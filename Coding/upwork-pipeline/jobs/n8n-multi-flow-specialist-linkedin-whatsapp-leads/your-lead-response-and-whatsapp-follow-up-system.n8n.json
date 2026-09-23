@@ -1,0 +1,782 @@
+{
+  "name": "Your Lead Response and WhatsApp Follow-Up System",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - A LEAD WRITES IN\n\nWeb form, Instagram DM or Facebook DM all land on one webhook, get cleaned into the same shape, and are saved in Supabase before anything else runs.",
+        "height": 820,
+        "width": 700,
+        "color": 5
+      },
+      "id": "b5ebf427-a7d8-5b30-bc89-0d2c7c8c8bd4",
+      "name": "Section - 1 - A LEAD WRITES IN",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - INSTANT ALERT AND FIRST REPLY\n\nThe team hears about the lead in Slack, and the lead gets a WhatsApp reply with a booking link, both within seconds of writing in.",
+        "height": 820,
+        "width": 460,
+        "color": 4
+      },
+      "id": "ac59e510-8064-53e3-8f22-38b3a33f2670",
+      "name": "Section - 2 - INSTANT ALERT AND FIRST REPLY",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        800,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - FOLLOW UP UNTIL BOOKED\n\nOne day later it checks Supabase. Booked or replied means confirm and put it on the calendar. Silence means a gentle nudge, wait two days, check again.",
+        "height": 820,
+        "width": 940,
+        "color": 6
+      },
+      "id": "a7258cb2-6685-5110-ace8-eb0d4a3a17f0",
+      "name": "Section - 3 - FOLLOW UP UNTIL BOOKED",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1420,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - WHEN THEY REPLY ON WHATSAPP\n\nTwilio posts the inbound message back in. The model reads it and routes it: book the time, hand a real question to a human, or stop messaging them for good.",
+        "height": 820,
+        "width": 1040,
+        "color": 7
+      },
+      "id": "27856d1c-fd80-509c-be85-5eddd33c79fe",
+      "name": "Section - 4 - WHEN THEY REPLY ON WHATSAPP",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2520,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - NOTHING FAILS QUIETLY\n\nIf any step in the flow errors, Slack gets the lead, the step and a link to the failed run, so a silent break never costs a booking.",
+        "height": 820,
+        "width": 460,
+        "color": 1
+      },
+      "id": "78b8dee8-686b-5828-b4c9-e1e2919e4019",
+      "name": "Section - 5 - NOTHING FAILS QUIETLY",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3720,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "ba5e1266-8afd-574e-b216-a011ed59a42f",
+      "name": "1 - New Lead Writes In From Web Form, IG or FB DM",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        180
+      ],
+      "webhookId": "8a75af00-0991-5388-bf7d-9514ea0f35a5"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "996fde7c-58e2-5013-b9d5-8669aedca620",
+              "name": "channel",
+              "value": "={{ $json.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "cef441fa-9cd0-58ee-b8ef-6825b8991ffd",
+              "name": "received_at",
+              "value": "={{ $json.received_at }}",
+              "type": "string"
+            },
+            {
+              "id": "8bcc621c-66f5-5688-8388-459ab4bb3721",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "891a07d9-0394-5664-b839-5a94538c58c4",
+              "name": "phone",
+              "value": "={{ $json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "85ba9491-c9b5-58c4-a91e-1172e5c71018",
+              "name": "source",
+              "value": "={{ $json.source }}",
+              "type": "string"
+            },
+            {
+              "id": "b2f08caf-7ada-5836-931c-0059d76a1391",
+              "name": "message",
+              "value": "={{ $json.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "1433208e-a8a8-5d5b-8201-a9fd7279d8fb",
+      "name": "2 - Normalize the Lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        240,
+        180
+      ],
+      "notes": "Name, phone in E.164, source, message. One shape, whatever channel it came from.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "create"
+      },
+      "id": "03516089-4267-5407-a315-6c018a299f4d",
+      "name": "3 - Save the Lead in Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        480,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "2462122d-b614-58ed-8dbe-9c2181a4692c",
+      "name": "4 - Instant Alert to the Team",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        860,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sms",
+        "operation": "send",
+        "to": "={{ $json.callback_number || $json.phone }}",
+        "message": "={{ $json.message }}"
+      },
+      "id": "f16ff5f4-b4fa-51ad-9bc1-6cfa83278ac8",
+      "name": "5 - WhatsApp via Twilio: Instant Reply With Booking Link",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "days"
+      },
+      "id": "6568e00a-290c-596c-b7af-51efefc392ad",
+      "name": "6 - Wait 1 Day",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1480,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7e390c5c-7be2-55c4-8dbe-8898d9d91d28",
+              "leftValue": "={{ $json.booked_replied }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "72ba80c6-06fe-505a-8a53-c7b08a734220",
+      "name": "7 - Booked or Replied?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1720,
+        180
+      ],
+      "notes": "Reads the lead status in Supabase, so a booking made anywhere stops the chase.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resource": "sms",
+        "operation": "send",
+        "to": "={{ $json.callback_number || $json.phone }}",
+        "message": "={{ $json.message }}"
+      },
+      "id": "8095ac2d-458c-527f-84ec-d3b29c5ee59f",
+      "name": "8 - WhatsApp: Confirm the Appointment",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "event",
+        "operation": "create",
+        "start": "={{ $json.starts_at }}",
+        "end": "={{ $json.ends_at }}",
+        "additionalFields": {
+          "summary": "={{ $json.title }}"
+        }
+      },
+      "id": "7b1359f5-092b-5875-9b27-0016fe3ecc8c",
+      "name": "9 - Put It on the Calendar",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        2200,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sms",
+        "operation": "send",
+        "to": "={{ $json.callback_number || $json.phone }}",
+        "message": "={{ $json.message }}"
+      },
+      "id": "8317f363-2418-5b39-b98c-2b3bbeed0291",
+      "name": "8b - WhatsApp: Gentle Follow-Up",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "days"
+      },
+      "id": "db9f638a-886f-5434-9108-62a67fbed4db",
+      "name": "9b - Wait 2 Days",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2200,
+        320
+      ],
+      "notes": "Then back to the same check. Capped, so nobody gets chased forever.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "74379684-d365-5d40-a4fe-c90e22882d7c",
+      "name": "1b - WhatsApp Reply Comes In From Twilio",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        2580,
+        180
+      ],
+      "webhookId": "37d8aa66-cb9a-51ac-b344-11878dafa8f7"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=10 - Classify the Reply\n\nchannel: {{ $json.channel }}\nreceived_at: {{ $json.received_at }}\nname: {{ $json.name }}\nphone: {{ $json.phone }}",
+        "batching": {}
+      },
+      "id": "974532b9-f294-557a-a55e-4f9437344222",
+      "name": "10 - Classify the Reply",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2820,
+        180
+      ],
+      "notes": "Book a time, a real question, or stop. Returns the picked time when there is one.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "id": "0632616d-70d1-5f0c-b725-1c2bd2ad2dde",
+      "name": "GPT-4o",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2880,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f565be14-a84a-5f3c-88b9-d09b8224e54b",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "Book",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Book"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6a48c58c-53ae-5a7f-af5b-997a4c03c66b",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "Question",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Question"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "94a7e5c1-7154-5867-9a15-dca6b432bca5",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "Stop",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Stop"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5b83699e-ccbe-53b5-8b89-a934f047bb02",
+      "name": "11 - Route: Book, Question, Stop",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        3160,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "event",
+        "operation": "create",
+        "start": "={{ $json.starts_at }}",
+        "end": "={{ $json.ends_at }}",
+        "additionalFields": {
+          "summary": "={{ $json.title }}"
+        }
+      },
+      "id": "f491c8e2-ff59-59ba-9161-d78a0395d6da",
+      "name": "12 - Book the Appointment on the Calendar",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        3400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "bfcf6a03-8c80-5397-9dbb-18177358bb41",
+      "name": "13 - Hand to a Human",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        3400,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "create"
+      },
+      "id": "1aceda6c-8ef3-5c96-b464-d108a759bcc3",
+      "name": "14 - Mark Opted Out",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3400,
+        480
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "55765c50-586f-5112-b1a4-45a8ce41db4c",
+      "name": "15 - Any Step Fails, Anywhere",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        3780,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "837d7b61-3f2a-5ab3-901b-96909981b77a",
+      "name": "16 - Alert: Flow Failed",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        4020,
+        180
+      ]
+    }
+  ],
+  "connections": {
+    "1 - New Lead Writes In From Web Form, IG or FB DM": {
+      "main": [
+        [
+          {
+            "node": "2 - Normalize the Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Normalize the Lead": {
+      "main": [
+        [
+          {
+            "node": "3 - Save the Lead in Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Save the Lead in Supabase": {
+      "main": [
+        [
+          {
+            "node": "4 - Instant Alert to the Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - Instant Alert to the Team": {
+      "main": [
+        [
+          {
+            "node": "5 - WhatsApp via Twilio: Instant Reply With Booking Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - WhatsApp via Twilio: Instant Reply With Booking Link": {
+      "main": [
+        [
+          {
+            "node": "6 - Wait 1 Day",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Wait 1 Day": {
+      "main": [
+        [
+          {
+            "node": "7 - Booked or Replied?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - Booked or Replied?": {
+      "main": [
+        [
+          {
+            "node": "8 - WhatsApp: Confirm the Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "8b - WhatsApp: Gentle Follow-Up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - WhatsApp: Confirm the Appointment": {
+      "main": [
+        [
+          {
+            "node": "9 - Put It on the Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8b - WhatsApp: Gentle Follow-Up": {
+      "main": [
+        [
+          {
+            "node": "9b - Wait 2 Days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9b - Wait 2 Days": {
+      "main": [
+        [
+          {
+            "node": "7 - Booked or Replied?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1b - WhatsApp Reply Comes In From Twilio": {
+      "main": [
+        [
+          {
+            "node": "10 - Classify the Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Classify the Reply": {
+      "main": [
+        [
+          {
+            "node": "11 - Route: Book, Question, Stop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Route: Book, Question, Stop": {
+      "main": [
+        [
+          {
+            "node": "12 - Book the Appointment on the Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "13 - Hand to a Human",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "14 - Mark Opted Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15 - Any Step Fails, Anywhere": {
+      "main": [
+        [
+          {
+            "node": "16 - Alert: Flow Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4o": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "10 - Classify the Reply",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "9946cff7-4a7e-582a-8211-9cc8d75bd29b",
+  "pinData": {
+    "1 - New Lead Writes In From Web Form, IG or FB DM": [
+      {
+        "json": {
+          "channel": "instagram_dm",
+          "received_at": "2026-09-21T14:08:33Z",
+          "name": "Priya Nair",
+          "phone": "+12025550188",
+          "source": "instagram_dm",
+          "message": "Do you have availability next week for a consultation?"
+        }
+      }
+    ],
+    "9 - Put It on the Calendar": [
+      {
+        "json": {
+          "whatsapp_reply_sent": "Hi Priya, thanks for reaching out on Instagram. You can grab a consultation time here: https://cal.example.com/consult/priya-nair . Reply here any time and a real person will pick it up.",
+          "slack_alert": "New lead: Priya Nair, +12025550188, from instagram_dm. Asked about availability next week for a consultation. Replied on WhatsApp 6 seconds after she wrote in.",
+          "supabase_row": {
+            "lead_id": "ld_7741",
+            "name": "Priya Nair",
+            "phone": "+12025550188",
+            "source": "instagram_dm",
+            "status": "booked",
+            "appointment": "2026-09-24 10:00",
+            "follow_ups_sent": 1,
+            "opted_out": false
+          },
+          "calendar_event": {
+            "title": "Consultation - Priya Nair",
+            "start": "2026-09-24 10:00",
+            "duration_min": 30,
+            "guest_notified_on": "whatsapp"
+          },
+          "if_a_step_had_failed": "Error trigger fires, Slack gets the lead, the step and a link to the failed run"
+        }
+      }
+    ]
+  }
+}

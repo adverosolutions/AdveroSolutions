@@ -1,0 +1,1416 @@
+{
+  "ai.agent:ai-local-agent:run-local-aiagent": {
+    "module": "ai-local-agent:RunLocalAIAgent",
+    "sample_mapper": {
+      "defaultModel": "gpt-5.4",
+      "files": [],
+      "message": "{{1.message}}",
+      "modelConfig": {
+        "iterationsFromHistoryCount": "10",
+        "recursionLimit": 300
+      },
+      "outputType": "text",
+      "systemPrompt": "You're a versatile Agent",
+      "threadId": "",
+      "timeout": ""
+    },
+    "sample_parameters": {
+      "makeConnectionId": 14613
+    },
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/examples/ai-agent-full-blueprint.json",
+    "version": 0
+  },
+  "ai.llm:ai-tools:ask": {
+    "module": "ai-tools:Ask",
+    "sample_mapper": {
+      "input": "{{1.`0`}}"
+    },
+    "sample_parameters": {
+      "makeConnectionId": "<connection_id>",
+      "model": "medium"
+    },
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/blueprint-construction.md",
+    "version": 2
+  },
+  "ai.llm:openai-gpt-3:create-completion": {
+    "module": "openai-gpt-3:CreateCompletion",
+    "sample_mapper": {
+      "max_tokens": "1000",
+      "messages": [
+        {
+          "content": "Reply to this message: {{1.channel_post.text}}\nIf the message is about {topic}, provide all the relevant details related to the message. If the message is about anything other {topic} like golf, video games etc, reply by saying that you do not answer any other topic besides {topic}.",
+          "role": "user"
+        }
+      ],
+      "model": "gpt-3.5-turbo",
+      "n_completions": "1",
+      "response_format": "text",
+      "select": "chat",
+      "temperature": "1",
+      "top_p": "1"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/03-chatgpt-telegram-bot.json",
+    "version": 1
+  },
+  "ai.llm:openai-gpt-3:create-model-response": {
+    "module": "openai-gpt-3:createModelResponse",
+    "sample_mapper": {
+      "background": false,
+      "createConversation": true,
+      "format": {},
+      "input": "You are a professional career coach writing recruiter outreach emails. Your task is to draft a concise, professional cold email, no more than 250 words, to apply for the \"{{4.`0`}}\" position.\r\n\r\nThe email must leverage the candidate's information from the resume [{{41.text}}] and the job requirements from the {{4.`8`}} to demonstrate a strong, targeted fit as per the {{4.`8`}}\nKey Requirements:\r\n\r\nOpening: Start with a brief, compelling introduction that states the purpose.\r\n\r\nTargeted Fit: Select and highlight 1-2 specific skills, experiences, or projects from the candidate's resume that directly align with the most important requirements in the job description.\r\n\r\nImpact/Value: Briefly state the value the candidate can bring to the role or company.\r\n\r\nCall to Action: Always use this sentence [\"Looking forward to hearing from you!\"]\r\n\r\nSignature: Use a professional closing and the candidate's name from resume. NO LinkedIn link.\r\n\r\nEnsure the tone is professional, confident, and persuasive. Do not use generic phrases; focus on quantifiable achievements or specific, relevant expertise.\r\n\r\nFormat Instructions:\r\n- Return the email body ONLY in **HTML** format.\r\n- Wrap each paragraph in <p>...</p>.\r\n- Insert a line break <br/> before the signature.\r\n- Do not include Markdown, explanations, or extra text.\r\n\r\nStructure of the response:\r\n\r\n<p>Dear {{4.`9`}},</p>\r\n\r\n<p>[Opening]</p>\r\n\r\n<p>[Targeted Fit & Impact/Value]</p>\r\n\r\n<p>[Call to Action]</p>\r\n\r\n<p>Best regards,<br/>  \r\nSizamayeen Kadri</p>\r\n",
+      "inputContentType": "text",
+      "max_output_tokens": "2048",
+      "model": "o4-mini",
+      "parallel_tool_calls": true,
+      "reasoning": {},
+      "store": true,
+      "truncation": "auto"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 5578057
+    },
+    "source": "https://raw.githubusercontent.com/SahilGogna/ai-automations-no-code/ea6d709f88b16ff06dd327fb919c96466369b8d1/reachout-recruiter/recruiter-reachout-makeautomation.json",
+    "version": 1
+  },
+  "ai.parser:openai-gpt-3:transform-text-to-structured-data": {
+    "module": "openai-gpt-3:transformTextToStructuredData",
+    "sample_mapper": {
+      "model": "gpt-4o",
+      "parameters": [
+        {
+          "description": "the name of the caller",
+          "isRequired": true,
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "description": "the email the caller gives",
+          "isRequired": false,
+          "name": "email",
+          "type": "string"
+        },
+        {
+          "description": "the date the user picked which you will put in ISO 8601 format",
+          "isRequired": false,
+          "name": "appointmentDate",
+          "type": "string"
+        }
+      ],
+      "prompt": "You are an expert data extractor. You will be provided with a call transcript and must extract structured data according to the provided JSON schema. The appointmentDate field represents the date the user selected to book the meeting. Please leave the value empty if they don't exist  Your output must strictly be the JSON object—no additional text, explanations, or formatting like \"here is the JSON\" or \"json:\" before or after the JSON object. Again Do not use the value examples please  leave the value empty if they don't exist\n  \"structuredDataSchema\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"name\": { \"type\": \"string\" },\n      \"email\": { \"type\": \"string\" },\n      \"appointmentDate\": { \"type\": \"string\" }\n    },\n    \"required\": [\"name\", \"email\", \"appointmentDate\"]\n  }\n}\n\n​",
+      "rawText": "call transcript : {{2.message.transcript}}"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 3509850
+    },
+    "source": "https://raw.githubusercontent.com/AlozieAI/VAPI-Calendly-Agent/main/Make-Automation-Blueprints/precall%26serverurl-automation",
+    "version": 1
+  },
+  "app.action:airtable:action-create-record": {
+    "module": "airtable:ActionCreateRecord",
+    "sample_mapper": {
+      "base": "app123456789xyz",
+      "record": {
+        "fldabc123xyz": {},
+        "flddef456xyz": "{{2.from.address}}"
+      },
+      "table": "tbl987654321xyz",
+      "typecast": false,
+      "useColumnId": false
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 100001
+    },
+    "source": "https://raw.githubusercontent.com/Univium-Inc/Univium-Automation-Tools/31de85787743cdfa8253a1ec89b8633cf5a94085/Make.com/Automate%20Email%20Inbox%20Management/Email%20to%20Airtable%20Automation.json",
+    "version": 3
+  },
+  "app.action:airtable:action-get-record": {
+    "module": "airtable:ActionGetRecord",
+    "sample_mapper": {
+      "base": "appMipeYj3rKOJv4z",
+      "id": "{{1.record_id}}",
+      "table": "tblIRQRiRRhh2LWgR",
+      "useColumnId": false
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 1505942
+    },
+    "source": "https://raw.githubusercontent.com/Meeting-Baas/meeting-bot-as-a-service/8ccf32b82b0e501d050a4f1e305106f556e04937/integrations-using-third-party-software/make-to-airtable-llm-brief/Workflows/Integration%20Airtable.json",
+    "version": 3
+  },
+  "app.action:airtable:action-search-records": {
+    "module": "airtable:ActionSearchRecords",
+    "sample_mapper": {
+      "base": "app0beaDqJ5glezcQ",
+      "fields": [
+        "Job Link"
+      ],
+      "formula": "{Job Link}=\"{{1.rssFields.link}}\"",
+      "maxRecords": "100000000000",
+      "table": "tblOmzo117PaK3rJ9",
+      "useColumnId": false
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 1302171
+    },
+    "source": "https://raw.githubusercontent.com/EricTechPro/Ai-Agent-templates/a73de119f9224410ca3c0a9c03889193ff9fbea8/Make-Daily-Job-Collector.json",
+    "version": 3
+  },
+  "app.action:airtable:action-update-records": {
+    "module": "airtable:ActionUpdateRecords",
+    "sample_mapper": {
+      "base": "app123456789xyz",
+      "id": "{{3.id}}",
+      "record": {
+        "fldghi789xyz": "{{now}}",
+        "fldjkl012xyz": "{{3.EmailsReceived + 1}}"
+      },
+      "table": "tbl987654321xyz",
+      "typecast": false,
+      "useColumnId": false
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 100001
+    },
+    "source": "https://raw.githubusercontent.com/Univium-Inc/Univium-Automation-Tools/31de85787743cdfa8253a1ec89b8633cf5a94085/Make.com/Automate%20Email%20Inbox%20Management/Email%20to%20Airtable%20Automation.json",
+    "version": 3
+  },
+  "app.action:apify:fetch-dataset-items": {
+    "module": "apify:fetchDatasetItems",
+    "sample_mapper": {
+      "datasetId": "{{1.defaultDatasetId}}",
+      "format": "json",
+      "limit": "2",
+      "type": "clean"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 5486105
+    },
+    "source": "https://raw.githubusercontent.com/buildfastwithai/gen-ai-experiments/680c466a542389c77ea20bbd3eec35fb8a987eec/cookbooks/workshops/scrape-latest-jobs-with-ai-using-make-com/2.%20Get%20Results%20from%20Indeed%20Bulk%20Job%20Scraper%20%26%20Customize%20Resume.blueprint.json",
+    "version": 1
+  },
+  "app.action:apify:run-actor": {
+    "module": "apify:runActor",
+    "sample_mapper": {
+      "actorId": "hMvNSpz3JnHgl5jkh",
+      "inputBody": "{\n    \"country\": \"IN\",\n    \"followApplyRedirects\": false,\n    \"maxItems\": 5,\n    \"parseCompanyDetails\": false,\n    \"position\": \"web developer\",\n    \"saveOnlyUniqueItems\": true\n}",
+      "runSync": false
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 5486073
+    },
+    "source": "https://raw.githubusercontent.com/buildfastwithai/gen-ai-experiments/680c466a542389c77ea20bbd3eec35fb8a987eec/cookbooks/workshops/scrape-latest-jobs-with-ai-using-make-com/1.%20Run%20Indeed%20Bulk%20Jobs%20Scraper.blueprint.json",
+    "version": 1
+  },
+  "app.action:app#skyvern-ai:get-task": {
+    "module": "app#skyvern-ai:getTask",
+    "sample_mapper": {
+      "taskId": "{{23.task_id}}"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 2977909
+    },
+    "source": "https://raw.githubusercontent.com/Skyvern-AI/skyvern/d999952e59ef42b800adbb3c1a6579365ba801dd/integrations/make/contact_form_make.com_blueprint.json",
+    "version": 1
+  },
+  "app.action:bannerly:renderimagev2": {
+    "module": "bannerly:renderimagev2",
+    "sample_mapper": {
+      "changes": [
+        {
+          "id": "subtitle.text",
+          "value": "{{16.Quote}}"
+        },
+        {
+          "id": "title.text",
+          "value": "{{16.Title}}"
+        },
+        {
+          "id": "image.src",
+          "value": "{{7.data.output[]}}"
+        }
+      ],
+      "template": "{{12.template}}"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 3432006
+    },
+    "source": "https://raw.githubusercontent.com/shabbirun/redesigned-octo-barnacle/009aeba40bd13e9ea128660802dd78a9aed7e633/AI%20Pinterest%20Images.blueprint.json",
+    "version": 1
+  },
+  "app.action:calendly:list-events": {
+    "module": "calendly:listEvents",
+    "sample_mapper": {
+      "invitee_email": "{{11.message.toolCalls[].function.arguments.email}}",
+      "limit": "1",
+      "sort": "start_time:desc",
+      "status": "active",
+      "user": "https://api.calendly.com/users/d75de721-7411-4701-9081-cc95df86f227"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 3787810
+    },
+    "source": "https://raw.githubusercontent.com/AlozieAI/VAPI-Calendly-Agent/main/Make-Automation-Blueprints/cancelmeeting-automation",
+    "version": 2
+  },
+  "app.action:calendly:make-api-call": {
+    "module": "calendly:makeApiCall",
+    "sample_mapper": {
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "method": "GET",
+      "qs": [
+        {
+          "key": "event_type",
+          "value": "https://api.calendly.com/event_types/216b1f6d-6f36-408a-8e90-3ea9c005d35b"
+        },
+        {
+          "key": "end_time",
+          "value": " {{formatDate(addDays(now; 6); \"YYYY-MM-DDT24:00:00.000000[Z]\")}}"
+        },
+        {
+          "key": "start_time",
+          "value": "{{formatDate(addDays(parseDate(now; \"MMMM D, YYYY h:mm A\"); 1); \"YYYY-MM-DDT24:00:00.000000[Z]\")}}"
+        }
+      ],
+      "url": "https://api.calendly.com/event_type_available_times"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 3787810
+    },
+    "source": "https://raw.githubusercontent.com/AlozieAI/VAPI-Calendly-Agent/main/Make-Automation-Blueprints/precall%26serverurl-automation",
+    "version": 2
+  },
+  "app.action:discord:create-message": {
+    "module": "discord:createMessage",
+    "sample_mapper": {
+      "channelId": "1224642245806788641",
+      "content": "{{2.content}}",
+      "message_reference": {},
+      "select": "channel"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 11867
+    },
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/examples/ai-agent-full-blueprint.json",
+    "version": 2
+  },
+  "app.action:email:action-get-emails": {
+    "module": "email:ActionGetEmails",
+    "sample_mapper": {
+      "before": "",
+      "continueWhenNoRes": false,
+      "criteria": "UNSEEN",
+      "folder": "A-Notifications",
+      "from": "",
+      "id": "",
+      "markSeen": true,
+      "maxResults": "100",
+      "searchType": "simple",
+      "since": "",
+      "subject": "",
+      "text": "",
+      "to": ""
+    },
+    "sample_parameters": {
+      "account": 123456
+    },
+    "source": "https://raw.githubusercontent.com/Univium-Inc/Univium-Automation-Tools/31de85787743cdfa8253a1ec89b8633cf5a94085/Make.com/Automate%20Email%20Inbox%20Management/A-Notifications%20-%20Complete.json",
+    "version": 7
+  },
+  "app.action:email:action-move-email": {
+    "module": "email:ActionMoveEmail",
+    "sample_mapper": {
+      "destinationFolder": "Auto Complete",
+      "folder": "INBOX",
+      "id": "{{3.id}}"
+    },
+    "sample_parameters": {
+      "account": 123456
+    },
+    "source": "https://raw.githubusercontent.com/Univium-Inc/Univium-Automation-Tools/31de85787743cdfa8253a1ec89b8633cf5a94085/Make.com/Automate%20Email%20Inbox%20Management/Complete%20Month%20Old%20Emails.json",
+    "version": 7
+  },
+  "app.action:email:action-send-email": {
+    "module": "email:ActionSendEmail",
+    "sample_mapper": {
+      "attachments": [],
+      "bcc": [],
+      "cc": [],
+      "contentType": "html",
+      "from": "",
+      "headers": [],
+      "html": "{{3.EmailMessage}}",
+      "inReplyTo": "",
+      "priority": "normal",
+      "references": [],
+      "replyTo": "",
+      "sender": "",
+      "subject": "{{3.EmailSubject}}",
+      "to": [
+        "{{3.RecipientEmail}}"
+      ]
+    },
+    "sample_parameters": {
+      "account": 1234567,
+      "saveAfterSent": false
+    },
+    "source": "https://raw.githubusercontent.com/Univium-Inc/Univium-Automation-Tools/31de85787743cdfa8253a1ec89b8633cf5a94085/Automation%20Packages/Trigger%20Automations%20with%20Google%20Sheets/Make%20-%20Send%20Email%20Blueprint.json",
+    "version": 7
+  },
+  "app.action:facebook-pages:create-post": {
+    "module": "facebook-pages:CreatePost",
+    "sample_mapper": {
+      "message": "{{6.`1`}}"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/router-pattern.json",
+    "version": 6
+  },
+  "app.action:google-calendar:create-an-event": {
+    "module": "google-calendar:createAnEvent",
+    "sample_mapper": {
+      "allDayEvent": false,
+      "end": "{{1.properties_value.`Meeting Time`.end}}",
+      "guestsCanModify": false,
+      "select": "detail",
+      "start": "{{1.properties_value.`Meeting Time`.start}}",
+      "summary": "{{1.properties_value.Title[].plain_text}}",
+      "transparency": "opaque",
+      "visibility": "default"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/10-sync-notion-to-google-calendar.json",
+    "version": 5
+  },
+  "app.action:google-calendar:delete-an-event": {
+    "module": "google-calendar:deleteAnEvent",
+    "sample_mapper": {
+      "event": "{{1.properties_value.`Event ID`[].plain_text}}"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/10-sync-notion-to-google-calendar.json",
+    "version": 5
+  },
+  "app.action:google-calendar:update-an-event": {
+    "module": "google-calendar:updateAnEvent",
+    "sample_mapper": {
+      "allDayEvent": false,
+      "append": false,
+      "end": "{{1.properties_value.`Meeting Time`.end}}",
+      "event": "{{1.properties_value.`Event ID`[].plain_text}}",
+      "start": "{{1.properties_value.`Meeting Time`.start}}",
+      "summary": "{{1.properties_value.Title[].plain_text}}"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/10-sync-notion-to-google-calendar.json",
+    "version": 5
+  },
+  "app.action:google-docs:append-adocument": {
+    "module": "google-docs:appendADocument",
+    "sample_mapper": {
+      "choose": "dropdown",
+      "destination": "drive",
+      "document": "/1B2n3d11xt3_zmSgddo56uWFbakViIc8v/1AoW05VeECow1Ncip3nax1dJkUE_zYFe1uVKBP0HveCI",
+      "select": "document",
+      "text": "\n\n{{3.post_id}}\n{{4.created_at}}\n-------------------\n{{4.result}}\n-------------------\n\n"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 4975958
+    },
+    "source": "https://raw.githubusercontent.com/SahilGogna/ai-automations-no-code/ea6d709f88b16ff06dd327fb919c96466369b8d1/linkedin-post-automation/linkedin-automation.json",
+    "version": 1
+  },
+  "app.action:google-docs:create-adocument": {
+    "module": "google-docs:createADocument",
+    "sample_mapper": {
+      "content": "{{5.data}}",
+      "destination": "drive",
+      "folderId": "/177cYGy1l1CxDUjn1j_O0DeErvwClRvhb/1LLN5SPTgAJJTE15k89RDNB4qtQ5H_ndt",
+      "footer": false,
+      "header": false,
+      "name": "Max Davis Resume"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 5486137
+    },
+    "source": "https://raw.githubusercontent.com/buildfastwithai/gen-ai-experiments/680c466a542389c77ea20bbd3eec35fb8a987eec/cookbooks/workshops/scrape-latest-jobs-with-ai-using-make-com/2.%20Get%20Results%20from%20Indeed%20Bulk%20Job%20Scraper%20%26%20Customize%20Resume.blueprint.json",
+    "version": 1
+  },
+  "app.action:google-docs:get-adocument": {
+    "module": "google-docs:getADocument",
+    "sample_mapper": {
+      "destination": "drive",
+      "document": "/1jDsHwkaPoL5jp6hn8LCE1XOMn1Nwr0EpBpPWtowXuSw",
+      "filter": "image",
+      "includeTabsContent": false,
+      "select": "dropdown"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 5564507
+    },
+    "source": "https://raw.githubusercontent.com/SahilGogna/ai-automations-no-code/ea6d709f88b16ff06dd327fb919c96466369b8d1/reachout-recruiter/recruiter-reachout-makeautomation.json",
+    "version": 1
+  },
+  "app.action:google-drive:upload-afile": {
+    "module": "google-drive:uploadAFile",
+    "sample_mapper": {
+      "data": "{{5.data}}",
+      "filename": "{{5.fileName}}",
+      "select": "value"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/09-save-gmail-attachments-to-drive.json",
+    "version": 4
+  },
+  "app.action:google-email:action-send-email": {
+    "module": "google-email:ActionSendEmail",
+    "sample_mapper": {
+      "attachments": [],
+      "bcc": [],
+      "cc": [],
+      "from": "",
+      "html": "{{1.`2`}}",
+      "subject": "{{1.`1`}}",
+      "to": [
+        "{{1.`0`}}"
+      ]
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/04-send-gmail-from-google-sheets-row.json",
+    "version": 2
+  },
+  "app.action:google-sheets:add-row": {
+    "module": "google-sheets:addRow",
+    "sample_mapper": {
+      "includesHeaders": true,
+      "insertDataOption": "INSERT_ROWS",
+      "mode": "select",
+      "valueInputOption": "USER_ENTERED",
+      "values": {
+        "0": "{{2.name}}",
+        "1": "{{2.email}}"
+      }
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/full-blueprint.json",
+    "version": 2
+  },
+  "app.action:google-sheets:clear-values-from-range": {
+    "module": "google-sheets:clearValuesFromRange",
+    "sample_mapper": {
+      "range": "A4:D",
+      "select": "fromAll",
+      "sheet": "JobScenarioApplication",
+      "spreadsheetId": "1ABC2DEF3GHI4JKL5MNO6PQR7STU8VWX"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 123456
+    },
+    "source": "https://raw.githubusercontent.com/Univium-Inc/Univium-Automation-Tools/31de85787743cdfa8253a1ec89b8633cf5a94085/Make.com/Sync%20Google%20Sheets%20with%20Airtable%20-%20Linked%20Record%20Expansion/Airtable%20to%20Sheets%20Sync%20-%20Linked%20Record%20Expansion.json",
+    "version": 2
+  },
+  "app.action:google-sheets:filter-rows": {
+    "module": "google-sheets:filterRows",
+    "sample_mapper": {
+      "dateTimeRenderOption": "FORMATTED_STRING",
+      "filter": [
+        [
+          {
+            "a": "B",
+            "b": "{{2.message.customer.number}}",
+            "o": "text:equal"
+          }
+        ]
+      ],
+      "from": "drive",
+      "includesHeaders": true,
+      "sheetId": "Sheet1",
+      "sortOrder": "asc",
+      "spreadsheetId": "1XgVSLFBqrLkQMuR8-L_ZFf0GduL3ael4oxTSHZcYYKk",
+      "tableFirstRow": "A1:CZ1",
+      "valueRenderOption": "FORMATTED_VALUE"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 3386872
+    },
+    "source": "https://raw.githubusercontent.com/AlozieAI/VAPI-Calendly-Agent/main/Make-Automation-Blueprints/precall%26serverurl-automation",
+    "version": 2
+  },
+  "app.action:google-sheets:get-cell": {
+    "module": "google-sheets:getCell",
+    "sample_mapper": {
+      "cell": "A2",
+      "dateTimeRenderOption": "FORMATTED_STRING",
+      "from": "drive",
+      "select": "list",
+      "sheetId": "Sheet1",
+      "spreadsheetId": "/1BW5LrUC3vj2D3x-tGHMmIzv0AbeNbve9/1VYTWLqqp_oselhp2THBUDClURik3e2PsBKKmRvD8p0M",
+      "valueRenderOption": "FORMATTED_VALUE"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 5589787
+    },
+    "source": "https://raw.githubusercontent.com/SahilGogna/ai-automations-no-code/ea6d709f88b16ff06dd327fb919c96466369b8d1/resume-cl-generator/LinkedIn%20Latest%20Jobs%20Automation-blueprint.json",
+    "version": 2
+  },
+  "app.action:google-sheets:get-sheet-content": {
+    "module": "google-sheets:getSheetContent",
+    "sample_mapper": {
+      "dateTimeRenderOption": "FORMATTED_STRING",
+      "from": "drive",
+      "includesHeaders": false,
+      "range": "A2:B50",
+      "select": "list",
+      "sheetId": "Hoja 1",
+      "spreadsheetId": "/1jOZ5YKEV3xTFjzGXB3YDwE2A59fOCYlKC_5J9Dpvpps",
+      "valueRenderOption": "FORMATTED_VALUE"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 1035115
+    },
+    "source": "https://raw.githubusercontent.com/leifermendez/bot-google-calendar/8b0c8616defbb5c92624fc16a78e636e985589d5/template/make-template-get-calendar.json",
+    "version": 2
+  },
+  "app.action:google-sheets:update-multiple-rows": {
+    "module": "google-sheets:updateMultipleRows",
+    "sample_mapper": {
+      "range": "A2:C",
+      "rows": "{{63.array}}",
+      "sheetId": "JobScenarioApplication",
+      "spreadsheetId": "1ABC2DEF3GHI4JKL5MNO6PQR7STU8VWX",
+      "valueInputOption": "USER_ENTERED"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 123456
+    },
+    "source": "https://raw.githubusercontent.com/Univium-Inc/Univium-Automation-Tools/31de85787743cdfa8253a1ec89b8633cf5a94085/Make.com/Sync%20Google%20Sheets%20with%20Airtable%20-%20Linked%20Record%20Expansion/Airtable%20to%20Sheets%20Sync%20-%20Linked%20Record%20Expansion.json",
+    "version": 2
+  },
+  "app.action:google-sheets:update-row": {
+    "module": "google-sheets:updateRow",
+    "sample_mapper": {
+      "mode": "map",
+      "rowNumber": "{{1.`__ROW_NUMBER__`}}",
+      "sheetId": "{{1.`__SHEET__`}}",
+      "spreadsheetId": "{{1.`__SPREADSHEET_ID__`}}",
+      "tableFirstRow": "A1:Z1",
+      "valueInputOption": "USER_ENTERED",
+      "values": {
+        "0": "{{2.result}}"
+      }
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/01-chatgpt-completions-from-google-sheets.json",
+    "version": 2
+  },
+  "app.action:hunter:find-email": {
+    "module": "hunter:findEmail",
+    "sample_mapper": {
+      "company": "{{4.`1`}}",
+      "first_name": "{{26.`First Name`}}",
+      "full_name": "{{25.`Full Name`}}",
+      "last_name": "{{26.`Last name`}}",
+      "max_duration": "5",
+      "searchCriteria": "company"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 5576550
+    },
+    "source": "https://raw.githubusercontent.com/SahilGogna/ai-automations-no-code/ea6d709f88b16ff06dd327fb919c96466369b8d1/reachout-recruiter/recruiter-reachout-makeautomation.json",
+    "version": 1
+  },
+  "app.action:jira-cloud-platform:create-an-issue": {
+    "module": "jira-cloud-platform:createAnIssue",
+    "sample_mapper": {
+      "description": "Criado automaticamente via Slack — canal: {{1.channel}}\n\nResumo: {{3.summary}}\nPrioridade sugerida: {{3.priority}}\nResponsável sugerido: {{3.assignee}}",
+      "issueType": "Task",
+      "project": "SEU_PROJETO",
+      "summary": "{{3.title}}"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": null
+    },
+    "source": "https://raw.githubusercontent.com/unipds-engenharia-de-ia-aplicada/engenharia-de-software-com-ia-aplicada/8271e74a19ad840aa860c1044e4c37ccee3103ff/modulo07-ferramentas-de-ia-para-gestao-de-projetos/modulo-09-automacao-de-ecossistema/make-blueprint-m9.json",
+    "version": 1
+  },
+  "app.action:linkedin:create-post": {
+    "module": "linkedin:CreatePost",
+    "sample_mapper": {
+      "content": "{{4.result}}",
+      "feedDistribution": "MAIN_FEED",
+      "isReshareDisabledByAuthor": false,
+      "visibility": "PUBLIC"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 5548685
+    },
+    "source": "https://raw.githubusercontent.com/SahilGogna/ai-automations-no-code/ea6d709f88b16ff06dd327fb919c96466369b8d1/linkedin-post-automation/linkedin-automation.json",
+    "version": 2
+  },
+  "app.action:linkedin:create-text-share": {
+    "module": "linkedin:CreateTextShare",
+    "sample_mapper": {
+      "content": "{{2.result}}",
+      "feedDistribution": "MAIN_FEED",
+      "isReshareDisabledByAuthor": false,
+      "media": {
+        "originalUrl": "https://www.example.com",
+        "thumbnail": {},
+        "title": "{title}"
+      },
+      "organization": "",
+      "type": "ARTICLE",
+      "visibility": "LOGGED_IN"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/08-summarize-website-and-create-social-posts.json",
+    "version": 2
+  },
+  "app.action:mails-so:validate": {
+    "module": "mails-so:validate",
+    "sample_mapper": {
+      "email": "{{1.message.toolCalls[].function.arguments.Email}}"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 3806137
+    },
+    "source": "https://raw.githubusercontent.com/AlozieAI/VAPI-Calendly-Agent/main/Make-Automation-Blueprints/emalvalidation-automation",
+    "version": 1
+  },
+  "app.action:notion:create-apage": {
+    "module": "notion:createAPage",
+    "sample_mapper": {
+      "database": "6feda45bc86e424488b4e534f63ee922",
+      "fields": {
+        "%40IA%5D": "{{1.Category}}",
+        "N%3Fmt": "{{1.Location}}",
+        "WPKj": "{{1.Hours}}",
+        "WyV%7B": "{{1.Description}}",
+        "adBt": "{{1.Date}}",
+        "cvVQ": "{{1.Weather}}",
+        "title": "{{1.Title}}",
+        "zk%3CS": "{{1.City}}"
+      },
+      "select": "list"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 3279589
+    },
+    "source": "https://raw.githubusercontent.com/hellotinah/AI-projects/c2ecd472d3157ac25b6028a60d5684b7a4f36d96/TravelBot/blueprint.json",
+    "version": 1
+  },
+  "app.action:notion:update-adatabase-item": {
+    "module": "notion:updateADatabaseItem",
+    "sample_mapper": {
+      "fields": {
+        "Ds=M": {
+          "includeTime": false
+        },
+        "]Edj": "{{3.id}}"
+      },
+      "page": "{{1.id}}",
+      "select": "list"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/10-sync-notion-to-google-calendar.json",
+    "version": 1
+  },
+  "app.action:onedrive:upload-afile": {
+    "module": "onedrive:uploadAFile",
+    "sample_mapper": {
+      "conflictBehavior": "replace",
+      "data": "{{42.data}}",
+      "enter": "id",
+      "filename": "{{replace(replace(replace(replace(12.Company_Name; ; \"_\"); \"/\"; \"_\"); \"&\"; \"and\"); \",\"; \"\")}}_{{replace(replace(12.Job_Title; ; \"_\"); \"/\"; \"_\")}}_Resume_{{formatDate(now; \"YYYY-MM-DD\")}}.pdf",
+      "folder": "/AE5C03A217705972!s11aad90437a4477a82e80bd81a352e56",
+      "select": "my",
+      "select1": "no"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 5616163
+    },
+    "source": "https://raw.githubusercontent.com/SahilGogna/ai-automations-no-code/ea6d709f88b16ff06dd327fb919c96466369b8d1/resume-cl-generator/LinkedIn%20Latest%20Jobs%20Automation-blueprint.json",
+    "version": 2
+  },
+  "app.action:pdf-co:htmlto-pdf": {
+    "module": "pdf-co:HTMLtoPDF",
+    "sample_mapper": {
+      "async": 15000,
+      "convert": {
+        "convertType": "fromHtml",
+        "html": "{{12.Taylored_Resume_HTML}}"
+      },
+      "expiration": "60",
+      "export": {
+        "exportType": "downloadFile"
+      },
+      "name": "{{replace(replace(replace(replace(12.Company_Name; ; \"_\"); \"/\"; \"_\"); \"&\"; \"and\"); \",\"; )}}_{{replace(replace(12.Job_Title; ; \"_\"); \"/\"; \"_\")}}_Resume_{{formatDate(now; \"YYYY-MM-DD\")}}.pdf",
+      "orientation": "portrait",
+      "paperSize": "a4",
+      "printBackground": true
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 5620296
+    },
+    "source": "https://raw.githubusercontent.com/SahilGogna/ai-automations-no-code/ea6d709f88b16ff06dd327fb919c96466369b8d1/resume-cl-generator/LinkedIn%20Latest%20Jobs%20Automation-blueprint.json",
+    "version": 1
+  },
+  "app.action:pinterest:create-pin": {
+    "module": "pinterest:createPin",
+    "sample_mapper": {
+      "alt_text": "{{24.result.description}}",
+      "board_id": "928867560585222107",
+      "description": "{{24.result.description}}",
+      "link": "{{15.`2`}}",
+      "media_source": {
+        "is_standard": true,
+        "source_type": "image_url",
+        "url": "{{3.href}}"
+      },
+      "title": "{{16.Title}}"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 3432244
+    },
+    "source": "https://raw.githubusercontent.com/shabbirun/redesigned-octo-barnacle/009aeba40bd13e9ea128660802dd78a9aed7e633/AI%20Pinterest%20Images.blueprint.json",
+    "version": 2
+  },
+  "app.action:quickbooks:make-api-call": {
+    "module": "quickbooks:MakeApiCall",
+    "sample_mapper": {
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "method": "GET",
+      "qs": [
+        {
+          "key": "minorversion",
+          "value": "75"
+        },
+        {
+          "key": "start_date",
+          "value": "2016-06-01"
+        },
+        {
+          "key": "end_date",
+          "value": "2025-02-06"
+        },
+        {
+          "key": "group_by",
+          "value": "None"
+        },
+        {
+          "key": "columns",
+          "value": "tx_date, tx_type, account_name,create_date,doc_num,cust_msg,inv_date,is_ap_paid,is_ar_paid,memo,name,pmt_mthd,is_adj,debt_amt,credit_amt,subt_nat_amount,other_account,tracking_num"
+        }
+      ],
+      "url": "/reports/TransactionList",
+      "version": "v3"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 9999999
+    },
+    "source": "https://raw.githubusercontent.com/Univium-Inc/Univium-Automation-Tools/31de85787743cdfa8253a1ec89b8633cf5a94085/Automation%20Packages/Quickbooks%20Sync%20to%20Google%20Sheets/Make-QB-Sync-Blueprint.json",
+    "version": 2
+  },
+  "app.action:rss:action-read-articles": {
+    "module": "rss:ActionReadArticles",
+    "sample_mapper": {
+      "filterDateFrom": "",
+      "filterDateTo": "",
+      "gzip": true,
+      "maxResults": "10000",
+      "password": "",
+      "url": "https://rss.app/feeds/5iIjPl1RrVtY761i.xml",
+      "username": ""
+    },
+    "sample_parameters": {
+      "include": []
+    },
+    "source": "https://raw.githubusercontent.com/EricTechPro/Ai-Agent-templates/a73de119f9224410ca3c0a9c03889193ff9fbea8/Make-Daily-Job-Collector.json",
+    "version": 4
+  },
+  "app.action:scenario-service:return-data": {
+    "module": "scenario-service:ReturnData",
+    "sample_mapper": {
+      "data": "{{3.body}}"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-api-shell-connection-workflow/examples/generic-api-shell-blueprint.json",
+    "version": 1
+  },
+  "app.action:scenario-service:start-subscenario": {
+    "module": "scenario-service:StartSubscenario",
+    "sample_mapper": {},
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-api-shell-connection-workflow/examples/generic-api-shell-blueprint.json",
+    "version": 2
+  },
+  "app.action:skyvern-ai:runa-task-v1": {
+    "module": "skyvern-ai:RunaTaskV1",
+    "sample_mapper": null,
+    "sample_parameters": null,
+    "source": "https://raw.githubusercontent.com/Skyvern-AI/skyvern/d999952e59ef42b800adbb3c1a6579365ba801dd/integrations/make/contact_form_make.com_blueprint.json",
+    "version": 1
+  },
+  "app.action:slack:create-message": {
+    "module": "slack:CreateMessage",
+    "sample_mapper": {
+      "text": "Active"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/if-else-pattern.json",
+    "version": 4
+  },
+  "app.action:telegram:send-reply-message": {
+    "module": "telegram:SendReplyMessage",
+    "sample_mapper": {
+      "chatId": "{{1.channel_post.chat.id}}",
+      "messageThreadId": "",
+      "parseMode": "",
+      "replyMarkup": "",
+      "replyMarkupAssembleType": "reply_markup_enter",
+      "replyToMessageId": "",
+      "text": "{{2.result}}"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/03-chatgpt-telegram-bot.json",
+    "version": 1
+  },
+  "app.action:twitter:create-atweet": {
+    "module": "twitter:createATweet",
+    "sample_mapper": {
+      "text": "{{6.`1`}}"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/router-pattern.json",
+    "version": 6
+  },
+  "app.action:twitter:create-tweet": {
+    "module": "twitter:createTweet",
+    "sample_mapper": {
+      "display_coordinates": true,
+      "possibly_sensitive": false,
+      "select": "image",
+      "status": "#TEST {{formatDate(2.data.CREATED_TIMESTAMP; \" DD-MM-YYYY HH:mm A\")}} data suggests a vehicle was traveling an average speed of {{14.SU}} MPH ({{11.FIS[].FI[].TMC.QD}}) in a residential area #SpeederBot"
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 1800630
+    },
+    "source": "https://raw.githubusercontent.com/BerkshireCar/SpeederBot/44e11e5d710bd20ebd5f1eaf82c51cda1d21db43/SpeederBot%20-%20Tweet%20Speed%20-%20Quiet%20%26%20Busy%20Roads.json",
+    "version": 5
+  },
+  "app.action:weather:action-get-current-weather": {
+    "module": "weather:ActionGetCurrentWeather",
+    "sample_mapper": {
+      "city": "{{2.city}}",
+      "type": "name"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/ai-agents.md",
+    "version": 1
+  },
+  "app.action:whatsapp-business-cloud:send-message": {
+    "module": "whatsapp-business-cloud:sendMessage",
+    "sample_mapper": {
+      "text": {
+        "body": "Thanks for your message! I'm a basic chatbot! To make my answers more sophisticated, you can use routers, filters or send http requests to your own scenarios with webhooks.",
+        "preview_url": false
+      },
+      "to": "{{1.contacts[].wa_id}}",
+      "type": "text"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/06-whatsapp-basic-chatbot.json",
+    "version": 1
+  },
+  "data.aggregate:builtin:basic-aggregator": {
+    "module": "builtin:BasicAggregator",
+    "sample_mapper": {
+      "i": "{{6.i}}"
+    },
+    "sample_parameters": {
+      "feeder": 3
+    },
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/aggregators.md",
+    "version": 1
+  },
+  "data.aggregate:json:aggregate-to-json": {
+    "module": "json:AggregateToJSON",
+    "sample_mapper": {
+      "date": "{{1.`1`}}",
+      "name": "{{1.`0`}}"
+    },
+    "sample_parameters": {
+      "feeder": 1,
+      "space": "",
+      "type": 33439
+    },
+    "source": "https://raw.githubusercontent.com/leifermendez/bot-google-calendar/8b0c8616defbb5c92624fc16a78e636e985589d5/template/make-template-get-calendar.json",
+    "version": 1
+  },
+  "data.aggregate:util:text-aggregator": {
+    "module": "util:TextAggregator",
+    "sample_mapper": {
+      "value": "{{2.text}}"
+    },
+    "sample_parameters": {
+      "feeder": 2,
+      "rowSeparator": ""
+    },
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/aggregators.md",
+    "version": 1
+  },
+  "data.code:onesaas:codepython": {
+    "module": "onesaas:codepython",
+    "sample_mapper": {
+      "pythonCode": "import json\nfrom datetime import datetime\nimport pytz\nimport phonenumbers\nfrom phonenumbers import timezone as ph_timezone\n\ndef adjust_time_to_caller_timezone(phone_number, input_json):\n    try:\n        # Determine the caller's timezone\n        parsed_number = phonenumbers.parse(phone_number)\n        timezones = ph_timezone.time_zones_for_number(parsed_number)\n        \n        # Default to UTC if no timezone is found\n        if not timezones:\n            caller_timezone = pytz.utc\n        else:\n            caller_timezone = pytz.timezone(timezones[0])  # Use the first timezone as the best fit\n\n        # Ensure the input JSON is parsed correctly\n        data = json.loads(input_json)  # Directly parse the JSON string\n\n        # Format times dynamically\n        formatted_times = []\n        for entry in data:\n            utc_time = datetime.strptime(entry[\"start_time\"], \"%Y-%m-%dT%H:%M:%SZ\").replace(tzinfo=pytz.utc)\n            local_time = utc_time.astimezone(caller_timezone)\n\n            # Format the date and time\n            formatted_time = local_time.strftime(\"%b %d\") + (\n                \"th\" if 4 <= int(local_time.day) <= 20 or 24 <= int(local_time.day) <= 30 else\n                \"st\" if local_time.day in [1, 21, 31] else\n                \"nd\" if local_time.day in [2, 22] else\n                \"rd\"\n            )\n            formatted_time += local_time.strftime(\" %I:%M %p\").lower()  # Format the time\n            formatted_time += f\" {local_time.tzname()}\"  # Add timezone abbreviation\n\n            # Append formatted entry\n            formatted_times.append(formatted_time)\n\n        # Combine all times into a single string\n        return f\"Avaliable times: {', '.join(formatted_times)}\"\n\n    except phonenumbers.NumberParseException as e:\n        return f\"Error parsing phone number: {str(e)}\"\n    except Exception as e:\n        return f\"An unexpected error occurred: {str(e)}\"\n\n# Example Input\nphone_number = \"{{2.message.customer.number}}\"  # Replace with the caller's phone number\ninput_json = \"\"\"{{10.json}}\"\"\"\n\n# Adjust the times and print the result\nresult = adjust_time_to_caller_timezone(phone_number, input_json)\nprint(result)\n\n",
+      "requirements": [
+        "phonenumbers ",
+        "pytz"
+      ]
+    },
+    "sample_parameters": {
+      "__IMTCONN__": 3801663
+    },
+    "source": "https://raw.githubusercontent.com/AlozieAI/VAPI-Calendly-Agent/main/Make-Automation-Blueprints/precall%26serverurl-automation",
+    "version": 2
+  },
+  "data.merge:builtin:basic-merge": {
+    "module": "builtin:BasicMerge",
+    "sample_mapper": null,
+    "sample_parameters": null,
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/branching.md",
+    "version": 1
+  },
+  "data.split:builtin:basic-feeder": {
+    "module": "builtin:BasicFeeder",
+    "sample_mapper": {
+      "array": "{{split(1.`1`; space)}}"
+    },
+    "sample_parameters": null,
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/blueprint-construction.md",
+    "version": 1
+  },
+  "data.split:builtin:basic-repeater": {
+    "module": "builtin:BasicRepeater",
+    "sample_mapper": {
+      "repeats": "10",
+      "start": "1",
+      "step": "1"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/aggregators.md",
+    "version": 1
+  },
+  "data.transform:json:parse-json": {
+    "module": "json:ParseJSON",
+    "sample_mapper": {
+      "json": "{{1.value}}"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/full-blueprint.json",
+    "version": 1
+  },
+  "data.transform:json:transform-to-json": {
+    "module": "json:TransformToJSON",
+    "sample_mapper": {
+      "object": "{{5.body.collection}}"
+    },
+    "sample_parameters": {
+      "space": ""
+    },
+    "source": "https://raw.githubusercontent.com/AlozieAI/VAPI-Calendly-Agent/main/Make-Automation-Blueprints/precall%26serverurl-automation",
+    "version": 1
+  },
+  "data.transform:markdown:compile": {
+    "module": "markdown:Compile",
+    "sample_mapper": {
+      "data": "{{3.result}}",
+      "gfm": true,
+      "sanitize": false
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/buildfastwithai/gen-ai-experiments/680c466a542389c77ea20bbd3eec35fb8a987eec/cookbooks/workshops/scrape-latest-jobs-with-ai-using-make-com/2.%20Get%20Results%20from%20Indeed%20Bulk%20Job%20Scraper%20%26%20Customize%20Resume.blueprint.json",
+    "version": 2
+  },
+  "data.transform:util:function-increment": {
+    "module": "util:FunctionIncrement",
+    "sample_mapper": {},
+    "sample_parameters": {
+      "reset": "scenario"
+    },
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/aggregators.md",
+    "version": 1
+  },
+  "data.transform:util:get-variable2": {
+    "module": "util:GetVariable2",
+    "sample_mapper": {
+      "name": "x"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/branching.md",
+    "version": 1
+  },
+  "data.transform:util:set-variable2": {
+    "module": "util:SetVariable2",
+    "sample_mapper": {
+      "name": "array",
+      "scope": "roundtrip",
+      "value": "{{8.array}}"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/aggregators.md",
+    "version": 1
+  },
+  "data.transform:util:set-variables": {
+    "module": "util:SetVariables",
+    "sample_mapper": {
+      "scope": "roundtrip",
+      "variables": [
+        {
+          "name": "sentence",
+          "value": "{{4.text}}"
+        }
+      ]
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/aggregators.md",
+    "version": 1
+  },
+  "data.transform:util:switcher": {
+    "module": "util:Switcher",
+    "sample_mapper": {
+      "casesTable": [
+        {
+          "output": "continue",
+          "pattern": "complete"
+        }
+      ],
+      "elseOutput": "stop",
+      "input": "{{1.event}}",
+      "useRegExpMatch": false
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/Meeting-Baas/meeting-bot-as-a-service/8ccf32b82b0e501d050a4f1e305106f556e04937/integrations-using-third-party-software/make-to-airtable-llm-brief/Workflows/Integration%20Webhook.json",
+    "version": 1
+  },
+  "flow.branch:builtin:basic-router": {
+    "module": "builtin:BasicRouter",
+    "sample_mapper": null,
+    "sample_parameters": null,
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/08-summarize-website-and-create-social-posts.json",
+    "version": 1
+  },
+  "flow.noop:builtin:ignore": {
+    "module": "builtin:Ignore",
+    "sample_mapper": null,
+    "sample_parameters": null,
+    "source": "https://raw.githubusercontent.com/EricTechPro/Ai-Agent-templates/a73de119f9224410ca3c0a9c03889193ff9fbea8/Make-Daily-Job-Collector.json",
+    "version": 1
+  },
+  "flow.switch:builtin:basic-if-else": {
+    "module": "builtin:BasicIfElse",
+    "sample_mapper": null,
+    "sample_parameters": null,
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/branching.md",
+    "version": 1
+  },
+  "flow.wait:util:function-sleep": {
+    "module": "util:FunctionSleep",
+    "sample_mapper": {
+      "duration": "30"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/EricTechPro/Ai-Agent-templates/a73de119f9224410ca3c0a9c03889193ff9fbea8/Make-Daily-Job-Collector.json",
+    "version": 1
+  },
+  "net.http:http:action-get-file": {
+    "module": "http:ActionGetFile",
+    "sample_mapper": {
+      "method": "get",
+      "serializeUrl": false,
+      "shareCookies": false,
+      "url": "{{7.data.assets.video}}"
+    },
+    "sample_parameters": {
+      "handleErrors": false
+    },
+    "source": "https://raw.githubusercontent.com/felores/make-blueprints/main/blueprints/Dream-Machine_img2vid_Connector_NOTACODER_blueprint.json",
+    "version": 3
+  },
+  "net.http:http:action-send-data": {
+    "module": "http:ActionSendData",
+    "sample_mapper": {
+      "authPass": "",
+      "authUser": "",
+      "bodyType": "raw",
+      "ca": "",
+      "contentType": "application/json",
+      "data": "{\n  \"date_time\": \"{{1.message.toolCalls[].function.arguments.`meetingDate&Time`}}\",\n  \"first_name\": \"{{1.message.toolCalls[].function.arguments.firstname}}\",\n  \"last_name\": \"{{1.message.toolCalls[].function.arguments.lastname}}\",\n  \"email\": \"{{1.message.toolCalls[].function.arguments.email}}\",\n  \"text\": \"{{1.message.toolCalls[].function.arguments.`_reason for booking the meeting`}}\"\n}",
+      "followAllRedirects": false,
+      "followRedirect": true,
+      "gzip": true,
+      "headers": [],
+      "method": "post",
+      "parseResponse": false,
+      "qs": [],
+      "rejectUnauthorized": true,
+      "serializeUrl": false,
+      "shareCookies": false,
+      "timeout": "",
+      "url": "https://b5f47499-3f3c-498e-893f-ab0b20daa529-00-uk08wqsi0qvd.spock.replit.dev/schedule",
+      "useMtls": false,
+      "useQuerystring": false
+    },
+    "sample_parameters": {
+      "handleErrors": true,
+      "useNewZLibDeCompress": true
+    },
+    "source": "https://raw.githubusercontent.com/AlozieAI/VAPI-Calendly-Agent/main/Make-Automation-Blueprints/bookmeeting-automation",
+    "version": 3
+  },
+  "net.http:http:action-send-data-apikey-auth": {
+    "module": "http:ActionSendDataAPIKeyAuth",
+    "sample_mapper": {
+      "bodyType": "raw",
+      "ca": "",
+      "contentType": "application/json",
+      "data": "{\n  \"model\": \"openrouter/cinematika-7b:free\",  \n  \"messages\": [\n    {\"role\": \"user\", \"content\": \"Given a detailed transcript of a meeting, generate a concise summary that captures the key points, decisions made, and action items, formatted in Markdown for better readability and organization. Do NOT include any other information other than the summary in markdown.\"},\n    {\"role\": \"user\", \"content\": \"{{replace(42.json; \"\"\"\"; \"'\")}}\"}  \n  ]\n}",
+      "followAllRedirects": false,
+      "followRedirect": true,
+      "gzip": true,
+      "headers": [],
+      "method": "post",
+      "parseResponse": true,
+      "qs": [],
+      "rejectUnauthorized": true,
+      "serializeUrl": false,
+      "shareCookies": false,
+      "timeout": "",
+      "url": "https://openrouter.ai/api/v1/chat/completions",
+      "useMtls": false,
+      "useQuerystring": false
+    },
+    "sample_parameters": {
+      "auth": 14964,
+      "handleErrors": false
+    },
+    "source": "https://raw.githubusercontent.com/Meeting-Baas/meeting-bot-as-a-service/8ccf32b82b0e501d050a4f1e305106f556e04937/integrations-using-third-party-software/make-to-airtable-llm-brief/Workflows/Integration%20Webhook.json",
+    "version": 3
+  },
+  "net.http:http:make-request": {
+    "module": "http:MakeRequest",
+    "sample_mapper": {
+      "allowRedirects": true,
+      "contentType": "{{if(length(2.body) > 0; \"json\")}}",
+      "headers": "{{2.headers}}",
+      "inputMethod": "jsonString",
+      "jsonStringBodyContent": "{{2.body}}",
+      "method": "{{lower(2.method)}}",
+      "parseResponse": false,
+      "queryParameters": "{{2.qs}}",
+      "requestCompressedContent": true,
+      "shareCookies": false,
+      "stopOnHttpError": false,
+      "url": "{{2.url}}"
+    },
+    "sample_parameters": {
+      "authenticationType": "noAuth",
+      "proxyKeychain": "",
+      "tlsType": ""
+    },
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-api-shell-connection-workflow/examples/http-fallback-shell-blueprint.json",
+    "version": 4
+  },
+  "net.respond:gateway:webhook-respond": {
+    "module": "gateway:WebhookRespond",
+    "sample_mapper": {
+      "body": "{{2.response}}",
+      "headers": [],
+      "status": "200"
+    },
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/examples/ai-agent-full-blueprint.json",
+    "version": 1
+  },
+  "trigger.app:airtable:webhook": {
+    "module": "airtable:webhook",
+    "sample_mapper": {},
+    "sample_parameters": {
+      "__IMTHOOK__": 509694
+    },
+    "source": "https://raw.githubusercontent.com/Meeting-Baas/meeting-bot-as-a-service/8ccf32b82b0e501d050a4f1e305106f556e04937/integrations-using-third-party-software/make-to-airtable-llm-brief/Workflows/Integration%20Airtable.json",
+    "version": 3
+  },
+  "trigger.app:apify:finished-actor-runs": {
+    "module": "apify:finishedActorRuns",
+    "sample_mapper": {},
+    "sample_parameters": {
+      "__IMTHOOK__": 1366126
+    },
+    "source": "https://raw.githubusercontent.com/buildfastwithai/gen-ai-experiments/680c466a542389c77ea20bbd3eec35fb8a987eec/cookbooks/workshops/scrape-latest-jobs-with-ai-using-make-com/2.%20Get%20Results%20from%20Indeed%20Bulk%20Job%20Scraper%20%26%20Customize%20Resume.blueprint.json",
+    "version": 1
+  },
+  "trigger.app:asana:watch-new-tasks": {
+    "module": "asana:WatchNewTasks",
+    "sample_mapper": {},
+    "sample_parameters": {
+      "__IMTCONN__": 32411,
+      "completed_since": null,
+      "filter": "project",
+      "modified_since": null,
+      "page": 10,
+      "project": "1209044428486087",
+      "workspaceRPC": "954608403209504"
+    },
+    "source": "https://raw.githubusercontent.com/okash1n/make-blueprints/main/blueprint.json",
+    "version": 2
+  },
+  "trigger.app:browse-ai:on-task-finished": {
+    "module": "browse-ai:onTaskFinished",
+    "sample_mapper": {},
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/08-summarize-website-and-create-social-posts.json",
+    "version": 1
+  },
+  "trigger.app:google-sheets:watch-rows": {
+    "module": "google-sheets:watchRows",
+    "sample_mapper": {},
+    "sample_parameters": {
+      "dateTimeRenderOption": "FORMATTED_STRING",
+      "from": "drive",
+      "includesHeaders": true,
+      "limit": 1,
+      "mode": "select",
+      "sheetId": "Sheet1",
+      "spreadsheetId": "",
+      "tableFirstRow": "A1:Z1",
+      "valueRenderOption": "FORMATTED_VALUE"
+    },
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/01-chatgpt-completions-from-google-sheets.json",
+    "version": 2
+  },
+  "trigger.app:notion:watch-database-items": {
+    "module": "notion:watchDatabaseItems",
+    "sample_mapper": {},
+    "sample_parameters": {
+      "select": "update"
+    },
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/10-sync-notion-to-google-calendar.json",
+    "version": 1
+  },
+  "trigger.app:slack:watch-public-channel-messages": {
+    "module": "slack:WatchPublicChannelMessages",
+    "sample_mapper": {},
+    "sample_parameters": {
+      "__IMTCONN__": null,
+      "channel": "",
+      "limit": 10
+    },
+    "source": "https://raw.githubusercontent.com/unipds-engenharia-de-ia-aplicada/engenharia-de-software-com-ia-aplicada/8271e74a19ad840aa860c1044e4c37ccee3103ff/modulo07-ferramentas-de-ia-para-gestao-de-projetos/modulo-09-automacao-de-ecossistema/make-blueprint-m9.json",
+    "version": 3
+  },
+  "trigger.app:util:basic-trigger": {
+    "module": "util:BasicTrigger",
+    "sample_mapper": {},
+    "sample_parameters": {
+      "values": [
+        {
+          "spec": [
+            {
+              "name": "text",
+              "value": "a"
+            }
+          ]
+        },
+        {
+          "spec": [
+            {
+              "name": "text",
+              "value": "b"
+            }
+          ]
+        },
+        {
+          "spec": [
+            {
+              "name": "text",
+              "value": "c"
+            }
+          ]
+        }
+      ]
+    },
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/aggregators.md",
+    "version": 1
+  },
+  "trigger.chat:telegram:watch-updates": {
+    "module": "telegram:WatchUpdates",
+    "sample_mapper": {},
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/03-chatgpt-telegram-bot.json",
+    "version": 1
+  },
+  "trigger.chat:whatsapp-business-cloud:watch-events": {
+    "module": "whatsapp-business-cloud:watchEvents",
+    "sample_mapper": {},
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/06-whatsapp-basic-chatbot.json",
+    "version": 1
+  },
+  "trigger.email:email:trigger-new-email": {
+    "module": "email:TriggerNewEmail",
+    "sample_mapper": {},
+    "sample_parameters": {
+      "folder": "INBOX",
+      "from": "",
+      "markSeen": false,
+      "subject": "",
+      "text": "",
+      "to": ""
+    },
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/07-incoming-emails-to-google-sheets.json",
+    "version": 7
+  },
+  "trigger.email:google-email:trigger-new-email": {
+    "module": "google-email:TriggerNewEmail",
+    "sample_mapper": {},
+    "sample_parameters": {
+      "from": null,
+      "markSeen": false,
+      "maxResults": 2,
+      "searchType": "simple",
+      "subject": "",
+      "text": ""
+    },
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/09-save-gmail-attachments-to-drive.json",
+    "version": 2
+  },
+  "trigger.form:facebook-lead-ads:new-lead-multiple": {
+    "module": "facebook-lead-ads:NewLeadMultiple",
+    "sample_mapper": {},
+    "sample_parameters": {},
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/05-facebook-leads-to-google-sheets.json",
+    "version": 2
+  },
+  "trigger.webhook:gateway:custom-web-hook": {
+    "module": "gateway:CustomWebHook",
+    "sample_mapper": {},
+    "sample_parameters": {
+      "hook": 12421,
+      "maxResults": 1
+    },
+    "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/examples/ai-agent-full-blueprint.json",
+    "version": 1
+  }
+}

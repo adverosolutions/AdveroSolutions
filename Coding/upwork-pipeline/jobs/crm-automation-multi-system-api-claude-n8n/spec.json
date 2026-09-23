@@ -1,0 +1,484 @@
+{
+  "title": "Your CRM Sync and AI Automation Hub",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 - CATCH THE CRM EVENT, PARK BAD DATA",
+      "color": 0,
+      "note": "HubSpot is shown as the example CRM, any CRM swaps in at the first node and the write-back. Every event is mapped into one standard record, and anything missing or malformed waits in a review table with the exact field named."
+    },
+    {
+      "key": "once",
+      "label": "2 - RUN EACH EVENT ONCE, ANSWER THE CRM FAST",
+      "color": 0,
+      "note": "CRMs resend webhooks, so every event id is claimed once in a ledger and a repeat stops cold. The CRM gets its answer in milliseconds while the real work carries on behind it."
+    },
+    {
+      "key": "sync",
+      "label": "3 - CLAUDE SHAPES IT, EVERY SYSTEM GETS ITS COPY",
+      "color": 0,
+      "note": "Claude cleans the names, maps the plan to invoice terms and writes the team summary, into a fixed schema. Ids and amounts come straight from the CRM, never from the model. A throttled call backs off and tries again."
+    },
+    {
+      "key": "close",
+      "label": "4 - WRITE IT BACK TO THE CRM, CLOSE THE LOOP",
+      "color": 0,
+      "note": "The rep sees the invoice number, ops record and sync time on the deal itself. The ledger row holds every id that was created, so any sync can be traced in one lookup."
+    },
+    {
+      "key": "errors",
+      "label": "5 - NOTHING FAILS QUIETLY",
+      "color": 0,
+      "note": "One error trigger covers every step. The event is marked failed with its payload kept, and the team gets the deal, the step that broke and a link to the run, ready to replay."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 - HubSpot or Your CRM: Deal Moved to Closed Won",
+      "section": "intake",
+      "notes": "HubSpot here as the example. Salesforce, Pipedrive, Zoho or GoHighLevel plug into this same spot.",
+      "params": {
+        "path": "crm-deal-events",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "key": "normalize",
+      "kind": "data.code",
+      "label": "2 - Normalize and Validate Into One Standard Record",
+      "section": "intake",
+      "notes": "CRM field names are mapped once, here. Required fields, email format, amount and currency are checked before anything moves.",
+      "params": {
+        "jsCode": "// 2 - Normalize and Validate Into One Standard Record\n// CRM field names are mapped here, once. Swapping CRMs means editing this map and the write-back.\nconst REQUIRED = ['event_id', 'deal.deal_id', 'deal.amount', 'deal.currency', 'company.name', 'contact.email'];\nconst get = (o, path) => path.split('.').reduce((v, k) => (v == null ? v : v[k]), o);\nconst blank = (v) => v === undefined || v === null || v === '';\n\nreturn $input.all().map(({ json: e }) => {\n  const record = {\n    crm: e.crm || 'hubspot',\n    event_id: String(e.event_id || ''),\n    stage: e.property_value,\n    occurred_at: e.occurred_at,\n    deal: { ...e.deal, amount: Number(e.deal?.amount) },\n    company: { ...e.company, name: (e.company?.name || '').trim() },\n    contact: { ...e.contact, email: (e.contact?.email || '').trim().toLowerCase() },\n  };\n  const failed = REQUIRED.filter((p) => blank(get(record, p)));\n  if (!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(record.contact.email)) failed.push('contact.email format');\n  if (!(record.deal.amount > 0)) failed.push('deal.amount must be above 0');\n  if (!/^[A-Z]{3}$/.test(record.deal.currency || '')) failed.push('deal.currency must be a 3 letter code');\n  return {\n    json: {\n      ...record,\n      validation: { passed: failed.length === 0, failed_fields: [...new Set(failed)], checked_at: new Date().toISOString() },\n    },\n  };\n});"
+      }
+    },
+    {
+      "key": "valid",
+      "kind": "flow.branch",
+      "label": "3 - Record Passes Validation?",
+      "section": "intake",
+      "params": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b3c1f0a2-5d7e-4c19-9a6b-2e8f41d7c301",
+              "leftValue": "={{ $json.validation.passed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "key": "park",
+      "kind": "app.action",
+      "app": "airtable",
+      "op": "create",
+      "label": "3b - Park It in Needs Review With the Failing Field",
+      "section": "intake",
+      "notes": "Bad data never reaches QuickBooks or the ops base. Someone fixes the field and replays it."
+    },
+    {
+      "key": "claim",
+      "kind": "app.action",
+      "app": "postgres",
+      "op": "insert",
+      "label": "4 - Sync Ledger: Claim This Event Id Once",
+      "section": "once",
+      "notes": "Unique key on the event id. A resent webhook inserts nothing, and the raw payload is kept for replay.",
+      "params": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO sync_ledger (event_id, crm, deal_id, execution_id, payload, status, claimed_at)\nVALUES ($1, $2, $3, $4, $5::jsonb, 'claimed', now())\nON CONFLICT (event_id) DO NOTHING\nRETURNING event_id, deal_id, true AS claimed;",
+        "options": {
+          "queryReplacement": "={{ [$json.event_id, $json.crm, $json.deal.deal_id, $execution.id, JSON.stringify($json)] }}"
+        }
+      }
+    },
+    {
+      "key": "fresh",
+      "kind": "data.filter",
+      "label": "5 - Only New Events Continue",
+      "section": "once",
+      "notes": "A repeat delivery stops here, so no invoice or ops record is ever created twice.",
+      "params": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c7a4e912-8b3f-4d05-b1e6-9f02d5a8e417",
+              "leftValue": "={{ $json.claimed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "key": "ack",
+      "kind": "net.respond",
+      "label": "6 - Acknowledge the CRM Right Away",
+      "section": "once",
+      "notes": "Answer first, work after. A slow answer is what makes a CRM resend.",
+      "params": {
+        "respondWith": "json",
+        "responseBody": "={\"received\": true, \"event_id\": \"{{ $json.event_id }}\"}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "7 - Claude Maps and Enriches the Record",
+      "section": "sync",
+      "notes": "Judgment work only: clean names, read the plan terms, write the summary. Ids, emails and amounts pass straight through.",
+      "params": {
+        "promptType": "define",
+        "text": "=A deal just closed in the CRM. Map it for the ops base, the invoice and the team channel.\n\nRecord:\n{{ JSON.stringify($('2 - Normalize and Validate Into One Standard Record').item.json) }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You turn one closed-won CRM deal into what each connected system needs. Clean the company name for display, read the plan text into a QuickBooks item and billing schedule, and write a two sentence summary for the team. Never invent or change an id, email or amount. If something needed is missing or unclear, set needs_review to true and name the field."
+        }
+      }
+    },
+    {
+      "key": "claude",
+      "kind": "ai.model",
+      "app": "anthropic",
+      "label": "Claude",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "schema",
+      "kind": "ai.parser",
+      "label": "Target Schema: Ops Record, Invoice Terms, Team Summary",
+      "parent": "agent",
+      "port": "ai_outputParser",
+      "params": {
+        "jsonSchemaExample": "{\n  \"company_display_name\": \"Kestrel Ridge Dental Group\",\n  \"quickbooks_item\": \"Growth Plan - Quarterly\",\n  \"billing_schedule\": \"quarterly\",\n  \"installments\": 4,\n  \"onboarding_owner\": \"Jordan Alvarez, Practice Manager\",\n  \"team_summary\": \"Kestrel Ridge Dental Group closed on the Growth plan, annual, billed quarterly. Onboarding contact is Jordan Alvarez, practice manager.\",\n  \"needs_review\": false,\n  \"review_reason\": \"\"\n}"
+      }
+    },
+    {
+      "key": "ops",
+      "kind": "app.action",
+      "app": "airtable",
+      "op": "create",
+      "label": "8 - Airtable: Create the Ops Project Record",
+      "section": "sync"
+    },
+    {
+      "key": "invoice",
+      "kind": "app.action",
+      "app": "quickbooks",
+      "op": "create",
+      "label": "9 - QuickBooks: Create the First Invoice",
+      "section": "sync",
+      "notes": "Line amount is the deal amount from the CRM divided by the installments. The model never sets a price."
+    },
+    {
+      "key": "accepted",
+      "kind": "flow.branch",
+      "label": "10 - QuickBooks Accepted It?",
+      "section": "sync",
+      "params": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e1d8b5c3-2a6f-4e7b-8c90-4f3a17b6d2e8",
+              "leftValue": "={{ $json.Id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "key": "backoff",
+      "kind": "flow.wait",
+      "label": "10b - Back Off 30 Seconds, Then Retry",
+      "section": "sync",
+      "notes": "Rate limits and token refreshes are usually temporary, so it waits and tries again. Past the retry cap, the error path takes over."
+    },
+    {
+      "key": "team",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "post",
+      "label": "11 - Slack: Tell the Team the Deal Is Live",
+      "section": "sync",
+      "params": {
+        "text": "={{ $('7 - Claude Maps and Enriches the Record').item.json.output.team_summary }}"
+      }
+    },
+    {
+      "key": "writeback",
+      "kind": "net.http",
+      "label": "12 - HubSpot or Your CRM: Write Ids and Sync Status to the Deal",
+      "section": "close",
+      "notes": "Only the sync fields are written, so the write-back can never retrigger this workflow.",
+      "params": {
+        "method": "PATCH",
+        "url": "=https://api.hubapi.com/crm/v3/objects/deals/{{ $('2 - Normalize and Validate Into One Standard Record').item.json.deal.deal_id }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"properties\": {\n    \"quickbooks_invoice_id\": \"{{ $('9 - QuickBooks: Create the First Invoice').item.json.Id }}\",\n    \"ops_record_id\": \"{{ $('8 - Airtable: Create the Ops Project Record').item.json.id }}\",\n    \"sync_status\": \"synced\",\n    \"last_synced_at\": \"{{ $now.toISO() }}\"\n  }\n}"
+      }
+    },
+    {
+      "key": "done",
+      "kind": "app.action",
+      "app": "postgres",
+      "op": "insert",
+      "label": "13 - Sync Ledger: Mark Done With Every Id",
+      "section": "close",
+      "params": {
+        "operation": "executeQuery",
+        "query": "UPDATE sync_ledger\nSET status = 'synced', airtable_record_id = $2, quickbooks_invoice_id = $3, synced_at = now()\nWHERE event_id = $1\nRETURNING *;",
+        "options": {
+          "queryReplacement": "={{ [$('2 - Normalize and Validate Into One Standard Record').item.json.event_id, $('8 - Airtable: Create the Ops Project Record').item.json.id, $('9 - QuickBooks: Create the First Invoice').item.json.Id] }}"
+        }
+      }
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "app": "n8n",
+      "op": "error_trigger",
+      "label": "14 - Any Node Fails, Anywhere",
+      "section": "errors"
+    },
+    {
+      "key": "failed",
+      "kind": "app.action",
+      "app": "postgres",
+      "op": "insert",
+      "label": "15 - Sync Ledger: Mark Failed, Ready to Replay",
+      "section": "errors",
+      "params": {
+        "operation": "executeQuery",
+        "query": "UPDATE sync_ledger\nSET status = 'failed', failed_step = $2, error = $3, failed_at = now()\nWHERE execution_id = $1\nRETURNING event_id, deal_id, failed_step, error;",
+        "options": {
+          "queryReplacement": "={{ [$json.execution.id, $json.execution.lastNodeExecuted, $json.execution.error.message] }}"
+        }
+      }
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "post",
+      "label": "16 - Alert With the Deal, the Failed Step and a Run Link",
+      "section": "errors",
+      "params": {
+        "text": "=Sync failed for deal {{ $json.deal_id }} at {{ $json.failed_step }}: {{ $json.error }}. Run: {{ $('14 - Any Node Fails, Anywhere').item.json.execution.url }}"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "normalize"
+    },
+    {
+      "from": "normalize",
+      "to": "valid"
+    },
+    {
+      "from": "valid",
+      "to": "claim",
+      "branch": "true"
+    },
+    {
+      "from": "valid",
+      "to": "park",
+      "branch": "false"
+    },
+    {
+      "from": "claim",
+      "to": "fresh"
+    },
+    {
+      "from": "fresh",
+      "to": "ack"
+    },
+    {
+      "from": "ack",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "ops"
+    },
+    {
+      "from": "ops",
+      "to": "invoice"
+    },
+    {
+      "from": "invoice",
+      "to": "accepted"
+    },
+    {
+      "from": "accepted",
+      "to": "team",
+      "branch": "true"
+    },
+    {
+      "from": "accepted",
+      "to": "backoff",
+      "branch": "false"
+    },
+    {
+      "from": "backoff",
+      "to": "invoice",
+      "loop": true
+    },
+    {
+      "from": "team",
+      "to": "writeback"
+    },
+    {
+      "from": "writeback",
+      "to": "done"
+    },
+    {
+      "from": "err",
+      "to": "failed"
+    },
+    {
+      "from": "failed",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "crm": "hubspot",
+    "portal_id": 44871203,
+    "event_id": "3927144812",
+    "subscription_type": "deal.propertyChange",
+    "property_name": "dealstage",
+    "property_value": "closedwon",
+    "occurred_at": "2026-09-22T16:41:07Z",
+    "deal": {
+      "deal_id": "18204417763",
+      "deal_name": "Kestrel Ridge Dental - Growth Annual",
+      "amount": "14400.00",
+      "currency": "USD",
+      "pipeline": "default",
+      "close_date": "2026-09-22",
+      "deal_owner": "Maya Chen",
+      "plan_notes": "Growth plan, annual, billed quarterly, kickoff first week of October"
+    },
+    "company": {
+      "company_id": "9921045531",
+      "name": "kestrel ridge dental grp llc",
+      "domain": "kestrelridgedental.com",
+      "city": "Sacramento",
+      "state": "CA"
+    },
+    "contact": {
+      "contact_id": "70114",
+      "first_name": "Jordan",
+      "last_name": "Alvarez",
+      "email": "jordan.alvarez@kestrelridgedental.com",
+      "phone": "(916) 555-0142",
+      "job_title": "Practice Manager"
+    }
+  },
+  "output_sample": {
+    "event_id": "3927144812",
+    "crm": "hubspot",
+    "deal_id": "18204417763",
+    "status": "synced",
+    "validation": {
+      "passed": true,
+      "fields_checked": 11,
+      "fields_failed": 0,
+      "amount_normalized": "14400.00 string to 14400 number, USD"
+    },
+    "duplicate_event": false,
+    "crm_acknowledged_in_ms": 212,
+    "claude": {
+      "company_display_name": "kestrel ridge dental grp llc to Kestrel Ridge Dental Group",
+      "quickbooks_item": "Growth Plan - Quarterly",
+      "billing_schedule": "quarterly, 4 installments",
+      "needs_review": false,
+      "team_summary": "Kestrel Ridge Dental Group closed on the Growth plan, annual, billed quarterly. Onboarding contact is Jordan Alvarez, practice manager."
+    },
+    "systems": {
+      "airtable": {
+        "record_id": "recN4tQ8vLm2XwP1a",
+        "table": "Onboarding Projects",
+        "status": "Kickoff to schedule"
+      },
+      "quickbooks": {
+        "customer_id": "214",
+        "invoice_id": "1873",
+        "invoice_number": "INV-1873",
+        "line_amount": "3600.00, from the CRM amount 14400.00 over 4 installments",
+        "attempts": 2,
+        "attempt_1": "429 throttled, backed off 30s",
+        "attempt_2": "200 OK"
+      },
+      "slack": {
+        "channel": "#closed-won",
+        "ts": "1790095307.218459"
+      },
+      "hubspot_writeback": {
+        "properties_updated": [
+          "quickbooks_invoice_id",
+          "ops_record_id",
+          "sync_status",
+          "last_synced_at"
+        ],
+        "sync_status": "synced"
+      }
+    },
+    "synced_at": "2026-09-22T16:41:48Z",
+    "total_run_ms": 40826,
+    "if_validation_had_failed": "record parked in Airtable Needs Review with contact.email named as the failing field, nothing sent to QuickBooks",
+    "if_it_had_failed": "error trigger marks event 3927144812 failed in the sync ledger with the payload kept, slack alert names the deal, the failed step and links the run, one click replay once fixed"
+  }
+}

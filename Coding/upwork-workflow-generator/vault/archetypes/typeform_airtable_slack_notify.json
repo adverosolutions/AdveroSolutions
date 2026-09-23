@@ -1,0 +1,173 @@
+{
+  "title": "Typeform → Airtable Row → Slack Notification",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · INTAKE",
+      "color": 0,
+      "note": "Typeform's native trigger fires the instant a response is submitted — no polling, no delay. Fields are mapped once here, so if you ever add a question you change one node and nothing downstream breaks."
+    },
+    {
+      "key": "guard",
+      "label": "2 · GUARD",
+      "color": 0,
+      "note": "Two cheap checks that stop the two things that actually go wrong in production: a resubmitted form creating a duplicate row, and a blank or malformed response silently landing in the base."
+    },
+    {
+      "key": "record",
+      "label": "3 · RECORD",
+      "color": 0,
+      "note": "The Airtable row is the source of truth and is written before anything is announced, so Slack never notifies about a record that failed to save."
+    },
+    {
+      "key": "notify",
+      "label": "4 · NOTIFY",
+      "color": 0,
+      "note": "A formatted Slack message with the submitter's name and a readable summary, then the Airtable row is stamped so you can see at a glance which submissions were announced."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "trig",
+      "kind": "trigger.app",
+      "label": "New Typeform Response",
+      "app": "typeform",
+      "op": "new_response",
+      "section": "intake"
+    },
+    {
+      "key": "map",
+      "kind": "data.transform",
+      "label": "Map Typeform Answers → Named Fields",
+      "section": "intake",
+      "notes": "Typeform returns answers as a positional array; this turns them into name, email, company, message."
+    },
+    {
+      "key": "dedupe",
+      "kind": "data.filter",
+      "label": "Skip Duplicate Response ID",
+      "section": "guard"
+    },
+    {
+      "key": "valid",
+      "kind": "flow.branch",
+      "label": "Name + Email Present?",
+      "section": "guard"
+    },
+    {
+      "key": "flag",
+      "kind": "app.action",
+      "label": "Flag Incomplete Submission → #ops",
+      "app": "slack",
+      "op": "send_message",
+      "section": "guard"
+    },
+    {
+      "key": "airtable",
+      "kind": "app.action",
+      "label": "Create Row in Submissions Base",
+      "app": "airtable",
+      "op": "create_record",
+      "section": "record"
+    },
+    {
+      "key": "summary",
+      "kind": "data.transform",
+      "label": "Build Slack Summary Block",
+      "section": "notify",
+      "notes": "Truncates long answers and keeps the message readable on mobile."
+    },
+    {
+      "key": "slack",
+      "kind": "app.action",
+      "label": "Post to #new-submissions",
+      "app": "slack",
+      "op": "send_message",
+      "section": "notify"
+    },
+    {
+      "key": "stamp",
+      "kind": "app.action",
+      "label": "Stamp Row: Notified ✓",
+      "app": "airtable",
+      "op": "update_record",
+      "section": "notify"
+    }
+  ],
+  "edges": [
+    {
+      "from": "trig",
+      "to": "map"
+    },
+    {
+      "from": "map",
+      "to": "dedupe"
+    },
+    {
+      "from": "dedupe",
+      "to": "valid"
+    },
+    {
+      "from": "valid",
+      "to": "airtable",
+      "branch": "true"
+    },
+    {
+      "from": "valid",
+      "to": "flag",
+      "branch": "false"
+    },
+    {
+      "from": "airtable",
+      "to": "summary"
+    },
+    {
+      "from": "summary",
+      "to": "slack"
+    },
+    {
+      "from": "slack",
+      "to": "stamp"
+    }
+  ],
+  "input_sample": {
+    "event_id": "01HQ7X4ZK2P9WYA3",
+    "form_response": {
+      "form_id": "kX9mQ2Lp",
+      "submitted_at": "2026-08-10T16:41:07Z",
+      "answers": {
+        "name": "Priya Raghunathan",
+        "email": "priya@lumenlabs.io",
+        "company": "Lumen Labs",
+        "budget": "$2,000 - $5,000",
+        "message": "We run three Typeforms for different service lines and everything is being copied into Airtable by hand every morning. Looking to stop that."
+      }
+    }
+  },
+  "output_sample": {
+    "airtable": {
+      "record_id": "recQ4vZ8nT1kLpYb",
+      "table": "Submissions",
+      "created_at": "2026-08-10T16:41:09Z",
+      "fields": {
+        "Name": "Priya Raghunathan",
+        "Email": "priya@lumenlabs.io",
+        "Company": "Lumen Labs",
+        "Budget": "$2,000 - $5,000",
+        "Status": "New",
+        "Notified": true
+      }
+    },
+    "slack": {
+      "channel": "#new-submissions",
+      "ts": "1786120869.004200",
+      "text": "New Typeform submission — Priya Raghunathan (Lumen Labs) · Budget $2,000–$5,000 · \"Three Typeforms copied into Airtable by hand every morning…\""
+    },
+    "duplicate_skipped": false,
+    "elapsed_ms": 2140
+  },
+  "archetype": "typeform_airtable_slack_notify",
+  "learned": true,
+  "learned_at": "2026-08-10"
+}

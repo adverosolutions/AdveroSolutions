@@ -1,0 +1,629 @@
+{
+  "name": "n8n Hardening: Validate, Retry, Fallback, Log, Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - VALIDATE BEFORE ANYTHING ELSE RUNS\n\nA bad record is rejected here with the exact field that is wrong, instead of blowing up three API calls later.",
+        "height": 720,
+        "width": 940,
+        "color": 5
+      },
+      "id": "1a107a7c-4524-5045-a599-3e8ed4fffc7a",
+      "name": "Section - 1 - VALIDATE BEFORE ANYTHING ELSE RUNS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - CALL SYSTEM A, RETRY ON FAILURE\n\nA failed call waits and tries again rather than killing the run. The retry count is a setting, not a guess.",
+        "height": 720,
+        "width": 940,
+        "color": 4
+      },
+      "id": "302408e8-c6c6-5975-874b-cd91a9de4863",
+      "name": "Section - 2 - CALL SYSTEM A, RETRY ON FAILURE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - FALLBACK WHEN IT KEEPS FAILING\n\nOnce retries are used up the record is queued for manual retry. Nothing is ever dropped on the floor.",
+        "height": 720,
+        "width": 220,
+        "color": 6
+      },
+      "id": "b4603ee4-ddcf-54f9-995a-c345818776e9",
+      "name": "Section - 3 - FALLBACK WHEN IT KEEPS FAILING",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2140,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - MAP THE FIELDS AND WRITE TO SYSTEM B\n\nOne place where field names are translated between the two systems, so a change is a one line edit.",
+        "height": 720,
+        "width": 460,
+        "color": 7
+      },
+      "id": "0728fec1-6bf0-5bc5-9d4e-4ef68fba6bb7",
+      "name": "Section - 4 - MAP THE FIELDS AND WRITE TO SYSTEM B",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2520,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - LOG EVERY RUN, ALERT ON ANY FAILURE\n\nEvery run leaves a row you can read. Anything that still breaks pings you with a link to the run.",
+        "height": 720,
+        "width": 940,
+        "color": 1
+      },
+      "id": "e0183fc3-e4cd-5bf8-b5e1-ceb63faa61a9",
+      "name": "Section - 5 - LOG EVERY RUN, ALERT ON ANY FAILURE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3140,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "c2ad8b15-5f62-5cc2-b9d3-277cdd857d49",
+      "name": "1 - Incoming Record",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        80
+      ],
+      "webhookId": "c4d205e3-c590-5f09-a4e5-4a7d5bb98d1f"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// 2 - Validate Schema and Required Fields\nreturn items.map(item => ({\n  json: {\n    event: item.json.event,\n    source: item.json.source,\n    received_at: item.json.received_at,\n    record: item.json.record,\n    processed_at: new Date().toISOString(),\n  },\n}));"
+      },
+      "id": "180c326d-222e-5d29-99ea-0da0ae225030",
+      "name": "2 - Validate Schema and Required Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "aace7118-a360-5e60-a99f-f6bed24ac713",
+              "leftValue": "={{ $json.record }}",
+              "rightValue": 3.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3ade1fa8-2b55-5125-b6e6-7522c3c5254d",
+      "name": "3 - Is the Record Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        480,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "2c77f898-cf7f-548a-a3c1-dec9c02d805e",
+      "name": "4 - Reject With Field Errors",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/5-system-a-fetch-related-record",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "dc24e314-56f5-57ca-bdc8-44756c3ce88f",
+      "name": "5 - System A: Fetch Related Record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1100,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8c379fd4-a6c9-5bf1-9f11-4af22a46592a",
+              "leftValue": "={{ $json.call_succeed }}",
+              "rightValue": 6.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d7fc0391-274d-5030-8754-696153273dfa",
+      "name": "6 - Did the Call Succeed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1340,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "743ca89c-262b-5591-baff-b456d4eb1a6c",
+              "leftValue": "={{ $json.retries_used }}",
+              "rightValue": 7.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "08625768-0a1c-5c5a-ba86-9953960e0e0e",
+      "name": "7 - Are the Retries Used Up?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1580,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 30,
+        "unit": "seconds"
+      },
+      "id": "0ed4610a-a943-5403-93e7-ada7e35845b5",
+      "name": "8 - Back Off 30 Seconds",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/9-fallback-queue-for-manual-retry",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "ff664f7d-9731-5401-b78d-e653870bcd34",
+      "name": "9 - Fallback: Queue for Manual Retry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2200,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b9d2f55e-ca93-5ed0-8762-d5b5e16cc0d0",
+              "name": "event",
+              "value": "={{ $json.event }}",
+              "type": "string"
+            },
+            {
+              "id": "d405aa0c-6d2f-54d2-a771-a090d436d33d",
+              "name": "source",
+              "value": "={{ $json.source }}",
+              "type": "string"
+            },
+            {
+              "id": "ae3980db-1a4f-5e97-b736-8d6c3750a763",
+              "name": "received_at",
+              "value": "={{ $json.received_at }}",
+              "type": "string"
+            },
+            {
+              "id": "a24beb11-a21b-57bd-8524-47c1859cf11f",
+              "name": "record",
+              "value": "={{ $json.record }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "ba5f97b8-e7d5-54f9-b833-1826426406e3",
+      "name": "10 - Map Fields Between Systems",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2580,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/11-system-b-create-or-update-record",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "b0e42e94-b3cb-5e13-8f26-0ed8e0e34ab2",
+      "name": "11 - System B: Create or Update Record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2820,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "30c8ac4c-e3ff-54a4-ad48-19677d6764c6",
+      "name": "12 - Run Log: Status, Latency, Retries",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3680,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "d093a5da-3c98-5f0b-a4fe-2f735413dd72",
+      "name": "13 - Return 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        3920,
+        140
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "aabea774-98d3-5ba2-aed4-5be3f8d32f59",
+      "name": "14 - Any Node Fails, Anywhere",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        3200,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "f3448b37-6a28-57c4-b1e1-14fc8137dd4f",
+      "name": "15 - Alert With Link to Failed Execution",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        3440,
+        80
+      ]
+    }
+  ],
+  "connections": {
+    "1 - Incoming Record": {
+      "main": [
+        [
+          {
+            "node": "2 - Validate Schema and Required Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Validate Schema and Required Fields": {
+      "main": [
+        [
+          {
+            "node": "3 - Is the Record Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Is the Record Valid?": {
+      "main": [
+        [
+          {
+            "node": "5 - System A: Fetch Related Record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "4 - Reject With Field Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - System A: Fetch Related Record": {
+      "main": [
+        [
+          {
+            "node": "6 - Did the Call Succeed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Did the Call Succeed?": {
+      "main": [
+        [
+          {
+            "node": "10 - Map Fields Between Systems",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "7 - Are the Retries Used Up?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - Are the Retries Used Up?": {
+      "main": [
+        [
+          {
+            "node": "9 - Fallback: Queue for Manual Retry",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "8 - Back Off 30 Seconds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - Back Off 30 Seconds": {
+      "main": [
+        [
+          {
+            "node": "5 - System A: Fetch Related Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9 - Fallback: Queue for Manual Retry": {
+      "main": [
+        [
+          {
+            "node": "12 - Run Log: Status, Latency, Retries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Map Fields Between Systems": {
+      "main": [
+        [
+          {
+            "node": "11 - System B: Create or Update Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - System B: Create or Update Record": {
+      "main": [
+        [
+          {
+            "node": "12 - Run Log: Status, Latency, Retries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 - Run Log: Status, Latency, Retries": {
+      "main": [
+        [
+          {
+            "node": "13 - Return 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 - Any Node Fails, Anywhere": {
+      "main": [
+        [
+          {
+            "node": "15 - Alert With Link to Failed Execution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "c9d27e24-dc30-5d55-b2a1-245200f9055b",
+  "pinData": {
+    "1 - Incoming Record": [
+      {
+        "json": {
+          "event": "record.created",
+          "source": "System A",
+          "received_at": "2026-09-09T14:02:11Z",
+          "record": {
+            "external_id": "CRM-48812",
+            "company": "Halden Mechanical",
+            "contact_name": "Priya Raman",
+            "email": "priya@haldenmech.com",
+            "phone": "+1 512 555 0148",
+            "amount": 4250,
+            "currency": "USD",
+            "stage": "won",
+            "owner": "d.kessler"
+          }
+        }
+      }
+    ],
+    "13 - Return 200 OK": [
+      {
+        "json": {
+          "run_log_row": {
+            "run_id": "run_2026_0909_1402_a7f3",
+            "external_id": "CRM-48812",
+            "status": "success",
+            "validation": "passed, 9 of 9 required fields present",
+            "system_a_attempts": 2,
+            "attempt_1": "503 Service Unavailable, backed off 30s",
+            "attempt_2": "200 OK, 412 ms",
+            "retries": 1,
+            "fallback_used": false,
+            "system_b_action": "updated",
+            "system_b_record_id": "SYSB-100394",
+            "latency_ms": 31842,
+            "alert_sent": false,
+            "logged_at": "2026-09-09T14:02:43Z"
+          },
+          "field_mapping_applied": {
+            "company -> account_name": "Halden Mechanical",
+            "amount + currency -> deal_value": "4250 USD",
+            "stage -> pipeline_status": "won mapped to closed_won"
+          },
+          "if_it_had_failed": "retries used up, record posted to the manual retry queue, run logged as fallback_used true, slack alert with a link to the failed execution"
+        }
+      }
+    ]
+  }
+}

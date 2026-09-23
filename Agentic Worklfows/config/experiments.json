@@ -1,0 +1,312 @@
+{
+  "_about": "Every running copy experiment (Blueprint M4). jobs/campaign_verdicts.py refreshes current_sample, observed and result on every run; the hypothesis, arms and sample_needed are written by hand. Nothing here touches a live system.",
+  "as_of": "2026-09-22",
+  "updated_at": "2026-09-22T08:07:22+00:00",
+  "rules": {
+    "variant_min_sends": 500,
+    "alpha": 0.05,
+    "note": "A variant is judged at 500 sends or more per variant (M3.3). The p-value is a tie-breaker on top of that rule, never a licence to judge a smaller sample. A campaign that is paused, sends nothing or sits at its M4 retirement line is left out of the decision with the reason recorded; if every campaign is left out the test is undecidable."
+  },
+  "experiments": [
+    {
+      "id": "EXP-001a-reactivation-rewrite",
+      "name": "Reactivation step 1: the live email against a rewrite that asks for the list",
+      "campaigns": [
+        "cleaning_reactivation",
+        "bookkeeping_reactivation",
+        "recruiting_reactivation"
+      ],
+      "hypothesis": "Asking the prospect to send their lost-bid, former-client or dormant-account list is a smaller ask than a call, so it gets more replies, and the replies self-qualify because only someone with a list can answer.",
+      "what_changed": "Step 1 variant B is a rewrite of the whole email, not a one-line swap. It opens on a niche-specific line ('I build reactivation systems for commercial cleaning companies / bookkeeping and tax firms / recruiting agencies'), restates the mechanism for {{companyName}}, shortens the no-risk line, and ends on 'send me your list of lost bids or former clients' (cleaning), 'former clients or inquiries that never signed' (bookkeeping) or 'dormant client accounts' (recruiting) 'and I'll show you which ones are worth chasing'. Variant A is the copy live today: a 15-minute call ask in bookkeeping and recruiting, and in cleaning a commission-only 'would you be open to it? Let me know' ask with a different opening. A result credits the whole rewrite, not the ask alone.",
+      "start_date": null,
+      "start_note": "starts when changesets/instantly_phase0 is applied; no B variant is live yet",
+      "split_note": "split from EXP-001-cta-friction on 2026-09-22 (owner decision R12): the old record pooled six campaigns whose B variants make two different changes",
+      "sample_needed": 500,
+      "sample_rule": "per arm, per campaign",
+      "metric": "positives",
+      "arms": [
+        {
+          "label": "A",
+          "description": "the step-1 email live today (control)"
+        },
+        {
+          "label": "B",
+          "description": "whole-email rewrite ending on the send-me-your-list ask"
+        }
+      ],
+      "measure": {
+        "kind": "campaign_variant",
+        "step": 1,
+        "arms": {
+          "A": 0,
+          "B": 1
+        }
+      },
+      "current_sample": {
+        "A": 596,
+        "B": 0
+      },
+      "observed": {
+        "A": {
+          "sends": 596,
+          "real_replies": 4,
+          "positives": 1
+        },
+        "B": {
+          "sends": 0,
+          "real_replies": 0,
+          "positives": 0
+        }
+      },
+      "status": "planned",
+      "result": {
+        "winner": null,
+        "loser": null,
+        "p_value": null,
+        "decided_at": null,
+        "reason": "only 1 of 2 arms has sent anything; the change-set that stages the other arm has not been applied"
+      },
+      "observed_by_campaign": {
+        "cleaning_reactivation": {
+          "A": {
+            "sends": 197,
+            "real_replies": 3,
+            "positives": 1
+          },
+          "B": {
+            "sends": 0,
+            "real_replies": 0,
+            "positives": 0
+          }
+        },
+        "bookkeeping_reactivation": {
+          "A": {
+            "sends": 199,
+            "real_replies": 0,
+            "positives": 0
+          },
+          "B": {
+            "sends": 0,
+            "real_replies": 0,
+            "positives": 0
+          }
+        },
+        "recruiting_reactivation": {
+          "A": {
+            "sends": 200,
+            "real_replies": 1,
+            "positives": 0
+          },
+          "B": {
+            "sends": 0,
+            "real_replies": 0,
+            "positives": 0
+          }
+        }
+      },
+      "current_sample_by_campaign": {
+        "cleaning_reactivation": {
+          "A": 197,
+          "B": 0
+        },
+        "bookkeeping_reactivation": {
+          "A": 199,
+          "B": 0
+        },
+        "recruiting_reactivation": {
+          "A": 200,
+          "B": 0
+        }
+      },
+      "sample_gate": {
+        "rule": "per arm, per campaign",
+        "needed_per_arm": 500,
+        "scope": [],
+        "excluded": {},
+        "met": false,
+        "unknown_rule": false,
+        "undecidable": null,
+        "shortfall": [
+          "no campaign is running every arm yet"
+        ]
+      },
+      "split_from_numbers": "current_sample and observed carried over from the EXP-001-cta-friction record as of 2026-09-22T08:07:22+00:00, split by campaign; the next campaign_verdicts run refreshes them"
+    },
+    {
+      "id": "EXP-001b-trigger-rewrite",
+      "name": "Trigger step 1: the live call ask against a rewrite that offers the trigger list",
+      "campaigns": [
+        "cleaning_trigger",
+        "bookkeeping_trigger",
+        "recruiting_outbound"
+      ],
+      "hypothesis": "Offering to send the prospect the trigger list (the leases, filings or stuck roles the system would work from) is a smaller ask than a call, so more owners reply yes, and a yes is a warm opening for the call.",
+      "what_changed": "Step 1 variant B is a rewrite of the whole email, not a one-line swap. It opens on a niche-specific line, restates the trigger mechanism for {{companyName}} (cleaning: 'I watch {{metro}} for new leases ... at {{buildingType}}', so it needs those two lead variables; recruiting: roles open more than three weeks), adds a one-line benefit, rewords the guarantee as a condition, and ends on an offer to send the prospect a list ('Want me to send over the trigger list I'd start with? ... Reply yes and I'll get it over'). Variant A is the copy live today, ending on a 15-minute call ask. This is not the send-me-your-list ask EXP-001a tests: here the list goes to the prospect. A result credits the whole rewrite, not the ask alone.",
+      "start_date": null,
+      "start_note": "starts when changesets/instantly_phase0 is applied; no B variant is live yet",
+      "split_note": "split from EXP-001-cta-friction on 2026-09-22 (owner decision R12): the old record pooled six campaigns whose B variants make two different changes",
+      "sample_needed": 500,
+      "sample_rule": "per arm, per campaign",
+      "metric": "positives",
+      "arms": [
+        {
+          "label": "A",
+          "description": "the step-1 email live today, 15-minute call ask (control)"
+        },
+        {
+          "label": "B",
+          "description": "whole-email rewrite ending on an offer to send the trigger list"
+        }
+      ],
+      "measure": {
+        "kind": "campaign_variant",
+        "step": 1,
+        "arms": {
+          "A": 0,
+          "B": 1
+        }
+      },
+      "current_sample": {
+        "A": 594,
+        "B": 0
+      },
+      "observed": {
+        "A": {
+          "sends": 594,
+          "real_replies": 8,
+          "positives": 1
+        },
+        "B": {
+          "sends": 0,
+          "real_replies": 0,
+          "positives": 0
+        }
+      },
+      "status": "planned",
+      "result": {
+        "winner": null,
+        "loser": null,
+        "p_value": null,
+        "decided_at": null,
+        "reason": "only 1 of 2 arms has sent anything; the change-set that stages the other arm has not been applied"
+      },
+      "observed_by_campaign": {
+        "cleaning_trigger": {
+          "A": {
+            "sends": 199,
+            "real_replies": 4,
+            "positives": 1
+          },
+          "B": {
+            "sends": 0,
+            "real_replies": 0,
+            "positives": 0
+          }
+        },
+        "bookkeeping_trigger": {
+          "A": {
+            "sends": 199,
+            "real_replies": 1,
+            "positives": 0
+          },
+          "B": {
+            "sends": 0,
+            "real_replies": 0,
+            "positives": 0
+          }
+        },
+        "recruiting_outbound": {
+          "A": {
+            "sends": 196,
+            "real_replies": 3,
+            "positives": 0
+          },
+          "B": {
+            "sends": 0,
+            "real_replies": 0,
+            "positives": 0
+          }
+        }
+      },
+      "current_sample_by_campaign": {
+        "cleaning_trigger": {
+          "A": 199,
+          "B": 0
+        },
+        "bookkeeping_trigger": {
+          "A": 199,
+          "B": 0
+        },
+        "recruiting_outbound": {
+          "A": 196,
+          "B": 0
+        }
+      },
+      "sample_gate": {
+        "rule": "per arm, per campaign",
+        "needed_per_arm": 500,
+        "scope": [],
+        "excluded": {},
+        "met": false,
+        "unknown_rule": false,
+        "undecidable": null,
+        "shortfall": [
+          "no campaign is running every arm yet"
+        ]
+      },
+      "split_from_numbers": "current_sample and observed carried over from the EXP-001-cta-friction record as of 2026-09-22T08:07:22+00:00, split by campaign; the next campaign_verdicts run refreshes them"
+    },
+    {
+      "id": "EXP-002-icebreaker-style",
+      "name": "Compliment icebreaker against 10-minute research against none",
+      "campaigns": [
+        "cleaning_reactivation",
+        "cleaning_trigger",
+        "bookkeeping_reactivation",
+        "bookkeeping_trigger",
+        "recruiting_reactivation",
+        "recruiting_outbound"
+      ],
+      "hypothesis": "A first line built from ten minutes of research (service area, building types, a lost-bid hypothesis) beats a compliment, and a compliment barely beats no icebreaker at all, because the compliment is the part every other cold email also has.",
+      "what_changed": "The {{personalization}} line only. Arm 1 is the compliment line the leads carry today. Arm 2 is a researched line naming the service area, the building types and a lost-bid hypothesis. Arm 3 opens on the offer sentence with no first line at all. M4: test a whole sentence, not a word.",
+      "start_date": null,
+      "sample_needed": 500,
+      "sample_rule": "per arm, pooled across campaigns of one niche",
+      "metric": "positives",
+      "arms": [
+        {
+          "label": "compliment",
+          "description": "the line the live leads carry"
+        },
+        {
+          "label": "researched",
+          "description": "service area, building types, lost-bid hypothesis"
+        },
+        {
+          "label": "none",
+          "description": "no first line, straight into the offer sentence"
+        }
+      ],
+      "measure": {
+        "kind": "lead_variable",
+        "variable": "icebreaker_style",
+        "values": {
+          "compliment": "compliment",
+          "researched": "researched",
+          "none": "none"
+        }
+      },
+      "current_sample": {},
+      "observed": {},
+      "status": "blocked",
+      "blocked_reason": "No lead carries an icebreaker_style variable, so the arms cannot be told apart. The list factory (A6) has to stamp it at personalization time and Instantly has to carry it as a custom variable before this test can be counted.",
+      "result": {
+        "winner": null,
+        "loser": null,
+        "p_value": null,
+        "reason": null,
+        "decided_at": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,342 @@
+[
+ {
+  "label": "accent Jose (thank you Jose x3)",
+  "records": [
+   {
+    "fl": "Thank you José! Great project.",
+    "to": "Ann B."
+   },
+   {
+    "fl": "Thanks José, smooth work.",
+    "to": "Cid D."
+   },
+   {
+    "fl": "Great to work with José again.",
+    "to": "Eve F."
+   }
+  ],
+  "expect": "José"
+ },
+ {
+  "label": "accent Andre/Chloe",
+  "records": [
+   {
+    "fl": "Thanks André, great client.",
+    "to": "Ann B."
+   },
+   {
+    "fl": "Working with André is easy.",
+    "to": "Cid D."
+   },
+   {
+    "fl": "I enjoyed working with Chloé.",
+    "to": "Eve F."
+   }
+  ],
+  "expect": "André"
+ },
+ {
+  "label": "Mr. Surname",
+  "records": [
+   {
+    "fl": "Mr. Smith was very helpful and clear.",
+    "to": "Ann B."
+   },
+   {
+    "fl": "Mr. Smith is a great client to work with.",
+    "to": "Cid D."
+   },
+   {
+    "fl": "Great client, thanks.",
+    "to": "Eve F."
+   }
+  ],
+  "expect": null
+ },
+ {
+  "label": "company name",
+  "records": [
+   {
+    "fl": "Great experience working with Brightpath, clear brief.",
+    "to": "Ann B."
+   },
+   {
+    "fl": "Brightpath was a pleasure to work for.",
+    "to": "Cid D."
+   },
+   {
+    "fl": "Loved the project.",
+    "to": "Eve F."
+   }
+  ],
+  "expect": null
+ },
+ {
+  "label": "product/tool name",
+  "records": [
+   {
+    "fl": "Always happy to help with Webflow updates for this client.",
+    "to": "Ann B."
+   },
+   {
+    "fl": "Excellent client for Webflow work, clear brief.",
+    "to": "Cid D."
+   },
+   {
+    "fl": "Nice client.",
+    "to": "Eve F."
+   }
+  ],
+  "expect": null
+ },
+ {
+  "label": "sentence-start nouns (small history)",
+  "records": [
+   {
+    "fl": "Payment was fast. Instructions clear.",
+    "to": "Ann B."
+   },
+   {
+    "fl": "Great client. Payment was on time and Feedback was quick.",
+    "to": "Cid D."
+   },
+   {
+    "fl": "Feedback was helpful.",
+    "to": "Eve F."
+   }
+  ],
+  "expect": null
+ },
+ {
+  "label": "Thanks Bro / Brother",
+  "records": [
+   {
+    "fl": "Thanks Bro! Great work together.",
+    "to": "Ann B."
+   },
+   {
+    "fl": "Thank you Brother, great client.",
+    "to": "Cid D."
+   },
+   {
+    "fl": "Thanks Bro, see you next time.",
+    "to": "Eve F."
+   }
+  ],
+  "expect": null
+ },
+ {
+  "label": "Thank you Guys / Boss",
+  "records": [
+   {
+    "fl": "Thank you Guys, awesome team.",
+    "to": "Ann B."
+   },
+   {
+    "fl": "Thanks Guys! Enjoyed it.",
+    "to": "Cid D."
+   },
+   {
+    "fl": "Thanks Boss!",
+    "to": "Eve F."
+   }
+  ],
+  "expect": null
+ },
+ {
+  "label": "comma Inc/Ltd",
+  "records": [
+   {
+    "fl": "Great working for Acme Holdings, Inc. Clear brief.",
+    "to": "Ann B."
+   },
+   {
+    "fl": "Nice client, Acme Holdings, Inc. Paid fast.",
+    "to": "Cid D."
+   },
+   {
+    "fl": "Nice.",
+    "to": "Eve F."
+   }
+  ],
+  "expect": null
+ },
+ {
+  "label": "freelancer names colleague",
+  "records": [
+   {
+    "fl": "Great client. Priya was our designer on this and she loved it.",
+    "to": "Blue Labs"
+   },
+   {
+    "fl": "Priya is our lead, she enjoyed working here.",
+    "to": "Blue Labs"
+   },
+   {
+    "fl": "Good client.",
+    "to": "Blue Labs"
+   }
+  ],
+  "expect": null
+ },
+ {
+  "label": "thanks-for-X, Word",
+  "records": [
+   {
+    "fl": "Thank you for the opportunity, Wish you the best.",
+    "to": "Ann B."
+   },
+   {
+    "fl": "Thanks for everything, Wish you success!",
+    "to": "Cid D."
+   },
+   {
+    "fl": "Nice client",
+    "to": "Eve F."
+   }
+  ],
+  "expect": null
+ },
+ {
+  "label": "client teammate PM",
+  "records": [
+   {
+    "fl": "Working with Sarah (their PM) was great.",
+    "to": "Ann B."
+   },
+   {
+    "fl": "Sarah was very organised. Mike signed off quickly.",
+    "to": "Cid D."
+   },
+   {
+    "fl": "Thanks Mike and Sarah!",
+    "to": "Eve F."
+   }
+  ],
+  "expect": null
+ },
+ {
+  "label": "typo merge Mark/Mary",
+  "records": [
+   {
+    "fl": "Thanks Mark, great project.",
+    "to": "Ann B."
+   },
+   {
+    "fl": "Mark was clear.",
+    "to": "Cid D."
+   },
+   {
+    "fl": "Working with Mark was fun.",
+    "to": "Eve F."
+   },
+   {
+    "fl": "Mary was lovely to work with.",
+    "to": "Gus H."
+   },
+   {
+    "fl": "Thank you Mary!",
+    "to": "Ian J."
+   }
+  ],
+  "expect": null
+ },
+ {
+  "label": "location comma",
+  "records": [
+   {
+    "fl": "Great client based in Austin, Texas.",
+    "to": "Ann B."
+   },
+   {
+    "fl": "Enjoyed helping a local shop in Dallas, Texas!",
+    "to": "Cid D."
+   },
+   {
+    "fl": "Nice",
+    "to": "Eve F."
+   }
+  ],
+  "expect": null
+ },
+ {
+  "label": "with Claude/Python tech",
+  "records": [
+   {
+    "fl": "Great project building with Claude and n8n.",
+    "to": "Ann B."
+   },
+   {
+    "fl": "Fun work with Claude agents, clear brief.",
+    "to": "Cid D."
+   },
+   {
+    "fl": "Nice",
+    "to": "Eve F."
+   }
+  ],
+  "expect": null
+ },
+ {
+  "label": "real name 2 + company 3",
+  "records": [
+   {
+    "fl": "Thanks Casey, great project.",
+    "to": "Ann B."
+   },
+   {
+    "fl": "Casey was clear and kind.",
+    "to": "Cid D."
+   },
+   {
+    "fl": "Working with Lumora was a pleasure.",
+    "to": "Eve F."
+   },
+   {
+    "fl": "Lumora is a great company to work for.",
+    "to": "Gus H."
+   },
+   {
+    "fl": "Happy to work with Lumora again.",
+    "to": "Ian J."
+   }
+  ],
+  "expect": "Casey"
+ },
+ {
+  "label": "name via 'for' in title-like phrase",
+  "records": [
+   {
+    "fl": "Built the dashboard for Jessica's channel, great client.",
+    "to": "Ann B."
+   },
+   {
+    "fl": "Edited videos for Jessica's YouTube, lovely experience.",
+    "to": "Cid D."
+   },
+   {
+    "fl": "Nice",
+    "to": "Eve F."
+   }
+  ],
+  "expect": null
+ },
+ {
+  "label": "freelancer display name differs",
+  "records": [
+   {
+    "fl": "Great client. Regards, Ahmed.",
+    "to": "Muhammad Ahmed K."
+   },
+   {
+    "fl": "Great client again. Regards, Ahmed.",
+    "to": "Muhammad Ahmed K."
+   },
+   {
+    "fl": "Nice",
+    "to": "Eve F."
+   }
+  ],
+  "expect": null
+ }
+]

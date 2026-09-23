@@ -1,0 +1,344 @@
+{
+  "title": "Your Enquiry to Booked System",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "capture",
+      "label": "1 - CAPTURE AND VALIDATE",
+      "color": 0,
+      "note": "One form, one webhook. Every enquiry is de-duplicated, standardized and checked against GoHighLevel before anything is created."
+    },
+    {
+      "key": "qualify",
+      "label": "2 - AI QUALIFICATION, NEVER INVENTED",
+      "color": 0,
+      "note": "Claude extracts the service, summarizes the enquiry and classifies it. Anything it cannot read is flagged, not guessed."
+    },
+    {
+      "key": "crm",
+      "label": "3 - INTO GOHIGHLEVEL",
+      "color": 0,
+      "note": "Contact, custom fields, tags, opportunity stage and notes. Sales opens one record and sees the whole enquiry."
+    },
+    {
+      "key": "followup",
+      "label": "4 - FOLLOW UP UNTIL THEY REPLY, BOOK OR OPT OUT",
+      "color": 0,
+      "note": "Approved messaging and the booking link go out on a sequence that stops itself the moment the lead responds."
+    },
+    {
+      "key": "ops",
+      "label": "5 - LOGS, RETRIES AND ALERTS",
+      "color": 0,
+      "note": "Every run writes a log row. A failed step retries once on a delay, then it tells you instead of failing quietly."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 - Enquiry Arrives From the Website Form",
+      "section": "capture"
+    },
+    {
+      "key": "idem",
+      "kind": "data.transform",
+      "label": "15 - Idempotency Key: Hash of Email Phone and Timestamp, Skip if Seen",
+      "section": "capture",
+      "notes": "Same key seen before means the webhook fired twice. Nothing downstream runs, so no duplicate contact, opportunity or message."
+    },
+    {
+      "key": "normalize",
+      "kind": "data.transform",
+      "label": "2 - Standardize Name, Phone E.164, Email Lowercase",
+      "section": "capture"
+    },
+    {
+      "key": "required",
+      "kind": "flow.branch",
+      "label": "3 - Required Fields Present?",
+      "section": "capture"
+    },
+    {
+      "key": "incomplete",
+      "kind": "net.http",
+      "label": "3b - GHL: Tag Incomplete and Ask for the Missing Field",
+      "section": "capture"
+    },
+    {
+      "key": "lookup",
+      "kind": "net.http",
+      "label": "4 - GHL: Look Up Existing Contact by Email or Phone",
+      "section": "capture"
+    },
+    {
+      "key": "exists",
+      "kind": "flow.branch",
+      "label": "5 - Already Exists?",
+      "section": "capture"
+    },
+    {
+      "key": "classify",
+      "kind": "ai.llm",
+      "label": "6 - Extract Service, Summarize, Classify Hot Warm Cold Unclear",
+      "section": "qualify"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "classify",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Service, Summary, Class, Missing Fields",
+      "parent": "classify",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "clear",
+      "kind": "flow.branch",
+      "label": "7 - Clear Enough to Qualify?",
+      "section": "qualify"
+    },
+    {
+      "key": "review",
+      "kind": "app.action",
+      "label": "7b - Manual Review Queue With the Summary",
+      "app": "slack",
+      "op": "post",
+      "section": "qualify"
+    },
+    {
+      "key": "upsert",
+      "kind": "net.http",
+      "label": "8 - GHL: Create or Update the Contact and Custom Fields",
+      "section": "crm"
+    },
+    {
+      "key": "tag",
+      "kind": "net.http",
+      "label": "9 - GHL: Tag by Class",
+      "section": "crm"
+    },
+    {
+      "key": "opportunity",
+      "kind": "net.http",
+      "label": "10 - GHL: Create or Move the Opportunity to the Stage",
+      "section": "crm"
+    },
+    {
+      "key": "note",
+      "kind": "net.http",
+      "label": "11 - GHL: Write the Summary and Result to the Contact Notes",
+      "section": "crm"
+    },
+    {
+      "key": "enroll",
+      "kind": "net.http",
+      "label": "12 - GHL: Enroll in the Follow-Up Workflow With the Booking Link",
+      "section": "followup"
+    },
+    {
+      "key": "stophook",
+      "kind": "trigger.webhook",
+      "label": "13 - GHL: Replied, Booked, Opted Out or Paused",
+      "section": "followup"
+    },
+    {
+      "key": "unenroll",
+      "kind": "net.http",
+      "label": "14 - GHL: Remove From the Follow-Up Workflow",
+      "section": "followup"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "16 - Execution Log Row",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "ops"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "17 - Any Step Fails",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "ops"
+    },
+    {
+      "key": "wait",
+      "kind": "flow.wait",
+      "label": "18 - Retry After 2 Minutes",
+      "section": "ops"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "19 - Alert After the Retry",
+      "app": "slack",
+      "op": "post",
+      "section": "ops"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "idem"
+    },
+    {
+      "from": "idem",
+      "to": "normalize"
+    },
+    {
+      "from": "normalize",
+      "to": "required"
+    },
+    {
+      "from": "required",
+      "to": "incomplete",
+      "branch": "false"
+    },
+    {
+      "from": "required",
+      "to": "lookup",
+      "branch": "true"
+    },
+    {
+      "from": "lookup",
+      "to": "exists"
+    },
+    {
+      "from": "exists",
+      "to": "classify",
+      "branch": "true"
+    },
+    {
+      "from": "exists",
+      "to": "classify",
+      "branch": "false"
+    },
+    {
+      "from": "classify",
+      "to": "clear"
+    },
+    {
+      "from": "clear",
+      "to": "review",
+      "branch": "false"
+    },
+    {
+      "from": "clear",
+      "to": "upsert",
+      "branch": "true"
+    },
+    {
+      "from": "upsert",
+      "to": "tag"
+    },
+    {
+      "from": "tag",
+      "to": "opportunity"
+    },
+    {
+      "from": "opportunity",
+      "to": "note"
+    },
+    {
+      "from": "note",
+      "to": "enroll"
+    },
+    {
+      "from": "enroll",
+      "to": "log"
+    },
+    {
+      "from": "stophook",
+      "to": "unenroll"
+    },
+    {
+      "from": "err",
+      "to": "wait"
+    },
+    {
+      "from": "wait",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "form": "Website Contact Form",
+    "submitted_at": "2026-09-21T09:14:22+05:00",
+    "name": "Ayesha Khan",
+    "phone": "0300 1234567",
+    "email": "Ayesha.K@Example.com",
+    "message": "Need a deep clean for a 3 bed flat before Friday, how much?",
+    "page_url": "https://example.com/contact",
+    "source": "Google Organic"
+  },
+  "output_sample": {
+    "duplicate": false,
+    "idempotency_key": "a41f9c2e7b3d",
+    "contact": {
+      "ghl_contact_id": "cN7qW2xTfL0a",
+      "first_name": "Ayesha",
+      "last_name": "Khan",
+      "phone": "+923001234567",
+      "email": "ayesha.k@example.com",
+      "action": "created"
+    },
+    "custom_fields": {
+      "service_requested": "deep clean",
+      "property_size": "3 bed flat",
+      "requested_by": "Friday",
+      "enquiry_source": "Website Contact Form"
+    },
+    "qualification": {
+      "service": "deep clean",
+      "class": "hot",
+      "summary": "Wants a deep clean for a 3 bed flat, needs it done before Friday, asking for a price. Timeline and property size given, no address or budget yet.",
+      "missing_fields": [
+        "address",
+        "budget"
+      ],
+      "invented_fields": "none, anything not stated is listed as missing"
+    },
+    "tags": [
+      "enquiry-hot",
+      "service-deep-clean"
+    ],
+    "opportunity": {
+      "pipeline": "Enquiries",
+      "stage": "New Enquiry",
+      "name": "Ayesha Khan - deep clean"
+    },
+    "contact_note": "Deep clean, 3 bed flat, wanted before Friday, price requested. Classified hot. Missing: address, budget.",
+    "follow_up": {
+      "workflow": "Enquiry Follow-Up",
+      "enrolled": true,
+      "booking_link_sent": true,
+      "stops_on": [
+        "replied",
+        "booked",
+        "opted out",
+        "manually paused"
+      ]
+    },
+    "log_row": {
+      "run_id": "exec_20268",
+      "received_at": "2026-09-21T09:14:22+05:00",
+      "email": "ayesha.k@example.com",
+      "class": "hot",
+      "ghl_contact_id": "cN7qW2xTfL0a",
+      "stage": "New Enquiry",
+      "result": "success",
+      "retries": 0
+    }
+  },
+  "archetype": "your_enquiry_to_booked_system",
+  "learned": true,
+  "learned_at": "2026-09-21"
+}

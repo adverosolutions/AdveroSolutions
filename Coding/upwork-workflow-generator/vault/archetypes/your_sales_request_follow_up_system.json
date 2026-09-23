@@ -1,0 +1,350 @@
+{
+  "title": "Your Sales Request Follow-Up System",
+  "platform": "gohighlevel",
+  "sections": [
+    {
+      "key": "in",
+      "label": "1 - SALES REQUEST COMES IN",
+      "color": 0,
+      "note": "The Sales Request form fires this. The contact is tagged and the request is opened in the Sales pipeline so nothing lives only in an inbox."
+    },
+    {
+      "key": "call",
+      "label": "2 - CALL YOU FIRST, WHISPER, THEN CONNECT",
+      "color": 0,
+      "note": "GoHighLevel rings you first, reads the lead source, square footage and desired service in your ear, then bridges the customer in. Needs the three form fields lead_source, square_footage and desired_service on the contact record, and a phone number on your user profile."
+    },
+    {
+      "key": "seq",
+      "label": "3 - IF THE CALL DOES NOT CONNECT, THE SEQUENCE STARTS",
+      "color": 0,
+      "note": "Text, email, a manual call task, text, email. Every text sends from the Quo business number hosted into GoHighLevel under Settings, Phone Numbers, hosted messaging, so replies land on your number and in the GoHighLevel conversation."
+    },
+    {
+      "key": "reply",
+      "label": "4 - STOP THE MOMENT THEY REPLY OR BOOK",
+      "color": 0,
+      "note": "The goal pulls any replier out of the sequence on whatever day they answer, moves the opportunity and texts you. A two-step reply catcher workflow adds the sales-replied tag the goal listens for."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "form",
+      "kind": "trigger.app",
+      "label": "1 - Sales Request Form Submitted",
+      "app": "ghl",
+      "op": "form_submitted",
+      "section": "in"
+    },
+    {
+      "key": "tag_req",
+      "kind": "app.action",
+      "label": "2 - Tag the Contact sales-request",
+      "app": "ghl",
+      "op": "add_tag",
+      "section": "in",
+      "params": {
+        "tag": "sales-request"
+      }
+    },
+    {
+      "key": "opp",
+      "kind": "app.action",
+      "label": "3 - Open the Request in the Sales Pipeline",
+      "app": "ghl",
+      "op": "create_opportunity",
+      "section": "in",
+      "params": {
+        "pipeline": "Sales Requests",
+        "stage": "New Request",
+        "name": "{{contact.first_name}} {{contact.last_name}} - {{contact.desired_service}}",
+        "status": "open"
+      }
+    },
+    {
+      "key": "call",
+      "kind": "app.action",
+      "label": "4 - Call You, Whisper the Details, Then Connect",
+      "app": "ghl",
+      "op": "call",
+      "section": "call",
+      "notes": "The whisper is read only to you. The customer hears ringing until you answer, then the two calls are bridged.",
+      "params": {
+        "whisper": "New sales request from {{contact.lead_source}}. {{contact.square_footage}} square feet. Wants {{contact.desired_service}}. Connecting you now.",
+        "to": "the contact's assigned user, and if none is assigned, the account owner",
+        "timeout_seconds": 25
+      }
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "5 - Did the Call Connect",
+      "section": "call",
+      "params": {
+        "condition": "call was answered and connected"
+      }
+    },
+    {
+      "key": "opp_spoke",
+      "kind": "app.action",
+      "label": "6 - Move the Request to Spoke With",
+      "app": "ghl",
+      "op": "update_opportunity",
+      "section": "call",
+      "notes": "You talked to them live, so no follow-up sequence runs at all.",
+      "params": {
+        "pipeline": "Sales Requests",
+        "stage": "Spoke With",
+        "status": "open"
+      }
+    },
+    {
+      "key": "sms1",
+      "kind": "app.action",
+      "label": "7 - Text: Sorry I Missed You",
+      "app": "ghl",
+      "op": "send_sms",
+      "section": "seq",
+      "params": {
+        "message": "Hi {{contact.first_name}}, it is {{user.first_name}} with {{location.name}}. I just tried calling about your {{contact.desired_service}} request and missed you. What day works best for us to come out? You can reply right here."
+      }
+    },
+    {
+      "key": "w1",
+      "kind": "flow.wait",
+      "label": "8 - Wait 1 Day",
+      "section": "seq",
+      "params": {
+        "amount": 1,
+        "unit": "days"
+      }
+    },
+    {
+      "key": "email1",
+      "kind": "app.action",
+      "label": "9 - Email: Getting You on the Schedule",
+      "app": "ghl",
+      "op": "send_email",
+      "section": "seq",
+      "params": {
+        "subject": "Your {{contact.desired_service}} request, {{contact.first_name}}",
+        "body": "Hi {{contact.first_name}}, thanks for asking us about {{contact.desired_service}}. I tried calling and missed you, so here is the short version. Tell me the day that works for you and I will hold the spot and confirm the price before we start. If you would rather talk it through, reply with a good time and I will call you then. {{user.first_name}}, {{location.name}}"
+      }
+    },
+    {
+      "key": "w2",
+      "kind": "flow.wait",
+      "label": "10 - Wait 2 Days",
+      "section": "seq",
+      "params": {
+        "amount": 2,
+        "unit": "days"
+      }
+    },
+    {
+      "key": "manual",
+      "kind": "app.action",
+      "label": "11 - Manual Call Task for You",
+      "app": "ghl",
+      "op": "manual_action",
+      "section": "seq",
+      "params": {
+        "type": "call",
+        "title": "Call {{contact.first_name}} about their {{contact.desired_service}}",
+        "instructions": "Call {{contact.first_name}} at {{contact.phone}}. They asked about {{contact.desired_service}} for {{contact.square_footage}} square feet and came from {{contact.lead_source}}. Goal of the call is a day on the calendar. If you get voicemail, leave one and mark the task complete so the texts and emails keep running."
+      }
+    },
+    {
+      "key": "w3",
+      "kind": "flow.wait",
+      "label": "12 - Wait 3 Days",
+      "section": "seq",
+      "params": {
+        "amount": 3,
+        "unit": "days"
+      }
+    },
+    {
+      "key": "sms2",
+      "kind": "app.action",
+      "label": "13 - Text: Still Want This on the Calendar",
+      "app": "ghl",
+      "op": "send_sms",
+      "section": "seq",
+      "params": {
+        "message": "Hi {{contact.first_name}}, {{user.first_name}} with {{location.name}} again. We still have room this week for your {{contact.desired_service}}. Reply with a day that works and I will hold the slot for you."
+      }
+    },
+    {
+      "key": "w4",
+      "kind": "flow.wait",
+      "label": "14 - Wait 4 Days",
+      "section": "seq",
+      "params": {
+        "amount": 4,
+        "unit": "days"
+      }
+    },
+    {
+      "key": "email2",
+      "kind": "app.action",
+      "label": "15 - Email: Last Note From Us",
+      "app": "ghl",
+      "op": "send_email",
+      "section": "seq",
+      "params": {
+        "subject": "Last note about your {{contact.desired_service}}",
+        "body": "Hi {{contact.first_name}}, this is my last note so I am not a pest. If you still want the {{contact.desired_service}} done, reply here or text us back and we will find a time that works for you. If the timing is off, just say the word and I will check back down the road. {{user.first_name}}, {{location.name}}"
+      }
+    },
+    {
+      "key": "goal",
+      "kind": "app.action",
+      "label": "16 - Goal: They Replied or Booked",
+      "app": "ghl",
+      "op": "goal",
+      "section": "reply",
+      "notes": "A reply on any channel on any day jumps the contact here and cancels every remaining text, email and task. The reply catcher workflow adds the sales-replied tag.",
+      "params": {
+        "goal_type": "tag_added",
+        "tag": "sales-replied",
+        "if_not_met": "end"
+      }
+    },
+    {
+      "key": "untag",
+      "kind": "app.action",
+      "label": "17 - Remove the sales-request Tag",
+      "app": "ghl",
+      "op": "remove_tag",
+      "section": "reply",
+      "params": {
+        "tag": "sales-request"
+      }
+    },
+    {
+      "key": "opp_replied",
+      "kind": "app.action",
+      "label": "18 - Move the Request to Replied",
+      "app": "ghl",
+      "op": "update_opportunity",
+      "section": "reply",
+      "params": {
+        "pipeline": "Sales Requests",
+        "stage": "Replied",
+        "status": "open"
+      }
+    },
+    {
+      "key": "notify",
+      "kind": "app.action",
+      "label": "19 - Text You That They Answered",
+      "app": "ghl",
+      "op": "internal_notification",
+      "section": "reply",
+      "params": {
+        "type": "sms",
+        "to": "the contact's assigned user, and if none is assigned, all users",
+        "message": "{{contact.first_name}} {{contact.last_name}} just replied about their {{contact.desired_service}} request. Call them back now at {{contact.phone}} while it is warm."
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "form",
+      "to": "tag_req"
+    },
+    {
+      "from": "tag_req",
+      "to": "opp"
+    },
+    {
+      "from": "opp",
+      "to": "call"
+    },
+    {
+      "from": "call",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "opp_spoke",
+      "branch": "true"
+    },
+    {
+      "from": "gate",
+      "to": "sms1",
+      "branch": "false"
+    },
+    {
+      "from": "sms1",
+      "to": "w1"
+    },
+    {
+      "from": "w1",
+      "to": "email1"
+    },
+    {
+      "from": "email1",
+      "to": "w2"
+    },
+    {
+      "from": "w2",
+      "to": "manual"
+    },
+    {
+      "from": "manual",
+      "to": "w3"
+    },
+    {
+      "from": "w3",
+      "to": "sms2"
+    },
+    {
+      "from": "sms2",
+      "to": "w4"
+    },
+    {
+      "from": "w4",
+      "to": "email2"
+    },
+    {
+      "from": "email2",
+      "to": "goal"
+    },
+    {
+      "from": "goal",
+      "to": "untag"
+    },
+    {
+      "from": "untag",
+      "to": "opp_replied"
+    },
+    {
+      "from": "opp_replied",
+      "to": "notify"
+    }
+  ],
+  "input_sample": {
+    "form": "Sales Request",
+    "contact": {
+      "first_name": "Marisol",
+      "last_name": "Reyes",
+      "phone": "+16195550188",
+      "email": "marisol.reyes@gmail.com",
+      "lead_source": "Google search",
+      "square_footage": "2,400",
+      "desired_service": "Deep clean, move out"
+    }
+  },
+  "output_sample": {
+    "call": "whisper played, owner connected to the customer in 11 seconds",
+    "opportunity": "Marisol Reyes - Deep clean, move out",
+    "stage": "Spoke With",
+    "sequence": "not started, the call connected",
+    "texts_sent_from": "the Quo business number hosted in GoHighLevel"
+  },
+  "archetype": "your_sales_request_follow_up_system",
+  "learned": true,
+  "learned_at": "2026-09-21"
+}

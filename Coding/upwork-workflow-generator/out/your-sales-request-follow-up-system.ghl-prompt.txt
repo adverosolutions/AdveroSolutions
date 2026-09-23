@@ -1,0 +1,33 @@
+Build this GoHighLevel workflow exactly as specified. Name the workflow exactly "Your Sales Request Follow-Up System".
+Rules: create every step listed below, in the order given, with the exact step names and field values given. Do not add steps, do not remove steps, do not merge steps, do not reorder them, do not rename anything, do not ask me questions. Where a tag, pipeline, stage, form or field is named, use that exact name. Leave the workflow as a draft; do not publish.
+
+Trigger - name it exactly "Sales Request Form Submitted". Trigger "Form submitted". Filter: form is any form (no filter).
+
+Actions, in this exact order:
+Step 1 - name this step exactly "Tag the Contact sales-request". Action "Add contact tag". Tag: "sales-request".
+Step 2 - name this step exactly "Open the Request in the Sales Pipeline". Action "Create/Update opportunity". Pipeline: "Sales Requests". Stage: "New Request". Opportunity name: "{{contact.first_name}} {{contact.last_name}} - {{contact.desired_service}}". Status: open.
+Step 3 - name this step exactly "Call You, Whisper the Details, Then Connect". Action "Call" (the automated call). Call the user first: the contact's assigned user, and if none is assigned, the account owner. Play this whisper message to the user before connecting to the contact, exactly: "New sales request from {{contact.lead_source}}. {{contact.square_footage}} square feet. Wants {{contact.desired_service}}. Connecting you now.". Then connect the call to the contact. Ring timeout: 25 seconds.
+  (Purpose: The whisper is read only to you. The customer hears ringing until you answer, then the two calls are bridged.)
+Step 4 - name this step exactly "Did the Call Connect". Action "If/Else". Branch name: "Did the Call Connect". Condition: call was answered and connected.
+  YES branch (condition is true):
+    Step 5 - name this step exactly "Move the Request to Spoke With". Action "Create/Update opportunity" (update the existing one). Pipeline: "Sales Requests". Move to stage: "Spoke With". Status: open.
+      (Purpose: You talked to them live, so no follow-up sequence runs at all.)
+      End of the workflow after this step.
+  NO branch (condition is false, the "None" branch):
+    Step 6 - name this step exactly "Text: Sorry I Missed You". Action "Send SMS". Message text, exactly: "Hi {{contact.first_name}}, it is {{user.first_name}} with {{location.name}}. I just tried calling about your {{contact.desired_service}} request and missed you. What day works best for us to come out? You can reply right here."
+    Step 7 - name this step exactly "Wait 1 Day". Action "Wait". Wait for a set time: 1 day.
+    Step 8 - name this step exactly "Email: Getting You on the Schedule". Action "Send email". Subject: "Your {{contact.desired_service}} request, {{contact.first_name}}". Body, exactly: "Hi {{contact.first_name}}, thanks for asking us about {{contact.desired_service}}. I tried calling and missed you, so here is the short version. Tell me the day that works for you and I will hold the spot and confirm the price before we start. If you would rather talk it through, reply with a good time and I will call you then. {{user.first_name}}, {{location.name}}"
+    Step 9 - name this step exactly "Wait 2 Days". Action "Wait". Wait for a set time: 2 days.
+    Step 10 - name this step exactly "Manual Call Task for You". Action "Manual action". Type: Manual Call. Title: "Call {{contact.first_name}} about their {{contact.desired_service}}". Instructions for the rep, exactly: "Call {{contact.first_name}} at {{contact.phone}}. They asked about {{contact.desired_service}} for {{contact.square_footage}} square feet and came from {{contact.lead_source}}. Goal of the call is a day on the calendar. If you get voicemail, leave one and mark the task complete so the texts and emails keep running."
+    Step 11 - name this step exactly "Wait 3 Days". Action "Wait". Wait for a set time: 3 days.
+    Step 12 - name this step exactly "Text: Still Want This on the Calendar". Action "Send SMS". Message text, exactly: "Hi {{contact.first_name}}, {{user.first_name}} with {{location.name}} again. We still have room this week for your {{contact.desired_service}}. Reply with a day that works and I will hold the slot for you."
+    Step 13 - name this step exactly "Wait 4 Days". Action "Wait". Wait for a set time: 4 days.
+    Step 14 - name this step exactly "Email: Last Note From Us". Action "Send email". Subject: "Last note about your {{contact.desired_service}}". Body, exactly: "Hi {{contact.first_name}}, this is my last note so I am not a pest. If you still want the {{contact.desired_service}} done, reply here or text us back and we will find a time that works for you. If the timing is off, just say the word and I will check back down the road. {{user.first_name}}, {{location.name}}"
+    Step 15 - name this step exactly "Goal: They Replied or Booked". Action "Goal event". Type of goal: "Added a contact Tag". Tag: "sales-replied". If the contact reaches this goal without meeting its conditions: End this workflow.
+      (Purpose: A reply on any channel on any day jumps the contact here and cancels every remaining text, email and task. The reply catcher workflow adds the sales-replied tag.)
+    Step 16 - name this step exactly "Remove the sales-request Tag". Action "Remove contact tag". Tag: "sales-request".
+    Step 17 - name this step exactly "Move the Request to Replied". Action "Create/Update opportunity" (update the existing one). Pipeline: "Sales Requests". Move to stage: "Replied". Status: open.
+    Step 18 - name this step exactly "Text You That They Answered". Action "Send internal notification". Type: SMS. Send to: the contact's assigned user, and if none is assigned, all users. Message, exactly: "{{contact.first_name}} {{contact.last_name}} just replied about their {{contact.desired_service}} request. Call them back now at {{contact.phone}} while it is warm."
+      End of the workflow after this step.
+
+Checklist before you finish: 1 trigger(s), 18 action steps, workflow name "Your Sales Request Follow-Up System". Every Send SMS, Send email and internal notification contains the exact message text above. Every Wait has the duration above. Every If/Else has both branches. Nothing is left unconfigured.

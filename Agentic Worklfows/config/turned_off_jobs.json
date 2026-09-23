@@ -1,0 +1,29 @@
+{
+  "_about": "Scheduled jobs Lorenzo turned off: he runs them by hand now (2026-09-22). Their code stays in git. They are not in services/reply_engine/modal_app.py SCHEDULES, not in changesets/schedules/schedules.json's schedule list and not in the staged laptop files; changesets/schedules/build_schedules.py --check refuses a name that is here AND scheduled. Readers (through shared/turned_off.py): jobs/retro_packet.py, jobs/pipeline_sweep.py, jobs/daily_metrics.py, changesets/deploy/watch_report.py and changesets/schedules/laptop_runner.py, which show these as 'turned off', never as missing or failed. To schedule one again: put it back in modal_app.SCHEDULES, delete it here, regenerate with build_schedules.py.",
+  "jobs": {
+    "campaign_verdicts": {
+      "module": "jobs.campaign_verdicts",
+      "tier": "marketing",
+      "was_scheduled": "Fri 15:00 CT (0 15 * * 5), before the 16:00 retro",
+      "turned_off_on": "2026-09-22",
+      "by_hand": "python3 -m jobs.campaign_verdicts --out .tmp/verdicts.md",
+      "why": "Lorenzo runs the campaign verdicts by hand"
+    },
+    "upwork_rooms_am": {
+      "module": "jobs.upwork_rooms",
+      "tier": "ops",
+      "was_scheduled": "09:00 CT weekdays (0 9 * * 1-5)",
+      "turned_off_on": "2026-09-22",
+      "by_hand": "python3 -m jobs.upwork_rooms --now",
+      "why": "Lorenzo checks the Upwork rooms by hand"
+    },
+    "upwork_rooms_pm": {
+      "module": "jobs.upwork_rooms",
+      "tier": "ops",
+      "was_scheduled": "15:00 CT weekdays (0 15 * * 1-5)",
+      "turned_off_on": "2026-09-22",
+      "by_hand": "python3 -m jobs.upwork_rooms --now",
+      "why": "Lorenzo checks the Upwork rooms by hand"
+    }
+  }
+}

@@ -1,0 +1,368 @@
+{
+  "title": "Partner Operations Hub - One Record, Tier Activation, AI Deliverables",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "record",
+      "label": "1 · ONE PARTNER RECORD",
+      "color": 0,
+      "note": "A partner changes in any one system and the same record updates everywhere else. No more typing the same fields into four tools."
+    },
+    {
+      "key": "activate",
+      "label": "2 · ACTIVATION BY PARTNER TIER",
+      "color": 0,
+      "note": "The tier decides what happens next, from a full joint campaign task set down to an automated check-in."
+    },
+    {
+      "key": "deliver",
+      "label": "3 · AI DELIVERABLES FROM YOUR OWN TEMPLATES",
+      "color": 0,
+      "note": "Client inputs go in, a draft built on your framework comes out. Claude writes into your structure, never its own."
+    },
+    {
+      "key": "review",
+      "label": "4 · REVIEW AND MEASURE",
+      "color": 0,
+      "note": "A person approves every draft before it leaves, and each run logs the hours it saved so the value is visible."
+    },
+    {
+      "key": "errors",
+      "label": "5 · WHEN SOMETHING BREAKS",
+      "color": 0,
+      "note": "A failed run pings the partner owner with a link straight to it. Nothing fails quietly."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 · Partner Created or Updated in CRM, PRM, Notion or Sheets",
+      "section": "record"
+    },
+    {
+      "key": "normalize",
+      "kind": "data.transform",
+      "label": "2 · Normalize to One Partner Record · Tier, Type, Owner, Stage",
+      "section": "record"
+    },
+    {
+      "key": "crm",
+      "kind": "app.action",
+      "label": "3 · Update the Partner in the CRM",
+      "app": "hubspot",
+      "op": "create_contact",
+      "section": "record"
+    },
+    {
+      "key": "prm",
+      "kind": "net.http",
+      "label": "4 · Update the Same Record in the PRM",
+      "section": "record"
+    },
+    {
+      "key": "notion",
+      "kind": "app.action",
+      "label": "5 · Update the Notion Partner Page",
+      "app": "notion",
+      "op": "update",
+      "section": "record"
+    },
+    {
+      "key": "sheet",
+      "kind": "app.action",
+      "label": "6 · Update the Master Sheet Row",
+      "app": "googleSheets",
+      "op": "update",
+      "section": "record"
+    },
+    {
+      "key": "route",
+      "kind": "flow.switch",
+      "label": "7 · Route Activation by Partner Tier",
+      "section": "activate"
+    },
+    {
+      "key": "t1tasks",
+      "kind": "app.action",
+      "label": "8a · Tier 1: Create the Joint Campaign Task Set",
+      "app": "clickup",
+      "op": "create",
+      "section": "activate"
+    },
+    {
+      "key": "t1email",
+      "kind": "app.action",
+      "label": "8b · Tier 1: Send the Kickoff Email to the Partner",
+      "app": "gmail",
+      "op": "send",
+      "section": "activate"
+    },
+    {
+      "key": "t2checklist",
+      "kind": "app.action",
+      "label": "9 · Tier 2: Create the Webinar Checklist",
+      "app": "clickup",
+      "op": "create",
+      "section": "activate"
+    },
+    {
+      "key": "t3wait",
+      "kind": "flow.wait",
+      "label": "10a · Tier 3: Wait 30 Days",
+      "section": "activate"
+    },
+    {
+      "key": "t3email",
+      "kind": "app.action",
+      "label": "10b · Tier 3: Send the Automated Check-In",
+      "app": "gmail",
+      "op": "send",
+      "section": "activate"
+    },
+    {
+      "key": "brief",
+      "kind": "trigger.form",
+      "label": "11 · Client Inputs Submitted · the Project Brief",
+      "section": "deliver"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "12 · Claude Drafts the Deliverable From Your Template",
+      "section": "deliver"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "tpl",
+      "kind": "ai.tool",
+      "label": "Template and Framework Library · Notion",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "lookup",
+      "kind": "ai.tool",
+      "label": "Partner Record Lookup",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Force Your Sections: Objective, Audience, Offer, Plan, Next Steps",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "doc",
+      "kind": "app.action",
+      "label": "13 · Put the Draft in Google Docs for Review",
+      "app": "googleDocs",
+      "op": "create",
+      "section": "deliver"
+    },
+    {
+      "key": "reviewping",
+      "kind": "app.action",
+      "label": "14 · Send the Review Request to the Partner Owner",
+      "app": "slack",
+      "op": "post",
+      "section": "review"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "15 · Log the Activity and the Hours It Saved",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "review"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "16 · Any Step Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "errors"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "17 · Alert the Owner With a Link to the Failed Run",
+      "app": "slack",
+      "op": "post",
+      "section": "errors"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "normalize"
+    },
+    {
+      "from": "normalize",
+      "to": "crm"
+    },
+    {
+      "from": "normalize",
+      "to": "prm"
+    },
+    {
+      "from": "normalize",
+      "to": "notion"
+    },
+    {
+      "from": "normalize",
+      "to": "sheet"
+    },
+    {
+      "from": "crm",
+      "to": "route"
+    },
+    {
+      "from": "prm",
+      "to": "route"
+    },
+    {
+      "from": "notion",
+      "to": "route"
+    },
+    {
+      "from": "sheet",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "t1tasks",
+      "branch": "Tier 1"
+    },
+    {
+      "from": "route",
+      "to": "t2checklist",
+      "branch": "Tier 2"
+    },
+    {
+      "from": "route",
+      "to": "t3wait",
+      "branch": "Tier 3"
+    },
+    {
+      "from": "t1tasks",
+      "to": "t1email"
+    },
+    {
+      "from": "t3wait",
+      "to": "t3email"
+    },
+    {
+      "from": "brief",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "doc"
+    },
+    {
+      "from": "doc",
+      "to": "reviewping"
+    },
+    {
+      "from": "reviewping",
+      "to": "log"
+    },
+    {
+      "from": "t1email",
+      "to": "log"
+    },
+    {
+      "from": "t2checklist",
+      "to": "log"
+    },
+    {
+      "from": "t3email",
+      "to": "log"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "source": "PRM",
+    "event": "partner.updated",
+    "partner": {
+      "partner_id": "PTR-2291",
+      "company": "Northbridge Consulting Group",
+      "primary_contact": "Dana Whitfield",
+      "email": "dana@northbridgecg.com",
+      "tier": "Tier 1",
+      "partner_type": "Co-Sell / Referral",
+      "owner": "Marcus Reed",
+      "stage": "Signed, not yet activated",
+      "agreement_signed": "2026-09-08",
+      "notion_page_id": "a41f9c2e",
+      "sheet_row": 184,
+      "crm_company_id": "8811204"
+    },
+    "changed_fields": [
+      "tier",
+      "stage",
+      "owner"
+    ]
+  },
+  "output_sample": {
+    "partner_id": "PTR-2291",
+    "one_record_written_to": {
+      "crm": "updated (company 8811204)",
+      "prm": "updated (PTR-2291)",
+      "notion": "updated (page a41f9c2e)",
+      "master_sheet": "updated (row 184)"
+    },
+    "fields_no_longer_typed_twice": [
+      "tier",
+      "stage",
+      "owner",
+      "partner_type"
+    ],
+    "tier_routed": "Tier 1",
+    "activation_created": {
+      "clickup_task_set": "Joint Campaign - Northbridge (7 tasks, owner Marcus Reed)",
+      "kickoff_email": "sent to dana@northbridgecg.com 2026-09-09 09:14"
+    },
+    "deliverable": {
+      "type": "Partner strategy document",
+      "template_used": "Advero Partner Strategy Framework v3 (Notion)",
+      "sections_returned": [
+        "Objective",
+        "Audience",
+        "Offer",
+        "Plan",
+        "Next Steps"
+      ],
+      "google_doc": "Northbridge - Partner Strategy (DRAFT for review)",
+      "review_requested_from": "Marcus Reed (Slack)",
+      "status": "Awaiting human approval, nothing sent to the partner yet"
+    },
+    "activity_log_row": {
+      "date": "2026-09-09",
+      "partner": "Northbridge Consulting Group",
+      "tier": "Tier 1",
+      "activity": "Activation + strategy doc draft",
+      "manual_minutes_before": 185,
+      "minutes_now": 12,
+      "hours_saved_estimate": 2.9
+    },
+    "if_something_had_failed": "Error trigger fires and the owner gets a Slack message with a link to the failed run"
+  },
+  "archetype": "partner_operations_hub_one_record_tier_activatio",
+  "learned": true,
+  "learned_at": "2026-09-09"
+}

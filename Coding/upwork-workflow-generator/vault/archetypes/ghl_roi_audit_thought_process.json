@@ -1,0 +1,148 @@
+{
+  "title": "How I Audit for ROI — Find the Leaks, Size the Cost, Fix What Pays",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "map",
+      "label": "1 · MAP THE REVENUE PATH",
+      "color": 0,
+      "note": "Before touching anything, I map where every lead enters and what it should be worth by the time it converts."
+    },
+    {
+      "key": "leak",
+      "label": "2 · FIND WHERE MONEY LEAKS",
+      "color": 0,
+      "note": "Every drop-off, stall, or wasted send is either lost revenue or wasted spend."
+    },
+    {
+      "key": "size",
+      "label": "3 · SIZE THE COST",
+      "color": 0,
+      "note": "Every leak gets a real dollar number, not a general note that something looks off."
+    },
+    {
+      "key": "fix",
+      "label": "4 · FIX FOR ROI",
+      "color": 0,
+      "note": "I fix the highest-dollar leak first and prove the fix worked in the numbers, not just in what changed."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "list_funnels",
+      "kind": "data.transform",
+      "label": "List Every Funnel and Automation Currently Spending Money or Time",
+      "section": "map"
+    },
+    {
+      "key": "map_value",
+      "kind": "data.transform",
+      "label": "Map Where Each Lead Enters and What It Should Be Worth",
+      "section": "map"
+    },
+    {
+      "key": "trace_dropoff",
+      "kind": "data.transform",
+      "label": "Trace Exactly Where Leads Drop Off or Stall",
+      "section": "leak"
+    },
+    {
+      "key": "flag_overspend",
+      "kind": "data.transform",
+      "label": "Flag Steps Burning Ad Spend or Tool Cost With No Return",
+      "section": "leak"
+    },
+    {
+      "key": "quantify",
+      "kind": "data.transform",
+      "label": "Put a Dollar Number on Every Leak: Lost Leads x Close Rate x Deal Value",
+      "section": "size"
+    },
+    {
+      "key": "rank_roi",
+      "kind": "data.aggregate",
+      "label": "Rank Every Leak by Revenue Impact, Highest Cost First",
+      "section": "size"
+    },
+    {
+      "key": "fix_top",
+      "kind": "data.transform",
+      "label": "Fix the Highest-ROI Leak First, Not the Easiest One",
+      "section": "fix"
+    },
+    {
+      "key": "adjust_funnel",
+      "kind": "data.transform",
+      "label": "Adjust the Funnel to Close Where the Money Was Leaking",
+      "section": "fix"
+    },
+    {
+      "key": "remeasure",
+      "kind": "data.transform",
+      "label": "Re-Measure Conversion Rate and Cost Per Lead After the Fix",
+      "section": "fix"
+    },
+    {
+      "key": "report_dollars",
+      "kind": "data.transform",
+      "label": "Report the Dollar Impact, Not Just What Changed",
+      "section": "fix"
+    }
+  ],
+  "edges": [
+    {
+      "from": "list_funnels",
+      "to": "map_value"
+    },
+    {
+      "from": "map_value",
+      "to": "trace_dropoff"
+    },
+    {
+      "from": "trace_dropoff",
+      "to": "flag_overspend"
+    },
+    {
+      "from": "flag_overspend",
+      "to": "quantify"
+    },
+    {
+      "from": "quantify",
+      "to": "rank_roi"
+    },
+    {
+      "from": "rank_roi",
+      "to": "fix_top"
+    },
+    {
+      "from": "fix_top",
+      "to": "adjust_funnel"
+    },
+    {
+      "from": "adjust_funnel",
+      "to": "remeasure"
+    },
+    {
+      "from": "remeasure",
+      "to": "report_dollars"
+    }
+  ],
+  "input_sample": {
+    "funnel": "New Lead → SMS Follow-Up",
+    "monthly_leads_in": 340,
+    "leads_lost_at_this_step": 61,
+    "avg_deal_value": 1800,
+    "close_rate_if_followed_up": "22%"
+  },
+  "output_sample": {
+    "leaks_found": 6,
+    "highest_leak_monthly_cost": "$24,138 in lost revenue from unanswered leads going cold after 24 hours",
+    "fix_applied": "Added a no-response branch with a second touch at 24h and 72h",
+    "conversion_before": "18%",
+    "conversion_after": "27%",
+    "monthly_revenue_recovered": "$14,850"
+  },
+  "archetype": "ghl_roi_audit_thought_process",
+  "learned": true,
+  "learned_at": "2026-08-24"
+}

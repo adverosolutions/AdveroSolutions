@@ -1,0 +1,294 @@
+{
+  "title": "Freight Quoting: Inquiry, Agent Rates, Negotiation, Quote, Invoice",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · READ THE INQUIRY AND PULL THE SHIPMENT DETAILS",
+      "color": 0,
+      "note": "Claude reads the inbound email and fills a fixed shipment schema. Anything missing goes back to the client before the lane is worked."
+    },
+    {
+      "key": "rates",
+      "label": "2 · SOURCE RATES FROM THE AGENT NETWORK",
+      "color": 0,
+      "note": "One rate request per country, sent from Outlook. The workflow holds the lane open for a day and then collects whatever came back."
+    },
+    {
+      "key": "negotiate",
+      "label": "3 · COMPARE, NEGOTIATE, GET HUMAN APPROVAL",
+      "color": 0,
+      "note": "Rates arrive in different currencies and units. Claude normalizes them, and no quote leaves without a person approving the number."
+    },
+    {
+      "key": "quote",
+      "label": "4 · QUOTE THE CLIENT AND FOLLOW UP",
+      "color": 0,
+      "note": "The quote is written from your template and terms, then chased on a timer until the client answers."
+    },
+    {
+      "key": "close",
+      "label": "5 · INVOICE, ARCHIVE, CATCH FAILURES",
+      "color": 0,
+      "note": "Accepted quotes become a Wafeq invoice. Every quote is archived and every outcome is logged, win or lose."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "inbox",
+      "kind": "trigger.email",
+      "label": "1 · New Inquiry Lands in the Outlook Inbox",
+      "section": "intake"
+    },
+    {
+      "key": "extract",
+      "kind": "ai.llm",
+      "label": "2 · Claude Reads the Email and Pulls the Shipment Details",
+      "section": "intake"
+    },
+    {
+      "key": "extract_model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "extract",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "extract_parser",
+      "kind": "ai.parser",
+      "label": "Force Origin Port, Destination Port, Weight, Volume, Cargo Type, Dangerous Goods Class, Incoterms",
+      "parent": "extract",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "complete",
+      "kind": "flow.branch",
+      "label": "3 · Did the Email Contain Every Field We Need to Quote?",
+      "section": "intake"
+    },
+    {
+      "key": "askback",
+      "kind": "net.http",
+      "label": "3b · Outlook: Ask the Client for the Missing Details",
+      "section": "intake"
+    },
+    {
+      "key": "log_inquiry",
+      "kind": "app.action",
+      "label": "4 · Log the Inquiry as a New Quote Reference",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "intake"
+    },
+    {
+      "key": "lane",
+      "kind": "flow.switch",
+      "label": "5 · Route the Rate Request by Trade Lane",
+      "section": "rates"
+    },
+    {
+      "key": "ask_agents",
+      "kind": "net.http",
+      "label": "6 · Outlook: Email the Rate Request to Agents in That Country",
+      "section": "rates"
+    },
+    {
+      "key": "window",
+      "kind": "flow.wait",
+      "label": "7 · Hold the Lane Open for 24 Hours While Agents Reply",
+      "section": "rates"
+    },
+    {
+      "key": "collect",
+      "kind": "net.http",
+      "label": "8 · Outlook: Collect the Agent Rate Replies for This Quote",
+      "section": "rates"
+    },
+    {
+      "key": "compare",
+      "kind": "ai.llm",
+      "label": "9 · Claude Normalizes Every Rate and Ranks Them Side by Side",
+      "section": "negotiate"
+    },
+    {
+      "key": "compare_model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "compare",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "compare_parser",
+      "kind": "ai.parser",
+      "label": "Force One All In Cost Per Agent in a Single Currency",
+      "parent": "compare",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "margin",
+      "kind": "flow.branch",
+      "label": "10 · Is the Best Rate Inside Our Target Margin?",
+      "section": "negotiate"
+    },
+    {
+      "key": "counter",
+      "kind": "net.http",
+      "label": "10b · Outlook: Send the Agent a Counter Offer, Two Rounds Maximum",
+      "section": "negotiate"
+    },
+    {
+      "key": "approve",
+      "kind": "app.action",
+      "label": "11 · Ask a Human to Approve the Rate Before Anything Is Quoted",
+      "app": "slack",
+      "op": "post",
+      "section": "negotiate"
+    },
+    {
+      "key": "draft",
+      "kind": "ai.llm",
+      "label": "12 · Claude Writes the Quote From Your Template and Terms",
+      "section": "quote"
+    },
+    {
+      "key": "draft_model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "draft",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "send_quote",
+      "kind": "net.http",
+      "label": "13 · Outlook: Send the Quote to the Client",
+      "section": "quote"
+    },
+    {
+      "key": "timer",
+      "kind": "flow.wait",
+      "label": "14 · Wait Out the Follow Up Timer",
+      "section": "quote"
+    },
+    {
+      "key": "replied",
+      "kind": "flow.branch",
+      "label": "15 · Has the Client Replied or Accepted the Quote?",
+      "section": "quote"
+    },
+    {
+      "key": "followup",
+      "kind": "net.http",
+      "label": "15b · Outlook: Send the Next Follow Up, Three Maximum, Then Stop",
+      "section": "quote"
+    },
+    {
+      "key": "invoice",
+      "kind": "net.http",
+      "label": "16 · Wafeq: Raise the Invoice for the Accepted Quote",
+      "section": "close"
+    },
+    {
+      "key": "archive",
+      "kind": "app.action",
+      "label": "17 · Archive the Quote PDF in the Client's Drive Folder",
+      "app": "googleDrive",
+      "op": "upload",
+      "section": "close"
+    },
+    {
+      "key": "outcome",
+      "kind": "app.action",
+      "label": "18 · Log the Outcome, Won or Lost, Against the Quote Reference",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "close"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "19 · Any Step Fails, Anywhere in the Workflow",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "close"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "20 · Alert the Team With the Quote Reference and a Link to the Run",
+      "app": "slack",
+      "op": "post",
+      "section": "close"
+    }
+  ],
+  "edges": [
+    { "from": "inbox", "to": "extract" },
+    { "from": "extract", "to": "complete" },
+    { "from": "complete", "to": "askback", "branch": "false" },
+    { "from": "complete", "to": "log_inquiry", "branch": "true" },
+    { "from": "log_inquiry", "to": "lane" },
+    { "from": "lane", "to": "ask_agents", "branch": "China and Southeast Asia" },
+    { "from": "lane", "to": "ask_agents", "branch": "Europe and Mediterranean" },
+    { "from": "lane", "to": "ask_agents", "branch": "Middle East and Gulf" },
+    { "from": "ask_agents", "to": "window" },
+    { "from": "window", "to": "collect" },
+    { "from": "collect", "to": "compare" },
+    { "from": "compare", "to": "margin" },
+    { "from": "margin", "to": "counter", "branch": "false" },
+    { "from": "counter", "to": "compare", "loop": true },
+    { "from": "margin", "to": "approve", "branch": "true" },
+    { "from": "approve", "to": "draft" },
+    { "from": "draft", "to": "send_quote" },
+    { "from": "send_quote", "to": "timer" },
+    { "from": "timer", "to": "replied" },
+    { "from": "replied", "to": "followup", "branch": "false" },
+    { "from": "followup", "to": "timer", "loop": true },
+    { "from": "replied", "to": "invoice", "branch": "true" },
+    { "from": "invoice", "to": "archive" },
+    { "from": "archive", "to": "outcome" },
+    { "from": "err", "to": "alert" }
+  ],
+  "input_sample": {
+    "from": "procurement@alrayanplastics.ae",
+    "subject": "Quote request: Ningbo to Jebel Ali, 2 x 40HC, resin pellets",
+    "received": "2026-09-09T06:41:00Z",
+    "body": "Hi, we need a rate for 2 x 40HC from Ningbo to Jebel Ali. Cargo is polypropylene resin pellets, about 21,500 kg per container, 62 cbm total. UN3077 marine pollutant, class 9. Terms FOB Ningbo, we arrange insurance. Cargo ready 22 September. Please include THC and doc fees.",
+    "attachments": ["packing_list_ALR-4417.pdf"]
+  },
+  "output_sample": {
+    "quote_ref": "QT-2026-0918",
+    "client": "Al Rayan Plastics FZE",
+    "shipment": {
+      "origin_port": "CNNGB Ningbo",
+      "destination_port": "AEJEA Jebel Ali",
+      "equipment": "2 x 40HC",
+      "gross_weight_kg": 43000,
+      "volume_cbm": 62,
+      "cargo_type": "Polypropylene resin pellets",
+      "dangerous_goods_class": "Class 9, UN3077 marine pollutant",
+      "incoterms": "FOB Ningbo",
+      "cargo_ready": "2026-09-22"
+    },
+    "missing_fields_chased": [],
+    "agent_rates_received": [
+      { "agent": "Ningbo Sunrise Logistics", "all_in_usd": 2480, "transit_days": 19, "note": "DG surcharge USD 180 per container included" },
+      { "agent": "Eastbridge Shipping Co", "all_in_usd": 2615, "transit_days": 17, "note": "quoted in CNY, converted at 7.11" },
+      { "agent": "Hanwei Freight", "all_in_usd": 2390, "transit_days": 24, "note": "after one counter offer round, down from 2540" }
+    ],
+    "negotiation_rounds": 1,
+    "selected_agent": "Hanwei Freight",
+    "buy_rate_usd": 2390,
+    "sell_rate_usd": 2915,
+    "margin_pct": 18.0,
+    "human_approval": { "approved_by": "operations", "channel": "#quote-approvals", "at": "2026-09-10T08:12:00Z" },
+    "quote_sent_at": "2026-09-10T08:19:00Z",
+    "follow_ups_sent": 1,
+    "client_response": "accepted",
+    "wafeq_invoice": { "invoice_number": "INV-3392", "amount_usd": 2915, "status": "sent" },
+    "quote_pdf": "https://drive.google.com/file/d/QT-2026-0918-quote",
+    "sheet_row_logged": "Quotes!A418",
+    "if_it_had_failed": "Error trigger fires, Slack gets the quote reference and a link to the failed run, nothing drops silently"
+  }
+}

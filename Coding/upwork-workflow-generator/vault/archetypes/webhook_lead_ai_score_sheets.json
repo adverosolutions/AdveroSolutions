@@ -1,0 +1,169 @@
+{
+  "title": "Lead Webhook → Google Sheets → AI Scores It Hot, Warm or Cold",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "in",
+      "label": "1 · LEAD ARRIVES",
+      "color": 0,
+      "note": "A bad payload gets a clear rejection instead of a half-written row."
+    },
+    {
+      "key": "save",
+      "label": "2 · SAVE IT FIRST",
+      "color": 0,
+      "note": "The lead is stored before the AI runs, so it is never lost if scoring fails."
+    },
+    {
+      "key": "score",
+      "label": "3 · SCORE IT",
+      "color": 0,
+      "note": "Hot, Warm or Cold, with one line saying why."
+    },
+    {
+      "key": "done",
+      "label": "4 · WRITE BACK AND REPLY",
+      "color": 0,
+      "note": "Row updated, webhook answered."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 · Lead Comes In From the Webhook",
+      "section": "in"
+    },
+    {
+      "key": "valid",
+      "kind": "flow.branch",
+      "label": "2 · Are Name and Email Actually There?",
+      "section": "in"
+    },
+    {
+      "key": "reject",
+      "kind": "net.respond",
+      "label": "3 · Reply With What Was Missing and Stop",
+      "section": "in"
+    },
+    {
+      "key": "add",
+      "kind": "app.action",
+      "label": "4 · Add the Lead to the Sheet",
+      "app": "googleSheets",
+      "op": "append_row",
+      "section": "save"
+    },
+    {
+      "key": "ai",
+      "kind": "ai.agent",
+      "label": "5 · Score the Lead Hot, Warm or Cold",
+      "section": "score"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "OpenAI",
+      "app": "openai",
+      "parent": "ai",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Only Allow Hot, Warm or Cold",
+      "parent": "ai",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "ok",
+      "kind": "flow.branch",
+      "label": "6 · Did the AI Give a Usable Answer?",
+      "section": "score"
+    },
+    {
+      "key": "retry",
+      "kind": "ai.llm",
+      "label": "7 · Try Once More, Then Mark Needs Review",
+      "section": "score"
+    },
+    {
+      "key": "update",
+      "kind": "app.action",
+      "label": "8 · Write the Score Back to That Row",
+      "app": "googleSheets",
+      "op": "update_row",
+      "section": "done"
+    },
+    {
+      "key": "reply",
+      "kind": "net.respond",
+      "label": "9 · Reply Success With the Score",
+      "section": "done"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "valid"
+    },
+    {
+      "from": "valid",
+      "to": "reject",
+      "branch": "false"
+    },
+    {
+      "from": "valid",
+      "to": "add",
+      "branch": "true"
+    },
+    {
+      "from": "add",
+      "to": "ai"
+    },
+    {
+      "from": "ai",
+      "to": "ok"
+    },
+    {
+      "from": "ok",
+      "to": "update",
+      "branch": "true"
+    },
+    {
+      "from": "ok",
+      "to": "retry",
+      "branch": "false"
+    },
+    {
+      "from": "retry",
+      "to": "update"
+    },
+    {
+      "from": "update",
+      "to": "reply"
+    }
+  ],
+  "input_sample": {
+    "name": "Priya Raghunathan",
+    "email": "priya@lumenlabs.io",
+    "company": "Lumen Labs",
+    "budget": "$2,000 - $5,000",
+    "timeline": "This month",
+    "message": "We need this sorted before our next campaign goes out."
+  },
+  "output_sample": {
+    "row": 148,
+    "score": "Hot",
+    "why": "Budget stated, timeline is this month, and the message names a deadline.",
+    "written_to_sheet": true,
+    "webhook_response": {
+      "status": 200,
+      "score": "Hot"
+    },
+    "if_it_had_failed": "Lead is already saved, row marked Needs Review, nothing lost"
+  },
+  "archetype": "webhook_lead_ai_score_sheets",
+  "learned": true,
+  "learned_at": "2026-08-12"
+}

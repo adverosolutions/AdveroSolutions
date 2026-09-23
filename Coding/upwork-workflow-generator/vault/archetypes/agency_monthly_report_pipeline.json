@@ -1,0 +1,202 @@
+{
+  "title": "Monthly Client Reporting — Collect, Summarize, Send, Log",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "roster",
+      "label": "1 · ROSTER",
+      "color": 0,
+      "note": "Adding a client is one row in the sheet — no workflow edit, ever. This is the whole scalability answer: the run loops the roster rather than hard-coding 20 clients."
+    },
+    {
+      "key": "collect",
+      "label": "2 · COLLECT",
+      "color": 0,
+      "note": "Both PDFs pulled per client, with retries. A source that is briefly down costs one retry, not a failed month."
+    },
+    {
+      "key": "draft",
+      "label": "3 · EXTRACT & DRAFT",
+      "color": 0,
+      "note": "Metrics parsed from the PDFs against a fixed schema, then the agent writes the summary from those numbers — so it can only report figures that actually appeared in the reports."
+    },
+    {
+      "key": "deliver",
+      "label": "4 · DELIVER & LOG",
+      "color": 0,
+      "note": "Sent from whichever mailbox that client expects, with both PDFs attached. Every run writes a row: sent, skipped or failed, and why."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "cron",
+      "kind": "trigger.schedule",
+      "label": "1st of the Month, 6:00 AM",
+      "section": "roster"
+    },
+    {
+      "key": "sheet",
+      "kind": "app.action",
+      "label": "Read the Client Roster",
+      "app": "googleSheets",
+      "op": "read",
+      "section": "roster",
+      "notes": "Client, email, mailbox, Looker report id, Keyword Tool id, active yes/no."
+    },
+    {
+      "key": "split",
+      "kind": "data.split",
+      "label": "Loop Each Client",
+      "section": "roster"
+    },
+    {
+      "key": "looker",
+      "kind": "net.http",
+      "label": "Download Looker Studio PDF",
+      "section": "collect"
+    },
+    {
+      "key": "kwtool",
+      "kind": "net.http",
+      "label": "Download Keyword Tool PDF",
+      "section": "collect"
+    },
+    {
+      "key": "extract",
+      "kind": "data.code",
+      "label": "Extract Metrics from Both PDFs",
+      "section": "draft"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "Draft the Client Email Summary",
+      "section": "draft",
+      "notes": "Writes to your voice and flags month-over-month moves worth commenting on."
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Report Metric Schema",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "Log Metrics & Run Status",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "deliver"
+    },
+    {
+      "key": "route",
+      "kind": "flow.switch",
+      "label": "Which mailbox",
+      "section": "deliver"
+    },
+    {
+      "key": "gmail",
+      "kind": "app.action",
+      "label": "Send via Gmail + Attachments",
+      "app": "gmail",
+      "op": "send",
+      "section": "deliver"
+    },
+    {
+      "key": "outlook",
+      "kind": "app.action",
+      "label": "Send via Outlook + Attachments",
+      "app": "microsoftOutlook",
+      "op": "send",
+      "section": "deliver"
+    }
+  ],
+  "edges": [
+    {
+      "from": "cron",
+      "to": "sheet"
+    },
+    {
+      "from": "sheet",
+      "to": "split"
+    },
+    {
+      "from": "split",
+      "to": "looker"
+    },
+    {
+      "from": "looker",
+      "to": "kwtool"
+    },
+    {
+      "from": "kwtool",
+      "to": "extract"
+    },
+    {
+      "from": "extract",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "log"
+    },
+    {
+      "from": "log",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "gmail",
+      "branch": "Gmail"
+    },
+    {
+      "from": "route",
+      "to": "outlook",
+      "branch": "Outlook"
+    },
+    {
+      "from": "gmail",
+      "to": "split",
+      "loop": true
+    },
+    {
+      "from": "outlook",
+      "to": "split",
+      "loop": true
+    }
+  ],
+  "input_sample": {
+    "run_month": "July 2026",
+    "clients_active": 20,
+    "client": "Northside Dental",
+    "email": "marketing@northsidedental.ca",
+    "mailbox": "Outlook",
+    "looker_report_id": "lkr_4471",
+    "keyword_tool_id": "kwt_8842"
+  },
+  "output_sample": {
+    "client": "Northside Dental",
+    "sent_from": "Outlook",
+    "attachments": [
+      "Northside-Looker-Jul2026.pdf",
+      "Northside-Keywords-Jul2026.pdf"
+    ],
+    "organic_sessions": "4,812  (+14% MoM)",
+    "top_gaining_keyword": "emergency dentist calgary  (#11 → #4)",
+    "conversions": "63  (+9 MoM)",
+    "summary_opening": "July was your strongest month for organic enquiries this year…",
+    "run_status": "20 of 20 sent · 0 failed · 3m 41s"
+  },
+  "archetype": "agency_monthly_report_pipeline",
+  "learned": true,
+  "learned_at": "2026-08-03"
+}

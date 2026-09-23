@@ -1,0 +1,231 @@
+{
+  "title": "Multi-Source Lead Capture → Claude Qualification → GoHighLevel → Route & Notify",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "capture",
+      "label": "1 · CAPTURE",
+      "color": 0,
+      "note": "Three sources, one lead shape. Adding a fourth source later means one new trigger into the same merge — never a second copy of the pipeline."
+    },
+    {
+      "key": "qualify",
+      "label": "2 · ENRICH & QUALIFY",
+      "color": 0,
+      "note": "Enrichment runs before Claude, so scoring sees company size and industry rather than only what the form collected. Score, reason and summary come back against a fixed schema."
+    },
+    {
+      "key": "crm",
+      "label": "3 · CRM & ROUTING",
+      "color": 0,
+      "note": "Contact, company and opportunity written as one unit, then routed on territory and current rep capacity — rules live in a sheet, not in the workflow."
+    },
+    {
+      "key": "notify",
+      "label": "4 · NOTIFY, SEQUENCE & LOG",
+      "color": 0,
+      "note": "The rep gets the summary in Slack before they open the CRM. Every lead lands in reporting whether it qualified or not — the disqualified ones are how the scoring gets tuned."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "fb",
+      "kind": "trigger.app",
+      "label": "Facebook Lead Ad Submitted",
+      "app": "facebook",
+      "section": "capture"
+    },
+    {
+      "key": "tf",
+      "kind": "trigger.form",
+      "label": "Typeform Submitted",
+      "section": "capture"
+    },
+    {
+      "key": "web",
+      "kind": "trigger.webhook",
+      "label": "Website Form Submitted",
+      "section": "capture"
+    },
+    {
+      "key": "merge",
+      "kind": "data.merge",
+      "label": "Unify Into One Lead Shape",
+      "section": "capture"
+    },
+    {
+      "key": "enrich",
+      "kind": "net.http",
+      "label": "Enrich Company & Contact",
+      "section": "qualify",
+      "notes": "Retries with backoff, then continues without enrichment — a rate-limited API must never drop a lead."
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "Qualify, Score & Summarize",
+      "section": "qualify"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Lead Scoring Schema",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "Qualified — score 70 or higher",
+      "section": "qualify"
+    },
+    {
+      "key": "ghl",
+      "kind": "app.action",
+      "label": "Upsert Contact & Company",
+      "app": "gohighlevel",
+      "op": "create",
+      "section": "crm",
+      "notes": "Matched on phone, then email. Three lead sources for one buyer is the fastest way to build a duplicate CRM."
+    },
+    {
+      "key": "opp",
+      "kind": "app.action",
+      "label": "Create the Opportunity",
+      "app": "gohighlevel",
+      "op": "create",
+      "section": "crm"
+    },
+    {
+      "key": "route",
+      "kind": "data.transform",
+      "label": "Route by Territory & Rep Capacity",
+      "section": "crm"
+    },
+    {
+      "key": "slack",
+      "kind": "app.action",
+      "label": "Post the AI Lead Summary",
+      "app": "slack",
+      "op": "post",
+      "section": "notify"
+    },
+    {
+      "key": "seq",
+      "kind": "app.action",
+      "label": "Start the Follow-Up Sequence",
+      "app": "gohighlevel",
+      "op": "send",
+      "section": "notify"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "Log to Reporting",
+      "app": "airtable",
+      "op": "create",
+      "section": "notify"
+    },
+    {
+      "key": "nurture",
+      "kind": "app.action",
+      "label": "Add to Nurture — Logged, Not Lost",
+      "app": "gohighlevel",
+      "op": "send",
+      "section": "notify"
+    }
+  ],
+  "edges": [
+    {
+      "from": "fb",
+      "to": "merge"
+    },
+    {
+      "from": "tf",
+      "to": "merge"
+    },
+    {
+      "from": "web",
+      "to": "merge"
+    },
+    {
+      "from": "merge",
+      "to": "enrich"
+    },
+    {
+      "from": "enrich",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "ghl",
+      "branch": "true"
+    },
+    {
+      "from": "ghl",
+      "to": "opp"
+    },
+    {
+      "from": "opp",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "slack"
+    },
+    {
+      "from": "slack",
+      "to": "seq"
+    },
+    {
+      "from": "seq",
+      "to": "log"
+    },
+    {
+      "from": "gate",
+      "to": "nurture",
+      "branch": "false"
+    }
+  ],
+  "input_sample": {
+    "source": "Facebook Lead Ads — Roofing Q3 Campaign",
+    "client_account": "Summit Exteriors",
+    "full_name": "Dana Reyes",
+    "email": "dana.reyes@meridianlogistics.com",
+    "phone": "+1 (512) 555-0148",
+    "form_answers": {
+      "roof_age": "18 years",
+      "insurance_claim": "Yes",
+      "timeline": "Within 30 days"
+    },
+    "submitted_at": "2026-08-03T09:14:22Z"
+  },
+  "output_sample": {
+    "ghl_contact_id": "ct_9f42ab10",
+    "opportunity_id": "opp_8842",
+    "lead_score": 88,
+    "score_reason": "Insurance claim open, 18-year roof, 30-day timeline — three of four buying signals",
+    "ai_summary": "Storm-damage claim already filed. Wants an inspection this week; decision maker is on the call.",
+    "enriched": "Meridian Logistics · 120 employees · Austin TX",
+    "routed_to": "Marcus Webb — Central territory, 3 of 8 open",
+    "slack_posted": "#leads-summit-exteriors",
+    "sequence": "Roofing — Touch 1 of 5",
+    "duplicates_prevented": 1,
+    "time_to_rep_seconds": 38
+  },
+  "archetype": "claude_n8n_lead_management",
+  "learned": true,
+  "learned_at": "2026-08-03"
+}

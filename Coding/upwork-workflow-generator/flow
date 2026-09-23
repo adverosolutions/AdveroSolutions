@@ -1,0 +1,3 @@
+#!/bin/bash
+# Swap the clipboard to the diagram from the most recent run.
+exec python3 -m upwork_gen clip "${1:-flow}"

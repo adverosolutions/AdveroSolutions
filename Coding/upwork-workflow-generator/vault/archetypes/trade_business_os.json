@@ -1,0 +1,256 @@
+{
+  "title": "Revamp OS — Intake → Recall Job History → Approve → Commit",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · INTAKE",
+      "color": 0,
+      "note": "Emails, quote requests and work orders all land in one place and are read into a single job shape — client, address, scope, urgency. Nothing sits in an inbox waiting to be re-read."
+    },
+    {
+      "key": "recall",
+      "label": "2 · RECALL",
+      "color": 0,
+      "note": "The part a CRM cannot do: search old jobs, notes and work logs from a messy clue. \"That render job in Palm Beach, maybe 2023, the one with the tricky access\" is enough to find the file, the photos and what was charged."
+    },
+    {
+      "key": "prepare",
+      "label": "3 · PREPARE",
+      "color": 0,
+      "note": "A site pack is drafted before the visit — what was quoted last time, what went wrong, materials used, access notes. The pre-visit prep that normally happens in your head, written down."
+    },
+    {
+      "key": "approve",
+      "label": "4 · APPROVE",
+      "color": 0,
+      "note": "Nothing is sent, changed or deleted without a yes. The draft goes out for review with the reasoning attached, and the workflow waits. This gate is the difference between a useful assistant and one you stop trusting."
+    },
+    {
+      "key": "commit",
+      "label": "5 · COMMIT",
+      "color": 0,
+      "note": "Only after approval: the quote lands in Xero, the jobs dashboard updates, and the work log is captured in a structured form so next year's pricing is based on what jobs actually cost rather than memory."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "email",
+      "kind": "trigger.email",
+      "label": "Email / Quote Request In",
+      "section": "intake"
+    },
+    {
+      "key": "classify",
+      "kind": "ai.agent",
+      "label": "Read & Extract Job Details",
+      "section": "intake",
+      "notes": "Client, site address, scope, urgency, attachments"
+    },
+    {
+      "key": "cmodel",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "classify",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "cparser",
+      "kind": "ai.parser",
+      "label": "Job Schema",
+      "parent": "classify",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "recall",
+      "kind": "ai.agent",
+      "label": "Find Matching Job History",
+      "section": "recall",
+      "notes": "Searches notes, chats and work logs from partial clues"
+    },
+    {
+      "key": "rmodel",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "recall",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "store",
+      "kind": "ai.vectorstore",
+      "label": "Job History Index (self-hosted)",
+      "app": "supabase",
+      "parent": "recall",
+      "port": "ai_tool"
+    },
+    {
+      "key": "embed",
+      "kind": "ai.embed",
+      "label": "Embeddings",
+      "app": "openai",
+      "parent": "store",
+      "port": "ai_embedding"
+    },
+    {
+      "key": "brief",
+      "kind": "ai.llm",
+      "label": "Draft Site Pack & Quote",
+      "section": "prepare",
+      "notes": "Prior pricing, access notes, materials, what went wrong last time"
+    },
+    {
+      "key": "bmodel",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "brief",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "approve",
+      "kind": "app.action",
+      "label": "Send for Your Approval",
+      "app": "gmail",
+      "op": "send",
+      "section": "approve"
+    },
+    {
+      "key": "wait",
+      "kind": "flow.wait",
+      "label": "Await Decision",
+      "section": "approve"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "Approved?",
+      "section": "approve"
+    },
+    {
+      "key": "xero",
+      "kind": "app.action",
+      "label": "Create Quote in Xero",
+      "app": "xero",
+      "op": "create",
+      "section": "commit"
+    },
+    {
+      "key": "dash",
+      "kind": "app.action",
+      "label": "Update Current Jobs Dashboard",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "commit"
+    },
+    {
+      "key": "worklog",
+      "kind": "app.action",
+      "label": "Capture Work Log for Pricing",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "commit"
+    },
+    {
+      "key": "revise",
+      "kind": "app.action",
+      "label": "Hold — Park for Revision",
+      "app": "gmail",
+      "op": "draft",
+      "section": "commit"
+    }
+  ],
+  "edges": [
+    {
+      "from": "email",
+      "to": "classify"
+    },
+    {
+      "from": "classify",
+      "to": "recall"
+    },
+    {
+      "from": "recall",
+      "to": "brief"
+    },
+    {
+      "from": "brief",
+      "to": "approve"
+    },
+    {
+      "from": "approve",
+      "to": "wait"
+    },
+    {
+      "from": "wait",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "xero",
+      "branch": "true"
+    },
+    {
+      "from": "gate",
+      "to": "revise",
+      "branch": "false"
+    },
+    {
+      "from": "xero",
+      "to": "dash"
+    },
+    {
+      "from": "dash",
+      "to": "worklog"
+    }
+  ],
+  "input_sample": {
+    "received_at": "2026-07-31T07:12:44Z",
+    "from": "kerry.mcallister@bigpond.com",
+    "subject": "Re: render touch up + the balcony",
+    "body": "Hi mate, you did some render work for us a couple of years back — think it was the Palm Beach place with the awkward side access. Balcony's gone again in the same spot and mum wants the whole north wall done properly this time. Can you come have a look? No rush but before the wet season ideally.",
+    "attachments": [
+      "balcony-crack.jpg"
+    ],
+    "matched_contact": null
+  },
+  "output_sample": {
+    "job_id": "RGC-2026-0311",
+    "client": "Kerry McAllister",
+    "site": "14 Kalinda St, Palm Beach QLD 4221",
+    "scope": "Render repair — north wall full re-render, balcony crack rectification",
+    "urgency": "before wet season (approx. Nov)",
+    "history_recalled": {
+      "matched_from_clue": "\"Palm Beach place with the awkward side access\", ~2 years ago, render",
+      "job": "RGC-2023-0184 · Nov 2023 · Render patch, south balcony",
+      "confidence": 0.89,
+      "prior_invoice_total": 2840.0,
+      "notes_found": "Side access under 900mm — no wheelbarrow, all material hand-carried. Add 3hrs labour. Original render mix was oxide-tinted, batch noted in job file.",
+      "photos": 7,
+      "same_defect_recurring": true
+    },
+    "site_pack": {
+      "flagged_for_visit": [
+        "Same location as 2023 patch — check for movement, not just surface cracking",
+        "Access constraint adds ~3hrs labour; price accordingly",
+        "Match existing oxide tint or quote full wall to avoid a visible join"
+      ],
+      "suggested_quote": 6350.0,
+      "basis": "2023 rate + 18% materials movement + full wall vs patch + access loading"
+    },
+    "approval": {
+      "sent_at": "2026-07-31T07:13:02Z",
+      "decided_at": "2026-07-31T08:41:19Z",
+      "decision": "approved",
+      "edits_made": "Dropped quote to $6,100 — repeat client"
+    },
+    "xero_quote": "QU-0412",
+    "dashboard_row": 87,
+    "work_log_captured": true,
+    "pricing_intelligence": "Render m² rate now backed by 6 completed jobs (2023-2026); access-constrained sites averaging +2.7hrs labour"
+  },
+  "archetype": "trade_business_os",
+  "learned": true,
+  "learned_at": "2026-08-02"
+}

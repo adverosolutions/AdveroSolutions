@@ -1,0 +1,294 @@
+{
+  "title": "Your Lead Response and WhatsApp Follow-Up System",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "lead",
+      "label": "1 - A LEAD WRITES IN",
+      "color": 0,
+      "note": "Web form, Instagram DM or Facebook DM all land on one webhook, get cleaned into the same shape, and are saved in Supabase before anything else runs."
+    },
+    {
+      "key": "first",
+      "label": "2 - INSTANT ALERT AND FIRST REPLY",
+      "color": 0,
+      "note": "The team hears about the lead in Slack, and the lead gets a WhatsApp reply with a booking link, both within seconds of writing in."
+    },
+    {
+      "key": "chase",
+      "label": "3 - FOLLOW UP UNTIL BOOKED",
+      "color": 0,
+      "note": "One day later it checks Supabase. Booked or replied means confirm and put it on the calendar. Silence means a gentle nudge, wait two days, check again."
+    },
+    {
+      "key": "reply",
+      "label": "4 - WHEN THEY REPLY ON WHATSAPP",
+      "color": 0,
+      "note": "Twilio posts the inbound message back in. The model reads it and routes it: book the time, hand a real question to a human, or stop messaging them for good."
+    },
+    {
+      "key": "safety",
+      "label": "5 - NOTHING FAILS QUIETLY",
+      "color": 0,
+      "note": "If any step in the flow errors, Slack gets the lead, the step and a link to the failed run, so a silent break never costs a booking."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 - New Lead Writes In From Web Form, IG or FB DM",
+      "section": "lead"
+    },
+    {
+      "key": "norm",
+      "kind": "data.transform",
+      "label": "2 - Normalize the Lead",
+      "section": "lead",
+      "notes": "Name, phone in E.164, source, message. One shape, whatever channel it came from."
+    },
+    {
+      "key": "save",
+      "kind": "app.action",
+      "label": "3 - Save the Lead in Supabase",
+      "app": "supabase",
+      "op": "insert",
+      "section": "lead"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "4 - Instant Alert to the Team",
+      "app": "slack",
+      "op": "post",
+      "section": "first"
+    },
+    {
+      "key": "wa1",
+      "kind": "app.action",
+      "label": "5 - WhatsApp via Twilio: Instant Reply With Booking Link",
+      "app": "twilio",
+      "op": "send",
+      "section": "first"
+    },
+    {
+      "key": "wait1",
+      "kind": "flow.wait",
+      "label": "6 - Wait 1 Day",
+      "section": "chase"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "7 - Booked or Replied?",
+      "section": "chase",
+      "notes": "Reads the lead status in Supabase, so a booking made anywhere stops the chase."
+    },
+    {
+      "key": "wa2",
+      "kind": "app.action",
+      "label": "8 - WhatsApp: Confirm the Appointment",
+      "app": "twilio",
+      "op": "send",
+      "section": "chase"
+    },
+    {
+      "key": "cal",
+      "kind": "app.action",
+      "label": "9 - Put It on the Calendar",
+      "app": "googleCalendar",
+      "op": "create",
+      "section": "chase"
+    },
+    {
+      "key": "wa3",
+      "kind": "app.action",
+      "label": "8b - WhatsApp: Gentle Follow-Up",
+      "app": "twilio",
+      "op": "send",
+      "section": "chase"
+    },
+    {
+      "key": "again",
+      "kind": "flow.wait",
+      "label": "9b - Wait 2 Days",
+      "section": "chase",
+      "notes": "Then back to the same check. Capped, so nobody gets chased forever."
+    },
+    {
+      "key": "hook2",
+      "kind": "trigger.webhook",
+      "label": "1b - WhatsApp Reply Comes In From Twilio",
+      "section": "reply"
+    },
+    {
+      "key": "classify",
+      "kind": "ai.llm",
+      "label": "10 - Classify the Reply",
+      "section": "reply",
+      "notes": "Book a time, a real question, or stop. Returns the picked time when there is one."
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "GPT-4o",
+      "app": "openai",
+      "parent": "classify",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "route",
+      "kind": "flow.switch",
+      "label": "11 - Route: Book, Question, Stop",
+      "section": "reply"
+    },
+    {
+      "key": "cal2",
+      "kind": "app.action",
+      "label": "12 - Book the Appointment on the Calendar",
+      "app": "googleCalendar",
+      "op": "create",
+      "section": "reply"
+    },
+    {
+      "key": "human",
+      "kind": "app.action",
+      "label": "13 - Hand to a Human",
+      "app": "slack",
+      "op": "post",
+      "section": "reply"
+    },
+    {
+      "key": "optout",
+      "kind": "app.action",
+      "label": "14 - Mark Opted Out",
+      "app": "supabase",
+      "op": "insert",
+      "section": "reply"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "15 - Any Step Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "safety"
+    },
+    {
+      "key": "errslack",
+      "kind": "app.action",
+      "label": "16 - Alert: Flow Failed",
+      "app": "slack",
+      "op": "post",
+      "section": "safety"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "norm"
+    },
+    {
+      "from": "norm",
+      "to": "save"
+    },
+    {
+      "from": "save",
+      "to": "alert"
+    },
+    {
+      "from": "alert",
+      "to": "wa1"
+    },
+    {
+      "from": "wa1",
+      "to": "wait1"
+    },
+    {
+      "from": "wait1",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "wa2",
+      "branch": "true"
+    },
+    {
+      "from": "wa2",
+      "to": "cal"
+    },
+    {
+      "from": "gate",
+      "to": "wa3",
+      "branch": "false"
+    },
+    {
+      "from": "wa3",
+      "to": "again"
+    },
+    {
+      "from": "again",
+      "to": "gate",
+      "loop": true
+    },
+    {
+      "from": "hook2",
+      "to": "classify"
+    },
+    {
+      "from": "classify",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "cal2",
+      "branch": "Book"
+    },
+    {
+      "from": "route",
+      "to": "human",
+      "branch": "Question"
+    },
+    {
+      "from": "route",
+      "to": "optout",
+      "branch": "Stop"
+    },
+    {
+      "from": "err",
+      "to": "errslack"
+    }
+  ],
+  "input_sample": {
+    "channel": "instagram_dm",
+    "received_at": "2026-09-21T14:08:33Z",
+    "name": "Priya Nair",
+    "phone": "+12025550188",
+    "source": "instagram_dm",
+    "message": "Do you have availability next week for a consultation?"
+  },
+  "output_sample": {
+    "whatsapp_reply_sent": "Hi Priya, thanks for reaching out on Instagram. You can grab a consultation time here: https://cal.example.com/consult/priya-nair . Reply here any time and a real person will pick it up.",
+    "slack_alert": "New lead: Priya Nair, +12025550188, from instagram_dm. Asked about availability next week for a consultation. Replied on WhatsApp 6 seconds after she wrote in.",
+    "supabase_row": {
+      "lead_id": "ld_7741",
+      "name": "Priya Nair",
+      "phone": "+12025550188",
+      "source": "instagram_dm",
+      "status": "booked",
+      "appointment": "2026-09-24 10:00",
+      "follow_ups_sent": 1,
+      "opted_out": false
+    },
+    "calendar_event": {
+      "title": "Consultation - Priya Nair",
+      "start": "2026-09-24 10:00",
+      "duration_min": 30,
+      "guest_notified_on": "whatsapp"
+    },
+    "if_a_step_had_failed": "Error trigger fires, Slack gets the lead, the step and a link to the failed run"
+  },
+  "archetype": "your_lead_response_and_whatsapp_follow_up_system",
+  "learned": true,
+  "learned_at": "2026-09-21"
+}

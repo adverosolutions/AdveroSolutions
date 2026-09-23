@@ -1,0 +1,300 @@
+{
+  "title": "Production AI Chatbot Backend - RAG, Memory, Analytics",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "conversation",
+      "label": "1 · THE CONVERSATION",
+      "color": 0,
+      "note": "Every message arrives with a user id and a session id, so the bot knows who it is talking to before it thinks."
+    },
+    {
+      "key": "answer",
+      "label": "2 · HOW THE ANSWER GETS BUILT",
+      "color": 0,
+      "note": "One agent, with your knowledge base and your REST API attached to it. It has to cite where the answer came from."
+    },
+    {
+      "key": "handoff",
+      "label": "3 · REPLY, HAND OFF, AND LOG EVERY TURN",
+      "color": 0,
+      "note": "Low confidence goes to a human with the full thread. Everything else streams back and gets written down either way."
+    },
+    {
+      "key": "ingestion",
+      "label": "4 · KEEPING THE KNOWLEDGE BASE CURRENT",
+      "color": 0,
+      "note": "Runs on its own every night. This is the part that stops the bot answering from last quarter's docs."
+    },
+    {
+      "key": "errors",
+      "label": "5 · WHEN SOMETHING BREAKS",
+      "color": 0,
+      "note": "A failed run pings me with a link to it. Nothing fails quietly in front of a customer."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "chat",
+      "kind": "trigger.chat",
+      "label": "1 · Message Arrives From the Web Widget",
+      "section": "conversation"
+    },
+    {
+      "key": "load",
+      "kind": "data.transform",
+      "label": "2 · Load the User, the Session and Recent History",
+      "section": "conversation"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "3 · Answer From Your Knowledge Base and Your APIs",
+      "section": "answer"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "OpenAI GPT-4.1",
+      "app": "openai",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "memory",
+      "kind": "ai.memory",
+      "label": "Conversation History, One Thread Per User",
+      "parent": "agent",
+      "port": "ai_memory"
+    },
+    {
+      "key": "kb",
+      "kind": "ai.vectorstore",
+      "label": "Your Knowledge Base, Searched by Meaning",
+      "app": "supabase",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "embed",
+      "kind": "ai.embed",
+      "label": "Turns the Question Into a Search Vector",
+      "app": "openai",
+      "parent": "kb",
+      "port": "ai_embedding"
+    },
+    {
+      "key": "apitool",
+      "kind": "ai.tool",
+      "label": "Your REST API: Account, Orders, Subscription",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Force: Answer, Sources, Confidence, Escalate Yes or No",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "compose",
+      "kind": "data.transform",
+      "label": "4 · Assemble the Reply With Its Sources",
+      "section": "answer"
+    },
+    {
+      "key": "escalate",
+      "kind": "flow.branch",
+      "label": "5 · Does This One Need a Human?",
+      "section": "handoff"
+    },
+    {
+      "key": "handoff",
+      "kind": "app.action",
+      "label": "6a · Hand It to Support With the Whole Thread",
+      "app": "slack",
+      "op": "post",
+      "section": "handoff"
+    },
+    {
+      "key": "reply",
+      "kind": "net.respond",
+      "label": "6b · Stream the Answer Back Into the Widget",
+      "section": "handoff"
+    },
+    {
+      "key": "save",
+      "kind": "app.action",
+      "label": "7 · Save This Turn to Conversation History",
+      "app": "supabase",
+      "op": "insert",
+      "section": "handoff"
+    },
+    {
+      "key": "analytics",
+      "kind": "app.action",
+      "label": "8 · Log Intent, Answer Time, Token Cost and Rating",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "handoff"
+    },
+    {
+      "key": "nightly",
+      "kind": "trigger.schedule",
+      "label": "9 · Re-Index Your Knowledge Base Every Night",
+      "section": "ingestion"
+    },
+    {
+      "key": "crawl",
+      "kind": "net.http",
+      "label": "10 · Crawl Your Docs, Help Centre and Product Pages",
+      "section": "ingestion"
+    },
+    {
+      "key": "changed",
+      "kind": "data.filter",
+      "label": "11 · Keep Only the Pages That Changed Since Last Night",
+      "section": "ingestion"
+    },
+    {
+      "key": "chunk",
+      "kind": "data.split",
+      "label": "12 · Split Each Page Into Passages the Bot Can Quote",
+      "section": "ingestion"
+    },
+    {
+      "key": "upsert",
+      "kind": "net.http",
+      "label": "13 · Embed the Passages and Upsert Into the Vector Store",
+      "section": "ingestion"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "14 · Any Step Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "errors"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "15 · Alert With a Link to the Failed Run",
+      "app": "slack",
+      "op": "post",
+      "section": "errors"
+    }
+  ],
+  "edges": [
+    {
+      "from": "chat",
+      "to": "load"
+    },
+    {
+      "from": "load",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "compose"
+    },
+    {
+      "from": "compose",
+      "to": "escalate"
+    },
+    {
+      "from": "escalate",
+      "to": "handoff",
+      "branch": "true"
+    },
+    {
+      "from": "escalate",
+      "to": "reply",
+      "branch": "false"
+    },
+    {
+      "from": "handoff",
+      "to": "save"
+    },
+    {
+      "from": "reply",
+      "to": "save"
+    },
+    {
+      "from": "save",
+      "to": "analytics"
+    },
+    {
+      "from": "nightly",
+      "to": "crawl"
+    },
+    {
+      "from": "crawl",
+      "to": "changed"
+    },
+    {
+      "from": "changed",
+      "to": "chunk"
+    },
+    {
+      "from": "chunk",
+      "to": "upsert"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "user_id": "usr_10428",
+    "email": "sana.raza@northgatelabs.co",
+    "plan": "Growth",
+    "session_id": "sess_9f4c21",
+    "message": "my invoice for august says 2 seats but we added a third on the 12th, why wasn't it billed?",
+    "page_url": "https://app.northgatelabs.co/billing",
+    "widget": "web-react",
+    "sent_at": "2026-09-09T14:07:33Z"
+  },
+  "output_sample": {
+    "answer": "Seats added mid-cycle are prorated onto the next invoice, not the current one. Your third seat was added 12 Aug, so it appears on the September invoice as a prorated line of $34.00 plus the full $49.00 seat charge.",
+    "sources": [
+      {
+        "title": "Billing: mid-cycle seat changes",
+        "url": "https://docs.northgatelabs.co/billing/proration",
+        "score": 0.91
+      },
+      {
+        "title": "Invoice line items explained",
+        "url": "https://docs.northgatelabs.co/billing/invoices",
+        "score": 0.78
+      }
+    ],
+    "api_calls_made": [
+      {
+        "tool": "Your REST API",
+        "endpoint": "GET /accounts/10428/subscription",
+        "seats": 3,
+        "seat_added_at": "2026-08-12"
+      }
+    ],
+    "confidence": 0.88,
+    "escalated_to_human": false,
+    "intent": "billing_proration",
+    "conversation_history_rows": 7,
+    "analytics_row": {
+      "session_id": "sess_9f4c21",
+      "intent": "billing_proration",
+      "answer_time_ms": 2140,
+      "tokens_in": 3180,
+      "tokens_out": 214,
+      "estimated_cost_usd": 0.0112,
+      "sources_cited": 2,
+      "thumbs_rating": "up"
+    },
+    "if_confidence_had_been_low": "Slack handoff fires with the full thread, the sources it did find, and a link back to the session, instead of guessing at a billing answer"
+  },
+  "archetype": "production_ai_chatbot_backend_rag_memory_analyti",
+  "learned": true,
+  "learned_at": "2026-09-09"
+}

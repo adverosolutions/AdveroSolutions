@@ -1,0 +1,167 @@
+{
+  "title": "Lead/Inquiry Capture → AI Score & Draft → Dynamics CRM → Route Sales or Support",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "capture",
+      "label": "1 · CAPTURE & ORGANIZE",
+      "color": 0,
+      "note": "Every inquiry gets normalized and checked against Dynamics before anything else happens, so nothing becomes a duplicate record."
+    },
+    {
+      "key": "score",
+      "label": "2 · AI SCORE & DRAFT",
+      "color": 0,
+      "note": "One AI step classifies whether this is a sales lead or a support need and drafts the first response either way."
+    },
+    {
+      "key": "sync",
+      "label": "3 · SYNC TO DYNAMICS",
+      "color": 0,
+      "note": "The record and the interaction both get logged, so the CRM stays the source of truth, not a spreadsheet on the side."
+    },
+    {
+      "key": "route",
+      "label": "4 · ROUTE SALES OR SUPPORT",
+      "color": 0,
+      "note": "Sales-ready leads notify a rep, support requests go to the queue, and the drafted response goes out either way."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "trig",
+      "kind": "trigger.webhook",
+      "label": "New Lead or Inquiry Received",
+      "section": "capture"
+    },
+    {
+      "key": "normalize",
+      "kind": "data.transform",
+      "label": "Normalize Contact Info and Message",
+      "section": "capture"
+    },
+    {
+      "key": "check_dup",
+      "kind": "net.http",
+      "label": "Check Dynamics CRM for an Existing Record",
+      "section": "capture"
+    },
+    {
+      "key": "score_agent",
+      "kind": "ai.agent",
+      "label": "Score the Lead, Classify Sales vs Support, and Draft a First Response",
+      "section": "score"
+    },
+    {
+      "key": "score_model",
+      "kind": "ai.model",
+      "label": "GPT-4.1",
+      "app": "openai",
+      "parent": "score_agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "upsert_dynamics",
+      "kind": "net.http",
+      "label": "Create or Update the Record in Dynamics CRM",
+      "section": "sync"
+    },
+    {
+      "key": "log_activity",
+      "kind": "net.http",
+      "label": "Log the Interaction and Drafted Response as an Activity",
+      "section": "sync"
+    },
+    {
+      "key": "intent_branch",
+      "kind": "flow.branch",
+      "label": "Classified as Sales-Ready or Support Request?",
+      "section": "route"
+    },
+    {
+      "key": "notify_sales",
+      "kind": "app.action",
+      "label": "Notify Sales Rep: New Qualified Lead",
+      "app": "slack",
+      "op": "post",
+      "section": "route"
+    },
+    {
+      "key": "route_support",
+      "kind": "app.action",
+      "label": "Route to Support Queue for Review",
+      "app": "slack",
+      "op": "post",
+      "section": "route"
+    },
+    {
+      "key": "send_response",
+      "kind": "app.action",
+      "label": "Send the Drafted Response to the Contact",
+      "app": "gmail",
+      "op": "send",
+      "section": "route"
+    }
+  ],
+  "edges": [
+    {
+      "from": "trig",
+      "to": "normalize"
+    },
+    {
+      "from": "normalize",
+      "to": "check_dup"
+    },
+    {
+      "from": "check_dup",
+      "to": "score_agent"
+    },
+    {
+      "from": "score_agent",
+      "to": "upsert_dynamics"
+    },
+    {
+      "from": "upsert_dynamics",
+      "to": "log_activity"
+    },
+    {
+      "from": "log_activity",
+      "to": "intent_branch"
+    },
+    {
+      "from": "intent_branch",
+      "to": "notify_sales",
+      "branch": "true"
+    },
+    {
+      "from": "intent_branch",
+      "to": "route_support",
+      "branch": "false"
+    },
+    {
+      "from": "notify_sales",
+      "to": "send_response"
+    },
+    {
+      "from": "route_support",
+      "to": "send_response"
+    }
+  ],
+  "input_sample": {
+    "source": "Contact Form — Pricing Page",
+    "name": "Dana Reyes",
+    "email": "dana.reyes@gmail.com",
+    "message": "We're evaluating CRMs for a 40-person sales team, can you send pricing?",
+    "submitted_at": "2026-08-24T15:10:00Z"
+  },
+  "output_sample": {
+    "dynamics_record_id": "lead_00481923",
+    "classification": "sales_ready",
+    "score": 82,
+    "drafted_response": "Hi Dana, thanks for reaching out, happy to walk you through pricing for a team your size...",
+    "routed_to": "Sales Rep: Marcus Chen"
+  },
+  "archetype": "dynamics_lead_ai_score_route_sales_support",
+  "learned": true,
+  "learned_at": "2026-08-26"
+}

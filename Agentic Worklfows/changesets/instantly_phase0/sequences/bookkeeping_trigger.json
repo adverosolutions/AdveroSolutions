@@ -1,0 +1,56 @@
+{
+  "sequences": [
+    {
+      "steps": [
+        {
+          "type": "email",
+          "delay": 3,
+          "delay_unit": "days",
+          "pre_delay_unit": "days",
+          "variants": [
+            {
+              "subject": "{{firstName}}, question",
+              "body": "<div>{{personalization}}</div><div><br /></div><div>I build outbound acquisition systems. I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days.</div><div><br /></div><div>I do this by watching for triggers (new business formations, companies posting part time bookkeeper or admin roles, second location openings) and running outreach under {{companyName}}'s name. {{RANDOM | All the discovery calls land straight on your calendar. | Every discovery call lands on your calendar. | The discovery calls go straight onto your calendar.}}</div><div><br /></div><div>I'm so confident that I guarantee at least $15,000 in new annual client fees signed within 90 days, or I give your money back and throw in a $200 gift card.</div><div><br /></div><div>{{RANDOM | If this interests you, let's hop on a short 15 minute call. | If that sounds useful, let's do a short 15 minute call. | Worth a short 15 minute call?}} Just reply Yes and I'll {{RANDOM | shoot a calendar invite over | send a calendar invite | get an invite over to you}}.</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it, | Cheers,}}</div><div>Lorenzo</div>"
+            },
+            {
+              "subject": "{{firstName}}, question",
+              "body": "<div>{{personalization}}</div><div><br /></div><div>{{RANDOM | Quick one: | Straight to it: | Here is the short version:}} I build outbound acquisition systems for bookkeeping and tax firms. I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days.</div><div><br /></div><div>For {{companyName}} it looks like this: I watch for new business formations, second locations, and companies posting part time bookkeeper or admin roles, reach the owner under your name, and the discovery calls land on your calendar. {{RANDOM | You only talk to people who already need the help. | Your team just takes the calls. | No prospecting on your side.}}</div><div><br /></div><div>If {{companyName}} doesn't sign at least $15,000 in new annual client fees within 90 days, I give your money back and throw in a $200 gift card.</div><div><br /></div><div>{{RANDOM | Want me to send over the first batch of new filings I'd start with? | Want to see the first 10 businesses I'd go after? | Should I send the trigger list I'd work from?}} Reply yes and I'll get it over.</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it, | Talk soon,}}</div><div>Lorenzo</div>"
+            }
+          ]
+        },
+        {
+          "type": "email",
+          "delay": 4,
+          "delay_unit": "days",
+          "pre_delay_unit": "days",
+          "variants": [
+            {
+              "subject": "",
+              "body": "<div>{{RANDOM | Hey | Hi | Hello}} {{firstName}},</div><div><br /></div><div>{{RANDOM | Checking in, in case the first one got buried. | Bumping this in case it got buried. | Following up in case my last note slipped through.}} Quick version:</div><div>- I want to build an outbound system for {{companyName}}. Goal is to catch new business formations and second locations opening, reach them under your name, and land the discovery calls on your calendar.</div><div>- I did this for a commercial roofer doing $150M/yr and generated about $180K in new contracts in 90 days.</div><div>- If you don't have at least $15K in new annual client fees signed within 90 days, I give your money back and throw in a $200 gift card.</div><div><br /></div><div>{{RANDOM | Worth a quick 15 minute call? | Open to a quick 15 minute call? | Want to give it 15 minutes?}} Just reply yes and I'll send a calendar invite.</div><div><br /></div><div>{{RANDOM | Thanks for the time, | Appreciate the time, | Thanks,}}</div><div>Lorenzo</div>"
+            },
+            {
+              "subject": "",
+              "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | One question instead of another pitch. | Rather than pitch you again, one question. | One question, then I will leave it there.}} When a new business files in your area, does anyone at {{companyName}} reach the owner before they pick a bookkeeper?</div><div><br /></div><div>For context: I did this for a commercial roofer doing $150M/yr and generated about $180K in new contracts in 90 days.</div><div><br /></div><div>The guarantee does not change either: $15,000 in new annual client fees within 90 days, or your money back plus the $200 gift card.</div><div><br /></div><div>{{RANDOM | If the timing is wrong, reply 'not now' and I'll come back later in the year. | If it is not a priority, reply 'not now' and I'll leave it there. | Wrong quarter for this? Reply 'not now' and I'll check back.}}</div><div><br /></div><div>{{RANDOM | Thanks for the time, | Appreciate the time, | Thanks,}}</div><div>Lorenzo</div>"
+            }
+          ]
+        },
+        {
+          "type": "email",
+          "delay": 3,
+          "delay_unit": "days",
+          "pre_delay_unit": "days",
+          "variants": [
+            {
+              "subject": "new business filings",
+              "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | Last one from me on this. | Closing the loop on this. | One more, then I'll leave it alone.}} Every week new LLCs get filed in your area and most of them pick a bookkeeper in the first 90 days, usually whoever reaches them first. {{RANDOM | Almost nobody in your space does that outreach. | The firms that win them are simply the ones that showed up. | That window closes fast and then they are someone else's client for years.}}</div><div><br /></div><div>I watch the filings, reach the owner under {{companyName}}'s name, and the discovery calls land on your calendar. Guarantee stands: $15,000 in new annual client fees within 90 days or your money back plus the gift card.</div><div><br /></div><div>{{RANDOM | Want this week's list of new filings in your area? | Reply with your service area and I'll send the first businesses I'd go after. | Want the first ten triggers I'd start with?}}</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div><div><br /></div><div>P.S. A consultancy running this same outbound setup lifted its reply rate 35%. Same mechanics, different trade.</div>"
+            },
+            {
+              "subject": "new business filings",
+              "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | I'll close the file on this one. | Closing the file on this one. | I'll put this down to bad timing and close the file.}} No hard feelings if the timing is off.</div><div><br /></div><div>One thing before I do. The businesses filed in your area this month will pick a bookkeeper in the next 90 days, and most of them pick whoever reached them first.</div><div><br /></div><div>Whenever you want those caught early, the offer and the guarantee are unchanged.</div><div><br /></div><div>{{RANDOM | If that changes, reply here and I'll pick it straight back up. | If it changes, this thread is the fastest way back to me. | If that changes later, reply here and I'll pick it up.}}</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div><div><br /></div><div>P.S. A consultancy running this same outbound setup lifted its reply rate 35%. Same mechanics, different trade.</div>"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

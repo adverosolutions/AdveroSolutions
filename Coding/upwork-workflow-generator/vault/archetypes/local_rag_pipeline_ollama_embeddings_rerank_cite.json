@@ -1,0 +1,303 @@
+{
+  "title": "Local RAG Pipeline: Ollama Embeddings, Rerank, Cited Answers",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "ingest",
+      "label": "1 · NIGHTLY INGESTION: PULL, CHUNK, EMBED, STORE",
+      "color": 0,
+      "note": "Every night the source documents are pulled, cut into chunks, embedded on a local Ollama model and written to the vector store. Nothing leaves the box."
+    },
+    {
+      "key": "retrieve",
+      "label": "2 · RETRIEVE AND RERANK",
+      "color": 0,
+      "note": "The question is embedded the same way, the 20 nearest chunks come back, and a local model reranks them to the 5 that actually answer it."
+    },
+    {
+      "key": "answer",
+      "label": "3 · ANSWER WITH CITATIONS (LOCAL LLM + KAG)",
+      "color": 0,
+      "note": "The agent answers only from the reranked chunks and the knowledge graph. It has to return sources and a confidence score, not just text."
+    },
+    {
+      "key": "respond",
+      "label": "4 · RESPOND, OR ASK TO CLARIFY, AND TRACK ACCURACY",
+      "color": 0,
+      "note": "Confident answers go back with sources. Weak ones say what is missing. Every question is logged so accuracy can be measured week over week."
+    },
+    {
+      "key": "reliability",
+      "label": "5 · RELIABILITY",
+      "color": 0,
+      "note": "Any failure anywhere raises an alert with a link to the run. Nothing fails silently."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "nightly",
+      "kind": "trigger.schedule",
+      "label": "1 · Nightly: Re-Index Documents",
+      "section": "ingest"
+    },
+    {
+      "key": "pull",
+      "kind": "net.http",
+      "label": "2 · Pull Documents From Source",
+      "section": "ingest"
+    },
+    {
+      "key": "chunk",
+      "kind": "data.split",
+      "label": "3 · Split Documents Into Chunks",
+      "section": "ingest"
+    },
+    {
+      "key": "embed_docs",
+      "kind": "net.http",
+      "label": "4 · Ollama: Embed Chunks · local",
+      "section": "ingest"
+    },
+    {
+      "key": "upsert",
+      "kind": "net.http",
+      "label": "5 · Vector Store: Upsert Chunks · pgvector",
+      "section": "ingest"
+    },
+    {
+      "key": "chat",
+      "kind": "trigger.chat",
+      "label": "6 · User Question",
+      "section": "retrieve"
+    },
+    {
+      "key": "embed_q",
+      "kind": "net.http",
+      "label": "7 · Ollama: Embed the Question · local",
+      "section": "retrieve"
+    },
+    {
+      "key": "topk",
+      "kind": "net.http",
+      "label": "8 · Vector Store: Retrieve Top 20 Chunks",
+      "section": "retrieve"
+    },
+    {
+      "key": "rerank",
+      "kind": "ai.llm",
+      "label": "9 · Rerank to Top 5 · local model",
+      "section": "retrieve"
+    },
+    {
+      "key": "rerank_model",
+      "kind": "ai.model",
+      "label": "Ollama · local LLM, rerank",
+      "app": "ollama",
+      "parent": "rerank",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "10 · Answer With Citations",
+      "section": "answer"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Ollama · local LLM",
+      "app": "ollama",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "kag",
+      "kind": "ai.tool",
+      "label": "Knowledge Graph Lookup · KAG",
+      "app": "http",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "vstore",
+      "kind": "ai.vectorstore",
+      "label": "Search More Chunks If Needed · pgvector",
+      "app": "supabase",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "embed_tool",
+      "kind": "ai.embed",
+      "label": "Ollama Embeddings · local",
+      "app": "ollama",
+      "parent": "vstore",
+      "port": "ai_embedding"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Answer + Sources + Confidence",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "confident",
+      "kind": "flow.branch",
+      "label": "11 · Confidence Above Threshold?",
+      "section": "respond"
+    },
+    {
+      "key": "reply_ok",
+      "kind": "net.respond",
+      "label": "12a · Return Answer + Sources",
+      "section": "respond"
+    },
+    {
+      "key": "reply_clarify",
+      "kind": "net.respond",
+      "label": "12b · Say What Is Missing, Ask to Clarify",
+      "section": "respond"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "13 · Log Question, Retrieval Hits, Score",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "respond"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "14 · Any Node Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "reliability"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "15 · Alert With a Link to the Failed Run",
+      "app": "slack",
+      "op": "post",
+      "section": "reliability"
+    }
+  ],
+  "edges": [
+    {
+      "from": "nightly",
+      "to": "pull"
+    },
+    {
+      "from": "pull",
+      "to": "chunk"
+    },
+    {
+      "from": "chunk",
+      "to": "embed_docs"
+    },
+    {
+      "from": "embed_docs",
+      "to": "upsert"
+    },
+    {
+      "from": "upsert",
+      "to": "chunk",
+      "branch": "loop",
+      "loop": true
+    },
+    {
+      "from": "chat",
+      "to": "embed_q"
+    },
+    {
+      "from": "embed_q",
+      "to": "topk"
+    },
+    {
+      "from": "topk",
+      "to": "rerank"
+    },
+    {
+      "from": "rerank",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "confident"
+    },
+    {
+      "from": "confident",
+      "to": "reply_ok",
+      "branch": "true"
+    },
+    {
+      "from": "confident",
+      "to": "reply_clarify",
+      "branch": "false"
+    },
+    {
+      "from": "reply_ok",
+      "to": "log"
+    },
+    {
+      "from": "reply_clarify",
+      "to": "log"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "session_id": "chat_7c41a9",
+    "user": "priya.n@internal",
+    "question": "What is our refund window for annual plans bought through a reseller, and who approves exceptions?",
+    "asked_at": "2026-09-07T14:12:08Z"
+  },
+  "output_sample": {
+    "session_id": "chat_7c41a9",
+    "answer": "Annual plans sold through a reseller have a 30-day refund window from the reseller invoice date, not the activation date. Exceptions past 30 days need written approval from the Regional Sales Director for that reseller's territory.",
+    "sources": [
+      {
+        "doc": "Reseller Program Terms v4.pdf",
+        "section": "7.2 Refunds",
+        "chunk_id": "rpt4-0031",
+        "rerank_score": 0.93
+      },
+      {
+        "doc": "Finance Approvals Matrix 2026.xlsx",
+        "section": "Refund exceptions",
+        "chunk_id": "fam26-0007",
+        "rerank_score": 0.88
+      }
+    ],
+    "knowledge_graph_hits": [
+      {
+        "entity": "Reseller refund exception",
+        "relation": "approved_by",
+        "target": "Regional Sales Director"
+      }
+    ],
+    "retrieval": {
+      "candidates": 20,
+      "kept_after_rerank": 5,
+      "used_in_answer": 2
+    },
+    "confidence": 0.91,
+    "threshold": 0.75,
+    "route": "Return Answer + Sources",
+    "models": {
+      "embeddings": "nomic-embed-text (Ollama, local)",
+      "rerank": "qwen2.5:7b (Ollama, local)",
+      "answer": "llama3.1:8b (Ollama, local)"
+    },
+    "latency_ms": 2640,
+    "logged_to_sheet": true,
+    "if_confidence_were_low": "Reply says which policy document is missing and asks the user to narrow the question; the miss is logged for the weekly accuracy review"
+  },
+  "archetype": "local_rag_pipeline_ollama_embeddings_rerank_cite",
+  "learned": true,
+  "learned_at": "2026-09-07"
+}

@@ -1,0 +1,14 @@
+Build this GoHighLevel workflow exactly as specified. Name the workflow exactly "Bid Reply Catcher".
+Rules: create every step listed below, in the order given, with the exact step names and field values given. Do not add steps, do not remove steps, do not merge steps, do not reorder them, do not rename anything, do not ask me questions. Where a tag, pipeline, stage, form or field is named, use that exact name. Leave the workflow as a draft; do not publish.
+
+Trigger: Trigger "Customer replied". Reply channel: all channels. No other filters.
+
+Actions, in this exact order:
+Step 1 - name this step exactly "Does the Contact Have a Bid Out". Action "If/Else". Branch name: "Does the Contact Have a Bid Out". Condition: contact tag includes "bid-sent".
+  YES branch (condition is true):
+    Step 2 - name this step exactly "Tag the Contact bid-replied". Action "Add contact tag". Tag: "bid-replied".
+      End of the workflow after this step.
+  NO branch (condition is false, the "None" branch):
+    End.
+
+Checklist before you finish: 1 trigger(s), 2 action steps, workflow name "Bid Reply Catcher". Every Send SMS, Send email and internal notification contains the exact message text above. Every Wait has the duration above. Every If/Else has both branches. Nothing is left unconfigured.

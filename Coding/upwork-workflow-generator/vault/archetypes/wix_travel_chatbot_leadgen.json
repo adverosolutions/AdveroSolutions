@@ -1,0 +1,203 @@
+{
+  "title": "Website Chatbot → Answer from Knowledge Base → Wix Contacts → Book a Specialist",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "chat",
+      "label": "1 · CONVERSATION",
+      "color": 0,
+      "note": "The chatbot answers from your own tours, itineraries, FAQs and pricing — retrieved per question, so it never invents an itinerary or quotes a stale price."
+    },
+    {
+      "key": "capture",
+      "label": "2 · CAPTURE",
+      "color": 0,
+      "note": "Details are asked for once the visitor is engaged, not up front. Every enquiry lands in Wix Contacts already tagged and segmented."
+    },
+    {
+      "key": "convert",
+      "label": "3 · CONVERT",
+      "color": 0,
+      "note": "Two exits, both automatic: a booked call with a travel specialist, or an enquiry follow-up sequence into your existing email workflow."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.chat",
+      "label": "Visitor Opens the Website Chat",
+      "section": "chat",
+      "notes": "Embedded on the Wix site — answers 24/7, including the overnight Sri Lanka enquiries you are asleep for."
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "Answer from Tours, Itineraries & Pricing",
+      "section": "chat"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "mem",
+      "kind": "ai.memory",
+      "label": "Conversation Memory",
+      "parent": "agent",
+      "port": "ai_memory"
+    },
+    {
+      "key": "vec",
+      "kind": "ai.vectorstore",
+      "label": "Tours, Itineraries, FAQs & Pricing",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "emb",
+      "kind": "ai.embed",
+      "label": "Site Content Embeddings",
+      "app": "openai",
+      "parent": "vec",
+      "port": "ai_embedding"
+    },
+    {
+      "key": "tool",
+      "kind": "ai.tool",
+      "label": "Live Availability Lookup",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "Visitor shared name and email",
+      "section": "capture"
+    },
+    {
+      "key": "wix",
+      "kind": "app.action",
+      "label": "Upsert Wix Contact",
+      "app": "wix",
+      "op": "create_contact",
+      "section": "capture",
+      "notes": "Matched on email first, so a returning visitor never becomes a second contact."
+    },
+    {
+      "key": "seg",
+      "kind": "data.transform",
+      "label": "Tag by Tour Type & Travel Window",
+      "section": "capture"
+    },
+    {
+      "key": "gap",
+      "kind": "app.action",
+      "label": "Log the Unanswered Question",
+      "app": "airtable",
+      "op": "create",
+      "section": "capture",
+      "notes": "Every question the knowledge base could not answer becomes the next FAQ — the chatbot gets better each week instead of going stale."
+    },
+    {
+      "key": "book",
+      "kind": "flow.branch",
+      "label": "Wants to book a specialist call",
+      "section": "convert"
+    },
+    {
+      "key": "cal",
+      "kind": "app.action",
+      "label": "Book the Travel Specialist Call",
+      "app": "googleCalendar",
+      "op": "create",
+      "section": "convert"
+    },
+    {
+      "key": "conf",
+      "kind": "app.action",
+      "label": "Send Confirmation & Itinerary Teaser",
+      "app": "gmail",
+      "op": "send",
+      "section": "convert"
+    },
+    {
+      "key": "seq",
+      "kind": "app.action",
+      "label": "Start Enquiry Follow-Up Sequence",
+      "app": "gmail",
+      "op": "send",
+      "section": "convert"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "wix",
+      "branch": "true"
+    },
+    {
+      "from": "gate",
+      "to": "gap",
+      "branch": "false"
+    },
+    {
+      "from": "wix",
+      "to": "seg"
+    },
+    {
+      "from": "seg",
+      "to": "book"
+    },
+    {
+      "from": "book",
+      "to": "cal",
+      "branch": "true"
+    },
+    {
+      "from": "cal",
+      "to": "conf"
+    },
+    {
+      "from": "book",
+      "to": "seq",
+      "branch": "false"
+    }
+  ],
+  "input_sample": {
+    "visitor_id": "vis_8f21",
+    "page": "/tours/cultural-triangle-7-day",
+    "question": "Is the Cultural Triangle tour doable with a 6 year old in December?",
+    "messages": 7,
+    "country": "Australia"
+  },
+  "output_sample": {
+    "wix_contact_id": "c_0011t00000QeYd2",
+    "name": "Dana Reyes",
+    "email": "dana.reyes@gmail.com",
+    "tags": [
+      "Cultural Triangle",
+      "Family",
+      "Dec 2026",
+      "Australia"
+    ],
+    "answered_from": "7-Day Cultural Triangle itinerary + Family FAQ",
+    "booked_call": "Aug 6, 4:00 PM AEST — Travel Specialist",
+    "sequence": "New Enquiry — Touch 1 of 4",
+    "handled_without_a_human": true
+  },
+  "archetype": "wix_travel_chatbot_leadgen",
+  "learned": true,
+  "learned_at": "2026-08-03"
+}

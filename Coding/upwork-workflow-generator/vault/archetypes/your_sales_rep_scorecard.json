@@ -1,0 +1,297 @@
+{
+  "title": "Your Sales Rep Scorecard",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "capture",
+      "label": "1 - EVERY EVENT THAT COUNTS",
+      "color": 0,
+      "note": "One webhook, fed by a GHL workflow per event type. New lead, appointment booked or updated, call outcome, contract sent, payment received. Every one arrives in the same shape."
+    },
+    {
+      "key": "credit",
+      "label": "2 - CREDIT THE RIGHT REP",
+      "color": 0,
+      "note": "This is the part that gets scorecards wrong. A booked call is credited to the assigned user on the calendar event, not to whoever owns the contact. Nothing gets counted until a rep is resolved."
+    },
+    {
+      "key": "raw",
+      "label": "3 - WRITE THE RAW ROW",
+      "color": 0,
+      "note": "Every event lands on an Events tab, one row, timestamped. The scorecard is always rebuildable from it, so a bad number can be traced to the event that caused it."
+    },
+    {
+      "key": "score",
+      "label": "4 - THE SCORECARD",
+      "color": 0,
+      "note": "Once a night the events roll up per rep into leads, booked, held, contracts, revenue, and the ratios that actually get coached on. One row per rep per day, plus a leaderboard in Slack."
+    },
+    {
+      "key": "safety",
+      "label": "5 - NOTHING FAILS QUIETLY",
+      "color": 0,
+      "note": "If a step breaks, you hear about it the same day with the failing node named. A silent scorecard is worse than no scorecard."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 - GHL Event: New Lead, Appointment, Call, Contract, Payment",
+      "section": "capture",
+      "notes": "One webhook url. Each GHL workflow posts to it with an event_type."
+    },
+    {
+      "key": "norm",
+      "kind": "data.transform",
+      "label": "2 - Normalize the Event: Type, Contact, Rep, Amount, Time",
+      "section": "capture",
+      "notes": "Same field names whatever the source, so nothing downstream has to special case."
+    },
+    {
+      "key": "which",
+      "kind": "flow.switch",
+      "label": "3 - Which Event?",
+      "section": "credit"
+    },
+    {
+      "key": "own_lead",
+      "kind": "data.transform",
+      "label": "4a - Credit the Contact Owner",
+      "section": "credit"
+    },
+    {
+      "key": "appt_user",
+      "kind": "net.http",
+      "label": "4b - GHL: Read the Appointment's Assigned User From the Calendar",
+      "section": "credit",
+      "notes": "The rep who took the call is the calendar event's assigned user, not the contact owner."
+    },
+    {
+      "key": "own_contract",
+      "kind": "data.transform",
+      "label": "4c - Credit the Opportunity Owner",
+      "section": "credit"
+    },
+    {
+      "key": "own_payment",
+      "kind": "data.transform",
+      "label": "4d - Credit the Opportunity Owner",
+      "section": "credit"
+    },
+    {
+      "key": "resolved",
+      "kind": "flow.branch",
+      "label": "5 - Rep Resolved?",
+      "section": "credit"
+    },
+    {
+      "key": "fix_queue",
+      "kind": "app.action",
+      "label": "5b - Unassigned Queue for a Human to Fix",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "credit",
+      "notes": "Never guess a rep. Park it, fix it, the nightly rollup picks it up."
+    },
+    {
+      "key": "events",
+      "kind": "app.action",
+      "label": "6 - Append to the Events Tab",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "raw"
+    },
+    {
+      "key": "nightly",
+      "kind": "trigger.schedule",
+      "label": "7 - Every Night at 11pm",
+      "section": "score"
+    },
+    {
+      "key": "read_today",
+      "kind": "app.action",
+      "label": "8 - Read Today's Events",
+      "app": "googleSheets",
+      "op": "read",
+      "section": "score"
+    },
+    {
+      "key": "rollup",
+      "kind": "data.aggregate",
+      "label": "9 - Per Rep: Leads, Booked, Held, Contracts, Revenue",
+      "section": "score"
+    },
+    {
+      "key": "ratios",
+      "kind": "data.transform",
+      "label": "10 - Ratios: Booked per Lead, Held per Booked, Cash per Lead",
+      "section": "score"
+    },
+    {
+      "key": "scorecard",
+      "kind": "app.action",
+      "label": "11 - Update the Scorecard Tab, One Row per Rep per Day",
+      "app": "googleSheets",
+      "op": "update",
+      "section": "score"
+    },
+    {
+      "key": "leaderboard",
+      "kind": "app.action",
+      "label": "12 - Post the Leaderboard",
+      "app": "slack",
+      "op": "post",
+      "section": "score"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "13 - Any Step Fails",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "safety"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "14 - Alert With the Failing Node",
+      "app": "slack",
+      "op": "post",
+      "section": "safety"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "norm"
+    },
+    {
+      "from": "norm",
+      "to": "which"
+    },
+    {
+      "from": "which",
+      "to": "own_lead",
+      "branch": "New Lead"
+    },
+    {
+      "from": "which",
+      "to": "appt_user",
+      "branch": "Appointment"
+    },
+    {
+      "from": "which",
+      "to": "own_contract",
+      "branch": "Contract Sent"
+    },
+    {
+      "from": "which",
+      "to": "own_payment",
+      "branch": "Payment"
+    },
+    {
+      "from": "own_lead",
+      "to": "resolved"
+    },
+    {
+      "from": "appt_user",
+      "to": "resolved"
+    },
+    {
+      "from": "own_contract",
+      "to": "resolved"
+    },
+    {
+      "from": "own_payment",
+      "to": "resolved"
+    },
+    {
+      "from": "resolved",
+      "to": "fix_queue",
+      "branch": "false"
+    },
+    {
+      "from": "resolved",
+      "to": "events",
+      "branch": "true"
+    },
+    {
+      "from": "nightly",
+      "to": "read_today"
+    },
+    {
+      "from": "read_today",
+      "to": "rollup"
+    },
+    {
+      "from": "rollup",
+      "to": "ratios"
+    },
+    {
+      "from": "ratios",
+      "to": "scorecard"
+    },
+    {
+      "from": "scorecard",
+      "to": "leaderboard"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "event_type": "appointment",
+    "location_id": "loc_8Kq2ZrNm",
+    "contact": {
+      "id": "cnt_91f4ad",
+      "name": "Maria Velez",
+      "phone": "+1 905 555 0182",
+      "owner": "Jordan"
+    },
+    "appointment": {
+      "id": "appt_4c72e1",
+      "calendar": "Consult Calendar",
+      "assigned_user": "Priya",
+      "status": "showed",
+      "start_time": "2026-09-21T14:30:00-04:00"
+    },
+    "opportunity": {
+      "service": "Laser package",
+      "value": 2400
+    }
+  },
+  "output_sample": {
+    "credited_rep": "Priya",
+    "why": "Appointment credited to the calendar event's assigned user Priya, not the contact owner Jordan",
+    "events_row": {
+      "date": "2026-09-21",
+      "event_type": "appointment",
+      "contact": "Maria Velez",
+      "rep": "Priya",
+      "calendar": "Consult Calendar",
+      "status": "showed",
+      "service": "Laser package",
+      "value": 2400
+    },
+    "scorecard_row": {
+      "date": "2026-09-21",
+      "rep": "Priya",
+      "leads": 14,
+      "booked": 9,
+      "held": 7,
+      "booked_per_lead": "64 percent",
+      "held_per_booked": "78 percent",
+      "contracts_sent": 4,
+      "revenue_booked": 9600,
+      "cash_per_lead": 686
+    },
+    "slack_leaderboard": "Scorecard for Sun Sep 21. 1. Priya 14 leads, 9 booked, 7 held, 78 percent held, 4 contracts, $9,600 booked, $686 cash per lead. 2. Jordan 16 leads, 8 booked, 5 held, 63 percent held, 3 contracts, $6,200 booked, $388 cash per lead.",
+    "unassigned_queue": "0 events parked today",
+    "if_it_had_failed": "Error trigger fires, Slack alert names the failing node and links the run, no row is silently skipped"
+  },
+  "archetype": "your_sales_rep_scorecard",
+  "learned": true,
+  "learned_at": "2026-09-21"
+}

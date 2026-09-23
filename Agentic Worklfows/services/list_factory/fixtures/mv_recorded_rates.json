@@ -1,0 +1,19 @@
+{
+ "_about": "Measured MillionVerifier outcomes from 7026 recorded checks across 12 result files in Coding/lead-scrape-2026/verify (Aug-Sep 2026). Role addresses excluded. IMPORTANT: these addresses were already email_status=validated when the Apify actor returned them, so these rates are an UPPER BOUND for a freshly guessed pattern. The replay verifier uses them to rehearse the pipeline offline; it is not a prediction of what a paid run would verify.",
+ "source_files": 12,
+ "checks": 7026,
+ "buckets": {
+  "plain": {
+   "ok": 3600,
+   "invalid": 478,
+   "catch_all": 1392,
+   "unknown": 267
+  },
+  "dotted": {
+   "catch_all": 707,
+   "ok": 397,
+   "invalid": 160,
+   "unknown": 25
+  }
+ }
+}

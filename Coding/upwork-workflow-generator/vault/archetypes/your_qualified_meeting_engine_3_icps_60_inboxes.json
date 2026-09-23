@@ -1,0 +1,254 @@
+{
+  "title": "Your Qualified Meeting Engine - 3 ICPs, 60 Inboxes, Booked Calls",
+  "platform": "diagram",
+  "sections": [
+    {
+      "key": "infra",
+      "label": "1 - INBOX HEALTH ON YOUR 30 DOMAINS AND 60 INBOXES",
+      "color": 0,
+      "note": "Nothing sends from an inbox that is not healthy. Warmup stays on, every inbox has a daily cap, and an inbox that slips comes out of rotation until it recovers."
+    },
+    {
+      "key": "lists",
+      "label": "2 - CLAY LISTS FOR YOUR 3 ICPS",
+      "color": 0,
+      "note": "One Clay table per ICP. Every contact is a decision-maker, verified, and suppressed against your clients and anyone already contacted."
+    },
+    {
+      "key": "copy",
+      "label": "3 - COPY PER ICP, SPINTAX AND FOLLOW-UPS",
+      "color": 0,
+      "note": "Plain text, short, one ask. Each ICP gets its own sequence and two angles, with spintax so no two emails read the same to a spam filter."
+    },
+    {
+      "key": "test",
+      "label": "4 - LAUNCH AND TEST IN SMARTLEAD",
+      "color": 0,
+      "note": "Low volume first, then A/B by ICP and angle. Reply rate decides what gets cut and what gets more inboxes."
+    },
+    {
+      "key": "book",
+      "label": "5 - QUALIFIED BEFORE ANY CALENDLY LINK GOES OUT",
+      "color": 0,
+      "note": "Every positive reply is checked against your qualified-meeting definition. Only a match gets the link, every booking carries its notes, and you get a report every week."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "dns",
+      "kind": "data.transform",
+      "label": "1 - SPF, DKIM, DMARC and Blacklists Checked on All 30 Domains",
+      "section": "infra"
+    },
+    {
+      "key": "warmup",
+      "kind": "data.transform",
+      "label": "2 - Smartlead Warmup On, Daily Cap Set per Inbox",
+      "section": "infra"
+    },
+    {
+      "key": "health",
+      "kind": "flow.branch",
+      "label": "3 - Inbox Healthy? Warmup Score, Bounces, Spam Placement",
+      "section": "infra"
+    },
+    {
+      "key": "rotate",
+      "kind": "data.transform",
+      "label": "3b - Rotate It Out, Fix DNS or Rewarm, Then Back In",
+      "section": "infra"
+    },
+    {
+      "key": "source",
+      "kind": "data.transform",
+      "label": "4 - Clay Table per ICP: Source, Enrich, Find the Decision-Maker",
+      "section": "lists"
+    },
+    {
+      "key": "verify",
+      "kind": "data.transform",
+      "label": "5 - Verify, Drop Catch-Alls, Suppress Clients and Past Contacts",
+      "section": "lists"
+    },
+    {
+      "key": "sequence",
+      "kind": "data.transform",
+      "label": "6 - One Sequence per ICP, Plain Text, Spintax on Every Line",
+      "section": "copy"
+    },
+    {
+      "key": "angles",
+      "kind": "data.transform",
+      "label": "7 - Two Angles per ICP, 3 Follow-Ups, First Line From Clay",
+      "section": "copy"
+    },
+    {
+      "key": "launch",
+      "kind": "data.transform",
+      "label": "8 - Launch in Smartlead: Inbox Rotation, Send Windows, Low Volume",
+      "section": "test"
+    },
+    {
+      "key": "abtest",
+      "kind": "data.transform",
+      "label": "9 - A/B by ICP and Angle, Kill or Scale on Reply Rate",
+      "section": "test"
+    },
+    {
+      "key": "qualify",
+      "kind": "flow.branch",
+      "label": "10 - Positive Reply Meets Your Qualified-Meeting Definition?",
+      "section": "book"
+    },
+    {
+      "key": "nurture",
+      "kind": "data.transform",
+      "label": "10b - Not Yet: Answer, Nurture, No Calendly Link",
+      "section": "book"
+    },
+    {
+      "key": "booked",
+      "kind": "data.transform",
+      "label": "11 - Calendly Link Sent, Booked With Qualification Notes",
+      "section": "book"
+    },
+    {
+      "key": "report",
+      "kind": "data.aggregate",
+      "label": "12 - Weekly Report per ICP: Sends, Replies, Positive, Qualified",
+      "section": "book"
+    }
+  ],
+  "edges": [
+    {
+      "from": "dns",
+      "to": "warmup"
+    },
+    {
+      "from": "warmup",
+      "to": "health"
+    },
+    {
+      "from": "health",
+      "to": "source",
+      "branch": "true"
+    },
+    {
+      "from": "health",
+      "to": "rotate",
+      "branch": "false"
+    },
+    {
+      "from": "rotate",
+      "to": "warmup",
+      "loop": true
+    },
+    {
+      "from": "source",
+      "to": "verify"
+    },
+    {
+      "from": "verify",
+      "to": "sequence"
+    },
+    {
+      "from": "sequence",
+      "to": "angles"
+    },
+    {
+      "from": "angles",
+      "to": "launch"
+    },
+    {
+      "from": "launch",
+      "to": "abtest"
+    },
+    {
+      "from": "abtest",
+      "to": "qualify"
+    },
+    {
+      "from": "qualify",
+      "to": "booked",
+      "branch": "true"
+    },
+    {
+      "from": "qualify",
+      "to": "nurture",
+      "branch": "false"
+    },
+    {
+      "from": "nurture",
+      "to": "qualify",
+      "loop": true
+    },
+    {
+      "from": "booked",
+      "to": "report"
+    }
+  ],
+  "input_sample": {
+    "sending_domains": 30,
+    "google_workspace_inboxes": 60,
+    "sequencer": "Smartlead",
+    "list_building": "Clay",
+    "booking": "Calendly",
+    "offer": "AI automation services",
+    "icps": [
+      "ICP 1 - shared after terms are agreed",
+      "ICP 2 - shared after terms are agreed",
+      "ICP 3 - shared after terms are agreed"
+    ],
+    "paid_on": "qualified meeting, per your 7-point definition"
+  },
+  "output_sample": {
+    "note": "Example figures to show the report format, not a forecast",
+    "week_of": "2026-10-26",
+    "inbox_health": {
+      "inboxes_sending": 58,
+      "rotated_out": 2,
+      "reason": "warmup score dropped, rewarming"
+    },
+    "by_icp": [
+      {
+        "icp": "ICP 1",
+        "emails_sent": 3000,
+        "replies": 48,
+        "positive": 14,
+        "qualified_meetings": 4,
+        "top_angle": "Angle B"
+      },
+      {
+        "icp": "ICP 2",
+        "emails_sent": 3000,
+        "replies": 33,
+        "positive": 9,
+        "qualified_meetings": 2,
+        "top_angle": "Angle A"
+      },
+      {
+        "icp": "ICP 3",
+        "emails_sent": 2700,
+        "replies": 21,
+        "positive": 5,
+        "qualified_meetings": 1,
+        "top_angle": "Angle A"
+      }
+    ],
+    "meetings": [
+      {
+        "icp": "ICP 1",
+        "role": "COO",
+        "company_size": "80 employees",
+        "need": "manual quote follow-up",
+        "budget": "approved this quarter",
+        "booked_via": "Calendly",
+        "qualification_notes": "attached"
+      }
+    ],
+    "recommendation": "Cut ICP 3 Angle B, move its inboxes to ICP 1 Angle B, new subject line test next week"
+  },
+  "archetype": "your_qualified_meeting_engine_3_icps_60_inboxes",
+  "learned": true,
+  "learned_at": "2026-09-22"
+}

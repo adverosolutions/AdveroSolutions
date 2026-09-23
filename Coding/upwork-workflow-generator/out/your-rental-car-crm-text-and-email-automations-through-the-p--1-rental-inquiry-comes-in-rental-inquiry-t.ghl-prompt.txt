@@ -1,0 +1,20 @@
+Build this GoHighLevel workflow exactly as specified. Name the workflow exactly "Your Rental Car CRM: Text and Email Automations Through the Process - Rental Inquiry Comes In: rental-inquiry Tag Added".
+Rules: create every step listed below, in the order given, with the exact step names and field values given. Do not add steps, do not remove steps, do not merge steps, do not reorder them, do not rename anything, do not ask me questions. Where a tag, pipeline, stage, form or field is named, use that exact name. Leave the workflow as a draft; do not publish.
+
+Trigger - name it exactly "Rental Inquiry Comes In: rental-inquiry Tag Added". Trigger "Contact tag". Tag added: "rental-inquiry".
+
+Actions, in this exact order:
+Step 1 - name this step exactly "Clear rental-inquiry So Their Next Inquiry Fires Again". Action "Remove contact tag". Tag: "rental-inquiry".
+  (Purpose: Repeat renters are normal: every workflow clears its own tag first, so a renter's next rental runs all of this again.)
+Step 2 - name this step exactly "Open the Card Under New Inquiry". Action "Create/Update opportunity". Pipeline: "Rental Car Process". Stage: "New Inquiry". Opportunity name: "{{contact.first_name}} {{contact.last_name}} - Rental". Status: open.
+  (Purpose: This step carries your opportunities tab headings, New Inquiry through Lost, in rental order.)
+Step 3 - name this step exactly "Text Back: Which Dates and Which Car". Action "Send SMS". Message text, exactly: "Hi {{contact.first_name}}, thanks for reaching out to {{location.name}} about a rental car. What dates do you need it, and is there a car you have in mind? Reply here and we will check what is available."
+Step 4 - name this step exactly "Email: What You Need to Rent With Us". Action "Send email". Subject: "What you need to rent a car with {{location.name}}". Body, exactly: "Hi {{contact.first_name}}, thanks for your interest in renting with {{location.name}}. So you are ready to go once we confirm your dates, here is what we need before pickup: a photo of your driver's license, front and back; proof of full-coverage auto insurance, like your insurance card or declarations page; a security deposit of {{custom_values.security_deposit}}, held during the rental and released after the car is returned and inspected; and your signed rental agreement, here: {{custom_values.rental_agreement_link}}. Reply to this email or text us your dates and the photos, and we will get you booked. {{location.name}}"
+Step 5 - name this step exactly "Text You the New Inquiry". Action "Send internal notification". Type: SMS. Send to: the contact's assigned user. Message, exactly: "New rental inquiry: {{contact.first_name}} {{contact.last_name}}, {{contact.phone}}. Car: {{contact.rental_vehicle}}. Dates: {{contact.pickup_date}} to {{contact.return_date}}. They got the text and the what-you-need email. The card is under New Inquiry."
+Step 6 - name this step exactly "Wait 1 Day". Action "Wait". Wait for a set time: 1 day.
+Step 7 - name this step exactly "Text: Still Need a Car?". Action "Send SMS". Message text, exactly: "Hi {{contact.first_name}}, checking in on your rental with {{location.name}}. Do you still need a car? Send your pickup and return dates and we will see what is open for you."
+Step 8 - name this step exactly "Goal: They Booked, So No Follow-Up Text". Action "Goal event". Type of goal: "Added a contact Tag". Tag: "rental-booked". If the contact reaches this goal without meeting its conditions: End this workflow.
+  (Purpose: The moment you add rental-booked, even mid-wait, the renter jumps here and the follow-up never goes out.)
+  End of the workflow after this step.
+
+Checklist before you finish: 1 trigger(s), 8 action steps, workflow name "Your Rental Car CRM: Text and Email Automations Through the Process - Rental Inquiry Comes In: rental-inquiry Tag Added". Every Send SMS, Send email and internal notification contains the exact message text above. Every Wait has the duration above. Every If/Else has both branches. Nothing is left unconfigured.

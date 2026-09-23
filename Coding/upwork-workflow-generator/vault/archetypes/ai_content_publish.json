@@ -1,0 +1,56 @@
+{
+  "archetype": "ai_content_publish",
+  "title": "Keyword Queue → Researched Article → Draft in CMS",
+  "platform": "n8n",
+  "sections": [
+    { "key": "queue",   "label": "1 · KEYWORD QUEUE", "note": "Keywords are pulled from the content sheet in priority order, one per run. Anything already published is skipped so the same topic is never written twice." },
+    { "key": "research","label": "2 · RESEARCH SERP", "note": "The top-ranking pages for the keyword are fetched and read first. The brief is built from what is actually ranking, not from the model's memory of the topic." },
+    { "key": "write",   "label": "3 · WRITE",         "note": "A full draft with headings, internal links and meta description, written against the brief. Length and structure follow what the SERP rewards for that specific query." },
+    { "key": "publish", "label": "4 · DRAFT & FLAG",  "note": "The article is created as a CMS draft — never auto-published — and the row is marked so an editor can review, adjust and hit publish themselves." }
+  ],
+  "nodes": [
+    { "key": "cron",     "kind": "trigger.schedule", "label": "Daily · 6am", "section": "queue" },
+    { "key": "pull",     "kind": "app.action", "app": "googleSheets", "op": "read", "label": "Next Keyword", "section": "queue" },
+    { "key": "serp",     "kind": "net.http", "label": "Fetch Top 10 Results", "section": "research" },
+    { "key": "read",     "kind": "app.action", "app": "html", "op": "extract", "label": "Read Competitor Pages", "section": "research" },
+    { "key": "brief",    "kind": "ai.llm", "label": "Build Content Brief", "section": "research" },
+    { "key": "bmodel",   "kind": "ai.model", "app": "openai", "label": "GPT-4.1", "parent": "brief" },
+    { "key": "agent",    "kind": "ai.agent", "label": "Write Full Article", "section": "write" },
+    { "key": "model",    "kind": "ai.model", "app": "anthropic", "label": "Claude", "parent": "agent" },
+    { "key": "parser",   "kind": "ai.parser", "label": "Article Schema", "parent": "agent" },
+    { "key": "cms",      "kind": "app.action", "app": "wordpress", "op": "create", "label": "Create Draft Post", "section": "publish" },
+    { "key": "mark",     "kind": "app.action", "app": "googleSheets", "op": "update", "label": "Mark as Drafted", "section": "publish" }
+  ],
+  "edges": [
+    { "from": "cron", "to": "pull" },
+    { "from": "pull", "to": "serp" },
+    { "from": "serp", "to": "read" },
+    { "from": "read", "to": "brief" },
+    { "from": "brief", "to": "agent" },
+    { "from": "agent", "to": "cms" },
+    { "from": "cms", "to": "mark" }
+  ],
+  "input_sample": {
+    "row": 47,
+    "keyword": "commercial hvac preventive maintenance checklist",
+    "monthly_volume": 1900,
+    "difficulty": 28,
+    "intent": "informational",
+    "target_word_count": 1800,
+    "internal_link_targets": ["/services/commercial-hvac", "/blog/rooftop-unit-lifespan"],
+    "status": "queued"
+  },
+  "output_sample": {
+    "keyword": "commercial hvac preventive maintenance checklist",
+    "title": "The Commercial HVAC Preventive Maintenance Checklist (Quarterly, Semi-Annual & Annual)",
+    "slug": "commercial-hvac-preventive-maintenance-checklist",
+    "meta_description": "A season-by-season commercial HVAC maintenance checklist — what to inspect quarterly, semi-annually and annually, and which items actually prevent failures.",
+    "word_count": 1874,
+    "h2_count": 7,
+    "internal_links_placed": 2,
+    "wordpress_post_id": 3312,
+    "status": "draft — awaiting editor",
+    "edit_url": "https://example.com/wp-admin/post.php?post=3312&action=edit",
+    "generated_in_seconds": 96
+  }
+}

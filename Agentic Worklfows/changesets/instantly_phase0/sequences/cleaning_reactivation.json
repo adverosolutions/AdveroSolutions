@@ -1,0 +1,56 @@
+{
+  "sequences": [
+    {
+      "steps": [
+        {
+          "type": "email",
+          "delay": 3,
+          "delay_unit": "days",
+          "pre_delay_unit": "days",
+          "variants": [
+            {
+              "subject": "{{firstName}}, question",
+              "body": "<div>{{personalization}}</div><div><br /></div><div>{{RANDOM | Know this is out of left field, but | Out of left field, I know, but | Odd question, but}} if I could recover the money from accounts that cancelled or stopped renewing their contracts, in exchange for a commission on the ones I bring back, would you be open to it? I work mostly on performance and am building my network.</div><div><br /></div><div>About me: I build client reactivation systems. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months. {{RANDOM | Would cost you nothing upfront. | Nothing up front on your end. | Costs you nothing until an account comes back.}}</div><div><br /></div><div>{{RANDOM | Let me know. | Worth a look? | Open to it?}}</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it, | Cheers,}}</div><div>Lorenzo</div>"
+            },
+            {
+              "subject": "{{firstName}}, question",
+              "body": "<div>{{personalization}}</div><div><br /></div><div>{{RANDOM | Quick one: | Straight to it: | Here is the short version:}} I build reactivation systems for commercial cleaning companies. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.</div><div><br /></div><div>For {{companyName}} that means email and text sequences to every account that cancelled, stopped renewing, or never signed after the walkthrough. The ready ones book straight onto your calendar. {{RANDOM | Nothing up front, I only earn a cut of what comes back. | You pay nothing until an account comes back. | Commission only, on the accounts I actually bring back.}}</div><div><br /></div><div>{{RANDOM | Easiest way to see if this is worth your time: | Lowest-effort next step: | If you want a quick read on it:}} send me your list of lost bids or former clients and I'll {{RANDOM | show you which ones are worth chasing | flag the ones worth chasing | mark which are worth a second run}}. Takes me a day, costs you nothing.</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it, | Talk soon,}}</div><div>Lorenzo</div>"
+            }
+          ]
+        },
+        {
+          "type": "email",
+          "delay": 4,
+          "delay_unit": "days",
+          "pre_delay_unit": "days",
+          "variants": [
+            {
+              "subject": "",
+              "body": "<div>{{RANDOM | Hey | Hi | Hello}} {{firstName}},</div><div><br /></div><div>{{RANDOM | Checking in, in case the first one got buried. | Bumping this in case it got buried. | Following up in case my last note slipped through.}} Quick version:</div><div>- I want to build a reactivation system for {{companyName}}. Goal is to bring back the accounts that cancelled or stopped renewing, without you chasing anyone.</div><div>- I did this for a commercial roofer doing $150M/yr and recovered about $6M in contracts in 6 months.</div><div>- Nothing up front. I only take a commission on the accounts I bring back.</div><div><br /></div><div>{{RANDOM | Worth a quick 15 minute call? | Open to a quick 15 minute call? | Want to give it 15 minutes?}} Just reply yes and I'll send a calendar invite.</div><div><br /></div><div>{{RANDOM | Thanks for the time, | Appreciate the time, | Thanks,}}</div><div>Lorenzo</div>"
+            },
+            {
+              "subject": "",
+              "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | One question instead of another pitch. | Rather than pitch you again, one question. | One question, then I will leave it there.}} Does {{companyName}} still have a list of accounts that cancelled or walkthroughs that never closed, or has someone already worked through it?</div><div><br /></div><div>For context: I did this for a commercial roofer doing $150M/yr and recovered about $6M in contracts in 6 months. Same mechanics, applied to your own lost accounts.</div><div><br /></div><div>Either way the terms do not change. Nothing up front, and I only take a commission on the accounts that come back.</div><div><br /></div><div>{{RANDOM | If the timing is wrong, reply 'not now' and I'll come back later in the year. | If it is not a priority, reply 'not now' and I'll leave it there. | Wrong quarter for this? Reply 'not now' and I'll check back.}}</div><div><br /></div><div>{{RANDOM | Thanks for the time, | Appreciate the time, | Thanks,}}</div><div>Lorenzo</div>"
+            }
+          ]
+        },
+        {
+          "type": "email",
+          "delay": 3,
+          "delay_unit": "days",
+          "pre_delay_unit": "days",
+          "variants": [
+            {
+              "subject": "lost bids",
+              "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | Last one from me on this. | Closing the loop on this. | One more, then I'll leave it alone.}} Most cleaning companies I talk to have 20 to 60 proposals from the last two years that never got a yes or a no. {{RANDOM | That list is usually the fastest money in the building. | Those are the easiest contracts to win back. | That is where the cheapest revenue sits.}}</div><div><br /></div><div>I run a follow-up sequence to every one of them under {{companyName}}'s name, and the ones that are ready book a walkthrough on your calendar. Nothing up front, commission on what comes back.</div><div><br /></div><div>{{RANDOM | Reply with a rough count of lost bids and I'll tell you what I'd expect to come back. | Send me roughly how many lost bids you have and I'll give you a realistic recovery number. | Reply with a rough count and I'll tell you which are worth chasing.}}</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div><div><br /></div><div>P.S. A lender ran the same follow-up mechanics on a $1.5k build and turned it into a $5M pipeline. Different industry, same math.</div>"
+            },
+            {
+              "subject": "lost bids",
+              "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | I'll close the file on this one. | Closing the file on this one. | I'll put this down to bad timing and close the file.}} No hard feelings if the timing is off.</div><div><br /></div><div>One thing before I do. The pile of cancelled accounts and lost walkthroughs is the only pipeline you already paid for, and it gets colder every quarter.</div><div><br /></div><div>Whenever you want it worked, it is nothing up front and commission only on what comes back.</div><div><br /></div><div>{{RANDOM | If that changes, reply here and I'll pick it straight back up. | If it changes, this thread is the fastest way back to me. | If that changes later, reply here and I'll pick it up.}}</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div><div><br /></div><div>P.S. A lender ran the same follow-up mechanics on a $1.5k build and turned it into a $5M pipeline. Different industry, same math.</div>"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

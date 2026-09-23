@@ -1,0 +1,217 @@
+{
+  "title": "Your Slack Team Hub - Trello and Drive Wired In",
+  "platform": "make",
+  "sections": [
+    {
+      "key": "events",
+      "label": "1 - TRELLO AND DRIVE EVENTS COME IN",
+      "color": 0,
+      "note": "Two ways in. A Trello card is created or moved to a new list, or a file lands in a watched Drive folder. Make allows one trigger per scenario, so this ships as two scenarios that share everything downstream."
+    },
+    {
+      "key": "route",
+      "label": "2 - ROUTE TO THE RIGHT TEAM CHANNEL",
+      "color": 0,
+      "note": "One table holds team to channel. The board or list name on a Trello card, or the folder name on a Drive file, picks the arm. Anything unrecognised falls to the default arm so nothing is lost."
+    },
+    {
+      "key": "post",
+      "label": "3 - POST TO SLACK",
+      "color": 0,
+      "note": "The message is built once, then posted into the private channel for that team. Card updates and file uploads read differently, so each gets its own wording and its own link back."
+    },
+    {
+      "key": "reliable",
+      "label": "4 - KEEP IT RELIABLE",
+      "color": 0,
+      "note": "Every post is checked. A refused post alerts ops instead of vanishing, and every notification lands in an audit sheet so you can prove what fired and when."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 - Trello Card or Drive File Event Arrives",
+      "section": "events"
+    },
+    {
+      "key": "map",
+      "kind": "data.transform",
+      "label": "2 - Private Channel Map",
+      "section": "route"
+    },
+    {
+      "key": "pick",
+      "kind": "data.transform",
+      "label": "3 - Pick the Team Channel From the Map",
+      "section": "route",
+      "notes": "design -> #team-design, editing -> #team-editing, writing -> #team-writing, anything else -> #ops"
+    },
+    {
+      "key": "build",
+      "kind": "data.transform",
+      "label": "4 - Build the Message",
+      "section": "post"
+    },
+    {
+      "key": "kind",
+      "kind": "flow.branch",
+      "label": "5 - Card Update or File Upload?",
+      "section": "post"
+    },
+    {
+      "key": "post_card",
+      "kind": "app.action",
+      "label": "6 - Post the Card Update to the Team Channel",
+      "app": "slack",
+      "op": "post",
+      "section": "post"
+    },
+    {
+      "key": "post_file",
+      "kind": "app.action",
+      "label": "6b - Post the File Link and Who Uploaded It",
+      "app": "slack",
+      "op": "post",
+      "section": "post"
+    },
+    {
+      "key": "ok",
+      "kind": "flow.branch",
+      "label": "7 - Posted OK?",
+      "section": "reliable"
+    },
+    {
+      "key": "opsalert",
+      "kind": "app.action",
+      "label": "8 - Alert Ops That the Post Failed",
+      "app": "slack",
+      "op": "post",
+      "section": "reliable"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "9 - Log Every Notification",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "reliable"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "map"
+    },
+    {
+      "from": "map",
+      "to": "pick"
+    },
+    {
+      "from": "pick",
+      "to": "build"
+    },
+    {
+      "from": "build",
+      "to": "kind"
+    },
+    {
+      "from": "kind",
+      "to": "post_card",
+      "branch": "true"
+    },
+    {
+      "from": "kind",
+      "to": "post_file",
+      "branch": "false"
+    },
+    {
+      "from": "post_card",
+      "to": "ok"
+    },
+    {
+      "from": "post_file",
+      "to": "ok"
+    },
+    {
+      "from": "ok",
+      "to": "log",
+      "branch": "true"
+    },
+    {
+      "from": "ok",
+      "to": "opsalert",
+      "branch": "false"
+    },
+    {
+      "from": "opsalert",
+      "to": "log"
+    }
+  ],
+  "input_sample": {
+    "trello_event": {
+      "action": "updateCard",
+      "card": {
+        "id": "66f1a2c9d4",
+        "name": "Q4 launch thumbnail set",
+        "url": "https://trello.com/c/66f1a2c9/412-q4-launch-thumbnail-set",
+        "due": "2026-09-25"
+      },
+      "board": {
+        "name": "Design"
+      },
+      "list_before": "In Progress",
+      "list_after": "In Review",
+      "member": {
+        "fullName": "Omar Haddad",
+        "username": "omarh"
+      },
+      "moved_at": "2026-09-21T09:14:03Z"
+    },
+    "drive_event": {
+      "event": "file.created",
+      "file": {
+        "id": "1kP9xQ_briefv3",
+        "name": "client_brief_v3.pdf",
+        "mimeType": "application/pdf",
+        "size_kb": 418,
+        "webViewLink": "https://drive.google.com/file/d/1kP9xQ_briefv3/view"
+      },
+      "folder_path": "Writing/Briefs",
+      "uploaded_by": "maria@company.com",
+      "created_at": "2026-09-21T09:31:47Z"
+    }
+  },
+  "output_sample": {
+    "channel_map_used": {
+      "design": "#team-design",
+      "editing": "#team-editing",
+      "writing": "#team-writing",
+      "ops": "#ops"
+    },
+    "slack_message_card": {
+      "channel": "#team-design",
+      "text": "Q4 launch thumbnail set moved to In Review on the Design board. Moved by Omar Haddad, due 25 Sep. Open the card: https://trello.com/c/66f1a2c9/412-q4-launch-thumbnail-set",
+      "ts": "1758446043.004200",
+      "ok": true
+    },
+    "slack_message_file": {
+      "channel": "#team-writing",
+      "text": "New file in Writing/Briefs: client_brief_v3.pdf, uploaded by maria@company.com. Open it: https://drive.google.com/file/d/1kP9xQ_briefv3/view",
+      "ts": "1758446507.008100",
+      "ok": true
+    },
+    "audit_row": {
+      "timestamp": "2026-09-21T09:31:49Z",
+      "source": "Google Drive",
+      "team": "writing",
+      "channel": "#team-writing",
+      "item": "client_brief_v3.pdf",
+      "status": "posted"
+    },
+    "if_slack_refuses": "Ops gets an alert in #ops naming the channel, the item and the error, and the audit row is still written with status failed"
+  },
+  "archetype": "your_slack_team_hub_trello_and_drive_wired_in",
+  "learned": true,
+  "learned_at": "2026-09-21"
+}

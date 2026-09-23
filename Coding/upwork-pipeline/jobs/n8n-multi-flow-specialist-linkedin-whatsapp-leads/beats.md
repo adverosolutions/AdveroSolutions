@@ -1,0 +1,8 @@
+- five flows, two weeks, i built the spine the rest hang on
+- one webhook takes web form, instagram dm or facebook dm
+- slack alert and whatsapp booking link, seconds after they write in
+- day later it checks supabase, booked confirms and hits google calendar
+- silence gets a gentle follow-up, wait two days, check again
+- their reply comes back, gpt-4o routes it: book, question, stop
+- twilio sender approval takes days; linkedin, reviews, ugc are later phases
+- can start [START], working demo by [DRAFT]

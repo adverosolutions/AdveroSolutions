@@ -1,0 +1,65 @@
+{
+  "archetype": "crm_sync",
+  "title": "Two-Way Sync · CRM ↔ Airtable with Conflict Handling",
+  "platform": "n8n",
+  "sections": [
+    { "key": "poll",    "label": "1 · POLL BOTH SIDES", "note": "Every fifteen minutes both systems are asked for records changed since the last successful run. Only deltas move, so the sync stays fast as the dataset grows." },
+    { "key": "match",   "label": "2 · MATCH & DIFF",    "note": "Records are matched on a stable external id rather than email, then compared field by field. Unchanged records are dropped here so nothing pointless is written." },
+    { "key": "resolve", "label": "3 · CONFLICTS",       "note": "When both sides changed the same field since the last run, the most recent edit wins and the loser is logged. Silent overwrites are the thing that makes people stop trusting a sync." },
+    { "key": "write",   "label": "4 · WRITE BACK",      "note": "Updates are applied in both directions, the watermark is advanced only on success, and a run summary lands in Slack so a failure is visible the same day rather than at month end." }
+  ],
+  "nodes": [
+    { "key": "cron",     "kind": "trigger.schedule", "label": "Every 15 Minutes", "section": "poll" },
+    { "key": "since",    "kind": "data.transform", "label": "Load Last Watermark", "section": "poll" },
+    { "key": "crm",      "kind": "app.action", "app": "hubspot", "op": "create_contact", "label": "Changed in CRM", "section": "poll" },
+    { "key": "base",     "kind": "app.action", "app": "airtable", "op": "search", "label": "Changed in Airtable", "section": "poll" },
+    { "key": "merge",    "kind": "data.merge", "label": "Match on External ID", "section": "match" },
+    { "key": "diff",     "kind": "data.code", "label": "Field-Level Diff", "section": "match" },
+    { "key": "changed",  "kind": "data.filter", "label": "Drop Unchanged", "section": "match" },
+    { "key": "conflict", "kind": "flow.branch", "label": "Both Sides Edited?", "section": "resolve" },
+    { "key": "resolve",  "kind": "data.transform", "label": "Newest Edit Wins", "section": "resolve" },
+    { "key": "apply",    "kind": "data.split", "label": "Apply Each Update", "section": "write" },
+    { "key": "push",     "kind": "net.http", "label": "Write Both Directions", "section": "write" },
+    { "key": "summary",  "kind": "app.action", "app": "slack", "op": "post", "label": "Run Summary", "section": "write" }
+  ],
+  "edges": [
+    { "from": "cron", "to": "since" },
+    { "from": "since", "to": "crm" },
+    { "from": "since", "to": "base" },
+    { "from": "crm", "to": "merge" },
+    { "from": "base", "to": "merge" },
+    { "from": "merge", "to": "diff" },
+    { "from": "diff", "to": "changed" },
+    { "from": "changed", "to": "conflict" },
+    { "from": "conflict", "to": "resolve", "branch": "true" },
+    { "from": "conflict", "to": "apply", "branch": "false" },
+    { "from": "resolve", "to": "apply" },
+    { "from": "apply", "to": "push" },
+    { "from": "push", "to": "summary" }
+  ],
+  "input_sample": {
+    "run_started": "2026-07-31T10:15:00Z",
+    "watermark": "2026-07-31T10:00:00Z",
+    "changed_in_crm": 14,
+    "changed_in_airtable": 6,
+    "sample_record": {
+      "external_id": "acct_8841",
+      "company": "Ridgeline Roofing",
+      "crm": { "stage": "Proposal Sent", "owner": "M. Reyes", "updated_at": "2026-07-31T10:08:41Z" },
+      "airtable": { "stage": "Qualified", "owner": "M. Reyes", "updated_at": "2026-07-31T10:02:17Z" }
+    }
+  },
+  "output_sample": {
+    "run_id": "sync_2026073110150",
+    "duration_seconds": 18,
+    "records_compared": 20,
+    "records_updated": 11,
+    "records_unchanged": 7,
+    "conflicts_resolved": 2,
+    "conflict_detail": [
+      { "external_id": "acct_8841", "field": "stage", "crm_value": "Proposal Sent", "airtable_value": "Qualified", "winner": "crm", "reason": "edited 6m24s later" }
+    ],
+    "errors": 0,
+    "new_watermark": "2026-07-31T10:15:18Z"
+  }
+}

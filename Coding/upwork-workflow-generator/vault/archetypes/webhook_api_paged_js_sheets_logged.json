@@ -1,0 +1,171 @@
+{
+  "title": "Webhook → External API (Paged, Authed, Rate-Limited) → JavaScript Transform → Google Sheets, With Logging",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "in",
+      "label": "1 · WEBHOOK IN",
+      "color": 0,
+      "note": "The request comes in and gets validated in JavaScript before anything else runs, so a bad payload fails loudly here instead of quietly later."
+    },
+    {
+      "key": "api",
+      "label": "2 · EXTERNAL API, DONE PROPERLY",
+      "color": 0,
+      "note": "Auth on the call, backoff on a rate limit, and it keeps paging until the API says it's done. That's the part that usually gets skipped and breaks at 10x volume."
+    },
+    {
+      "key": "sheet",
+      "label": "3 · LOG TO SHEETS",
+      "color": 0,
+      "note": "Every page gets normalized into the same clean rows in JavaScript, appended once, and the caller gets a real response with the row count."
+    },
+    {
+      "key": "ops",
+      "label": "4 · ERRORS & RUN LOG",
+      "color": 0,
+      "note": "One run-log row per execution and an alert with the step and the error when something fails. Small on purpose, nothing here is more than the task needs."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "Webhook Receives the Request",
+      "section": "in"
+    },
+    {
+      "key": "validate",
+      "kind": "data.code",
+      "label": "Validate and Shape the Payload in JavaScript",
+      "section": "in"
+    },
+    {
+      "key": "call_api",
+      "kind": "net.http",
+      "label": "Call the External API With Auth and Rate-Limit Backoff",
+      "section": "api"
+    },
+    {
+      "key": "more_pages",
+      "kind": "flow.branch",
+      "label": "More Pages to Fetch?",
+      "section": "api"
+    },
+    {
+      "key": "normalize",
+      "kind": "data.code",
+      "label": "Normalize Every Page Into One Clean Row Set in JavaScript",
+      "section": "api"
+    },
+    {
+      "key": "append",
+      "kind": "app.action",
+      "label": "Append the Structured Rows to Google Sheets",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "sheet"
+    },
+    {
+      "key": "respond",
+      "kind": "net.respond",
+      "label": "Respond 200 With the Row Count",
+      "section": "sheet"
+    },
+    {
+      "key": "failed",
+      "kind": "flow.branch",
+      "label": "Did Anything Fail?",
+      "section": "ops"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "Alert With the Step and the Error",
+      "app": "slack",
+      "op": "post",
+      "section": "ops"
+    },
+    {
+      "key": "run_log",
+      "kind": "app.action",
+      "label": "Write the Run Log Row: Time, Rows, Pages, Status",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "ops"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "validate"
+    },
+    {
+      "from": "validate",
+      "to": "call_api"
+    },
+    {
+      "from": "call_api",
+      "to": "more_pages"
+    },
+    {
+      "from": "more_pages",
+      "to": "call_api",
+      "branch": "true",
+      "loop": true
+    },
+    {
+      "from": "more_pages",
+      "to": "normalize",
+      "branch": "false"
+    },
+    {
+      "from": "normalize",
+      "to": "append"
+    },
+    {
+      "from": "append",
+      "to": "respond"
+    },
+    {
+      "from": "respond",
+      "to": "failed"
+    },
+    {
+      "from": "failed",
+      "to": "alert",
+      "branch": "true"
+    },
+    {
+      "from": "failed",
+      "to": "run_log",
+      "branch": "false"
+    },
+    {
+      "from": "alert",
+      "to": "run_log"
+    }
+  ],
+  "input_sample": {
+    "source": "lead form",
+    "account_id": "acct_2291",
+    "since": "2026-09-01",
+    "fields": [
+      "name",
+      "email",
+      "campaign",
+      "status"
+    ]
+  },
+  "output_sample": {
+    "pages_fetched": 4,
+    "rows_appended": 187,
+    "invalid_rows_dropped": 3,
+    "rate_limited_retries": 1,
+    "status": "ok",
+    "duration_sec": 6.2
+  },
+  "archetype": "webhook_api_paged_js_sheets_logged",
+  "learned": true,
+  "learned_at": "2026-09-03"
+}

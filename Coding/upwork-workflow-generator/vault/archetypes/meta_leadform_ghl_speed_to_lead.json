@@ -1,0 +1,250 @@
+{
+  "title": "Meta Lead Form → GoHighLevel Speed to Lead",
+  "platform": "gohighlevel",
+  "sections": [
+    {
+      "key": "arrive",
+      "label": "1 · THE LEAD ARRIVES",
+      "color": 0,
+      "note": "Meta posts straight into GoHighLevel rather than sitting in Ads Manager waiting to be pulled. The contact is matched on phone first so a repeat enquiry does not become a second record, then removed from any sequence already running on them. That removal step is what stops a lead getting two different messages from you in the same minute."
+    },
+    {
+      "key": "speed",
+      "label": "2 · FIRST 60 SECONDS",
+      "color": 0,
+      "note": "The text goes out before anyone has looked at the lead, and the rep's phone rings at the same time. Response time is the single biggest lever on lead-to-appointment rate, and it is the one thing that cannot be fixed later in the sequence."
+    },
+    {
+      "key": "chase",
+      "label": "3 · IF THEY GO QUIET",
+      "color": 0,
+      "note": "Spaced follow-up over the first day and a half, not a burst. Each touch is a different channel so the lead is not receiving three of the same message, and the sequence has a defined end rather than running forever."
+    },
+    {
+      "key": "reply",
+      "label": "4 · THE MOMENT THEY REPLY",
+      "color": 0,
+      "note": "Everything queued stops on the first reply, on any channel. The pipeline stage moves and the rep is told who replied and what they said, so nobody opens a conversation cold."
+    },
+    {
+      "key": "track",
+      "label": "5 · SO YOU CAN SEE IT WORKING",
+      "color": 0,
+      "note": "Response time is stamped on every lead, which turns speed to lead from a claim into a number you can open on a Monday and check per rep and per campaign."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "form",
+      "kind": "trigger.form",
+      "label": "1 · New Meta Lead Form Submission",
+      "section": "arrive"
+    },
+    {
+      "key": "match",
+      "kind": "app.action",
+      "label": "2 · Create or Match the Contact",
+      "app": "GoHighLevel",
+      "op": "upsert_contact",
+      "section": "arrive"
+    },
+    {
+      "key": "clear",
+      "kind": "app.action",
+      "label": "3 · Remove From Any Conflicting Sequences",
+      "app": "GoHighLevel",
+      "op": "remove_from_workflows",
+      "section": "arrive"
+    },
+    {
+      "key": "sms",
+      "kind": "app.action",
+      "label": "4 · Text Them Within 60 Seconds",
+      "app": "GoHighLevel",
+      "op": "send_sms",
+      "section": "speed"
+    },
+    {
+      "key": "ring",
+      "kind": "app.action",
+      "label": "5 · Ring the Rep and Create the Call Task",
+      "app": "GoHighLevel",
+      "op": "create_task",
+      "section": "speed"
+    },
+    {
+      "key": "wait5",
+      "kind": "flow.wait",
+      "label": "6 · Wait 5 Minutes",
+      "section": "speed"
+    },
+    {
+      "key": "replied",
+      "kind": "flow.branch",
+      "label": "7 · Did They Reply?",
+      "section": "speed"
+    },
+    {
+      "key": "touch2",
+      "kind": "app.action",
+      "label": "8 · Second Touch — Email, 1 Hour Later",
+      "app": "GoHighLevel",
+      "op": "send_email",
+      "section": "chase"
+    },
+    {
+      "key": "touch3",
+      "kind": "app.action",
+      "label": "9 · Third Touch — SMS Next Morning",
+      "app": "GoHighLevel",
+      "op": "send_sms",
+      "section": "chase"
+    },
+    {
+      "key": "nurture",
+      "kind": "app.action",
+      "label": "10 · Still Cold — Move to Long-Term Nurture",
+      "app": "GoHighLevel",
+      "op": "add_tag_and_stage",
+      "section": "chase"
+    },
+    {
+      "key": "stop",
+      "kind": "app.action",
+      "label": "11 · Stop Every Queued Follow-Up",
+      "app": "GoHighLevel",
+      "op": "remove_from_workflows",
+      "section": "reply"
+    },
+    {
+      "key": "stage",
+      "kind": "app.action",
+      "label": "12 · Move Pipeline Stage to Contacted",
+      "app": "GoHighLevel",
+      "op": "update_opportunity",
+      "section": "reply"
+    },
+    {
+      "key": "tell",
+      "kind": "app.action",
+      "label": "13 · Tell the Rep Who Replied and What They Said",
+      "app": "GoHighLevel",
+      "op": "notify_user",
+      "section": "reply"
+    },
+    {
+      "key": "stamp",
+      "kind": "app.action",
+      "label": "14 · Stamp the Response Time on the Record",
+      "app": "GoHighLevel",
+      "op": "update_contact",
+      "section": "track"
+    }
+  ],
+  "edges": [
+    {
+      "from": "form",
+      "to": "match"
+    },
+    {
+      "from": "match",
+      "to": "clear"
+    },
+    {
+      "from": "clear",
+      "to": "sms"
+    },
+    {
+      "from": "sms",
+      "to": "ring"
+    },
+    {
+      "from": "ring",
+      "to": "wait5"
+    },
+    {
+      "from": "wait5",
+      "to": "replied"
+    },
+    {
+      "from": "replied",
+      "to": "stop",
+      "branch": "Replied"
+    },
+    {
+      "from": "stop",
+      "to": "stage"
+    },
+    {
+      "from": "stage",
+      "to": "tell"
+    },
+    {
+      "from": "tell",
+      "to": "stamp"
+    },
+    {
+      "from": "replied",
+      "to": "touch2",
+      "branch": "No reply yet"
+    },
+    {
+      "from": "touch2",
+      "to": "touch3"
+    },
+    {
+      "from": "touch3",
+      "to": "nurture"
+    }
+  ],
+  "input_sample": {
+    "source": "Meta Lead Ad — Spring Roof Replacement",
+    "form_id": "1204889371",
+    "submitted_at": "2026-08-11T14:03:12Z",
+    "campaign": "Roofing — Storm Damage — 25mi",
+    "lead": {
+      "full_name": "Teresa Whitlock",
+      "phone": "+19195550164",
+      "email": "twhitlock@outlook.com",
+      "answers": {
+        "homeowner": "Yes",
+        "roof_age": "18 years",
+        "timeline": "Within 30 days"
+      }
+    }
+  },
+  "output_sample": {
+    "contact_id": "ghl_a91f27",
+    "duplicate_created": false,
+    "removed_from": [
+      "General Nurture — Q3"
+    ],
+    "first_touch": {
+      "channel": "SMS",
+      "sent_at": "2026-08-11T14:03:48Z",
+      "response_time_seconds": 36
+    },
+    "rep_task": {
+      "assigned_to": "Marcus D.",
+      "type": "Call now",
+      "phone_rang_at": "2026-08-11T14:03:51Z"
+    },
+    "lead_replied_at": "2026-08-11T14:07:22Z",
+    "reply_text": "Yes still interested, mornings are better for me",
+    "follow_up_cancelled": [
+      "Email touch 2",
+      "SMS touch 3",
+      "Nurture enrollment"
+    ],
+    "pipeline": {
+      "name": "Roofing Sales",
+      "stage_before": "New Lead",
+      "stage_after": "Contacted"
+    },
+    "total_time_lead_to_conversation": "4 min 10 sec",
+    "before_this_build": "Leads sat in Ads Manager until someone exported them, average first touch was next business day"
+  },
+  "archetype": "meta_leadform_ghl_speed_to_lead",
+  "learned": true,
+  "learned_at": "2026-08-11"
+}

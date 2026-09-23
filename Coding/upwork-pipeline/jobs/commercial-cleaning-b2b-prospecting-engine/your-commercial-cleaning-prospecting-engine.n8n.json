@@ -1,0 +1,931 @@
+{
+  "name": "Your Commercial Cleaning Prospecting Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - DISCOVER\n\nOutscraper works one zip cluster a morning and pulls the buildings that actually buy cleaning. Nobody uploads a list.",
+        "height": 780,
+        "width": 1420,
+        "color": 5
+      },
+      "id": "453bc761-6c68-5a7b-ba9a-1dfdeb56dc50",
+      "name": "Section - 1 - DISCOVER",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - ENRICH\n\nApollo turns a building into a named facilities or office manager with a verified email. No name, no guessing, it parks.",
+        "height": 780,
+        "width": 700,
+        "color": 4
+      },
+      "id": "f1c43090-3acb-58da-88b0-46a1456c304c",
+      "name": "Section - 2 - ENRICH",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - RESEARCH AND SCORE\n\nThe agent reads the site and the Google profile, then scores the account on size, foot traffic, vendor signals and hiring.",
+        "height": 780,
+        "width": 1160,
+        "color": 6
+      },
+      "id": "5ac606d7-7c5f-59db-92f9-e2da01e26279",
+      "name": "Section - 3 - RESEARCH AND SCORE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2420,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - HUMAN APPROVAL, THEN THE CRM\n\nNothing reaches HighLevel until a human says yes. The morning list posts to Slack, one tap approves, one tap rejects with a reason.",
+        "height": 780,
+        "width": 1180,
+        "color": 7
+      },
+      "id": "ca913ab2-c3e9-5a47-ac60-a754d3424f03",
+      "name": "Section - 4 - HUMAN APPROVAL, THEN THE CRM",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3740,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - LOGS, DEDUPE, ALERTS\n\nPostgres is the dedupe key, by place id and normalized phone, so the same building never shows up twice. Every failure names its node.",
+        "height": 780,
+        "width": 700,
+        "color": 1
+      },
+      "id": "929b6ccf-c193-57db-8c60-1ee95867b16c",
+      "name": "Section - 5 - LOGS, DEDUPE, ALERTS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5080,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "8291edd1-a977-50c7-84e4-618da497da3c",
+      "name": "1 - Every Weekday at 5am, Next Zip Cluster",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/2-outscraper-offices-medical-gyms-school",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "11688295-f2cb-5d75-bc10-137712203901",
+      "name": "2 - Outscraper: Offices, Medical, Gyms, Schools, Warehouses Over 5,000 Sq Ft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        240,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "447f404a-9d64-56b8-b1dd-b6a1f24dfb92",
+              "name": "source",
+              "value": "={{ $json.source }}",
+              "type": "string"
+            },
+            {
+              "id": "7f78e977-52b7-5243-9435-d25b503f0e11",
+              "name": "zip_cluster",
+              "value": "={{ $json.zip_cluster }}",
+              "type": "string"
+            },
+            {
+              "id": "2f75f873-966a-5ca2-a78a-323a0eacaa29",
+              "name": "search_terms",
+              "value": "={{ $json.search_terms }}",
+              "type": "array"
+            },
+            {
+              "id": "ee752f61-54b0-551b-8655-eda775fce772",
+              "name": "business_name",
+              "value": "={{ $json.business_name }}",
+              "type": "string"
+            },
+            {
+              "id": "74b0bf2d-359d-524f-91e8-38e792a788c3",
+              "name": "category",
+              "value": "={{ $json.category }}",
+              "type": "string"
+            },
+            {
+              "id": "2d950fe3-c9be-55fc-a74e-6bc8a2630032",
+              "name": "address",
+              "value": "={{ $json.address }}",
+              "type": "string"
+            },
+            {
+              "id": "94717a74-61e5-51dc-8bc8-65a9d509acef",
+              "name": "phone",
+              "value": "={{ $json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "3720affc-f2d7-51fc-9e72-b96bf9e88e4d",
+              "name": "website",
+              "value": "={{ $json.website }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "7b676eb8-1690-5f59-82a6-1baf0dddac44",
+      "name": "3 - Normalize: Name, Address, Phone, Category, Reviews",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        480,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "options": {},
+        "query": "SELECT * FROM records WHERE id = $1;"
+      },
+      "id": "c37ce58f-b5f6-5f6c-ace4-bafc0f196726",
+      "name": "4 - Seen Before? Check the Prospect Database",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        720,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5304c41b-061c-56b8-87c7-9a688a04694c",
+              "leftValue": "={{ $json.prospect_record }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d0d34ed1-cd90-5ca0-a835-8ede0639a42e",
+      "name": "5 - New Prospect?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        960,
+        360
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "e7508cd0-1625-59ab-832e-6435518e5739",
+      "name": "5b - Skip, Already Known",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/6-apollo-find-the-facilities-or-office-m",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "069d58d9-479f-53a7-9aba-3018d1a0e541",
+      "name": "6 - Apollo: Find the Facilities or Office Manager and Verified Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1580,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e243d0e0-5a98-5d75-998a-1fb0acdb740a",
+              "leftValue": "={{ $json.decision_maker }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d61df1ef-5767-5c3e-802b-cc6f0af97ceb",
+      "name": "7 - Decision Maker Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1820,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "database",
+        "operation": "executeQuery",
+        "query": "SELECT * FROM my_table LIMIT 10;",
+        "options": {}
+      },
+      "id": "32d69726-4394-5670-aaed-31e86e0df7b1",
+      "name": "7b - Park for Manual Enrichment",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        2060,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "auto",
+        "text": "={{ $json.chatInput }}",
+        "options": {},
+        "hasOutputParser": true
+      },
+      "id": "bbd163d0-ea0f-59dd-a8ea-1c879961b71d",
+      "name": "8 - Research Agent: Size, Foot Traffic, Current Vendor Signals, Hiring",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2640,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "id": "d7b4795b-dae4-5288-aef4-e64321218530",
+      "name": "GPT-4o",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2480,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Call a sub-workflow to perform a task",
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "d9c223e4-c5f5-5cda-967f-3b3be13cd112",
+      "name": "Read the Website and Google Profile",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2680,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"summary\": \"text\",\n  \"score\": 1\n}"
+      },
+      "id": "602ee290-70b6-5f4a-a327-9ef22d215eec",
+      "name": "Score 1 to 10, Reason, Best Angle",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2880,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d0d88b03-75bf-5aed-ba5b-89fea864c7e7",
+              "leftValue": "={{ $json.score_higher }}",
+              "rightValue": 7.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1ac5a511-1112-599f-b7f4-2bf33e1322e2",
+      "name": "9 - Score 7 or Higher?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3180,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "database",
+        "operation": "executeQuery",
+        "query": "SELECT * FROM my_table LIMIT 10;",
+        "options": {}
+      },
+      "id": "ec60e767-ae92-558d-82fe-15ba2a84ecd4",
+      "name": "9b - Store as Low Priority",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        3420,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "49918798-750f-5ee1-8502-d9b0ebaf5417",
+      "name": "10 - Post the Top Prospects to #approvals With Approve and Reject Buttons",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        3800,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "22acf206-6109-50e2-9e58-844cdfcbee69",
+      "name": "11 - Approval Decision Comes Back",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        4040,
+        80
+      ],
+      "webhookId": "8f772667-602a-521e-aaa3-b6bdb5b5acbc"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e92e743e-acd5-56e3-ac4d-4b021bbbc930",
+              "leftValue": "={{ $json.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d0bd5d48-6505-5f6b-9635-41d7e275350c",
+      "name": "12 - Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4280,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "database",
+        "operation": "executeQuery",
+        "query": "SELECT * FROM my_table LIMIT 10;",
+        "options": {}
+      },
+      "id": "d8f51de4-38d0-5607-853e-d08f304449d7",
+      "name": "12b - Rejected, With the Reason, Feeds the Scoring Prompt",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        4520,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/13-highlevel-create-contact-tag-opportun",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "d7306f40-504d-5074-b73d-047422608b4e",
+      "name": "13 - HighLevel: Create Contact, Tag, Opportunity in Prospecting Pipeline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4520,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/14-highlevel-trigger-the-sales-follow-up",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "cfbe293d-9509-58ef-b3a2-f09e60fb6610",
+      "name": "14 - HighLevel: Trigger the Sales Follow-Up Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4760,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "database",
+        "operation": "executeQuery",
+        "query": "SELECT * FROM my_table LIMIT 10;",
+        "options": {}
+      },
+      "id": "021b0679-e6e7-50d8-b1bc-0c26b70e54e2",
+      "name": "15 - Write the Prospect Record With Score, Source, Approval",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        5620,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "e0593aea-df48-5740-8632-e5c17a03f17c",
+      "name": "16 - Any Step Fails",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        5140,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "ed6bce47-8c0b-5a3b-b7a4-80ce8761f397",
+      "name": "17 - Alert With the Failing Node",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        5380,
+        360
+      ]
+    }
+  ],
+  "connections": {
+    "1 - Every Weekday at 5am, Next Zip Cluster": {
+      "main": [
+        [
+          {
+            "node": "2 - Outscraper: Offices, Medical, Gyms, Schools, Warehouses Over 5,000 Sq Ft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Outscraper: Offices, Medical, Gyms, Schools, Warehouses Over 5,000 Sq Ft": {
+      "main": [
+        [
+          {
+            "node": "3 - Normalize: Name, Address, Phone, Category, Reviews",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Normalize: Name, Address, Phone, Category, Reviews": {
+      "main": [
+        [
+          {
+            "node": "4 - Seen Before? Check the Prospect Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - Seen Before? Check the Prospect Database": {
+      "main": [
+        [
+          {
+            "node": "5 - New Prospect?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - New Prospect?": {
+      "main": [
+        [
+          {
+            "node": "6 - Apollo: Find the Facilities or Office Manager and Verified Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "5b - Skip, Already Known",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Apollo: Find the Facilities or Office Manager and Verified Email": {
+      "main": [
+        [
+          {
+            "node": "7 - Decision Maker Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - Decision Maker Found?": {
+      "main": [
+        [
+          {
+            "node": "8 - Research Agent: Size, Foot Traffic, Current Vendor Signals, Hiring",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "7b - Park for Manual Enrichment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - Research Agent: Size, Foot Traffic, Current Vendor Signals, Hiring": {
+      "main": [
+        [
+          {
+            "node": "9 - Score 7 or Higher?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9 - Score 7 or Higher?": {
+      "main": [
+        [
+          {
+            "node": "10 - Post the Top Prospects to #approvals With Approve and Reject Buttons",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "9b - Store as Low Priority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Post the Top Prospects to #approvals With Approve and Reject Buttons": {
+      "main": [
+        [
+          {
+            "node": "11 - Approval Decision Comes Back",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Approval Decision Comes Back": {
+      "main": [
+        [
+          {
+            "node": "12 - Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 - Approved?": {
+      "main": [
+        [
+          {
+            "node": "13 - HighLevel: Create Contact, Tag, Opportunity in Prospecting Pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "12b - Rejected, With the Reason, Feeds the Scoring Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - HighLevel: Create Contact, Tag, Opportunity in Prospecting Pipeline": {
+      "main": [
+        [
+          {
+            "node": "14 - HighLevel: Trigger the Sales Follow-Up Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 - HighLevel: Trigger the Sales Follow-Up Workflow": {
+      "main": [
+        [
+          {
+            "node": "15 - Write the Prospect Record With Score, Source, Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16 - Any Step Fails": {
+      "main": [
+        [
+          {
+            "node": "17 - Alert With the Failing Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4o": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "8 - Research Agent: Size, Foot Traffic, Current Vendor Signals, Hiring",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read the Website and Google Profile": {
+      "ai_tool": [
+        [
+          {
+            "node": "8 - Research Agent: Size, Foot Traffic, Current Vendor Signals, Hiring",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score 1 to 10, Reason, Best Angle": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "8 - Research Agent: Size, Foot Traffic, Current Vendor Signals, Hiring",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "aa4dae70-48f3-5d98-b474-5001b9f4723a",
+  "pinData": {
+    "1 - Every Weekday at 5am, Next Zip Cluster": [
+      {
+        "json": {
+          "source": "Outscraper",
+          "zip_cluster": "Plano TX 75024",
+          "search_terms": [
+            "medical office",
+            "office building",
+            "fitness center",
+            "private school",
+            "warehouse"
+          ],
+          "business_name": "Northgate Medical Plaza",
+          "category": "medical office",
+          "address": "6101 Windhaven Pkwy, Plano, TX 75024",
+          "phone": "+1 972 555 0188",
+          "website": "northgatemedicalplaza.com",
+          "rating": 4.3,
+          "review_count": 87,
+          "building_sq_ft": 8400,
+          "place_id": "ChIJ0nK7Plano75024Ngmp"
+        }
+      }
+    ],
+    "15 - Write the Prospect Record With Score, Source, Approval": [
+      {
+        "json": {
+          "highlevel_contact": {
+            "first_name": "Denise",
+            "last_name": "Carter",
+            "title": "Facilities Manager",
+            "email": "dcarter@northgatemedicalplaza.com",
+            "phone": "+1 972 555 0188",
+            "company": "Northgate Medical Plaza",
+            "address": "6101 Windhaven Pkwy, Plano, TX 75024",
+            "tags": [
+              "outscraper-plano-75024",
+              "medical-office",
+              "score-8",
+              "approved"
+            ],
+            "opportunity": {
+              "pipeline": "Prospecting",
+              "stage": "Prospect",
+              "name": "Northgate Medical Plaza - 8,400 sq ft medical office",
+              "source": "Outscraper + Apollo, auto-researched"
+            },
+            "custom_fields": {
+              "score": 8,
+              "score_reason": "8,400 sq ft, 4 tenant practices, high daily patient traffic, no janitorial vendor named anywhere on site, new wing permit filed in July",
+              "best_angle": "post-construction cleanup, plaza expanding",
+              "current_vendor_signal": "none found, front desk handles supplies",
+              "hiring_signal": "posted for a part-time front office cleaner in August"
+            },
+            "followup_workflow": "Commercial Cleaning - New Prospect Day 1 Call and Email"
+          },
+          "approval": {
+            "approved_by": "Marcus",
+            "channel": "#approvals",
+            "decided_at": "2026-09-22T07:12:00-05:00",
+            "queued_this_morning": 23,
+            "approved": 14,
+            "rejected": 9
+          },
+          "prospect_record": {
+            "place_id": "ChIJ0nK7Plano75024Ngmp",
+            "normalized_phone": "9725550188",
+            "source": "Outscraper",
+            "score": 8,
+            "approval": "approved by Marcus",
+            "pushed_to_highlevel": true,
+            "first_seen": "2026-09-22"
+          },
+          "if_it_had_failed": "Error trigger catches the step, Slack alert names the failing node and the building it died on, nothing reaches HighLevel unreviewed"
+        }
+      }
+    ]
+  }
+}

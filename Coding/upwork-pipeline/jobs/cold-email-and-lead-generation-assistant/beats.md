@@ -1,0 +1,8 @@
+- you want qualified prospects in the right hunter campaign, not junk lists
+- every weekday it pulls candidate companies and works one at a time
+- claude reads each site and fit-checks against your written criteria
+- not sure means rejected with the reason, never silently added
+- hunter finds the decision-maker by title, then verifies the email
+- skips anyone already in a campaign, routes by segment to the campaign
+- daily slack digest shows added, rejected, and why; risk is title matching
+- can start [START], next step is a short call on your criteria

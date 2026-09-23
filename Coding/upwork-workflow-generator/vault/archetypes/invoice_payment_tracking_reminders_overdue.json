@@ -1,0 +1,218 @@
+{
+  "title": "Invoice & Payment Tracking — Invoice In → Status Sync → Reminders → Overdue Alerts",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "invoice",
+      "label": "1 · INVOICE IN",
+      "color": 0,
+      "note": "Every new invoice lands in the tracking sheet the moment it's created, so the sheet is the single source of truth, not a weekly export."
+    },
+    {
+      "key": "payment",
+      "label": "2 · PAYMENT RECEIVED",
+      "color": 0,
+      "note": "A payment gets matched to its invoice and marked paid everywhere at once, accounting tool, sheet, and team, so no one chases an invoice that's already settled."
+    },
+    {
+      "key": "reminders",
+      "label": "3 · REMINDERS & OVERDUE",
+      "color": 0,
+      "note": "A daily check sends the right message for where each invoice actually is, upcoming, due today, or overdue, and the team only hears about the overdue ones."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "invoice_trig",
+      "kind": "trigger.app",
+      "label": "New Invoice Created in the Accounting Tool",
+      "section": "invoice"
+    },
+    {
+      "key": "normalize",
+      "kind": "data.transform",
+      "label": "Normalize Invoice: Customer, Amount, Due Date, Status",
+      "section": "invoice"
+    },
+    {
+      "key": "add_to_sheet",
+      "kind": "app.action",
+      "label": "Add the Invoice to the Tracking Sheet",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "invoice"
+    },
+    {
+      "key": "payment_trig",
+      "kind": "trigger.webhook",
+      "label": "Payment Received from the Payment Tool",
+      "section": "payment"
+    },
+    {
+      "key": "match_invoice",
+      "kind": "data.transform",
+      "label": "Match the Payment to Its Invoice",
+      "section": "payment"
+    },
+    {
+      "key": "mark_paid",
+      "kind": "net.http",
+      "label": "Mark the Invoice Paid in the Accounting Tool",
+      "section": "payment"
+    },
+    {
+      "key": "sheet_paid",
+      "kind": "app.action",
+      "label": "Update the Sheet: Status Paid, Date Paid",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "payment"
+    },
+    {
+      "key": "notify_paid",
+      "kind": "app.action",
+      "label": "Notify the Team: Payment Received",
+      "app": "slack",
+      "op": "post",
+      "section": "payment"
+    },
+    {
+      "key": "daily_trig",
+      "kind": "trigger.schedule",
+      "label": "Daily Check, 8am",
+      "section": "reminders"
+    },
+    {
+      "key": "find_unpaid",
+      "kind": "data.filter",
+      "label": "Find Unpaid Invoices Due in 3 Days, Due Today, or Past Due",
+      "section": "reminders"
+    },
+    {
+      "key": "where_switch",
+      "kind": "flow.switch",
+      "label": "Where Is It: Upcoming, Due Today, or Overdue?",
+      "section": "reminders"
+    },
+    {
+      "key": "remind_upcoming",
+      "kind": "app.action",
+      "label": "Send a Friendly Heads-Up: Due in 3 Days",
+      "app": "gmail",
+      "op": "send",
+      "section": "reminders"
+    },
+    {
+      "key": "remind_today",
+      "kind": "app.action",
+      "label": "Send the Due-Today Reminder",
+      "app": "gmail",
+      "op": "send",
+      "section": "reminders"
+    },
+    {
+      "key": "remind_overdue",
+      "kind": "app.action",
+      "label": "Send the Overdue Notice",
+      "app": "gmail",
+      "op": "send",
+      "section": "reminders"
+    },
+    {
+      "key": "sheet_overdue",
+      "kind": "app.action",
+      "label": "Update the Sheet: Status Overdue, Days Late",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "reminders"
+    },
+    {
+      "key": "notify_overdue",
+      "kind": "app.action",
+      "label": "Notify the Team: Invoice Overdue",
+      "app": "slack",
+      "op": "post",
+      "section": "reminders"
+    }
+  ],
+  "edges": [
+    {
+      "from": "invoice_trig",
+      "to": "normalize"
+    },
+    {
+      "from": "normalize",
+      "to": "add_to_sheet"
+    },
+    {
+      "from": "payment_trig",
+      "to": "match_invoice"
+    },
+    {
+      "from": "match_invoice",
+      "to": "mark_paid"
+    },
+    {
+      "from": "mark_paid",
+      "to": "sheet_paid"
+    },
+    {
+      "from": "sheet_paid",
+      "to": "notify_paid"
+    },
+    {
+      "from": "daily_trig",
+      "to": "find_unpaid"
+    },
+    {
+      "from": "find_unpaid",
+      "to": "where_switch"
+    },
+    {
+      "from": "where_switch",
+      "to": "remind_upcoming",
+      "branch": "upcoming"
+    },
+    {
+      "from": "where_switch",
+      "to": "remind_today",
+      "branch": "due today"
+    },
+    {
+      "from": "where_switch",
+      "to": "remind_overdue",
+      "branch": "overdue"
+    },
+    {
+      "from": "remind_overdue",
+      "to": "sheet_overdue"
+    },
+    {
+      "from": "sheet_overdue",
+      "to": "notify_overdue"
+    }
+  ],
+  "input_sample": {
+    "invoice_number": "INV-2041",
+    "customer": "Northgate Manufacturing",
+    "amount": "$4,850.00",
+    "issued": "2026-08-01",
+    "due_date": "2026-08-31",
+    "status": "unpaid"
+  },
+  "output_sample": {
+    "invoice_number": "INV-2041",
+    "status": "overdue",
+    "days_late": 4,
+    "reminders_sent": [
+      "due in 3 days",
+      "due today",
+      "overdue notice"
+    ],
+    "team_notified": true,
+    "sheet_row": "row_00212"
+  },
+  "archetype": "invoice_payment_tracking_reminders_overdue",
+  "learned": true,
+  "learned_at": "2026-09-03"
+}

@@ -1,0 +1,31 @@
+@direction LR
+@spacing 60
+
+(Check for Scheduled Posts Every Hour) -> [[Pull Posts Due to Publish from the Content Calendar]]
+[[Pull Posts Due to Publish from the Content Calendar]] -> {Post Marked Approved and Ready?}
+{Post Marked Approved and Ready?} -> "true" -> [Repurpose Base Content for Each Platform's Format and Tone]
+[Repurpose Base Content for Each Platform's Format and Tone] -> [Publish to Facebook Page]
+[Repurpose Base Content for Each Platform's Format and Tone] -> [Publish to Instagram]
+[Repurpose Base Content for Each Platform's Format and Tone] -> [Publish to TikTok]
+[Repurpose Base Content for Each Platform's Format and Tone] -> [Publish to LinkedIn]
+[Repurpose Base Content for Each Platform's Format and Tone] -> [Publish to X · Twitter]
+[Publish to Facebook Page] -> [Merge Publish Results Across All Platforms]
+[Publish to Instagram] -> [Merge Publish Results Across All Platforms]
+[Publish to TikTok] -> [Merge Publish Results Across All Platforms]
+[Publish to LinkedIn] -> [Merge Publish Results Across All Platforms]
+[Publish to X · Twitter] -> [Merge Publish Results Across All Platforms]
+[Merge Publish Results Across All Platforms] -> {Every Platform Published Successfully?}
+{Every Platform Published Successfully?} -> "true" -> [[Log Post URLs and Status Back to the Calendar]]
+{Every Platform Published Successfully?} -> "false" -> [Alert: Publish Failed on One or More Platforms]
+(Daily Performance Pull) -> [Pull Facebook Post Engagement]
+(Daily Performance Pull) -> [Pull Instagram Post Engagement]
+(Daily Performance Pull) -> [Pull TikTok Video Metrics]
+(Daily Performance Pull) -> [Pull LinkedIn Post Metrics]
+(Daily Performance Pull) -> [Pull X · Twitter Post Metrics]
+[Pull Facebook Post Engagement] -> [Aggregate Likes, Comments, Shares, and Clicks by Post]
+[Pull Instagram Post Engagement] -> [Aggregate Likes, Comments, Shares, and Clicks by Post]
+[Pull TikTok Video Metrics] -> [Aggregate Likes, Comments, Shares, and Clicks by Post]
+[Pull LinkedIn Post Metrics] -> [Aggregate Likes, Comments, Shares, and Clicks by Post]
+[Pull X · Twitter Post Metrics] -> [Aggregate Likes, Comments, Shares, and Clicks by Post]
+[Aggregate Likes, Comments, Shares, and Clicks by Post] -> [[Write Performance Data Back to the Calendar]]
+[GPT-4.1] --> [Repurpose Base Content for Each Platform's Format and Tone]

@@ -1,0 +1,178 @@
+{
+  "title": "AI Website Chatbot — Model Agnostic, Grounded, Lead Capture",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · CHAT INTAKE",
+      "color": 0,
+      "note": "The widget posts straight in. Session and any known visitor details load first, so a returning visitor is not asked to repeat themselves and the conversation has context from the first message."
+    },
+    {
+      "key": "brain",
+      "label": "2 · THE ASSISTANT",
+      "color": 0,
+      "note": "One agent, with the model as a swappable sub-node. Claude, GPT or Gemini is a one-node change, which matters because you named three providers and picking one now is the wrong time to decide. Retrieval keeps answers on your own content instead of general knowledge."
+    },
+    {
+      "key": "decide",
+      "label": "3 · ANSWER OR HAND OFF",
+      "color": 0,
+      "note": "A single check decides whether the bot replies on its own or pulls a human in. Anything it cannot support from your content, plus any explicit request for a person, goes to the handoff path rather than being guessed at."
+    },
+    {
+      "key": "capture",
+      "label": "4 · CAPTURE + RESPOND",
+      "color": 0,
+      "note": "Every conversation is written down with the transcript attached, so the chatbot doubles as a lead source instead of a support cost. The reply streams back to the widget either way."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "chat",
+      "kind": "trigger.chat",
+      "label": "Website Chat Widget",
+      "section": "intake"
+    },
+    {
+      "key": "session",
+      "kind": "data.transform",
+      "label": "Load Session + Visitor Context",
+      "section": "intake"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "AI Assistant",
+      "section": "brain"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Model — Swappable · Claude / GPT / Gemini",
+      "app": "openai",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "mem",
+      "kind": "ai.memory",
+      "label": "Conversation Memory",
+      "parent": "agent",
+      "port": "ai_memory"
+    },
+    {
+      "key": "kb",
+      "kind": "ai.vectorstore",
+      "label": "Your Site Content + FAQs",
+      "app": "pinecone",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "emb",
+      "kind": "ai.embed",
+      "label": "Embeddings",
+      "app": "openai",
+      "parent": "kb",
+      "port": "ai_embedding"
+    },
+    {
+      "key": "tool",
+      "kind": "ai.tool",
+      "label": "Tool — Check Availability / Pricing",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "Can It Answer, or Does a Human Step In?",
+      "section": "decide"
+    },
+    {
+      "key": "notify",
+      "kind": "app.action",
+      "label": "Ping the Team With the Transcript",
+      "app": "slack",
+      "op": "send_message",
+      "section": "decide"
+    },
+    {
+      "key": "lead",
+      "kind": "app.action",
+      "label": "Save Conversation + Contact Details",
+      "app": "airtable",
+      "op": "create_record",
+      "section": "capture"
+    },
+    {
+      "key": "respond",
+      "kind": "net.respond",
+      "label": "Stream the Reply Back to the Widget",
+      "section": "capture"
+    }
+  ],
+  "edges": [
+    {
+      "from": "chat",
+      "to": "session"
+    },
+    {
+      "from": "session",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "lead",
+      "branch": "true"
+    },
+    {
+      "from": "gate",
+      "to": "notify",
+      "branch": "false"
+    },
+    {
+      "from": "notify",
+      "to": "lead"
+    },
+    {
+      "from": "lead",
+      "to": "respond"
+    }
+  ],
+  "input_sample": {
+    "session_id": "sess_4b18e7",
+    "page": "/pricing",
+    "visitor": {
+      "returning": true,
+      "first_seen": "2026-08-04",
+      "company_guess": "Ridgeline Fitness"
+    },
+    "message": "Do you integrate with Shopify, and what does the starter plan actually include?"
+  },
+  "output_sample": {
+    "answered_by": "assistant",
+    "grounded_in": [
+      "Integrations — Shopify",
+      "Pricing — Starter plan inclusions"
+    ],
+    "confidence": 0.88,
+    "reply": "Yes, Shopify is a native integration. Starter covers 2 seats, 5,000 conversations a month and the Shopify + Stripe connectors. Want me to check if your store volume fits it?",
+    "handoff": false,
+    "lead_captured": {
+      "airtable_record": "recA71pQ2sVdKm",
+      "email": "dana@ridgelinefit.co",
+      "intent": "pricing + integration fit",
+      "stage": "warm"
+    },
+    "response_time_ms": 1420
+  },
+  "archetype": "simple_site_chatbot_model_agnostic",
+  "learned": true,
+  "learned_at": "2026-08-11"
+}

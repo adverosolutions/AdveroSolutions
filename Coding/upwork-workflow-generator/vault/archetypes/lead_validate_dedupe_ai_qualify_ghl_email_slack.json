@@ -1,0 +1,220 @@
+{
+  "title": "Lead → Validate → Dedupe → AI Qualify → GHL → Email → Slack",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · CAPTURE AND VALIDATE THE LEAD",
+      "color": 0,
+      "note": "One lead comes in from a form or any webhook. Missing email or a bad phone throws with a clear reason, so nothing half-broken reaches the CRM."
+    },
+    {
+      "key": "dedupe",
+      "label": "2 · CHECK THE CRM FOR A DUPLICATE",
+      "color": 0,
+      "note": "Search GoHighLevel by email before creating anything. Swapping to Zoho CRM is the same two HTTP calls with different endpoints."
+    },
+    {
+      "key": "qualify",
+      "label": "3 · QUALIFY AND PUSH TO THE CRM",
+      "color": 0,
+      "note": "Claude reads the lead and returns hot, warm, or cold plus a one-line reason. The contact is created with that tag so sales can filter on it."
+    },
+    {
+      "key": "followup",
+      "label": "4 · FOLLOW UP AND NOTIFY SALES",
+      "color": 0,
+      "note": "The lead gets a same-minute email. Sales gets one message with the score, the reason, and the CRM link."
+    },
+    {
+      "key": "errors",
+      "label": "5 · FAIL LOUDLY IF SOMETHING BREAKS",
+      "color": 0,
+      "note": "Any node failing anywhere posts an alert with a link to the run. Nothing fails silently."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 · Lead Captured · Form or Webhook",
+      "section": "intake"
+    },
+    {
+      "key": "validate",
+      "kind": "data.code",
+      "label": "2 · Validate Fields",
+      "section": "intake"
+    },
+    {
+      "key": "search",
+      "kind": "net.http",
+      "label": "3 · GoHighLevel: Search Contact by Email",
+      "section": "dedupe"
+    },
+    {
+      "key": "dup",
+      "kind": "flow.branch",
+      "label": "4 · Duplicate?",
+      "section": "dedupe"
+    },
+    {
+      "key": "skip",
+      "kind": "flow.noop",
+      "label": "5a · Skip, Already in CRM",
+      "section": "dedupe"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "5b · Qualify the Lead",
+      "section": "qualify"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Force One of: Hot, Warm, Cold, Plus a Reason",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "create",
+      "kind": "net.http",
+      "label": "6 · GoHighLevel: Create Contact + Tag",
+      "section": "qualify"
+    },
+    {
+      "key": "email",
+      "kind": "app.action",
+      "label": "7 · Automated Follow-Up Email",
+      "app": "gmail",
+      "op": "send",
+      "section": "followup"
+    },
+    {
+      "key": "notify",
+      "kind": "app.action",
+      "label": "8 · Notify Sales: Lead Processed",
+      "app": "slack",
+      "op": "post",
+      "section": "followup"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "9 · Any Node Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "errors"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "10 · Alert Sales With a Link to the Failed Run",
+      "app": "slack",
+      "op": "post",
+      "section": "errors"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "validate"
+    },
+    {
+      "from": "validate",
+      "to": "search"
+    },
+    {
+      "from": "search",
+      "to": "dup"
+    },
+    {
+      "from": "dup",
+      "to": "skip",
+      "branch": "true"
+    },
+    {
+      "from": "dup",
+      "to": "agent",
+      "branch": "false"
+    },
+    {
+      "from": "agent",
+      "to": "create"
+    },
+    {
+      "from": "create",
+      "to": "email"
+    },
+    {
+      "from": "email",
+      "to": "notify"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "source": "website_form",
+    "first_name": "Dana",
+    "last_name": "Okafor",
+    "email": "dana.okafor@brightpathdental.com",
+    "phone": "+1 (312) 555-0148",
+    "company": "BrightPath Dental",
+    "message": "We have 3 locations and need help automating patient follow-up. Looking to start this month.",
+    "utm_source": "google",
+    "utm_campaign": "dental-automation-q3",
+    "submitted_at": "2026-09-07T14:12:33Z"
+  },
+  "output_sample": {
+    "lead_email": "dana.okafor@brightpathdental.com",
+    "validation": {
+      "passed": true,
+      "email_format": "ok",
+      "phone_normalized": "+13125550148"
+    },
+    "duplicate_check": {
+      "crm": "GoHighLevel",
+      "matches_found": 0,
+      "action": "create"
+    },
+    "qualification": {
+      "score": "hot",
+      "reason": "Multi-location business, named a concrete use case, and gave a start timeframe of this month."
+    },
+    "crm": {
+      "contact_id": "ghl_ct_7Ka2mP9xQ",
+      "tags": [
+        "hot",
+        "website_form",
+        "dental-automation-q3"
+      ],
+      "url": "https://app.gohighlevel.com/v2/location/loc_4d1/contacts/detail/ghl_ct_7Ka2mP9xQ"
+    },
+    "follow_up_email": {
+      "sent": true,
+      "to": "dana.okafor@brightpathdental.com",
+      "subject": "Re: your request about patient follow-up automation",
+      "sent_at": "2026-09-07T14:12:41Z"
+    },
+    "sales_notification": {
+      "channel": "#new-leads",
+      "text": "HOT lead: Dana Okafor, BrightPath Dental, 3 locations, wants to start this month. Contact created in GHL, follow-up email sent."
+    },
+    "processing_time_ms": 7940,
+    "if_it_had_failed": "Error trigger catches it, alert posted with a link to the run, nothing silently drops"
+  },
+  "archetype": "lead_validate_dedupe_ai_qualify_ghl_email_slack",
+  "learned": true,
+  "learned_at": "2026-09-07"
+}

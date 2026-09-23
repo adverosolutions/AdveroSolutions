@@ -1,0 +1,972 @@
+{
+  "name": "Prospect Research, Fit-Check, Verify, Route to Hunter Campaign",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - PULL TODAY'S CANDIDATE COMPANIES\n\nRuns every weekday morning. Pulls a small batch from the source list and works through it one company at a time.",
+        "height": 1000,
+        "width": 700,
+        "color": 5
+      },
+      "id": "85b16f01-a1e6-5b56-9eed-05d5f3d81bce",
+      "name": "Section - 1 - PULL TODAY'S CANDIDATE COMPANIES",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - RESEARCH AND FIT-CHECK AGAINST YOUR CRITERIA\n\nClaude reads the company site and judges it against your written criteria. Anything it is not sure about gets rejected with the reason, not added.",
+        "height": 1000,
+        "width": 900,
+        "color": 4
+      },
+      "id": "4c334a14-baa5-5794-8185-d19c8053c512",
+      "name": "Section - 2 - RESEARCH AND FIT-CHECK AGAINST YOUR CRITERIA",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        860,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - FIND AND VERIFY THE DECISION-MAKER\n\nHunter finds the right person by title, then verifies the address. Unverified emails never reach a campaign.",
+        "height": 1000,
+        "width": 700,
+        "color": 6
+      },
+      "id": "31776bb8-bdaf-50d3-a67b-cdbdb6d76a79",
+      "name": "Section - 3 - FIND AND VERIFY THE DECISION-MAKER",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - DEDUPE AND ADD TO THE RIGHT CAMPAIGN\n\nSkips anyone already in a campaign, then routes by segment: local service, medtech, or B2B.",
+        "height": 1000,
+        "width": 940,
+        "color": 7
+      },
+      "id": "40ff3856-f880-5670-bbd5-e3bb89d2a922",
+      "name": "Section - 4 - DEDUPE AND ADD TO THE RIGHT CAMPAIGN",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2780,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - LOG EVERY DECISION, SEND THE DAILY DIGEST\n\nEvery company lands in the log, added or rejected, with the reason. One Slack message a day shows both lists.",
+        "height": 1000,
+        "width": 940,
+        "color": 1
+      },
+      "id": "825ef21e-3368-59bf-8fb1-b8587d5101a3",
+      "name": "Section - 5 - LOG EVERY DECISION, SEND THE DAILY DIGEST",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3880,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "61f26b71-5477-52e3-bc0d-dcaf0b9f1d62",
+      "name": "1 - Every Weekday at 7am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apollo.example.com/v1/apollo",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "5c776166-9ba9-5b7e-9826-9f79afa2c910",
+      "name": "2 - Apollo: Pull Candidate Companies by Industry and Size",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        240,
+        540
+      ],
+      "notes": "Swap for Google Maps or a CSV of accounts. Same shape downstream.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "batchSize": 3,
+        "options": {}
+      },
+      "id": "428b5dbe-d1e3-5c12-8c98-e6773ea6f62a",
+      "name": "3 - Work Through One Company at a Time",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        480,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "auto",
+        "text": "={{ $json.chatInput }}",
+        "options": {}
+      },
+      "id": "f047a5a5-fe19-5d26-bd5f-e1b2130cc9fe",
+      "name": "4 - Fit-Check Against Your Written Criteria",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1060,
+        440
+      ],
+      "notes": "Reads the site, decides fit, names the segment, gives the reason.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "d99766a9-df54-5eda-a58f-a66993b11f4c",
+      "name": "Claude",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        920,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Call a sub-workflow to perform a task",
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "a1589a46-a591-55d4-a1a7-0bcfc3e36c38",
+      "name": "Read the Company Website and About Page",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"summary\": \"text\",\n  \"score\": 1\n}"
+      },
+      "id": "09301df9-a56a-5084-929b-c791f8aa0e92",
+      "name": "Force: Fit Yes/No, Segment, Confidence, Reason",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1320,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6d2f8f7c-c851-5285-816e-f203bab12d30",
+              "leftValue": "={{ $json.fit_high }}",
+              "rightValue": 5.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "335ed04f-2a89-5820-a4ab-988ea89c21d8",
+      "name": "5 - Does It Fit, With High Confidence?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1600,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hunter.example.com/v1/hunter",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "f6c675dd-db70-5a83-acd2-557bd6e9e719",
+      "name": "6 - Hunter: Find Decision-Maker by Domain and Title",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1980,
+        360
+      ],
+      "notes": "Owner or founder for local service, VP Marketing or CMO for medtech and B2B.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hunter.example.com/v1/hunter",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "052b78ff-1ff0-500f-8f22-b93824a5f897",
+      "name": "7 - Hunter: Verify the Email Address",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2220,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "237e1dff-abdf-5ef7-9f0d-06b748de98d5",
+              "leftValue": "={{ $json.email_deliverable }}",
+              "rightValue": 8.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5b50f3a4-a310-5937-aa02-6966ff5a71f7",
+      "name": "8 - Is the Email Deliverable?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2460,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hunter.example.com/v1/hunter",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "52ca01a4-2aad-5bdd-ac27-4d5558ee632d",
+      "name": "9 - Hunter: Check if Already in Any Campaign",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2840,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2c2e824c-3676-5141-9a44-7c708ccc3a86",
+              "leftValue": "={{ $json.brand_new }}",
+              "rightValue": 10.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cc495a56-313c-5531-988e-da454b5bf4c2",
+      "name": "10 - Is This a Brand New Lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3080,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "67a72d29-8414-5b54-b97e-4a7c9a2a4d1e",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "Local Service",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Local Service"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "222e6b86-a593-5aee-8ac2-be1008359941",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "Medtech",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Medtech"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "68402043-8317-50dc-85d9-8faba2882760",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "B2B",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "B2B"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1dbdedb3-bb59-5c16-8991-4175ec84bef5",
+      "name": "11 - Route by Segment",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        3320,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hunter.example.com/v1/hunter",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "14e2dd7c-1bb6-5c96-81b8-cd748c3f8535",
+      "name": "12a - Hunter: Add to Local Service Campaign",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3560,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hunter.example.com/v1/hunter",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "8b012962-0f36-58ff-80df-e982796f0273",
+      "name": "12b - Hunter: Add to Medtech Campaign",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3560,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hunter.example.com/v1/hunter",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "0ddcc97a-ca3b-5cb4-9932-50832f14ee39",
+      "name": "12c - Hunter: Add to B2B Campaign",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3560,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "7f61ad34-8925-5403-ad41-bb2e58014d37",
+      "name": "13 - Log the Decision: Added or Rejected, and Why",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4660,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "729b3bd8-e6eb-5fc0-835a-72bbd4822132",
+      "name": "14 - Slack: Daily Digest of Added, Rejected, and Reasons",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        4420,
+        640
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "f2870381-881a-5c48-96fb-70d3e4482610",
+      "name": "15 - Any Node Fails, Anywhere",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        3940,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "94ab0958-c4d1-5518-98ea-6e6692c688b1",
+      "name": "16 - Slack: Alert With a Link to the Failed Run",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        4180,
+        540
+      ]
+    }
+  ],
+  "connections": {
+    "1 - Every Weekday at 7am": {
+      "main": [
+        [
+          {
+            "node": "2 - Apollo: Pull Candidate Companies by Industry and Size",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Apollo: Pull Candidate Companies by Industry and Size": {
+      "main": [
+        [
+          {
+            "node": "3 - Work Through One Company at a Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Work Through One Company at a Time": {
+      "main": [
+        [
+          {
+            "node": "14 - Slack: Daily Digest of Added, Rejected, and Reasons",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "4 - Fit-Check Against Your Written Criteria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - Fit-Check Against Your Written Criteria": {
+      "main": [
+        [
+          {
+            "node": "5 - Does It Fit, With High Confidence?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - Does It Fit, With High Confidence?": {
+      "main": [
+        [
+          {
+            "node": "6 - Hunter: Find Decision-Maker by Domain and Title",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "13 - Log the Decision: Added or Rejected, and Why",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Hunter: Find Decision-Maker by Domain and Title": {
+      "main": [
+        [
+          {
+            "node": "7 - Hunter: Verify the Email Address",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - Hunter: Verify the Email Address": {
+      "main": [
+        [
+          {
+            "node": "8 - Is the Email Deliverable?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - Is the Email Deliverable?": {
+      "main": [
+        [
+          {
+            "node": "9 - Hunter: Check if Already in Any Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "13 - Log the Decision: Added or Rejected, and Why",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9 - Hunter: Check if Already in Any Campaign": {
+      "main": [
+        [
+          {
+            "node": "10 - Is This a Brand New Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Is This a Brand New Lead?": {
+      "main": [
+        [
+          {
+            "node": "11 - Route by Segment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "13 - Log the Decision: Added or Rejected, and Why",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Route by Segment": {
+      "main": [
+        [
+          {
+            "node": "12a - Hunter: Add to Local Service Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "12b - Hunter: Add to Medtech Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "12c - Hunter: Add to B2B Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12a - Hunter: Add to Local Service Campaign": {
+      "main": [
+        [
+          {
+            "node": "13 - Log the Decision: Added or Rejected, and Why",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12b - Hunter: Add to Medtech Campaign": {
+      "main": [
+        [
+          {
+            "node": "13 - Log the Decision: Added or Rejected, and Why",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12c - Hunter: Add to B2B Campaign": {
+      "main": [
+        [
+          {
+            "node": "13 - Log the Decision: Added or Rejected, and Why",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - Log the Decision: Added or Rejected, and Why": {
+      "main": [
+        [
+          {
+            "node": "3 - Work Through One Company at a Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15 - Any Node Fails, Anywhere": {
+      "main": [
+        [
+          {
+            "node": "16 - Slack: Alert With a Link to the Failed Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "4 - Fit-Check Against Your Written Criteria",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read the Company Website and About Page": {
+      "ai_tool": [
+        [
+          {
+            "node": "4 - Fit-Check Against Your Written Criteria",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Force: Fit Yes/No, Segment, Confidence, Reason": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "4 - Fit-Check Against Your Written Criteria",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "05733f29-05ea-5369-af62-31aa7c56a438",
+  "pinData": {
+    "1 - Every Weekday at 7am": [
+      {
+        "json": {
+          "run_date": "2026-09-08",
+          "source": "apollo",
+          "batch_size": 25,
+          "criteria_doc": "ICP Criteria v3 (Google Doc)",
+          "candidates": [
+            {
+              "company": "Brightline Orthopedics",
+              "domain": "brightlineortho.com",
+              "industry": "Medical Devices",
+              "employees": 85,
+              "hq": "Minneapolis, MN"
+            },
+            {
+              "company": "Pinnacle Roofing & Exteriors",
+              "domain": "pinnacleroofingtx.com",
+              "industry": "Roofing Contractors",
+              "employees": 22,
+              "hq": "Plano, TX"
+            },
+            {
+              "company": "Corvid Data Systems",
+              "domain": "corviddata.io",
+              "industry": "B2B SaaS",
+              "employees": 140,
+              "hq": "Denver, CO"
+            },
+            {
+              "company": "Quick Cash Pawn",
+              "domain": "quickcashpawnnc.com",
+              "industry": "Pawn Shops",
+              "employees": 6,
+              "hq": "Raleigh, NC"
+            }
+          ]
+        }
+      }
+    ],
+    "13 - Log the Decision: Added or Rejected, and Why": [
+      {
+        "json": {
+          "digest_date": "2026-09-08",
+          "reviewed": 25,
+          "added": 9,
+          "rejected": 16,
+          "added_to_campaigns": [
+            {
+              "company": "Brightline Orthopedics",
+              "contact": "Dana Whitfield, VP Marketing",
+              "email": "dana.whitfield@brightlineortho.com",
+              "verify_status": "deliverable (score 96)",
+              "segment": "Medtech",
+              "campaign": "Medtech - AI Visibility Q4",
+              "fit_reason": "FDA-cleared device maker, 50-200 staff, publishes clinical content but no AI-search presence."
+            },
+            {
+              "company": "Pinnacle Roofing & Exteriors",
+              "contact": "Marcus Bell, Owner",
+              "email": "marcus@pinnacleroofingtx.com",
+              "verify_status": "deliverable (score 91)",
+              "segment": "Local Service",
+              "campaign": "Local Service - Search Visibility",
+              "fit_reason": "Multi-crew roofer in a metro you target, 4.7 stars on 300+ reviews, no earned-media footprint."
+            },
+            {
+              "company": "Corvid Data Systems",
+              "contact": "Priya Natarajan, CMO",
+              "email": "priya@corviddata.io",
+              "verify_status": "deliverable (score 94)",
+              "segment": "B2B",
+              "campaign": "B2B - Authority and Earned Media",
+              "fit_reason": "Series A B2B SaaS, hiring a content marketer, no analyst or press coverage yet."
+            }
+          ],
+          "rejected_with_reasons": [
+            {
+              "company": "Quick Cash Pawn",
+              "stage": "Fit-Check",
+              "reason": "Outside criteria: retail pawn shop, not a service, medtech, or B2B business."
+            },
+            {
+              "company": "Northgate Dental Lab",
+              "stage": "Fit-Check",
+              "reason": "Low confidence (0.55): site does not say whether they sell to practices or consumers. Flagged for your call."
+            },
+            {
+              "company": "Helix Bio Supply",
+              "stage": "Verify Email",
+              "reason": "Hunter returned 'risky' for the only marketing contact found. Not added."
+            },
+            {
+              "company": "Summit HVAC Pros",
+              "stage": "Dedupe",
+              "reason": "Owner already in 'Local Service - Search Visibility' since Aug 14."
+            }
+          ],
+          "hunter_credits_used": 41,
+          "slack_channel": "#prospecting-digest",
+          "log_sheet": "Prospect Decisions 2026 (Google Sheet)"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,933 @@
+{
+  "name": "Partner Operations Hub - One Record, Tier Activation, AI Deliverables",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - ONE PARTNER RECORD\n\nA partner changes in any one system and the same record updates everywhere else. No more typing the same fields into four tools.",
+        "height": 1060,
+        "width": 700,
+        "color": 5
+      },
+      "id": "4064c257-5667-5235-9ef7-1c4f8d8faa82",
+      "name": "Section - 1 - ONE PARTNER RECORD",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - ACTIVATION BY PARTNER TIER\n\nThe tier decides what happens next, from a full joint campaign task set down to an automated check-in.",
+        "height": 1060,
+        "width": 700,
+        "color": 4
+      },
+      "id": "ff8ae501-66e5-53d0-9a5b-1be58647fc21",
+      "name": "Section - 2 - ACTIVATION BY PARTNER TIER",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        800,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - AI DELIVERABLES FROM YOUR OWN TEMPLATES\n\nClient inputs go in, a draft built on your framework comes out. Claude writes into your structure, never its own.",
+        "height": 1060,
+        "width": 1400,
+        "color": 6
+      },
+      "id": "ac7a462a-4652-5b64-aee4-62bdd5bb6dd5",
+      "name": "Section - 3 - AI DELIVERABLES FROM YOUR OWN TEMPLATES",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - REVIEW AND MEASURE\n\nA person approves every draft before it leaves, and each run logs the hours it saved so the value is visible.",
+        "height": 1060,
+        "width": 460,
+        "color": 7
+      },
+      "id": "f05ed694-b248-5ecd-993e-559392f3a8da",
+      "name": "Section - 4 - REVIEW AND MEASURE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3220,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - WHEN SOMETHING BREAKS\n\nA failed run pings the partner owner with a link straight to it. Nothing fails quietly.",
+        "height": 1060,
+        "width": 460,
+        "color": 1
+      },
+      "id": "5099010d-6dd2-541a-88b0-1a02c3fd81f1",
+      "name": "Section - 5 - WHEN SOMETHING BREAKS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3840,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "3185f0c2-1f90-54ea-b705-0694ff3a989a",
+      "name": "1 - Partner Created or Updated in CRM, PRM, Notion or Sheets",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "7d13f497-562c-5886-8d91-59a08e7975e7"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "447f404a-9d64-56b8-b1dd-b6a1f24dfb92",
+              "name": "source",
+              "value": "={{ $json.source }}",
+              "type": "string"
+            },
+            {
+              "id": "4f99c520-cab6-504f-beac-42184d9c95ef",
+              "name": "event",
+              "value": "={{ $json.event }}",
+              "type": "string"
+            },
+            {
+              "id": "173a77d1-e197-5e4f-985c-621f0a134bee",
+              "name": "partner",
+              "value": "={{ $json.partner }}",
+              "type": "object"
+            },
+            {
+              "id": "3d912ac1-93da-5337-bafa-29435db1c7d7",
+              "name": "changed_fields",
+              "value": "={{ $json.changed_fields }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "d473754c-3c7b-564f-8091-b97dc17ebb0f",
+      "name": "2 - Normalize to One Partner Record - Tier, Type, Owner, Stage",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "upsert",
+        "email": "={{ $json.email }}",
+        "additionalFields": {}
+      },
+      "id": "5d85e196-f683-52e8-8e66-6685b3aec1b6",
+      "name": "3 - Update the Partner in the CRM",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/4-update-the-same-record-in-the-prm",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "9f9a17ea-52bb-5859-b142-d0eb8f6865b9",
+      "name": "4 - Update the Same Record in the PRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        480,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "propertiesUi": {
+          "propertyValues": []
+        },
+        "options": {}
+      },
+      "id": "e745e025-e694-52d9-b4ef-c5cac1a4fdbb",
+      "name": "5 - Update the Notion Partner Page",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "update",
+        "options": {},
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        }
+      },
+      "id": "1848c598-9c42-5b0d-89be-4a8ea1e0a217",
+      "name": "6 - Update the Master Sheet Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        480,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "92f89fd6-3d58-53a2-86d1-a0db6f3c3ce4",
+                    "leftValue": "={{ $json.activation_created }}",
+                    "rightValue": "Tier 1",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Tier 1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "526d3904-1d02-5b28-8275-720f44cc2d61",
+                    "leftValue": "={{ $json.activation_created }}",
+                    "rightValue": "Tier 2",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Tier 2"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e5277056-e01f-548a-8a28-4a5579923a97",
+                    "leftValue": "={{ $json.activation_created }}",
+                    "rightValue": "Tier 3",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Tier 3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8ec6b467-4d15-577f-9b61-5a5dfca73dd6",
+      "name": "7 - Route Activation by Partner Tier",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        860,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "task",
+        "operation": "create"
+      },
+      "id": "a16f6bfd-6a11-5b1f-94d0-aceb3f733648",
+      "name": "8a - Tier 1: Create the Joint Campaign Task Set",
+      "type": "n8n-nodes-base.clickUp",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $json.email }}",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "f689be06-3261-50f5-a9f4-cc1e4db0f790",
+      "name": "8b - Tier 1: Send the Kickoff Email to the Partner",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1340,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "task",
+        "operation": "create"
+      },
+      "id": "7ff736b1-5dda-5c2e-9c41-43037f942aea",
+      "name": "9 - Tier 2: Create the Webinar Checklist",
+      "type": "n8n-nodes-base.clickUp",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "days"
+      },
+      "id": "6802978a-356c-5bc1-a7ff-ee2c3c85d960",
+      "name": "10a - Tier 3: Wait 30 Days",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $json.email }}",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "de35463a-6086-57b9-93bc-b70ef3069a46",
+      "name": "10b - Tier 3: Send the Automated Check-In",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1340,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "11 - Client Inputs Submitted - the Project Brief",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Source",
+              "requiredField": true,
+              "fieldType": "text"
+            },
+            {
+              "fieldLabel": "Event",
+              "requiredField": true,
+              "fieldType": "text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7b30562c-eb7a-588f-bab9-d5212f5d1f26",
+      "name": "11 - Client Inputs Submitted - the Project Brief",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        1720,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "auto",
+        "text": "={{ $json.chatInput }}",
+        "options": {}
+      },
+      "id": "7f406da5-a479-57fd-8e2f-a1f340f7c9b0",
+      "name": "12 - Claude Drafts the Deliverable From Your Template",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "7875e88f-1a58-5bbf-ac55-e6dab80f8b70",
+      "name": "Claude",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        2000,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Call a sub-workflow to perform a task",
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "89ded1de-a445-5965-aad1-dbe70be94de7",
+      "name": "Template and Framework Library - Notion",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2200,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Call a sub-workflow to perform a task",
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "ffbb74fd-8aa6-5fa9-aaf4-9a2f92848f91",
+      "name": "Partner Record Lookup",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2400,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"summary\": \"text\",\n  \"score\": 1\n}"
+      },
+      "id": "959dd4b6-e32f-59dd-8cbc-e7edef635a02",
+      "name": "Force Your Sections: Objective, Audience, Offer, Plan, Next Steps",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2600,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "operation": "create",
+        "folderId": "root",
+        "title": "={{ $json.title }}"
+      },
+      "id": "d2ae1c8a-fee8-5b41-8c48-f680396d4ce0",
+      "name": "13 - Put the Draft in Google Docs for Review",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        2900,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "c194264c-aa68-53ac-8815-1244af0f2eeb",
+      "name": "14 - Send the Review Request to the Partner Owner",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        3280,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "ee7a4239-e6e7-515b-acab-a3db8592ac03",
+      "name": "15 - Log the Activity and the Hours It Saved",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3520,
+        320
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "d2951278-3e24-5e4a-90ff-816eb10f5b98",
+      "name": "16 - Any Step Fails, Anywhere",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        3900,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "9f620d56-5744-56f4-8249-d242eb78b865",
+      "name": "17 - Alert the Owner With a Link to the Failed Run",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        4140,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "1 - Partner Created or Updated in CRM, PRM, Notion or Sheets": {
+      "main": [
+        [
+          {
+            "node": "2 - Normalize to One Partner Record - Tier, Type, Owner, Stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Normalize to One Partner Record - Tier, Type, Owner, Stage": {
+      "main": [
+        [
+          {
+            "node": "3 - Update the Partner in the CRM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "4 - Update the Same Record in the PRM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "5 - Update the Notion Partner Page",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "6 - Update the Master Sheet Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Update the Partner in the CRM": {
+      "main": [
+        [
+          {
+            "node": "7 - Route Activation by Partner Tier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - Update the Same Record in the PRM": {
+      "main": [
+        [
+          {
+            "node": "7 - Route Activation by Partner Tier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - Update the Notion Partner Page": {
+      "main": [
+        [
+          {
+            "node": "7 - Route Activation by Partner Tier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Update the Master Sheet Row": {
+      "main": [
+        [
+          {
+            "node": "7 - Route Activation by Partner Tier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - Route Activation by Partner Tier": {
+      "main": [
+        [
+          {
+            "node": "8a - Tier 1: Create the Joint Campaign Task Set",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "9 - Tier 2: Create the Webinar Checklist",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "10a - Tier 3: Wait 30 Days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8a - Tier 1: Create the Joint Campaign Task Set": {
+      "main": [
+        [
+          {
+            "node": "8b - Tier 1: Send the Kickoff Email to the Partner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8b - Tier 1: Send the Kickoff Email to the Partner": {
+      "main": [
+        [
+          {
+            "node": "15 - Log the Activity and the Hours It Saved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9 - Tier 2: Create the Webinar Checklist": {
+      "main": [
+        [
+          {
+            "node": "15 - Log the Activity and the Hours It Saved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10a - Tier 3: Wait 30 Days": {
+      "main": [
+        [
+          {
+            "node": "10b - Tier 3: Send the Automated Check-In",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10b - Tier 3: Send the Automated Check-In": {
+      "main": [
+        [
+          {
+            "node": "15 - Log the Activity and the Hours It Saved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Client Inputs Submitted - the Project Brief": {
+      "main": [
+        [
+          {
+            "node": "12 - Claude Drafts the Deliverable From Your Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 - Claude Drafts the Deliverable From Your Template": {
+      "main": [
+        [
+          {
+            "node": "13 - Put the Draft in Google Docs for Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - Put the Draft in Google Docs for Review": {
+      "main": [
+        [
+          {
+            "node": "14 - Send the Review Request to the Partner Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 - Send the Review Request to the Partner Owner": {
+      "main": [
+        [
+          {
+            "node": "15 - Log the Activity and the Hours It Saved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16 - Any Step Fails, Anywhere": {
+      "main": [
+        [
+          {
+            "node": "17 - Alert the Owner With a Link to the Failed Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "12 - Claude Drafts the Deliverable From Your Template",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Template and Framework Library - Notion": {
+      "ai_tool": [
+        [
+          {
+            "node": "12 - Claude Drafts the Deliverable From Your Template",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Partner Record Lookup": {
+      "ai_tool": [
+        [
+          {
+            "node": "12 - Claude Drafts the Deliverable From Your Template",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Force Your Sections: Objective, Audience, Offer, Plan, Next Steps": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "12 - Claude Drafts the Deliverable From Your Template",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "22206245-e0bb-5fa9-bb0e-902c13da9863",
+  "pinData": {
+    "1 - Partner Created or Updated in CRM, PRM, Notion or Sheets": [
+      {
+        "json": {
+          "source": "PRM",
+          "event": "partner.updated",
+          "partner": {
+            "partner_id": "PTR-2291",
+            "company": "Northbridge Consulting Group",
+            "primary_contact": "Dana Whitfield",
+            "email": "dana@northbridgecg.com",
+            "tier": "Tier 1",
+            "partner_type": "Co-Sell / Referral",
+            "owner": "Marcus Reed",
+            "stage": "Signed, not yet activated",
+            "agreement_signed": "2026-09-08",
+            "notion_page_id": "a41f9c2e",
+            "sheet_row": 184,
+            "crm_company_id": "8811204"
+          },
+          "changed_fields": [
+            "tier",
+            "stage",
+            "owner"
+          ]
+        }
+      }
+    ],
+    "15 - Log the Activity and the Hours It Saved": [
+      {
+        "json": {
+          "partner_id": "PTR-2291",
+          "one_record_written_to": {
+            "crm": "updated (company 8811204)",
+            "prm": "updated (PTR-2291)",
+            "notion": "updated (page a41f9c2e)",
+            "master_sheet": "updated (row 184)"
+          },
+          "fields_no_longer_typed_twice": [
+            "tier",
+            "stage",
+            "owner",
+            "partner_type"
+          ],
+          "tier_routed": "Tier 1",
+          "activation_created": {
+            "clickup_task_set": "Joint Campaign - Northbridge (7 tasks, owner Marcus Reed)",
+            "kickoff_email": "sent to dana@northbridgecg.com 2026-09-09 09:14"
+          },
+          "deliverable": {
+            "type": "Partner strategy document",
+            "template_used": "Advero Partner Strategy Framework v3 (Notion)",
+            "sections_returned": [
+              "Objective",
+              "Audience",
+              "Offer",
+              "Plan",
+              "Next Steps"
+            ],
+            "google_doc": "Northbridge - Partner Strategy (DRAFT for review)",
+            "review_requested_from": "Marcus Reed (Slack)",
+            "status": "Awaiting human approval, nothing sent to the partner yet"
+          },
+          "activity_log_row": {
+            "date": "2026-09-09",
+            "partner": "Northbridge Consulting Group",
+            "tier": "Tier 1",
+            "activity": "Activation + strategy doc draft",
+            "manual_minutes_before": 185,
+            "minutes_now": 12,
+            "hours_saved_estimate": 2.9
+          },
+          "if_something_had_failed": "Error trigger fires and the owner gets a Slack message with a link to the failed run"
+        }
+      }
+    ]
+  }
+}

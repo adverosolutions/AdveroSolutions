@@ -1,0 +1,65 @@
+{
+  "_meta": {
+    "note": "Swap an archetype's default app for whatever the job post actually names, when both sit in the same functional group. A post asking for Salesforce should not see a HubSpot node, but it also should not change the shape of the workflow — only the app on that node."
+  },
+
+  "groups": {
+    "crm":      ["hubspot", "salesforce", "pipedrive", "monday", "clickup", "airtable", "notion"],
+    "chat":     ["slack", "discord", "telegram", "whatsapp", "twilio"],
+    "store":    ["googleSheets", "airtable", "notion", "postgres", "supabase"],
+    "email":    ["gmail", "outlook", "instantly"],
+    "llm":      ["openai", "anthropic"],
+    "vector":   ["pinecone", "supabase"],
+    "commerce": ["shopify", "stripe"],
+    "docs":     ["googleDocs", "googleDrive", "notion", "wordpress"],
+    "calendar": ["googleCalendar", "calendly"],
+    "books":    ["quickbooks", "xero"]
+  },
+
+  "display": {
+    "googleSheets": "Google Sheets",
+    "googleDocs": "Google Docs",
+    "googleDrive": "Google Drive",
+    "googleCalendar": "Google Calendar",
+    "hubspot": "HubSpot",
+    "salesforce": "Salesforce",
+    "pipedrive": "Pipedrive",
+    "airtable": "Airtable",
+    "notion": "Notion",
+    "slack": "Slack",
+    "discord": "Discord",
+    "telegram": "Telegram",
+    "whatsapp": "WhatsApp",
+    "twilio": "Twilio",
+    "gmail": "Gmail",
+    "outlook": "Outlook",
+    "instantly": "Instantly",
+    "openai": "OpenAI",
+    "anthropic": "Claude",
+    "pinecone": "Pinecone",
+    "supabase": "Supabase",
+    "postgres": "Postgres",
+    "shopify": "Shopify",
+    "stripe": "Stripe",
+    "wordpress": "WordPress",
+    "quickbooks": "QuickBooks",
+    "xero": "Xero",
+    "calendly": "Calendly",
+    "monday": "Monday.com",
+    "clickup": "ClickUp"
+  },
+
+  "op_for": {
+    "_note": "The operation each app uses for its role in a group. A blanket per-group default produced nonsense like discord:post and airtable:create_contact, so the op is pinned per app.",
+    "crm":      { "hubspot": "create_contact", "salesforce": "create_contact", "pipedrive": "create_contact", "monday": "create", "clickup": "create", "airtable": "create", "notion": "create" },
+    "chat":     { "slack": "post", "discord": "send", "telegram": "send", "whatsapp": "send", "twilio": "send" },
+    "store":    { "googleSheets": "append", "airtable": "create", "notion": "create", "postgres": "insert", "supabase": "insert" },
+    "email":    { "gmail": "send", "outlook": "send", "instantly": "send" },
+    "docs":     { "googleDocs": "create", "googleDrive": "upload", "notion": "create", "wordpress": "create" },
+    "calendar": { "googleCalendar": "create", "calendly": "get" },
+    "commerce": { "shopify": "get", "stripe": "get" },
+    "books":    { "quickbooks": "create", "xero": "create" },
+    "llm":      { "openai": "message", "anthropic": "message" },
+    "vector":   { "pinecone": "upsert", "supabase": "upsert" }
+  }
+}

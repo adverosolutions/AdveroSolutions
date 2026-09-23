@@ -1,0 +1,58 @@
+# Environment variables and secrets
+.env
+*.env
+
+# Google OAuth credentials
+credentials.json
+token.json
+
+# Temporary/intermediate files
+.tmp/
+*.tmp
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Machine-written sidecars beside the change-sets. The DATED change-set files
+# (changesets/inbox_actions/<date>.json) are the audit trail of what was
+# proposed and applied and ARE committed; these two are regenerated on every
+# run and carry only the last result, so a commit of one is noise that reads
+# like a hand-authored decision.
+changesets/inbox_actions/last_placement.json
+changesets/inbox_actions/last_canary.json
+changesets/inbox_actions/last_canary_*.json
+
+# Dead Modal handler carrying four hard-coded live credentials (an Instantly
+# API key, a GitHub token, a Slack webhook URL and a Google service-account
+# private key). Nothing imports or deploys it: execution/webhooks.json maps
+# only lead_sync, to execution/modal_lead_sync.py, so ignoring it breaks no
+# deploy path. It is already deleted in the working tree.
+#
+# READ THIS BEFORE TRUSTING THE LINE BELOW: git ignores nothing it is already
+# tracking, and this file IS tracked at HEAD and in three commits. The entry
+# only stops a future copy from being added. Rotating the four credentials and
+# untracking the file (git rm --cached) are Lorenzo's calls:
+# runbooks/GO_LIVE_CHECKLIST.md step 0 and runbooks/DECISIONS_FOR_LORENZO.md 0.1.
+execution/modal_reply_handler_v2.py

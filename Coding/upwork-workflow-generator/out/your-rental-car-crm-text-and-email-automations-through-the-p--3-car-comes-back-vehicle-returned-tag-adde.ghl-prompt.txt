@@ -1,0 +1,21 @@
+Build this GoHighLevel workflow exactly as specified. Name the workflow exactly "Your Rental Car CRM: Text and Email Automations Through the Process - Car Comes Back: vehicle-returned Tag Added".
+Rules: create every step listed below, in the order given, with the exact step names and field values given. Do not add steps, do not remove steps, do not merge steps, do not reorder them, do not rename anything, do not ask me questions. Where a tag, pipeline, stage, form or field is named, use that exact name. Leave the workflow as a draft; do not publish.
+
+Trigger - name it exactly "Car Comes Back: vehicle-returned Tag Added". Trigger "Contact tag". Tag added: "vehicle-returned".
+
+Actions, in this exact order:
+Step 1 - name this step exactly "Clear vehicle-returned for Their Next Rental". Action "Remove contact tag". Tag: "vehicle-returned".
+Step 2 - name this step exactly "Move the Card to Returned - Inspection". Action "Create/Update opportunity" (update the existing one). Pipeline: "Rental Car Process". Move to stage: "Returned - Inspection". Status: open.
+Step 3 - name this step exactly "Text: Thanks, Deposit Released After Inspection". Action "Send SMS". Message text, exactly: "Thanks for renting with {{location.name}}, {{contact.first_name}}! We have the {{contact.rental_vehicle}} back. We will do a quick inspection and release your deposit once it is done."
+Step 4 - name this step exactly "Task: Inspect, Log Mileage, Check If Service Is Due". Action "Create task". Title: "Inspect the {{contact.rental_vehicle}} returned by {{contact.first_name}} {{contact.last_name}}". Due in 1 days. Assign to: the contact's assigned user.
+  (Purpose: Every return feeds your Vehicles and Maintenance tabs: new mileage on the car, a service record when one is due.)
+Step 5 - name this step exactly "Wait 2 Days While You Inspect". Action "Wait". Wait for a set time: 2 days.
+Step 6 - name this step exactly "Claim Open on This Rental?". Action "If/Else". Branch name: "Claim Open on This Rental?". Condition: Contact has tag "claim-open".
+  YES branch (condition is true):
+    Step 7 - name this step exactly "Yes: Stop Here, No Review Ask During a Claim". End of this branch. Nothing else runs here.
+  NO branch (condition is false, the "None" branch):
+    Step 8 - name this step exactly "No: Move the Card to Rental Completed". Action "Create/Update opportunity" (update the existing one). Pipeline: "Rental Car Process". Move to stage: "Rental Completed". Status: open.
+    Step 9 - name this step exactly "Send Your Review Request". Action "Send review request".
+      End of the workflow after this step.
+
+Checklist before you finish: 1 trigger(s), 9 action steps, workflow name "Your Rental Car CRM: Text and Email Automations Through the Process - Car Comes Back: vehicle-returned Tag Added". Every Send SMS, Send email and internal notification contains the exact message text above. Every Wait has the duration above. Every If/Else has both branches. Nothing is left unconfigured.

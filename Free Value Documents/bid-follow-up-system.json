@@ -1,0 +1,2339 @@
+{
+  "name": "Bid Follow-Up System",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# Bid and Follow-Up Automation System\nOne workflow, five lanes. Every trigger on the left runs through the single **Config** node (edit your details there once) and the **Which lane?** switch sends it to the right lane.\n\nThe Google Sheet is the source of truth: **Bids** is the tracker, **Templates** holds the copy and cadence. Edit those in the sheet, not here.\n\nStop any customer's follow-ups by setting their status to anything other than Sent / Following Up.",
+        "width": 1000,
+        "height": 240,
+        "color": 6
+      },
+      "id": "ab37a46b-4954-4010-bd42-eb5b1fb425d5",
+      "name": "Note a3ee88",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -420
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "13fcc31e-d71a-4742-b53d-680120cb0773",
+              "name": "sheet_id",
+              "value": "PASTE_GOOGLE_SHEET_ID_HERE",
+              "type": "string"
+            },
+            {
+              "id": "25d9caa9-208a-4d6b-965e-3c1aa0deae3a",
+              "name": "business_name",
+              "value": "Lawson Construction",
+              "type": "string"
+            },
+            {
+              "id": "6f638771-052f-47df-8ba3-97c14618c0d9",
+              "name": "owner_name",
+              "value": "Jennifer",
+              "type": "string"
+            },
+            {
+              "id": "71ecb88f-8b3c-4f76-89d4-98d3d6ab1e78",
+              "name": "owner_phone",
+              "value": "(555) 555-0100",
+              "type": "string"
+            },
+            {
+              "id": "493a9d19-eeb1-4e33-b68b-3ee8946c2673",
+              "name": "from_email",
+              "value": "bids@yourbusiness.com",
+              "type": "string"
+            },
+            {
+              "id": "7a5ea85c-641b-4cbb-b2ff-1eeb8b425dee",
+              "name": "team_email",
+              "value": "jennifer@yourbusiness.com",
+              "type": "string"
+            },
+            {
+              "id": "3b25ac49-b2c8-4bbd-bc39-639f89e9c3a7",
+              "name": "team_phone",
+              "value": "+15555550100",
+              "type": "string"
+            },
+            {
+              "id": "a9b96001-690a-4417-8bdb-3458269d2b08",
+              "name": "twilio_from",
+              "value": "+15555550199",
+              "type": "string"
+            },
+            {
+              "id": "98ee9fea-f18d-4997-a04d-28640ec2d4bb",
+              "name": "timezone",
+              "value": "America/Chicago",
+              "type": "string"
+            },
+            {
+              "id": "e8f0b5aa-9ca7-471e-9899-550d457c9dd3",
+              "name": "no_response_grace_days",
+              "value": "3",
+              "type": "string"
+            },
+            {
+              "id": "e9e370c1-6dba-4dcd-9d26-a865f3b4b06b",
+              "name": "lane",
+              "value": "={{ $prevNode.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "9cfbb4e3-24d9-424e-bb73-ca2d694407e0",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "03be777b-73f7-485c-a2ff-cd63088f64f4",
+                    "leftValue": "={{ $json.lane }}",
+                    "rightValue": "New Bid (Website Form)",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "id": "90b30a27-223d-4072-827f-f500c013e874",
+                    "leftValue": "={{ $json.lane }}",
+                    "rightValue": "Parse Notification Email",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "intake"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ce98c9fa-baac-4ac3-9c9a-d6db44752c75",
+                    "leftValue": "={{ $json.lane }}",
+                    "rightValue": "Every hour, business hours CT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "scheduler"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ef6b55f6-9246-479c-9ee8-2c617e3a2e41",
+                    "leftValue": "={{ $json.lane }}",
+                    "rightValue": "Respond to Twilio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "text_reply"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "dedde946-b78d-4028-b499-0aeee1098fb2",
+                    "leftValue": "={{ $json.lane }}",
+                    "rightValue": "Reply Lands in Inbox",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "email_reply"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "abf9ae3b-3a12-47ce-a923-956a157b7874",
+                    "leftValue": "={{ $json.lane }}",
+                    "rightValue": "Every day 8am CT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "summary"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "70a84ff8-abbc-41c6-8279-8176c19eeaa6",
+      "name": "Which lane?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        820,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 1. Bid intake\nA new bid from the website form hits this webhook (POST). It is normalized, given a bid_id, and logged in the **Bids** tab with status **Sent**. The scheduler picks it up from there.\n\nWebhook URL: `https://YOUR-N8N/webhook/new-bid`\n\nYou can also add a row by hand in the sheet with status Sent and a date_sent. The scheduler handles it the same way.",
+        "width": 560,
+        "height": 220,
+        "color": 4
+      },
+      "id": "b5396c07-f82f-43fd-a3ba-620695f12ede",
+      "name": "Note 88ad08",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Optional: start from the form's notification email\nIf the form cannot call a webhook, enable this Gmail trigger and it will parse the notification email instead. Adjust the subject filter in the trigger and the field names in **Parse Notification Email** to match the form.",
+        "width": 560,
+        "height": 160,
+        "color": 5
+      },
+      "id": "d96b4d12-362c-4d77-ad6d-d8779f91af50",
+      "name": "Note 14b08e",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-bid",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "d65237f5-dbe3-490a-ab60-d4b3ecc3207b",
+      "name": "New Bid (Website Form)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "611e3d4a-bd5a-4d1b-8da0-46ae72844a4e"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "subject:(new bid OR new estimate OR estimate request)"
+        },
+        "options": {}
+      },
+      "id": "5e92cc6f-6912-4825-8a83-0d201e1a3b8e",
+      "name": "Form Notification Email",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        460
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// Turns a plain-text form notification (\"Name: Jane Doe\" lines) into a form-style payload.\nconst m = $input.first().json;\nconst text = String(m.text || m.snippet || '');\nconst body = {};\nfor (const line of text.split(/\\r?\\n/)) {\n  const mm = line.match(/^\\s*([A-Za-z][A-Za-z0-9 _-]{1,40})\\s*[:=]\\s*(.+)$/);\n  if (mm) body[mm[1].trim().toLowerCase().replace(/\\s+/g, '_')] = mm[2].trim();\n}\nreturn [{ json: { body } }];\n"
+      },
+      "id": "5581b8cd-cf9c-4c7a-b9cb-cc2a3672d8e8",
+      "name": "Parse Notification Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst ACTIVE = ['Sent', 'Following Up'];\nfunction parseDate(v) {\n  if (v === undefined || v === null || v === '') return null;\n  if (typeof v === 'number') return DateTime.fromMillis(Math.round((v - 25569) * 86400000), { zone: 'utc' }).setZone(ZONE);\n  const s = String(v).trim();\n  let d = DateTime.fromISO(s, { zone: ZONE });\n  for (const f of ['M/d/yyyy', 'M/d/yyyy H:mm:ss', 'M/d/yyyy H:mm', 'yyyy-MM-dd H:mm:ss', 'yyyy-MM-dd H:mm']) {\n    if (d.isValid) break;\n    d = DateTime.fromFormat(s, f, { zone: ZONE });\n  }\n  if (!d.isValid) { const js = new Date(s); d = isNaN(js.getTime()) ? null : DateTime.fromJSDate(js).setZone(ZONE); }\n  return d && d.isValid ? d : null;\n}\nfunction digits(s) { return String(s || '').replace(/\\D/g, ''); }\nfunction e164(s) { const d = digits(s); if (d.length === 10) return '+1' + d; if (d.length === 11 && d[0] === '1') return '+' + d; return d ? '+' + d : ''; }\nfunction money(v) { if (v === undefined || v === null || v === '') return ''; const n = Number(String(v).replace(/[^0-9.]/g, '')); return isNaN(n) ? String(v) : '$' + n.toLocaleString('en-US', { maximumFractionDigits: 2 }); }\n\nconst cfg = $('Config').first().json;\nconst ZONE = cfg.timezone || 'America/Chicago';\nconst j = $input.first().json;\nconst src = (j.body && typeof j.body === 'object' && Object.keys(j.body).length) ? j.body : j;\nconst norm = k => String(k).toLowerCase().replace(/[^a-z0-9]/g, '');\nconst pick = (...keys) => {\n  for (const k of keys) {\n    const hit = Object.keys(src).find(x => norm(x) === k);\n    if (hit && src[hit] !== null && src[hit] !== undefined && String(src[hit]).trim() !== '') return String(src[hit]).trim();\n  }\n  return '';\n};\nconst name = pick('customername', 'fullname', 'name', 'contactname', 'customer') || [pick('firstname', 'first'), pick('lastname', 'last')].join(' ').trim();\nconst first = pick('firstname', 'first') || name.split(/\\s+/)[0] || '';\nconst now = DateTime.now().setZone(ZONE);\nconst bid_id = 'BID-' + now.toFormat('yyyyLLdd') + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();\nreturn [{ json: {\n  bid_id,\n  customer_name: name,\n  first_name: first,\n  phone: e164(pick('phone', 'phonenumber', 'tel', 'telephone', 'mobile', 'cell', 'cellphone')),\n  email: pick('email', 'emailaddress', 'customeremail').toLowerCase(),\n  project: pick('project', 'projecttype', 'service', 'jobtype', 'job', 'scope', 'description', 'message'),\n  bid_amount: pick('bidamount', 'amount', 'estimate', 'estimateamount', 'total', 'price', 'quote'),\n  date_sent: (parseDate(pick('datesent', 'date', 'sentdate')) || now).toISO(),\n  status: 'Sent',\n  touch_index: 0,\n  next_touch_at: '',\n  last_touch: '',\n  last_touch_channel: '',\n  last_reply: '',\n  last_reply_text: '',\n  thread_id: '',\n  opt_out: '',\n  notes: pick('notes', 'comments'),\n}}];\n"
+      },
+      "id": "d44ed340-8d6e-49aa-93fd-75c1564108e4",
+      "name": "Normalize Bid",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Config').first().json.sheet_id }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Bids"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "bid_id",
+              "displayName": "bid_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "first_name",
+              "displayName": "first_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "project",
+              "displayName": "project",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "bid_amount",
+              "displayName": "bid_amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date_sent",
+              "displayName": "date_sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "touch_index",
+              "displayName": "touch_index",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "next_touch_at",
+              "displayName": "next_touch_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_touch",
+              "displayName": "last_touch",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_touch_channel",
+              "displayName": "last_touch_channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_reply",
+              "displayName": "last_reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_reply_text",
+              "displayName": "last_reply_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "thread_id",
+              "displayName": "thread_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "opt_out",
+              "displayName": "opt_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "id": "4508eae0-54c3-45a3-833d-de3c297326b3",
+      "name": "Log Bid in Tracker",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1840,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, bid_id: $('Normalize Bid').first().json.bid_id }) }}",
+        "options": {}
+      },
+      "id": "b7248ef9-6c78-4128-9005-728fd4261055",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2080,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2. Follow-up scheduler\nRuns every hour, 9am to 5pm Central, Monday to Friday. For every bid with status **Sent** or **Following Up** it checks whether the next touch is due, sends it (email via Gmail, text via Twilio), and moves the bid forward.\n\nThe cadence lives in the **Templates** tab (day + channel + copy). Change days or wording there. Nothing here needs editing.\n\nStopping a bid: any reply, a STOP, or setting the status to Booked / Declined / anything other than Sent or Following Up.",
+        "width": 620,
+        "height": 260,
+        "color": 4
+      },
+      "id": "51fe409f-6c36-4817-abc9-4077a093cb8d",
+      "name": "Note 68c8d1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Why one touch per bid per run\nIf a bid was entered late and several touches are already overdue, it still gets at most one touch per hour and never two on the same day. The next touch is always at least the next business morning.",
+        "width": 460,
+        "height": 160,
+        "color": 5
+      },
+      "id": "4196eced-eb87-421d-a0ba-3acbb8169d6d",
+      "name": "Note a156d4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2780,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9-17 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "fcd9f3ac-002d-4086-a1bb-8862bdbc67ca",
+      "name": "Every hour, business hours CT",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Config').first().json.sheet_id }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Bids"
+        },
+        "options": {}
+      },
+      "id": "2ddc3e00-d19b-4a9f-afdd-5fa246753dd7",
+      "name": "Read Bids (scheduler)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1600,
+        500
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Config').first().json.sheet_id }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Templates"
+        },
+        "options": {}
+      },
+      "id": "26235df4-8266-4871-9ba5-f390402552ea",
+      "name": "Read Templates (scheduler)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1840,
+        500
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst ACTIVE = ['Sent', 'Following Up'];\nfunction parseDate(v) {\n  if (v === undefined || v === null || v === '') return null;\n  if (typeof v === 'number') return DateTime.fromMillis(Math.round((v - 25569) * 86400000), { zone: 'utc' }).setZone(ZONE);\n  const s = String(v).trim();\n  let d = DateTime.fromISO(s, { zone: ZONE });\n  for (const f of ['M/d/yyyy', 'M/d/yyyy H:mm:ss', 'M/d/yyyy H:mm', 'yyyy-MM-dd H:mm:ss', 'yyyy-MM-dd H:mm']) {\n    if (d.isValid) break;\n    d = DateTime.fromFormat(s, f, { zone: ZONE });\n  }\n  if (!d.isValid) { const js = new Date(s); d = isNaN(js.getTime()) ? null : DateTime.fromJSDate(js).setZone(ZONE); }\n  return d && d.isValid ? d : null;\n}\nfunction digits(s) { return String(s || '').replace(/\\D/g, ''); }\nfunction e164(s) { const d = digits(s); if (d.length === 10) return '+1' + d; if (d.length === 11 && d[0] === '1') return '+' + d; return d ? '+' + d : ''; }\nfunction money(v) { if (v === undefined || v === null || v === '') return ''; const n = Number(String(v).replace(/[^0-9.]/g, '')); return isNaN(n) ? String(v) : '$' + n.toLocaleString('en-US', { maximumFractionDigits: 2 }); }\n\nconst cfg = $('Config').first().json;\nconst ZONE = cfg.timezone || 'America/Chicago';\nconst GRACE_DAYS = Number(cfg.no_response_grace_days || 3);\nconst now = DateTime.now().setZone(ZONE);\n\nconst templates = $('Read Templates (scheduler)').all().map(i => i.json)\n  .filter(t => t.step !== undefined && String(t.step).trim() !== '' && String(t.enabled === undefined ? 'TRUE' : t.enabled).toUpperCase() !== 'FALSE')\n  .map(t => ({ ...t, step: Number(t.step), day: Number(t.day), channel: String(t.channel || '').trim().toLowerCase() }))\n  .sort((a, b) => a.day - b.day || a.step - b.step);\n\nfunction dueFor(sentAt, day) { return sentAt.startOf('day').plus({ days: day }).set({ hour: 9, minute: 0, second: 0, millisecond: 0 }); }\nfunction render(text, vars) { return String(text || '').replace(/\\{\\{\\s*([\\w.]+)\\s*\\}\\}/g, (_, k) => (vars[k] === undefined ? '' : vars[k])); }\n\nconst out = [];\nfor (const item of $('Read Bids (scheduler)').all()) {\n  const r = item.json;\n  if (!r || r.row_number === undefined) continue;\n  const status = String(r.status || '').trim();\n  if (!ACTIVE.includes(status)) continue;\n  if (String(r.opt_out || '').toUpperCase() === 'TRUE') continue;\n  const sentAt = parseDate(r.date_sent);\n  if (!sentAt) continue;\n  const idx = Number(r.touch_index || 0);\n  const lastTouch = parseDate(r.last_touch);\n  const base = {\n    row_number: r.row_number, bid_id: r.bid_id || '', customer_name: r.customer_name || '',\n    email: String(r.email || '').trim(), phone: r.phone || '', project: r.project || '', bid_amount: r.bid_amount || '',\n    thread_id: r.thread_id || '', status, touch_index: idx, next_touch_at: r.next_touch_at || '',\n    last_touch: r.last_touch || '', last_touch_channel: r.last_touch_channel || '',\n  };\n\n  // Sequence finished: after the grace period with no reply, close it out.\n  if (idx >= templates.length) {\n    const anchor = lastTouch || sentAt;\n    if (now.diff(anchor, 'days').days >= GRACE_DAYS) out.push({ json: { ...base, action: 'no_response', status: 'No Response', next_touch_at: '' } });\n    continue;\n  }\n\n  const step = templates[idx];\n  const stored = parseDate(r.next_touch_at);\n  const due = stored || dueFor(sentAt, step.day);\n  if (due > now) continue;\n\n  const nextStep = templates[idx + 1];\n  let nextAt = '';\n  if (nextStep) {\n    const scheduled = dueFor(sentAt, nextStep.day);\n    const floor = now.plus({ days: 1 }).set({ hour: 9, minute: 0, second: 0, millisecond: 0 });\n    nextAt = (scheduled > floor ? scheduled : floor).toISO();\n  }\n  const after = { ...base, status: 'Following Up', touch_index: idx + 1, next_touch_at: nextAt, last_touch: now.toISO(), last_touch_channel: step.channel };\n\n  const hasTarget = step.channel === 'sms' ? digits(r.phone).length >= 10 : base.email.includes('@');\n  if (!hasTarget) { out.push({ json: { ...after, action: 'skip', last_touch: base.last_touch, last_touch_channel: base.last_touch_channel } }); continue; }\n\n  const vars = {\n    first_name: (r.first_name || base.customer_name.split(/\\s+/)[0] || 'there'),\n    customer_name: base.customer_name, project: base.project || 'project', bid_amount: money(base.bid_amount),\n    business_name: cfg.business_name || '', owner_name: cfg.owner_name || '', owner_phone: cfg.owner_phone || '',\n  };\n  out.push({ json: { ...after, action: 'send', channel: step.channel, step: step.step,\n    subject: render(step.subject, vars), body: render(step.body, vars),\n    to_email: base.email, to_phone: e164(r.phone) } });\n}\nreturn out;\n"
+      },
+      "id": "02c0f97d-9ad2-4ccd-8f11-1e7a0981b3ad",
+      "name": "Build Due Touches",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2080,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d3162ea6-0b3e-46bb-9e49-3235948024e3",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "send",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ac49ef88-bccf-4754-bdb0-39517fbad5ff",
+      "name": "Send something?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2320,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fa7b245c-2d3b-40c3-9230-ddaf9fe089b8",
+              "leftValue": "={{ $json.channel }}",
+              "rightValue": "email",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4bd268bb-289b-40b2-9999-481fc05f9d6c",
+      "name": "Email or text?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2560,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.to_email }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "1b68d87f-d403-4854-8bd7-7e62fe2314d7",
+      "name": "Send Follow-Up Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2800,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sms",
+        "operation": "send",
+        "from": "={{ $('Config').first().json.twilio_from }}",
+        "to": "={{ $json.to_phone }}",
+        "toWhatsapp": false,
+        "message": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "3fbf496a-5baf-4dfb-ae9a-3d98e9447384",
+      "name": "Send Follow-Up Text",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        2800,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst base = $('Build Due Touches').item.json;\nreturn { json: { ...base, thread_id: $json.threadId || base.thread_id || '' } };\n",
+        "mode": "runOnceForEachItem"
+      },
+      "id": "8275cc08-5e1e-4740-96eb-f04cd18db490",
+      "name": "After Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3040,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst base = $('Build Due Touches').item.json;\nreturn { json: { ...base } };\n",
+        "mode": "runOnceForEachItem"
+      },
+      "id": "e1d0b1c1-b78b-4f97-be7e-994465735388",
+      "name": "After Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3040,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Config').first().json.sheet_id }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Bids"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.row_number }}",
+            "status": "={{ $json.status }}",
+            "touch_index": "={{ $json.touch_index }}",
+            "next_touch_at": "={{ $json.next_touch_at }}",
+            "last_touch": "={{ $json.last_touch }}",
+            "last_touch_channel": "={{ $json.last_touch_channel }}",
+            "thread_id": "={{ $json.thread_id }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "bid_id",
+              "displayName": "bid_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "first_name",
+              "displayName": "first_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "project",
+              "displayName": "project",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "bid_amount",
+              "displayName": "bid_amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date_sent",
+              "displayName": "date_sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "touch_index",
+              "displayName": "touch_index",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "next_touch_at",
+              "displayName": "next_touch_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_touch",
+              "displayName": "last_touch",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_touch_channel",
+              "displayName": "last_touch_channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_reply",
+              "displayName": "last_reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_reply_text",
+              "displayName": "last_reply_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "thread_id",
+              "displayName": "thread_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "opt_out",
+              "displayName": "opt_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "id": "d61592f7-cfd6-41cd-9983-3d6bb02d423f",
+      "name": "Update Bid Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        3320,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3. Customer texts back\nTwilio posts every inbound text here. Point the Twilio number's **Messaging > A message comes in** webhook at:\n`https://YOUR-N8N/webhook/twilio-inbound` (HTTP POST)\n\nThe bid is matched by phone number, marked **Replied** (or **Opted Out** on STOP), all remaining touches stop, and the team is alerted by text and email.\n\nTwilio also enforces STOP on its side, so the number is blocked even if this workflow is paused.",
+        "width": 620,
+        "height": 240,
+        "color": 4
+      },
+      "id": "94130510-4983-4177-b7f2-dd945059e709",
+      "name": "Note 45da41",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "twilio-inbound",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "14ac74ac-cdb1-47cc-baa2-498fa3dcee0c",
+      "name": "Twilio Inbound SMS",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        1000
+      ],
+      "webhookId": "a21ea60b-30d1-4f1b-bd1b-acb8608811ca"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/xml"
+              }
+            ]
+          }
+        }
+      },
+      "id": "952fd704-3b6d-43ab-9288-db4497f0c454",
+      "name": "Respond to Twilio",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Config').first().json.sheet_id }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Bids"
+        },
+        "options": {}
+      },
+      "id": "4c86505b-5c8b-4564-a380-d88077396820",
+      "name": "Read Bids (text reply)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1840,
+        1000
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst ACTIVE = ['Sent', 'Following Up'];\nfunction parseDate(v) {\n  if (v === undefined || v === null || v === '') return null;\n  if (typeof v === 'number') return DateTime.fromMillis(Math.round((v - 25569) * 86400000), { zone: 'utc' }).setZone(ZONE);\n  const s = String(v).trim();\n  let d = DateTime.fromISO(s, { zone: ZONE });\n  for (const f of ['M/d/yyyy', 'M/d/yyyy H:mm:ss', 'M/d/yyyy H:mm', 'yyyy-MM-dd H:mm:ss', 'yyyy-MM-dd H:mm']) {\n    if (d.isValid) break;\n    d = DateTime.fromFormat(s, f, { zone: ZONE });\n  }\n  if (!d.isValid) { const js = new Date(s); d = isNaN(js.getTime()) ? null : DateTime.fromJSDate(js).setZone(ZONE); }\n  return d && d.isValid ? d : null;\n}\nfunction digits(s) { return String(s || '').replace(/\\D/g, ''); }\nfunction e164(s) { const d = digits(s); if (d.length === 10) return '+1' + d; if (d.length === 11 && d[0] === '1') return '+' + d; return d ? '+' + d : ''; }\nfunction money(v) { if (v === undefined || v === null || v === '') return ''; const n = Number(String(v).replace(/[^0-9.]/g, '')); return isNaN(n) ? String(v) : '$' + n.toLocaleString('en-US', { maximumFractionDigits: 2 }); }\n\nconst cfg = $('Config').first().json;\nconst ZONE = cfg.timezone || 'America/Chicago';\nconst hook = $('Twilio Inbound SMS').first().json;\nconst p = hook.body || {};\nconst from = String(p.From || '');\nconst text = String(p.Body || '').trim();\nconst isStop = /^\\s*(stop|stopall|unsubscribe|cancel|end|quit)\\b/i.test(text);\nconst key = digits(from).slice(-10);\nconst rows = $('Read Bids (text reply)').all().map(i => i.json).filter(r => r && r.row_number !== undefined && key && digits(r.phone).slice(-10) === key);\nconst row = rows.filter(r => ACTIVE.includes(String(r.status || '').trim())).pop() || rows.pop() || null;\nconst now = DateTime.now().setZone(ZONE);\n\nconst name = row ? (row.customer_name || from) : from;\nconst bid = row ? `${row.project || 'bid'}${row.bid_amount ? ' (' + money(row.bid_amount) + ')' : ''}` : 'no bid on file for this number';\nconst wasActive = row ? ACTIVE.includes(String(row.status || '').trim()) : false;\nconst status = row ? (isStop ? 'Opted Out' : (wasActive ? 'Replied' : String(row.status).trim())) : '';\n\nlet alert_sms, alert_subject, alert_body;\nif (isStop) {\n  alert_sms = `${name} replied STOP. All follow-ups stopped for ${bid}.`;\n  alert_subject = `Opt-out: ${name} (${bid})`;\n  alert_body = `${name} (${from}) replied STOP.\\n\\nBid: ${bid}\\n\\nTexting and emailing for this bid has been stopped and the tracker is marked Opted Out.`;\n} else {\n  const snippet = text.length > 200 ? text.slice(0, 197) + '...' : text;\n  alert_sms = `Reply from ${name} on ${bid}: \"${snippet}\" - text them back at ${from}`;\n  alert_subject = `Reply from ${name}: ${bid}`;\n  alert_body = `${name} (${from}) just replied by text.\\n\\nBid: ${bid}\\n\\nMessage:\\n${text}\\n\\nFollow-ups for this bid are paused. Reply to them directly at ${from}.` + (row ? `\\n\\nTracker row: ${row.row_number}${row.bid_id ? ' / ' + row.bid_id : ''}` : '');\n}\nreturn [{ json: {\n  matched: !!row, is_stop: isStop,\n  row_number: row ? row.row_number : '',\n  status,\n  opt_out: isStop ? 'TRUE' : (row ? (row.opt_out || '') : ''),\n  next_touch_at: '',\n  last_reply: now.toISO(),\n  last_reply_text: text,\n  from, alert_sms, alert_subject, alert_body,\n}}];\n"
+      },
+      "id": "12172c2c-1b76-4273-a6f7-80db1a41ec4b",
+      "name": "Match Reply to Bid",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2080,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ab47cb68-3f03-493d-9670-d0a9ff8755a0",
+              "leftValue": "={{ $json.matched }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f89c3931-3ec8-49ec-9230-b58e82630b91",
+      "name": "Bid found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2320,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Config').first().json.sheet_id }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Bids"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.row_number }}",
+            "status": "={{ $json.status }}",
+            "opt_out": "={{ $json.opt_out }}",
+            "next_touch_at": "={{ $json.next_touch_at }}",
+            "last_reply": "={{ $json.last_reply }}",
+            "last_reply_text": "={{ $json.last_reply_text }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "bid_id",
+              "displayName": "bid_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "first_name",
+              "displayName": "first_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "project",
+              "displayName": "project",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "bid_amount",
+              "displayName": "bid_amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date_sent",
+              "displayName": "date_sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "touch_index",
+              "displayName": "touch_index",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "next_touch_at",
+              "displayName": "next_touch_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_touch",
+              "displayName": "last_touch",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_touch_channel",
+              "displayName": "last_touch_channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_reply",
+              "displayName": "last_reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_reply_text",
+              "displayName": "last_reply_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "thread_id",
+              "displayName": "thread_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "opt_out",
+              "displayName": "opt_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "id": "0c0ffeae-880e-4e79-b297-3f77fcb442be",
+      "name": "Mark Replied / Opted Out",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2560,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sms",
+        "operation": "send",
+        "from": "={{ $('Config').first().json.twilio_from }}",
+        "to": "={{ $('Config').first().json.team_phone }}",
+        "toWhatsapp": false,
+        "message": "={{ $('Match Reply to Bid').item.json.alert_sms }}",
+        "options": {}
+      },
+      "id": "6061627c-2495-4afe-8b90-c6b0ff77ddd8",
+      "name": "Text the Team (text reply)",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        2800,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Config').first().json.team_email }}",
+        "subject": "={{ $('Match Reply to Bid').item.json.alert_subject }}",
+        "emailType": "text",
+        "message": "={{ $('Match Reply to Bid').item.json.alert_body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "74e13e17-1658-4ee0-aca7-e50b98e2252e",
+      "name": "Email the Team (text reply)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        3040,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4. Customer emails back\nWatches the sending inbox every minute. A new email is matched to a bid by Gmail thread first, then by the sender's address. Matches are marked **Replied**, remaining touches stop, and the team is alerted by text and email. Unrelated inbox mail is ignored.",
+        "width": 620,
+        "height": 180,
+        "color": 4
+      },
+      "id": "7d1b910c-946a-4fc5-b16f-8de1ac2e601f",
+      "name": "Note c6dc26",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        1240
+      ]
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "id": "3479cc7c-2d74-4c94-98fc-a435dfc9bea4",
+      "name": "Reply Lands in Inbox",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        1500
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Config').first().json.sheet_id }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Bids"
+        },
+        "options": {}
+      },
+      "id": "b8e0dda4-e933-4b89-836e-ba5d1bcef684",
+      "name": "Read Bids (email reply)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1600,
+        1500
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst ACTIVE = ['Sent', 'Following Up'];\nfunction parseDate(v) {\n  if (v === undefined || v === null || v === '') return null;\n  if (typeof v === 'number') return DateTime.fromMillis(Math.round((v - 25569) * 86400000), { zone: 'utc' }).setZone(ZONE);\n  const s = String(v).trim();\n  let d = DateTime.fromISO(s, { zone: ZONE });\n  for (const f of ['M/d/yyyy', 'M/d/yyyy H:mm:ss', 'M/d/yyyy H:mm', 'yyyy-MM-dd H:mm:ss', 'yyyy-MM-dd H:mm']) {\n    if (d.isValid) break;\n    d = DateTime.fromFormat(s, f, { zone: ZONE });\n  }\n  if (!d.isValid) { const js = new Date(s); d = isNaN(js.getTime()) ? null : DateTime.fromJSDate(js).setZone(ZONE); }\n  return d && d.isValid ? d : null;\n}\nfunction digits(s) { return String(s || '').replace(/\\D/g, ''); }\nfunction e164(s) { const d = digits(s); if (d.length === 10) return '+1' + d; if (d.length === 11 && d[0] === '1') return '+' + d; return d ? '+' + d : ''; }\nfunction money(v) { if (v === undefined || v === null || v === '') return ''; const n = Number(String(v).replace(/[^0-9.]/g, '')); return isNaN(n) ? String(v) : '$' + n.toLocaleString('en-US', { maximumFractionDigits: 2 }); }\n\nconst cfg = $('Config').first().json;\nconst ZONE = cfg.timezone || 'America/Chicago';\nconst out = [];\nfor (const m of $('Reply Lands in Inbox').all().map(i => i.json)) {\nconst fromAddr = ((m.from && m.from.value && m.from.value[0] && m.from.value[0].address)\n  || (String(m.From || m.from || '').match(/[\\w.+-]+@[\\w.-]+/) || [''])[0]).toLowerCase();\nconst self = String(cfg.from_email || '').toLowerCase();\nif (!fromAddr || fromAddr === self || /no-?reply|mailer-daemon|postmaster|notifications?@|calendar-notification/.test(fromAddr)) continue;\n\nconst threadId = String(m.threadId || '');\nconst rows = $('Read Bids (email reply)').all().map(i => i.json).filter(r => r && r.row_number !== undefined);\nconst pick = list => list.filter(r => ACTIVE.includes(String(r.status || '').trim())).pop() || list.pop() || null;\nconst row = pick(rows.filter(r => threadId && String(r.thread_id || '') === threadId))\n  || pick(rows.filter(r => String(r.email || '').trim().toLowerCase() === fromAddr));\nif (!row) continue;\n\nconst raw = String(m.text || m.snippet || '');\nconst text = raw.split(/\\r?\\n\\s*(On .{5,120} wrote:|From: |-----Original Message-----)/)[0].trim().slice(0, 1500);\nconst now = DateTime.now().setZone(ZONE);\nconst name = row.customer_name || fromAddr;\nconst bid = `${row.project || 'bid'}${row.bid_amount ? ' (' + money(row.bid_amount) + ')' : ''}`;\nconst wasActive = ACTIVE.includes(String(row.status || '').trim());\nconst snippet = text.length > 200 ? text.slice(0, 197) + '...' : text;\nout.push({ json: {\n  row_number: row.row_number,\n  status: wasActive ? 'Replied' : String(row.status).trim(),\n  next_touch_at: '',\n  last_reply: now.toISO(),\n  last_reply_text: text,\n  alert_sms: `Email reply from ${name} on ${bid}: \"${snippet}\" - reply from ${self}`,\n  alert_subject: `Reply from ${name}: ${bid}`,\n  alert_body: `${name} (${fromAddr}) just replied by email.\\n\\nBid: ${bid}\\nSubject: ${m.subject || ''}\\n\\nMessage:\\n${text}\\n\\nFollow-ups for this bid are paused. Reply to them from the ${self} inbox.\\n\\nTracker row: ${row.row_number}${row.bid_id ? ' / ' + row.bid_id : ''}`,\n}});\n}\nreturn out;\n"
+      },
+      "id": "1e844bfd-35f0-4e93-8f60-f0930b115ba1",
+      "name": "Match Email to Bid",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        1500
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Config').first().json.sheet_id }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Bids"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.row_number }}",
+            "status": "={{ $json.status }}",
+            "next_touch_at": "={{ $json.next_touch_at }}",
+            "last_reply": "={{ $json.last_reply }}",
+            "last_reply_text": "={{ $json.last_reply_text }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "bid_id",
+              "displayName": "bid_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "first_name",
+              "displayName": "first_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "project",
+              "displayName": "project",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "bid_amount",
+              "displayName": "bid_amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date_sent",
+              "displayName": "date_sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "touch_index",
+              "displayName": "touch_index",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "next_touch_at",
+              "displayName": "next_touch_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_touch",
+              "displayName": "last_touch",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_touch_channel",
+              "displayName": "last_touch_channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_reply",
+              "displayName": "last_reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_reply_text",
+              "displayName": "last_reply_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "thread_id",
+              "displayName": "thread_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "opt_out",
+              "displayName": "opt_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "id": "53cb4b98-44e0-41f0-9b71-be9948c9b1c8",
+      "name": "Mark Replied",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2080,
+        1500
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sms",
+        "operation": "send",
+        "from": "={{ $('Config').first().json.twilio_from }}",
+        "to": "={{ $('Config').first().json.team_phone }}",
+        "toWhatsapp": false,
+        "message": "={{ $('Match Email to Bid').item.json.alert_sms }}",
+        "options": {}
+      },
+      "id": "ebac62e4-461c-41a8-99e9-031b687bfbb9",
+      "name": "Text the Team (email reply)",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        1500
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Config').first().json.team_email }}",
+        "subject": "={{ $('Match Email to Bid').item.json.alert_subject }}",
+        "emailType": "text",
+        "message": "={{ $('Match Email to Bid').item.json.alert_body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "aab40b2c-1bba-43d9-a9a4-199c76c5ffd3",
+      "name": "Email the Team (email reply)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2560,
+        1500
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5. Daily summary\nEvery morning at 8am Central: which bids are still in follow-up, what goes out today, and every reply from the last 24 hours. Sent to the team email in the Config node.",
+        "width": 560,
+        "height": 140,
+        "color": 4
+      },
+      "id": "df9eee7b-abf5-442e-8b12-112d29e1ac1b",
+      "name": "Note d210ef",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        1780
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "id": "a5b6d04b-9008-41aa-851a-c100e3e9e0ba",
+      "name": "Every day 8am CT",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        2000
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Config').first().json.sheet_id }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Bids"
+        },
+        "options": {}
+      },
+      "id": "74f53306-1bd3-44ab-bdee-9b6e1f9571fe",
+      "name": "Read Bids (summary)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1600,
+        2000
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Config').first().json.sheet_id }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Templates"
+        },
+        "options": {}
+      },
+      "id": "80b86543-4ab4-4be2-8641-09092c7fa452",
+      "name": "Read Templates (summary)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1840,
+        2000
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst ACTIVE = ['Sent', 'Following Up'];\nfunction parseDate(v) {\n  if (v === undefined || v === null || v === '') return null;\n  if (typeof v === 'number') return DateTime.fromMillis(Math.round((v - 25569) * 86400000), { zone: 'utc' }).setZone(ZONE);\n  const s = String(v).trim();\n  let d = DateTime.fromISO(s, { zone: ZONE });\n  for (const f of ['M/d/yyyy', 'M/d/yyyy H:mm:ss', 'M/d/yyyy H:mm', 'yyyy-MM-dd H:mm:ss', 'yyyy-MM-dd H:mm']) {\n    if (d.isValid) break;\n    d = DateTime.fromFormat(s, f, { zone: ZONE });\n  }\n  if (!d.isValid) { const js = new Date(s); d = isNaN(js.getTime()) ? null : DateTime.fromJSDate(js).setZone(ZONE); }\n  return d && d.isValid ? d : null;\n}\nfunction digits(s) { return String(s || '').replace(/\\D/g, ''); }\nfunction e164(s) { const d = digits(s); if (d.length === 10) return '+1' + d; if (d.length === 11 && d[0] === '1') return '+' + d; return d ? '+' + d : ''; }\nfunction money(v) { if (v === undefined || v === null || v === '') return ''; const n = Number(String(v).replace(/[^0-9.]/g, '')); return isNaN(n) ? String(v) : '$' + n.toLocaleString('en-US', { maximumFractionDigits: 2 }); }\n\nconst cfg = $('Config').first().json;\nconst ZONE = cfg.timezone || 'America/Chicago';\nconst now = DateTime.now().setZone(ZONE);\nconst dayAgo = now.minus({ hours: 24 });\nconst rows = $('Read Bids (summary)').all().map(i => i.json).filter(r => r && r.row_number !== undefined && String(r.status || '').trim() !== '');\nconst templates = $('Read Templates (summary)').all().map(i => i.json)\n  .filter(t => t.step !== undefined && String(t.step).trim() !== '' && String(t.enabled === undefined ? 'TRUE' : t.enabled).toUpperCase() !== 'FALSE')\n  .map(t => ({ day: Number(t.day), channel: String(t.channel || '').trim().toLowerCase() })).sort((a, b) => a.day - b.day);\nfunction nextTouch(r) {\n  const idx = Number(r.touch_index || 0);\n  if (idx >= templates.length) return 'sequence complete, closing out soon';\n  const sent = parseDate(r.date_sent);\n  const stored = parseDate(r.next_touch_at);\n  const due = stored || (sent ? sent.startOf('day').plus({ days: templates[idx].day }).set({ hour: 9 }) : now);\n  return (due <= now ? 'today' : fmt(due)) + ' (' + templates[idx].channel + ')';\n}\n\nconst counts = {};\nfor (const r of rows) { const s = String(r.status).trim(); counts[s] = (counts[s] || 0) + 1; }\nconst active = rows.filter(r => ACTIVE.includes(String(r.status).trim()));\nconst replies = rows.filter(r => { const d = parseDate(r.last_reply); return d && d >= dayAgo; });\nconst fmt = d => d ? d.toFormat('ccc M/d h:mm a') : '';\nconst line = r => `- ${r.customer_name || '(no name)'} | ${r.project || 'bid'} | ${money(r.bid_amount)}`;\n\nconst lines = [];\nlines.push(`Bid follow-up summary for ${now.toFormat('cccc, LLLL d')}`, '');\nlines.push(`Totals: ` + Object.entries(counts).map(([k, v]) => `${k} ${v}`).join(' | '), '');\nlines.push(`REPLIES IN THE LAST 24 HOURS (${replies.length})`);\nif (!replies.length) lines.push('- none');\nfor (const r of replies) lines.push(line(r) + ` | ${fmt(parseDate(r.last_reply))}` + (r.last_reply_text ? `\\n    \"${String(r.last_reply_text).slice(0, 160)}\"` : ''));\nlines.push('', `STILL IN FOLLOW-UP (${active.length})`);\nif (!active.length) lines.push('- none');\nfor (const r of active.sort((a, b) => (parseDate(a.next_touch_at) || now).toMillis() - (parseDate(b.next_touch_at) || now).toMillis())) {\n  const sent = parseDate(r.date_sent);\n  lines.push(line(r) + ` | sent ${sent ? sent.toFormat('M/d') : '?'} | touches so far ${Number(r.touch_index || 0)} | next ${nextTouch(r)}`);\n}\nlines.push('', 'Open the tracker to mark any bid Booked or Declined. That stops its follow-ups immediately.');\nreturn [{ json: { subject: `Bid follow-up: ${replies.length} repl${replies.length === 1 ? 'y' : 'ies'}, ${active.length} in progress`, body: lines.join('\\n') } }];\n"
+      },
+      "id": "dffb5be4-75d7-4886-8fbd-559bbedca3d9",
+      "name": "Build Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2080,
+        2000
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Config').first().json.team_email }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "853c446c-e7a3-4bd4-b283-fe663c55dcc9",
+      "name": "Email Daily Summary",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2320,
+        2000
+      ]
+    }
+  ],
+  "connections": {
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Which lane?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Bid (Website Form)": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Form Notification Email": {
+      "main": [
+        [
+          {
+            "node": "Parse Notification Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Notification Email": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Bid": {
+      "main": [
+        [
+          {
+            "node": "Log Bid in Tracker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Bid in Tracker": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Which lane?": {
+      "main": [
+        [
+          {
+            "node": "Normalize Bid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Read Bids (scheduler)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Read Bids (text reply)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Read Bids (email reply)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Read Bids (summary)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every hour, business hours CT": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Bids (scheduler)": {
+      "main": [
+        [
+          {
+            "node": "Read Templates (scheduler)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Templates (scheduler)": {
+      "main": [
+        [
+          {
+            "node": "Build Due Touches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Due Touches": {
+      "main": [
+        [
+          {
+            "node": "Send something?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send something?": {
+      "main": [
+        [
+          {
+            "node": "Email or text?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Bid Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email or text?": {
+      "main": [
+        [
+          {
+            "node": "Send Follow-Up Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Follow-Up Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Follow-Up Email": {
+      "main": [
+        [
+          {
+            "node": "After Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Follow-Up Text": {
+      "main": [
+        [
+          {
+            "node": "After Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "After Email": {
+      "main": [
+        [
+          {
+            "node": "Update Bid Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "After Text": {
+      "main": [
+        [
+          {
+            "node": "Update Bid Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio Inbound SMS": {
+      "main": [
+        [
+          {
+            "node": "Respond to Twilio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Twilio": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Bids (text reply)": {
+      "main": [
+        [
+          {
+            "node": "Match Reply to Bid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Reply to Bid": {
+      "main": [
+        [
+          {
+            "node": "Bid found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bid found?": {
+      "main": [
+        [
+          {
+            "node": "Mark Replied / Opted Out",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Text the Team (text reply)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Replied / Opted Out": {
+      "main": [
+        [
+          {
+            "node": "Text the Team (text reply)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text the Team (text reply)": {
+      "main": [
+        [
+          {
+            "node": "Email the Team (text reply)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply Lands in Inbox": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Bids (email reply)": {
+      "main": [
+        [
+          {
+            "node": "Match Email to Bid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Email to Bid": {
+      "main": [
+        [
+          {
+            "node": "Mark Replied",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Replied": {
+      "main": [
+        [
+          {
+            "node": "Text the Team (email reply)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text the Team (email reply)": {
+      "main": [
+        [
+          {
+            "node": "Email the Team (email reply)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every day 8am CT": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Bids (summary)": {
+      "main": [
+        [
+          {
+            "node": "Read Templates (summary)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Templates (summary)": {
+      "main": [
+        [
+          {
+            "node": "Build Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Summary": {
+      "main": [
+        [
+          {
+            "node": "Email Daily Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Chicago"
+  },
+  "pinData": {}
+}

@@ -1,0 +1,32 @@
+Private healthcare service receiving a significant number of repetitive customer enquiries through Gmail. Need an n8n specialist to build Phase 1 of an email-response automation system.
+
+Phase 1 classifies straightforward enquiries and prepares approved Gmail reply drafts for staff to review. The system must NEVER send emails automatically. Applicants quote for Phase 1 only.
+
+Phase 1 categories that get a draft:
+1. Patients under 18 — only test 18+. Identify enquiries about children/teens/under-18, draft the approved response. If age unclear, flag for human review.
+2. Clinic locations and opening times — identify which clinic/area, draft with approved address, opening days/times, booking info, booking link. If location can't be identified confidently, flag for human review.
+3. Health insurance — identify insurance/reimbursement/coverage questions, draft approved wording explaining reimbursement depends on the customer's policy and cannot be guaranteed.
+
+4. Other/uncertain — must NOT get a detailed automated draft: specific blood test requests, lists of tests, pricing/quotation requests, doctor's requisition forms, emails with medical attachments, blood result questions, clinical/medical advice requests, complaints, anything that can't be classified confidently. These get labelled "AI – Human Review".
+
+CRITICAL RULE: if an email contains BOTH a straightforward enquiry AND a test/price/clinical/requisition-related question, the ENTIRE email goes to human review. No partial/incomplete draft is ever prepared.
+
+Required workflow: monitor a Gmail inbox/label for new messages; ignore internal emails, newsletters, automated notifications, results emails, spam; classify into the approved categories; extract only limited info (sender first name, patient age if stated, requested location, whether insurance-related); retrieve factual info from an approved Google Sheet (controlled source, never search the internet); create a draft reply in the original Gmail thread; never send automatically; apply Gmail labels (AI – Draft Ready, AI – Human Review, AI – Processed, AI – Error); prevent duplicate drafts if the same email is processed twice; log email ID, classification, status, confidence, errors to a Google Sheet; notify on workflow failure; route uncertain/out-of-scope to human review.
+
+May use rules, AI classification, or both — applicant should explain and justify their approach.
+
+Knowledge source: approved response templates, under-18 policy, approved clinic locations/hours, booking links, approved insurance wording, anonymised test enquiries — all provided. Must be structured so non-technical staff can update locations/hours/wording without rebuilding the n8n workflow. Must NOT search the internet for clinic/medical/insurance/operational info.
+
+Explicitly excluded from Phase 1 (do not price these in): automatic test availability checks, test-name/biomarker extraction, price matching, itemised quotations, panel comparison, reading requisition forms/attachments, medical/clinical advice, interpreting blood results, automatically sending emails.
+
+Potential Phase 2 (separate scope/price later): test-name extraction, abbreviation matching, test catalogue checks, itemised quotations, turnaround times, panel identification, reading requisition forms/attachments, advanced routing, more categories. Prefer to continue with the same freelancer if Phase 1 is reliable and well documented.
+
+Data protection: development/testing should use anonymised examples; real customer emails must not be downloaded/copied/retained outside approved systems; AI processing gets minimum necessary info; customer info must not be used for model training; all credentials remain client-owned; Gmail via OAuth only, no passwords shared; freelancer must explain where email content is processed/transmitted/stored; must sign confidentiality/data-processing terms before live access; workflow built in client-owned accounts.
+
+Deliverables: fully configured/tested n8n workflow; Gmail drafts in correct threads; Google Sheet knowledge-source structure; approved classification rules and AI prompts; Gmail labels; duplicate-prevention logic; processing/error logs; failure notifications; testing against supplied anonymised emails; exported n8n workflow JSON; written setup/maintenance instructions; recorded handover video; 14 days post-launch support for genuine bugs. Must be understandable/maintainable by a non-technical business owner after handover.
+
+Essential experience: n8n; Gmail triggers and OAuth; creating draft replies in existing Gmail threads; Google Sheets; AI classification/structured extraction; error handling and duplicate prevention; secure handling of sensitive personal/health info. Healthcare or regulated-industry experience a plus.
+
+Proposal must begin with the words: "PHASE 1 – DRAFT ONLY". Must include: examples of similar n8n/Gmail workflows built; how you'd structure Phase 1; rules vs AI classification vs both, and why; how you'd prevent duplicate drafts; how drafts stay in the original thread; what customer info leaves Gmail and where it's processed/stored; n8n Cloud vs self-hosted recommendation and why; fixed price for Phase 1 only; estimated delivery time; what access you'd need; confirmation of interest in Phase 2 if Phase 1 succeeds.
+
+Prefer a focused, dependable, maintainable workflow over an unnecessarily complicated autonomous AI agent.

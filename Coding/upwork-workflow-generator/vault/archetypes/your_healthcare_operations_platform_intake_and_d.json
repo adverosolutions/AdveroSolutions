@@ -1,0 +1,596 @@
+{
+  "title": "Your Healthcare Operations Platform: Intake and Document Triage First",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 - INTAKE SUPPORT AND DOCUMENT TRIAGE",
+      "color": 0,
+      "note": "Your part 1, intake support and document triage; its internal task routing lands in section 4. Staff send an item from the portal, their role is checked and patient identifiers are masked before any model sees it."
+    },
+    {
+      "key": "kb",
+      "label": "2 - RAG OVER YOUR POLICIES, SOPS, FORMS AND SERVICE GUIDELINES",
+      "color": 0,
+      "note": "Your part 2, and your question on keeping the AI useful as the knowledge base grows: each item is matched only against the active version of your own documents, filtered by service line and by what the staff role may see. When an admin edits a document, KB 1 to KB 4 re-index it and retire the old version, so no answer cites an outdated SOP; items with no matching passage are logged as gaps, so admins see what to write next."
+    },
+    {
+      "key": "ai",
+      "label": "3 - CLAUDE FIRST, OPENAI AS FALLBACK, CLEAR BOUNDARIES",
+      "color": 0,
+      "note": "Your part 3: Claude triages from the matched passages only, cites them and never makes a clinical call. If Claude fails, OpenAI runs the same rules; anything unsure, uncited or clinical goes to a person."
+    },
+    {
+      "key": "route",
+      "label": "4 - ROUTE THE TASK OR SEND IT TO THE REVIEW QUEUE",
+      "color": 0,
+      "note": "Your parts 4 and 5: the API call into your internal tools, and the review queue behind your admin screen. Confident, cited items become a task in the right queue; everything else waits for staff to approve, edit or reject it."
+    },
+    {
+      "key": "audit",
+      "label": "5 - AUDIT TRAIL, PERMISSIONS AND THE STAFF SCREEN",
+      "color": 0,
+      "note": "Your parts 6 and 7: logging, permissions and audit trail, then the staff web interface. Permissions are checked at steps 2 and 3 and filter retrieval at step 6; every action, that check included, gets its own append-only audit row with who, what, which sources and which model, and the staff screen shows status, owner, next steps and sources in plain words. Every later workflow reuses sections 2 to 5 as they are, so new workflows can be added without rebuilding the entire system."
+    },
+    {
+      "key": "errors",
+      "label": "6 - IF ANY STEP FAILS",
+      "color": 0,
+      "note": "The item is held for manual handling, the failure is logged, and the admin screen is flagged with no patient details in the alert, so nothing sits silently."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "intake",
+      "kind": "trigger.webhook",
+      "label": "1 - New Intake Item or Document From the Staff Portal",
+      "section": "intake",
+      "params": {
+        "path": "intake-triage",
+        "authentication": "headerAuth",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "key": "role",
+      "kind": "app.action",
+      "label": "2 - Look Up the Staff Role, Mark the Item In Progress",
+      "app": "postgres",
+      "op": "select",
+      "section": "intake",
+      "params": {
+        "operation": "executeQuery",
+        "query": "WITH in_progress AS (\n  UPDATE intake_items\n  SET status = 'processing', execution_id = $3, updated_at = now()\n  WHERE item_id = $2\n  RETURNING item_id\n)\nSELECT role, can_submit_intake, service_lines\nFROM staff_users\nWHERE portal_user_id = $1 AND active = true\nLIMIT 1;",
+        "options": {
+          "queryReplacement": "={{ [ $json.body.staff_user_id, $json.body.item_id, $execution.id ] }}"
+        },
+        "alwaysOutputData": true
+      }
+    },
+    {
+      "key": "allowed",
+      "kind": "flow.branch",
+      "label": "3 - Role Allowed to Submit Intake?",
+      "section": "intake",
+      "params": {
+        "condition": {
+          "left": "={{ $json.can_submit_intake === true }}",
+          "op": "true"
+        }
+      }
+    },
+    {
+      "key": "refused",
+      "kind": "data.transform",
+      "label": "3b - Refuse: Role Not Allowed to Submit Intake",
+      "section": "intake",
+      "params": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "refuse-item",
+              "name": "item_id",
+              "value": "={{ $('1 - New Intake Item or Document From the Staff Portal').item.json.body.item_id }}",
+              "type": "string"
+            },
+            {
+              "id": "refuse-outcome",
+              "name": "outcome",
+              "value": "refused",
+              "type": "string"
+            },
+            {
+              "id": "refuse-reason",
+              "name": "reason",
+              "value": "Staff role not allowed to submit intake items",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      }
+    },
+    {
+      "key": "mask",
+      "kind": "data.code",
+      "label": "4 - Mask Patient Identifiers Before Any Model Sees Them",
+      "section": "intake",
+      "notes": "The name on file, dates, phone numbers, emails, SSNs and member IDs are masked before any model call. This cuts what a model sees but is not de-identification, so real patient data waits for your BAAs.",
+      "params": {
+        "jsCode": "// 4 - Mask patient identifiers before any model sees them.\n// Only the masked text goes to OpenAI or Anthropic; the original stays in your database behind staff permissions.\nconst item = $('1 - New Intake Item or Document From the Staff Portal').first().json.body;\nconst role = $input.first().json;\nlet text = String(item.document_text || '');\nfor (const name of [item.patient_display_name].filter(Boolean)) text = text.split(name).join('[NAME]');\nconst rules = [\n  [/\\b\\d{1,2}[\\/.-]\\d{1,2}[\\/.-]\\d{2,4}\\b/g, '[DATE]'],\n  [/\\b\\d{3}-\\d{2}-\\d{4}\\b/g, '[SSN]'],\n  [/(?:\\+?1[\\s.-]?)?\\(?\\b\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}\\b/g, '[PHONE]'],\n  [/[\\w.+-]+@[\\w-]+\\.[\\w.-]+/g, '[EMAIL]'],\n  [/\\b(?:member|subscriber|mrn|account)\\s*(?:id|no\\.?|number|#)\\s*[:#]?\\s*(?=[A-Z0-9-]*\\d)[A-Z0-9-]{5,}/gi, '[MEMBER_ID]'],\n];\nfor (const [pattern, tag] of rules) text = text.replace(pattern, tag);\nreturn [{ json: {\n  item_id: item.item_id,\n  staff_user_id: item.staff_user_id,\n  staff_role: role.role,\n  service_line: item.service_line || 'all',\n  document_type_hint: item.document_type_hint || 'none',\n  masked_text: text.slice(0, 12000),\n} }];"
+      }
+    },
+    {
+      "key": "embedq",
+      "kind": "net.http",
+      "label": "5 - OpenAI: Turn the Masked Text Into a Search Vector",
+      "section": "kb",
+      "params": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "body": "{{ JSON.stringify({ model: 'text-embedding-3-small', input: $json.masked_text }) }}"
+      }
+    },
+    {
+      "key": "search",
+      "kind": "app.action",
+      "label": "6 - Supabase: Find the Matching Policy, SOP and Form Passages",
+      "app": "postgres",
+      "op": "select",
+      "section": "kb",
+      "params": {
+        "operation": "executeQuery",
+        "query": "SELECT COALESCE(json_agg(t ORDER BY t.similarity DESC), '[]'::json) AS passages,\n       COALESCE(MAX(t.similarity), 0) AS top_similarity\nFROM (\n  SELECT chunk_id, doc_id, doc_title, doc_type, version, section_heading, content,\n         1 - (embedding <=> $1::vector) AS similarity\n  FROM kb_chunks\n  WHERE status = 'active'\n    AND (service_line = $2 OR service_line = 'all')\n    AND $3 = ANY (visible_to_roles)\n  ORDER BY embedding <=> $1::vector\n  LIMIT 6\n) t;",
+        "options": {
+          "queryReplacement": "={{ [ JSON.stringify($json.data[0].embedding), $('4 - Mask Patient Identifiers Before Any Model Sees Them').item.json.service_line, $('4 - Mask Patient Identifiers Before Any Model Sees Them').item.json.staff_role ] }}"
+        }
+      }
+    },
+    {
+      "key": "enough",
+      "kind": "flow.branch",
+      "label": "7 - Found a Passage That Covers This Item?",
+      "section": "kb",
+      "params": {
+        "condition": {
+          "left": "={{ Number($json.top_similarity || 0) }}",
+          "op": "gte",
+          "right": 0.75
+        }
+      }
+    },
+    {
+      "key": "kbsaved",
+      "kind": "trigger.webhook",
+      "label": "KB 1 - Admin Saves or Edits a Policy, SOP, Form or Guideline",
+      "section": "kb",
+      "params": {
+        "path": "kb-document-saved",
+        "authentication": "headerAuth",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "key": "chunk",
+      "kind": "data.code",
+      "label": "KB 2 - Split Into Passages Tagged With Doc, Version, Section",
+      "section": "kb",
+      "params": {
+        "jsCode": "// KB 2 - Split the saved document into passages, each tagged with doc, version and section.\n// Headings start a new passage; long sections are cut at about 1,200 characters with a small overlap.\nconst doc = $('KB 1 - Admin Saves or Edits a Policy, SOP, Form or Guideline').first().json.body;\nconst MAX = 1200, OVERLAP = 150;\nconst blocks = String(doc.text || '').split(/\\n(?=#{1,3} )/);\nconst passages = [];\nfor (const block of blocks) {\n  const body = block.trim();\n  const heading = (body.split('\\n')[0] || '').replace(/^#+\\s*/, '').slice(0, 120);\n  for (let start = 0; start < body.length; start += MAX - OVERLAP) {\n    const content = body.slice(start, start + MAX);\n    if (content.trim().length < 40) continue;\n    const n = passages.length;\n    passages.push({ idx: n, chunk_id: doc.doc_id + '-v' + doc.version + '-c' + String(n + 1).padStart(2, '0'), section_heading: heading, content });\n  }\n}\nreturn [{ json: { doc_id: doc.doc_id, version: doc.version, passages, inputs: passages.map(p => doc.doc_title + ' | ' + p.section_heading + '\\n' + p.content) } }];"
+      }
+    },
+    {
+      "key": "kbembed",
+      "kind": "net.http",
+      "label": "KB 3 - OpenAI: Embed Every Passage in One Call",
+      "section": "kb",
+      "params": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "body": "{{ JSON.stringify({ model: 'text-embedding-3-small', input: $json.inputs }) }}"
+      }
+    },
+    {
+      "key": "kbstore",
+      "kind": "app.action",
+      "label": "KB 4 - Supabase: Store the New Version, Retire the Old One",
+      "app": "postgres",
+      "op": "insert",
+      "section": "kb",
+      "params": {
+        "operation": "executeQuery",
+        "query": "WITH retired AS (\n  UPDATE kb_chunks SET status = 'retired', retired_at = now()\n  WHERE doc_id = $1 AND status = 'active'\n  RETURNING chunk_id\n), logged AS (\n  INSERT INTO audit_log (staff_user_id, execution_id, action, outcome, detail, created_at)\n  VALUES ($7, $8, 'kb_document_reindexed', 'active', $1 || ' now v' || $5, now())\n)\nINSERT INTO kb_chunks (chunk_id, doc_id, doc_title, doc_type, service_line, visible_to_roles, version, section_heading, content, embedding, status, created_at)\nSELECT p.chunk_id, $1, $2, $3, $4, $6::text[], $5, p.section_heading, p.content, e.embedding::vector, 'active', now()\nFROM jsonb_to_recordset($9::jsonb) AS p(idx int, chunk_id text, section_heading text, content text)\nJOIN jsonb_to_recordset($10::jsonb) AS e(\"index\" int, embedding text) ON e.\"index\" = p.idx\nRETURNING chunk_id, version;",
+        "options": {
+          "queryReplacement": "={{ (() => { const d = $('KB 1 - Admin Saves or Edits a Policy, SOP, Form or Guideline').item.json.body; return [d.doc_id, d.doc_title, d.doc_type, d.service_line || 'all', String(d.version), '{' + (d.visible_to_roles || []).join(',') + '}', d.edited_by, $execution.id, JSON.stringify($('KB 2 - Split Into Passages Tagged With Doc, Version, Section').item.json.passages), JSON.stringify($json.data)]; })() }}"
+        }
+      }
+    },
+    {
+      "key": "triage",
+      "kind": "ai.llm",
+      "label": "8 - Claude Triages Using Only Your Documents",
+      "section": "ai",
+      "notes": "No source, no answer: it cites your documents or hands the item to a person.",
+      "params": {
+        "system_message": "You triage administrative intake items for a healthcare services business. You support office staff with paperwork; you do not replace clinical judgment. Hard boundaries: never diagnose, never assess symptoms, never suggest treatment or medication, and never judge how urgent care is. If the item describes symptoms, asks a clinical question or suggests a patient's health may be at risk, set category to clinical_question and needs_human to true, write one neutral line in summary_for_staff and stop. Use only the SOURCES passages you are given. Every next step must be supported by a passage you cite by chunk_id. If the sources do not cover the item, or two queues fit equally well, set needs_human to true and say why in reason. Never invent a policy, form name, deadline, fee, phone number or queue. Patient identifiers are masked as [NAME], [DATE], [PHONE], [EMAIL], [SSN] and [MEMBER_ID]; never guess or restore them, and do not repeat them in your summary. owner_queue must be exactly one of the ALLOWED QUEUES. priority is administrative only: time_sensitive when the document states a deadline, otherwise routine. confidence is your honest probability, 0 to 1, that category and owner_queue are right given the sources; stay below 0.8 when the document is partial, unreadable or contradicts the sources. Return only the requested fields as JSON.",
+        "prompt": "Intake item {{ $('4 - Mask Patient Identifiers Before Any Model Sees Them').item.json.item_id }}\nSubmitted by role: {{ $('4 - Mask Patient Identifiers Before Any Model Sees Them').item.json.staff_role }}\nService line: {{ $('4 - Mask Patient Identifiers Before Any Model Sees Them').item.json.service_line }}\nStaff hint: {{ $('4 - Mask Patient Identifiers Before Any Model Sees Them').item.json.document_type_hint }}\n\nDOCUMENT TEXT, patient identifiers masked:\n{{ $('4 - Mask Patient Identifiers Before Any Model Sees Them').item.json.masked_text }}\n\nSOURCES, active versions of your policies, SOPs, forms and service guidelines:\n{{ $('6 - Supabase: Find the Matching Policy, SOP and Form Passages').item.json.passages.map(p => '[' + p.chunk_id + '] ' + p.doc_title + ' v' + p.version + ', ' + p.section_heading + '\\n' + p.content).join('\\n\\n') }}\n\nALLOWED QUEUES: {{ $('0 - Config: Your Settings').item.json.staff_queues }}\n\nClassify the item as one of: new_patient_intake, referral, insurance_or_eligibility, authorization_request, records_request, scheduling_request, billing_question, form_or_consent, clinical_question, other.\nReturn: category, document_type, owner_queue, priority, summary_for_staff (two plain sentences a staff member can act on), next_steps (only steps a cited passage supports), missing_items (anything the cited SOP requires that the document lacks, such as a signature or an authorization page), cited_chunk_ids, confidence, needs_human, reason (one sentence).",
+        "hasOutputParser": true,
+        "onError": "continueRegularOutput"
+      }
+    },
+    {
+      "key": "claude",
+      "kind": "ai.model",
+      "label": "Claude - Triages Against Your SOPs",
+      "app": "anthropic",
+      "parent": "triage",
+      "port": "ai_languageModel",
+      "params": {
+        "options": {
+          "temperature": 0
+        }
+      }
+    },
+    {
+      "key": "triage_result",
+      "kind": "ai.parser",
+      "label": "Triage Result: Queue, Confidence, Cited Sources",
+      "parent": "triage",
+      "port": "ai_outputParser",
+      "params": {
+        "schema": {
+          "category": "referral",
+          "document_type": "Referral form",
+          "owner_queue": "Intake Coordination",
+          "priority": "routine",
+          "summary_for_staff": "Referral for a new patient with an insurance card copy attached. The authorization section is blank, so it is not ready to schedule.",
+          "next_steps": [
+            "Verify insurance eligibility before scheduling",
+            "Request the missing authorization page from the referring office"
+          ],
+          "missing_items": [
+            "Authorization section blank"
+          ],
+          "cited_chunk_ids": [
+            "referral-intake-sop-v3-c02",
+            "authorization-policy-v2-c01"
+          ],
+          "confidence": 0.91,
+          "needs_human": false,
+          "reason": "The referral intake SOP covers this document type and names one queue."
+        }
+      }
+    },
+    {
+      "key": "valid",
+      "kind": "flow.branch",
+      "label": "9 - Claude Returned a Usable Answer?",
+      "section": "ai",
+      "params": {
+        "condition": {
+          "left": "={{ Boolean($json.output && $json.output.category) }}",
+          "op": "true"
+        }
+      }
+    },
+    {
+      "key": "fallback",
+      "kind": "ai.llm",
+      "label": "9b - OpenAI Fallback: Same Rules, Same Sources",
+      "section": "ai",
+      "params": {
+        "system_message": "You triage administrative intake items for a healthcare services business. You support office staff with paperwork; you do not replace clinical judgment. Hard boundaries: never diagnose, never assess symptoms, never suggest treatment or medication, and never judge how urgent care is. If the item describes symptoms, asks a clinical question or suggests a patient's health may be at risk, set category to clinical_question and needs_human to true, write one neutral line in summary_for_staff and stop. Use only the SOURCES passages you are given. Every next step must be supported by a passage you cite by chunk_id. If the sources do not cover the item, or two queues fit equally well, set needs_human to true and say why in reason. Never invent a policy, form name, deadline, fee, phone number or queue. Patient identifiers are masked as [NAME], [DATE], [PHONE], [EMAIL], [SSN] and [MEMBER_ID]; never guess or restore them, and do not repeat them in your summary. owner_queue must be exactly one of the ALLOWED QUEUES. priority is administrative only: time_sensitive when the document states a deadline, otherwise routine. confidence is your honest probability, 0 to 1, that category and owner_queue are right given the sources; stay below 0.8 when the document is partial, unreadable or contradicts the sources. Return only the requested fields as JSON.",
+        "prompt": "Claude could not answer this item, so you are running the same triage under the same rules.\n\nIntake item {{ $('4 - Mask Patient Identifiers Before Any Model Sees Them').item.json.item_id }}\nSubmitted by role: {{ $('4 - Mask Patient Identifiers Before Any Model Sees Them').item.json.staff_role }}\nService line: {{ $('4 - Mask Patient Identifiers Before Any Model Sees Them').item.json.service_line }}\nStaff hint: {{ $('4 - Mask Patient Identifiers Before Any Model Sees Them').item.json.document_type_hint }}\n\nDOCUMENT TEXT, patient identifiers masked:\n{{ $('4 - Mask Patient Identifiers Before Any Model Sees Them').item.json.masked_text }}\n\nSOURCES, active versions of your policies, SOPs, forms and service guidelines:\n{{ $('6 - Supabase: Find the Matching Policy, SOP and Form Passages').item.json.passages.map(p => '[' + p.chunk_id + '] ' + p.doc_title + ' v' + p.version + ', ' + p.section_heading + '\\n' + p.content).join('\\n\\n') }}\n\nALLOWED QUEUES: {{ $('0 - Config: Your Settings').item.json.staff_queues }}\n\nClassify the item as one of: new_patient_intake, referral, insurance_or_eligibility, authorization_request, records_request, scheduling_request, billing_question, form_or_consent, clinical_question, other.\nReturn: category, document_type, owner_queue, priority, summary_for_staff (two plain sentences a staff member can act on), next_steps (only steps a cited passage supports), missing_items (anything the cited SOP requires that the document lacks), cited_chunk_ids, confidence, needs_human, reason (one sentence).",
+        "hasOutputParser": true,
+        "onError": "continueRegularOutput"
+      }
+    },
+    {
+      "key": "gpt",
+      "kind": "ai.model",
+      "label": "OpenAI - Fallback Triage Model",
+      "app": "openai",
+      "parent": "fallback",
+      "port": "ai_languageModel",
+      "params": {
+        "options": {}
+      }
+    },
+    {
+      "key": "fallback_result",
+      "kind": "ai.parser",
+      "label": "Fallback Result: Same Fields as Claude",
+      "parent": "fallback",
+      "port": "ai_outputParser",
+      "params": {
+        "schema": {
+          "category": "referral",
+          "document_type": "Referral form",
+          "owner_queue": "Intake Coordination",
+          "priority": "routine",
+          "summary_for_staff": "Referral for a new patient with an insurance card copy attached. The authorization section is blank, so it is not ready to schedule.",
+          "next_steps": [
+            "Verify insurance eligibility before scheduling",
+            "Request the missing authorization page from the referring office"
+          ],
+          "missing_items": [
+            "Authorization section blank"
+          ],
+          "cited_chunk_ids": [
+            "referral-intake-sop-v3-c02",
+            "authorization-policy-v2-c01"
+          ],
+          "confidence": 0.88,
+          "needs_human": false,
+          "reason": "The referral intake SOP covers this document type and names one queue."
+        }
+      }
+    },
+    {
+      "key": "confident",
+      "kind": "flow.branch",
+      "label": "10 - Confident, Cited, Known Queue, Nothing Clinical?",
+      "section": "ai",
+      "notes": "0.8 is a starting threshold, tuned on your own items; below it, a person decides.",
+      "params": {
+        "condition": [
+          {
+            "left": "={{ Number(($json.output || {}).confidence || 0) }}",
+            "op": "gte",
+            "right": 0.8
+          },
+          {
+            "left": "={{ (($json.output || {}).cited_chunk_ids || []).length > 0 && (($json.output || {}).cited_chunk_ids || []).every(id => ($('6 - Supabase: Find the Matching Policy, SOP and Form Passages').item.json.passages || []).some(p => p.chunk_id === id)) }}",
+            "op": "true"
+          },
+          {
+            "left": "={{ String($('0 - Config: Your Settings').item.json.staff_queues).split(',').map(q => q.trim()).includes(($json.output || {}).owner_queue) }}",
+            "op": "true"
+          },
+          {
+            "left": "={{ ($json.output || {}).needs_human === false && ($json.output || {}).category !== 'clinical_question' }}",
+            "op": "true"
+          }
+        ]
+      }
+    },
+    {
+      "key": "task",
+      "kind": "net.http",
+      "label": "11 - Your Internal Tools API: Create the Task in the Right Queue",
+      "section": "route",
+      "params": {
+        "method": "POST",
+        "url": "{{ $('0 - Config: Your Settings').item.json.internal_tools_api_url }}/tasks",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "body": "{{ JSON.stringify({ external_ref: $('1 - New Intake Item or Document From the Staff Portal').item.json.body.item_id, queue: $json.output.owner_queue, priority: $json.output.priority, title: $json.output.document_type + ' - ' + $json.output.category, summary: $json.output.summary_for_staff, checklist: $json.output.next_steps, missing_items: $json.output.missing_items, created_by: 'ai_triage', audit_ref: $execution.id }) }}"
+      }
+    },
+    {
+      "key": "review",
+      "kind": "app.action",
+      "label": "11b - Add It to the Human Review Queue",
+      "app": "postgres",
+      "op": "insert",
+      "section": "route",
+      "notes": "No-match items are logged as knowledge-base gaps, so admins see what to write next.",
+      "params": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO review_queue (item_id, reason_code, reason, ai_draft, ai_confidence, status, created_at)\nVALUES ($1, $2, $3, $4::jsonb, $5, 'waiting', now())\nRETURNING review_id, item_id, reason_code, reason;",
+        "options": {
+          "queryReplacement": "={{ (() => { const o = $json.output; const code = o ? 'low_confidence_or_boundary' : ($json.error ? 'model_error' : 'kb_gap_no_matching_source'); const why = o ? o.reason : ($json.error ? 'Claude and OpenAI both failed on this item' : 'No active policy, SOP, form or guideline passage covers this item'); return [$('1 - New Intake Item or Document From the Staff Portal').item.json.body.item_id, code, why, JSON.stringify(o || {}), o ? Number(o.confidence || 0) : 0]; })() }}"
+        }
+      }
+    },
+    {
+      "key": "actions",
+      "kind": "data.code",
+      "label": "12 - Build One Audit Row per Action Taken",
+      "section": "audit",
+      "params": {
+        "jsCode": "// 12 - One audit row per action the system took on this intake item.\n// It reads which steps actually ran, so a refused run, a fallback run and a review run each log exactly what happened.\nconst N = {\n  intake: '1 - New Intake Item or Document From the Staff Portal',\n  role: '2 - Look Up the Staff Role, Mark the Item In Progress',\n  refused: '3b - Refuse: Role Not Allowed to Submit Intake',\n  search: '6 - Supabase: Find the Matching Policy, SOP and Form Passages',\n  claude: '8 - Claude Triages Using Only Your Documents',\n  fallback: '9b - OpenAI Fallback: Same Rules, Same Sources',\n  task: '11 - Your Internal Tools API: Create the Task in the Right Queue',\n  review: '11b - Add It to the Human Review Queue',\n};\nconst ran = (name) => { try { return $(name).isExecuted; } catch (e) { return false; } };\nconst out = (name) => (ran(name) ? $(name).first().json : {});\nconst intake = out(N.intake).body || {};\nconst passages = out(N.search).passages || [];\nconst base = { item_id: intake.item_id, staff_user_id: intake.staff_user_id, execution_id: $execution.id, model: null, confidence: null, source_ids: [] };\nconst rows = [{ ...base, action: 'intake_received', outcome: 'ok', detail: intake.document_type_hint || 'no hint' }];\n\nif (ran(N.refused)) {\n  rows.push({ ...base, action: 'permission_check', outcome: 'refused', detail: 'role not allowed to submit intake' });\n} else {\n  rows.push({ ...base, action: 'permission_check', outcome: 'allowed', detail: out(N.role).role });\n  rows.push({ ...base, action: 'identifiers_masked', outcome: 'ok', detail: 'masked before any model call' });\n  rows.push({ ...base, action: 'knowledge_retrieved', outcome: ran(N.claude) ? 'matched' : 'no_match', source_ids: passages.map(p => p.chunk_id), detail: 'top similarity ' + Number(out(N.search).top_similarity || 0).toFixed(2) });\n  for (const [name, model, action] of [[N.claude, 'claude', 'ai_triage'], [N.fallback, 'openai', 'ai_triage_fallback']]) {\n    if (!ran(name)) continue;\n    const r = out(name);\n    rows.push({ ...base, action, model, outcome: r.output ? 'answered' : 'failed', confidence: r.output ? r.output.confidence : null, source_ids: r.output ? r.output.cited_chunk_ids : [], detail: r.output ? r.output.category : String(r.error || 'no output').slice(0, 200) });\n  }\n  if (ran(N.task)) rows.push({ ...base, action: 'task_routed', outcome: 'routed', detail: 'task ' + (out(N.task).id || out(N.task).task_id) });\n  if (ran(N.review)) rows.push({ ...base, action: 'sent_to_human_review', outcome: 'needs_review', detail: out(N.review).reason_code });\n}\n\n// What the staff screen shows, built once from the same facts.\nconst ai = out(N.fallback).output || out(N.claude).output || null;\nconst cite = (id) => { const p = passages.find(x => x.chunk_id === id); return p ? p.doc_title + ' v' + p.version + ', ' + p.section_heading : id; };\nconst screen = ran(N.refused)\n  ? { status: 'refused', owner_queue: null, staff_summary: 'Your role cannot submit intake items. Ask an admin for access.' }\n  : ran(N.task)\n    ? { status: 'routed', owner_queue: ai.owner_queue, staff_summary: ai.summary_for_staff, task_ref: out(N.task).id || out(N.task).task_id }\n    : { status: 'in_review', owner_queue: 'human_review', staff_summary: 'Waiting for a person: ' + (out(N.review).reason || 'needs review') };\nObject.assign(screen, {\n  item_id: intake.item_id,\n  next_steps: screen.status === 'routed' ? (ai.next_steps || []) : [],\n  cited_sources: ai ? (ai.cited_chunk_ids || []).map(cite) : [],\n  ai_model: out(N.fallback).output ? 'openai' : (ai ? 'claude' : null),\n  ai_confidence: ai ? ai.confidence : null,\n  audit_rows: rows.length,\n});\nreturn rows.map(r => ({ json: { ...r, screen } }));"
+      }
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "13 - Supabase: Write the Append-Only Audit Rows",
+      "app": "postgres",
+      "op": "insert",
+      "section": "audit",
+      "notes": "Append-only: the workflow can add audit rows, never edit or delete them.",
+      "params": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO audit_log (item_id, staff_user_id, execution_id, action, outcome, model, confidence, source_ids, detail, created_at)\nVALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, now())\nRETURNING id, action, outcome;",
+        "options": {
+          "queryReplacement": "={{ [ $json.item_id, $json.staff_user_id, $json.execution_id, $json.action, $json.outcome, $json.model, $json.confidence, JSON.stringify($json.source_ids || []), $json.detail ] }}"
+        }
+      }
+    },
+    {
+      "key": "screen",
+      "kind": "app.action",
+      "label": "14 - Update the Staff Screen: Status, Owner, Sources",
+      "app": "postgres",
+      "op": "insert",
+      "section": "audit",
+      "params": {
+        "operation": "executeQuery",
+        "query": "UPDATE intake_items\nSET status = $2, owner_queue = $3, staff_summary = $4, next_steps = $5::jsonb,\n    cited_sources = $6::jsonb, ai_model = $7, ai_confidence = $8, task_ref = $9, updated_at = now()\nWHERE item_id = $1\nRETURNING item_id, status, owner_queue, staff_summary, next_steps, cited_sources, ai_model, ai_confidence, task_ref, updated_at;",
+        "options": {
+          "queryReplacement": "={{ (() => { const s = $('12 - Build One Audit Row per Action Taken').first().json.screen; return [s.item_id, s.status, s.owner_queue, s.staff_summary, JSON.stringify(s.next_steps || []), JSON.stringify(s.cited_sources || []), s.ai_model, s.ai_confidence, s.task_ref || null]; })() }}"
+        },
+        "executeOnce": true
+      }
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "15 - Any Step Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "errors"
+    },
+    {
+      "key": "flag",
+      "kind": "app.action",
+      "label": "16 - Log It and Flag the Admin Screen, No Patient Details",
+      "app": "postgres",
+      "op": "insert",
+      "section": "errors",
+      "params": {
+        "operation": "executeQuery",
+        "query": "WITH held AS (\n  UPDATE intake_items SET status = 'manual_handling', updated_at = now()\n  WHERE execution_id = $1\n  RETURNING item_id\n), logged AS (\n  INSERT INTO audit_log (item_id, execution_id, action, outcome, detail, created_at)\n  SELECT item_id, $1, 'workflow_failed', 'manual_handling', 'stopped at ' || $2, now() FROM held\n)\nINSERT INTO admin_alerts (execution_id, failed_step, message, created_at)\nVALUES ($1, $2, 'Intake triage stopped at ' || $2 || '. The item is held for manual handling; details are in the n8n execution log.', now())\nRETURNING id, failed_step;",
+        "options": {
+          "queryReplacement": "={{ [ String($json.execution.id), $json.execution.lastNodeExecuted ] }}"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "intake",
+      "to": "role"
+    },
+    {
+      "from": "role",
+      "to": "allowed"
+    },
+    {
+      "from": "allowed",
+      "to": "mask",
+      "branch": "true"
+    },
+    {
+      "from": "allowed",
+      "to": "refused",
+      "branch": "false"
+    },
+    {
+      "from": "refused",
+      "to": "actions"
+    },
+    {
+      "from": "mask",
+      "to": "embedq"
+    },
+    {
+      "from": "embedq",
+      "to": "search"
+    },
+    {
+      "from": "search",
+      "to": "enough"
+    },
+    {
+      "from": "enough",
+      "to": "triage",
+      "branch": "true"
+    },
+    {
+      "from": "enough",
+      "to": "review",
+      "branch": "false"
+    },
+    {
+      "from": "triage",
+      "to": "valid"
+    },
+    {
+      "from": "valid",
+      "to": "confident",
+      "branch": "true"
+    },
+    {
+      "from": "valid",
+      "to": "fallback",
+      "branch": "false"
+    },
+    {
+      "from": "fallback",
+      "to": "confident"
+    },
+    {
+      "from": "confident",
+      "to": "task",
+      "branch": "true"
+    },
+    {
+      "from": "confident",
+      "to": "review",
+      "branch": "false"
+    },
+    {
+      "from": "task",
+      "to": "actions"
+    },
+    {
+      "from": "review",
+      "to": "actions"
+    },
+    {
+      "from": "actions",
+      "to": "log"
+    },
+    {
+      "from": "log",
+      "to": "screen"
+    },
+    {
+      "from": "err",
+      "to": "flag"
+    },
+    {
+      "from": "kbsaved",
+      "to": "chunk"
+    },
+    {
+      "from": "chunk",
+      "to": "kbembed"
+    },
+    {
+      "from": "kbembed",
+      "to": "kbstore"
+    }
+  ],
+  "input_sample": {
+    "body": {
+      "item_id": "INT-TEST-0001",
+      "staff_user_id": "staff-test-017",
+      "service_line": "all",
+      "document_type_hint": "referral",
+      "patient_ref": "TEST-PT-0001",
+      "patient_display_name": "Test Patient A",
+      "document_file": "test-referral-0001.pdf",
+      "document_text": "TEST RECORD, NOT A REAL PATIENT. Referral for Test Patient A, DOB 01/01/1900, phone 000-555-0100. Reason for referral: new patient intake. Insurance card copy attached. Authorization section: blank. Please schedule the first available intake appointment.",
+      "submitted_at": "2026-09-23T09:14:00-04:00"
+    }
+  },
+  "output_sample": {
+    "item_id": "INT-TEST-0001",
+    "status": "routed",
+    "owner_queue": "Intake Coordination",
+    "staff_summary": "Referral for a new patient with an insurance card copy attached. The authorization section is blank, so it is not ready to schedule.",
+    "next_steps": [
+      "Verify insurance eligibility before scheduling",
+      "Request the missing authorization page from the referring office"
+    ],
+    "cited_sources": [
+      "Referral Intake SOP v3, Required documents",
+      "Authorization Policy v2, When an authorization is required"
+    ],
+    "ai_model": "claude",
+    "ai_confidence": 0.91,
+    "task_ref": "TASK-TEST-0412",
+    "updated_at": "2026-09-23T09:14:21-04:00"
+  },
+  "archetype": "your_healthcare_operations_platform_intake_and_d",
+  "learned": true,
+  "learned_at": "2026-09-23"
+}

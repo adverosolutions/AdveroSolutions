@@ -1,0 +1,36 @@
+{
+  "title": "Your Webinar Invite Sending Setup - 10 to 20 Warm Domains to Login",
+  "platform": "diagram",
+  "sections": [
+    {"key": "scope", "label": "1 - SIZE IT FROM YOUR LIST", "note": "The list size and how fast you want the invites out decide the domain and mailbox count. 30 a day per mailbox, 3 mailboxes per domain, so 10 to 20 domains is 30 to 60 mailboxes and 900 to 1,800 invites a day once warm."},
+    {"key": "list", "label": "2 - CLEAN THE OLD LIST FIRST", "note": "An old list is the fastest way to burn 20 new domains. Every address is verified before it is loaded, bounces and catch-alls are split out, and the clean list is what goes in."},
+    {"key": "provision", "label": "3 - DOMAINS AND MAILBOXES, NEVER YOUR MAIN DOMAIN", "note": "Lookalike sending domains and their mailboxes are provisioned together through a mailbox provider on your account and your card, about $3 to $4 per mailbox a month. Pre-warmed mailboxes if the webinar date is close."},
+    {"key": "dns", "label": "4 - AUTHENTICATION THAT KEEPS YOU OUT OF SPAM", "note": "SPF, DKIM, DMARC, MX and a custom tracking domain on every sending domain, verified before a single invite goes out."},
+    {"key": "handover", "label": "5 - INSTANTLY IN YOUR NAME, THEN YOUR LOGIN", "note": "Every mailbox imported into an Instantly workspace you own, warmup running, limits ramped, one unibox for replies. You get the login, paste the list and the sequence, and press send."}
+  ],
+  "nodes": [
+    {"key": "size", "kind": "data.transform", "label": "1 - Count the List and Pick the Send-By Date", "section": "scope"},
+    {"key": "count", "kind": "data.transform", "label": "2 - Work Out Domains and Mailboxes: 30 a Day Each, 3 per Domain", "section": "scope"},
+    {"key": "verify_list", "kind": "data.transform", "label": "3 - Verify Every Address on the Old List", "section": "list"},
+    {"key": "clean", "kind": "flow.branch", "label": "4 - Deliverable?", "section": "list"},
+    {"key": "park", "kind": "data.transform", "label": "4b - Bounces and Catch-Alls Split Out, Never Loaded", "section": "list"},
+    {"key": "rush", "kind": "flow.branch", "label": "5 - Webinar Date Close?", "section": "provision"},
+    {"key": "prewarmed", "kind": "data.transform", "label": "5a - Pre-Warmed Mailboxes So Invites Go Out This Week", "section": "provision"},
+    {"key": "buy", "kind": "data.transform", "label": "6 - Provision 10 to 20 Lookalike Domains and Their Mailboxes on Your Card", "section": "provision"},
+    {"key": "dns", "kind": "data.transform", "label": "7 - Publish SPF, DKIM, DMARC, MX and a Tracking Domain", "section": "dns"},
+    {"key": "check", "kind": "flow.branch", "label": "8 - Every Record Passes?", "section": "dns"},
+    {"key": "fix", "kind": "data.transform", "label": "8b - Fix the Failing Record and Re-Check", "section": "dns"},
+    {"key": "import", "kind": "data.transform", "label": "9 - Import Every Mailbox Into Your Instantly Workspace", "section": "handover"},
+    {"key": "warm", "kind": "data.transform", "label": "10 - Warmup On, Limits Ramped, One Unibox for Replies", "section": "handover"},
+    {"key": "login", "kind": "data.aggregate", "label": "11 - Your Login: Paste the List and the Sequence, Press Send", "section": "handover"}
+  ],
+  "edges": [
+    {"from": "size", "to": "count"}, {"from": "count", "to": "verify_list"}, {"from": "verify_list", "to": "clean"},
+    {"from": "clean", "to": "rush", "branch": "true"}, {"from": "clean", "to": "park", "branch": "false"},
+    {"from": "rush", "to": "prewarmed", "branch": "true"}, {"from": "prewarmed", "to": "buy"}, {"from": "rush", "to": "buy", "branch": "false"},
+    {"from": "buy", "to": "dns"}, {"from": "dns", "to": "check"}, {"from": "check", "to": "fix", "branch": "false"}, {"from": "fix", "to": "dns", "loop": true},
+    {"from": "check", "to": "import", "branch": "true"}, {"from": "import", "to": "warm"}, {"from": "warm", "to": "login"}
+  ],
+  "input_sample": {"list": "old list, about 25,000 addresses", "goal": "webinar invites, 3 email sequence", "domains_requested": "10 to 20, warm"},
+  "output_sample": {"clean_list": "21,400 deliverable, 3,600 removed", "domains": 15, "mailboxes": 45, "daily_capacity": "1,350 invites a day once warm", "dns": "all records verified", "instantly": "45 mailboxes, warmup on, unibox live", "handover": "login in your name, list and sequence loaded by you"}
+}

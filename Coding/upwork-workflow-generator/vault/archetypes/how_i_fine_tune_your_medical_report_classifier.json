@@ -1,0 +1,149 @@
+{
+  "title": "How I Fine Tune Your Medical Report Classifier",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "clean",
+      "label": "1 - CLEAN THE DATA",
+      "color": 0,
+      "note": "Duplicates out, formatting fixed, suspicious labels sent back to you. A test set is set aside first so the results are honest."
+    },
+    {
+      "key": "pick",
+      "label": "2 - PICK A SMALL MODEL",
+      "color": 0,
+      "note": "An existing lightweight open source model, not one built from scratch. Cheap to run, fast to train."
+    },
+    {
+      "key": "train",
+      "label": "3 - MEASURE, THEN TRAIN",
+      "color": 0,
+      "note": "Score the untouched model first so the before number is real. Then train a small adapter on your examples."
+    },
+    {
+      "key": "handoff",
+      "label": "4 - PROVE IT AND HAND IT OVER",
+      "color": 0,
+      "note": "Same test set, before vs after, per category. You get the adapter files, a one command script, and a short write up."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "clean",
+      "kind": "data.transform",
+      "label": "1 - Clean the 800 Reports, Send Suspect Labels Back to You",
+      "section": "clean"
+    },
+    {
+      "key": "split",
+      "kind": "data.transform",
+      "label": "2 - Set Aside a Test Set Before Anything Trains",
+      "section": "clean"
+    },
+    {
+      "key": "pick",
+      "kind": "data.transform",
+      "label": "3 - Pick a Small Open Source Model That Fits Your Categories",
+      "section": "pick"
+    },
+    {
+      "key": "baseline",
+      "kind": "data.transform",
+      "label": "4 - Score the Untouched Model First",
+      "section": "train"
+    },
+    {
+      "key": "train",
+      "kind": "data.transform",
+      "label": "5 - Train a Small Adapter on Your Examples",
+      "section": "train"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "6 - Does It Beat the Baseline, Especially on Urgent?",
+      "section": "train"
+    },
+    {
+      "key": "fix",
+      "kind": "data.transform",
+      "label": "6a - Fix Labels, Rebalance, Train Again",
+      "section": "train"
+    },
+    {
+      "key": "handoff",
+      "kind": "data.aggregate",
+      "label": "7 - Adapter Files, One Command Script, Short Write Up",
+      "section": "handoff"
+    }
+  ],
+  "edges": [
+    {
+      "from": "clean",
+      "to": "split"
+    },
+    {
+      "from": "split",
+      "to": "pick"
+    },
+    {
+      "from": "pick",
+      "to": "baseline"
+    },
+    {
+      "from": "baseline",
+      "to": "train"
+    },
+    {
+      "from": "train",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "fix",
+      "branch": "false"
+    },
+    {
+      "from": "fix",
+      "to": "train",
+      "loop": true
+    },
+    {
+      "from": "gate",
+      "to": "handoff",
+      "branch": "true"
+    }
+  ],
+  "input_sample": {
+    "row_id": 417,
+    "report_text": "CT chest without contrast. Lungs clear, no focal consolidation. Small 4 mm nodule right lower lobe, unchanged from prior study. No pleural effusion. Recommend interval imaging in 12 months.",
+    "category": "Follow-up needed",
+    "source_file": "reports_export_2026.csv"
+  },
+  "output_sample": {
+    "test_set_size": 120,
+    "categories": [
+      "Normal",
+      "Follow-up needed",
+      "Urgent",
+      "Incomplete"
+    ],
+    "baseline_accuracy": 0.68,
+    "fine_tuned_accuracy": 0.91,
+    "urgent_recall_baseline": 0.55,
+    "urgent_recall_fine_tuned": 0.94,
+    "worst_confusion": "Incomplete misread as Normal, 4 of 120",
+    "training_time": "18 minutes on one T4 GPU",
+    "gpu_cost_usd": 0.0,
+    "api_cost_usd": 0.0,
+    "deliverables": [
+      "adapter files",
+      "classify.py",
+      "train.py",
+      "README.md"
+    ]
+  },
+  "archetype": "how_i_fine_tune_your_medical_report_classifier",
+  "learned": true,
+  "learned_at": "2026-09-09"
+}

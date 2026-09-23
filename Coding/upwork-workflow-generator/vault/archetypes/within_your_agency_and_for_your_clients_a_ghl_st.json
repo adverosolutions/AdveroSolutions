@@ -1,0 +1,207 @@
+{
+  "title": "Within Your Agency and for Your Clients: A GHL Starting Plan",
+  "platform": "diagram",
+  "sections": [
+    {
+      "key": "automate",
+      "label": "1 - AUTOMATE PROCESSES WITHIN YOUR AGENCY AND FOR YOUR CLIENTS",
+      "color": 0,
+      "note": "Your post names no automation yet, so this is a starting plan built on two workflows; we swap in your own processes once you list them. The first runs on your own enquiries and inside every client sub-account."
+    },
+    {
+      "key": "potential",
+      "label": "2 - UNCOVER THE FULL POTENTIAL OF GHL'S AUTOMATION",
+      "color": 0,
+      "note": "Your team knows GHL, so no tour of the builder. The full potential is the same rules running everywhere: a reply check before every follow-up and pipeline stages that move themselves, built once and loaded into your account and every client's."
+    },
+    {
+      "key": "strategy",
+      "label": "3 - STRATEGIES FOR WORKFLOW EFFICIENCY AND CLIENT SATISFACTION",
+      "color": 0,
+      "note": "Efficiency: one new-client tag does the onboarding nobody should copy by hand. Client satisfaction: a day-3 check-in, so you hear about a problem before it becomes a complaint."
+    },
+    {
+      "key": "team",
+      "label": "4 - GUIDE YOUR TEAM IN IMPLEMENTING BEST PRACTICES",
+      "color": 0,
+      "note": "How your team rolls out these two workflows and every one after them: saved in the snapshot, named and tagged one way, and tested on every branch before a client sees it."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "lead_in",
+      "kind": "data.transform",
+      "label": "1 - New Lead Follow-Up in Your Agency: Instant Text, Team Alert",
+      "section": "automate"
+    },
+    {
+      "key": "every_client",
+      "kind": "data.transform",
+      "label": "2 - Same Workflow in Every Client Sub-Account via Custom Values",
+      "section": "automate",
+      "notes": "Booking, onboarding form and kickoff links are custom values, so one workflow loads into each client account and only the values change."
+    },
+    {
+      "key": "reply_check",
+      "kind": "flow.branch",
+      "label": "3 - Did the Lead Reply? Checked Before Every Follow-Up",
+      "section": "potential",
+      "notes": "Checked before every follow-up, so nobody who already answered gets chased."
+    },
+    {
+      "key": "replied",
+      "kind": "data.transform",
+      "label": "3a - Yes: No More Chasing, the Pipeline Moves to Replied",
+      "section": "potential"
+    },
+    {
+      "key": "no_response",
+      "kind": "data.transform",
+      "label": "3b - No: Next Follow-Up, Then the Pipeline Moves to No Response",
+      "section": "potential"
+    },
+    {
+      "key": "onboarding",
+      "kind": "data.transform",
+      "label": "4 - Deal Won: Your Team Adds One new-client Tag, Welcome and Setup Tasks Follow",
+      "section": "strategy",
+      "notes": "Your team adds one tag when the deal closes; the welcome email, team alert and setup tasks follow."
+    },
+    {
+      "key": "checkin",
+      "kind": "flow.branch",
+      "label": "5 - Day-3 Check-In: Did the Client Reply?",
+      "section": "strategy"
+    },
+    {
+      "key": "am_answers",
+      "kind": "data.transform",
+      "label": "5a - Yes: The Account Manager Answers the Same Day",
+      "section": "strategy"
+    },
+    {
+      "key": "call_task",
+      "kind": "data.transform",
+      "label": "5b - No: Silence Becomes a Call Task",
+      "section": "strategy",
+      "notes": "Ask before they complain: silence lands on someone's list, not a quiet, unhappy client."
+    },
+    {
+      "key": "snapshot",
+      "kind": "data.transform",
+      "label": "6 - Both Workflows in Your Agency Snapshot: Fix Once, Push to Every Client",
+      "section": "team"
+    },
+    {
+      "key": "conventions",
+      "kind": "data.transform",
+      "label": "7 - Naming and Tag Conventions Your Team Follows",
+      "section": "team"
+    },
+    {
+      "key": "test_contacts",
+      "kind": "data.transform",
+      "label": "8 - Test Contacts Through Every Branch Before Go-Live",
+      "section": "team",
+      "notes": "One test contact per branch, in your account and one client's, before anything goes live."
+    },
+    {
+      "key": "delivered",
+      "kind": "data.aggregate",
+      "label": "9 - Delivered: First Two Workflows and Team Playbook",
+      "section": "team"
+    }
+  ],
+  "edges": [
+    {
+      "from": "lead_in",
+      "to": "every_client"
+    },
+    {
+      "from": "every_client",
+      "to": "reply_check"
+    },
+    {
+      "from": "reply_check",
+      "to": "replied",
+      "branch": "true"
+    },
+    {
+      "from": "reply_check",
+      "to": "no_response",
+      "branch": "false"
+    },
+    {
+      "from": "replied",
+      "to": "onboarding"
+    },
+    {
+      "from": "onboarding",
+      "to": "checkin"
+    },
+    {
+      "from": "checkin",
+      "to": "am_answers",
+      "branch": "true"
+    },
+    {
+      "from": "checkin",
+      "to": "call_task",
+      "branch": "false"
+    },
+    {
+      "from": "am_answers",
+      "to": "snapshot"
+    },
+    {
+      "from": "call_task",
+      "to": "snapshot"
+    },
+    {
+      "from": "snapshot",
+      "to": "conventions"
+    },
+    {
+      "from": "conventions",
+      "to": "test_contacts"
+    },
+    {
+      "from": "test_contacts",
+      "to": "delivered"
+    }
+  ],
+  "input_sample": {
+    "starting_point": "Your post names no automation yet; these two workflows start the plan until you list your own",
+    "sample_lead": {
+      "form": "Website Enquiry",
+      "first_name": "Hannah",
+      "last_name": "Reyes",
+      "company_name": "Reyes Dental Studio",
+      "email": "hannah@reyesdentalstudio.com",
+      "phone": "+44 7700 900318",
+      "message": "Looking for help with Instagram content and local SEO for our clinic."
+    },
+    "your_inputs": {
+      "processes_your_team_runs_by_hand": "PASTE-YOUR-LIST",
+      "client_sub_accounts": "PASTE-YOUR-CLIENT-SUB-ACCOUNT-COUNT",
+      "booking_link": "PASTE-YOUR-BOOKING-LINK",
+      "onboarding_form_link": "PASTE-YOUR-ONBOARDING-FORM-LINK",
+      "kickoff_call_link": "PASTE-YOUR-KICKOFF-CALL-LINK"
+    }
+  },
+  "output_sample": {
+    "delivered": "First two workflows and team playbook",
+    "workflow_1": "New lead follow-up in your agency and every client sub-account, a reply check before every follow-up, stages Replied or No Response",
+    "workflow_2": "Client onboarding from one new-client tag: welcome email, team alert, setup tasks, day-3 check-in, silence becomes a call task",
+    "snapshot": "Both workflows in your agency snapshot; custom values filled per client sub-account",
+    "team_playbook": [
+      "Workflow names: Agency or Client - Trigger - Outcome",
+      "Tags lowercase with hyphens, one per event, like new-client",
+      "One test contact through every branch before go-live"
+    ],
+    "sample_lead_result": "Hannah Reyes, Reyes Dental Studio: replied, tagged new-client, day-3 check-in answered by the account manager"
+  },
+  "archetype": "within_your_agency_and_for_your_clients_a_ghl_st",
+  "learned": true,
+  "learned_at": "2026-09-23"
+}

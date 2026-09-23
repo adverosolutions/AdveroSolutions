@@ -1,0 +1,62 @@
+{
+  "archetype": "ecommerce_order",
+  "title": "New Order → Fraud & Stock Check → Fulfill → Notify",
+  "platform": "n8n",
+  "sections": [
+    { "key": "order",   "label": "1 · NEW ORDER",   "note": "Orders arrive the moment they are placed. Line items, customer history and shipping details are pulled together into one record before any decision is made." },
+    { "key": "check",   "label": "2 · CHECKS",      "note": "Stock is confirmed and the order is scored for risk — mismatched billing and shipping, first order over a threshold, rush shipping on a new account. Risky orders are held rather than cancelled." },
+    { "key": "route",   "label": "3 · ROUTE",       "note": "Clean orders go to the warehouse. Held orders go to a review queue with the reason attached, so someone can clear them in seconds instead of investigating from scratch." },
+    { "key": "tell",    "label": "4 · FULFIL & TELL","note": "The fulfilment request is sent, inventory is decremented, and the customer gets a confirmation with tracking. Ops gets a running feed in Slack rather than having to check a dashboard." }
+  ],
+  "nodes": [
+    { "key": "hook",   "kind": "trigger.webhook", "label": "Order Placed", "section": "order" },
+    { "key": "detail", "kind": "app.action", "app": "shopify", "op": "get", "label": "Fetch Full Order", "section": "order" },
+    { "key": "stock",  "kind": "app.action", "app": "googleSheets", "op": "read", "label": "Check Inventory", "section": "check" },
+    { "key": "risk",   "kind": "ai.llm", "label": "Score Fraud Risk", "section": "check" },
+    { "key": "model",  "kind": "ai.model", "app": "openai", "label": "GPT-4.1", "parent": "risk" },
+    { "key": "gate",   "kind": "flow.branch", "label": "Clear to Ship?", "section": "route" },
+    { "key": "hold",   "kind": "app.action", "app": "slack", "op": "post", "label": "Hold for Review", "section": "route" },
+    { "key": "fulfil", "kind": "net.http", "label": "Send to 3PL", "section": "tell" },
+    { "key": "decr",   "kind": "app.action", "app": "googleSheets", "op": "update", "label": "Decrement Stock", "section": "tell" },
+    { "key": "email",  "kind": "app.action", "app": "gmail", "op": "send", "label": "Confirm to Customer", "section": "tell" }
+  ],
+  "edges": [
+    { "from": "hook", "to": "detail" },
+    { "from": "detail", "to": "stock" },
+    { "from": "stock", "to": "risk" },
+    { "from": "risk", "to": "gate" },
+    { "from": "gate", "to": "fulfil", "branch": "true" },
+    { "from": "gate", "to": "hold", "branch": "false" },
+    { "from": "fulfil", "to": "decr" },
+    { "from": "decr", "to": "email" }
+  ],
+  "input_sample": {
+    "order_id": "#10482",
+    "placed_at": "2026-07-31T16:48:22Z",
+    "customer": { "email": "s.kowalski@fastmail.com", "orders_before": 0, "account_age_days": 0 },
+    "items": [
+      { "sku": "TRW-400-BLK", "name": "Trailwright 400 Pack — Black", "qty": 2, "price": 189.0 },
+      { "sku": "TRW-RAIN-L", "name": "Rain Cover — Large", "qty": 1, "price": 34.0 }
+    ],
+    "subtotal": 412.0,
+    "shipping_method": "Overnight",
+    "billing_country": "US",
+    "shipping_country": "US",
+    "billing_zip": "60614",
+    "shipping_zip": "33139"
+  },
+  "output_sample": {
+    "order_id": "#10482",
+    "risk_score": 68,
+    "risk_flags": ["first order", "overnight shipping", "billing and shipping ZIP mismatch"],
+    "decision": "hold_for_review",
+    "stock_check": [
+      { "sku": "TRW-400-BLK", "requested": 2, "on_hand": 17, "ok": true },
+      { "sku": "TRW-RAIN-L", "requested": 1, "on_hand": 3, "ok": true }
+    ],
+    "held_at": "2026-07-31T16:48:25Z",
+    "review_channel": "#ops-holds",
+    "customer_notified": false,
+    "note": "Stock is available — held on risk only. Clearing in review releases straight to the 3PL."
+  }
+}

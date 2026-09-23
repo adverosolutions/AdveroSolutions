@@ -1,0 +1,63 @@
+{
+  "archetype": "voice_ai_call",
+  "title": "Voice AI Call → Transcript → Summary → CRM & Follow-up",
+  "platform": "n8n",
+  "sections": [
+    { "key": "call",    "label": "1 · CALL ENDS",  "note": "The voice platform posts the completed call the moment it hangs up — recording, transcript and metadata in one payload. Nothing is polled." },
+    { "key": "read",    "label": "2 · UNDERSTAND", "note": "The transcript is read for outcome, objections raised, next step agreed and any commitment made on the call. Structured output means these land as fields, not a paragraph someone has to re-read." },
+    { "key": "route",   "label": "3 · OUTCOME",    "note": "Booked calls create the deal and the calendar hold. Objections route to the right follow-up sequence. Wrong numbers and voicemails are marked and dropped without touching the pipeline." },
+    { "key": "record",  "label": "4 · WRITE BACK", "note": "Everything lands on the contact record — transcript link, summary, outcome and next step — so the next person to touch this lead sees the whole call without listening to it." }
+  ],
+  "nodes": [
+    { "key": "hook",    "kind": "trigger.webhook", "label": "Call Completed", "section": "call" },
+    { "key": "norm",    "kind": "data.transform", "label": "Normalize Call Payload", "section": "call" },
+    { "key": "agent",   "kind": "ai.agent", "label": "Summarize & Extract Outcome", "section": "read" },
+    { "key": "model",   "kind": "ai.model", "app": "anthropic", "label": "Claude", "parent": "agent" },
+    { "key": "parser",  "kind": "ai.parser", "label": "Call Outcome Schema", "parent": "agent" },
+    { "key": "switch",  "kind": "flow.switch", "label": "Outcome", "section": "route" },
+    { "key": "deal",    "kind": "app.action", "app": "hubspot", "op": "create_deal", "label": "Create Deal", "section": "route" },
+    { "key": "nurture", "kind": "app.action", "app": "gmail", "op": "send", "label": "Objection Follow-up", "section": "route" },
+    { "key": "drop",    "kind": "app.action", "app": "googleSheets", "op": "append", "label": "Mark Bad Number", "section": "route" },
+    { "key": "contact", "kind": "app.action", "app": "hubspot", "op": "create_contact", "label": "Log to Contact", "section": "record" },
+    { "key": "notify",  "kind": "app.action", "app": "slack", "op": "post", "label": "Post to #calls", "section": "record" }
+  ],
+  "edges": [
+    { "from": "hook", "to": "norm" },
+    { "from": "norm", "to": "agent" },
+    { "from": "agent", "to": "switch" },
+    { "from": "switch", "to": "deal", "branch": "booked" },
+    { "from": "switch", "to": "nurture", "branch": "objection" },
+    { "from": "switch", "to": "drop", "branch": "unreachable" },
+    { "from": "deal", "to": "contact" },
+    { "from": "nurture", "to": "contact" },
+    { "from": "contact", "to": "notify" }
+  ],
+  "input_sample": {
+    "call_id": "call_4a91ce77",
+    "assistant": "Outbound — Roofing Inspections",
+    "to": "+1 972 555 0119",
+    "contact_name": "Wes Delgado",
+    "duration_seconds": 214,
+    "ended_reason": "customer-ended-call",
+    "recording_url": "https://recordings.example.com/call_4a91ce77.mp3",
+    "transcript_preview": "AI: Hi, is this Wes? … Wes: Yeah, we had some shingles come off in the storm last month but I already had one guy out …",
+    "ended_at": "2026-07-31T15:41:09Z"
+  },
+  "output_sample": {
+    "call_id": "call_4a91ce77",
+    "contact": "Wes Delgado",
+    "outcome": "booked",
+    "summary": "Storm damage from last month's hail, already had one contractor look at it but no work scheduled and no written estimate. Wants a second opinion before filing with insurance. Agreed to a free inspection Thursday morning.",
+    "objections": ["already had someone look at it"],
+    "objection_handled": true,
+    "commitments": [
+      { "who": "us", "what": "Free roof inspection", "when": "2026-08-06T14:00:00Z" },
+      { "who": "them", "what": "Have the insurance claim number ready", "when": "2026-08-06" }
+    ],
+    "sentiment": "warm",
+    "deal_id": "0-3-19824417",
+    "deal_value_estimate": 14500,
+    "next_step": "Inspection Thu 9am — assigned to field team",
+    "talk_ratio": { "ai": 0.41, "customer": 0.59 }
+  }
+}

@@ -1,0 +1,222 @@
+{
+  "title": "Small Business AI Assistant — Prompt Layer + MCP Tool Connections",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · A REQUEST COMES IN FROM ANY CHANNEL",
+      "color": 0,
+      "note": "Chat widget, email, or an internal form. Every request lands in the same lane so one set of prompts serves all of them."
+    },
+    {
+      "key": "prompt",
+      "label": "2 · LOAD THE BUSINESS'S PROMPT PROFILE",
+      "color": 0,
+      "note": "Tone, services, pricing rules, and what the assistant is never allowed to promise live in a sheet the owner can edit. No code change to update a prompt."
+    },
+    {
+      "key": "reason",
+      "label": "3 · CLAUDE DECIDES AND USES THE BUSINESS'S OWN TOOLS",
+      "color": 0,
+      "note": "Each tool is an MCP connection into software the business already pays for. Claude reads and writes real records instead of guessing."
+    },
+    {
+      "key": "guard",
+      "label": "4 · CHECK THE ANSWER BEFORE IT GOES OUT",
+      "color": 0,
+      "note": "Anything touching money, bookings, or a complaint goes to a human first. Everything else replies on its own."
+    },
+    {
+      "key": "learn",
+      "label": "5 · LOG IT SO THE PROMPTS GET BETTER EVERY WEEK",
+      "color": 0,
+      "note": "Every exchange is scored. Low-scoring ones become next week's prompt revisions."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "chat",
+      "kind": "trigger.chat",
+      "label": "1 · Customer or Staff Message",
+      "section": "intake"
+    },
+    {
+      "key": "norm",
+      "kind": "data.transform",
+      "label": "2 · Normalize Channel, Sender, Business ID",
+      "section": "intake"
+    },
+    {
+      "key": "profile",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "read",
+      "label": "3 · Read the Prompt Profile for This Business",
+      "section": "prompt"
+    },
+    {
+      "key": "build",
+      "kind": "data.transform",
+      "label": "4 · Assemble System Prompt (Tone + Rules + Context)",
+      "section": "prompt"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "5 · Claude Handles the Request",
+      "section": "reason"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "app": "anthropic",
+      "label": "Claude",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "memory",
+      "kind": "ai.memory",
+      "label": "Conversation Memory (per customer)",
+      "parent": "agent",
+      "port": "ai_memory"
+    },
+    {
+      "key": "mcp_crm",
+      "kind": "ai.tool",
+      "label": "MCP — CRM: Find or Update a Customer",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "mcp_cal",
+      "kind": "ai.tool",
+      "label": "MCP — Calendar: Check and Book Slots",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "mcp_inv",
+      "kind": "ai.tool",
+      "label": "MCP — Invoicing: Balance and Payment Link",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "mcp_kb",
+      "kind": "ai.tool",
+      "label": "MCP — Business Docs: Policies and FAQs",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Reply + Action Taken + Confidence",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "risky",
+      "kind": "flow.branch",
+      "label": "6 · Money, Booking Change, or Complaint?",
+      "section": "guard"
+    },
+    {
+      "key": "review",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "send_message",
+      "label": "7a · Send to Owner for a One-Tap Approve",
+      "section": "guard"
+    },
+    {
+      "key": "reply",
+      "kind": "net.respond",
+      "label": "7b · Reply to the Customer",
+      "section": "guard"
+    },
+    {
+      "key": "score",
+      "kind": "ai.llm",
+      "label": "8 · Score the Exchange Against the Prompt Rules",
+      "section": "learn"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "append",
+      "label": "9 · Log Prompt Version, Score, Tools Used",
+      "section": "learn"
+    }
+  ],
+  "edges": [
+    {
+      "from": "chat",
+      "to": "norm"
+    },
+    {
+      "from": "norm",
+      "to": "profile"
+    },
+    {
+      "from": "profile",
+      "to": "build"
+    },
+    {
+      "from": "build",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "risky"
+    },
+    {
+      "from": "risky",
+      "to": "review",
+      "branch": "true"
+    },
+    {
+      "from": "risky",
+      "to": "reply",
+      "branch": "false"
+    },
+    {
+      "from": "review",
+      "to": "score"
+    },
+    {
+      "from": "reply",
+      "to": "score"
+    },
+    {
+      "from": "score",
+      "to": "log"
+    }
+  ],
+  "input_sample": {
+    "channel": "website_chat",
+    "business_id": "biz_sunrise_dental",
+    "sender": "+1 813 555 0142",
+    "message": "Hi, can I move my cleaning from Thursday to next Monday afternoon? Also what do I still owe from last visit?"
+  },
+  "output_sample": {
+    "business_id": "biz_sunrise_dental",
+    "prompt_version": "v14",
+    "reply": "Done, you're booked Monday at 2:30pm. Your balance from the last visit is $85, here's a secure link to pay.",
+    "actions_taken": [
+      "calendar.reschedule",
+      "invoicing.balance_lookup",
+      "invoicing.payment_link"
+    ],
+    "needed_owner_approval": false,
+    "confidence": 0.93,
+    "score": 9,
+    "tools_used": [
+      "MCP - CRM",
+      "MCP - Calendar",
+      "MCP - Invoicing"
+    ]
+  }
+}

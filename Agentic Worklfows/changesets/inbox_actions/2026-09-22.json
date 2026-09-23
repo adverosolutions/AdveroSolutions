@@ -1,0 +1,1222 @@
+{
+  "_about": "Proposed inbox actions from the five-level deliverability monitor (Blueprint M1). Nothing here has been applied. Review, then run changesets/inbox_actions/apply_inbox_actions.py --dry-run.",
+  "generated_at": "2026-09-22T08:31:10+00:00",
+  "generated_by": "deliverability_monitor",
+  "mode": "shadow",
+  "levels_run": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "thresholds": {
+    "warmup_health_min_pct": 98.0,
+    "reply_rate_min_pct": 1.0,
+    "reply_rate_min_sent": 100,
+    "bounce_rate_max_pct": 2.0,
+    "placement_inbox_min_pct": 85.0,
+    "canary_kill_pct": 60.0,
+    "sudden_drop_ratio": 0.5
+  },
+  "capacity": {
+    "total": 45,
+    "sending": 12,
+    "insurance": 33,
+    "insurance_promotable": 0,
+    "paused": 0,
+    "daily_capacity": 300,
+    "insurance_ratio": 2.75,
+    "promotable_ratio": 0.0,
+    "domains": [
+      "adverocreative.com",
+      "adverogrowth.com",
+      "adverohq.com",
+      "adveromedia.com",
+      "adveropartners.com",
+      "adverosolution.com",
+      "adverostudio.com",
+      "adveroteam.com",
+      "getadvero.com",
+      "joinadvero.com",
+      "meetadvero.com",
+      "myadvero.com",
+      "proadvero.com",
+      "theadvero.com",
+      "tryadvero.com"
+    ]
+  },
+  "proposals": [
+    {
+      "id": "remove_from_email_list:lorenzo@myadvero.com",
+      "kind": "remove_from_email_list",
+      "target": "lorenzo@myadvero.com",
+      "severity": "medium",
+      "level": 3,
+      "reason": "0.00% real replies on 150 sends in 7 days (floor 1.0% at 100 sends)",
+      "evidence": {
+        "windows": {
+          "7": {
+            "sent": 150,
+            "real_replies": 0,
+            "bounced": 1,
+            "reply_pct": 0.0,
+            "bounce_pct": 0.667,
+            "fails": [
+              "reply_rate"
+            ],
+            "judgeable": true,
+            "judgeable_reply": true,
+            "judgeable_bounce": true
+          },
+          "14": {
+            "sent": 150,
+            "real_replies": 0,
+            "bounced": 1,
+            "reply_pct": 0.0,
+            "bounce_pct": 0.667,
+            "fails": [
+              "reply_rate"
+            ],
+            "judgeable": true,
+            "judgeable_reply": true,
+            "judgeable_bounce": true
+          }
+        },
+        "judged_on_days": 14,
+        "failed_on_days": {
+          "reply_rate": 7
+        }
+      },
+      "thin_evidence": true,
+      "note": "thin evidence: 150 sends is under the 300 this monitor wants before it trusts a rate. One more reply moves this inbox across the line.",
+      "also": [],
+      "notes": [
+        "thin evidence: 150 sends is under the 300 this monitor wants before it trusts a rate. One more reply moves this inbox across the line."
+      ],
+      "levels": [
+        3
+      ],
+      "replacement": null,
+      "in_campaigns": [
+        "bookkeeping_reactivation",
+        "bookkeeping_trigger",
+        "cleaning_reactivation",
+        "cleaning_trigger",
+        "recruiting_outbound",
+        "recruiting_reactivation"
+      ],
+      "removes_inboxes": [
+        "lorenzo@myadvero.com"
+      ],
+      "actions": [
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "bookkeeping_reactivation",
+          "campaign_id": "f00c5e28-fdc4-4d84-a7e6-dfba9695f35d",
+          "remove": "lorenzo@myadvero.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "bookkeeping_trigger",
+          "campaign_id": "87ebb167-9b64-4b6f-b658-88f3d1af9980",
+          "remove": "lorenzo@myadvero.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "cleaning_reactivation",
+          "campaign_id": "8086b41e-b546-4b36-9fa0-2d01f5cc119a",
+          "remove": "lorenzo@myadvero.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "cleaning_trigger",
+          "campaign_id": "f347604e-48c7-4813-831c-dc7b9d4b50ae",
+          "remove": "lorenzo@myadvero.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "recruiting_outbound",
+          "campaign_id": "cd2e251c-3b5a-40d2-a3dc-d07c4004a48c",
+          "remove": "lorenzo@myadvero.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "recruiting_reactivation",
+          "campaign_id": "1d4d5bb3-40a7-4333-bf34-b269d2cc9955",
+          "remove": "lorenzo@myadvero.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ]
+        }
+      ],
+      "first_seen": "2026-09-22T07:36:57+00:00",
+      "last_seen": "2026-09-22T08:31:10+00:00",
+      "status": "proposed",
+      "generated_by": "deliverability_monitor"
+    },
+    {
+      "id": "remove_from_email_list:lorenzo@proadvero.com",
+      "kind": "remove_from_email_list",
+      "target": "lorenzo@proadvero.com",
+      "severity": "medium",
+      "level": 3,
+      "reason": "0.67% real replies on 150 sends in 7 days (floor 1.0% at 100 sends)",
+      "evidence": {
+        "windows": {
+          "7": {
+            "sent": 150,
+            "real_replies": 1,
+            "bounced": 3,
+            "reply_pct": 0.667,
+            "bounce_pct": 2.0,
+            "fails": [
+              "reply_rate"
+            ],
+            "judgeable": true,
+            "judgeable_reply": true,
+            "judgeable_bounce": true
+          },
+          "14": {
+            "sent": 150,
+            "real_replies": 1,
+            "bounced": 3,
+            "reply_pct": 0.667,
+            "bounce_pct": 2.0,
+            "fails": [
+              "reply_rate"
+            ],
+            "judgeable": true,
+            "judgeable_reply": true,
+            "judgeable_bounce": true
+          }
+        },
+        "judged_on_days": 14,
+        "failed_on_days": {
+          "reply_rate": 7
+        }
+      },
+      "thin_evidence": true,
+      "note": "thin evidence: 150 sends is under the 300 this monitor wants before it trusts a rate. One more reply moves this inbox across the line.",
+      "also": [],
+      "notes": [
+        "thin evidence: 150 sends is under the 300 this monitor wants before it trusts a rate. One more reply moves this inbox across the line."
+      ],
+      "levels": [
+        3
+      ],
+      "replacement": null,
+      "in_campaigns": [
+        "bookkeeping_reactivation",
+        "bookkeeping_trigger",
+        "cleaning_reactivation",
+        "cleaning_trigger",
+        "recruiting_outbound",
+        "recruiting_reactivation"
+      ],
+      "removes_inboxes": [
+        "lorenzo@proadvero.com"
+      ],
+      "actions": [
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "bookkeeping_reactivation",
+          "campaign_id": "f00c5e28-fdc4-4d84-a7e6-dfba9695f35d",
+          "remove": "lorenzo@proadvero.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "bookkeeping_trigger",
+          "campaign_id": "87ebb167-9b64-4b6f-b658-88f3d1af9980",
+          "remove": "lorenzo@proadvero.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "cleaning_reactivation",
+          "campaign_id": "8086b41e-b546-4b36-9fa0-2d01f5cc119a",
+          "remove": "lorenzo@proadvero.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "cleaning_trigger",
+          "campaign_id": "f347604e-48c7-4813-831c-dc7b9d4b50ae",
+          "remove": "lorenzo@proadvero.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "recruiting_outbound",
+          "campaign_id": "cd2e251c-3b5a-40d2-a3dc-d07c4004a48c",
+          "remove": "lorenzo@proadvero.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "recruiting_reactivation",
+          "campaign_id": "1d4d5bb3-40a7-4333-bf34-b269d2cc9955",
+          "remove": "lorenzo@proadvero.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ]
+        }
+      ],
+      "first_seen": "2026-09-22T07:36:57+00:00",
+      "last_seen": "2026-09-22T08:31:10+00:00",
+      "status": "proposed",
+      "generated_by": "deliverability_monitor"
+    },
+    {
+      "id": "remove_from_email_list:lorenzov@adveromedia.com",
+      "kind": "remove_from_email_list",
+      "target": "lorenzov@adveromedia.com",
+      "severity": "medium",
+      "level": 3,
+      "reason": "0.67% real replies on 150 sends in 7 days (floor 1.0% at 100 sends)",
+      "evidence": {
+        "windows": {
+          "7": {
+            "sent": 150,
+            "real_replies": 1,
+            "bounced": 0,
+            "reply_pct": 0.667,
+            "bounce_pct": 0.0,
+            "fails": [
+              "reply_rate"
+            ],
+            "judgeable": true,
+            "judgeable_reply": true,
+            "judgeable_bounce": true
+          },
+          "14": {
+            "sent": 150,
+            "real_replies": 1,
+            "bounced": 0,
+            "reply_pct": 0.667,
+            "bounce_pct": 0.0,
+            "fails": [
+              "reply_rate"
+            ],
+            "judgeable": true,
+            "judgeable_reply": true,
+            "judgeable_bounce": true
+          }
+        },
+        "judged_on_days": 14,
+        "failed_on_days": {
+          "reply_rate": 7
+        }
+      },
+      "thin_evidence": true,
+      "note": "thin evidence: 150 sends is under the 300 this monitor wants before it trusts a rate. One more reply moves this inbox across the line.",
+      "also": [],
+      "notes": [
+        "thin evidence: 150 sends is under the 300 this monitor wants before it trusts a rate. One more reply moves this inbox across the line."
+      ],
+      "levels": [
+        3
+      ],
+      "replacement": null,
+      "in_campaigns": [
+        "bookkeeping_reactivation",
+        "bookkeeping_trigger",
+        "cleaning_reactivation",
+        "cleaning_trigger",
+        "recruiting_outbound",
+        "recruiting_reactivation"
+      ],
+      "removes_inboxes": [
+        "lorenzov@adveromedia.com"
+      ],
+      "actions": [
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "bookkeeping_reactivation",
+          "campaign_id": "f00c5e28-fdc4-4d84-a7e6-dfba9695f35d",
+          "remove": "lorenzov@adveromedia.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "bookkeeping_trigger",
+          "campaign_id": "87ebb167-9b64-4b6f-b658-88f3d1af9980",
+          "remove": "lorenzov@adveromedia.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "cleaning_reactivation",
+          "campaign_id": "8086b41e-b546-4b36-9fa0-2d01f5cc119a",
+          "remove": "lorenzov@adveromedia.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "cleaning_trigger",
+          "campaign_id": "f347604e-48c7-4813-831c-dc7b9d4b50ae",
+          "remove": "lorenzov@adveromedia.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "recruiting_outbound",
+          "campaign_id": "cd2e251c-3b5a-40d2-a3dc-d07c4004a48c",
+          "remove": "lorenzov@adveromedia.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "recruiting_reactivation",
+          "campaign_id": "1d4d5bb3-40a7-4333-bf34-b269d2cc9955",
+          "remove": "lorenzov@adveromedia.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ]
+        }
+      ],
+      "first_seen": "2026-09-22T07:36:57+00:00",
+      "last_seen": "2026-09-22T08:31:10+00:00",
+      "status": "proposed",
+      "generated_by": "deliverability_monitor"
+    },
+    {
+      "id": "remove_from_email_list:lorenzovillarreal@theadvero.com",
+      "kind": "remove_from_email_list",
+      "target": "lorenzovillarreal@theadvero.com",
+      "severity": "medium",
+      "level": 3,
+      "reason": "0.00% real replies on 150 sends in 7 days (floor 1.0% at 100 sends)",
+      "evidence": {
+        "windows": {
+          "7": {
+            "sent": 150,
+            "real_replies": 0,
+            "bounced": 1,
+            "reply_pct": 0.0,
+            "bounce_pct": 0.667,
+            "fails": [
+              "reply_rate"
+            ],
+            "judgeable": true,
+            "judgeable_reply": true,
+            "judgeable_bounce": true
+          },
+          "14": {
+            "sent": 150,
+            "real_replies": 0,
+            "bounced": 1,
+            "reply_pct": 0.0,
+            "bounce_pct": 0.667,
+            "fails": [
+              "reply_rate"
+            ],
+            "judgeable": true,
+            "judgeable_reply": true,
+            "judgeable_bounce": true
+          }
+        },
+        "judged_on_days": 14,
+        "failed_on_days": {
+          "reply_rate": 7
+        }
+      },
+      "thin_evidence": true,
+      "note": "thin evidence: 150 sends is under the 300 this monitor wants before it trusts a rate. One more reply moves this inbox across the line.",
+      "also": [],
+      "notes": [
+        "thin evidence: 150 sends is under the 300 this monitor wants before it trusts a rate. One more reply moves this inbox across the line."
+      ],
+      "levels": [
+        3
+      ],
+      "replacement": null,
+      "in_campaigns": [
+        "bookkeeping_reactivation",
+        "bookkeeping_trigger",
+        "cleaning_reactivation",
+        "cleaning_trigger",
+        "recruiting_outbound",
+        "recruiting_reactivation"
+      ],
+      "removes_inboxes": [
+        "lorenzovillarreal@theadvero.com"
+      ],
+      "actions": [
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "bookkeeping_reactivation",
+          "campaign_id": "f00c5e28-fdc4-4d84-a7e6-dfba9695f35d",
+          "remove": "lorenzovillarreal@theadvero.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "bookkeeping_trigger",
+          "campaign_id": "87ebb167-9b64-4b6f-b658-88f3d1af9980",
+          "remove": "lorenzovillarreal@theadvero.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "cleaning_reactivation",
+          "campaign_id": "8086b41e-b546-4b36-9fa0-2d01f5cc119a",
+          "remove": "lorenzovillarreal@theadvero.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "cleaning_trigger",
+          "campaign_id": "f347604e-48c7-4813-831c-dc7b9d4b50ae",
+          "remove": "lorenzovillarreal@theadvero.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "recruiting_outbound",
+          "campaign_id": "cd2e251c-3b5a-40d2-a3dc-d07c4004a48c",
+          "remove": "lorenzovillarreal@theadvero.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com"
+          ]
+        },
+        {
+          "system": "instantly",
+          "op": "patch_campaign_email_list",
+          "campaign_key": "recruiting_reactivation",
+          "campaign_id": "1d4d5bb3-40a7-4333-bf34-b269d2cc9955",
+          "remove": "lorenzovillarreal@theadvero.com",
+          "add": null,
+          "expected_before": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com",
+            "lorenzovillarreal@theadvero.com"
+          ],
+          "expected_after": [
+            "lorenzo@adveromedia.com",
+            "lorenzo@myadvero.com",
+            "lorenzo@proadvero.com",
+            "lorenzo@theadvero.com",
+            "lorenzov@adveromedia.com",
+            "lorenzov@myadvero.com",
+            "lorenzov@proadvero.com",
+            "lorenzov@theadvero.com",
+            "lorenzovillarreal@adveromedia.com",
+            "lorenzovillarreal@myadvero.com",
+            "lorenzovillarreal@proadvero.com"
+          ]
+        }
+      ],
+      "first_seen": "2026-09-22T07:36:57+00:00",
+      "last_seen": "2026-09-22T08:31:10+00:00",
+      "status": "proposed",
+      "generated_by": "deliverability_monitor"
+    },
+    {
+      "id": "create_placement_test:2026-09-22",
+      "kind": "create_placement_test",
+      "target": "Weekly placement 2026-09-22",
+      "severity": "low",
+      "level": 2,
+      "reason": "no placement test in the last 7 days (newest: none ever); M1 L2 runs one every Monday",
+      "actions": [
+        {
+          "system": "instantly",
+          "op": "create_placement_test",
+          "payload": {
+            "name": "Weekly placement 2026-09-22",
+            "type": 0,
+            "sending_method": 0,
+            "email_subject": "quick question",
+            "email_body": "Hi there,\n\nI help commercial service companies get more out of the client lists they already have.\nWorth a short conversation?\n\nLorenzo\n",
+            "emails": []
+          }
+        }
+      ],
+      "evidence": {
+        "existing_tests": 0,
+        "newest_age_days": null,
+        "sending_inboxes": [
+          "lorenzo@adveromedia.com",
+          "lorenzov@adveromedia.com",
+          "lorenzovillarreal@adveromedia.com",
+          "lorenzo@myadvero.com",
+          "lorenzov@myadvero.com",
+          "lorenzovillarreal@myadvero.com",
+          "lorenzo@proadvero.com",
+          "lorenzov@proadvero.com",
+          "lorenzovillarreal@proadvero.com",
+          "lorenzo@theadvero.com",
+          "lorenzov@theadvero.com",
+          "lorenzovillarreal@theadvero.com"
+        ],
+        "costs_credits": true
+      },
+      "blocked": true,
+      "first_seen": "2026-09-22T07:36:54+00:00",
+      "last_seen": "2026-09-22T07:36:54+00:00",
+      "status": "proposed",
+      "generated_by": "inbox_placement"
+    }
+  ],
+  "levels_evaluated": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "written_by": [
+    "deliverability_monitor"
+  ]
+}

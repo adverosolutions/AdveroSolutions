@@ -1,0 +1,234 @@
+{
+  "title": "Business Assistant Agent — Claude + MCP Across Gmail, Shopify and Messenger",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "in",
+      "label": "1 · EVERYTHING LANDS IN ONE PLACE",
+      "color": 0,
+      "note": "Email, Messenger and Shopify events all arrive as the same shape, so the assistant learns one task format instead of three. The first filter is aggressive on purpose: most of what hits your inbox is not work, and an assistant that reacts to everything is worse than no assistant."
+    },
+    {
+      "key": "brain",
+      "label": "2 · THE ASSISTANT DECIDES",
+      "color": 0,
+      "note": "Claude holds each system as an MCP tool rather than having integrations hardcoded around it. That means adding your next system is a tool definition, not a rebuild, and the assistant can chain across them in one task: read the order, check the email thread, draft the reply."
+    },
+    {
+      "key": "safe",
+      "label": "3 · NOTHING GOES OUT UNSEEN AT FIRST",
+      "color": 0,
+      "note": "Every action is drafted with exactly what it would change before it happens. Low-risk actions run on their own, anything that touches money, a customer, or something irreversible waits for you. As you approve the same thing repeatedly, it moves to the automatic list."
+    },
+    {
+      "key": "done",
+      "label": "4 · DO IT AND KEEP THE RECEIPT",
+      "color": 0,
+      "note": "Execution goes through the same MCP tool that proposed the action, so there is one audit trail rather than two. Every run logs what was handled, what was skipped and roughly what it saved you, which is what tells us where to point it next."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "in",
+      "kind": "trigger.webhook",
+      "label": "1 · New Email, Message or Shopify Event",
+      "section": "in"
+    },
+    {
+      "key": "norm",
+      "kind": "data.transform",
+      "label": "2 · Turn It Into One Task Format",
+      "section": "in"
+    },
+    {
+      "key": "worth",
+      "kind": "flow.branch",
+      "label": "3 · Is This Actually Something to Handle?",
+      "section": "in"
+    },
+    {
+      "key": "ignore",
+      "kind": "flow.noop",
+      "label": "3b · Ignore and Log It",
+      "section": "in"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "4 · Assistant Works Out What to Do",
+      "section": "brain"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude · Reasoning",
+      "app": "openai",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "mem",
+      "kind": "ai.memory",
+      "label": "What We Did Last Time",
+      "parent": "agent",
+      "port": "ai_memory"
+    },
+    {
+      "key": "mcp_g",
+      "kind": "ai.tool",
+      "label": "MCP — Gmail, Calendar, Drive",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "mcp_s",
+      "kind": "ai.tool",
+      "label": "MCP — Shopify Orders & Inventory",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "mcp_m",
+      "kind": "ai.tool",
+      "label": "MCP — Facebook Messenger",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "draft",
+      "kind": "data.transform",
+      "label": "5 · Draft the Action and What It Changes",
+      "section": "safe"
+    },
+    {
+      "key": "risky",
+      "kind": "flow.branch",
+      "label": "6 · Safe to Do on Its Own?",
+      "section": "safe"
+    },
+    {
+      "key": "ask",
+      "kind": "app.action",
+      "label": "6b · Ask You First, Draft Attached",
+      "app": "slack",
+      "op": "send_message",
+      "section": "safe"
+    },
+    {
+      "key": "run",
+      "kind": "net.http",
+      "label": "7 · Do It Through the Same MCP Tool",
+      "section": "done"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "8 · Log What It Did and What It Skipped",
+      "app": "googleSheets",
+      "op": "update_row",
+      "section": "done"
+    },
+    {
+      "key": "digest",
+      "kind": "app.action",
+      "label": "9 · Friday Digest: Handled, Skipped, Saved",
+      "app": "gmail",
+      "op": "send_email",
+      "section": "done"
+    }
+  ],
+  "edges": [
+    {
+      "from": "in",
+      "to": "norm"
+    },
+    {
+      "from": "norm",
+      "to": "worth"
+    },
+    {
+      "from": "worth",
+      "to": "ignore",
+      "branch": "false"
+    },
+    {
+      "from": "worth",
+      "to": "agent",
+      "branch": "true"
+    },
+    {
+      "from": "agent",
+      "to": "draft"
+    },
+    {
+      "from": "draft",
+      "to": "risky"
+    },
+    {
+      "from": "risky",
+      "to": "run",
+      "branch": "true"
+    },
+    {
+      "from": "risky",
+      "to": "ask",
+      "branch": "false"
+    },
+    {
+      "from": "ask",
+      "to": "run"
+    },
+    {
+      "from": "run",
+      "to": "log"
+    },
+    {
+      "from": "log",
+      "to": "digest"
+    }
+  ],
+  "input_sample": {
+    "source": "gmail",
+    "received_at": "2026-08-11T08:12:40Z",
+    "from": "hallie.crenshaw@gmail.com",
+    "subject": "order 40218 - wrong size again",
+    "body": "This is the second time I've been sent a medium instead of a large. I've got an event on the 22nd. Can you just send the right one out, I'll return the medium.",
+    "context_found": {
+      "shopify_order": "#40218",
+      "customer_since": "2024-03",
+      "lifetime_orders": 7,
+      "prior_ticket": "#1188 — same issue, June"
+    }
+  },
+  "output_sample": {
+    "task_type": "Customer service — fulfilment error, repeat",
+    "assistant_plan": [
+      "Look up order #40218 in Shopify and confirm the size shipped",
+      "Check stock on the large before promising it",
+      "Draft a reply that apologises, confirms the replacement and includes a prepaid return label",
+      "Create the replacement order and flag the repeat error"
+    ],
+    "tools_used": [
+      "MCP Shopify — orders.get, inventory.check",
+      "MCP Gmail — thread.read, draft.create"
+    ],
+    "drafted_reply": "Hi Hallie, that's twice now and I'm sorry. The large is in stock and going out today so it'll be with you well before the 22nd. Return label attached for the medium, no rush on it.",
+    "would_change": {
+      "shopify": "Create replacement order, no charge, $0.00",
+      "gmail": "Send reply on thread 40218",
+      "tag": "fulfilment-error-repeat"
+    },
+    "risk_check": "Touches a customer and creates an order — held for approval",
+    "approved_by": "you, 09:04",
+    "executed": true,
+    "time_saved_estimate": "11 min",
+    "week_to_date": {
+      "handled_automatically": 34,
+      "approved_by_you": 9,
+      "ignored_as_noise": 216
+    }
+  },
+  "archetype": "claude_mcp_business_assistant",
+  "learned": true,
+  "learned_at": "2026-08-11"
+}

@@ -1,0 +1,756 @@
+{
+  "_meta": {
+    "status": "verified",
+    "verified_against": {
+      "n8n": "2.32.7",
+      "n8n-nodes-base": "2.32.4",
+      "@n8n/n8n-nodes-langchain": "2.32.4"
+    },
+    "verified_on": "2026-07-31",
+    "method": "typeVersion = n8n's own resolveNodeVersion(): description.defaultVersion ?? last(version[]), read from each package's build-time dist/types/nodes.json. Not hand-transcribed, not from docs prose.",
+    "unmapped_from_harvest": [
+      "net.http:http:get"
+    ]
+  },
+  "entries": {
+    "trigger.webhook::": {
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/"
+    },
+    "trigger.schedule::": {
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.scheduletrigger/"
+    },
+    "trigger.chat::": {
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "parameters": {
+        "public": false,
+        "options": {}
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-langchain.chattrigger/"
+    },
+    "trigger.app::": {
+      "type": "n8n-nodes-base.calendlyTrigger",
+      "typeVersion": 2,
+      "parameters": {
+        "scope": "user",
+        "events": [
+          "invitee.created"
+        ]
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/trigger-nodes/n8n-nodes-base.calendlytrigger/"
+    },
+    "app.action:googleSheets:append": {
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.googlesheets/"
+    },
+    "app.action:googleSheets:": {
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.googlesheets/"
+    },
+    "app.action:gmail:send": {
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "parameters": {
+        "resource": "message",
+        "operation": "send"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.gmail/"
+    },
+    "app.action:gmail:": {
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "parameters": {
+        "resource": "message",
+        "operation": "send"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.gmail/"
+    },
+    "app.action:slack:post": {
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.slack/"
+    },
+    "app.action:slack:": {
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.slack/"
+    },
+    "app.action:airtable:create": {
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "parameters": {
+        "resource": "record",
+        "operation": "create"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.airtable/"
+    },
+    "app.action:airtable:": {
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "parameters": {
+        "resource": "record",
+        "operation": "create"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.airtable/"
+    },
+    "app.action:hubspot:create_contact": {
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "parameters": {
+        "resource": "contact",
+        "operation": "upsert"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.hubspot/"
+    },
+    "app.action:hubspot:": {
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "parameters": {
+        "resource": "contact",
+        "operation": "upsert"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.hubspot/"
+    },
+    "app.action:notion:create": {
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "parameters": {
+        "resource": "page",
+        "operation": "create"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.notion/"
+    },
+    "app.action:notion:": {
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "parameters": {
+        "resource": "page",
+        "operation": "create"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.notion/"
+    },
+    "app.action:telegram:send": {
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.telegram/"
+    },
+    "app.action:telegram:": {
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.telegram/"
+    },
+    "app.action:whatsapp:send": {
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "message",
+        "operation": "send"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.whatsapp/"
+    },
+    "app.action:whatsapp:": {
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "message",
+        "operation": "send"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.whatsapp/"
+    },
+    "app.action:postgres:insert": {
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "parameters": {
+        "resource": "database",
+        "operation": "executeQuery",
+        "query": "SELECT * FROM my_table LIMIT 10;"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.postgres/"
+    },
+    "app.action:postgres:": {
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "parameters": {
+        "resource": "database",
+        "operation": "executeQuery",
+        "query": "SELECT * FROM my_table LIMIT 10;"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.postgres/"
+    },
+    "app.action:stripe:get": {
+      "type": "n8n-nodes-base.stripe",
+      "typeVersion": 1,
+      "parameters": {
+        "resource": "charge",
+        "operation": "create"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.stripe/"
+    },
+    "app.action:stripe:": {
+      "type": "n8n-nodes-base.stripe",
+      "typeVersion": 1,
+      "parameters": {
+        "resource": "charge",
+        "operation": "create"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.stripe/"
+    },
+    "app.action:shopify:get": {
+      "type": "n8n-nodes-base.shopify",
+      "typeVersion": 1,
+      "parameters": {
+        "resource": "order",
+        "operation": "create"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.shopify/"
+    },
+    "app.action:shopify:": {
+      "type": "n8n-nodes-base.shopify",
+      "typeVersion": 1,
+      "parameters": {
+        "resource": "order",
+        "operation": "create"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.shopify/"
+    },
+    "app.action:twilio:send": {
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "parameters": {
+        "resource": "sms",
+        "operation": "send"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.twilio/"
+    },
+    "app.action:twilio:": {
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "parameters": {
+        "resource": "sms",
+        "operation": "send"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.twilio/"
+    },
+    "app.action:discord:send": {
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "parameters": {
+        "authentication": "botToken",
+        "resource": "message",
+        "operation": "send"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.discord/"
+    },
+    "app.action:discord:": {
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "parameters": {
+        "authentication": "botToken",
+        "resource": "message",
+        "operation": "send"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.discord/"
+    },
+    "app.action:wordpress:create": {
+      "type": "n8n-nodes-base.wordpress",
+      "typeVersion": 1,
+      "parameters": {
+        "resource": "post",
+        "operation": "create"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.wordpress/"
+    },
+    "app.action:wordpress:": {
+      "type": "n8n-nodes-base.wordpress",
+      "typeVersion": 1,
+      "parameters": {
+        "resource": "post",
+        "operation": "create"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.wordpress/"
+    },
+    "app.action:googleDrive:upload": {
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "parameters": {
+        "resource": "file",
+        "operation": "upload"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.googledrive/"
+    },
+    "app.action:googleDrive:": {
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "parameters": {
+        "resource": "file",
+        "operation": "upload"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.googledrive/"
+    },
+    "app.action:googleDocs:create": {
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "parameters": {
+        "resource": "document",
+        "operation": "create"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.googledocs/"
+    },
+    "app.action:googleDocs:": {
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "parameters": {
+        "resource": "document",
+        "operation": "create"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.googledocs/"
+    },
+    "net.http::": {
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.example.com/resource",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.httprequest/"
+    },
+    "net.respond::": {
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.respondtowebhook/"
+    },
+    "data.transform::": {
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1b2c3d4-0000-4000-8000-000000000001",
+              "name": "my_field",
+              "value": "={{ $json.source_field }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.set/"
+    },
+    "data.code::": {
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "for (const item of $input.all()) {\n  item.json.processed = true;\n}\nreturn $input.all();"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.code/"
+    },
+    "data.merge::": {
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 2
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.merge/"
+    },
+    "data.split::": {
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.splitinbatches/"
+    },
+    "flow.branch::": {
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c0000000-0000-4000-8000-000000000001",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "active",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.if/"
+    },
+    "flow.switch::": {
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d0000000-0000-4000-8000-000000000001",
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "a",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "type_a"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.switch/"
+    },
+    "flow.noop::": {
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.noop/"
+    },
+    "ai.agent::": {
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "parameters": {
+        "promptType": "auto",
+        "text": "={{ $json.chatInput }}",
+        "options": {}
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.agent/"
+    },
+    "ai.llm::": {
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "parameters": {
+        "promptType": "auto",
+        "text": "={{ $json.chatInput }}"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.chainllm/"
+    },
+    "app.action:openai:message": {
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "parameters": {
+        "resource": "text",
+        "operation": "response",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-langchain.openai/"
+    },
+    "app.action:openai:": {
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "parameters": {
+        "resource": "text",
+        "operation": "response",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-langchain.openai/"
+    },
+    "ai.model:openai:": {
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.lmchatopenai/"
+    },
+    "ai.model::": {
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.lmchatopenai/"
+    },
+    "ai.model:anthropic:": {
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.lmchatanthropic/"
+    },
+    "ai.memory::": {
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "parameters": {
+        "sessionIdType": "fromInput",
+        "contextWindowLength": 5
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.memorybufferwindow/"
+    },
+    "ai.embed:openai:": {
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "parameters": {
+        "model": "text-embedding-3-small",
+        "options": {}
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.embeddingsopenai/"
+    },
+    "ai.embed::": {
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "parameters": {
+        "model": "text-embedding-3-small",
+        "options": {}
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.embeddingsopenai/"
+    },
+    "ai.vectorstore:pinecone:": {
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Search the knowledge base for relevant context",
+        "pineconeIndex": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "topK": 4
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.vectorstorepinecone/"
+    },
+    "ai.vectorstore::": {
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Search the knowledge base for relevant context",
+        "pineconeIndex": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "topK": 4
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.vectorstorepinecone/"
+    },
+    "ai.tool:http:": {
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "parameters": {
+        "toolDescription": "Call an external API to fetch data",
+        "method": "GET",
+        "url": "https://api.example.com/resource"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolhttprequest/"
+    },
+    "ai.tool:workflow:": {
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "parameters": {
+        "description": "Call a sub-workflow to perform a task",
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolworkflow/"
+    },
+    "ai.tool::": {
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "parameters": {
+        "description": "Call a sub-workflow to perform a task",
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolworkflow/"
+    },
+    "ai.parser::": {
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"summary\": \"text\",\n  \"score\": 1\n}"
+      },
+      "verified": true,
+      "source": "https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.outputparserstructured/"
+    }
+  },
+  "sticky": {
+    "type": "n8n-nodes-base.stickyNote",
+    "typeVersion": 1,
+    "verified": true
+  }
+}

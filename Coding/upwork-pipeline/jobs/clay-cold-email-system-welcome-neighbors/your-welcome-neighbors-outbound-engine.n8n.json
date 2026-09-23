@@ -1,0 +1,970 @@
+{
+  "name": "Your Welcome Neighbors Outbound Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - SOURCE LOCAL BUSINESSES BY AREA\n\nPick the metro, pull every HVAC, dental, roofing and plumbing business in those zip codes. Nobody uploads a CSV.",
+        "height": 1060,
+        "width": 460,
+        "color": 5
+      },
+      "id": "8c9a682e-540d-5438-94a2-bd61a757f01f",
+      "name": "Section - 1 - SOURCE LOCAL BUSINESSES BY AREA",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - CLAY ENRICHMENT WATERFALL\n\nClay enriches the business, finds the owner, then runs three email providers in order until one returns a verified address.",
+        "height": 1060,
+        "width": 940,
+        "color": 4
+      },
+      "id": "e6c57c2b-5f85-5baa-8df1-ce25eeb18fa3",
+      "name": "Section - 2 - CLAY ENRICHMENT WATERFALL",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - QUALIFY AND PERSONALIZE\n\nClaude reads their site and Google profile, scores the fit, and writes the first line off what it actually found.",
+        "height": 1060,
+        "width": 1160,
+        "color": 6
+      },
+      "id": "d445f7cd-5f17-5866-b118-1a148a8c5b01",
+      "name": "Section - 3 - QUALIFY AND PERSONALIZE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1700,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - INTO THE CAMPAIGN\n\nThe lead lands in the campaign for its segment with the variables already filled, and the follow-ups run on schedule.",
+        "height": 1060,
+        "width": 220,
+        "color": 7
+      },
+      "id": "3d07f456-ff52-55cd-9f23-b0e9f2d87fc8",
+      "name": "Section - 4 - INTO THE CAMPAIGN",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3020,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - REPLIES, ROUTING AND THE NUMBERS\n\nEvery reply is read and routed within minutes, and the day's real numbers land in one sheet you can open.",
+        "height": 1060,
+        "width": 1280,
+        "color": 1
+      },
+      "id": "575bcc44-84d8-5a47-83c9-36524692af60",
+      "name": "Section - 5 - REPLIES, ROUTING AND THE NUMBERS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3400,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "6851491a-3b09-5e82-9da9-ccfb1dd90771",
+      "name": "1 - Every Weekday at 6am, Next Target Metro",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/2-google-maps-pull-hvac-dental-roofing-a",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "48b3dc7d-d331-5207-be8f-5ea64e615e0c",
+      "name": "2 - Google Maps: Pull HVAC, Dental, Roofing and Plumbing Businesses in the Zip Codes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        240,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/3-clay-enrich-the-business-website-phone",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "91be09c8-6b5e-5e75-82c4-773cbeaa7572",
+      "name": "3 - Clay: Enrich the Business, Website, Phone, Size and Reviews",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        620,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/4-clay-find-the-owner-or-decision-maker",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "03dfd85c-2ea0-55c0-8864-7547e20eeab8",
+      "name": "4 - Clay: Find the Owner or Decision Maker",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        860,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/5-clay-waterfall-email-from-3-providers-",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "a015902a-9067-5688-940b-5fc55ddb5aa0",
+      "name": "5 - Clay Waterfall: Email From 3 Providers, Then Verify It Is Deliverable",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1100,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4301bd63-4d3f-563f-b818-c8d6d65ea46f",
+              "leftValue": "={{ $json.deliverable_owner }}",
+              "rightValue": 6.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8b998c7e-f928-5bdb-8c8e-7c5fb66f5e52",
+      "name": "6 - Deliverable and Owner Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1340,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "auto",
+        "text": "={{ $json.chatInput }}",
+        "options": {}
+      },
+      "id": "9c79e37b-e4c0-58e9-a55e-571f37687a3d",
+      "name": "7 - Claude Scores Fit: Serves New Movers, Size, Reviews, Ads Running",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1920,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "9ffe2968-66ec-5943-adcc-01e5b2cbf181",
+      "name": "Claude",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        1760,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Call a sub-workflow to perform a task",
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "bd42c448-308d-5aa9-9b4f-f6f1641767be",
+      "name": "Read Their Website and Google Profile",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1960,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"summary\": \"text\",\n  \"score\": 1\n}"
+      },
+      "id": "65de663c-cd20-5218-b5f6-964eaa7eb3b5",
+      "name": "Score 1 to 10, Segment, First Line",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2160,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6f6510be-e702-5f09-baad-7c7bc1b71955",
+              "leftValue": "={{ $json.score_higher }}",
+              "rightValue": 8.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9b676dd3-39f3-5189-8ae2-d7da1395c2dc",
+      "name": "8 - Score 7 or Higher?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2460,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "8b29c930-fc1a-5a4d-a70a-bcbe51aad065",
+      "name": "9 - Park It: Log the Reason, Retry Next Cycle",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2700,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/10-instantly-add-lead-to-the-segment-cam",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "85fcdf12-052e-5140-9b93-02332d693eac",
+      "name": "10 - Instantly: Add Lead to the Segment Campaign With the First Line and Follow-Ups",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3080,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "adead068-b619-5da0-bd0f-00a5ba9d8fae",
+      "name": "11 - Instantly: Reply Comes In",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        3460,
+        280
+      ],
+      "webhookId": "947ba9a4-fbd8-5cad-92f1-c5e3d45efd1f"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=12 - Claude Sorts the Reply: Interested, Question, Not Now, Unsubscribe\n\nsource: {{ $json.source }}\ntarget_metro: {{ $json.target_metro }}\nzip_codes: {{ $json.zip_codes }}\nbusiness_name: {{ $json.business_name }}",
+        "batching": {}
+      },
+      "id": "26c50290-f2e9-5fa6-b2f0-de68544d5074",
+      "name": "12 - Claude Sorts the Reply: Interested, Question, Not Now, Unsubscribe",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        3700,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "fdbb6f06-eea3-509c-a00a-290ad31b73cc",
+      "name": "Claude 2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        3760,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8a97525c-ffd6-5afc-8cce-2db9dc0291ad",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "Interested",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Interested"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6a48c58c-53ae-5a7f-af5b-997a4c03c66b",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "Question",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Question"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "589a43bc-cb85-5485-b7c6-055f8c4dd7d3",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "Not Now",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Not Now"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e6241777-a392-5761-b28e-45234b15ccb8",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "Unsubscribe",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Unsubscribe"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c93b9ad8-a6c4-5026-8817-559e52e3c423",
+      "name": "13 - Route the Reply",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        4040,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/14-gohighlevel-create-the-lead-and-notif",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "21e4f020-85db-5608-89cb-a727c9c1a064",
+      "name": "14 - GoHighLevel: Create the Lead and Notify Sales",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4280,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "002dd0b7-8efe-51f1-95ee-f327c66bab96",
+      "name": "14b - Hand to a Human",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        4280,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "78ce60f5-cfea-5701-b95b-2602a4ed5aa9",
+      "name": "14c - Nurture List, Retry in 90 Days",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4280,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/14d-instantly-unsubscribe-everywhere",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "e9a94c39-2ae1-5605-acd2-0fdd94880084",
+      "name": "14d - Instantly: Unsubscribe Everywhere",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4280,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "b97b18b9-8caa-536f-a462-e44c2daaf0df",
+      "name": "15 - Daily Scorecard: Sent, Delivered, Replies, Positive, Booked",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4520,
+        40
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "28a624ea-fc83-5241-9b8d-07a4cb60973e",
+      "name": "16 - Any Step Fails",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        3460,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "a8c0a018-90fa-502a-986f-ee5db31c31bc",
+      "name": "17 - Alert With the Failing Node",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        3700,
+        720
+      ]
+    }
+  ],
+  "connections": {
+    "1 - Every Weekday at 6am, Next Target Metro": {
+      "main": [
+        [
+          {
+            "node": "2 - Google Maps: Pull HVAC, Dental, Roofing and Plumbing Businesses in the Zip Codes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Google Maps: Pull HVAC, Dental, Roofing and Plumbing Businesses in the Zip Codes": {
+      "main": [
+        [
+          {
+            "node": "3 - Clay: Enrich the Business, Website, Phone, Size and Reviews",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Clay: Enrich the Business, Website, Phone, Size and Reviews": {
+      "main": [
+        [
+          {
+            "node": "4 - Clay: Find the Owner or Decision Maker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - Clay: Find the Owner or Decision Maker": {
+      "main": [
+        [
+          {
+            "node": "5 - Clay Waterfall: Email From 3 Providers, Then Verify It Is Deliverable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - Clay Waterfall: Email From 3 Providers, Then Verify It Is Deliverable": {
+      "main": [
+        [
+          {
+            "node": "6 - Deliverable and Owner Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Deliverable and Owner Found?": {
+      "main": [
+        [
+          {
+            "node": "7 - Claude Scores Fit: Serves New Movers, Size, Reviews, Ads Running",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "9 - Park It: Log the Reason, Retry Next Cycle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - Claude Scores Fit: Serves New Movers, Size, Reviews, Ads Running": {
+      "main": [
+        [
+          {
+            "node": "8 - Score 7 or Higher?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - Score 7 or Higher?": {
+      "main": [
+        [
+          {
+            "node": "10 - Instantly: Add Lead to the Segment Campaign With the First Line and Follow-Ups",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "9 - Park It: Log the Reason, Retry Next Cycle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Instantly: Add Lead to the Segment Campaign With the First Line and Follow-Ups": {
+      "main": [
+        [
+          {
+            "node": "15 - Daily Scorecard: Sent, Delivered, Replies, Positive, Booked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Instantly: Reply Comes In": {
+      "main": [
+        [
+          {
+            "node": "12 - Claude Sorts the Reply: Interested, Question, Not Now, Unsubscribe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 - Claude Sorts the Reply: Interested, Question, Not Now, Unsubscribe": {
+      "main": [
+        [
+          {
+            "node": "13 - Route the Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - Route the Reply": {
+      "main": [
+        [
+          {
+            "node": "14 - GoHighLevel: Create the Lead and Notify Sales",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "14b - Hand to a Human",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "14c - Nurture List, Retry in 90 Days",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "14d - Instantly: Unsubscribe Everywhere",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 - GoHighLevel: Create the Lead and Notify Sales": {
+      "main": [
+        [
+          {
+            "node": "15 - Daily Scorecard: Sent, Delivered, Replies, Positive, Booked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16 - Any Step Fails": {
+      "main": [
+        [
+          {
+            "node": "17 - Alert With the Failing Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "7 - Claude Scores Fit: Serves New Movers, Size, Reviews, Ads Running",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Their Website and Google Profile": {
+      "ai_tool": [
+        [
+          {
+            "node": "7 - Claude Scores Fit: Serves New Movers, Size, Reviews, Ads Running",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score 1 to 10, Segment, First Line": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "7 - Claude Scores Fit: Serves New Movers, Size, Reviews, Ads Running",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude 2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "12 - Claude Sorts the Reply: Interested, Question, Not Now, Unsubscribe",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "41912ed6-e42a-55d9-82a8-6e7a68c72153",
+  "pinData": {
+    "1 - Every Weekday at 6am, Next Target Metro": [
+      {
+        "json": {
+          "source": "Google Maps",
+          "target_metro": "Dallas Fort Worth",
+          "zip_codes": [
+            "75034",
+            "75035",
+            "75024"
+          ],
+          "business_name": "Comfort Air Heating & Cooling",
+          "category": "HVAC contractor",
+          "address": "2204 Preston Rd, Frisco, TX 75034",
+          "phone": "+1 469 555 0142",
+          "website": "comfortairfrisco.com",
+          "rating": 4.8,
+          "review_count": 212,
+          "place_id": "ChIJq1d4Frisco0142"
+        }
+      }
+    ],
+    "15 - Daily Scorecard: Sent, Delivered, Replies, Positive, Booked": [
+      {
+        "json": {
+          "instantly_lead": {
+            "campaign": "DFW HVAC Sept",
+            "email": "mike@comfortairfrisco.com",
+            "email_status": "verified, catch-all no, provider hit on attempt 2 of 3",
+            "first_name": "Mike",
+            "last_name": "Delgado",
+            "title": "Owner",
+            "company": "Comfort Air Heating & Cooling",
+            "phone": "+1 469 555 0142",
+            "segment": "hvac-dfw-mid",
+            "fit_score": 8,
+            "score_reason": "9 techs, 212 reviews at 4.8, running Google ads, three new-construction service pages, no new mover offer anywhere on the site",
+            "variables": {
+              "first_line": "saw the new-construction pages on comfortairfrisco.com, so you are already chasing the houses before anyone moves in",
+              "city": "Frisco",
+              "trade": "HVAC",
+              "review_proof": "4.8 across 212 reviews"
+            }
+          },
+          "scorecard_row": {
+            "date": "2026-09-22",
+            "sourced": 640,
+            "enriched_with_owner": 471,
+            "verified_emails": 388,
+            "qualified_7_plus": 262,
+            "sent": 1440,
+            "delivered": 1411,
+            "replies": 34,
+            "positive": 9,
+            "booked": 4,
+            "unsubscribed": 6,
+            "bounce_rate": "2.0 percent"
+          },
+          "if_it_had_failed": "Error trigger catches the step, Slack alert names the failing node and the business it died on, nothing drops silently"
+        }
+      }
+    ]
+  }
+}

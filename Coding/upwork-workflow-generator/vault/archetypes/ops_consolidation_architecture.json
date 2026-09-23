@@ -1,0 +1,207 @@
+{
+  "title": "LinkedIn Growth Ops → Airtable Core → AI Decisioning → Outreach",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "capture",
+      "label": "1 · CAPTURE",
+      "color": 0,
+      "note": "Every lead source lands in one normalized shape before anything downstream sees it — the precondition for consolidating Make, n8n and Zapier onto one spine."
+    },
+    {
+      "key": "decide",
+      "label": "2 · AI DECISIONING",
+      "color": 0,
+      "note": "An agent with tools, not a trigger-action rule. It reads the account history and decides segment, priority and the opening line."
+    },
+    {
+      "key": "sync",
+      "label": "3 · AIRTABLE CORE + SYNC",
+      "color": 0,
+      "note": "Airtable stays the single source of truth; Sheets, Docs and Excel are mirrors written from it, never written to directly."
+    },
+    {
+      "key": "activate",
+      "label": "4 · ACTIVATE",
+      "color": 0,
+      "note": "Outreach and human hand-off fire from the record state, so nothing depends on someone remembering."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "li",
+      "kind": "trigger.app",
+      "label": "New LinkedIn Lead Captured",
+      "app": "linkedin",
+      "section": "capture",
+      "notes": "Also the single entry point for the Zapier and Make sources being consolidated."
+    },
+    {
+      "key": "norm",
+      "kind": "data.transform",
+      "label": "Normalize & Dedupe vs Airtable",
+      "section": "capture"
+    },
+    {
+      "key": "enrich",
+      "kind": "net.http",
+      "label": "Enrich Company, Role & Headcount",
+      "section": "capture"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "Score ICP Fit, Segment & Draft Opener",
+      "section": "decide"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "mem",
+      "kind": "ai.memory",
+      "label": "Account History",
+      "parent": "agent",
+      "port": "ai_memory"
+    },
+    {
+      "key": "t1",
+      "kind": "ai.tool",
+      "label": "Airtable Lookup",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "t2",
+      "kind": "ai.tool",
+      "label": "Calendar Availability",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "ICP fit score is 75 or higher",
+      "section": "decide"
+    },
+    {
+      "key": "air",
+      "kind": "app.action",
+      "label": "Upsert Airtable Record",
+      "app": "airtable",
+      "op": "create",
+      "section": "sync",
+      "notes": "One base, typed fields, linked records — the schema the roadmap is built on."
+    },
+    {
+      "key": "sheet",
+      "kind": "app.action",
+      "label": "Mirror to Sheets & Excel",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "sync"
+    },
+    {
+      "key": "doc",
+      "kind": "app.action",
+      "label": "Generate Account One-Pager",
+      "app": "googleDocs",
+      "op": "create",
+      "section": "sync"
+    },
+    {
+      "key": "arch",
+      "kind": "app.action",
+      "label": "Archive — Out of ICP",
+      "app": "airtable",
+      "op": "update",
+      "section": "sync"
+    },
+    {
+      "key": "seq",
+      "kind": "app.action",
+      "label": "Enroll in Outreach Sequence",
+      "app": "instantly",
+      "op": "add_lead",
+      "section": "activate"
+    },
+    {
+      "key": "slack",
+      "kind": "app.action",
+      "label": "Alert the Account Owner",
+      "app": "slack",
+      "op": "post",
+      "section": "activate"
+    }
+  ],
+  "edges": [
+    {
+      "from": "li",
+      "to": "norm"
+    },
+    {
+      "from": "norm",
+      "to": "enrich"
+    },
+    {
+      "from": "enrich",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "air",
+      "branch": "true"
+    },
+    {
+      "from": "gate",
+      "to": "arch",
+      "branch": "false"
+    },
+    {
+      "from": "air",
+      "to": "sheet"
+    },
+    {
+      "from": "sheet",
+      "to": "doc"
+    },
+    {
+      "from": "doc",
+      "to": "seq"
+    },
+    {
+      "from": "seq",
+      "to": "slack"
+    }
+  ],
+  "input_sample": {
+    "source": "LinkedIn — Ops Leaders Campaign",
+    "full_name": "Dana Reyes",
+    "title": "VP Operations",
+    "company": "Meridian Logistics",
+    "linkedin_url": "linkedin.com/in/danareyes",
+    "captured_at": "2026-08-03T09:14:22Z"
+  },
+  "output_sample": {
+    "airtable_record_id": "recA9f42ab10",
+    "icp_fit_score": 88,
+    "segment": "Mid-Market — Logistics",
+    "opener": "Saw Meridian just opened the Dallas hub — how are you handling dispatch handoffs?",
+    "one_pager_url": "docs.google.com/document/d/1kQ…",
+    "sequence": "Ops Leaders — Touch 1 of 5",
+    "owner_notified": "Marcus Webb",
+    "tools_consolidated": 3
+  },
+  "archetype": "ops_consolidation_architecture",
+  "learned": true,
+  "learned_at": "2026-08-03"
+}

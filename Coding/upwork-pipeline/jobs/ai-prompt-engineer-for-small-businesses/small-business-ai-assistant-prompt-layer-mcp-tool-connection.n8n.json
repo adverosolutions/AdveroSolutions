@@ -1,0 +1,670 @@
+{
+  "name": "Small Business AI Assistant - Prompt Layer + MCP Tool Connections",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - A REQUEST COMES IN FROM ANY CHANNEL\n\nChat widget, email, or an internal form. Every request lands in the same lane so one set of prompts serves all of them.",
+        "height": 640,
+        "width": 460,
+        "color": 5
+      },
+      "id": "e0818a3b-9b9e-5f41-9095-9a4ab2896485",
+      "name": "Section - 1 - A REQUEST COMES IN FROM ANY CHANNEL",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - LOAD THE BUSINESS'S PROMPT PROFILE\n\nTone, services, pricing rules, and what the assistant is never allowed to promise live in a sheet the owner can edit. No code change to update a prompt.",
+        "height": 640,
+        "width": 460,
+        "color": 4
+      },
+      "id": "0d3a928b-67ff-5efd-9302-be3c1f7dd2ef",
+      "name": "Section - 2 - LOAD THE BUSINESS'S PROMPT PROFILE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - CLAUDE DECIDES AND USES THE BUSINESS'S OWN TOOLS\n\nEach tool is an MCP connection into software the business already pays for. Claude reads and writes real records instead of guessing.",
+        "height": 640,
+        "width": 1420,
+        "color": 6
+      },
+      "id": "aa6dd941-8538-59ce-a1d2-b7c3731c9c99",
+      "name": "Section - 3 - CLAUDE DECIDES AND USES THE BUSINESS'S OWN TOOLS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1220,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - CHECK THE ANSWER BEFORE IT GOES OUT\n\nAnything touching money, bookings, or a complaint goes to a human first. Everything else replies on its own.",
+        "height": 640,
+        "width": 460,
+        "color": 7
+      },
+      "id": "dcc1bb8d-7e96-50e0-a0d4-7666c935bfbd",
+      "name": "Section - 4 - CHECK THE ANSWER BEFORE IT GOES OUT",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2860,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - LOG IT SO THE PROMPTS GET BETTER EVERY WEEK\n\nEvery exchange is scored. Low-scoring ones become next week's prompt revisions.",
+        "height": 640,
+        "width": 560,
+        "color": 1
+      },
+      "id": "38d5bb37-83bd-5fe5-8d0a-e1b91f91adba",
+      "name": "Section - 5 - LOG IT SO THE PROMPTS GET BETTER EVERY WEEK",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3480,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "public": false,
+        "options": {}
+      },
+      "id": "380f6742-07d4-5a74-a448-e324f7818cac",
+      "name": "1 - Customer or Staff Message",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "996fde7c-58e2-5013-b9d5-8669aedca620",
+              "name": "channel",
+              "value": "={{ $json.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "ebd47be2-1cf9-5c0d-8c60-b4377f855dd9",
+              "name": "business_id",
+              "value": "={{ $json.business_id }}",
+              "type": "string"
+            },
+            {
+              "id": "543332cf-5dde-55ed-baa9-97ad17e61f77",
+              "name": "sender",
+              "value": "={{ $json.sender }}",
+              "type": "string"
+            },
+            {
+              "id": "b2f08caf-7ada-5836-931c-0059d76a1391",
+              "name": "message",
+              "value": "={{ $json.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "9cc14763-12ef-510d-8243-53adf08cdb7e",
+      "name": "2 - Normalize Channel, Sender, Business ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        240,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "options": {},
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        }
+      },
+      "id": "867b8815-045c-5246-8040-ea8eb4ca2b02",
+      "name": "3 - Read the Prompt Profile for This Business",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        620,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b89050ff-7c39-5e82-aacf-98fcd151488c",
+              "name": "channel",
+              "value": "={{ $json.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "038ecbd1-255b-55cd-87e4-eb918f404fb7",
+              "name": "business_id",
+              "value": "={{ $json.business_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f4c75bd1-9307-5e56-ba51-32330306828a",
+              "name": "sender",
+              "value": "={{ $json.sender }}",
+              "type": "string"
+            },
+            {
+              "id": "26831292-4bef-5263-b0fb-da489e43ddb3",
+              "name": "message",
+              "value": "={{ $json.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "5cabaa24-d534-5b40-93d5-6255c4886a61",
+      "name": "4 - Assemble System Prompt - Tone + Rules + Context",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        860,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "auto",
+        "text": "={{ $json.chatInput }}",
+        "options": {}
+      },
+      "id": "aebdea7d-5f2c-5918-9ad1-7f98086eced1",
+      "name": "5 - Claude Handles the Request",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1840,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "6ca4fc7f-c99e-584a-9b8a-a5351e3be4f9",
+      "name": "Claude",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        1280,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "fromInput",
+        "contextWindowLength": 10
+      },
+      "id": "81150e12-fdbd-5867-8d74-6bc3f3abe719",
+      "name": "Conversation Memory - per customer",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        1480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Call a sub-workflow to perform a task",
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "684e028c-79dd-5647-a26d-cec579c4fe41",
+      "name": "MCP - CRM: Find or Update a Customer",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Call a sub-workflow to perform a task",
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "8a5789e5-a2ff-5550-a303-a045bbb1662f",
+      "name": "MCP - Calendar: Check and Book Slots",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Call a sub-workflow to perform a task",
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "902afda1-6cae-5f05-992c-793577d0c44b",
+      "name": "MCP - Invoicing: Balance and Payment Link",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2080,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Call a sub-workflow to perform a task",
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "c6df11cb-0058-5934-a4c9-1a1b78b49431",
+      "name": "MCP - Business Docs: Policies and FAQs",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2280,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"summary\": \"text\",\n  \"score\": 1\n}"
+      },
+      "id": "83002779-4511-5bdb-99d4-d1ad15dab1a4",
+      "name": "Reply + Action Taken + Confidence",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b4c0d326-995c-5c41-a486-1b6e8ca6afa0",
+              "leftValue": "={{ $json.money_booking }}",
+              "rightValue": 6.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5499c37a-9fef-5022-8583-77bf74de0a9c",
+      "name": "6 - Money, Booking Change, or Complaint?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2920,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "abd3eb74-96cd-5774-be0f-964e41c26939",
+      "name": "7a - Send to Owner for a One-Tap Approve",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        3160,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "addcec4a-58c0-5f0a-9cdf-340f799aac4d",
+      "name": "7b - Reply to the Customer",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        3160,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=8 - Score the Exchange Against the Prompt Rules\n\nchannel: {{ $json.channel }}\nbusiness_id: {{ $json.business_id }}\nsender: {{ $json.sender }}\nmessage: {{ $json.message }}",
+        "batching": {}
+      },
+      "id": "35a6c559-42d6-5d29-8b79-c3bffdeee9e4",
+      "name": "8 - Score the Exchange Against the Prompt Rules",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        3540,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "e795beb9-e3ed-587e-bf99-70e83188de7d",
+      "name": "9 - Log Prompt Version, Score, Tools Used",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3880,
+        120
+      ]
+    }
+  ],
+  "connections": {
+    "1 - Customer or Staff Message": {
+      "main": [
+        [
+          {
+            "node": "2 - Normalize Channel, Sender, Business ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Normalize Channel, Sender, Business ID": {
+      "main": [
+        [
+          {
+            "node": "3 - Read the Prompt Profile for This Business",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Read the Prompt Profile for This Business": {
+      "main": [
+        [
+          {
+            "node": "4 - Assemble System Prompt - Tone + Rules + Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - Assemble System Prompt - Tone + Rules + Context": {
+      "main": [
+        [
+          {
+            "node": "5 - Claude Handles the Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - Claude Handles the Request": {
+      "main": [
+        [
+          {
+            "node": "6 - Money, Booking Change, or Complaint?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Money, Booking Change, or Complaint?": {
+      "main": [
+        [
+          {
+            "node": "7a - Send to Owner for a One-Tap Approve",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "7b - Reply to the Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7a - Send to Owner for a One-Tap Approve": {
+      "main": [
+        [
+          {
+            "node": "8 - Score the Exchange Against the Prompt Rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7b - Reply to the Customer": {
+      "main": [
+        [
+          {
+            "node": "8 - Score the Exchange Against the Prompt Rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - Score the Exchange Against the Prompt Rules": {
+      "main": [
+        [
+          {
+            "node": "9 - Log Prompt Version, Score, Tools Used",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "5 - Claude Handles the Request",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Memory - per customer": {
+      "ai_memory": [
+        [
+          {
+            "node": "5 - Claude Handles the Request",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP - CRM: Find or Update a Customer": {
+      "ai_tool": [
+        [
+          {
+            "node": "5 - Claude Handles the Request",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP - Calendar: Check and Book Slots": {
+      "ai_tool": [
+        [
+          {
+            "node": "5 - Claude Handles the Request",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP - Invoicing: Balance and Payment Link": {
+      "ai_tool": [
+        [
+          {
+            "node": "5 - Claude Handles the Request",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP - Business Docs: Policies and FAQs": {
+      "ai_tool": [
+        [
+          {
+            "node": "5 - Claude Handles the Request",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply + Action Taken + Confidence": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "5 - Claude Handles the Request",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "373946d7-8d72-5d5f-adb6-96bc430ee053",
+  "pinData": {
+    "1 - Customer or Staff Message": [
+      {
+        "json": {
+          "channel": "website_chat",
+          "business_id": "biz_sunrise_dental",
+          "sender": "+1 813 555 0142",
+          "message": "Hi, can I move my cleaning from Thursday to next Monday afternoon? Also what do I still owe from last visit?"
+        }
+      }
+    ],
+    "9 - Log Prompt Version, Score, Tools Used": [
+      {
+        "json": {
+          "business_id": "biz_sunrise_dental",
+          "prompt_version": "v14",
+          "reply": "Done, you're booked Monday at 2:30pm. Your balance from the last visit is $85, here's a secure link to pay.",
+          "actions_taken": [
+            "calendar.reschedule",
+            "invoicing.balance_lookup",
+            "invoicing.payment_link"
+          ],
+          "needed_owner_approval": false,
+          "confidence": 0.93,
+          "score": 9,
+          "tools_used": [
+            "MCP - CRM",
+            "MCP - Calendar",
+            "MCP - Invoicing"
+          ]
+        }
+      }
+    ]
+  }
+}

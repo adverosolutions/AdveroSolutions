@@ -1,0 +1,62 @@
+{
+  "archetype": "resume_screening",
+  "title": "Application → Resume Parse → Score vs Rubric → Shortlist",
+  "platform": "n8n",
+  "sections": [
+    { "key": "apply",  "label": "1 · APPLICATION", "note": "Applications arrive with an attached resume. The file is parsed to text up front so PDFs, Word docs and exported LinkedIn profiles all reach the scorer in the same shape." },
+    { "key": "score",  "label": "2 · SCORE",       "note": "Candidates are scored against a written rubric — must-haves, nice-to-haves, and disqualifiers — and every score comes with the evidence line from the resume that justified it." },
+    { "key": "band",   "label": "3 · BAND",        "note": "Strong candidates are fast-tracked to a scheduling link the same day. Borderline ones queue for human review. Clear misses get a prompt, courteous rejection rather than silence." },
+    { "key": "track",  "label": "4 · TRACK",       "note": "Every candidate lands in the tracker with score, rationale and stage, so the pipeline is visible and the scoring can be audited if anyone questions a decision." }
+  ],
+  "nodes": [
+    { "key": "form",    "kind": "trigger.form", "label": "Application Submitted", "section": "apply" },
+    { "key": "parse",   "kind": "app.action", "app": "extractFile", "op": "pdf", "label": "Parse Resume", "section": "apply" },
+    { "key": "agent",   "kind": "ai.agent", "label": "Score Against Rubric", "section": "score" },
+    { "key": "model",   "kind": "ai.model", "app": "anthropic", "label": "Claude", "parent": "agent" },
+    { "key": "parser",  "kind": "ai.parser", "label": "Scorecard Schema", "parent": "agent" },
+    { "key": "band",    "kind": "flow.switch", "label": "Score Band", "section": "band" },
+    { "key": "invite",  "kind": "app.action", "app": "gmail", "op": "send", "label": "Send Interview Link", "section": "band" },
+    { "key": "review",  "kind": "app.action", "app": "slack", "op": "post", "label": "Queue for Review", "section": "band" },
+    { "key": "reject",  "kind": "app.action", "app": "gmail", "op": "send", "label": "Send Kind Rejection", "section": "band" },
+    { "key": "track",   "kind": "app.action", "app": "airtable", "op": "create", "label": "Add to Tracker", "section": "track" }
+  ],
+  "edges": [
+    { "from": "form", "to": "parse" },
+    { "from": "parse", "to": "agent" },
+    { "from": "agent", "to": "band" },
+    { "from": "band", "to": "invite", "branch": "strong" },
+    { "from": "band", "to": "review", "branch": "borderline" },
+    { "from": "band", "to": "reject", "branch": "miss" },
+    { "from": "invite", "to": "track" },
+    { "from": "review", "to": "track" },
+    { "from": "reject", "to": "track" }
+  ],
+  "input_sample": {
+    "role": "Senior Backend Engineer (Go)",
+    "applicant": { "name": "Ifeoma Adeyemi", "email": "i.adeyemi@proton.me", "location": "Remote — GMT+1" },
+    "resume_file": "ifeoma-adeyemi-resume.pdf",
+    "years_experience_claimed": 8,
+    "submitted_at": "2026-07-31T08:55:12Z",
+    "source": "LinkedIn"
+  },
+  "output_sample": {
+    "applicant": "Ifeoma Adeyemi",
+    "overall_score": 87,
+    "band": "strong",
+    "must_haves": [
+      { "criterion": "5+ years backend", "met": true, "evidence": "8 years across Paystack and a fintech consultancy" },
+      { "criterion": "Production Go", "met": true, "evidence": "Led migration of payments service from Python to Go, 2023-2025" },
+      { "criterion": "Distributed systems", "met": true, "evidence": "Designed idempotent retry layer handling ~4M txn/day" }
+    ],
+    "nice_to_haves": [
+      { "criterion": "Kubernetes", "met": true },
+      { "criterion": "Fintech domain", "met": true },
+      { "criterion": "Team leadership", "met": true, "evidence": "Mentored 3 engineers" }
+    ],
+    "concerns": ["No public open-source footprint to review"],
+    "timezone_overlap_hours": 5,
+    "action": "interview_link_sent",
+    "tracker_record": "recPq44Nz1",
+    "screened_in_seconds": 11
+  }
+}

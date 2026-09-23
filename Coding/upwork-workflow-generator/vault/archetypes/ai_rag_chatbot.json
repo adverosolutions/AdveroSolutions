@@ -1,0 +1,49 @@
+{
+  "archetype": "ai_rag_chatbot",
+  "title": "Support Chatbot → RAG over Docs → Cited Answer",
+  "platform": "n8n",
+  "sections": [
+    { "key": "intake",  "label": "1 · CONVERSATION", "note": "Chat arrives from the website widget. Session memory keeps the last ten turns so follow-up questions like \"what about the enterprise plan?\" resolve against what was already asked." },
+    { "key": "reason",  "label": "2 · RETRIEVE & ANSWER", "note": "The agent searches the vector index for the passages that actually answer the question, then writes a reply grounded only in what it retrieved. Every claim carries the source document it came from." },
+    { "key": "guard",   "label": "3 · CONFIDENCE GATE",  "note": "If retrieval returns nothing close enough, the bot does not improvise. Low-confidence questions hand off to a human instead of inventing an answer — the failure mode that erodes trust fastest." },
+    { "key": "deliver", "label": "4 · RESPOND & LOG",    "note": "The answer goes back to the widget, and every exchange is logged with its retrieved sources and confidence so you can see exactly what the bot has been telling customers." }
+  ],
+  "nodes": [
+    { "key": "chat",     "kind": "trigger.chat",  "label": "Website Chat Message", "section": "intake" },
+    { "key": "agent",    "kind": "ai.agent",      "label": "Answer From Knowledge Base", "section": "reason" },
+    { "key": "model",    "kind": "ai.model",  "app": "openai",   "label": "GPT-4.1",              "parent": "agent" },
+    { "key": "memory",   "kind": "ai.memory", "label": "Session Memory (10 turns)",               "parent": "agent" },
+    { "key": "store",    "kind": "ai.vectorstore", "app": "pinecone", "label": "Product Docs Index", "parent": "agent" },
+    { "key": "embed",    "kind": "ai.embed",  "app": "openai",   "label": "Embeddings",           "parent": "store" },
+    { "key": "gate",     "kind": "flow.branch",   "label": "Confidence ≥ 0.75?", "section": "guard" },
+    { "key": "reply",    "kind": "net.respond",   "label": "Send Cited Answer",  "section": "deliver" },
+    { "key": "escalate", "kind": "app.action", "app": "slack", "op": "post", "label": "Escalate to #support", "section": "deliver" },
+    { "key": "log",      "kind": "app.action", "app": "googleSheets", "op": "append", "label": "Log Conversation", "section": "deliver" }
+  ],
+  "edges": [
+    { "from": "chat",  "to": "agent" },
+    { "from": "agent", "to": "gate" },
+    { "from": "gate",  "to": "reply",    "branch": "true" },
+    { "from": "gate",  "to": "escalate", "branch": "false" },
+    { "from": "reply", "to": "log" }
+  ],
+  "input_sample": {
+    "session_id": "sess_9f2ab41c",
+    "user": { "email": "priya.raman@bellwether-legal.com", "plan": "Professional" },
+    "message": "Does the Professional plan let me export matter records to our own S3 bucket, or is that enterprise only?",
+    "history_turns": 3,
+    "received_at": "2026-07-31T09:14:02Z"
+  },
+  "output_sample": {
+    "session_id": "sess_9f2ab41c",
+    "answer": "Yes — scheduled exports to your own S3 bucket are included on Professional. You'll configure the bucket and IAM role under Settings → Data Export, and exports can run nightly or weekly. The Enterprise-only piece is bring-your-own-KMS key for encryption at rest.",
+    "confidence": 0.91,
+    "sources": [
+      { "doc": "Data Export Guide v4.pdf", "page": 12, "score": 0.93 },
+      { "doc": "Plan Comparison — 2026.md", "section": "Storage & Export", "score": 0.88 }
+    ],
+    "escalated": false,
+    "tokens_used": 1247,
+    "latency_ms": 2310
+  }
+}

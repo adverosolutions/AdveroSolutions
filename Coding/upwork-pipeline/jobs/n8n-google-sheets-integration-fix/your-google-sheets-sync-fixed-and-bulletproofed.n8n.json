@@ -1,0 +1,680 @@
+{
+  "name": "Your Google Sheets Sync, Fixed and Bulletproofed",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - THE DATA COMES IN\n\nWhatever feeds the sheet lands here, one record at a time, so every run can be replayed against the exact payload that broke it.",
+        "height": 660,
+        "width": 220,
+        "color": 5
+      },
+      "id": "0b0d1517-fe5b-5e1d-8737-e77eecfed0a1",
+      "name": "Section - 1 - THE DATA COMES IN",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - THE FIVE THINGS THAT BREAK SHEETS SYNCS\n\nWrong types, empty rows, a renamed tab, a moved header, and appending when it should update. Each one gets its own guard before a single cell is written.",
+        "height": 660,
+        "width": 1180,
+        "color": 4
+      },
+      "id": "3862852b-457f-5d4a-ba40-01f5bc105372",
+      "name": "Section - 2 - THE FIVE THINGS THAT BREAK SHEETS SYNCS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        320,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - WRITE IT THE RIGHT WAY\n\nMatched on a key column, so the same record updates its row instead of quietly stacking duplicates at the bottom of the sheet.",
+        "height": 660,
+        "width": 220,
+        "color": 6
+      },
+      "id": "bb5661b3-885d-5a87-a76e-fe5270027823",
+      "name": "Section - 3 - WRITE IT THE RIGHT WAY",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - QUOTA AND AUTH GUARDS\n\nGoogle throttles bursts and OAuth tokens expire. A failed write backs off, refreshes the credential, and retries instead of dying silently.",
+        "height": 660,
+        "width": 700,
+        "color": 7
+      },
+      "id": "14a62d02-bcbb-513a-bac5-4c2816c95609",
+      "name": "Section - 4 - QUOTA AND AUTH GUARDS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2040,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - PROVE IT KEEPS WORKING\n\nA heartbeat row on a log tab shows the sync is alive, and any node that fails names itself and the row it was on.",
+        "height": 660,
+        "width": 940,
+        "color": 1
+      },
+      "id": "398653e0-167d-5ec1-87d8-d687bff423f9",
+      "name": "Section - 5 - PROVE IT KEEPS WORKING",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2900,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "e34e8b40-937c-5488-852f-d4a79a347e3d",
+      "name": "1 - Record Arrives",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        180
+      ],
+      "webhookId": "e8cbb725-02dc-5df9-9df7-2b6ced7dbafa"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "690f1632-a2a0-52df-9129-b8dc2b3b5691",
+              "name": "event",
+              "value": "={{ $json.event }}",
+              "type": "string"
+            },
+            {
+              "id": "dcdc009b-e61a-5f4e-9e1a-dadd00ad32c4",
+              "name": "received_at",
+              "value": "={{ $json.received_at }}",
+              "type": "string"
+            },
+            {
+              "id": "1df9f4b5-008b-5eac-a581-d8be4b028ed6",
+              "name": "record",
+              "value": "={{ $json.record }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "d5ba8ee4-a7f6-50ab-910c-c554a82c90d9",
+      "name": "2 - Coerce Types and Dates",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        380,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9b387916-ac31-5681-9e33-3ebdb2e9ad89",
+              "leftValue": "={{ $json.drop_empty }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "ad1ef3ea-09b7-58d0-b6f7-1538452534da",
+      "name": "3 - Drop Empty Rows",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        620,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "781debe1-cb03-5d9e-b6b6-02a8f224c6d9",
+              "leftValue": "={{ $json.sheet }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "aaf253e0-0b74-59c1-b202-fb6487335143",
+      "name": "4 - Sheet and Tab Still Exist?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        860,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "00dd90b0-d763-538e-be0f-7697104ffa71",
+      "name": "4b - Alert: Sheet or Tab Renamed",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        1100,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "options": {},
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        }
+      },
+      "id": "65f9cd62-9650-5440-b72b-bec016c68fcf",
+      "name": "5 - Look Up the Row by Key",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1100,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "76df2606-3fe2-53c5-b96a-deaabddde0c3",
+              "leftValue": "={{ $json.row }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "02c18196-a56e-5c62-ab18-52e49826967d",
+      "name": "6 - Row Already There?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1340,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "update",
+        "options": {},
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        }
+      },
+      "id": "1f2d1163-e376-5365-b946-ef3f998ab5b7",
+      "name": "7 - Update the Existing Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1720,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "f46ca0fe-894d-50c1-ae30-f20aeca73333",
+      "name": "7b - Append a New Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1720,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c5b54fa7-b9ed-536f-9a2b-998a66d4cc55",
+              "leftValue": "={{ $json.write_succeeded }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "43b858ad-869f-53c8-aa6e-1af02cf4c8ae",
+      "name": "8 - Write Succeeded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2100,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 30,
+        "unit": "seconds"
+      },
+      "id": "2b62fb7a-3960-5762-8ca9-809d4fc646ce",
+      "name": "9 - Back Off 30 Seconds",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2340,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/10-refresh-google-oauth-token",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "58ee3778-565b-5426-b11e-1ff9ff3dd3e9",
+      "name": "10 - Refresh Google OAuth Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2580,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "7400a17a-27a1-549d-91e7-e14503b579b7",
+      "name": "11 - Write a Heartbeat Row to the Log Tab",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3440,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "513d4a60-5918-5a7e-9c2c-deadff1a918b",
+      "name": "12 - Reply 200 Synced to the Sender",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        3680,
+        40
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "38f1ac1c-30a3-5761-b8e6-87f82d0fd87a",
+      "name": "13 - Any Node Fails",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        2960,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "e1477b0e-ef34-5a51-b071-224a20f3c6ce",
+      "name": "14 - Alert With the Failing Node and Row",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        3200,
+        180
+      ]
+    }
+  ],
+  "connections": {
+    "1 - Record Arrives": {
+      "main": [
+        [
+          {
+            "node": "2 - Coerce Types and Dates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Coerce Types and Dates": {
+      "main": [
+        [
+          {
+            "node": "3 - Drop Empty Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Drop Empty Rows": {
+      "main": [
+        [
+          {
+            "node": "4 - Sheet and Tab Still Exist?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - Sheet and Tab Still Exist?": {
+      "main": [
+        [
+          {
+            "node": "5 - Look Up the Row by Key",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "4b - Alert: Sheet or Tab Renamed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - Look Up the Row by Key": {
+      "main": [
+        [
+          {
+            "node": "6 - Row Already There?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Row Already There?": {
+      "main": [
+        [
+          {
+            "node": "7 - Update the Existing Row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "7b - Append a New Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - Update the Existing Row": {
+      "main": [
+        [
+          {
+            "node": "8 - Write Succeeded?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7b - Append a New Row": {
+      "main": [
+        [
+          {
+            "node": "8 - Write Succeeded?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - Write Succeeded?": {
+      "main": [
+        [
+          {
+            "node": "11 - Write a Heartbeat Row to the Log Tab",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "9 - Back Off 30 Seconds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9 - Back Off 30 Seconds": {
+      "main": [
+        [
+          {
+            "node": "10 - Refresh Google OAuth Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Refresh Google OAuth Token": {
+      "main": [
+        [
+          {
+            "node": "5 - Look Up the Row by Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Write a Heartbeat Row to the Log Tab": {
+      "main": [
+        [
+          {
+            "node": "12 - Reply 200 Synced to the Sender",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - Any Node Fails": {
+      "main": [
+        [
+          {
+            "node": "14 - Alert With the Failing Node and Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "6695cb4e-0021-5953-826f-1b82325eb251",
+  "pinData": {
+    "1 - Record Arrives": [
+      {
+        "json": {
+          "event": "order.updated",
+          "received_at": "2026-09-21T14:03:12Z",
+          "record": {
+            "order_id": "ORD-10422",
+            "customer": "Kenji Watanabe",
+            "email": "kenji.watanabe@northfieldsupply.com",
+            "amount": "1,249.00",
+            "currency": "USD",
+            "status": "paid",
+            "created_at": "2026-09-21T14:03:00Z",
+            "notes": ""
+          }
+        }
+      }
+    ],
+    "12 - Reply 200 Synced to the Sender": [
+      {
+        "json": {
+          "sheet": "Orders 2026",
+          "tab": "Live Sync",
+          "matching_column": "order_id",
+          "action": "updated",
+          "row": 883,
+          "row_as_written": {
+            "order_id": "ORD-10422",
+            "customer": "Kenji Watanabe",
+            "email": "kenji.watanabe@northfieldsupply.com",
+            "amount": 1249.0,
+            "currency": "USD",
+            "status": "synced",
+            "created_at": "2026-09-21 09:03:00",
+            "last_synced_at": "2026-09-21 09:03:14"
+          },
+          "what_the_guards_did": {
+            "amount": "arrived as the string 1,249.00, written as the number 1249.00",
+            "created_at": "arrived as an ISO string, written as a real date Sheets can sort and filter",
+            "empty_row": "no, the record had a key column value so it was kept",
+            "tab_check": "Live Sync tab found, headers matched",
+            "append_vs_update": "order_id ORD-10422 already sat on row 883, so the row was updated instead of appended"
+          },
+          "heartbeat_row": {
+            "tab": "Sync Log",
+            "run_id": "run_2026_0921_1403_c4e1",
+            "ran_at": "2026-09-21 09:03:14",
+            "records_in": 1,
+            "rows_updated": 1,
+            "rows_appended": 0,
+            "rows_skipped_empty": 0,
+            "retries": 0,
+            "status": "healthy"
+          },
+          "if_it_had_failed": "a 429 or an expired token sends the write down node 9, backs off 30 seconds, refreshes the credential, and retries the lookup; if it still fails, node 13 posts the failing node name and the order_id to Slack"
+        }
+      }
+    ]
+  }
+}

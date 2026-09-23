@@ -1,0 +1,296 @@
+{
+  "title": "Your Monday.com to PandaDoc Contract Engine",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 - CONTRACT REQUEST COMES IN FROM MONDAY",
+      "color": 0,
+      "note": "A column change on the board starts the run. We pull the item, its column values, and the source PDF straight from Monday."
+    },
+    {
+      "key": "read",
+      "label": "2 - PULL THE FIELDS OUT OF THE PDF",
+      "color": 0,
+      "note": "Text first, then one extraction step that returns a fixed JSON schema. Scanned PDFs get routed to OCR instead of failing."
+    },
+    {
+      "key": "check",
+      "label": "3 - CHECK EVERYTHING BEFORE ANYTHING IS SENT",
+      "color": 0,
+      "note": "Required fields present, amounts parse as numbers, dates are real dates. Anything short of that stops here and a person looks at it."
+    },
+    {
+      "key": "build",
+      "label": "4 - BUILD AND SEND THE PANDADOC CONTRACT",
+      "color": 0,
+      "note": "PandaDoc builds the document from your template asynchronously, so we wait for draft status before sending it for signature."
+    },
+    {
+      "key": "fail",
+      "label": "5 - WHEN SOMETHING BREAKS, EVERYONE KNOWS",
+      "color": 0,
+      "note": "Any node failing anywhere in the run posts to Slack and writes the failure back onto the Monday item. Nothing goes quiet."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 - Monday.com Item Moved to Ready for Contract",
+      "section": "intake"
+    },
+    {
+      "key": "item",
+      "kind": "net.http",
+      "label": "2 - Monday.com: Fetch the Item and Column Values",
+      "section": "intake"
+    },
+    {
+      "key": "asset",
+      "kind": "net.http",
+      "label": "3 - Monday.com: Download the Contract PDF",
+      "section": "intake"
+    },
+    {
+      "key": "text",
+      "kind": "app.action",
+      "app": "extractFile",
+      "op": "pdf",
+      "label": "4 - Extract Text From PDF",
+      "section": "read"
+    },
+    {
+      "key": "hastext",
+      "kind": "flow.branch",
+      "label": "5 - Text Found in the PDF?",
+      "section": "read"
+    },
+    {
+      "key": "ocr",
+      "kind": "net.http",
+      "label": "5b - OCR the Scanned Pages Instead",
+      "section": "read"
+    },
+    {
+      "key": "llm",
+      "kind": "ai.llm",
+      "label": "6 - Extract Contract Fields to JSON Schema",
+      "section": "read"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "app": "openai",
+      "label": "GPT-4o",
+      "parent": "llm",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "schema",
+      "kind": "ai.parser",
+      "label": "Schema: Party, Address, Value, Term, Start Date",
+      "parent": "llm",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "valid",
+      "kind": "flow.branch",
+      "label": "7 - Required Fields Present and Amounts Parse?",
+      "section": "check"
+    },
+    {
+      "key": "hold",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "post",
+      "label": "7b - Hold the Item and Ask a Human to Confirm",
+      "section": "check"
+    },
+    {
+      "key": "create",
+      "kind": "net.http",
+      "label": "8 - PandaDoc: Create Document From Template",
+      "section": "build"
+    },
+    {
+      "key": "wait",
+      "kind": "flow.wait",
+      "label": "9 - Wait 20 Seconds for the Draft to Build",
+      "section": "build"
+    },
+    {
+      "key": "ready",
+      "kind": "flow.branch",
+      "label": "10 - Is the Document in Draft Status Yet?",
+      "section": "build"
+    },
+    {
+      "key": "send",
+      "kind": "net.http",
+      "label": "11 - PandaDoc: Send For Signature",
+      "section": "build"
+    },
+    {
+      "key": "update",
+      "kind": "net.http",
+      "label": "12 - Monday.com: Write Back the Link and Status",
+      "section": "build"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "app": "n8n",
+      "op": "error_trigger",
+      "label": "13 - Any Step Fails, Anywhere in the Run",
+      "section": "fail"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "post",
+      "label": "14 - Alert the Team With the Failed Run Link",
+      "section": "fail"
+    },
+    {
+      "key": "failstatus",
+      "kind": "net.http",
+      "label": "15 - Monday.com: Flag the Item as Contract Failed",
+      "section": "fail"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "item"
+    },
+    {
+      "from": "item",
+      "to": "asset"
+    },
+    {
+      "from": "asset",
+      "to": "text"
+    },
+    {
+      "from": "text",
+      "to": "hastext"
+    },
+    {
+      "from": "hastext",
+      "to": "llm",
+      "branch": "true"
+    },
+    {
+      "from": "hastext",
+      "to": "ocr",
+      "branch": "false"
+    },
+    {
+      "from": "ocr",
+      "to": "llm"
+    },
+    {
+      "from": "llm",
+      "to": "valid"
+    },
+    {
+      "from": "valid",
+      "to": "create",
+      "branch": "true"
+    },
+    {
+      "from": "valid",
+      "to": "hold",
+      "branch": "false"
+    },
+    {
+      "from": "create",
+      "to": "wait"
+    },
+    {
+      "from": "wait",
+      "to": "ready"
+    },
+    {
+      "from": "ready",
+      "to": "send",
+      "branch": "true"
+    },
+    {
+      "from": "ready",
+      "to": "wait",
+      "branch": "false",
+      "loop": true
+    },
+    {
+      "from": "send",
+      "to": "update"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    },
+    {
+      "from": "alert",
+      "to": "failstatus"
+    }
+  ],
+  "input_sample": {
+    "event": {
+      "type": "update_column_value",
+      "boardId": 7412998033,
+      "pulseId": 9013774521,
+      "pulseName": "Acme Logistics - MSA 2026",
+      "columnId": "status",
+      "columnType": "color",
+      "value": {
+        "label": {
+          "text": "Ready for Contract"
+        }
+      },
+      "previousValue": {
+        "label": {
+          "text": "In Review"
+        }
+      },
+      "userId": 41288907,
+      "triggerTime": "2026-09-10T14:22:07.918Z"
+    }
+  },
+  "output_sample": {
+    "monday_item": {
+      "board_id": 7412998033,
+      "item_id": 9013774521,
+      "item_name": "Acme Logistics - MSA 2026",
+      "status": "Sent for signature",
+      "pandadoc_link": "https://app.pandadoc.com/a/#/documents/w7Kq2fMxDrN4vTb9",
+      "updated_at": "2026-09-10T14:23:04.512Z"
+    },
+    "pandadoc": {
+      "document_id": "w7Kq2fMxDrN4vTb9",
+      "template": "MSA - Standard Services 2026",
+      "status": "document.sent",
+      "recipient": "dana.reyes@acmelogistics.com",
+      "created_from_draft_in_seconds": 19
+    },
+    "extracted_fields": {
+      "party_name": "Acme Logistics LLC",
+      "party_address": "4188 W Cheyenne Ave, Suite 210, Las Vegas, NV 89032",
+      "contract_value": 84500.0,
+      "currency": "USD",
+      "term_months": 24,
+      "start_date": "2026-10-01",
+      "signer_name": "Dana Reyes",
+      "signer_title": "Director of Operations"
+    },
+    "checks": {
+      "pdf_had_text_layer": true,
+      "required_fields_present": true,
+      "amount_parsed_as_number": true,
+      "dates_valid": true
+    },
+    "if_it_had_failed": "Error trigger fires, Slack gets the failed run link, and the Monday item flips to Contract Failed with the reason"
+  }
+}

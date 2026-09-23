@@ -1,0 +1,319 @@
+{
+  "title": "AI Operating System — Data In → Specialized Agents → Insights → Dashboards & Action",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "sources",
+      "label": "1 · DATA ENTERS",
+      "color": 0,
+      "note": "Every business system feeds in on a continuous sync, marketing spend, CRM, jobs, and financials, so the AI layer sees the whole business, not one slice."
+    },
+    {
+      "key": "connect",
+      "label": "2 · CONNECT & ATTRIBUTE",
+      "color": 0,
+      "note": "Everything lands in one data layer linked by customer, so a lead can be traced to its job and its invoice, that's what makes cost per lead and profitability answerable."
+    },
+    {
+      "key": "agents",
+      "label": "3 · SPECIALIZED AGENTS",
+      "color": 0,
+      "note": "Not one chatbot, a team. Each agent owns one domain and reads only the data it needs, so the answers stay sharp instead of generic."
+    },
+    {
+      "key": "decide",
+      "label": "4 · INSIGHTS & DECISIONS",
+      "color": 0,
+      "note": "An executive agent sits over the team, answers questions like how many roofing leads this month, and flags issues before someone has to notice them."
+    },
+    {
+      "key": "act",
+      "label": "5 · DASHBOARDS & ACTION",
+      "color": 0,
+      "note": "Insights become dashboards for management and alerts and tasks for the team, that's the part that actually saves staff time."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "trig",
+      "kind": "trigger.schedule",
+      "label": "Continuous Sync, Every 15 Minutes",
+      "section": "sources"
+    },
+    {
+      "key": "src_marketing",
+      "kind": "net.http",
+      "label": "Pull Google Ads and Meta Ads Spend and Leads",
+      "section": "sources"
+    },
+    {
+      "key": "src_ghl",
+      "kind": "net.http",
+      "label": "Pull Leads, Pipeline, and Conversations from GoHighLevel",
+      "section": "sources"
+    },
+    {
+      "key": "src_servicem8",
+      "kind": "net.http",
+      "label": "Pull Jobs, Scheduling, and Completion Data from ServiceM8",
+      "section": "sources"
+    },
+    {
+      "key": "src_xero",
+      "kind": "net.http",
+      "label": "Pull Revenue, Invoices, and Margin from Xero",
+      "section": "sources"
+    },
+    {
+      "key": "unify",
+      "kind": "data.merge",
+      "label": "Unify Into One Data Layer, Lead to Job to Invoice, Linked by Customer",
+      "section": "connect"
+    },
+    {
+      "key": "attribution",
+      "kind": "data.transform",
+      "label": "Attribute Every Job and Invoice Back to Its Lead Source and Campaign",
+      "section": "connect"
+    },
+    {
+      "key": "agent_marketing",
+      "kind": "ai.agent",
+      "label": "Marketing Intelligence Agent: CPL, CPA, and Return on Ad Spend by Channel",
+      "section": "agents"
+    },
+    {
+      "key": "model_marketing",
+      "kind": "ai.model",
+      "label": "GPT-4.1",
+      "app": "openai",
+      "parent": "agent_marketing",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "agent_revenue",
+      "kind": "ai.agent",
+      "label": "Revenue Agent: Pipeline, Conversion, and Sales Bottlenecks",
+      "section": "agents"
+    },
+    {
+      "key": "model_revenue",
+      "kind": "ai.model",
+      "label": "GPT-4.1",
+      "app": "openai",
+      "parent": "agent_revenue",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "agent_ops",
+      "kind": "ai.agent",
+      "label": "Operations Agent: Jobs Completed, Delayed, and Team Performance",
+      "section": "agents"
+    },
+    {
+      "key": "model_ops",
+      "kind": "ai.model",
+      "label": "GPT-4.1",
+      "app": "openai",
+      "parent": "agent_ops",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "agent_finance",
+      "kind": "ai.agent",
+      "label": "Finance Agent: Revenue, Margin, and Cashflow Indicators",
+      "section": "agents"
+    },
+    {
+      "key": "model_finance",
+      "kind": "ai.model",
+      "label": "GPT-4.1",
+      "app": "openai",
+      "parent": "agent_finance",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "agent_cx",
+      "kind": "ai.agent",
+      "label": "Customer Experience Agent: Reviews, Complaints, and Response Times",
+      "section": "agents"
+    },
+    {
+      "key": "model_cx",
+      "kind": "ai.model",
+      "label": "GPT-4.1",
+      "app": "openai",
+      "parent": "agent_cx",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "orchestrator",
+      "kind": "ai.agent",
+      "label": "Executive Agent: Answers Business Questions and Flags Issues Across the Team",
+      "section": "decide"
+    },
+    {
+      "key": "model_exec",
+      "kind": "ai.model",
+      "label": "GPT-4.1",
+      "app": "openai",
+      "parent": "orchestrator",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "issue_branch",
+      "kind": "flow.branch",
+      "label": "Issue Detected: Slow Response, Lost Opportunity, Delayed Job, or Margin Drop?",
+      "section": "decide"
+    },
+    {
+      "key": "alert_team",
+      "kind": "app.action",
+      "label": "Alert the Right Team Member With the Insight",
+      "app": "slack",
+      "op": "post",
+      "section": "act"
+    },
+    {
+      "key": "create_task",
+      "kind": "net.http",
+      "label": "Create a Follow-Up Task in Monday.com",
+      "section": "act"
+    },
+    {
+      "key": "dashboards",
+      "kind": "app.action",
+      "label": "Update Executive Dashboards: Marketing, Sales, Ops, Finance, CX",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "act"
+    }
+  ],
+  "edges": [
+    {
+      "from": "trig",
+      "to": "src_marketing"
+    },
+    {
+      "from": "trig",
+      "to": "src_ghl"
+    },
+    {
+      "from": "trig",
+      "to": "src_servicem8"
+    },
+    {
+      "from": "trig",
+      "to": "src_xero"
+    },
+    {
+      "from": "src_marketing",
+      "to": "unify"
+    },
+    {
+      "from": "src_ghl",
+      "to": "unify"
+    },
+    {
+      "from": "src_servicem8",
+      "to": "unify"
+    },
+    {
+      "from": "src_xero",
+      "to": "unify"
+    },
+    {
+      "from": "unify",
+      "to": "attribution"
+    },
+    {
+      "from": "attribution",
+      "to": "agent_marketing"
+    },
+    {
+      "from": "attribution",
+      "to": "agent_revenue"
+    },
+    {
+      "from": "attribution",
+      "to": "agent_ops"
+    },
+    {
+      "from": "attribution",
+      "to": "agent_finance"
+    },
+    {
+      "from": "attribution",
+      "to": "agent_cx"
+    },
+    {
+      "from": "agent_marketing",
+      "to": "orchestrator"
+    },
+    {
+      "from": "agent_revenue",
+      "to": "orchestrator"
+    },
+    {
+      "from": "agent_ops",
+      "to": "orchestrator"
+    },
+    {
+      "from": "agent_finance",
+      "to": "orchestrator"
+    },
+    {
+      "from": "agent_cx",
+      "to": "orchestrator"
+    },
+    {
+      "from": "orchestrator",
+      "to": "issue_branch"
+    },
+    {
+      "from": "issue_branch",
+      "to": "alert_team",
+      "branch": "true"
+    },
+    {
+      "from": "issue_branch",
+      "to": "create_task",
+      "branch": "true"
+    },
+    {
+      "from": "issue_branch",
+      "to": "dashboards",
+      "branch": "false"
+    },
+    {
+      "from": "alert_team",
+      "to": "dashboards"
+    },
+    {
+      "from": "create_task",
+      "to": "dashboards"
+    }
+  ],
+  "input_sample": {
+    "question": "How many roofing leads did we receive this month?",
+    "brand": "Roofing",
+    "period": "2026-08"
+  },
+  "output_sample": {
+    "roofing_leads": 142,
+    "by_source": {
+      "google_ads": 68,
+      "meta_ads": 51,
+      "referral": 23
+    },
+    "cost_per_lead": "$38.20",
+    "appointment_rate_pct": 41,
+    "conversion_rate_pct": 27,
+    "revenue_generated": "$187,400",
+    "gross_margin_pct": 34,
+    "flag": "Meta Ads CPL up 22% vs last month, 6 leads with no follow-up in 48 hours"
+  },
+  "archetype": "home_services_ai_operating_system_multi_agent",
+  "learned": true,
+  "learned_at": "2026-09-02"
+}

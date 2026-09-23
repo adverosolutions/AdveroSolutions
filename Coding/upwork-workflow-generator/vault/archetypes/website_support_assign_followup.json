@@ -1,0 +1,217 @@
+{
+  "title": "Website Support Automation — Answer, Assign, Follow Up, Never Drop",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "in",
+      "label": "1 · THE MESSAGE COMES IN",
+      "color": 0,
+      "note": "One entry point for the web widget or a contact form, so every inquiry gets the same treatment regardless of where it started."
+    },
+    {
+      "key": "triage",
+      "label": "2 · WORK OUT WHAT IT NEEDS",
+      "color": 0,
+      "note": "Simple, answerable-now questions get answered now. Anything else gets assigned to a person immediately instead of sitting in a queue nobody owns."
+    },
+    {
+      "key": "coord",
+      "label": "3 · INTERNAL COORDINATION",
+      "color": 0,
+      "note": "The right team member is notified the moment something is assigned, and if it sits too long without a response, they get reminded. Nothing waits on someone remembering to check a queue."
+    },
+    {
+      "key": "reliable",
+      "label": "4 · LOG EVERYTHING, FAIL LOUDLY",
+      "color": 0,
+      "note": "Every inquiry is logged with its outcome, and any step that breaks alerts immediately instead of quietly dropping a customer."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "msg",
+      "kind": "trigger.chat",
+      "label": "1 · Customer Message Comes In",
+      "section": "in"
+    },
+    {
+      "key": "extract",
+      "kind": "data.transform",
+      "label": "2 · Pull Out Who They Are and What They're Asking",
+      "section": "in"
+    },
+    {
+      "key": "triage",
+      "kind": "ai.agent",
+      "label": "3 · Work Out What Kind of Request This Is",
+      "section": "triage"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Triage Model",
+      "app": "openai",
+      "parent": "triage",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Force a Category and a Can-Answer-Now Flag",
+      "parent": "triage",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "answerable",
+      "kind": "flow.branch",
+      "label": "4 · Can This Be Answered Right Away?",
+      "section": "triage"
+    },
+    {
+      "key": "reply",
+      "kind": "net.respond",
+      "label": "5 · Send the Answer",
+      "section": "triage"
+    },
+    {
+      "key": "assign",
+      "kind": "app.action",
+      "label": "5b · Assign It to the Right Team Member",
+      "app": "hubspot",
+      "op": "assign_owner",
+      "section": "triage"
+    },
+    {
+      "key": "notify",
+      "kind": "app.action",
+      "label": "6 · Notify Whoever It Was Assigned To",
+      "app": "slack",
+      "op": "send_message",
+      "section": "coord"
+    },
+    {
+      "key": "wait",
+      "kind": "flow.wait",
+      "label": "7 · Wait for a Response",
+      "section": "coord"
+    },
+    {
+      "key": "resolved",
+      "kind": "flow.branch",
+      "label": "8 · Did It Get Handled in Time?",
+      "section": "coord"
+    },
+    {
+      "key": "remind",
+      "kind": "app.action",
+      "label": "8b · Remind the Assigned Person — Still Open",
+      "app": "slack",
+      "op": "send_message",
+      "section": "coord"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "9 · Log the Inquiry and Its Outcome",
+      "app": "airtable",
+      "op": "create_record",
+      "section": "reliable"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "10 · Any Step Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "reliable"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "11 · Alert With a Link to the Failed Run",
+      "app": "slack",
+      "op": "send_message",
+      "section": "reliable"
+    }
+  ],
+  "edges": [
+    {
+      "from": "msg",
+      "to": "extract"
+    },
+    {
+      "from": "extract",
+      "to": "triage"
+    },
+    {
+      "from": "triage",
+      "to": "answerable"
+    },
+    {
+      "from": "answerable",
+      "to": "reply",
+      "branch": "true"
+    },
+    {
+      "from": "answerable",
+      "to": "assign",
+      "branch": "false"
+    },
+    {
+      "from": "assign",
+      "to": "notify"
+    },
+    {
+      "from": "notify",
+      "to": "wait"
+    },
+    {
+      "from": "wait",
+      "to": "resolved"
+    },
+    {
+      "from": "resolved",
+      "to": "remind",
+      "branch": "Still open"
+    },
+    {
+      "from": "resolved",
+      "to": "log",
+      "branch": "Handled"
+    },
+    {
+      "from": "remind",
+      "to": "log"
+    },
+    {
+      "from": "reply",
+      "to": "log"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "channel": "web_widget",
+    "page": "/shipping-policy",
+    "name": "Renee Castellanos",
+    "email": "renee.c@northfieldstudio.co",
+    "message": "My order shipped to the wrong address and it's already out for delivery, what can we do?"
+  },
+  "output_sample": {
+    "category": "Shipping issue — in transit, needs a person",
+    "can_answer_now": false,
+    "assigned_to": "Priya (Support Lead)",
+    "notified_at": "2026-08-20T15:02:11Z",
+    "response_window_hours": 2,
+    "resolved_in_window": false,
+    "reminder_sent": true,
+    "final_status": "Handled — carrier redirect requested",
+    "logged": true,
+    "before_this_build": "Would have sat in a shared inbox until someone happened to scroll past it"
+  },
+  "archetype": "website_support_assign_followup",
+  "learned": true,
+  "learned_at": "2026-08-20"
+}

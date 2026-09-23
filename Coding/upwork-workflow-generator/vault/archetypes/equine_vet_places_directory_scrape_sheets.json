@@ -1,0 +1,216 @@
+{
+  "title": "Equine Vet Database — Google Places + Directory Scrape → Dedupe → Google Sheets",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "places",
+      "label": "1 · SOURCE: GOOGLE PLACES",
+      "color": 0,
+      "note": "Loops through the country list and queries the official Places API for equine vets in each one."
+    },
+    {
+      "key": "directory",
+      "label": "2 · SOURCE: DIRECTORY SCRAPE",
+      "color": 0,
+      "note": "Loops through the directory URLs, fetches the HTML, and parses contact data in code, the BeautifulSoup-equivalent step run inside the workflow."
+    },
+    {
+      "key": "merge",
+      "label": "3 · DEDUPE & MERGE",
+      "color": 0,
+      "note": "Both sources land in one merge, then get deduplicated by name, country, and matching phone or website."
+    },
+    {
+      "key": "output",
+      "label": "4 · WRITE TO SHEETS",
+      "color": 0,
+      "note": "Clean records write straight to Google Sheets, with a run summary logged for visibility."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "trig",
+      "kind": "trigger.schedule",
+      "label": "Weekly Automated Refresh",
+      "section": "places"
+    },
+    {
+      "key": "next_country",
+      "kind": "data.split",
+      "label": "Split Country List Into One Batch at a Time",
+      "section": "places"
+    },
+    {
+      "key": "places_query",
+      "kind": "net.http",
+      "label": "Query Google Places API for Equine Vets in This Country",
+      "section": "places"
+    },
+    {
+      "key": "parse_places",
+      "kind": "data.transform",
+      "label": "Parse Results Into Name, Address, Phone, Website",
+      "section": "places"
+    },
+    {
+      "key": "more_countries",
+      "kind": "flow.branch",
+      "label": "More Countries Left to Query?",
+      "section": "places"
+    },
+    {
+      "key": "next_directory",
+      "kind": "data.split",
+      "label": "Split Directory URL List Into One Batch at a Time",
+      "section": "directory"
+    },
+    {
+      "key": "fetch_html",
+      "kind": "net.http",
+      "label": "Fetch the Directory Page HTML",
+      "section": "directory"
+    },
+    {
+      "key": "parse_html",
+      "kind": "data.code",
+      "label": "Parse HTML and Extract Name, Clinic, Email, Phone",
+      "section": "directory"
+    },
+    {
+      "key": "normalize_dir",
+      "kind": "data.transform",
+      "label": "Normalize Directory Fields to Match the Places Schema",
+      "section": "directory"
+    },
+    {
+      "key": "more_directories",
+      "kind": "flow.branch",
+      "label": "More Directory Pages Left to Parse?",
+      "section": "directory"
+    },
+    {
+      "key": "merge_sources",
+      "kind": "data.merge",
+      "label": "Merge Google Places and Directory Records",
+      "section": "merge"
+    },
+    {
+      "key": "dedupe",
+      "kind": "data.filter",
+      "label": "Deduplicate by Name, Country, and Matching Phone or Website",
+      "section": "merge"
+    },
+    {
+      "key": "write_sheets",
+      "kind": "app.action",
+      "label": "Write Clean Records to Google Sheets",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "output"
+    },
+    {
+      "key": "log_summary",
+      "kind": "data.aggregate",
+      "label": "Log Run Summary: New, Updated, Duplicates Skipped",
+      "section": "output"
+    }
+  ],
+  "edges": [
+    {
+      "from": "trig",
+      "to": "next_country"
+    },
+    {
+      "from": "trig",
+      "to": "next_directory"
+    },
+    {
+      "from": "next_country",
+      "to": "places_query"
+    },
+    {
+      "from": "places_query",
+      "to": "parse_places"
+    },
+    {
+      "from": "parse_places",
+      "to": "more_countries"
+    },
+    {
+      "from": "more_countries",
+      "to": "next_country",
+      "branch": "true",
+      "loop": true
+    },
+    {
+      "from": "more_countries",
+      "to": "merge_sources",
+      "branch": "false"
+    },
+    {
+      "from": "next_directory",
+      "to": "fetch_html"
+    },
+    {
+      "from": "fetch_html",
+      "to": "parse_html"
+    },
+    {
+      "from": "parse_html",
+      "to": "normalize_dir"
+    },
+    {
+      "from": "normalize_dir",
+      "to": "more_directories"
+    },
+    {
+      "from": "more_directories",
+      "to": "next_directory",
+      "branch": "true",
+      "loop": true
+    },
+    {
+      "from": "more_directories",
+      "to": "merge_sources",
+      "branch": "false"
+    },
+    {
+      "from": "merge_sources",
+      "to": "dedupe"
+    },
+    {
+      "from": "dedupe",
+      "to": "write_sheets"
+    },
+    {
+      "from": "write_sheets",
+      "to": "log_summary"
+    }
+  ],
+  "input_sample": {
+    "countries": [
+      "Germany",
+      "France",
+      "Netherlands",
+      "Belgium",
+      "Italy"
+    ],
+    "directory_urls": [
+      "https://www.vet-directory.eu/equine/de",
+      "https://www.vet-directory.eu/equine/fr"
+    ]
+  },
+  "output_sample": {
+    "clinic_name": "Pferdeklinik Aachen",
+    "country": "Germany",
+    "email": "info@pferdeklinik-aachen.de",
+    "phone": "+49 241 555 0192",
+    "website": "https://pferdeklinik-aachen.de",
+    "source": "google_places+directory_match",
+    "new_records_this_run": 38,
+    "duplicates_skipped": 11
+  },
+  "archetype": "equine_vet_places_directory_scrape_sheets",
+  "learned": true,
+  "learned_at": "2026-08-24"
+}

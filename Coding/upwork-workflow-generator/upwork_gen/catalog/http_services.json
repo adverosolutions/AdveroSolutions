@@ -1,0 +1,1061 @@
+{
+  "_meta": {
+    "purpose": "Real base URLs, auth styles and representative endpoints for the HTTP Request nodes the n8n compiler emits. A net.http node (or an app.action that fell back to HTTP) resolves a service from the `service` shorthand, its `app`, or the service name in its label, then picks an operation by label keywords.",
+    "tokens": {
+      "{config:KEY}": "A Config node reference when the spec has `config` (the key is added to the Config node if missing), else the service's placeholder for KEY, e.g. PASTE-YOUR-GHL-API-KEY. Never a real secret.",
+      "{field:NAME}": "{{ $json.NAME }}, with NAME swapped for a matching sample key where one exists (contact_id -> ghl_contact_id).",
+      "{json:NAME}": "Unquoted {{ JSON.stringify($json.NAME) }} inside a JSON body, for arrays and objects.",
+      "{js:EXPR}": "Unquoted {{ EXPR }} inside a JSON body.",
+      "__sample_row__": "As a whole body: one key per scalar input_sample field."
+    },
+    "rule": "Only endpoints we are confident exist. When unsure of an operation, it is left out rather than invented.",
+    "aliases": "Matched on word boundaries anywhere in the label. Never add an alias that is ordinary English ('high level' matched 'Send a High Level Summary'). strict_aliases (ordinary English words such as 'instantly' or 'monday') only match as the node's app, the `service` shorthand, 'Alias:' in the label, or the first word after the step prefix."
+  },
+  "services": {
+    "gohighlevel": {
+      "name": "GoHighLevel",
+      "aliases": [
+        "gohighlevel",
+        "go high level",
+        "highlevel",
+        "ghl",
+        "leadconnector"
+      ],
+      "strict_aliases": [],
+      "base_url": "https://services.leadconnectorhq.com",
+      "auth": {
+        "in": "header",
+        "name": "Authorization",
+        "value": "Bearer {config:ghl_api_key}"
+      },
+      "headers": {
+        "Version": "2021-07-28",
+        "Accept": "application/json"
+      },
+      "placeholders": {
+        "ghl_api_key": "PASTE-YOUR-GHL-API-KEY",
+        "ghl_location_id": "PASTE-YOUR-GHL-LOCATION-ID",
+        "ghl_pipeline_id": "PASTE-YOUR-GHL-PIPELINE-ID",
+        "ghl_stage_id": "PASTE-YOUR-GHL-STAGE-ID",
+        "ghl_workflow_id": "PASTE-YOUR-GHL-WORKFLOW-ID"
+      },
+      "setup": "Private Integration token and location id",
+      "default_op": "upsert_contact",
+      "operations": {
+        "lookup_contact": {
+          "method": "GET",
+          "path": "/contacts/search/duplicate",
+          "query": {
+            "locationId": "{config:ghl_location_id}",
+            "email": "{field:email}"
+          },
+          "keywords": {
+            "look up": 3,
+            "lookup": 3,
+            "search": 3,
+            "find": 2,
+            "existing": 2,
+            "duplicate": 3,
+            "exists": 2,
+            "check": 1
+          },
+          "id_path": "contact.id"
+        },
+        "upsert_contact": {
+          "method": "POST",
+          "path": "/contacts/upsert",
+          "body": {
+            "locationId": "{config:ghl_location_id}",
+            "firstName": "{field:first_name}",
+            "lastName": "{field:last_name}",
+            "email": "{field:email}",
+            "phone": "{field:phone}",
+            "source": "{field:source}"
+          },
+          "keywords": {
+            "upsert": 3,
+            "create or update": 3,
+            "create contact": 3,
+            "update contact": 3,
+            "add contact": 3,
+            "contact": 1,
+            "custom field": 2
+          },
+          "id_path": "contact.id"
+        },
+        "remove_tag": {
+          "method": "DELETE",
+          "path": "/contacts/{field:contact_id}/tags",
+          "body": {
+            "tags": "{json:tags}"
+          },
+          "keywords": {
+            "remove tag": 4,
+            "untag": 4,
+            "remove the tag": 4
+          }
+        },
+        "add_tag": {
+          "method": "POST",
+          "path": "/contacts/{field:contact_id}/tags",
+          "body": {
+            "tags": "{json:tags}"
+          },
+          "keywords": {
+            "tag": 3
+          }
+        },
+        "create_opportunity": {
+          "method": "POST",
+          "path": "/opportunities/",
+          "body": {
+            "locationId": "{config:ghl_location_id}",
+            "pipelineId": "{config:ghl_pipeline_id}",
+            "pipelineStageId": "{config:ghl_stage_id}",
+            "contactId": "{field:contact_id}",
+            "name": "{field:name}",
+            "status": "open"
+          },
+          "keywords": {
+            "opportunit": 3,
+            "pipeline": 3,
+            "stage": 2,
+            "deal": 2
+          },
+          "id_path": "opportunity.id"
+        },
+        "add_note": {
+          "method": "POST",
+          "path": "/contacts/{field:contact_id}/notes",
+          "body": {
+            "body": "{field:summary}"
+          },
+          "keywords": {
+            "note": 3
+          }
+        },
+        "remove_from_workflow": {
+          "method": "DELETE",
+          "path": "/contacts/{field:contact_id}/workflow/{config:ghl_workflow_id}",
+          "keywords": {
+            "remove": 3,
+            "unenroll": 3,
+            "stop": 2,
+            "workflow": 1
+          }
+        },
+        "add_to_workflow": {
+          "method": "POST",
+          "path": "/contacts/{field:contact_id}/workflow/{config:ghl_workflow_id}",
+          "keywords": {
+            "enroll": 3,
+            "workflow": 3,
+            "sequence": 2,
+            "follow-up": 1,
+            "nurture": 2
+          }
+        },
+        "send_message": {
+          "method": "POST",
+          "path": "/conversations/messages",
+          "headers": {
+            "Version": "2021-04-15"
+          },
+          "body": {
+            "type": "SMS",
+            "contactId": "{field:contact_id}",
+            "message": "{field:message}"
+          },
+          "keywords": {
+            "message": 3,
+            "sms": 3,
+            "text": 2,
+            "reply": 2,
+            "send": 1,
+            "ask": 1
+          }
+        }
+      }
+    },
+    "instantly": {
+      "name": "Instantly",
+      "aliases": [
+        "instantly.ai"
+      ],
+      "strict_aliases": [
+        "instantly"
+      ],
+      "base_url": "https://api.instantly.ai/api/v2",
+      "auth": {
+        "in": "header",
+        "name": "Authorization",
+        "value": "Bearer {config:instantly_api_key}"
+      },
+      "headers": {},
+      "placeholders": {
+        "instantly_api_key": "PASTE-YOUR-INSTANTLY-API-KEY",
+        "instantly_campaign_id": "PASTE-YOUR-INSTANTLY-CAMPAIGN-ID",
+        "instantly_sending_account": "you@yourdomain.com"
+      },
+      "setup": "API key (v2) and campaign id",
+      "default_op": "add_lead",
+      "operations": {
+        "create_campaign": {
+          "method": "POST",
+          "path": "/campaigns",
+          "body": {
+            "name": "{field:campaign_name}",
+            "campaign_schedule": {
+              "schedules": [
+                {
+                  "name": "Business hours",
+                  "timing": {
+                    "from": "09:00",
+                    "to": "17:00"
+                  },
+                  "days": {
+                    "1": true,
+                    "2": true,
+                    "3": true,
+                    "4": true,
+                    "5": true
+                  },
+                  "timezone": "America/Chicago"
+                }
+              ]
+            }
+          },
+          "keywords": {
+            "create campaign": 4,
+            "new campaign": 4,
+            "create the campaign": 4
+          }
+        },
+        "reply": {
+          "method": "POST",
+          "path": "/emails/reply",
+          "body": {
+            "reply_to_uuid": "{field:email_id}",
+            "eaccount": "{config:instantly_sending_account}",
+            "subject": "{field:subject}",
+            "body": {
+              "text": "{field:reply_body}"
+            }
+          },
+          "keywords": {
+            "reply": 3,
+            "respond": 2,
+            "answer": 2
+          }
+        },
+        "update_interest": {
+          "method": "POST",
+          "path": "/leads/update-interest-status",
+          "body": {
+            "lead_email": "{field:email}",
+            "interest_value": 1
+          },
+          "keywords": {
+            "interest": 3,
+            "mark interested": 4,
+            "mark as interested": 4
+          }
+        },
+        "add_lead": {
+          "method": "POST",
+          "path": "/leads",
+          "body": {
+            "campaign": "{config:instantly_campaign_id}",
+            "email": "{field:email}",
+            "first_name": "{field:first_name}",
+            "last_name": "{field:last_name}",
+            "company_name": "{field:company}",
+            "personalization": "{field:personalization}"
+          },
+          "keywords": {
+            "lead": 3,
+            "add": 2,
+            "push": 2,
+            "upload": 2,
+            "enroll": 2,
+            "sequence": 1,
+            "campaign": 1
+          }
+        }
+      }
+    },
+    "clay": {
+      "name": "Clay",
+      "aliases": [
+        "clay.com"
+      ],
+      "strict_aliases": [
+        "clay"
+      ],
+      "base_url": "{config:clay_webhook_url}",
+      "auth": null,
+      "headers": {},
+      "placeholders": {
+        "clay_webhook_url": "https://api.clay.com/v3/sources/webhook/PASTE-YOUR-CLAY-TABLE-WEBHOOK"
+      },
+      "setup": "the webhook URL of the Clay table",
+      "default_op": "add_row",
+      "operations": {
+        "add_row": {
+          "method": "POST",
+          "path": "",
+          "body": "__sample_row__",
+          "keywords": {
+            "row": 3,
+            "table": 3,
+            "add": 1,
+            "send": 1,
+            "push": 1,
+            "enrich": 1
+          }
+        }
+      }
+    },
+    "hunter": {
+      "name": "Hunter",
+      "aliases": [
+        "hunter.io"
+      ],
+      "strict_aliases": [
+        "hunter"
+      ],
+      "base_url": "https://api.hunter.io/v2",
+      "auth": {
+        "in": "query",
+        "name": "api_key",
+        "value": "{config:hunter_api_key}"
+      },
+      "headers": {},
+      "placeholders": {
+        "hunter_api_key": "PASTE-YOUR-HUNTER-API-KEY",
+        "hunter_leads_list_id": "PASTE-YOUR-HUNTER-LIST-ID"
+      },
+      "setup": "API key",
+      "default_op": "email_finder",
+      "operations": {
+        "email_finder": {
+          "method": "GET",
+          "path": "/email-finder",
+          "query": {
+            "domain": "{field:domain}",
+            "first_name": "{field:first_name}",
+            "last_name": "{field:last_name}"
+          },
+          "keywords": {
+            "find": 3,
+            "finder": 3,
+            "decision": 1,
+            "look up": 2,
+            "lookup": 2,
+            "email": 1
+          }
+        },
+        "email_verifier": {
+          "method": "GET",
+          "path": "/email-verifier",
+          "query": {
+            "email": "{field:email}"
+          },
+          "keywords": {
+            "verif": 3,
+            "valid": 2,
+            "bounce": 2,
+            "deliverab": 2,
+            "check": 1
+          }
+        },
+        "add_lead": {
+          "method": "POST",
+          "path": "/leads",
+          "body": {
+            "email": "{field:email}",
+            "first_name": "{field:first_name}",
+            "last_name": "{field:last_name}",
+            "company": "{field:company}",
+            "leads_list_id": "{config:hunter_leads_list_id}"
+          },
+          "keywords": {
+            "add": 2,
+            "save": 2,
+            "lead": 2,
+            "campaign": 2,
+            "list": 1
+          }
+        }
+      }
+    },
+    "apollo": {
+      "name": "Apollo",
+      "aliases": [
+        "apollo",
+        "apollo.io"
+      ],
+      "strict_aliases": [],
+      "base_url": "https://api.apollo.io/api/v1",
+      "auth": {
+        "in": "header",
+        "name": "x-api-key",
+        "value": "{config:apollo_api_key}"
+      },
+      "headers": {
+        "Cache-Control": "no-cache"
+      },
+      "placeholders": {
+        "apollo_api_key": "PASTE-YOUR-APOLLO-API-KEY"
+      },
+      "setup": "API key (master key for search)",
+      "default_op": "people_match",
+      "operations": {
+        "people_match": {
+          "method": "POST",
+          "path": "/people/match",
+          "body": {
+            "first_name": "{field:first_name}",
+            "last_name": "{field:last_name}",
+            "organization_name": "{field:company}",
+            "domain": "{field:domain}",
+            "email": "{field:email}",
+            "reveal_personal_emails": false
+          },
+          "keywords": {
+            "enrich": 3,
+            "match": 3,
+            "person": 1,
+            "contact": 1,
+            "role": 1
+          }
+        },
+        "people_search": {
+          "method": "POST",
+          "path": "/mixed_people/search",
+          "body": {
+            "person_titles": [
+              "Owner",
+              "Founder",
+              "CEO"
+            ],
+            "person_locations": [
+              "United States"
+            ],
+            "organization_num_employees_ranges": [
+              "1,50"
+            ],
+            "page": 1,
+            "per_page": 25
+          },
+          "keywords": {
+            "search": 3,
+            "source": 2,
+            "prospect": 2,
+            "pull": 1,
+            "list": 1
+          }
+        }
+      }
+    },
+    "smartlead": {
+      "name": "Smartlead",
+      "aliases": [
+        "smartlead",
+        "smartlead.ai"
+      ],
+      "strict_aliases": [],
+      "base_url": "https://server.smartlead.ai/api/v1",
+      "auth": {
+        "in": "query",
+        "name": "api_key",
+        "value": "{config:smartlead_api_key}"
+      },
+      "headers": {},
+      "placeholders": {
+        "smartlead_api_key": "PASTE-YOUR-SMARTLEAD-API-KEY",
+        "smartlead_campaign_id": "PASTE-YOUR-SMARTLEAD-CAMPAIGN-ID"
+      },
+      "setup": "API key and campaign id",
+      "default_op": "add_leads",
+      "operations": {
+        "add_leads": {
+          "method": "POST",
+          "path": "/campaigns/{config:smartlead_campaign_id}/leads",
+          "body": {
+            "lead_list": [
+              {
+                "first_name": "{field:first_name}",
+                "last_name": "{field:last_name}",
+                "email": "{field:email}",
+                "company_name": "{field:company}"
+              }
+            ]
+          },
+          "keywords": {
+            "lead": 3,
+            "add": 2,
+            "push": 2,
+            "upload": 2,
+            "campaign": 1
+          }
+        }
+      }
+    },
+    "calendly": {
+      "name": "Calendly",
+      "aliases": [
+        "calendly"
+      ],
+      "strict_aliases": [],
+      "base_url": "https://api.calendly.com",
+      "auth": {
+        "in": "header",
+        "name": "Authorization",
+        "value": "Bearer {config:calendly_token}"
+      },
+      "headers": {},
+      "placeholders": {
+        "calendly_token": "PASTE-YOUR-CALENDLY-PERSONAL-ACCESS-TOKEN",
+        "calendly_organization_uri": "https://api.calendly.com/organizations/PASTE-YOUR-ORG-UUID",
+        "calendly_user_uri": "https://api.calendly.com/users/PASTE-YOUR-USER-UUID",
+        "calendly_callback_url": "https://PASTE-YOUR-N8N-HOST/webhook/calendly-events"
+      },
+      "setup": "personal access token and organization URI",
+      "default_op": "scheduled_events",
+      "operations": {
+        "create_webhook": {
+          "method": "POST",
+          "path": "/webhook_subscriptions",
+          "body": {
+            "url": "{config:calendly_callback_url}",
+            "events": [
+              "invitee.created",
+              "invitee.canceled"
+            ],
+            "organization": "{config:calendly_organization_uri}",
+            "scope": "organization"
+          },
+          "keywords": {
+            "webhook": 3,
+            "subscri": 3,
+            "listen": 2
+          }
+        },
+        "scheduled_events": {
+          "method": "GET",
+          "path": "/scheduled_events",
+          "query": {
+            "user": "{config:calendly_user_uri}",
+            "status": "active"
+          },
+          "keywords": {
+            "scheduled": 3,
+            "event": 2,
+            "booking": 2,
+            "meeting": 2,
+            "list": 2,
+            "get": 1,
+            "fetch": 1,
+            "pull": 1
+          }
+        }
+      }
+    },
+    "calcom": {
+      "name": "Cal.com",
+      "aliases": [
+        "cal.com",
+        "calcom"
+      ],
+      "strict_aliases": [],
+      "base_url": "https://api.cal.com/v2",
+      "auth": {
+        "in": "header",
+        "name": "Authorization",
+        "value": "Bearer {config:calcom_api_key}"
+      },
+      "headers": {
+        "cal-api-version": "2024-08-13"
+      },
+      "placeholders": {
+        "calcom_api_key": "PASTE-YOUR-CALCOM-API-KEY",
+        "calcom_event_type_id": "PASTE-YOUR-EVENT-TYPE-ID"
+      },
+      "setup": "API key and event type id",
+      "default_op": "create_booking",
+      "operations": {
+        "list_bookings": {
+          "method": "GET",
+          "path": "/bookings",
+          "query": {
+            "status": "upcoming"
+          },
+          "keywords": {
+            "list": 3,
+            "upcoming": 3,
+            "get": 2,
+            "fetch": 2,
+            "pull": 2
+          }
+        },
+        "create_booking": {
+          "method": "POST",
+          "path": "/bookings",
+          "body": {
+            "start": "{field:start_time}",
+            "eventTypeId": "{config:calcom_event_type_id}",
+            "attendee": {
+              "name": "{field:name}",
+              "email": "{field:email}",
+              "timeZone": "America/Chicago"
+            }
+          },
+          "keywords": {
+            "book": 3,
+            "schedule": 2,
+            "appointment": 2,
+            "create": 1
+          }
+        }
+      }
+    },
+    "openphone": {
+      "name": "Quo (OpenPhone)",
+      "aliases": [
+        "openphone",
+        "open phone"
+      ],
+      "strict_aliases": [
+        "quo"
+      ],
+      "base_url": "https://api.openphone.com/v1",
+      "auth": {
+        "in": "header",
+        "name": "Authorization",
+        "value": "{config:openphone_api_key}"
+      },
+      "headers": {},
+      "placeholders": {
+        "openphone_api_key": "PASTE-YOUR-OPENPHONE-API-KEY",
+        "openphone_number": "+15555550100"
+      },
+      "setup": "API key and the sending number",
+      "default_op": "send_message",
+      "operations": {
+        "send_message": {
+          "method": "POST",
+          "path": "/messages",
+          "body": {
+            "content": "{field:message}",
+            "from": "{config:openphone_number}",
+            "to": [
+              "{field:phone}"
+            ]
+          },
+          "keywords": {
+            "sms": 3,
+            "text": 3,
+            "message": 3,
+            "send": 1
+          }
+        }
+      }
+    },
+    "zoho": {
+      "name": "Zoho CRM",
+      "aliases": [
+        "zoho crm",
+        "zoho"
+      ],
+      "strict_aliases": [],
+      "base_url": "https://www.zohoapis.com/crm/v2",
+      "auth": {
+        "in": "header",
+        "name": "Authorization",
+        "value": "Zoho-oauthtoken {config:zoho_access_token}"
+      },
+      "headers": {},
+      "placeholders": {
+        "zoho_access_token": "PASTE-YOUR-ZOHO-ACCESS-TOKEN"
+      },
+      "setup": "OAuth access token",
+      "default_op": "upsert_lead",
+      "operations": {
+        "upsert_contact": {
+          "method": "POST",
+          "path": "/Contacts/upsert",
+          "body": {
+            "data": [
+              {
+                "Last_Name": "{field:last_name}",
+                "First_Name": "{field:first_name}",
+                "Email": "{field:email}",
+                "Phone": "{field:phone}"
+              }
+            ],
+            "duplicate_check_fields": [
+              "Email"
+            ]
+          },
+          "keywords": {
+            "contact": 3
+          }
+        },
+        "upsert_lead": {
+          "method": "POST",
+          "path": "/Leads/upsert",
+          "body": {
+            "data": [
+              {
+                "Last_Name": "{field:last_name}",
+                "First_Name": "{field:first_name}",
+                "Email": "{field:email}",
+                "Phone": "{field:phone}",
+                "Company": "{field:company}",
+                "Lead_Source": "{field:source}"
+              }
+            ],
+            "duplicate_check_fields": [
+              "Email"
+            ]
+          },
+          "keywords": {
+            "lead": 3,
+            "upsert": 2,
+            "create": 1,
+            "update": 1
+          }
+        }
+      }
+    },
+    "workiz": {
+      "name": "Workiz",
+      "aliases": [
+        "workiz"
+      ],
+      "strict_aliases": [],
+      "base_url": "https://api.workiz.com/api/v1/{config:workiz_api_token}",
+      "auth": null,
+      "headers": {},
+      "placeholders": {
+        "workiz_api_token": "PASTE-YOUR-WORKIZ-API-TOKEN",
+        "workiz_api_secret": "PASTE-YOUR-WORKIZ-API-SECRET"
+      },
+      "setup": "API token and API secret",
+      "default_op": "create_lead",
+      "operations": {
+        "create_job": {
+          "method": "POST",
+          "path": "/job/create/",
+          "body": {
+            "auth_secret": "{config:workiz_api_secret}",
+            "FirstName": "{field:first_name}",
+            "LastName": "{field:last_name}",
+            "Phone": "{field:phone}",
+            "Email": "{field:email}",
+            "JobType": "{field:service}"
+          },
+          "keywords": {
+            "job": 3,
+            "work order": 2
+          }
+        },
+        "create_lead": {
+          "method": "POST",
+          "path": "/lead/create/",
+          "body": {
+            "auth_secret": "{config:workiz_api_secret}",
+            "FirstName": "{field:first_name}",
+            "LastName": "{field:last_name}",
+            "Phone": "{field:phone}",
+            "Email": "{field:email}"
+          },
+          "keywords": {
+            "lead": 3,
+            "create": 1
+          }
+        }
+      }
+    },
+    "pandadoc": {
+      "name": "PandaDoc",
+      "aliases": [
+        "pandadoc",
+        "panda doc"
+      ],
+      "strict_aliases": [],
+      "base_url": "https://api.pandadoc.com/public/v1",
+      "auth": {
+        "in": "header",
+        "name": "Authorization",
+        "value": "API-Key {config:pandadoc_api_key}"
+      },
+      "headers": {},
+      "placeholders": {
+        "pandadoc_api_key": "PASTE-YOUR-PANDADOC-API-KEY",
+        "pandadoc_template_id": "PASTE-YOUR-TEMPLATE-UUID"
+      },
+      "setup": "API key and template id",
+      "default_op": "create_document",
+      "operations": {
+        "send_document": {
+          "method": "POST",
+          "path": "/documents/{field:document_id}/send",
+          "body": {
+            "message": "Your agreement is ready to review and sign.",
+            "silent": false
+          },
+          "keywords": {
+            "send": 3
+          }
+        },
+        "create_document": {
+          "method": "POST",
+          "path": "/documents",
+          "body": {
+            "name": "{field:document_name}",
+            "template_uuid": "{config:pandadoc_template_id}",
+            "recipients": [
+              {
+                "email": "{field:email}",
+                "first_name": "{field:first_name}",
+                "last_name": "{field:last_name}",
+                "role": "Client"
+              }
+            ],
+            "tokens": [
+              {
+                "name": "Client.Company",
+                "value": "{field:company}"
+              }
+            ]
+          },
+          "keywords": {
+            "contract": 3,
+            "proposal": 3,
+            "document": 2,
+            "generate": 2,
+            "quote": 2,
+            "create": 1,
+            "draft": 1
+          }
+        }
+      }
+    },
+    "monday": {
+      "name": "monday.com",
+      "aliases": [
+        "monday.com"
+      ],
+      "strict_aliases": [
+        "monday"
+      ],
+      "base_url": "https://api.monday.com/v2",
+      "auth": {
+        "in": "header",
+        "name": "Authorization",
+        "value": "{config:monday_api_token}"
+      },
+      "headers": {},
+      "placeholders": {
+        "monday_api_token": "PASTE-YOUR-MONDAY-API-TOKEN",
+        "monday_board_id": "PASTE-YOUR-BOARD-ID"
+      },
+      "setup": "API token and board id",
+      "default_op": "create_item",
+      "operations": {
+        "update_columns": {
+          "method": "POST",
+          "path": "",
+          "body": {
+            "query": "mutation ($board: ID!, $item: ID!, $cols: JSON!) { change_multiple_column_values (board_id: $board, item_id: $item, column_values: $cols) { id } }",
+            "variables": {
+              "board": "{config:monday_board_id}",
+              "item": "{field:item_id}",
+              "cols": "{js:JSON.stringify(JSON.stringify({ status: { label: $json.status } }))}"
+            }
+          },
+          "keywords": {
+            "update": 3,
+            "write back": 3,
+            "status": 2,
+            "move": 1
+          }
+        },
+        "create_item": {
+          "method": "POST",
+          "path": "",
+          "body": {
+            "query": "mutation ($board: ID!, $name: String!) { create_item (board_id: $board, item_name: $name) { id } }",
+            "variables": {
+              "board": "{config:monday_board_id}",
+              "name": "{field:name}"
+            }
+          },
+          "keywords": {
+            "item": 3,
+            "board": 2,
+            "create": 1,
+            "add": 1
+          }
+        }
+      }
+    },
+    "snov": {
+      "name": "Snov.io",
+      "aliases": [
+        "snov",
+        "snov.io"
+      ],
+      "strict_aliases": [],
+      "base_url": "https://api.snov.io/v1",
+      "auth": null,
+      "headers": {},
+      "placeholders": {
+        "snov_client_id": "PASTE-YOUR-SNOV-CLIENT-ID",
+        "snov_client_secret": "PASTE-YOUR-SNOV-CLIENT-SECRET",
+        "snov_access_token": "PASTE-YOUR-SNOV-ACCESS-TOKEN",
+        "snov_list_id": "PASTE-YOUR-SNOV-LIST-ID"
+      },
+      "setup": "client id and secret",
+      "default_op": "add_prospect",
+      "operations": {
+        "access_token": {
+          "method": "POST",
+          "path": "/oauth/access_token",
+          "body": {
+            "grant_type": "client_credentials",
+            "client_id": "{config:snov_client_id}",
+            "client_secret": "{config:snov_client_secret}"
+          },
+          "keywords": {
+            "token": 3,
+            "auth": 2
+          }
+        },
+        "add_prospect": {
+          "method": "POST",
+          "path": "/add-prospect-to-list",
+          "body": {
+            "access_token": "{config:snov_access_token}",
+            "email": "{field:email}",
+            "firstName": "{field:first_name}",
+            "lastName": "{field:last_name}",
+            "listId": "{config:snov_list_id}"
+          },
+          "keywords": {
+            "prospect": 3,
+            "list": 2,
+            "add": 2
+          }
+        }
+      }
+    },
+    "firecrawl": {
+      "name": "Firecrawl",
+      "aliases": [
+        "firecrawl"
+      ],
+      "strict_aliases": [],
+      "base_url": "https://api.firecrawl.dev/v1",
+      "auth": {
+        "in": "header",
+        "name": "Authorization",
+        "value": "Bearer {config:firecrawl_api_key}"
+      },
+      "headers": {},
+      "placeholders": {
+        "firecrawl_api_key": "PASTE-YOUR-FIRECRAWL-API-KEY"
+      },
+      "setup": "API key",
+      "default_op": "scrape",
+      "operations": {
+        "crawl": {
+          "method": "POST",
+          "path": "/crawl",
+          "body": {
+            "url": "{field:website}",
+            "limit": 20,
+            "scrapeOptions": {
+              "formats": [
+                "markdown"
+              ]
+            }
+          },
+          "keywords": {
+            "crawl": 4
+          }
+        },
+        "search": {
+          "method": "POST",
+          "path": "/search",
+          "body": {
+            "query": "{field:query}",
+            "limit": 5
+          },
+          "keywords": {
+            "search": 3
+          }
+        },
+        "scrape": {
+          "method": "POST",
+          "path": "/scrape",
+          "body": {
+            "url": "{field:website}",
+            "formats": [
+              "markdown"
+            ],
+            "onlyMainContent": true
+          },
+          "keywords": {
+            "scrape": 3,
+            "read": 1,
+            "page": 1,
+            "website": 1,
+            "site": 1
+          }
+        }
+      }
+    },
+    "apify": {
+      "name": "Apify",
+      "aliases": [
+        "apify"
+      ],
+      "strict_aliases": [],
+      "base_url": "https://api.apify.com/v2",
+      "auth": {
+        "in": "header",
+        "name": "Authorization",
+        "value": "Bearer {config:apify_token}"
+      },
+      "headers": {},
+      "placeholders": {
+        "apify_token": "PASTE-YOUR-APIFY-TOKEN",
+        "apify_actor_id": "PASTE-YOUR-USERNAME~PASTE-YOUR-ACTOR"
+      },
+      "setup": "API token and actor id",
+      "default_op": "run_actor_sync",
+      "operations": {
+        "run_actor_sync": {
+          "method": "POST",
+          "path": "/acts/{config:apify_actor_id}/run-sync-get-dataset-items",
+          "body": {
+            "startUrls": [
+              {
+                "url": "{field:website}"
+              }
+            ],
+            "maxItems": 50
+          },
+          "keywords": {
+            "actor": 3,
+            "run": 2,
+            "scrape": 2
+          }
+        }
+      }
+    }
+  }
+}

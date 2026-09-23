@@ -1,0 +1,141 @@
+{
+  "title": "How I Build an Automation Roadmap — Map, Find Inefficiency, Score ROI, Sequence",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "map",
+      "label": "1 · MAP CURRENT PROCESSES",
+      "color": 0,
+      "note": "Before recommending anything, I list every marketing workflow that's currently run manually or semi-manually."
+    },
+    {
+      "key": "find",
+      "label": "2 · FIND THE INEFFICIENCY",
+      "color": 0,
+      "note": "Every repeated manual task gets checked against what it actually costs in time and errors."
+    },
+    {
+      "key": "score",
+      "label": "3 · SCORE THE OPPORTUNITY",
+      "color": 0,
+      "note": "Every automation candidate gets a real ROI number, not a gut feeling about what seems worth building."
+    },
+    {
+      "key": "map_out",
+      "label": "4 · BUILD THE ROADMAP",
+      "color": 0,
+      "note": "Opportunities get sequenced by ROI and ease, quick wins first, so the roadmap is practical, not aspirational."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "list_processes",
+      "kind": "data.transform",
+      "label": "List Every Marketing Workflow Run Manually or Semi-Manually",
+      "section": "map"
+    },
+    {
+      "key": "metric_hours",
+      "kind": "data.transform",
+      "label": "Check the Metric: Hours Spent per Week on Each Process",
+      "section": "map"
+    },
+    {
+      "key": "find_repeat",
+      "kind": "data.transform",
+      "label": "Check Where the Same Task Gets Repeated by a Person Instead of a System",
+      "section": "find"
+    },
+    {
+      "key": "metric_error",
+      "kind": "data.transform",
+      "label": "Check the Metric: Error Rate or Delay Introduced by Manual Handling",
+      "section": "find"
+    },
+    {
+      "key": "estimate_savings",
+      "kind": "data.transform",
+      "label": "Estimate Hours Saved and Technical Feasibility for Each Candidate",
+      "section": "score"
+    },
+    {
+      "key": "metric_roi",
+      "kind": "data.transform",
+      "label": "Check the Metric: Hours Saved per Month vs Setup Effort",
+      "section": "score"
+    },
+    {
+      "key": "rank_opportunities",
+      "kind": "data.aggregate",
+      "label": "Rank Every Opportunity by ROI and Ease of Implementation",
+      "section": "map_out"
+    },
+    {
+      "key": "sequence_roadmap",
+      "kind": "data.transform",
+      "label": "Sequence Into a Roadmap: Quick Wins First, Bigger Builds After",
+      "section": "map_out"
+    },
+    {
+      "key": "hand_off",
+      "kind": "data.transform",
+      "label": "Hand Off the Roadmap With a Recommendation for Each Item",
+      "section": "map_out"
+    }
+  ],
+  "edges": [
+    {
+      "from": "list_processes",
+      "to": "metric_hours"
+    },
+    {
+      "from": "metric_hours",
+      "to": "find_repeat"
+    },
+    {
+      "from": "find_repeat",
+      "to": "metric_error"
+    },
+    {
+      "from": "metric_error",
+      "to": "estimate_savings"
+    },
+    {
+      "from": "estimate_savings",
+      "to": "metric_roi"
+    },
+    {
+      "from": "metric_roi",
+      "to": "rank_opportunities"
+    },
+    {
+      "from": "rank_opportunities",
+      "to": "sequence_roadmap"
+    },
+    {
+      "from": "sequence_roadmap",
+      "to": "hand_off"
+    }
+  ],
+  "input_sample": {
+    "process": "Weekly email campaign build",
+    "hours_per_week": 6,
+    "who_does_it": "Marketing coordinator, manual copy/paste from spreadsheet",
+    "error_notes": "Segment lists go stale, wrong offer sent to wrong segment twice last quarter"
+  },
+  "output_sample": {
+    "processes_reviewed": 9,
+    "automation_candidates": 5,
+    "top_recommendation": "Weekly email campaign build, 6 hrs/week saved, low setup effort, quick win",
+    "roadmap_order": [
+      "Email campaign build",
+      "Lead scoring sync",
+      "Social repurposing",
+      "Ad performance digest",
+      "Full CRM handoff"
+    ]
+  },
+  "archetype": "marketing_automation_roadmap_thought_process",
+  "learned": true,
+  "learned_at": "2026-08-26"
+}

@@ -1,0 +1,13 @@
+Senior n8n Automation Engineer - Ecommerce + Codex/Claude + Browser Automation
+
+Build a production ecommerce automation system. Takes an AliExpress link through building ads and stores, launching, and reporting results. Existing store-building and video-creation capabilities will be provided; build the automation around supplied business rules and policies and implement the remaining integrations and workflows.
+
+Must manage multiple products at once across store setup, offer setup, creative, payments/COGS, manual checks, ad deployment, testing, classification, reporting, and ongoing background automation.
+
+Core challenge: reliable parallel, long-running workflows. Multiple Codex, Claude, and Chrome/browser-based jobs may run concurrently, finish at different times, fail, wait for manual intervention, or continue in the background. The system must reliably track what completed, failed, or is waiting, and determine the next action without products interfering with each other.
+
+Required: n8n, browser automation, APIs/webhooks, asynchronous workflows, retries/concurrency, production automation reliability. Shopify and Codex/Claude experience strong pluses. All infrastructure, code, and workflows remain company-owned.
+
+To apply: 2-3 relevant systems you personally built, what you were personally responsible for, availability. Shortlisted candidates complete a paid practical test.
+
+Budget: $6,000 fixed-price, paid through milestones.

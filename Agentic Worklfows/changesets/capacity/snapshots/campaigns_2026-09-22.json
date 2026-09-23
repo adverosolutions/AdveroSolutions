@@ -1,0 +1,670 @@
+{
+ "items": [
+  {
+   "id": "f347604e-48c7-4813-831c-dc7b9d4b50ae",
+   "name": "2026 Cleaning - Trigger Outbound",
+   "status": 1,
+   "campaign_schedule": {
+    "schedules": [
+     {
+      "name": "Business hours",
+      "timing": {
+       "from": "07:00",
+       "to": "19:00"
+      },
+      "days": {
+       "0": false,
+       "1": true,
+       "2": true,
+       "3": true,
+       "4": true,
+       "5": true,
+       "6": true
+      },
+      "timezone": "America/Detroit"
+     }
+    ],
+    "start_date": null,
+    "end_date": null
+   },
+   "timestamp_created": "2026-09-10T00:18:11.835Z",
+   "timestamp_updated": "2026-09-19T11:06:57.210Z",
+   "pl_value": 1000,
+   "sequences": [
+    {
+     "steps": [
+      {
+       "type": "email",
+       "delay": 3,
+       "variants": [
+        {
+         "subject": "{{firstName}}, question",
+         "body": "<div>{{personalization}}</div><div><br /></div><div>I build outbound acquisition systems. I recently implemented the same system for a commercial roofing company doing around $150M/yr and was able to generate around $180,000 in 90 days.\u00a0</div><div><br /></div><div>I do this by watching for triggers (new leases, office expansions, property management changes, new construction) and run outreach under {{companyName}}'s name. All the walkthroughs would land straight on your calendar.</div><div><br /></div><div>I'm so confident that I guarantee at least $24,000 a year in new cleaning contracts signed within 90 days, or I give your money back and throw in a $200 gift card to your favorite steakhouse.\u00a0</div><div><br /></div><div>If this interests you, let's hop on a short 15 minute call. Just reply Yes and I can shoot you over a calendar invite.\u00a0</div><div><br /></div><div>Thanks,</div><div>Lorenzo</div>"
+        }
+       ],
+       "delay_unit": "days",
+       "pre_delay_unit": "days"
+      },
+      {
+       "type": "email",
+       "delay": 3,
+       "variants": [
+        {
+         "subject": "",
+         "body": "<div>Hey {{firstName}},</div><div><br /></div><div>Checking in, in case the first one got buried. Quick version:</div><div>- I want to build an outbound system for {{companyName}}. Goal is to catch businesses signing new leases or expanding, reach them under your name, and land the walkthroughs on your calendar.</div><div>- I did this for a commercial roofer doing $150M/yr and generated about $180K in new contracts in 90 days.</div><div>- If you don't have at least $24K a year in new cleaning contracts signed within 90 days, I give your money back and throw in a $200 gift card to your favorite steakhouse.</div><div><br /></div><div>Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.</div><div><br /></div><div>Thanks for the time,</div><div>Lorenzo</div>"
+        }
+       ],
+       "delay_unit": "days",
+       "pre_delay_unit": "days"
+      }
+     ]
+    }
+   ],
+   "email_gap": 7,
+   "text_only": true,
+   "first_email_text_only": false,
+   "email_list": [
+    "lorenzo@adveromedia.com",
+    "lorenzo@myadvero.com",
+    "lorenzo@proadvero.com",
+    "lorenzo@theadvero.com",
+    "lorenzov@adveromedia.com",
+    "lorenzov@myadvero.com",
+    "lorenzov@proadvero.com",
+    "lorenzov@theadvero.com",
+    "lorenzovillarreal@adveromedia.com",
+    "lorenzovillarreal@myadvero.com",
+    "lorenzovillarreal@proadvero.com",
+    "lorenzovillarreal@theadvero.com"
+   ],
+   "daily_limit": 50,
+   "stop_on_reply": true,
+   "email_tag_list": [],
+   "link_tracking": false,
+   "open_tracking": false,
+   "stop_on_auto_reply": false,
+   "prioritize_new_leads": false,
+   "match_lead_esp": false,
+   "stop_for_company": false,
+   "core_variables": {
+    "phone": true,
+    "website": true,
+    "lastName": true,
+    "firstName": true,
+    "companyName": true,
+    "personalization": true
+   },
+   "custom_variables": {
+    "email": true,
+    "lead_id": true,
+    "campaign": true,
+    "mv_result": true,
+    "specialty": true,
+    "pause_until": true
+   },
+   "insert_unsubscribe_header": false,
+   "allow_risky_contacts": true,
+   "disable_bounce_protect": false,
+   "cc_list": [],
+   "bcc_list": [],
+   "organization": "92fb7f1b-1d71-45d5-bea0-178894b5b492",
+   "owned_by": "fdb81354-a6cc-4460-9efb-0944b23abcec",
+   "provider_routing_rules": []
+  },
+  {
+   "id": "f00c5e28-fdc4-4d84-a7e6-dfba9695f35d",
+   "name": "2026 Bookkeeping - Client Reactivation",
+   "status": 1,
+   "campaign_schedule": {
+    "schedules": [
+     {
+      "name": "Business hours",
+      "timing": {
+       "from": "07:00",
+       "to": "19:00"
+      },
+      "days": {
+       "0": false,
+       "1": true,
+       "2": true,
+       "3": true,
+       "4": true,
+       "5": true,
+       "6": true
+      },
+      "timezone": "America/Detroit"
+     }
+    ],
+    "start_date": null,
+    "end_date": null
+   },
+   "timestamp_created": "2026-09-10T00:18:12.159Z",
+   "timestamp_updated": "2026-09-18T11:32:39.478Z",
+   "pl_value": 1000,
+   "sequences": [
+    {
+     "steps": [
+      {
+       "type": "email",
+       "delay": 3,
+       "variants": [
+        {
+         "subject": "{{firstName}}, question",
+         "body": "<div>{{personalization}}</div><div><br /></div><div>I build client reactivation systems. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.</div><div><br /></div><div>TLDR: I'd recover lost revenue by building email sequences that would go out to any lost inquiries and former clients, timed to tax season, quarterly estimates, and year-end cleanup. Booked straight onto your calendar.</div><div><br /></div><div>I'm so certain this would work for you that I won't charge you a single cent up front, only a percentage of first-year fees from clients I bring back, $0 if nothing closes. I truly believe I can benefit {{companyName}}.</div><div><br />Would you be open to a quick 15 minute call about this? If so just say yes and I'll shoot a calendar invite over.</div><div><br /></div><div>Thanks,</div><div>Lorenzo</div>"
+        }
+       ],
+       "delay_unit": "days",
+       "pre_delay_unit": "days"
+      },
+      {
+       "type": "email",
+       "delay": 3,
+       "variants": [
+        {
+         "subject": "",
+         "body": "<div>Hey {{firstName}},</div><div><br /></div><div>Checking in, in case the first one got buried. Quick version:</div><div>- I want to build a reactivation system for {{companyName}}. Goal is to bring back lost inquiries and former clients with sequences timed to tax season, quarterly estimates, and year-end cleanup.</div><div>- I did this for a commercial roofer doing $150M/yr and recovered about $6M in contracts in 6 months.</div><div>- Nothing up front. I only take a percentage of first-year fees on clients I bring back, $0 if nothing closes.</div><div><br /></div><div>Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.</div><div><br /></div><div>Thanks for the time,</div><div>Lorenzo</div>"
+        }
+       ],
+       "delay_unit": "days",
+       "pre_delay_unit": "days"
+      }
+     ]
+    }
+   ],
+   "email_gap": 7,
+   "text_only": true,
+   "first_email_text_only": false,
+   "email_list": [
+    "lorenzo@adveromedia.com",
+    "lorenzo@myadvero.com",
+    "lorenzo@proadvero.com",
+    "lorenzo@theadvero.com",
+    "lorenzov@adveromedia.com",
+    "lorenzov@myadvero.com",
+    "lorenzov@proadvero.com",
+    "lorenzov@theadvero.com",
+    "lorenzovillarreal@adveromedia.com",
+    "lorenzovillarreal@myadvero.com",
+    "lorenzovillarreal@proadvero.com",
+    "lorenzovillarreal@theadvero.com"
+   ],
+   "daily_limit": 50,
+   "stop_on_reply": true,
+   "email_tag_list": [],
+   "link_tracking": false,
+   "open_tracking": false,
+   "stop_on_auto_reply": false,
+   "prioritize_new_leads": false,
+   "match_lead_esp": false,
+   "stop_for_company": false,
+   "core_variables": {
+    "phone": true,
+    "website": true,
+    "lastName": true,
+    "firstName": true,
+    "companyName": true,
+    "personalization": true
+   },
+   "custom_variables": {
+    "email": true,
+    "lead_id": true,
+    "campaign": true,
+    "mv_result": true,
+    "specialty": true,
+    "pause_until": true
+   },
+   "insert_unsubscribe_header": false,
+   "allow_risky_contacts": true,
+   "disable_bounce_protect": false,
+   "cc_list": [],
+   "bcc_list": [],
+   "organization": "92fb7f1b-1d71-45d5-bea0-178894b5b492",
+   "owned_by": "fdb81354-a6cc-4460-9efb-0944b23abcec",
+   "provider_routing_rules": []
+  },
+  {
+   "id": "cd2e251c-3b5a-40d2-a3dc-d07c4004a48c",
+   "name": "2026 Recruiting - Outbound (specialty roles)",
+   "status": 1,
+   "campaign_schedule": {
+    "schedules": [
+     {
+      "name": "Business hours",
+      "timing": {
+       "from": "08:00",
+       "to": "17:00"
+      },
+      "days": {
+       "0": false,
+       "1": true,
+       "2": true,
+       "3": true,
+       "4": true,
+       "5": true,
+       "6": true
+      },
+      "timezone": "America/Chicago"
+     }
+    ],
+    "start_date": null,
+    "end_date": null
+   },
+   "timestamp_created": "2026-09-10T00:18:11.274Z",
+   "timestamp_updated": "2026-09-18T13:25:46.959Z",
+   "pl_value": 1000,
+   "sequences": [
+    {
+     "steps": [
+      {
+       "type": "email",
+       "delay": 3,
+       "variants": [
+        {
+         "subject": "{{firstName}}, question",
+         "body": "<div>{{personalization}}</div><div><br /></div><div>I build outbound systems for recruiting agencies. I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days.</div><div><br /></div><div>Here's what this would look like for {{companyName}}: I watch for {{specialty}} roles sitting open on job boards, run outreach to the hiring managers under your name, and put the intro calls straight on your calendar.</div><div><br /></div><div>I'm so confident this works that I guarantee at least $40,000 in new placement fees from those calls within 180 days, or I return your money and throw in a $200 gift card to your favorite steakhouse.</div><div><br /></div><div>Open to a quick 15 minute call? Just say yes and I'll send a calendar invite.</div><div><br /></div><div>Thanks,</div><div>Lorenzo</div>"
+        }
+       ],
+       "delay_unit": "days",
+       "pre_delay_unit": "days"
+      },
+      {
+       "type": "email",
+       "delay": 3,
+       "variants": [
+        {
+         "subject": "",
+         "body": "<div>Hey {{firstName}},</div><div><br /></div><div>Checking in, in case the first one got buried. Quick version:</div><div>- I want to build an outbound system for {{companyName}}. Goal is to find {{specialty}} roles sitting open on job boards, reach the hiring managers under your name, and put the intro calls on your calendar.</div><div>- I did this for a commercial roofer doing $150M/yr and generated about $180K in new contracts in 90 days.</div><div>- If you don't see $40K in new placement fees within 180 days, I return your money and throw in a $200 gift card to your favorite steakhouse.</div><div><br /></div><div>Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.</div><div><br /></div><div>Thanks for the time,</div><div>Lorenzo</div>"
+        }
+       ],
+       "delay_unit": "days",
+       "pre_delay_unit": "days"
+      }
+     ]
+    }
+   ],
+   "email_gap": 7,
+   "text_only": true,
+   "first_email_text_only": false,
+   "email_list": [
+    "lorenzo@adveromedia.com",
+    "lorenzo@myadvero.com",
+    "lorenzo@proadvero.com",
+    "lorenzo@theadvero.com",
+    "lorenzov@adveromedia.com",
+    "lorenzov@myadvero.com",
+    "lorenzov@proadvero.com",
+    "lorenzov@theadvero.com",
+    "lorenzovillarreal@adveromedia.com",
+    "lorenzovillarreal@myadvero.com",
+    "lorenzovillarreal@proadvero.com",
+    "lorenzovillarreal@theadvero.com"
+   ],
+   "daily_limit": 50,
+   "stop_on_reply": true,
+   "email_tag_list": [],
+   "link_tracking": false,
+   "open_tracking": false,
+   "stop_on_auto_reply": false,
+   "prioritize_new_leads": false,
+   "match_lead_esp": false,
+   "stop_for_company": false,
+   "core_variables": {
+    "phone": true,
+    "website": true,
+    "lastName": true,
+    "firstName": true,
+    "companyName": true,
+    "personalization": true
+   },
+   "custom_variables": {
+    "email": true,
+    "lead_id": true,
+    "campaign": true,
+    "mv_result": true,
+    "specialty": true,
+    "pause_until": true
+   },
+   "insert_unsubscribe_header": false,
+   "allow_risky_contacts": true,
+   "disable_bounce_protect": false,
+   "cc_list": [],
+   "bcc_list": [],
+   "organization": "92fb7f1b-1d71-45d5-bea0-178894b5b492",
+   "owned_by": "fdb81354-a6cc-4460-9efb-0944b23abcec",
+   "provider_routing_rules": []
+  },
+  {
+   "id": "87ebb167-9b64-4b6f-b658-88f3d1af9980",
+   "name": "2026 Bookkeeping - Trigger Outbound",
+   "status": 1,
+   "campaign_schedule": {
+    "schedules": [
+     {
+      "name": "Business hours",
+      "timing": {
+       "from": "07:00",
+       "to": "19:00"
+      },
+      "days": {
+       "0": false,
+       "1": true,
+       "2": true,
+       "3": true,
+       "4": true,
+       "5": true,
+       "6": true
+      },
+      "timezone": "America/Detroit"
+     }
+    ],
+    "start_date": null,
+    "end_date": null
+   },
+   "timestamp_created": "2026-09-10T00:18:12.431Z",
+   "timestamp_updated": "2026-09-17T11:49:15.622Z",
+   "pl_value": 1000,
+   "sequences": [
+    {
+     "steps": [
+      {
+       "type": "email",
+       "delay": 3,
+       "variants": [
+        {
+         "subject": "{{firstName}}, question",
+         "body": "<div>{{personalization}}</div><div><br /></div><div>I build outbound acquisition systems. I recently implemented the same system for a commercial roofing company doing around $150M/yr and was able to generate around $180,000 in 90 days.\u00a0</div><div><br /></div><div>I do this by watching for triggers (new business formations, companies posting part time bookkeeper or admin roles, second location openings) and run outreach under {{companyName}}'s name. All the discovery calls land straight on your calendar.</div><div><br /></div><div>I'm so confident that I guarantee at least $15,000 in new annual client fees signed within 90 days, or I give your money back and throw in a $200 gift card to your favorite steakhouse.\u00a0</div><div><br /></div><div>If this interests you, let's hop on a short 15 minute call. Just reply Yes and I can shoot you over a calendar invite.\u00a0</div><div><br /></div><div>Thanks,</div><div>Lorenzo</div>"
+        }
+       ],
+       "delay_unit": "days",
+       "pre_delay_unit": "days"
+      },
+      {
+       "type": "email",
+       "delay": 3,
+       "variants": [
+        {
+         "subject": "",
+         "body": "<div>Hey {{firstName}},</div><div><br /></div><div>Checking in, in case the first one got buried. Quick version:</div><div>- I want to build an outbound system for {{companyName}}. Goal is to catch new business formations and second locations opening, reach them under your name, and land the discovery calls on your calendar.</div><div>- I did this for a commercial roofer doing $150M/yr and generated about $180K in new contracts in 90 days.</div><div>- If you don't have at least $15K in new annual client fees signed within 90 days, I give your money back and throw in a $200 gift card to your favorite steakhouse.</div><div><br /></div><div>Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.</div><div><br /></div><div>Thanks for the time,</div><div>Lorenzo</div>"
+        }
+       ],
+       "delay_unit": "days",
+       "pre_delay_unit": "days"
+      }
+     ]
+    }
+   ],
+   "email_gap": 7,
+   "text_only": true,
+   "first_email_text_only": false,
+   "email_list": [
+    "lorenzo@adveromedia.com",
+    "lorenzo@myadvero.com",
+    "lorenzo@proadvero.com",
+    "lorenzo@theadvero.com",
+    "lorenzov@adveromedia.com",
+    "lorenzov@myadvero.com",
+    "lorenzov@proadvero.com",
+    "lorenzov@theadvero.com",
+    "lorenzovillarreal@adveromedia.com",
+    "lorenzovillarreal@myadvero.com",
+    "lorenzovillarreal@proadvero.com",
+    "lorenzovillarreal@theadvero.com"
+   ],
+   "daily_limit": 50,
+   "stop_on_reply": true,
+   "email_tag_list": [],
+   "link_tracking": false,
+   "open_tracking": false,
+   "stop_on_auto_reply": false,
+   "prioritize_new_leads": false,
+   "match_lead_esp": false,
+   "stop_for_company": false,
+   "core_variables": {
+    "phone": true,
+    "website": true,
+    "lastName": true,
+    "firstName": true,
+    "companyName": true,
+    "personalization": true
+   },
+   "custom_variables": {
+    "email": true,
+    "lead_id": true,
+    "campaign": true,
+    "mv_result": true,
+    "specialty": true,
+    "pause_until": true
+   },
+   "insert_unsubscribe_header": false,
+   "allow_risky_contacts": true,
+   "disable_bounce_protect": false,
+   "cc_list": [],
+   "bcc_list": [],
+   "organization": "92fb7f1b-1d71-45d5-bea0-178894b5b492",
+   "owned_by": "fdb81354-a6cc-4460-9efb-0944b23abcec",
+   "provider_routing_rules": []
+  },
+  {
+   "id": "8086b41e-b546-4b36-9fa0-2d01f5cc119a",
+   "name": "2026 Cleaning - Client Reactivation",
+   "status": 1,
+   "campaign_schedule": {
+    "schedules": [
+     {
+      "name": "Business hours",
+      "timing": {
+       "from": "07:00",
+       "to": "19:00"
+      },
+      "days": {
+       "0": false,
+       "1": true,
+       "2": true,
+       "3": true,
+       "4": true,
+       "5": true,
+       "6": true
+      },
+      "timezone": "America/Detroit"
+     }
+    ],
+    "start_date": null,
+    "end_date": null
+   },
+   "timestamp_created": "2026-09-10T00:18:11.548Z",
+   "timestamp_updated": "2026-09-16T13:33:23.646Z",
+   "pl_value": 1000,
+   "sequences": [
+    {
+     "steps": [
+      {
+       "type": "email",
+       "delay": 3,
+       "variants": [
+        {
+         "subject": "{{firstName}}, question",
+         "body": "<div>{{personalization}}</div><div><br /></div><div>Know this is out of left field, if I could help recover the money from accounts that cancelled or stopped renewing their contracts in exchange for a commission on the accounts I bring back, would you be open? I work mostly on performance and am building my network.</div><div><br /></div><div>About me: I build client reactivation systems. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months. Would cost you nothing upfront.</div><div><br /></div><div>Let me know.</div><div><br /></div><div>Thanks,</div><div>Lorenzo</div>"
+        }
+       ],
+       "delay_unit": "days",
+       "pre_delay_unit": "days"
+      },
+      {
+       "type": "email",
+       "delay": 3,
+       "variants": [
+        {
+         "subject": "",
+         "body": "<div>Hey {{firstName}},</div><div><br /></div><div>Checking in, in case the first one got buried. Quick version:</div><div>- I want to build a reactivation system for {{companyName}}. Goal is to bring back the accounts that cancelled or stopped renewing, without you chasing anyone.</div><div>- I did this for a commercial roofer doing $150M/yr and recovered about $6M in contracts in 6 months.</div><div>- Nothing up front. I only take a commission on the accounts I bring back.</div><div><br /></div><div>Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.</div><div><br /></div><div>Thanks for the time,</div><div>Lorenzo</div>"
+        }
+       ],
+       "delay_unit": "days",
+       "pre_delay_unit": "days"
+      }
+     ]
+    }
+   ],
+   "email_gap": 10,
+   "text_only": true,
+   "first_email_text_only": false,
+   "email_list": [
+    "lorenzo@adveromedia.com",
+    "lorenzo@myadvero.com",
+    "lorenzo@proadvero.com",
+    "lorenzo@theadvero.com",
+    "lorenzov@adveromedia.com",
+    "lorenzov@myadvero.com",
+    "lorenzov@proadvero.com",
+    "lorenzov@theadvero.com",
+    "lorenzovillarreal@adveromedia.com",
+    "lorenzovillarreal@myadvero.com",
+    "lorenzovillarreal@proadvero.com",
+    "lorenzovillarreal@theadvero.com"
+   ],
+   "daily_limit": 50,
+   "stop_on_reply": true,
+   "email_tag_list": [],
+   "link_tracking": false,
+   "open_tracking": false,
+   "stop_on_auto_reply": false,
+   "prioritize_new_leads": false,
+   "match_lead_esp": false,
+   "stop_for_company": false,
+   "core_variables": {
+    "phone": true,
+    "website": true,
+    "lastName": true,
+    "firstName": true,
+    "companyName": true,
+    "personalization": true
+   },
+   "custom_variables": {
+    "email": true,
+    "lead_id": true,
+    "campaign": true,
+    "mv_result": true,
+    "specialty": true,
+    "pause_until": true
+   },
+   "insert_unsubscribe_header": false,
+   "allow_risky_contacts": true,
+   "disable_bounce_protect": false,
+   "cc_list": [],
+   "bcc_list": [],
+   "organization": "92fb7f1b-1d71-45d5-bea0-178894b5b492",
+   "owned_by": "fdb81354-a6cc-4460-9efb-0944b23abcec",
+   "provider_routing_rules": []
+  },
+  {
+   "id": "1d4d5bb3-40a7-4333-bf34-b269d2cc9955",
+   "name": "2026 Recruiting - Client Reactivation",
+   "status": 1,
+   "campaign_schedule": {
+    "schedules": [
+     {
+      "name": "Business hours",
+      "timing": {
+       "from": "07:00",
+       "to": "19:00"
+      },
+      "days": {
+       "0": false,
+       "1": true,
+       "2": true,
+       "3": true,
+       "4": true,
+       "5": true,
+       "6": true
+      },
+      "timezone": "America/Detroit"
+     }
+    ],
+    "start_date": null,
+    "end_date": null
+   },
+   "timestamp_created": "2026-09-10T00:18:10.999Z",
+   "timestamp_updated": "2026-09-16T13:33:48.932Z",
+   "pl_value": 1000,
+   "sequences": [
+    {
+     "steps": [
+      {
+       "type": "email",
+       "delay": 3,
+       "variants": [
+        {
+         "subject": "{{firstName}}, question",
+         "body": "<div>{{personalization}}</div><div><br /></div><div>I build client reactivation systems. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.</div><div><br /></div><div>TLDR: I'd recover lost revenue by building email and text sequences that would go out to any dormant or near miss candidate accounts.\u00a0</div><div><br /></div><div>I'm so certain this would work for you that I won't charge you a single cent up front, only a percentage of placement fees from accounts I bring back, $0 if nothing closes. I truly believe I can benefit {{companyName}}.</div><div><br /></div><div>Would you be open to a quick 15 minute call about this? If so just say yes and I'll shoot a calendar invite over.</div><div><br /></div><div>Thanks,</div><div>Lorenzo</div>"
+        }
+       ],
+       "delay_unit": "days",
+       "pre_delay_unit": "days"
+      },
+      {
+       "type": "email",
+       "delay": 3,
+       "variants": [
+        {
+         "subject": "",
+         "body": "<div>Hey {{firstName}},</div><div><br /></div><div>Checking in, in case the first one got buried. Quick version:</div><div>- I want to build a reactivation system for {{companyName}}. Goal is to bring back the accounts that went quiet on you, with email and text sequences that run on their own.</div><div>- I did this for a commercial roofer doing $150M/yr and recovered about $6M in contracts in 6 months.</div><div>- Nothing up front. I only take a percentage of placement fees on accounts I bring back, $0 if nothing closes.</div><div><br /></div><div>Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.</div><div><br /></div><div>Thanks for the time,</div><div>Lorenzo</div>"
+        }
+       ],
+       "delay_unit": "days",
+       "pre_delay_unit": "days"
+      }
+     ]
+    }
+   ],
+   "email_gap": 7,
+   "text_only": true,
+   "first_email_text_only": false,
+   "email_list": [
+    "lorenzo@adveromedia.com",
+    "lorenzo@myadvero.com",
+    "lorenzo@proadvero.com",
+    "lorenzo@theadvero.com",
+    "lorenzov@adveromedia.com",
+    "lorenzov@myadvero.com",
+    "lorenzov@proadvero.com",
+    "lorenzov@theadvero.com",
+    "lorenzovillarreal@adveromedia.com",
+    "lorenzovillarreal@myadvero.com",
+    "lorenzovillarreal@proadvero.com",
+    "lorenzovillarreal@theadvero.com"
+   ],
+   "daily_limit": 50,
+   "stop_on_reply": true,
+   "email_tag_list": [],
+   "link_tracking": false,
+   "open_tracking": false,
+   "stop_on_auto_reply": false,
+   "prioritize_new_leads": false,
+   "match_lead_esp": false,
+   "stop_for_company": false,
+   "core_variables": {
+    "phone": true,
+    "website": true,
+    "lastName": true,
+    "firstName": true,
+    "companyName": true,
+    "personalization": true
+   },
+   "custom_variables": {
+    "email": true,
+    "lead_id": true,
+    "campaign": true,
+    "mv_result": true,
+    "specialty": true,
+    "pause_until": true
+   },
+   "insert_unsubscribe_header": false,
+   "allow_risky_contacts": true,
+   "disable_bounce_protect": false,
+   "cc_list": [],
+   "bcc_list": [],
+   "organization": "92fb7f1b-1d71-45d5-bea0-178894b5b492",
+   "owned_by": "fdb81354-a6cc-4460-9efb-0944b23abcec",
+   "provider_routing_rules": []
+  }
+ ]
+}

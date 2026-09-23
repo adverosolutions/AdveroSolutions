@@ -1,0 +1,251 @@
+{
+  "title": "Phase 1 — Draft-Only Gmail Classifier for Straightforward Enquiries",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · WATCH THE INBOX, IGNORE THE NOISE",
+      "color": 0,
+      "note": "Newsletters, internal mail, automated notifications, results emails and spam never reach classification. The same message never gets processed twice, even if Gmail re-delivers it."
+    },
+    {
+      "key": "classify",
+      "label": "2 · CLASSIFY AND EXTRACT ONLY WHAT'S NEEDED",
+      "color": 0,
+      "note": "The model reads the email and returns a category, a confidence score, and only the specific fields required: sender's first name, stated age, requested location, whether insurance is mentioned. Nothing else leaves this step."
+    },
+    {
+      "key": "gate",
+      "label": "3 · THE OUT-OF-SCOPE GATE",
+      "color": 0,
+      "note": "This is the rule that matters most. An email that mixes a simple question with a test, price, clinical, or requisition question is sent to a human in full. No partial draft is ever written, even for the simple part."
+    },
+    {
+      "key": "draft",
+      "label": "4 · BUILD THE DRAFT FROM APPROVED CONTENT ONLY",
+      "color": 0,
+      "note": "The wording comes from the approved Google Sheet, never from the model's own knowledge, and never from the internet. Staff can update a location, an opening time, or the approved wording without anyone touching the workflow."
+    },
+    {
+      "key": "review",
+      "label": "5 · HUMAN REVIEW",
+      "color": 0,
+      "note": "Unclear age, unclear location, mixed topics, or anything outside the three approved categories lands here labelled and untouched. Nothing is guessed at."
+    },
+    {
+      "key": "log",
+      "label": "6 · LOG EVERY OUTCOME, ALERT ON FAILURE",
+      "color": 0,
+      "note": "Every email gets one row, success or review, so accuracy can be audited from day one. A failed step anywhere alerts immediately instead of failing silently."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "mail",
+      "kind": "trigger.email",
+      "label": "1 · New Message in the Support Inbox",
+      "section": "intake"
+    },
+    {
+      "key": "noise",
+      "kind": "data.filter",
+      "label": "2 · Ignore Newsletters, Internal Mail, Results Emails and Spam",
+      "section": "intake"
+    },
+    {
+      "key": "dedupe",
+      "kind": "data.filter",
+      "label": "3 · Skip It if We Already Processed This Email",
+      "section": "intake"
+    },
+    {
+      "key": "classify",
+      "kind": "ai.agent",
+      "label": "4 · Read the Email and Classify It",
+      "section": "classify"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Classification Model",
+      "app": "openai",
+      "parent": "classify",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Force Category, Confidence, and Only the Needed Fields",
+      "parent": "classify",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "outscope",
+      "kind": "flow.branch",
+      "label": "5 · Does It Touch Anything Outside Phase 1?",
+      "section": "gate"
+    },
+    {
+      "key": "route",
+      "kind": "flow.switch",
+      "label": "6 · Which Straightforward Category Is This?",
+      "section": "draft"
+    },
+    {
+      "key": "lookup",
+      "kind": "app.action",
+      "label": "7 · Pull the Approved Wording for This Category",
+      "app": "googleSheets",
+      "op": "lookup_row",
+      "section": "draft"
+    },
+    {
+      "key": "fill",
+      "kind": "data.transform",
+      "label": "8 · Fill In the Approved Template With Their Details",
+      "section": "draft"
+    },
+    {
+      "key": "draft_create",
+      "kind": "app.action",
+      "label": "9 · Create the Reply Draft in the Same Thread",
+      "app": "gmail",
+      "op": "create_draft",
+      "section": "draft"
+    },
+    {
+      "key": "label_ready",
+      "kind": "app.action",
+      "label": "10 · Label It AI – Draft Ready",
+      "app": "gmail",
+      "op": "add_label",
+      "section": "draft"
+    },
+    {
+      "key": "label_review",
+      "kind": "app.action",
+      "label": "11 · Label It AI – Human Review, No Draft Written",
+      "app": "gmail",
+      "op": "add_label",
+      "section": "review"
+    },
+    {
+      "key": "logrow",
+      "kind": "app.action",
+      "label": "12 · Log the Email ID, Category, Confidence and Status",
+      "app": "googleSheets",
+      "op": "append_row",
+      "section": "log"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "13 · Any Step Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "log"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "14 · Label It AI – Error and Alert Us",
+      "app": "gmail",
+      "op": "add_label",
+      "section": "log"
+    }
+  ],
+  "edges": [
+    {
+      "from": "mail",
+      "to": "noise"
+    },
+    {
+      "from": "noise",
+      "to": "dedupe"
+    },
+    {
+      "from": "dedupe",
+      "to": "classify"
+    },
+    {
+      "from": "classify",
+      "to": "outscope"
+    },
+    {
+      "from": "outscope",
+      "to": "label_review",
+      "branch": "Touches a test, price, clinical or requisition topic"
+    },
+    {
+      "from": "outscope",
+      "to": "route",
+      "branch": "Straightforward only"
+    },
+    {
+      "from": "route",
+      "to": "lookup",
+      "branch": "Patient under 18, age clear"
+    },
+    {
+      "from": "route",
+      "to": "lookup",
+      "branch": "Clinic location, confident"
+    },
+    {
+      "from": "route",
+      "to": "lookup",
+      "branch": "Insurance question"
+    },
+    {
+      "from": "route",
+      "to": "label_review",
+      "branch": "Age or location unclear"
+    },
+    {
+      "from": "lookup",
+      "to": "fill"
+    },
+    {
+      "from": "fill",
+      "to": "draft_create"
+    },
+    {
+      "from": "draft_create",
+      "to": "label_ready"
+    },
+    {
+      "from": "label_ready",
+      "to": "logrow"
+    },
+    {
+      "from": "label_review",
+      "to": "logrow"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "from": "j.okafor@personal-email.co.uk",
+    "subject": "Opening hours + a quick test question",
+    "body": "Hi, what time does your Manchester clinic open on Saturdays? Also, do you test for ferritin there and roughly how much would that cost?"
+  },
+  "output_sample": {
+    "straightforward_part_detected": "Clinic location and opening hours — Manchester",
+    "out_of_scope_part_detected": "Specific test name (ferritin) plus a price request",
+    "routing_decision": "Entire email routed to human review — no partial draft attempted, even though the location question alone would have qualified",
+    "label_applied": "AI – Human Review",
+    "confidence": 0.91,
+    "draft_created": false,
+    "logged": {
+      "email_id": "18d2a9f1c7e4b3a2",
+      "category": "Mixed — Location + Test/Price",
+      "status": "Routed to human review",
+      "confidence": 0.91
+    }
+  },
+  "archetype": "healthcare_gmail_draft_only_classifier",
+  "learned": true,
+  "learned_at": "2026-08-20"
+}

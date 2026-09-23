@@ -1,0 +1,110 @@
+{
+  "title": "CRM Stage Trigger to SMS + Email Follow-Up With Exit Rules",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "trig",
+      "label": "1 · CRM STAGE CHANGE COMES IN",
+      "color": 0,
+      "note": "GoHighLevel or HubSpot fires a webhook when a contact moves stage. We normalize the contact so every stage below reads the same fields."
+    },
+    {
+      "key": "route",
+      "label": "2 · ROUTE BY PIPELINE STAGE",
+      "color": 0,
+      "note": "One switch, one sequence per stage. Adding a stage later is one more arm, not a rebuild."
+    },
+    {
+      "key": "seq",
+      "label": "3 · NEW LEAD SEQUENCE: SMS, WAIT, EMAIL, WAIT",
+      "color": 0,
+      "note": "Instant SMS while the lead is still warm, email an hour later, then a full day before the next check. Every delay timer is visible in its label."
+    },
+    {
+      "key": "exit",
+      "label": "4 · EXIT RULES AND TOUCH CAP",
+      "color": 0,
+      "note": "If they replied or booked, the sequence stops. Otherwise one more SMS and back to the day timer, until the touch cap ends it."
+    },
+    {
+      "key": "out",
+      "label": "5 · NOTIFY THE REP, WRITE BACK TO THE CRM, CATCH ERRORS",
+      "color": 0,
+      "note": "The rep sees every touch in Slack and the CRM holds the sequence state. Any failure alerts with a link to the run."
+    }
+  ],
+  "nodes": [
+    { "key": "hook", "kind": "trigger.webhook", "label": "1 · CRM Stage Changed (GoHighLevel / HubSpot)", "section": "trig" },
+    { "key": "norm", "kind": "data.transform", "label": "2 · Normalize Contact, Stage, Consent and Touch Count", "section": "trig" },
+    { "key": "route", "kind": "flow.switch", "label": "3 · Route by Pipeline Stage", "section": "route" },
+    { "key": "sms1", "kind": "app.action", "app": "twilio", "op": "send", "label": "4 · Instant SMS: Thanks, Quick Question", "section": "seq" },
+    { "key": "wait1", "kind": "flow.wait", "label": "5 · Delay Timer: Wait 1 Hour", "section": "seq" },
+    { "key": "email1", "kind": "app.action", "app": "gmail", "op": "send", "label": "6 · Email: Intro and Booking Link", "section": "seq" },
+    { "key": "wait2", "kind": "flow.wait", "label": "7 · Delay Timer: Wait 1 Day", "section": "seq" },
+    { "key": "exit", "kind": "flow.branch", "label": "8 · Replied or Booked? (Exit Rule)", "section": "exit" },
+    { "key": "stop", "kind": "flow.noop", "label": "9 · Stop Sequence: Lead Responded", "section": "exit" },
+    { "key": "cap", "kind": "flow.branch", "label": "10 · Under 4 Touches? (Touch Cap)", "section": "exit" },
+    { "key": "sms2", "kind": "app.action", "app": "twilio", "op": "send", "label": "11 · Next SMS Touch, Then Back to the Day Timer", "section": "exit" },
+    { "key": "pwait", "kind": "flow.wait", "label": "12 · Proposal Sent: Delay Timer, Wait 2 Days", "section": "seq" },
+    { "key": "pemail", "kind": "app.action", "app": "gmail", "op": "send", "label": "13 · Email: Any Questions on the Proposal?", "section": "seq" },
+    { "key": "nosms", "kind": "app.action", "app": "twilio", "op": "send", "label": "14 · No Response: Breakup SMS, Should I Close Your File?", "section": "seq" },
+    { "key": "notify", "kind": "app.action", "app": "slack", "op": "post", "label": "15 · Notify the Rep in Slack: Touch Sent or Sequence Ended", "section": "out" },
+    { "key": "writeback", "kind": "net.http", "label": "16 · CRM: Update Contact Sequence Status", "section": "out" },
+    { "key": "err", "kind": "trigger.app", "app": "n8n", "op": "error_trigger", "label": "17 · Any Node Fails, Anywhere", "section": "out" },
+    { "key": "alert", "kind": "app.action", "app": "slack", "op": "post", "label": "18 · Alert the Rep With a Link to the Failed Run", "section": "out" }
+  ],
+  "edges": [
+    { "from": "hook", "to": "norm" },
+    { "from": "norm", "to": "route" },
+    { "from": "route", "to": "sms1", "branch": "New Lead" },
+    { "from": "route", "to": "pwait", "branch": "Proposal Sent" },
+    { "from": "route", "to": "nosms", "branch": "No Response" },
+    { "from": "sms1", "to": "wait1" },
+    { "from": "wait1", "to": "email1" },
+    { "from": "email1", "to": "wait2" },
+    { "from": "wait2", "to": "exit" },
+    { "from": "exit", "to": "stop", "branch": "true" },
+    { "from": "exit", "to": "cap", "branch": "false" },
+    { "from": "cap", "to": "sms2", "branch": "true" },
+    { "from": "cap", "to": "notify", "branch": "false" },
+    { "from": "sms2", "to": "wait2", "loop": true },
+    { "from": "stop", "to": "notify" },
+    { "from": "pwait", "to": "pemail" },
+    { "from": "pemail", "to": "notify" },
+    { "from": "nosms", "to": "notify" },
+    { "from": "notify", "to": "writeback" },
+    { "from": "err", "to": "alert" }
+  ],
+  "input_sample": {
+    "event": "pipeline_stage_changed",
+    "crm": "gohighlevel",
+    "contact_id": "ghl_c_7f3a91",
+    "first_name": "Marcus",
+    "last_name": "Reyes",
+    "phone": "+15125550187",
+    "email": "marcus@reyesroofingtx.com",
+    "pipeline": "Sales Pipeline",
+    "stage_from": "Unassigned",
+    "stage_to": "New Lead",
+    "assigned_rep": "Dana K.",
+    "sms_consent": true,
+    "sequence_touches_sent": 0,
+    "source": "Website Form",
+    "changed_at": "2026-09-07T14:02:11Z"
+  },
+  "output_sample": {
+    "contact_id": "ghl_c_7f3a91",
+    "sequence": "New Lead",
+    "touches_sent": 2,
+    "touch_log": [
+      { "n": 1, "channel": "sms", "sent_at": "2026-09-07T14:02:14Z", "status": "delivered" },
+      { "n": 2, "channel": "email", "sent_at": "2026-09-07T15:02:20Z", "status": "sent" }
+    ],
+    "exit_rule_checked_at": "2026-09-08T15:02:25Z",
+    "exit_reason": "booked_call",
+    "booked_at": "2026-09-08T09:41:00Z",
+    "sequence_status": "stopped",
+    "rep_notified": "Dana K. via Slack #sales-followups",
+    "crm_write_back": { "field": "sequence_status", "value": "stopped: booked_call", "http_status": 200 }
+  }
+}

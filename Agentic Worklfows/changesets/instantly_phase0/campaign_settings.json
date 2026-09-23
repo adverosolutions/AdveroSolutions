@@ -1,0 +1,101 @@
+{
+  "_about": "Phase 0 desired campaign settings, keyed by campaign key from config/ids.json. Only pl_value changes; the other three are already at the desired value on all six campaigns (snapshot 2026-09-21). Applied by apply_instantly_phase0.py via PATCH /campaigns/{id} together with the new sequences.",
+  "as_of": "2026-09-21",
+  "ui_only_notes": {
+    "ai_smart_pause_ooo": "\"AI Smart Pause for OOO\" is a UI toggle (Campaign > Settings > Auto-pause for out-of-office replies). It is not exposed by the v2 campaigns API, so it is on PHASE0_MANUAL_CHECKLIST.md. Keep stop_on_auto_reply=false so an OOO reply never kills the sequence.",
+    "variables": "New merge variables ({{buildingType}}, {{metro}}) appear in Instantly only once a lead upload carries them. The validator treats them as warnings and the apply script refuses cleaning_trigger unless --allow-new-variables is passed and the list factory has populated them.",
+    "campaign_schedule": "Five of the six campaigns send 07:00-19:00 America/Detroit with Saturday on (recruiting_outbound 08:00-17:00 America/Chicago). America/Detroit 07:00 is 06:00 CT, an hour before shared.settings.SEND_WINDOW opens, and the cadence never sends at weekends. The desired schedule below is 07:00-19:00 America/Chicago Mon-Fri and is patched with the sequences; campaign_schedule is in the PATCH allow-list in config/instantly_api_contract.md."
+  },
+  "campaign_schedule": {
+    "schedules": [
+      {
+        "name": "Business hours",
+        "timing": {
+          "from": "07:00",
+          "to": "19:00"
+        },
+        "days": {
+          "0": false,
+          "1": true,
+          "2": true,
+          "3": true,
+          "4": true,
+          "5": true,
+          "6": false
+        },
+        "timezone": "America/Chicago"
+      }
+    ],
+    "start_date": null,
+    "end_date": null
+  },
+  "proof": {
+    "reactivation": "I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.",
+    "outbound": "I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days."
+  },
+  "campaigns": {
+    "cleaning_reactivation": {
+      "id": "8086b41e-b546-4b36-9fa0-2d01f5cc119a",
+      "offer": "reactivation",
+      "pl_value": 6000,
+      "stop_on_auto_reply": false,
+      "open_tracking": false,
+      "link_tracking": false,
+      "new_variables": [],
+      "step3_subject": "lost bids"
+    },
+    "cleaning_trigger": {
+      "id": "f347604e-48c7-4813-831c-dc7b9d4b50ae",
+      "offer": "outbound",
+      "pl_value": 7500,
+      "stop_on_auto_reply": false,
+      "open_tracking": false,
+      "link_tracking": false,
+      "new_variables": [
+        "buildingType",
+        "metro"
+      ],
+      "step3_subject": "new leases near you"
+    },
+    "bookkeeping_reactivation": {
+      "id": "f00c5e28-fdc4-4d84-a7e6-dfba9695f35d",
+      "offer": "reactivation",
+      "pl_value": 6000,
+      "stop_on_auto_reply": false,
+      "open_tracking": false,
+      "link_tracking": false,
+      "new_variables": [],
+      "step3_subject": "last tax season"
+    },
+    "bookkeeping_trigger": {
+      "id": "87ebb167-9b64-4b6f-b658-88f3d1af9980",
+      "offer": "outbound",
+      "pl_value": 7500,
+      "stop_on_auto_reply": false,
+      "open_tracking": false,
+      "link_tracking": false,
+      "new_variables": [],
+      "step3_subject": "new business filings"
+    },
+    "recruiting_reactivation": {
+      "id": "1d4d5bb3-40a7-4333-bf34-b269d2cc9955",
+      "offer": "reactivation",
+      "pl_value": 6000,
+      "stop_on_auto_reply": false,
+      "open_tracking": false,
+      "link_tracking": false,
+      "new_variables": [],
+      "step3_subject": "quiet accounts"
+    },
+    "recruiting_outbound": {
+      "id": "cd2e251c-3b5a-40d2-a3dc-d07c4004a48c",
+      "offer": "outbound",
+      "pl_value": 7500,
+      "stop_on_auto_reply": false,
+      "open_tracking": false,
+      "link_tracking": false,
+      "new_variables": [],
+      "step3_subject": "open reqs"
+    }
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "_about": "Custom AI lead-label taxonomy (blueprint S1). Created via POST /api/v2/lead-labels with use_with_ai=false (R9, owner decision 2026-09-22): the labels exist and can be applied by hand, but Instantly's AI labeler does not apply them until every detector (pipeline sweep, experiments analytics, retro metrics, pipeline sync) reads the custom values they get. The apply reads those values back into changesets/instantly_phase0/lead_label_values.json. Switching AI labelling on is a separate, later change-set; the reply engine reads the same names. Every example is carried twice: inside `description` (what the AI labeler reads) and in `examples` (what the tests check). No positive or neutral label may quote a recorded hostile reply, or the labeler learns to route a hostile lead away from the blocklist and DND route; changesets/tests/test_phase0.py enforces that. `examples` is not sent to the API. Nothing here is applied until Lorenzo approves; the apply script's --labels dry-run only lists what would be created.",
+  "as_of": "2026-09-21",
+  "labels": [
+    {
+      "label": "positive_interested",
+      "interest_status_label": "positive",
+      "description": "The lead wants to talk, accepts the call, or proposes a time. Examples: 'Sure, let's get together Monday at 2 CST', 'Thursday 4pm Eastern works for me', 'I have a better idea, let's chat Friday afternoon'.",
+      "use_with_ai": false,
+      "examples": [
+        "Sure, let's get together Monday at 2 CST",
+        "Thursday 4pm Eastern works for me",
+        "I have a better idea, let's chat Friday afternoon"
+      ]
+    },
+    {
+      "label": "positive_question",
+      "interest_status_label": "positive",
+      "description": "The lead is engaged and asks how it works, what it costs, or for more information before committing to a call. Examples: 'What is your percentage?', 'What is the upfront cost?', 'Tell me more?', 'Send me some info'.",
+      "use_with_ai": false,
+      "examples": [
+        "What is your percentage?",
+        "What is the upfront cost?",
+        "Tell me more?",
+        "Send me some info"
+      ]
+    },
+    {
+      "label": "positive_referral",
+      "interest_status_label": "positive",
+      "description": "The lead points to a colleague, partner, or decision maker who should be contacted instead, without declining the offer. Examples: 'Talk to Dustin, our managing partner', 'Loop in my operations director on this', 'Gary handles vendor decisions'.",
+      "use_with_ai": false,
+      "examples": [
+        "Talk to Dustin, our managing partner",
+        "Loop in my operations director on this",
+        "Gary handles vendor decisions"
+      ]
+    },
+    {
+      "label": "neutral_question",
+      "interest_status_label": "neutral",
+      "description": "The lead replies with a clarifying or procedural question and shows no interest either way, and is not rude about it. A question wrapped in insults, a spam accusation or a threat is negative_hostile, not this label. Examples: 'Which of our locations is this about?', 'Is this a sales pitch?', 'How did you get my email?', 'Who referred you to us?'.",
+      "use_with_ai": false,
+      "examples": [
+        "Which of our locations is this about?",
+        "Is this a sales pitch?",
+        "How did you get my email?",
+        "Who referred you to us?"
+      ]
+    },
+    {
+      "label": "negative_notnow",
+      "interest_status_label": "negative",
+      "description": "A soft no tied to timing: the lead is busy, already testing something, or asks to reconnect later. Examples: 'We just started with a company offering the same services, let's touch base next month', 'Not right now, maybe after tax season'.",
+      "use_with_ai": false,
+      "examples": [
+        "We just started with a company offering the same services, let's touch base next month",
+        "Not right now, maybe after tax season"
+      ]
+    },
+    {
+      "label": "negative_notfit",
+      "interest_status_label": "negative",
+      "description": "A polite decline because the offer does not fit the business, with no hostility. Examples: 'Not something that would be of interest, wish you all the best', 'We only do a placement or two a month and know our clients personally', 'No thank you'.",
+      "use_with_ai": false,
+      "examples": [
+        "Not something that would be of interest, wish you all the best",
+        "We only do a placement or two a month and know our clients personally",
+        "No thank you"
+      ]
+    },
+    {
+      "label": "negative_hostile",
+      "interest_status_label": "negative",
+      "description": "An angry or abusive reply, an accusation of spam or bad research, or a threat to leave reviews or report the sender. Insults or threats outrank any question in the same message. Examples: 'For the love of god leave me alone', 'This has been marked as spam, do not contact us again', 'Your worthless AI must be hallucinating', 'we will give companies like yours terrible reviews on multiple platforms'.",
+      "use_with_ai": false,
+      "examples": [
+        "For the love of god leave me alone",
+        "This has been marked as spam, do not contact us again",
+        "Your worthless AI must be hallucinating",
+        "we will give companies like yours terrible reviews on multiple platforms"
+      ]
+    },
+    {
+      "label": "unsubscribe",
+      "interest_status_label": "negative",
+      "description": "A short instruction to stop emailing, with no other content. Examples: 'Remove', 'Stop', 'Please do not email me again', 'Unsubscribe', 'Take me off your list'.",
+      "use_with_ai": false,
+      "examples": [
+        "Remove",
+        "Stop",
+        "Please do not email me again",
+        "Unsubscribe",
+        "Take me off your list"
+      ]
+    },
+    {
+      "label": "ooo",
+      "interest_status_label": "neutral",
+      "description": "An out-of-office auto-reply that names a return date or limited access; the person will be back. Examples: 'I am out of the office and will return Tuesday September 22nd', 'On vacation, returning Monday', 'Traveling this week, response may be delayed'.",
+      "use_with_ai": false,
+      "examples": [
+        "I am out of the office and will return Tuesday September 22nd",
+        "On vacation, returning Monday",
+        "Traveling this week, response may be delayed"
+      ]
+    },
+    {
+      "label": "wrong_person",
+      "interest_status_label": "neutral",
+      "description": "The recipient is not the right contact or has left, and a different address or person is named. Examples: 'Our email has changed, please use dayers@ayerspartners.com', 'This email is no longer monitored, reach current management at info@', 'I moved to a limited role, contact Gary or Dustin'.",
+      "use_with_ai": false,
+      "examples": [
+        "Our email has changed, please use dayers@ayerspartners.com",
+        "This email is no longer monitored, reach current management at info@",
+        "I moved to a limited role, contact Gary or Dustin"
+      ]
+    },
+    {
+      "label": "auto_reply_unmonitored",
+      "interest_status_label": "neutral",
+      "description": "A permanent auto-responder from an inbox nobody reads or a cold-email filter, not a vacation notice. Examples: 'We do not respond to emails, please use our portal', 'Your email was identified as unsolicited outreach and has been filtered', 'Thank you for reaching out, allow 72 hours for a reply during busy season'.",
+      "use_with_ai": false,
+      "examples": [
+        "We do not respond to emails, please use our portal",
+        "Your email was identified as unsolicited outreach and has been filtered",
+        "Thank you for reaching out, allow 72 hours for a reply during busy season"
+      ]
+    }
+  ]
+}

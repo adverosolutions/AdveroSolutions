@@ -1,0 +1,8 @@
+- "prompt engineer for your small businesses, MCP into your software, built this for you"
+- sheet: tone, services, rules the owner edits, no code change
+- Claude reads the profile, becomes that business
+- four MCP tools: CRM, calendar, invoicing, docs, real records
+- money, booking, or complaint goes to the owner first
+- every exchange scored, low scores become next week's prompt fixes
+- flip to Claude Code: this is my own MCP setup, live, right now
+- can start [START], short call to pick the first business

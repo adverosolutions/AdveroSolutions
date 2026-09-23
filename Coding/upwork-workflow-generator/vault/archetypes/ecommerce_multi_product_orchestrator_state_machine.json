@@ -1,0 +1,328 @@
+{
+  "title": "Multi-Product Orchestrator — State Table → Dispatcher → Parallel Jobs → Results, Retries, Manual Holds → Nightly Classification",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · INTAKE & PRODUCT STATE",
+      "color": 0,
+      "note": "Every product gets one row in a state table the moment its link comes in. That row is the only source of truth for where it is, so products can never interfere with each other."
+    },
+    {
+      "key": "dispatch",
+      "label": "2 · DISPATCHER: NEXT ACTION PER PRODUCT",
+      "color": 0,
+      "note": "A dispatcher reads every product's state each minute and kicks off whatever that product needs next, store, creative, ads, or a Codex/Claude job, in parallel across products."
+    },
+    {
+      "key": "results",
+      "label": "3 · JOBS REPORT BACK",
+      "color": 0,
+      "note": "Every job, however long it runs, reports back through one door. Done advances the product, failed retries with backoff up to a cap, and needs-a-human parks it and pings the reviewer."
+    },
+    {
+      "key": "report",
+      "label": "4 · TESTING, CLASSIFICATION & REPORTING",
+      "color": 0,
+      "note": "Nightly, real ad results and COGS come in per product and get classified scale, iterate, or kill, so the next morning's dispatcher is already acting on it."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "link_trig",
+      "kind": "trigger.webhook",
+      "label": "AliExpress Link Submitted",
+      "section": "intake"
+    },
+    {
+      "key": "create_record",
+      "kind": "data.transform",
+      "label": "Create the Product Record: One Row, One State, One Source of Truth",
+      "section": "intake"
+    },
+    {
+      "key": "write_state",
+      "kind": "app.action",
+      "label": "Write the Product to the State Table as Queued",
+      "app": "airtable",
+      "op": "create",
+      "section": "intake"
+    },
+    {
+      "key": "dispatch_trig",
+      "kind": "trigger.schedule",
+      "label": "Dispatcher Runs Every Minute",
+      "section": "dispatch"
+    },
+    {
+      "key": "read_states",
+      "kind": "app.action",
+      "label": "Read Every Product and Its Current State",
+      "app": "airtable",
+      "op": "list",
+      "section": "dispatch"
+    },
+    {
+      "key": "next_switch",
+      "kind": "flow.switch",
+      "label": "What Does This Product Need Next?",
+      "section": "dispatch"
+    },
+    {
+      "key": "job_store",
+      "kind": "net.http",
+      "label": "Kick Off the Store Build · Supplied Tool",
+      "section": "dispatch"
+    },
+    {
+      "key": "job_creative",
+      "kind": "net.http",
+      "label": "Kick Off Creative and Video · Supplied Tool",
+      "section": "dispatch"
+    },
+    {
+      "key": "job_ads",
+      "kind": "net.http",
+      "label": "Kick Off Ad Deployment as a Browser Job",
+      "section": "dispatch"
+    },
+    {
+      "key": "job_llm",
+      "kind": "ai.agent",
+      "label": "Codex/Claude Job: Offer Copy, Policy Check, and Product Classification",
+      "section": "dispatch"
+    },
+    {
+      "key": "job_llm_model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "job_llm",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "mark_running",
+      "kind": "app.action",
+      "label": "Mark the Job Running With a Job Id and Started Time",
+      "app": "airtable",
+      "op": "update",
+      "section": "dispatch"
+    },
+    {
+      "key": "result_trig",
+      "kind": "trigger.webhook",
+      "label": "Any Job Reports Back: Done, Failed, or Needs a Human",
+      "section": "results"
+    },
+    {
+      "key": "result_switch",
+      "kind": "flow.switch",
+      "label": "How Did It End?",
+      "section": "results"
+    },
+    {
+      "key": "advance",
+      "kind": "app.action",
+      "label": "Advance the Product to Its Next State",
+      "app": "airtable",
+      "op": "update",
+      "section": "results"
+    },
+    {
+      "key": "retry_branch",
+      "kind": "flow.branch",
+      "label": "Under the Retry Cap?",
+      "section": "results"
+    },
+    {
+      "key": "requeue",
+      "kind": "app.action",
+      "label": "Requeue With Backoff, Attempt Count Plus One",
+      "app": "airtable",
+      "op": "update",
+      "section": "results"
+    },
+    {
+      "key": "alert_stuck",
+      "kind": "app.action",
+      "label": "Alert: Product Stuck After 3 Attempts, With the Last Error",
+      "app": "slack",
+      "op": "post",
+      "section": "results"
+    },
+    {
+      "key": "hold_manual",
+      "kind": "app.action",
+      "label": "Park It as Waiting on Manual Check and Ping the Reviewer",
+      "app": "airtable",
+      "op": "update",
+      "section": "results"
+    },
+    {
+      "key": "nightly_trig",
+      "kind": "trigger.schedule",
+      "label": "Nightly Results Pull",
+      "section": "report"
+    },
+    {
+      "key": "pull_results",
+      "kind": "net.http",
+      "label": "Pull Ad Results, Spend, and COGS per Product",
+      "section": "report"
+    },
+    {
+      "key": "classify",
+      "kind": "ai.agent",
+      "label": "Classify Each Product: Scale, Iterate, or Kill, With the Reason",
+      "section": "report"
+    },
+    {
+      "key": "classify_model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "classify",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "write_report",
+      "kind": "app.action",
+      "label": "Write the Daily Report per Product",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "report"
+    },
+    {
+      "key": "post_summary",
+      "kind": "app.action",
+      "label": "Post Winners, Losers, and Anything Waiting on a Human",
+      "app": "slack",
+      "op": "post",
+      "section": "report"
+    }
+  ],
+  "edges": [
+    {
+      "from": "link_trig",
+      "to": "create_record"
+    },
+    {
+      "from": "create_record",
+      "to": "write_state"
+    },
+    {
+      "from": "dispatch_trig",
+      "to": "read_states"
+    },
+    {
+      "from": "read_states",
+      "to": "next_switch"
+    },
+    {
+      "from": "next_switch",
+      "to": "job_store",
+      "branch": "store setup"
+    },
+    {
+      "from": "next_switch",
+      "to": "job_creative",
+      "branch": "creative"
+    },
+    {
+      "from": "next_switch",
+      "to": "job_ads",
+      "branch": "ad deployment"
+    },
+    {
+      "from": "next_switch",
+      "to": "job_llm",
+      "branch": "codex/claude"
+    },
+    {
+      "from": "job_store",
+      "to": "mark_running"
+    },
+    {
+      "from": "job_creative",
+      "to": "mark_running"
+    },
+    {
+      "from": "job_ads",
+      "to": "mark_running"
+    },
+    {
+      "from": "job_llm",
+      "to": "mark_running"
+    },
+    {
+      "from": "result_trig",
+      "to": "result_switch"
+    },
+    {
+      "from": "result_switch",
+      "to": "advance",
+      "branch": "done"
+    },
+    {
+      "from": "result_switch",
+      "to": "retry_branch",
+      "branch": "failed"
+    },
+    {
+      "from": "result_switch",
+      "to": "hold_manual",
+      "branch": "needs a human"
+    },
+    {
+      "from": "retry_branch",
+      "to": "requeue",
+      "branch": "true"
+    },
+    {
+      "from": "retry_branch",
+      "to": "alert_stuck",
+      "branch": "false"
+    },
+    {
+      "from": "nightly_trig",
+      "to": "pull_results"
+    },
+    {
+      "from": "pull_results",
+      "to": "classify"
+    },
+    {
+      "from": "classify",
+      "to": "write_report"
+    },
+    {
+      "from": "write_report",
+      "to": "post_summary"
+    }
+  ],
+  "input_sample": {
+    "product_id": "prod_0417",
+    "aliexpress_url": "https://www.aliexpress.com/item/1005006123456789.html",
+    "state": "creative",
+    "attempt": 2,
+    "running_job_id": "job_9f21a8",
+    "started_at": "2026-09-03T14:02:00Z",
+    "waiting_on_human": false
+  },
+  "output_sample": {
+    "products_in_flight": 14,
+    "completed_today": 6,
+    "retried_today": 3,
+    "stuck_after_cap": 1,
+    "waiting_on_human": 2,
+    "classified": {
+      "scale": 2,
+      "iterate": 3,
+      "kill": 1
+    },
+    "example": "prod_0417 creative job failed twice (timeout), requeued with backoff, completed on attempt 3, advanced to ad deployment"
+  },
+  "archetype": "ecommerce_multi_product_orchestrator_state_machine",
+  "learned": true,
+  "learned_at": "2026-09-03"
+}

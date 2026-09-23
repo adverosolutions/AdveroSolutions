@@ -1,0 +1,261 @@
+{
+  "title": "How I Fine Tune Your Medical Report Classifier, Step by Step",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "clean",
+      "label": "1 · CLEAN THE DATA AND LOCK AN HONEST TEST SET",
+      "color": 0,
+      "note": "800 rows is small, so every bad row costs real accuracy. The test set is set aside first, before anything else touches the data."
+    },
+    {
+      "key": "pick",
+      "label": "2 · PICK THE SMALLEST MODEL THAT DOES THE JOB",
+      "color": 0,
+      "note": "A small classifier is cheaper and more accurate on 800 rows. A small instruct model only wins if you need a written reason with each label."
+    },
+    {
+      "key": "before",
+      "label": "3 · MEASURE THE BEFORE, DO NOT GUESS IT",
+      "color": 0,
+      "note": "The untouched model gets scored on the held out set first. That is the number the fine-tuned one has to beat."
+    },
+    {
+      "key": "tune",
+      "label": "4 · FINE TUNE, THEN GRADE IT PER CATEGORY",
+      "color": 0,
+      "note": "Overall accuracy can look great while Urgent is quietly missed. Per class recall is the number that matters here."
+    },
+    {
+      "key": "handoff",
+      "label": "5 · HAND IT OVER SO YOU CAN RUN IT WITHOUT ME",
+      "color": 0,
+      "note": "Adapter files, a one command script, and a short written summary of what was done and where it is weak."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "dedupe",
+      "kind": "data.transform",
+      "label": "1 · Read the CSV and Drop Exact Duplicate Reports",
+      "section": "clean"
+    },
+    {
+      "key": "normalize",
+      "kind": "data.transform",
+      "label": "2 · Catch Near Duplicates and Normalize the Formatting",
+      "section": "clean"
+    },
+    {
+      "key": "suspect",
+      "kind": "flow.branch",
+      "label": "3 · Do Any Rows Look Mislabeled?",
+      "section": "clean"
+    },
+    {
+      "key": "confirm",
+      "kind": "data.transform",
+      "label": "3a · Send Those Rows Back for You to Confirm",
+      "section": "clean"
+    },
+    {
+      "key": "holdout",
+      "kind": "data.transform",
+      "label": "4 · Hold Out a Balanced Test Set Before Anything Trains",
+      "section": "clean"
+    },
+    {
+      "key": "choose",
+      "kind": "data.transform",
+      "label": "5 · Choose a Small Classifier or a Small Instruct Model",
+      "section": "pick"
+    },
+    {
+      "key": "reason",
+      "kind": "data.transform",
+      "label": "6 · Decide If Each Answer Needs a Written Reason",
+      "section": "pick"
+    },
+    {
+      "key": "format",
+      "kind": "data.transform",
+      "label": "7 · Convert Every Row Into the Training Format",
+      "section": "pick"
+    },
+    {
+      "key": "zeroshot",
+      "kind": "data.transform",
+      "label": "8 · Score the Untouched Model on the Held Out Set",
+      "section": "before"
+    },
+    {
+      "key": "baseline",
+      "kind": "data.aggregate",
+      "label": "9 · Write Down the Baseline Accuracy per Category",
+      "section": "before"
+    },
+    {
+      "key": "train",
+      "kind": "data.transform",
+      "label": "10 · Train a LoRA Adapter for a Few Short Epochs",
+      "section": "tune"
+    },
+    {
+      "key": "score",
+      "kind": "data.transform",
+      "label": "11 · Score the Tuned Model on the Same Test Set",
+      "section": "tune"
+    },
+    {
+      "key": "matrix",
+      "kind": "data.aggregate",
+      "label": "12 · Build the Confusion Matrix and per Class Recall",
+      "section": "tune"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "13 · Does It Beat the Baseline on Urgent Recall?",
+      "section": "tune"
+    },
+    {
+      "key": "rerun",
+      "kind": "data.transform",
+      "label": "13a · Fix Labels, Weight Urgent Higher, Train Again",
+      "section": "tune"
+    },
+    {
+      "key": "save",
+      "kind": "data.transform",
+      "label": "14 · Save the Adapter Files and the Training Code",
+      "section": "handoff"
+    },
+    {
+      "key": "script",
+      "kind": "data.transform",
+      "label": "15 · One Command Script to Classify a New Report",
+      "section": "handoff"
+    },
+    {
+      "key": "readme",
+      "kind": "data.aggregate",
+      "label": "16 · Write Up Data, Model, Results, Limits and Cost",
+      "section": "handoff"
+    }
+  ],
+  "edges": [
+    {
+      "from": "dedupe",
+      "to": "normalize"
+    },
+    {
+      "from": "normalize",
+      "to": "suspect"
+    },
+    {
+      "from": "suspect",
+      "to": "confirm",
+      "branch": "true"
+    },
+    {
+      "from": "suspect",
+      "to": "holdout",
+      "branch": "false"
+    },
+    {
+      "from": "confirm",
+      "to": "holdout"
+    },
+    {
+      "from": "holdout",
+      "to": "choose"
+    },
+    {
+      "from": "choose",
+      "to": "reason"
+    },
+    {
+      "from": "reason",
+      "to": "format"
+    },
+    {
+      "from": "format",
+      "to": "zeroshot"
+    },
+    {
+      "from": "zeroshot",
+      "to": "baseline"
+    },
+    {
+      "from": "baseline",
+      "to": "train"
+    },
+    {
+      "from": "train",
+      "to": "score"
+    },
+    {
+      "from": "score",
+      "to": "matrix"
+    },
+    {
+      "from": "matrix",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "rerun",
+      "branch": "false"
+    },
+    {
+      "from": "rerun",
+      "to": "train",
+      "loop": true
+    },
+    {
+      "from": "gate",
+      "to": "save",
+      "branch": "true"
+    },
+    {
+      "from": "save",
+      "to": "script"
+    },
+    {
+      "from": "script",
+      "to": "readme"
+    }
+  ],
+  "input_sample": {
+    "row_id": 417,
+    "report_text": "CT chest without contrast. Lungs clear, no focal consolidation. Small 4 mm nodule right lower lobe, unchanged from prior study. No pleural effusion. Recommend interval imaging in 12 months.",
+    "category": "Follow-up needed",
+    "source_file": "reports_export_2026.csv"
+  },
+  "output_sample": {
+    "test_set_size": 120,
+    "categories": [
+      "Normal",
+      "Follow-up needed",
+      "Urgent",
+      "Incomplete"
+    ],
+    "baseline_accuracy": 0.68,
+    "fine_tuned_accuracy": 0.91,
+    "urgent_recall_baseline": 0.55,
+    "urgent_recall_fine_tuned": 0.94,
+    "worst_confusion": "Incomplete misread as Normal, 4 of 120",
+    "training_time": "18 minutes on one T4 GPU",
+    "gpu_cost_usd": 0.0,
+    "api_cost_usd": 0.0,
+    "deliverables": [
+      "adapter files",
+      "classify.py",
+      "train.py",
+      "README.md"
+    ]
+  },
+  "archetype": "how_i_fine_tune_your_medical_report_classifier_s",
+  "learned": true,
+  "learned_at": "2026-09-09"
+}

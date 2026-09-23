@@ -1,0 +1,165 @@
+{
+  "title": "Automation Intake → AI Scoping → Triage → Spec & Runbook",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · INTAKE",
+      "color": 0,
+      "note": "Every automation request enters one door in one shape. Ad-hoc requests in DMs are why automation backlogs become folklore."
+    },
+    {
+      "key": "scope",
+      "label": "2 · SCOPE",
+      "color": 0,
+      "note": "The agent checks what the request actually touches — which systems, whether the APIs exist, where the data has to transform — before anyone estimates it."
+    },
+    {
+      "key": "triage",
+      "label": "3 · TRIAGE",
+      "color": 0,
+      "note": "A written yes or a written no. Parking a request with a reason is what stops the same idea being re-proposed every quarter."
+    },
+    {
+      "key": "ship",
+      "label": "4 · SPEC & RUNBOOK",
+      "color": 0,
+      "note": "Nothing is built from a conversation. The spec and the runbook are generated together, so the documentation cannot drift from what shipped."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.form",
+      "label": "Stakeholder Submits a Request",
+      "section": "intake"
+    },
+    {
+      "key": "norm",
+      "kind": "data.transform",
+      "label": "Normalize Request & Systems Touched",
+      "section": "intake"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "Scope Systems, APIs, Effort & Risk",
+      "section": "scope"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Scoping Schema",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "tool",
+      "kind": "ai.tool",
+      "label": "API Capability Lookup",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "APIs exist and the payback is under 90 days",
+      "section": "triage"
+    },
+    {
+      "key": "spec",
+      "kind": "data.code",
+      "label": "Generate the Workflow Spec",
+      "section": "ship",
+      "notes": "A typed spec, not hand-written node JSON — an invalid node type becomes impossible rather than merely unlikely."
+    },
+    {
+      "key": "doc",
+      "kind": "app.action",
+      "label": "Publish Spec & Runbook",
+      "app": "notion",
+      "op": "create",
+      "section": "ship"
+    },
+    {
+      "key": "notify",
+      "kind": "app.action",
+      "label": "Reply to the Requester",
+      "app": "slack",
+      "op": "post",
+      "section": "ship"
+    },
+    {
+      "key": "park",
+      "kind": "app.action",
+      "label": "Park It — With the Reason",
+      "app": "notion",
+      "op": "create",
+      "section": "ship"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "norm"
+    },
+    {
+      "from": "norm",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "spec",
+      "branch": "true"
+    },
+    {
+      "from": "spec",
+      "to": "doc"
+    },
+    {
+      "from": "doc",
+      "to": "notify"
+    },
+    {
+      "from": "gate",
+      "to": "park",
+      "branch": "false"
+    }
+  ],
+  "input_sample": {
+    "requested_by": "Ops — Marcus Webb",
+    "request": "Stop re-keying supplier invoices into the ledger by hand",
+    "systems": [
+      "Supplier portal",
+      "QuickBooks",
+      "Google Drive"
+    ],
+    "current_time_cost": "6 hrs/week",
+    "submitted_at": "2026-08-03T09:14:22Z"
+  },
+  "output_sample": {
+    "verdict": "Build",
+    "apis_available": "QuickBooks REST yes · supplier portal no public API — email ingest instead",
+    "transformation": "PDF → line items → ledger schema",
+    "estimated_build": "11 hrs",
+    "payback": "18 days at 6 hrs/week",
+    "spec_url": "notion.so/spec/invoice-ingest-v1",
+    "runbook_url": "notion.so/runbook/invoice-ingest-v1",
+    "risk_flagged": "Portal has no API — email ingest breaks if they change the template"
+  },
+  "archetype": "automation_intake_triage",
+  "learned": true,
+  "learned_at": "2026-08-03"
+}

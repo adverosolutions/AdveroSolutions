@@ -1,0 +1,271 @@
+{
+  "title": "Your Google Sheets Sync, Fixed and Bulletproofed",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 - THE DATA COMES IN",
+      "color": 0,
+      "note": "Whatever feeds the sheet lands here, one record at a time, so every run can be replayed against the exact payload that broke it."
+    },
+    {
+      "key": "causes",
+      "label": "2 - THE FIVE THINGS THAT BREAK SHEETS SYNCS",
+      "color": 0,
+      "note": "Wrong types, empty rows, a renamed tab, a moved header, and appending when it should update. Each one gets its own guard before a single cell is written."
+    },
+    {
+      "key": "write",
+      "label": "3 - WRITE IT THE RIGHT WAY",
+      "color": 0,
+      "note": "Matched on a key column, so the same record updates its row instead of quietly stacking duplicates at the bottom of the sheet."
+    },
+    {
+      "key": "guards",
+      "label": "4 - QUOTA AND AUTH GUARDS",
+      "color": 0,
+      "note": "Google throttles bursts and OAuth tokens expire. A failed write backs off, refreshes the credential, and retries instead of dying silently."
+    },
+    {
+      "key": "proof",
+      "label": "5 - PROVE IT KEEPS WORKING",
+      "color": 0,
+      "note": "A heartbeat row on a log tab shows the sync is alive, and any node that fails names itself and the row it was on."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 - Record Arrives",
+      "section": "intake"
+    },
+    {
+      "key": "coerce",
+      "kind": "data.transform",
+      "label": "2 - Coerce Types and Dates",
+      "section": "causes"
+    },
+    {
+      "key": "drop",
+      "kind": "data.filter",
+      "label": "3 - Drop Empty Rows",
+      "section": "causes"
+    },
+    {
+      "key": "tabgate",
+      "kind": "flow.branch",
+      "label": "4 - Sheet and Tab Still Exist?",
+      "section": "causes"
+    },
+    {
+      "key": "renamed",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "post",
+      "label": "4b - Alert: Sheet or Tab Renamed",
+      "section": "causes"
+    },
+    {
+      "key": "lookup",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "read",
+      "label": "5 - Look Up the Row by Key",
+      "section": "causes"
+    },
+    {
+      "key": "exists",
+      "kind": "flow.branch",
+      "label": "6 - Row Already There?",
+      "section": "causes"
+    },
+    {
+      "key": "update",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "update",
+      "label": "7 - Update the Existing Row",
+      "section": "write"
+    },
+    {
+      "key": "append",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "append",
+      "label": "7b - Append a New Row",
+      "section": "write"
+    },
+    {
+      "key": "wrote",
+      "kind": "flow.branch",
+      "label": "8 - Write Succeeded?",
+      "section": "guards"
+    },
+    {
+      "key": "backoff",
+      "kind": "flow.wait",
+      "label": "9 - Back Off 30 Seconds",
+      "section": "guards"
+    },
+    {
+      "key": "refresh",
+      "kind": "net.http",
+      "label": "10 - Refresh Google OAuth Token",
+      "section": "guards"
+    },
+    {
+      "key": "heartbeat",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "append",
+      "label": "11 - Write a Heartbeat Row to the Log Tab",
+      "section": "proof"
+    },
+    {
+      "key": "respond",
+      "kind": "net.respond",
+      "label": "12 - Reply 200 Synced to the Sender",
+      "section": "proof"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "app": "n8n",
+      "op": "error_trigger",
+      "label": "13 - Any Node Fails",
+      "section": "proof"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "post",
+      "label": "14 - Alert With the Failing Node and Row",
+      "section": "proof"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "coerce"
+    },
+    {
+      "from": "coerce",
+      "to": "drop"
+    },
+    {
+      "from": "drop",
+      "to": "tabgate"
+    },
+    {
+      "from": "tabgate",
+      "to": "lookup",
+      "branch": "true"
+    },
+    {
+      "from": "tabgate",
+      "to": "renamed",
+      "branch": "false"
+    },
+    {
+      "from": "lookup",
+      "to": "exists"
+    },
+    {
+      "from": "exists",
+      "to": "update",
+      "branch": "true"
+    },
+    {
+      "from": "exists",
+      "to": "append",
+      "branch": "false"
+    },
+    {
+      "from": "update",
+      "to": "wrote"
+    },
+    {
+      "from": "append",
+      "to": "wrote"
+    },
+    {
+      "from": "wrote",
+      "to": "heartbeat",
+      "branch": "true"
+    },
+    {
+      "from": "wrote",
+      "to": "backoff",
+      "branch": "false"
+    },
+    {
+      "from": "backoff",
+      "to": "refresh"
+    },
+    {
+      "from": "refresh",
+      "to": "lookup",
+      "loop": true
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    },
+    {
+      "from": "heartbeat",
+      "to": "respond"
+    }
+  ],
+  "input_sample": {
+    "event": "order.updated",
+    "received_at": "2026-09-21T14:03:12Z",
+    "record": {
+      "order_id": "ORD-10422",
+      "customer": "Kenji Watanabe",
+      "email": "kenji.watanabe@northfieldsupply.com",
+      "amount": "1,249.00",
+      "currency": "USD",
+      "status": "paid",
+      "created_at": "2026-09-21T14:03:00Z",
+      "notes": ""
+    }
+  },
+  "output_sample": {
+    "sheet": "Orders 2026",
+    "tab": "Live Sync",
+    "matching_column": "order_id",
+    "action": "updated",
+    "row": 883,
+    "row_as_written": {
+      "order_id": "ORD-10422",
+      "customer": "Kenji Watanabe",
+      "email": "kenji.watanabe@northfieldsupply.com",
+      "amount": 1249.0,
+      "currency": "USD",
+      "status": "synced",
+      "created_at": "2026-09-21 09:03:00",
+      "last_synced_at": "2026-09-21 09:03:14"
+    },
+    "what_the_guards_did": {
+      "amount": "arrived as the string 1,249.00, written as the number 1249.00",
+      "created_at": "arrived as an ISO string, written as a real date Sheets can sort and filter",
+      "empty_row": "no, the record had a key column value so it was kept",
+      "tab_check": "Live Sync tab found, headers matched",
+      "append_vs_update": "order_id ORD-10422 already sat on row 883, so the row was updated instead of appended"
+    },
+    "heartbeat_row": {
+      "tab": "Sync Log",
+      "run_id": "run_2026_0921_1403_c4e1",
+      "ran_at": "2026-09-21 09:03:14",
+      "records_in": 1,
+      "rows_updated": 1,
+      "rows_appended": 0,
+      "rows_skipped_empty": 0,
+      "retries": 0,
+      "status": "healthy"
+    },
+    "if_it_had_failed": "a 429 or an expired token sends the write down node 9, backs off 30 seconds, refreshes the credential, and retries the lookup; if it still fails, node 13 posts the failing node name and the order_id to Slack"
+  }
+}

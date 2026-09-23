@@ -1,0 +1,266 @@
+{
+  "title": "Grounded AI Support Agent — Retrieval, Confidence Gate, Human Handoff",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "kb",
+      "label": "1 · SELF-SERVE KNOWLEDGE BASE",
+      "color": 0,
+      "note": "You edit articles where you already work — Notion or Drive. A nightly sync re-embeds only what changed and upserts it into the vector store. Nobody opens the workflow to update the knowledge base, which is the requirement."
+    },
+    {
+      "key": "convo",
+      "label": "2 · CONVERSATION + RETRIEVAL",
+      "color": 0,
+      "note": "The agent is retrieval-only: it is instructed to answer from retrieved passages or to say it cannot. CRM context loads first so a returning customer is not asked to repeat themselves."
+    },
+    {
+      "key": "ground",
+      "label": "3 · GROUNDING CHECK",
+      "color": 0,
+      "note": "This is the part that makes it not a FAQ bot. Every answer is parsed for its supporting sources and a confidence score before a single word reaches the customer — an answer with no source is treated as a failure, not an answer."
+    },
+    {
+      "key": "handoff",
+      "label": "4 · RESPOND OR ESCALATE",
+      "color": 0,
+      "note": "Three exclusive outcomes. Grounded answers ship with their sources. Low confidence, complaints and explicit human requests all escalate with the full transcript attached, so the human starts informed instead of starting over."
+    },
+    {
+      "key": "reliability",
+      "label": "5 · RELIABILITY",
+      "color": 0,
+      "note": "A dedicated error path catches any failed node — retrieval timeout, model error, CRM outage — and alerts your channel with the execution link. Silent failure is the one thing a support bot cannot do."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "kbtrig",
+      "kind": "trigger.schedule",
+      "label": "Nightly KB Sync",
+      "section": "kb"
+    },
+    {
+      "key": "kbupsert",
+      "kind": "app.action",
+      "label": "Re-Embed Changed Articles → Vector Store",
+      "app": "pinecone",
+      "op": "upsert_vectors",
+      "section": "kb",
+      "notes": "Diffed by last-edited timestamp, so a 400-article base costs seconds, not a full re-index."
+    },
+    {
+      "key": "chat",
+      "kind": "trigger.chat",
+      "label": "Customer Message — Web Widget",
+      "section": "convo"
+    },
+    {
+      "key": "ctx",
+      "kind": "app.action",
+      "label": "Load Contact + Open Tickets",
+      "app": "hubspot",
+      "op": "get_contact",
+      "section": "convo"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "Grounded Support Agent",
+      "section": "convo",
+      "notes": "System prompt forbids answering outside retrieved context and requires it to return a confidence score with every reply."
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Answer Model",
+      "app": "openai",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "mem",
+      "kind": "ai.memory",
+      "label": "Session Memory",
+      "parent": "agent",
+      "port": "ai_memory"
+    },
+    {
+      "key": "vstore",
+      "kind": "ai.vectorstore",
+      "label": "Knowledge Base Retriever",
+      "app": "pinecone",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "embed",
+      "kind": "ai.embed",
+      "label": "Embeddings",
+      "app": "openai",
+      "parent": "vstore",
+      "port": "ai_embedding"
+    },
+    {
+      "key": "tool",
+      "kind": "ai.tool",
+      "label": "Tool — Check Order Status",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "parse",
+      "kind": "data.transform",
+      "label": "Extract Answer · Sources · Confidence",
+      "section": "ground"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.switch",
+      "label": "Grounded? Complaint? Human Asked?",
+      "section": "ground"
+    },
+    {
+      "key": "reply",
+      "kind": "net.respond",
+      "label": "Send Answer With Sources",
+      "section": "handoff"
+    },
+    {
+      "key": "escalate",
+      "kind": "app.action",
+      "label": "Escalate to #support — Live Handoff",
+      "app": "slack",
+      "op": "send_message",
+      "section": "handoff"
+    },
+    {
+      "key": "ticket",
+      "kind": "app.action",
+      "label": "Open Ticket With Full Transcript",
+      "app": "hubspot",
+      "op": "create_ticket",
+      "section": "handoff"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "Log Conversation to CRM Timeline",
+      "app": "hubspot",
+      "op": "log_activity",
+      "section": "handoff"
+    },
+    {
+      "key": "errtrig",
+      "kind": "trigger.app",
+      "label": "Error Trigger — Any Node Fails",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "reliability"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "Alert #alerts With Execution Link",
+      "app": "slack",
+      "op": "send_message",
+      "section": "reliability"
+    }
+  ],
+  "edges": [
+    {
+      "from": "kbtrig",
+      "to": "kbupsert"
+    },
+    {
+      "from": "chat",
+      "to": "ctx"
+    },
+    {
+      "from": "ctx",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "parse"
+    },
+    {
+      "from": "parse",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "reply",
+      "branch": "Grounded · confidence ≥ 0.75"
+    },
+    {
+      "from": "gate",
+      "to": "escalate",
+      "branch": "Low confidence / no source"
+    },
+    {
+      "from": "gate",
+      "to": "ticket",
+      "branch": "Complaint or human requested"
+    },
+    {
+      "from": "reply",
+      "to": "log"
+    },
+    {
+      "from": "escalate",
+      "to": "ticket"
+    },
+    {
+      "from": "ticket",
+      "to": "log"
+    },
+    {
+      "from": "errtrig",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "session_id": "sess_9c41ab72",
+    "channel": "web_widget",
+    "contact": {
+      "email": "marcus.oyelaran@brightpath.co.uk",
+      "hubspot_id": "1204877",
+      "plan": "Growth (annual)"
+    },
+    "message": "I was charged twice this month and your policy page says refunds take 5 days but it's been nine. Can someone actually look at this?"
+  },
+  "output_sample": {
+    "route": "Complaint or human requested",
+    "confidence": 0.41,
+    "grounded": false,
+    "reason": "Retrieved passages cover the refund window but contain nothing about duplicate charges; customer also expressed dissatisfaction.",
+    "retrieved_sources": [
+      {
+        "title": "Refunds & Billing Policy",
+        "section": "Processing times",
+        "score": 0.62
+      },
+      {
+        "title": "Billing FAQ",
+        "section": "When am I charged?",
+        "score": 0.48
+      }
+    ],
+    "customer_saw": "I don't want to guess on a billing issue — I've passed this to a person with your full conversation attached. Ticket #48812.",
+    "escalation": {
+      "slack_channel": "#support",
+      "ticket_id": "48812",
+      "priority": "high",
+      "transcript_attached": true
+    },
+    "crm": {
+      "logged_to": "Contact 1204877 timeline",
+      "activity_type": "Chat transcript"
+    },
+    "hallucination_risk": "none — no ungrounded claim was sent"
+  },
+  "archetype": "grounded_support_agent_handoff",
+  "learned": true,
+  "learned_at": "2026-08-10"
+}

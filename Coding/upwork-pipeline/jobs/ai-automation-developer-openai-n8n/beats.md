@@ -1,0 +1,8 @@
+- your ask: take a workflow, automate it, no unnecessary complexity
+- new request comes in, tidy the name, email and message
+- openai sorts it and drafts the reply; every request hits the sheet
+- route by category: quotes get the reply right away, sales pinged
+- support or unsure: saved as a draft to approve, never auto-sent
+- mark the row handled; any step fails, slack alert with a link
+- kept simple on purpose: one openai call, no agent, easy to maintain
+- can start [START], working demo by [DRAFT]

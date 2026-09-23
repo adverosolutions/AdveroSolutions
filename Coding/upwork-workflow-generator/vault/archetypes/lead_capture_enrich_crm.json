@@ -1,0 +1,60 @@
+{
+  "archetype": "lead_capture_enrich_crm",
+  "title": "Inbound Lead → AI Qualify → CRM → Slack",
+  "platform": "n8n",
+  "sections": [
+    { "key": "intake",  "label": "1 · INTAKE",      "note": "Every inbound lead — website form, landing page, or ad — lands on one webhook and is normalised into a single shape before anything downstream touches it." },
+    { "key": "enrich",  "label": "2 · AI QUALIFY",  "note": "The company domain is enriched, then an AI agent scores fit against your ICP and writes a one-line rationale the rep can read at a glance." },
+    { "key": "route",   "label": "3 · ROUTE",       "note": "Scored leads split: qualified leads go straight to the CRM and the sales channel, everything else drops into a nurture list instead of the reps' queue." },
+    { "key": "deliver", "label": "4 · DELIVER",     "note": "The CRM record is created or updated, the rep is notified with the score and rationale attached, and the webhook answers the form so the visitor sees an instant confirmation." }
+  ],
+  "nodes": [
+    { "key": "hook",     "kind": "trigger.webhook", "label": "New Lead Submitted",   "section": "intake" },
+    { "key": "normalize","kind": "data.transform",  "label": "Normalize Lead Fields","section": "intake" },
+    { "key": "enrich",   "kind": "net.http",        "label": "Enrich Company Domain","section": "enrich" },
+    { "key": "agent",    "kind": "ai.agent",        "label": "Score Lead vs ICP",    "section": "enrich" },
+    { "key": "model",    "kind": "ai.model",  "app": "openai", "label": "GPT-4.1",   "parent": "agent" },
+    { "key": "parser",   "kind": "ai.parser", "label": "Structured Score Output",    "parent": "agent" },
+    { "key": "gate",     "kind": "flow.branch",     "label": "Score ≥ 70?",          "section": "route" },
+    { "key": "crm",      "kind": "app.action", "app": "hubspot", "op": "create_contact", "label": "Upsert CRM Contact", "section": "deliver" },
+    { "key": "notify",   "kind": "app.action", "app": "slack",   "op": "post",           "label": "Alert #sales",       "section": "deliver" },
+    { "key": "nurture",  "kind": "app.action", "app": "googleSheets", "op": "append",    "label": "Add to Nurture List","section": "deliver" },
+    { "key": "respond",  "kind": "net.respond",     "label": "Confirm to Visitor",   "section": "deliver" }
+  ],
+  "edges": [
+    { "from": "hook",     "to": "normalize" },
+    { "from": "normalize","to": "enrich" },
+    { "from": "enrich",   "to": "agent" },
+    { "from": "agent",    "to": "gate" },
+    { "from": "gate",     "to": "crm",     "branch": "true" },
+    { "from": "gate",     "to": "nurture", "branch": "false" },
+    { "from": "crm",      "to": "notify" },
+    { "from": "notify",   "to": "respond" }
+  ],
+  "input_sample": {
+    "submitted_at": "2026-07-31T14:22:09Z",
+    "source": "website/pricing-page",
+    "full_name": "Dana Whitfield",
+    "work_email": "dana.whitfield@northgate-industrial.com",
+    "company": "Northgate Industrial",
+    "company_size": "120-250",
+    "phone": "+1 402 555 0163",
+    "message": "We're replacing a manual quoting process and need something that talks to our ERP."
+  },
+  "output_sample": {
+    "lead_id": "LD-40917",
+    "crm_contact_id": "0-1-88213554",
+    "status": "qualified",
+    "fit_score": 84,
+    "rationale": "Mid-market manufacturer, named an ERP integration need, and arrived from the pricing page — high intent and squarely in ICP.",
+    "assigned_to": "#sales · Marcus Reyes",
+    "enriched": {
+      "domain": "northgate-industrial.com",
+      "industry": "Industrial Manufacturing",
+      "employees": 180,
+      "hq": "Omaha, NE"
+    },
+    "notified_at": "2026-07-31T14:22:11Z",
+    "elapsed_ms": 1840
+  }
+}

@@ -1,0 +1,212 @@
+{
+  "title": "Shopify + WordPress Event → AI Agent Decides → The Right System Gets Updated",
+  "platform": "make",
+  "sections": [
+    {
+      "key": "in",
+      "label": "1 · A WEBHOOK FIRES",
+      "color": 0,
+      "note": "Bad payloads get rejected with a clear message instead of half-finishing."
+    },
+    {
+      "key": "context",
+      "label": "2 · GATHER THE CONTEXT FIRST",
+      "color": 0,
+      "note": "The agent never guesses at facts it could look up."
+    },
+    {
+      "key": "decide",
+      "label": "3 · THE AGENT DECIDES",
+      "color": 0,
+      "note": "It proposes an action and says why, before anything is changed."
+    },
+    {
+      "key": "act",
+      "label": "4 · CARRY IT OUT",
+      "color": 0,
+      "note": "One route per outcome, so each path is easy to test on its own."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 · Webhook Fires From Shopify or WordPress",
+      "section": "in"
+    },
+    {
+      "key": "check",
+      "kind": "flow.branch",
+      "label": "2 · Does the Payload Have What We Need?",
+      "section": "in"
+    },
+    {
+      "key": "reject",
+      "kind": "net.respond",
+      "label": "3 · Reply Saying What Was Missing and Stop",
+      "section": "in"
+    },
+    {
+      "key": "crm",
+      "kind": "net.http",
+      "label": "4 · Look the Customer Up in the CRM",
+      "section": "context"
+    },
+    {
+      "key": "orders",
+      "kind": "net.http",
+      "label": "5 · Pull Their Order History From Shopify",
+      "section": "context"
+    },
+    {
+      "key": "retry",
+      "kind": "flow.branch",
+      "label": "6 · If an API Call Failed, Retry Then Alert",
+      "section": "context",
+      "notes": "Three attempts with a delay, then the record parks in a queue and a message goes out with a link to the run."
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "7 · AI Agent Works Out What Should Happen",
+      "section": "decide"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "OpenAI",
+      "app": "openai",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Force One of the Allowed Actions",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "why",
+      "kind": "data.transform",
+      "label": "8 · Write Down the Action and the Reason",
+      "section": "decide"
+    },
+    {
+      "key": "route",
+      "kind": "flow.switch",
+      "label": "9 · Do What It Decided",
+      "section": "act"
+    },
+    {
+      "key": "upd",
+      "kind": "net.http",
+      "label": "9a · Update the Customer Record",
+      "section": "act"
+    },
+    {
+      "key": "mail",
+      "kind": "app.action",
+      "label": "9b · Send the Follow-Up Email",
+      "app": "gmail",
+      "op": "send_email",
+      "section": "act"
+    },
+    {
+      "key": "flag",
+      "kind": "app.action",
+      "label": "9c · Flag It for a Person to Look At",
+      "app": "slack",
+      "op": "send_message",
+      "section": "act"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "check"
+    },
+    {
+      "from": "check",
+      "to": "reject",
+      "branch": "false"
+    },
+    {
+      "from": "check",
+      "to": "crm",
+      "branch": "true"
+    },
+    {
+      "from": "crm",
+      "to": "orders"
+    },
+    {
+      "from": "orders",
+      "to": "retry"
+    },
+    {
+      "from": "retry",
+      "to": "agent",
+      "branch": "All good"
+    },
+    {
+      "from": "retry",
+      "to": "flag",
+      "branch": "Failed after retries"
+    },
+    {
+      "from": "agent",
+      "to": "why"
+    },
+    {
+      "from": "why",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "upd",
+      "branch": "Update the record"
+    },
+    {
+      "from": "route",
+      "to": "mail",
+      "branch": "Send an email"
+    },
+    {
+      "from": "route",
+      "to": "flag",
+      "branch": "Needs a person"
+    }
+  ],
+  "input_sample": {
+    "source": "Shopify webhook — refunds/create",
+    "received_at": "2026-08-11T16:04:11Z",
+    "payload": {
+      "order": "#40911",
+      "customer_email": "j.okonkwo@fastmail.com",
+      "refund_amount_usd": 148.0,
+      "reason": "Item never arrived"
+    }
+  },
+  "output_sample": {
+    "customer": {
+      "crm_id": "6127",
+      "lifetime_orders": 4,
+      "first_order": "2024-11",
+      "prior_refunds": 0
+    },
+    "agent_decision": "Send the follow-up email",
+    "reason": "First refund in four orders and the cause was delivery, not the product. Worth keeping rather than flagging.",
+    "action_taken": "Apology email with a replacement offer, CRM tagged Delivery Issue",
+    "not_taken": [
+      "Flag for a person — no dispute risk",
+      "Update record only — would have said nothing to the customer"
+    ],
+    "api_calls": 3,
+    "retries_needed": 0,
+    "if_shopify_had_timed_out": "Three retries, then parked and a Slack alert with a link to the run"
+  },
+  "archetype": "make_agent_ecommerce_router",
+  "learned": true,
+  "learned_at": "2026-08-12"
+}

@@ -1,0 +1,54 @@
+# AdveroSolutions System Dependencies
+
+# Core
+python-dotenv==1.0.0
+requests==2.31.0
+
+# Google Sheets Integration
+google-api-python-client==2.110.0
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.0
+gspread==5.12.4
+
+# Anthropic (Claude API)
+anthropic==0.39.0
+
+# Date/Time handling
+pytz==2023.3
+python-dateutil==2.8.2
+
+# Data processing
+pandas==2.1.4
+openpyxl==3.1.2
+
+# Modal (Cloud Functions)
+modal==0.63.64
+
+# HTTP utilities
+httpx==0.25.2
+
+# Validation
+pydantic==2.5.3
+
+# Templating (Free Value generator)
+jinja2>=3.1.0
+
+# Supabase (Free Value hosting)
+supabase>=2.0.0
+
+# Logging & Monitoring (optional)
+slack-sdk==3.26.1
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+
+# Lead Discovery
+playwright==1.41.0
+
+# Dashboard
+streamlit>=1.30.0
+plotly>=5.18.0
+
+# OpenAI (for icebreakers)
+openai>=1.10.0

@@ -1,0 +1,268 @@
+{
+  "title": "Appointment Booking, Reminders, No-Show Recovery, Reschedule & Cancel",
+  "platform": "gohighlevel",
+  "sections": [
+    {
+      "key": "book",
+      "label": "1 · BOOK THE APPOINTMENT",
+      "color": 0,
+      "note": "A prospect can only book a slot that is actually open, checked in real time against the calendar, not against a static list that goes stale."
+    },
+    {
+      "key": "confirm",
+      "label": "2 · CONFIRM AND REMIND",
+      "color": 0,
+      "note": "Email plus text confirmation immediately, then a reminder sequence timed to when people actually forget, the day before and the hour before."
+    },
+    {
+      "key": "outcome",
+      "label": "3 · DID THEY SHOW UP?",
+      "color": 0,
+      "note": "The two outcomes need completely different follow-ups. Treating a no-show the same as a completed appointment is the single biggest reason follow-up sequences feel generic."
+    },
+    {
+      "key": "change",
+      "label": "4 · RESCHEDULE OR CANCEL, HANDLED CLEANLY",
+      "color": 0,
+      "note": "Both release the original slot immediately so it goes back into inventory instead of sitting held on a no-longer-real booking."
+    },
+    {
+      "key": "cancel",
+      "label": "5 · CANCELLATION",
+      "color": 0,
+      "note": "A cancelled slot goes straight back into inventory, and the contact moves to nurture on its own path rather than sharing the no-show recovery track."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "book_trig",
+      "kind": "trigger.form",
+      "label": "1 · Prospect Requests an Appointment",
+      "section": "book"
+    },
+    {
+      "key": "slot_check",
+      "kind": "app.action",
+      "label": "2 · Confirm the Time Slot Is Still Open",
+      "app": "GoHighLevel",
+      "op": "check_availability",
+      "section": "book"
+    },
+    {
+      "key": "book_confirm",
+      "kind": "app.action",
+      "label": "3 · Lock the Appointment on the Calendar",
+      "app": "GoHighLevel",
+      "op": "create_appointment",
+      "section": "book"
+    },
+    {
+      "key": "email_confirm",
+      "kind": "app.action",
+      "label": "4 · Send the Confirmation Email",
+      "app": "GoHighLevel",
+      "op": "send_email",
+      "section": "confirm"
+    },
+    {
+      "key": "sms_confirm",
+      "kind": "app.action",
+      "label": "5 · Send the Confirmation Text",
+      "app": "GoHighLevel",
+      "op": "send_sms",
+      "section": "confirm"
+    },
+    {
+      "key": "reminder_24",
+      "kind": "app.action",
+      "label": "6 · Reminder — Day Before",
+      "app": "GoHighLevel",
+      "op": "send_sms",
+      "section": "confirm"
+    },
+    {
+      "key": "reminder_1h",
+      "kind": "app.action",
+      "label": "7 · Reminder — One Hour Before",
+      "app": "GoHighLevel",
+      "op": "send_sms",
+      "section": "confirm"
+    },
+    {
+      "key": "showed",
+      "kind": "flow.branch",
+      "label": "8 · Did They Show Up?",
+      "section": "outcome"
+    },
+    {
+      "key": "post_followup",
+      "kind": "app.action",
+      "label": "9a · Post-Appointment Follow-Up",
+      "app": "GoHighLevel",
+      "op": "start_sequence",
+      "section": "outcome"
+    },
+    {
+      "key": "noshow",
+      "kind": "app.action",
+      "label": "9b · No-Show Recovery — Rebook Offer",
+      "app": "GoHighLevel",
+      "op": "start_sequence",
+      "section": "outcome"
+    },
+    {
+      "key": "nurture",
+      "kind": "app.action",
+      "label": "10 · Still Not Booked — Long-Term Nurture",
+      "app": "GoHighLevel",
+      "op": "add_tag_and_stage",
+      "section": "outcome"
+    },
+    {
+      "key": "resched_trig",
+      "kind": "trigger.form",
+      "label": "11 · Reschedule Requested",
+      "section": "change"
+    },
+    {
+      "key": "release_old",
+      "kind": "app.action",
+      "label": "12 · Release the Original Time Slot",
+      "app": "GoHighLevel",
+      "op": "cancel_appointment",
+      "section": "change"
+    },
+    {
+      "key": "book_new",
+      "kind": "app.action",
+      "label": "13 · Book the New Time Slot",
+      "app": "GoHighLevel",
+      "op": "create_appointment",
+      "section": "change"
+    },
+    {
+      "key": "resched_confirm",
+      "kind": "app.action",
+      "label": "14 · Send the Updated Confirmation",
+      "app": "GoHighLevel",
+      "op": "send_sms",
+      "section": "change"
+    },
+    {
+      "key": "cancel_trig",
+      "kind": "trigger.form",
+      "label": "15 · Cancellation Requested",
+      "section": "cancel"
+    },
+    {
+      "key": "release_cancel",
+      "kind": "app.action",
+      "label": "16 · Release the Slot Back to the Calendar",
+      "app": "GoHighLevel",
+      "op": "cancel_appointment",
+      "section": "cancel"
+    },
+    {
+      "key": "cancel_nurture",
+      "kind": "app.action",
+      "label": "17 · Move to Long-Term Nurture",
+      "app": "GoHighLevel",
+      "op": "add_tag_and_stage",
+      "section": "cancel"
+    }
+  ],
+  "edges": [
+    {
+      "from": "book_trig",
+      "to": "slot_check"
+    },
+    {
+      "from": "slot_check",
+      "to": "book_confirm"
+    },
+    {
+      "from": "book_confirm",
+      "to": "email_confirm"
+    },
+    {
+      "from": "email_confirm",
+      "to": "sms_confirm"
+    },
+    {
+      "from": "sms_confirm",
+      "to": "reminder_24"
+    },
+    {
+      "from": "reminder_24",
+      "to": "reminder_1h"
+    },
+    {
+      "from": "reminder_1h",
+      "to": "showed"
+    },
+    {
+      "from": "showed",
+      "to": "post_followup",
+      "branch": "Showed up"
+    },
+    {
+      "from": "showed",
+      "to": "noshow",
+      "branch": "No-show"
+    },
+    {
+      "from": "noshow",
+      "to": "nurture"
+    },
+    {
+      "from": "resched_trig",
+      "to": "release_old"
+    },
+    {
+      "from": "release_old",
+      "to": "book_new"
+    },
+    {
+      "from": "book_new",
+      "to": "resched_confirm"
+    },
+    {
+      "from": "cancel_trig",
+      "to": "release_cancel"
+    },
+    {
+      "from": "release_cancel",
+      "to": "cancel_nurture"
+    }
+  ],
+  "input_sample": {
+    "prospect": {
+      "name": "Owen Marsh",
+      "phone": "+1 (817) 555-0193",
+      "email": "owen.marsh@brighthavenhvac-lead.com"
+    },
+    "requested_slot": "2026-08-21T14:00:00-05:00",
+    "service_type": "AC not cooling — same-day request",
+    "source": "Website booking form"
+  },
+  "output_sample": {
+    "appointment_id": "apt_77213",
+    "slot_locked": "2026-08-21T14:00:00-05:00",
+    "confirmations_sent": {
+      "email": true,
+      "sms": true
+    },
+    "reminders_scheduled": [
+      "2026-08-20T14:00:00-05:00",
+      "2026-08-21T13:00:00-05:00"
+    ],
+    "outcome": "No-show",
+    "recovery_sequence": "No-Show Recovery — Rebook Offer sent within 30 minutes, same-day slot held open",
+    "rebooked": true,
+    "new_appointment_id": "apt_77298",
+    "before_this_build": "No-shows were only noticed when the tech showed up to an empty driveway"
+  },
+  "archetype": "appointment_booking_noshow_recovery",
+  "learned": true,
+  "learned_at": "2026-08-20"
+}

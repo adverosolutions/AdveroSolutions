@@ -1,0 +1,8 @@
+- 800 labeled reports, you want a model that classifies them consistently
+- prepare the data: dedupe, normalize, suspect labels come back to you
+- hold out a stratified validation and test set before any training
+- select a lightweight open source model, convert rows to its format
+- score the base model on the test set first, that is the before number
+- train a lora adapter for a few epochs on your hardware or cloud
+- evaluate per category, especially recall on urgent, iterate until it beats baseline
+- adapter files, inference script, reproducible code, summary; start [START], numbers by [DRAFT]

@@ -1,0 +1,8 @@
+- Someone books a call, the lead lands in your call booked pipeline.
+- Your Zapier handles Cal.com to GoHighLevel: contact, call time, call-booked tag.
+- Add the Lead to Call Booked Pipeline, then text and email you.
+- Cal.com already sends reminders, so one prep question email, nothing duplicated.
+- Close-out task reminds you to mark Showed or No Show.
+- The goal catches a cancel mid-wait: Cancelled stage, rebook link out.
+- Option: Cal.com webhook straight into GoHighLevel, no Zap needed.
+- can start [START], working demo by [DRAFT]

@@ -1,0 +1,39 @@
+{
+  "_about": "Suppression entries the Instantly workspace cannot tell the factory about. Everything else (leads already in the workspace, bounces, unsubscribes, blocklist, hostile replies, contacted domains) is pulled read-only at run time. Edit this file by hand; the factory never writes it.",
+  "as_of": "2026-09-22",
+  "client_domains": [
+    "adverosolutions.com",
+    "adveromedia.com",
+    "myadvero.com",
+    "proadvero.com",
+    "theadvero.com",
+    "adverohq.com",
+    "meetadvero.com",
+    "adveropartners.com",
+    "joinadvero.com",
+    "getadvero.com",
+    "adverocreative.com",
+    "adverosolution.com",
+    "adverostudio.com",
+    "adveroteam.com",
+    "tryadvero.com",
+    "adverogrowth.com"
+  ],
+  "client_domains_note": "Lorenzo's own sending domains. Add every paying client's domain here on the day they sign: a live client receiving a cold pitch from us is the one suppression failure that costs revenue rather than reputation.",
+  "manual_emails": [],
+  "manual_domains": [
+    "gmail.com",
+    "yahoo.com",
+    "hotmail.com",
+    "aol.com",
+    "outlook.com",
+    "icloud.com",
+    "me.com",
+    "msn.com",
+    "comcast.net",
+    "live.com",
+    "protonmail.com",
+    "mail.com"
+  ],
+  "manual_domains_note": "Free mailbox providers. A personal address is never a company contact, and pattern-guessing against gmail.com produces garbage that burns verification credits. These are matched as domains, so a lead whose only address is a gmail one is rejected before it costs anything."
+}

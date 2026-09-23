@@ -1,0 +1,352 @@
+{
+  "_about": "Live system identifiers pulled read-only on 2026-09-21. Every script reads ids from here; never hard-code them. Snapshots of the raw pulls live in config/snapshots/.",
+  "as_of": "2026-09-21",
+  "timezone": "America/Chicago",
+  "owner": {
+    "name": "Lorenzo Villarreal",
+    "email": "adveroadvertising@gmail.com",
+    "calendar_email": "lorenzovillarreal@adverosolutions.com"
+  },
+  "instantly": {
+    "api_base": "https://api.instantly.ai/api/v2",
+    "env_key": "INSTANTLY_API_KEY (write-capable: goes only in ~/.advero/live.env and the Modal secret, never a repo .env; agents read with INSTANTLY_API_KEY_READ, scope all:read, in Agentic Worklfows/.env. History: the old key sat in Coding/lead-scrape-2026/.env and Agentic Worklfows/.env from 2026-09-21; delete both copies and rotate it. See runbooks/read_only_keys.md)",
+    "organization_id": "92fb7f1b-1d71-45d5-bea0-178894b5b492",
+    "owned_by": "fdb81354-a6cc-4460-9efb-0944b23abcec",
+    "plan": "Hyper Growth",
+    "campaigns": {
+      "cleaning_reactivation": {
+        "id": "8086b41e-b546-4b36-9fa0-2d01f5cc119a",
+        "name": "2026 Cleaning - Client Reactivation",
+        "niche": "cleaning",
+        "offer": "reactivation",
+        "email_gap": 10
+      },
+      "cleaning_trigger": {
+        "id": "f347604e-48c7-4813-831c-dc7b9d4b50ae",
+        "name": "2026 Cleaning - Trigger Outbound",
+        "niche": "cleaning",
+        "offer": "outbound",
+        "email_gap": 7
+      },
+      "bookkeeping_reactivation": {
+        "id": "f00c5e28-fdc4-4d84-a7e6-dfba9695f35d",
+        "name": "2026 Bookkeeping - Client Reactivation",
+        "niche": "bookkeeping",
+        "offer": "reactivation",
+        "email_gap": 7
+      },
+      "bookkeeping_trigger": {
+        "id": "87ebb167-9b64-4b6f-b658-88f3d1af9980",
+        "name": "2026 Bookkeeping - Trigger Outbound",
+        "niche": "bookkeeping",
+        "offer": "outbound",
+        "email_gap": 7
+      },
+      "recruiting_reactivation": {
+        "id": "1d4d5bb3-40a7-4333-bf34-b269d2cc9955",
+        "name": "2026 Recruiting - Client Reactivation",
+        "niche": "recruiting",
+        "offer": "reactivation",
+        "email_gap": 7
+      },
+      "recruiting_outbound": {
+        "id": "cd2e251c-3b5a-40d2-a3dc-d07c4004a48c",
+        "name": "2026 Recruiting - Outbound (specialty roles)",
+        "niche": "recruiting",
+        "offer": "outbound",
+        "email_gap": 7
+      }
+    },
+    "campaign_settings_observed": {
+      "status": 1,
+      "daily_limit": 50,
+      "stop_on_reply": true,
+      "stop_on_auto_reply": false,
+      "open_tracking": false,
+      "link_tracking": false,
+      "text_only": true,
+      "pl_value": 1000,
+      "steps": 2,
+      "variants_per_step": 1,
+      "schedule": "07:00-19:00 America/Detroit Mon-Sat (recruiting_outbound: 08:00-17:00 America/Chicago)"
+    },
+    "active_domains": [
+      "adveromedia.com",
+      "myadvero.com",
+      "proadvero.com",
+      "theadvero.com"
+    ],
+    "active_inboxes": [
+      "lorenzo@adveromedia.com",
+      "lorenzov@adveromedia.com",
+      "lorenzovillarreal@adveromedia.com",
+      "lorenzo@myadvero.com",
+      "lorenzov@myadvero.com",
+      "lorenzovillarreal@myadvero.com",
+      "lorenzo@proadvero.com",
+      "lorenzov@proadvero.com",
+      "lorenzovillarreal@proadvero.com",
+      "lorenzo@theadvero.com",
+      "lorenzov@theadvero.com",
+      "lorenzovillarreal@theadvero.com"
+    ],
+    "warming_domains": [
+      "adverohq.com",
+      "meetadvero.com",
+      "adveropartners.com",
+      "joinadvero.com",
+      "getadvero.com",
+      "adverocreative.com",
+      "adverosolution.com",
+      "adverostudio.com",
+      "adveroteam.com",
+      "tryadvero.com",
+      "adverogrowth.com"
+    ],
+    "warming_inboxes_note": "33 inboxes = 11 domains x personas lorenzo@ / lorenzov@ / lorenzovillarreal@, created 2026-09-20 19:07-19:08Z, warmup started 2026-09-20 23:39Z, daily_limit 25, warmup limit 10, go-live target 2026-10-11",
+    "per_inbox_daily_limit": 25,
+    "interest_status_codes": {
+      "1": "interested",
+      "2": "meeting_booked",
+      "3": "meeting_completed",
+      "4": "closed",
+      "0": "out_of_office_or_neutral",
+      "-1": "not_interested",
+      "-2": "wrong_person",
+      "-3": "lost",
+      "-4": "no_show"
+    },
+    "webhooks": "none exist as of 2026-09-21 (do not create until go-live approval)",
+    "lead_labels": "none exist as of 2026-09-21",
+    "subsequences": "none observed",
+    "webhook_event_types": [
+      "email_sent",
+      "email_bounced",
+      "email_opened",
+      "email_link_clicked",
+      "reply_received",
+      "lead_unsubscribed",
+      "campaign_completed",
+      "account_error",
+      "lead_interested",
+      "lead_not_interested",
+      "lead_neutral",
+      "lead_meeting_booked",
+      "lead_meeting_completed",
+      "lead_closed",
+      "lead_out_of_office",
+      "lead_wrong_person",
+      "custom_label_any_positive",
+      "custom_label_any_negative"
+    ],
+    "retired_domains_note": "9 *adverosolutions.com variants (oneadverosolutions, eliteadverosolutions, clickadverosolutions, proadverosolutions, onlineadverosolutions, gotadverosolutions, ...) used Dec 2025 - Mar 2026 for HVAC/roofing; not in the current account list"
+  },
+  "ghl": {
+    "api_base": "https://services.leadconnectorhq.com",
+    "api_version_header": "2021-07-28",
+    "env_key": "GHL_PRIVATE_INTEGRATION_TOKEN (not yet created; Lorenzo must mint it in GHL Settings > Private Integrations with contacts, opportunities, calendars, calendars/events, conversations, workflows scopes. The write token goes only in ~/.advero/live.env and the Modal secret; a second, readonly-scopes-only token goes in Agentic Worklfows/.env as GHL_PRIVATE_INTEGRATION_TOKEN_READ. See runbooks/read_only_keys.md)",
+    "location_id": "ebyNANPagaK7ycf1pfge",
+    "location_name": "AdveroSolutions",
+    "user_id": "gIwBtPohHJXADQBuGAx8",
+    "pipelines": {
+      "sales": {
+        "id": "GCBkIzFpung73cIDVPzn",
+        "name": "Sales",
+        "stages": {
+          "new_reply": {
+            "id": "f000f05d-5732-40c1-866a-bd71cd0f95b6",
+            "name": "New Reply/Lead",
+            "position": 0
+          },
+          "call_booked": {
+            "id": "f12615dc-66e1-412d-902b-4d1adab812c9",
+            "name": "Call Booked",
+            "position": 1
+          },
+          "proposal_sent": {
+            "id": "fcf3359e-f8e0-4354-92ee-2d7b396b769e",
+            "name": "Proposal Sent",
+            "position": 2
+          },
+          "won": {
+            "id": "48eca719-502a-46cc-9e39-7db0aeffb41e",
+            "name": "Won",
+            "position": 3
+          },
+          "lost": {
+            "id": "6ce29ed4-fab0-4244-938f-758ef8688cd8",
+            "name": "Lost",
+            "position": 4
+          },
+          "follow_up_later": {
+            "id": "ce219fc8-3caa-45e5-bc81-622a1625a23b",
+            "name": "Follow Up Later",
+            "position": 5
+          }
+        }
+      },
+      "sales_requests": {
+        "id": "ytu2vA1aOTnVQVExcO4d",
+        "name": "Sales Requests",
+        "note": "client-demo pipeline created 2026-09-21; not used by the reply engine",
+        "stages": {
+          "new_request": "13541eb1-3d4a-4ae0-894b-7b95d2493cf1",
+          "spoke_with": "2a2ef0bf-667d-42bc-8740-b288ef562e63",
+          "replied": "fda5e7c7-41e5-425f-bb02-b2adb5880615"
+        }
+      },
+      "upwork": {
+        "id": null,
+        "stages": {
+          "new_reply": null,
+          "proposal_sent": null,
+          "call_booked": null,
+          "follow_up_later": null,
+          "won": null,
+          "lost": null
+        },
+        "note": "Lorenzo creates this pipeline in GHL; fill the ids after"
+      }
+    },
+    "calendars": {
+      "discovery_call": {
+        "id": "GDugwLmZNdsD13RBDnRu",
+        "name": "Discovery Call",
+        "slug": "advero-discovery-call",
+        "booking_url": "https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu",
+        "booking_url_note": "VERIFIED 2026-09-21: HTTP 200, page title 'Discovery Call'. Safe to use in outbound copy.",
+        "slot_minutes": 15,
+        "buffer_minutes": 15,
+        "per_day": 6,
+        "open_hours": "Mon-Fri 12:00-18:00 (calendar timezone follows the location)",
+        "allow_booking_after_hours": 4,
+        "allow_booking_for_days": 30,
+        "auto_confirm": true,
+        "allow_reschedule": true,
+        "allow_cancellation": true,
+        "conferencing": "google_conference (Zoom NOT connected as of 2026-09-21; isZoomAdded=false)",
+        "event_title": "Discovery Call - {{contact.name}}"
+      }
+    },
+    "workflows": {
+      "deal_won_clickup": {
+        "id": "e0593495-a88e-46f0-a9ac-611fabf7f0f9",
+        "name": "Deal Won -> ClickUp project + client tag",
+        "status": "published"
+      },
+      "proposal_follow_up": {
+        "id": "45f6c25f-e7d0-419b-898f-a9b0e6e1fa06",
+        "name": "Proposal Follow-up Sequence",
+        "status": "draft"
+      },
+      "bid_follow_up_demo": {
+        "id": "d58ae7f9-4768-4be0-ab99-9f5cd6ca9388",
+        "name": "Your Bid Follow-Up System",
+        "status": "draft"
+      },
+      "sales_request_follow_up_demo": [
+        "591d527e-70b3-4f96-9e19-ddc542ebc48d",
+        "b379d3fe-0a34-4056-8032-8fa941210323"
+      ],
+      "empty_drafts": 13
+    },
+    "contact_tags_in_use": [
+      "cold-email",
+      "instantly-positive-reply"
+    ],
+    "opportunities_observed_2026-09-21": [
+      {
+        "id": "hStqQMLQ5eSRVnqxnSMq",
+        "contact_id": "iDhesF6A9rhdDajGZuYw",
+        "name": "Taxfo Accounting - Sopio Svanishvili (Cold Email)",
+        "stage": "new_reply",
+        "email": "sopiosvanishvili@taxfoaccounting.com"
+      },
+      {
+        "id": "HOPG1Hl4vj6REtzjXH8r",
+        "contact_id": "cnfZoGRCRi3JMqZfo0XD",
+        "name": "Shiningarmorcleaningnj - Ilmi Curovic (Cold Email)",
+        "stage": "call_booked",
+        "email": "ilmi@shiningarmorcleaningnj.com"
+      },
+      {
+        "id": "4yGl9QF5hJVxAEudwqBq",
+        "contact_id": "tE3tyj5iIAXfBpD52rFM",
+        "name": "Flowerhill Facility Services - Tiffany Spelman (Cold Email)",
+        "stage": "new_reply",
+        "email": "tiffany@flowerhillfs.com"
+      }
+    ],
+    "a2p_10dlc": "not registered as of 2026-09-21; SMS legs stay off until it clears"
+  },
+  "google_calendar": {
+    "id": "lorenzovillarreal@adverosolutions.com",
+    "timezone": "America/Chicago",
+    "booked_this_week": [
+      {
+        "who": "Ilmi Curovic / Shining Armor Cleaning NJ",
+        "email": "ilmi@shiningarmorcleaningnj.com",
+        "start": "2026-09-23T11:30:00-05:00",
+        "event_id": "eqlug7qn67rnjdppja91ffuto0",
+        "note": "rescheduled by Ilmi on 2026-09-21 (emergency); hand-made Zoom meeting on Lorenzo's Google Calendar, accepted from ilmi@ (verified 2026-09-22)",
+        "location": "https://us06web.zoom.us/j/86701305944",
+        "response_status": "accepted"
+      },
+      {
+        "who": "Sopio Svanishvili / Taxfo Accounting",
+        "email": "sopiosvanishvili@taxfoaccounting.com",
+        "start": "2026-09-24T15:00:00-05:00",
+        "event_id": "j8n9pmfjl3cufeiu58g4kp12c8",
+        "note": "Sopio's phone in thread: 237-791-5700; her last email (Sept 21 18:17 CT) says any day 3-6pm ET, awaiting confirmation",
+        "location": "https://us06web.zoom.us/j/87015029476",
+        "response_status": "needsAction"
+      }
+    ],
+    "conferencing": "zoom (hand-made Google Calendar events on Lorenzo's own calendar, NOT GHL widget bookings; verified read-only 2026-09-22). This is distinct from ghl.calendars.discovery_call.conferencing, which describes widget bookings only."
+  },
+  "clickup": {
+    "workspace_id": "90141659171",
+    "space_id": "90148701454",
+    "client_work_folder_id": "901413482947",
+    "active_clients_list_id": "901421193684",
+    "internal_admin_list_id": "901421193681"
+  },
+  "upwork": {
+    "org_uid": "2081884703335585732",
+    "freelancer_user_id": "2081884703335585731",
+    "rooms_awaiting_you_2026-09-21": [
+      {
+        "room_id": "room_98ca24b9d88b971b724548a9fd15c60e",
+        "client": "Aysha Sanam, Treasure Labs LLC",
+        "contract_id": "44501032",
+        "status": "ENDED",
+        "last": "Great thanks will do (2026-09-17)",
+        "note": "review/testimonial already asked in Lorenzo's close-out message; warmup check-in promised around Oct 5"
+      },
+      {
+        "room_id": "room_af2d4096f4dbb52b66e2d4994c1a1bf6",
+        "client": "Jennifer Lawson",
+        "contract_id": "44491561",
+        "status": "ENDED",
+        "last": "contract ended (2026-09-14)",
+        "note": "no review/testimonial ask sent yet; 7-day support window ended Sept 21"
+      }
+    ],
+    "invitations_note": "ClosePoint USA and RoutVox Consulting are not visible via the MCP rooms/offers endpoints; check the Upwork Messages > Invitations tab by hand"
+  },
+  "modal": {
+    "profile": "adverosolutionsbackup",
+    "deployed_apps": [
+      "instantly-e\u2026 (2 apps, deployed 2026-04-02)"
+    ],
+    "planned_app": "advero-reply-engine",
+    "python": "3.11 in image; local runtime is 3.9.6 so code must stay 3.9-compatible"
+  },
+  "dead_or_missing": {
+    "supabase": "SUPABASE_URL in Agentic Worklfows/.env does not resolve (curl HTTP 000) \u2014 do not use as a store",
+    "slack_webhook": "SLACK_WEBHOOK_URL returns HTTP 000 \u2014 dead; use ntfy + Gmail SMTP for alerts",
+    "ntfy_topic": "NTFY_TOPIC unset; the engine generates advero-<random> on first run and prints the subscribe URL",
+    "zoom": "no API app, not connected to GHL",
+    "ghl_token": "no Private Integration token in any .env"
+  }
+}

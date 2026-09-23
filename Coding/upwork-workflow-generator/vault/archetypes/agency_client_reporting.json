@@ -1,0 +1,274 @@
+{
+  "title": "Monthly Client Reporting — Pull, Write, Approve, Send",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "kickoff",
+      "label": "1 · MONTH ROLLS OVER",
+      "color": 0,
+      "note": "Runs itself on the 1st. The client roster is the only thing anyone maintains, and every client on it gets handled individually — one broken integration never costs you the other nineteen reports."
+    },
+    {
+      "key": "pull",
+      "label": "2 · PULL THE NUMBERS",
+      "color": 0,
+      "note": "Ad spend and site data are fetched per client and reconciled against last month and against goal. This is the part that currently eats an afternoon of copy-paste per client and is the single biggest time sink in most agencies."
+    },
+    {
+      "key": "write",
+      "label": "3 · WRITE THE STORY",
+      "color": 0,
+      "note": "Numbers are not a report. This drafts what actually moved, what caused it, and what you are doing about it next month — in your voice, per client, grounded only in the figures that were pulled."
+    },
+    {
+      "key": "review",
+      "label": "4 · ACCOUNT MANAGER SIGN-OFF",
+      "color": 0,
+      "note": "Nothing reaches a client unread. The AM gets the draft with the figures attached and approves or sends it back. This gate is why the agency can trust the automation instead of quietly re-checking everything by hand."
+    },
+    {
+      "key": "deliver",
+      "label": "5 · SEND & MEASURE",
+      "color": 0,
+      "note": "Approved reports go out branded, and every run logs how long it would have taken manually. That log is what proves the automation is worth keeping — and what you show a client when they ask what they are paying for."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "cron",
+      "kind": "trigger.schedule",
+      "label": "1st of Month · 7am",
+      "section": "kickoff"
+    },
+    {
+      "key": "roster",
+      "kind": "app.action",
+      "label": "Load Client Roster",
+      "app": "googleSheets",
+      "op": "read",
+      "section": "kickoff"
+    },
+    {
+      "key": "loop",
+      "kind": "data.split",
+      "label": "One Client at a Time",
+      "section": "kickoff"
+    },
+    {
+      "key": "ads",
+      "kind": "net.http",
+      "label": "Pull Ad Platform Spend",
+      "section": "pull",
+      "notes": "Meta, Google Ads, LinkedIn"
+    },
+    {
+      "key": "site",
+      "kind": "net.http",
+      "label": "Pull GA4 & Conversions",
+      "section": "pull"
+    },
+    {
+      "key": "merge",
+      "kind": "data.merge",
+      "label": "Reconcile vs Last Month",
+      "section": "pull"
+    },
+    {
+      "key": "write",
+      "kind": "ai.llm",
+      "label": "Draft the Performance Story",
+      "section": "write",
+      "notes": "What moved, why, and next month's plan"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "write",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "doc",
+      "kind": "app.action",
+      "label": "Build Branded Report",
+      "app": "googleDocs",
+      "op": "create",
+      "section": "write"
+    },
+    {
+      "key": "review",
+      "kind": "app.action",
+      "label": "Send to AM for Review",
+      "app": "slack",
+      "op": "post",
+      "section": "review"
+    },
+    {
+      "key": "wait",
+      "kind": "flow.wait",
+      "label": "Await Sign-Off",
+      "section": "review"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "Approved?",
+      "section": "review"
+    },
+    {
+      "key": "send",
+      "kind": "app.action",
+      "label": "Send to Client",
+      "app": "gmail",
+      "op": "send",
+      "section": "deliver"
+    },
+    {
+      "key": "edits",
+      "kind": "app.action",
+      "label": "Return for Edits",
+      "app": "slack",
+      "op": "post",
+      "section": "deliver"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "Log Delivery & Hours Saved",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "deliver"
+    }
+  ],
+  "edges": [
+    {
+      "from": "cron",
+      "to": "roster"
+    },
+    {
+      "from": "roster",
+      "to": "loop"
+    },
+    {
+      "from": "loop",
+      "to": "ads",
+      "branch": "loop"
+    },
+    {
+      "from": "ads",
+      "to": "site"
+    },
+    {
+      "from": "site",
+      "to": "merge"
+    },
+    {
+      "from": "merge",
+      "to": "write"
+    },
+    {
+      "from": "write",
+      "to": "doc"
+    },
+    {
+      "from": "doc",
+      "to": "review"
+    },
+    {
+      "from": "review",
+      "to": "wait"
+    },
+    {
+      "from": "wait",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "send",
+      "branch": "true"
+    },
+    {
+      "from": "gate",
+      "to": "edits",
+      "branch": "false"
+    },
+    {
+      "from": "send",
+      "to": "log"
+    },
+    {
+      "from": "edits",
+      "to": "log"
+    }
+  ],
+  "input_sample": {
+    "run_at": "2026-09-01T07:00:00Z",
+    "reporting_period": "August 2026",
+    "clients_on_roster": 19,
+    "sample_client": {
+      "name": "Harbour & Finch Dental",
+      "account_manager": "Priya Raman",
+      "channels": [
+        "Google Ads",
+        "Meta",
+        "Organic"
+      ],
+      "monthly_retainer": 4200,
+      "goal": "35 booked consults/month",
+      "report_recipient": "dominic@harbourfinch.com.au"
+    }
+  },
+  "output_sample": {
+    "client": "Harbour & Finch Dental",
+    "period": "August 2026",
+    "metrics": {
+      "ad_spend": {
+        "value": 6180.0,
+        "prior": 6050.0,
+        "change_pct": 2.1
+      },
+      "leads": {
+        "value": 84,
+        "prior": 61,
+        "change_pct": 37.7
+      },
+      "cost_per_lead": {
+        "value": 73.57,
+        "prior": 99.18,
+        "change_pct": -25.8
+      },
+      "booked_consults": {
+        "value": 41,
+        "prior": 29,
+        "goal": 35,
+        "vs_goal": "+17%"
+      },
+      "organic_sessions": {
+        "value": 3140,
+        "prior": 3305,
+        "change_pct": -5.0
+      }
+    },
+    "narrative": "August was the first month above the consult goal — 41 against a target of 35, on essentially flat spend. The gain came from cost per lead dropping 26% after we cut the two broad-match campaigns on the 8th and moved that budget into the branded and 'emergency dentist' terms. Organic dipped 5%, which tracks with the site being down for the migration on the 14th–15th; it has already recovered in the first week of September. Next month we're testing the same tightening on Meta, where cost per lead is still running 40% above Google.",
+    "flagged_for_am": [
+      "Organic dip explained by migration downtime — confirm before sending"
+    ],
+    "approval": {
+      "sent_to": "Priya Raman",
+      "sent_at": "2026-09-01T07:04:12Z",
+      "decided_at": "2026-09-01T09:26:40Z",
+      "decision": "approved",
+      "edits": "Reworded the organic paragraph to lead with the recovery"
+    },
+    "report_url": "https://docs.google.com/document/d/1Hq7…/edit",
+    "delivered_to": "dominic@harbourfinch.com.au",
+    "manual_baseline_minutes": 95,
+    "actual_minutes": 4,
+    "hours_saved_this_run": 1.5,
+    "hours_saved_across_roster": 28.8
+  },
+  "archetype": "agency_client_reporting",
+  "learned": true,
+  "learned_at": "2026-08-02"
+}

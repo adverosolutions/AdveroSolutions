@@ -1,0 +1,285 @@
+{
+  "title": "Shopify Support Automation — Answer From Live Order Data, Escalate on Rules",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "in",
+      "label": "1 · IDENTIFY BEFORE ANSWERING",
+      "color": 0,
+      "note": "The customer and their orders are pulled before the model sees anything, so every reply is grounded in what is actually in Shopify rather than in what the message claims. Intent is classified separately from answering, because those two jobs fail in different ways and mixing them is what makes support bots unpredictable."
+    },
+    {
+      "key": "facts",
+      "label": "2 · FACTS FIRST, THEN LANGUAGE",
+      "color": 0,
+      "note": "Order status, tracking and return eligibility are looked up in Shopify and checked against your policy in code. The model never calculates whether something is inside the returns window, it only writes the sentence explaining the answer that the lookup produced. This is the single decision that keeps it from inventing a refund."
+    },
+    {
+      "key": "gate",
+      "label": "3 · THE ESCALATION RULES",
+      "color": 0,
+      "note": "Escalation is a rules decision, not a vibe. Low confidence, no supporting source, anything touching money above a threshold, an angry or repeat contact, or an explicit ask for a human all go to an agent. Everything else sends. The thresholds are yours and can be tightened on day one and loosened as you build trust."
+    },
+    {
+      "key": "out",
+      "label": "4 · AGENTS GET A HEAD START, NOT A TICKET",
+      "color": 0,
+      "note": "An escalation arrives with the draft reply, the order, the history and the reason it escalated. The agent edits and sends rather than starting from scratch, which is where most of the time saving actually comes from once the easy questions are handled."
+    },
+    {
+      "key": "ops",
+      "label": "5 · IT HAS TO FAIL LOUDLY",
+      "color": 0,
+      "note": "A support workflow that dies quietly is worse than no workflow, because nobody finds out until a customer does. Any failed node alerts with the execution link, and every conversation is logged so the questions it could not answer become next month's FAQ additions."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "msg",
+      "kind": "trigger.webhook",
+      "label": "1 · New Message — Email, Helpdesk or Chat",
+      "section": "in"
+    },
+    {
+      "key": "who",
+      "kind": "app.action",
+      "label": "2 · Identify the Customer and Pull Their Orders",
+      "app": "shopify",
+      "op": "get_customer",
+      "section": "in"
+    },
+    {
+      "key": "intent",
+      "kind": "ai.llm",
+      "label": "3 · Classify the Request",
+      "section": "in"
+    },
+    {
+      "key": "route",
+      "kind": "flow.switch",
+      "label": "4 · Route by What They Need",
+      "section": "in"
+    },
+    {
+      "key": "order",
+      "kind": "app.action",
+      "label": "4a · Look Up Live Order Status and Tracking",
+      "app": "shopify",
+      "op": "get_order",
+      "section": "facts"
+    },
+    {
+      "key": "policy",
+      "kind": "data.transform",
+      "label": "4b · Check Return Window Against Policy · in code",
+      "section": "facts"
+    },
+    {
+      "key": "kb",
+      "kind": "data.transform",
+      "label": "4c · Retrieve Product and FAQ Content",
+      "section": "facts"
+    },
+    {
+      "key": "draft",
+      "kind": "ai.agent",
+      "label": "5 · Write the Reply From What Was Retrieved",
+      "section": "facts"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Reply Model",
+      "app": "openai",
+      "parent": "draft",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "store",
+      "kind": "ai.vectorstore",
+      "label": "Product Docs, Policies, Past Tickets",
+      "app": "pinecone",
+      "parent": "draft",
+      "port": "ai_tool"
+    },
+    {
+      "key": "embed",
+      "kind": "ai.embed",
+      "label": "Embeddings",
+      "app": "openai",
+      "parent": "store",
+      "port": "ai_embedding"
+    },
+    {
+      "key": "check",
+      "kind": "data.transform",
+      "label": "6 · Score Confidence, Sources and Money at Risk",
+      "section": "gate"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "7 · Send It, or Hand It to an Agent?",
+      "section": "gate"
+    },
+    {
+      "key": "send",
+      "kind": "app.action",
+      "label": "8 · Send the Reply",
+      "app": "gmail",
+      "op": "send_email",
+      "section": "out"
+    },
+    {
+      "key": "esc",
+      "kind": "app.action",
+      "label": "8b · Escalate With Draft, Order and Reason",
+      "app": "slack",
+      "op": "send_message",
+      "section": "out"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "9 · Log It and Flag Unanswerable Questions",
+      "app": "airtable",
+      "op": "create_record",
+      "section": "ops"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "10 · Any Node Fails",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "ops"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "11 · Alert With the Execution Link",
+      "app": "slack",
+      "op": "send_message",
+      "section": "ops"
+    }
+  ],
+  "edges": [
+    {
+      "from": "msg",
+      "to": "who"
+    },
+    {
+      "from": "who",
+      "to": "intent"
+    },
+    {
+      "from": "intent",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "order",
+      "branch": "Order & shipping"
+    },
+    {
+      "from": "route",
+      "to": "policy",
+      "branch": "Returns & refunds"
+    },
+    {
+      "from": "route",
+      "to": "kb",
+      "branch": "Product & FAQ"
+    },
+    {
+      "from": "order",
+      "to": "draft"
+    },
+    {
+      "from": "policy",
+      "to": "draft"
+    },
+    {
+      "from": "kb",
+      "to": "draft"
+    },
+    {
+      "from": "draft",
+      "to": "check"
+    },
+    {
+      "from": "check",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "send",
+      "branch": "true"
+    },
+    {
+      "from": "gate",
+      "to": "esc",
+      "branch": "false"
+    },
+    {
+      "from": "send",
+      "to": "log"
+    },
+    {
+      "from": "esc",
+      "to": "log"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "channel": "helpdesk",
+    "received_at": "2026-08-11T11:07:33Z",
+    "from": "j.okonkwo@fastmail.com",
+    "subject": "Re: order 40911",
+    "body": "I ordered these three weeks ago and tracking hasn't moved since the 29th. If it's lost can I just get a refund instead, I needed them for a trip that's already happened."
+  },
+  "output_sample": {
+    "customer_matched": {
+      "shopify_id": "gid://shopify/Customer/6127",
+      "orders_lifetime": 4,
+      "first_order": "2024-11"
+    },
+    "intent": "Order status + refund request",
+    "facts_retrieved": {
+      "order": "#40911",
+      "fulfilment_status": "In transit",
+      "carrier": "USPS",
+      "last_scan": "2026-07-29, Kansas City MO",
+      "days_since_scan": 13,
+      "order_value_usd": 148.0,
+      "return_window": "30 days from delivery — not yet delivered, policy does not cover this case"
+    },
+    "policy_decision_made_in_code": true,
+    "drafted_reply": "Hi Jide, you're right, that hasn't moved since the 29th and thirteen days is well past normal. I've opened a lost package claim with USPS. I'm not going to make you wait on that though, so tell me whether you'd rather have a replacement out today or a full refund on the $148 and I'll do it now.",
+    "escalation": {
+      "escalated": true,
+      "reasons": [
+        "Refund above $100 auto-send threshold",
+        "Return policy does not cover an undelivered order — needs a human decision"
+      ],
+      "sent_to": "#support-escalations",
+      "agent_receives": [
+        "draft reply",
+        "order #40911",
+        "tracking history",
+        "4 prior orders",
+        "escalation reason"
+      ]
+    },
+    "agent_time_to_send": "40 seconds — edited one line",
+    "logged": {
+      "faq_gap": "Undelivered past carrier SLA is not covered by the returns policy — worth writing"
+    }
+  },
+  "archetype": "shopify_support_escalation_rules",
+  "learned": true,
+  "learned_at": "2026-08-12"
+}

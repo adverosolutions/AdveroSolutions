@@ -1,0 +1,40 @@
+{
+  "title": "Your Bid Follow-Up System",
+  "platform": "gohighlevel",
+  "sections": [
+    {"key": "in", "label": "1 - A BID GOES OUT", "note": "The website form fires the sequence and the bid is tracked as an opportunity."},
+    {"key": "touch", "label": "2 - FOUR TIMED TOUCHES", "note": "Text and email alternate on day 1, 3, 7 and 14. Business hours only."},
+    {"key": "cold", "label": "3 - NO ANSWER", "note": "After the last touch the bid is marked cold so nobody chases it by hand."},
+    {"key": "reply", "label": "4 - THE MOMENT THEY REPLY", "note": "The goal jumps any replier here, whatever day it is. The owner is told immediately."}
+  ],
+  "nodes": [
+    {"key": "form", "kind": "trigger.app", "app": "ghl", "op": "form_submitted", "label": "1 - Bid Request Form Submitted", "section": "in", "params": {"form": "Bid Request"}},
+    {"key": "tag_sent", "kind": "app.action", "app": "ghl", "op": "add_tag", "label": "2 - Tag the Contact bid-sent", "section": "in", "params": {"tag": "bid-sent"}},
+    {"key": "opp", "kind": "app.action", "app": "ghl", "op": "create_opportunity", "label": "3 - Open the Bid in the Pipeline", "section": "in", "params": {"pipeline": "Bids", "stage": "Bid Sent", "name": "{{contact.first_name}} {{contact.last_name}} - {{contact.project_type}}", "status": "open"}},
+    {"key": "w1", "kind": "flow.wait", "label": "4 - Wait 1 Day", "section": "touch", "params": {"amount": 1, "unit": "days"}},
+    {"key": "sms1", "kind": "app.action", "app": "ghl", "op": "send_sms", "label": "5 - Text: Did You Get the Bid", "section": "touch", "params": {"message": "Hi {{contact.first_name}}, this is {{user.first_name}} with {{location.name}}. Just making sure the bid we sent over came through. Any questions on it? Happy to walk you through the numbers."}},
+    {"key": "w2", "kind": "flow.wait", "label": "6 - Wait 2 Days", "section": "touch", "params": {"amount": 2, "unit": "days"}},
+    {"key": "email1", "kind": "app.action", "app": "ghl", "op": "send_email", "label": "7 - Email: Quick Recap of Your Bid", "section": "touch", "params": {"subject": "Quick recap of your bid, {{contact.first_name}}", "body": "Hi {{contact.first_name}}, wanted to make this easy to find. Your bid from {{location.name}} is attached to this thread. If the scope or timing needs adjusting, reply here and I will rework it the same day. {{user.first_name}}"}},
+    {"key": "w3", "kind": "flow.wait", "label": "8 - Wait 4 Days", "section": "touch", "params": {"amount": 4, "unit": "days"}},
+    {"key": "sms2", "kind": "app.action", "app": "ghl", "op": "send_sms", "label": "9 - Text: Still Want to Move Forward", "section": "touch", "params": {"message": "Hi {{contact.first_name}}, {{user.first_name}} again. Our schedule for the next few weeks is filling up. If you want to lock in your spot on the bid we sent, just reply here and I will get you on the calendar."}},
+    {"key": "w4", "kind": "flow.wait", "label": "10 - Wait 7 Days", "section": "touch", "params": {"amount": 7, "unit": "days"}},
+    {"key": "email2", "kind": "app.action", "app": "ghl", "op": "send_email", "label": "11 - Email: Last Check In", "section": "touch", "params": {"subject": "Last check in on your project", "body": "Hi {{contact.first_name}}, I will stop following up after this one so I am not a pest. If the project is still on, the bid stands and I can start whenever you are ready. If it is on hold, no problem at all, just let me know and I will check back in a few months. {{user.first_name}}"}},
+    {"key": "opp_cold", "kind": "app.action", "app": "ghl", "op": "update_opportunity", "label": "12 - Move the Bid to No Response", "section": "cold", "params": {"pipeline": "Bids", "stage": "No Response", "status": "open"}},
+    {"key": "tag_cold", "kind": "app.action", "app": "ghl", "op": "add_tag", "label": "13 - Tag the Contact bid-cold", "section": "cold", "params": {"tag": "bid-cold"}},
+    {"key": "goal", "kind": "app.action", "app": "ghl", "op": "goal", "label": "14 - Goal: Customer Replied to the Bid", "section": "reply", "params": {"goal_type": "tag_added", "tag": "bid-replied", "if_not_met": "end"}, "notes": "The companion workflow adds bid-replied the moment the customer replies on any channel, so a reply on day 2 skips every remaining touch and lands here."},
+    {"key": "untag", "kind": "app.action", "app": "ghl", "op": "remove_tag", "label": "15 - Remove the bid-sent Tag", "section": "reply", "params": {"tag": "bid-sent"}},
+    {"key": "opp_replied", "kind": "app.action", "app": "ghl", "op": "update_opportunity", "label": "16 - Move the Bid to Replied", "section": "reply", "params": {"pipeline": "Bids", "stage": "Replied", "status": "open"}},
+    {"key": "notify_sms", "kind": "app.action", "app": "ghl", "op": "internal_notification", "label": "17 - Text the Owner", "section": "reply", "params": {"type": "sms", "to": "the contact's assigned user, and if none is assigned, all users", "message": "{{contact.first_name}} {{contact.last_name}} just replied about their bid. Open the conversation and answer while it is warm: {{contact.phone}}"}},
+    {"key": "notify_email", "kind": "app.action", "app": "ghl", "op": "internal_notification", "label": "18 - Email the Owner", "section": "reply", "params": {"type": "email", "to": "the contact's assigned user, and if none is assigned, all users", "subject": "Bid reply from {{contact.first_name}} {{contact.last_name}}", "message": "{{contact.first_name}} {{contact.last_name}} replied to the bid follow-up. Phone {{contact.phone}}, email {{contact.email}}. Open the conversation in GoHighLevel to answer."}}
+  ],
+  "edges": [
+    {"from": "form", "to": "tag_sent"}, {"from": "tag_sent", "to": "opp"}, {"from": "opp", "to": "w1"},
+    {"from": "w1", "to": "sms1"}, {"from": "sms1", "to": "w2"}, {"from": "w2", "to": "email1"},
+    {"from": "email1", "to": "w3"}, {"from": "w3", "to": "sms2"}, {"from": "sms2", "to": "w4"},
+    {"from": "w4", "to": "email2"}, {"from": "email2", "to": "opp_cold"}, {"from": "opp_cold", "to": "tag_cold"},
+    {"from": "tag_cold", "to": "goal"}, {"from": "goal", "to": "untag"}, {"from": "untag", "to": "opp_replied"},
+    {"from": "opp_replied", "to": "notify_sms"}, {"from": "notify_sms", "to": "notify_email"}
+  ],
+  "input_sample": {"form": "Bid Request", "contact": {"first_name": "Dana", "last_name": "Whitfield", "phone": "+18175550142", "email": "dana@whitfieldhomes.com", "project_type": "Kitchen remodel"}},
+  "output_sample": {"opportunity": "Dana Whitfield - Kitchen remodel", "stage": "Replied", "tags": ["bid-replied"], "owner_alert": "sent by SMS and email"}
+}

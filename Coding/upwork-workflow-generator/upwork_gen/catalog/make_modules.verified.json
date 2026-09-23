@@ -1,0 +1,403 @@
+{
+  "_meta": {
+    "status": "verified",
+    "harvest_entries": 94,
+    "note": "Module ids and versions mined from real exported blueprints; every source entry carries the URL it came from."
+  },
+  "entries": {
+    "ai.llm::": {
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/03-chatgpt-telegram-bot.json"
+    },
+    "ai.agent::": {
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/03-chatgpt-telegram-bot.json"
+    },
+    "app.action:openai:message": {
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/03-chatgpt-telegram-bot.json"
+    },
+    "app.action:openai:": {
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/03-chatgpt-telegram-bot.json"
+    },
+    "ai.parser::": {
+      "module": "openai-gpt-3:transformTextToStructuredData",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 3509850
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/AlozieAI/VAPI-Calendly-Agent/main/Make-Automation-Blueprints/precall%26serverurl-automation"
+    },
+    "app.action:airtable:create": {
+      "module": "airtable:ActionCreateRecord",
+      "version": 3,
+      "parameters": {
+        "__IMTCONN__": 100001
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/Univium-Inc/Univium-Automation-Tools/31de85787743cdfa8253a1ec89b8633cf5a94085/Make.com/Automate%20Email%20Inbox%20Management/Email%20to%20Airtable%20Automation.json"
+    },
+    "app.action:airtable:": {
+      "module": "airtable:ActionCreateRecord",
+      "version": 3,
+      "parameters": {
+        "__IMTCONN__": 100001
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/Univium-Inc/Univium-Automation-Tools/31de85787743cdfa8253a1ec89b8633cf5a94085/Make.com/Automate%20Email%20Inbox%20Management/Email%20to%20Airtable%20Automation.json"
+    },
+    "app.action:airtable:search": {
+      "module": "airtable:ActionSearchRecords",
+      "version": 3,
+      "parameters": {
+        "__IMTCONN__": 1302171
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/EricTechPro/Ai-Agent-templates/a73de119f9224410ca3c0a9c03889193ff9fbea8/Make-Daily-Job-Collector.json"
+    },
+    "app.action:airtable:update": {
+      "module": "airtable:ActionUpdateRecords",
+      "version": 3,
+      "parameters": {
+        "__IMTCONN__": 100001
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/Univium-Inc/Univium-Automation-Tools/31de85787743cdfa8253a1ec89b8633cf5a94085/Make.com/Automate%20Email%20Inbox%20Management/Email%20to%20Airtable%20Automation.json"
+    },
+    "app.action:calendly:get": {
+      "module": "calendly:listEvents",
+      "version": 2,
+      "parameters": {
+        "__IMTCONN__": 3787810
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/AlozieAI/VAPI-Calendly-Agent/main/Make-Automation-Blueprints/cancelmeeting-automation"
+    },
+    "app.action:calendly:": {
+      "module": "calendly:listEvents",
+      "version": 2,
+      "parameters": {
+        "__IMTCONN__": 3787810
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/AlozieAI/VAPI-Calendly-Agent/main/Make-Automation-Blueprints/cancelmeeting-automation"
+    },
+    "app.action:discord:send": {
+      "module": "discord:createMessage",
+      "version": 2,
+      "parameters": {
+        "__IMTCONN__": 11867
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/examples/ai-agent-full-blueprint.json"
+    },
+    "app.action:discord:": {
+      "module": "discord:createMessage",
+      "version": 2,
+      "parameters": {
+        "__IMTCONN__": 11867
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/examples/ai-agent-full-blueprint.json"
+    },
+    "app.action:googleCalendar:create": {
+      "module": "google-calendar:createAnEvent",
+      "version": 5,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/10-sync-notion-to-google-calendar.json"
+    },
+    "app.action:googleCalendar:": {
+      "module": "google-calendar:createAnEvent",
+      "version": 5,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/10-sync-notion-to-google-calendar.json"
+    },
+    "app.action:gmail:send": {
+      "module": "google-email:ActionSendEmail",
+      "version": 2,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/04-send-gmail-from-google-sheets-row.json"
+    },
+    "app.action:gmail:": {
+      "module": "google-email:ActionSendEmail",
+      "version": 2,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/04-send-gmail-from-google-sheets-row.json"
+    },
+    "app.action:googleSheets:append": {
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/full-blueprint.json"
+    },
+    "app.action:googleSheets:": {
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/full-blueprint.json"
+    },
+    "app.action:googleSheets:read": {
+      "module": "google-sheets:getSheetContent",
+      "version": 2,
+      "parameters": {
+        "__IMTCONN__": 1035115
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/leifermendez/bot-google-calendar/8b0c8616defbb5c92624fc16a78e636e985589d5/template/make-template-get-calendar.json"
+    },
+    "app.action:googleSheets:update": {
+      "module": "google-sheets:updateRow",
+      "version": 2,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/01-chatgpt-completions-from-google-sheets.json"
+    },
+    "app.action:quickbooks:create": {
+      "module": "quickbooks:MakeApiCall",
+      "version": 2,
+      "parameters": {
+        "__IMTCONN__": 9999999
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/Univium-Inc/Univium-Automation-Tools/31de85787743cdfa8253a1ec89b8633cf5a94085/Automation%20Packages/Quickbooks%20Sync%20to%20Google%20Sheets/Make-QB-Sync-Blueprint.json"
+    },
+    "app.action:quickbooks:": {
+      "module": "quickbooks:MakeApiCall",
+      "version": 2,
+      "parameters": {
+        "__IMTCONN__": 9999999
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/Univium-Inc/Univium-Automation-Tools/31de85787743cdfa8253a1ec89b8633cf5a94085/Automation%20Packages/Quickbooks%20Sync%20to%20Google%20Sheets/Make-QB-Sync-Blueprint.json"
+    },
+    "app.action:slack:post": {
+      "module": "slack:CreateMessage",
+      "version": 4,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/if-else-pattern.json"
+    },
+    "app.action:slack:": {
+      "module": "slack:CreateMessage",
+      "version": 4,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/if-else-pattern.json"
+    },
+    "app.action:telegram:send": {
+      "module": "telegram:SendReplyMessage",
+      "version": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/03-chatgpt-telegram-bot.json"
+    },
+    "app.action:telegram:": {
+      "module": "telegram:SendReplyMessage",
+      "version": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/03-chatgpt-telegram-bot.json"
+    },
+    "app.action:whatsapp:send": {
+      "module": "whatsapp-business-cloud:sendMessage",
+      "version": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/06-whatsapp-basic-chatbot.json"
+    },
+    "app.action:whatsapp:": {
+      "module": "whatsapp-business-cloud:sendMessage",
+      "version": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/06-whatsapp-basic-chatbot.json"
+    },
+    "data.aggregate::": {
+      "module": "builtin:BasicAggregator",
+      "version": 1,
+      "parameters": {
+        "feeder": 3
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/aggregators.md"
+    },
+    "data.merge::": {
+      "module": "builtin:BasicMerge",
+      "version": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/branching.md"
+    },
+    "data.split::": {
+      "module": "builtin:BasicFeeder",
+      "version": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/blueprint-construction.md"
+    },
+    "data.transform::": {
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/aggregators.md"
+    },
+    "data.code::": {
+      "module": "util:SetVariables",
+      "version": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/aggregators.md"
+    },
+    "flow.branch::": {
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/08-summarize-website-and-create-social-posts.json"
+    },
+    "flow.switch::": {
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/08-summarize-website-and-create-social-posts.json"
+    },
+    "data.filter::": {
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/08-summarize-website-and-create-social-posts.json"
+    },
+    "flow.noop::": {
+      "module": "builtin:Ignore",
+      "version": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/EricTechPro/Ai-Agent-templates/a73de119f9224410ca3c0a9c03889193ff9fbea8/Make-Daily-Job-Collector.json"
+    },
+    "flow.wait::": {
+      "module": "util:FunctionSleep",
+      "version": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/EricTechPro/Ai-Agent-templates/a73de119f9224410ca3c0a9c03889193ff9fbea8/Make-Daily-Job-Collector.json"
+    },
+    "net.http::": {
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/AlozieAI/VAPI-Calendly-Agent/main/Make-Automation-Blueprints/bookmeeting-automation"
+    },
+    "trigger.schedule::": {
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/AlozieAI/VAPI-Calendly-Agent/main/Make-Automation-Blueprints/bookmeeting-automation"
+    },
+    "net.respond::": {
+      "module": "gateway:WebhookRespond",
+      "version": 1,
+      "parameters": {},
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/examples/ai-agent-full-blueprint.json"
+    },
+    "trigger.email::": {
+      "module": "email:TriggerNewEmail",
+      "version": 7,
+      "parameters": {
+        "folder": "INBOX",
+        "from": "",
+        "markSeen": false,
+        "subject": "",
+        "text": "",
+        "to": ""
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/07-incoming-emails-to-google-sheets.json"
+    },
+    "trigger.webhook::": {
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 12421,
+        "maxResults": 1
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/examples/ai-agent-full-blueprint.json"
+    },
+    "trigger.app::": {
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 12421,
+        "maxResults": 1
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/examples/ai-agent-full-blueprint.json"
+    },
+    "trigger.form::": {
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 12421,
+        "maxResults": 1
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/examples/ai-agent-full-blueprint.json"
+    },
+    "trigger.chat::": {
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 12421,
+        "maxResults": 1
+      },
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/examples/ai-agent-full-blueprint.json"
+    }
+  },
+  "special": {
+    "set_variable": {
+      "module": "util:SetVariable2",
+      "version": 1,
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-module-configuring/aggregators.md"
+    },
+    "router": {
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "verified": true,
+      "source": "https://raw.githubusercontent.com/integromat/make-skills/8ee0fef21b0179f102ff272821bb480ba5c96772/skills/make-scenario-building/examples/popular-templates/08-summarize-website-and-create-social-posts.json"
+    }
+  }
+}

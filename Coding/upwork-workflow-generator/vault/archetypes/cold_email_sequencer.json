@@ -1,0 +1,57 @@
+{
+  "archetype": "cold_email_sequencer",
+  "title": "Cold Outreach → Research → Personalized 3-Step Sequence",
+  "platform": "n8n",
+  "sections": [
+    { "key": "source",  "label": "1 · PROSPECT LIST",  "note": "New rows in the prospect sheet kick off the sequence. The batch loop keeps sending volume under your daily cap so domain reputation stays intact." },
+    { "key": "research","label": "2 · RESEARCH",       "note": "Each prospect's site is scraped and read before a single word is written. The model gets real evidence — what they sell, who they serve, what changed recently — instead of guessing from a company name." },
+    { "key": "write",   "label": "3 · PERSONALIZE",    "note": "One opening line per prospect, written from the research and checked against a quality bar. Anything generic enough to apply to a hundred companies gets rejected and rewritten." },
+    { "key": "send",    "label": "4 · SEND & TRACK",   "note": "Email one goes out immediately; follow-ups are queued on a delay and cancelled the moment someone replies. Every send is written back to the sheet so the list is always the source of truth." }
+  ],
+  "nodes": [
+    { "key": "schedule", "kind": "trigger.schedule", "label": "Every Morning · 8am", "section": "source" },
+    { "key": "fetch",    "kind": "app.action", "app": "googleSheets", "op": "read", "label": "Pull New Prospects", "section": "source" },
+    { "key": "batch",    "kind": "data.split", "label": "Loop · 40/day Cap", "section": "source" },
+    { "key": "scrape",   "kind": "app.action", "app": "html", "op": "extract", "label": "Scrape Their Website", "section": "research" },
+    { "key": "agent",    "kind": "ai.agent",  "label": "Write Opening Line", "section": "write" },
+    { "key": "model",    "kind": "ai.model", "app": "openai", "label": "GPT-4.1", "parent": "agent" },
+    { "key": "parser",   "kind": "ai.parser", "label": "Structured Output", "parent": "agent" },
+    { "key": "qa",       "kind": "flow.branch", "label": "Specific Enough?", "section": "write" },
+    { "key": "send",     "kind": "app.action", "app": "gmail", "op": "send", "label": "Send Email 1", "section": "send" },
+    { "key": "wait",     "kind": "flow.wait",  "label": "Wait 3 Days", "section": "send" },
+    { "key": "followup", "kind": "app.action", "app": "gmail", "op": "send", "label": "Send Follow-up", "section": "send" },
+    { "key": "mark",     "kind": "app.action", "app": "googleSheets", "op": "update", "label": "Update Sheet Status", "section": "send" }
+  ],
+  "edges": [
+    { "from": "schedule", "to": "fetch" },
+    { "from": "fetch",    "to": "batch" },
+    { "from": "batch",    "to": "scrape" },
+    { "from": "scrape",   "to": "agent" },
+    { "from": "agent",    "to": "qa" },
+    { "from": "qa",       "to": "send", "branch": "true" },
+    { "from": "qa",       "to": "mark", "branch": "false" },
+    { "from": "send",     "to": "wait" },
+    { "from": "wait",     "to": "followup" },
+    { "from": "followup", "to": "mark" }
+  ],
+  "input_sample": {
+    "row": 214,
+    "company": "Cedar & Vine Interiors",
+    "website": "https://cedarandvine.co",
+    "contact_name": "Marissa Okonkwo",
+    "title": "Owner",
+    "email": "marissa@cedarandvine.co",
+    "city": "Austin, TX",
+    "status": "not_contacted"
+  },
+  "output_sample": {
+    "row": 214,
+    "contact_name": "Marissa Okonkwo",
+    "opening_line": "Saw you just took on the Tarrytown loft renovation — the before/afters on your portfolio page are the kind of thing most firms bury three clicks deep.",
+    "specificity_score": 8.7,
+    "email_1": { "sent_at": "2026-07-31T08:04:19Z", "subject": "the Tarrytown loft", "message_id": "<CAF9k2@mail.gmail.com>" },
+    "email_2": { "scheduled_for": "2026-08-03T08:04:00Z", "status": "queued" },
+    "status": "contacted",
+    "daily_sends_used": "17 / 40"
+  }
+}

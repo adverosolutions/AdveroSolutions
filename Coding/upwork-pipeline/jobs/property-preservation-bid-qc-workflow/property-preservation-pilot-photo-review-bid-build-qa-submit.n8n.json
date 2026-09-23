@@ -1,0 +1,908 @@
+{
+  "name": "Property Preservation Bid and QC System - Phase 1 Pilot",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - WORK ORDER INTAKE\n\nOne work order type to start. The feed from PPW is a swappable first step: API if they expose one, scheduled export if not, browser automation as the fallback. Discovery decides which.",
+        "height": 1140,
+        "width": 460,
+        "color": 5
+      },
+      "id": "e331b615-6d0a-5bc7-852f-f1a5e2252794",
+      "name": "Section - 1 - WORK ORDER INTAKE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - BEFORE-PHOTO REVIEW AND SCOPE CHECK\n\nEvery before-photo is described and checked against the work order instructions. Missing or off-scope photos go back to the contractor before anyone builds a bid. Phase 2 runs the same pattern on after-photos once work is approved and completed.",
+        "height": 1140,
+        "width": 1040,
+        "color": 4
+      },
+      "id": "69c329d7-e361-5e60-87e6-e858ae44fe79",
+      "name": "Section - 2 - BEFORE-PHOTO REVIEW AND SCOPE CHECK",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - BID SHEET GENERATION\n\nThe bid is built from the photo findings, the measurements, and historical bids for that geography and work order type. Client pricing rules and target margin are tools the model has to call, not text in a prompt.",
+        "height": 1140,
+        "width": 1120,
+        "color": 6
+      },
+      "id": "62977261-3bba-5e3d-98d6-1612241c794c",
+      "name": "Section - 3 - BID SHEET GENERATION",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - QA PASS AND HUMAN CHECKPOINT\n\nA second model reviews the bid for underpriced, overpriced, or incomplete lines. Nothing reaches a client until a person taps approve. The checkpoint stays even after the QA pass earns trust.",
+        "height": 1140,
+        "width": 800,
+        "color": 7
+      },
+      "id": "f7ebc49e-ef72-585d-9303-db966d518d77",
+      "name": "Section - 4 - QA PASS AND HUMAN CHECKPOINT",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3080,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - SUBMIT, LOG, AND CATCH FAILURES\n\nThe approved bid goes back into PPW and every line is logged with the pricing it was based on, so the pricing model gets better with each order. \"Ready for office\" routing after verification is Phase 2 on this same pattern.",
+        "height": 1140,
+        "width": 940,
+        "color": 1
+      },
+      "id": "057c6e8a-3e7f-5581-a32d-a61cf131a679",
+      "name": "Section - 5 - SUBMIT, LOG, AND CATCH FAILURES",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4040,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "588c921f-dc05-561d-b13a-6cfb58c1a5c0",
+      "name": "1 - New Work Order From PPW - API, Export, or RPA Feed",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        80
+      ],
+      "webhookId": "af7cb0b3-2d28-5b25-841e-14658ed4918f"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ppw.example.com/v1/ppw",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "0add601c-87eb-58bf-8a7b-61695c45fdef",
+      "name": "2 - PPW: Pull Work Order Notes and Photos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        240,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 3,
+        "options": {}
+      },
+      "id": "46dbef40-ef46-562d-b176-d23025db2b1f",
+      "name": "3 - One Photo at a Time",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        620,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=4 - Claude Vision: Describe Condition and Check Scope vs Instructions\n\nwork_order_id: {{ $json.work_order_id }}\nclient: {{ $json.client }}\nwork_order_type: {{ $json.work_order_type }}\nproperty: {{ $json.property }}",
+        "batching": {}
+      },
+      "id": "fc3c5596-0197-58a6-9b53-d13d6bdcde59",
+      "name": "4 - Claude Vision: Describe Condition and Check Scope vs Instructions",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        860,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "9d34cb24-1bf4-588f-bedf-00219e241920",
+      "name": "Claude",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        920,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {},
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "work_order_id"
+            },
+            {
+              "fieldToAggregate": "photo_review"
+            },
+            {
+              "fieldToAggregate": "bid_sheet"
+            }
+          ]
+        }
+      },
+      "id": "b5fd2546-6b98-5eda-9ee2-ad242b6afda4",
+      "name": "5 - Combine Photo Findings",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        860,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "562f7e6c-4f04-54f9-9dfe-371334eb3b59",
+              "leftValue": "={{ $json.photos }}",
+              "rightValue": 6.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "67da1755-3ee9-5483-ae11-d712472fdd72",
+      "name": "6 - Photos Complete and In Scope?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1200,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "18ea9b2f-de79-50f7-ade7-d8148c7bbac2",
+      "name": "6a - Flag: Missing or Off-Scope Photos, Request Re-Upload",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        1440,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pricingdb.example.com/v1/pricingdb",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "a0db1188-aea6-59dd-8be0-5886d1e17317",
+      "name": "7 - Pricing DB: Historical Bids by Geography and Work Order Type",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1820,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "auto",
+        "text": "={{ $json.chatInput }}",
+        "options": {}
+      },
+      "id": "cc9dae01-077f-5cb2-8a8c-fef724e39c23",
+      "name": "8 - Claude: Build Bid Sheet Line Items",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2360,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "4c2a1d78-cf42-5faf-8963-35ae3d1f7d32",
+      "name": "Claude 2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        2120,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Call a sub-workflow to perform a task",
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "0ab90a8f-1c17-55ac-84a3-881b03b4095e",
+      "name": "Historical Pricing Lookup",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2320,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Call a sub-workflow to perform a task",
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "6a4783d0-f808-55f2-80d8-aa037a138280",
+      "name": "Client Pricing Rules",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2520,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"summary\": \"text\",\n  \"score\": 1\n}"
+      },
+      "id": "2c7732f7-26ee-5ea9-b677-84fcfb6c8307",
+      "name": "Force Line Items, Quantities, Unit Prices, and Margin",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2720,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=9 - QA Pass: Flag Underpriced, Overpriced, Incomplete\n\nwork_order_id: {{ $json.work_order_id }}\nclient: {{ $json.client }}\nwork_order_type: {{ $json.work_order_type }}\nproperty: {{ $json.property }}",
+        "batching": {}
+      },
+      "id": "560aef95-c9b5-5c6f-9828-219ddf4318d1",
+      "name": "9 - QA Pass: Flag Underpriced, Overpriced, Incomplete",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        3140,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "f8f97632-ef5e-5d82-a6a5-bb79bd4b707a",
+      "name": "Claude 3",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        3200,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e0cef7a2-82c2-51d3-9d89-917cfa971b96",
+              "leftValue": "={{ $json.qa_result }}",
+              "rightValue": 10.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cebc7e1a-84b1-5045-bb49-79c805cea9f7",
+      "name": "10 - QA Clean?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3480,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "6ebb22f9-ccb7-5d9b-8341-f6656efac517",
+      "name": "10a - Bid Needs Human Review, With the Reasons Attached",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        3720,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "5bc6c055-fe15-573f-82b0-c113f34aace0",
+      "name": "11 - Human Approval: One-Tap Submit",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        3720,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ppw.example.com/v1/ppw",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "56ce9ce0-5c2b-56d2-bac3-d84c942790cb",
+      "name": "12 - PPW: Submit Bid",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4580,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "0c6ffc52-7391-5b0b-b166-83846ea70252",
+      "name": "13 - Log the Bid, the Pricing Basis, and the QA Result",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4820,
+        700
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "a637df51-5252-5ec0-ab99-9629502801f0",
+      "name": "14 - Any Step Fails, Anywhere",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        4100,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "9c45a70e-2dd8-5329-bd42-cdba343b7794",
+      "name": "15 - Alert Ops With the Work Order Number and a Link to the Run",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        4340,
+        80
+      ]
+    }
+  ],
+  "connections": {
+    "1 - New Work Order From PPW - API, Export, or RPA Feed": {
+      "main": [
+        [
+          {
+            "node": "2 - PPW: Pull Work Order Notes and Photos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - PPW: Pull Work Order Notes and Photos": {
+      "main": [
+        [
+          {
+            "node": "3 - One Photo at a Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - One Photo at a Time": {
+      "main": [
+        [
+          {
+            "node": "5 - Combine Photo Findings",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "4 - Claude Vision: Describe Condition and Check Scope vs Instructions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - Claude Vision: Describe Condition and Check Scope vs Instructions": {
+      "main": [
+        [
+          {
+            "node": "3 - One Photo at a Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - Combine Photo Findings": {
+      "main": [
+        [
+          {
+            "node": "6 - Photos Complete and In Scope?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Photos Complete and In Scope?": {
+      "main": [
+        [
+          {
+            "node": "7 - Pricing DB: Historical Bids by Geography and Work Order Type",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "6a - Flag: Missing or Off-Scope Photos, Request Re-Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - Pricing DB: Historical Bids by Geography and Work Order Type": {
+      "main": [
+        [
+          {
+            "node": "8 - Claude: Build Bid Sheet Line Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - Claude: Build Bid Sheet Line Items": {
+      "main": [
+        [
+          {
+            "node": "9 - QA Pass: Flag Underpriced, Overpriced, Incomplete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9 - QA Pass: Flag Underpriced, Overpriced, Incomplete": {
+      "main": [
+        [
+          {
+            "node": "10 - QA Clean?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - QA Clean?": {
+      "main": [
+        [
+          {
+            "node": "11 - Human Approval: One-Tap Submit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "10a - Bid Needs Human Review, With the Reasons Attached",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Human Approval: One-Tap Submit": {
+      "main": [
+        [
+          {
+            "node": "12 - PPW: Submit Bid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 - PPW: Submit Bid": {
+      "main": [
+        [
+          {
+            "node": "13 - Log the Bid, the Pricing Basis, and the QA Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 - Any Step Fails, Anywhere": {
+      "main": [
+        [
+          {
+            "node": "15 - Alert Ops With the Work Order Number and a Link to the Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "4 - Claude Vision: Describe Condition and Check Scope vs Instructions",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude 2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "8 - Claude: Build Bid Sheet Line Items",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Historical Pricing Lookup": {
+      "ai_tool": [
+        [
+          {
+            "node": "8 - Claude: Build Bid Sheet Line Items",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Client Pricing Rules": {
+      "ai_tool": [
+        [
+          {
+            "node": "8 - Claude: Build Bid Sheet Line Items",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Force Line Items, Quantities, Unit Prices, and Margin": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "8 - Claude: Build Bid Sheet Line Items",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude 3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "9 - QA Pass: Flag Underpriced, Overpriced, Incomplete",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "66164eb7-df07-5cf2-a0ba-52de3677921a",
+  "pinData": {
+    "1 - New Work Order From PPW - API, Export, or RPA Feed": [
+      {
+        "json": {
+          "work_order_id": "WO-4482197",
+          "client": "MCS",
+          "work_order_type": "Initial Secure",
+          "property": {
+            "address": "1841 Kesterson Rd, Toledo, OH 43613",
+            "county": "Lucas",
+            "occupancy_status": "Vacant"
+          },
+          "contractor": {
+            "id": "C-338",
+            "name": "R. Delgado"
+          },
+          "due_date": "2026-09-12",
+          "instructions": "Secure all points of entry, install lockbox on front door, boardup any broken glass, photograph every opening before and after. Grass over 12in, bid separately.",
+          "measurements": {
+            "broken_window_1": "34in x 46in",
+            "broken_window_2": "28in x 40in",
+            "rear_door": "36in x 80in",
+            "lot_size_sqft": 6800
+          },
+          "photos": [
+            {
+              "id": "p1",
+              "label": "front elevation",
+              "url": "https://ppw.example/wo/4482197/p1.jpg"
+            },
+            {
+              "id": "p2",
+              "label": "front door lockbox",
+              "url": "https://ppw.example/wo/4482197/p2.jpg"
+            },
+            {
+              "id": "p3",
+              "label": "broken window, left side",
+              "url": "https://ppw.example/wo/4482197/p3.jpg"
+            },
+            {
+              "id": "p4",
+              "label": "broken window, rear",
+              "url": "https://ppw.example/wo/4482197/p4.jpg"
+            },
+            {
+              "id": "p5",
+              "label": "rear yard, overgrown",
+              "url": "https://ppw.example/wo/4482197/p5.jpg"
+            }
+          ]
+        }
+      }
+    ],
+    "13 - Log the Bid, the Pricing Basis, and the QA Result": [
+      {
+        "json": {
+          "work_order_id": "WO-4482197",
+          "photo_review": {
+            "photos_reviewed": 5,
+            "in_scope": true,
+            "findings": [
+              {
+                "photo": "p3",
+                "condition": "Single-pane sash broken out, frame intact, glass on interior sill",
+                "matches_instruction": "boardup broken glass"
+              },
+              {
+                "photo": "p4",
+                "condition": "Rear window broken, screen missing, frame square",
+                "matches_instruction": "boardup broken glass"
+              },
+              {
+                "photo": "p5",
+                "condition": "Rear yard grass roughly knee height, debris pile near fence",
+                "matches_instruction": "grass over 12in, bid separately"
+              }
+            ],
+            "missing": [],
+            "note": "Required before-photo set complete for Initial Secure"
+          },
+          "bid_sheet": [
+            {
+              "line": "Boardup, window, 34x46",
+              "qty": 1,
+              "unit": "ea",
+              "unit_price": 78.0,
+              "basis": "Lucas County median of 14 comparable MCS boardups, last 12 months"
+            },
+            {
+              "line": "Boardup, window, 28x40",
+              "qty": 1,
+              "unit": "ea",
+              "unit_price": 68.0,
+              "basis": "Lucas County median of 14 comparable MCS boardups, last 12 months"
+            },
+            {
+              "line": "Lockbox install, front door",
+              "qty": 1,
+              "unit": "ea",
+              "unit_price": 35.0,
+              "basis": "Client allowable, MCS schedule"
+            },
+            {
+              "line": "Initial grass cut, lot 6,800 sqft",
+              "qty": 1,
+              "unit": "ea",
+              "unit_price": 145.0,
+              "basis": "Geo benchmark, 5,000 to 8,000 sqft band"
+            }
+          ],
+          "bid_total": 326.0,
+          "contractor_cost": 214.0,
+          "margin_pct": 34.4,
+          "qa_result": {
+            "status": "flagged",
+            "flags": [
+              {
+                "line": "Initial grass cut, lot 6,800 sqft",
+                "issue": "12% above the 90-day median for this county",
+                "suggestion": "confirm debris removal is bundled or split it to its own line"
+              }
+            ],
+            "incomplete_lines": 0
+          },
+          "routing": "Sent to #bid-review for human approval, not auto-submitted",
+          "approved_by": "pending",
+          "logged_row": "Sheet: Bid Log 2026, row 1,184, pricing basis and QA flags stored with the bid",
+          "phase_2_next": "After-photo verification against approved scope, then ready for office routing"
+        }
+      }
+    ]
+  }
+}

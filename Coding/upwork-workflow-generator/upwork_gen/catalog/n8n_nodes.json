@@ -1,0 +1,116 @@
+{
+  "_meta": {
+    "status": "stub",
+    "note": "Hand-seeded so the spine works before the verified catalog lands. Every entry with \"verified\": false is a best-effort guess at the type name and typeVersion. The external catalog agent's output should be dropped in as n8n_nodes.verified.json, which the loader merges OVER this file.",
+    "verified_against_n8n_version": null
+  },
+
+  "entries": {
+    "trigger.webhook::":    { "type": "n8n-nodes-base.webhook",        "typeVersion": 2,   "parameters": { "path": "inbound", "httpMethod": "POST", "responseMode": "responseNode" }, "verified": false },
+    "trigger.schedule::":   { "type": "n8n-nodes-base.scheduleTrigger", "typeVersion": 1.2, "parameters": { "rule": { "interval": [ { "field": "hours", "hoursInterval": 1 } ] } }, "verified": false },
+    "trigger.form::":       { "type": "n8n-nodes-base.formTrigger",     "typeVersion": 2.2, "parameters": { "formTitle": "Intake", "formFields": { "values": [] } }, "verified": false },
+    "trigger.chat::":       { "type": "@n8n/n8n-nodes-langchain.chatTrigger", "typeVersion": 1.1, "parameters": {}, "verified": false },
+    "trigger.email::":      { "type": "n8n-nodes-base.emailReadImap",   "typeVersion": 2,   "parameters": { "format": "simple" }, "verified": false },
+    "trigger.app:n8n:error_trigger": { "type": "n8n-nodes-base.errorTrigger", "typeVersion": 1, "parameters": {}, "verified": false },
+    "trigger.app:facebook:": { "type": "n8n-nodes-base.facebookLeadAdsTrigger", "typeVersion": 1, "parameters": { "event": "newLead", "options": {} }, "verified": false, "source": "https://docs.n8n.io/integrations/builtin/trigger-nodes/n8n-nodes-base.facebookleadadstrigger/ (name facebookLeadAdsTrigger, version 1, event newLead: packages/nodes-base/nodes/FacebookLeadAds/FacebookLeadAdsTrigger.node.ts)" },
+    "ai.model:ollama:":     { "type": "@n8n/n8n-nodes-langchain.lmChatOllama",     "typeVersion": 1,   "parameters": { "model": "llama3.1:8b", "options": {} }, "verified": false },
+    "ai.embed:ollama:":     { "type": "@n8n/n8n-nodes-langchain.embeddingsOllama", "typeVersion": 1,   "parameters": { "model": "nomic-embed-text" }, "verified": false },
+    "trigger.app::":        { "type": "n8n-nodes-base.webhook",         "typeVersion": 2,   "parameters": { "path": "app-event", "httpMethod": "POST" }, "verified": false },
+
+    "data.transform::":     { "type": "n8n-nodes-base.set",             "typeVersion": 3.4, "parameters": { "mode": "manual", "options": {} }, "verified": false },
+    "data.code::":          { "type": "n8n-nodes-base.code",            "typeVersion": 2,   "parameters": { "jsCode": "return items;" }, "verified": false },
+    "data.merge::":         { "type": "n8n-nodes-base.merge",           "typeVersion": 3,   "parameters": { "mode": "combine", "options": {} }, "verified": false },
+    "data.split::":         { "type": "n8n-nodes-base.splitInBatches",  "typeVersion": 3,   "parameters": { "options": {} }, "verified": false },
+    "data.aggregate::":     { "type": "n8n-nodes-base.aggregate",       "typeVersion": 1,   "parameters": { "aggregate": "aggregateAllItemData", "options": {} }, "verified": false },
+    "data.filter::":        { "type": "n8n-nodes-base.filter",          "typeVersion": 2.2, "parameters": { "options": {} }, "verified": false },
+
+    "flow.branch::":        { "type": "n8n-nodes-base.if",              "typeVersion": 2.2, "parameters": { "options": {} }, "verified": false },
+    "flow.switch::":        { "type": "n8n-nodes-base.switch",          "typeVersion": 3.2, "parameters": { "options": {} }, "verified": false },
+    "flow.wait::":          { "type": "n8n-nodes-base.wait",            "typeVersion": 1.1, "parameters": { "amount": 1, "unit": "days" }, "verified": false },
+    "flow.noop::":          { "type": "n8n-nodes-base.noOp",            "typeVersion": 1,   "parameters": {}, "verified": false },
+
+    "net.http::":           { "type": "n8n-nodes-base.httpRequest",     "typeVersion": 4.2, "parameters": { "method": "GET", "url": "", "options": {} }, "verified": false },
+    "net.respond::":        { "type": "n8n-nodes-base.respondToWebhook","typeVersion": 1.1, "parameters": { "respondWith": "json", "options": {} }, "verified": false },
+
+    "ai.agent::":           { "type": "@n8n/n8n-nodes-langchain.agent",  "typeVersion": 1.7, "parameters": { "options": {} }, "verified": false },
+    "ai.llm::":             { "type": "@n8n/n8n-nodes-langchain.chainLlm", "typeVersion": 1.5, "parameters": {}, "verified": false },
+
+    "ai.model:openai:":     { "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",    "typeVersion": 1.2, "parameters": { "model": "gpt-4.1", "options": {} }, "verified": false },
+    "ai.model:anthropic:":  { "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic", "typeVersion": 1.2, "parameters": { "options": {} }, "verified": false },
+    "ai.model::":           { "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",    "typeVersion": 1.2, "parameters": { "model": "gpt-4.1", "options": {} }, "verified": false },
+
+    "ai.memory::":          { "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow", "typeVersion": 1.3, "parameters": {}, "verified": false },
+    "ai.tool:http:":        { "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",    "typeVersion": 1.1, "parameters": { "options": {} }, "verified": false },
+    "ai.tool:workflow:":    { "type": "@n8n/n8n-nodes-langchain.toolWorkflow",       "typeVersion": 1.2, "parameters": {}, "verified": false },
+    "ai.tool::":            { "type": "@n8n/n8n-nodes-langchain.toolWorkflow",       "typeVersion": 1.2, "parameters": {}, "verified": false },
+    "ai.embed:openai:":     { "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",   "typeVersion": 1.2, "parameters": { "options": {} }, "verified": false },
+    "ai.embed::":           { "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",   "typeVersion": 1.2, "parameters": { "options": {} }, "verified": false },
+    "ai.vectorstore:pinecone:": { "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone", "typeVersion": 1.1, "parameters": { "options": {} }, "verified": false },
+    "ai.vectorstore:supabase:": { "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase", "typeVersion": 1.1, "parameters": { "options": {} }, "verified": false },
+    "ai.vectorstore::":     { "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",     "typeVersion": 1.1, "parameters": { "options": {} }, "verified": false },
+    "ai.parser::":          { "type": "@n8n/n8n-nodes-langchain.outputParserStructured",  "typeVersion": 1.2, "parameters": {}, "verified": false },
+
+    "app.action:openai:message":       { "type": "@n8n/n8n-nodes-langchain.openAi", "typeVersion": 1.8, "parameters": { "resource": "text", "operation": "message", "modelId": "gpt-4.1" }, "verified": false },
+    "app.action:openai:transcribe":    { "type": "@n8n/n8n-nodes-langchain.openAi", "typeVersion": 1.8, "parameters": { "resource": "audio", "operation": "transcribe" }, "verified": false },
+    "app.action:openai:analyze_image": { "type": "@n8n/n8n-nodes-langchain.openAi", "typeVersion": 1.8, "parameters": { "resource": "image", "operation": "analyze" }, "verified": false },
+
+    "app.action:googleSheets:append": { "type": "n8n-nodes-base.googleSheets", "typeVersion": 4.5, "parameters": { "resource": "sheet", "operation": "append", "options": {} }, "verified": false },
+    "app.action:googleSheets:read":   { "type": "n8n-nodes-base.googleSheets", "typeVersion": 4.5, "parameters": { "resource": "sheet", "operation": "read",   "options": {} }, "verified": false },
+    "app.action:googleSheets:update": { "type": "n8n-nodes-base.googleSheets", "typeVersion": 4.5, "parameters": { "resource": "sheet", "operation": "update", "options": {} }, "verified": false },
+
+    "app.action:gmail:send":   { "type": "n8n-nodes-base.gmail", "typeVersion": 2.1, "parameters": { "resource": "message", "operation": "send",  "options": {} }, "verified": false },
+    "app.action:gmail:reply":  { "type": "n8n-nodes-base.gmail", "typeVersion": 2.1, "parameters": { "resource": "message", "operation": "reply", "options": {} }, "verified": false },
+    "app.action:gmail:draft":  { "type": "n8n-nodes-base.gmail", "typeVersion": 2.1, "parameters": { "resource": "draft",   "operation": "create","options": {} }, "verified": false },
+
+    "app.action:slack:post":    { "type": "n8n-nodes-base.slack", "typeVersion": 2.2, "parameters": { "resource": "message", "operation": "post",  "otherOptions": {} }, "verified": false },
+    "app.action:slack:update":  { "type": "n8n-nodes-base.slack", "typeVersion": 2.2, "parameters": { "resource": "message", "operation": "update","otherOptions": {} }, "verified": false },
+
+    "app.action:airtable:create": { "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "parameters": { "resource": "record", "operation": "create", "options": {} }, "verified": false },
+    "app.action:airtable:search": { "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "parameters": { "resource": "record", "operation": "search", "options": {} }, "verified": false },
+    "app.action:airtable:update": { "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "parameters": { "resource": "record", "operation": "update", "options": {} }, "verified": false },
+
+    "app.action:hubspot:create_contact": { "type": "n8n-nodes-base.hubspot", "typeVersion": 2.1, "parameters": { "resource": "contact", "operation": "upsert" }, "verified": false },
+    "app.action:hubspot:create_deal":    { "type": "n8n-nodes-base.hubspot", "typeVersion": 2.1, "parameters": { "resource": "deal",    "operation": "create" }, "verified": false },
+
+    "app.action:notion:create":  { "type": "n8n-nodes-base.notion", "typeVersion": 2.2, "parameters": { "resource": "databasePage", "operation": "create" }, "verified": false },
+    "app.action:notion:update":  { "type": "n8n-nodes-base.notion", "typeVersion": 2.2, "parameters": { "resource": "databasePage", "operation": "update" }, "verified": false },
+
+    "app.action:telegram:send":  { "type": "n8n-nodes-base.telegram", "typeVersion": 1.2, "parameters": { "resource": "message", "operation": "sendMessage", "additionalFields": {} }, "verified": false },
+    "app.action:whatsapp:send":  { "type": "n8n-nodes-base.whatsApp", "typeVersion": 1,   "parameters": { "resource": "message", "operation": "send" }, "verified": false },
+    "app.action:discord:send":   { "type": "n8n-nodes-base.discord",  "typeVersion": 2,   "parameters": { "resource": "message", "operation": "send", "options": {} }, "verified": false },
+    "app.action:twilio:send":    { "type": "n8n-nodes-base.twilio",   "typeVersion": 1,   "parameters": { "resource": "sms", "operation": "send" }, "verified": false },
+
+    "app.action:postgres:insert": { "type": "n8n-nodes-base.postgres", "typeVersion": 2.5, "parameters": { "operation": "insert", "options": {} }, "verified": false },
+    "app.action:postgres:select": { "type": "n8n-nodes-base.postgres", "typeVersion": 2.5, "parameters": { "operation": "select", "options": {} }, "verified": false },
+
+    "app.action:stripe:get":       { "type": "n8n-nodes-base.stripe",      "typeVersion": 1, "parameters": { "resource": "customer", "operation": "get" }, "verified": false },
+    "app.action:shopify:get":      { "type": "n8n-nodes-base.shopify",     "typeVersion": 1, "parameters": { "resource": "order",    "operation": "get" }, "verified": false },
+    "app.action:googleDrive:upload": { "type": "n8n-nodes-base.googleDrive", "typeVersion": 3, "parameters": { "resource": "file", "operation": "upload", "options": {} }, "verified": false },
+    "app.action:googleDocs:create":  { "type": "n8n-nodes-base.googleDocs",  "typeVersion": 2, "parameters": { "operation": "create" }, "verified": false },
+    "app.action:googleCalendar:create": { "type": "n8n-nodes-base.googleCalendar", "typeVersion": 1.3, "parameters": { "resource": "event", "operation": "create" }, "verified": false },
+    "app.action:wordpress:create":   { "type": "n8n-nodes-base.wordpress",  "typeVersion": 1, "parameters": { "resource": "post", "operation": "create" }, "verified": false },
+    "app.action:extractFile:pdf":    { "type": "n8n-nodes-base.extractFromFile", "typeVersion": 1, "parameters": { "operation": "pdf", "options": {} }, "verified": false },
+    "app.action:html:extract":       { "type": "n8n-nodes-base.html",       "typeVersion": 1.2, "parameters": { "operation": "extractHtmlContent", "options": {} }, "verified": false },
+
+    "app.action:salesforce:create_contact": { "type": "n8n-nodes-base.salesforce",       "typeVersion": 1, "parameters": { "resource": "contact", "operation": "create" }, "verified": false },
+    "app.action:pipedrive:create_contact":  { "type": "n8n-nodes-base.pipedrive",        "typeVersion": 1, "parameters": { "resource": "person",  "operation": "create" }, "verified": false },
+    "app.action:clickup:create":            { "type": "n8n-nodes-base.clickUp",          "typeVersion": 1, "parameters": { "resource": "task",    "operation": "create" }, "verified": false },
+    "app.action:monday:create":             { "type": "n8n-nodes-base.mondayCom",        "typeVersion": 1, "parameters": { "resource": "boardItem", "operation": "create" }, "verified": false },
+    "app.action:outlook:send":              { "type": "n8n-nodes-base.microsoftOutlook", "typeVersion": 2, "parameters": { "resource": "message", "operation": "send" }, "verified": false },
+    "app.action:quickbooks:create":         { "type": "n8n-nodes-base.quickbooks",       "typeVersion": 1, "parameters": { "resource": "invoice", "operation": "create" }, "verified": false },
+    "app.action:xero:create":               { "type": "n8n-nodes-base.xero",             "typeVersion": 1, "parameters": { "resource": "invoice", "operation": "create" }, "verified": false },
+    "app.action:supabase:insert":           { "type": "n8n-nodes-base.supabase",         "typeVersion": 1, "parameters": { "resource": "row",     "operation": "create" }, "verified": false }
+  },
+
+  "sticky": {
+    "type": "n8n-nodes-base.stickyNote",
+    "typeVersion": 1,
+    "note": "parameters.color is an integer 1-7. Mapping is UNCONFIRMED pending the Phase 0 answer; SECTION_COLORS in layout.py is the single place to correct once known."
+  },
+
+  "fallback": {
+    "note": "Resolution order is exact -> kind:app: -> kind:: -> this. Unknown apps become a labelled HTTP Request, which reads as entirely plausible on a canvas and means the compiler can never fail on an app we have not catalogued.",
+    "app.action": { "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "parameters": { "method": "POST", "url": "", "options": {} } },
+    "default":    { "type": "n8n-nodes-base.noOp",        "typeVersion": 1,   "parameters": {} }
+  }
+}

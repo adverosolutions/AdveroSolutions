@@ -1,0 +1,304 @@
+{
+  "title": "Daily Executive Brief — Calendar × Salesforce × Meeting History",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "sweep",
+      "label": "1 · MORNING SWEEP",
+      "color": 0,
+      "note": "Runs before you're at your desk. Today's calendar is pulled once and each meeting handled individually, so one unreachable record never costs you the whole brief."
+    },
+    {
+      "key": "gather",
+      "label": "2 · GATHER CONTEXT",
+      "color": 0,
+      "note": "Per meeting: the Salesforce account and open opportunity, plus the last real interaction recalled from your meeting history — what was said, what was promised, what is still outstanding."
+    },
+    {
+      "key": "prep",
+      "label": "3 · PREP EACH MEETING",
+      "color": 0,
+      "note": "A brief per meeting: where the deal stands, the open action items with owners, recommended talking points, and the next step to push for. The prep you would do at 11pm the night before, done at 6am by something that never skips it."
+    },
+    {
+      "key": "rank",
+      "label": "4 · PRIORITISE",
+      "color": 0,
+      "note": "Once every meeting is prepped, the day is ranked as a whole — deal stage, deadline pressure, overdue follow-ups, and how much preparation each one actually needs. Ranking requires seeing all of them at once, which is why it happens after the loop, not inside it."
+    },
+    {
+      "key": "deliver",
+      "label": "5 · DELIVER",
+      "color": 0,
+      "note": "A structured agenda with time allocations lands in your inbox before the first meeting, with the three things that actually matter today pushed to Slack for the phone-in-the-car read."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "cron",
+      "kind": "trigger.schedule",
+      "label": "Weekdays · 6:00am",
+      "section": "sweep"
+    },
+    {
+      "key": "cal",
+      "kind": "app.action",
+      "label": "Pull Today's Calendar",
+      "app": "googleCalendar",
+      "op": "get",
+      "section": "sweep"
+    },
+    {
+      "key": "loop",
+      "kind": "data.split",
+      "label": "Each Meeting",
+      "section": "sweep"
+    },
+    {
+      "key": "sf",
+      "kind": "app.action",
+      "label": "Account & Open Opportunity",
+      "app": "salesforce",
+      "op": "get",
+      "section": "gather",
+      "notes": "Stage, amount, close date, owner"
+    },
+    {
+      "key": "hist",
+      "kind": "ai.agent",
+      "label": "Recall Last Interaction",
+      "section": "gather",
+      "notes": "Searches past meeting notes and threads for this account"
+    },
+    {
+      "key": "hmodel",
+      "kind": "ai.model",
+      "label": "GPT-4.1",
+      "app": "openai",
+      "parent": "hist",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "store",
+      "kind": "ai.vectorstore",
+      "label": "Meeting History Index",
+      "app": "supabase",
+      "parent": "hist",
+      "port": "ai_tool"
+    },
+    {
+      "key": "embed",
+      "kind": "ai.embed",
+      "label": "Embeddings",
+      "app": "openai",
+      "parent": "store",
+      "port": "ai_embedding"
+    },
+    {
+      "key": "prep",
+      "kind": "ai.llm",
+      "label": "Build Meeting Brief",
+      "section": "prep",
+      "notes": "Open items · talking points · next step"
+    },
+    {
+      "key": "pmodel",
+      "kind": "ai.model",
+      "label": "GPT-4.1",
+      "app": "openai",
+      "parent": "prep",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "agg",
+      "kind": "data.aggregate",
+      "label": "Collect All Briefs",
+      "section": "rank"
+    },
+    {
+      "key": "rank",
+      "kind": "ai.llm",
+      "label": "Prioritise & Allocate Time",
+      "section": "rank"
+    },
+    {
+      "key": "rmodel",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "rank",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "doc",
+      "kind": "app.action",
+      "label": "Write Daily Agenda",
+      "app": "googleDocs",
+      "op": "create",
+      "section": "deliver"
+    },
+    {
+      "key": "send",
+      "kind": "app.action",
+      "label": "Email the Plan",
+      "app": "gmail",
+      "op": "send",
+      "section": "deliver"
+    },
+    {
+      "key": "slack",
+      "kind": "app.action",
+      "label": "Top 3 to Slack",
+      "app": "slack",
+      "op": "post",
+      "section": "deliver"
+    }
+  ],
+  "edges": [
+    {
+      "from": "cron",
+      "to": "cal"
+    },
+    {
+      "from": "cal",
+      "to": "loop"
+    },
+    {
+      "from": "loop",
+      "to": "agg",
+      "branch": "done"
+    },
+    {
+      "from": "loop",
+      "to": "sf",
+      "branch": "loop"
+    },
+    {
+      "from": "sf",
+      "to": "hist"
+    },
+    {
+      "from": "hist",
+      "to": "prep"
+    },
+    {
+      "from": "prep",
+      "to": "loop",
+      "loop": true
+    },
+    {
+      "from": "agg",
+      "to": "rank"
+    },
+    {
+      "from": "rank",
+      "to": "doc"
+    },
+    {
+      "from": "doc",
+      "to": "send"
+    },
+    {
+      "from": "send",
+      "to": "slack"
+    }
+  ],
+  "input_sample": {
+    "run_at": "2026-08-03T06:00:00Z",
+    "for": "dsilva@northbridge-partners.com",
+    "timezone": "America/Chicago",
+    "meetings_today": 6,
+    "first_meeting": "2026-08-03T13:30:00Z",
+    "sample_event": {
+      "title": "Halvorsen Group — Q3 renewal",
+      "start": "2026-08-03T15:00:00Z",
+      "duration_minutes": 45,
+      "attendees": [
+        "p.halvorsen@halvorsengroup.com",
+        "legal@halvorsengroup.com"
+      ],
+      "location": "Zoom"
+    },
+    "open_tasks": 14
+  },
+  "output_sample": {
+    "date": "Monday 3 August 2026",
+    "meetings_prepped": 6,
+    "prep_time_saved_minutes": 95,
+    "day_summary": "Two of six meetings actually decide anything today. Halvorsen is the day — legal joined the invite, which they have not done before, and the renewal closes in 11 days with a security review still open. Everything else can run on autopilot.",
+    "top_priority": {
+      "meeting": "Halvorsen Group — Q3 renewal · 10:00am",
+      "why_first": "Legal added to the invite for the first time; $148k renewal closes in 11 days; security questionnaire outstanding 9 days",
+      "opportunity": {
+        "stage": "Negotiation",
+        "amount": 148000,
+        "close_date": "2026-08-14",
+        "days_in_stage": 22
+      },
+      "last_interaction": "17 Jul — Paul asked for SOC 2 report and pricing on the extra 40 seats. You sent pricing on the 18th. The SOC 2 was never sent.",
+      "open_action_items": [
+        {
+          "item": "Send SOC 2 Type II report",
+          "owner": "you",
+          "overdue_days": 9
+        },
+        {
+          "item": "Confirm 40-seat expansion pricing holds through Q3",
+          "owner": "Paul",
+          "status": "no reply"
+        }
+      ],
+      "talking_points": [
+        "Lead with the SOC 2 — it is the only thing you owe them and legal being on the call means it is now the blocker",
+        "The 40-seat expansion is still unconfirmed; getting it into this renewal is worth $31k over doing it separately later",
+        "They have been in Negotiation 22 days against a 14-day average — name the timeline directly"
+      ],
+      "recommended_next_step": "Ask for a signature target date on the call, not after it"
+    },
+    "agenda": [
+      {
+        "time": "09:00-09:30",
+        "block": "Send SOC 2 + expansion pricing recap",
+        "type": "prep",
+        "priority": 1
+      },
+      {
+        "time": "10:00-10:45",
+        "block": "Halvorsen Group — Q3 renewal",
+        "type": "meeting",
+        "priority": 1
+      },
+      {
+        "time": "11:00-11:30",
+        "block": "Ridgeline — discovery",
+        "type": "meeting",
+        "priority": 3
+      },
+      {
+        "time": "13:00-14:00",
+        "block": "Deep work — Q3 forecast",
+        "type": "focus",
+        "priority": 2
+      },
+      {
+        "time": "14:30-15:00",
+        "block": "Internal — pipeline review",
+        "type": "meeting",
+        "priority": 4
+      },
+      {
+        "time": "16:00-16:30",
+        "block": "Clear 4 overdue follow-ups",
+        "type": "admin",
+        "priority": 2
+      }
+    ],
+    "deprioritised": [
+      "Weekly marketing sync — no decisions pending, forward notes instead"
+    ],
+    "generated_at": "2026-08-03T06:01:47Z"
+  },
+  "archetype": "daily_exec_brief",
+  "learned": true,
+  "learned_at": "2026-08-02"
+}

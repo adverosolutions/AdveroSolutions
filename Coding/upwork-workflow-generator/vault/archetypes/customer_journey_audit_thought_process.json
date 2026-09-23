@@ -1,0 +1,160 @@
+{
+  "title": "How I Audit a Customer Journey — Stage by Stage, Metric by Metric",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "capture",
+      "label": "1 · CAPTURE — HOW JOURNEYS BEGIN",
+      "color": 0,
+      "note": "Before judging anything downstream, I map every entry point a customer journey can start from."
+    },
+    {
+      "key": "nurture",
+      "label": "2 · NURTURE — TOUCHPOINTS & ENGAGEMENT",
+      "color": 0,
+      "note": "Every touchpoint in the sequence gets checked against its own engagement number, not assumed to be working."
+    },
+    {
+      "key": "convert",
+      "label": "3 · CONVERSION — WHERE INTENT BECOMES ACTION",
+      "color": 0,
+      "note": "Wherever a journey asks for a decision, that step gets measured on its own conversion rate."
+    },
+    {
+      "key": "retain",
+      "label": "4 · RETENTION — LIFECYCLE AFTER THE SALE",
+      "color": 0,
+      "note": "The journey doesn't end at the sale, so neither does the audit."
+    },
+    {
+      "key": "fix",
+      "label": "5 · FINDINGS & FIX",
+      "color": 0,
+      "note": "Every gap gets tied to its stage and its metric, then fixed in order of what's actually losing the most conversion or retention."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "map_entry",
+      "kind": "data.transform",
+      "label": "Map Every Entry Point: Forms, Ads, Referrals, Events",
+      "section": "capture"
+    },
+    {
+      "key": "metric_capture",
+      "kind": "data.transform",
+      "label": "Check the Metric: Capture Rate and Time to First Touchpoint",
+      "section": "capture"
+    },
+    {
+      "key": "check_touch",
+      "kind": "data.transform",
+      "label": "Check Every Touchpoint in the Nurture Sequence and What Triggers It",
+      "section": "nurture"
+    },
+    {
+      "key": "metric_nurture",
+      "kind": "data.transform",
+      "label": "Check the Metric: Engagement Rate and Response Rate by Touchpoint",
+      "section": "nurture"
+    },
+    {
+      "key": "check_convert",
+      "kind": "data.transform",
+      "label": "Check Where and How a Lead Is Asked to Convert",
+      "section": "convert"
+    },
+    {
+      "key": "metric_convert",
+      "kind": "data.transform",
+      "label": "Check the Metric: Conversion Rate at Each Journey Stage",
+      "section": "convert"
+    },
+    {
+      "key": "check_retain",
+      "kind": "data.transform",
+      "label": "Check What Happens After the Sale: Onboarding, Upsell, Win-Back",
+      "section": "retain"
+    },
+    {
+      "key": "metric_retain",
+      "kind": "data.transform",
+      "label": "Check the Metric: Retention Rate and Repeat Engagement",
+      "section": "retain"
+    },
+    {
+      "key": "log_gaps",
+      "kind": "data.transform",
+      "label": "Log Every Gap Against Its Stage and Its Metric",
+      "section": "fix"
+    },
+    {
+      "key": "rank_gaps",
+      "kind": "data.aggregate",
+      "label": "Rank Gaps by Which Stage Is Losing the Most Conversion or Retention",
+      "section": "fix"
+    },
+    {
+      "key": "fix_top",
+      "kind": "data.transform",
+      "label": "Fix the Highest-Impact Stage First",
+      "section": "fix"
+    }
+  ],
+  "edges": [
+    {
+      "from": "map_entry",
+      "to": "metric_capture"
+    },
+    {
+      "from": "metric_capture",
+      "to": "check_touch"
+    },
+    {
+      "from": "check_touch",
+      "to": "metric_nurture"
+    },
+    {
+      "from": "metric_nurture",
+      "to": "check_convert"
+    },
+    {
+      "from": "check_convert",
+      "to": "metric_convert"
+    },
+    {
+      "from": "metric_convert",
+      "to": "check_retain"
+    },
+    {
+      "from": "check_retain",
+      "to": "metric_retain"
+    },
+    {
+      "from": "metric_retain",
+      "to": "log_gaps"
+    },
+    {
+      "from": "log_gaps",
+      "to": "rank_gaps"
+    },
+    {
+      "from": "rank_gaps",
+      "to": "fix_top"
+    }
+  ],
+  "input_sample": {
+    "stage": "Nurture",
+    "expected": "Consistent touchpoint every 2-3 days until conversion or opt-out",
+    "actual": "Sequence stops after touchpoint 2, no re-engagement trigger for cold leads"
+  },
+  "output_sample": {
+    "stages_reviewed": 4,
+    "gaps_found": 3,
+    "highest_impact_gap": "Nurture — sequence dead-ends after touchpoint 2, no re-engagement for cold leads",
+    "fix_applied": "Added a re-engagement branch triggered by no-response after 5 days"
+  },
+  "archetype": "customer_journey_audit_thought_process",
+  "learned": true,
+  "learned_at": "2026-08-26"
+}

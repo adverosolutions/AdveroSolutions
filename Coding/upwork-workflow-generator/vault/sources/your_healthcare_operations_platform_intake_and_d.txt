@@ -1,0 +1,44 @@
+url: https://www.upwork.com/jobs/~022102823599813958957
+Agentic AI Developer for Healthcare Operations Platform
+Fixed price $1,300, expert. Client in Florida (US), timezone America/New_York. Client record: 136 contracts, 119 jobs with hires, 1 active, $126.8k spent, 5.0 over 110 reviews, 780 hours: a strong, frequent hirer. Recent hires: Klaviyo email flows, "Turn Our Google Ads Spend Into Booked Kitchen and Bathroom Jobs", Shopify design, a CRO landing-page overhaul, a Klaviyo sign-up form (they run or serve several businesses; this post is for a healthcare services business). Posted about 2026-09-23, 0 invites, 0 interviewing, 0 hired. Recorded bids avg $1,626.33, range $10-$37,000 (basis unspecified). Connects to apply: 21.
+Prop: an n8n build of the first thing Lorenzo would build (their own question: "What would you build first"): intake support and document triage with retrieval over their policies / SOPs / forms, a confidence gate that sends anything uncertain to a human review queue, internal task routing, and an audit-trail row for every action the system takes. Plus the chart of the full platform architecture and phasing. The post asks for a Python / FastAPI style stack: be honest that the n8n canvas is the working prototype of workflow one, and the chart shows the production architecture. Never imply HIPAA certification or clinical judgment; no real patient data in samples (clearly invented, minimal).
+Their "To Apply" list must each be answered in the proposal or the Loom: examples of agents / RAG / automation platforms built; recommended stack and architecture; how to prevent inaccurate or unsafe outputs; realistic timeline and availability; solo or team; and the question.
+
+About the Project
+
+We are building an AI platform for a healthcare services business that handles a high volume of patient-related administrative work. The goal is not to replace clinical judgment, but to reduce repetitive operational tasks, organize information faster, and help internal staff make better decisions with less manual searching.
+
+What We Need Built
+
+We are looking for an experienced AI developer or small team to design and build an agentic AI system that can connect to healthcare workflows, retrieve relevant internal knowledge, and perform structured actions through APIs. This should be more than a simple chatbot. The system needs to be reliable, auditable, and designed with healthcare data sensitivity in mind.
+
+Core Features
+
+- AI agent workflows for intake support, document triage, and internal task routing
+- RAG and knowledge-base architecture for policies, SOPs, forms, and service guidelines
+- OpenAI and/or Claude integrations with clear reasoning boundaries and fallback behavior
+- API integration with existing internal tools or CRM-style systems
+- Admin interface for reviewing AI outputs, editing knowledge sources, and managing workflows
+- Logging, permissions, and basic audit trail for actions taken by the system
+- Clean web interface for staff users, with practical UX rather than over-designed screens
+
+Technical Expectations
+
+A good fit would be comfortable with Python, API development, AI agent development, and full-stack implementation. Experience with FastAPI, Node.js, vector databases, PostgreSQL, Supabase, LangGraph, LangChain, LlamaIndex, or similar tools would be helpful. We are open to your recommended architecture, but the system should be maintainable and easy to expand.
+
+We also care about privacy, accuracy, and cost control. The platform should be designed so new workflows can be added later without rebuilding the entire system.
+
+What We Are Looking For
+
+We want someone who can take ownership of the technical architecture, ask practical questions, and work independently. Healthcare experience is a plus, but strong judgment around sensitive data and production-ready AI systems is more important.
+
+To Apply
+
+Please include:
+- Examples of AI agents, RAG systems, or automation platforms you have built
+- Your recommended tech stack and architecture for this project
+- How you would prevent inaccurate or unsafe AI outputs
+- A realistic timeline and availability
+- Whether you work solo or with a team
+
+Question: What would you build first in this platform, and how would you make sure the AI stays useful as the knowledge base grows?

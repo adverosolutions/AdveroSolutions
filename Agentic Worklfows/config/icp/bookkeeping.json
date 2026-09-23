@@ -1,0 +1,66 @@
+{
+  "_about": "ICP rubric for bookkeeping/tax firms. No trigger variable is required by the live bookkeeping_trigger copy today (verified read-only 2026-09-21: it references firstName, companyName, personalization only), so trigger_variables is empty and every lead is B-eligible.",
+  "niche": "bookkeeping",
+  "short_label": "the books for small businesses",
+  "label": "Bookkeeping and tax firms serving small business",
+  "campaigns": {
+    "reactivation": "bookkeeping_reactivation",
+    "trigger": "bookkeeping_trigger"
+  },
+  "question": "Does this firm provide ongoing bookkeeping, accounting or tax services to other small businesses as its main line of work?",
+  "accept_signals": [
+    "bookkeeping",
+    "tax preparation",
+    "small business accounting",
+    "payroll",
+    "quickbooks",
+    "cpa firm",
+    "fractional cfo",
+    "year-end cleanup",
+    "quarterly estimates"
+  ],
+  "reject_signals": [
+    "accounting software vendor",
+    "big four",
+    "audit only",
+    "forensic accounting only",
+    "personal tax only walk-in",
+    "franchise sales",
+    "financial advisor and wealth management only",
+    "debt settlement"
+  ],
+  "hard_reject_keywords": [
+    "software",
+    "saas",
+    "franchise opportunity",
+    "franchise for sale",
+    "deloitte",
+    "kpmg",
+    "ernst & young",
+    "pricewaterhouse",
+    "pwc",
+    "audit only",
+    "forensic accounting",
+    "debt settlement",
+    "credit repair",
+    "tax resolution only",
+    "wealth management only",
+    "insurance agency",
+    "mortgage broker",
+    "real estate brokerage",
+    "staffing agency"
+  ],
+  "hard_accept_keywords": [
+    "bookkeeping",
+    "tax preparation",
+    "tax services",
+    "accounting services",
+    "small business accounting",
+    "cpa firm",
+    "payroll services"
+  ],
+  "min_confidence": 0.7,
+  "escalate_below": 0.8,
+  "trigger_variables": [],
+  "notes": "When Lorenzo adds a bookkeeping B variant that needs a variable, add it to trigger_variables and give it a derivation map here; the factory will start marking leads not B-eligible the moment it cannot fill it."
+}

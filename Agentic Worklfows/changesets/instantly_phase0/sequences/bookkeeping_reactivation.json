@@ -1,0 +1,56 @@
+{
+  "sequences": [
+    {
+      "steps": [
+        {
+          "type": "email",
+          "delay": 3,
+          "delay_unit": "days",
+          "pre_delay_unit": "days",
+          "variants": [
+            {
+              "subject": "{{firstName}}, question",
+              "body": "<div>{{personalization}}</div><div><br /></div><div>I build client reactivation systems. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.</div><div><br /></div><div>{{RANDOM | TLDR: | Short version: | In plain terms:}} I'd recover lost revenue by building email sequences that go out to any lost inquiries and former clients, timed to tax season, quarterly estimates, and year-end cleanup. Booked straight onto your calendar.</div><div><br /></div><div>I'm so certain this would work for you that I won't charge you a single cent up front, only a percentage of first-year fees from clients I bring back, $0 if nothing closes. {{RANDOM | I truly believe | I genuinely think | I'm confident}} I can benefit {{companyName}}.</div><div><br /></div><div>{{RANDOM | Would you be open to a quick 15 minute call about this? | Open to a quick 15 minute call on it? | Worth 15 minutes to walk through it?}} If so just say yes and I'll {{RANDOM | shoot a calendar invite over | send a calendar invite | get an invite over to you}}.</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it, | Cheers,}}</div><div>Lorenzo</div>"
+            },
+            {
+              "subject": "{{firstName}}, question",
+              "body": "<div>{{personalization}}</div><div><br /></div><div>{{RANDOM | Quick one: | Straight to it: | Here is the short version:}} I build reactivation systems for bookkeeping and tax firms. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.</div><div><br /></div><div>For {{companyName}} that means sequences to every lost inquiry and former client, timed to tax season, quarterly estimates, and year-end cleanup, with the ready ones booking straight onto your calendar. {{RANDOM | Nothing up front, only a percentage of first-year fees on clients who come back. | You pay nothing until a client comes back. | $0 up front, a cut of first-year fees on what returns.}}</div><div><br /></div><div>{{RANDOM | Easiest way to see if this is worth your time: | Lowest-effort next step: | If you want a quick read on it:}} send me your list of former clients or inquiries that never signed and I'll {{RANDOM | show you which ones are worth chasing before year-end | flag the ones worth chasing | mark which are worth a second run}}. Takes me a day, costs you nothing.</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it, | Talk soon,}}</div><div>Lorenzo</div>"
+            }
+          ]
+        },
+        {
+          "type": "email",
+          "delay": 4,
+          "delay_unit": "days",
+          "pre_delay_unit": "days",
+          "variants": [
+            {
+              "subject": "",
+              "body": "<div>{{RANDOM | Hey | Hi | Hello}} {{firstName}},</div><div><br /></div><div>{{RANDOM | Checking in, in case the first one got buried. | Bumping this in case it got buried. | Following up in case my last note slipped through.}} Quick version:</div><div>- I want to build a reactivation system for {{companyName}}. Goal is to bring back lost inquiries and former clients with sequences timed to tax season, quarterly estimates, and year-end cleanup.</div><div>- I did this for a commercial roofer doing $150M/yr and recovered about $6M in contracts in 6 months.</div><div>- Nothing up front. I only take a percentage of first-year fees on clients I bring back, $0 if nothing closes.</div><div><br /></div><div>{{RANDOM | Worth a quick 15 minute call? | Open to a quick 15 minute call? | Want to give it 15 minutes?}} Just reply yes and I'll send a calendar invite.</div><div><br /></div><div>{{RANDOM | Thanks for the time, | Appreciate the time, | Thanks,}}</div><div>Lorenzo</div>"
+            },
+            {
+              "subject": "",
+              "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | One question instead of another pitch. | Rather than pitch you again, one question. | One question, then I will leave it there.}} Does {{companyName}} still have last season's lost inquiries and former clients on file, or has that list gone cold for good?</div><div><br /></div><div>For context: I did this for a commercial roofer doing $150M/yr and recovered about $6M in contracts in 6 months. Same mechanics, applied to your old client list.</div><div><br /></div><div>Either way the terms do not change. Nothing up front, and I only take a percentage of first-year fees from clients who come back.</div><div><br /></div><div>{{RANDOM | If the timing is wrong, reply 'not now' and I'll come back later in the year. | If it is not a priority, reply 'not now' and I'll leave it there. | Wrong quarter for this? Reply 'not now' and I'll check back.}}</div><div><br /></div><div>{{RANDOM | Thanks for the time, | Appreciate the time, | Thanks,}}</div><div>Lorenzo</div>"
+            }
+          ]
+        },
+        {
+          "type": "email",
+          "delay": 3,
+          "delay_unit": "days",
+          "pre_delay_unit": "days",
+          "variants": [
+            {
+              "subject": "last tax season",
+              "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | Last one from me on this. | Closing the loop on this. | One more, then I'll leave it alone.}} Every firm I talk to has a stack of people from last tax season who asked for a quote, sent one document, or filed once and never came back. {{RANDOM | Those are the cheapest clients you'll ever win. | That list is worth more than any ad budget. | Nobody follows up with them, which is the whole opportunity.}}</div><div><br /></div><div>Between now and year-end cleanup is the best window to bring them back. I run the sequences under {{companyName}}'s name and the ones who are ready land on your calendar. $0 up front, a percentage of first-year fees on whoever returns.</div><div><br /></div><div>{{RANDOM | Reply with a rough count of former clients and lost inquiries and I'll tell you what I'd expect back. | Send me roughly how many people went quiet last season and I'll give you a realistic number. | Reply with a rough count and I'll tell you which are worth chasing.}}</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div><div><br /></div><div>P.S. A lender ran the same follow-up mechanics on a $1.5k build and turned it into a $5M pipeline. Different industry, same math.</div>"
+            },
+            {
+              "subject": "last tax season",
+              "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | I'll close the file on this one. | Closing the file on this one. | I'll put this down to bad timing and close the file.}} No hard feelings if the timing is off.</div><div><br /></div><div>One thing before I do. The people who asked for a quote last season and never came back are still the cheapest clients you could win this year.</div><div><br /></div><div>Whenever you want that list worked, it is nothing up front and a percentage of first-year fees on whoever returns.</div><div><br /></div><div>{{RANDOM | If that changes, reply here and I'll pick it straight back up. | If it changes, this thread is the fastest way back to me. | If that changes later, reply here and I'll pick it up.}}</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div><div><br /></div><div>P.S. A lender ran the same follow-up mechanics on a $1.5k build and turned it into a $5M pipeline. Different industry, same math.</div>"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

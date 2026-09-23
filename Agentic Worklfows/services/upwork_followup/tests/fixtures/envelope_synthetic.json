@@ -1,0 +1,702 @@
+{
+ "collected_at": "2026-09-22T13:30:00Z",
+ "list_rooms": [
+  {
+   "data": {
+    "rooms": [
+     {
+      "id": "room_a1",
+      "roomName": "<untrusted_participant_content>\nJane Carter, Acme Roofing\n</untrusted_participant_content>",
+      "roomType": "INTERVIEW",
+      "lastActivity": "1790006400000",
+      "latestStory": {
+       "createdDateTime": "2026-09-21T16:00:00.000Z",
+       "id": "story_a4",
+       "message": "<untrusted_participant_content>\n**Jane C.** sent an offer\n</untrusted_participant_content>"
+      },
+      "last_message_side": "client",
+      "last_message_from_self": false,
+      "awaiting_reply_from": "you",
+      "numUnread": 0,
+      "numUsers": 2
+     },
+     {
+      "id": "room_b2",
+      "roomName": "<untrusted_participant_content>\nBolt Plumbing\n</untrusted_participant_content>",
+      "roomType": "INTERVIEW",
+      "lastActivity": "1789722000000",
+      "latestStory": {
+       "createdDateTime": "2026-09-18T09:00:00.000Z",
+       "id": "story_b9",
+       "message": "<untrusted_participant_content>\nYou: Here is the flow I mentioned.\n</untrusted_participant_content>"
+      },
+      "last_message_side": "freelancer",
+      "last_message_from_self": true,
+      "awaiting_reply_from": "them",
+      "numUnread": 0,
+      "numUsers": 2
+     },
+     {
+      "id": "room_c3",
+      "roomName": "<untrusted_participant_content>\nCedar HVAC\n</untrusted_participant_content>",
+      "roomType": "INTERVIEW",
+      "lastActivity": "1789894800000",
+      "latestStory": {
+       "createdDateTime": "2026-09-20T09:00:00.000Z",
+       "id": "story_c1",
+       "message": "<untrusted_participant_content>\nCal: Are you available?\n</untrusted_participant_content>"
+      },
+      "last_message_side": "client",
+      "last_message_from_self": false,
+      "awaiting_reply_from": "you",
+      "numUnread": 0,
+      "numUsers": 2
+     },
+     {
+      "id": "room_g7",
+      "roomName": "<untrusted_participant_content>\nGina Park, Gamma Glass\n</untrusted_participant_content>",
+      "roomType": "INTERVIEW",
+      "lastActivity": "1789462800000",
+      "latestStory": {
+       "createdDateTime": "2026-09-15T09:00:00.000Z",
+       "id": "story_g1",
+       "message": "<untrusted_participant_content>\n**Gina P.** ended the contract\n</untrusted_participant_content>"
+      },
+      "last_message_side": "client",
+      "last_message_from_self": false,
+      "awaiting_reply_from": "you",
+      "numUnread": 0,
+      "numUsers": 2,
+      "contractId": "5002",
+      "contractStatus": "ENDED"
+     }
+    ]
+   },
+   "hasMore": true,
+   "next_cursor": "cur2",
+   "status": "ok"
+  },
+  {
+   "data": {
+    "rooms": [
+     {
+      "id": "room_d4",
+      "roomName": "<untrusted_participant_content>\nDelta Electric\n</untrusted_participant_content>",
+      "roomType": "INTERVIEW",
+      "lastActivity": "1780304400000",
+      "latestStory": {
+       "createdDateTime": "2026-06-01T09:00:00.000Z",
+       "id": "story_d1",
+       "message": "<untrusted_participant_content>\nDan: Old thread.\n</untrusted_participant_content>"
+      },
+      "last_message_side": "client",
+      "last_message_from_self": false,
+      "awaiting_reply_from": "you",
+      "numUnread": 0,
+      "numUsers": 2
+     },
+     {
+      "id": "room_e5",
+      "roomName": "<untrusted_participant_content>\nEcho Group\n</untrusted_participant_content>",
+      "roomType": "GROUP",
+      "lastActivity": "1789808400000",
+      "latestStory": {
+       "createdDateTime": "2026-09-19T09:00:00.000Z",
+       "id": "story_e1",
+       "message": "<untrusted_participant_content>\nEve: Group chat.\n</untrusted_participant_content>"
+      },
+      "last_message_side": "client",
+      "last_message_from_self": false,
+      "awaiting_reply_from": "you",
+      "numUnread": 0,
+      "numUsers": 2
+     },
+     {
+      "id": "room_s1",
+      "roomName": "<untrusted_participant_content>\nUpwork Support\n</untrusted_participant_content>",
+      "roomType": "ONE_ON_ONE",
+      "lastActivity": "1789981200000",
+      "latestStory": {
+       "createdDateTime": "2026-09-21T09:00:00.000Z",
+       "id": "story_s1",
+       "message": "<untrusted_participant_content>\nYour ticket was updated.\n</untrusted_participant_content>"
+      },
+      "last_message_side": "client",
+      "last_message_from_self": false,
+      "awaiting_reply_from": "you",
+      "numUnread": 0,
+      "numUsers": 2
+     },
+     {
+      "id": "room_h8",
+      "roomName": "<untrusted_participant_content>\nHal Moss, Harbor HVAC\n</untrusted_participant_content>",
+      "roomType": "INTERVIEW",
+      "lastActivity": "1789894800000",
+      "latestStory": {
+       "createdDateTime": "2026-09-20T09:00:00.000Z",
+       "id": "story_h1",
+       "message": "<untrusted_participant_content>\nHal: Milestone looks good.\n</untrusted_participant_content>"
+      },
+      "last_message_side": "client",
+      "last_message_from_self": false,
+      "awaiting_reply_from": "you",
+      "numUnread": 0,
+      "numUsers": 2,
+      "contractId": "5001",
+      "contractStatus": "ACTIVE"
+     }
+    ]
+   },
+   "hasMore": false,
+   "next_cursor": null,
+   "status": "ok"
+  }
+ ],
+ "proposals": {
+  "Accepted": [
+   {
+    "data": {
+     "vendorProposals": {
+      "edges": [
+       {
+        "node": {
+         "id": "p1",
+         "auditDetails": {
+          "createdDateTime": {
+           "displayValue": "2026-09-10T10:00:00.000Z",
+           "rawValue": "1789034400000"
+          },
+          "modifiedDateTime": {
+           "displayValue": "2026-09-10T10:00:00.000Z",
+           "rawValue": "1789034400000"
+          }
+         },
+         "boosted": false,
+         "terms": {
+          "connectsBid": 10
+         },
+         "marketplaceJobPosting": {
+          "id": "1111111111111111111",
+          "content": {
+           "title": "Roof Lead Follow-Up Automation"
+          },
+          "url": "https://www.upwork.com/jobs/~021111111111111111111?utm_campaign=LLM_claude_MCP_jobpost"
+         },
+         "status": {
+          "status": "Accepted",
+          "status_label": "Accepted"
+         }
+        }
+       },
+       {
+        "node": {
+         "id": "p2",
+         "auditDetails": {
+          "createdDateTime": {
+           "displayValue": "2026-09-11T10:00:00.000Z",
+           "rawValue": "1789120800000"
+          },
+          "modifiedDateTime": {
+           "displayValue": "2026-09-11T10:00:00.000Z",
+           "rawValue": "1789120800000"
+          }
+         },
+         "boosted": false,
+         "terms": {
+          "connectsBid": 10
+         },
+         "marketplaceJobPosting": {
+          "id": "2222222222222222222",
+          "content": {
+           "title": "Plumbing Dispatch Bot"
+          },
+          "url": "https://www.upwork.com/jobs/~022222222222222222222?utm_campaign=LLM_claude_MCP_jobpost"
+         },
+         "status": {
+          "status": "Accepted",
+          "status_label": "Accepted"
+         }
+        }
+       },
+       {
+        "node": {
+         "id": "p3",
+         "auditDetails": {
+          "createdDateTime": {
+           "displayValue": "2026-09-12T10:00:00.000Z",
+           "rawValue": "1789207200000"
+          },
+          "modifiedDateTime": {
+           "displayValue": "2026-09-12T10:00:00.000Z",
+           "rawValue": "1789207200000"
+          }
+         },
+         "boosted": false,
+         "terms": {
+          "connectsBid": 10
+         },
+         "marketplaceJobPosting": {
+          "id": "3333333333333333333",
+          "content": {
+           "title": "Unopened Job"
+          },
+          "url": "https://www.upwork.com/jobs/~023333333333333333333?utm_campaign=LLM_claude_MCP_jobpost"
+         },
+         "status": {
+          "status": "Accepted",
+          "status_label": "Accepted"
+         }
+        }
+       },
+       {
+        "node": {
+         "id": "p4",
+         "auditDetails": {
+          "createdDateTime": {
+           "displayValue": "2026-05-20T10:00:00.000Z",
+           "rawValue": "1779271200000"
+          },
+          "modifiedDateTime": {
+           "displayValue": "2026-05-20T10:00:00.000Z",
+           "rawValue": "1779271200000"
+          }
+         },
+         "boosted": false,
+         "terms": {
+          "connectsBid": 10
+         },
+         "marketplaceJobPosting": {
+          "id": "4444444444444444444",
+          "content": {
+           "title": "Old Electric Job"
+          },
+          "url": "https://www.upwork.com/jobs/~024444444444444444444?utm_campaign=LLM_claude_MCP_jobpost"
+         },
+         "status": {
+          "status": "Accepted",
+          "status_label": "Accepted"
+         }
+        }
+       },
+       {
+        "node": {
+         "id": "p5",
+         "auditDetails": {
+          "createdDateTime": {
+           "displayValue": "2026-09-13T10:00:00.000Z",
+           "rawValue": "1789293600000"
+          },
+          "modifiedDateTime": {
+           "displayValue": "2026-09-13T10:00:00.000Z",
+           "rawValue": "1789293600000"
+          }
+         },
+         "boosted": false,
+         "terms": {
+          "connectsBid": 10
+         },
+         "marketplaceJobPosting": {
+          "id": "5555555555555555555",
+          "content": {
+           "title": "Group Room Job"
+          },
+          "url": "https://www.upwork.com/jobs/~025555555555555555555?utm_campaign=LLM_claude_MCP_jobpost"
+         },
+         "status": {
+          "status": "Accepted",
+          "status_label": "Accepted"
+         }
+        }
+       }
+      ],
+      "pageInfo": {
+       "endCursor": "c",
+       "hasNextPage": true
+      },
+      "totalCount": 5
+     }
+    },
+    "hasMore": false,
+    "status": "ok"
+   },
+   {
+    "data": {
+     "vendorProposals": {
+      "edges": [],
+      "pageInfo": {
+       "endCursor": "c",
+       "hasNextPage": true
+      },
+      "totalCount": 0
+     }
+    },
+    "hasMore": false,
+    "status": "ok"
+   }
+  ],
+  "Activated": [
+   {
+    "data": {
+     "vendorProposals": {
+      "edges": [
+       {
+        "node": {
+         "id": "p6",
+         "auditDetails": {
+          "createdDateTime": {
+           "displayValue": "2026-09-14T10:00:00.000Z",
+           "rawValue": "1789380000000"
+          },
+          "modifiedDateTime": {
+           "displayValue": "2026-09-14T10:00:00.000Z",
+           "rawValue": "1789380000000"
+          }
+         },
+         "boosted": false,
+         "terms": {
+          "connectsBid": 10
+         },
+         "marketplaceJobPosting": {
+          "id": "6666666666666666666",
+          "content": {
+           "title": "Solar Quote Assistant"
+          },
+          "url": "https://www.upwork.com/jobs/~026666666666666666666?utm_campaign=LLM_claude_MCP_jobpost"
+         },
+         "status": {
+          "status": "Activated",
+          "status_label": "Activated"
+         }
+        }
+       },
+       {
+        "node": {
+         "id": "p7",
+         "auditDetails": {
+          "createdDateTime": {
+           "displayValue": "2026-09-01T10:00:00.000Z",
+           "rawValue": "1788256800000"
+          },
+          "modifiedDateTime": {
+           "displayValue": "2026-09-01T10:00:00.000Z",
+           "rawValue": "1788256800000"
+          }
+         },
+         "boosted": false,
+         "terms": {
+          "connectsBid": 10
+         },
+         "marketplaceJobPosting": {
+          "id": "7777777777777777777",
+          "content": {
+           "title": "Glass Quote Portal"
+          },
+          "url": "https://www.upwork.com/jobs/~027777777777777777777?utm_campaign=LLM_claude_MCP_jobpost"
+         },
+         "status": {
+          "status": "Activated",
+          "status_label": "Activated"
+         }
+        }
+       }
+      ],
+      "pageInfo": {
+       "endCursor": "c",
+       "hasNextPage": true
+      },
+      "totalCount": 2
+     }
+    },
+    "hasMore": false,
+    "status": "ok"
+   }
+  ],
+  "Offered": [
+   {
+    "data": {
+     "vendorProposals": {
+      "edges": [],
+      "pageInfo": {
+       "endCursor": "c",
+       "hasNextPage": true
+      },
+      "totalCount": 0
+     }
+    },
+    "hasMore": false,
+    "status": "ok"
+   }
+  ]
+ },
+ "proposal_rooms": {
+  "p1": {
+   "data": {
+    "proposalRoom": {
+     "id": "room_a1",
+     "roomType": "INTERVIEW"
+    }
+   },
+   "status": "ok"
+  },
+  "p2": {
+   "data": {
+    "proposalRoom": {
+     "id": "room_b2",
+     "roomType": "INTERVIEW"
+    }
+   },
+   "status": "ok"
+  },
+  "p3": {
+   "error_code": "NOT_FOUND",
+   "status": "error",
+   "message": "room not found"
+  },
+  "p4": {
+   "data": {
+    "proposalRoom": {
+     "id": "room_d4",
+     "roomType": "INTERVIEW"
+    }
+   },
+   "status": "ok"
+  },
+  "p5": {
+   "data": {
+    "proposalRoom": {
+     "id": "room_e5",
+     "roomType": "GROUP"
+    }
+   },
+   "status": "ok"
+  },
+  "p6": {
+   "data": {
+    "proposalRoom": {
+     "id": "room_f6",
+     "roomType": "INTERVIEW",
+     "roomName": "<untrusted_participant_content>\nFern Owens, Fern Landscaping\n</untrusted_participant_content>",
+     "lastActivity": "1790013600000"
+    }
+   },
+   "status": "ok"
+  },
+  "p7": {
+   "data": {
+    "proposalRoom": {
+     "id": "room_g7",
+     "roomType": "INTERVIEW"
+    }
+   },
+   "status": "ok"
+  }
+ },
+ "messages": {
+  "room_a1": {
+   "data": {
+    "roomStories": {
+     "edges": [
+      {
+       "node": {
+        "id": "story_a4",
+        "createdDateTime": "2026-09-21T16:00:00.000Z",
+        "message": "<untrusted_participant_content>\n**Jane C.** sent an offer\n</untrusted_participant_content>",
+        "from": "<untrusted_participant_content>\nJane C.\n</untrusted_participant_content>",
+        "from_organization": "<untrusted_participant_content>\nAcme Roofing\n</untrusted_participant_content>",
+        "from_my_organization": false,
+        "from_side": "client"
+       }
+      },
+      {
+       "node": {
+        "id": "story_a3",
+        "createdDateTime": "2026-09-21T15:00:00.000Z",
+        "message": "<untrusted_participant_content>\nSounds good, what would the first week look like?\n</untrusted_participant_content>",
+        "from": "<untrusted_participant_content>\nJane C.\n</untrusted_participant_content>",
+        "from_organization": "<untrusted_participant_content>\nAcme Roofing\n</untrusted_participant_content>",
+        "from_my_organization": false,
+        "from_side": "client"
+       }
+      },
+      {
+       "node": {
+        "id": "story_a2",
+        "createdDateTime": "2026-09-20T12:00:00.000Z",
+        "message": "<untrusted_participant_content>\nThanks Jane, week one is intake \\-&gt; follow-up.\n</untrusted_participant_content>",
+        "from": "<untrusted_participant_content>\nFreelancer F.\n</untrusted_participant_content>",
+        "from_organization": "<untrusted_participant_content>\nFreelancer Org\n</untrusted_participant_content>",
+        "from_my_organization": true,
+        "from_side": "freelancer",
+        "from_self": true
+       }
+      },
+      {
+       "node": {
+        "id": "story_a1",
+        "createdDateTime": "2026-09-19T10:00:00.000Z",
+        "message": "<untrusted_participant_content>\nHi, saw your proposal.\nCan we talk?\n</untrusted_participant_content>",
+        "from": "<untrusted_participant_content>\nJane C.\n</untrusted_participant_content>",
+        "from_organization": "<untrusted_participant_content>\nAcme Roofing\n</untrusted_participant_content>",
+        "from_my_organization": false,
+        "from_side": "client"
+       }
+      }
+     ],
+     "pageInfo": {
+      "endCursor": "s",
+      "hasNextPage": false
+     }
+    }
+   },
+   "hasMore": false,
+   "next_cursor": null,
+   "status": "ok"
+  },
+  "room_f6": {
+   "data": {
+    "roomStories": {
+     "edges": [
+      {
+       "node": {
+        "id": "m2",
+        "createdDateTime": "2026-09-21T18:00:00.000Z",
+        "message": "<untrusted_participant_content>\nYes, I can walk you through it.\n</untrusted_participant_content>",
+        "from": "<untrusted_participant_content>\nFreelancer F.\n</untrusted_participant_content>",
+        "from_organization": "<untrusted_participant_content>\nFreelancer Org\n</untrusted_participant_content>",
+        "from_my_organization": true,
+        "from_side": "freelancer",
+        "from_self": true
+       }
+      },
+      {
+       "node": {
+        "id": "m1",
+        "createdDateTime": "2026-09-20T18:00:00.000Z",
+        "message": "<untrusted_participant_content>\nHello, is the quote tool still possible?\n</untrusted_participant_content>",
+        "from": "<untrusted_participant_content>\nFern O.\n</untrusted_participant_content>",
+        "from_organization": "<untrusted_participant_content>\nFern Landscaping\n</untrusted_participant_content>",
+        "from_my_organization": false,
+        "from_side": "client"
+       }
+      }
+     ],
+     "pageInfo": {
+      "endCursor": "s",
+      "hasNextPage": false
+     }
+    }
+   },
+   "hasMore": false,
+   "next_cursor": null,
+   "status": "ok"
+  }
+ },
+ "contracts": [
+  {
+   "data": {
+    "vendorContracts": {
+     "contracts": [
+      {
+       "id": "5001",
+       "status": "ACTIVE",
+       "title": "Harbor HVAC Dispatch",
+       "offerId": "9001",
+       "deliveryModel": "TALENT_MARKETPLACE",
+       "clientOrganization": {
+        "id": "800",
+        "name": "Harbor HVAC"
+       },
+       "startDate": "2026-09-17T00:00:00.000Z",
+       "freelancer": {
+        "id": "555000111",
+        "name": "Freelancer F."
+       }
+      },
+      {
+       "id": "5002",
+       "status": "CLOSED",
+       "title": "Glass Quote Portal",
+       "offerId": "9002",
+       "deliveryModel": "TALENT_MARKETPLACE",
+       "clientOrganization": {
+        "id": "801",
+        "name": "Gamma Glass"
+       },
+       "startDate": "2026-09-02T00:00:00.000Z",
+       "endDate": "2026-09-15T00:00:00.000Z"
+      }
+     ],
+     "paging": {
+      "limit": 10,
+      "offset": 0
+     }
+    }
+   },
+   "hasMore": false,
+   "status": "ok"
+  }
+ ],
+ "offers": [
+  {
+   "data": {
+    "offersByAttribute": {
+     "offers": [
+      {
+       "id": "o1",
+       "title": "Solar Quote Assistant",
+       "state": "awaiting_your_acceptance",
+       "state_label": "Awaiting your acceptance",
+       "type": "FIXED",
+       "job": {
+        "id": "6666666666666666666",
+        "url": "https://www.upwork.com/jobs/~026666666666666666666",
+        "content": {
+         "title": "Solar Quote Assistant"
+        }
+       },
+       "messageToContractor": "<untrusted_participant_content>\nLooking forward to it.\n</untrusted_participant_content>",
+       "offerTerms": {
+        "expectedStartDate": "2026-09-25"
+       },
+       "vendorProposal": {
+        "user": {
+         "id": "555000111",
+         "name": "Freelancer F."
+        }
+       }
+      },
+      {
+       "id": "o2",
+       "title": "Other Job",
+       "state": "contract_started",
+       "state_label": "Contract started",
+       "type": "HOURLY",
+       "job": {
+        "id": "9999999999999999999",
+        "url": "https://www.upwork.com/jobs/~029999999999999999999",
+        "content": {
+         "title": "Other Job"
+        }
+       },
+       "messageToContractor": "<untrusted_participant_content>\nWelcome aboard.\n</untrusted_participant_content>",
+       "offerTerms": {
+        "expectedStartDate": "2026-09-01"
+       },
+       "vendorProposal": {
+        "user": {
+         "id": "555000111",
+         "name": "Freelancer F."
+        }
+       }
+      }
+     ]
+    }
+   },
+   "hasMore": false,
+   "next_offset": null,
+   "status": "ok"
+  }
+ ],
+ "caps_hit": [],
+ "live_threads": []
+}

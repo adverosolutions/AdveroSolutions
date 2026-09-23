@@ -1,0 +1,220 @@
+{
+  "summary": {
+    "catalog_entries": 556,
+    "distinct_source_files_cited": 266,
+    "blueprint_files_successfully_parsed": 526,
+    "candidate_files_fetched": 675,
+    "module_ids_harvested": 586,
+    "module_ids_rejected_as_unverified": 28,
+    "every_entry_reverified_against_source": true,
+    "verification_failures": 0
+  },
+  "trust_basis_of_published_entries": {
+    "official-make-repo": 45,
+    "cross-attested-11-repos": 4,
+    "cross-attested-8-repos": 9,
+    "single-repo-exporter-artifacts": 328,
+    "cross-attested-3-repos": 42,
+    "cross-attested-2-repos": 65,
+    "cross-attested-21-repos": 2,
+    "cross-attested-12-repos": 3,
+    "cross-attested-26-repos": 2,
+    "cross-attested-18-repos": 1,
+    "cross-attested-4-repos": 11,
+    "cross-attested-9-repos": 6,
+    "cross-attested-5-repos": 9,
+    "cross-attested-13-repos": 2,
+    "cross-attested-17-repos": 2,
+    "cross-attested-6-repos": 8,
+    "cross-attested-7-repos": 7,
+    "cross-attested-38-repos": 1,
+    "cross-attested-24-repos": 1,
+    "cross-attested-10-repos": 4,
+    "cross-attested-28-repos": 1,
+    "cross-attested-22-repos": 1,
+    "cross-attested-70-repos": 1,
+    "cross-attested-14-repos": 1
+  },
+  "source_mix": {
+    "community_make_com_forum_attachments": 168,
+    "github_raw": 73,
+    "github_gists": 25,
+    "official_integromat_make_skills": 19
+  },
+  "apps_with_no_verified_module": {},
+  "notes": [
+    "All 20 requested apps now have at least one verified module.",
+    "pinecone:upsertVector rests on a single exporter-artifact source - weakest entry in the catalog.",
+    "postgres:Query was REJECTED (fabricated); postgres:InsertIntoTable is the verified Postgres module."
+  ],
+  "rejected_module_ids": {
+    "wordpress:searchPosts": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://community.make.com/uploads/short-url/9cfx7hr4gl0dx9fnFoUF6ip0sLq.json"
+      ]
+    },
+    "google-email:watchEmails": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://gist.githubusercontent.com/jonyremolina2019-source/01a2ae7f6f469b727f414dd323b1d1b0/raw/"
+      ]
+    },
+    "google-email:sendEmail": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://gist.githubusercontent.com/jonyremolina2019-source/01a2ae7f6f469b727f414dd323b1d1b0/raw/"
+      ]
+    },
+    "whatsapp-business:getConversationStatus": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://gist.githubusercontent.com/jonyremolina2019-source/01a2ae7f6f469b727f414dd323b1d1b0/raw/"
+      ]
+    },
+    "whatsapp-business:sendTextMessage": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://gist.githubusercontent.com/jonyremolina2019-source/01a2ae7f6f469b727f414dd323b1d1b0/raw/"
+      ]
+    },
+    "whatsapp-business:sendTemplateMessage": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://gist.githubusercontent.com/jonyremolina2019-source/01a2ae7f6f469b727f414dd323b1d1b0/raw/"
+      ]
+    },
+    "whatsapp-business:watchMessages": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://gist.githubusercontent.com/jonyremolina2019-source/01a2ae7f6f469b727f414dd323b1d1b0/raw/"
+      ]
+    },
+    "slack:createMessage": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://gist.githubusercontent.com/jonyremolina2019-source/01a2ae7f6f469b727f414dd323b1d1b0/raw/"
+      ]
+    },
+    "builtin:BasicScheduler": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/DariuszCiesielski/ai-automatyzacja-biznesu/main/examples/make-competitor-monitor.json"
+      ]
+    },
+    "builtin:BasicIterator": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/DariuszCiesielski/ai-automatyzacja-biznesu/main/examples/make-competitor-monitor.json"
+      ]
+    },
+    "google-sheets:ActionSearchRows": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/DariuszCiesielski/ai-automatyzacja-biznesu/main/examples/make-competitor-monitor.json"
+      ]
+    },
+    "openai:CreateChatCompletion": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/DariuszCiesielski/ai-automatyzacja-biznesu/main/examples/make-competitor-monitor.json"
+      ]
+    },
+    "google-sheets:ActionAppendRow": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/DariuszCiesielski/ai-automatyzacja-biznesu/main/examples/make-competitor-monitor.json"
+      ]
+    },
+    "demo:SearchLeads": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/SaharBarak/make-testkit/main/examples/blueprints/lead-sync.json"
+      ]
+    },
+    "demo:DedupKey": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/SaharBarak/make-testkit/main/examples/blueprints/lead-sync.json"
+      ]
+    },
+    "demo:PushLead": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/SaharBarak/make-testkit/main/examples/blueprints/lead-sync.json"
+      ]
+    },
+    "demo:UpdateLead": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/SaharBarak/make-testkit/main/examples/blueprints/lead-sync.json"
+      ]
+    },
+    "hubspotcrm:WatchCRMObjects": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/jernejsurc/revenue-intelligence-engine/main/make_scenario_blueprint.json"
+      ]
+    },
+    "postgres:Query": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/jernejsurc/revenue-intelligence-engine/main/make_scenario_blueprint.json"
+      ]
+    },
+    "hubspotcrm:UpdateRecord": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/jernejsurc/revenue-intelligence-engine/main/make_scenario_blueprint.json"
+      ]
+    },
+    "microsoft-excel:watchWorksheetRows": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/makremriahi99/Make-Automazioni-AI/main/blueprints/06-benvenuto-clienti-excel-whatsapp.json"
+      ]
+    },
+    "rss:ActionReadFeed": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/rifindejosh/JSON-Workflow-Blueprints/main/make-rss-to-x-automation.json"
+      ]
+    },
+    "openai:ActionCreateCompletion": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/rifindejosh/JSON-Workflow-Blueprints/main/make-rss-to-x-automation.json"
+      ]
+    },
+    "twitter:ActionCreateTweet": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/rifindejosh/JSON-Workflow-Blueprints/main/make-rss-to-x-automation.json"
+      ]
+    },
+    "bannerly:renderimagev2": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/shabbirun/redesigned-octo-barnacle/009aeba40bd13e9ea128660802dd78a9aed7e633/AI%20Pinterest%20Images.blueprint.json"
+      ]
+    },
+    "gmail:sendEmail": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/veracitylife/Spun-Web-Make.com-Workflows---Blueprints---Scenerios/main/Calendar%20Agent/blueprint.json"
+      ]
+    },
+    "facebook-lead-ads:WatchLeads": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/veracitylife/Spun-Web-Make.com-Workflows---Blueprints---Scenerios/main/leadcapture/Lead%20Capture%20via%20Webhook%20%E2%86%92%20HTTP.blueprint.json"
+      ]
+    },
+    "email:send-email": {
+      "reason": "failed cross-attestation / exporter-artifact test",
+      "seen_in": [
+        "https://raw.githubusercontent.com/veracitylife/Spun-Web-Make.com-Workflows---Blueprints---Scenerios/main/leadcapture/Lead%20Capture%20via%20Webhook%20%E2%86%92%20HTTP.blueprint.json"
+      ]
+    }
+  }
+}

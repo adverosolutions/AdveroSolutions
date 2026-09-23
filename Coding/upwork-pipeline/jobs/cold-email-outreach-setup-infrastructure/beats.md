@@ -1,0 +1,8 @@
+- technical setup only, nothing ever sends from your main domain
+- size it: emails a day decides mailboxes and domains, 30 a day each
+- need to send right away? pre-warmed mailboxes, otherwise warm them
+- lookalike domains and mailboxes on your account, your card, a few dollars each
+- spf, dkim, dmarc, mx, tracking domain, verified before anything sends
+- everything imported into instantly, warmup on, limits ramped to your spec
+- one unibox for every reply, instantly wired to claude to sort and draft
+- can start [START], sending by [DRAFT], runbook so you run it without me

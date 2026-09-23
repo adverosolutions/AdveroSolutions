@@ -1,0 +1,52 @@
+{
+  "archetype": "ticket_triage",
+  "title": "Support Inbox → AI Triage → Route, Draft, Escalate",
+  "platform": "n8n",
+  "sections": [
+    { "key": "intake",  "label": "1 · INTAKE",   "note": "Every inbound support email lands here and is stripped to the parts that matter — sender, subject, body, and any prior thread history — before classification." },
+    { "key": "triage",  "label": "2 · TRIAGE",   "note": "One pass assigns category, urgency and sentiment, and drafts a reply. Angry customers and billing problems are detected here rather than after they have sat in a queue for six hours." },
+    { "key": "route",   "label": "3 · ROUTE",    "note": "Urgent tickets page the on-call channel immediately. Routine ones get a drafted reply waiting for a human to skim and send — the agent proposes, a person still approves." },
+    { "key": "record",  "label": "4 · RECORD",   "note": "Everything is written to the ticket table with its classification, so response-time and volume-by-category reporting comes for free instead of needing its own project." }
+  ],
+  "nodes": [
+    { "key": "email",   "kind": "trigger.email", "label": "New Support Email", "section": "intake" },
+    { "key": "clean",   "kind": "data.transform", "label": "Strip Quoted Thread", "section": "intake" },
+    { "key": "agent",   "kind": "ai.agent", "label": "Classify & Draft Reply", "section": "triage" },
+    { "key": "model",   "kind": "ai.model", "app": "openai", "label": "GPT-4.1", "parent": "agent" },
+    { "key": "parser",  "kind": "ai.parser", "label": "Triage Schema", "parent": "agent" },
+    { "key": "switch",  "kind": "flow.switch", "label": "Urgency", "section": "route" },
+    { "key": "page",    "kind": "app.action", "app": "slack", "op": "post", "label": "Page #on-call", "section": "route" },
+    { "key": "draft",   "kind": "app.action", "app": "gmail", "op": "draft", "label": "Draft Reply for Review", "section": "route" },
+    { "key": "record",  "kind": "app.action", "app": "airtable", "op": "create", "label": "Create Ticket Record", "section": "record" }
+  ],
+  "edges": [
+    { "from": "email",  "to": "clean" },
+    { "from": "clean",  "to": "agent" },
+    { "from": "agent",  "to": "switch" },
+    { "from": "switch", "to": "page",  "branch": "urgent" },
+    { "from": "switch", "to": "draft", "branch": "normal" },
+    { "from": "page",   "to": "record" },
+    { "from": "draft",  "to": "record" }
+  ],
+  "input_sample": {
+    "from": "t.brennan@fieldstonedental.com",
+    "name": "Tom Brennan",
+    "subject": "Re: charged twice this month??",
+    "body": "This is the second time — we got billed on the 3rd and again on the 17th for the same seat count. I need this refunded before our board meeting Friday or we're looking at alternatives.",
+    "received_at": "2026-07-31T11:07:44Z",
+    "thread_messages": 4,
+    "account_tier": "Professional"
+  },
+  "output_sample": {
+    "ticket_id": "TKT-11492",
+    "category": "Billing · Duplicate charge",
+    "urgency": "urgent",
+    "sentiment": "frustrated",
+    "churn_risk": "elevated — mentions evaluating alternatives",
+    "sla_due": "2026-07-31T15:07:44Z",
+    "assigned_to": "#on-call · Billing",
+    "drafted_reply": "Hi Tom — you're right, I can see two charges on the 3rd and the 17th for the same 12 seats. I've submitted the refund for the duplicate; it'll land back on the original card in 3-5 business days. I've also flagged the account so the duplicate schedule can't repeat.",
+    "requires_human_send": true,
+    "paged_at": "2026-07-31T11:07:46Z"
+  }
+}

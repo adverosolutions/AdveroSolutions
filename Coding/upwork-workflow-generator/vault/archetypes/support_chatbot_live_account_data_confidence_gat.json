@@ -1,0 +1,241 @@
+{
+  "title": "Support Chatbot: Live Account Data, Confidence Gate, Human Handoff",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · CUSTOMER MESSAGE COMES IN",
+      "color": 0,
+      "note": "Every message is tied to a session and a customer id before the model sees it, so the agent never guesses whose account it is looking at."
+    },
+    {
+      "key": "agent",
+      "label": "2 · THE SUPPORT AGENT ANSWERS WITH LIVE ACCOUNT DATA",
+      "color": 0,
+      "note": "One agent, a locked system prompt, and three tools that call your backend API. It reads real account, order and billing data instead of making it up."
+    },
+    {
+      "key": "gate",
+      "label": "3 · SEND IT, RETRY IT, OR HAND IT TO A HUMAN",
+      "color": 0,
+      "note": "The reply only goes out when the model reports high confidence and no sensitive action. Backend errors retry once, everything else goes to a person with full context."
+    },
+    {
+      "key": "ops",
+      "label": "4 · LOG EVERY TURN, FAIL LOUDLY",
+      "color": 0,
+      "note": "Each turn is logged with tokens and outcome so prompt changes can be measured. Any node failure alerts a human with a link to the run."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "chat",
+      "kind": "trigger.chat",
+      "label": "1 · Customer Message Comes In",
+      "section": "intake"
+    },
+    {
+      "key": "ident",
+      "kind": "data.transform",
+      "label": "2 · Identify Session and Customer ID",
+      "section": "intake"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "3 · Support Agent · Prompt Architecture",
+      "section": "agent"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "OpenAI GPT-4.1",
+      "app": "openai",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "memory",
+      "kind": "ai.memory",
+      "label": "Conversation Memory · Last 10 Turns",
+      "parent": "agent",
+      "port": "ai_memory"
+    },
+    {
+      "key": "tool_account",
+      "kind": "ai.tool",
+      "label": "Backend API: Fetch Account Details",
+      "app": "http",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "tool_orders",
+      "kind": "ai.tool",
+      "label": "Backend API: Order and Billing Status",
+      "app": "http",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "tool_help",
+      "kind": "ai.tool",
+      "label": "Help Center Search",
+      "app": "http",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Answer + Confidence + Needs Human",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "confident",
+      "kind": "flow.branch",
+      "label": "4 · Confident and Safe to Send?",
+      "section": "gate"
+    },
+    {
+      "key": "respond",
+      "kind": "net.respond",
+      "label": "5 · Reply in Real Time",
+      "section": "gate"
+    },
+    {
+      "key": "apierr",
+      "kind": "flow.branch",
+      "label": "6 · Backend API Error? · Max 2 Retries",
+      "section": "gate"
+    },
+    {
+      "key": "wait",
+      "kind": "flow.wait",
+      "label": "7 · Pause 2 Seconds and Retry the Call",
+      "section": "gate"
+    },
+    {
+      "key": "escalate",
+      "kind": "app.action",
+      "label": "8 · Escalate to a Human With Context",
+      "app": "slack",
+      "op": "post",
+      "section": "gate"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "9 · Log Turn, Tokens, and Outcome",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "ops"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "10 · Any Node Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "ops"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "11 · Alert With a Link to the Failed Run",
+      "app": "slack",
+      "op": "post",
+      "section": "ops"
+    }
+  ],
+  "edges": [
+    {
+      "from": "chat",
+      "to": "ident"
+    },
+    {
+      "from": "ident",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "confident"
+    },
+    {
+      "from": "confident",
+      "to": "respond",
+      "branch": "true"
+    },
+    {
+      "from": "confident",
+      "to": "apierr",
+      "branch": "false"
+    },
+    {
+      "from": "apierr",
+      "to": "wait",
+      "branch": "true"
+    },
+    {
+      "from": "wait",
+      "to": "agent",
+      "loop": true
+    },
+    {
+      "from": "apierr",
+      "to": "escalate",
+      "branch": "false"
+    },
+    {
+      "from": "respond",
+      "to": "log"
+    },
+    {
+      "from": "escalate",
+      "to": "log"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "sessionId": "sess_7c41a9",
+    "action": "sendMessage",
+    "chatInput": "Hi, I was charged twice this month and my last order still says processing. Can you check what's going on? My account email is dana.whitfield@example.com",
+    "metadata": {
+      "channel": "web_widget",
+      "customer_email": "dana.whitfield@example.com",
+      "customer_id": "cus_20388",
+      "auth_token_present": true,
+      "received_at": "2026-09-07T14:12:41Z"
+    }
+  },
+  "output_sample": {
+    "session_id": "sess_7c41a9",
+    "customer_id": "cus_20388",
+    "turn": 1,
+    "tools_called": [
+      "Backend API: Fetch Account Details (200, 142 ms)",
+      "Backend API: Order and Billing Status (200, 218 ms)"
+    ],
+    "backend_retries": 0,
+    "answer": "Hi Dana, I checked your account. The second charge on Sep 3 for $49.00 is a pending authorization from a failed retry, not a real charge, and it will drop off within 3 to 5 business days. Your order #A-88213 is in processing because the warehouse is waiting on one item, expected to ship Sep 9. Want me to send you a note the moment it ships?",
+    "confidence": 0.91,
+    "needs_human": false,
+    "sensitive_action_requested": false,
+    "outcome": "replied",
+    "tokens": {
+      "prompt": 1842,
+      "completion": 168,
+      "total": 2010
+    },
+    "latency_ms": 2310,
+    "logged_to_sheet": true,
+    "if_it_had_failed": "Confidence under 0.75 or any refund or cancel request goes to Slack with the full transcript and account snapshot; a backend error retries once, then escalates."
+  },
+  "archetype": "support_chatbot_live_account_data_confidence_gat",
+  "learned": true,
+  "learned_at": "2026-09-07"
+}

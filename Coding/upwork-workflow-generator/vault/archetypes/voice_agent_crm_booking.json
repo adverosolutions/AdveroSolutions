@@ -1,0 +1,189 @@
+{
+  "title": "Voice AI Call → Dedupe CRM → Book Slot → Call Summary",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "call",
+      "label": "1 · CALL",
+      "color": 0,
+      "note": "The voice agent hands off the moment the call ends — transcript, caller details and intent in one webhook."
+    },
+    {
+      "key": "identify",
+      "label": "2 · IDENTIFY",
+      "color": 0,
+      "note": "Match before create, always. Phone first, then email, then fuzzy name — this is what keeps duplicate contacts out of the CRM."
+    },
+    {
+      "key": "schedule",
+      "label": "3 · SCHEDULE",
+      "color": 0,
+      "note": "Real availability from the calendar API, not a guess. The agent only ever offers slots that are actually open."
+    },
+    {
+      "key": "record",
+      "label": "4 · CONFIRM & RECORD",
+      "color": 0,
+      "note": "Booking, confirmation and the call summary all land on the same contact record, so nothing has to be re-entered by hand."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "Voice Agent Call Completed",
+      "section": "call",
+      "notes": "Signed webhook from the voice platform — retried on failure so a dropped call is never lost."
+    },
+    {
+      "key": "parse",
+      "kind": "data.transform",
+      "label": "Parse Caller Details & Intent",
+      "section": "call"
+    },
+    {
+      "key": "match",
+      "kind": "net.http",
+      "label": "Match Contact — Phone, Then Email",
+      "section": "identify",
+      "notes": "Two lookups before any write. The single most common cause of duplicate CRM records is creating on the first miss."
+    },
+    {
+      "key": "upsert",
+      "kind": "app.action",
+      "label": "Upsert CRM Contact",
+      "app": "hubspot",
+      "op": "create_contact",
+      "section": "identify"
+    },
+    {
+      "key": "avail",
+      "kind": "net.http",
+      "label": "Fetch Open Calendar Slots",
+      "section": "schedule"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "Choose Slot & Write Call Summary",
+      "section": "schedule"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "tool",
+      "kind": "ai.tool",
+      "label": "Calendar Availability",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "Caller confirmed a slot on the call",
+      "section": "schedule"
+    },
+    {
+      "key": "book",
+      "kind": "app.action",
+      "label": "Book the Appointment",
+      "app": "googleCalendar",
+      "op": "create",
+      "section": "record"
+    },
+    {
+      "key": "sms",
+      "kind": "app.action",
+      "label": "Text the Confirmation",
+      "app": "twilio",
+      "op": "send_sms",
+      "section": "record"
+    },
+    {
+      "key": "save",
+      "kind": "app.action",
+      "label": "Save Call Summary to Contact",
+      "app": "hubspot",
+      "op": "create_note",
+      "section": "record"
+    },
+    {
+      "key": "task",
+      "kind": "app.action",
+      "label": "Create Callback Task",
+      "app": "hubspot",
+      "op": "create_task",
+      "section": "record"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "parse"
+    },
+    {
+      "from": "parse",
+      "to": "match"
+    },
+    {
+      "from": "match",
+      "to": "upsert"
+    },
+    {
+      "from": "upsert",
+      "to": "avail"
+    },
+    {
+      "from": "avail",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "book",
+      "branch": "true"
+    },
+    {
+      "from": "book",
+      "to": "sms"
+    },
+    {
+      "from": "sms",
+      "to": "save"
+    },
+    {
+      "from": "gate",
+      "to": "task",
+      "branch": "false"
+    }
+  ],
+  "input_sample": {
+    "call_id": "CA7f31d0c9b2",
+    "from_number": "+1 (512) 555-0148",
+    "caller_name": "Dana Reyes",
+    "duration_sec": 214,
+    "intent": "Book a consultation",
+    "transcript_url": "api.voice-agent.io/calls/CA7f31d0c9b2/transcript"
+  },
+  "output_sample": {
+    "crm_contact_id": "0011t00000QeYd2",
+    "matched_on": "phone",
+    "duplicate_prevented": true,
+    "appointment": "Aug 5, 2:30 PM — Consultation (30 min)",
+    "calendar_event_id": "evt_9f42ab10",
+    "call_summary": "Wants pricing for two locations; decision by end of month.",
+    "confirmation_sent": "+1 (512) 555-0148"
+  },
+  "archetype": "voice_agent_crm_booking",
+  "learned": true,
+  "learned_at": "2026-08-03"
+}

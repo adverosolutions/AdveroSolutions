@@ -1,0 +1,63 @@
+{
+  "archetype": "booking_calendar",
+  "title": "Booking → Reminders → No-Show Recovery",
+  "platform": "n8n",
+  "sections": [
+    { "key": "book",    "label": "1 · BOOKED",     "note": "A new booking arrives and is written to the CRM immediately, so the calendar and the customer record never drift apart." },
+    { "key": "prep",    "label": "2 · REMINDERS",  "note": "A confirmation goes out now, a reminder 24 hours out, and an SMS two hours out. Most no-shows are forgetting, not choosing — the SMS is the one that moves the number." },
+    { "key": "after",   "label": "3 · AFTER",      "note": "Once the slot has passed, attendance decides the path. Attended goes to follow-up, missed goes to recovery rather than quietly disappearing from the pipeline." },
+    { "key": "recover", "label": "4 · RECOVER",    "note": "No-shows get a one-click rebook link within the hour, while intent is still warm, and the outcome is logged either way so the no-show rate is measurable." }
+  ],
+  "nodes": [
+    { "key": "hook",    "kind": "trigger.webhook", "label": "New Booking", "section": "book" },
+    { "key": "crm",     "kind": "app.action", "app": "hubspot", "op": "create_contact", "label": "Upsert Contact", "section": "book" },
+    { "key": "confirm", "kind": "app.action", "app": "gmail", "op": "send", "label": "Send Confirmation", "section": "prep" },
+    { "key": "wait24",  "kind": "flow.wait", "label": "Until 24h Before", "section": "prep" },
+    { "key": "remind",  "kind": "app.action", "app": "gmail", "op": "send", "label": "24h Email Reminder", "section": "prep" },
+    { "key": "wait2",   "kind": "flow.wait", "label": "Until 2h Before", "section": "prep" },
+    { "key": "sms",     "kind": "app.action", "app": "twilio", "op": "send", "label": "2h SMS Reminder", "section": "prep" },
+    { "key": "waitend", "kind": "flow.wait", "label": "Until Slot Ends", "section": "after" },
+    { "key": "showed",  "kind": "flow.branch", "label": "Attended?", "section": "after" },
+    { "key": "thanks",  "kind": "app.action", "app": "gmail", "op": "send", "label": "Send Recap", "section": "recover" },
+    { "key": "rebook",  "kind": "app.action", "app": "gmail", "op": "send", "label": "One-Click Rebook", "section": "recover" },
+    { "key": "log",     "kind": "app.action", "app": "googleSheets", "op": "append", "label": "Log Outcome", "section": "recover" }
+  ],
+  "edges": [
+    { "from": "hook", "to": "crm" },
+    { "from": "crm", "to": "confirm" },
+    { "from": "confirm", "to": "wait24" },
+    { "from": "wait24", "to": "remind" },
+    { "from": "remind", "to": "wait2" },
+    { "from": "wait2", "to": "sms" },
+    { "from": "sms", "to": "waitend" },
+    { "from": "waitend", "to": "showed" },
+    { "from": "showed", "to": "thanks", "branch": "true" },
+    { "from": "showed", "to": "rebook", "branch": "false" },
+    { "from": "thanks", "to": "log" },
+    { "from": "rebook", "to": "log" }
+  ],
+  "input_sample": {
+    "booking_id": "bk_71fd220a",
+    "booked_at": "2026-07-29T15:33:08Z",
+    "invitee": { "name": "Alan Petrosyan", "email": "alan@petrosyanhvac.com", "phone": "+1 818 555 0147" },
+    "event_type": "Systems Audit — 30 min",
+    "starts_at": "2026-07-31T18:00:00Z",
+    "timezone": "America/Los_Angeles",
+    "source": "paid search"
+  },
+  "output_sample": {
+    "booking_id": "bk_71fd220a",
+    "contact_id": "0-1-77410299",
+    "reminders_sent": [
+      { "type": "confirmation", "channel": "email", "sent_at": "2026-07-29T15:33:11Z" },
+      { "type": "24h", "channel": "email", "sent_at": "2026-07-30T18:00:04Z" },
+      { "type": "2h", "channel": "sms", "sent_at": "2026-07-31T16:00:02Z" }
+    ],
+    "attended": false,
+    "outcome": "no_show",
+    "recovery_sent_at": "2026-07-31T18:34:00Z",
+    "rebook_link": "https://cal.example.com/reschedule/bk_71fd220a",
+    "rebooked": true,
+    "new_slot": "2026-08-04T17:00:00Z"
+  }
+}

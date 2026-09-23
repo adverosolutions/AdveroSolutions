@@ -1,0 +1,346 @@
+{
+  "title": "Fleet Notes to Structured Records Pipeline - Milestone 1 and 3",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · NOTE INTAKE",
+      "color": 0,
+      "note": "A dispatcher or driver sends a voice note or a text note. Audio goes through Whisper first, text skips straight ahead."
+    },
+    {
+      "key": "extract",
+      "label": "2 · EXTRACT AND VALIDATE",
+      "color": 0,
+      "note": "The cheap model turns the note into JSON. Nothing is trusted until it passes the schema check."
+    },
+    {
+      "key": "save",
+      "label": "3 · SAVE AND REVIEW",
+      "color": 0,
+      "note": "The clean record lands in Supabase and comes back to the review screen for a human to confirm."
+    },
+    {
+      "key": "loads",
+      "label": "4 · LOAD PARSER AND SCORING",
+      "color": 0,
+      "note": "Pasted load-board text becomes scored loads, then the best legal combination for each truck, then a load card."
+    },
+    {
+      "key": "errors",
+      "label": "5 · WHEN SOMETHING BREAKS",
+      "color": 0,
+      "note": "Every failure is caught and posted with a link to the exact run. Nothing drops silently."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook_note",
+      "kind": "trigger.webhook",
+      "label": "1 · Voice or Text Note From Dispatcher or Driver",
+      "section": "intake"
+    },
+    {
+      "key": "is_audio",
+      "kind": "flow.branch",
+      "label": "2 · Is This an Audio Recording?",
+      "section": "intake"
+    },
+    {
+      "key": "whisper",
+      "kind": "net.http",
+      "label": "3 · Whisper: Turn the Recording Into Text",
+      "section": "intake"
+    },
+    {
+      "key": "normalize",
+      "kind": "data.transform",
+      "label": "4 · Clean the Note and Attach Truck, Driver and Date",
+      "section": "intake"
+    },
+    {
+      "key": "extract",
+      "kind": "ai.llm",
+      "label": "5 · Extraction Model, Cheap: Note Into Structured JSON",
+      "section": "extract"
+    },
+    {
+      "key": "extract_model",
+      "kind": "ai.model",
+      "label": "Provider Adapter: Anthropic / OpenAI / Google",
+      "app": "anthropic",
+      "parent": "extract",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "extract_parser",
+      "kind": "ai.parser",
+      "label": "Force the Schema: Loads, Expenses, Driver Events, Broker Contacts, Maintenance",
+      "parent": "extract",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "validate",
+      "kind": "data.code",
+      "label": "6 · Check the JSON Against the Record Schema",
+      "section": "extract"
+    },
+    {
+      "key": "is_valid",
+      "kind": "flow.branch",
+      "label": "7 · Did It Come Back Valid?",
+      "section": "extract"
+    },
+    {
+      "key": "repair",
+      "kind": "flow.wait",
+      "label": "8 · Send It Back With a Repair Prompt, Twice at Most",
+      "section": "extract"
+    },
+    {
+      "key": "save_record",
+      "kind": "app.action",
+      "label": "9 · Save the Record, Row Locked to That Fleet",
+      "app": "supabase",
+      "op": "insert",
+      "section": "save"
+    },
+    {
+      "key": "respond",
+      "kind": "net.respond",
+      "label": "10 · Hand the Record to the Review Screen",
+      "section": "save"
+    },
+    {
+      "key": "hook_board",
+      "kind": "trigger.webhook",
+      "label": "11 · Raw Load-Board Text Pasted In",
+      "section": "loads"
+    },
+    {
+      "key": "parse_loads",
+      "kind": "ai.llm",
+      "label": "12 · Extraction Model: Pull the Loads Out of Messy Text",
+      "section": "loads"
+    },
+    {
+      "key": "loads_parser",
+      "kind": "ai.parser",
+      "label": "Force One Row per Load: Pickup, Drop, Rate, Miles, Vehicles",
+      "parent": "parse_loads",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "score",
+      "kind": "data.code",
+      "label": "13 · Score Revenue per Mile, Deadhead, 9-Car Unit and Weight Limits",
+      "section": "loads"
+    },
+    {
+      "key": "combine",
+      "kind": "data.code",
+      "label": "14 · Pick the Best Legal Combination for Each Truck",
+      "section": "loads"
+    },
+    {
+      "key": "card",
+      "kind": "ai.llm",
+      "label": "15 · Synthesis Model, Larger: Write the HTML Load Card",
+      "section": "loads"
+    },
+    {
+      "key": "card_model",
+      "kind": "ai.model",
+      "label": "Provider Adapter: Same Interface, Bigger Model",
+      "app": "anthropic",
+      "parent": "card",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "save_loads",
+      "kind": "app.action",
+      "label": "16 · Save the Scored Loads and the Card",
+      "app": "supabase",
+      "op": "insert",
+      "section": "loads"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "17 · Any Step Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "errors"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "18 · Post the Failure With a Link to the Run",
+      "app": "slack",
+      "op": "post",
+      "section": "errors"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook_note",
+      "to": "is_audio"
+    },
+    {
+      "from": "is_audio",
+      "to": "whisper",
+      "branch": "true"
+    },
+    {
+      "from": "is_audio",
+      "to": "normalize",
+      "branch": "false"
+    },
+    {
+      "from": "whisper",
+      "to": "normalize"
+    },
+    {
+      "from": "normalize",
+      "to": "extract"
+    },
+    {
+      "from": "extract",
+      "to": "validate"
+    },
+    {
+      "from": "validate",
+      "to": "is_valid"
+    },
+    {
+      "from": "is_valid",
+      "to": "save_record",
+      "branch": "true"
+    },
+    {
+      "from": "is_valid",
+      "to": "repair",
+      "branch": "false"
+    },
+    {
+      "from": "repair",
+      "to": "extract",
+      "loop": true
+    },
+    {
+      "from": "save_record",
+      "to": "respond"
+    },
+    {
+      "from": "hook_board",
+      "to": "parse_loads"
+    },
+    {
+      "from": "parse_loads",
+      "to": "score"
+    },
+    {
+      "from": "score",
+      "to": "combine"
+    },
+    {
+      "from": "combine",
+      "to": "card"
+    },
+    {
+      "from": "card",
+      "to": "save_loads"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "source": "driver_voice_note",
+    "fleet_id": "fl_0417",
+    "truck": "T-12",
+    "driver": "Marcus Hale",
+    "recorded_at": "2026-09-09T07:42:11-05:00",
+    "audio_url": "https://storage.supabase.co/fleet/notes/2026-09-09-t12-0742.m4a",
+    "transcript_preview": "picked up 7 units in Dallas for Carvana headed to Phoenix, 1,065 miles, they're paying 1,410 all in, put 212 in diesel at the Love's in Weatherford, oh and the passenger side ramp on the top deck is sticking again, needs looking at before next week"
+  },
+  "output_sample": {
+    "record_id": "rec_9f31c2",
+    "fleet_id": "fl_0417",
+    "confirmed_by_human": false,
+    "extracted": {
+      "loads": [
+        {
+          "broker": "Carvana",
+          "origin": "Dallas, TX",
+          "destination": "Phoenix, AZ",
+          "vehicle_count": 7,
+          "miles": 1065,
+          "rate_usd": 1410.0,
+          "revenue_per_mile": 1.32
+        }
+      ],
+      "expenses": [
+        {
+          "type": "fuel",
+          "amount_usd": 212.0,
+          "vendor": "Love's, Weatherford TX",
+          "truck": "T-12"
+        }
+      ],
+      "driver_events": [
+        {
+          "driver": "Marcus Hale",
+          "event": "pickup_complete",
+          "at": "2026-09-09T07:30:00-05:00"
+        }
+      ],
+      "broker_contacts": [],
+      "maintenance": [
+        {
+          "truck": "T-12",
+          "issue": "Passenger side top deck ramp sticking",
+          "severity": "medium",
+          "due_before": "2026-09-16"
+        }
+      ]
+    },
+    "pipeline": {
+      "transcription_ms": 2140,
+      "extraction_model": "cheap tier via provider adapter",
+      "schema_valid_first_try": false,
+      "repair_attempts": 1,
+      "provider_used": "anthropic",
+      "swappable_to": [
+        "openai",
+        "google"
+      ]
+    },
+    "load_board_run": {
+      "loads_parsed": 34,
+      "loads_rejected_illegal": 6,
+      "rejection_reasons": [
+        "over 9-unit trailer capacity",
+        "gross weight over limit"
+      ],
+      "best_combination_for_T-12": {
+        "loads": [
+          "CVNA-88213",
+          "ACV-40117"
+        ],
+        "units_used": 9,
+        "gross_weight_lbs": 31200,
+        "total_rate_usd": 2185.0,
+        "loaded_miles": 1418,
+        "deadhead_miles": 96,
+        "revenue_per_mile_all_in": 1.44
+      },
+      "html_load_card": "<div class=\"load-card\">T-12 · Dallas → Phoenix → Las Vegas · 9 units · $2,185 · $1.44/mi</div>"
+    },
+    "if_it_had_failed": "Error trigger fires, Slack gets the run link and the raw note, the record stays unsaved rather than half-saved"
+  },
+  "archetype": "fleet_notes_to_structured_records_pipeline_miles",
+  "learned": true,
+  "learned_at": "2026-09-09"
+}

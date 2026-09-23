@@ -1,0 +1,63 @@
+{
+  "archetype": "multi_agent_ops",
+  "title": "Research Request → Multi-Agent Crew → Cited Brief",
+  "platform": "n8n",
+  "sections": [
+    { "key": "brief",   "label": "1 · REQUEST",     "note": "A research question comes in from a form or Slack and is turned into a plan — the sub-questions that actually need answering before the main one can be." },
+    { "key": "crew",    "label": "2 · AGENT CREW",  "note": "A lead agent works the plan with real tools: web search, the internal document store, and a data lookup. Each sub-question is researched independently rather than answered from one long prompt." },
+    { "key": "check",   "label": "3 · VERIFY",      "note": "A separate reviewer agent checks every claim against the sources actually retrieved and strips anything unsupported. The writer and the fact-checker being the same model in one pass is where these systems usually fail." },
+    { "key": "ship",    "label": "4 · DELIVER",     "note": "The verified brief is written to a doc with inline citations and posted back to the requester, with the full source list attached so any claim can be traced in one click." }
+  ],
+  "nodes": [
+    { "key": "form",     "kind": "trigger.form", "label": "Research Request", "section": "brief" },
+    { "key": "plan",     "kind": "ai.llm", "label": "Decompose Into Sub-Questions", "section": "brief" },
+    { "key": "pmodel",   "kind": "ai.model", "app": "anthropic", "label": "Claude", "parent": "plan" },
+    { "key": "lead",     "kind": "ai.agent", "label": "Lead Research Agent", "section": "crew" },
+    { "key": "model",    "kind": "ai.model", "app": "anthropic", "label": "Claude", "parent": "lead" },
+    { "key": "memory",   "kind": "ai.memory", "label": "Working Memory", "parent": "lead" },
+    { "key": "websearch","kind": "ai.tool", "app": "http", "label": "Web Search Tool", "parent": "lead" },
+    { "key": "docs",     "kind": "ai.tool", "app": "workflow", "label": "Internal Docs Tool", "parent": "lead" },
+    { "key": "review",   "kind": "ai.agent", "label": "Fact-Check Agent", "section": "check" },
+    { "key": "rmodel",   "kind": "ai.model", "app": "openai", "label": "GPT-4.1", "parent": "review" },
+    { "key": "rparser",  "kind": "ai.parser", "label": "Verdict Schema", "parent": "review" },
+    { "key": "gate",     "kind": "flow.branch", "label": "All Claims Sourced?", "section": "check" },
+    { "key": "doc",      "kind": "app.action", "app": "googleDocs", "op": "create", "label": "Write Cited Brief", "section": "ship" },
+    { "key": "flag",     "kind": "app.action", "app": "slack", "op": "post", "label": "Flag Unsupported Claims", "section": "ship" },
+    { "key": "deliver",  "kind": "app.action", "app": "slack", "op": "post", "label": "Deliver to Requester", "section": "ship" }
+  ],
+  "edges": [
+    { "from": "form", "to": "plan" },
+    { "from": "plan", "to": "lead" },
+    { "from": "lead", "to": "review" },
+    { "from": "review", "to": "gate" },
+    { "from": "gate", "to": "doc", "branch": "true" },
+    { "from": "gate", "to": "flag", "branch": "false" },
+    { "from": "doc", "to": "deliver" },
+    { "from": "flag", "to": "deliver" }
+  ],
+  "input_sample": {
+    "requested_by": "strategy@company.com",
+    "question": "Should we build native Spanish-language support before expanding into Mexico, or is English-only viable for the first year?",
+    "context": "B2B SaaS, current customers are US mid-market logistics firms. Considering a Mexico City pilot in Q1.",
+    "depth": "deep",
+    "deadline": "2026-08-04",
+    "submitted_at": "2026-07-31T09:30:00Z"
+  },
+  "output_sample": {
+    "question": "Should we build native Spanish-language support before expanding into Mexico?",
+    "sub_questions_researched": 6,
+    "sources_retrieved": 23,
+    "sources_cited": 14,
+    "claims_checked": 19,
+    "claims_unsupported_removed": 2,
+    "recommendation": "English-only is viable for a Q1 pilot but not for scale. Mid-market Mexican logistics firms show high English proficiency at the decision-maker level, so the pilot can land without localization — but support tickets and end-user adoption are where English-only breaks down, and that surfaces around month four.",
+    "key_findings": [
+      { "finding": "Decision-makers at target-size firms are predominantly English-comfortable", "confidence": "high", "sources": 4 },
+      { "finding": "End-user adoption drops sharply without localized UI in this segment", "confidence": "medium", "sources": 3 },
+      { "finding": "Localization effort estimated at 6-9 weeks for UI plus ongoing support staffing", "confidence": "medium", "sources": 2 }
+    ],
+    "doc_url": "https://docs.google.com/document/d/1Kf9…/edit",
+    "delivered_to": "strategy@company.com",
+    "elapsed_seconds": 187
+  }
+}

@@ -1,0 +1,6 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Scraper outputs (regenerable; land in Downloads anyway)
+*_maps.csv

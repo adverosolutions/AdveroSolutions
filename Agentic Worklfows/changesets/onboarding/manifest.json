@@ -1,0 +1,152 @@
+{
+  "_about": "F1 onboarding change-set. The single source of truth for what 'Deal Won' should fire. onboarding_spec.md documents each target in prose; apply.py reads THIS file so the two cannot drift. Nothing here has been created: every target is either manual_only (no create API exists) or no_credential (the key does not exist in any .env as of 2026-09-22).",
+  "changeset": "onboarding",
+  "brief": "A12 / Blueprint F1",
+  "as_of": "2026-09-22",
+  "extends": {
+    "system": "ghl",
+    "object": "workflow",
+    "id": "e0593495-a88e-46f0-a9ac-611fabf7f0f9",
+    "name": "Deal Won -> ClickUp project + client tag",
+    "status_live": "published",
+    "note": "Published today. The extension is built as a SECOND workflow in Draft ('Client Onboarding: kickoff kit') triggered by the same stage move, so the published workflow keeps working untouched while the new one is tested. Merging them is a later, deliberate step."
+  },
+  "capability_reasons": {
+    "manual_only": "GHL has no public create API for workflows, forms or calendars (the API lists workflows and adds contacts to them). A person builds it in the UI from the spec.",
+    "no_credential": "No API key for this system exists in Agentic Worklfows/.env or AdveroSolutions/.env as of 2026-09-22, so there is nothing to diff against and nothing to apply."
+  },
+  "targets": [
+    {
+      "key": "ghl_workflow_kickoff",
+      "order": 1,
+      "system": "ghl",
+      "capability": "manual_only",
+      "object": "workflow",
+      "name": "Client Onboarding: kickoff kit",
+      "build_status": "draft",
+      "trigger": {
+        "type": "opportunity_stage_changed",
+        "pipeline_id": "GCBkIzFpung73cIDVPzn",
+        "to_stage_id": "48eca719-502a-46cc-9e39-7db0aeffb41e",
+        "to_stage_name": "Won"
+      },
+      "preflight_read": "workflows_list",
+      "spec_section": "1. The workflow"
+    },
+    {
+      "key": "drive_client_folder",
+      "order": 2,
+      "system": "google_drive",
+      "capability": "no_credential",
+      "object": "folder_tree",
+      "name": "{client_slug}",
+      "template": {
+        "root": "Clients/{client_slug}",
+        "children": ["01 Raw", "02 Review", "03 Approved"],
+        "seed_files": [
+          "01 Raw/README.txt",
+          "02 Review/README.txt",
+          "03 Approved/README.txt",
+          "kickoff-form-answers.md",
+          "do-not-say.md",
+          "voice-notes.md"
+        ]
+      },
+      "blocker": "The service account (credentials.json) has zero Drive storage quota, so it cannot create files or folders anywhere it is not already a member. Either Lorenzo creates the tree by hand from the template, or he shares a parent folder that a real user account owns and the job uses OAuth as that user.",
+      "spec_section": "2. Drive client folder"
+    },
+    {
+      "key": "kickoff_form",
+      "order": 3,
+      "system": "ghl",
+      "capability": "manual_only",
+      "object": "form",
+      "name": "Advero Kickoff",
+      "fields_file": "kickoff_form.md",
+      "spec_section": "3. Kickoff form"
+    },
+    {
+      "key": "kickoff_calendar",
+      "order": 4,
+      "system": "ghl",
+      "capability": "manual_only",
+      "object": "calendar",
+      "name": "Kickoff Call",
+      "separate_from": {
+        "id": "GDugwLmZNdsD13RBDnRu",
+        "name": "Discovery Call",
+        "why": "Discovery is 15 minutes, 6 a day, and sells. Kickoff is 45 minutes, 2 a day, and delivers. Sharing one calendar lets a kickoff eat a sales slot."
+      },
+      "settings": {
+        "slot_minutes": 45,
+        "buffer_minutes": 15,
+        "per_day": 2,
+        "open_hours": "Mon-Fri 12:00-18:00 America/Chicago",
+        "allow_booking_after_hours": 24,
+        "allow_booking_for_days": 14,
+        "auto_confirm": true,
+        "assigned_user_id": "gIwBtPohHJXADQBuGAx8"
+      },
+      "spec_section": "4. Kickoff call calendar"
+    },
+    {
+      "key": "stripe_invoice",
+      "order": 5,
+      "system": "stripe",
+      "capability": "no_credential",
+      "object": "invoice",
+      "name": "First installment, {client_name}",
+      "rule": "One invoice per product, raised at Won, due on the kickoff date. Performance deals (reactivation) raise NO invoice at Won: they invoice monthly against the F3 scorecard, and the change-set must skip them rather than send a zero-dollar invoice.",
+      "blocker": "No STRIPE_SECRET_KEY in any .env. Until there is one, the workflow step is an internal task for Lorenzo that carries the amount and the due date.",
+      "spec_section": "5. Stripe first-installment invoice"
+    },
+    {
+      "key": "clickup_task_template",
+      "order": 6,
+      "system": "clickup",
+      "capability": "no_credential",
+      "object": "task_template",
+      "workspace_id": "90141659171",
+      "space_id": "90148701454",
+      "list_id": "901421193684",
+      "list_name": "Active Clients",
+      "templates_file": "clickup_templates.md",
+      "blocker": "No ClickUp API token in any .env. The ClickUp MCP is available inside a Claude session but writing through it is a live write, so it stays off tonight.",
+      "spec_section": "6. ClickUp task template per product"
+    }
+  ],
+  "products": [
+    {
+      "key": "reactivation",
+      "name": "Reactivation system",
+      "deal_type": "performance",
+      "clickup_template": "Reactivation build",
+      "invoice_at_won": false,
+      "kit": "products/reactivation_system"
+    },
+    {
+      "key": "bid_follow_up",
+      "name": "Bid and sales-request follow-up system",
+      "deal_type": "setup_plus_monthly",
+      "clickup_template": "Follow-up engine build",
+      "invoice_at_won": true,
+      "kit": "products/bid_follow_up_system"
+    },
+    {
+      "key": "cold_email_infra",
+      "name": "Cold-email infrastructure setup",
+      "deal_type": "flat",
+      "clickup_template": "Infrastructure build",
+      "invoice_at_won": true,
+      "kit": "products/cold_email_infrastructure"
+    },
+    {
+      "key": "content_lead_system",
+      "name": "Content and lead system (30 day)",
+      "deal_type": "flat",
+      "clickup_template": "Content and lead system build",
+      "invoice_at_won": true,
+      "kit": "none yet (Mike at Man Transformed is the only one; productize it after the day-21 results snapshot)"
+    }
+  ]
+}

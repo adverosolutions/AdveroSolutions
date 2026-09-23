@@ -1,0 +1,299 @@
+{
+  "title": "Clay Enrichment → LinkedIn + Email Launch → Recruit CRM Sync → Weekly Health Digest",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "enrich",
+      "label": "1 · CLAY ENRICHMENT & ICP SCORE",
+      "color": 0,
+      "note": "Pulls newly enriched rows off the Clay table and scores each contact against the ICP before anything else runs."
+    },
+    {
+      "key": "quality",
+      "label": "2 · DEDUPE & DATA QUALITY",
+      "color": 0,
+      "note": "Checks Recruit CRM for an existing contact and drops duplicates, recently-touched records, and rows missing an email or LinkedIn URL."
+    },
+    {
+      "key": "launch",
+      "label": "3 · LAUNCH: LINKEDIN + EMAIL",
+      "color": 0,
+      "note": "Adds the surviving contacts to the LinkedIn campaign and the cold email sequence in parallel."
+    },
+    {
+      "key": "sync",
+      "label": "4 · CRM SYNC & REPLY ROUTING",
+      "color": 0,
+      "note": "Logs every touchpoint back to Recruit CRM and routes inbound replies to pause outreach and move the deal stage."
+    },
+    {
+      "key": "digest",
+      "label": "5 · WEEKLY HEALTH DIGEST",
+      "color": 0,
+      "note": "Rolls up sends, opens, replies and bounce rate every Monday and flags deliverability before it becomes a problem."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "trig",
+      "kind": "trigger.schedule",
+      "label": "Daily Clay Table Sync",
+      "section": "enrich"
+    },
+    {
+      "key": "clay_pull",
+      "kind": "app.action",
+      "label": "Pull Newly Enriched Rows from Clay",
+      "app": "clay",
+      "op": "fetch_new_rows",
+      "section": "enrich"
+    },
+    {
+      "key": "icp_agent",
+      "kind": "ai.agent",
+      "label": "Score Contact Against ICP",
+      "section": "enrich"
+    },
+    {
+      "key": "icp_model",
+      "kind": "ai.model",
+      "label": "GPT-4.1",
+      "app": "openai",
+      "parent": "icp_agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "icp_branch",
+      "kind": "flow.branch",
+      "label": "ICP Fit Score 70 or Higher?",
+      "section": "enrich"
+    },
+    {
+      "key": "crm_check",
+      "kind": "app.action",
+      "label": "Check Recruit CRM for Existing Contact",
+      "app": "recruitcrm",
+      "op": "search_contact",
+      "section": "quality"
+    },
+    {
+      "key": "dedup_filter",
+      "kind": "data.filter",
+      "label": "Drop Duplicates, Recent Touches, and Missing Email or LinkedIn URL",
+      "section": "quality"
+    },
+    {
+      "key": "heyreach_add",
+      "kind": "app.action",
+      "label": "Add to LinkedIn Campaign in HeyReach",
+      "app": "heyreach",
+      "op": "add_to_campaign",
+      "section": "launch"
+    },
+    {
+      "key": "email_add",
+      "kind": "app.action",
+      "label": "Add to Cold Email Sequence",
+      "app": "email_platform",
+      "op": "add_to_sequence",
+      "section": "launch"
+    },
+    {
+      "key": "merge_touch",
+      "kind": "data.merge",
+      "label": "Merge LinkedIn and Email Touchpoints",
+      "section": "launch"
+    },
+    {
+      "key": "crm_sync",
+      "kind": "app.action",
+      "label": "Upsert Contact and Log Campaign Activity in Recruit CRM",
+      "app": "recruitcrm",
+      "op": "upsert_contact",
+      "section": "sync"
+    },
+    {
+      "key": "reply_trig",
+      "kind": "trigger.email",
+      "label": "Inbound Reply Received",
+      "section": "sync"
+    },
+    {
+      "key": "reply_agent",
+      "kind": "ai.agent",
+      "label": "Classify Reply: Interested, Not Interested, or Out of Office",
+      "section": "sync"
+    },
+    {
+      "key": "reply_model",
+      "kind": "ai.model",
+      "label": "GPT-4.1",
+      "app": "openai",
+      "parent": "reply_agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "reply_branch",
+      "kind": "flow.branch",
+      "label": "Interested?",
+      "section": "sync"
+    },
+    {
+      "key": "crm_update",
+      "kind": "app.action",
+      "label": "Move Deal to Interested Stage and Pause Outreach",
+      "app": "recruitcrm",
+      "op": "update_stage",
+      "section": "sync"
+    },
+    {
+      "key": "weekly_trig",
+      "kind": "trigger.schedule",
+      "label": "Weekly Health Check — Monday 8am",
+      "section": "digest"
+    },
+    {
+      "key": "aggregate",
+      "kind": "data.aggregate",
+      "label": "Aggregate Sends, Opens, Replies, and Bounce Rate",
+      "section": "digest"
+    },
+    {
+      "key": "bounce_branch",
+      "kind": "flow.branch",
+      "label": "Bounce Rate Above 3 Percent?",
+      "section": "digest"
+    },
+    {
+      "key": "alert_slack",
+      "kind": "app.action",
+      "label": "Alert: Inbox Health Degrading",
+      "app": "slack",
+      "op": "send_message",
+      "section": "digest"
+    },
+    {
+      "key": "digest_agent",
+      "kind": "ai.agent",
+      "label": "Draft Weekly Summary of Campaigns, Issues, and Recommendations",
+      "section": "digest"
+    },
+    {
+      "key": "digest_model",
+      "kind": "ai.model",
+      "label": "GPT-4.1",
+      "app": "openai",
+      "parent": "digest_agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "post_digest",
+      "kind": "app.action",
+      "label": "Post Weekly Summary to Team",
+      "app": "slack",
+      "op": "send_message",
+      "section": "digest"
+    }
+  ],
+  "edges": [
+    {
+      "from": "trig",
+      "to": "clay_pull"
+    },
+    {
+      "from": "clay_pull",
+      "to": "icp_agent"
+    },
+    {
+      "from": "icp_agent",
+      "to": "icp_branch"
+    },
+    {
+      "from": "icp_branch",
+      "to": "crm_check",
+      "branch": "true"
+    },
+    {
+      "from": "crm_check",
+      "to": "dedup_filter"
+    },
+    {
+      "from": "dedup_filter",
+      "to": "heyreach_add"
+    },
+    {
+      "from": "dedup_filter",
+      "to": "email_add"
+    },
+    {
+      "from": "heyreach_add",
+      "to": "merge_touch"
+    },
+    {
+      "from": "email_add",
+      "to": "merge_touch"
+    },
+    {
+      "from": "merge_touch",
+      "to": "crm_sync"
+    },
+    {
+      "from": "reply_trig",
+      "to": "reply_agent"
+    },
+    {
+      "from": "reply_agent",
+      "to": "reply_branch"
+    },
+    {
+      "from": "reply_branch",
+      "to": "crm_update",
+      "branch": "true"
+    },
+    {
+      "from": "weekly_trig",
+      "to": "aggregate"
+    },
+    {
+      "from": "aggregate",
+      "to": "bounce_branch"
+    },
+    {
+      "from": "bounce_branch",
+      "to": "alert_slack",
+      "branch": "true"
+    },
+    {
+      "from": "aggregate",
+      "to": "digest_agent"
+    },
+    {
+      "from": "digest_agent",
+      "to": "post_digest"
+    }
+  ],
+  "input_sample": {
+    "clay_table": "Recruitment_Outbound_Master",
+    "row_id": "rec_48213",
+    "company": "Harrow & Vance Executive Search",
+    "contact_name": "Priya Anand",
+    "title": "VP Talent Acquisition",
+    "linkedin_url": "https://linkedin.com/in/priyaanand",
+    "email": "priya.anand@harrowvance.com",
+    "vertical": "Professional Services",
+    "enriched_at": "2026-08-24T08:00:00Z"
+  },
+  "output_sample": {
+    "week_of": "2026-08-17",
+    "contacts_synced_to_crm": 214,
+    "linkedin_connections_sent": 180,
+    "emails_sent": 640,
+    "replies": 23,
+    "bounce_rate_pct": 1.8,
+    "flagged_for_review": 9,
+    "recommendation": "Bounce rate stable under 3% threshold. Pause list B (title mismatch, 40% no-fit rate) and refresh with updated ICP filter."
+  },
+  "archetype": "outbound_gtm_ops_clay_heyreach_recruitcrm",
+  "learned": true,
+  "learned_at": "2026-08-24"
+}

@@ -1,0 +1,320 @@
+{
+  "title": "AI Marketing Automation: Acquire, Nurture, Retain, Report",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "capture",
+      "label": "1 · CAPTURE EVERY LEAD AND CUSTOMER EVENT",
+      "color": 0,
+      "note": "Form fills, purchases and signups all land in one place and get cleaned into the same shape."
+    },
+    {
+      "key": "decide",
+      "label": "2 · DECIDE WHO THEY ARE AND WHAT THEY GET NEXT",
+      "color": 0,
+      "note": "Claude looks the person up in the CRM and picks the next best message instead of a fixed drip."
+    },
+    {
+      "key": "acquisition",
+      "label": "3 · ACQUISITION: WELCOME THE NEW ONES",
+      "color": 0,
+      "note": "Brand new contacts get the welcome and the first offer straight away, while interest is highest."
+    },
+    {
+      "key": "journey",
+      "label": "4 · NURTURE AND RETENTION: KEEP THEM MOVING",
+      "color": 0,
+      "note": "Nurture loops a personalized touch every two days until they engage, capped so nobody gets spammed. Quiet customers get a win back instead."
+    },
+    {
+      "key": "measure",
+      "label": "5 · MEASURE, REPORT, AND CATCH FAILURES",
+      "color": 0,
+      "note": "Every send updates the CRM and logs a metrics row, and Monday morning the numbers land in Slack."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 · New Lead or Customer Event Arrives",
+      "section": "capture"
+    },
+    {
+      "key": "norm",
+      "kind": "data.transform",
+      "label": "2 · Normalize Source, Stage, and Last Activity",
+      "section": "capture"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "3 · Claude Segments and Picks the Next Best Message",
+      "section": "decide"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "tool",
+      "kind": "ai.tool",
+      "label": "CRM Lookup: Past Opens, Purchases, and Stage",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Force Segment, Campaign, Channel, and Send Time",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "route",
+      "kind": "flow.switch",
+      "label": "4 · Route by Journey: Acquisition, Nurture, Retention",
+      "section": "decide"
+    },
+    {
+      "key": "welcome",
+      "kind": "app.action",
+      "label": "5 · Send the Welcome and First Offer Email",
+      "app": "gmail",
+      "op": "send",
+      "section": "acquisition"
+    },
+    {
+      "key": "wait",
+      "kind": "flow.wait",
+      "label": "6 · Wait Two Days Before the Next Touch",
+      "section": "journey"
+    },
+    {
+      "key": "write",
+      "kind": "ai.llm",
+      "label": "7 · Claude Writes the Personalized Nurture Touch",
+      "section": "journey"
+    },
+    {
+      "key": "nurture_send",
+      "kind": "app.action",
+      "label": "8 · Send the Nurture Email",
+      "app": "gmail",
+      "op": "send",
+      "section": "journey"
+    },
+    {
+      "key": "engaged",
+      "kind": "flow.branch",
+      "label": "9 · Did They Open or Click It?",
+      "section": "journey"
+    },
+    {
+      "key": "inactive",
+      "kind": "flow.branch",
+      "label": "10 · Quiet for 30 Days or More?",
+      "section": "journey"
+    },
+    {
+      "key": "winback",
+      "kind": "app.action",
+      "label": "11 · Send the Win Back Campaign",
+      "app": "gmail",
+      "op": "send",
+      "section": "journey"
+    },
+    {
+      "key": "crm",
+      "kind": "app.action",
+      "label": "12 · Update CRM Stage and Tags",
+      "app": "hubspot",
+      "op": "create_contact",
+      "section": "measure"
+    },
+    {
+      "key": "sheet",
+      "kind": "app.action",
+      "label": "13 · Log a Campaign Metrics Row",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "measure"
+    },
+    {
+      "key": "cron",
+      "kind": "trigger.schedule",
+      "label": "14 · Every Monday Morning",
+      "section": "measure"
+    },
+    {
+      "key": "rollup",
+      "kind": "data.aggregate",
+      "label": "15 · Roll Up Opens, Clicks, and Conversions",
+      "section": "measure"
+    },
+    {
+      "key": "digest",
+      "kind": "app.action",
+      "label": "16 · Post the Weekly Performance Digest",
+      "app": "slack",
+      "op": "post",
+      "section": "measure"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "17 · Any Step Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "measure"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "18 · Alert With a Link to the Failed Run",
+      "app": "slack",
+      "op": "post",
+      "section": "measure"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "norm"
+    },
+    {
+      "from": "norm",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "welcome",
+      "branch": "Acquisition"
+    },
+    {
+      "from": "route",
+      "to": "wait",
+      "branch": "Nurture"
+    },
+    {
+      "from": "route",
+      "to": "inactive",
+      "branch": "Retention"
+    },
+    {
+      "from": "welcome",
+      "to": "crm"
+    },
+    {
+      "from": "wait",
+      "to": "write"
+    },
+    {
+      "from": "write",
+      "to": "nurture_send"
+    },
+    {
+      "from": "nurture_send",
+      "to": "engaged"
+    },
+    {
+      "from": "engaged",
+      "to": "crm",
+      "branch": "true"
+    },
+    {
+      "from": "engaged",
+      "to": "wait",
+      "branch": "false",
+      "loop": true
+    },
+    {
+      "from": "inactive",
+      "to": "winback",
+      "branch": "true"
+    },
+    {
+      "from": "inactive",
+      "to": "crm",
+      "branch": "false"
+    },
+    {
+      "from": "winback",
+      "to": "crm"
+    },
+    {
+      "from": "crm",
+      "to": "sheet"
+    },
+    {
+      "from": "cron",
+      "to": "rollup"
+    },
+    {
+      "from": "rollup",
+      "to": "digest"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "event": "form_submit",
+    "source": "google_ads_landing_page",
+    "form": "Free Consultation Request",
+    "contact": {
+      "email": "d.whitfield@northlanedental.com",
+      "first_name": "Dana",
+      "company": "Northlane Dental Group",
+      "phone": "+1 512 555 0184"
+    },
+    "crm_stage": "New",
+    "last_activity_at": null,
+    "lifetime_value_usd": 0,
+    "submitted_at": "2026-09-09T14:22:05Z"
+  },
+  "output_sample": {
+    "segment": "New Inbound, High Intent",
+    "why": "First touch from a paid landing page, requested a consultation, no prior activity in the CRM, so acquisition rather than nurture.",
+    "journey": "Acquisition",
+    "campaign": "Welcome + First Offer",
+    "channel": "email",
+    "send_time": "2026-09-09T15:00:00Z",
+    "email_sent": {
+      "subject": "Dana, here is what the first 30 days look like",
+      "message_id": "CAF9x2r-welcome-88104"
+    },
+    "crm_update": {
+      "contact_id": "hs_0119482",
+      "stage": "Marketing Qualified",
+      "tags": [
+        "paid_search",
+        "consultation_request",
+        "welcome_sent"
+      ]
+    },
+    "metrics_row": {
+      "date": "2026-09-09",
+      "campaign": "Welcome + First Offer",
+      "journey": "Acquisition",
+      "sends": 1,
+      "opens": 0,
+      "clicks": 0,
+      "conversions": 0
+    },
+    "next_scheduled_touch": "2026-09-11T15:00:00Z (nurture touch 1 of 4 if no open or click)",
+    "weekly_digest_preview": "Last 7 days: 412 sends, 189 opens (45.9%), 61 clicks (14.8%), 9 conversions, 14 win backs sent, 3 reactivated"
+  },
+  "archetype": "ai_marketing_automation_acquire_nurture_retain_r",
+  "learned": true,
+  "learned_at": "2026-09-09"
+}

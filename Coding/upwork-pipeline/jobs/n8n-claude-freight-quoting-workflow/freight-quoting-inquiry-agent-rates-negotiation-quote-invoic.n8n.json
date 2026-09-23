@@ -1,0 +1,1099 @@
+{
+  "name": "Full Freight Quoting System - Inquiry to Invoice",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - READ THE INQUIRY AND PULL THE SHIPMENT DETAILS\n\nClaude reads the inbound email and fills a fixed shipment schema. Anything missing goes back to the client before the lane is worked.",
+        "height": 800,
+        "width": 1240,
+        "color": 5
+      },
+      "id": "1d22194b-299a-5e79-b8f9-f256f835bce3",
+      "name": "Section - 1 - READ THE INQUIRY AND PULL THE SHIPMENT DETAILS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - SOURCE RATES FROM THE AGENT NETWORK\n\nOne rate request per country, sent from Outlook. The workflow holds the lane open for a day and then collects whatever came back.",
+        "height": 800,
+        "width": 940,
+        "color": 4
+      },
+      "id": "e70c2217-7d07-594d-9fab-41f27ece30db",
+      "name": "Section - 2 - SOURCE RATES FROM THE AGENT NETWORK",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - COMPARE, NEGOTIATE, GET HUMAN APPROVAL\n\nRates arrive in different currencies and units. Claude normalizes them, and no quote leaves without a person approving the number.",
+        "height": 800,
+        "width": 940,
+        "color": 6
+      },
+      "id": "9aecd4b3-81ed-5ca2-a0d3-982b8863656e",
+      "name": "Section - 3 - COMPARE, NEGOTIATE, GET HUMAN APPROVAL",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2500,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - QUOTE THE CLIENT AND FOLLOW UP\n\nThe quote is written from your template and terms, then chased on a timer until the client answers.",
+        "height": 800,
+        "width": 1280,
+        "color": 7
+      },
+      "id": "a8852d13-d389-5e37-90da-c21fb2e9a13f",
+      "name": "Section - 4 - QUOTE THE CLIENT AND FOLLOW UP",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3600,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - INVOICE, ARCHIVE, CATCH FAILURES\n\nAccepted quotes become a Wafeq invoice. Every quote is archived and every outcome is logged, win or lose.",
+        "height": 800,
+        "width": 1180,
+        "color": 1
+      },
+      "id": "b36bccc4-7975-548b-9161-283c119114aa",
+      "name": "Section - 5 - INVOICE, ARCHIVE, CATCH FAILURES",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5040,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "format": "simple"
+      },
+      "id": "b9ec39f3-be2c-5f1a-95dc-b95f06205afd",
+      "name": "1 - New Inquiry Lands in the Outlook Inbox",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [
+        0,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=2 - Claude Reads the Email and Pulls the Shipment Details\n\nfrom: {{ $json.from }}\nsubject: {{ $json.subject }}\nreceived: {{ $json.received }}\nbody: {{ $json.body }}",
+        "batching": {}
+      },
+      "id": "306742cc-9c82-5221-8480-c9518ed65cb3",
+      "name": "2 - Claude Reads the Email and Pulls the Shipment Details",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        340,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "78cdb072-b40e-5314-be4a-f73f1a7c4448",
+      "name": "Claude",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        280,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"summary\": \"text\",\n  \"score\": 1\n}"
+      },
+      "id": "ecde4398-74bd-5669-aff9-1890ca315b75",
+      "name": "Force Origin Port, Destination Port, Weight, Volume, Cargo Type, Dangerous Goods Class, Incoterms",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e8b09ce2-8865-5299-9907-7b1519c97f9d",
+              "leftValue": "={{ $json.quote_ref }}",
+              "rightValue": 3.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ba3213c4-cd88-5d12-ad51-4186323006ad",
+      "name": "3 - Did the Email Contain Every Field We Need to Quote?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        780,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/3b-outlook-ask-the-client-for-the-missin",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "e65ef813-4222-566a-b301-84920ce2bb87",
+      "name": "3b - Outlook: Ask the Client for the Missing Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1020,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "570e0eb1-90ad-54f2-8562-e1f432709beb",
+      "name": "4 - Log the Inquiry as a New Quote Reference",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1020,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "787743e6-6f50-57c1-a452-04617de383e9",
+                    "leftValue": "={{ $json.buy_rate_usd }}",
+                    "rightValue": "China and Southeast Asia",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "China and Southeast Asia"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "259f382e-7a33-50ee-b7be-f0e5d9d8fe54",
+                    "leftValue": "={{ $json.buy_rate_usd }}",
+                    "rightValue": "Europe and Mediterranean",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Europe and Mediterranean"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d0ab3bbc-d52b-5484-9b43-12052cf6b498",
+                    "leftValue": "={{ $json.buy_rate_usd }}",
+                    "rightValue": "Middle East and Gulf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Middle East and Gulf"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3bfc75bb-5d40-5377-9015-882627cbbac1",
+      "name": "5 - Route the Rate Request by Trade Lane",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1400,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/6-outlook-email-the-rate-request-to-agen",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "2ec7e05d-4c53-529f-b939-c7daec634cf4",
+      "name": "6 - Outlook: Email the Rate Request to Agents in That Country",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1640,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 24,
+        "unit": "hours"
+      },
+      "id": "0456e30d-6657-58d5-92eb-7d28446dee13",
+      "name": "7 - Hold the Lane Open for 24 Hours While Agents Reply",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1880,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/8-outlook-collect-the-agent-rate-replies",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "5e6af0b5-9d2b-5881-9f0c-2b01f8f88926",
+      "name": "8 - Outlook: Collect the Agent Rate Replies for This Quote",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2120,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=9 - Claude Normalizes Every Rate and Ranks Them Side by Side\n\nfrom: {{ $json.from }}\nsubject: {{ $json.subject }}\nreceived: {{ $json.received }}\nbody: {{ $json.body }}",
+        "batching": {}
+      },
+      "id": "18322f59-1a69-5bbf-a7f0-f6f1285b1c87",
+      "name": "9 - Claude Normalizes Every Rate and Ranks Them Side by Side",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2600,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "0d46500c-6c33-53b4-9ffc-1d9493752c86",
+      "name": "Claude 2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        2560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"summary\": \"text\",\n  \"score\": 1\n}"
+      },
+      "id": "5142d9b5-c5ff-5a93-956b-1efe250660da",
+      "name": "Force One All In Cost Per Agent in a Single Currency",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2760,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "06120326-911a-5218-87be-c4095c2c27db",
+              "leftValue": "={{ $json.buy_rate_usd }}",
+              "rightValue": 10.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6f193a8f-57a1-54e2-9347-85c534a04469",
+      "name": "10 - Is the Best Rate Inside Our Target Margin?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3040,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/10b-outlook-send-the-agent-a-counter-off",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "7b83856d-1198-5edf-b2ed-fdc8be4e3902",
+      "name": "10b - Outlook: Send the Agent a Counter Offer, Two Rounds Maximum",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3280,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "ad851a28-48d4-5f9f-85aa-ef4242685ae2",
+      "name": "11 - Ask a Human to Approve the Rate Before Anything Is Quoted",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        3280,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=12 - Claude Writes the Quote From Your Template and Terms\n\nfrom: {{ $json.from }}\nsubject: {{ $json.subject }}\nreceived: {{ $json.received }}\nbody: {{ $json.body }}",
+        "batching": {}
+      },
+      "id": "588294ae-a564-52ee-8f5b-4e9b083e2dd0",
+      "name": "12 - Claude Writes the Quote From Your Template and Terms",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        3660,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "f0dadaeb-5fc6-5e42-b9bf-31b3d2bff6c8",
+      "name": "Claude 3",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        3720,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/13-outlook-send-the-quote-to-the-client",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "63aefa41-ec73-5ad5-9998-092db1738e26",
+      "name": "13 - Outlook: Send the Quote to the Client",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4000,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "days"
+      },
+      "id": "dfaf0d5d-a699-54b5-a0d0-8b921180d3b3",
+      "name": "14 - Wait Out the Follow Up Timer",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4240,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5b663a2d-0f8c-5c2d-a496-4057ed1e3cdc",
+              "leftValue": "={{ $json.client }}",
+              "rightValue": 15.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "47c2d006-b260-551c-85a1-8d5a610c134a",
+      "name": "15 - Has the Client Replied or Accepted the Quote?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4480,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/15b-outlook-send-the-next-follow-up-thre",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "e07be954-0ace-5477-986a-240836993bdc",
+      "name": "15b - Outlook: Send the Next Follow Up, Three Maximum, Then Stop",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4720,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/16-wafeq-raise-the-invoice-for-the-accep",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "b16a32a3-60fc-5568-ad29-5e7dfa560670",
+      "name": "16 - Wafeq: Raise the Invoice for the Accepted Quote",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        5580,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "upload",
+        "name": "={{ $json.filename }}",
+        "options": {}
+      },
+      "id": "b84507fc-9ddf-5dae-b545-6a48470cd272",
+      "name": "17 - Archive the Quote PDF in the Client's Drive Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        5820,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "dfe58751-27c2-58d3-b33d-eee16a4851b6",
+      "name": "18 - Log the Outcome, Won or Lost, Against the Quote Reference",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        6060,
+        320
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "6b6ce390-5f0d-531e-95ef-a9a849a4b084",
+      "name": "19 - Any Step Fails, Anywhere in the Workflow",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        5100,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "562f4bcb-e75d-52cc-a8e1-17550efc3b77",
+      "name": "20 - Alert the Team With the Quote Reference and a Link to the Run",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        5340,
+        120
+      ]
+    }
+  ],
+  "connections": {
+    "1 - New Inquiry Lands in the Outlook Inbox": {
+      "main": [
+        [
+          {
+            "node": "2 - Claude Reads the Email and Pulls the Shipment Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Claude Reads the Email and Pulls the Shipment Details": {
+      "main": [
+        [
+          {
+            "node": "3 - Did the Email Contain Every Field We Need to Quote?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Did the Email Contain Every Field We Need to Quote?": {
+      "main": [
+        [
+          {
+            "node": "4 - Log the Inquiry as a New Quote Reference",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "3b - Outlook: Ask the Client for the Missing Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - Log the Inquiry as a New Quote Reference": {
+      "main": [
+        [
+          {
+            "node": "5 - Route the Rate Request by Trade Lane",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - Route the Rate Request by Trade Lane": {
+      "main": [
+        [
+          {
+            "node": "6 - Outlook: Email the Rate Request to Agents in That Country",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "6 - Outlook: Email the Rate Request to Agents in That Country",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "6 - Outlook: Email the Rate Request to Agents in That Country",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Outlook: Email the Rate Request to Agents in That Country": {
+      "main": [
+        [
+          {
+            "node": "7 - Hold the Lane Open for 24 Hours While Agents Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - Hold the Lane Open for 24 Hours While Agents Reply": {
+      "main": [
+        [
+          {
+            "node": "8 - Outlook: Collect the Agent Rate Replies for This Quote",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - Outlook: Collect the Agent Rate Replies for This Quote": {
+      "main": [
+        [
+          {
+            "node": "9 - Claude Normalizes Every Rate and Ranks Them Side by Side",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9 - Claude Normalizes Every Rate and Ranks Them Side by Side": {
+      "main": [
+        [
+          {
+            "node": "10 - Is the Best Rate Inside Our Target Margin?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Is the Best Rate Inside Our Target Margin?": {
+      "main": [
+        [
+          {
+            "node": "11 - Ask a Human to Approve the Rate Before Anything Is Quoted",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "10b - Outlook: Send the Agent a Counter Offer, Two Rounds Maximum",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10b - Outlook: Send the Agent a Counter Offer, Two Rounds Maximum": {
+      "main": [
+        [
+          {
+            "node": "9 - Claude Normalizes Every Rate and Ranks Them Side by Side",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Ask a Human to Approve the Rate Before Anything Is Quoted": {
+      "main": [
+        [
+          {
+            "node": "12 - Claude Writes the Quote From Your Template and Terms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 - Claude Writes the Quote From Your Template and Terms": {
+      "main": [
+        [
+          {
+            "node": "13 - Outlook: Send the Quote to the Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - Outlook: Send the Quote to the Client": {
+      "main": [
+        [
+          {
+            "node": "14 - Wait Out the Follow Up Timer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 - Wait Out the Follow Up Timer": {
+      "main": [
+        [
+          {
+            "node": "15 - Has the Client Replied or Accepted the Quote?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15 - Has the Client Replied or Accepted the Quote?": {
+      "main": [
+        [
+          {
+            "node": "16 - Wafeq: Raise the Invoice for the Accepted Quote",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "15b - Outlook: Send the Next Follow Up, Three Maximum, Then Stop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15b - Outlook: Send the Next Follow Up, Three Maximum, Then Stop": {
+      "main": [
+        [
+          {
+            "node": "14 - Wait Out the Follow Up Timer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16 - Wafeq: Raise the Invoice for the Accepted Quote": {
+      "main": [
+        [
+          {
+            "node": "17 - Archive the Quote PDF in the Client's Drive Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "17 - Archive the Quote PDF in the Client's Drive Folder": {
+      "main": [
+        [
+          {
+            "node": "18 - Log the Outcome, Won or Lost, Against the Quote Reference",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "19 - Any Step Fails, Anywhere in the Workflow": {
+      "main": [
+        [
+          {
+            "node": "20 - Alert the Team With the Quote Reference and a Link to the Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "2 - Claude Reads the Email and Pulls the Shipment Details",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Force Origin Port, Destination Port, Weight, Volume, Cargo Type, Dangerous Goods Class, Incoterms": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "2 - Claude Reads the Email and Pulls the Shipment Details",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude 2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "9 - Claude Normalizes Every Rate and Ranks Them Side by Side",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Force One All In Cost Per Agent in a Single Currency": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "9 - Claude Normalizes Every Rate and Ranks Them Side by Side",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude 3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "12 - Claude Writes the Quote From Your Template and Terms",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "4df633c6-e607-532f-97f8-0b8a26a47da7",
+  "pinData": {
+    "1 - New Inquiry Lands in the Outlook Inbox": [
+      {
+        "json": {
+          "from": "procurement@alrayanplastics.ae",
+          "subject": "Quote request: Ningbo to Jebel Ali, 2 x 40HC, resin pellets",
+          "received": "2026-09-09T06:41:00Z",
+          "body": "Hi, we need a rate for 2 x 40HC from Ningbo to Jebel Ali. Cargo is polypropylene resin pellets, about 21,500 kg per container, 62 cbm total. UN3077 marine pollutant, class 9. Terms FOB Ningbo, we arrange insurance. Cargo ready 22 September. Please include THC and doc fees.",
+          "attachments": [
+            "packing_list_ALR-4417.pdf"
+          ]
+        }
+      }
+    ],
+    "18 - Log the Outcome, Won or Lost, Against the Quote Reference": [
+      {
+        "json": {
+          "quote_ref": "QT-2026-0918",
+          "client": "Al Rayan Plastics FZE",
+          "shipment": {
+            "origin_port": "CNNGB Ningbo",
+            "destination_port": "AEJEA Jebel Ali",
+            "equipment": "2 x 40HC",
+            "gross_weight_kg": 43000,
+            "volume_cbm": 62,
+            "cargo_type": "Polypropylene resin pellets",
+            "dangerous_goods_class": "Class 9, UN3077 marine pollutant",
+            "incoterms": "FOB Ningbo",
+            "cargo_ready": "2026-09-22"
+          },
+          "missing_fields_chased": [],
+          "agent_rates_received": [
+            {
+              "agent": "Ningbo Sunrise Logistics",
+              "all_in_usd": 2480,
+              "transit_days": 19,
+              "note": "DG surcharge USD 180 per container included"
+            },
+            {
+              "agent": "Eastbridge Shipping Co",
+              "all_in_usd": 2615,
+              "transit_days": 17,
+              "note": "quoted in CNY, converted at 7.11"
+            },
+            {
+              "agent": "Hanwei Freight",
+              "all_in_usd": 2390,
+              "transit_days": 24,
+              "note": "after one counter offer round, down from 2540"
+            }
+          ],
+          "negotiation_rounds": 1,
+          "selected_agent": "Hanwei Freight",
+          "buy_rate_usd": 2390,
+          "sell_rate_usd": 2915,
+          "margin_pct": 18.0,
+          "human_approval": {
+            "approved_by": "operations",
+            "channel": "#quote-approvals",
+            "at": "2026-09-10T08:12:00Z"
+          },
+          "quote_sent_at": "2026-09-10T08:19:00Z",
+          "follow_ups_sent": 1,
+          "client_response": "accepted",
+          "wafeq_invoice": {
+            "invoice_number": "INV-3392",
+            "amount_usd": 2915,
+            "status": "sent"
+          },
+          "quote_pdf": "https://drive.google.com/file/d/QT-2026-0918-quote",
+          "sheet_row_logged": "Quotes!A418",
+          "if_it_had_failed": "Error trigger fires, Slack gets the quote reference and a link to the failed run, nothing drops silently"
+        }
+      }
+    ]
+  }
+}

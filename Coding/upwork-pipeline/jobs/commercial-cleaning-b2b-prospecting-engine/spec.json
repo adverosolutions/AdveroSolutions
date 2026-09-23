@@ -1,0 +1,357 @@
+{
+  "title": "Your Commercial Cleaning Prospecting Engine",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "discover",
+      "label": "1 - DISCOVER",
+      "color": 0,
+      "note": "Outscraper works one zip cluster a morning and pulls the buildings that actually buy cleaning. Nobody uploads a list."
+    },
+    {
+      "key": "enrich",
+      "label": "2 - ENRICH",
+      "color": 0,
+      "note": "Apollo turns a building into a named facilities or office manager with a verified email. No name, no guessing, it parks."
+    },
+    {
+      "key": "research",
+      "label": "3 - RESEARCH AND SCORE",
+      "color": 0,
+      "note": "The agent reads the site and the Google profile, then scores the account on size, foot traffic, vendor signals and hiring."
+    },
+    {
+      "key": "approval",
+      "label": "4 - HUMAN APPROVAL, THEN THE CRM",
+      "color": 0,
+      "note": "Nothing reaches HighLevel until a human says yes. The morning list posts to Slack, one tap approves, one tap rejects with a reason."
+    },
+    {
+      "key": "logs",
+      "label": "5 - LOGS, DEDUPE, ALERTS",
+      "color": 0,
+      "note": "Postgres is the dedupe key, by place id and normalized phone, so the same building never shows up twice. Every failure names its node."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "sched",
+      "kind": "trigger.schedule",
+      "label": "1 - Every Weekday at 5am, Next Zip Cluster",
+      "section": "discover"
+    },
+    {
+      "key": "outscraper",
+      "kind": "net.http",
+      "label": "2 - Outscraper: Offices, Medical, Gyms, Schools, Warehouses Over 5,000 Sq Ft",
+      "section": "discover"
+    },
+    {
+      "key": "normalize",
+      "kind": "data.transform",
+      "label": "3 - Normalize: Name, Address, Phone, Category, Reviews",
+      "section": "discover"
+    },
+    {
+      "key": "seen",
+      "kind": "app.action",
+      "app": "postgres",
+      "op": "select",
+      "label": "4 - Seen Before? Check the Prospect Database",
+      "section": "discover"
+    },
+    {
+      "key": "isnew",
+      "kind": "flow.branch",
+      "label": "5 - New Prospect?",
+      "section": "discover"
+    },
+    {
+      "key": "skip",
+      "kind": "flow.noop",
+      "label": "5b - Skip, Already Known",
+      "section": "discover"
+    },
+    {
+      "key": "apollo",
+      "kind": "net.http",
+      "label": "6 - Apollo: Find the Facilities or Office Manager and Verified Email",
+      "section": "enrich"
+    },
+    {
+      "key": "dmfound",
+      "kind": "flow.branch",
+      "label": "7 - Decision Maker Found?",
+      "section": "enrich"
+    },
+    {
+      "key": "manual",
+      "kind": "app.action",
+      "app": "postgres",
+      "op": "insert",
+      "label": "7b - Park for Manual Enrichment",
+      "section": "enrich"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "8 - Research Agent: Size, Foot Traffic, Current Vendor Signals, Hiring",
+      "section": "research"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "app": "openai",
+      "label": "GPT-4o",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "tool",
+      "kind": "ai.tool",
+      "label": "Read the Website and Google Profile",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Score 1 to 10, Reason, Best Angle",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "9 - Score 7 or Higher?",
+      "section": "research"
+    },
+    {
+      "key": "lowpri",
+      "kind": "app.action",
+      "app": "postgres",
+      "op": "insert",
+      "label": "9b - Store as Low Priority",
+      "section": "research"
+    },
+    {
+      "key": "post",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "post",
+      "label": "10 - Post the Top Prospects to #approvals With Approve and Reject Buttons",
+      "section": "approval"
+    },
+    {
+      "key": "decision",
+      "kind": "trigger.webhook",
+      "label": "11 - Approval Decision Comes Back",
+      "section": "approval"
+    },
+    {
+      "key": "approved",
+      "kind": "flow.branch",
+      "label": "12 - Approved?",
+      "section": "approval"
+    },
+    {
+      "key": "rejected",
+      "kind": "app.action",
+      "app": "postgres",
+      "op": "insert",
+      "label": "12b - Rejected, With the Reason, Feeds the Scoring Prompt",
+      "section": "approval"
+    },
+    {
+      "key": "ghlcontact",
+      "kind": "net.http",
+      "label": "13 - HighLevel: Create Contact, Tag, Opportunity in Prospecting Pipeline",
+      "section": "approval"
+    },
+    {
+      "key": "ghlworkflow",
+      "kind": "net.http",
+      "label": "14 - HighLevel: Trigger the Sales Follow-Up Workflow",
+      "section": "approval"
+    },
+    {
+      "key": "record",
+      "kind": "app.action",
+      "app": "postgres",
+      "op": "insert",
+      "label": "15 - Write the Prospect Record With Score, Source, Approval",
+      "section": "logs"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "app": "n8n",
+      "op": "error_trigger",
+      "label": "16 - Any Step Fails",
+      "section": "logs"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "post",
+      "label": "17 - Alert With the Failing Node",
+      "section": "logs"
+    }
+  ],
+  "edges": [
+    {
+      "from": "sched",
+      "to": "outscraper"
+    },
+    {
+      "from": "outscraper",
+      "to": "normalize"
+    },
+    {
+      "from": "normalize",
+      "to": "seen"
+    },
+    {
+      "from": "seen",
+      "to": "isnew"
+    },
+    {
+      "from": "isnew",
+      "to": "apollo",
+      "branch": "true"
+    },
+    {
+      "from": "isnew",
+      "to": "skip",
+      "branch": "false"
+    },
+    {
+      "from": "apollo",
+      "to": "dmfound"
+    },
+    {
+      "from": "dmfound",
+      "to": "agent",
+      "branch": "true"
+    },
+    {
+      "from": "dmfound",
+      "to": "manual",
+      "branch": "false"
+    },
+    {
+      "from": "agent",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "post",
+      "branch": "true"
+    },
+    {
+      "from": "gate",
+      "to": "lowpri",
+      "branch": "false"
+    },
+    {
+      "from": "post",
+      "to": "decision"
+    },
+    {
+      "from": "decision",
+      "to": "approved"
+    },
+    {
+      "from": "approved",
+      "to": "ghlcontact",
+      "branch": "true"
+    },
+    {
+      "from": "approved",
+      "to": "rejected",
+      "branch": "false"
+    },
+    {
+      "from": "ghlcontact",
+      "to": "ghlworkflow"
+    },
+    {
+      "from": "ghlworkflow",
+      "to": "record"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "source": "Outscraper",
+    "zip_cluster": "Plano TX 75024",
+    "search_terms": [
+      "medical office",
+      "office building",
+      "fitness center",
+      "private school",
+      "warehouse"
+    ],
+    "business_name": "Northgate Medical Plaza",
+    "category": "medical office",
+    "address": "6101 Windhaven Pkwy, Plano, TX 75024",
+    "phone": "+1 972 555 0188",
+    "website": "northgatemedicalplaza.com",
+    "rating": 4.3,
+    "review_count": 87,
+    "building_sq_ft": 8400,
+    "place_id": "ChIJ0nK7Plano75024Ngmp"
+  },
+  "output_sample": {
+    "highlevel_contact": {
+      "first_name": "Denise",
+      "last_name": "Carter",
+      "title": "Facilities Manager",
+      "email": "dcarter@northgatemedicalplaza.com",
+      "phone": "+1 972 555 0188",
+      "company": "Northgate Medical Plaza",
+      "address": "6101 Windhaven Pkwy, Plano, TX 75024",
+      "tags": [
+        "outscraper-plano-75024",
+        "medical-office",
+        "score-8",
+        "approved"
+      ],
+      "opportunity": {
+        "pipeline": "Prospecting",
+        "stage": "Prospect",
+        "name": "Northgate Medical Plaza - 8,400 sq ft medical office",
+        "source": "Outscraper + Apollo, auto-researched"
+      },
+      "custom_fields": {
+        "score": 8,
+        "score_reason": "8,400 sq ft, 4 tenant practices, high daily patient traffic, no janitorial vendor named anywhere on site, new wing permit filed in July",
+        "best_angle": "post-construction cleanup, plaza expanding",
+        "current_vendor_signal": "none found, front desk handles supplies",
+        "hiring_signal": "posted for a part-time front office cleaner in August"
+      },
+      "followup_workflow": "Commercial Cleaning - New Prospect Day 1 Call and Email"
+    },
+    "approval": {
+      "approved_by": "Marcus",
+      "channel": "#approvals",
+      "decided_at": "2026-09-22T07:12:00-05:00",
+      "queued_this_morning": 23,
+      "approved": 14,
+      "rejected": 9
+    },
+    "prospect_record": {
+      "place_id": "ChIJ0nK7Plano75024Ngmp",
+      "normalized_phone": "9725550188",
+      "source": "Outscraper",
+      "score": 8,
+      "approval": "approved by Marcus",
+      "pushed_to_highlevel": true,
+      "first_seen": "2026-09-22"
+    },
+    "if_it_had_failed": "Error trigger catches the step, Slack alert names the failing node and the building it died on, nothing reaches HighLevel unreviewed"
+  }
+}

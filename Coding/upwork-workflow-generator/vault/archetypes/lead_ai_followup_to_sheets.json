@@ -1,0 +1,178 @@
+{
+  "title": "New Lead → AI Personalized Follow-Up → Google Sheets",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "capture",
+      "label": "1 · CAPTURE THE LEAD",
+      "color": 0,
+      "note": "Works from a form submission or a new row in your sheet, whichever you already use. Details are cleaned once here, so a messy submission does not become a messy message later."
+    },
+    {
+      "key": "write",
+      "label": "2 · AI WRITES THE MESSAGE",
+      "color": 0,
+      "note": "The model is a swappable piece, so Claude or ChatGPT is a one-node change rather than a rebuild. Output is forced into a fixed structure instead of free text, which is what stops the occasional reply that starts with Sure, here's a follow-up message."
+    },
+    {
+      "key": "check",
+      "label": "3 · CHECK BEFORE IT GOES OUT",
+      "color": 0,
+      "note": "One quick check catches the two failures that actually happen in production: an empty or truncated response, and a message still carrying a placeholder like [Company]. Anything that fails gets one stricter retry rather than being sent."
+    },
+    {
+      "key": "deliver",
+      "label": "4 · SAVE AND SEND",
+      "color": 0,
+      "note": "The message is written back to the same row so you can read every one before it goes anywhere. Sending is a separate step you can switch on once you trust the output."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "trig",
+      "kind": "trigger.form",
+      "label": "1 · New Lead Submitted · Form or Sheet Row",
+      "section": "capture"
+    },
+    {
+      "key": "clean",
+      "kind": "data.transform",
+      "label": "2 · Clean Up the Lead Details",
+      "section": "capture",
+      "notes": "Trims whitespace, fixes casing on names, normalizes the company name."
+    },
+    {
+      "key": "seen",
+      "kind": "data.filter",
+      "label": "3 · Skip Anyone We Already Messaged",
+      "section": "capture"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "4 · Write the Personalized Follow-Up",
+      "section": "write"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Model — Swappable · Claude or ChatGPT",
+      "app": "openai",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Force a Fixed Output Format",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "ok",
+      "kind": "flow.branch",
+      "label": "5 · Is the Message Actually Usable?",
+      "section": "check"
+    },
+    {
+      "key": "retry",
+      "kind": "ai.llm",
+      "label": "5b · Retry Once With Stricter Instructions",
+      "section": "check"
+    },
+    {
+      "key": "sheet",
+      "kind": "app.action",
+      "label": "6 · Write the Message Back to the Sheet",
+      "app": "googleSheets",
+      "op": "update_row",
+      "section": "deliver"
+    },
+    {
+      "key": "send",
+      "kind": "app.action",
+      "label": "7 · Send It · Optional — Off Until You Say So",
+      "app": "gmail",
+      "op": "send_email",
+      "section": "deliver"
+    },
+    {
+      "key": "stamp",
+      "kind": "app.action",
+      "label": "8 · Mark the Row Done With a Timestamp",
+      "app": "googleSheets",
+      "op": "update_row",
+      "section": "deliver"
+    }
+  ],
+  "edges": [
+    {
+      "from": "trig",
+      "to": "clean"
+    },
+    {
+      "from": "clean",
+      "to": "seen"
+    },
+    {
+      "from": "seen",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "ok"
+    },
+    {
+      "from": "ok",
+      "to": "sheet",
+      "branch": "true"
+    },
+    {
+      "from": "ok",
+      "to": "retry",
+      "branch": "false"
+    },
+    {
+      "from": "retry",
+      "to": "sheet"
+    },
+    {
+      "from": "sheet",
+      "to": "send"
+    },
+    {
+      "from": "send",
+      "to": "stamp"
+    }
+  ],
+  "input_sample": {
+    "row": 148,
+    "submitted_at": "2026-08-11T09:14:22Z",
+    "name": "marcus  DELGADO ",
+    "email": "m.delgado@harborviewdental.com",
+    "company": "harborview dental group",
+    "source": "Website contact form",
+    "message": "Saw you at the trade show. We're opening a second location in Tacoma in the spring and our front desk can't keep up with callbacks as it is."
+  },
+  "output_sample": {
+    "row": 148,
+    "lead": {
+      "name": "Marcus Delgado",
+      "company": "Harborview Dental Group"
+    },
+    "follow_up_message": "Hi Marcus — congrats on the Tacoma location. With a second site opening in spring, the callback backlog you mentioned usually gets worse before it gets better, so it's a good moment to look at it. Free for 15 minutes this week?",
+    "personalization_used": [
+      "second location opening in Tacoma",
+      "front desk callback backlog"
+    ],
+    "word_count": 44,
+    "quality_check": "passed — no placeholders, no preamble, under 60 words",
+    "retries": 0,
+    "written_to_sheet": "Column H, row 148",
+    "sent": false,
+    "duplicate_skipped": false
+  },
+  "archetype": "lead_ai_followup_to_sheets",
+  "learned": true,
+  "learned_at": "2026-08-11"
+}

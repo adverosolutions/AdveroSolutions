@@ -1,0 +1,58 @@
+{
+  "archetype": "invoice_ocr",
+  "title": "Invoice Inbox → OCR → Coded & Approved → Accounting",
+  "platform": "n8n",
+  "sections": [
+    { "key": "intake",  "label": "1 · CAPTURE",     "note": "Invoices arrive by email. The PDF is pulled off the message and its text extracted before anything is read, so scans and native PDFs both work." },
+    { "key": "extract", "label": "2 · EXTRACT",     "note": "Vendor, invoice number, dates, line items, tax and total are read into a fixed schema. The structured output parser means a missing field fails loudly rather than silently becoming null in your ledger." },
+    { "key": "check",   "label": "3 · APPROVAL",    "note": "Anything above the approval threshold, or from a vendor not seen before, is routed to a human in Slack with the extracted values attached. Everything else posts straight through." },
+    { "key": "post",    "label": "4 · POST & FILE", "note": "The bill is created in accounting with line items coded to the right account, the original PDF is filed in Drive against the vendor, and the sender gets a confirmation with the reference number." }
+  ],
+  "nodes": [
+    { "key": "email",   "kind": "trigger.email", "label": "New Invoice Email", "section": "intake" },
+    { "key": "pdf",     "kind": "app.action", "app": "extractFile", "op": "pdf", "label": "Extract PDF Text", "section": "intake" },
+    { "key": "agent",   "kind": "ai.agent", "label": "Read Invoice Fields", "section": "extract" },
+    { "key": "model",   "kind": "ai.model", "app": "openai", "label": "GPT-4.1", "parent": "agent" },
+    { "key": "parser",  "kind": "ai.parser", "label": "Invoice Schema", "parent": "agent" },
+    { "key": "gate",    "kind": "flow.branch", "label": "Over $5,000?", "section": "check" },
+    { "key": "approve", "kind": "app.action", "app": "slack", "op": "post", "label": "Request Approval", "section": "check" },
+    { "key": "book",    "kind": "app.action", "app": "quickbooks", "op": "create", "label": "Create Bill", "section": "post" },
+    { "key": "file",    "kind": "app.action", "app": "googleDrive", "op": "upload", "label": "File Original PDF", "section": "post" },
+    { "key": "confirm", "kind": "app.action", "app": "gmail", "op": "reply", "label": "Confirm to Sender", "section": "post" }
+  ],
+  "edges": [
+    { "from": "email",   "to": "pdf" },
+    { "from": "pdf",     "to": "agent" },
+    { "from": "agent",   "to": "gate" },
+    { "from": "gate",    "to": "approve", "branch": "true" },
+    { "from": "gate",    "to": "book",    "branch": "false" },
+    { "from": "approve", "to": "book" },
+    { "from": "book",    "to": "file" },
+    { "from": "file",    "to": "confirm" }
+  ],
+  "input_sample": {
+    "from": "billing@harlowsupply.com",
+    "subject": "Invoice HS-88214 — Harlow Supply Co.",
+    "received_at": "2026-07-31T06:41:55Z",
+    "attachment": { "filename": "HS-88214.pdf", "mime": "application/pdf", "size_kb": 214, "pages": 2 }
+  },
+  "output_sample": {
+    "vendor": "Harlow Supply Co.",
+    "invoice_number": "HS-88214",
+    "invoice_date": "2026-07-28",
+    "due_date": "2026-08-27",
+    "currency": "USD",
+    "line_items": [
+      { "description": "3/4in copper fittings — case of 50", "qty": 6, "unit_price": 84.0, "amount": 504.0, "account": "5100 · Materials" },
+      { "description": "Pipe insulation sleeves, 8ft", "qty": 40, "unit_price": 11.25, "amount": 450.0, "account": "5100 · Materials" },
+      { "description": "Delivery surcharge", "qty": 1, "unit_price": 65.0, "amount": 65.0, "account": "5300 · Freight" }
+    ],
+    "subtotal": 1019.0,
+    "tax": 84.07,
+    "total": 1103.07,
+    "approval_required": false,
+    "quickbooks_bill_id": "BILL-2026-4471",
+    "pdf_url": "https://drive.google.com/file/d/1kQ9…/view",
+    "confidence": 0.97
+  }
+}

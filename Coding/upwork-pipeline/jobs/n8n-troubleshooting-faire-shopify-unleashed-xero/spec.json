@@ -1,0 +1,249 @@
+{
+  "title": "Your Order to Books Pipeline, Watched and Self-Healing",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 - AN ORDER COMES IN FROM EITHER CHANNEL",
+      "color": 0,
+      "note": "Faire wholesale and Shopify DTC land on separate hooks and get flattened into one shape, so every downstream step reads the same fields no matter which channel sent it."
+    },
+    {
+      "key": "breaks",
+      "label": "2 - THE THREE PLACES IT USUALLY BREAKS",
+      "color": 0,
+      "note": "An unmapped SKU, an Unleashed call that times out or hits a rate limit, and a Xero call on an expired token. Each one gets a gate, and each gate has somewhere safe to put the order instead of dropping it."
+    },
+    {
+      "key": "closeloop",
+      "label": "3 - CLOSE THE LOOP",
+      "color": 0,
+      "note": "The channel gets the fulfilment and invoice number written back, and every run leaves a row behind with timings, so a slow step is visible before it becomes a broken one."
+    },
+    {
+      "key": "health",
+      "label": "4 - EVERY MORNING, PROVE IT IS HEALTHY",
+      "color": 0,
+      "note": "A 7am pass over yesterday's log and dead letters, counted and posted. Green means the numbers reconcile. Red names the orders that need a human before anyone has to ask."
+    },
+    {
+      "key": "loud",
+      "label": "5 - NOTHING FAILS QUIETLY",
+      "color": 0,
+      "note": "One error trigger covers every workflow in the instance, so a breakdown announces itself with the workflow, the node and the order id instead of being found days later in a stock count."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "faire",
+      "kind": "trigger.webhook",
+      "label": "1 - Faire Wholesale Order",
+      "section": "intake"
+    },
+    {
+      "key": "shopify",
+      "kind": "trigger.webhook",
+      "label": "1b - Shopify Order",
+      "section": "intake"
+    },
+    {
+      "key": "normalize",
+      "kind": "data.transform",
+      "label": "2 - Normalize: SKUs, Quantities, Customer, Channel",
+      "section": "intake",
+      "notes": "One payload shape for both channels, so nothing downstream has to know where the order came from."
+    },
+    {
+      "key": "skugate",
+      "kind": "flow.branch",
+      "label": "3 - Every SKU Exists in Unleashed?",
+      "section": "breaks"
+    },
+    {
+      "key": "unmapped",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "post",
+      "label": "3b - Alert: Unmapped SKU, Order Parked",
+      "section": "breaks",
+      "notes": "The order waits instead of half-posting a sales order that has to be unpicked later."
+    },
+    {
+      "key": "unleashed",
+      "kind": "net.http",
+      "label": "4 - Unleashed: Create the Sales Order and Allocate Stock",
+      "section": "breaks"
+    },
+    {
+      "key": "unleashedgate",
+      "kind": "flow.branch",
+      "label": "5 - Unleashed Accepted It?",
+      "section": "breaks"
+    },
+    {
+      "key": "backoff",
+      "kind": "flow.wait",
+      "label": "5b - Back Off 60 Seconds and Retry",
+      "section": "breaks",
+      "notes": "Rate limits and timeouts are temporary, so the retry happens before a human ever hears about it."
+    },
+    {
+      "key": "xero",
+      "kind": "net.http",
+      "label": "6 - Xero: Create the Invoice Against the Right Contact",
+      "section": "breaks"
+    },
+    {
+      "key": "xerogate",
+      "kind": "flow.branch",
+      "label": "7 - Xero Accepted It?",
+      "section": "breaks"
+    },
+    {
+      "key": "deadletter",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "append",
+      "label": "7b - Dead Letter: Order, Error, Payload, for Replay",
+      "section": "breaks",
+      "notes": "The exact payload is kept, so a fixed order is replayed in one click instead of rebuilt by hand."
+    },
+    {
+      "key": "writeback",
+      "kind": "net.http",
+      "label": "8 - Shopify or Faire: Write Back Fulfilment and Invoice Number",
+      "section": "closeloop"
+    },
+    {
+      "key": "runlog",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "append",
+      "label": "9 - Run Log: Order, Channel, Each Step, Duration",
+      "section": "closeloop"
+    },
+    {
+      "key": "sched",
+      "kind": "trigger.schedule",
+      "label": "10 - Every Morning at 7am",
+      "section": "health"
+    },
+    {
+      "key": "readlog",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "read",
+      "label": "11 - Read Yesterday's Runs and Dead Letters",
+      "section": "health"
+    },
+    {
+      "key": "healthcheck",
+      "kind": "data.aggregate",
+      "label": "12 - Health Check: Orders In, Invoiced, Parked, Failed",
+      "section": "health",
+      "notes": "Orders in has to equal invoiced plus parked plus failed. When it does not, that is the bug, found at 7am."
+    },
+    {
+      "key": "report",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "post",
+      "label": "13 - Post the Health Report, Green or Red",
+      "section": "health"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "app": "n8n",
+      "op": "error_trigger",
+      "label": "14 - Any Node Fails, Any Workflow",
+      "section": "loud"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "post",
+      "label": "15 - Alert With Workflow, Node, Order Id",
+      "section": "loud"
+    }
+  ],
+  "edges": [
+    { "from": "faire", "to": "normalize" },
+    { "from": "shopify", "to": "normalize" },
+    { "from": "normalize", "to": "skugate" },
+    { "from": "skugate", "to": "unleashed", "branch": "true" },
+    { "from": "skugate", "to": "unmapped", "branch": "false" },
+    { "from": "unleashed", "to": "unleashedgate" },
+    { "from": "unleashedgate", "to": "xero", "branch": "true" },
+    { "from": "unleashedgate", "to": "backoff", "branch": "false" },
+    { "from": "backoff", "to": "unleashed", "loop": true },
+    { "from": "xero", "to": "xerogate" },
+    { "from": "xerogate", "to": "writeback", "branch": "true" },
+    { "from": "xerogate", "to": "deadletter", "branch": "false" },
+    { "from": "writeback", "to": "runlog" },
+    { "from": "deadletter", "to": "runlog" },
+    { "from": "runlog", "to": "readlog" },
+    { "from": "sched", "to": "readlog" },
+    { "from": "readlog", "to": "healthcheck" },
+    { "from": "healthcheck", "to": "report" },
+    { "from": "err", "to": "alert" }
+  ],
+  "input_sample": {
+    "source": "faire",
+    "event": "order.created",
+    "received_at": "2026-09-21T08:14:07Z",
+    "order": {
+      "faire_order_id": "FO-88213",
+      "retailer": "Maison Verte",
+      "retailer_email": "orders@maisonverte.co.uk",
+      "ship_to": {
+        "line1": "14 Hanbury Street",
+        "city": "London",
+        "postcode": "E1 6QR",
+        "country": "GB"
+      },
+      "currency": "GBP",
+      "payout_terms": "net 60",
+      "items": [
+        { "sku": "CND-VAN-8OZ", "name": "Vanilla Amber Candle 8oz", "qty": 24, "unit_price": 11.5 },
+        { "sku": "CND-LAV-8OZ", "name": "Lavender Fig Candle 8oz", "qty": 12, "unit_price": 11.5 },
+        { "sku": "DIF-CED-100", "name": "Cedar Reed Diffuser 100ml", "qty": 6, "unit_price": 16.0 }
+      ],
+      "order_total": 510.0
+    },
+    "note": "CND-LAV-8OZ has no matching product code in Unleashed, which is exactly the case node 3 catches before anything is written."
+  },
+  "output_sample": {
+    "posted_to": "#ops-orders",
+    "date": "2026-09-21",
+    "status": "RED",
+    "headline": "1 order parked, everything else reconciled",
+    "counts": {
+      "orders_in": 41,
+      "faire": 17,
+      "shopify": 24,
+      "invoiced_in_xero": 40,
+      "parked": 1,
+      "failed": 0
+    },
+    "timing": {
+      "avg_order_to_invoice_seconds": 38,
+      "slowest_order_seconds": 96,
+      "retries_that_self_healed": 3
+    },
+    "needs_a_human": [
+      {
+        "order": "FO-88213",
+        "channel": "Faire",
+        "retailer": "Maison Verte",
+        "reason": "SKU CND-LAV-8OZ is not mapped in Unleashed",
+        "parked_at": "2026-09-21 08:14:09",
+        "fix": "add the product code in Unleashed, then replay the row from the dead letter tab"
+      }
+    ],
+    "reconciliation": "41 in = 40 invoiced + 1 parked + 0 failed",
+    "dead_letter_tab": "0 new rows overnight, 1 open row from 2026-09-18 already replayed",
+    "if_nothing_were_wrong": "same message, GREEN, one line: 41 in, 41 invoiced, 0 parked, 0 failed, avg 38 seconds"
+  }
+}

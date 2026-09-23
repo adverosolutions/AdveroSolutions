@@ -1,0 +1,174 @@
+{
+  "title": "Chatbot Lead Capture → AI Qualify → CRM → Follow-Up",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "capture",
+      "label": "1 · CAPTURE",
+      "color": 0,
+      "note": "The chatbot does the intake, so a lead is already structured before anyone reads it — no form, no drop-off."
+    },
+    {
+      "key": "qualify",
+      "label": "2 · AI QUALIFY",
+      "color": 0,
+      "note": "An agent with the conversation history and CRM access decides fit, priority and the next step. Not a keyword rule."
+    },
+    {
+      "key": "crm",
+      "label": "3 · CRM + THIRD PARTY",
+      "color": 0,
+      "note": "One write to the CRM, then fan out to the other tools from it — the CRM stays the source of truth."
+    },
+    {
+      "key": "followup",
+      "label": "4 · FOLLOW-UP",
+      "color": 0,
+      "note": "Sequence and owner alert fire off the record state, which is what turns a captured lead into a converted one."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "chat",
+      "kind": "trigger.chat",
+      "label": "Website Chatbot Conversation Ends",
+      "section": "capture",
+      "notes": "Also the entry point for the ad and inbox sources once they are consolidated."
+    },
+    {
+      "key": "parse",
+      "kind": "data.transform",
+      "label": "Extract Contact, Need & Timeline",
+      "section": "capture"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "Qualify Lead & Recommend Next Step",
+      "section": "qualify"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "mem",
+      "kind": "ai.memory",
+      "label": "Conversation History",
+      "parent": "agent",
+      "port": "ai_memory"
+    },
+    {
+      "key": "tool",
+      "kind": "ai.tool",
+      "label": "CRM Lookup",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "Budget and timeline both confirmed",
+      "section": "qualify"
+    },
+    {
+      "key": "crm",
+      "kind": "app.action",
+      "label": "Upsert CRM Contact",
+      "app": "hubspot",
+      "op": "create_contact",
+      "section": "crm",
+      "notes": "Matched on email, then phone, so a returning chatter never becomes a second record."
+    },
+    {
+      "key": "sync",
+      "kind": "net.http",
+      "label": "Push to Billing & Support Tools",
+      "section": "crm"
+    },
+    {
+      "key": "seq",
+      "kind": "app.action",
+      "label": "Start Sales Follow-Up Sequence",
+      "app": "gmail",
+      "op": "send",
+      "section": "followup"
+    },
+    {
+      "key": "slack",
+      "kind": "app.action",
+      "label": "Alert the Deal Owner",
+      "app": "slack",
+      "op": "post",
+      "section": "followup"
+    },
+    {
+      "key": "nurture",
+      "kind": "app.action",
+      "label": "Start 60-Day Nurture Track",
+      "app": "gmail",
+      "op": "send",
+      "section": "followup"
+    }
+  ],
+  "edges": [
+    {
+      "from": "chat",
+      "to": "parse"
+    },
+    {
+      "from": "parse",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "crm",
+      "branch": "true"
+    },
+    {
+      "from": "crm",
+      "to": "sync"
+    },
+    {
+      "from": "sync",
+      "to": "seq"
+    },
+    {
+      "from": "seq",
+      "to": "slack"
+    },
+    {
+      "from": "gate",
+      "to": "nurture",
+      "branch": "false"
+    }
+  ],
+  "input_sample": {
+    "channel": "Website chat — Pricing page",
+    "name": "Dana Reyes",
+    "email": "dana.reyes@meridianlogistics.com",
+    "asked_about": "Multi-site rollout",
+    "timeline": "Within 30 days",
+    "messages": 11
+  },
+  "output_sample": {
+    "crm_contact_id": "0011t00000QeYd2",
+    "qualification": "Qualified — budget confirmed, 30-day timeline",
+    "fit_score": 84,
+    "recommended_next_step": "Book a 30-min scoping call this week",
+    "sequence": "Sales Follow-Up — Touch 1 of 4",
+    "owner_notified": "Marcus Webb",
+    "handled_without_a_human": true
+  },
+  "archetype": "chatbot_lead_qualify_followup",
+  "learned": true,
+  "learned_at": "2026-08-03"
+}

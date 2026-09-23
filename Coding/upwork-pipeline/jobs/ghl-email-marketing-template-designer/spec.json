@@ -1,0 +1,125 @@
+{
+  "title": "Your Product and Service Update Email System in GoHighLevel",
+  "platform": "diagram",
+  "sections": [
+    {
+      "key": "draft",
+      "label": "1 - YOUR ROUGH DRAFT IN",
+      "color": 0,
+      "note": "You send the copy the way it comes out, plus the one thing the update should get people to do. Nothing in your draft gets lost on the way to the finished email."
+    },
+    {
+      "key": "design",
+      "label": "2 - DESIGN: STRUCTURE AND BRAND KIT",
+      "color": 0,
+      "note": "The update is broken into sections people can scan in seconds, then dressed in your colors, fonts and logo. The header and footer are saved once in GoHighLevel, so every future update starts on brand."
+    },
+    {
+      "key": "build",
+      "label": "3 - BUILD AND TEST IN GOHIGHLEVEL",
+      "color": 0,
+      "note": "Built in the GoHighLevel email builder with your merge fields, then test sends to Gmail, Outlook and an iPhone, checked on mobile and in dark mode. Nothing goes out until it looks right everywhere."
+    },
+    {
+      "key": "send",
+      "label": "4 - SAVE, SEND AND LEARN",
+      "color": 0,
+      "note": "Saved as a reusable template, sent or scheduled to the right smart list or tag, and the opens and clicks shape the next update."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "copy",
+      "kind": "data.transform",
+      "label": "1 - Your Rough Draft Copy Comes In",
+      "section": "draft"
+    },
+    {
+      "key": "goal",
+      "kind": "data.transform",
+      "label": "2 - Set the Goal: The One Thing Readers Should Do Next",
+      "section": "draft"
+    },
+    {
+      "key": "structure",
+      "kind": "data.transform",
+      "label": "3 - Structure the Update: Headline, Update Cards, One Button",
+      "section": "design"
+    },
+    {
+      "key": "brand",
+      "kind": "data.transform",
+      "label": "4 - Apply Your Brand Kit: Colors, Fonts, Logo, Saved Header and Footer",
+      "section": "design"
+    },
+    {
+      "key": "build",
+      "kind": "data.transform",
+      "label": "5 - Build It in the GoHighLevel Email Builder With Merge Fields",
+      "section": "build"
+    },
+    {
+      "key": "test",
+      "kind": "data.transform",
+      "label": "6 - Test Sends to Gmail, Outlook and iPhone, Mobile and Dark Mode",
+      "section": "build"
+    },
+    {
+      "key": "passes",
+      "kind": "flow.branch",
+      "label": "7 - Looks Right in Every Inbox?",
+      "section": "build"
+    },
+    {
+      "key": "fix",
+      "kind": "data.transform",
+      "label": "7a - Fix What Broke and Re-Test",
+      "section": "build"
+    },
+    {
+      "key": "save",
+      "kind": "data.transform",
+      "label": "8 - Save as a Reusable Template for the Next Update",
+      "section": "send"
+    },
+    {
+      "key": "schedule",
+      "kind": "data.transform",
+      "label": "9 - Send or Schedule to the Right Smart List or Tag",
+      "section": "send"
+    },
+    {
+      "key": "learn",
+      "kind": "data.aggregate",
+      "label": "10 - Check Opens and Clicks, Feed Them Into the Next Update",
+      "section": "send"
+    }
+  ],
+  "edges": [
+    { "from": "copy", "to": "goal" },
+    { "from": "goal", "to": "structure" },
+    { "from": "structure", "to": "brand" },
+    { "from": "brand", "to": "build" },
+    { "from": "build", "to": "test" },
+    { "from": "test", "to": "passes" },
+    { "from": "passes", "to": "fix", "branch": "false" },
+    { "from": "fix", "to": "test", "loop": true },
+    { "from": "passes", "to": "save", "branch": "true" },
+    { "from": "save", "to": "schedule" },
+    { "from": "schedule", "to": "learn" }
+  ],
+  "input_sample": {
+    "draft_copy": "rough notes: online booking is live, client portal works on phones now, saturday hours start next month",
+    "goal": "get people to book a quick call",
+    "brand_kit": "logo file, 2 brand colors, 1 font",
+    "audience": "smart list: active clients"
+  },
+  "output_sample": {
+    "template": "Monthly Update - Master, saved in GoHighLevel",
+    "sections": "header, hero headline, 3 update cards, 1 button, sign-off, footer",
+    "merge_fields": "{{contact.first_name}}, {{user.first_name}}, {{location.name}}",
+    "tested_in": "Gmail, Outlook, iPhone Mail, mobile and dark mode",
+    "sent_to": "smart list: active clients, scheduled",
+    "next_update": "opens and clicks per link noted, copy and layout adjusted"
+  }
+}

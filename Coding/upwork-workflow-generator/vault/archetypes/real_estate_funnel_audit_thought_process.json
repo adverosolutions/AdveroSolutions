@@ -1,0 +1,160 @@
+{
+  "title": "How I Audit a Real Estate Lead Pipeline — Stage by Stage, Metric by Metric",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "top",
+      "label": "1 · TOP OF FUNNEL — LEAD CAPTURE",
+      "color": 0,
+      "note": "Before judging anything downstream, I map every source a lead can come from and what it costs to get one."
+    },
+    {
+      "key": "speed",
+      "label": "2 · SPEED TO LEAD — FIRST RESPONSE",
+      "color": 0,
+      "note": "This is the single stage most real estate pipelines lose leads at, so it gets checked on its own metric."
+    },
+    {
+      "key": "nurture",
+      "label": "3 · PIPELINE PROGRESSION — NURTURE",
+      "color": 0,
+      "note": "Right pipeline, right stage, right cadence, checked against where leads actually stall."
+    },
+    {
+      "key": "close",
+      "label": "4 · CONVERSION — CLOSE & FOLLOW-UP",
+      "color": 0,
+      "note": "The stage that turns activity into closed deals, measured the same way as every stage before it."
+    },
+    {
+      "key": "fix",
+      "label": "5 · FINDINGS & FIX",
+      "color": 0,
+      "note": "Every gap gets tied to its stage and its metric, then fixed in order of what's actually losing the most leads."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "map_sources",
+      "kind": "data.transform",
+      "label": "Map Every Source Leads Come From: Ads, Forms, Calls, Referrals",
+      "section": "top"
+    },
+    {
+      "key": "metric_capture",
+      "kind": "data.transform",
+      "label": "Check the Metric: Cost Per Lead and Capture Rate by Source",
+      "section": "top"
+    },
+    {
+      "key": "check_response",
+      "kind": "data.transform",
+      "label": "Check How Fast and How a New Lead Gets a First Response",
+      "section": "speed"
+    },
+    {
+      "key": "metric_speed",
+      "kind": "data.transform",
+      "label": "Check the Metric: Minutes to First Contact",
+      "section": "speed"
+    },
+    {
+      "key": "check_pipeline",
+      "kind": "data.transform",
+      "label": "Check Whether Leads Land in the Right Pipeline and Stage",
+      "section": "nurture"
+    },
+    {
+      "key": "metric_nurture",
+      "kind": "data.transform",
+      "label": "Check the Metric: Follow-Up Cadence and Stage Drop-Off Rate",
+      "section": "nurture"
+    },
+    {
+      "key": "check_close",
+      "kind": "data.transform",
+      "label": "Check What Happens at Appointment Set and at No-Show",
+      "section": "close"
+    },
+    {
+      "key": "metric_close",
+      "kind": "data.transform",
+      "label": "Check the Metric: Lead-to-Appointment and Appointment-to-Close Rate",
+      "section": "close"
+    },
+    {
+      "key": "log_gaps",
+      "kind": "data.transform",
+      "label": "Log Every Gap Against Its Stage and Its Metric",
+      "section": "fix"
+    },
+    {
+      "key": "rank_gaps",
+      "kind": "data.aggregate",
+      "label": "Rank Gaps by Which Stage Is Losing the Most Leads",
+      "section": "fix"
+    },
+    {
+      "key": "fix_top",
+      "kind": "data.transform",
+      "label": "Fix the Highest-Impact Stage First",
+      "section": "fix"
+    }
+  ],
+  "edges": [
+    {
+      "from": "map_sources",
+      "to": "metric_capture"
+    },
+    {
+      "from": "metric_capture",
+      "to": "check_response"
+    },
+    {
+      "from": "check_response",
+      "to": "metric_speed"
+    },
+    {
+      "from": "metric_speed",
+      "to": "check_pipeline"
+    },
+    {
+      "from": "check_pipeline",
+      "to": "metric_nurture"
+    },
+    {
+      "from": "metric_nurture",
+      "to": "check_close"
+    },
+    {
+      "from": "check_close",
+      "to": "metric_close"
+    },
+    {
+      "from": "metric_close",
+      "to": "log_gaps"
+    },
+    {
+      "from": "log_gaps",
+      "to": "rank_gaps"
+    },
+    {
+      "from": "rank_gaps",
+      "to": "fix_top"
+    }
+  ],
+  "input_sample": {
+    "stage": "Speed to Lead",
+    "expected": "First contact within 5 minutes",
+    "actual": "Average first contact at 47 minutes, no SMS sent on new-lead trigger"
+  },
+  "output_sample": {
+    "stages_reviewed": 4,
+    "gaps_found": 3,
+    "highest_impact_gap": "Speed to Lead — 47 min avg first contact, industry benchmark is under 5 min",
+    "fix_applied": "Instant SMS + correct pipeline assignment on new-lead trigger"
+  },
+  "archetype": "real_estate_funnel_audit_thought_process",
+  "learned": true,
+  "learned_at": "2026-08-26"
+}

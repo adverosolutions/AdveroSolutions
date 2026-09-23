@@ -1,0 +1,312 @@
+{
+  "title": "Your Two-Voice News Desk - 6 Sources to Google Sheets",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "pull",
+      "label": "1 - EVERY MORNING, PULL THE SIX SOURCES",
+      "color": 0,
+      "note": "One trigger for the whole pipeline. The six urls live in one node, so swapping a source is a one line edit, not a rebuild."
+    },
+    {
+      "key": "screen",
+      "label": "2 - KEEP ONLY WHAT IS NEW AND ON TOPIC",
+      "color": 0,
+      "note": "Keyword screen first, then a lookup against what the sheet already holds. The same story never gets written or paid for twice."
+    },
+    {
+      "key": "voices",
+      "label": "3 - REWRITE EVERY STORY IN BOTH VOICES",
+      "color": 0,
+      "note": "Two separate nodes, two separate prompts. Style A reads like a newsroom wire, style B like a signed column, and you can tune one without touching the other."
+    },
+    {
+      "key": "topics",
+      "label": "4 - WRITE THE 20 ORIGINAL TOPICS",
+      "color": 0,
+      "note": "Your own topic list, written by the same model, landing in the same review sheet with the source marked original so editors can sort them apart."
+    },
+    {
+      "key": "watch",
+      "label": "5 - NOTHING FAILS QUIETLY",
+      "color": 0,
+      "note": "A dead source gets logged and the other five keep running. A real failure pings you before anyone opens the sheet and finds it empty."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "sched",
+      "kind": "trigger.schedule",
+      "label": "1 - Every Morning at 6am",
+      "section": "pull"
+    },
+    {
+      "key": "sources",
+      "kind": "data.transform",
+      "label": "2 - Load the 6 Source Feeds",
+      "section": "pull"
+    },
+    {
+      "key": "fetch",
+      "kind": "net.http",
+      "label": "3 - Fetch the RSS Feed",
+      "section": "pull"
+    },
+    {
+      "key": "reach",
+      "kind": "flow.branch",
+      "label": "4 - Feed Reachable?",
+      "section": "pull"
+    },
+    {
+      "key": "deadlog",
+      "kind": "app.action",
+      "label": "5 - Log the Dead Source",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "pull"
+    },
+    {
+      "key": "split",
+      "kind": "data.split",
+      "label": "6 - Split Into One Story per Item",
+      "section": "screen"
+    },
+    {
+      "key": "relevant",
+      "kind": "data.filter",
+      "label": "7 - Keep Only Topic Relevant Stories",
+      "section": "screen"
+    },
+    {
+      "key": "published",
+      "kind": "app.action",
+      "label": "8 - Look Up What We Already Published",
+      "app": "googleSheets",
+      "op": "read",
+      "section": "screen"
+    },
+    {
+      "key": "isnew",
+      "kind": "flow.branch",
+      "label": "9 - New Story?",
+      "section": "screen"
+    },
+    {
+      "key": "stylea",
+      "kind": "ai.llm",
+      "label": "10 - Rewrite in Style A, Newsroom",
+      "section": "voices"
+    },
+    {
+      "key": "modela",
+      "kind": "ai.model",
+      "label": "GPT-4o",
+      "app": "openai",
+      "parent": "stylea",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "styleb",
+      "kind": "ai.llm",
+      "label": "11 - Rewrite in Style B, Editorial Column",
+      "section": "voices"
+    },
+    {
+      "key": "modelb",
+      "kind": "ai.model",
+      "label": "GPT-4o",
+      "app": "openai",
+      "parent": "styleb",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "sheetnews",
+      "kind": "app.action",
+      "label": "12 - Write Both Versions to the Review Sheet",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "voices"
+    },
+    {
+      "key": "topicload",
+      "kind": "app.action",
+      "label": "13 - Load the 20 Topic Prompts",
+      "app": "googleSheets",
+      "op": "read",
+      "section": "topics"
+    },
+    {
+      "key": "topicwrite",
+      "kind": "ai.llm",
+      "label": "14 - Write the Topic Article",
+      "section": "topics"
+    },
+    {
+      "key": "modelt",
+      "kind": "ai.model",
+      "label": "GPT-4o",
+      "app": "openai",
+      "parent": "topicwrite",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "topicappend",
+      "kind": "app.action",
+      "label": "15 - Add the Originals to the Same Sheet",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "topics"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "16 - Any Node Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "watch"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "17 - Alert: Pipeline Failed",
+      "app": "telegram",
+      "op": "send",
+      "section": "watch"
+    }
+  ],
+  "edges": [
+    {
+      "from": "sched",
+      "to": "sources"
+    },
+    {
+      "from": "sources",
+      "to": "fetch"
+    },
+    {
+      "from": "fetch",
+      "to": "reach"
+    },
+    {
+      "from": "reach",
+      "to": "split",
+      "branch": "true"
+    },
+    {
+      "from": "reach",
+      "to": "deadlog",
+      "branch": "false"
+    },
+    {
+      "from": "split",
+      "to": "relevant"
+    },
+    {
+      "from": "relevant",
+      "to": "published"
+    },
+    {
+      "from": "published",
+      "to": "isnew"
+    },
+    {
+      "from": "isnew",
+      "to": "stylea",
+      "branch": "true"
+    },
+    {
+      "from": "isnew",
+      "to": "split",
+      "branch": "false",
+      "loop": true
+    },
+    {
+      "from": "stylea",
+      "to": "styleb"
+    },
+    {
+      "from": "styleb",
+      "to": "sheetnews"
+    },
+    {
+      "from": "sheetnews",
+      "to": "topicload"
+    },
+    {
+      "from": "topicload",
+      "to": "topicwrite"
+    },
+    {
+      "from": "topicwrite",
+      "to": "topicappend"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "trigger": "Schedule, 06:00 Asia/Jerusalem, 2026-09-11",
+    "sources": [
+      {
+        "name": "TechCrunch",
+        "feed": "https://techcrunch.com/feed/"
+      },
+      {
+        "name": "The Verge",
+        "feed": "https://www.theverge.com/rss/index.xml"
+      },
+      {
+        "name": "Reuters Business",
+        "feed": "https://www.reutersagency.com/feed/?best-topics=business-finance"
+      },
+      {
+        "name": "Ars Technica",
+        "feed": "https://feeds.arstechnica.com/arstechnica/index"
+      },
+      {
+        "name": "VentureBeat",
+        "feed": "https://venturebeat.com/feed/"
+      },
+      {
+        "name": "Wired Business",
+        "feed": "https://www.wired.com/feed/category/business/rss"
+      }
+    ],
+    "keywords": [
+      "ai",
+      "startup",
+      "funding",
+      "regulation",
+      "chips"
+    ],
+    "topics_tab": "Topics!A2:B21"
+  },
+  "output_sample": {
+    "row_written": {
+      "run_date": "2026-09-11",
+      "source": "TechCrunch",
+      "url": "https://techcrunch.com/2026/09/11/eu-ai-act-enforcement-begins/",
+      "headline": "EU begins enforcing the AI Act, first audits target foundation model providers",
+      "style_a": "Brussels started enforcing the AI Act on Thursday, with the first compliance audits aimed at providers of general purpose models. Regulators said the opening round covers documentation, training data disclosure, and incident reporting. Firms that miss the filing window face fines of up to three percent of global turnover.",
+      "style_b": "The AI Act was always going to arrive as paperwork rather than as a thunderclap, and here it is. What matters is not the fines, which are survivable, but the disclosure line, which forces labs to say out loud what they trained on. Expect the next six months to be an argument about definitions.",
+      "status": "needs review"
+    },
+    "run_summary": {
+      "feeds_fetched": 6,
+      "feeds_unreachable": 1,
+      "dead_source_logged": "Wired Business, 403 at 06:00",
+      "stories_seen": 84,
+      "topic_relevant": 19,
+      "duplicates_skipped": 7,
+      "news_rows_written": 12,
+      "original_topic_rows_written": 20,
+      "sheet_rows_total": 32,
+      "runtime": "4m 12s"
+    }
+  },
+  "archetype": "your_two_voice_news_desk_6_sources_to_google_she",
+  "learned": true,
+  "learned_at": "2026-09-10"
+}

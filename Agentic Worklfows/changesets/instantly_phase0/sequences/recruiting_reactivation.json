@@ -1,0 +1,56 @@
+{
+  "sequences": [
+    {
+      "steps": [
+        {
+          "type": "email",
+          "delay": 3,
+          "delay_unit": "days",
+          "pre_delay_unit": "days",
+          "variants": [
+            {
+              "subject": "{{firstName}}, question",
+              "body": "<div>{{personalization}}</div><div><br /></div><div>I build client reactivation systems. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.</div><div><br /></div><div>{{RANDOM | TLDR: | Short version: | In plain terms:}} I'd recover lost revenue by building sequences that go out to any dormant or near-miss client accounts, the companies that used you once or almost did.</div><div><br /></div><div>I'm so certain this would work for you that I won't charge you a single cent up front, only a percentage of placement fees from accounts I bring back, $0 if nothing closes. {{RANDOM | I truly believe | I genuinely think | I'm confident}} I can benefit {{companyName}}.</div><div><br /></div><div>{{RANDOM | Would you be open to a quick 15 minute call about this? | Open to a quick 15 minute call on it? | Worth 15 minutes to walk through it?}} If so just say yes and I'll {{RANDOM | shoot a calendar invite over | send a calendar invite | get an invite over to you}}.</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it, | Cheers,}}</div><div>Lorenzo</div>"
+            },
+            {
+              "subject": "{{firstName}}, question",
+              "body": "<div>{{personalization}}</div><div><br /></div><div>{{RANDOM | Quick one: | Straight to it: | Here is the short version:}} I build reactivation systems for recruiting agencies. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.</div><div><br /></div><div>For {{companyName}} that means sequences to every client account that went quiet, the hiring managers who used you once and the ones who almost signed, with the ready ones booking straight onto your calendar. {{RANDOM | Nothing up front, only a percentage of placement fees on accounts that come back. | You pay nothing until an account places again. | $0 up front, a cut of the placement fee on what returns.}}</div><div><br /></div><div>{{RANDOM | Easiest way to see if this is worth your time: | Lowest-effort next step: | If you want a quick read on it:}} send me your list of dormant client accounts and I'll {{RANDOM | show you which ones are worth chasing | flag the ones worth chasing | mark which are worth a second run}}. Takes me a day, costs you nothing.</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it, | Talk soon,}}</div><div>Lorenzo</div>"
+            }
+          ]
+        },
+        {
+          "type": "email",
+          "delay": 4,
+          "delay_unit": "days",
+          "pre_delay_unit": "days",
+          "variants": [
+            {
+              "subject": "",
+              "body": "<div>{{RANDOM | Hey | Hi | Hello}} {{firstName}},</div><div><br /></div><div>{{RANDOM | Checking in, in case the first one got buried. | Bumping this in case it got buried. | Following up in case my last note slipped through.}} Quick version:</div><div>- I want to build a reactivation system for {{companyName}}. Goal is to bring back the accounts that went quiet on you, with sequences that run on their own.</div><div>- I did this for a commercial roofer doing $150M/yr and recovered about $6M in contracts in 6 months.</div><div>- Nothing up front. I only take a percentage of placement fees on accounts I bring back, $0 if nothing closes.</div><div><br /></div><div>{{RANDOM | Worth a quick 15 minute call? | Open to a quick 15 minute call? | Want to give it 15 minutes?}} Just reply yes and I'll send a calendar invite.</div><div><br /></div><div>{{RANDOM | Thanks for the time, | Appreciate the time, | Thanks,}}</div><div>Lorenzo</div>"
+            },
+            {
+              "subject": "",
+              "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | One question instead of another pitch. | Rather than pitch you again, one question. | One question, then I will leave it there.}} Does {{companyName}} still have the client accounts that placed once and then went quiet, or have they been written off?</div><div><br /></div><div>For context: I did this for a commercial roofer doing $150M/yr and recovered about $6M in contracts in 6 months. Same mechanics, applied to your dormant accounts.</div><div><br /></div><div>Either way the terms do not change. Nothing up front, and I only take a percentage of the placement fees from accounts that come back.</div><div><br /></div><div>{{RANDOM | If the timing is wrong, reply 'not now' and I'll come back later in the year. | If it is not a priority, reply 'not now' and I'll leave it there. | Wrong quarter for this? Reply 'not now' and I'll check back.}}</div><div><br /></div><div>{{RANDOM | Thanks for the time, | Appreciate the time, | Thanks,}}</div><div>Lorenzo</div>"
+            }
+          ]
+        },
+        {
+          "type": "email",
+          "delay": 3,
+          "delay_unit": "days",
+          "pre_delay_unit": "days",
+          "variants": [
+            {
+              "subject": "quiet accounts",
+              "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | Last one from me on this. | Closing the loop on this. | One more, then I'll leave it alone.}} Most agencies I talk to have 30 to 100 client accounts that placed once or asked for a search and then went quiet, and nobody has emailed them in a year. {{RANDOM | Those hiring managers still have open reqs. | That list is the cheapest pipeline you own. | They already know your name, which is the hard part.}}</div><div><br /></div><div>I run the sequences under {{companyName}}'s name and the accounts that are hiring again land on your calendar. $0 up front, a percentage of the placement fee on whoever comes back.</div><div><br /></div><div>{{RANDOM | Reply with a rough count of quiet accounts and I'll tell you what I'd expect back. | Send me roughly how many client accounts went quiet and I'll give you a realistic number. | Reply with a rough count and I'll tell you which are worth chasing.}}</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div><div><br /></div><div>P.S. A lender ran the same follow-up mechanics on a $1.5k build and turned it into a $5M pipeline. Different industry, same math.</div>"
+            },
+            {
+              "subject": "quiet accounts",
+              "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | I'll close the file on this one. | Closing the file on this one. | I'll put this down to bad timing and close the file.}} No hard feelings if the timing is off.</div><div><br /></div><div>One thing before I do. The hiring managers who used {{companyName}} once already trust you, which is the part that usually takes a year to earn.</div><div><br /></div><div>Whenever you want those accounts worked, it is nothing up front and a percentage of the placement fee on whoever comes back.</div><div><br /></div><div>{{RANDOM | If that changes, reply here and I'll pick it straight back up. | If it changes, this thread is the fastest way back to me. | If that changes later, reply here and I'll pick it up.}}</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div><div><br /></div><div>P.S. A lender ran the same follow-up mechanics on a $1.5k build and turned it into a $5M pipeline. Different industry, same math.</div>"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,262 @@
+{
+  "title": "LinkedIn Content Pipeline — Draft, Approve, Guard, Schedule, Track",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · DRAFT INTAKE",
+      "color": 0,
+      "note": "Every draft becomes one Airtable record the moment it exists, so nothing lives only in a Slack thread or a Google Doc that gets lost."
+    },
+    {
+      "key": "approve",
+      "label": "2 · APPROVAL",
+      "color": 0,
+      "note": "A draft moves forward only when a person marks it ready. No post reaches Buffer without someone having actually looked at it."
+    },
+    {
+      "key": "guard",
+      "label": "3 · SAFEGUARDS",
+      "color": 0,
+      "note": "Two checks nobody wants to do by hand every time: is this the same post as one we already ran, and does it trip a banned-word or bad-link rule. Both run before scheduling, not after."
+    },
+    {
+      "key": "schedule",
+      "label": "4 · SCHEDULING",
+      "color": 0,
+      "note": "Only a post that has cleared approval and safeguards reaches Buffer. The slot it lands on is checked against what is already queued so nothing doubles up."
+    },
+    {
+      "key": "track",
+      "label": "5 · POST-PUBLISH TRACKING",
+      "color": 0,
+      "note": "When Buffer actually publishes, that confirmation writes back to the same Airtable record, closing the loop from idea to published post in one place."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "draft_in",
+      "kind": "trigger.form",
+      "label": "1 · New Draft Submitted",
+      "section": "intake"
+    },
+    {
+      "key": "draft_rec",
+      "kind": "app.action",
+      "label": "2 · Create the Draft Record in Airtable",
+      "app": "airtable",
+      "op": "create_record",
+      "section": "intake"
+    },
+    {
+      "key": "ready",
+      "kind": "trigger.app",
+      "label": "3 · Draft Marked Ready for Review",
+      "app": "airtable",
+      "op": "record_updated",
+      "section": "approve"
+    },
+    {
+      "key": "notify_approver",
+      "kind": "app.action",
+      "label": "4 · Notify the Approver With the Draft",
+      "app": "slack",
+      "op": "send_message",
+      "section": "approve"
+    },
+    {
+      "key": "wait_approval",
+      "kind": "flow.wait",
+      "label": "5 · Wait for an Approve or Reject",
+      "section": "approve"
+    },
+    {
+      "key": "approved",
+      "kind": "flow.branch",
+      "label": "6 · Approved or Sent Back?",
+      "section": "approve"
+    },
+    {
+      "key": "rejected",
+      "kind": "app.action",
+      "label": "6b · Mark Needs Revision, Notify the Writer",
+      "app": "airtable",
+      "op": "update_record",
+      "section": "approve"
+    },
+    {
+      "key": "guard_trig",
+      "kind": "trigger.app",
+      "label": "7 · Approved Draft Enters the Guard Check",
+      "app": "airtable",
+      "op": "record_updated",
+      "section": "guard"
+    },
+    {
+      "key": "dupe_check",
+      "kind": "data.filter",
+      "label": "8 · Compare Against the Last 90 Days of Posts",
+      "section": "guard"
+    },
+    {
+      "key": "content_check",
+      "kind": "data.filter",
+      "label": "9 · Scan for Banned Words and Broken Links",
+      "section": "guard"
+    },
+    {
+      "key": "flagged",
+      "kind": "flow.branch",
+      "label": "10 · Did Anything Get Flagged?",
+      "section": "guard"
+    },
+    {
+      "key": "hold",
+      "kind": "app.action",
+      "label": "10b · Hold It, Tell the Writer Why",
+      "app": "airtable",
+      "op": "update_record",
+      "section": "guard"
+    },
+    {
+      "key": "sched_trig",
+      "kind": "trigger.app",
+      "label": "11 · Cleared Draft Enters Scheduling",
+      "app": "airtable",
+      "op": "record_updated",
+      "section": "schedule"
+    },
+    {
+      "key": "slot_check",
+      "kind": "data.filter",
+      "label": "12 · Check the Requested Slot Isn't Already Taken",
+      "section": "schedule"
+    },
+    {
+      "key": "buffer_push",
+      "kind": "app.action",
+      "label": "13 · Queue It in Buffer",
+      "app": "buffer",
+      "op": "create_post",
+      "section": "schedule"
+    },
+    {
+      "key": "sched_update",
+      "kind": "app.action",
+      "label": "14 · Mark Scheduled With the Confirmed Time",
+      "app": "airtable",
+      "op": "update_record",
+      "section": "schedule"
+    },
+    {
+      "key": "pub_hook",
+      "kind": "trigger.webhook",
+      "label": "15 · Buffer Confirms It Published",
+      "section": "track"
+    },
+    {
+      "key": "pub_update",
+      "kind": "app.action",
+      "label": "16 · Mark Published With Timestamp and Link",
+      "app": "airtable",
+      "op": "update_record",
+      "section": "track"
+    }
+  ],
+  "edges": [
+    {
+      "from": "draft_in",
+      "to": "draft_rec"
+    },
+    {
+      "from": "ready",
+      "to": "notify_approver"
+    },
+    {
+      "from": "notify_approver",
+      "to": "wait_approval"
+    },
+    {
+      "from": "wait_approval",
+      "to": "approved"
+    },
+    {
+      "from": "approved",
+      "to": "rejected",
+      "branch": "Sent back"
+    },
+    {
+      "from": "guard_trig",
+      "to": "dupe_check"
+    },
+    {
+      "from": "dupe_check",
+      "to": "content_check"
+    },
+    {
+      "from": "content_check",
+      "to": "flagged"
+    },
+    {
+      "from": "flagged",
+      "to": "hold",
+      "branch": "Flagged"
+    },
+    {
+      "from": "sched_trig",
+      "to": "slot_check"
+    },
+    {
+      "from": "slot_check",
+      "to": "buffer_push"
+    },
+    {
+      "from": "buffer_push",
+      "to": "sched_update"
+    },
+    {
+      "from": "pub_hook",
+      "to": "pub_update"
+    }
+  ],
+  "input_sample": {
+    "author": "Dana Krol",
+    "draft_text": "3 things I wish I knew before scaling our support team past 10 people...",
+    "requested_slot": "2026-08-24T09:00:00-05:00",
+    "status": "Ready for Review"
+  },
+  "output_sample": {
+    "record_id": "recL8v2Qm",
+    "approval": {
+      "approved_by": "Marcus",
+      "approved_at": "2026-08-20T15:12:00Z"
+    },
+    "guard_check": {
+      "duplicate": false,
+      "banned_words": "none",
+      "broken_links": "none",
+      "result": "cleared"
+    },
+    "scheduled": {
+      "buffer_post_id": "buf_9214",
+      "slot": "2026-08-24T09:00:00-05:00",
+      "slot_conflict": false
+    },
+    "published": {
+      "confirmed_at": "2026-08-24T09:00:14Z",
+      "live_url": "https://linkedin.com/posts/dana-krol_..."
+    },
+    "airtable_status_history": [
+      "Draft",
+      "Ready for Review",
+      "Approved",
+      "Cleared",
+      "Scheduled",
+      "Published"
+    ],
+    "duplicates_prevented": 1
+  },
+  "archetype": "linkedin_content_pipeline_five_workflows",
+  "learned": true,
+  "learned_at": "2026-08-20"
+}

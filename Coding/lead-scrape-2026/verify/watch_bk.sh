@@ -1,0 +1,27 @@
+#!/bin/bash
+cd "$(dirname "$0")/.."
+KEY=$(grep MILLIONVERIFIER .env | cut -d= -f2); FID=31950729
+for i in $(seq 1 240); do
+  R=$(curl -s "https://bulkapi.millionverifier.com/bulkapi/v2/fileinfo?key=$KEY&file_id=$FID")
+  ST=$(echo "$R" | python3 -c "import json,sys;d=json.load(sys.stdin);print(d['status'],d['percent'],d['verified'])" 2>/dev/null)
+  echo "$(date +%H:%M:%S) $ST" >> verify/watch_bk.log
+  case "$ST" in
+    finished*) curl -s "https://bulkapi.millionverifier.com/bulkapi/v2/download?key=$KEY&file_id=$FID&filter=all" -o verify/results_bk_prod.csv
+               python3 - <<'PY'
+import csv
+from collections import Counter
+new=list(csv.DictReader(open('verify/results_bk_prod.csv',encoding='utf-8-sig')))
+with open('verify/results.csv','a',newline='',encoding='utf-8-sig') as fh:
+    w=csv.DictWriter(fh,fieldnames=['email','quality','result','free','role'])
+    for r in new: w.writerow({k:r.get(k,'') for k in w.fieldnames})
+c=Counter(r['result'] for r in new); n=len(new)
+open('verify/watch_bk.log','a').write(f"DONE bookkeeping: {dict(c)} clean={100*c['ok']//n}%\n")
+PY
+               python3 merge_verified.py >> verify/watch_bk.log 2>&1
+               python3 deliver_final.py  >> verify/watch_bk.log 2>&1
+               echo "FINAL FILES BUILT" >> verify/watch_bk.log
+               break;;
+    error*|canceled*) echo "HALTED" >> verify/watch_bk.log; break;;
+  esac
+  python3 -c "import time;time.sleep(60)"
+done

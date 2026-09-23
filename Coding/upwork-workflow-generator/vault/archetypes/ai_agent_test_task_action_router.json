@@ -1,0 +1,235 @@
+{
+  "title": "AI Agent Test — Input → LLM Decision → Action → Structured Output",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "in",
+      "label": "1 · RECEIVE AND VALIDATE THE INPUT",
+      "color": 0,
+      "note": "A bad payload gets rejected with a clear reason instead of failing halfway through."
+    },
+    {
+      "key": "decide",
+      "label": "2 · THE LLM DECIDES WHAT TO DO",
+      "color": 0,
+      "note": "Not just a reply. It picks one action from a fixed list and gives the reason."
+    },
+    {
+      "key": "act",
+      "label": "3 · PERFORM THE ACTION",
+      "color": 0,
+      "note": "One path per action type, so each is easy to test on its own."
+    },
+    {
+      "key": "out",
+      "label": "4 · RETURN THE RESULT, FAIL LOUDLY IF SOMETHING BREAKS",
+      "color": 0,
+      "note": "Structured output either way. Nothing fails silently."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 · Request Comes In",
+      "section": "in"
+    },
+    {
+      "key": "valid",
+      "kind": "flow.branch",
+      "label": "2 · Does the Input Have What We Need?",
+      "section": "in"
+    },
+    {
+      "key": "reject",
+      "kind": "net.respond",
+      "label": "3 · Reject With a Clear Reason",
+      "section": "in"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "4 · Decide the Action From the Input",
+      "section": "decide"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "OpenAI",
+      "app": "openai",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Force One of: Lookup, Summarize, Flag for Review",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "ok",
+      "kind": "flow.branch",
+      "label": "5 · Did It Return a Valid Action?",
+      "section": "decide"
+    },
+    {
+      "key": "retry",
+      "kind": "ai.llm",
+      "label": "5b · Retry Once, Then Flag for Review",
+      "section": "decide"
+    },
+    {
+      "key": "route",
+      "kind": "flow.switch",
+      "label": "6 · Route by Action Type",
+      "section": "act"
+    },
+    {
+      "key": "lookup",
+      "kind": "net.http",
+      "label": "6a · Look Up the Requested Data",
+      "section": "act"
+    },
+    {
+      "key": "summarize",
+      "kind": "ai.llm",
+      "label": "6b · Summarize the Input",
+      "section": "act"
+    },
+    {
+      "key": "flag",
+      "kind": "app.action",
+      "label": "6c · Flag for Human Review",
+      "app": "slack",
+      "op": "send_message",
+      "section": "act"
+    },
+    {
+      "key": "format",
+      "kind": "data.transform",
+      "label": "7 · Build the Structured Output",
+      "section": "out"
+    },
+    {
+      "key": "respond",
+      "kind": "net.respond",
+      "label": "8 · Return the Result",
+      "section": "out"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "9 · Any Node Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "out"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "10 · Alert With a Link to the Failed Run",
+      "app": "slack",
+      "op": "send_message",
+      "section": "out"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "valid"
+    },
+    {
+      "from": "valid",
+      "to": "reject",
+      "branch": "false"
+    },
+    {
+      "from": "valid",
+      "to": "agent",
+      "branch": "true"
+    },
+    {
+      "from": "agent",
+      "to": "ok"
+    },
+    {
+      "from": "ok",
+      "to": "route",
+      "branch": "true"
+    },
+    {
+      "from": "ok",
+      "to": "retry",
+      "branch": "false"
+    },
+    {
+      "from": "retry",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "lookup",
+      "branch": "Lookup"
+    },
+    {
+      "from": "route",
+      "to": "summarize",
+      "branch": "Summarize"
+    },
+    {
+      "from": "route",
+      "to": "flag",
+      "branch": "Flag for Review"
+    },
+    {
+      "from": "lookup",
+      "to": "format"
+    },
+    {
+      "from": "summarize",
+      "to": "format"
+    },
+    {
+      "from": "flag",
+      "to": "format"
+    },
+    {
+      "from": "format",
+      "to": "respond"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "request_id": "req_8f21c",
+    "input": "What's the current status of order #40911, and has it shipped yet?"
+  },
+  "output_sample": {
+    "action_chosen": "Lookup",
+    "reason": "Request references a specific order id and asks for its current state, not a summary or something needing a person.",
+    "result": {
+      "order": "#40911",
+      "status": "In transit",
+      "carrier": "USPS",
+      "last_scan": "2026-08-17"
+    },
+    "structured_output": {
+      "request_id": "req_8f21c",
+      "action": "Lookup",
+      "success": true,
+      "data": {
+        "order": "#40911",
+        "status": "In transit"
+      },
+      "latency_ms": 812
+    },
+    "retries_needed": 0,
+    "if_it_had_failed": "Error trigger catches it, alert sent with a link to the run, nothing silently drops"
+  },
+  "archetype": "ai_agent_test_task_action_router",
+  "learned": true,
+  "learned_at": "2026-08-18"
+}

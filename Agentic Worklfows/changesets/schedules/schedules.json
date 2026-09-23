@@ -1,0 +1,440 @@
+{
+  "_about": "Every schedule in the system as data, generated from services/reply_engine/modal_app.py by changesets/schedules/build_schedules.py. Do not edit by hand: regenerate.",
+  "_generated_from": "services/reply_engine/modal_app.py SCHEDULES + SCHEDULE_JOB_MODULE",
+  "_mode": "Every entry is mode=shadow. MODE=live plus ALLOW_LIVE_WRITES=1 is the only combination that writes anything. On Modal that pair lives in the secret; on the laptop the runner sets it per job, live only for a tier named in LAPTOP_LIVE_TIERS. Flipping either is a Lorenzo-approved step (runbooks/deployment.md).",
+  "_split": "runtime=modal schedules are registered by `modal deploy` when their tier is in DEPLOY_TIERS (default: sales only). runtime=laptop schedules hand off through files and never run on Modal; changesets/schedules/laptop/ holds their STAGED launchd plists and crontab lines, which run changesets/schedules/laptop_runner.py.",
+  "_timezone": "cron_ct is what is scheduled: modal.Cron reads it in America/Chicago, so the CT times are literal. cron_utc_cdt and cron_utc_cst exist only for a scheduler that cannot take a timezone; CDT ends 2026-11-01 and CST ends 2027-03-14, and a job left on a fixed UTC cron moves by an hour on each of those dates.",
+  "_install": "Nothing here is installed. install_schedules.sh --deploy (Lorenzo's terminal) deploys the Modal half; the laptop half is copied into place by hand (runbooks/deployment.md).",
+  "_turned_off": "Jobs Lorenzo turned off (he runs them by hand). Not scheduled anywhere; listed so a reader can say 'turned off' rather than 'missing'. Source: config/turned_off_jobs.json.",
+  "deploy_default_tiers": [
+    "sales"
+  ],
+  "tiers": {
+    "sales": {
+      "modal": [
+        "appointments_tick",
+        "approval_escalation",
+        "cadence_tick",
+        "cadence_veto_ping",
+        "pipeline_sweep",
+        "pipeline_sync",
+        "poller",
+        "precall_tick"
+      ],
+      "laptop": []
+    },
+    "marketing": {
+      "modal": [],
+      "laptop": [
+        "autoresponder_canary",
+        "deliverability_monitor",
+        "inbox_inventory",
+        "inbox_placement",
+        "list_factory"
+      ]
+    },
+    "ops": {
+      "modal": [],
+      "laptop": [
+        "daily_metrics",
+        "retro_packet"
+      ]
+    },
+    "fulfillment": {
+      "modal": [],
+      "laptop": [
+        "client_scorecard"
+      ]
+    }
+  },
+  "dst": {
+    "cdt_utc_offset_hours": -5,
+    "cst_utc_offset_hours": -6,
+    "cdt_ends": "2026-11-01",
+    "cst_ends": "2027-03-14"
+  },
+  "schedules": [
+    {
+      "name": "appointments_tick",
+      "module": "services.reply_engine.show_rate",
+      "tier": "sales",
+      "runtime": "modal",
+      "purpose": "Show-rate confirmations and no-show detection for booked calls (S4/S5).",
+      "command": "python3 -m jobs.appointments_tick --now",
+      "cron_ct": "*/10 * * * *",
+      "timezone": "America/Chicago",
+      "when_ct": "every 10 minutes",
+      "cron_utc_cdt": "*/10 * * * *",
+      "cron_utc_cst": "*/10 * * * *",
+      "mode": "shadow",
+      "shadow_safe": true,
+      "writes": "GHL appointment status, SMS and email legs (guarded)",
+      "needs": [
+        "GHL_PRIVATE_INTEGRATION_TOKEN",
+        "A2P_10DLC_REGISTERED for the SMS legs",
+        "ZOOM_WEBHOOK_SECRET for real join telemetry"
+      ]
+    },
+    {
+      "name": "approval_escalation",
+      "module": "services.reply_engine.approval",
+      "tier": "sales",
+      "runtime": "modal",
+      "purpose": "The 5-minute reply SLA chase (S1): a rising ntfy push for every approval card Lorenzo has not actioned, counted in sending minutes. The poller runs the same chase; this tick exists so an Instantly failure in the poller cannot silence it.",
+      "command": "python3 -c \"import sys;sys.path.insert(0,'.');from services.reply_engine import approval;print(approval.escalate_pending())\"",
+      "cron_ct": "*/5 * * * *",
+      "timezone": "America/Chicago",
+      "when_ct": "every 5 minutes, beside poller; it chases only, it cannot send",
+      "cron_utc_cdt": "*/5 * * * *",
+      "cron_utc_cst": "*/5 * * * *",
+      "mode": "shadow",
+      "shadow_safe": true,
+      "writes": "nothing but ntfy pushes; it takes no Instantly client and no rung of it can send",
+      "needs": [
+        "BASE_URL, or every Approve/Veto button on the chase card points at localhost",
+        "NTFY_TOPIC (and NTFY_TOKEN if the card should carry names)"
+      ]
+    },
+    {
+      "name": "autoresponder_canary",
+      "module": "jobs.autoresponder_canary",
+      "tier": "marketing",
+      "runtime": "laptop",
+      "purpose": "Measure auto-responder rate per inbox (M1 level 4 / O7).",
+      "command": "python3 -m jobs.autoresponder_canary --now",
+      "cron_ct": "45 6 * * 6",
+      "timezone": "America/Chicago",
+      "when_ct": "Sat 06:45 CT, before the 07:00 monitor (O7)",
+      "cron_utc_cdt": "45 11 * * 6",
+      "cron_utc_cst": "45 12 * * 6",
+      "mode": "shadow",
+      "shadow_safe": true,
+      "writes": "changesets/inbox_actions/<date>.json + last_canary.json",
+      "needs": [
+        "a decision on canary-mailing real prospects (DECISIONS Q-J10)",
+        "a usable address pool: 17 today. Each address is mailed once a round, so 12 inboxes need 60 for the 5-per-inbox verdict minimum (CANARY_MIN_ADDRESSES_FOR_VERDICT) and 120 for the full 10 per inbox (CANARY_ADDRESSES_PER_INBOX)"
+      ],
+      "argv": [
+        "--now"
+      ],
+      "why_laptop": "writes the level-4 sidecar and the dated change-set the 07:00 monitor reads",
+      "launchd_label": "com.advero.autoresponder_canary",
+      "must_run_before": {
+        "schedule": "deliverability_monitor",
+        "why": "level 4's sidecar and its change-set rows have to exist before the card is built"
+      }
+    },
+    {
+      "name": "cadence_tick",
+      "module": "services.reply_engine.cadence",
+      "tier": "sales",
+      "runtime": "modal",
+      "purpose": "Send the due follow-up touch for every armed lead (S2), 07:00-19:00 CT.",
+      "command": "python3 -m jobs.cadence_tick --now",
+      "cron_ct": "0 7-19 * * *",
+      "timezone": "America/Chicago",
+      "when_ct": "hourly 07:00-19:00 CT; the function re-checks the CT send window itself",
+      "cron_utc_cdt": "0 7-19 * * *  # CROSSES MIDNIGHT UTC: split this range by hand",
+      "cron_utc_cst": "0 7-19 * * *  # CROSSES MIDNIGHT UTC: split this range by hand",
+      "mode": "shadow",
+      "shadow_safe": true,
+      "writes": "Instantly replies (guarded), ntfy digest",
+      "needs": []
+    },
+    {
+      "name": "cadence_veto_ping",
+      "module": "services.reply_engine.cadence",
+      "tier": "sales",
+      "runtime": "modal",
+      "purpose": "The 09:30 CT half-hour run the D1 veto window needs. The D1 touch auto-sends after a 30-minute veto window opened by a push; an hourly tick never serves it.",
+      "command": "python3 -m jobs.cadence_tick --now",
+      "cron_ct": "30 9 * * 1-5",
+      "timezone": "America/Chicago",
+      "when_ct": "09:30 CT weekdays: the half-hour run the D1 veto window needs",
+      "cron_utc_cdt": "30 14 * * 1-5",
+      "cron_utc_cst": "30 15 * * 1-5",
+      "mode": "shadow",
+      "shadow_safe": true,
+      "writes": "the D1 veto push, then the send after the window closes (guarded)",
+      "needs": []
+    },
+    {
+      "name": "client_scorecard",
+      "module": "jobs.client_scorecard",
+      "tier": "fulfillment",
+      "runtime": "laptop",
+      "purpose": "Weekly client cards and the F4 retention touches (F3/F4).",
+      "command": "python3 -m jobs.client_scorecard --now",
+      "cron_ct": "15 19 * * 5",
+      "timezone": "America/Chicago",
+      "when_ct": "Fri 19:15 CT, after the sending day closes (F3/F4)",
+      "cron_utc_cdt": "15 0 * * 5  # NOTE: this is the NEXT UTC day; shift the day-of-week too",
+      "cron_utc_cst": "15 1 * * 5  # NOTE: this is the NEXT UTC day; shift the day-of-week too",
+      "mode": "shadow",
+      "shadow_safe": true,
+      "writes": "cards and drafts under .tmp/scorecards/, one ntfy digest and a Job_Log row; never sends to a client (delivery is manual, by Lorenzo)",
+      "needs": [
+        "campaign ids on each roster row; Mike has none, so his card reads 'no source'"
+      ],
+      "argv": [
+        "--now"
+      ],
+      "why_laptop": "needs the client roster and templates on disk",
+      "launchd_label": "com.advero.client_scorecard"
+    },
+    {
+      "name": "daily_metrics",
+      "module": "jobs.daily_metrics",
+      "tier": "ops",
+      "runtime": "laptop",
+      "purpose": "The daily scorecard row, the DAILY UPDATE block and the Section 6 KPI dashboard (O4).",
+      "command": "python3 -m jobs.daily_metrics --now",
+      "cron_ct": "0 18 * * *",
+      "timezone": "America/Chicago",
+      "when_ct": "18:00 CT daily (O4)",
+      "cron_utc_cdt": "0 23 * * *",
+      "cron_utc_cst": "0 0 * * *  # NOTE: this is the NEXT UTC day; shift the day-of-week too",
+      "mode": "shadow",
+      "shadow_safe": true,
+      "writes": "a Google Sheets row (guarded) and a STAGED Skool post that is never auto-published",
+      "needs": [
+        "DAILY_METRICS_SHEET_ID",
+        "a fresh Skool auth token before the first real post"
+      ],
+      "argv": [
+        "--now"
+      ],
+      "why_laptop": "reads the list-factory ledger and the Job_Log from disk for the KPI dashboard",
+      "launchd_label": "com.advero.daily_metrics"
+    },
+    {
+      "name": "deliverability_monitor",
+      "module": "jobs.deliverability_monitor",
+      "tier": "marketing",
+      "runtime": "laptop",
+      "purpose": "The five-level deliverability monitor (M1 / O1). Reads live, proposes, never applies.",
+      "command": "python3 -m jobs.deliverability_monitor --now",
+      "cron_ct": "0 7 * * *",
+      "timezone": "America/Chicago",
+      "when_ct": "07:00 CT daily (O1)",
+      "cron_utc_cdt": "0 12 * * *",
+      "cron_utc_cst": "0 13 * * *",
+      "mode": "shadow",
+      "shadow_safe": true,
+      "writes": "proposals into changesets/inbox_actions/<date>.json, one ntfy card",
+      "needs": [],
+      "argv": [
+        "--now"
+      ],
+      "why_laptop": "reads the placement and canary sidecars and writes proposals into changesets/inbox_actions/, which Lorenzo reviews on disk",
+      "launchd_label": "com.advero.deliverability_monitor"
+    },
+    {
+      "name": "inbox_inventory",
+      "module": "jobs.inbox_inventory",
+      "tier": "marketing",
+      "runtime": "laptop",
+      "purpose": "Inbox and domain health alerts (M2): roles, flags and sending alerts. No reserve count and no buying advice; promotion change-sets come only from a hand-run --promote.",
+      "command": "python3 -m jobs.inbox_inventory --now",
+      "cron_ct": "0 7 * * *",
+      "timezone": "America/Chicago",
+      "when_ct": "07:00 CT daily, alongside O1 (M2/A5)",
+      "cron_utc_cdt": "0 12 * * *",
+      "cron_utc_cst": "0 13 * * *",
+      "mode": "shadow",
+      "shadow_safe": true,
+      "writes": "config/inbox_inventory.json, one ntfy digest and a Job_Log row; nothing live",
+      "needs": [],
+      "argv": [
+        "--now"
+      ],
+      "why_laptop": "writes config/inbox_inventory.json, which Lorenzo reads on disk; a Modal container would throw it away",
+      "launchd_label": "com.advero.inbox_inventory"
+    },
+    {
+      "name": "inbox_placement",
+      "module": "jobs.inbox_placement",
+      "tier": "marketing",
+      "runtime": "laptop",
+      "purpose": "Score the seed/placement tests and stage the next one (M1 level 2 / O5).",
+      "command": "python3 -m jobs.inbox_placement --now",
+      "cron_ct": "45 6 * * 1",
+      "timezone": "America/Chicago",
+      "when_ct": "Mon 06:45 CT, before the 07:00 monitor (O5)",
+      "cron_utc_cdt": "45 11 * * 1",
+      "cron_utc_cst": "45 12 * * 1",
+      "mode": "shadow",
+      "shadow_safe": true,
+      "writes": "changesets/inbox_actions/<date>.json + last_placement.json; NEVER fires the create",
+      "needs": [
+        "seed addresses (no read-only endpoint lists them; copy them from one UI test)"
+      ],
+      "argv": [
+        "--now"
+      ],
+      "why_laptop": "writes the level-2 sidecar and the dated change-set the 07:00 monitor reads",
+      "launchd_label": "com.advero.inbox_placement",
+      "must_run_before": {
+        "schedule": "deliverability_monitor",
+        "why": "level 2's sidecar and its change-set rows have to exist before the card is built"
+      }
+    },
+    {
+      "name": "list_factory",
+      "module": "jobs.list_factory",
+      "tier": "marketing",
+      "runtime": "laptop",
+      "purpose": "Source, score, verify, personalise and stage next week's list (O8).",
+      "command": "python3 -m jobs.list_factory --now --all-campaigns --refresh-suppression",
+      "cron_ct": "0 9 * * 0",
+      "timezone": "America/Chicago",
+      "when_ct": "Sun 09:00 CT (O8); PAID whenever ALLOW_PAID_CALLS=1, live or not",
+      "cron_utc_cdt": "0 14 * * 0",
+      "cron_utc_cst": "0 15 * * 0",
+      "mode": "shadow",
+      "shadow_safe": false,
+      "writes": "a staged CSV and create_lead would_do records",
+      "needs": [
+        "ALLOW_PAID_CALLS=1 (the runner sets it only when LAPTOP_PAID_JOBS names this job)",
+        "APIFY_API_TOKEN",
+        "MILLIONVERIFIER_API_KEY",
+        "the client-domain suppression list, which is empty today"
+      ],
+      "argv": [
+        "--now",
+        "--all-campaigns",
+        "--refresh-suppression"
+      ],
+      "why_laptop": "stages a CSV, keeps its resumable run state and cost ledger on disk, and needs the real source and suppression files",
+      "launchd_label": "com.advero.list_factory",
+      "shadow_note": "This is the ONE scheduled job that spends through ALLOW_PAID_CALLS. Shadow stops the Instantly writes, but Apify, Perplexity, MillionVerifier and this job's own model calls are gated by ALLOW_PAID_CALLS=1 ALONE (owner decision R7): a shadow run with the flag set spends. The laptop runner passes ALLOW_PAID_CALLS=0 unless LAPTOP_PAID_JOBS names list_factory; keep it that way until Lorenzo approves a figure (DECISIONS R14: the preflight prices about $10.20 a niche, and the cost-per-contact cap halts every real run before Apify until then). The flag does not stop Anthropic spend anywhere else."
+    },
+    {
+      "name": "pipeline_sweep",
+      "module": "jobs.pipeline_sweep",
+      "tier": "sales",
+      "runtime": "modal",
+      "purpose": "What is waiting on Lorenzo, ordered by money (O3).",
+      "command": "python3 -m jobs.pipeline_sweep --now",
+      "cron_ct": "30 7 * * *",
+      "timezone": "America/Chicago",
+      "when_ct": "07:30 CT (O3, the single scheduled sweep)",
+      "cron_utc_cdt": "30 12 * * *",
+      "cron_utc_cst": "30 13 * * *",
+      "mode": "shadow",
+      "shadow_safe": true,
+      "writes": "nothing; one ntfy digest and a Job_Log row. The ONLY scheduled 07:30 sweep: jobs/positive_sweep.py delegates to it and is not scheduled (GOL-13)",
+      "needs": []
+    },
+    {
+      "name": "pipeline_sync",
+      "module": "services.reply_engine.pipeline_sync",
+      "tier": "sales",
+      "runtime": "modal",
+      "purpose": "Mirror the GHL Sales pipeline onto Instantly interest status (S8).",
+      "command": "python3 -m services.reply_engine.pipeline_sync --now",
+      "cron_ct": "0 6 * * *",
+      "timezone": "America/Chicago",
+      "when_ct": "06:00 CT",
+      "cron_utc_cdt": "0 11 * * *",
+      "cron_utc_cst": "0 12 * * *",
+      "mode": "shadow",
+      "shadow_safe": true,
+      "writes": "Instantly interest status, GHL upserts and notes (guarded)",
+      "needs": [
+        "GHL_PRIVATE_INTEGRATION_TOKEN"
+      ]
+    },
+    {
+      "name": "poller",
+      "module": "services.reply_engine.poller",
+      "tier": "sales",
+      "runtime": "modal",
+      "purpose": "Read new Instantly replies and route them (S1). No webhooks exist yet, so this polls.",
+      "command": "python3 -m services.reply_engine.poller --now",
+      "cron_ct": "*/5 * * * *",
+      "timezone": "America/Chicago",
+      "when_ct": "every 5 minutes",
+      "cron_utc_cdt": "*/5 * * * *",
+      "cron_utc_cst": "*/5 * * * *",
+      "mode": "shadow",
+      "shadow_safe": true,
+      "writes": "drafts + approval cards; every send is behind an approval token",
+      "needs": []
+    },
+    {
+      "name": "precall_tick",
+      "module": "jobs.precall_tick",
+      "tier": "sales",
+      "runtime": "modal",
+      "purpose": "Pre-call brief before a booked call, and the proposal draft after it (S6/S7).",
+      "command": "python3 -m jobs.precall_tick",
+      "cron_ct": "*/5 * * * *",
+      "timezone": "America/Chicago",
+      "when_ct": "every 5 minutes, beside appointments_tick; one container at a time (max_containers=1)",
+      "cron_utc_cdt": "*/5 * * * *",
+      "cron_utc_cst": "*/5 * * * *",
+      "mode": "shadow",
+      "shadow_safe": true,
+      "writes": "GHL notes and proposal drafts (guarded); takes .tmp/precall_tick.lock",
+      "needs": [
+        "GHL_PRIVATE_INTEGRATION_TOKEN",
+        "PAYMENT_LINK_URL for the SOP-009 draft"
+      ]
+    },
+    {
+      "name": "retro_packet",
+      "module": "jobs.retro_packet",
+      "tier": "ops",
+      "runtime": "laptop",
+      "purpose": "The Friday retro packet (O6): the week's numbers, lessons and three bets.",
+      "command": "python3 -m jobs.retro_packet --now",
+      "cron_ct": "0 16 * * 5",
+      "timezone": "America/Chicago",
+      "when_ct": "Fri 16:00 CT (O6)",
+      "cron_utc_cdt": "0 21 * * 5",
+      "cron_utc_cst": "0 22 * * 5",
+      "mode": "shadow",
+      "shadow_safe": true,
+      "writes": "markdown in .tmp/retro/ and a skool would_do; posts nothing",
+      "needs": [
+        "RIZE_EXPORT_PATH for the hours section",
+        "FIREFLIES_API_KEY for call content"
+      ],
+      "argv": [
+        "--now"
+      ],
+      "why_laptop": "reads the Job_Log from disk and writes .tmp/retro/",
+      "launchd_label": "com.advero.retro_packet"
+    }
+  ],
+  "turned_off": [
+    {
+      "name": "campaign_verdicts",
+      "by_hand": "python3 -m jobs.campaign_verdicts --out .tmp/verdicts.md",
+      "module": "jobs.campaign_verdicts",
+      "tier": "marketing",
+      "turned_off_on": "2026-09-22",
+      "was_scheduled": "Fri 15:00 CT (0 15 * * 5), before the 16:00 retro",
+      "why": "Lorenzo runs the campaign verdicts by hand"
+    },
+    {
+      "name": "upwork_rooms_am",
+      "by_hand": "python3 -m jobs.upwork_rooms --now",
+      "module": "jobs.upwork_rooms",
+      "tier": "ops",
+      "turned_off_on": "2026-09-22",
+      "was_scheduled": "09:00 CT weekdays (0 9 * * 1-5)",
+      "why": "Lorenzo checks the Upwork rooms by hand"
+    },
+    {
+      "name": "upwork_rooms_pm",
+      "by_hand": "python3 -m jobs.upwork_rooms --now",
+      "module": "jobs.upwork_rooms",
+      "tier": "ops",
+      "turned_off_on": "2026-09-22",
+      "was_scheduled": "15:00 CT weekdays (0 15 * * 1-5)",
+      "why": "Lorenzo checks the Upwork rooms by hand"
+    }
+  ]
+}

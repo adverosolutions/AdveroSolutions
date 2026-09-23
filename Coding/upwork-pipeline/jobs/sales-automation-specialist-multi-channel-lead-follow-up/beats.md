@@ -1,0 +1,8 @@
+- your post: stage-triggered sms and email follow-up, delay timers, exit rules
+- crm stage changed comes in, normalize contact, stage, consent, touch count
+- route by pipeline stage: new lead, proposal sent, no response
+- new lead: instant sms, wait 1 hour, email, wait 1 day
+- replied or booked? stop sequence. otherwise next sms, loop back
+- under 4 touches keeps it going, the cap ends it
+- decision: which crm you run and 10dlc sms registration come first
+- can start [START], working demo by [DRAFT]

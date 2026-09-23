@@ -1,0 +1,13 @@
+n8n Developer Needed — AI Voice Agent Post-Call Automation
+
+We run an outbound appointment setting operation using Vapi. After every call ends we need
+the transcript pulled, summarized, and the outcome pushed into HubSpot automatically.
+Right now a VA does this manually and we're losing 3 hours a day.
+
+Requirements:
+- Webhook from Vapi on call completion
+- Summarize transcript, extract outcome (booked / objection / bad number)
+- Create deal in HubSpot if booked, log to contact either way
+- Post a summary to our Slack #calls channel
+
+Must be n8n. Please show examples of similar workflows you've built.

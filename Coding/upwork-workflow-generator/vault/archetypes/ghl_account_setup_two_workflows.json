@@ -1,0 +1,172 @@
+{
+  "title": "New Client Account — Email, SMS, Calendar + 2 Workflows",
+  "platform": "gohighlevel",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · NEW LEAD INTAKE",
+      "color": 0,
+      "note": "Every lead that hits the account gets captured and matched before anything sends."
+    },
+    {
+      "key": "wf1",
+      "label": "2 · WORKFLOW 1 — WELCOME & BOOKING",
+      "color": 0,
+      "note": "Your email and text content drops straight into these steps. Booking runs off the team calendar."
+    },
+    {
+      "key": "wf2",
+      "label": "3 · WORKFLOW 2 — APPOINTMENT HANDLING",
+      "color": 0,
+      "note": "Booked contacts get confirmed and reminded. Everyone else gets a nudge and a follow-up tag."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "form",
+      "kind": "trigger.form",
+      "label": "New Lead Submits the Form",
+      "section": "intake"
+    },
+    {
+      "key": "upsert",
+      "kind": "app.action",
+      "label": "Create or Match the Contact",
+      "app": "gohighlevel",
+      "op": "upsert_contact",
+      "section": "intake"
+    },
+    {
+      "key": "email1",
+      "kind": "app.action",
+      "label": "Send the Welcome Email — Your Copy",
+      "app": "gohighlevel",
+      "op": "send_email",
+      "section": "wf1"
+    },
+    {
+      "key": "sms1",
+      "kind": "app.action",
+      "label": "Text the Booking Link",
+      "app": "gohighlevel",
+      "op": "send_sms",
+      "section": "wf1"
+    },
+    {
+      "key": "calendar",
+      "kind": "app.action",
+      "label": "Offer Open Slots from the Team Calendar",
+      "app": "gohighlevel",
+      "op": "offer_calendar_slots",
+      "section": "wf1"
+    },
+    {
+      "key": "wait",
+      "kind": "flow.wait",
+      "label": "Wait Up to 2 Days for a Booking",
+      "section": "wf2"
+    },
+    {
+      "key": "booked",
+      "kind": "flow.branch",
+      "label": "Did They Book a Time?",
+      "section": "wf2"
+    },
+    {
+      "key": "confirm",
+      "kind": "app.action",
+      "label": "Email the Confirmation with Date and Time",
+      "app": "gohighlevel",
+      "op": "send_email",
+      "section": "wf2"
+    },
+    {
+      "key": "remind",
+      "kind": "app.action",
+      "label": "Text a Reminder the Morning Of",
+      "app": "gohighlevel",
+      "op": "send_sms",
+      "section": "wf2"
+    },
+    {
+      "key": "nudge",
+      "kind": "app.action",
+      "label": "Send the Nudge Text with the Link Again",
+      "app": "gohighlevel",
+      "op": "send_sms",
+      "section": "wf2"
+    },
+    {
+      "key": "tag",
+      "kind": "app.action",
+      "label": "Tag as Needs Follow-Up",
+      "app": "gohighlevel",
+      "op": "add_tag",
+      "section": "wf2"
+    }
+  ],
+  "edges": [
+    {
+      "from": "form",
+      "to": "upsert"
+    },
+    {
+      "from": "upsert",
+      "to": "email1"
+    },
+    {
+      "from": "email1",
+      "to": "sms1"
+    },
+    {
+      "from": "sms1",
+      "to": "calendar"
+    },
+    {
+      "from": "calendar",
+      "to": "wait"
+    },
+    {
+      "from": "wait",
+      "to": "booked"
+    },
+    {
+      "from": "booked",
+      "to": "confirm",
+      "branch": "true"
+    },
+    {
+      "from": "confirm",
+      "to": "remind"
+    },
+    {
+      "from": "booked",
+      "to": "nudge",
+      "branch": "false"
+    },
+    {
+      "from": "nudge",
+      "to": "tag"
+    }
+  ],
+  "input_sample": {
+    "name": "Dana Whitfield",
+    "email": "dana@wexfordhomeservices.com",
+    "phone": "+1 (313) 555-0142",
+    "source": "Website form",
+    "requested_service": "Consultation"
+  },
+  "output_sample": {
+    "contact": "Dana Whitfield",
+    "status": "Appointment confirmed",
+    "slot": "Thu Aug 14, 10:30 AM",
+    "confirmations_sent": [
+      "email",
+      "sms"
+    ],
+    "first_touch_response_time": "48 seconds"
+  },
+  "archetype": "ghl_account_setup_two_workflows",
+  "learned": true,
+  "learned_at": "2026-08-13"
+}

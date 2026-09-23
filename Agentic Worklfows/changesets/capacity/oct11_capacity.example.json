@@ -1,0 +1,62 @@
+{
+  "_about": "EXAMPLE ONLY. The shape of the input changesets/capacity/apply_capacity.py reads. The addresses are placeholders on example domains and the numbers are illustrative; they are NOT Option A or Option B (R8, still being defined by Lorenzo). To use it: copy this file to changesets/capacity/oct11_capacity.json, set \"example\": false, name the option, list the real warmed inboxes per campaign and each campaign's daily_limit, and make expected_total_daily_limit the sum of those limits. --apply refuses any file that does not say \"example\": false.",
+  "example": true,
+  "option": "EXAMPLE (replace with the option Lorenzo chose)",
+  "expected_total_daily_limit": 600,
+  "campaigns": {
+    "cleaning_reactivation": {
+      "campaign_id": "8086b41e-b546-4b36-9fa0-2d01f5cc119a",
+      "add_inboxes": [
+        "inbox1@example-domain-a.com",
+        "inbox2@example-domain-a.com",
+        "inbox1@example-domain-b.com"
+      ],
+      "daily_limit": 100
+    },
+    "cleaning_trigger": {
+      "campaign_id": "f347604e-48c7-4813-831c-dc7b9d4b50ae",
+      "add_inboxes": [
+        "inbox1@example-domain-a.com",
+        "inbox2@example-domain-a.com",
+        "inbox1@example-domain-b.com"
+      ],
+      "daily_limit": 100
+    },
+    "bookkeeping_reactivation": {
+      "campaign_id": "f00c5e28-fdc4-4d84-a7e6-dfba9695f35d",
+      "add_inboxes": [
+        "inbox1@example-domain-a.com",
+        "inbox2@example-domain-a.com",
+        "inbox1@example-domain-b.com"
+      ],
+      "daily_limit": 100
+    },
+    "bookkeeping_trigger": {
+      "campaign_id": "87ebb167-9b64-4b6f-b658-88f3d1af9980",
+      "add_inboxes": [
+        "inbox1@example-domain-a.com",
+        "inbox2@example-domain-a.com",
+        "inbox1@example-domain-b.com"
+      ],
+      "daily_limit": 100
+    },
+    "recruiting_reactivation": {
+      "campaign_id": "1d4d5bb3-40a7-4333-bf34-b269d2cc9955",
+      "add_inboxes": [
+        "inbox1@example-domain-a.com",
+        "inbox2@example-domain-a.com",
+        "inbox1@example-domain-b.com"
+      ],
+      "daily_limit": 100
+    },
+    "recruiting_outbound": {
+      "campaign_id": "cd2e251c-3b5a-40d2-a3dc-d07c4004a48c",
+      "add_inboxes": [
+        "inbox1@example-domain-a.com",
+        "inbox2@example-domain-a.com",
+        "inbox1@example-domain-b.com"
+      ],
+      "daily_limit": 100
+    }
+  }
+}

@@ -1,0 +1,949 @@
+{
+  "name": "Your Sales Rep Scorecard",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - EVERY EVENT THAT COUNTS\n\nOne webhook, fed by a GHL workflow per event type. New lead, appointment booked or updated, call outcome, contract sent, payment received. Every one arrives in the same shape.",
+        "height": 1060,
+        "width": 460,
+        "color": 5
+      },
+      "id": "5777e831-137c-520c-9c36-b47f616022c3",
+      "name": "Section - 1 - EVERY EVENT THAT COUNTS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - CREDIT THE RIGHT REP\n\nThis is the part that gets scorecards wrong. A booked call is credited to the assigned user on the calendar event, not to whoever owns the contact. Nothing gets counted until a rep is resolved.",
+        "height": 1060,
+        "width": 940,
+        "color": 4
+      },
+      "id": "87332bdd-1bca-5a38-b9be-ad69c0847c08",
+      "name": "Section - 2 - CREDIT THE RIGHT REP",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - WRITE THE RAW ROW\n\nEvery event lands on an Events tab, one row, timestamped. The scorecard is always rebuildable from it, so a bad number can be traced to the event that caused it.",
+        "height": 1060,
+        "width": 220,
+        "color": 6
+      },
+      "id": "5b1b1d45-f1ad-55b4-8cb7-0ac607668a4b",
+      "name": "Section - 3 - WRITE THE RAW ROW",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - THE SCORECARD\n\nOnce a night the events roll up per rep into leads, booked, held, contracts, revenue, and the ratios that actually get coached on. One row per rep per day, plus a leaderboard in Slack.",
+        "height": 1060,
+        "width": 1420,
+        "color": 7
+      },
+      "id": "b11c17fb-443b-5496-899e-586b06267e5f",
+      "name": "Section - 4 - THE SCORECARD",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2040,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - NOTHING FAILS QUIETLY\n\nIf a step breaks, you hear about it the same day with the failing node named. A silent scorecard is worse than no scorecard.",
+        "height": 1060,
+        "width": 460,
+        "color": 1
+      },
+      "id": "fd42a198-2def-58b0-9147-cf087f5bd424",
+      "name": "Section - 5 - NOTHING FAILS QUIETLY",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3620,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "00609df9-4429-521b-8baf-a982944c5f6e",
+      "name": "1 - GHL Event: New Lead, Appointment, Call, Contract, Payment",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        280
+      ],
+      "notes": "One webhook url. Each GHL workflow posts to it with an event_type.",
+      "notesInFlow": true,
+      "webhookId": "3474941a-9f28-5581-8514-bfd669cacfd5"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3b4e292c-1312-5b35-a0ac-2d7ea1608326",
+              "name": "event_type",
+              "value": "={{ $json.event_type }}",
+              "type": "string"
+            },
+            {
+              "id": "b3df0717-4b54-506c-ac1b-7747b331f5ab",
+              "name": "location_id",
+              "value": "={{ $json.location_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ae2867d5-f789-5b7f-9adf-172f43dca442",
+              "name": "contact",
+              "value": "={{ $json.contact }}",
+              "type": "object"
+            },
+            {
+              "id": "23da2bba-f09e-5c7c-9a23-915b3d4f24d4",
+              "name": "appointment",
+              "value": "={{ $json.appointment }}",
+              "type": "object"
+            },
+            {
+              "id": "17826942-4ab4-5f5e-b00f-4854fafa5c55",
+              "name": "opportunity",
+              "value": "={{ $json.opportunity }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "dfd007a7-bc51-52a5-be7e-fc14bc4988d2",
+      "name": "2 - Normalize the Event: Type, Contact, Rep, Amount, Time",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        240,
+        280
+      ],
+      "notes": "Same field names whatever the source, so nothing downstream has to special case.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "da60444b-6637-5b07-ba85-0d2cb01b4f39",
+                    "leftValue": "={{ $json.event_type }}",
+                    "rightValue": "New Lead",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "New Lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "abecf6c0-7979-5934-86c0-42c3752d4795",
+                    "leftValue": "={{ $json.event_type }}",
+                    "rightValue": "Appointment",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Appointment"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cadabd61-a150-5030-824b-eba642b67603",
+                    "leftValue": "={{ $json.event_type }}",
+                    "rightValue": "Contract Sent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Contract Sent"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ba302d77-6831-5641-b0d5-1c7b1efa6eec",
+                    "leftValue": "={{ $json.event_type }}",
+                    "rightValue": "Payment",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Payment"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "21cc1b6c-acff-5b0d-ba54-dba655569588",
+      "name": "3 - Which Event?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        620,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "63a0ac89-11c2-5e53-8460-23e1c6c5f319",
+              "name": "event_type",
+              "value": "={{ $json.event_type }}",
+              "type": "string"
+            },
+            {
+              "id": "2ab12250-b014-5d52-9bdf-fa75365a6625",
+              "name": "location_id",
+              "value": "={{ $json.location_id }}",
+              "type": "string"
+            },
+            {
+              "id": "14ff5989-2060-5cac-a202-9445a3789233",
+              "name": "contact",
+              "value": "={{ $json.contact }}",
+              "type": "object"
+            },
+            {
+              "id": "1b6cc0ce-5ec0-50f9-900e-050e38b6942f",
+              "name": "appointment",
+              "value": "={{ $json.appointment }}",
+              "type": "object"
+            },
+            {
+              "id": "5ce4062d-a30f-56f9-b0be-198d320119f3",
+              "name": "opportunity",
+              "value": "={{ $json.opportunity }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "392b3569-6c92-5ef6-9145-cd2bff079f36",
+      "name": "4a - Credit the Contact Owner",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        860,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/4b-ghl-read-the-appointment-s-assigned-u",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "103f8195-78fb-5e0a-9171-185ad021a08c",
+      "name": "4b - GHL: Read the Appointment's Assigned User From the Calendar",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        860,
+        240
+      ],
+      "notes": "The rep who took the call is the calendar event's assigned user, not the contact owner.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "263566e5-726b-5614-a3b7-6a2a1ed1b3bc",
+              "name": "event_type",
+              "value": "={{ $json.event_type }}",
+              "type": "string"
+            },
+            {
+              "id": "0480d8c1-5eee-513c-bd66-b7aedf72f780",
+              "name": "location_id",
+              "value": "={{ $json.location_id }}",
+              "type": "string"
+            },
+            {
+              "id": "5565c528-3969-52c6-bcb3-0f035ad49979",
+              "name": "contact",
+              "value": "={{ $json.contact }}",
+              "type": "object"
+            },
+            {
+              "id": "1c019bd4-d3e4-51e4-8664-f58c4ab74113",
+              "name": "appointment",
+              "value": "={{ $json.appointment }}",
+              "type": "object"
+            },
+            {
+              "id": "3fcde038-6ea6-590a-b201-95760389b165",
+              "name": "opportunity",
+              "value": "={{ $json.opportunity }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "6f8bc582-8731-542b-b99b-4fa8683952ed",
+      "name": "4c - Credit the Opportunity Owner",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        860,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e0e7eb98-5327-5303-aefd-e10b78f65937",
+              "name": "event_type",
+              "value": "={{ $json.event_type }}",
+              "type": "string"
+            },
+            {
+              "id": "b504a872-5930-58d4-8884-8cf12f08d952",
+              "name": "location_id",
+              "value": "={{ $json.location_id }}",
+              "type": "string"
+            },
+            {
+              "id": "7b8ae29f-e703-5163-be31-5b4f9cf41aef",
+              "name": "contact",
+              "value": "={{ $json.contact }}",
+              "type": "object"
+            },
+            {
+              "id": "81241259-be33-5a46-a841-246eba78065b",
+              "name": "appointment",
+              "value": "={{ $json.appointment }}",
+              "type": "object"
+            },
+            {
+              "id": "492f7c46-6b0b-55a6-ab17-6f6afa749618",
+              "name": "opportunity",
+              "value": "={{ $json.opportunity }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "4316f688-55ae-553c-9fb0-3fac7f227a11",
+      "name": "4d - Credit the Opportunity Owner",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        860,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bedc44f0-d257-5eb1-916e-4c0abac0f78e",
+              "leftValue": "={{ $json.credited_rep }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1fe6e3c6-8c9c-5e4c-8c62-bd5419ab9632",
+      "name": "5 - Rep Resolved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1100,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "414b930f-45c7-50b9-b1ba-dc37233a9da7",
+      "name": "5b - Unassigned Queue for a Human to Fix",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1340,
+        280
+      ],
+      "notes": "Never guess a rep. Park it, fix it, the nightly rollup picks it up.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "9be0a1de-d4cc-5786-9f88-b3675485bf11",
+      "name": "6 - Append to the Events Tab",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1720,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "6ad29c37-6d34-5542-bacf-68b59bd81657",
+      "name": "7 - Every Night at 11pm",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        2100,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "options": {},
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        }
+      },
+      "id": "20fc33fc-d363-5e44-bf76-cafd1cba314b",
+      "name": "8 - Read Today's Events",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2340,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {},
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "credited_rep"
+            },
+            {
+              "fieldToAggregate": "why"
+            },
+            {
+              "fieldToAggregate": "events_row"
+            }
+          ]
+        }
+      },
+      "id": "61507f03-dd19-54c2-aeca-a056a2eeafb5",
+      "name": "9 - Per Rep: Leads, Booked, Held, Contracts, Revenue",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2580,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3e342d62-fcd6-5759-afe2-fb011b461363",
+              "name": "event_type",
+              "value": "={{ $json.event_type }}",
+              "type": "string"
+            },
+            {
+              "id": "2f780233-49ac-5d5d-bea2-376ca7f198cc",
+              "name": "location_id",
+              "value": "={{ $json.location_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2430be26-7e94-5980-b3cb-d31e905f6706",
+              "name": "contact",
+              "value": "={{ $json.contact }}",
+              "type": "object"
+            },
+            {
+              "id": "c4567e56-0c76-5c6e-b2f4-7a4b874fd799",
+              "name": "appointment",
+              "value": "={{ $json.appointment }}",
+              "type": "object"
+            },
+            {
+              "id": "62b41c1c-829f-5fd2-a14f-89cc3309bd30",
+              "name": "opportunity",
+              "value": "={{ $json.opportunity }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "7e606609-ced8-583d-b04a-34d13108f919",
+      "name": "10 - Ratios: Booked per Lead, Held per Booked, Cash per Lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2820,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "update",
+        "options": {},
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        }
+      },
+      "id": "c7ddccf1-dcd4-538f-9d8f-2287139df43b",
+      "name": "11 - Update the Scorecard Tab, One Row per Rep per Day",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        3060,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "f3c5508c-15d8-5f29-8093-241e1f331402",
+      "name": "12 - Post the Leaderboard",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        3300,
+        280
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "c3c7699b-ef95-5d12-bb77-ce60715b46f6",
+      "name": "13 - Any Step Fails",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        3680,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "fe0e5aa3-2a83-50bb-abef-d5167bcd0b31",
+      "name": "14 - Alert With the Failing Node",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        3920,
+        280
+      ]
+    }
+  ],
+  "connections": {
+    "1 - GHL Event: New Lead, Appointment, Call, Contract, Payment": {
+      "main": [
+        [
+          {
+            "node": "2 - Normalize the Event: Type, Contact, Rep, Amount, Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Normalize the Event: Type, Contact, Rep, Amount, Time": {
+      "main": [
+        [
+          {
+            "node": "3 - Which Event?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Which Event?": {
+      "main": [
+        [
+          {
+            "node": "4a - Credit the Contact Owner",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "4b - GHL: Read the Appointment's Assigned User From the Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "4c - Credit the Opportunity Owner",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "4d - Credit the Opportunity Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4a - Credit the Contact Owner": {
+      "main": [
+        [
+          {
+            "node": "5 - Rep Resolved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4b - GHL: Read the Appointment's Assigned User From the Calendar": {
+      "main": [
+        [
+          {
+            "node": "5 - Rep Resolved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4c - Credit the Opportunity Owner": {
+      "main": [
+        [
+          {
+            "node": "5 - Rep Resolved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4d - Credit the Opportunity Owner": {
+      "main": [
+        [
+          {
+            "node": "5 - Rep Resolved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - Rep Resolved?": {
+      "main": [
+        [
+          {
+            "node": "6 - Append to the Events Tab",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "5b - Unassigned Queue for a Human to Fix",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - Every Night at 11pm": {
+      "main": [
+        [
+          {
+            "node": "8 - Read Today's Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - Read Today's Events": {
+      "main": [
+        [
+          {
+            "node": "9 - Per Rep: Leads, Booked, Held, Contracts, Revenue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9 - Per Rep: Leads, Booked, Held, Contracts, Revenue": {
+      "main": [
+        [
+          {
+            "node": "10 - Ratios: Booked per Lead, Held per Booked, Cash per Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Ratios: Booked per Lead, Held per Booked, Cash per Lead": {
+      "main": [
+        [
+          {
+            "node": "11 - Update the Scorecard Tab, One Row per Rep per Day",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Update the Scorecard Tab, One Row per Rep per Day": {
+      "main": [
+        [
+          {
+            "node": "12 - Post the Leaderboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - Any Step Fails": {
+      "main": [
+        [
+          {
+            "node": "14 - Alert With the Failing Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "bafb8774-d39b-5ebc-b8e0-ca4d4558e4b1",
+  "pinData": {
+    "1 - GHL Event: New Lead, Appointment, Call, Contract, Payment": [
+      {
+        "json": {
+          "event_type": "appointment",
+          "location_id": "loc_8Kq2ZrNm",
+          "contact": {
+            "id": "cnt_91f4ad",
+            "name": "Maria Velez",
+            "phone": "+1 905 555 0182",
+            "owner": "Jordan"
+          },
+          "appointment": {
+            "id": "appt_4c72e1",
+            "calendar": "Consult Calendar",
+            "assigned_user": "Priya",
+            "status": "showed",
+            "start_time": "2026-09-21T14:30:00-04:00"
+          },
+          "opportunity": {
+            "service": "Laser package",
+            "value": 2400
+          }
+        }
+      }
+    ],
+    "12 - Post the Leaderboard": [
+      {
+        "json": {
+          "credited_rep": "Priya",
+          "why": "Appointment credited to the calendar event's assigned user Priya, not the contact owner Jordan",
+          "events_row": {
+            "date": "2026-09-21",
+            "event_type": "appointment",
+            "contact": "Maria Velez",
+            "rep": "Priya",
+            "calendar": "Consult Calendar",
+            "status": "showed",
+            "service": "Laser package",
+            "value": 2400
+          },
+          "scorecard_row": {
+            "date": "2026-09-21",
+            "rep": "Priya",
+            "leads": 14,
+            "booked": 9,
+            "held": 7,
+            "booked_per_lead": "64 percent",
+            "held_per_booked": "78 percent",
+            "contracts_sent": 4,
+            "revenue_booked": 9600,
+            "cash_per_lead": 686
+          },
+          "slack_leaderboard": "Scorecard for Sun Sep 21. 1. Priya 14 leads, 9 booked, 7 held, 78 percent held, 4 contracts, $9,600 booked, $686 cash per lead. 2. Jordan 16 leads, 8 booked, 5 held, 63 percent held, 3 contracts, $6,200 booked, $388 cash per lead.",
+          "unassigned_queue": "0 events parked today",
+          "if_it_had_failed": "Error trigger fires, Slack alert names the failing node and links the run, no row is silently skipped"
+        }
+      }
+    ]
+  }
+}

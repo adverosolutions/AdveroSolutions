@@ -1,0 +1,9 @@
+I need a simple n8n automation built for a small lead management workflow.
+
+The workflow should: receive lead information through a webhook, add the lead to Google Sheets or Airtable, use an AI API to categorize the lead as Hot, Warm, or Cold, update the lead with the AI result, and include basic error handling.
+
+Deliverable: a working n8n workflow that I can import and test, plus a short explanation of how it works.
+
+Requirements: experience with n8n, webhooks, APIs, Google Sheets/Airtable, and AI API integrations is preferred.
+
+This is a small test project with a $5 fixed budget. The workflow should be simple and focused, with no unnecessary complexity.

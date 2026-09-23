@@ -1,0 +1,644 @@
+{
+  "workflowId": "591d527e-70b3-4f96-9e19-ddc542ebc48d",
+  "workflowName": "Your Sales Request Follow-Up System",
+  "locationId": "ebyNANPagaK7ycf1pfge",
+  "url": "https://app.gohighlevel.com/v2/location/ebyNANPagaK7ycf1pfge/automation/workflow/591d527e-70b3-4f96-9e19-ddc542ebc48d",
+  "capturedAt": "2026-09-21T17:35:09.100Z",
+  "status": "draft",
+  "folder": null,
+  "references": {
+    "other": {
+      "8142d116-0485-4667-92aa-ece489f3aa64": "Tag the Contact sales-request",
+      "cf49dfbb-152c-4e77-978d-471a11e2b9af": "Open the Request in the Sales Pipeline",
+      "9f103bcd-1516-424b-bc22-7f9a3150c929": "Call You, Whisper the Details, Then Connect",
+      "ytu2vA1aOTnVQVExcO4d": "Sales Requests",
+      "13541eb1-3d4a-4ae0-894b-7b95d2493cf1": "New Request",
+      "e0399a70-5478-447a-89c1-96bc49f8f5d0": "Did the Call Connect",
+      "677723e4-edc7-49b6-9555-5ad46cc8adef": "Call Connected",
+      "5b187b23-ad6d-414b-95ca-96b89b8eb94a": "Call Not Connected",
+      "75daa25b-41c6-4283-8ad2-c0d42fa34199": "None",
+      "fb6b54bb-c35a-4048-bda8-094a9e3addf9": "Move the Request to Spoke With",
+      "2a2ef0bf-667d-42bc-8740-b288ef562e63": "Spoke With",
+      "911d9240-b62c-4699-8181-8b667bc5fb69": "Text: Sorry I Missed You",
+      "96ac03af-51d9-4500-81ef-06259c44fe68": "Wait 1 Day",
+      "bc10693f-9e19-47e2-a0c3-27ac4862ceb0": "Email: Getting You on the Schedule",
+      "bc420a5b-4f8e-4000-a3e5-00d2c5967631": "Wait 2 Days",
+      "09ae4244-9351-4bf2-a64f-96523393080a": "Manual Call Task for You",
+      "571b62d0-60bf-4d54-8d72-33196a5dddf3": "Wait 3 Days",
+      "d48a2b29-529a-4e1f-9668-952376f54f02": "Text: Still Want This on the Calendar",
+      "d940d62e-4079-480a-a954-bb98d9fd9ead": "Wait 4 Days",
+      "b5fd578e-5e93-4193-9ed5-17ddc779eecf": "Email: Last Note From Us",
+      "fd3b6510-57df-4284-95b1-b43b489a8532": "Goal: They Replied or Booked",
+      "0e3d86ab-ffe1-43b0-97ce-394a27413dcd": "Remove the sales-request Tag",
+      "d9c8ca68-3461-415f-988b-715945bced62": "Move the Request to Replied",
+      "26f87343-4c0d-419e-8697-d740fb240946": "Text You That They Answered",
+      "LJE8sZdwUKqTKLI6mwci": "Sales Request Form Submitted",
+      "591d527e-70b3-4f96-9e19-ddc542ebc48d": "Your Sales Request Follow-Up System"
+    }
+  },
+  "unresolvedReferenceIds": [],
+  "captureComplete": {
+    "triggers": true,
+    "tier": "A:vue-state"
+  },
+  "triggers": [
+    {
+      "id": "LJE8sZdwUKqTKLI6mwci",
+      "date_added": "2026-09-21T17:14:50.460Z",
+      "deleted": false,
+      "active": false,
+      "actions": [
+        {
+          "workflow_id": "591d527e-70b3-4f96-9e19-ddc542ebc48d",
+          "type": "add_to_workflow",
+          "workflow_name": "Your Sales Request Follow-Up System"
+        }
+      ],
+      "conditions": [],
+      "type": "form_submission",
+      "masterType": "highlevel",
+      "workflow_id": "591d527e-70b3-4f96-9e19-ddc542ebc48d",
+      "location_id": "ebyNANPagaK7ycf1pfge",
+      "name": "Sales Request Form Submitted",
+      "belongs_to": "workflow",
+      "date_updated": "2026-09-21T17:18:19.346Z",
+      "status": "draft",
+      "workflow_name": "Your Sales Request Follow-Up System"
+    }
+  ],
+  "metadata": {
+    "createdAt": "2026-09-21T17:13:57.515Z",
+    "updatedAt": "2026-09-21T17:20:16.541Z",
+    "settings": {
+      "locationId": "ebyNANPagaK7ycf1pfge",
+      "companyId": "nizhdvkxvM2rIZtGMzVa",
+      "version": 3,
+      "dataVersion": 7,
+      "allowMultiple": true,
+      "timezone": "account",
+      "removeContactFromLastStep": true,
+      "filePath": "location/ebyNANPagaK7ycf1pfge/workflows/591d527e-70b3-4f96-9e19-ddc542ebc48d/3",
+      "fileUrl": "https://firebasestorage.googleapis.com/v0/b/automation-workflows-production/o/location%2FebyNANPagaK7ycf1pfge%2Fworkflows%2F591d527e-70b3-4f96-9e19-ddc542ebc48d%2F3?alt=media&token=REDACTED",
+      "stopOnResponse": false,
+      "autoMarkAsRead": false,
+      "permission": 380,
+      "type": "workflow",
+      "updatedBy": "gIwBtPohHJXADQBuGAx8",
+      "deleted": false,
+      "allowMultipleOpportunity": true,
+      "creationSource": "workflow_ai",
+      "isTriggerBucketMigrated": true,
+      "originType": "user",
+      "__v": 0,
+      "triggersFilePath": "location/ebyNANPagaK7ycf1pfge/workflow-triggers/591d527e-70b3-4f96-9e19-ddc542ebc48d/3"
+    }
+  },
+  "nodes": [
+    {
+      "type": "add_contact_tag",
+      "id": "8142d116-0485-4667-92aa-ece489f3aa64",
+      "name": "Tag the Contact sales-request",
+      "next": "cf49dfbb-152c-4e77-978d-471a11e2b9af",
+      "attributes": {
+        "tags": [
+          "sales-request"
+        ]
+      },
+      "order": 0,
+      "nextName": "Open the Request in the Sales Pipeline"
+    },
+    {
+      "type": "create_opportunity",
+      "id": "cf49dfbb-152c-4e77-978d-471a11e2b9af",
+      "name": "Open the Request in the Sales Pipeline",
+      "next": "9f103bcd-1516-424b-bc22-7f9a3150c929",
+      "attributes": {
+        "pipeline_id": "ytu2vA1aOTnVQVExcO4d",
+        "pipeline_stage_id": "13541eb1-3d4a-4ae0-894b-7b95d2493cf1",
+        "opportunity_name": "{{contact.first_name}} {{contact.last_name}} - {{contact.desired_service}}",
+        "opportunity_source": "",
+        "monetary_value": "",
+        "opportunity_status": "open",
+        "pipeline_name": "Sales Requests",
+        "pipeline_stage_name": "New Request"
+      },
+      "parentKey": "8142d116-0485-4667-92aa-ece489f3aa64",
+      "order": 1,
+      "nextName": "Call You, Whisper the Details, Then Connect",
+      "parentKeyName": "Tag the Contact sales-request"
+    },
+    {
+      "type": "call",
+      "id": "9f103bcd-1516-424b-bc22-7f9a3150c929",
+      "name": "Call You, Whisper the Details, Then Connect",
+      "next": "e0399a70-5478-447a-89c1-96bc49f8f5d0",
+      "attributes": {
+        "timeout": 25,
+        "whisper_message": "New sales request from {{contact.lead_source}}. {{contact.square_footage}} square feet. Wants {{contact.desired_service}}. Connecting you now.",
+        "disable_detect_voicemail": false,
+        "call_connect": true
+      },
+      "parentKey": "cf49dfbb-152c-4e77-978d-471a11e2b9af",
+      "order": 2,
+      "nextName": "Did the Call Connect",
+      "parentKeyName": "Open the Request in the Sales Pipeline"
+    },
+    {
+      "type": "if_else",
+      "id": "e0399a70-5478-447a-89c1-96bc49f8f5d0",
+      "name": "Did the Call Connect",
+      "attributes": {
+        "currentRecipeType": "CUSTOM",
+        "branches": [
+          {
+            "name": "Call Connected Branch",
+            "operator": "and",
+            "segments": [
+              {
+                "operator": "and",
+                "conditions": [
+                  {
+                    "conditionType": "events",
+                    "conditionSubType": "email_event",
+                    "conditionOperator": "=="
+                  },
+                  {
+                    "conditionType": "contact_reply",
+                    "conditionSubType": "contact_replied",
+                    "conditionOperator": "==",
+                    "conditionValue": "true"
+                  }
+                ]
+              }
+            ],
+            "id": "677723e4-edc7-49b6-9555-5ad46cc8adef"
+          },
+          {
+            "name": "Call Not Connected",
+            "operator": "and",
+            "segments": [
+              {
+                "operator": "or",
+                "conditions": [
+                  {
+                    "conditionType": "appointment",
+                    "conditionSubType": "startTime",
+                    "conditionOperator": "=="
+                  },
+                  {
+                    "conditionType": "contact_reply",
+                    "conditionSubType": "contact_replied",
+                    "conditionOperator": "==",
+                    "conditionValue": "false"
+                  },
+                  {
+                    "conditionType": "contact_reply",
+                    "conditionSubType": "contact_replied",
+                    "conditionOperator": "==",
+                    "conditionValue": "false"
+                  }
+                ]
+              }
+            ],
+            "id": "5b187b23-ad6d-414b-95ca-96b89b8eb94a"
+          }
+        ],
+        "if": true,
+        "operator": "and",
+        "conditionName": "Did the Call Connect",
+        "version": 2,
+        "noneBranchName": "None"
+      },
+      "parentKey": "9f103bcd-1516-424b-bc22-7f9a3150c929",
+      "nodeType": "condition-node",
+      "cat": "conditions",
+      "next": [
+        "677723e4-edc7-49b6-9555-5ad46cc8adef",
+        "5b187b23-ad6d-414b-95ca-96b89b8eb94a",
+        "75daa25b-41c6-4283-8ad2-c0d42fa34199"
+      ],
+      "order": 3,
+      "parentKeyName": "Call You, Whisper the Details, Then Connect",
+      "nextNames": [
+        "Call Connected",
+        "Call Not Connected",
+        "None"
+      ]
+    },
+    {
+      "type": "if_else",
+      "id": "677723e4-edc7-49b6-9555-5ad46cc8adef",
+      "name": "Call Connected",
+      "parentKey": "e0399a70-5478-447a-89c1-96bc49f8f5d0",
+      "parent": "e0399a70-5478-447a-89c1-96bc49f8f5d0",
+      "nodeType": "branch-yes",
+      "cat": "conditions",
+      "sibling": [
+        "5b187b23-ad6d-414b-95ca-96b89b8eb94a",
+        "75daa25b-41c6-4283-8ad2-c0d42fa34199"
+      ],
+      "attributes": {
+        "if": false,
+        "conditionName": "Condition",
+        "operator": "and",
+        "branches": []
+      },
+      "order": 4,
+      "next": "fb6b54bb-c35a-4048-bda8-094a9e3addf9",
+      "parentKeyName": "Did the Call Connect",
+      "parentName": "Did the Call Connect",
+      "siblingNames": [
+        "Call Not Connected",
+        "None"
+      ],
+      "nextName": "Move the Request to Spoke With"
+    },
+    {
+      "type": "create_opportunity",
+      "id": "fb6b54bb-c35a-4048-bda8-094a9e3addf9",
+      "name": "Move the Request to Spoke With",
+      "attributes": {
+        "pipeline_id": "ytu2vA1aOTnVQVExcO4d",
+        "pipeline_stage_id": "2a2ef0bf-667d-42bc-8740-b288ef562e63",
+        "opportunity_name": "{{contact.name}}",
+        "opportunity_source": "Unknown",
+        "monetary_value": "",
+        "opportunity_status": "open",
+        "pipeline_name": "Sales Requests",
+        "pipeline_stage_name": "Spoke With"
+      },
+      "next": "",
+      "parentKey": "677723e4-edc7-49b6-9555-5ad46cc8adef",
+      "parent": "677723e4-edc7-49b6-9555-5ad46cc8adef",
+      "order": 0,
+      "parentKeyName": "Call Connected",
+      "parentName": "Call Connected"
+    },
+    {
+      "type": "if_else",
+      "id": "5b187b23-ad6d-414b-95ca-96b89b8eb94a",
+      "name": "Call Not Connected",
+      "parentKey": "e0399a70-5478-447a-89c1-96bc49f8f5d0",
+      "parent": "e0399a70-5478-447a-89c1-96bc49f8f5d0",
+      "nodeType": "branch-yes",
+      "cat": "conditions",
+      "sibling": [
+        "677723e4-edc7-49b6-9555-5ad46cc8adef",
+        "75daa25b-41c6-4283-8ad2-c0d42fa34199"
+      ],
+      "attributes": {
+        "if": false,
+        "conditionName": "Condition",
+        "operator": "and",
+        "branches": []
+      },
+      "order": 4,
+      "next": "911d9240-b62c-4699-8181-8b667bc5fb69",
+      "parentKeyName": "Did the Call Connect",
+      "parentName": "Did the Call Connect",
+      "siblingNames": [
+        "Call Connected",
+        "None"
+      ],
+      "nextName": "Text: Sorry I Missed You"
+    },
+    {
+      "type": "sms",
+      "id": "911d9240-b62c-4699-8181-8b667bc5fb69",
+      "name": "Text: Sorry I Missed You",
+      "next": "96ac03af-51d9-4500-81ef-06259c44fe68",
+      "attributes": {
+        "body": "Hi {{contact.first_name}}, it is {{user.first_name}} with {{location.name}}. I just tried calling about your {{contact.desired_service}} request and missed you. What day works best for us to come out? You can reply right here.",
+        "assignedOwners": [
+          "contact_owner"
+        ],
+        "alsoNotifyContactFollowers": false,
+        "alsoNotifyOpportunityFollowers": false
+      },
+      "parentKey": "5b187b23-ad6d-414b-95ca-96b89b8eb94a",
+      "parent": "5b187b23-ad6d-414b-95ca-96b89b8eb94a",
+      "order": 0,
+      "nextName": "Wait 1 Day",
+      "parentKeyName": "Call Not Connected",
+      "parentName": "Call Not Connected"
+    },
+    {
+      "type": "wait",
+      "id": "96ac03af-51d9-4500-81ef-06259c44fe68",
+      "name": "Wait 1 Day",
+      "next": "bc10693f-9e19-47e2-a0c3-27ac4862ceb0",
+      "attributes": {
+        "type": "time",
+        "convertToMultipath": false,
+        "hybridActionType": "wait",
+        "isHybridAction": true,
+        "name": "Wait 1 Day",
+        "cat": "action",
+        "transitions": [],
+        "startAfter": {
+          "when": "after",
+          "type": "days",
+          "value": 1
+        },
+        "timePeriodInputMode": "standard",
+        "unitInputMode": "standard"
+      },
+      "parentKey": "911d9240-b62c-4699-8181-8b667bc5fb69",
+      "parent": "5b187b23-ad6d-414b-95ca-96b89b8eb94a",
+      "order": 1,
+      "nextName": "Email: Getting You on the Schedule",
+      "parentKeyName": "Text: Sorry I Missed You",
+      "parentName": "Call Not Connected"
+    },
+    {
+      "type": "email",
+      "id": "bc10693f-9e19-47e2-a0c3-27ac4862ceb0",
+      "name": "Email: Getting You on the Schedule",
+      "next": "bc420a5b-4f8e-4000-a3e5-00d2c5967631",
+      "attributes": {
+        "subject": "Your {{contact.desired_service}} request, {{contact.first_name}}",
+        "html": "Hi {{contact.first_name}}, thanks for asking us about {{contact.desired_service}}. I tried calling and missed you, so here is the short version. Tell me the day that works for you and I will hold the spot and confirm the price before we start. If you would rather talk it through, reply with a good time and I will call you then. {{user.first_name}}, {{location.name}}",
+        "from_name": "",
+        "from_email": "",
+        "cc": "",
+        "bcc": "",
+        "preHeader": "Thanks for your interest in our services. Let's find a time that works for you.",
+        "assignedOwners": [
+          "contact_owner"
+        ],
+        "alsoNotifyContactFollowers": false,
+        "alsoNotifyOpportunityFollowers": false
+      },
+      "parentKey": "96ac03af-51d9-4500-81ef-06259c44fe68",
+      "parent": "5b187b23-ad6d-414b-95ca-96b89b8eb94a",
+      "order": 2,
+      "nextName": "Wait 2 Days",
+      "parentKeyName": "Wait 1 Day",
+      "parentName": "Call Not Connected"
+    },
+    {
+      "type": "wait",
+      "id": "bc420a5b-4f8e-4000-a3e5-00d2c5967631",
+      "name": "Wait 2 Days",
+      "next": "09ae4244-9351-4bf2-a64f-96523393080a",
+      "attributes": {
+        "type": "time",
+        "convertToMultipath": false,
+        "hybridActionType": "wait",
+        "isHybridAction": true,
+        "name": "Wait 2 Days",
+        "cat": "action",
+        "transitions": [],
+        "startAfter": {
+          "when": "after",
+          "type": "days",
+          "value": 2
+        },
+        "timePeriodInputMode": "standard",
+        "unitInputMode": "standard"
+      },
+      "parentKey": "bc10693f-9e19-47e2-a0c3-27ac4862ceb0",
+      "parent": "5b187b23-ad6d-414b-95ca-96b89b8eb94a",
+      "order": 3,
+      "nextName": "Manual Call Task for You",
+      "parentKeyName": "Email: Getting You on the Schedule",
+      "parentName": "Call Not Connected"
+    },
+    {
+      "type": "add_notes",
+      "id": "09ae4244-9351-4bf2-a64f-96523393080a",
+      "name": "Manual Call Task for You",
+      "next": "571b62d0-60bf-4d54-8d72-33196a5dddf3",
+      "attributes": {
+        "html": "Call {{contact.first_name}} at {{contact.phone}}. They asked about {{contact.desired_service}} for {{contact.square_footage}} square feet and came from {{contact.lead_source}}. Goal of the call is a day on the calendar. If you get voicemail, leave one and mark the task complete so the texts and emails keep running.",
+        "title": "Call {{contact.first_name}} about their {{contact.desired_service}}",
+        "color": null
+      },
+      "parentKey": "bc420a5b-4f8e-4000-a3e5-00d2c5967631",
+      "parent": "5b187b23-ad6d-414b-95ca-96b89b8eb94a",
+      "order": 4,
+      "nextName": "Wait 3 Days",
+      "parentKeyName": "Wait 2 Days",
+      "parentName": "Call Not Connected"
+    },
+    {
+      "type": "wait",
+      "id": "571b62d0-60bf-4d54-8d72-33196a5dddf3",
+      "name": "Wait 3 Days",
+      "next": "d48a2b29-529a-4e1f-9668-952376f54f02",
+      "attributes": {
+        "type": "time",
+        "convertToMultipath": false,
+        "hybridActionType": "wait",
+        "isHybridAction": true,
+        "name": "Wait 3 Days",
+        "cat": "action",
+        "transitions": [],
+        "startAfter": {
+          "when": "after",
+          "type": "days",
+          "value": 3
+        },
+        "timePeriodInputMode": "standard",
+        "unitInputMode": "standard"
+      },
+      "parentKey": "09ae4244-9351-4bf2-a64f-96523393080a",
+      "parent": "5b187b23-ad6d-414b-95ca-96b89b8eb94a",
+      "order": 5,
+      "nextName": "Text: Still Want This on the Calendar",
+      "parentKeyName": "Manual Call Task for You",
+      "parentName": "Call Not Connected"
+    },
+    {
+      "type": "sms",
+      "id": "d48a2b29-529a-4e1f-9668-952376f54f02",
+      "name": "Text: Still Want This on the Calendar",
+      "next": "d940d62e-4079-480a-a954-bb98d9fd9ead",
+      "attributes": {
+        "body": "Hi {{contact.first_name}}, {{user.first_name}} with {{location.name}} again. We still have room this week for your {{contact.desired_service}}. Reply with a day that works and I will hold the slot for you.",
+        "assignedOwners": [
+          "contact_owner"
+        ],
+        "alsoNotifyContactFollowers": false,
+        "alsoNotifyOpportunityFollowers": false
+      },
+      "parentKey": "571b62d0-60bf-4d54-8d72-33196a5dddf3",
+      "parent": "5b187b23-ad6d-414b-95ca-96b89b8eb94a",
+      "order": 6,
+      "nextName": "Wait 4 Days",
+      "parentKeyName": "Wait 3 Days",
+      "parentName": "Call Not Connected"
+    },
+    {
+      "type": "wait",
+      "id": "d940d62e-4079-480a-a954-bb98d9fd9ead",
+      "name": "Wait 4 Days",
+      "next": "b5fd578e-5e93-4193-9ed5-17ddc779eecf",
+      "attributes": {
+        "type": "time",
+        "convertToMultipath": false,
+        "hybridActionType": "wait",
+        "isHybridAction": true,
+        "name": "Wait 4 Days",
+        "cat": "action",
+        "transitions": [],
+        "startAfter": {
+          "when": "after",
+          "type": "days",
+          "value": 4
+        },
+        "timePeriodInputMode": "standard",
+        "unitInputMode": "standard"
+      },
+      "parentKey": "d48a2b29-529a-4e1f-9668-952376f54f02",
+      "parent": "5b187b23-ad6d-414b-95ca-96b89b8eb94a",
+      "order": 7,
+      "nextName": "Email: Last Note From Us",
+      "parentKeyName": "Text: Still Want This on the Calendar",
+      "parentName": "Call Not Connected"
+    },
+    {
+      "type": "email",
+      "id": "b5fd578e-5e93-4193-9ed5-17ddc779eecf",
+      "name": "Email: Last Note From Us",
+      "next": "fd3b6510-57df-4284-95b1-b43b489a8532",
+      "attributes": {
+        "subject": "Last note about your {{contact.desired_service}}",
+        "html": "Hi {{contact.first_name}}, this is my last note so I am not a pest. If you still want the {{contact.desired_service}} done, reply here or text us back and we will find a time that works for you. If the timing is off, just say the word and I will check back down the road. {{user.first_name}}, {{location.name}}",
+        "from_name": "",
+        "from_email": "",
+        "cc": "",
+        "bcc": "",
+        "preHeader": "This is the last follow-up about your {{contact.desired_service}} request.",
+        "assignedOwners": [
+          "contact_owner"
+        ],
+        "alsoNotifyContactFollowers": false,
+        "alsoNotifyOpportunityFollowers": false
+      },
+      "parentKey": "d940d62e-4079-480a-a954-bb98d9fd9ead",
+      "parent": "5b187b23-ad6d-414b-95ca-96b89b8eb94a",
+      "order": 8,
+      "nextName": "Goal: They Replied or Booked",
+      "parentKeyName": "Wait 4 Days",
+      "parentName": "Call Not Connected"
+    },
+    {
+      "type": "workflow_goal",
+      "id": "fd3b6510-57df-4284-95b1-b43b489a8532",
+      "name": "Goal: They Replied or Booked",
+      "next": "0e3d86ab-ffe1-43b0-97ce-394a27413dcd",
+      "attributes": {
+        "op": "or",
+        "segments": [
+          {
+            "op": "or",
+            "conditions": [
+              {
+                "goal_condition": "email_event",
+                "extras": {
+                  "stepIds": [],
+                  "event_types": []
+                },
+                "id": "c8dcfbe9-8f2d-4017-9027-8e0bc39c514a"
+              }
+            ]
+          }
+        ],
+        "type": "workflow_goal",
+        "action": "exit"
+      },
+      "parentKey": "b5fd578e-5e93-4193-9ed5-17ddc779eecf",
+      "parent": "5b187b23-ad6d-414b-95ca-96b89b8eb94a",
+      "order": 9,
+      "nextName": "Remove the sales-request Tag",
+      "parentKeyName": "Email: Last Note From Us",
+      "parentName": "Call Not Connected"
+    },
+    {
+      "type": "remove_contact_tag",
+      "id": "0e3d86ab-ffe1-43b0-97ce-394a27413dcd",
+      "name": "Remove the sales-request Tag",
+      "next": "d9c8ca68-3461-415f-988b-715945bced62",
+      "attributes": {
+        "tags": [
+          "sales-request"
+        ]
+      },
+      "parentKey": "fd3b6510-57df-4284-95b1-b43b489a8532",
+      "parent": "5b187b23-ad6d-414b-95ca-96b89b8eb94a",
+      "order": 10,
+      "nextName": "Move the Request to Replied",
+      "parentKeyName": "Goal: They Replied or Booked",
+      "parentName": "Call Not Connected"
+    },
+    {
+      "type": "internal_update_opportunity",
+      "id": "d9c8ca68-3461-415f-988b-715945bced62",
+      "name": "Move the Request to Replied",
+      "next": "26f87343-4c0d-419e-8697-d740fb240946",
+      "attributes": {
+        "allowBackward": true,
+        "DYNAMIC": "Update opportunity to 'Replied' stage with status open in 'Sales Requests' pipeline"
+      },
+      "parentKey": "0e3d86ab-ffe1-43b0-97ce-394a27413dcd",
+      "parent": "5b187b23-ad6d-414b-95ca-96b89b8eb94a",
+      "workflowsActionType": "INTERNAL",
+      "order": 11,
+      "nextName": "Text You That They Answered",
+      "parentKeyName": "Remove the sales-request Tag",
+      "parentName": "Call Not Connected"
+    },
+    {
+      "type": "internal_notification",
+      "id": "26f87343-4c0d-419e-8697-d740fb240946",
+      "name": "Text You That They Answered",
+      "attributes": {
+        "type": "notification",
+        "email": null,
+        "sms": null,
+        "userType": "assign",
+        "whatsapp": null,
+        "notification": {
+          "title": "Contact Replied - Call Back Now",
+          "body": "{{contact.first_name}} {{contact.last_name}} just replied about their {{contact.desired_service}} request. Call them back now at {{contact.phone}} while it is warm.",
+          "redirectPage": "contact",
+          "userType": "assign",
+          "assignedOwners": [
+            "contact_owner"
+          ],
+          "alsoNotifyContactFollowers": false,
+          "alsoNotifyOpportunityFollowers": false
+        }
+      },
+      "parentKey": "d9c8ca68-3461-415f-988b-715945bced62",
+      "parent": "5b187b23-ad6d-414b-95ca-96b89b8eb94a",
+      "order": 12,
+      "parentKeyName": "Move the Request to Replied",
+      "parentName": "Call Not Connected"
+    },
+    {
+      "type": "if_else",
+      "id": "75daa25b-41c6-4283-8ad2-c0d42fa34199",
+      "name": "None",
+      "parentKey": "e0399a70-5478-447a-89c1-96bc49f8f5d0",
+      "parent": "e0399a70-5478-447a-89c1-96bc49f8f5d0",
+      "nodeType": "branch-no",
+      "cat": "conditions",
+      "sibling": [
+        "677723e4-edc7-49b6-9555-5ad46cc8adef",
+        "5b187b23-ad6d-414b-95ca-96b89b8eb94a"
+      ],
+      "attributes": {
+        "else": true
+      },
+      "order": 4,
+      "parentKeyName": "Did the Call Connect",
+      "parentName": "Did the Call Connect",
+      "siblingNames": [
+        "Call Connected",
+        "Call Not Connected"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,787 @@
+{
+  "name": "Your Two-Voice News Desk - 6 Sources to Google Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - EVERY MORNING, PULL THE SIX SOURCES\n\nOne trigger for the whole pipeline. The six urls live in one node, so swapping a source is a one line edit, not a rebuild.",
+        "height": 560,
+        "width": 1180,
+        "color": 5
+      },
+      "id": "3f34b51d-94e4-5843-97ae-4387308a55fe",
+      "name": "Section - 1 - EVERY MORNING, PULL THE SIX SOURCES",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - KEEP ONLY WHAT IS NEW AND ON TOPIC\n\nKeyword screen first, then a lookup against what the sheet already holds. The same story never gets written or paid for twice.",
+        "height": 560,
+        "width": 940,
+        "color": 4
+      },
+      "id": "ee117417-77e5-53f6-a618-516701c11389",
+      "name": "Section - 2 - KEEP ONLY WHAT IS NEW AND ON TOPIC",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - REWRITE EVERY STORY IN BOTH VOICES\n\nTwo separate nodes, two separate prompts. Style A reads like a newsroom wire, style B like a signed column, and you can tune one without touching the other.",
+        "height": 560,
+        "width": 900,
+        "color": 6
+      },
+      "id": "f3d16b05-fc2f-541b-a37e-a76176f79b25",
+      "name": "Section - 3 - REWRITE EVERY STORY IN BOTH VOICES",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2380,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - WRITE THE 20 ORIGINAL TOPICS\n\nYour own topic list, written by the same model, landing in the same review sheet with the source marked original so editors can sort them apart.",
+        "height": 560,
+        "width": 800,
+        "color": 7
+      },
+      "id": "e9b734d1-aded-5280-8ee9-a0dde149b927",
+      "name": "Section - 4 - WRITE THE 20 ORIGINAL TOPICS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3440,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - NOTHING FAILS QUIETLY\n\nA dead source gets logged and the other five keep running. A real failure pings you before anyone opens the sheet and finds it empty.",
+        "height": 560,
+        "width": 460,
+        "color": 1
+      },
+      "id": "97417580-0f90-5530-ab80-efdbbf6f86c2",
+      "name": "Section - 5 - NOTHING FAILS QUIETLY",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4400,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "23a952e9-0a52-531b-9aed-2b4623fb4db8",
+      "name": "1 - Every Morning at 6am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ff7ab607-c945-5611-b857-7af15f909c32",
+              "name": "trigger",
+              "value": "={{ $json.trigger }}",
+              "type": "string"
+            },
+            {
+              "id": "f93675fb-aac3-5339-ba49-89f07eb5e067",
+              "name": "sources",
+              "value": "={{ $json.sources }}",
+              "type": "array"
+            },
+            {
+              "id": "afa700f1-357a-54d3-9538-38d36a024e7b",
+              "name": "keywords",
+              "value": "={{ $json.keywords }}",
+              "type": "array"
+            },
+            {
+              "id": "cfd37740-64b4-583e-b19d-556e55d5ae37",
+              "name": "topics_tab",
+              "value": "={{ $json.topics_tab }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "92128986-16e9-5969-b352-fef73938d2d6",
+      "name": "2 - Load the 6 Source Feeds",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        240,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/3-fetch-the-rss-feed",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "e2c14588-5e96-5126-8985-c59ffe9e891d",
+      "name": "3 - Fetch the RSS Feed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        480,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ce6d8afb-0717-505e-993b-df5c1fb405fb",
+              "leftValue": "={{ $json.feed_reachable }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a7a1eed0-9ca3-58b9-8101-2f1fa16dcc77",
+      "name": "4 - Feed Reachable?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        720,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "0ea9407c-ef2f-598a-99a5-3fda94fdc760",
+      "name": "5 - Log the Dead Source",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        960,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "id": "0dcdfb83-783c-5191-bc93-7e3f872c20f7",
+      "name": "6 - Split Into One Story per Item",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1340,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f5927dbf-fbd7-584f-8df5-8e4e941209de",
+              "leftValue": "={{ $json.keep_only }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "437b2d03-33f2-5d9d-a9a8-8afa7837ac62",
+      "name": "7 - Keep Only Topic Relevant Stories",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1580,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "options": {},
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        }
+      },
+      "id": "3fe54a17-0ea6-5231-8f79-3d62d8169186",
+      "name": "8 - Look Up What We Already Published",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1820,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5304c41b-061c-56b8-87c7-9a688a04694c",
+              "leftValue": "={{ $json.new_story }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "61c64fcd-c657-567c-a7e8-3b4802130494",
+      "name": "9 - New Story?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2060,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=10 - Rewrite in Style A, Newsroom\n\ntrigger: {{ $json.trigger }}\nsources: {{ $json.sources }}\nkeywords: {{ $json.keywords }}\ntopics_tab: {{ $json.topics_tab }}",
+        "batching": {}
+      },
+      "id": "75ccd8c5-ec77-52e9-a368-c8bc10965508",
+      "name": "10 - Rewrite in Style A, Newsroom",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "id": "a814a857-bfdd-5d5b-94dc-3666d5640fd7",
+      "name": "GPT-4o",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2480,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=11 - Rewrite in Style B, Editorial Column\n\ntrigger: {{ $json.trigger }}\nsources: {{ $json.sources }}\nkeywords: {{ $json.keywords }}\ntopics_tab: {{ $json.topics_tab }}",
+        "batching": {}
+      },
+      "id": "b5a7e378-05ce-583c-abea-68282c30f8d7",
+      "name": "11 - Rewrite in Style B, Editorial Column",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2780,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "id": "cdb2064a-0a06-5791-b934-52e8acca6d29",
+      "name": "GPT-4o 2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2840,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "655e5784-0d8f-5419-b6ab-b5bb99ffcb5e",
+      "name": "12 - Write Both Versions to the Review Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3120,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "options": {},
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        }
+      },
+      "id": "c18389c9-9bf1-5b50-9bc1-6c2d25c73b25",
+      "name": "13 - Load the 20 Topic Prompts",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        3500,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=14 - Write the Topic Article\n\ntrigger: {{ $json.trigger }}\nsources: {{ $json.sources }}\nkeywords: {{ $json.keywords }}\ntopics_tab: {{ $json.topics_tab }}",
+        "batching": {}
+      },
+      "id": "9cc212b5-6be8-55fa-a885-c63d6652c1f4",
+      "name": "14 - Write the Topic Article",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        3740,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "id": "40184ca7-974a-53b0-8117-cab6b7bafacd",
+      "name": "GPT-4o 3",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        3800,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "31bcd6d2-d03e-5e5a-8c41-8717ce4f4016",
+      "name": "15 - Add the Originals to the Same Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4080,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "3adb40ca-3bbc-598a-a435-3fe6a01fbbb5",
+      "name": "16 - Any Node Fails, Anywhere",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        4460,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "id": "5f7fe1ff-0713-550d-84ac-e12c7c8993c6",
+      "name": "17 - Alert: Pipeline Failed",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4700,
+        80
+      ]
+    }
+  ],
+  "connections": {
+    "1 - Every Morning at 6am": {
+      "main": [
+        [
+          {
+            "node": "2 - Load the 6 Source Feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Load the 6 Source Feeds": {
+      "main": [
+        [
+          {
+            "node": "3 - Fetch the RSS Feed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Fetch the RSS Feed": {
+      "main": [
+        [
+          {
+            "node": "4 - Feed Reachable?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - Feed Reachable?": {
+      "main": [
+        [
+          {
+            "node": "6 - Split Into One Story per Item",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "5 - Log the Dead Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Split Into One Story per Item": {
+      "main": [
+        [
+          {
+            "node": "7 - Keep Only Topic Relevant Stories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - Keep Only Topic Relevant Stories": {
+      "main": [
+        [
+          {
+            "node": "8 - Look Up What We Already Published",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - Look Up What We Already Published": {
+      "main": [
+        [
+          {
+            "node": "9 - New Story?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9 - New Story?": {
+      "main": [
+        [
+          {
+            "node": "10 - Rewrite in Style A, Newsroom",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "6 - Split Into One Story per Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Rewrite in Style A, Newsroom": {
+      "main": [
+        [
+          {
+            "node": "11 - Rewrite in Style B, Editorial Column",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Rewrite in Style B, Editorial Column": {
+      "main": [
+        [
+          {
+            "node": "12 - Write Both Versions to the Review Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 - Write Both Versions to the Review Sheet": {
+      "main": [
+        [
+          {
+            "node": "13 - Load the 20 Topic Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - Load the 20 Topic Prompts": {
+      "main": [
+        [
+          {
+            "node": "14 - Write the Topic Article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 - Write the Topic Article": {
+      "main": [
+        [
+          {
+            "node": "15 - Add the Originals to the Same Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16 - Any Node Fails, Anywhere": {
+      "main": [
+        [
+          {
+            "node": "17 - Alert: Pipeline Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4o": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "10 - Rewrite in Style A, Newsroom",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4o 2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "11 - Rewrite in Style B, Editorial Column",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4o 3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "14 - Write the Topic Article",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "83604844-dc8a-5bdd-bb5e-b58f5cce2ae0",
+  "pinData": {
+    "1 - Every Morning at 6am": [
+      {
+        "json": {
+          "trigger": "Schedule, 06:00 Asia/Jerusalem, 2026-09-11",
+          "sources": [
+            {
+              "name": "TechCrunch",
+              "feed": "https://techcrunch.com/feed/"
+            },
+            {
+              "name": "The Verge",
+              "feed": "https://www.theverge.com/rss/index.xml"
+            },
+            {
+              "name": "Reuters Business",
+              "feed": "https://www.reutersagency.com/feed/?best-topics=business-finance"
+            },
+            {
+              "name": "Ars Technica",
+              "feed": "https://feeds.arstechnica.com/arstechnica/index"
+            },
+            {
+              "name": "VentureBeat",
+              "feed": "https://venturebeat.com/feed/"
+            },
+            {
+              "name": "Wired Business",
+              "feed": "https://www.wired.com/feed/category/business/rss"
+            }
+          ],
+          "keywords": [
+            "ai",
+            "startup",
+            "funding",
+            "regulation",
+            "chips"
+          ],
+          "topics_tab": "Topics!A2:B21"
+        }
+      }
+    ],
+    "15 - Add the Originals to the Same Sheet": [
+      {
+        "json": {
+          "row_written": {
+            "run_date": "2026-09-11",
+            "source": "TechCrunch",
+            "url": "https://techcrunch.com/2026/09/11/eu-ai-act-enforcement-begins/",
+            "headline": "EU begins enforcing the AI Act, first audits target foundation model providers",
+            "style_a": "Brussels started enforcing the AI Act on Thursday, with the first compliance audits aimed at providers of general purpose models. Regulators said the opening round covers documentation, training data disclosure, and incident reporting. Firms that miss the filing window face fines of up to three percent of global turnover.",
+            "style_b": "The AI Act was always going to arrive as paperwork rather than as a thunderclap, and here it is. What matters is not the fines, which are survivable, but the disclosure line, which forces labs to say out loud what they trained on. Expect the next six months to be an argument about definitions.",
+            "status": "needs review"
+          },
+          "run_summary": {
+            "feeds_fetched": 6,
+            "feeds_unreachable": 1,
+            "dead_source_logged": "Wired Business, 403 at 06:00",
+            "stories_seen": 84,
+            "topic_relevant": 19,
+            "duplicates_skipped": 7,
+            "news_rows_written": 12,
+            "original_topic_rows_written": 20,
+            "sheet_rows_total": 32,
+            "runtime": "4m 12s"
+          }
+        }
+      }
+    ]
+  }
+}

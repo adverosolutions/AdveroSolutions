@@ -1,0 +1,66 @@
+{
+  "archetype": "web_monitoring",
+  "title": "Competitor Page Watch → Diff → Classified Alert",
+  "platform": "n8n",
+  "sections": [
+    { "key": "sweep",  "label": "1 · SWEEP",     "note": "The watchlist is walked on a schedule, one page at a time with a polite delay between requests. Every URL carries its own selector, so only the region that matters is read." },
+    { "key": "diff",   "label": "2 · DIFF",      "note": "The extracted region is hashed and compared to the last snapshot. Unchanged pages cost nothing and stop here, which is what keeps a 200-page watchlist cheap to run hourly." },
+    { "key": "judge",  "label": "3 · CLASSIFY",  "note": "Changes are read and classified before anyone is told. A price move or a new plan tier is worth an alert; a rotated testimonial or a changed hero image is not. This is the difference between a useful monitor and one people mute." },
+    { "key": "tell",   "label": "4 · ALERT",     "note": "Material changes alert with a plain-language description of what moved and the before/after values. Every check is snapshotted so the history is queryable later." }
+  ],
+  "nodes": [
+    { "key": "cron",     "kind": "trigger.schedule", "label": "Every 6 Hours", "section": "sweep" },
+    { "key": "list",     "kind": "app.action", "app": "googleSheets", "op": "read", "label": "Load Watchlist", "section": "sweep" },
+    { "key": "loop",     "kind": "data.split", "label": "One URL at a Time", "section": "sweep" },
+    { "key": "fetch",    "kind": "net.http", "label": "Fetch Page", "section": "sweep" },
+    { "key": "extract",  "kind": "app.action", "app": "html", "op": "extract", "label": "Extract Watched Region", "section": "diff" },
+    { "key": "hash",     "kind": "data.code", "label": "Hash & Compare", "section": "diff" },
+    { "key": "changed",  "kind": "flow.branch", "label": "Changed?", "section": "diff" },
+    { "key": "classify", "kind": "ai.llm", "label": "Material or Cosmetic?", "section": "judge" },
+    { "key": "model",    "kind": "ai.model", "app": "openai", "label": "GPT-4.1", "parent": "classify" },
+    { "key": "gate",     "kind": "flow.branch", "label": "Material?", "section": "judge" },
+    { "key": "alert",    "kind": "app.action", "app": "slack", "op": "post", "label": "Alert #competitive", "section": "tell" },
+    { "key": "snapshot", "kind": "app.action", "app": "googleSheets", "op": "append", "label": "Store Snapshot", "section": "tell" }
+  ],
+  "edges": [
+    { "from": "cron", "to": "list" },
+    { "from": "list", "to": "loop" },
+    { "from": "loop", "to": "fetch" },
+    { "from": "fetch", "to": "extract" },
+    { "from": "extract", "to": "hash" },
+    { "from": "hash", "to": "changed" },
+    { "from": "changed", "to": "classify", "branch": "true" },
+    { "from": "changed", "to": "snapshot", "branch": "false" },
+    { "from": "classify", "to": "gate" },
+    { "from": "gate", "to": "alert", "branch": "true" },
+    { "from": "gate", "to": "snapshot", "branch": "false" },
+    { "from": "alert", "to": "snapshot" }
+  ],
+  "input_sample": {
+    "checked_at": "2026-07-31T12:00:00Z",
+    "watchlist_size": 42,
+    "url": "https://competitor.example.com/pricing",
+    "selector": "section#plans",
+    "label": "Competitor A — Pricing page",
+    "last_hash": "9f2c41ab77e0",
+    "last_checked": "2026-07-31T06:00:00Z"
+  },
+  "output_sample": {
+    "url": "https://competitor.example.com/pricing",
+    "label": "Competitor A — Pricing page",
+    "changed": true,
+    "new_hash": "3d81ce09b442",
+    "classification": "material",
+    "change_type": "pricing",
+    "summary": "Their Pro tier moved from $79 to $99 per seat per month, and a new 'Scale' tier appeared at $149 with SSO and audit logs — both features previously listed as enterprise-only.",
+    "diff": [
+      { "field": "Pro — monthly", "before": "$79", "after": "$99" },
+      { "field": "Tiers offered", "before": "Starter, Pro, Enterprise", "after": "Starter, Pro, Scale, Enterprise" }
+    ],
+    "alerted": true,
+    "alerted_channel": "#competitive",
+    "pages_checked_this_run": 42,
+    "pages_changed": 3,
+    "pages_material": 1
+  }
+}

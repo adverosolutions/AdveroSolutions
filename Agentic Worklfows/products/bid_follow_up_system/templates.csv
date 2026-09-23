@@ -1,0 +1,36 @@
+step,day,channel,subject,body,enabled
+1,1,email,Your {{project}} estimate from {{business_name}},"Hi {{first_name}},
+
+Thanks again for having us out. Your estimate for the {{project}} came to {{bid_amount}}.
+
+If anything in it needs a second look, or you'd like me to walk you through it, just reply here or call me at {{owner_phone}}.
+
+{{owner_name}}
+{{business_name}}",TRUE
+2,2,sms,,"Hi {{first_name}}, {{owner_name}} with {{business_name}}. Just making sure the {{project}} estimate reached you. Any questions? Reply STOP to opt out.",FALSE
+3,3,email,Quick question on the {{project}},"Hi {{first_name}},
+
+Wanted to check in on the {{project}} estimate. If anything needs adjusting, whether that's scope, timing, or budget, tell me and I'll rework it.
+
+If you're ready to go, reply here and we'll get you on the schedule.
+
+{{owner_name}}
+{{business_name}}",TRUE
+4,5,sms,,"Hi {{first_name}}, our schedule for the next few weeks is filling up. If you'd like to lock in a start date for the {{project}}, just reply here. - {{owner_name}}. Reply STOP to opt out.",FALSE
+5,7,email,Still thinking it over?,"Hi {{first_name}},
+
+It's been a week since I sent over the {{project}} estimate, so I wanted to reach out one more time. Totally understand if you're comparing bids or the timing isn't right.
+
+If it helps, I'm glad to answer anything about materials, timeline, or the price. Just reply and let me know where things stand.
+
+{{owner_name}}
+{{business_name}}",TRUE
+6,9,sms,,"Hi {{first_name}}, {{owner_name}} here. Did you decide on the {{project}}? A quick yes, no, or not yet is all I need. Reply STOP to opt out.",FALSE
+7,12,sms,,"Hi {{first_name}}, last text from me on the {{project}} estimate. If you'd like to move forward or have it updated, reply anytime. - {{owner_name}}, {{business_name}}. Reply STOP to opt out.",FALSE
+8,14,email,Closing the file on your {{project}} estimate,"Hi {{first_name}},
+
+I'll assume the timing didn't work out on the {{project}} and close out the estimate on my end. If anything changes, the price of {{bid_amount}} stays good for 30 days from today. Just reply to this email.
+
+Thanks for considering {{business_name}}.
+
+{{owner_name}}",TRUE

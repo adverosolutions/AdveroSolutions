@@ -1,0 +1,341 @@
+{
+  "title": "Content Calendar → AI Repurpose → 5-Platform Publish → Performance Tracking",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "queue",
+      "label": "1 · CONTENT CALENDAR & QUEUE",
+      "color": 0,
+      "note": "Checks the calendar every hour for posts due to go out, and only touches ones marked approved."
+    },
+    {
+      "key": "repurpose",
+      "label": "2 · REPURPOSE FOR EACH PLATFORM",
+      "color": 0,
+      "note": "One base piece of content gets reshaped into each platform's own format and tone before anything publishes."
+    },
+    {
+      "key": "publish",
+      "label": "3 · PUBLISH ACROSS PLATFORMS",
+      "color": 0,
+      "note": "Fans out to all five platforms in parallel so one slow API doesn't hold up the others."
+    },
+    {
+      "key": "confirm",
+      "label": "4 · CONFIRM & LOG",
+      "color": 0,
+      "note": "Every publish result gets checked before the calendar is updated, so a silent failure never gets logged as a success."
+    },
+    {
+      "key": "track",
+      "label": "5 · PERFORMANCE TRACKING",
+      "color": 0,
+      "note": "Pulls engagement daily from every platform and writes it straight back to the same calendar record."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "trig",
+      "kind": "trigger.schedule",
+      "label": "Check for Scheduled Posts Every Hour",
+      "section": "queue"
+    },
+    {
+      "key": "pull_calendar",
+      "kind": "app.action",
+      "label": "Pull Posts Due to Publish from the Content Calendar",
+      "app": "airtable",
+      "op": "list_records",
+      "section": "queue"
+    },
+    {
+      "key": "approved_branch",
+      "kind": "flow.branch",
+      "label": "Post Marked Approved and Ready?",
+      "section": "queue"
+    },
+    {
+      "key": "repurpose_agent",
+      "kind": "ai.agent",
+      "label": "Repurpose Base Content for Each Platform's Format and Tone",
+      "section": "repurpose"
+    },
+    {
+      "key": "repurpose_model",
+      "kind": "ai.model",
+      "label": "GPT-4.1",
+      "app": "openai",
+      "parent": "repurpose_agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "fb_post",
+      "kind": "app.action",
+      "label": "Publish to Facebook Page",
+      "app": "facebook",
+      "op": "create_post",
+      "section": "publish"
+    },
+    {
+      "key": "ig_post",
+      "kind": "app.action",
+      "label": "Publish to Instagram",
+      "app": "instagram",
+      "op": "create_post",
+      "section": "publish"
+    },
+    {
+      "key": "tiktok_post",
+      "kind": "app.action",
+      "label": "Publish to TikTok",
+      "app": "tiktok",
+      "op": "create_post",
+      "section": "publish"
+    },
+    {
+      "key": "li_post",
+      "kind": "app.action",
+      "label": "Publish to LinkedIn",
+      "app": "linkedin",
+      "op": "create_post",
+      "section": "publish"
+    },
+    {
+      "key": "tw_post",
+      "kind": "app.action",
+      "label": "Publish to X · Twitter",
+      "app": "twitter",
+      "op": "create_tweet",
+      "section": "publish"
+    },
+    {
+      "key": "merge_results",
+      "kind": "data.merge",
+      "label": "Merge Publish Results Across All Platforms",
+      "section": "publish"
+    },
+    {
+      "key": "publish_check",
+      "kind": "flow.branch",
+      "label": "Every Platform Published Successfully?",
+      "section": "confirm"
+    },
+    {
+      "key": "log_status",
+      "kind": "app.action",
+      "label": "Log Post URLs and Status Back to the Calendar",
+      "app": "airtable",
+      "op": "update_record",
+      "section": "confirm"
+    },
+    {
+      "key": "alert_fail",
+      "kind": "app.action",
+      "label": "Alert: Publish Failed on One or More Platforms",
+      "app": "slack",
+      "op": "post",
+      "section": "confirm"
+    },
+    {
+      "key": "perf_trig",
+      "kind": "trigger.schedule",
+      "label": "Daily Performance Pull",
+      "section": "track"
+    },
+    {
+      "key": "fb_insights",
+      "kind": "app.action",
+      "label": "Pull Facebook Post Engagement",
+      "app": "facebook",
+      "op": "get_insights",
+      "section": "track"
+    },
+    {
+      "key": "ig_insights",
+      "kind": "app.action",
+      "label": "Pull Instagram Post Engagement",
+      "app": "instagram",
+      "op": "get_insights",
+      "section": "track"
+    },
+    {
+      "key": "tiktok_insights",
+      "kind": "app.action",
+      "label": "Pull TikTok Video Metrics",
+      "app": "tiktok",
+      "op": "get_metrics",
+      "section": "track"
+    },
+    {
+      "key": "li_insights",
+      "kind": "app.action",
+      "label": "Pull LinkedIn Post Metrics",
+      "app": "linkedin",
+      "op": "get_metrics",
+      "section": "track"
+    },
+    {
+      "key": "tw_insights",
+      "kind": "app.action",
+      "label": "Pull X · Twitter Post Metrics",
+      "app": "twitter",
+      "op": "get_metrics",
+      "section": "track"
+    },
+    {
+      "key": "aggregate_perf",
+      "kind": "data.aggregate",
+      "label": "Aggregate Likes, Comments, Shares, and Clicks by Post",
+      "section": "track"
+    },
+    {
+      "key": "write_perf",
+      "kind": "app.action",
+      "label": "Write Performance Data Back to the Calendar",
+      "app": "airtable",
+      "op": "update_record",
+      "section": "track"
+    }
+  ],
+  "edges": [
+    {
+      "from": "trig",
+      "to": "pull_calendar"
+    },
+    {
+      "from": "pull_calendar",
+      "to": "approved_branch"
+    },
+    {
+      "from": "approved_branch",
+      "to": "repurpose_agent",
+      "branch": "true"
+    },
+    {
+      "from": "repurpose_agent",
+      "to": "fb_post"
+    },
+    {
+      "from": "repurpose_agent",
+      "to": "ig_post"
+    },
+    {
+      "from": "repurpose_agent",
+      "to": "tiktok_post"
+    },
+    {
+      "from": "repurpose_agent",
+      "to": "li_post"
+    },
+    {
+      "from": "repurpose_agent",
+      "to": "tw_post"
+    },
+    {
+      "from": "fb_post",
+      "to": "merge_results"
+    },
+    {
+      "from": "ig_post",
+      "to": "merge_results"
+    },
+    {
+      "from": "tiktok_post",
+      "to": "merge_results"
+    },
+    {
+      "from": "li_post",
+      "to": "merge_results"
+    },
+    {
+      "from": "tw_post",
+      "to": "merge_results"
+    },
+    {
+      "from": "merge_results",
+      "to": "publish_check"
+    },
+    {
+      "from": "publish_check",
+      "to": "log_status",
+      "branch": "true"
+    },
+    {
+      "from": "publish_check",
+      "to": "alert_fail",
+      "branch": "false"
+    },
+    {
+      "from": "perf_trig",
+      "to": "fb_insights"
+    },
+    {
+      "from": "perf_trig",
+      "to": "ig_insights"
+    },
+    {
+      "from": "perf_trig",
+      "to": "tiktok_insights"
+    },
+    {
+      "from": "perf_trig",
+      "to": "li_insights"
+    },
+    {
+      "from": "perf_trig",
+      "to": "tw_insights"
+    },
+    {
+      "from": "fb_insights",
+      "to": "aggregate_perf"
+    },
+    {
+      "from": "ig_insights",
+      "to": "aggregate_perf"
+    },
+    {
+      "from": "tiktok_insights",
+      "to": "aggregate_perf"
+    },
+    {
+      "from": "li_insights",
+      "to": "aggregate_perf"
+    },
+    {
+      "from": "tw_insights",
+      "to": "aggregate_perf"
+    },
+    {
+      "from": "aggregate_perf",
+      "to": "write_perf"
+    }
+  ],
+  "input_sample": {
+    "post_id": "cal_00214",
+    "base_content": "New arrivals just dropped, link in bio",
+    "platforms": [
+      "facebook",
+      "instagram",
+      "tiktok",
+      "linkedin",
+      "x"
+    ],
+    "scheduled_for": "2026-08-24T15:00:00Z",
+    "status": "approved"
+  },
+  "output_sample": {
+    "post_id": "cal_00214",
+    "facebook_url": "https://facebook.com/yourpage/posts/998234",
+    "instagram_url": "https://instagram.com/p/Cxy8fA1",
+    "tiktok_url": "https://tiktok.com/@yourbrand/video/7291837465",
+    "linkedin_url": "https://linkedin.com/feed/update/urn:li:activity:71029384756",
+    "x_url": "https://x.com/yourhandle/status/1893847172",
+    "likes": 214,
+    "comments": 18,
+    "shares": 32,
+    "clicks": 87
+  },
+  "archetype": "social_calendar_repurpose_5platform_track",
+  "learned": true,
+  "learned_at": "2026-08-24"
+}

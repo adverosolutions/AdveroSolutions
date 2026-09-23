@@ -1,0 +1,310 @@
+{
+  "title": "Website Visitor ID + Buying Signals: IPinfo, Claude, Salesforce, Slack",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "visit",
+      "label": "1 · IDENTIFY WHO IS ON THE SITE",
+      "color": 0,
+      "note": "The tracking script posts every page view here. Bots and home ISPs get dropped, real companies get named by their IP."
+    },
+    {
+      "key": "score",
+      "label": "2 · SCORE THE VISIT",
+      "color": 0,
+      "note": "Pages viewed, time on site and a pricing page visit add up to one number. Only hot visits go further."
+    },
+    {
+      "key": "enrich",
+      "label": "3 · CLAUDE ENRICHES, SALESFORCE AND SLACK GET IT",
+      "color": 0,
+      "note": "Claude checks Salesforce over MCP for an existing account, writes a summary, then the account and a Slack alert are created."
+    },
+    {
+      "key": "signals",
+      "label": "4 · EVERY MORNING: WATCH THE WEB FOR BUYING SIGNALS",
+      "color": 0,
+      "note": "Firecrawl pulls the watched sources, Claude reads them for hiring, funding and expansion signals, and a Salesforce task lands on the matching account."
+    },
+    {
+      "key": "errors",
+      "label": "5 · FAIL LOUDLY",
+      "color": 0,
+      "note": "Any node failing anywhere sends a Slack alert with a link to the run. Nothing dies silently on the Mac mini."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 · Tracking Script: Page View Event",
+      "section": "visit"
+    },
+    {
+      "key": "bots",
+      "kind": "data.code",
+      "label": "2 · Filter Bots and ISPs",
+      "section": "visit"
+    },
+    {
+      "key": "ipinfo",
+      "kind": "net.http",
+      "label": "3 · IPinfo: Reverse IP to Company",
+      "app": "ipinfo",
+      "section": "visit"
+    },
+    {
+      "key": "behav",
+      "kind": "data.code",
+      "label": "4 · Behavioral Score · pages, time, pricing page",
+      "section": "score"
+    },
+    {
+      "key": "thresh",
+      "kind": "flow.branch",
+      "label": "5 · Score Above Threshold?",
+      "section": "score"
+    },
+    {
+      "key": "coldvisit",
+      "kind": "flow.noop",
+      "label": "5b · Below Threshold: Keep the Visit, No Alert",
+      "section": "score"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "6 · Claude: Enrich and Summarize the Account",
+      "section": "enrich"
+    },
+    {
+      "key": "agent_model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "agent_tool",
+      "kind": "ai.tool",
+      "label": "MCP: Salesforce Account Lookup",
+      "app": "mcp",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "agent_parser",
+      "kind": "ai.parser",
+      "label": "Account Summary, Fit Score, Suggested Next Step",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "sf_upsert",
+      "kind": "app.action",
+      "label": "7 · Upsert Account + Visit Activity",
+      "app": "salesforce",
+      "op": "create_contact",
+      "section": "enrich"
+    },
+    {
+      "key": "hot_alert",
+      "kind": "app.action",
+      "label": "8 · Hot Visitor Alert to Sales",
+      "app": "slack",
+      "op": "post",
+      "section": "enrich"
+    },
+    {
+      "key": "morning",
+      "kind": "trigger.schedule",
+      "label": "9 · Every Morning",
+      "section": "signals"
+    },
+    {
+      "key": "crawl",
+      "kind": "net.http",
+      "label": "10 · Firecrawl: Crawl Watched Sources",
+      "app": "firecrawl",
+      "section": "signals"
+    },
+    {
+      "key": "extract",
+      "kind": "ai.llm",
+      "label": "11 · Claude: Extract Buying Signals",
+      "section": "signals"
+    },
+    {
+      "key": "extract_model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "extract",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "found",
+      "kind": "flow.branch",
+      "label": "12 · Signal Found?",
+      "section": "signals"
+    },
+    {
+      "key": "sf_task",
+      "kind": "net.http",
+      "label": "13 · Salesforce: Create Task on Account",
+      "app": "salesforce",
+      "section": "signals"
+    },
+    {
+      "key": "signal_alert",
+      "kind": "app.action",
+      "label": "14 · Buying Signal Digest to Sales",
+      "app": "slack",
+      "op": "post",
+      "section": "signals"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "15 · Any Node Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "errors"
+    },
+    {
+      "key": "err_alert",
+      "kind": "app.action",
+      "label": "16 · Alert With a Link to the Failed Run",
+      "app": "slack",
+      "op": "post",
+      "section": "errors"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "bots"
+    },
+    {
+      "from": "bots",
+      "to": "ipinfo"
+    },
+    {
+      "from": "ipinfo",
+      "to": "behav"
+    },
+    {
+      "from": "behav",
+      "to": "thresh"
+    },
+    {
+      "from": "thresh",
+      "to": "agent",
+      "branch": "true"
+    },
+    {
+      "from": "thresh",
+      "to": "coldvisit",
+      "branch": "false"
+    },
+    {
+      "from": "agent",
+      "to": "sf_upsert"
+    },
+    {
+      "from": "sf_upsert",
+      "to": "hot_alert"
+    },
+    {
+      "from": "morning",
+      "to": "crawl"
+    },
+    {
+      "from": "crawl",
+      "to": "extract"
+    },
+    {
+      "from": "extract",
+      "to": "found"
+    },
+    {
+      "from": "found",
+      "to": "sf_task",
+      "branch": "true"
+    },
+    {
+      "from": "sf_task",
+      "to": "signal_alert"
+    },
+    {
+      "from": "err",
+      "to": "err_alert"
+    }
+  ],
+  "input_sample": {
+    "event": "page_view",
+    "visitor_id": "v_7c19e4",
+    "ip": "104.28.15.77",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Safari/605.1.15",
+    "page": "/pricing",
+    "referrer": "https://www.google.com/",
+    "session": {
+      "pages_viewed": [
+        "/",
+        "/solutions/field-service",
+        "/case-studies",
+        "/pricing"
+      ],
+      "seconds_on_site": 412,
+      "visits_last_30_days": 3
+    },
+    "timestamp": "2026-09-07T14:22:08Z"
+  },
+  "output_sample": {
+    "visitor_id": "v_7c19e4",
+    "bot_or_isp": false,
+    "ipinfo": {
+      "company": "Brightline Mechanical Services",
+      "domain": "brightlinemechanical.com",
+      "type": "business",
+      "city": "Tampa",
+      "region": "Florida"
+    },
+    "behavioral_score": 82,
+    "score_breakdown": {
+      "pages_viewed": 20,
+      "time_on_site": 22,
+      "pricing_page": 30,
+      "return_visitor": 10
+    },
+    "above_threshold": true,
+    "claude_summary": {
+      "account_exists_in_salesforce": true,
+      "salesforce_account_id": "001Hs00001kX2Rt",
+      "summary": "Commercial HVAC contractor, ~60 employees, Tampa. Third visit this month, went straight to pricing after the field-service page. Existing account, no open opportunity, last activity 4 months ago.",
+      "fit_score": 8,
+      "suggested_next_step": "Rep should call today and reference the field-service page. Ask about their dispatch setup."
+    },
+    "salesforce": {
+      "account_id": "001Hs00001kX2Rt",
+      "activity_id": "00THs00003pQ9Lm",
+      "action": "updated_existing"
+    },
+    "slack_alert": "#sales: Hot visitor: Brightline Mechanical Services (Tampa, FL) scored 82. Pricing page, 3rd visit this month. Existing account, no open opp. Next step: call today, reference field-service page.",
+    "morning_signals_run": {
+      "sources_crawled": 14,
+      "signals_found": 2,
+      "example": {
+        "account": "Gulf Coast Plumbing Group",
+        "signal": "Posted 3 dispatcher job openings this week",
+        "source": "https://gulfcoastplumbing.com/careers",
+        "salesforce_task_id": "00THs00003pR1Aa"
+      }
+    },
+    "if_it_had_failed": "Error trigger catches it, Slack alert with a link to the run, nothing silently drops"
+  },
+  "archetype": "website_visitor_id_buying_signals_ipinfo_claude",
+  "learned": true,
+  "learned_at": "2026-09-07"
+}

@@ -1,0 +1,339 @@
+{
+  "title": "Your Welcome Neighbors Outbound Engine",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "source",
+      "label": "1 - SOURCE LOCAL BUSINESSES BY AREA",
+      "color": 0,
+      "note": "Pick the metro, pull every HVAC, dental, roofing and plumbing business in those zip codes. Nobody uploads a CSV."
+    },
+    {
+      "key": "clay",
+      "label": "2 - CLAY ENRICHMENT WATERFALL",
+      "color": 0,
+      "note": "Clay enriches the business, finds the owner, then runs three email providers in order until one returns a verified address."
+    },
+    {
+      "key": "qualify",
+      "label": "3 - QUALIFY AND PERSONALIZE",
+      "color": 0,
+      "note": "Claude reads their site and Google profile, scores the fit, and writes the first line off what it actually found."
+    },
+    {
+      "key": "campaign",
+      "label": "4 - INTO THE CAMPAIGN",
+      "color": 0,
+      "note": "The lead lands in the campaign for its segment with the variables already filled, and the follow-ups run on schedule."
+    },
+    {
+      "key": "replies",
+      "label": "5 - REPLIES, ROUTING AND THE NUMBERS",
+      "color": 0,
+      "note": "Every reply is read and routed within minutes, and the day's real numbers land in one sheet you can open."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "sched",
+      "kind": "trigger.schedule",
+      "label": "1 - Every Weekday at 6am, Next Target Metro",
+      "section": "source"
+    },
+    {
+      "key": "maps",
+      "kind": "net.http",
+      "label": "2 - Google Maps: Pull HVAC, Dental, Roofing and Plumbing Businesses in the Zip Codes",
+      "section": "source"
+    },
+    {
+      "key": "enrich",
+      "kind": "net.http",
+      "label": "3 - Clay: Enrich the Business, Website, Phone, Size and Reviews",
+      "section": "clay"
+    },
+    {
+      "key": "owner",
+      "kind": "net.http",
+      "label": "4 - Clay: Find the Owner or Decision Maker",
+      "section": "clay"
+    },
+    {
+      "key": "waterfall",
+      "kind": "net.http",
+      "label": "5 - Clay Waterfall: Email From 3 Providers, Then Verify It Is Deliverable",
+      "section": "clay"
+    },
+    {
+      "key": "found",
+      "kind": "flow.branch",
+      "label": "6 - Deliverable and Owner Found?",
+      "section": "clay"
+    },
+    {
+      "key": "score",
+      "kind": "ai.agent",
+      "label": "7 - Claude Scores Fit: Serves New Movers, Size, Reviews, Ads Running",
+      "section": "qualify"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "app": "anthropic",
+      "label": "Claude",
+      "parent": "score",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "tool",
+      "kind": "ai.tool",
+      "label": "Read Their Website and Google Profile",
+      "parent": "score",
+      "port": "ai_tool"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Score 1 to 10, Segment, First Line",
+      "parent": "score",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "8 - Score 7 or Higher?",
+      "section": "qualify"
+    },
+    {
+      "key": "park",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "append",
+      "label": "9 - Park It: Log the Reason, Retry Next Cycle",
+      "section": "qualify"
+    },
+    {
+      "key": "instantly",
+      "kind": "net.http",
+      "label": "10 - Instantly: Add Lead to the Segment Campaign With the First Line and Follow-Ups",
+      "section": "campaign"
+    },
+    {
+      "key": "reply",
+      "kind": "trigger.webhook",
+      "label": "11 - Instantly: Reply Comes In",
+      "section": "replies"
+    },
+    {
+      "key": "sort",
+      "kind": "ai.llm",
+      "label": "12 - Claude Sorts the Reply: Interested, Question, Not Now, Unsubscribe",
+      "section": "replies"
+    },
+    {
+      "key": "sortmodel",
+      "kind": "ai.model",
+      "app": "anthropic",
+      "label": "Claude",
+      "parent": "sort",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "route",
+      "kind": "flow.switch",
+      "label": "13 - Route the Reply",
+      "section": "replies"
+    },
+    {
+      "key": "ghl",
+      "kind": "net.http",
+      "label": "14 - GoHighLevel: Create the Lead and Notify Sales",
+      "section": "replies"
+    },
+    {
+      "key": "human",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "post",
+      "label": "14b - Hand to a Human",
+      "section": "replies"
+    },
+    {
+      "key": "nurture",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "append",
+      "label": "14c - Nurture List, Retry in 90 Days",
+      "section": "replies"
+    },
+    {
+      "key": "unsub",
+      "kind": "net.http",
+      "label": "14d - Instantly: Unsubscribe Everywhere",
+      "section": "replies"
+    },
+    {
+      "key": "scorecard",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "append",
+      "label": "15 - Daily Scorecard: Sent, Delivered, Replies, Positive, Booked",
+      "section": "replies"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "app": "n8n",
+      "op": "error_trigger",
+      "label": "16 - Any Step Fails",
+      "section": "replies"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "post",
+      "label": "17 - Alert With the Failing Node",
+      "section": "replies"
+    }
+  ],
+  "edges": [
+    {
+      "from": "sched",
+      "to": "maps"
+    },
+    {
+      "from": "maps",
+      "to": "enrich"
+    },
+    {
+      "from": "enrich",
+      "to": "owner"
+    },
+    {
+      "from": "owner",
+      "to": "waterfall"
+    },
+    {
+      "from": "waterfall",
+      "to": "found"
+    },
+    {
+      "from": "found",
+      "to": "score",
+      "branch": "true"
+    },
+    {
+      "from": "found",
+      "to": "park",
+      "branch": "false"
+    },
+    {
+      "from": "score",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "instantly",
+      "branch": "true"
+    },
+    {
+      "from": "gate",
+      "to": "park",
+      "branch": "false"
+    },
+    {
+      "from": "reply",
+      "to": "sort"
+    },
+    {
+      "from": "sort",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "ghl",
+      "branch": "Interested"
+    },
+    {
+      "from": "route",
+      "to": "human",
+      "branch": "Question"
+    },
+    {
+      "from": "route",
+      "to": "nurture",
+      "branch": "Not Now"
+    },
+    {
+      "from": "route",
+      "to": "unsub",
+      "branch": "Unsubscribe"
+    },
+    {
+      "from": "ghl",
+      "to": "scorecard"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    },
+    {
+      "from": "instantly",
+      "to": "scorecard"
+    }
+  ],
+  "input_sample": {
+    "source": "Google Maps",
+    "target_metro": "Dallas Fort Worth",
+    "zip_codes": [
+      "75034",
+      "75035",
+      "75024"
+    ],
+    "business_name": "Comfort Air Heating & Cooling",
+    "category": "HVAC contractor",
+    "address": "2204 Preston Rd, Frisco, TX 75034",
+    "phone": "+1 469 555 0142",
+    "website": "comfortairfrisco.com",
+    "rating": 4.8,
+    "review_count": 212,
+    "place_id": "ChIJq1d4Frisco0142"
+  },
+  "output_sample": {
+    "instantly_lead": {
+      "campaign": "DFW HVAC Sept",
+      "email": "mike@comfortairfrisco.com",
+      "email_status": "verified, catch-all no, provider hit on attempt 2 of 3",
+      "first_name": "Mike",
+      "last_name": "Delgado",
+      "title": "Owner",
+      "company": "Comfort Air Heating & Cooling",
+      "phone": "+1 469 555 0142",
+      "segment": "hvac-dfw-mid",
+      "fit_score": 8,
+      "score_reason": "9 techs, 212 reviews at 4.8, running Google ads, three new-construction service pages, no new mover offer anywhere on the site",
+      "variables": {
+        "first_line": "saw the new-construction pages on comfortairfrisco.com, so you are already chasing the houses before anyone moves in",
+        "city": "Frisco",
+        "trade": "HVAC",
+        "review_proof": "4.8 across 212 reviews"
+      }
+    },
+    "scorecard_row": {
+      "date": "2026-09-22",
+      "sourced": 640,
+      "enriched_with_owner": 471,
+      "verified_emails": 388,
+      "qualified_7_plus": 262,
+      "sent": 1440,
+      "delivered": 1411,
+      "replies": 34,
+      "positive": 9,
+      "booked": 4,
+      "unsubscribed": 6,
+      "bounce_rate": "2.0 percent"
+    },
+    "if_it_had_failed": "Error trigger catches the step, Slack alert names the failing node and the business it died on, nothing drops silently"
+  }
+}

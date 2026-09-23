@@ -1,0 +1,8 @@
+{
+  "lead_sync": {
+    "name": "Instantly Lead Status Sync",
+    "directive": "directives/AUTOMATED/sync_instantly_leads.md",
+    "description": "Pulls all lead statuses from Instantly and updates Master CRM stages and timestamps",
+    "tools": ["read_sheet", "update_sheet"]
+  }
+}

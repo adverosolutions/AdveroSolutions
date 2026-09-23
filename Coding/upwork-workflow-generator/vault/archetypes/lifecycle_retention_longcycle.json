@@ -1,0 +1,202 @@
+{
+  "title": "Quote → Recovery → Trip → Review → Referral → Next Trip",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "signal",
+      "label": "1 · SIGNAL",
+      "color": 0,
+      "note": "Every quote is the start of the lifecycle, not every order. Trip dates, destination and child age are captured here because all four downstream flows key off them."
+    },
+    {
+      "key": "recover",
+      "label": "2 · RECOVER",
+      "color": 0,
+      "note": "The only flow that earns money this month. High intent, short window — a quote that goes cold in 48 hours is gone."
+    },
+    {
+      "key": "trip",
+      "label": "3 · TRIP & ADVOCACY",
+      "color": 0,
+      "note": "Reviews and referrals fire while the trip is still fresh. Referral is what turns an 18-month repeat cycle into a booking next month from someone else."
+    },
+    {
+      "key": "next",
+      "label": "4 · NEXT TRIP",
+      "color": 0,
+      "note": "Reactivation on a predicted travel window and the child's age, not a calendar blast — the equipment a family needs changes as the child grows, and eventually they age out entirely."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "Quote Created",
+      "section": "signal"
+    },
+    {
+      "key": "norm",
+      "kind": "data.transform",
+      "label": "Capture Destination, Trip Dates & Child Age",
+      "section": "signal",
+      "notes": "The three attributes the whole retention system depends on. Without these, every flow degrades to a generic blast."
+    },
+    {
+      "key": "wait1",
+      "kind": "flow.wait",
+      "label": "Wait 4 Hours",
+      "section": "signal"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "Quote converted to a booking",
+      "section": "signal"
+    },
+    {
+      "key": "recover",
+      "kind": "app.action",
+      "label": "Abandoned Quote Recovery — 3 Touches",
+      "app": "brevo",
+      "op": "send",
+      "section": "recover",
+      "notes": "4 hours, 24 hours, 48 hours. Stops the moment the quote converts."
+    },
+    {
+      "key": "conf",
+      "kind": "app.action",
+      "label": "Confirmation & Pre-Trip Checklist",
+      "app": "brevo",
+      "op": "send",
+      "section": "trip"
+    },
+    {
+      "key": "wait2",
+      "kind": "flow.wait",
+      "label": "Wait Until the Trip Ends",
+      "section": "trip"
+    },
+    {
+      "key": "review",
+      "kind": "app.action",
+      "label": "Request a Review",
+      "app": "brevo",
+      "op": "send",
+      "section": "trip"
+    },
+    {
+      "key": "refer",
+      "kind": "app.action",
+      "label": "Referral Invite — Traveling Friends",
+      "app": "brevo",
+      "op": "send",
+      "section": "trip"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "Predict the Next Travel Window",
+      "section": "next",
+      "notes": "Reads trip history, destination type and child age to time the next touch — and to stop sending when the child ages out."
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "remind",
+      "kind": "app.action",
+      "label": "Travel Reminder — Predicted Window",
+      "app": "brevo",
+      "op": "send",
+      "section": "next"
+    },
+    {
+      "key": "dash",
+      "kind": "app.action",
+      "label": "Log to Retention Dashboard",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "next"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "norm"
+    },
+    {
+      "from": "norm",
+      "to": "wait1"
+    },
+    {
+      "from": "wait1",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "recover",
+      "branch": "false"
+    },
+    {
+      "from": "gate",
+      "to": "conf",
+      "branch": "true"
+    },
+    {
+      "from": "conf",
+      "to": "wait2"
+    },
+    {
+      "from": "wait2",
+      "to": "review"
+    },
+    {
+      "from": "review",
+      "to": "refer"
+    },
+    {
+      "from": "refer",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "remind"
+    },
+    {
+      "from": "remind",
+      "to": "dash"
+    }
+  ],
+  "input_sample": {
+    "quote_id": "q_88421",
+    "customer": "Dana Reyes",
+    "email": "dana.reyes@gmail.com",
+    "destination": "Anaheim, CA — Disneyland",
+    "trip_dates": "Dec 18–24, 2026",
+    "items": [
+      "Full-size crib",
+      "Convertible car seat",
+      "Double stroller"
+    ],
+    "child_age_months": 19,
+    "quote_total": "$214.00"
+  },
+  "output_sample": {
+    "quote_recovered": true,
+    "recovered_at": "Touch 2 — 24 hours",
+    "order_value": "$214.00",
+    "review_submitted": "5 stars — Anaheim provider",
+    "referrals_sent": 2,
+    "predicted_next_trip": "Jun–Aug 2027 — summer window",
+    "equipment_next_time": "Booster seat, toddler bed — child will be 26 months",
+    "ages_out": "Dec 2030"
+  },
+  "archetype": "lifecycle_retention_longcycle",
+  "learned": true,
+  "learned_at": "2026-08-03"
+}

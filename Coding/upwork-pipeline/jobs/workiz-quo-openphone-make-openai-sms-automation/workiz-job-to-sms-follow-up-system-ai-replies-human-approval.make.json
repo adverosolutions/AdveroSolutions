@@ -1,0 +1,395 @@
+{
+  "name": "Workiz Job to SMS Follow-Up System - AI Replies, Human Approval",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 12421,
+        "maxResults": 1
+      },
+      "mapper": {
+        "maxResults": 1
+      },
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "1 - Workiz: Job Assigned to Me"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 2,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {
+        "scope": "roundtrip"
+      },
+      "mapper": {
+        "name": "sample_input",
+        "scope": "roundtrip",
+        "value": "{\n  \"event\": \"job.assigned\",\n  \"job_id\": \"WKZ-48213\",\n  \"assigned_to\": \"Marc Belanger\",\n  \"job_type\": \"Furnace no heat - diagnostic\",\n  \"customer\": {\n    \"name\": \"Priya Raman\",\n    \"company\": \"Lakeshore Dental Group\",\n    \"phone\": \"+16475550142\",\n    \"consent_on_file\": true\n  },\n  \"address\": \"221 Wellington St W, Toronto, ON M5V 3C7\",\n  \"scheduled_window\": \"2026-09-11 13:00-15:00 EDT\",\n  \"notes\": \"Second floor unit, buzz suite 404. Building has no rear access after 4pm.\"\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Sample Input"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 3,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "2___pull_customer__job_type__address__time_window",
+        "scope": "roundtrip",
+        "value": "{{1.value}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "2 - Pull Customer, Job Type, Address, Time Window"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 4,
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "select": "chat",
+        "model": "gpt-4.1",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are the step '3 - OpenAI: Write the Personalized First SMS From Your Template' in a business automation. Follow the instructions exactly and return only the requested output."
+          },
+          {
+            "role": "user",
+            "content": "{{1.value}}"
+          }
+        ],
+        "max_tokens": "800",
+        "temperature": "0.3",
+        "n_completions": "1",
+        "response_format": "text"
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "3 - OpenAI: Write the Personalized First SMS From Your Template"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.openphone.com/v1/messages",
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{YOUR_API_KEY}}"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "contentType": "application/json",
+        "data": "{{1.value}}",
+        "timeout": "",
+        "shareCookies": false,
+        "followRedirect": true,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0,
+          "name": "4 - Quo / OpenPhone: Send SMS From Your Existing Number"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 6,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "mode": "select",
+        "insertDataOption": "INSERT_ROWS",
+        "valueInputOption": "USER_ENTERED",
+        "includesHeaders": true,
+        "sheetId": "Sheet1",
+        "values": {
+          "0": "{{now}}",
+          "1": "{{1.value}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0,
+          "name": "5 - Log Job + Message Sent"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 7,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 12421,
+        "maxResults": 1
+      },
+      "mapper": {
+        "maxResults": 1
+      },
+      "metadata": {
+        "designer": {
+          "x": 1800,
+          "y": 0,
+          "name": "6 - Quo / OpenPhone: Customer Replied"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 8,
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "select": "chat",
+        "model": "gpt-4.1",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are the step '7 - OpenAI: Understand the Reply and Pick a Pre-Approved Template' in a business automation. Follow the instructions exactly and return only the requested output."
+          },
+          {
+            "role": "user",
+            "content": "{{1.value}}"
+          }
+        ],
+        "max_tokens": "800",
+        "temperature": "0.3",
+        "n_completions": "1",
+        "response_format": "text"
+      },
+      "metadata": {
+        "designer": {
+          "x": 2100,
+          "y": 0,
+          "name": "7 - OpenAI: Understand the Reply and Pick a Pre-Approved Template"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 9,
+      "module": "slack:CreateMessage",
+      "version": 4,
+      "parameters": {},
+      "mapper": {
+        "channelType": "public",
+        "channel": "#ops",
+        "text": "8 - Suggest Reply to Rep: Approve or Edit: {{1.value}}",
+        "parseType": "full",
+        "mrkdwn": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 2400,
+          "y": 0,
+          "name": "8 - Suggest Reply to Rep: Approve or Edit"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 10,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 12421,
+        "maxResults": 1
+      },
+      "mapper": {
+        "maxResults": 1
+      },
+      "metadata": {
+        "designer": {
+          "x": 2700,
+          "y": 0,
+          "name": "9 - Rep Approved or Edited"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 11,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.openphone.com/v1/messages",
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{YOUR_API_KEY}}"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "contentType": "application/json",
+        "data": "{{1.value}}",
+        "timeout": "",
+        "shareCookies": false,
+        "followRedirect": true,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 3000,
+          "y": 0,
+          "name": "10 - Quo / OpenPhone: Send the Approved Reply"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 12,
+      "module": "google-sheets:updateRow",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "mode": "select",
+        "valueInputOption": "USER_ENTERED",
+        "includesHeaders": true,
+        "sheetId": "Sheet1",
+        "rowNumber": "2",
+        "values": {
+          "0": "{{now}}",
+          "1": "{{1.value}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 3300,
+          "y": 0,
+          "name": "11 - Log Reply + Approval"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 13,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 12421,
+        "maxResults": 1
+      },
+      "mapper": {
+        "maxResults": 1
+      },
+      "metadata": {
+        "designer": {
+          "x": 3600,
+          "y": 0,
+          "name": "12 - Any Step in the Scenario Fails"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 14,
+      "module": "slack:CreateMessage",
+      "version": 4,
+      "parameters": {},
+      "mapper": {
+        "channelType": "public",
+        "channel": "#ops",
+        "text": "13 - Alert Me With the Job and What Broke: {{1.value}}",
+        "parseType": "full",
+        "mrkdwn": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 3900,
+          "y": 0,
+          "name": "13 - Alert Me With the Job and What Broke"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 15,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {
+        "scope": "roundtrip"
+      },
+      "mapper": {
+        "name": "final_output",
+        "scope": "roundtrip",
+        "value": "{\n  \"job_id\": \"WKZ-48213\",\n  \"first_sms\": {\n    \"sent_from\": \"+14165550188 (your existing Quo number)\",\n    \"body\": \"Hi Priya, Marc from Northline Mechanical here. You're booked Thursday Sep 11 between 1 and 3pm at 221 Wellington W for the furnace diagnostic. I'll text when I'm 30 min out. Reply here if anything changes.\",\n    \"quo_message_id\": \"msg_9f42ab\",\n    \"sent_at\": \"2026-09-09T16:12:04-04:00\"\n  },\n  \"customer_reply\": \"can we push it to friday morning? nobody is here thursday after 2\",\n  \"ai_read\": {\n    \"intent\": \"reschedule_request\",\n    \"template_chosen\": \"Reschedule - offer two windows\",\n    \"confidence\": 0.93,\n    \"why\": \"Customer names a different day and a hard constraint on the current window, no pricing or complaint language.\"\n  },\n  \"suggested_reply\": \"No problem Priya. I have Friday Sep 12, 8-10am or 10am-12pm. Which works better and I'll move the job over?\",\n  \"human_step\": {\n    \"sent_to\": \"Marc (Slack)\",\n    \"action\": \"edited\",\n    \"edit\": \"added 'I'll confirm with the office and text you back within the hour'\",\n    \"approved_at\": \"2026-09-09T16:19:41-04:00\",\n    \"seconds_to_approve\": 74\n  },\n  \"sent\": true,\n  \"logged_row\": {\n    \"sheet\": \"SMS Follow-Ups 2026\",\n    \"row\": 418,\n    \"job_id\": \"WKZ-48213\",\n    \"outcome\": \"Rescheduled to Fri Sep 12 8-10am\",\n    \"messages_in_thread\": 4,\n    \"ai_suggestion_used_as_is\": false\n  },\n  \"if_it_had_failed\": \"Error handler fires, Slack alert names the job id and the step that broke, so nobody is left waiting on a text that never sent.\"\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 4200,
+          "y": 0,
+          "name": "Final Output"
+        },
+        "restore": {}
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com",
+    "notes": []
+  }
+}

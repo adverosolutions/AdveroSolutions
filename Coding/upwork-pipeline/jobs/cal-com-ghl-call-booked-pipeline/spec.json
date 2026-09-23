@@ -1,0 +1,60 @@
+{
+  "title": "Your Cal.com to Call Booked Pipeline System",
+  "platform": "gohighlevel",
+  "sections": [
+    {"key": "booked", "label": "1 - A CALL GETS BOOKED", "color": 0, "note": "Zapier does the handoff. When a call is booked in Cal.com, the Booking Created Zap creates or updates the contact in GoHighLevel, fills Call Time and Call Notes, and adds the call-booked tag. That tag starts everything below and puts the lead in the Call Booked Pipeline."},
+    {"key": "owner", "label": "2 - THE OWNER HEARS FIRST", "color": 0, "note": "You get a text the moment it lands and an email with everything from the booking form, so you walk into the call prepared."},
+    {"key": "before", "label": "3 - BEFORE THE CALL", "color": 0, "note": "Cal.com already sends the confirmation and the reminders, so nothing here repeats them. One short email asks what they want from the call, then the workflow keeps watch for a cancel. The close-out task keeps cards from sitting in Call Booked; Showed and No Show are the other two stages."},
+    {"key": "cancel", "label": "4 - IF THEY CANCEL", "color": 0, "note": "A second Zap on Cal.com Booking Cancelled adds call-cancelled. The goal pulls the contact here from wherever they are, the card moves to Cancelled, and they get one easy way to rebook. A reschedule only updates Call Time, so the card stays put."}
+  ],
+  "nodes": [
+    {"key": "trigger", "kind": "trigger.app", "app": "ghl", "op": "contact_tag_added", "label": "1 - Zapier Tags the Contact call-booked", "section": "booked", "params": {"tag": "call-booked"}},
+    {"key": "clear_cancel", "kind": "app.action", "app": "ghl", "op": "remove_tag", "label": "2 - Clear an Old call-cancelled Tag", "section": "booked", "params": {"tag": "call-cancelled"}, "notes": "Someone who cancelled before and books again starts clean, so a second cancel is still caught by the goal."},
+    {"key": "opp", "kind": "app.action", "app": "ghl", "op": "create_opportunity", "label": "3 - Add the Lead to Call Booked Pipeline", "section": "booked", "params": {"pipeline": "Call Booked Pipeline", "stage": "Call Booked", "name": "{{contact.first_name}} {{contact.last_name}} - Booked Call", "status": "open"}},
+    {"key": "owner_sms", "kind": "app.action", "app": "ghl", "op": "internal_notification", "label": "4 - Text the Owner the New Booking", "section": "owner", "params": {"type": "sms", "to": "the contact's assigned user, and if none is assigned, all users", "message": "New call booked: {{contact.first_name}} {{contact.last_name}} for {{contact.call_time}}. It is in the Call Booked Pipeline. Details are in your email."}},
+    {"key": "owner_email", "kind": "app.action", "app": "ghl", "op": "internal_notification", "label": "5 - Email the Owner the Booking Details", "section": "owner", "params": {"type": "email", "to": "the contact's assigned user, and if none is assigned, all users", "subject": "Call booked: {{contact.first_name}} {{contact.last_name}}, {{contact.call_time}}", "message": "{{contact.first_name}} {{contact.last_name}} booked a call for {{contact.call_time}}. Email {{contact.email}}. Phone {{contact.phone}}. What they wrote on the booking form: {{contact.call_notes}}. The opportunity is in Call Booked Pipeline, stage Call Booked."}},
+    {"key": "prep_email", "kind": "app.action", "app": "ghl", "op": "send_email", "label": "6 - Email the Lead One Prep Question", "section": "before", "params": {"subject": "Quick question before our call, {{contact.first_name}}", "body": "Hi {{contact.first_name}}, thanks for booking time with {{location.name}}. Your calendar invite already has the details. One question so I can come prepared: what is the one thing you most want to walk away with from our call? Just hit reply. {{user.first_name}}"}, "notes": "Not a reminder. Cal.com sends those. This is the one message that makes the call better."},
+    {"key": "wait", "kind": "flow.wait", "label": "7 - Wait 14 Days While the Call Is Upcoming", "section": "before", "params": {"amount": 14, "unit": "days"}, "notes": "Keeps the contact in the workflow so the goal can catch a cancel. Match it to how far ahead the Cal.com event type lets people book."},
+    {"key": "closeout", "kind": "app.action", "app": "ghl", "op": "create_task", "label": "8 - Task: Close Out the Card After the Call", "section": "before", "params": {"title": "Move {{contact.first_name}} {{contact.last_name}} to Showed or No Show if the card is still in Call Booked", "due_in_days": 1, "assign_to": "the contact's assigned user"}},
+    {"key": "goal", "kind": "app.action", "app": "ghl", "op": "goal", "label": "9 - Goal: Call Cancelled in Cal.com", "section": "cancel", "params": {"goal_type": "tag_added", "tag": "call-cancelled", "if_not_met": "end"}, "notes": "The Booking Cancelled Zap adds call-cancelled. Whenever that lands, even mid-wait, the contact jumps straight here. Anyone who reaches this step without cancelling simply ends."},
+    {"key": "opp_cancel", "kind": "app.action", "app": "ghl", "op": "update_opportunity", "label": "10 - Move the Opportunity to Cancelled", "section": "cancel", "params": {"pipeline": "Call Booked Pipeline", "stage": "Cancelled", "status": "open"}},
+    {"key": "untag", "kind": "app.action", "app": "ghl", "op": "remove_tag", "label": "11 - Remove the call-booked Tag", "section": "cancel", "params": {"tag": "call-booked"}, "notes": "So a rebooking adds the tag fresh and starts this workflow again."},
+    {"key": "rebook", "kind": "app.action", "app": "ghl", "op": "send_email", "label": "12 - Email the Lead a Link to Rebook", "section": "cancel", "params": {"subject": "Want to pick a new time, {{contact.first_name}}?", "body": "Hi {{contact.first_name}}, no problem on cancelling. If you still want to talk, grab any open time here: {{custom_values.booking_link}}. If the timing is just not right, reply and let me know. {{user.first_name}}"}},
+    {"key": "owner_cancel", "kind": "app.action", "app": "ghl", "op": "internal_notification", "label": "13 - Text the Owner the Cancellation", "section": "cancel", "params": {"type": "sms", "to": "the contact's assigned user, and if none is assigned, all users", "message": "{{contact.first_name}} {{contact.last_name}} cancelled their call for {{contact.call_time}}. The card is in Cancelled and a rebook link went out by email."}}
+  ],
+  "edges": [
+    {"from": "trigger", "to": "clear_cancel"},
+    {"from": "clear_cancel", "to": "opp"},
+    {"from": "opp", "to": "owner_sms"},
+    {"from": "owner_sms", "to": "owner_email"},
+    {"from": "owner_email", "to": "prep_email"},
+    {"from": "prep_email", "to": "wait"},
+    {"from": "wait", "to": "closeout"},
+    {"from": "closeout", "to": "goal"},
+    {"from": "goal", "to": "opp_cancel"},
+    {"from": "opp_cancel", "to": "untag"},
+    {"from": "untag", "to": "rebook"},
+    {"from": "rebook", "to": "owner_cancel"}
+  ],
+  "input_sample": {
+    "source": "Cal.com Booking Created via Zapier",
+    "tag_added": "call-booked",
+    "event_type": "30 Min Discovery Call",
+    "contact": {
+      "first_name": "Marcus",
+      "last_name": "Bell",
+      "email": "marcus@bellrenovations.com",
+      "phone": "+13475550186",
+      "call_time": "Thu Sep 24, 2:00 PM ET",
+      "call_notes": "Want to see how to stop losing leads after the first call"
+    }
+  },
+  "output_sample": {
+    "opportunity": "Marcus Bell - Booked Call",
+    "pipeline": "Call Booked Pipeline",
+    "stage": "Cancelled",
+    "tags": ["call-cancelled"],
+    "rebook_email": "sent",
+    "owner_alert": "sent by SMS"
+  }
+}

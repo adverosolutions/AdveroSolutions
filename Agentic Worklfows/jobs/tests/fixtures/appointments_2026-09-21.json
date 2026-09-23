@@ -1,0 +1,45 @@
+{
+  "_about": "The two real upcoming Discovery Calls from config/ids.json google_calendar.booked_this_week, shaped like normalised GHL appointments. Used by `python3 -m jobs.appointments_tick --dry-run --appointments <this file>` when no GHL token exists. Zoom links are placeholders: the real links live on the Google Calendar events.",
+  "appointments": [
+    {
+      "id": "gcal_eqlug7qn67rnjdppja91ffuto0",
+      "contact_id": "cnfZoGRCRi3JMqZfo0XD",
+      "opportunity_id": "HOPG1Hl4vj6REtzjXH8r",
+      "first_name": "Ilmi",
+      "contact_name": "Ilmi Curovic",
+      "company": "Shining Armor Cleaning NJ",
+      "email": "ilmi@shiningarmorcleaningnj.com",
+      "phone": null,
+      "niche": "cleaning",
+      "offer": "reactivation",
+      "campaign_key": "cleaning_reactivation",
+      "lead_tz": "America/New_York",
+      "start_iso": "2026-09-23T11:30:00-05:00",
+      "end_iso": "2026-09-23T11:45:00-05:00",
+      "zoom_link": "https://zoom.us/j/000000000001",
+      "zoom_meeting_id": "000000000001",
+      "title": "Discovery Call - Ilmi Curovic",
+      "note": "rescheduled by Ilmi on 2026-09-21 (emergency)"
+    },
+    {
+      "id": "gcal_j8n9pmfjl3cufeiu58g4kp12c8",
+      "contact_id": "iDhesF6A9rhdDajGZuYw",
+      "opportunity_id": "hStqQMLQ5eSRVnqxnSMq",
+      "first_name": "Sopio",
+      "contact_name": "Sopio Svanishvili",
+      "company": "Taxfo Accounting",
+      "email": "sopiosvanishvili@taxfoaccounting.com",
+      "phone": "237-791-5700",
+      "niche": "bookkeeping",
+      "offer": "reactivation",
+      "campaign_key": "bookkeeping_reactivation",
+      "lead_tz": "America/New_York",
+      "start_iso": "2026-09-24T15:00:00-05:00",
+      "end_iso": "2026-09-24T15:15:00-05:00",
+      "zoom_link": "https://zoom.us/j/000000000002",
+      "zoom_meeting_id": "000000000002",
+      "title": "Discovery Call - Sopio Svanishvili",
+      "note": "her last email says any day 3-6pm ET, awaiting confirmation"
+    }
+  ]
+}

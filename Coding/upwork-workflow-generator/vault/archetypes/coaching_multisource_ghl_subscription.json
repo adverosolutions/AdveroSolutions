@@ -1,0 +1,269 @@
+{
+  "title": "Coaching Program Engine — Meta, ManyChat and WordPress into One GoHighLevel Pipeline",
+  "platform": "gohighlevel",
+  "sections": [
+    {
+      "key": "door",
+      "label": "1 · THREE SOURCES, ONE FRONT DOOR",
+      "color": 0,
+      "note": "Meta ads, Instagram and Facebook DMs through ManyChat, and WordPress lead magnets all enter through the same door and get matched against the same contact. Someone who DMs you today and downloads a guide next week is one person in GoHighLevel, not three. Source is still tagged on the way in so you can tell where they came from."
+    },
+    {
+      "key": "follow",
+      "label": "2 · FOLLOW-UP THAT ACTUALLY LANDS",
+      "color": 0,
+      "note": "First text goes out inside a minute, then the email sequence runs on spacing that survives a weekend. Every contact is pulled out of competing sequences first, which is what stops a lead getting your ad follow-up and your lead-magnet follow-up on the same afternoon."
+    },
+    {
+      "key": "sell",
+      "label": "3 · TIERS, PAYMENT AND ONBOARDING",
+      "color": 0,
+      "note": "Payment and subscription live inside GoHighLevel, so a purchase moves the pipeline, tags the tier and starts the right onboarding without anyone rekeying it. A failed or cancelled payment routes into its own recovery sequence rather than being silently lost."
+    },
+    {
+      "key": "sync",
+      "label": "4 · EVERYTHING STAYS IN SYNC",
+      "color": 0,
+      "note": "Status is written back to ManyChat so your DM conversations show the same picture as the CRM. This is the part that usually breaks. Two systems each holding half a customer is the reason teams stop trusting the CRM."
+    },
+    {
+      "key": "team",
+      "label": "5 · SO YOUR TEAM CAN RUN IT",
+      "color": 0,
+      "note": "Naming, tagging and pipeline stages follow one convention throughout, documented as each piece is built. The goal is that your team can add a sequence in month three without calling me."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "lead",
+      "kind": "trigger.form",
+      "label": "1 · New Lead — Meta Ad, ManyChat DM or WordPress Form",
+      "section": "door"
+    },
+    {
+      "key": "tag",
+      "kind": "app.action",
+      "label": "2 · Tag the Source, Campaign and Lead Magnet",
+      "app": "GoHighLevel",
+      "op": "add_tag",
+      "section": "door"
+    },
+    {
+      "key": "chat",
+      "kind": "app.action",
+      "label": "3 · Pull the ManyChat Conversation Across",
+      "app": "ManyChat",
+      "op": "sync_contact",
+      "section": "door"
+    },
+    {
+      "key": "match",
+      "kind": "app.action",
+      "label": "4 · Match to One Contact Across All Three",
+      "app": "GoHighLevel",
+      "op": "upsert_contact",
+      "section": "door",
+      "notes": "Phone first, then email, so the same person arriving from three places stays one record."
+    },
+    {
+      "key": "clear",
+      "kind": "app.action",
+      "label": "5 · Remove From Any Competing Sequence",
+      "app": "GoHighLevel",
+      "op": "remove_from_workflows",
+      "section": "follow"
+    },
+    {
+      "key": "sms",
+      "kind": "app.action",
+      "label": "6 · Text Them Within 60 Seconds",
+      "app": "GoHighLevel",
+      "op": "send_sms",
+      "section": "follow"
+    },
+    {
+      "key": "email",
+      "kind": "app.action",
+      "label": "7 · Start the 5-Touch Email Sequence",
+      "app": "GoHighLevel",
+      "op": "start_sequence",
+      "section": "follow"
+    },
+    {
+      "key": "bought",
+      "kind": "flow.branch",
+      "label": "8 · Did They Join the Program?",
+      "section": "follow"
+    },
+    {
+      "key": "nurture",
+      "kind": "app.action",
+      "label": "Move to Long-Term Nurture",
+      "app": "GoHighLevel",
+      "op": "add_tag_and_stage",
+      "section": "follow"
+    },
+    {
+      "key": "pay",
+      "kind": "app.action",
+      "label": "9 · Take Payment and Start the Subscription",
+      "app": "GoHighLevel",
+      "op": "create_subscription",
+      "section": "sell",
+      "notes": "Failed or cancelled payments route into their own recovery sequence."
+    },
+    {
+      "key": "onboard",
+      "kind": "app.action",
+      "label": "10 · Run Their Tier's Onboarding",
+      "app": "GoHighLevel",
+      "op": "start_sequence",
+      "section": "sell"
+    },
+    {
+      "key": "back",
+      "kind": "app.action",
+      "label": "11 · Write Their Status Back to ManyChat",
+      "app": "ManyChat",
+      "op": "update_contact",
+      "section": "sync"
+    },
+    {
+      "key": "stage",
+      "kind": "app.action",
+      "label": "12 · Move the Pipeline Stage",
+      "app": "GoHighLevel",
+      "op": "update_opportunity",
+      "section": "sync"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "13 · Stamp Source, Response Time and Tier",
+      "app": "GoHighLevel",
+      "op": "update_contact",
+      "section": "team"
+    }
+  ],
+  "edges": [
+    {
+      "from": "lead",
+      "to": "tag"
+    },
+    {
+      "from": "tag",
+      "to": "chat"
+    },
+    {
+      "from": "chat",
+      "to": "match"
+    },
+    {
+      "from": "match",
+      "to": "clear"
+    },
+    {
+      "from": "clear",
+      "to": "sms"
+    },
+    {
+      "from": "sms",
+      "to": "email"
+    },
+    {
+      "from": "email",
+      "to": "bought"
+    },
+    {
+      "from": "bought",
+      "to": "nurture",
+      "branch": "Not yet"
+    },
+    {
+      "from": "bought",
+      "to": "pay",
+      "branch": "Joined"
+    },
+    {
+      "from": "pay",
+      "to": "onboard"
+    },
+    {
+      "from": "onboard",
+      "to": "back"
+    },
+    {
+      "from": "back",
+      "to": "stage"
+    },
+    {
+      "from": "stage",
+      "to": "log"
+    }
+  ],
+  "input_sample": {
+    "source": "ManyChat — Instagram DM",
+    "received_at": "2026-08-11T13:41:08Z",
+    "contact": {
+      "first_name": "Alicia",
+      "instagram": "@aliciamovesbetter",
+      "phone": "+13055550117",
+      "email": null
+    },
+    "conversation": [
+      {
+        "from": "them",
+        "text": "saw your reel about the 6 week program, is it still open?"
+      },
+      {
+        "from": "bot",
+        "text": "It is. What's your goal right now?"
+      },
+      {
+        "from": "them",
+        "text": "getting back on stage by december honestly"
+      }
+    ],
+    "already_in_crm": {
+      "matched_on": "phone",
+      "prior_source": "Meta ad — Free Guide, 9 days ago",
+      "duplicate_avoided": true
+    }
+  },
+  "output_sample": {
+    "contact_id": "ghl_5cd8f1",
+    "one_record_across_sources": [
+      "Meta ad — Free Guide",
+      "ManyChat — Instagram DM"
+    ],
+    "duplicates_created": 0,
+    "removed_from": [
+      "Free Guide Nurture — Day 9"
+    ],
+    "first_touch": {
+      "channel": "SMS",
+      "response_time_seconds": 41
+    },
+    "joined": true,
+    "subscription": {
+      "tier": "Tier 2 — Group Coaching",
+      "amount_usd": 197,
+      "billing": "monthly",
+      "status": "active",
+      "next_charge": "2026-09-11"
+    },
+    "onboarding_started": "Tier 2 — Week 1 Welcome",
+    "manychat_updated": {
+      "status_field": "Customer — Tier 2",
+      "conversation_tag": "closed-won"
+    },
+    "pipeline": {
+      "stage_before": "Lead Magnet",
+      "stage_after": "Active Member"
+    },
+    "documented_for_your_team": "Naming convention, tags and stages written up as this was built"
+  },
+  "archetype": "coaching_multisource_ghl_subscription",
+  "learned": true,
+  "learned_at": "2026-08-11"
+}

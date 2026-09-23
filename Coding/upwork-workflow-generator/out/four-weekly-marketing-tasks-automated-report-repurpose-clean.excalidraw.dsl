@@ -1,0 +1,25 @@
+@direction LR
+@spacing 60
+
+(Every Monday, 8am) -> [Pull Last Week's Ads and Analytics Numbers]
+(Every Monday, 8am) -> [Pull This Week's Blog Post or Newsletter]
+(Every Monday, 8am) -> [Pull New Leads From Forms and Signups]
+(Every Monday, 8am) -> [Pull Unanswered Replies From the Inbox]
+[Pull Last Week's Ads and Analytics Numbers] -> [Summarize Performance and Flag What Changed]
+[Summarize Performance and Flag What Changed] -> [Post the Weekly Report to Slack]
+[Pull This Week's Blog Post or Newsletter] -> [Repurpose Into Social Posts in the Brand Voice]
+[Repurpose Into Social Posts in the Brand Voice] -> [Push the Posts to the Scheduler]
+[Pull New Leads From Forms and Signups] -> [Dedupe and Drop Incomplete Records]
+[Dedupe and Drop Incomplete Records] -> [Create or Update Contacts in the CRM]
+[Pull Unanswered Replies From the Inbox] -> [Classify Hot, Warm, or Cold and Draft the Follow-Up]
+[Classify Hot, Warm, or Cold and Draft the Follow-Up] -> [Create Follow-Up Tasks for the Hot Ones]
+[Post the Weekly Report to Slack] -> [[Log the Run: What Ran, What Failed, How Long]]
+[Push the Posts to the Scheduler] -> [[Log the Run: What Ran, What Failed, How Long]]
+[Create or Update Contacts in the CRM] -> [[Log the Run: What Ran, What Failed, How Long]]
+[Create Follow-Up Tasks for the Hot Ones] -> [[Log the Run: What Ran, What Failed, How Long]]
+[[Log the Run: What Ran, What Failed, How Long]] -> {Did Any Task Fail?}
+{Did Any Task Fail?} -> "true" -> [Alert Immediately With Which Task and Why]
+{Did Any Task Fail?} -> "false" -> [All Four Ran Clean]
+[Claude] --> [Summarize Performance and Flag What Changed]
+[Claude 2] --> [Repurpose Into Social Posts in the Brand Voice]
+[Claude 3] --> [Classify Hot, Warm, or Cold and Draft the Follow-Up]

@@ -1,0 +1,161 @@
+{
+  "_about": "ICP rubric for recruiting. Recruiting has 0 positives and 3 hostile replies in 400 contacts (Blueprint Section 2), so this rubric is the strictest of the three: perm/direct-hire search only, no temp or staffing suppliers.",
+  "niche": "recruiting",
+  "short_label": "permanent placements",
+  "label": "Boutique permanent-placement recruiting agencies",
+  "campaigns": {
+    "reactivation": "recruiting_reactivation",
+    "trigger": "recruiting_outbound"
+  },
+  "question": "Is this an agency that places permanent, direct-hire employees for client companies and earns a placement fee, rather than a temp/contract staffing supplier, an in-house talent team, or an RPO reseller?",
+  "accept_signals": [
+    "permanent placement",
+    "direct hire",
+    "executive search",
+    "retained search",
+    "contingency search",
+    "headhunting",
+    "placement fee",
+    "search firm"
+  ],
+  "reject_signals": [
+    "temp staffing only",
+    "contract staffing only",
+    "light industrial staffing",
+    "travel nursing",
+    "locum tenens",
+    "per diem",
+    "in-house talent acquisition team",
+    "job board",
+    "resume writing service",
+    "career coaching for candidates"
+  ],
+  "hard_reject_keywords": [
+    "temp staffing",
+    "temporary staffing",
+    "temp agency",
+    "contract staffing",
+    "locum tenens",
+    "travel nursing",
+    "travel nurse",
+    "light industrial",
+    "household staffing",
+    "home care",
+    "per diem",
+    "temp-to-hire",
+    "day labor",
+    "job board",
+    "resume writing",
+    "career coach",
+    "outplacement",
+    "payroll services",
+    "peo",
+    "franchise opportunity",
+    "franchise for sale",
+    "applicant tracking",
+    "hr software",
+    "recruiting software"
+  ],
+  "hard_accept_keywords": [
+    "permanent placement",
+    "direct hire",
+    "executive search",
+    "retained search",
+    "contingency search",
+    "search firm"
+  ],
+  "min_confidence": 0.75,
+  "escalate_below": 0.8,
+  "trigger_variables": [
+    "specialty"
+  ],
+  "specialties": {
+    "accounting and finance": [
+      "accounting",
+      "finance",
+      "cpa",
+      "controller",
+      "audit",
+      "tax",
+      "cfo"
+    ],
+    "technology": [
+      "technology",
+      "information technology",
+      "it recruiting",
+      "it staffing",
+      "it roles",
+      "software",
+      "engineering",
+      "developer",
+      "devops",
+      "cyber",
+      "data science"
+    ],
+    "healthcare": [
+      "healthcare",
+      "clinical",
+      "nursing",
+      "physician",
+      "medical",
+      "pharma",
+      "biotech"
+    ],
+    "legal": [
+      "legal",
+      "attorney",
+      "attorneys",
+      "lawyer",
+      "lawyers",
+      "paralegal",
+      "paralegals",
+      "counsel"
+    ],
+    "manufacturing and operations": [
+      "manufacturing",
+      "operations",
+      "supply chain",
+      "plant",
+      "industrial",
+      "logistics"
+    ],
+    "sales and marketing": [
+      "sales",
+      "marketing",
+      "revenue",
+      "business development",
+      "demand generation"
+    ],
+    "construction and engineering": [
+      "construction",
+      "civil",
+      "architecture",
+      "mep",
+      "structural"
+    ],
+    "executive": [
+      "executive",
+      "c-suite",
+      "board",
+      "vp of",
+      "vice president",
+      "president"
+    ],
+    "insurance": [
+      "insurance",
+      "underwriting",
+      "actuarial",
+      "claims"
+    ],
+    "human resources": [
+      "human resources",
+      "hr recruiting",
+      "hr roles",
+      "talent",
+      "people operations"
+    ]
+  },
+  "specialty_default": null,
+  "specialty_default_allowed": false,
+  "notes": "specialty_default_allowed is false. 2,507 live leads currently carry the filler specialty \"your clients'\" (measured read-only 2026-09-21), which is what a default produces. A lead with no derivable specialty is staged for the A variant only. The trailing-space entries \"it \", \"hr \" and \"vp \" were removed on 2026-09-22: keyword_hit strips the keyword, so they became the bare words it/hr/vp and matched ordinary English. 'We make it simple to hire attorneys' was tagged specialty=technology, and specialty is interpolated into live recruiting_outbound copy."
+}

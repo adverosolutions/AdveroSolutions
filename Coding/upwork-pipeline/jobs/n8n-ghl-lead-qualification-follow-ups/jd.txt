@@ -1,0 +1,15 @@
+url: https://www.upwork.com/jobs/~022102065801227930757
+n8n AI Automation Developer - GoHighLevel CRM, Lead Qualification & Follow-Ups
+Fixed price $100, entry level. Client in Punjab, Pakistan, brand new account (0 contracts, 0 feedback, 0 spent). Posted 2026-09-21, 0 hires, 0 invites, bids 90 to 150 (basis unspecified). Connects to apply: 7.
+Application asks for one relevant automation example, your contribution, and briefly how you prevent duplicate records and handle failed executions. The Loom covers all three.
+
+We're looking for an n8n automation developer to build a lead-management system that connects incoming enquiries, AI-powered lead qualification, and GoHighLevel (GHL) CRM. Capture each enquiry, organize the information, update the CRM, and trigger the appropriate follow-up without repeated manual work. A working business process, not a chatbot demo. Clear workflow logic, reliable integrations, error handling, and documentation.
+What you'll build:
+1. Lead capture and data validation: n8n workflow receiving leads from one website form or webhook. Validate required fields, standardize contact information, check for existing records before creating new contacts.
+2. AI-powered lead qualification: extract the requested service, summarize the enquiry, classify leads using agreed criteria. Missing information flagged rather than invented; unclear enquiries routed for manual review.
+3. GoHighLevel CRM integration: create or update contacts, populate custom fields, apply tags, create or update opportunities in the right pipeline stage. Store the enquiry summary and qualification result where sales can review.
+4. Follow-up and appointment workflows: acknowledgement and follow-up sequence with approved messaging and a booking link. Follow-ups stop when a lead replies, books, opts out, or is manually paused.
+5. Monitoring and failure handling: execution logs, controlled retries, alerts for failed integrations. Repeated webhook events or retries must not create duplicate contacts, opportunities, or messages.
+Deliverables: working n8n automation connected to one lead source, one GHL account, one email-sending service; CRM field mappings, pipeline rules, AI qualification instructions; tested follow-up logic, duplicate prevention, error notifications; export of workflows without secrets, setup documentation, recorded handover.
+Success: a test enquiry moves from submission to qualification, CRM update, and the correct follow-up without manual copying. Testing covers duplicates, missing fields, unavailable integrations, AI failures, stop conditions.
+Initial scope: one lead source, one GHL pipeline, one qualification flow, one follow-up sequence.

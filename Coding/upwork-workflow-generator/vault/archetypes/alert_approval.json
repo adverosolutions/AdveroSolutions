@@ -1,0 +1,57 @@
+{
+  "archetype": "alert_approval",
+  "title": "Request → Policy Check → Slack Approval → Execute",
+  "platform": "n8n",
+  "sections": [
+    { "key": "intake",  "label": "1 · REQUEST",     "note": "Requests arrive from a form or another system and are normalised into one shape, so the approval logic does not care where a request came from." },
+    { "key": "policy",  "label": "2 · POLICY",      "note": "Anything under the auto-approve threshold and inside policy clears without a human. The point of an approval workflow is to stop routing the routine 80% to a person." },
+    { "key": "human",   "label": "3 · HUMAN GATE",  "note": "Everything else posts to Slack with Approve and Reject buttons and the full context attached. The workflow waits on the response rather than firing and hoping." },
+    { "key": "act",     "label": "4 · EXECUTE",     "note": "Approved requests execute and the requester is told. Rejections are recorded with the reason, so the audit trail answers \"who approved this and when\" without anyone digging through Slack history." }
+  ],
+  "nodes": [
+    { "key": "hook",     "kind": "trigger.webhook", "label": "New Request", "section": "intake" },
+    { "key": "norm",     "kind": "data.transform", "label": "Normalize Request", "section": "intake" },
+    { "key": "policy",   "kind": "flow.branch", "label": "Under Auto-Approve Limit?", "section": "policy" },
+    { "key": "ask",      "kind": "app.action", "app": "slack", "op": "post", "label": "Ask Approver in Slack", "section": "human" },
+    { "key": "wait",     "kind": "flow.wait", "label": "Await Decision", "section": "human" },
+    { "key": "decision", "kind": "flow.branch", "label": "Approved?", "section": "human" },
+    { "key": "execute",  "kind": "net.http", "label": "Execute Request", "section": "act" },
+    { "key": "log",      "kind": "app.action", "app": "googleSheets", "op": "append", "label": "Write Audit Trail", "section": "act" },
+    { "key": "tell",     "kind": "app.action", "app": "gmail", "op": "send", "label": "Notify Requester", "section": "act" }
+  ],
+  "edges": [
+    { "from": "hook", "to": "norm" },
+    { "from": "norm", "to": "policy" },
+    { "from": "policy", "to": "execute", "branch": "true" },
+    { "from": "policy", "to": "ask", "branch": "false" },
+    { "from": "ask", "to": "wait" },
+    { "from": "wait", "to": "decision" },
+    { "from": "decision", "to": "execute", "branch": "true" },
+    { "from": "decision", "to": "log", "branch": "false" },
+    { "from": "execute", "to": "log" },
+    { "from": "log", "to": "tell" }
+  ],
+  "input_sample": {
+    "request_id": "REQ-2291",
+    "type": "vendor_payment",
+    "requested_by": "j.alvarez@company.com",
+    "vendor": "Northwind Freight",
+    "amount": 8450.0,
+    "currency": "USD",
+    "cost_center": "OPS-114",
+    "justification": "Expedited shipping for the Ridgeline install — original carrier missed the window.",
+    "submitted_at": "2026-07-31T13:02:11Z"
+  },
+  "output_sample": {
+    "request_id": "REQ-2291",
+    "auto_approved": false,
+    "approver": "d.okafor@company.com",
+    "decision": "approved",
+    "decided_at": "2026-07-31T13:19:44Z",
+    "time_to_decision": "17m 33s",
+    "note": "Approved — confirmed the original carrier failure with ops before signing off.",
+    "executed": true,
+    "execution_ref": "PAY-77120",
+    "audit_row": 1184
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "archetype": "doc_generation",
+  "title": "Intake Form → Priced Proposal PDF → Sent for Signature",
+  "platform": "n8n",
+  "sections": [
+    { "key": "intake", "label": "1 · INTAKE",   "note": "The scoping form comes in with the job details. Values are validated up front, so a missing square footage stops the run here rather than producing a proposal with a blank in it." },
+    { "key": "price",  "label": "2 · PRICE",    "note": "Line items are priced from the live rate table, not hardcoded. Margin rules and minimums are applied in one place, so pricing changes never mean editing a template." },
+    { "key": "build",  "label": "3 · BUILD",    "note": "The scope narrative is written for this specific job, merged into the branded template, and exported to PDF. What differs between proposals is the writing — the layout stays identical." },
+    { "key": "send",   "label": "4 · SEND",     "note": "The proposal goes out for signature and the deal moves to Proposal Sent with the document attached, so the pipeline reflects reality without anyone updating it by hand." }
+  ],
+  "nodes": [
+    { "key": "form",   "kind": "trigger.form", "label": "Scoping Form Submitted", "section": "intake" },
+    { "key": "valid",  "kind": "data.filter", "label": "Validate Required Fields", "section": "intake" },
+    { "key": "rates",  "kind": "app.action", "app": "googleSheets", "op": "read", "label": "Load Rate Table", "section": "price" },
+    { "key": "calc",   "kind": "data.code", "label": "Price Line Items", "section": "price" },
+    { "key": "write",  "kind": "ai.llm", "label": "Write Scope Narrative", "section": "build" },
+    { "key": "model",  "kind": "ai.model", "app": "openai", "label": "GPT-4.1", "parent": "write" },
+    { "key": "doc",    "kind": "app.action", "app": "googleDocs", "op": "create", "label": "Merge Into Template", "section": "build" },
+    { "key": "pdf",    "kind": "app.action", "app": "googleDrive", "op": "upload", "label": "Export PDF", "section": "build" },
+    { "key": "sign",   "kind": "net.http", "label": "Send for Signature", "section": "send" },
+    { "key": "deal",   "kind": "app.action", "app": "hubspot", "op": "create_deal", "label": "Move to Proposal Sent", "section": "send" },
+    { "key": "email",  "kind": "app.action", "app": "gmail", "op": "send", "label": "Email the Client", "section": "send" }
+  ],
+  "edges": [
+    { "from": "form", "to": "valid" },
+    { "from": "valid", "to": "rates" },
+    { "from": "rates", "to": "calc" },
+    { "from": "calc", "to": "write" },
+    { "from": "write", "to": "doc" },
+    { "from": "doc", "to": "pdf" },
+    { "from": "pdf", "to": "sign" },
+    { "from": "sign", "to": "deal" },
+    { "from": "deal", "to": "email" }
+  ],
+  "input_sample": {
+    "submitted_at": "2026-07-31T12:18:40Z",
+    "client": { "name": "Vera Lindqvist", "company": "Lindqvist Dental Group", "email": "vera@lindqvistdental.com" },
+    "property": { "address": "4820 Halsted St, Chicago IL", "type": "Commercial — clinic", "square_feet": 6400 },
+    "scope": ["Rooftop unit replacement (2x 7.5-ton)", "Ductwork rebalancing", "Smart thermostat integration"],
+    "timeline_preference": "Before end of Q3",
+    "notes": "Clinic can only be down on weekends."
+  },
+  "output_sample": {
+    "proposal_number": "PRO-2026-0418",
+    "client": "Lindqvist Dental Group",
+    "line_items": [
+      { "item": "7.5-ton rooftop unit — supply & install", "qty": 2, "unit": 18400.0, "total": 36800.0 },
+      { "item": "Ductwork rebalancing — 6,400 sq ft", "qty": 1, "unit": 5100.0, "total": 5100.0 },
+      { "item": "Smart thermostat integration (4 zones)", "qty": 4, "unit": 640.0, "total": 2560.0 },
+      { "item": "Weekend labor premium", "qty": 1, "unit": 3200.0, "total": 3200.0 }
+    ],
+    "subtotal": 47660.0,
+    "tax": 3931.95,
+    "total": 51591.95,
+    "valid_until": "2026-08-30",
+    "scope_narrative": "Both rooftop units are past the point where repair makes financial sense on a clinic that cannot afford unplanned downtime. We'll stage the replacement across two consecutive weekends so the practice never loses a weekday, rebalance the duct runs afterward since the existing distribution was sized for the old equipment, and bring all four zones onto a single controller.",
+    "pdf_url": "https://drive.google.com/file/d/1Zx7…/view",
+    "signature_status": "sent",
+    "signature_url": "https://sign.example.com/d/9f21ab",
+    "deal_id": "0-3-20011744",
+    "generated_in_seconds": 38
+  }
+}

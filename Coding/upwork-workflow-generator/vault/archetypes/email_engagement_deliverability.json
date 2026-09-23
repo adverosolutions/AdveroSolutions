@@ -1,0 +1,170 @@
+{
+  "title": "Engagement Scoring → Segmented Send → Re-Engage → Protect Sender",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "collect",
+      "label": "1 · COLLECT",
+      "color": 0,
+      "note": "Opens, clicks, bounces and complaints pulled from the ESP daily. Every decision below is made on behaviour, not on the list someone imported two years ago."
+    },
+    {
+      "key": "segment",
+      "label": "2 · SEGMENT",
+      "color": 0,
+      "note": "One engagement score per subscriber — recency weighted hardest. Segmentation that is recalculated daily beats static lists that quietly rot."
+    },
+    {
+      "key": "send",
+      "label": "3 · SEND",
+      "color": 0,
+      "note": "Engaged subscribers get the campaign, lapsing ones get a short win-back. Content is written against what actually performed, not against a template."
+    },
+    {
+      "key": "protect",
+      "label": "4 · PROTECT",
+      "color": 0,
+      "note": "The unglamorous half nobody builds: dormant subscribers are suppressed on a schedule. Sender reputation is the ceiling on every other number in this system."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "cron",
+      "kind": "trigger.schedule",
+      "label": "Daily — 6:00 AM",
+      "section": "collect"
+    },
+    {
+      "key": "pull",
+      "kind": "net.http",
+      "label": "Pull Campaign & Subscriber Activity",
+      "section": "collect",
+      "notes": "ESP API — works the same whether you stay on your current platform or move."
+    },
+    {
+      "key": "score",
+      "kind": "data.transform",
+      "label": "Score Engagement — Recency, Opens, Clicks",
+      "section": "segment"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "Log Sends, Clicks, Bounces & Complaints",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "segment",
+      "notes": "The reporting layer that makes 'data-driven optimization' a measurement rather than an opinion."
+    },
+    {
+      "key": "route",
+      "kind": "flow.switch",
+      "label": "Engagement tier",
+      "section": "segment"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "Write the Next Campaign",
+      "section": "send"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "tool",
+      "kind": "ai.tool",
+      "label": "Top-Performing Subjects & Offers",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "send",
+      "kind": "app.action",
+      "label": "Send the Segmented Campaign",
+      "app": "gmail",
+      "op": "send",
+      "section": "send"
+    },
+    {
+      "key": "winback",
+      "kind": "app.action",
+      "label": "Win-Back — 3 Touches, Then Stop",
+      "app": "gmail",
+      "op": "send",
+      "section": "send"
+    },
+    {
+      "key": "suppress",
+      "kind": "app.action",
+      "label": "Suppress & Protect Sender Reputation",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "protect"
+    }
+  ],
+  "edges": [
+    {
+      "from": "cron",
+      "to": "pull"
+    },
+    {
+      "from": "pull",
+      "to": "score"
+    },
+    {
+      "from": "score",
+      "to": "log"
+    },
+    {
+      "from": "log",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "agent",
+      "branch": "Engaged"
+    },
+    {
+      "from": "agent",
+      "to": "send"
+    },
+    {
+      "from": "route",
+      "to": "winback",
+      "branch": "Lapsing"
+    },
+    {
+      "from": "route",
+      "to": "suppress",
+      "branch": "Dormant"
+    }
+  ],
+  "input_sample": {
+    "list_size": 18420,
+    "campaigns_last_30d": 6,
+    "avg_open_rate": "21.4%",
+    "avg_click_rate": "1.9%",
+    "bounce_rate": "2.8%",
+    "complaint_rate": "0.11%",
+    "never_opened_180d": 6109
+  },
+  "output_sample": {
+    "engaged": "7,842 — campaign sent",
+    "lapsing": "4,469 — win-back touch 1 of 3",
+    "dormant": "6,109 — suppressed",
+    "sending_list_reduced_by": "33%",
+    "projected_open_rate": "31.8%  (from 21.4%)",
+    "complaint_rate": "0.11% → 0.03% projected",
+    "top_subject": "\"Your March pricing is locked\" — 38.2% open",
+    "next_test": "Send time: Tue 9am vs Thu 2pm"
+  },
+  "archetype": "email_engagement_deliverability",
+  "learned": true,
+  "learned_at": "2026-08-03"
+}

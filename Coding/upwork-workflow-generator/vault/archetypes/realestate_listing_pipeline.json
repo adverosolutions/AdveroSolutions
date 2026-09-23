@@ -1,0 +1,292 @@
+{
+  "title": "New Listing → Comps → AI Description → Approve → MLS & Buyer Alerts",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · NEW LISTING",
+      "color": 0,
+      "note": "You enter the address and the basics once. Everything after this runs off that single entry — no re-typing the same property into three systems."
+    },
+    {
+      "key": "market",
+      "label": "2 · COMPS & PRICING",
+      "color": 0,
+      "note": "Recent comparable sales are pulled automatically and the listing is positioned against them. This is the research you currently do by hand for every property, and it is the part that dates fastest."
+    },
+    {
+      "key": "write",
+      "label": "3 · WRITE THE LISTING",
+      "color": 0,
+      "note": "Claude drafts the public description and the MLS fields together — headline, features, and the keyword-weighted remarks that decide whether the listing surfaces in search. Grounded in the actual comps, not invented."
+    },
+    {
+      "key": "review",
+      "label": "4 · YOUR APPROVAL",
+      "color": 0,
+      "note": "Nothing publishes without you. The draft comes to WhatsApp with the comps attached; you approve or send it back with a note. Your name is on the listing, so the gate is not optional."
+    },
+    {
+      "key": "publish",
+      "label": "5 · PUBLISH & ALERT BUYERS",
+      "color": 0,
+      "note": "Approved listings go to BoldTrail and the MLS, then your buyer list is matched on price band and criteria — and only the genuine matches get a WhatsApp. That is the prospecting half: the listing markets itself the moment it goes live."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "intake",
+      "kind": "trigger.form",
+      "label": "New Listing Intake",
+      "section": "intake"
+    },
+    {
+      "key": "comps",
+      "kind": "net.http",
+      "label": "Pull Comparable Sales",
+      "section": "market",
+      "notes": "Sold in last 90 days, 1mi radius"
+    },
+    {
+      "key": "price",
+      "kind": "data.code",
+      "label": "Position vs Comps",
+      "section": "market"
+    },
+    {
+      "key": "write",
+      "kind": "ai.agent",
+      "label": "Write Listing & MLS Fields",
+      "section": "write",
+      "notes": "Description, headline, features, MLS remarks"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "write",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Listing Schema",
+      "parent": "write",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "approve",
+      "kind": "app.action",
+      "label": "Send Paola the Draft",
+      "app": "whatsapp",
+      "op": "send",
+      "section": "review"
+    },
+    {
+      "key": "wait",
+      "kind": "flow.wait",
+      "label": "Await Approval",
+      "section": "review"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "Approved?",
+      "section": "review"
+    },
+    {
+      "key": "edits",
+      "kind": "app.action",
+      "label": "Return for Edits",
+      "app": "whatsapp",
+      "op": "send",
+      "section": "review"
+    },
+    {
+      "key": "crm",
+      "kind": "app.action",
+      "label": "Create in BoldTrail",
+      "app": "boldtrail",
+      "op": "create_listing",
+      "section": "publish"
+    },
+    {
+      "key": "mls",
+      "kind": "net.http",
+      "label": "Push to MLS",
+      "section": "publish"
+    },
+    {
+      "key": "match",
+      "kind": "app.action",
+      "label": "Match Buyer List",
+      "app": "googleSheets",
+      "op": "read",
+      "section": "publish"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "WhatsApp Matched Buyers",
+      "app": "whatsapp",
+      "op": "send",
+      "section": "publish"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "Log Listing & Interest",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "publish"
+    }
+  ],
+  "edges": [
+    {
+      "from": "intake",
+      "to": "comps"
+    },
+    {
+      "from": "comps",
+      "to": "price"
+    },
+    {
+      "from": "price",
+      "to": "write"
+    },
+    {
+      "from": "write",
+      "to": "approve"
+    },
+    {
+      "from": "approve",
+      "to": "wait"
+    },
+    {
+      "from": "wait",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "crm",
+      "branch": "true"
+    },
+    {
+      "from": "gate",
+      "to": "edits",
+      "branch": "false"
+    },
+    {
+      "from": "crm",
+      "to": "mls"
+    },
+    {
+      "from": "mls",
+      "to": "match"
+    },
+    {
+      "from": "match",
+      "to": "alert"
+    },
+    {
+      "from": "alert",
+      "to": "log"
+    },
+    {
+      "from": "edits",
+      "to": "log"
+    }
+  ],
+  "input_sample": {
+    "submitted_at": "2026-08-02T14:20:11Z",
+    "agent": "Paola",
+    "address": "2418 Marisol Terrace, Coral Gables FL 33134",
+    "type": "Single family",
+    "beds": 4,
+    "baths": 3,
+    "sqft": 2840,
+    "lot_sqft": 8100,
+    "year_built": 1996,
+    "asking": 1185000,
+    "features": [
+      "renovated kitchen 2024",
+      "pool",
+      "impact windows",
+      "two-car garage",
+      "corner lot"
+    ],
+    "notes": "Seller wants it live before the weekend. Roof replaced 2021.",
+    "photos": 34
+  },
+  "output_sample": {
+    "address": "2418 Marisol Terrace, Coral Gables FL 33134",
+    "comps": [
+      {
+        "address": "2390 Marisol Ter",
+        "sold": 1142000,
+        "sqft": 2710,
+        "ppsf": 421,
+        "closed": "2026-06-18"
+      },
+      {
+        "address": "845 Alcazar Ave",
+        "sold": 1225000,
+        "sqft": 2905,
+        "ppsf": 422,
+        "closed": "2026-05-30"
+      },
+      {
+        "address": "1130 Almeria Ave",
+        "sold": 1098000,
+        "sqft": 2680,
+        "ppsf": 410,
+        "closed": "2026-07-09"
+      }
+    ],
+    "price_position": {
+      "asking_ppsf": 417,
+      "comp_median_ppsf": 421,
+      "read": "Priced 1% under the comp median — defensible, and leaves room to hold firm rather than reduce in week three.",
+      "days_on_market_estimate": "18-26 days at this price"
+    },
+    "listing": {
+      "headline": "Renovated 4-Bed on a Coral Gables Corner Lot — Pool, Impact Windows, 2024 Kitchen",
+      "description": "Set on a corner lot in the heart of Coral Gables, this four-bedroom has had the expensive work already done. The kitchen was taken back to studs in 2024 — quartz counters, a proper vented range, and cabinetry that runs to the ceiling rather than stopping short. Impact windows throughout and a 2021 roof mean the insurance conversation is a short one. The pool sits in a fenced yard with room left over, and the two-car garage is a real one, not a converted space. Walking distance to Alcazar, ten minutes to Miracle Mile.",
+      "mls_remarks": "RENOVATED 2024 KITCHEN | IMPACT WINDOWS | 2021 ROOF | POOL | CORNER LOT | 2-CAR GARAGE. Move-in ready. Insurance-friendly. Showings begin Friday.",
+      "keywords_weighted": [
+        "impact windows",
+        "renovated kitchen",
+        "corner lot",
+        "pool",
+        "Coral Gables"
+      ],
+      "seo_note": "Led with 'renovated' and 'impact windows' — the two filters buyers in this ZIP search most after price."
+    },
+    "approval": {
+      "sent_to": "Paola · WhatsApp",
+      "sent_at": "2026-08-02T14:20:38Z",
+      "decided_at": "2026-08-02T14:34:02Z",
+      "decision": "approved",
+      "edit": "Changed 'ten minutes to Miracle Mile' to 'five minutes' "
+    },
+    "published": {
+      "boldtrail_id": "BT-99214",
+      "mls_number": "A11742883",
+      "live_at": "2026-08-02T14:36:20Z"
+    },
+    "buyer_matches": {
+      "list_size": 214,
+      "matched": 9,
+      "criteria": "Coral Gables, 3+ bed, $1.0-1.3M, pool preferred",
+      "notified_via": "WhatsApp",
+      "responses_within_1h": 4,
+      "showings_booked": 2
+    },
+    "elapsed_from_intake_to_live": "16 minutes",
+    "manual_baseline": "3-4 hours across comps, writing, MLS entry, and buyer outreach"
+  },
+  "archetype": "realestate_listing_pipeline",
+  "learned": true,
+  "learned_at": "2026-08-02"
+}

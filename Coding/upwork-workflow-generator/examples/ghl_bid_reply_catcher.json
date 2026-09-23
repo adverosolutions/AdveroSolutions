@@ -1,0 +1,13 @@
+{
+  "title": "Bid Reply Catcher",
+  "platform": "gohighlevel",
+  "sections": [{"key": "r", "label": "1 - CATCH THE REPLY", "note": "Two steps. Any reply from a contact who has a bid out gets the tag that the main workflow's goal is waiting for."}],
+  "nodes": [
+    {"key": "replied", "kind": "trigger.app", "app": "ghl", "op": "customer_replied", "label": "1 - Customer Replied", "section": "r", "params": {"channels": ["all channels"]}},
+    {"key": "gate", "kind": "flow.branch", "label": "2 - Does the Contact Have a Bid Out", "section": "r", "params": {"condition": "contact tag includes \"bid-sent\"", "tag": "bid-sent"}},
+    {"key": "tag", "kind": "app.action", "app": "ghl", "op": "add_tag", "label": "3 - Tag the Contact bid-replied", "section": "r", "params": {"tag": "bid-replied"}}
+  ],
+  "edges": [{"from": "replied", "to": "gate"}, {"from": "gate", "to": "tag", "branch": "true"}],
+  "input_sample": {"channel": "SMS", "message": "Yes, we want to go ahead with the kitchen"},
+  "output_sample": {"tag_added": "bid-replied"}
+}

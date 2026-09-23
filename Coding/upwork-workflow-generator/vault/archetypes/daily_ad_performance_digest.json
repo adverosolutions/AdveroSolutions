@@ -1,0 +1,217 @@
+{
+  "title": "Daily Ad Performance → AI Analysis → Budget Recommendation",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "pull",
+      "label": "1 · PULL THE NUMBERS",
+      "color": 0,
+      "note": "Runs every morning before anyone opens a dashboard. Pulls yesterday plus a trailing 7-day window from every ad account, so a single bad day never triggers a decision on its own."
+    },
+    {
+      "key": "think",
+      "label": "2 · WORK OUT WHAT CHANGED",
+      "color": 0,
+      "note": "The model does not see raw numbers. It sees each campaign against its own target and its own recent baseline, which is what stops the usual output of restating the report back at you."
+    },
+    {
+      "key": "decide",
+      "label": "3 · TURN IT INTO A DECISION",
+      "color": 0,
+      "note": "Every finding comes out as a specific action with a number attached: shift this much, pause this, test this variant. Anything below a materiality threshold is dropped rather than padded into the report."
+    },
+    {
+      "key": "deliver",
+      "label": "4 · DELIVER IT",
+      "color": 0,
+      "note": "One short message every morning with the three things worth doing today, plus the full history logged so the recommendations can be scored against what actually happened."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "cron",
+      "kind": "trigger.schedule",
+      "label": "1 · Every Morning, 7am",
+      "section": "pull"
+    },
+    {
+      "key": "fetch",
+      "kind": "net.http",
+      "label": "2 · Pull Campaign Performance · All Accounts",
+      "section": "pull"
+    },
+    {
+      "key": "window",
+      "kind": "data.transform",
+      "label": "3 · Compare vs Target and vs Last 7 Days",
+      "section": "pull"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "4 · Find What Actually Changed and Why",
+      "section": "think"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Analysis Model",
+      "app": "openai",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Force Structured Findings",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "material",
+      "kind": "data.filter",
+      "label": "5 · Drop Anything Below the Materiality Cut",
+      "section": "decide"
+    },
+    {
+      "key": "actions",
+      "kind": "data.transform",
+      "label": "6 · Convert Findings into Costed Actions",
+      "section": "decide"
+    },
+    {
+      "key": "cap",
+      "kind": "flow.branch",
+      "label": "7 · Above the Spend-Change Cap?",
+      "section": "decide"
+    },
+    {
+      "key": "approve",
+      "kind": "app.action",
+      "label": "7b · Send for Approval First",
+      "app": "slack",
+      "op": "send_message",
+      "section": "decide"
+    },
+    {
+      "key": "digest",
+      "kind": "app.action",
+      "label": "8 · Post the Morning Digest",
+      "app": "slack",
+      "op": "send_message",
+      "section": "deliver"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "9 · Log It So Recommendations Can Be Scored",
+      "app": "googleSheets",
+      "op": "update_row",
+      "section": "deliver"
+    }
+  ],
+  "edges": [
+    {
+      "from": "cron",
+      "to": "fetch"
+    },
+    {
+      "from": "fetch",
+      "to": "window"
+    },
+    {
+      "from": "window",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "material"
+    },
+    {
+      "from": "material",
+      "to": "actions"
+    },
+    {
+      "from": "actions",
+      "to": "cap"
+    },
+    {
+      "from": "cap",
+      "to": "approve",
+      "branch": "true"
+    },
+    {
+      "from": "cap",
+      "to": "digest",
+      "branch": "false"
+    },
+    {
+      "from": "approve",
+      "to": "digest"
+    },
+    {
+      "from": "digest",
+      "to": "log"
+    }
+  ],
+  "input_sample": {
+    "date": "2026-08-11",
+    "window": "yesterday vs trailing 7d",
+    "campaigns": [
+      {
+        "name": "Brand — Search",
+        "spend": 612,
+        "conv": 4,
+        "cpa": 153,
+        "target_cpa": 90,
+        "cpa_7d": 98
+      },
+      {
+        "name": "Prospecting — Broad",
+        "spend": 940,
+        "conv": 19,
+        "cpa": 49,
+        "target_cpa": 70,
+        "cpa_7d": 52,
+        "impr_share_lost_budget": 0.31
+      },
+      {
+        "name": "Retargeting — 30d",
+        "spend": 210,
+        "conv": 8,
+        "cpa": 26,
+        "target_cpa": 40,
+        "cpa_7d": 25
+      }
+    ]
+  },
+  "output_sample": {
+    "headline": "One thing to fix, one thing to feed.",
+    "actions": [
+      {
+        "priority": 1,
+        "campaign": "Brand — Search",
+        "action": "Investigate before cutting",
+        "detail": "CPA jumped 56% above its own 7-day baseline in one day. That is a change, not a trend. Check for a competitor bid or a broken landing page before touching budget.",
+        "spend_change": 0
+      },
+      {
+        "priority": 2,
+        "campaign": "Prospecting — Broad",
+        "action": "Increase daily budget $200",
+        "detail": "30% under target CPA and losing 31% impression share to budget. This is the only campaign with headroom.",
+        "spend_change": 200,
+        "within_cap": true
+      }
+    ],
+    "dropped_as_immaterial": [
+      "Retargeting — 30d: 4% CPA improvement, inside normal variance"
+    ],
+    "approval_required": false,
+    "recommendations_logged": 2,
+    "prior_recommendation_accuracy": "8 of 11 directionally correct over 30 days"
+  },
+  "archetype": "daily_ad_performance_digest",
+  "learned": true,
+  "learned_at": "2026-08-11"
+}

@@ -1,0 +1,252 @@
+{
+  "title": "Workiz Job to SMS Follow-Up System - AI Replies, Human Approval",
+  "platform": "make",
+  "sections": [
+    {
+      "key": "assigned",
+      "label": "1 · A JOB LANDS ON YOUR BOARD",
+      "color": 0,
+      "note": "The moment Workiz assigns the job to you, this fires. Nobody has to remember to text anyone."
+    },
+    {
+      "key": "firstsms",
+      "label": "2 · THE FIRST TEXT GOES OUT",
+      "color": 0,
+      "note": "Written from your own template, filled with this customer's real job details, sent from the Quo number they already know."
+    },
+    {
+      "key": "replies",
+      "label": "3 · THE CUSTOMER TEXTS BACK",
+      "color": 0,
+      "note": "AI reads the reply and picks from your pre-approved templates. It never writes a message from scratch."
+    },
+    {
+      "key": "approval",
+      "label": "4 · YOUR REP APPROVES BEFORE ANYTHING SENDS",
+      "color": 0,
+      "note": "The suggestion goes to a person first. Shown here in Slack, but this can just as easily be a Quo internal thread or a text to the rep."
+    },
+    {
+      "key": "log",
+      "label": "5 · EVERY MESSAGE LOGGED, NOTHING FAILS QUIETLY",
+      "color": 0,
+      "note": "One row per conversation, plus an alert the moment a step breaks so a customer is never left on read."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "job_hook",
+      "kind": "trigger.webhook",
+      "label": "1 · Workiz: Job Assigned to Me",
+      "section": "assigned"
+    },
+    {
+      "key": "pull",
+      "kind": "data.transform",
+      "label": "2 · Pull Customer, Job Type, Address, Time Window",
+      "section": "assigned"
+    },
+    {
+      "key": "write_sms",
+      "kind": "ai.llm",
+      "label": "3 · OpenAI: Write the Personalized First SMS From Your Template",
+      "app": "openai",
+      "section": "firstsms"
+    },
+    {
+      "key": "write_model",
+      "kind": "ai.model",
+      "label": "OpenAI",
+      "app": "openai",
+      "parent": "write_sms",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "send_sms",
+      "kind": "net.http",
+      "label": "4 · Quo / OpenPhone: Send SMS From Your Existing Number",
+      "app": "openphone",
+      "op": "messages",
+      "section": "firstsms"
+    },
+    {
+      "key": "log_sent",
+      "kind": "app.action",
+      "label": "5 · Log Job + Message Sent",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "firstsms"
+    },
+    {
+      "key": "reply_hook",
+      "kind": "trigger.webhook",
+      "label": "6 · Quo / OpenPhone: Customer Replied",
+      "section": "replies"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "7 · OpenAI: Understand the Reply and Pick a Pre-Approved Template",
+      "section": "replies"
+    },
+    {
+      "key": "agent_model",
+      "kind": "ai.model",
+      "label": "OpenAI",
+      "app": "openai",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "agent_tool",
+      "kind": "ai.tool",
+      "label": "Approved Template Library",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "agent_parser",
+      "kind": "ai.parser",
+      "label": "Intent + Suggested Reply + Confidence",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "suggest",
+      "kind": "app.action",
+      "label": "8 · Suggest Reply to Rep: Approve or Edit",
+      "app": "slack",
+      "op": "post",
+      "section": "approval",
+      "notes": "Shown in Slack. Can be a Quo internal thread or a text to the rep instead, same flow."
+    },
+    {
+      "key": "approved_hook",
+      "kind": "trigger.webhook",
+      "label": "9 · Rep Approved or Edited",
+      "section": "approval"
+    },
+    {
+      "key": "send_reply",
+      "kind": "net.http",
+      "label": "10 · Quo / OpenPhone: Send the Approved Reply",
+      "app": "openphone",
+      "op": "messages",
+      "section": "approval"
+    },
+    {
+      "key": "log_reply",
+      "kind": "app.action",
+      "label": "11 · Log Reply + Approval",
+      "app": "googleSheets",
+      "op": "update",
+      "section": "log"
+    },
+    {
+      "key": "err_hook",
+      "kind": "trigger.app",
+      "label": "12 · Any Step in the Scenario Fails",
+      "app": "make",
+      "op": "error_handler",
+      "section": "log"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "13 · Alert Me With the Job and What Broke",
+      "app": "slack",
+      "op": "post",
+      "section": "log"
+    }
+  ],
+  "edges": [
+    {
+      "from": "job_hook",
+      "to": "pull"
+    },
+    {
+      "from": "pull",
+      "to": "write_sms"
+    },
+    {
+      "from": "write_sms",
+      "to": "send_sms"
+    },
+    {
+      "from": "send_sms",
+      "to": "log_sent"
+    },
+    {
+      "from": "reply_hook",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "suggest"
+    },
+    {
+      "from": "approved_hook",
+      "to": "send_reply"
+    },
+    {
+      "from": "send_reply",
+      "to": "log_reply"
+    },
+    {
+      "from": "err_hook",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "event": "job.assigned",
+    "job_id": "WKZ-48213",
+    "assigned_to": "Marc Belanger",
+    "job_type": "Furnace no heat - diagnostic",
+    "customer": {
+      "name": "Priya Raman",
+      "company": "Lakeshore Dental Group",
+      "phone": "+16475550142",
+      "consent_on_file": true
+    },
+    "address": "221 Wellington St W, Toronto, ON M5V 3C7",
+    "scheduled_window": "2026-09-11 13:00-15:00 EDT",
+    "notes": "Second floor unit, buzz suite 404. Building has no rear access after 4pm."
+  },
+  "output_sample": {
+    "job_id": "WKZ-48213",
+    "first_sms": {
+      "sent_from": "+14165550188 (your existing Quo number)",
+      "body": "Hi Priya, Marc from Northline Mechanical here. You're booked Thursday Sep 11 between 1 and 3pm at 221 Wellington W for the furnace diagnostic. I'll text when I'm 30 min out. Reply here if anything changes.",
+      "quo_message_id": "msg_9f42ab",
+      "sent_at": "2026-09-09T16:12:04-04:00"
+    },
+    "customer_reply": "can we push it to friday morning? nobody is here thursday after 2",
+    "ai_read": {
+      "intent": "reschedule_request",
+      "template_chosen": "Reschedule - offer two windows",
+      "confidence": 0.93,
+      "why": "Customer names a different day and a hard constraint on the current window, no pricing or complaint language."
+    },
+    "suggested_reply": "No problem Priya. I have Friday Sep 12, 8-10am or 10am-12pm. Which works better and I'll move the job over?",
+    "human_step": {
+      "sent_to": "Marc (Slack)",
+      "action": "edited",
+      "edit": "added 'I'll confirm with the office and text you back within the hour'",
+      "approved_at": "2026-09-09T16:19:41-04:00",
+      "seconds_to_approve": 74
+    },
+    "sent": true,
+    "logged_row": {
+      "sheet": "SMS Follow-Ups 2026",
+      "row": 418,
+      "job_id": "WKZ-48213",
+      "outcome": "Rescheduled to Fri Sep 12 8-10am",
+      "messages_in_thread": 4,
+      "ai_suggestion_used_as_is": false
+    },
+    "if_it_had_failed": "Error handler fires, Slack alert names the job id and the step that broke, so nobody is left waiting on a text that never sent."
+  },
+  "archetype": "workiz_job_to_sms_follow_up_system_ai_replies_hu",
+  "learned": true,
+  "learned_at": "2026-09-09"
+}

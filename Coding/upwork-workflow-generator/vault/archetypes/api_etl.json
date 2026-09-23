@@ -1,0 +1,62 @@
+{
+  "archetype": "api_etl",
+  "title": "Paginated API → Transform → Warehouse (Idempotent)",
+  "platform": "n8n",
+  "sections": [
+    { "key": "plan",   "label": "1 · INCREMENTAL",  "note": "Each run reads the stored watermark and asks only for records changed since then. A full re-pull is a flag, not the default, so the job stays the same length as the data grows." },
+    { "key": "pull",   "label": "2 · PAGINATE",     "note": "Pages are walked until the cursor runs out, with backoff on 429s. Rate limits are treated as an expected condition rather than an error, which is what keeps a long backfill alive." },
+    { "key": "shape",  "label": "3 · TRANSFORM",    "note": "Records are flattened, typed and deduplicated on the natural key. Rows that fail validation are diverted to a quarantine table instead of poisoning the load." },
+    { "key": "load",   "label": "4 · UPSERT",       "note": "Loads are upserts keyed on the source id, so a re-run repairs rather than duplicates. The watermark advances only after a clean load — a failed run simply repeats." }
+  ],
+  "nodes": [
+    { "key": "cron",   "kind": "trigger.schedule", "label": "Hourly", "section": "plan" },
+    { "key": "mark",   "kind": "data.transform", "label": "Read Watermark", "section": "plan" },
+    { "key": "loop",   "kind": "data.split", "label": "Page Loop", "section": "pull" },
+    { "key": "fetch",  "kind": "net.http", "label": "GET /records?cursor=", "section": "pull" },
+    { "key": "more",   "kind": "flow.branch", "label": "More Pages?", "section": "pull" },
+    { "key": "flat",   "kind": "data.code", "label": "Flatten & Cast Types", "section": "shape" },
+    { "key": "valid",  "kind": "data.filter", "label": "Validate Rows", "section": "shape" },
+    { "key": "dedupe", "kind": "data.aggregate", "label": "Dedupe on Source ID", "section": "shape" },
+    { "key": "upsert", "kind": "app.action", "app": "postgres", "op": "insert", "label": "Upsert to Warehouse", "section": "load" },
+    { "key": "quar",   "kind": "app.action", "app": "postgres", "op": "insert", "label": "Quarantine Bad Rows", "section": "load" },
+    { "key": "save",   "kind": "data.transform", "label": "Advance Watermark", "section": "load" },
+    { "key": "report", "kind": "app.action", "app": "slack", "op": "post", "label": "Run Report", "section": "load" }
+  ],
+  "edges": [
+    { "from": "cron", "to": "mark" },
+    { "from": "mark", "to": "loop" },
+    { "from": "loop", "to": "fetch" },
+    { "from": "fetch", "to": "more" },
+    { "from": "more", "to": "loop", "branch": "loop", "loop": true },
+    { "from": "more", "to": "flat", "branch": "done" },
+    { "from": "flat", "to": "valid" },
+    { "from": "valid", "to": "dedupe", "branch": "true" },
+    { "from": "valid", "to": "quar", "branch": "false" },
+    { "from": "dedupe", "to": "upsert" },
+    { "from": "upsert", "to": "save" },
+    { "from": "save", "to": "report" }
+  ],
+  "input_sample": {
+    "run_started": "2026-07-31T14:00:00Z",
+    "source": "https://api.vendor.io/v2/transactions",
+    "watermark": "2026-07-31T13:00:00Z",
+    "page_size": 250,
+    "mode": "incremental"
+  },
+  "output_sample": {
+    "run_id": "etl_20260731_1400",
+    "pages_fetched": 7,
+    "rate_limit_pauses": 1,
+    "records_received": 1614,
+    "records_valid": 1602,
+    "records_quarantined": 12,
+    "quarantine_reasons": { "missing_currency": 9, "negative_amount": 3 },
+    "duplicates_collapsed": 38,
+    "rows_upserted": 1564,
+    "rows_inserted": 1211,
+    "rows_updated": 353,
+    "duration_seconds": 42,
+    "new_watermark": "2026-07-31T14:00:42Z",
+    "status": "success"
+  }
+}

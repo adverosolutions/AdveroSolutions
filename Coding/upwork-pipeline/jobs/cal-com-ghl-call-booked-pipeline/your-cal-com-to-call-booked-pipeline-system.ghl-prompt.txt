@@ -1,0 +1,26 @@
+Build this GoHighLevel workflow exactly as specified. Name the workflow exactly "Your Cal.com to Call Booked Pipeline System".
+Rules: create every step listed below, in the order given, with the exact step names and field values given. Do not add steps, do not remove steps, do not merge steps, do not reorder them, do not rename anything, do not ask me questions. Where a tag, pipeline, stage, form or field is named, use that exact name. Leave the workflow as a draft; do not publish.
+
+Trigger - name it exactly "Zapier Tags the Contact call-booked". Trigger "Contact tag". Tag added: "call-booked".
+
+Actions, in this exact order:
+Step 1 - name this step exactly "Clear an Old call-cancelled Tag". Action "Remove contact tag". Tag: "call-cancelled".
+  (Purpose: Someone who cancelled before and books again starts clean, so a second cancel is still caught by the goal.)
+Step 2 - name this step exactly "Add the Lead to Call Booked Pipeline". Action "Create/Update opportunity". Pipeline: "Call Booked Pipeline". Stage: "Call Booked". Opportunity name: "{{contact.first_name}} {{contact.last_name}} - Booked Call". Status: open.
+Step 3 - name this step exactly "Text the Owner the New Booking". Action "Send internal notification". Type: SMS. Send to: the contact's assigned user, and if none is assigned, all users. Message, exactly: "New call booked: {{contact.first_name}} {{contact.last_name}} for {{contact.call_time}}. It is in the Call Booked Pipeline. Details are in your email."
+Step 4 - name this step exactly "Email the Owner the Booking Details". Action "Send internal notification". Type: Email. Send to: the contact's assigned user, and if none is assigned, all users. Subject: "Call booked: {{contact.first_name}} {{contact.last_name}}, {{contact.call_time}}". Message, exactly: "{{contact.first_name}} {{contact.last_name}} booked a call for {{contact.call_time}}. Email {{contact.email}}. Phone {{contact.phone}}. What they wrote on the booking form: {{contact.call_notes}}. The opportunity is in Call Booked Pipeline, stage Call Booked."
+Step 5 - name this step exactly "Email the Lead One Prep Question". Action "Send email". Subject: "Quick question before our call, {{contact.first_name}}". Body, exactly: "Hi {{contact.first_name}}, thanks for booking time with {{location.name}}. Your calendar invite already has the details. One question so I can come prepared: what is the one thing you most want to walk away with from our call? Just hit reply. {{user.first_name}}"
+  (Purpose: Not a reminder. Cal.com sends those. This is the one message that makes the call better.)
+Step 6 - name this step exactly "Wait 14 Days While the Call Is Upcoming". Action "Wait". Wait for a set time: 14 days.
+  (Purpose: Keeps the contact in the workflow so the goal can catch a cancel. Match it to how far ahead the Cal.com event type lets people book.)
+Step 7 - name this step exactly "Task: Close Out the Card After the Call". Action "Create task". Title: "Move {{contact.first_name}} {{contact.last_name}} to Showed or No Show if the card is still in Call Booked". Due in 1 days. Assign to: the contact's assigned user.
+Step 8 - name this step exactly "Goal: Call Cancelled in Cal.com". Action "Goal event". Type of goal: "Added a contact Tag". Tag: "call-cancelled". If the contact reaches this goal without meeting its conditions: End this workflow.
+  (Purpose: The Booking Cancelled Zap adds call-cancelled. Whenever that lands, even mid-wait, the contact jumps straight here. Anyone who reaches this step without cancelling simply ends.)
+Step 9 - name this step exactly "Move the Opportunity to Cancelled". Action "Create/Update opportunity" (update the existing one). Pipeline: "Call Booked Pipeline". Move to stage: "Cancelled". Status: open.
+Step 10 - name this step exactly "Remove the call-booked Tag". Action "Remove contact tag". Tag: "call-booked".
+  (Purpose: So a rebooking adds the tag fresh and starts this workflow again.)
+Step 11 - name this step exactly "Email the Lead a Link to Rebook". Action "Send email". Subject: "Want to pick a new time, {{contact.first_name}}?". Body, exactly: "Hi {{contact.first_name}}, no problem on cancelling. If you still want to talk, grab any open time here: {{custom_values.booking_link}}. If the timing is just not right, reply and let me know. {{user.first_name}}"
+Step 12 - name this step exactly "Text the Owner the Cancellation". Action "Send internal notification". Type: SMS. Send to: the contact's assigned user, and if none is assigned, all users. Message, exactly: "{{contact.first_name}} {{contact.last_name}} cancelled their call for {{contact.call_time}}. The card is in Cancelled and a rebook link went out by email."
+  End of the workflow after this step.
+
+Checklist before you finish: 1 trigger(s), 12 action steps, workflow name "Your Cal.com to Call Booked Pipeline System". Every Send SMS, Send email and internal notification contains the exact message text above. Every Wait has the duration above. Every If/Else has both branches. Nothing is left unconfigured.

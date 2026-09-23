@@ -1,0 +1,196 @@
+{
+  "title": "AI Retrofit for an Existing Chatbot — Keep What Works, AI Catches the Rest",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "keep",
+      "label": "1 · KEEP WHAT ALREADY WORKS",
+      "color": 0,
+      "note": "Nothing gets ripped out. Your existing flows keep handling everything they already handle correctly, and they answer first. AI only sees the messages your bot currently falls over on, which is the cheapest way to add it and the easiest to roll back."
+    },
+    {
+      "key": "ai",
+      "label": "2 · AI PICKS UP THE REST",
+      "color": 0,
+      "note": "Answers come from your own help docs and past transcripts, not from general knowledge, so the bot cannot start telling customers things that are not true for you. The model itself is a swappable piece rather than a hardcoded dependency."
+    },
+    {
+      "key": "check",
+      "label": "3 · CHECK BEFORE IT SENDS",
+      "color": 0,
+      "note": "Every AI answer is scored for confidence and checked for a supporting source. No source means it is not an answer, it is a handoff. This is the single difference between a bot customers trust and one they learn to bypass."
+    },
+    {
+      "key": "learn",
+      "label": "4 · IT GETS BETTER EVERY WEEK",
+      "color": 0,
+      "note": "Every question the AI could not answer is logged as a content gap. That list is what you feed back into the knowledge base, so coverage improves from real customer questions instead of guesses."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "in",
+      "kind": "trigger.webhook",
+      "label": "1 · Message Comes In From Your Existing Bot",
+      "section": "keep"
+    },
+    {
+      "key": "handled",
+      "kind": "flow.branch",
+      "label": "2 · Did Your Existing Flow Already Handle It?",
+      "section": "keep"
+    },
+    {
+      "key": "passthru",
+      "kind": "net.respond",
+      "label": "2a · Yes — Return Your Answer Unchanged",
+      "section": "keep"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "3 · AI Answers From Your Own Content",
+      "section": "ai"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Model — Swappable",
+      "app": "openai",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "store",
+      "kind": "ai.vectorstore",
+      "label": "Your Help Docs + Past Transcripts",
+      "app": "pinecone",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "embed",
+      "kind": "ai.embed",
+      "label": "Embeddings",
+      "app": "openai",
+      "parent": "store",
+      "port": "ai_embedding"
+    },
+    {
+      "key": "score",
+      "kind": "data.transform",
+      "label": "4 · Score Confidence and Check the Source",
+      "section": "check"
+    },
+    {
+      "key": "good",
+      "kind": "flow.branch",
+      "label": "5 · Confident and Sourced?",
+      "section": "check"
+    },
+    {
+      "key": "human",
+      "kind": "app.action",
+      "label": "5b · Hand to a Human With the Transcript",
+      "app": "slack",
+      "op": "send_message",
+      "section": "check"
+    },
+    {
+      "key": "reply",
+      "kind": "net.respond",
+      "label": "6 · Send the Answer",
+      "section": "check"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "7 · Log Question, Answer, Confidence",
+      "app": "airtable",
+      "op": "create_record",
+      "section": "learn"
+    },
+    {
+      "key": "gaps",
+      "kind": "data.transform",
+      "label": "8 · Flag Content Gaps to Add This Week",
+      "section": "learn"
+    }
+  ],
+  "edges": [
+    {
+      "from": "in",
+      "to": "handled"
+    },
+    {
+      "from": "handled",
+      "to": "passthru",
+      "branch": "true"
+    },
+    {
+      "from": "handled",
+      "to": "agent",
+      "branch": "false"
+    },
+    {
+      "from": "agent",
+      "to": "score"
+    },
+    {
+      "from": "score",
+      "to": "good"
+    },
+    {
+      "from": "good",
+      "to": "reply",
+      "branch": "true"
+    },
+    {
+      "from": "good",
+      "to": "human",
+      "branch": "false"
+    },
+    {
+      "from": "human",
+      "to": "log"
+    },
+    {
+      "from": "reply",
+      "to": "log"
+    },
+    {
+      "from": "log",
+      "to": "gaps"
+    }
+  ],
+  "input_sample": {
+    "session_id": "sess_c17d40",
+    "existing_bot": {
+      "matched_intent": null,
+      "fallback_triggered": true,
+      "fallback_text": "Sorry, I didn't understand that. Type MENU for options."
+    },
+    "user_message": "if I cancel halfway through the year do I get the rest of my months back or is it just gone"
+  },
+  "output_sample": {
+    "route": "AI handled it (existing bot had fallen back to its menu)",
+    "confidence": 0.91,
+    "sources": [
+      {
+        "doc": "Billing & Cancellation Policy",
+        "section": "Mid-term cancellation",
+        "score": 0.88
+      }
+    ],
+    "reply": "You'll get a prorated refund for the unused months, back to the original payment method, usually within 5 business days. Nothing is forfeited. Want me to start that for you?",
+    "handed_to_human": false,
+    "logged": {
+      "content_gap": false,
+      "note": "Third time this question has been asked this week"
+    },
+    "before_this_build": "Customer would have seen: Sorry, I didn't understand that. Type MENU for options."
+  },
+  "archetype": "existing_chatbot_ai_retrofit",
+  "learned": true,
+  "learned_at": "2026-08-11"
+}

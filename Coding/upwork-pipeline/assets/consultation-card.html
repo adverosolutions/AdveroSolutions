@@ -1,0 +1,73 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;width:1600px;height:1200px;overflow:hidden;background:#0B1526;font-family:-apple-system,"SF Pro Display","Helvetica Neue",Helvetica,Arial,sans-serif;color:#F4F7FB}
+.bg{position:absolute;inset:0;background:
+ radial-gradient(900px 600px at 78% 62%, rgba(45,212,191,.16), transparent 60%),
+ radial-gradient(700px 500px at 15% 20%, rgba(96,165,250,.14), transparent 60%),
+ #0B1526}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:80px 80px;mask-image:radial-gradient(ellipse at center,black 40%,transparent 85%);-webkit-mask-image:radial-gradient(ellipse at center,black 40%,transparent 85%)}
+.wrap{position:absolute;inset:0;padding:96px 110px;box-sizing:border-box}
+.kicker{display:flex;align-items:center;gap:16px;font-size:26px;letter-spacing:.22em;font-weight:600;color:#7DD3C8;text-transform:uppercase}
+.kicker i{width:14px;height:14px;border-radius:50%;background:#2DD4BF;box-shadow:0 0 22px #2DD4BF}
+h1{margin:44px 0 0;font-size:104px;line-height:1.02;font-weight:700;letter-spacing:-.025em;max-width:1200px}
+h1 span{color:#2DD4BF}
+.sub{margin-top:30px;font-size:34px;line-height:1.35;color:#AAB7C9;max-width:1050px;font-weight:400}
+.flow{position:absolute;left:110px;right:110px;top:640px;height:250px}
+.durations{position:absolute;left:110px;bottom:96px;display:flex;gap:22px}
+.pill{padding:18px 36px;border-radius:999px;border:2px solid rgba(255,255,255,.18);font-size:32px;font-weight:600;background:rgba(255,255,255,.04)}
+.pill b{color:#2DD4BF;font-weight:700}
+.tools{position:absolute;right:110px;bottom:108px;font-size:26px;color:#8A98AC;letter-spacing:.06em}
+.tools b{color:#C9D3E0;font-weight:600}
+</style></head><body>
+<div class="bg"></div><div class="grid"></div>
+<div class="wrap">
+  <div class="kicker"><i></i>AI Automation Consultation</div>
+  <h1>Find the one workflow <span>worth automating.</span></h1>
+  <div class="sub">One call. A written build plan, the right tools, a real timeline, and a cost you can act on.</div>
+</div>
+<svg class="flow" viewBox="0 0 1380 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ln" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1380" y2="0"><stop offset="0" stop-color="#60A5FA"/><stop offset="1" stop-color="#2DD4BF"/></linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <!-- connectors -->
+  <path d="M430 125 L 550 125" stroke="url(#ln)" stroke-width="5" stroke-dasharray="14 12" stroke-linecap="round"/>
+  <path d="M830 125 L 950 125" stroke="url(#ln)" stroke-width="5" stroke-dasharray="14 12" stroke-linecap="round"/>
+  <path d="M538 113 L552 125 L538 137" stroke="#2DD4BF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M938 113 L952 125 L938 137" stroke="#2DD4BF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- node 1: manual process -->
+  <g>
+    <rect x="0" y="45" width="430" height="160" rx="26" fill="#111F35" stroke="rgba(255,255,255,.14)" stroke-width="2"/>
+    <rect x="34" y="82" width="18" height="18" rx="4" fill="#3B4B63"/><rect x="34" y="116" width="18" height="18" rx="4" fill="#3B4B63"/><rect x="34" y="150" width="18" height="18" rx="4" fill="#3B4B63"/>
+    <rect x="66" y="84" width="220" height="14" rx="7" fill="#3B4B63"/><rect x="66" y="118" width="160" height="14" rx="7" fill="#3B4B63"/><rect x="66" y="152" width="250" height="14" rx="7" fill="#3B4B63"/>
+    <text x="34" y="30" fill="#8A98AC" font-size="22" font-weight="600" letter-spacing="3" font-family="-apple-system,Helvetica,Arial">HOW IT RUNS TODAY</text>
+  </g>
+  <!-- node 2: automation -->
+  <g filter="url(#glow)">
+    <rect x="550" y="35" width="280" height="180" rx="30" fill="#0E2A33" stroke="#2DD4BF" stroke-width="3"/>
+  </g>
+  <g transform="translate(690 125)">
+    <path d="M0 -52 L14 -14 L52 0 L14 14 L0 52 L-14 14 L-52 0 L-14 -14 Z" fill="#2DD4BF"/>
+    <path d="M44 -58 L50 -44 L64 -38 L50 -32 L44 -18 L38 -32 L24 -38 L38 -44 Z" fill="#7DD3C8"/>
+    <circle cx="-44" cy="48" r="7" fill="#7DD3C8"/>
+  </g>
+  <text x="690" y="245" text-anchor="middle" fill="#7DD3C8" font-size="22" font-weight="600" letter-spacing="3" font-family="-apple-system,Helvetica,Arial">AUTOMATED</text>
+  <!-- node 3: outcome -->
+  <g>
+    <rect x="950" y="45" width="430" height="160" rx="26" fill="#111F35" stroke="rgba(255,255,255,.14)" stroke-width="2"/>
+    <text x="984" y="30" fill="#8A98AC" font-size="22" font-weight="600" letter-spacing="3" font-family="-apple-system,Helvetica,Arial">WHAT YOU GET BACK</text>
+    <g transform="translate(984 84)">
+      <path d="M0 9 L9 18 L26 0" stroke="#2DD4BF" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="44" y="16" fill="#E6ECF4" font-size="26" font-weight="500" font-family="-apple-system,Helvetica,Arial">Hours back every week</text>
+    </g>
+    <g transform="translate(984 130)">
+      <path d="M0 9 L9 18 L26 0" stroke="#2DD4BF" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="44" y="16" fill="#E6ECF4" font-size="26" font-weight="500" font-family="-apple-system,Helvetica,Arial">Leads that never go cold</text>
+    </g>
+    <g transform="translate(984 176)">
+      <path d="M0 9 L9 18 L26 0" stroke="#2DD4BF" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="44" y="16" fill="#E6ECF4" font-size="26" font-weight="500" font-family="-apple-system,Helvetica,Arial">A plan you can build on</text>
+    </g>
+  </g>
+</svg>
+<div class="durations"><div class="pill"><b>30</b> min</div><div class="pill"><b>60</b> min</div><div class="pill"><b>90</b> min</div></div>
+<div class="tools"><b>n8n</b> &nbsp;/&nbsp; <b>Make</b> &nbsp;/&nbsp; <b>GoHighLevel</b> &nbsp;/&nbsp; <b>Claude</b></div>
+</body></html>

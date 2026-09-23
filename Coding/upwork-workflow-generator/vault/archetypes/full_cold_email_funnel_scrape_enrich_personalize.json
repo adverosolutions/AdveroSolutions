@@ -1,0 +1,331 @@
+{
+  "title": "Full Cold Email Funnel - Scrape, Enrich, Personalize, Send, Reply",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "scrape",
+      "label": "1 · SCRAPE THE TARGET COMPANIES",
+      "color": 0,
+      "note": "Apify pulls the company list on a schedule. Nothing is typed in by hand."
+    },
+    {
+      "key": "contact",
+      "label": "2 · FIND AND VERIFY THE DECISION MAKER",
+      "color": 0,
+      "note": "Snov.io finds the person and checks the address before a single email is queued."
+    },
+    {
+      "key": "write",
+      "label": "3 · RESEARCH AND WRITE A PERSONAL FIRST LINE",
+      "color": 0,
+      "note": "The agent reads their website and writes one line about them, plus a fit score."
+    },
+    {
+      "key": "send",
+      "label": "4 · LOAD THE CAMPAIGN AND KEEP THE RECORD",
+      "color": 0,
+      "note": "Only prospects that passed both checks get added. Everything else is logged with a reason."
+    },
+    {
+      "key": "replies",
+      "label": "5 · HANDLE EVERY REPLY THE SAME DAY",
+      "color": 0,
+      "note": "Interested reaches you in Slack. Not now and unsubscribe are handled without you touching them."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "sched",
+      "kind": "trigger.schedule",
+      "label": "1 · Daily Prospect Run",
+      "section": "scrape"
+    },
+    {
+      "key": "apify",
+      "kind": "net.http",
+      "label": "2 · Apify: Scrape Target Companies From Google Maps and LinkedIn",
+      "section": "scrape"
+    },
+    {
+      "key": "split",
+      "kind": "data.split",
+      "label": "3 · Take One Company at a Time",
+      "section": "scrape"
+    },
+    {
+      "key": "find",
+      "kind": "net.http",
+      "label": "4 · Snov.io: Find the Decision Maker's Email",
+      "section": "contact"
+    },
+    {
+      "key": "verify",
+      "kind": "net.http",
+      "label": "5 · Snov.io: Verify That Email Is Deliverable",
+      "section": "contact"
+    },
+    {
+      "key": "deliverable",
+      "kind": "flow.branch",
+      "label": "6 · Did the Address Come Back Deliverable?",
+      "section": "contact"
+    },
+    {
+      "key": "skiplog",
+      "kind": "data.transform",
+      "label": "7 · Record Why This Company Was Skipped",
+      "section": "send"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "8 · Research the Company and Write a Personalized First Line",
+      "section": "write"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "OpenAI",
+      "app": "openai",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "site",
+      "kind": "ai.tool",
+      "label": "Read the Company Website",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Force Back a First Line, an Angle, and a Fit Score",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "fit",
+      "kind": "flow.branch",
+      "label": "9 · Is the Fit Score Above Your Threshold?",
+      "section": "write"
+    },
+    {
+      "key": "addcamp",
+      "kind": "net.http",
+      "label": "10 · Snov.io: Add the Prospect to the Campaign With Custom Fields",
+      "section": "send"
+    },
+    {
+      "key": "sheet",
+      "kind": "app.action",
+      "label": "11 · Log Every Company Added and Rejected, With the Reason",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "send"
+    },
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "12 · A Reply Comes Back From Snov.io",
+      "section": "replies"
+    },
+    {
+      "key": "classify",
+      "kind": "ai.llm",
+      "label": "13 · OpenAI: Read the Reply and Label It Interested, Not Now, or Unsubscribe",
+      "section": "replies"
+    },
+    {
+      "key": "route",
+      "kind": "flow.switch",
+      "label": "14 · Route on What They Actually Said",
+      "section": "replies"
+    },
+    {
+      "key": "slackhot",
+      "kind": "app.action",
+      "label": "14a · Send Interested Leads Straight to You",
+      "app": "slack",
+      "op": "post",
+      "section": "replies"
+    },
+    {
+      "key": "pause",
+      "kind": "net.http",
+      "label": "14b · Snov.io: Pause the Sequence and Try Again Later",
+      "section": "replies"
+    },
+    {
+      "key": "unsub",
+      "kind": "net.http",
+      "label": "14c · Snov.io: Unsubscribe Them and Stop All Email",
+      "section": "replies"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "15 · Any Step Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "replies"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "16 · Alert You With a Link to the Failed Run",
+      "app": "slack",
+      "op": "post",
+      "section": "replies"
+    }
+  ],
+  "edges": [
+    {
+      "from": "sched",
+      "to": "apify"
+    },
+    {
+      "from": "apify",
+      "to": "split"
+    },
+    {
+      "from": "split",
+      "to": "find",
+      "branch": "loop"
+    },
+    {
+      "from": "split",
+      "to": "sheet",
+      "branch": "done"
+    },
+    {
+      "from": "find",
+      "to": "verify"
+    },
+    {
+      "from": "verify",
+      "to": "deliverable"
+    },
+    {
+      "from": "deliverable",
+      "to": "agent",
+      "branch": "true"
+    },
+    {
+      "from": "deliverable",
+      "to": "skiplog",
+      "branch": "false"
+    },
+    {
+      "from": "agent",
+      "to": "fit"
+    },
+    {
+      "from": "fit",
+      "to": "addcamp",
+      "branch": "true"
+    },
+    {
+      "from": "fit",
+      "to": "skiplog",
+      "branch": "false"
+    },
+    {
+      "from": "addcamp",
+      "to": "split",
+      "loop": true
+    },
+    {
+      "from": "skiplog",
+      "to": "split",
+      "loop": true
+    },
+    {
+      "from": "hook",
+      "to": "classify"
+    },
+    {
+      "from": "classify",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "slackhot",
+      "branch": "Interested"
+    },
+    {
+      "from": "route",
+      "to": "pause",
+      "branch": "Not Now"
+    },
+    {
+      "from": "route",
+      "to": "unsub",
+      "branch": "Unsubscribe"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "run_date": "2026-09-10",
+    "apify_actor": "compass/crawler-google-places",
+    "search_terms": [
+      "commercial hvac contractor",
+      "mechanical contractor"
+    ],
+    "locations": [
+      "Dallas TX",
+      "Fort Worth TX",
+      "Austin TX"
+    ],
+    "max_companies_per_run": 300,
+    "target_titles": [
+      "Owner",
+      "Operations Director",
+      "General Manager"
+    ],
+    "snov_campaign": "HVAC Q4 Outbound - Sequence A",
+    "min_fit_score": 7
+  },
+  "output_sample": {
+    "run_date": "2026-09-10",
+    "companies_scraped": 287,
+    "emails_found": 214,
+    "verified_deliverable": 169,
+    "rejected_undeliverable": 45,
+    "rejected_low_fit": 22,
+    "added_to_campaign": 147,
+    "example_prospect": {
+      "company": "Beltline Mechanical Services",
+      "contact": "Dana Whitfield",
+      "title": "Operations Director",
+      "email": "dwhitfield@beltlinemech.com",
+      "snov_verification": "valid",
+      "fit_score": 9,
+      "angle": "Hiring three service techs while the site still promises 24/7 emergency coverage",
+      "first_line": "saw beltline is hiring three more service techs and still promising 24/7 emergency coverage, that reads like a dispatch problem before it is a staffing one",
+      "snov_custom_fields": {
+        "first_line": "saw beltline is hiring three more service techs and still promising 24/7 emergency coverage",
+        "angle": "hiring vs 24/7 coverage promise",
+        "fit_score": 9
+      }
+    },
+    "example_rejection": {
+      "company": "Ridgeway Air Systems",
+      "reason": "Snov.io returned the address as catch-all, not deliverable",
+      "stage": "verify"
+    },
+    "replies_handled_today": {
+      "interested": 4,
+      "not_now": 9,
+      "unsubscribe": 3
+    },
+    "interested_pushed_to_slack": 4,
+    "sheet_rows_written": 191
+  },
+  "archetype": "full_cold_email_funnel_scrape_enrich_personalize",
+  "learned": true,
+  "learned_at": "2026-09-09"
+}

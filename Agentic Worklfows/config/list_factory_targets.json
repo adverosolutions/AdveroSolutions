@@ -1,0 +1,53 @@
+{
+  "_about": "Which campaigns the Sunday list factory (O8) feeds, in run order, one entry per campaign in config/ids.json. Owner decision R10 (2026-09-22): cover every cold campaign, Cleaning Reactivation first. An entry is enabled only when its ICP rubric (config/icp/<niche>.json, whose 'campaigns' map names the campaign) and its source filters (Coding/lead-scrape-2026/niches/<niche>.json) both exist in the repo. A disabled entry carries the reason, and every run prints and logs it. Lives under config/ because the repo .gitignore ignores *.json elsewhere. Read by services/list_factory/targets.py; jobs/list_factory.py --all-campaigns runs it.",
+  "as_of": "2026-09-22",
+  "target_basis": "weekly_target is one week of worst-case first-touch sends at today's campaign daily_limit: 50 per day (config/ids.json instantly.campaign_settings_observed.daily_limit) x 6 sending days (Mon-Sat, same block) = 300. It keeps Blueprint Section 6's '>= 5 days of uncontacted leads per campaign' (5 x 50 = 250) even if a campaign spends its whole limit on step 1. Revisit when the campaign daily limits are raised for the Oct 11 scale-up. The M5 figure of 3,300 a week is the fleet-wide plan at 1,100+ sends a day, not a per-campaign number.",
+  "defaults": {
+    "source": "apify",
+    "verify": "millionverifier"
+  },
+  "campaigns": [
+    {
+      "campaign_key": "cleaning_reactivation",
+      "niche": "cleaning",
+      "enabled": true,
+      "weekly_target": 300,
+      "why": "Blueprint M4: scale Cleaning Reactivation first (2 of 3 booked calls). ICP: config/icp/cleaning.json (campaigns.reactivation). Source: Coding/lead-scrape-2026/niches/cleaning.json."
+    },
+    {
+      "campaign_key": "cleaning_trigger",
+      "niche": "cleaning",
+      "enabled": true,
+      "weekly_target": 300,
+      "why": "Blueprint M4: scale. ICP: config/icp/cleaning.json (campaigns.trigger). Source: Coding/lead-scrape-2026/niches/cleaning.json. Shares one source pull with cleaning_reactivation, so no business is staged for both."
+    },
+    {
+      "campaign_key": "bookkeeping_reactivation",
+      "niche": "bookkeeping",
+      "enabled": true,
+      "weekly_target": 300,
+      "why": "Blueprint M4: keep. ICP: config/icp/bookkeeping.json (campaigns.reactivation). Source: Coding/lead-scrape-2026/niches/bookkeeping.json."
+    },
+    {
+      "campaign_key": "bookkeeping_trigger",
+      "niche": "bookkeeping",
+      "enabled": true,
+      "weekly_target": 300,
+      "why": "Blueprint M4: keep to 1,000, then decide. ICP: config/icp/bookkeeping.json (campaigns.trigger). Source: Coding/lead-scrape-2026/niches/bookkeeping.json."
+    },
+    {
+      "campaign_key": "recruiting_reactivation",
+      "niche": "recruiting",
+      "enabled": false,
+      "weekly_target": 0,
+      "disabled_reason": "Blueprint M4 runs recruiting to 1,000 sends only (zero positives and hostile replies so far) and then retires it. Buying new leads for a campaign the plan retires at 1,000 is spend Lorenzo has not approved; the job does not decide it for him. Lead stock measured from the recorded Instantly analytics overview (services/experiments/fixtures/campaign_overview_2026-09-22.json, leads_count minus contacted_count): 464 of this campaign's 664 leads are not yet contacted (200 contacted). ICP and source both exist (config/icp/recruiting.json, Coding/lead-scrape-2026/niches/recruiting.json): enable this entry if Lorenzo keeps recruiting past its verdict. Disabling it departs from owner decision R10 ('cover every cold campaign') and is flagged for Lorenzo."
+    },
+    {
+      "campaign_key": "recruiting_outbound",
+      "niche": "recruiting",
+      "enabled": false,
+      "weekly_target": 0,
+      "disabled_reason": "Blueprint M4 runs recruiting to 1,000 sends only (zero positives and hostile replies so far) and then retires it. Buying new leads for a campaign the plan retires at 1,000 is spend Lorenzo has not approved; the job does not decide it for him. Lead stock measured from the recorded Instantly analytics overview (services/experiments/fixtures/campaign_overview_2026-09-22.json, leads_count minus contacted_count): 452 of this campaign's 648 leads are not yet contacted (196 contacted). Note that config/icp/recruiting.json records 2,507 live leads carrying the filler specialty \"your clients'\" (measured 2026-09-21), which the outbound B variant cannot use. ICP and source both exist (config/icp/recruiting.json, Coding/lead-scrape-2026/niches/recruiting.json): enable this entry if Lorenzo keeps recruiting past its verdict. Disabling it departs from owner decision R10 ('cover every cold campaign') and is flagged for Lorenzo."
+    }
+  ]
+}

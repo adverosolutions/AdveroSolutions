@@ -1,0 +1,752 @@
+{
+  "name": "Your Otter to Docketwise Case Notes System - Meetings and Calls",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - IN PERSON MEETINGS RECORDED IN OTTER\n\nOtter finishes a client meeting and we go straight to the Microsoft 365 appointment it belongs to. If the appointment does not name the case, Claude reads the transcript for it.",
+        "height": 800,
+        "width": 1280,
+        "color": 5
+      },
+      "id": "c1e24042-a27b-5145-ae4e-746068b26743",
+      "name": "Section - 1 - IN PERSON MEETINGS RECORDED IN OTTER",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - RINGCENTRAL PHONE CALLS\n\nA recorded call arrives with its caller ID. The phone number is looked up against Docketwise contacts, then it joins the same matching gate the meetings use.",
+        "height": 800,
+        "width": 700,
+        "color": 4
+      },
+      "id": "9150b43b-25c6-5699-adf8-aaeda05bd1b7",
+      "name": "Section - 2 - RINGCENTRAL PHONE CALLS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1380,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - MATCH IT TO THE RIGHT MATTER\n\nOne matter, or nobody guesses. Anything ambiguous goes to a person by email before a single word is written to a file.",
+        "height": 800,
+        "width": 700,
+        "color": 6
+      },
+      "id": "0dea54a9-5db6-5e72-9fac-564b6e7874f1",
+      "name": "Section - 3 - MATCH IT TO THE RIGHT MATTER",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - WRITE THE CASE NOTE\n\nClaude turns the transcript into a case note a paralegal would write: decisions, deadlines, follow-ups. It is posted to the matter in Docketwise.",
+        "height": 800,
+        "width": 560,
+        "color": 7
+      },
+      "id": "b8f5c233-f57c-54b5-b066-793a03139336",
+      "name": "Section - 4 - WRITE THE CASE NOTE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3100,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - AUDIT LOG AND FAILURE ALERTS\n\nEvery note filed is logged with its source and matter. Anything that errors emails the office instead of disappearing quietly.",
+        "height": 800,
+        "width": 700,
+        "color": 1
+      },
+      "id": "ef8903b5-0d3c-5083-b4b9-a02d8ea4509c",
+      "name": "Section - 5 - AUDIT LOG AND FAILURE ALERTS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3820,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "c4350d61-1f43-5f3d-9999-22e447bb7548",
+      "name": "1 - Otter AI: Meeting Transcript Ready",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        140
+      ],
+      "notes": "Fires when Otter finishes processing a recorded in person meeting.",
+      "notesInFlow": true,
+      "webhookId": "7bd2c518-b260-5f71-8f36-072e91d96ae5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/2-microsoft-365-find-the-calendar-appoin",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "1d7e3f91-eb00-5c86-be69-d5a2e1d32e90",
+      "name": "2 - Microsoft 365: Find the Calendar Appointment for This Meeting",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        240,
+        140
+      ],
+      "notes": "Matches on the attorney's calendar by start time and attendees.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "22ba285a-9e3f-5e5a-9f4e-f7ee1859ad30",
+              "name": "event",
+              "value": "={{ $json.event }}",
+              "type": "string"
+            },
+            {
+              "id": "ca09b17f-51cc-597e-ac5f-1a729806cde0",
+              "name": "source",
+              "value": "={{ $json.source }}",
+              "type": "string"
+            },
+            {
+              "id": "2706ed8a-2dd2-5d37-b508-c8c174bb98fb",
+              "name": "speech_id",
+              "value": "={{ $json.speech_id }}",
+              "type": "string"
+            },
+            {
+              "id": "1b45ffa4-b72c-5036-93da-26074be1ba0b",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "cb6dc2f3-575a-5dc6-9e46-eb54f19b5218",
+              "name": "recorded_at",
+              "value": "={{ $json.recorded_at }}",
+              "type": "string"
+            },
+            {
+              "id": "0d2e4321-57d1-5608-abef-ceefb62b176f",
+              "name": "duration_seconds",
+              "value": "={{ $json.duration_seconds }}",
+              "type": "number"
+            },
+            {
+              "id": "5768d2dc-f049-5518-9dc2-829caf733a67",
+              "name": "attendees",
+              "value": "={{ $json.attendees }}",
+              "type": "array"
+            },
+            {
+              "id": "5da98853-e03a-536d-b10b-68681e5e55c2",
+              "name": "transcript_url",
+              "value": "={{ $json.transcript_url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "2e15b891-f74c-5a8b-8581-9e4a0da15480",
+      "name": "3 - Pull Client Name and Case Number From the Appointment",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        480,
+        140
+      ],
+      "notes": "Reads the subject, body and attendee list for a client name or case file number.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "40a3ec01-83b0-556b-8ed6-211ff60cc005",
+              "leftValue": "={{ $json.case_number }}",
+              "rightValue": 4.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "77fd1182-ce23-57ea-9ec5-3a979fac6177",
+      "name": "4 - Case Identified From the Calendar?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        720,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=5 - Claude: Extract Client and Case References From the Transcript\n\nevent: {{ $json.event }}\nsource: {{ $json.source }}\nspeech_id: {{ $json.speech_id }}\ntitle: {{ $json.title }}",
+        "batching": {}
+      },
+      "id": "357c64e0-7c66-5da0-8bb2-22ce9b8c5740",
+      "name": "5 - Claude: Extract Client and Case References From the Transcript",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        960,
+        220
+      ],
+      "notes": "For meetings booked without case details, it reads what was said out loud in the room.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "7dd5ccda-4c05-5995-9b26-365d338c2a8f",
+      "name": "Claude",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        1000,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "f0b9e9ac-85a0-5e68-bd41-cae9c60c0453",
+      "name": "6 - RingCentral: Call Recording Available",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        1440,
+        140
+      ],
+      "notes": "Fires the moment a recorded call ends.",
+      "notesInFlow": true,
+      "webhookId": "d2d95548-8c0a-59c7-a30b-5789d08e4b9f"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/7-ringcentral-fetch-the-recording-and-ca",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "a9fc7425-0ab3-5d77-bcfc-6d01a78cb8ed",
+      "name": "7 - RingCentral: Fetch the Recording and Caller ID",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1680,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/8-docketwise-match-contact-by-phone-numb",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "4b033f78-89c4-51e1-9f51-2b28d6ac48a8",
+      "name": "8 - Docketwise: Match Contact by Phone Number",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1920,
+        140
+      ],
+      "notes": "The caller ID is the fastest identifier we have on a phone call.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/9-docketwise-search-matter-by-client-or-",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "80925a01-7564-57a6-8105-ae0bbaa0dc86",
+      "name": "9 - Docketwise: Search Matter by Client or Case Number",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2300,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fe22e62e-9cd1-570e-af46-5161c3ac0f38",
+              "leftValue": "={{ $json.docketwise_matter_id }}",
+              "rightValue": 10.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b1f32b44-6bfa-5ded-b609-66d38cb22116",
+      "name": "10 - Exactly One Matter Matched?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2540,
+        80
+      ],
+      "notes": "Zero matches or two matches both count as no match.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "toRecipients": "={{ $json.email }}",
+        "subject": "={{ $json.subject }}"
+      },
+      "id": "23192b23-d6d2-5a26-a459-386c79637b88",
+      "name": "11 - Email Staff to Confirm Which Matter This Belongs To",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        2780,
+        180
+      ],
+      "notes": "Holds the transcript until a person picks the matter. Nothing is filed on a guess.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=12 - Claude: Summarize Into a Case Note With Decisions, Deadlines and Follow Ups\n\nevent: {{ $json.event }}\nsource: {{ $json.source }}\nspeech_id: {{ $json.speech_id }}\ntitle: {{ $json.title }}",
+        "batching": {}
+      },
+      "id": "dc5d1a72-2540-5fac-a43f-a295089b7905",
+      "name": "12 - Claude: Summarize Into a Case Note With Decisions, Deadlines and Follow Ups",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        3160,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "9e9de97c-f7c8-5870-8c3c-62b7863c730c",
+      "name": "Claude 2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        3200,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/13-docketwise-add-the-note-to-the-matter",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "f189078f-acaf-5735-b12a-cb1b55eb354c",
+      "name": "13 - Docketwise: Add the Note to the Matter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3500,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "481eb7e4-568e-5c27-a101-bd7b0cfcfe5d",
+      "name": "14 - Audit Log: Source, Matter and Link to the Note",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4360,
+        0
+      ],
+      "notes": "One row per filed note so the office can prove where every note came from.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {},
+      "id": "e4ace896-3e03-5439-be61-aee7f9e47820",
+      "name": "15 - Something Failed Anywhere in the Flow",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        3880,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "toRecipients": "={{ $json.email }}",
+        "subject": "={{ $json.subject }}"
+      },
+      "id": "80cc3b8c-f4b6-5524-acc9-796d34e5069b",
+      "name": "16 - Email the Office With the Transcript That Did Not File",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        4120,
+        140
+      ]
+    }
+  ],
+  "connections": {
+    "1 - Otter AI: Meeting Transcript Ready": {
+      "main": [
+        [
+          {
+            "node": "2 - Microsoft 365: Find the Calendar Appointment for This Meeting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Microsoft 365: Find the Calendar Appointment for This Meeting": {
+      "main": [
+        [
+          {
+            "node": "3 - Pull Client Name and Case Number From the Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Pull Client Name and Case Number From the Appointment": {
+      "main": [
+        [
+          {
+            "node": "4 - Case Identified From the Calendar?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - Case Identified From the Calendar?": {
+      "main": [
+        [
+          {
+            "node": "9 - Docketwise: Search Matter by Client or Case Number",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "5 - Claude: Extract Client and Case References From the Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - Claude: Extract Client and Case References From the Transcript": {
+      "main": [
+        [
+          {
+            "node": "9 - Docketwise: Search Matter by Client or Case Number",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - RingCentral: Call Recording Available": {
+      "main": [
+        [
+          {
+            "node": "7 - RingCentral: Fetch the Recording and Caller ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - RingCentral: Fetch the Recording and Caller ID": {
+      "main": [
+        [
+          {
+            "node": "8 - Docketwise: Match Contact by Phone Number",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - Docketwise: Match Contact by Phone Number": {
+      "main": [
+        [
+          {
+            "node": "10 - Exactly One Matter Matched?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9 - Docketwise: Search Matter by Client or Case Number": {
+      "main": [
+        [
+          {
+            "node": "10 - Exactly One Matter Matched?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Exactly One Matter Matched?": {
+      "main": [
+        [
+          {
+            "node": "12 - Claude: Summarize Into a Case Note With Decisions, Deadlines and Follow Ups",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "11 - Email Staff to Confirm Which Matter This Belongs To",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 - Claude: Summarize Into a Case Note With Decisions, Deadlines and Follow Ups": {
+      "main": [
+        [
+          {
+            "node": "13 - Docketwise: Add the Note to the Matter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - Docketwise: Add the Note to the Matter": {
+      "main": [
+        [
+          {
+            "node": "14 - Audit Log: Source, Matter and Link to the Note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15 - Something Failed Anywhere in the Flow": {
+      "main": [
+        [
+          {
+            "node": "16 - Email the Office With the Transcript That Did Not File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "5 - Claude: Extract Client and Case References From the Transcript",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude 2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "12 - Claude: Summarize Into a Case Note With Decisions, Deadlines and Follow Ups",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "4ff27b0e-56de-5f61-8226-5ef8a39ada8b",
+  "pinData": {
+    "1 - Otter AI: Meeting Transcript Ready": [
+      {
+        "json": {
+          "event": "speech.finished",
+          "source": "otter_ai",
+          "speech_id": "OTR-88214417",
+          "title": "Consultation - Delgado Ruiz",
+          "recorded_at": "2026-09-08T14:02:11-05:00",
+          "duration_seconds": 2764,
+          "attendees": [
+            "k.whitfield@firm.com",
+            "maria.delgadoruiz@gmail.com"
+          ],
+          "transcript_url": "https://otter.ai/u/OTR-88214417/transcript.txt",
+          "transcript_preview": "Okay Maria, so on the I-130 for your husband, the RFE response is due October 3rd. We still need the joint bank statements and the lease with both names on it..."
+        }
+      }
+    ],
+    "14 - Audit Log: Source, Matter and Link to the Note": [
+      {
+        "json": {
+          "filed_at": "2026-09-08T14:51:03-05:00",
+          "source": "Otter AI meeting",
+          "matched_by": "Microsoft 365 appointment subject",
+          "match_confidence": "single exact match",
+          "docketwise_matter_id": "MTR-40817",
+          "matter_name": "Delgado Ruiz, Maria - I-130 Petition",
+          "client_name": "Maria Delgado Ruiz",
+          "case_number": "IMM-2026-0417",
+          "note_id": "NOTE-119204",
+          "note_url": "https://app.docketwise.com/matters/40817/notes/119204",
+          "note_summary": "RFE response on the I-130 due Oct 3, 2026. Client to provide joint bank statements and a lease listing both spouses. Attorney to draft the cover letter once documents land.",
+          "deadlines": [
+            {
+              "item": "I-130 RFE response filed",
+              "due": "2026-10-03"
+            }
+          ],
+          "follow_ups": [
+            {
+              "owner": "client",
+              "task": "Send joint bank statements and joint lease"
+            },
+            {
+              "owner": "paralegal",
+              "task": "Chase documents on Sep 22 if nothing received"
+            }
+          ],
+          "audit_row": "2026-09-08 | Otter AI meeting | MTR-40817 | NOTE-119204 | filed automatically"
+        }
+      }
+    ]
+  }
+}

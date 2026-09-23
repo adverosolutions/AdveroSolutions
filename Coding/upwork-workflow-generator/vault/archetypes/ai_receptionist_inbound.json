@@ -1,0 +1,244 @@
+{
+  "title": "AI Receptionist — Qualify, Route & Warm Transfer",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "call",
+      "label": "1 · CALL LANDS",
+      "color": 0,
+      "note": "ElevenLabs answers and posts the live call to n8n. The caller's number is matched against the book of business before the agent speaks, so a known policyholder is greeted by name instead of being asked to spell it."
+    },
+    {
+      "key": "qualify",
+      "label": "2 · QUALIFY",
+      "color": 0,
+      "note": "One pass captures name, policy number, callback number and reason for calling, and decides what the caller actually needs. Structured output means these land as fields the team can act on, not a transcript someone has to read."
+    },
+    {
+      "key": "route",
+      "label": "3 · ROUTE",
+      "color": 0,
+      "note": "Business hours decide the path. In hours, the caller is routed by intent to sales, service or claims. After hours, nothing is dropped — the call becomes a structured message instead of a voicemail nobody transcribes."
+    },
+    {
+      "key": "fulfil",
+      "label": "4 · HANDLE",
+      "color": 0,
+      "note": "Warm transfer hands the human a screen-pop with everything already captured. Simple service requests never reach a person at all — an auto ID card is texted in seconds — and callbacks are booked straight onto the calendar."
+    },
+    {
+      "key": "log",
+      "label": "5 · LOG & NOTIFY",
+      "color": 0,
+      "note": "Every call is written to the agency system with its outcome, and the team gets a summary. After-hours messages land as a morning queue ordered by urgency rather than a stack of voicemails."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "ElevenLabs · Inbound Call",
+      "section": "call"
+    },
+    {
+      "key": "lookup",
+      "kind": "net.http",
+      "label": "Match Caller to Policy",
+      "section": "call"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "Qualify Caller & Capture Details",
+      "section": "qualify"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "memory",
+      "kind": "ai.memory",
+      "label": "Call Context",
+      "parent": "agent",
+      "port": "ai_memory"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Intake Schema",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "hours",
+      "kind": "flow.branch",
+      "label": "During Business Hours?",
+      "section": "route"
+    },
+    {
+      "key": "intent",
+      "kind": "flow.switch",
+      "label": "What They Need",
+      "section": "route"
+    },
+    {
+      "key": "transfer",
+      "kind": "net.http",
+      "label": "Warm Transfer + Screen Pop",
+      "section": "fulfil"
+    },
+    {
+      "key": "idcard",
+      "kind": "app.action",
+      "label": "Text Auto ID Card",
+      "app": "twilio",
+      "op": "send",
+      "section": "fulfil"
+    },
+    {
+      "key": "book",
+      "kind": "app.action",
+      "label": "Book Callback",
+      "app": "googleCalendar",
+      "op": "create",
+      "section": "fulfil"
+    },
+    {
+      "key": "message",
+      "kind": "data.transform",
+      "label": "Structure After-Hours Message",
+      "section": "fulfil"
+    },
+    {
+      "key": "crm",
+      "kind": "app.action",
+      "label": "Log Call to Agency System",
+      "app": "airtable",
+      "op": "create",
+      "section": "log"
+    },
+    {
+      "key": "notify",
+      "kind": "app.action",
+      "label": "Summary to Team",
+      "app": "slack",
+      "op": "post",
+      "section": "log"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "lookup"
+    },
+    {
+      "from": "lookup",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "hours"
+    },
+    {
+      "from": "hours",
+      "to": "intent",
+      "branch": "true"
+    },
+    {
+      "from": "hours",
+      "to": "message",
+      "branch": "false"
+    },
+    {
+      "from": "intent",
+      "to": "transfer",
+      "branch": "sales_service_claims"
+    },
+    {
+      "from": "intent",
+      "to": "idcard",
+      "branch": "id_card"
+    },
+    {
+      "from": "intent",
+      "to": "book",
+      "branch": "callback"
+    },
+    {
+      "from": "transfer",
+      "to": "crm"
+    },
+    {
+      "from": "idcard",
+      "to": "crm"
+    },
+    {
+      "from": "book",
+      "to": "crm"
+    },
+    {
+      "from": "message",
+      "to": "crm"
+    },
+    {
+      "from": "crm",
+      "to": "notify"
+    }
+  ],
+  "input_sample": {
+    "call_id": "call_7c31ab04",
+    "received_at": "2026-07-31T18:47:12Z",
+    "from_number": "+1 214 555 0182",
+    "to_number": "+1 214 555 0100",
+    "agency": "Brightwater Insurance Group",
+    "after_hours": false,
+    "matched_policyholder": {
+      "name": "Curtis Ellingson",
+      "policy_number": "AUT-4471902",
+      "policy_type": "Personal Auto",
+      "status": "Active",
+      "agent_of_record": "Dana Whitfield"
+    },
+    "opening_utterance": "Hey, I need a copy of my insurance card for the DMV, and I think I might have a claim to file from a fender bender last week."
+  },
+  "output_sample": {
+    "call_id": "call_7c31ab04",
+    "caller_name": "Curtis Ellingson",
+    "policy_number": "AUT-4471902",
+    "callback_number": "+1 214 555 0182",
+    "reason_for_calling": "Needs auto ID card for DMV; also reporting a possible claim from a minor collision last week",
+    "intents_detected": [
+      "id_card_request",
+      "new_claim"
+    ],
+    "primary_intent": "new_claim",
+    "handled_by_agent": [
+      {
+        "action": "Texted auto ID card",
+        "to": "+1 214 555 0182",
+        "at": "2026-07-31T18:47:41Z",
+        "status": "delivered"
+      }
+    ],
+    "warm_transfer": {
+      "department": "Claims",
+      "transferred_to": "Marcus Reyes",
+      "at": "2026-07-31T18:48:03Z",
+      "screen_pop": "Curtis Ellingson · AUT-4471902 · Personal Auto · Active · possible collision claim, last week, ID card already sent"
+    },
+    "callback_booked": null,
+    "after_hours_message": null,
+    "call_duration_seconds": 51,
+    "time_to_human_seconds": 51,
+    "containment": "partial — ID card fully self-served, claim escalated",
+    "crm_record": "recQ81mLp4"
+  },
+  "archetype": "ai_receptionist_inbound",
+  "learned": true,
+  "learned_at": "2026-07-31"
+}

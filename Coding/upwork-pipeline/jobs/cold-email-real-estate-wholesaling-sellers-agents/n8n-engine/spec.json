@@ -1,0 +1,319 @@
+{
+  "title": "Your Seller and Agent Outbound System",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "lists",
+      "label": "1 - TWO LISTS, ONE PIPE",
+      "color": 0,
+      "note": "Fresh distressed-owner records and agents sitting on aged or off-market listings get pulled on the same schedule, then merged into one queue with a seller or agent tag. Two campaigns, one system, nobody uploads a CSV."
+    },
+    {
+      "key": "clean",
+      "label": "2 - CLEAN BEFORE ANYTHING SENDS",
+      "color": 0,
+      "note": "Every address is verified, bounces and catch-alls are suppressed instead of sent, and anyone already contacted or opted out is filtered out. This is what keeps the sending domains alive."
+    },
+    {
+      "key": "write",
+      "label": "3 - WRITE THE HUMAN VERSION",
+      "color": 0,
+      "note": "Claude reads the actual property record or listing and writes the plain-text first line off what it found, picks the angle, then the lead drops into the seller or the agent sequence."
+    },
+    {
+      "key": "replies",
+      "label": "4 - REPLIES INTO YOUR CRM",
+      "color": 0,
+      "note": "Every reply is read and sorted within minutes. Interested goes straight to the CRM with acquisitions alerted, questions go to a human, not now goes to nurture, remove is suppressed everywhere."
+    },
+    {
+      "key": "numbers",
+      "label": "5 - NUMBERS AND NOTHING FAILS QUIETLY",
+      "color": 0,
+      "note": "One scorecard row a day with sent, bounce, reply, positive and appointments, so scaling is a decision off real numbers. If any step fails you get told which node and which record."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "sched",
+      "kind": "trigger.schedule",
+      "label": "1 - Every Weekday at 6am",
+      "section": "lists"
+    },
+    {
+      "key": "sellers",
+      "kind": "net.http",
+      "label": "2 - Pull Fresh Distressed-Owner Records: Probate, Tax Lien, Pre-Foreclosure",
+      "section": "lists"
+    },
+    {
+      "key": "agents",
+      "kind": "net.http",
+      "label": "2b - Pull Agents With Aged or Off-Market Listings",
+      "section": "lists"
+    },
+    {
+      "key": "queue",
+      "kind": "data.merge",
+      "label": "3 - One Queue, Tagged Seller or Agent",
+      "section": "lists"
+    },
+    {
+      "key": "verify",
+      "kind": "net.http",
+      "label": "4 - Verify Every Email",
+      "section": "clean"
+    },
+    {
+      "key": "deliverable",
+      "kind": "flow.branch",
+      "label": "5 - Deliverable?",
+      "section": "clean"
+    },
+    {
+      "key": "suppress",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "append",
+      "label": "5b - Suppressed: Bounces and Catch-Alls",
+      "section": "clean"
+    },
+    {
+      "key": "history",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "read",
+      "label": "6 - Already Contacted or Opted Out?",
+      "section": "clean"
+    },
+    {
+      "key": "isnew",
+      "kind": "flow.branch",
+      "label": "7 - New Contact?",
+      "section": "clean"
+    },
+    {
+      "key": "writer",
+      "kind": "ai.agent",
+      "label": "8 - Claude Writes the Plain-Text First Line and Picks the Angle",
+      "section": "write"
+    },
+    {
+      "key": "writermodel",
+      "kind": "ai.model",
+      "app": "anthropic",
+      "label": "Claude",
+      "parent": "writer",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "writertool",
+      "kind": "ai.tool",
+      "label": "Read the Property Record or Listing",
+      "parent": "writer",
+      "port": "ai_tool"
+    },
+    {
+      "key": "writerparser",
+      "kind": "ai.parser",
+      "label": "First Line, Angle, Campaign",
+      "parent": "writer",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "which",
+      "kind": "flow.switch",
+      "label": "9 - Seller or Agent?",
+      "section": "write"
+    },
+    {
+      "key": "seqseller",
+      "kind": "net.http",
+      "label": "10a - Instantly: Add to the Seller Sequence",
+      "section": "write"
+    },
+    {
+      "key": "seqagent",
+      "kind": "net.http",
+      "label": "10b - Instantly: Add to the Agent Sequence",
+      "section": "write"
+    },
+    {
+      "key": "reply",
+      "kind": "trigger.webhook",
+      "label": "11 - Instantly: Reply Comes In",
+      "section": "replies"
+    },
+    {
+      "key": "sort",
+      "kind": "ai.llm",
+      "label": "12 - Sort the Reply: Interested, Question, Not Now, Remove",
+      "section": "replies"
+    },
+    {
+      "key": "sortmodel",
+      "kind": "ai.model",
+      "app": "anthropic",
+      "label": "Claude",
+      "parent": "sort",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "route",
+      "kind": "flow.switch",
+      "label": "13 - Route",
+      "section": "replies"
+    },
+    {
+      "key": "crm",
+      "kind": "net.http",
+      "label": "14 - CRM: Create the Lead and Alert Acquisitions",
+      "section": "replies"
+    },
+    {
+      "key": "human",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "post",
+      "label": "14b - Hand to a Human",
+      "section": "replies"
+    },
+    {
+      "key": "nurture",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "append",
+      "label": "14c - Nurture, Retry in 90 Days",
+      "section": "replies"
+    },
+    {
+      "key": "unsub",
+      "kind": "net.http",
+      "label": "14d - Instantly: Unsubscribe and Suppress",
+      "section": "replies"
+    },
+    {
+      "key": "scorecard",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "append",
+      "label": "15 - Daily Scorecard: Sent, Bounce, Reply, Positive, Appointments",
+      "section": "numbers"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "app": "n8n",
+      "op": "error_trigger",
+      "label": "16 - Any Step Fails",
+      "section": "numbers"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "post",
+      "label": "17 - Alert With the Failing Node",
+      "section": "numbers"
+    }
+  ],
+  "edges": [
+    {"from": "sched", "to": "sellers"},
+    {"from": "sched", "to": "agents"},
+    {"from": "sellers", "to": "queue"},
+    {"from": "agents", "to": "queue"},
+    {"from": "queue", "to": "verify"},
+    {"from": "verify", "to": "deliverable"},
+    {"from": "deliverable", "to": "history", "branch": "true"},
+    {"from": "deliverable", "to": "suppress", "branch": "false"},
+    {"from": "history", "to": "isnew"},
+    {"from": "isnew", "to": "writer", "branch": "true"},
+    {"from": "isnew", "to": "suppress", "branch": "false"},
+    {"from": "writer", "to": "which"},
+    {"from": "which", "to": "seqseller", "branch": "Seller"},
+    {"from": "which", "to": "seqagent", "branch": "Agent"},
+    {"from": "reply", "to": "sort"},
+    {"from": "sort", "to": "route"},
+    {"from": "route", "to": "crm", "branch": "Interested"},
+    {"from": "route", "to": "human", "branch": "Question"},
+    {"from": "route", "to": "nurture", "branch": "Not Now"},
+    {"from": "route", "to": "unsub", "branch": "Remove"},
+    {"from": "seqseller", "to": "scorecard"},
+    {"from": "seqagent", "to": "scorecard"},
+    {"from": "crm", "to": "scorecard"},
+    {"from": "err", "to": "alert"}
+  ],
+  "input_sample": {
+    "pulled_at": "2026-09-22T06:00:00-04:00",
+    "seller_record": {
+      "record_type": "probate",
+      "tag": "seller",
+      "owner_name": "Linda Farrow",
+      "property_address": "1422 Ashland Ave, Dayton OH 45420",
+      "county": "Montgomery County, OH",
+      "case_filed": "2026-08-30",
+      "estimated_equity": "$84,000",
+      "estimated_value": "$146,000",
+      "mortgage_balance": "$62,000",
+      "owner_occupied": false,
+      "beds_baths": "3 bed 1.5 bath, 1,248 sqft",
+      "email": "l.farrow@example.com"
+    },
+    "agent_record": {
+      "record_type": "aged listing",
+      "tag": "agent",
+      "agent_name": "Chris Okafor",
+      "brokerage": "Keystone Realty Group",
+      "listing_address": "907 Wayne Ave, Dayton OH 45410",
+      "days_on_market": 118,
+      "list_price": "$189,900",
+      "price_cuts": 2,
+      "active_listings": 11,
+      "email": "chris@example.com"
+    }
+  },
+  "output_sample": {
+    "instantly_lead_seller": {
+      "campaign": "OH Sellers - Probate and Tax Lien",
+      "email": "l.farrow@example.com",
+      "email_status": "verified, catch-all no",
+      "first_name": "Linda",
+      "tag": "seller",
+      "angle": "probate, out of state, non owner occupied",
+      "variables": {
+        "first_line": "saw the Ashland Ave place went through probate in Montgomery County at the end of August, and it looks like nobody is living in it",
+        "property": "1422 Ashland Ave, Dayton OH 45420",
+        "city": "Dayton"
+      },
+      "sequence": "3 emails, plain text, physical address footer, one click opt out"
+    },
+    "instantly_lead_agent": {
+      "campaign": "OH Agents - Aged and Off-Market",
+      "email": "chris@example.com",
+      "email_status": "verified, catch-all no",
+      "first_name": "Chris",
+      "tag": "agent",
+      "angle": "aged listing, two price cuts, 11 active",
+      "variables": {
+        "first_line": "noticed 907 Wayne Ave has been sitting 118 days with two price cuts, which usually means the buyers walking it are not the buyers for it",
+        "brokerage": "Keystone Realty Group",
+        "city": "Dayton"
+      },
+      "sequence": "3 emails, plain text, cash close angle, commission protected"
+    },
+    "scorecard_row": {
+      "date": "2026-09-22",
+      "pulled": "seller 412, agent 168",
+      "verified_deliverable": 389,
+      "suppressed_bounce_or_catch_all": 94,
+      "already_contacted_or_opted_out": 97,
+      "sent": "seller 0, agent 0, to be filled from live sending",
+      "bounce_rate": "to be filled from live sending",
+      "replies": "to be filled from live sending",
+      "positive": "to be filled from live sending",
+      "appointments": "to be filled from live sending",
+      "note": "counts above are this run's queue math, send metrics fill in once the mailboxes are warm and the campaign is live"
+    },
+    "if_it_had_failed": "Error trigger catches the step, the Slack alert names the failing node and the record it died on, nothing drops silently"
+  }
+}

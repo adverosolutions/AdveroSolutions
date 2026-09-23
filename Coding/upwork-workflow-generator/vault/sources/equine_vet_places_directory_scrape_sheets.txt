@@ -1,0 +1,11 @@
+We need a reusable, scheduled automation workflow to collect and maintain a database of equine veterinary professionals for legitimate B2B outreach, without requiring us to manage Python code or a developer server.
+
+What we need
+We need an automation expert to build a no-code or low-code workflow using n8n, Make (Integromat), or a comparable platform that:
+Queries the official Google Places API for equine vets across multiple European countries
+Fetches and parses publicly accessible European vet directory pages (HTML), extracting structured contact data, the equivalent of what BeautifulSoup does in Python, handled inside the workflow's code or parsing nodes
+Deduplicates and merges records from both sources
+Writes clean, structured output directly to Google Sheets
+Runs on a scheduled trigger so the database stays up to date without manual intervention
+
+The finished workflow must be exported and handed over to us in full, either as an n8n JSON export or a Make blueprint, so we can run, inspect, and modify it ourselves.

@@ -1,0 +1,51 @@
+{
+  "archetype": "social_repurpose",
+  "title": "Long-Form Video → Transcribe → 8 Posts Across Channels",
+  "platform": "n8n",
+  "sections": [
+    { "key": "intake",  "label": "1 · NEW EPISODE",  "note": "A new file in the episodes folder starts the run. Nothing is uploaded twice — the file id is checked against what has already been processed." },
+    { "key": "listen",  "label": "2 · TRANSCRIBE",   "note": "Audio is transcribed with timestamps, so every clip the model suggests can be traced back to the exact second it came from rather than being paraphrased into something that was never said." },
+    { "key": "mine",    "label": "3 · FIND MOMENTS", "note": "The transcript is mined for the handful of moments that actually stand alone — a claim, a story, a contrarian take — and each is rewritten natively for the channel it is going to." },
+    { "key": "queue",   "label": "4 · QUEUE",        "note": "Drafts land in the content calendar with their source timestamp attached, scheduled across the week rather than dumped in one day. A human still approves before anything publishes." }
+  ],
+  "nodes": [
+    { "key": "watch",     "kind": "trigger.schedule", "label": "Check Episode Folder", "section": "intake" },
+    { "key": "list",      "kind": "app.action", "app": "googleDrive", "op": "upload", "label": "Find New Recordings", "section": "intake" },
+    { "key": "seen",      "kind": "data.filter", "label": "Skip Already Processed", "section": "intake" },
+    { "key": "transcribe","kind": "app.action", "app": "openai", "op": "transcribe", "label": "Whisper Transcript", "section": "listen" },
+    { "key": "agent",     "kind": "ai.agent", "label": "Extract 8 Standalone Moments", "section": "mine" },
+    { "key": "model",     "kind": "ai.model", "app": "openai", "label": "GPT-4.1", "parent": "agent" },
+    { "key": "parser",    "kind": "ai.parser", "label": "Post Schema", "parent": "agent" },
+    { "key": "split",     "kind": "data.split", "label": "One Item Per Post", "section": "queue" },
+    { "key": "calendar",  "kind": "app.action", "app": "airtable", "op": "create", "label": "Add to Content Calendar", "section": "queue" },
+    { "key": "notify",    "kind": "app.action", "app": "slack", "op": "post", "label": "Notify #content", "section": "queue" }
+  ],
+  "edges": [
+    { "from": "watch", "to": "list" },
+    { "from": "list", "to": "seen" },
+    { "from": "seen", "to": "transcribe" },
+    { "from": "transcribe", "to": "agent" },
+    { "from": "agent", "to": "split" },
+    { "from": "split", "to": "calendar" },
+    { "from": "calendar", "to": "notify" }
+  ],
+  "input_sample": {
+    "file_id": "1kQ9xR_pod_ep_142",
+    "filename": "Ep142 — Why We Killed Our Best-Selling Product.mp4",
+    "duration_seconds": 3418,
+    "uploaded_at": "2026-07-30T22:11:03Z",
+    "channel": "The Margin Call Podcast"
+  },
+  "output_sample": {
+    "episode": "Ep142 — Why We Killed Our Best-Selling Product",
+    "transcript_words": 7841,
+    "posts_generated": 8,
+    "posts": [
+      { "channel": "LinkedIn", "hook": "We killed the product doing $2.1M a year. Here's the math that made it obvious.", "source_timestamp": "00:14:22", "scheduled_for": "2026-08-03T13:00:00Z" },
+      { "channel": "X", "hook": "\"Best-selling\" and \"most profitable\" were different products. We found out four years late.", "source_timestamp": "00:22:07", "scheduled_for": "2026-08-04T15:30:00Z" },
+      { "channel": "Instagram Reel", "hook": "The support tickets told us before the P&L did.", "source_timestamp": "00:41:55", "scheduled_for": "2026-08-05T17:00:00Z" }
+    ],
+    "status": "awaiting_approval",
+    "processing_seconds": 214
+  }
+}

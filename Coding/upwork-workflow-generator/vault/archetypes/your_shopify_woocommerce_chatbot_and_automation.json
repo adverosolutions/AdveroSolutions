@@ -1,0 +1,593 @@
+{
+  "title": "Your Shopify/WooCommerce Chatbot and Automation Tasks in n8n",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "chatbot",
+      "label": "1 - SHOPIFY/WOOCOMMERCE CHATBOT: ORDERS AND PRODUCT QUESTIONS",
+      "color": 0,
+      "note": "Your part 1, the Shopify/WooCommerce chatbot. One setting picks your platform, and order status and product answers come from your live store, never from Claude's memory."
+    },
+    {
+      "key": "automation",
+      "label": "2 - AUTOMATION TASK: LATE ORDERS FLAGGED TO YOU",
+      "color": 0,
+      "note": "Your part 2, automation tasks, starting with this one. When a shopper asks about an order still unshipped past your shipping promise, you get an email before they ask twice."
+    },
+    {
+      "key": "improve",
+      "label": "3 - BUILDING AND IMPROVING WORKFLOWS: EVERY CHAT LOGGED",
+      "color": 0,
+      "note": "Your part 3, building and improving workflows. Every chat lands in a Google Sheet with the question, the answer and whether a person was needed, so each improvement comes from real chats."
+    },
+    {
+      "key": "connect",
+      "label": "4 - CONNECTING SYSTEMS: YOUR INBOX TAKES OVER",
+      "color": 0,
+      "note": "Your part 4, connecting systems. Refunds, cancellations and anything the bot should not guess go to your inbox with the chat and the order, and your reply goes straight to the shopper."
+    },
+    {
+      "key": "support",
+      "label": "5 - SUPPORTING ONGOING AUTOMATION NEEDS: NOTHING FAILS QUIETLY",
+      "color": 0,
+      "note": "Your part 5, supporting ongoing automation needs. If any step fails, say a store key expires, you get the failed step and a link to the run."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "chat",
+      "kind": "trigger.chat",
+      "label": "1 - Shopper Asks a Question in Your Store Chat",
+      "section": "chatbot",
+      "params": {
+        "public": true,
+        "mode": "webhook",
+        "options": {
+          "responseMode": "responseNode",
+          "allowedOrigins": "PASTE-YOUR-STORE-DOMAIN"
+        }
+      }
+    },
+    {
+      "key": "sort",
+      "kind": "ai.agent",
+      "label": "2 - Claude Sorts It: Order Status, Product Question or a Person",
+      "section": "chatbot",
+      "params": {
+        "system_message": "You read every message in an online store's chat and sort it before anything is looked up. The store runs on Shopify or WooCommerce; you never look anything up and never answer the shopper yourself. Return one intent: order_status (where is my order, has it shipped, tracking, delivery date) only when the chat so far has both an order number and the email used at checkout; need_details when they ask about an order but one of those two is missing; product_question (sizes, colours, materials, stock, price, which product to pick); human (refund, return, exchange, cancellation, damaged or wrong item, address change, payment problem, complaint, or they ask for a person); other (anything else, including empty or abusive messages). Read the earlier messages in this chat: an order number given two messages ago still counts. Set wants_person to true for human, and also when an order or product question comes with a refund, return, cancel or complaint request, and say why in handoff_reason in one short sentence. order_number is the number only, without the # sign. email is lowercase and exactly as typed; never guess or complete one. product_query is the few words a catalog search should match, such as linen pillow cover, and stays empty unless intent is product_question.",
+        "prompt": "=Shopper message: {{ $json.chatInput }}\n\nReturn intent, order_number, email, product_query, wants_person and handoff_reason."
+      }
+    },
+    {
+      "key": "sort_model",
+      "kind": "ai.model",
+      "label": "Claude - Sorts Each Chat Message",
+      "app": "anthropic",
+      "parent": "sort",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "sort_memory",
+      "kind": "ai.memory",
+      "label": "Memory - Keeps the Thread of This Chat",
+      "parent": "sort",
+      "port": "ai_memory"
+    },
+    {
+      "key": "sort_parser",
+      "kind": "ai.parser",
+      "label": "Parser - Intent, Order Number, Email, Product",
+      "parent": "sort",
+      "port": "ai_outputParser",
+      "params": {
+        "schema": {
+          "intent": "order_status",
+          "order_number": "1047",
+          "email": "marisol.okonkwo@gmail.com",
+          "product_query": "",
+          "wants_person": true,
+          "handoff_reason": "Wants to cancel if order 1047 cannot ship this week."
+        }
+      }
+    },
+    {
+      "key": "route",
+      "kind": "flow.switch",
+      "label": "3 - Your Store: Shopify or WooCommerce?",
+      "section": "chatbot",
+      "notes": "Flip one value in Config to move between Shopify and WooCommerce. Nothing else in the flow changes.",
+      "params": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5b1f2c3a-7d41-4e8a-9c02-1a6e4f0b7d11",
+                    "leftValue": "={{ String($('0 - Config: Your Settings').first().json.store_platform).trim().toLowerCase() }}",
+                    "rightValue": "shopify",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "id": "5b1f2c3a-7d41-4e8a-9c02-1a6e4f0b7d12",
+                    "leftValue": "={{ ['order_status', 'product_question'].includes($json.output.intent) }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Shopify"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5b1f2c3a-7d41-4e8a-9c02-1a6e4f0b7d21",
+                    "leftValue": "={{ String($('0 - Config: Your Settings').first().json.store_platform).trim().toLowerCase() }}",
+                    "rightValue": "woocommerce",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "id": "5b1f2c3a-7d41-4e8a-9c02-1a6e4f0b7d22",
+                    "leftValue": "={{ ['order_status', 'product_question'].includes($json.output.intent) }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "WooCommerce"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5b1f2c3a-7d41-4e8a-9c02-1a6e4f0b7d31",
+                    "leftValue": "={{ ['order_status', 'product_question'].includes($json.output.intent) }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "false",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "No Lookup Needed"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "key": "shopify",
+      "kind": "net.http",
+      "label": "4a - Shopify: Look Up the Order or the Product",
+      "section": "chatbot",
+      "notes": "Orders older than 60 days need Shopify's read_all_orders scope, so older orders still get an answer.",
+      "params": {
+        "method": "POST",
+        "url": "https://{{ $('0 - Config: Your Settings').first().json.shopify_store }}.myshopify.com/admin/api/{{ $('0 - Config: Your Settings').first().json.shopify_api_version }}/graphql.json",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "query": "query StoreLookup($orderQuery: String!, $productQuery: String!) { orders(first: 1, query: $orderQuery) { nodes { name email createdAt displayFinancialStatus displayFulfillmentStatus lineItems(first: 10) { nodes { title quantity } } fulfillments(first: 5) { status estimatedDeliveryAt trackingInfo(first: 3) { company number url } } } } products(first: 5, query: $productQuery) { nodes { title onlineStoreUrl totalInventory priceRangeV2 { minVariantPrice { amount currencyCode } } variants(first: 10) { nodes { title availableForSale } } } } }",
+          "variables": {
+            "orderQuery": "name:#{{ $json.output.order_number || 'none' }} AND email:{{ $json.output.email || 'none' }}",
+            "productQuery": "status:active {{ $json.output.product_query || 'none' }}"
+          }
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "alwaysOutputData": true
+      }
+    },
+    {
+      "key": "woo",
+      "kind": "net.http",
+      "label": "4b - WooCommerce: Look Up the Order or the Product",
+      "section": "chatbot",
+      "params": {
+        "method": "GET",
+        "url": "{{ $('0 - Config: Your Settings').first().json.woo_store_url }}/wp-json/wc/v3/{{ $json.output.intent === 'order_status' ? 'orders?per_page=5&search=' + encodeURIComponent($json.output.order_number) : 'products?status=publish&per_page=5&search=' + encodeURIComponent($json.output.product_query) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "alwaysOutputData": true
+      }
+    },
+    {
+      "key": "shape",
+      "kind": "data.code",
+      "label": "5 - One Shape for Either Store, Email Must Match",
+      "section": "chatbot",
+      "notes": "Someone typing a stranger's order number gets nothing back. Your store decides what is true, never the model.",
+      "params": {
+        "jsCode": "// 5 - One Shape for Either Store, Email Must Match\n// Shopify and WooCommerce answer in different shapes. This turns either one into the same fields,\n// and an order is only described when the email on it matches the email the shopper typed.\nconst cfg = $('0 - Config: Your Settings').first().json;\nconst ask = $('2 - Claude Sorts It: Order Status, Product Question or a Person').first().json.output || {};\nconst platform = String(cfg.store_platform || '').trim().toLowerCase();\nconst typedEmail = String(ask.email || '').trim().toLowerCase();\nconst typedNumber = String(ask.order_number || '').replace(/[^0-9A-Za-z-]/g, '');\nconst shipWithin = Number(cfg.ship_within_days);\nconst daysSince = (iso) => Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);\n\nconst out = {\n  platform,\n  intent: ask.intent || 'other',\n  wants_person: ask.wants_person === true,\n  handoff_reason: ask.handoff_reason || '',\n  shopper_email: typedEmail,\n  order_number: typedNumber,\n  order_found: false,\n  email_matches: false,\n  order: null,\n  products: [],\n  late: false,\n};\nconst lookedUp = ['order_status', 'product_question'].includes(out.intent);\n\nif (lookedUp && platform === 'shopify') {\n  const data = $('4a - Shopify: Look Up the Order or the Product').first().json.data || {};\n  const o = ((data.orders || {}).nodes || [])[0];\n  if (out.intent === 'order_status' && o) {\n    out.order_found = true;\n    out.email_matches = typedEmail !== '' && String(o.email || '').toLowerCase() === typedEmail;\n    if (out.email_matches) {\n      const tracking = (o.fulfillments || []).flatMap((f) => (f.trackingInfo || []).map((t) => ({ carrier: t.company, number: t.number, url: t.url, eta: f.estimatedDeliveryAt || '' })));\n      out.order = {\n        number: o.name,\n        placed_at: o.createdAt,\n        days_since_order: daysSince(o.createdAt),\n        payment: o.displayFinancialStatus,\n        fulfillment: o.displayFulfillmentStatus,\n        items: ((o.lineItems || {}).nodes || []).map((li) => li.quantity + ' x ' + li.title),\n        tracking,\n      };\n    }\n  }\n  if (out.intent === 'product_question') {\n    out.products = ((data.products || {}).nodes || []).map((p) => ({\n      title: p.title,\n      url: p.onlineStoreUrl || '',\n      price: p.priceRangeV2 ? p.priceRangeV2.minVariantPrice.amount + ' ' + p.priceRangeV2.minVariantPrice.currencyCode : '',\n      in_stock: (p.totalInventory || 0) > 0,\n      options: ((p.variants || {}).nodes || []).map((v) => v.title + (v.availableForSale ? '' : ' (sold out)')),\n    }));\n  }\n}\n\nif (lookedUp && platform === 'woocommerce') {\n  const rows = $('4b - WooCommerce: Look Up the Order or the Product').all().map((i) => i.json).filter((r) => r && r.id);\n  if (out.intent === 'order_status') {\n    const o = rows.find((r) => String(r.number) === typedNumber);\n    if (o) {\n      out.order_found = true;\n      out.email_matches = typedEmail !== '' && String((o.billing || {}).email || '').toLowerCase() === typedEmail;\n      if (out.email_matches) {\n        // Tracking sits in order meta when a shipment tracking plugin is installed.\n        const meta = (o.meta_data || []).find((m) => m.key === '_wc_shipment_tracking_items');\n        const tracking = ((meta && meta.value) || []).map((t) => ({ carrier: t.tracking_provider || t.custom_tracking_provider || '', number: t.tracking_number, url: t.custom_tracking_link || '', eta: '' }));\n        out.order = {\n          number: '#' + o.number,\n          placed_at: o.date_created_gmt + 'Z',\n          days_since_order: daysSince(o.date_created_gmt + 'Z'),\n          payment: o.date_paid_gmt ? 'PAID' : 'UNPAID',\n          fulfillment: o.status,\n          items: (o.line_items || []).map((li) => li.quantity + ' x ' + li.name),\n          tracking,\n        };\n      }\n    }\n  }\n  if (out.intent === 'product_question') {\n    out.products = rows.map((p) => ({ title: p.name, url: p.permalink, price: p.price, in_stock: p.stock_status === 'instock', options: [] }));\n  }\n}\n\n// Your part 2: an order still unshipped past your shipping promise gets flagged.\nconst waiting = ['UNFULFILLED', 'PARTIALLY_FULFILLED', 'IN_PROGRESS', 'ON_HOLD', 'processing', 'on-hold'];\nout.late = !!out.order && waiting.includes(out.order.fulfillment) && Number.isFinite(shipWithin) && out.order.days_since_order > shipWithin;\n\nreturn [{ json: out }];"
+      }
+    },
+    {
+      "key": "reply",
+      "kind": "ai.llm",
+      "label": "6 - Claude Writes the Reply From Your Live Store Data",
+      "section": "chatbot",
+      "params": {
+        "system_message": "You write the reply a shopper sees in an online store's chat. Sound like a helpful person on the store's team: warm, plain words, no emojis, 2 to 4 sentences. Use only the store data you are given and never guess an order status, a delivery date, a price or stock. If intent is need_details, ask for the order number and the email used at checkout. If intent is order_status and order_found or email_matches is false, say you could not find an order with that number and email, ask them to check both, and share nothing else about any order. For a shipped order give the carrier, the tracking link and the delivery estimate when there is one. If late is true, say the order has not shipped yet, apologise once, and say the team has been told. For product_question answer from the products list only: name, price, in stock or not, and the link; if nothing matches, say so and offer to pass the question to the team. If wants_person is true, say a person from the team will email them within the reply time given, and ask for their email if shopper_email is empty. Never promise a refund, a cancellation, a discount or a delivery date the data does not show; a person decides those.",
+        "prompt": "=Store: {{ $('0 - Config: Your Settings').first().json.store_name }}\nTeam reply time: {{ $('0 - Config: Your Settings').first().json.team_reply_window }}\n\nShopper wrote: {{ $('1 - Shopper Asks a Question in Your Store Chat').first().json.chatInput }}\n\nStore data: {{ JSON.stringify($json) }}\n\nWrite the reply."
+      }
+    },
+    {
+      "key": "reply_model",
+      "kind": "ai.model",
+      "label": "Claude - Writes the Shopper Reply",
+      "app": "anthropic",
+      "parent": "reply",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "respond",
+      "kind": "net.respond",
+      "label": "7 - Send the Reply Back to the Shopper",
+      "section": "chatbot",
+      "params": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ output: $json.text }) }}",
+        "options": {}
+      }
+    },
+    {
+      "key": "late",
+      "kind": "flow.branch",
+      "label": "8 - Order Still Unshipped Past Your Shipping Promise?",
+      "section": "automation",
+      "params": {
+        "condition": {
+          "left": "={{ $('5 - One Shape for Either Store, Email Must Match').first().json.late }}",
+          "op": "true"
+        }
+      }
+    },
+    {
+      "key": "flag",
+      "kind": "app.action",
+      "label": "8b - Gmail: Flag the Late Order Before They Ask Again",
+      "app": "gmail",
+      "op": "send",
+      "section": "automation",
+      "notes": "You hear about a late order the first time a shopper asks, not after the second email.",
+      "params": {
+        "sendTo": "={{ $('0 - Config: Your Settings').first().json.fulfillment_inbox }}",
+        "subject": "=Late order {{ $('5 - One Shape for Either Store, Email Must Match').first().json.order.number }}: {{ $('5 - One Shape for Either Store, Email Must Match').first().json.order.days_since_order }} days, still unshipped",
+        "emailType": "text",
+        "message": "=A shopper just asked about order {{ $('5 - One Shape for Either Store, Email Must Match').first().json.order.number }} in your store chat, and it has not shipped.\n\nPlaced: {{ $('5 - One Shape for Either Store, Email Must Match').first().json.order.placed_at }}\nStatus in {{ $('5 - One Shape for Either Store, Email Must Match').first().json.platform }}: {{ $('5 - One Shape for Either Store, Email Must Match').first().json.order.fulfillment }}\nItems: {{ $('5 - One Shape for Either Store, Email Must Match').first().json.order.items.join(', ') }}\nShopper: {{ $('5 - One Shape for Either Store, Email Must Match').first().json.shopper_email }}\n\nThe bot told them it has not shipped yet and that the team knows.",
+        "options": {
+          "appendAttribution": false
+        }
+      }
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "9 - Google Sheets: Log Every Chat, Answer and Outcome",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "improve",
+      "params": {
+        "document": "={{ $('0 - Config: Your Settings').first().json.chat_log_sheet_id }}",
+        "sheet": "Chat Log",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $now.toISO() }}",
+            "Chat Session": "={{ $('1 - Shopper Asks a Question in Your Store Chat').first().json.sessionId }}",
+            "Platform": "={{ $('5 - One Shape for Either Store, Email Must Match').first().json.platform }}",
+            "Shopper Asked": "={{ $('1 - Shopper Asks a Question in Your Store Chat').first().json.chatInput }}",
+            "Intent": "={{ $('5 - One Shape for Either Store, Email Must Match').first().json.intent }}",
+            "Order Number": "={{ $('5 - One Shape for Either Store, Email Must Match').first().json.order_number }}",
+            "Email Matched": "={{ $('5 - One Shape for Either Store, Email Must Match').first().json.email_matches }}",
+            "Bot Replied": "={{ $('6 - Claude Writes the Reply From Your Live Store Data').first().json.text }}",
+            "Late Order Flagged": "={{ $('5 - One Shape for Either Store, Email Must Match').first().json.late }}",
+            "Needs a Person": "={{ $('5 - One Shape for Either Store, Email Must Match').first().json.wants_person }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chat Session",
+              "displayName": "Chat Session",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Platform",
+              "displayName": "Platform",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Shopper Asked",
+              "displayName": "Shopper Asked",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Intent",
+              "displayName": "Intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Order Number",
+              "displayName": "Order Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Matched",
+              "displayName": "Email Matched",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bot Replied",
+              "displayName": "Bot Replied",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Late Order Flagged",
+              "displayName": "Late Order Flagged",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Needs a Person",
+              "displayName": "Needs a Person",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "person",
+      "kind": "flow.branch",
+      "label": "10 - Shopper Needs a Person?",
+      "section": "connect",
+      "params": {
+        "condition": {
+          "left": "={{ $('5 - One Shape for Either Store, Email Must Match').first().json.wants_person }}",
+          "op": "true"
+        }
+      }
+    },
+    {
+      "key": "handoff",
+      "kind": "app.action",
+      "label": "11 - Gmail: Hand the Chat to Your Support Inbox",
+      "app": "gmail",
+      "op": "send",
+      "section": "connect",
+      "notes": "Your team hits reply and the answer goes straight to the shopper, with the order already in the email.",
+      "params": {
+        "sendTo": "={{ $('0 - Config: Your Settings').first().json.support_inbox }}",
+        "subject": "=Chat handoff: {{ $('5 - One Shape for Either Store, Email Must Match').first().json.handoff_reason || 'shopper asked for a person' }}",
+        "emailType": "text",
+        "message": "=A shopper in your store chat needs a person.\n\nThey wrote: {{ $('1 - Shopper Asks a Question in Your Store Chat').first().json.chatInput }}\n\nBot replied: {{ $('6 - Claude Writes the Reply From Your Live Store Data').first().json.text }}\n\nOrder: {{ $('5 - One Shape for Either Store, Email Must Match').first().json.order ? $('5 - One Shape for Either Store, Email Must Match').first().json.order.number + ', ' + $('5 - One Shape for Either Store, Email Must Match').first().json.order.fulfillment + ', ' + $('5 - One Shape for Either Store, Email Must Match').first().json.order.items.join(', ') : 'none matched' }}\nShopper email: {{ $('5 - One Shape for Either Store, Email Must Match').first().json.shopper_email || 'not given yet, see the chat log' }}\n\nHit reply and your answer goes straight to the shopper.",
+        "options": {
+          "replyTo": "={{ $('5 - One Shape for Either Store, Email Must Match').first().json.shopper_email || $('0 - Config: Your Settings').first().json.support_inbox }}",
+          "appendAttribution": false
+        }
+      }
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "12 - Any Step Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "support"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "13 - Gmail: Send You the Failed Step and a Run Link",
+      "app": "gmail",
+      "op": "send",
+      "section": "support",
+      "params": {
+        "sendTo": "PASTE-YOUR-ALERT-EMAIL",
+        "subject": "=Store chatbot: {{ $json.execution.lastNodeExecuted }} failed",
+        "emailType": "text",
+        "message": "=Workflow: {{ $json.workflow.name }}\nFailed step: {{ $json.execution.lastNodeExecuted }}\nError: {{ $json.execution.error.message }}\nRun: {{ $json.execution.url }}",
+        "options": {
+          "appendAttribution": false
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "chat",
+      "to": "sort"
+    },
+    {
+      "from": "sort",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "shopify",
+      "branch": "Shopify"
+    },
+    {
+      "from": "route",
+      "to": "woo",
+      "branch": "WooCommerce"
+    },
+    {
+      "from": "route",
+      "to": "shape",
+      "branch": "No Lookup Needed"
+    },
+    {
+      "from": "shopify",
+      "to": "shape"
+    },
+    {
+      "from": "woo",
+      "to": "shape"
+    },
+    {
+      "from": "shape",
+      "to": "reply"
+    },
+    {
+      "from": "reply",
+      "to": "respond"
+    },
+    {
+      "from": "respond",
+      "to": "late"
+    },
+    {
+      "from": "late",
+      "to": "flag",
+      "branch": "true"
+    },
+    {
+      "from": "late",
+      "to": "log",
+      "branch": "false"
+    },
+    {
+      "from": "flag",
+      "to": "log"
+    },
+    {
+      "from": "log",
+      "to": "person"
+    },
+    {
+      "from": "person",
+      "to": "handoff",
+      "branch": "true"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "sessionId": "c7f2a9e4-5b1d-4f3e-9a2c-81d6e0b4f317",
+    "action": "sendMessage",
+    "chatInput": "Hi, I ordered 2 linen pillow covers on the 16th and still no shipping email. Order #1047, marisol.okonkwo@gmail.com. If it can't ship this week I'd rather cancel."
+  },
+  "output_sample": {
+    "gmail_message_id": "19a6c2f07e5d3b41",
+    "sent_to": "support inbox from 0 - Config: Your Settings",
+    "reply_to": "marisol.okonkwo@gmail.com",
+    "subject": "Chat handoff: Wants to cancel if order 1047 cannot ship this week.",
+    "chat_session": "c7f2a9e4-5b1d-4f3e-9a2c-81d6e0b4f317",
+    "platform": "shopify",
+    "sorted_as": {
+      "intent": "order_status",
+      "order_number": "1047",
+      "email": "marisol.okonkwo@gmail.com",
+      "wants_person": true
+    },
+    "store_lookup": {
+      "order": "#1047",
+      "email_matches": true,
+      "payment": "PAID",
+      "fulfillment": "UNFULFILLED",
+      "placed_at": "2026-09-16T14:02:11Z",
+      "days_since_order": 7,
+      "items": [
+        "2 x Linen Pillow Cover - Sage"
+      ]
+    },
+    "bot_reply": "Hi Marisol, order #1047 (2 linen pillow covers in sage) is paid but has not shipped yet, and I am sorry about the wait. I have flagged it to the team and passed on your cancel request. Someone from our team will email you at marisol.okonkwo@gmail.com.",
+    "late_order_flagged": "yes, unshipped past the shipping promise set in Config, emailed to the fulfillment inbox",
+    "logged": "one Chat Log row: intent, order, email matched, reply, late flag, needs a person",
+    "if_the_email_had_not_matched": "bot says it cannot find order 1047 with that email and shares nothing about it",
+    "sample_note": "made-up chat: the post names no store, so your own orders and products replace it once connected"
+  },
+  "archetype": "your_shopify_woocommerce_chatbot_and_automation",
+  "learned": true,
+  "learned_at": "2026-09-23"
+}

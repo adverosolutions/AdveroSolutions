@@ -1,0 +1,52 @@
+#!/bin/bash
+# Load one saved job by name: puts its build on the clipboard and prints the notes.
+#   ./job <name-or-partial> [n8n|make|flow|mermaid|ghl]   (default n8n, falls back to make, then to ghl;
+#                                                         ghl copies the current spec's *.ghl.json to ~/Desktop/GHL-Imports)
+#   ./job list
+# Only the current spec's builds are ever loaded: <slug>.<kind>, where <slug> is computed from
+# spec.json's title exactly as upwork_gen names its outputs (plus <slug>--<n>-<trigger>.ghl.json
+# when one spec is split into several GHL workflows). Leftovers from an older title are ignored.
+# Env (for tests): UPWORK_GHL_IMPORTS overrides ~/Desktop/GHL-Imports; UPWORK_NO_WARM=1 skips the n8n wake-up.
+D="$(cd "$(dirname "$0")" && pwd)/jobs"
+WG="$(cd "$(dirname "$0")/.." && pwd)/upwork-workflow-generator"
+if [ "${1:-list}" = "list" ]; then if [ -f "$D/_ORDER.txt" ]; then n=0; while read -r j; do [ -d "$D/$j" ] && { n=$((n+1)); echo "$n  $j"; }; done < "$D/_ORDER.txt"; ls "$D" | grep -v '^_' | grep -v -x -f "$D/_ORDER.txt" | sed "s/^/-  /"; else ls "$D" | grep -v '^_'; fi; exit 0; fi
+# Wake the Render n8n instance while the job loads: background, silent, never blocks.
+[ -z "$UPWORK_NO_WARM" ] && ( cd "$WG" 2>/dev/null && python3 -c "from upwork_gen.handoff import warm; warm()" >/dev/null 2>&1 & ) >/dev/null 2>&1
+M=$(ls "$D" | grep -v '^_' | grep -i -- "$1" | head -1)
+[ -z "$M" ] && { echo "no job matching '$1'"; ls "$D" | grep -v '^_'; exit 1; }
+J="$D/$M"
+# The build slug, computed by the tool itself so it can never drift from the file names.
+S=$(cd "$WG" 2>/dev/null && python3 -c 'import json,sys; from upwork_gen.spec import slugify; print(slugify(json.load(open(sys.argv[1], encoding="utf-8"))["title"]))' "$J/spec.json" 2>/dev/null)
+# The current spec's GHL import files, in workflow order (--1-, --2-, ... --10-).
+ghl_split() { for g in "$J/$S"--[0-9]*-*.ghl.json; do [ -f "$g" ] && echo "$g"; done; }
+ghl_files() {
+  [ -z "$S" ] && return
+  [ -n "$(ghl_split)" ] && { ghl_split | awk -v p="$J/$S--" '{ n = substr($0, length(p) + 1); sub(/-.*/, "", n); print n "\t" $0 }' | sort -n | cut -f2-; return; }
+  [ -f "$J/$S.ghl.json" ] && echo "$J/$S.ghl.json"
+}
+# One compile writes either <slug>.ghl.json or the split <slug>--<n>-*.ghl.json, never both:
+# when both are here one set is from an older run, and loading either could hand over the stale one.
+ghl_conflict() { [ -n "$S" ] && [ -f "$J/$S.ghl.json" ] && [ -n "$(ghl_split)" ]; }
+pick() { [ -n "$S" ] && [ -f "$J/$S.$1" ] && echo "$J/$S.$1"; }
+K="${2:-n8n}"
+# A GoHighLevel job has only *.ghl.json: load it as ghl instead of "no make file yet".
+if [ "$K" = n8n ] && [ -z "$(pick n8n.json)" ] && [ -z "$(pick make.json)" ] && [ -n "$(ghl_files)" ]; then K=ghl; fi
+if [ "$K" = ghl ] && ghl_conflict; then
+  echo "REFUSED: $M has both $S.ghl.json and split $S--<n>-*.ghl.json files; one set is from an older run."
+  echo "  Nothing copied. Check it: (cd \"$WG\" && python3 -m upwork_gen.verify_job \"$J\")"
+  echo "  then re-run batch for this job (it moves the stale set into .stale/)."
+  exit 1
+fi
+case "$K" in
+  n8n) F=$(pick n8n.json); [ -z "$F" ] && F=$(pick make.json) && K=make; WHERE="the n8n canvas"; [ "$K" = make ] && WHERE="Make: Import Blueprint";;
+  make) F=$(pick make.json); WHERE="Make: Import Blueprint";;
+  ghl) F=$(ghl_files | head -1); WHERE="GHL: open an empty workflow, click the Backup & Audit extension, Import, pick the file"
+       if [ -n "$F" ]; then G="${UPWORK_GHL_IMPORTS:-$HOME/Desktop/GHL-Imports}"; mkdir -p "$G"; while IFS= read -r g; do cp "$g" "$G/" && echo "GHL-Imports: $(basename "$g")"; done < <(ghl_files); open "$G"; fi;;
+  flow) F=$(pick excalidraw); WHERE="excalidraw.com";;
+  mermaid) F=$(pick mmd.md); WHERE="a markdown editor";;
+  *) echo "unknown kind $K"; exit 1;;
+esac
+[ -z "$S" ] && { echo "$M: cannot read the build slug from spec.json"; exit 1; }
+[ -z "$F" ] && { echo "$M has no $K file for the current spec ($S) yet (not compiled)"; exit 1; }
+pbcopy < "$F" && echo "clipboard: $(basename "$F")  ->  Cmd+V into $WHERE"
+echo; echo "== $M"; grep -m1 "^url:" "$J/jd.txt" 2>/dev/null; for f in assessment beats proposal; do echo; echo "--- $f"; cat "$J/$f.md" 2>/dev/null; done

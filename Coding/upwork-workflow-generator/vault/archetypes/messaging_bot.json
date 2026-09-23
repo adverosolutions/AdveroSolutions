@@ -1,0 +1,59 @@
+{
+  "archetype": "messaging_bot",
+  "title": "WhatsApp Bot → Intent → Book, Quote or Hand Off",
+  "platform": "n8n",
+  "sections": [
+    { "key": "in",     "label": "1 · MESSAGE IN",  "note": "Inbound messages arrive from the messaging API. Conversation memory is keyed on the phone number, so the bot remembers what was already said instead of restarting every message." },
+    { "key": "think",  "label": "2 · UNDERSTAND",  "note": "One pass classifies intent and pulls out whatever detail the message already contains — a date, an address, a service type — so the bot asks only for what is genuinely missing." },
+    { "key": "act",    "label": "3 · ACT",         "note": "Booking requests check live availability, quote requests price from the rate table, and anything the bot is not confident about is handed to a person rather than guessed at." },
+    { "key": "out",    "label": "4 · REPLY & LOG", "note": "The reply goes back on the same thread and the whole exchange is written to the CRM, so a rep picking it up later has the full history rather than a cold start." }
+  ],
+  "nodes": [
+    { "key": "hook",   "kind": "trigger.webhook", "label": "Inbound WhatsApp", "section": "in" },
+    { "key": "agent",  "kind": "ai.agent", "label": "Detect Intent & Slots", "section": "think" },
+    { "key": "model",  "kind": "ai.model", "app": "openai", "label": "GPT-4.1", "parent": "agent" },
+    { "key": "memory", "kind": "ai.memory", "label": "Conversation Memory", "parent": "agent" },
+    { "key": "parser", "kind": "ai.parser", "label": "Intent Schema", "parent": "agent" },
+    { "key": "route",  "kind": "flow.switch", "label": "Intent", "section": "act" },
+    { "key": "slots",  "kind": "app.action", "app": "googleCalendar", "op": "create", "label": "Check Availability", "section": "act" },
+    { "key": "quote",  "kind": "app.action", "app": "googleSheets", "op": "read", "label": "Price From Rate Table", "section": "act" },
+    { "key": "human",  "kind": "app.action", "app": "slack", "op": "post", "label": "Hand Off to Human", "section": "act" },
+    { "key": "reply",  "kind": "app.action", "app": "whatsapp", "op": "send", "label": "Send Reply", "section": "out" },
+    { "key": "log",    "kind": "app.action", "app": "airtable", "op": "create", "label": "Log to CRM", "section": "out" }
+  ],
+  "edges": [
+    { "from": "hook", "to": "agent" },
+    { "from": "agent", "to": "route" },
+    { "from": "route", "to": "slots", "branch": "booking" },
+    { "from": "route", "to": "quote", "branch": "quote" },
+    { "from": "route", "to": "human", "branch": "other" },
+    { "from": "slots", "to": "reply" },
+    { "from": "quote", "to": "reply" },
+    { "from": "human", "to": "reply" },
+    { "from": "reply", "to": "log" }
+  ],
+  "input_sample": {
+    "from": "+1 512 555 0188",
+    "profile_name": "Rachel M.",
+    "message": "hey do you guys do same day ac repair? we're in south austin and it's not blowing cold at all",
+    "received_at": "2026-07-31T19:22:41Z",
+    "conversation_turns": 1
+  },
+  "output_sample": {
+    "from": "+1 512 555 0188",
+    "intent": "booking",
+    "confidence": 0.94,
+    "slots_extracted": {
+      "service": "AC repair",
+      "urgency": "same day",
+      "area": "South Austin",
+      "symptom": "not cooling"
+    },
+    "slots_missing": ["address", "preferred_window"],
+    "availability_found": ["Today 4:00-6:00pm", "Today 6:30-8:30pm"],
+    "reply_sent": "We can get someone out today — we've got a 4-6pm or a 6:30-8:30pm window open in South Austin. Which works better? I'll just need the service address to lock it in.",
+    "handed_to_human": false,
+    "crm_record": "rec8Kq21LmP",
+    "response_time_ms": 1920
+  }
+}

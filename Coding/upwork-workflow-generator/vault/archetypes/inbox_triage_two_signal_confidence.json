@@ -1,0 +1,154 @@
+{
+  "title": "Support Inbox Triage",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "read",
+      "label": "1 · READ",
+      "color": 0,
+      "note": "Clean the email before judging it."
+    },
+    {
+      "key": "think",
+      "label": "2 · CLASSIFY",
+      "color": 0,
+      "note": "Category, department, urgency, and how sure it is."
+    },
+    {
+      "key": "decide",
+      "label": "3 · DECIDE",
+      "color": 0,
+      "note": "Clear winner routes itself. A close call goes to a human."
+    },
+    {
+      "key": "record",
+      "label": "4 · RECORD",
+      "color": 0,
+      "note": "Every decision written down so accuracy can be checked."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "mail",
+      "kind": "trigger.email",
+      "label": "1 · Email Arrives",
+      "section": "read"
+    },
+    {
+      "key": "strip",
+      "kind": "data.transform",
+      "label": "2 · Strip Quoted Replies and Signatures",
+      "section": "read"
+    },
+    {
+      "key": "classify",
+      "kind": "ai.agent",
+      "label": "3 · Classify the Email",
+      "section": "think"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "OpenAI",
+      "app": "openai",
+      "parent": "classify",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Top Choice + Runner-Up + Scores",
+      "parent": "classify",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "gap",
+      "kind": "data.transform",
+      "label": "4 · Compare the Top Two Scores",
+      "section": "decide"
+    },
+    {
+      "key": "clear",
+      "kind": "flow.branch",
+      "label": "5 · Clear Winner?",
+      "section": "decide"
+    },
+    {
+      "key": "human",
+      "kind": "app.action",
+      "label": "6 · Too Close — Send to a Human",
+      "app": "slack",
+      "op": "send_message",
+      "section": "decide"
+    },
+    {
+      "key": "fwd",
+      "kind": "app.action",
+      "label": "7 · Forward to That Team",
+      "app": "gmail",
+      "op": "send_email",
+      "section": "decide"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "8 · Log the Decision",
+      "app": "airtable",
+      "op": "create_record",
+      "section": "record"
+    }
+  ],
+  "edges": [
+    {
+      "from": "mail",
+      "to": "strip"
+    },
+    {
+      "from": "strip",
+      "to": "classify"
+    },
+    {
+      "from": "classify",
+      "to": "gap"
+    },
+    {
+      "from": "gap",
+      "to": "clear"
+    },
+    {
+      "from": "clear",
+      "to": "fwd",
+      "branch": "true"
+    },
+    {
+      "from": "clear",
+      "to": "human",
+      "branch": "false"
+    },
+    {
+      "from": "fwd",
+      "to": "log"
+    },
+    {
+      "from": "human",
+      "to": "log"
+    }
+  ],
+  "input_sample": {
+    "from": "operations@brightlinelogistics.co.uk",
+    "subject": "RE: RE: Invoice 88214 — and the API keeps 500ing",
+    "body": "Two things. We still haven't had the credit note for invoice 88214 from June. Separately our integration has been throwing 500s since about 6am and we've got a warehouse team standing around."
+  },
+  "output_sample": {
+    "top_choice": "Technical — API outage (Engineering) — 0.74",
+    "runner_up": "Billing — credit note (Finance) — 0.69",
+    "gap": 0.05,
+    "needed_gap": 0.15,
+    "decision": "Too close to call — sent to a human with both options shown",
+    "urgency": "High — active outage, warehouse team idle",
+    "logged": "Technical vs Billing confused 3 times this week"
+  },
+  "archetype": "inbox_triage_two_signal_confidence",
+  "learned": true,
+  "learned_at": "2026-08-12"
+}

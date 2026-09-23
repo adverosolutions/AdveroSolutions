@@ -1,0 +1,830 @@
+{
+  "workflowId": "c612b7d7-ea22-4f93-aa8a-c3d5d8c70147",
+  "workflowName": "REFERENCE - All Step Types",
+  "locationId": "ebyNANPagaK7ycf1pfge",
+  "url": "https://app.gohighlevel.com/v2/location/ebyNANPagaK7ycf1pfge/automation/workflow/c612b7d7-ea22-4f93-aa8a-c3d5d8c70147",
+  "capturedAt": "2026-09-23T04:51:03.205Z",
+  "status": "draft",
+  "folder": null,
+  "references": {
+    "other": {
+      "db1267e6-044d-4f08-93b7-cd83289c8c6f": "Add Tag call-booked",
+      "7f615b79-d8ea-40ad-8a41-028d67c69260": "Remove Tag call-cancelled",
+      "b5fdeff5-54c8-4f71-839a-dd5191862800": "Send SMS Body Filled",
+      "b5c4ef03-32a1-4b10-ae2d-04e691a957f8": "Send Email Subject and Body Filled",
+      "95eb4630-48e2-45d1-823a-6949df730d8b": "Wait 2 Days",
+      "0f2f19ee-b9cf-462d-a140-c2177df3f827": "Create Opportunity in Call Booked",
+      "vNB4nHSeDZlu6URPbtmP": "Call Booked Pipeline",
+      "8132be0b-7e27-4d7a-8589-51dd2445df42": "Call Booked",
+      "b66a0d48-f305-4a21-9a4f-cc5f184b3edb": "Update Opportunity to Cancelled",
+      "6affd21a-4144-4ec5-a4aa-df8307b920e2": "Cancelled",
+      "e1e962b8-571b-4815-b4cc-ffa516d85963": "Wait 1 Hour",
+      "aa608f59-8976-49bd-b4cf-fb6f653be514": "Internal Notification SMS to Assigned User",
+      "ce2927ec-2bfe-413b-ae6c-6a3afbc74efa": "Internal Notification Email to Assigned User",
+      "49be27ef-fa24-405e-ba7e-60b5c87d7c4b": "Internal Notification In-App",
+      "9258a3fa-5519-4ac1-8dd1-09e01edeca11": "Add Task Due in 1 Day",
+      "2b5ba3a3-2f00-4f7c-80f9-579dfa9f3630": "Manual Action Call as Add Note",
+      "a538a69f-f6aa-41dd-a15e-9c5ccb9f843e": "Call With Whisper",
+      "63bd4cf2-1fad-4167-a2d4-938c80c98a95": "Update Contact Field Call Notes",
+      "vXBjyZPCWfbts0cNBt4B": "Call Notes",
+      "83cf09cc-c24b-4841-90c0-be7bdad6aca7": "Assign to User Round Robin",
+      "gIwBtPohHJXADQBuGAx8": "Lorenzo Villarreal",
+      "b9f59eee-a0f4-4df8-9727-7db3f8646037": "Webhook POST",
+      "e98f9657-3b00-4d04-9fe8-5ef0a9b39767": "GPT powered by OpenAI",
+      "f29c2fe2-d85c-4d11-9d54-1444ac30a3bb": "Add to Workflow Your Sales Request Follow-Up",
+      "591d527e-70b3-4f96-9e19-ddc542ebc48d": "Your Sales Request Follow-Up System",
+      "2c9d92d7-4d7a-4fc3-8b5f-530eb0583895": "Remove from Workflow Sales Request Follow-Up",
+      "459513c4-be19-4d1e-9f1d-4ce45a9fbd3c": "Send review request",
+      "31553fec-acfe-4e11-9ab2-47b488528410": "Goal Tag Added call-cancelled",
+      "31041996-e7aa-4323-a750-972587c0a6b9": "If Else Has Tag call-booked",
+      "de4bbe5c-dc17-4514-97ae-a17be8cdb22f": "Has call-booked",
+      "c294fd7f-cf34-46da-8e6a-357fe5cbe2cc": "None",
+      "1acdfff6-8a6f-4e62-888a-0cdf5d144888": "Yes Branch Update Opportunity to Showed",
+      "65af9da7-ec31-4d2e-ae43-8882f5661d22": "Showed",
+      "a227935e-78fa-410e-a0bc-0de83dd2db64": "Yes Branch Go To Step 27",
+      "353364f3-1ef5-42fc-ba7b-2b456d6c3404": "No Branch Remove Tag call-booked",
+      "b345b152-fa70-4481-aea8-c5b92b9aa850": "No Branch Send SMS Last Step",
+      "XLDPcAODJCSH16SwqhDB": "T1 - Trigger Tag Added Filter call-booked",
+      "c612b7d7-ea22-4f93-aa8a-c3d5d8c70147": "REFERENCE - All Step Types",
+      "ebyNANPagaK7ycf1pfge": "AdveroSolutions",
+      "v72lsrLiSh7CPrCaKJoQ": "T2 - Trigger Tag Removed Filter call-cancelled"
+    }
+  },
+  "unresolvedReferenceIds": [],
+  "captureComplete": {
+    "triggers": true,
+    "tier": "A:vue-state"
+  },
+  "triggers": [
+    {
+      "id": "XLDPcAODJCSH16SwqhDB",
+      "date_added": "2026-09-23T04:27:49.471Z",
+      "deleted": false,
+      "active": false,
+      "actions": [
+        {
+          "workflow_id": "c612b7d7-ea22-4f93-aa8a-c3d5d8c70147",
+          "type": "add_to_workflow",
+          "workflow_name": "REFERENCE - All Step Types"
+        }
+      ],
+      "conditions": [
+        {
+          "field": "tagsAdded",
+          "operator": "index-of-true",
+          "value": "call-booked",
+          "title": "Tag Added",
+          "type": "select",
+          "id": "tag-added"
+        }
+      ],
+      "type": "contact_tag",
+      "masterType": "highlevel",
+      "workflow_id": "c612b7d7-ea22-4f93-aa8a-c3d5d8c70147",
+      "location_id": "ebyNANPagaK7ycf1pfge",
+      "name": "T1 - Trigger Tag Added Filter call-booked",
+      "belongs_to": "workflow",
+      "schedule_config": {},
+      "date_updated": "2026-09-23T04:30:19.551Z",
+      "status": "draft",
+      "workflow_name": "REFERENCE - All Step Types",
+      "location_name": "AdveroSolutions"
+    },
+    {
+      "id": "v72lsrLiSh7CPrCaKJoQ",
+      "date_added": "2026-09-23T04:27:49.663Z",
+      "deleted": false,
+      "active": false,
+      "actions": [
+        {
+          "workflow_id": "c612b7d7-ea22-4f93-aa8a-c3d5d8c70147",
+          "type": "add_to_workflow",
+          "workflow_name": "REFERENCE - All Step Types"
+        }
+      ],
+      "conditions": [
+        {
+          "field": "tagsRemoved",
+          "operator": "index-of-true",
+          "value": "call-cancelled",
+          "title": "Tag Removed",
+          "type": "select",
+          "id": "tag-removed"
+        }
+      ],
+      "type": "contact_tag",
+      "masterType": "highlevel",
+      "workflow_id": "c612b7d7-ea22-4f93-aa8a-c3d5d8c70147",
+      "location_id": "ebyNANPagaK7ycf1pfge",
+      "name": "T2 - Trigger Tag Removed Filter call-cancelled",
+      "belongs_to": "workflow",
+      "date_updated": "2026-09-23T04:29:53.765Z",
+      "schedule_config": {},
+      "status": "draft",
+      "workflow_name": "REFERENCE - All Step Types",
+      "location_name": "AdveroSolutions"
+    }
+  ],
+  "metadata": {
+    "createdAt": "2026-09-23T04:27:01.884Z",
+    "updatedAt": "2026-09-23T04:39:44.417Z",
+    "settings": {
+      "locationId": "ebyNANPagaK7ycf1pfge",
+      "companyId": "nizhdvkxvM2rIZtGMzVa",
+      "version": 5,
+      "dataVersion": 7,
+      "allowMultiple": true,
+      "timezone": "account",
+      "removeContactFromLastStep": true,
+      "filePath": "location/ebyNANPagaK7ycf1pfge/workflows/c612b7d7-ea22-4f93-aa8a-c3d5d8c70147/5",
+      "fileUrl": "https://firebasestorage.googleapis.com/v0/b/automation-workflows-production/o/location%2FebyNANPagaK7ycf1pfge%2Fworkflows%2Fc612b7d7-ea22-4f93-aa8a-c3d5d8c70147%2F5?alt=media&token=REDACTED",
+      "stopOnResponse": false,
+      "autoMarkAsRead": false,
+      "permission": 380,
+      "type": "workflow",
+      "updatedBy": "gIwBtPohHJXADQBuGAx8",
+      "deleted": false,
+      "allowMultipleOpportunity": true,
+      "creationSource": "builder",
+      "isTriggerBucketMigrated": true,
+      "originType": "user",
+      "__v": 0,
+      "triggersFilePath": "location/ebyNANPagaK7ycf1pfge/workflow-triggers/c612b7d7-ea22-4f93-aa8a-c3d5d8c70147/6"
+    }
+  },
+  "nodes": [
+    {
+      "type": "add_contact_tag",
+      "id": "db1267e6-044d-4f08-93b7-cd83289c8c6f",
+      "name": "Add Tag call-booked",
+      "attributes": {
+        "tags": [
+          "call-booked"
+        ]
+      },
+      "order": 0,
+      "next": "7f615b79-d8ea-40ad-8a41-028d67c69260",
+      "nextName": "Remove Tag call-cancelled"
+    },
+    {
+      "type": "remove_contact_tag",
+      "id": "7f615b79-d8ea-40ad-8a41-028d67c69260",
+      "name": "Remove Tag call-cancelled",
+      "attributes": {
+        "tags": [
+          "call-cancelled"
+        ]
+      },
+      "order": 1,
+      "parentKey": "db1267e6-044d-4f08-93b7-cd83289c8c6f",
+      "next": "b5fdeff5-54c8-4f71-839a-dd5191862800",
+      "parentKeyName": "Add Tag call-booked",
+      "nextName": "Send SMS Body Filled"
+    },
+    {
+      "type": "sms",
+      "id": "b5fdeff5-54c8-4f71-839a-dd5191862800",
+      "name": "Send SMS Body Filled",
+      "attributes": {
+        "body": "REFERENCE SMS: Hi {{contact.first_name}}, this is the SMS body. It should appear in the message box.",
+        "assignedOwners": [
+          "contact_owner"
+        ],
+        "alsoNotifyContactFollowers": false,
+        "alsoNotifyOpportunityFollowers": false
+      },
+      "order": 2,
+      "parentKey": "7f615b79-d8ea-40ad-8a41-028d67c69260",
+      "next": "b5c4ef03-32a1-4b10-ae2d-04e691a957f8",
+      "parentKeyName": "Remove Tag call-cancelled",
+      "nextName": "Send Email Subject and Body Filled"
+    },
+    {
+      "type": "email",
+      "id": "b5c4ef03-32a1-4b10-ae2d-04e691a957f8",
+      "name": "Send Email Subject and Body Filled",
+      "attributes": {
+        "subject": "REFERENCE email subject for {{contact.first_name}}",
+        "html": "REFERENCE email body. Hi {{contact.first_name}}, this text should appear in the email editor.",
+        "body": "REFERENCE email body. Hi {{contact.first_name}}, this text should appear in the email editor.",
+        "from_name": "",
+        "from_email": "",
+        "cc": "",
+        "bcc": "",
+        "preHeader": "",
+        "assignedOwners": [
+          "contact_owner"
+        ],
+        "alsoNotifyContactFollowers": false,
+        "alsoNotifyOpportunityFollowers": false
+      },
+      "order": 3,
+      "parentKey": "b5fdeff5-54c8-4f71-839a-dd5191862800",
+      "next": "95eb4630-48e2-45d1-823a-6949df730d8b",
+      "parentKeyName": "Send SMS Body Filled",
+      "nextName": "Wait 2 Days"
+    },
+    {
+      "type": "wait",
+      "id": "95eb4630-48e2-45d1-823a-6949df730d8b",
+      "name": "Wait 2 Days",
+      "attributes": {
+        "type": "time",
+        "convertToMultipath": false,
+        "hybridActionType": "wait",
+        "isHybridAction": true,
+        "name": "Wait 2 Days",
+        "cat": "action",
+        "transitions": [],
+        "startAfter": {
+          "when": "after",
+          "type": "days",
+          "value": 2
+        },
+        "timePeriodInputMode": "standard",
+        "unitInputMode": "standard"
+      },
+      "order": 4,
+      "parentKey": "b5c4ef03-32a1-4b10-ae2d-04e691a957f8",
+      "next": "0f2f19ee-b9cf-462d-a140-c2177df3f827",
+      "parentKeyName": "Send Email Subject and Body Filled",
+      "nextName": "Create Opportunity in Call Booked"
+    },
+    {
+      "type": "create_opportunity",
+      "id": "0f2f19ee-b9cf-462d-a140-c2177df3f827",
+      "name": "Create Opportunity in Call Booked",
+      "attributes": {
+        "pipeline_id": "vNB4nHSeDZlu6URPbtmP",
+        "pipeline_stage_id": "8132be0b-7e27-4d7a-8589-51dd2445df42",
+        "opportunity_name": "{{contact.first_name}} {{contact.last_name}} - REFERENCE",
+        "opportunity_source": "",
+        "monetary_value": "",
+        "opportunity_status": "open",
+        "pipeline_name": "Call Booked Pipeline",
+        "pipeline_stage_name": "Call Booked"
+      },
+      "order": 5,
+      "parentKey": "95eb4630-48e2-45d1-823a-6949df730d8b",
+      "next": "b66a0d48-f305-4a21-9a4f-cc5f184b3edb",
+      "parentKeyName": "Wait 2 Days",
+      "nextName": "Update Opportunity to Cancelled"
+    },
+    {
+      "type": "internal_update_opportunity",
+      "id": "b66a0d48-f305-4a21-9a4f-cc5f184b3edb",
+      "name": "Update Opportunity to Cancelled",
+      "attributes": {
+        "type": "internal_update_opportunity",
+        "allowBackward": true,
+        "pipelineId": "vNB4nHSeDZlu6URPbtmP",
+        "__customInputFields__": [
+          {
+            "filterField": "pipelineStageId",
+            "value": "6affd21a-4144-4ec5-a4aa-df8307b920e2",
+            "dataType": "SINGLE_OPTIONS",
+            "valueFieldType": "select",
+            "__customInputs__": {},
+            "valueName": "Cancelled"
+          }
+        ],
+        "__customInputs__": {},
+        "DYNAMIC": "Update opportunity to 'Cancelled' stage with status open in 'Call Booked Pipeline' pipeline",
+        "pipeline_name": "Call Booked Pipeline",
+        "pipeline_stage_name": "Cancelled",
+        "pipelineName": "Call Booked Pipeline"
+      },
+      "order": 6,
+      "parentKey": "0f2f19ee-b9cf-462d-a140-c2177df3f827",
+      "workflowsActionType": "INTERNAL",
+      "next": "e1e962b8-571b-4815-b4cc-ffa516d85963",
+      "parentKeyName": "Create Opportunity in Call Booked",
+      "nextName": "Wait 1 Hour"
+    },
+    {
+      "type": "wait",
+      "id": "e1e962b8-571b-4815-b4cc-ffa516d85963",
+      "name": "Wait 1 Hour",
+      "attributes": {
+        "type": "time",
+        "convertToMultipath": false,
+        "hybridActionType": "wait",
+        "isHybridAction": true,
+        "name": "Wait 1 Hour",
+        "cat": "action",
+        "transitions": [],
+        "startAfter": {
+          "when": "after",
+          "type": "hour",
+          "value": 1
+        },
+        "timePeriodInputMode": "standard",
+        "unitInputMode": "standard"
+      },
+      "order": 7,
+      "parentKey": "b66a0d48-f305-4a21-9a4f-cc5f184b3edb",
+      "next": "aa608f59-8976-49bd-b4cf-fb6f653be514",
+      "parentKeyName": "Update Opportunity to Cancelled",
+      "nextName": "Internal Notification SMS to Assigned User"
+    },
+    {
+      "type": "internal_notification",
+      "id": "aa608f59-8976-49bd-b4cf-fb6f653be514",
+      "name": "Internal Notification SMS to Assigned User",
+      "attributes": {
+        "type": "sms",
+        "email": null,
+        "sms": {
+          "userType": "assign",
+          "assignedOwners": [
+            "contact_owner"
+          ],
+          "alsoNotifyContactFollowers": false,
+          "alsoNotifyOpportunityFollowers": false,
+          "body": "REFERENCE internal SMS: {{contact.first_name}} {{contact.last_name}} booked."
+        },
+        "userType": "assign",
+        "whatsapp": null,
+        "notification": null
+      },
+      "order": 8,
+      "parentKey": "e1e962b8-571b-4815-b4cc-ffa516d85963",
+      "next": "ce2927ec-2bfe-413b-ae6c-6a3afbc74efa",
+      "parentKeyName": "Wait 1 Hour",
+      "nextName": "Internal Notification Email to Assigned User"
+    },
+    {
+      "type": "internal_notification",
+      "id": "ce2927ec-2bfe-413b-ae6c-6a3afbc74efa",
+      "name": "Internal Notification Email to Assigned User",
+      "attributes": {
+        "type": "email",
+        "email": {
+          "userType": "assign",
+          "assignedOwners": [
+            "contact_owner"
+          ],
+          "alsoNotifyContactFollowers": false,
+          "alsoNotifyOpportunityFollowers": false,
+          "subject": "REFERENCE internal email subject",
+          "html": "REFERENCE internal email body for {{contact.first_name}}."
+        },
+        "sms": null,
+        "userType": "assign",
+        "whatsapp": null,
+        "notification": null
+      },
+      "order": 9,
+      "parentKey": "aa608f59-8976-49bd-b4cf-fb6f653be514",
+      "next": "49be27ef-fa24-405e-ba7e-60b5c87d7c4b",
+      "parentKeyName": "Internal Notification SMS to Assigned User",
+      "nextName": "Internal Notification In-App"
+    },
+    {
+      "type": "internal_notification",
+      "id": "49be27ef-fa24-405e-ba7e-60b5c87d7c4b",
+      "name": "Internal Notification In-App",
+      "attributes": {
+        "type": "notification",
+        "email": null,
+        "sms": null,
+        "userType": "assign",
+        "whatsapp": null,
+        "notification": {
+          "title": "Internal Notification In-App",
+          "body": "REFERENCE in-app notification body for {{contact.first_name}}.",
+          "redirectPage": "contact",
+          "userType": "assign",
+          "assignedOwners": [
+            "contact_owner"
+          ],
+          "alsoNotifyContactFollowers": false,
+          "alsoNotifyOpportunityFollowers": false
+        }
+      },
+      "order": 10,
+      "parentKey": "ce2927ec-2bfe-413b-ae6c-6a3afbc74efa",
+      "next": "9258a3fa-5519-4ac1-8dd1-09e01edeca11",
+      "parentKeyName": "Internal Notification Email to Assigned User",
+      "nextName": "Add Task Due in 1 Day"
+    },
+    {
+      "type": "task-notification",
+      "id": "9258a3fa-5519-4ac1-8dd1-09e01edeca11",
+      "name": "Add Task Due in 1 Day",
+      "attributes": {
+        "type": "task_notification",
+        "title": "REFERENCE task: call {{contact.first_name}}",
+        "body": "Due in 1 day. Assign to: the contact's assigned user.",
+        "assignedTo": "contact.assigned_user",
+        "dueDate": {
+          "duration": 1,
+          "unit": "days",
+          "skipWeekends": false
+        },
+        "__customInputs__": {}
+      },
+      "order": 11,
+      "parentKey": "49be27ef-fa24-405e-ba7e-60b5c87d7c4b",
+      "next": "2b5ba3a3-2f00-4f7c-80f9-579dfa9f3630",
+      "workflowsActionType": "INTERNAL",
+      "stepIndex": 1,
+      "parentKeyName": "Internal Notification In-App",
+      "nextName": "Manual Action Call as Add Note"
+    },
+    {
+      "type": "add_notes",
+      "id": "2b5ba3a3-2f00-4f7c-80f9-579dfa9f3630",
+      "name": "Manual Action Call as Add Note",
+      "attributes": {
+        "html": "REFERENCE manual call instructions: call {{contact.phone}}.",
+        "title": "REFERENCE manual call title",
+        "color": "#D3F8DF",
+        "type": "add_notes"
+      },
+      "order": 12,
+      "parentKey": "9258a3fa-5519-4ac1-8dd1-09e01edeca11",
+      "next": "a538a69f-f6aa-41dd-a15e-9c5ccb9f843e",
+      "parentKeyName": "Add Task Due in 1 Day",
+      "nextName": "Call With Whisper"
+    },
+    {
+      "type": "call",
+      "id": "a538a69f-f6aa-41dd-a15e-9c5ccb9f843e",
+      "name": "Call With Whisper",
+      "attributes": {
+        "timeout": 25,
+        "whisper_message": "REFERENCE whisper: connecting you to {{contact.first_name}}.",
+        "disable_detect_voicemail": false,
+        "call_connect": true
+      },
+      "order": 13,
+      "parentKey": "2b5ba3a3-2f00-4f7c-80f9-579dfa9f3630",
+      "next": "63bd4cf2-1fad-4167-a2d4-938c80c98a95",
+      "parentKeyName": "Manual Action Call as Add Note",
+      "nextName": "Update Contact Field Call Notes"
+    },
+    {
+      "type": "update_contact_field",
+      "id": "63bd4cf2-1fad-4167-a2d4-938c80c98a95",
+      "name": "Update Contact Field Call Notes",
+      "attributes": {
+        "type": "update_contact_field",
+        "actionType": "update_field_data",
+        "fields": [
+          {
+            "field": "vXBjyZPCWfbts0cNBt4B",
+            "value": "e",
+            "title": "Call Notes",
+            "type": "string",
+            "date": "",
+            "fieldName": "Call Notes"
+          }
+        ]
+      },
+      "order": 14,
+      "parentKey": "a538a69f-f6aa-41dd-a15e-9c5ccb9f843e",
+      "next": "83cf09cc-c24b-4841-90c0-be7bdad6aca7",
+      "parentKeyName": "Call With Whisper",
+      "nextName": "Assign to User Round Robin"
+    },
+    {
+      "type": "assign_user",
+      "id": "83cf09cc-c24b-4841-90c0-be7bdad6aca7",
+      "name": "Assign to User Round Robin",
+      "attributes": {
+        "only_unassigned_contact": false,
+        "total_index": 1,
+        "traffic_split": "equally",
+        "traffic_weightage": {
+          "gIwBtPohHJXADQBuGAx8": 1
+        },
+        "traffic_index": [
+          {
+            "id": "gIwBtPohHJXADQBuGAx8",
+            "indexes": [
+              1
+            ]
+          }
+        ],
+        "user_list": [
+          "gIwBtPohHJXADQBuGAx8"
+        ],
+        "type": "assign_user",
+        "user_listNames": [
+          "Lorenzo Villarreal"
+        ]
+      },
+      "order": 15,
+      "parentKey": "63bd4cf2-1fad-4167-a2d4-938c80c98a95",
+      "next": "b9f59eee-a0f4-4df8-9727-7db3f8646037",
+      "parentKeyName": "Update Contact Field Call Notes",
+      "nextName": "Webhook POST"
+    },
+    {
+      "type": "webhook",
+      "id": "b9f59eee-a0f4-4df8-9727-7db3f8646037",
+      "name": "Webhook POST",
+      "attributes": {
+        "url": "https://example.com/ghl-reference-test",
+        "method": "POST"
+      },
+      "order": 16,
+      "parentKey": "83cf09cc-c24b-4841-90c0-be7bdad6aca7",
+      "next": "e98f9657-3b00-4d04-9fe8-5ef0a9b39767",
+      "parentKeyName": "Assign to User Round Robin",
+      "nextName": "GPT powered by OpenAI"
+    },
+    {
+      "id": "e98f9657-3b00-4d04-9fe8-5ef0a9b39767",
+      "stepIndex": 1,
+      "order": 17,
+      "attributes": {
+        "type": "chatgpt",
+        "apiKey": "",
+        "event": "simple-prompt",
+        "model": "gpt-5-mini",
+        "temperature": "0.2",
+        "promptText": "REFERENCE AI prompt: summarise {{contact.call_notes}} in one sentence.",
+        "actionType": "custom",
+        "actionParams": {
+          "message": "",
+          "categories": [],
+          "length": "",
+          "from": "",
+          "to": "",
+          "memoryKeyToggle": false,
+          "memoryKeyType": "action",
+          "memoryKeyCustom": ""
+        },
+        "memoryKey": "",
+        "excludeFromHistory": false,
+        "excludeInstructionsFromHistory": false
+      },
+      "name": "GPT powered by OpenAI",
+      "type": "chatgpt",
+      "next": "f29c2fe2-d85c-4d11-9d54-1444ac30a3bb",
+      "parentKey": "b9f59eee-a0f4-4df8-9727-7db3f8646037",
+      "nextName": "Add to Workflow Your Sales Request Follow-Up",
+      "parentKeyName": "Webhook POST"
+    },
+    {
+      "type": "add_to_workflow",
+      "id": "f29c2fe2-d85c-4d11-9d54-1444ac30a3bb",
+      "name": "Add to Workflow Your Sales Request Follow-Up",
+      "attributes": {
+        "workflow_id": "591d527e-70b3-4f96-9e19-ddc542ebc48d",
+        "input_trigger_params": true,
+        "type": "add_to_workflow",
+        "workflow_name": "Your Sales Request Follow-Up System"
+      },
+      "order": 18,
+      "parentKey": "e98f9657-3b00-4d04-9fe8-5ef0a9b39767",
+      "next": "2c9d92d7-4d7a-4fc3-8b5f-530eb0583895",
+      "parentKeyName": "GPT powered by OpenAI",
+      "nextName": "Remove from Workflow Sales Request Follow-Up"
+    },
+    {
+      "type": "remove_from_workflow",
+      "id": "2c9d92d7-4d7a-4fc3-8b5f-530eb0583895",
+      "name": "Remove from Workflow Sales Request Follow-Up",
+      "attributes": {
+        "workflow_id": "591d527e-70b3-4f96-9e19-ddc542ebc48d",
+        "workflow_name": "Your Sales Request Follow-Up System"
+      },
+      "order": 19,
+      "parentKey": "f29c2fe2-d85c-4d11-9d54-1444ac30a3bb",
+      "next": "459513c4-be19-4d1e-9f1d-4ce45a9fbd3c",
+      "parentKeyName": "Add to Workflow Your Sales Request Follow-Up",
+      "nextName": "Send review request"
+    },
+    {
+      "id": "459513c4-be19-4d1e-9f1d-4ce45a9fbd3c",
+      "order": 20,
+      "attributes": {
+        "type": "review_request",
+        "overrideReviewLink": "default",
+        "review_type": "sms"
+      },
+      "name": "Send review request",
+      "type": "review_request",
+      "next": "31553fec-acfe-4e11-9ab2-47b488528410",
+      "parentKey": "2c9d92d7-4d7a-4fc3-8b5f-530eb0583895",
+      "nextName": "Goal Tag Added call-cancelled",
+      "parentKeyName": "Remove from Workflow Sales Request Follow-Up"
+    },
+    {
+      "type": "workflow_goal",
+      "id": "31553fec-acfe-4e11-9ab2-47b488528410",
+      "name": "Goal Tag Added call-cancelled",
+      "attributes": {
+        "op": "or",
+        "segments": [
+          {
+            "op": "or",
+            "conditions": [
+              {
+                "goal_condition": "add_contact_tag",
+                "extras": {
+                  "tags": [
+                    "call-cancelled"
+                  ]
+                },
+                "id": "f3d02e90-3862-4e38-a22b-1f126fa9920e"
+              }
+            ]
+          }
+        ],
+        "type": "workflow_goal",
+        "action": "exit"
+      },
+      "order": 21,
+      "parentKey": "459513c4-be19-4d1e-9f1d-4ce45a9fbd3c",
+      "next": "31041996-e7aa-4323-a750-972587c0a6b9",
+      "parentKeyName": "Send review request",
+      "nextName": "If Else Has Tag call-booked"
+    },
+    {
+      "type": "if_else",
+      "id": "31041996-e7aa-4323-a750-972587c0a6b9",
+      "name": "If Else Has Tag call-booked",
+      "attributes": {
+        "currentRecipeType": "CUSTOM",
+        "branches": [
+          {
+            "name": "Has call-booked",
+            "operator": "and",
+            "segments": [
+              {
+                "operator": "and",
+                "conditions": [
+                  {
+                    "conditionType": "contact_detail",
+                    "conditionSubType": "tags",
+                    "conditionOperator": "index-of-true",
+                    "conditionValue": [
+                      "call-booked"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "id": "de4bbe5c-dc17-4514-97ae-a17be8cdb22f"
+          }
+        ],
+        "if": true,
+        "operator": "and",
+        "conditionName": "If Else Has Tag call-booked",
+        "version": 2,
+        "noneBranchName": "None"
+      },
+      "order": 22,
+      "parentKey": "31553fec-acfe-4e11-9ab2-47b488528410",
+      "nodeType": "condition-node",
+      "cat": "conditions",
+      "next": [
+        "de4bbe5c-dc17-4514-97ae-a17be8cdb22f",
+        "c294fd7f-cf34-46da-8e6a-357fe5cbe2cc"
+      ],
+      "parentKeyName": "Goal Tag Added call-cancelled",
+      "nextNames": [
+        "Has call-booked",
+        "None"
+      ]
+    },
+    {
+      "type": "if_else",
+      "id": "de4bbe5c-dc17-4514-97ae-a17be8cdb22f",
+      "name": "Has call-booked",
+      "parentKey": "31041996-e7aa-4323-a750-972587c0a6b9",
+      "parent": "31041996-e7aa-4323-a750-972587c0a6b9",
+      "nodeType": "branch-yes",
+      "cat": "conditions",
+      "sibling": [
+        "c294fd7f-cf34-46da-8e6a-357fe5cbe2cc"
+      ],
+      "attributes": {
+        "if": false,
+        "conditionName": "Condition",
+        "operator": "and",
+        "branches": []
+      },
+      "order": 23,
+      "next": "1acdfff6-8a6f-4e62-888a-0cdf5d144888",
+      "parentKeyName": "If Else Has Tag call-booked",
+      "parentName": "If Else Has Tag call-booked",
+      "siblingNames": [
+        "None"
+      ],
+      "nextName": "Yes Branch Update Opportunity to Showed"
+    },
+    {
+      "type": "internal_update_opportunity",
+      "id": "1acdfff6-8a6f-4e62-888a-0cdf5d144888",
+      "name": "Yes Branch Update Opportunity to Showed",
+      "attributes": {
+        "type": "internal_update_opportunity",
+        "allowBackward": true,
+        "pipelineId": "vNB4nHSeDZlu6URPbtmP",
+        "__customInputFields__": [
+          {
+            "filterField": "pipelineStageId",
+            "value": "65af9da7-ec31-4d2e-ae43-8882f5661d22",
+            "dataType": "SINGLE_OPTIONS",
+            "valueFieldType": "select",
+            "__customInputs__": {},
+            "valueName": "Showed"
+          }
+        ],
+        "__customInputs__": {},
+        "DYNAMIC": "Update opportunity to 'Showed' stage with status open in 'Call Booked Pipeline' pipeline",
+        "pipeline_name": "Call Booked Pipeline",
+        "pipeline_stage_name": "Showed",
+        "pipelineName": "Call Booked Pipeline"
+      },
+      "order": 0,
+      "parentKey": "de4bbe5c-dc17-4514-97ae-a17be8cdb22f",
+      "parent": "de4bbe5c-dc17-4514-97ae-a17be8cdb22f",
+      "workflowsActionType": "INTERNAL",
+      "next": "a227935e-78fa-410e-a0bc-0de83dd2db64",
+      "parentKeyName": "Has call-booked",
+      "parentName": "Has call-booked",
+      "nextName": "Yes Branch Go To Step 27"
+    },
+    {
+      "type": "goto",
+      "id": "a227935e-78fa-410e-a0bc-0de83dd2db64",
+      "name": "Yes Branch Go To Step 27",
+      "attributes": {
+        "targetNodeId": "db1267e6-044d-4f08-93b7-cd83289c8c6f",
+        "type": "goto",
+        "targetNodeName": "Add Tag call-booked"
+      },
+      "order": 1,
+      "parentKey": "1acdfff6-8a6f-4e62-888a-0cdf5d144888",
+      "parent": "de4bbe5c-dc17-4514-97ae-a17be8cdb22f",
+      "next": "",
+      "parentKeyName": "Yes Branch Update Opportunity to Showed",
+      "parentName": "Has call-booked"
+    },
+    {
+      "type": "if_else",
+      "id": "c294fd7f-cf34-46da-8e6a-357fe5cbe2cc",
+      "name": "None",
+      "parentKey": "31041996-e7aa-4323-a750-972587c0a6b9",
+      "parent": "31041996-e7aa-4323-a750-972587c0a6b9",
+      "nodeType": "branch-no",
+      "cat": "conditions",
+      "sibling": [
+        "de4bbe5c-dc17-4514-97ae-a17be8cdb22f"
+      ],
+      "attributes": {
+        "else": true
+      },
+      "order": 23,
+      "next": "353364f3-1ef5-42fc-ba7b-2b456d6c3404",
+      "parentKeyName": "If Else Has Tag call-booked",
+      "parentName": "If Else Has Tag call-booked",
+      "siblingNames": [
+        "Has call-booked"
+      ],
+      "nextName": "No Branch Remove Tag call-booked"
+    },
+    {
+      "type": "remove_contact_tag",
+      "id": "353364f3-1ef5-42fc-ba7b-2b456d6c3404",
+      "name": "No Branch Remove Tag call-booked",
+      "attributes": {
+        "tags": [
+          "call-booked"
+        ]
+      },
+      "order": 0,
+      "parentKey": "c294fd7f-cf34-46da-8e6a-357fe5cbe2cc",
+      "parent": "c294fd7f-cf34-46da-8e6a-357fe5cbe2cc",
+      "next": "b345b152-fa70-4481-aea8-c5b92b9aa850",
+      "parentKeyName": "None",
+      "parentName": "None",
+      "nextName": "No Branch Send SMS Last Step"
+    },
+    {
+      "type": "sms",
+      "id": "b345b152-fa70-4481-aea8-c5b92b9aa850",
+      "name": "No Branch Send SMS Last Step",
+      "attributes": {
+        "body": "REFERENCE last SMS in the None branch.",
+        "assignedOwners": [
+          "contact_owner"
+        ],
+        "alsoNotifyContactFollowers": false,
+        "alsoNotifyOpportunityFollowers": false
+      },
+      "order": 1,
+      "parentKey": "353364f3-1ef5-42fc-ba7b-2b456d6c3404",
+      "parent": "c294fd7f-cf34-46da-8e6a-357fe5cbe2cc",
+      "next": "",
+      "parentKeyName": "No Branch Remove Tag call-booked",
+      "parentName": "None"
+    }
+  ]
+}

@@ -1,0 +1,280 @@
+{
+  "title": "Otter to Docketwise Case Notes System - Meetings and Calls",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "meetings",
+      "label": "1 · IN PERSON MEETINGS RECORDED IN OTTER",
+      "color": 0,
+      "note": "Otter finishes a client meeting and we go straight to the Microsoft 365 appointment it belongs to. If the appointment does not name the case, Claude reads the transcript for it."
+    },
+    {
+      "key": "calls",
+      "label": "2 · RINGCENTRAL PHONE CALLS",
+      "color": 0,
+      "note": "A recorded call arrives with its caller ID. The phone number is looked up against Docketwise contacts, then it joins the same matching gate the meetings use."
+    },
+    {
+      "key": "match",
+      "label": "3 · MATCH IT TO THE RIGHT MATTER",
+      "color": 0,
+      "note": "One matter, or nobody guesses. Anything ambiguous goes to a person by email before a single word is written to a file."
+    },
+    {
+      "key": "note",
+      "label": "4 · WRITE THE CASE NOTE",
+      "color": 0,
+      "note": "Claude turns the transcript into a case note a paralegal would write: decisions, deadlines, follow-ups. It is posted to the matter in Docketwise."
+    },
+    {
+      "key": "audit",
+      "label": "5 · AUDIT LOG AND FAILURE ALERTS",
+      "color": 0,
+      "note": "Every note filed is logged with its source and matter. Anything that errors emails the office instead of disappearing quietly."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "otter",
+      "kind": "trigger.webhook",
+      "label": "1 · Otter AI: Meeting Transcript Ready",
+      "section": "meetings",
+      "notes": "Fires when Otter finishes processing a recorded in person meeting."
+    },
+    {
+      "key": "m365",
+      "kind": "net.http",
+      "label": "2 · Microsoft 365: Find the Calendar Appointment for This Meeting",
+      "section": "meetings",
+      "notes": "Matches on the attorney's calendar by start time and attendees."
+    },
+    {
+      "key": "pull",
+      "kind": "data.transform",
+      "label": "3 · Pull Client Name and Case Number From the Appointment",
+      "section": "meetings",
+      "notes": "Reads the subject, body and attendee list for a client name or case file number."
+    },
+    {
+      "key": "fromcal",
+      "kind": "flow.branch",
+      "label": "4 · Case Identified From the Calendar?",
+      "section": "meetings"
+    },
+    {
+      "key": "extract",
+      "kind": "ai.llm",
+      "label": "5 · Claude: Extract Client and Case References From the Transcript",
+      "section": "meetings",
+      "notes": "For meetings booked without case details, it reads what was said out loud in the room."
+    },
+    {
+      "key": "extractmodel",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "extract",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "rc",
+      "kind": "trigger.webhook",
+      "label": "6 · RingCentral: Call Recording Available",
+      "section": "calls",
+      "notes": "Fires the moment a recorded call ends."
+    },
+    {
+      "key": "rcfetch",
+      "kind": "net.http",
+      "label": "7 · RingCentral: Fetch the Recording and Caller ID",
+      "section": "calls"
+    },
+    {
+      "key": "rcphone",
+      "kind": "net.http",
+      "label": "8 · Docketwise: Match Contact by Phone Number",
+      "section": "calls",
+      "notes": "The caller ID is the fastest identifier we have on a phone call."
+    },
+    {
+      "key": "dwsearch",
+      "kind": "net.http",
+      "label": "9 · Docketwise: Search Matter by Client or Case Number",
+      "section": "match"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "10 · Exactly One Matter Matched?",
+      "section": "match",
+      "notes": "Zero matches or two matches both count as no match."
+    },
+    {
+      "key": "confirm",
+      "kind": "app.action",
+      "label": "11 · Email Staff to Confirm Which Matter This Belongs To",
+      "app": "outlook",
+      "op": "send",
+      "section": "match",
+      "notes": "Holds the transcript until a person picks the matter. Nothing is filed on a guess."
+    },
+    {
+      "key": "summarize",
+      "kind": "ai.llm",
+      "label": "12 · Claude: Summarize Into a Case Note With Decisions, Deadlines and Follow Ups",
+      "section": "note"
+    },
+    {
+      "key": "notemodel",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "summarize",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "addnote",
+      "kind": "net.http",
+      "label": "13 · Docketwise: Add the Note to the Matter",
+      "section": "note"
+    },
+    {
+      "key": "audit",
+      "kind": "app.action",
+      "label": "14 · Audit Log: Source, Matter and Link to the Note",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "audit",
+      "notes": "One row per filed note so the office can prove where every note came from."
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "15 · Something Failed Anywhere in the Flow",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "audit"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "16 · Email the Office With the Transcript That Did Not File",
+      "app": "outlook",
+      "op": "send",
+      "section": "audit"
+    }
+  ],
+  "edges": [
+    {
+      "from": "otter",
+      "to": "m365"
+    },
+    {
+      "from": "m365",
+      "to": "pull"
+    },
+    {
+      "from": "pull",
+      "to": "fromcal"
+    },
+    {
+      "from": "fromcal",
+      "to": "dwsearch",
+      "branch": "true"
+    },
+    {
+      "from": "fromcal",
+      "to": "extract",
+      "branch": "false"
+    },
+    {
+      "from": "extract",
+      "to": "dwsearch"
+    },
+    {
+      "from": "rc",
+      "to": "rcfetch"
+    },
+    {
+      "from": "rcfetch",
+      "to": "rcphone"
+    },
+    {
+      "from": "rcphone",
+      "to": "gate"
+    },
+    {
+      "from": "dwsearch",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "summarize",
+      "branch": "true"
+    },
+    {
+      "from": "gate",
+      "to": "confirm",
+      "branch": "false"
+    },
+    {
+      "from": "summarize",
+      "to": "addnote"
+    },
+    {
+      "from": "addnote",
+      "to": "audit"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "event": "speech.finished",
+    "source": "otter_ai",
+    "speech_id": "OTR-88214417",
+    "title": "Consultation - Delgado Ruiz",
+    "recorded_at": "2026-09-08T14:02:11-05:00",
+    "duration_seconds": 2764,
+    "attendees": [
+      "k.whitfield@firm.com",
+      "maria.delgadoruiz@gmail.com"
+    ],
+    "transcript_url": "https://otter.ai/u/OTR-88214417/transcript.txt",
+    "transcript_preview": "Okay Maria, so on the I-130 for your husband, the RFE response is due October 3rd. We still need the joint bank statements and the lease with both names on it..."
+  },
+  "output_sample": {
+    "filed_at": "2026-09-08T14:51:03-05:00",
+    "source": "Otter AI meeting",
+    "matched_by": "Microsoft 365 appointment subject",
+    "match_confidence": "single exact match",
+    "docketwise_matter_id": "MTR-40817",
+    "matter_name": "Delgado Ruiz, Maria - I-130 Petition",
+    "client_name": "Maria Delgado Ruiz",
+    "case_number": "IMM-2026-0417",
+    "note_id": "NOTE-119204",
+    "note_url": "https://app.docketwise.com/matters/40817/notes/119204",
+    "note_summary": "RFE response on the I-130 due Oct 3, 2026. Client to provide joint bank statements and a lease listing both spouses. Attorney to draft the cover letter once documents land.",
+    "deadlines": [
+      {
+        "item": "I-130 RFE response filed",
+        "due": "2026-10-03"
+      }
+    ],
+    "follow_ups": [
+      {
+        "owner": "client",
+        "task": "Send joint bank statements and joint lease"
+      },
+      {
+        "owner": "paralegal",
+        "task": "Chase documents on Sep 22 if nothing received"
+      }
+    ],
+    "audit_row": "2026-09-08 | Otter AI meeting | MTR-40817 | NOTE-119204 | filed automatically"
+  },
+  "archetype": "otter_to_docketwise_case_notes_system_meetings_a",
+  "learned": true,
+  "learned_at": "2026-09-09"
+}

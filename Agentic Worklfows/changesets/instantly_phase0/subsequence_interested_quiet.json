@@ -1,0 +1,529 @@
+{
+  "_about": "THE Interested-quiet subsequence: both the copy Lorenzo reviews and the exact POST /subsequences body that changesets/instantly_subsequences/apply_subsequences.py sends (keys starting with _ are stripped first). Fixed-copy D1/D3/D7 fallback for when services/reply_engine/cadence.py, which owns the real fresh-slot follow-up, is down. Field names follow config/instantly_api_contract.md (verified 2026-09-21): conditions is required, the schedule key is subsequence_schedule, and pre_delay on step 1 is what makes the first email land on day 1 instead of on the move. Leads are meant to be enrolled only by an explicit move, one lead per call, and only when slots were offered and went unanswered. The conditions object is sent with two empty lists and no reply_contains, but HOW INSTANTLY EVALUATES AN EMPTY CONDITION SET IS UNVERIFIED: runbooks/phase0.md go-live step 10 requires the new subsequence's enrolled-lead count to be read immediately after the first create and the subsequence deleted if it is not 0. Nothing is applied until Lorenzo approves.",
+  "booking_url_note": "VERIFIED 2026-09-21: HTTP 200, page title 'Discovery Call'. Safe to use in outbound copy.",
+  "move_endpoint": "POST /leads/subsequence/move {id, subsequence_id}, one call per lead (shared.instantly.Instantly.move_leads_to_subsequence). There is no `ids` array on this endpoint.",
+  "campaigns": {
+    "cleaning_reactivation": {
+      "parent_campaign": "8086b41e-b546-4b36-9fa0-2d01f5cc119a",
+      "name": "Interested-quiet: 2026 Cleaning - Client Reactivation",
+      "conditions": {
+        "crm_status": [],
+        "lead_activity": []
+      },
+      "subsequence_schedule": {
+        "start_date": null,
+        "end_date": null,
+        "schedules": [
+          {
+            "name": "Weekday mornings CT",
+            "timing": {
+              "from": "10:00",
+              "to": "12:00"
+            },
+            "days": {
+              "0": false,
+              "1": true,
+              "2": true,
+              "3": true,
+              "4": true,
+              "5": true,
+              "6": false
+            },
+            "timezone": "America/Chicago"
+          }
+        ]
+      },
+      "sequences": [
+        {
+          "steps": [
+            {
+              "type": "email",
+              "delay": 2,
+              "delay_unit": "days",
+              "variants": [
+                {
+                  "subject": "",
+                  "body": "<div>{{RANDOM | Hey | Hi | Hello}} {{firstName}},</div><div><br /></div><div>{{RANDOM | The times I floated have filled up on my end, so rather than leave you hanging, grab whatever works here: | Both slots I mentioned went to other calls, so pick any time that suits you here: | I lost the times I offered, easiest is to grab one that works for you here:}} https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu</div><div><br /></div><div>{{RANDOM | If none of those fit, reply with a day and I'll make it work. | Or reply with a day and time and I'll send the invite. | If it's easier, tell me a day and I'll build around it.}}</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div>"
+                }
+              ],
+              "pre_delay": 1,
+              "pre_delay_unit": "days"
+            },
+            {
+              "type": "email",
+              "delay": 4,
+              "delay_unit": "days",
+              "variants": [
+                {
+                  "subject": "",
+                  "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>Quick reason it's worth 15 minutes: you send me the list of accounts that cancelled, stopped renewing, or never closed, and I show you which ones are worth chasing and what I'd expect to come back. Nothing up front, I only earn on what returns.</div><div><br /></div><div>{{RANDOM | Grab a time here and I'll come prepared: | Any slot here works: | Pick whatever is easiest here:}} https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div>"
+                }
+              ]
+            },
+            {
+              "type": "email",
+              "delay": 0,
+              "delay_unit": "days",
+              "variants": [
+                {
+                  "subject": "",
+                  "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | Should I close your file, or is a different week better? | Want me to close this out, or is there a better week to pick it up? | Is this a no for now, or just a bad week?}} {{RANDOM | Either answer is fine, I just don't want to keep landing in your inbox if the timing is off. | Either way is fine, I'd rather know than keep nudging. | No hard feelings either way.}}</div><div><br /></div><div>If it's the week, the calendar is here: https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div>"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "_meta": {
+        "campaign_key": "cleaning_reactivation",
+        "niche": "cleaning",
+        "offer": "reactivation",
+        "enrolment": "manual move only",
+        "enrolment_precondition": "slots were offered and went unanswered",
+        "conditions_semantics": "UNVERIFIED against a live create. No API document states how an empty condition set is evaluated, so the create is not assumed to enrol nobody: runbooks/phase0.md go-live step 10 requires the new subsequence's lead count to be read immediately and the subsequence deleted if it is not 0.",
+        "how": "POST /leads/subsequence/move {id, subsequence_id}, one call per lead (shared.instantly.Instantly.move_leads_to_subsequence). There is no `ids` array on this endpoint.",
+        "send_days": [
+          1,
+          3,
+          7
+        ],
+        "note": "fallback only; services/reply_engine/cadence.py is the real follow-up. Keys starting with _ are stripped before the POST."
+      }
+    },
+    "cleaning_trigger": {
+      "parent_campaign": "f347604e-48c7-4813-831c-dc7b9d4b50ae",
+      "name": "Interested-quiet: 2026 Cleaning - Trigger Outbound",
+      "conditions": {
+        "crm_status": [],
+        "lead_activity": []
+      },
+      "subsequence_schedule": {
+        "start_date": null,
+        "end_date": null,
+        "schedules": [
+          {
+            "name": "Weekday mornings CT",
+            "timing": {
+              "from": "10:00",
+              "to": "12:00"
+            },
+            "days": {
+              "0": false,
+              "1": true,
+              "2": true,
+              "3": true,
+              "4": true,
+              "5": true,
+              "6": false
+            },
+            "timezone": "America/Chicago"
+          }
+        ]
+      },
+      "sequences": [
+        {
+          "steps": [
+            {
+              "type": "email",
+              "delay": 2,
+              "delay_unit": "days",
+              "variants": [
+                {
+                  "subject": "",
+                  "body": "<div>{{RANDOM | Hey | Hi | Hello}} {{firstName}},</div><div><br /></div><div>{{RANDOM | The times I floated have filled up on my end, so rather than leave you hanging, grab whatever works here: | Both slots I mentioned went to other calls, so pick any time that suits you here: | I lost the times I offered, easiest is to grab one that works for you here:}} https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu</div><div><br /></div><div>{{RANDOM | If none of those fit, reply with a day and I'll make it work. | Or reply with a day and time and I'll send the invite. | If it's easier, tell me a day and I'll build around it.}}</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div>"
+                }
+              ],
+              "pre_delay": 1,
+              "pre_delay_unit": "days"
+            },
+            {
+              "type": "email",
+              "delay": 4,
+              "delay_unit": "days",
+              "variants": [
+                {
+                  "subject": "",
+                  "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>Quick reason it's worth 15 minutes: I'll show you the exact triggers I'd watch for {{companyName}}, the new leases and office expansions in your service area, what the first month looks like, and how the guarantee is structured. If it doesn't fit, you'll know in ten minutes.</div><div><br /></div><div>{{RANDOM | Grab a time here and I'll come prepared: | Any slot here works: | Pick whatever is easiest here:}} https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div>"
+                }
+              ]
+            },
+            {
+              "type": "email",
+              "delay": 0,
+              "delay_unit": "days",
+              "variants": [
+                {
+                  "subject": "",
+                  "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | Should I close your file, or is a different week better? | Want me to close this out, or is there a better week to pick it up? | Is this a no for now, or just a bad week?}} {{RANDOM | Either answer is fine, I just don't want to keep landing in your inbox if the timing is off. | Either way is fine, I'd rather know than keep nudging. | No hard feelings either way.}}</div><div><br /></div><div>If it's the week, the calendar is here: https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div>"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "_meta": {
+        "campaign_key": "cleaning_trigger",
+        "niche": "cleaning",
+        "offer": "outbound",
+        "enrolment": "manual move only",
+        "enrolment_precondition": "slots were offered and went unanswered",
+        "conditions_semantics": "UNVERIFIED against a live create. No API document states how an empty condition set is evaluated, so the create is not assumed to enrol nobody: runbooks/phase0.md go-live step 10 requires the new subsequence's lead count to be read immediately and the subsequence deleted if it is not 0.",
+        "how": "POST /leads/subsequence/move {id, subsequence_id}, one call per lead (shared.instantly.Instantly.move_leads_to_subsequence). There is no `ids` array on this endpoint.",
+        "send_days": [
+          1,
+          3,
+          7
+        ],
+        "note": "fallback only; services/reply_engine/cadence.py is the real follow-up. Keys starting with _ are stripped before the POST."
+      }
+    },
+    "bookkeeping_reactivation": {
+      "parent_campaign": "f00c5e28-fdc4-4d84-a7e6-dfba9695f35d",
+      "name": "Interested-quiet: 2026 Bookkeeping - Client Reactivation",
+      "conditions": {
+        "crm_status": [],
+        "lead_activity": []
+      },
+      "subsequence_schedule": {
+        "start_date": null,
+        "end_date": null,
+        "schedules": [
+          {
+            "name": "Weekday mornings CT",
+            "timing": {
+              "from": "10:00",
+              "to": "12:00"
+            },
+            "days": {
+              "0": false,
+              "1": true,
+              "2": true,
+              "3": true,
+              "4": true,
+              "5": true,
+              "6": false
+            },
+            "timezone": "America/Chicago"
+          }
+        ]
+      },
+      "sequences": [
+        {
+          "steps": [
+            {
+              "type": "email",
+              "delay": 2,
+              "delay_unit": "days",
+              "variants": [
+                {
+                  "subject": "",
+                  "body": "<div>{{RANDOM | Hey | Hi | Hello}} {{firstName}},</div><div><br /></div><div>{{RANDOM | The times I floated have filled up on my end, so rather than leave you hanging, grab whatever works here: | Both slots I mentioned went to other calls, so pick any time that suits you here: | I lost the times I offered, easiest is to grab one that works for you here:}} https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu</div><div><br /></div><div>{{RANDOM | If none of those fit, reply with a day and I'll make it work. | Or reply with a day and time and I'll send the invite. | If it's easier, tell me a day and I'll build around it.}}</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div>"
+                }
+              ],
+              "pre_delay": 1,
+              "pre_delay_unit": "days"
+            },
+            {
+              "type": "email",
+              "delay": 4,
+              "delay_unit": "days",
+              "variants": [
+                {
+                  "subject": "",
+                  "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>Quick reason it's worth 15 minutes: you send me the former clients and the inquiries that never closed, and I show you which ones are worth a run before tax season and what I'd expect to come back. Nothing up front, I only earn on the fees that come back.</div><div><br /></div><div>{{RANDOM | Grab a time here and I'll come prepared: | Any slot here works: | Pick whatever is easiest here:}} https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div>"
+                }
+              ]
+            },
+            {
+              "type": "email",
+              "delay": 0,
+              "delay_unit": "days",
+              "variants": [
+                {
+                  "subject": "",
+                  "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | Should I close your file, or is a different week better? | Want me to close this out, or is there a better week to pick it up? | Is this a no for now, or just a bad week?}} {{RANDOM | Either answer is fine, I just don't want to keep landing in your inbox if the timing is off. | Either way is fine, I'd rather know than keep nudging. | No hard feelings either way.}}</div><div><br /></div><div>If it's the week, the calendar is here: https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div>"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "_meta": {
+        "campaign_key": "bookkeeping_reactivation",
+        "niche": "bookkeeping",
+        "offer": "reactivation",
+        "enrolment": "manual move only",
+        "enrolment_precondition": "slots were offered and went unanswered",
+        "conditions_semantics": "UNVERIFIED against a live create. No API document states how an empty condition set is evaluated, so the create is not assumed to enrol nobody: runbooks/phase0.md go-live step 10 requires the new subsequence's lead count to be read immediately and the subsequence deleted if it is not 0.",
+        "how": "POST /leads/subsequence/move {id, subsequence_id}, one call per lead (shared.instantly.Instantly.move_leads_to_subsequence). There is no `ids` array on this endpoint.",
+        "send_days": [
+          1,
+          3,
+          7
+        ],
+        "note": "fallback only; services/reply_engine/cadence.py is the real follow-up. Keys starting with _ are stripped before the POST."
+      }
+    },
+    "bookkeeping_trigger": {
+      "parent_campaign": "87ebb167-9b64-4b6f-b658-88f3d1af9980",
+      "name": "Interested-quiet: 2026 Bookkeeping - Trigger Outbound",
+      "conditions": {
+        "crm_status": [],
+        "lead_activity": []
+      },
+      "subsequence_schedule": {
+        "start_date": null,
+        "end_date": null,
+        "schedules": [
+          {
+            "name": "Weekday mornings CT",
+            "timing": {
+              "from": "10:00",
+              "to": "12:00"
+            },
+            "days": {
+              "0": false,
+              "1": true,
+              "2": true,
+              "3": true,
+              "4": true,
+              "5": true,
+              "6": false
+            },
+            "timezone": "America/Chicago"
+          }
+        ]
+      },
+      "sequences": [
+        {
+          "steps": [
+            {
+              "type": "email",
+              "delay": 2,
+              "delay_unit": "days",
+              "variants": [
+                {
+                  "subject": "",
+                  "body": "<div>{{RANDOM | Hey | Hi | Hello}} {{firstName}},</div><div><br /></div><div>{{RANDOM | The times I floated have filled up on my end, so rather than leave you hanging, grab whatever works here: | Both slots I mentioned went to other calls, so pick any time that suits you here: | I lost the times I offered, easiest is to grab one that works for you here:}} https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu</div><div><br /></div><div>{{RANDOM | If none of those fit, reply with a day and I'll make it work. | Or reply with a day and time and I'll send the invite. | If it's easier, tell me a day and I'll build around it.}}</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div>"
+                }
+              ],
+              "pre_delay": 1,
+              "pre_delay_unit": "days"
+            },
+            {
+              "type": "email",
+              "delay": 4,
+              "delay_unit": "days",
+              "variants": [
+                {
+                  "subject": "",
+                  "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>Quick reason it's worth 15 minutes: I'll show you the exact triggers I'd watch for {{companyName}}, the new business filings and the bookkeeper job posts in your area, what the first month looks like, and how the guarantee is structured. If it doesn't fit, you'll know in ten minutes.</div><div><br /></div><div>{{RANDOM | Grab a time here and I'll come prepared: | Any slot here works: | Pick whatever is easiest here:}} https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div>"
+                }
+              ]
+            },
+            {
+              "type": "email",
+              "delay": 0,
+              "delay_unit": "days",
+              "variants": [
+                {
+                  "subject": "",
+                  "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | Should I close your file, or is a different week better? | Want me to close this out, or is there a better week to pick it up? | Is this a no for now, or just a bad week?}} {{RANDOM | Either answer is fine, I just don't want to keep landing in your inbox if the timing is off. | Either way is fine, I'd rather know than keep nudging. | No hard feelings either way.}}</div><div><br /></div><div>If it's the week, the calendar is here: https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div>"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "_meta": {
+        "campaign_key": "bookkeeping_trigger",
+        "niche": "bookkeeping",
+        "offer": "outbound",
+        "enrolment": "manual move only",
+        "enrolment_precondition": "slots were offered and went unanswered",
+        "conditions_semantics": "UNVERIFIED against a live create. No API document states how an empty condition set is evaluated, so the create is not assumed to enrol nobody: runbooks/phase0.md go-live step 10 requires the new subsequence's lead count to be read immediately and the subsequence deleted if it is not 0.",
+        "how": "POST /leads/subsequence/move {id, subsequence_id}, one call per lead (shared.instantly.Instantly.move_leads_to_subsequence). There is no `ids` array on this endpoint.",
+        "send_days": [
+          1,
+          3,
+          7
+        ],
+        "note": "fallback only; services/reply_engine/cadence.py is the real follow-up. Keys starting with _ are stripped before the POST."
+      }
+    },
+    "recruiting_reactivation": {
+      "parent_campaign": "1d4d5bb3-40a7-4333-bf34-b269d2cc9955",
+      "name": "Interested-quiet: 2026 Recruiting - Client Reactivation",
+      "conditions": {
+        "crm_status": [],
+        "lead_activity": []
+      },
+      "subsequence_schedule": {
+        "start_date": null,
+        "end_date": null,
+        "schedules": [
+          {
+            "name": "Weekday mornings CT",
+            "timing": {
+              "from": "10:00",
+              "to": "12:00"
+            },
+            "days": {
+              "0": false,
+              "1": true,
+              "2": true,
+              "3": true,
+              "4": true,
+              "5": true,
+              "6": false
+            },
+            "timezone": "America/Chicago"
+          }
+        ]
+      },
+      "sequences": [
+        {
+          "steps": [
+            {
+              "type": "email",
+              "delay": 2,
+              "delay_unit": "days",
+              "variants": [
+                {
+                  "subject": "",
+                  "body": "<div>{{RANDOM | Hey | Hi | Hello}} {{firstName}},</div><div><br /></div><div>{{RANDOM | The times I floated have filled up on my end, so rather than leave you hanging, grab whatever works here: | Both slots I mentioned went to other calls, so pick any time that suits you here: | I lost the times I offered, easiest is to grab one that works for you here:}} https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu</div><div><br /></div><div>{{RANDOM | If none of those fit, reply with a day and I'll make it work. | Or reply with a day and time and I'll send the invite. | If it's easier, tell me a day and I'll build around it.}}</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div>"
+                }
+              ],
+              "pre_delay": 1,
+              "pre_delay_unit": "days"
+            },
+            {
+              "type": "email",
+              "delay": 4,
+              "delay_unit": "days",
+              "variants": [
+                {
+                  "subject": "",
+                  "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>Quick reason it's worth 15 minutes: you send me the client accounts that have gone dormant and the searches that never closed, and I show you which ones are worth a run and what I'd expect to come back. Nothing up front, I only earn on the placements that come from them.</div><div><br /></div><div>{{RANDOM | Grab a time here and I'll come prepared: | Any slot here works: | Pick whatever is easiest here:}} https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div>"
+                }
+              ]
+            },
+            {
+              "type": "email",
+              "delay": 0,
+              "delay_unit": "days",
+              "variants": [
+                {
+                  "subject": "",
+                  "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | Should I close your file, or is a different week better? | Want me to close this out, or is there a better week to pick it up? | Is this a no for now, or just a bad week?}} {{RANDOM | Either answer is fine, I just don't want to keep landing in your inbox if the timing is off. | Either way is fine, I'd rather know than keep nudging. | No hard feelings either way.}}</div><div><br /></div><div>If it's the week, the calendar is here: https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div>"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "_meta": {
+        "campaign_key": "recruiting_reactivation",
+        "niche": "recruiting",
+        "offer": "reactivation",
+        "enrolment": "manual move only",
+        "enrolment_precondition": "slots were offered and went unanswered",
+        "conditions_semantics": "UNVERIFIED against a live create. No API document states how an empty condition set is evaluated, so the create is not assumed to enrol nobody: runbooks/phase0.md go-live step 10 requires the new subsequence's lead count to be read immediately and the subsequence deleted if it is not 0.",
+        "how": "POST /leads/subsequence/move {id, subsequence_id}, one call per lead (shared.instantly.Instantly.move_leads_to_subsequence). There is no `ids` array on this endpoint.",
+        "send_days": [
+          1,
+          3,
+          7
+        ],
+        "note": "fallback only; services/reply_engine/cadence.py is the real follow-up. Keys starting with _ are stripped before the POST."
+      }
+    },
+    "recruiting_outbound": {
+      "parent_campaign": "cd2e251c-3b5a-40d2-a3dc-d07c4004a48c",
+      "name": "Interested-quiet: 2026 Recruiting - Outbound (specialty roles)",
+      "conditions": {
+        "crm_status": [],
+        "lead_activity": []
+      },
+      "subsequence_schedule": {
+        "start_date": null,
+        "end_date": null,
+        "schedules": [
+          {
+            "name": "Weekday mornings CT",
+            "timing": {
+              "from": "10:00",
+              "to": "12:00"
+            },
+            "days": {
+              "0": false,
+              "1": true,
+              "2": true,
+              "3": true,
+              "4": true,
+              "5": true,
+              "6": false
+            },
+            "timezone": "America/Chicago"
+          }
+        ]
+      },
+      "sequences": [
+        {
+          "steps": [
+            {
+              "type": "email",
+              "delay": 2,
+              "delay_unit": "days",
+              "variants": [
+                {
+                  "subject": "",
+                  "body": "<div>{{RANDOM | Hey | Hi | Hello}} {{firstName}},</div><div><br /></div><div>{{RANDOM | The times I floated have filled up on my end, so rather than leave you hanging, grab whatever works here: | Both slots I mentioned went to other calls, so pick any time that suits you here: | I lost the times I offered, easiest is to grab one that works for you here:}} https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu</div><div><br /></div><div>{{RANDOM | If none of those fit, reply with a day and I'll make it work. | Or reply with a day and time and I'll send the invite. | If it's easier, tell me a day and I'll build around it.}}</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div>"
+                }
+              ],
+              "pre_delay": 1,
+              "pre_delay_unit": "days"
+            },
+            {
+              "type": "email",
+              "delay": 4,
+              "delay_unit": "days",
+              "variants": [
+                {
+                  "subject": "",
+                  "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>Quick reason it's worth 15 minutes: I'll show you the exact triggers I'd watch for {{companyName}}, the roles sitting open on job boards in your specialty, what the first month looks like, and how the guarantee is structured. If it doesn't fit, you'll know in ten minutes.</div><div><br /></div><div>{{RANDOM | Grab a time here and I'll come prepared: | Any slot here works: | Pick whatever is easiest here:}} https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div>"
+                }
+              ]
+            },
+            {
+              "type": "email",
+              "delay": 0,
+              "delay_unit": "days",
+              "variants": [
+                {
+                  "subject": "",
+                  "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | Should I close your file, or is a different week better? | Want me to close this out, or is there a better week to pick it up? | Is this a no for now, or just a bad week?}} {{RANDOM | Either answer is fine, I just don't want to keep landing in your inbox if the timing is off. | Either way is fine, I'd rather know than keep nudging. | No hard feelings either way.}}</div><div><br /></div><div>If it's the week, the calendar is here: https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div>"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "_meta": {
+        "campaign_key": "recruiting_outbound",
+        "niche": "recruiting",
+        "offer": "outbound",
+        "enrolment": "manual move only",
+        "enrolment_precondition": "slots were offered and went unanswered",
+        "conditions_semantics": "UNVERIFIED against a live create. No API document states how an empty condition set is evaluated, so the create is not assumed to enrol nobody: runbooks/phase0.md go-live step 10 requires the new subsequence's lead count to be read immediately and the subsequence deleted if it is not 0.",
+        "how": "POST /leads/subsequence/move {id, subsequence_id}, one call per lead (shared.instantly.Instantly.move_leads_to_subsequence). There is no `ids` array on this endpoint.",
+        "send_days": [
+          1,
+          3,
+          7
+        ],
+        "note": "fallback only; services/reply_engine/cadence.py is the real follow-up. Keys starting with _ are stripped before the POST."
+      }
+    }
+  }
+}

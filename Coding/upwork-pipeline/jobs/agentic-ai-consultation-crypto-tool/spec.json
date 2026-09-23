@@ -1,0 +1,64 @@
+{
+  "title": "Your Automate-First Map",
+  "platform": "diagram",
+  "sections": [
+    {"key": "sort", "label": "1 - SORT AI FROM AUTOMATION", "color": 0, "note": "Before anything gets ranked, every manual pile gets one question asked of it: does a human make a judgement call here, or is someone just moving data from one place to another. Trade logs out of Excel into a real database, lead lists, the email tool nobody trusts, the marketing side - that is plain automation on AWS, no model involved. Only what needs judgement goes into the AI lane."},
+    {"key": "tickets", "label": "2 - TICKETS FIRST, CHEAPEST WIN", "color": 0, "note": "Support tickets are the cheapest real AI win you have, and the safest place to start. Ninety days of tickets cluster into a short list of repeat questions, and an assistant grounded in your own docs answers those and hands everything else to a person. This is not a scripted FAQ bot - it reads the question and cites your documentation - but it is also not a research project."},
+    {"key": "identity", "label": "3 - ID CHECKS SECOND", "color": 0, "note": "120 ID checks a week done by eye is the next thing to shrink. Document OCR pulls the fields off the upload and a face match scores the selfie against the ID photo. This is a vendor API, not a model you train. Clear scores decide themselves and get logged, and the ambiguous ones still reach a human - just far fewer of them."},
+    {"key": "anomaly", "label": "4 - ANOMALY DETECTION, RULES BEFORE NEURAL NETS", "color": 0, "note": "The most urgent item is the one to build last, and honestly. Statistical rules on trade velocity, size and z-scores catch a surprising share of suspicious patterns, and they are explainable when someone asks why an account got flagged. Measure them against what your humans catch before spending a dollar on a model. If the rules genuinely miss real cases, the next step is a scikit-learn model on your dataset, not TensorFlow and not deep learning."},
+    {"key": "deliverable", "label": "5 - WHAT YOU WALK AWAY WITH", "color": 0, "note": "One page at the end of the hour: the four areas in build order, an effort range on each, which AWS pieces they need, and a plain column marking what is genuinely AI and what is just automation someone has been calling AI. The blockchain project is accounted for in the data work. You can hand that page to whoever you hire next."}
+  ],
+  "nodes": [
+    {"key": "inventory", "kind": "data.transform", "label": "1 - List Every Manual Pile: Trade Logs, Leads, Tickets, ID Checks", "section": "sort"},
+    {"key": "split", "kind": "flow.branch", "label": "2 - Needs Judgement, or Just Moving Data?", "section": "sort"},
+    {"key": "plain", "kind": "data.transform", "label": "2b - Plain Automation: Excel to a Database, Zapier or n8n on AWS", "section": "sort"},
+    {"key": "cluster", "kind": "data.transform", "label": "3 - Cluster Last 90 Days of Tickets, Find the Top 10 Questions", "section": "tickets"},
+    {"key": "answer", "kind": "data.transform", "label": "4 - Claude Answers the Top 10 From Your Docs, Human Sees the Rest", "section": "tickets"},
+    {"key": "score_id", "kind": "data.transform", "label": "5 - Document OCR and Face Match Score the Upload", "section": "identity"},
+    {"key": "clear", "kind": "flow.branch", "label": "6 - Score Clear Either Way?", "section": "identity"},
+    {"key": "auto_decide", "kind": "data.transform", "label": "6a - Auto Approve or Reject, Logged", "section": "identity"},
+    {"key": "human_queue", "kind": "data.transform", "label": "6b - Human Queue, Now a Fraction of Today", "section": "identity"},
+    {"key": "rules", "kind": "data.transform", "label": "7 - Start With Statistical Rules: Z-Scores, Velocity, Size Limits", "section": "anomaly"},
+    {"key": "measure", "kind": "data.transform", "label": "8 - Measure: Catch Rate vs Human, False Alarms", "section": "anomaly"},
+    {"key": "gap", "kind": "flow.branch", "label": "9 - Rules Miss Real Cases?", "section": "anomaly"},
+    {"key": "model", "kind": "data.transform", "label": "9a - Then a Model: Isolation Forest in Scikit-Learn, Not Deep Learning Yet", "section": "anomaly"},
+    {"key": "one_page", "kind": "data.aggregate", "label": "10 - One Page: Order, Effort, AWS Pieces, What Is AI and What Is Not", "section": "deliverable"}
+  ],
+  "edges": [
+    {"from": "inventory", "to": "split"},
+    {"from": "split", "to": "cluster", "branch": "true"},
+    {"from": "split", "to": "plain", "branch": "false"},
+    {"from": "plain", "to": "one_page"},
+    {"from": "cluster", "to": "answer"},
+    {"from": "answer", "to": "score_id"},
+    {"from": "score_id", "to": "clear"},
+    {"from": "clear", "to": "auto_decide", "branch": "true"},
+    {"from": "clear", "to": "human_queue", "branch": "false"},
+    {"from": "human_queue", "to": "one_page"},
+    {"from": "auto_decide", "to": "rules"},
+    {"from": "rules", "to": "measure"},
+    {"from": "measure", "to": "gap"},
+    {"from": "gap", "to": "model", "branch": "true"},
+    {"from": "gap", "to": "one_page", "branch": "false"},
+    {"from": "model", "to": "one_page"}
+  ],
+  "input_sample": {
+    "business": "small cryptocurrency trading tool, plus a separate blockchain project",
+    "trade_log": "Microsoft Excel, about 40,000 rows, updated by hand",
+    "support_tickets": "about 300 a month, answered from scratch every time",
+    "identity_checks": "about 120 a week, ID and selfie approved by eye",
+    "lead_lists": "spreadsheets updated by hand, email tool nobody trusts",
+    "stack": "everything on AWS, React and Node.js dashboard",
+    "assumption_on_the_table": "Python and TensorFlow for anomaly detection"
+  },
+  "output_sample": {
+    "rank_1_support_tickets": "AI, real - top 10 questions answered from your docs, 1 to 2 weeks, deflects roughly half of 300 a month",
+    "rank_2_identity_checks": "AI via vendor API, not a model you train - OCR plus face match, 2 to 3 weeks, most of 120 a week decide themselves",
+    "rank_3_anomaly_rules": "not AI yet - statistical rules on velocity, size and z-scores, 2 to 3 weeks, measured against your humans before any model",
+    "rank_3b_anomaly_model": "only if the rules miss real cases - scikit-learn isolation forest on 40,000 rows, 3 to 4 weeks, a data scientist joins if a neural net is ever justified",
+    "rank_4_growth": "plain automation - Excel to a database, lead lists and email sequences on AWS, 1 to 2 weeks per piece",
+    "honest_split": "2 of 4 areas are genuinely AI today, the rest is automation being called AI",
+    "tensorflow_verdict": "wrong tool at your dataset size - scikit-learn first, deep learning is not justified yet",
+    "deliverable": "one page you can hand to whoever you hire next"
+  }
+}

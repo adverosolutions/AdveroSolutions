@@ -1,0 +1,64 @@
+{
+  "_about": "Level 5 spec (Blueprint M1 L5): the permanently-on positive-behaviour baseline campaign whose per-inbox reply rate is the deliverability canary. NOTHING HERE HAS BEEN CREATED. jobs/deliverability_monitor.py reads this file and reports 'not configured' until campaign_id is a real uuid.",
+  "status": "spec_only",
+  "campaign_id": null,
+  "campaign_id_note": "Paste the uuid here after Lorenzo creates the campaign in Instantly. The monitor starts scoring level 5 the next run; nothing else changes.",
+  "start_date": null,
+  "start_date_note": "ISO date (YYYY-MM-DD) the campaign went live. Left null the monitor scores the last 28 days.",
+
+  "why": "Cold outreach to strangers has a reply rate near 1 percent, which is too noisy to tell a dying inbox from a bad offer. Partner and peer outreach should reply at 10 to 30 percent. When an inbox's rate on THIS campaign halves against the campaign median, the cause is delivery, not copy, because the copy and the audience are the same for every inbox. That is what makes it a canary rather than another campaign.",
+
+  "audience": {
+    "who": "Automation freelancers and small agencies who need cold-email infrastructure, and Maker School peers",
+    "size_target": 300,
+    "sources": [
+      "Maker School member list (skool MCP, read-only)",
+      "Upwork freelancers in n8n / Make / GoHighLevel categories",
+      "Agencies that already run outbound and would resell an infrastructure build"
+    ],
+    "not": "Never a prospect from the six revenue campaigns. Mixing them makes the baseline move with the offer, which is the one thing it must not do."
+  },
+
+  "settings": {
+    "email_list": "the same sending inboxes as the revenue campaigns, so the baseline measures the same inboxes that do the work",
+    "daily_limit": 10,
+    "daily_limit_note": "Small on purpose. This campaign spends sending capacity that would otherwise go to revenue; 10/day across the fleet is enough to build a rate and cheap enough to leave on forever.",
+    "stop_on_reply": true,
+    "stop_on_auto_reply": false,
+    "open_tracking": false,
+    "link_tracking": false,
+    "text_only": true,
+    "schedule": "07:00-19:00 America/Chicago, Mon-Fri"
+  },
+
+  "sequence": [
+    {
+      "step": 1,
+      "delay_days_before_next": 4,
+      "subject": "the boring part of cold email",
+      "body": "Hi {{firstName}},\n\nI build the unglamorous half of cold outreach: domains, inboxes, warm-up, deliverability monitoring, the part that decides whether good copy ever gets read.\n\nIf you are running outbound for clients and the infrastructure side is eating your week, I am happy to compare notes on what is working in 2026.\n\nWhat are you seeing on reply rates right now?\n\nLorenzo"
+    },
+    {
+      "step": 2,
+      "delay_days_before_next": 0,
+      "subject": "",
+      "body": "Hi {{firstName}},\n\nOne more note on this. The thing that moved the needle most for me was measuring inbox placement per inbox rather than per campaign. It turns a vague deliverability problem into a list of inboxes to retire.\n\nHappy to send you how I check it if that is useful.\n\nLorenzo"
+    }
+  ],
+  "copy_rules_applied": "config/offers.md reply rules 8 and 9: no em dashes, no exclamation marks, no mention of AI or automation tooling, signed Lorenzo. No pricing and no guarantee appears here because this campaign sells nothing.",
+
+  "how_the_monitor_uses_it": {
+    "metric": "real replies per inbox on this campaign (replies, which already excludes replies_automatic on this workspace)",
+    "threshold_constant": "shared.thresholds.LEVEL5_DROP_RATIO",
+    "rule": "an inbox below LEVEL5_DROP_RATIO x the campaign median, with at least LEVEL5_MIN_SENT sends, takes a level 3 action (remove from the revenue campaigns' email_list)",
+    "known_limitation": "GET /accounts/analytics/daily is per account, not per account+campaign. Until Instantly exposes a per-campaign-per-account daily read, level 5 scores the inbox's whole daily traffic over the campaign window, which mixes in the revenue campaigns. Keep daily_limit small and read the level 5 number as directional. This is written up in runbooks/deliverability.md and is the first thing to fix if level 5 ever proposes a removal on its own."
+  },
+
+  "to_create": [
+    "1. Create the campaign in the Instantly UI (or stage a POST /campaigns change-set). This monitor never creates it.",
+    "2. Upload the audience as a lead list. Nothing from the six revenue campaigns.",
+    "3. Set email_list to the current sending inboxes and daily_limit to 10.",
+    "4. Paste the campaign uuid into campaign_id above and set start_date.",
+    "5. python3 jobs/deliverability_monitor.py --dry-run --level 5   (it should now say 'configured')."
+  ]
+}

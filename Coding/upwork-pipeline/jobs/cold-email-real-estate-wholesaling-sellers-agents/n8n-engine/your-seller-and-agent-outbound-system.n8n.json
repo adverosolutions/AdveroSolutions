@@ -1,0 +1,1136 @@
+{
+  "name": "Your Seller and Agent Outbound System",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - TWO LISTS, ONE PIPE\n\nFresh distressed-owner records and agents sitting on aged or off-market listings get pulled on the same schedule, then merged into one queue with a seller or agent tag. Two campaigns, one system, nobody uploads a CSV.",
+        "height": 1060,
+        "width": 700,
+        "color": 5
+      },
+      "id": "d54828a8-ab2d-5ff4-a258-ebc5b4310b3f",
+      "name": "Section - 1 - TWO LISTS, ONE PIPE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - CLEAN BEFORE ANYTHING SENDS\n\nEvery address is verified, bounces and catch-alls are suppressed instead of sent, and anyone already contacted or opted out is filtered out. This is what keeps the sending domains alive.",
+        "height": 1060,
+        "width": 1180,
+        "color": 4
+      },
+      "id": "fd534449-af7f-5374-afbe-b62f0f602ab5",
+      "name": "Section - 2 - CLEAN BEFORE ANYTHING SENDS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        800,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - WRITE THE HUMAN VERSION\n\nClaude reads the actual property record or listing and writes the plain-text first line off what it found, picks the angle, then the lead drops into the seller or the agent sequence.",
+        "height": 1060,
+        "width": 1160,
+        "color": 6
+      },
+      "id": "3f48206e-c6bc-5f1b-b3de-68bbf993a866",
+      "name": "Section - 3 - WRITE THE HUMAN VERSION",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2180,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - REPLIES INTO YOUR CRM\n\nEvery reply is read and sorted within minutes. Interested goes straight to the CRM with acquisitions alerted, questions go to a human, not now goes to nurture, remove is suppressed everywhere.",
+        "height": 1060,
+        "width": 1040,
+        "color": 7
+      },
+      "id": "29ff0c37-1efe-52ba-8716-93ba4c40fcd2",
+      "name": "Section - 4 - REPLIES INTO YOUR CRM",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3500,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - NUMBERS AND NOTHING FAILS QUIETLY\n\nOne scorecard row a day with sent, bounce, reply, positive and appointments, so scaling is a decision off real numbers. If any step fails you get told which node and which record.",
+        "height": 1060,
+        "width": 700,
+        "color": 1
+      },
+      "id": "9eec8b73-3d60-55d7-af79-01d066505a3a",
+      "name": "Section - 5 - NUMBERS AND NOTHING FAILS QUIETLY",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4700,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "e0d04555-8bdd-5429-b87c-1eefadde02a1",
+      "name": "1 - Every Weekday at 6am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/2-pull-fresh-distressed-owner-records-pr",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "fcd67e5a-9bff-5f38-9d5e-e4b9c12f7b67",
+      "name": "2 - Pull Fresh Distressed-Owner Records: Probate, Tax Lien, Pre-Foreclosure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        240,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/2b-pull-agents-with-aged-or-off-market-l",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "f7ecdd14-c4c9-5534-9816-720fae676c66",
+      "name": "2b - Pull Agents With Aged or Off-Market Listings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        240,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "numberInputs": 2,
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "id": "2cffe5b9-7aab-50ab-b0e5-6316a7b86bfb",
+      "name": "3 - One Queue, Tagged Seller or Agent",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        480,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/4-verify-every-email",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "31de4fa7-17da-50e3-bd76-da86ddf42f60",
+      "name": "4 - Verify Every Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        860,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4c43752b-d3c3-540f-a2d8-ba6f22e45ca0",
+              "leftValue": "={{ $json.deliverable }}",
+              "rightValue": 5.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d512595f-d3ae-5dcf-ae49-3e6f7207ad33",
+      "name": "5 - Deliverable?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1100,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "4f89a79b-bb43-5e55-8cf1-9313717b0fd4",
+      "name": "5b - Suppressed: Bounces and Catch-Alls",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1820,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "options": {},
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        }
+      },
+      "id": "f5ec945f-8457-579a-adec-59ae97475579",
+      "name": "6 - Already Contacted or Opted Out?",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1340,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9147adc7-8b21-5ca3-9b0e-32a5ba1d593c",
+              "leftValue": "={{ $json.new_contact }}",
+              "rightValue": 7.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "babd890b-e388-5345-8b2f-325f83070c24",
+      "name": "7 - New Contact?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1580,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "auto",
+        "text": "={{ $json.chatInput }}",
+        "options": {}
+      },
+      "id": "fef7262e-1bd1-5230-9695-958b91b75b2a",
+      "name": "8 - Claude Writes the Plain-Text First Line and Picks the Angle",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2400,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "d957187c-b858-5404-bbda-06fe66c2a15b",
+      "name": "Claude",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        2240,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Call a sub-workflow to perform a task",
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "80bd5445-96dd-52d2-977b-a0a59dab569f",
+      "name": "Read the Property Record or Listing",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2440,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"summary\": \"text\",\n  \"score\": 1\n}"
+      },
+      "id": "09f5c10a-1ced-5d47-8715-607545a5c8a3",
+      "name": "First Line, Angle, Campaign",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2640,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "31a583a1-f270-5c58-9b47-151b287527d8",
+                    "leftValue": "={{ $json.seller_record }}",
+                    "rightValue": "Seller",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Seller"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6db2b2c7-ca52-5639-9c55-29d790ed8870",
+                    "leftValue": "={{ $json.seller_record }}",
+                    "rightValue": "Agent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Agent"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "39da891a-a59c-5685-8a6d-ba4358ed7ef2",
+      "name": "9 - Seller or Agent?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        2940,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/10a-instantly-add-to-the-seller-sequence",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "bea64735-9990-5cef-9faf-8ce479011f99",
+      "name": "10a - Instantly: Add to the Seller Sequence",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3180,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/10b-instantly-add-to-the-agent-sequence",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "7e8f0a1e-1f73-5bd4-b48b-298e68c5d2c1",
+      "name": "10b - Instantly: Add to the Agent Sequence",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3180,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "3c30fdb0-dbab-53b2-b74a-f939887dc143",
+      "name": "11 - Instantly: Reply Comes In",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        3560,
+        280
+      ],
+      "webhookId": "bb64f4c5-f9be-57d8-920f-a5c5b26b9dbc"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=12 - Sort the Reply: Interested, Question, Not Now, Remove\n\npulled_at: {{ $json.pulled_at }}\nseller_record: {{ $json.seller_record }}\nagent_record: {{ $json.agent_record }}",
+        "batching": {}
+      },
+      "id": "30d48228-d3ac-5c2c-8665-182d150924f6",
+      "name": "12 - Sort the Reply: Interested, Question, Not Now, Remove",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        3800,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "82ba06d1-e31d-55ff-8a3b-11d7e7400f73",
+      "name": "Claude 2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        3840,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8a97525c-ffd6-5afc-8cce-2db9dc0291ad",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "Interested",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Interested"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6a48c58c-53ae-5a7f-af5b-997a4c03c66b",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "Question",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Question"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "589a43bc-cb85-5485-b7c6-055f8c4dd7d3",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "Not Now",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Not Now"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "9ea308ef-4fe3-516f-969d-2d7c3cb71de1",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "Remove",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Remove"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "02b1b40b-7de5-5235-817a-edc7ed940c0a",
+      "name": "13 - Route",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        4140,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/14-crm-create-the-lead-and-alert-acquisi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "bc81110a-a459-5239-b892-585bd4eda033",
+      "name": "14 - CRM: Create the Lead and Alert Acquisitions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4380,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "591ca116-e43b-56be-baa3-f4686890662b",
+      "name": "14b - Hand to a Human",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        4380,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "73b81c65-b9ec-5384-8963-8e4451fb3e1d",
+      "name": "14c - Nurture, Retry in 90 Days",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4380,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/14d-instantly-unsubscribe-and-suppress",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "f7b59575-1bb0-5f99-9d4c-9b4ff0291029",
+      "name": "14d - Instantly: Unsubscribe and Suppress",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4380,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "e132f322-1c2d-5fef-b171-34781add3a9b",
+      "name": "15 - Daily Scorecard: Sent, Bounce, Reply, Positive, Appointments",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        5240,
+        160
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "6e3d2d2f-e028-5cf7-8477-8db7f10eb55b",
+      "name": "16 - Any Step Fails",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        4760,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "dccc814e-98ca-54e2-90c0-07b1f5e6db0e",
+      "name": "17 - Alert With the Failing Node",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        5000,
+        280
+      ]
+    }
+  ],
+  "connections": {
+    "1 - Every Weekday at 6am": {
+      "main": [
+        [
+          {
+            "node": "2 - Pull Fresh Distressed-Owner Records: Probate, Tax Lien, Pre-Foreclosure",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "2b - Pull Agents With Aged or Off-Market Listings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Pull Fresh Distressed-Owner Records: Probate, Tax Lien, Pre-Foreclosure": {
+      "main": [
+        [
+          {
+            "node": "3 - One Queue, Tagged Seller or Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2b - Pull Agents With Aged or Off-Market Listings": {
+      "main": [
+        [
+          {
+            "node": "3 - One Queue, Tagged Seller or Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - One Queue, Tagged Seller or Agent": {
+      "main": [
+        [
+          {
+            "node": "4 - Verify Every Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - Verify Every Email": {
+      "main": [
+        [
+          {
+            "node": "5 - Deliverable?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - Deliverable?": {
+      "main": [
+        [
+          {
+            "node": "6 - Already Contacted or Opted Out?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "5b - Suppressed: Bounces and Catch-Alls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Already Contacted or Opted Out?": {
+      "main": [
+        [
+          {
+            "node": "7 - New Contact?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - New Contact?": {
+      "main": [
+        [
+          {
+            "node": "8 - Claude Writes the Plain-Text First Line and Picks the Angle",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "5b - Suppressed: Bounces and Catch-Alls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - Claude Writes the Plain-Text First Line and Picks the Angle": {
+      "main": [
+        [
+          {
+            "node": "9 - Seller or Agent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9 - Seller or Agent?": {
+      "main": [
+        [
+          {
+            "node": "10a - Instantly: Add to the Seller Sequence",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "10b - Instantly: Add to the Agent Sequence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10a - Instantly: Add to the Seller Sequence": {
+      "main": [
+        [
+          {
+            "node": "15 - Daily Scorecard: Sent, Bounce, Reply, Positive, Appointments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10b - Instantly: Add to the Agent Sequence": {
+      "main": [
+        [
+          {
+            "node": "15 - Daily Scorecard: Sent, Bounce, Reply, Positive, Appointments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Instantly: Reply Comes In": {
+      "main": [
+        [
+          {
+            "node": "12 - Sort the Reply: Interested, Question, Not Now, Remove",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 - Sort the Reply: Interested, Question, Not Now, Remove": {
+      "main": [
+        [
+          {
+            "node": "13 - Route",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - Route": {
+      "main": [
+        [
+          {
+            "node": "14 - CRM: Create the Lead and Alert Acquisitions",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "14b - Hand to a Human",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "14c - Nurture, Retry in 90 Days",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "14d - Instantly: Unsubscribe and Suppress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 - CRM: Create the Lead and Alert Acquisitions": {
+      "main": [
+        [
+          {
+            "node": "15 - Daily Scorecard: Sent, Bounce, Reply, Positive, Appointments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16 - Any Step Fails": {
+      "main": [
+        [
+          {
+            "node": "17 - Alert With the Failing Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "8 - Claude Writes the Plain-Text First Line and Picks the Angle",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read the Property Record or Listing": {
+      "ai_tool": [
+        [
+          {
+            "node": "8 - Claude Writes the Plain-Text First Line and Picks the Angle",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "First Line, Angle, Campaign": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "8 - Claude Writes the Plain-Text First Line and Picks the Angle",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude 2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "12 - Sort the Reply: Interested, Question, Not Now, Remove",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "97d8ee7a-c6d8-5322-a32d-15e0ab0c029c",
+  "pinData": {
+    "1 - Every Weekday at 6am": [
+      {
+        "json": {
+          "pulled_at": "2026-09-22T06:00:00-04:00",
+          "seller_record": {
+            "record_type": "probate",
+            "tag": "seller",
+            "owner_name": "Linda Farrow",
+            "property_address": "1422 Ashland Ave, Dayton OH 45420",
+            "county": "Montgomery County, OH",
+            "case_filed": "2026-08-30",
+            "estimated_equity": "$84,000",
+            "estimated_value": "$146,000",
+            "mortgage_balance": "$62,000",
+            "owner_occupied": false,
+            "beds_baths": "3 bed 1.5 bath, 1,248 sqft",
+            "email": "l.farrow@example.com"
+          },
+          "agent_record": {
+            "record_type": "aged listing",
+            "tag": "agent",
+            "agent_name": "Chris Okafor",
+            "brokerage": "Keystone Realty Group",
+            "listing_address": "907 Wayne Ave, Dayton OH 45410",
+            "days_on_market": 118,
+            "list_price": "$189,900",
+            "price_cuts": 2,
+            "active_listings": 11,
+            "email": "chris@example.com"
+          }
+        }
+      }
+    ],
+    "15 - Daily Scorecard: Sent, Bounce, Reply, Positive, Appointments": [
+      {
+        "json": {
+          "instantly_lead_seller": {
+            "campaign": "OH Sellers - Probate and Tax Lien",
+            "email": "l.farrow@example.com",
+            "email_status": "verified, catch-all no",
+            "first_name": "Linda",
+            "tag": "seller",
+            "angle": "probate, out of state, non owner occupied",
+            "variables": {
+              "first_line": "saw the Ashland Ave place went through probate in Montgomery County at the end of August, and it looks like nobody is living in it",
+              "property": "1422 Ashland Ave, Dayton OH 45420",
+              "city": "Dayton"
+            },
+            "sequence": "3 emails, plain text, physical address footer, one click opt out"
+          },
+          "instantly_lead_agent": {
+            "campaign": "OH Agents - Aged and Off-Market",
+            "email": "chris@example.com",
+            "email_status": "verified, catch-all no",
+            "first_name": "Chris",
+            "tag": "agent",
+            "angle": "aged listing, two price cuts, 11 active",
+            "variables": {
+              "first_line": "noticed 907 Wayne Ave has been sitting 118 days with two price cuts, which usually means the buyers walking it are not the buyers for it",
+              "brokerage": "Keystone Realty Group",
+              "city": "Dayton"
+            },
+            "sequence": "3 emails, plain text, cash close angle, commission protected"
+          },
+          "scorecard_row": {
+            "date": "2026-09-22",
+            "pulled": "seller 412, agent 168",
+            "verified_deliverable": 389,
+            "suppressed_bounce_or_catch_all": 94,
+            "already_contacted_or_opted_out": 97,
+            "sent": "seller 0, agent 0, to be filled from live sending",
+            "bounce_rate": "to be filled from live sending",
+            "replies": "to be filled from live sending",
+            "positive": "to be filled from live sending",
+            "appointments": "to be filled from live sending",
+            "note": "counts above are this run's queue math, send metrics fill in once the mailboxes are warm and the campaign is live"
+          },
+          "if_it_had_failed": "Error trigger catches the step, the Slack alert names the failing node and the record it died on, nothing drops silently"
+        }
+      }
+    ]
+  }
+}

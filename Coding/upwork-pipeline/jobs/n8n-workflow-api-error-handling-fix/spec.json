@@ -1,0 +1,191 @@
+{
+  "title": "n8n Hardening: Validate, Retry, Fallback, Log, Alert",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "validate",
+      "label": "1 · VALIDATE BEFORE ANYTHING ELSE RUNS",
+      "color": 0,
+      "note": "A bad record is rejected here with the exact field that is wrong, instead of blowing up three API calls later."
+    },
+    {
+      "key": "call",
+      "label": "2 · CALL SYSTEM A, RETRY ON FAILURE",
+      "color": 0,
+      "note": "A failed call waits and tries again rather than killing the run. The retry count is a setting, not a guess."
+    },
+    {
+      "key": "fallback",
+      "label": "3 · FALLBACK WHEN IT KEEPS FAILING",
+      "color": 0,
+      "note": "Once retries are used up the record is queued for manual retry. Nothing is ever dropped on the floor."
+    },
+    {
+      "key": "write",
+      "label": "4 · MAP THE FIELDS AND WRITE TO SYSTEM B",
+      "color": 0,
+      "note": "One place where field names are translated between the two systems, so a change is a one line edit."
+    },
+    {
+      "key": "alert",
+      "label": "5 · LOG EVERY RUN, ALERT ON ANY FAILURE",
+      "color": 0,
+      "note": "Every run leaves a row you can read. Anything that still breaks pings you with a link to the run."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 · Incoming Record",
+      "section": "validate"
+    },
+    {
+      "key": "check",
+      "kind": "data.code",
+      "label": "2 · Validate Schema and Required Fields",
+      "section": "validate"
+    },
+    {
+      "key": "valid",
+      "kind": "flow.branch",
+      "label": "3 · Is the Record Valid?",
+      "section": "validate"
+    },
+    {
+      "key": "reject",
+      "kind": "net.respond",
+      "label": "4 · Reject With Field Errors",
+      "section": "validate"
+    },
+    {
+      "key": "fetch",
+      "kind": "net.http",
+      "label": "5 · System A: Fetch Related Record",
+      "section": "call"
+    },
+    {
+      "key": "ok",
+      "kind": "flow.branch",
+      "label": "6 · Did the Call Succeed?",
+      "section": "call"
+    },
+    {
+      "key": "exhausted",
+      "kind": "flow.branch",
+      "label": "7 · Are the Retries Used Up?",
+      "section": "call"
+    },
+    {
+      "key": "wait",
+      "kind": "flow.wait",
+      "label": "8 · Back Off 30 Seconds",
+      "section": "call"
+    },
+    {
+      "key": "queue",
+      "kind": "net.http",
+      "label": "9 · Fallback: Queue for Manual Retry",
+      "section": "fallback"
+    },
+    {
+      "key": "map",
+      "kind": "data.transform",
+      "label": "10 · Map Fields Between Systems",
+      "section": "write"
+    },
+    {
+      "key": "write",
+      "kind": "net.http",
+      "label": "11 · System B: Create or Update Record",
+      "section": "write"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "append",
+      "label": "12 · Run Log: Status, Latency, Retries",
+      "section": "alert"
+    },
+    {
+      "key": "respond",
+      "kind": "net.respond",
+      "label": "13 · Return 200 OK",
+      "section": "alert"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "app": "n8n",
+      "op": "error_trigger",
+      "label": "14 · Any Node Fails, Anywhere",
+      "section": "alert"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "post",
+      "label": "15 · Alert With Link to Failed Execution",
+      "section": "alert"
+    }
+  ],
+  "edges": [
+    { "from": "hook", "to": "check" },
+    { "from": "check", "to": "valid" },
+    { "from": "valid", "to": "reject", "branch": "false" },
+    { "from": "valid", "to": "fetch", "branch": "true" },
+    { "from": "fetch", "to": "ok" },
+    { "from": "ok", "to": "map", "branch": "true" },
+    { "from": "ok", "to": "exhausted", "branch": "false" },
+    { "from": "exhausted", "to": "queue", "branch": "true" },
+    { "from": "exhausted", "to": "wait", "branch": "false" },
+    { "from": "wait", "to": "fetch", "loop": true },
+    { "from": "queue", "to": "log" },
+    { "from": "map", "to": "write" },
+    { "from": "write", "to": "log" },
+    { "from": "log", "to": "respond" },
+    { "from": "err", "to": "alert" }
+  ],
+  "input_sample": {
+    "event": "record.created",
+    "source": "System A",
+    "received_at": "2026-09-09T14:02:11Z",
+    "record": {
+      "external_id": "CRM-48812",
+      "company": "Halden Mechanical",
+      "contact_name": "Priya Raman",
+      "email": "priya@haldenmech.com",
+      "phone": "+1 512 555 0148",
+      "amount": 4250,
+      "currency": "USD",
+      "stage": "won",
+      "owner": "d.kessler"
+    }
+  },
+  "output_sample": {
+    "run_log_row": {
+      "run_id": "run_2026_0909_1402_a7f3",
+      "external_id": "CRM-48812",
+      "status": "success",
+      "validation": "passed, 9 of 9 required fields present",
+      "system_a_attempts": 2,
+      "attempt_1": "503 Service Unavailable, backed off 30s",
+      "attempt_2": "200 OK, 412 ms",
+      "retries": 1,
+      "fallback_used": false,
+      "system_b_action": "updated",
+      "system_b_record_id": "SYSB-100394",
+      "latency_ms": 31842,
+      "alert_sent": false,
+      "logged_at": "2026-09-09T14:02:43Z"
+    },
+    "field_mapping_applied": {
+      "company -> account_name": "Halden Mechanical",
+      "amount + currency -> deal_value": "4250 USD",
+      "stage -> pipeline_status": "won mapped to closed_won"
+    },
+    "if_it_had_failed": "retries used up, record posted to the manual retry queue, run logged as fallback_used true, slack alert with a link to the failed execution"
+  }
+}

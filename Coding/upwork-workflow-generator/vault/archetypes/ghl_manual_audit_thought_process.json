@@ -1,0 +1,145 @@
+{
+  "title": "How I Audit a GoHighLevel Account — Define, Compare, Prioritize, Recommend",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "define",
+      "label": "1 · DEFINE EXPECTED BEHAVIOR",
+      "color": 0,
+      "note": "Before judging anything, I write down what each workflow is supposed to do."
+    },
+    {
+      "key": "compare",
+      "label": "2 · COMPARE ACTUAL VS EXPECTED",
+      "color": 0,
+      "note": "I trace what the workflow actually does and measure it against that expectation, across every workflow in the account."
+    },
+    {
+      "key": "log",
+      "label": "3 · LOG EVERY GAP",
+      "color": 0,
+      "note": "Anywhere actual and expected don't match gets logged with its root cause."
+    },
+    {
+      "key": "recommend",
+      "label": "4 · PRIORITIZE & RECOMMEND",
+      "color": 0,
+      "note": "Gaps get sorted by lead-flow impact and each one gets a specific fix, not a vague note."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "pull",
+      "kind": "data.transform",
+      "label": "List Every Active Workflow in the Account",
+      "section": "define"
+    },
+    {
+      "key": "define_io",
+      "kind": "data.transform",
+      "label": "Define Each Workflow's Input and Expected Output",
+      "section": "define"
+    },
+    {
+      "key": "trace",
+      "kind": "data.transform",
+      "label": "Trace What Each Workflow Actually Does, Step by Step",
+      "section": "compare"
+    },
+    {
+      "key": "compare_io",
+      "kind": "data.transform",
+      "label": "Compare Actual Output Against Expected Output",
+      "section": "compare"
+    },
+    {
+      "key": "measure",
+      "kind": "data.transform",
+      "label": "Measure Efficiency: Step Count, Delay Time, Drop-Off Points",
+      "section": "compare"
+    },
+    {
+      "key": "log_gaps",
+      "kind": "data.transform",
+      "label": "Log Every Gap Found, With Its Root Cause",
+      "section": "log"
+    },
+    {
+      "key": "prioritize",
+      "kind": "data.aggregate",
+      "label": "Sort Every Logged Gap by Lead-Flow Impact",
+      "section": "recommend"
+    },
+    {
+      "key": "assign_fix",
+      "kind": "data.transform",
+      "label": "Assign Each Gap a Fix: Quick Fix or Rebuild",
+      "section": "recommend"
+    },
+    {
+      "key": "compile",
+      "kind": "data.transform",
+      "label": "Compile Into One Prioritized List",
+      "section": "recommend"
+    },
+    {
+      "key": "present",
+      "kind": "data.transform",
+      "label": "Walk the Client Through Findings and Fixes",
+      "section": "recommend"
+    }
+  ],
+  "edges": [
+    {
+      "from": "pull",
+      "to": "define_io"
+    },
+    {
+      "from": "define_io",
+      "to": "trace"
+    },
+    {
+      "from": "trace",
+      "to": "compare_io"
+    },
+    {
+      "from": "compare_io",
+      "to": "measure"
+    },
+    {
+      "from": "measure",
+      "to": "log_gaps"
+    },
+    {
+      "from": "log_gaps",
+      "to": "prioritize"
+    },
+    {
+      "from": "prioritize",
+      "to": "assign_fix"
+    },
+    {
+      "from": "assign_fix",
+      "to": "compile"
+    },
+    {
+      "from": "compile",
+      "to": "present"
+    }
+  ],
+  "input_sample": {
+    "workflow_name": "New Lead → SMS Follow-Up",
+    "expected_output": "Lead replies or gets a human follow-up within 24 hours",
+    "actual_output": "One SMS sent, no retry, no handoff if the lead never replies"
+  },
+  "output_sample": {
+    "workflows_reviewed": 14,
+    "gaps_logged": 6,
+    "quick_fixes": 4,
+    "rebuild_recommendations": 2,
+    "top_priority": "New Lead workflow has no 24-hour no-response branch, ranked highest impact since it sits on every incoming lead"
+  },
+  "archetype": "ghl_manual_audit_thought_process",
+  "learned": true,
+  "learned_at": "2026-08-24"
+}

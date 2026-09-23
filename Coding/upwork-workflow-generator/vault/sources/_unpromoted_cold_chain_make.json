@@ -1,0 +1,72 @@
+{
+  "title": "Cold Chain Monitor → Sustained Breach → Phone Tree → Audit Log",
+  "platform": "make",
+  "sections": [
+    { "key": "poll",     "label": "1 · POLL SENSORS", "color": 5, "note": "All four sites are polled every five minutes. Each freezer is handled individually so one unreachable sensor never stops the others from being read." },
+    { "key": "detect",   "label": "2 · SUSTAINED BREACH", "color": 4, "note": "A single spike is a door opening, not an incident. Breaches are counted consecutively and only a sustained ten minutes above -15°C opens an escalation — this is what stops alert fatigue from making the whole system ignorable." },
+    { "key": "escalate", "label": "3 · PHONE TREE", "color": 3, "note": "On-shift lead first, five minutes to acknowledge, then the supervisor, then the ops director by voice call. Each step stops the moment someone acknowledges." },
+    { "key": "audit",    "label": "4 · IMMUTABLE AUDIT", "color": 6, "note": "Every reading and every escalation step is appended to an insert-only table with its timestamp and actor, which is what an FDA audit actually asks for. The weekly QA report reads from this same log." }
+  ],
+  "nodes": [
+    { "key": "poll",   "kind": "trigger.schedule", "label": "Every 5 Minutes", "section": "poll" },
+    { "key": "fetch",  "kind": "net.http", "label": "Read All Sensor Endpoints", "section": "poll" },
+    { "key": "each",   "kind": "data.split", "label": "One Freezer at a Time", "section": "poll" },
+    { "key": "breach", "kind": "flow.branch", "label": "Above -15°C?", "section": "detect" },
+    { "key": "streak", "kind": "data.transform", "label": "Track Consecutive Breaches", "section": "detect" },
+    { "key": "sust",   "kind": "flow.branch", "label": "10+ Minutes Sustained?", "section": "detect" },
+    { "key": "lead",   "kind": "app.action", "app": "twilio", "op": "send", "label": "Text On-Shift Lead", "section": "escalate" },
+    { "key": "wait1",  "kind": "flow.wait", "label": "5 Min to Acknowledge", "section": "escalate" },
+    { "key": "ack",    "kind": "flow.branch", "label": "Acknowledged?", "section": "escalate" },
+    { "key": "super",  "kind": "app.action", "app": "twilio", "op": "send", "label": "Escalate to Supervisor", "section": "escalate" },
+    { "key": "wait2",  "kind": "flow.wait", "label": "5 Min to Acknowledge", "section": "escalate" },
+    { "key": "call",   "kind": "app.action", "app": "twilio", "op": "send", "label": "Voice Call Ops Director", "section": "escalate" },
+    { "key": "audit",  "kind": "app.action", "app": "postgres", "op": "insert", "label": "Append to Audit Log", "section": "audit" }
+  ],
+  "edges": [
+    { "from": "poll",   "to": "fetch" },
+    { "from": "fetch",  "to": "each" },
+    { "from": "each",   "to": "breach" },
+    { "from": "breach", "to": "streak", "branch": "true" },
+    { "from": "breach", "to": "audit",  "branch": "false" },
+    { "from": "streak", "to": "sust" },
+    { "from": "sust",   "to": "lead",  "branch": "true" },
+    { "from": "sust",   "to": "audit", "branch": "false" },
+    { "from": "lead",   "to": "wait1" },
+    { "from": "wait1",  "to": "ack" },
+    { "from": "ack",    "to": "audit", "branch": "true" },
+    { "from": "ack",    "to": "super", "branch": "false" },
+    { "from": "super",  "to": "wait2" },
+    { "from": "wait2",  "to": "call" },
+    { "from": "call",   "to": "audit" }
+  ],
+  "input_sample": {
+    "polled_at": "2026-07-31T14:35:00Z",
+    "site": "Warehouse 3 — Bakersfield",
+    "unit_id": "FRZ-03-B",
+    "unit_name": "Freezer B — Raw Poultry",
+    "temperature_c": -11.4,
+    "setpoint_c": -18.0,
+    "threshold_c": -15.0,
+    "door_state": "closed",
+    "sensor_battery_pct": 84,
+    "consecutive_breaches": 2
+  },
+  "output_sample": {
+    "incident_id": "INC-2026-0731-0042",
+    "site": "Warehouse 3 — Bakersfield",
+    "unit_id": "FRZ-03-B",
+    "breach_started": "2026-07-31T14:25:00Z",
+    "sustained_minutes": 10,
+    "peak_temperature_c": -9.8,
+    "escalation": [
+      { "step": 1, "role": "On-shift lead", "contact": "+1 661 555 0142", "channel": "sms", "sent_at": "2026-07-31T14:35:04Z", "acknowledged": false },
+      { "step": 2, "role": "Supervisor", "contact": "+1 661 555 0177", "channel": "sms", "sent_at": "2026-07-31T14:40:06Z", "acknowledged": true, "acknowledged_at": "2026-07-31T14:42:19Z" }
+    ],
+    "resolved_by": "Supervisor — D. Marchetti",
+    "time_to_acknowledge": "7m 19s",
+    "ops_director_called": false,
+    "audit_entries_written": 14,
+    "audit_table": "cold_chain_events (insert-only)",
+    "compliance_status": "logged — within 15-minute FDA response window"
+  }
+}

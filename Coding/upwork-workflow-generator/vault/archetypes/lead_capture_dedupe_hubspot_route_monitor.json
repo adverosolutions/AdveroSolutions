@@ -1,0 +1,182 @@
+{
+  "title": "Lead Capture → Dedupe → HubSpot Sync → Route → Monitor",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "capture",
+      "label": "1 · CAPTURE FROM ANY SOURCE",
+      "color": 0,
+      "note": "One webhook accepts leads from forms, landing pages, ads, or a direct API call, and bad submissions get caught before they touch the CRM."
+    },
+    {
+      "key": "dedupe",
+      "label": "2 · DEDUPE & MATCH",
+      "color": 0,
+      "note": "Every lead gets checked against HubSpot by email or phone before anything is written, so the next step knows whether to create or update."
+    },
+    {
+      "key": "sync",
+      "label": "3 · CREATE/UPDATE & ROUTE",
+      "color": 0,
+      "note": "Fields map to the right HubSpot properties, source and campaign get tagged, and the lead is routed by the rules you set."
+    },
+    {
+      "key": "monitor",
+      "label": "4 · NOTIFY & MONITOR",
+      "color": 0,
+      "note": "The assigned rep gets notified, every run gets logged, and a failed sync alerts instead of silently disappearing."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "trig",
+      "kind": "trigger.webhook",
+      "label": "Lead Submitted — Form, Landing Page, Ad, or API",
+      "section": "capture"
+    },
+    {
+      "key": "normalize",
+      "kind": "data.transform",
+      "label": "Normalize Fields and Tag Lead Source and Campaign",
+      "section": "capture"
+    },
+    {
+      "key": "validate_branch",
+      "kind": "flow.branch",
+      "label": "Required Fields Present: Email or Phone?",
+      "section": "capture"
+    },
+    {
+      "key": "log_invalid",
+      "kind": "app.action",
+      "label": "Alert: Incomplete Lead Received",
+      "app": "slack",
+      "op": "post",
+      "section": "capture"
+    },
+    {
+      "key": "check_dup",
+      "kind": "net.http",
+      "label": "Search HubSpot for an Existing Contact by Email or Phone",
+      "section": "dedupe"
+    },
+    {
+      "key": "map_fields",
+      "kind": "data.transform",
+      "label": "Map Lead Fields to HubSpot Properties",
+      "section": "sync"
+    },
+    {
+      "key": "upsert_contact",
+      "kind": "app.action",
+      "label": "Create or Update the Contact in HubSpot",
+      "app": "hubspot",
+      "op": "upsert",
+      "section": "sync"
+    },
+    {
+      "key": "route_rules",
+      "kind": "data.transform",
+      "label": "Apply Routing Rules: Assign Lead by Source, Territory, or Product",
+      "section": "sync"
+    },
+    {
+      "key": "notify_owner",
+      "kind": "app.action",
+      "label": "Notify the Assigned Rep of the New Lead",
+      "app": "slack",
+      "op": "post",
+      "section": "sync"
+    },
+    {
+      "key": "run_branch",
+      "kind": "flow.branch",
+      "label": "Sync Completed Without Errors?",
+      "section": "monitor"
+    },
+    {
+      "key": "log_success",
+      "kind": "app.action",
+      "label": "Log Lead and Routing Result to the Tracking Sheet",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "monitor"
+    },
+    {
+      "key": "alert_error",
+      "kind": "app.action",
+      "label": "Alert: Sync Error, Needs Manual Review",
+      "app": "slack",
+      "op": "post",
+      "section": "monitor"
+    }
+  ],
+  "edges": [
+    {
+      "from": "trig",
+      "to": "normalize"
+    },
+    {
+      "from": "normalize",
+      "to": "validate_branch"
+    },
+    {
+      "from": "validate_branch",
+      "to": "check_dup",
+      "branch": "true"
+    },
+    {
+      "from": "validate_branch",
+      "to": "log_invalid",
+      "branch": "false"
+    },
+    {
+      "from": "check_dup",
+      "to": "map_fields"
+    },
+    {
+      "from": "map_fields",
+      "to": "upsert_contact"
+    },
+    {
+      "from": "upsert_contact",
+      "to": "route_rules"
+    },
+    {
+      "from": "route_rules",
+      "to": "notify_owner"
+    },
+    {
+      "from": "notify_owner",
+      "to": "run_branch"
+    },
+    {
+      "from": "run_branch",
+      "to": "log_success",
+      "branch": "true"
+    },
+    {
+      "from": "run_branch",
+      "to": "alert_error",
+      "branch": "false"
+    }
+  ],
+  "input_sample": {
+    "lead_source": "Landing Page — Spring Promo",
+    "campaign": "spring_2026_launch",
+    "name": "Priya Anand",
+    "email": "priya.anand@gmail.com",
+    "phone": "+15125550148",
+    "submitted_at": "2026-08-24T14:02:00Z"
+  },
+  "output_sample": {
+    "hubspot_contact_id": "c_9f21a8",
+    "match_type": "new_contact",
+    "assigned_to": "Rep: Marcus Chen (Territory: Southwest)",
+    "sync_status": "success",
+    "logged_row": "row_00482"
+  },
+  "archetype": "lead_capture_dedupe_hubspot_route_monitor",
+  "learned": true,
+  "learned_at": "2026-08-26"
+}

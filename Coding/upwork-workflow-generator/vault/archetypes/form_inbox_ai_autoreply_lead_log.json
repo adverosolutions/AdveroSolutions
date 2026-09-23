@@ -1,0 +1,136 @@
+{
+  "title": "Form or Inbox → AI Draft → Auto-Reply → Lead Logged",
+  "platform": "make",
+  "sections": [
+    {
+      "key": "in",
+      "label": "1 · SOMETHING COMES IN",
+      "color": 0,
+      "note": "A form submission or a new inbox message, treated the same way from here."
+    },
+    {
+      "key": "think",
+      "label": "2 · AI DRAFTS THE RESPONSE",
+      "color": 0,
+      "note": "Grounded in what they actually asked, not a template."
+    },
+    {
+      "key": "check",
+      "label": "3 · DECIDE: SEND IT OR HOLD IT",
+      "color": 0,
+      "note": "Simple stuff goes out. Anything unsure waits for a person."
+    },
+    {
+      "key": "log",
+      "label": "4 · LOG THE LEAD",
+      "color": 0,
+      "note": "CRM updated either way, so nothing falls through."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 · New Form Submission or Inbox Message",
+      "section": "in"
+    },
+    {
+      "key": "clean",
+      "kind": "data.transform",
+      "label": "2 · Pull Out Name, Ask, and Contact Info",
+      "section": "in"
+    },
+    {
+      "key": "draft",
+      "kind": "ai.agent",
+      "label": "3 · Draft a Reply Based on What They Asked",
+      "section": "think"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude or OpenAI",
+      "app": "openai",
+      "parent": "draft",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "confident",
+      "kind": "flow.branch",
+      "label": "4 · Is This a Simple, Safe Reply?",
+      "section": "check"
+    },
+    {
+      "key": "hold",
+      "kind": "app.action",
+      "label": "4b · Hold for Review — Draft Attached",
+      "app": "slack",
+      "op": "send_message",
+      "section": "check"
+    },
+    {
+      "key": "send",
+      "kind": "app.action",
+      "label": "5 · Send the Auto-Reply",
+      "app": "gmail",
+      "op": "send_email",
+      "section": "check"
+    },
+    {
+      "key": "crm",
+      "kind": "app.action",
+      "label": "6 · Log the Lead in the CRM",
+      "app": "hubspot",
+      "op": "create_contact",
+      "section": "log"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "clean"
+    },
+    {
+      "from": "clean",
+      "to": "draft"
+    },
+    {
+      "from": "draft",
+      "to": "confident"
+    },
+    {
+      "from": "confident",
+      "to": "send",
+      "branch": "true"
+    },
+    {
+      "from": "confident",
+      "to": "hold",
+      "branch": "false"
+    },
+    {
+      "from": "send",
+      "to": "crm"
+    },
+    {
+      "from": "hold",
+      "to": "crm"
+    }
+  ],
+  "input_sample": {
+    "source": "Website contact form",
+    "name": "Renata Cho",
+    "email": "renata@brightmark-consulting.com",
+    "message": "Do you handle onboarding for teams under 10 people, or is this only for larger orgs?"
+  },
+  "output_sample": {
+    "confidence": "high — simple factual question",
+    "drafted_reply": "Yes, we work with teams under 10 all the time, our onboarding scales down fine. Want me to send over pricing for that size?",
+    "auto_sent": true,
+    "crm_contact_created": true,
+    "time_from_submission_to_reply": "18 seconds"
+  },
+  "archetype": "form_inbox_ai_autoreply_lead_log",
+  "learned": true,
+  "learned_at": "2026-08-18"
+}

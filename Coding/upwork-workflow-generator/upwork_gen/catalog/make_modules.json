@@ -1,0 +1,72 @@
+{
+  "_meta": {
+    "status": "stub",
+    "note": "PROVISIONAL. Make's importer rejects unknown module ids, so nothing here should be trusted until the harvesting agent replaces it with make_modules.verified.json (mined from real blueprint exports, each entry carrying a source URL). The loader merges the verified file OVER this one. Until then, generate Make blueprints for rehearsal only, not for a live recording.",
+    "known_compromises": [
+      "trigger.schedule has no module in Make — scheduling lives in scenario settings, not the flow. It is mapped to an HTTP poller and metadata.instant is set to false. Revisit once the harvest shows how real scheduled blueprints open.",
+      "util:SetVariable2 is the least certain id here, and the compiler leans on it for the Sample Input / Final Output modules that stand in for n8n's pinData. Verify this one first."
+    ]
+  },
+
+  "entries": {
+    "trigger.webhook::":  { "module": "gateway:CustomWebHook", "version": 1, "parameters": { "hook": null, "maxResults": 1 }, "instant": true,  "verified": false },
+    "trigger.app::":      { "module": "gateway:CustomWebHook", "version": 1, "parameters": { "hook": null, "maxResults": 1 }, "instant": true,  "verified": false },
+    "trigger.form::":     { "module": "gateway:CustomWebHook", "version": 1, "parameters": { "hook": null, "maxResults": 1 }, "instant": true,  "verified": false },
+    "trigger.chat::":     { "module": "gateway:CustomWebHook", "version": 1, "parameters": { "hook": null, "maxResults": 1 }, "instant": true,  "verified": false },
+    "trigger.schedule::": { "module": "http:ActionSendData",   "version": 3, "parameters": { "handleErrors": false, "useNewZLibDeCompress": true }, "instant": false, "verified": false },
+    "trigger.email::":    { "module": "email:TriggerNewEmail", "version": 2, "parameters": {}, "instant": false, "verified": false },
+
+    "data.transform::":   { "module": "util:SetVariable2",     "version": 1, "parameters": { "scope": "roundtrip" }, "verified": false },
+    "data.code::":        { "module": "util:FunctionInline",   "version": 1, "parameters": {}, "verified": false },
+    "data.merge::":       { "module": "builtin:BasicAggregator", "version": 1, "parameters": {}, "verified": false },
+    "data.aggregate::":   { "module": "builtin:BasicAggregator", "version": 1, "parameters": {}, "verified": false },
+    "data.split::":       { "module": "builtin:BasicFeeder",   "version": 1, "parameters": {}, "verified": false },
+    "data.filter::":      { "module": "builtin:BasicRouter",   "version": 1, "parameters": {}, "verified": false },
+
+    "flow.branch::":      { "module": "builtin:BasicRouter",   "version": 1, "parameters": {}, "router": true, "verified": false },
+    "flow.switch::":      { "module": "builtin:BasicRouter",   "version": 1, "parameters": {}, "router": true, "verified": false },
+    "flow.wait::":        { "module": "builtin:Sleep",         "version": 1, "parameters": { "delay": 1 }, "verified": false },
+    "flow.noop::":        { "module": "util:SetVariable2",     "version": 1, "parameters": { "scope": "roundtrip" }, "verified": false },
+
+    "net.http::":         { "module": "http:ActionSendData",   "version": 3, "parameters": { "handleErrors": false, "useNewZLibDeCompress": true }, "verified": false },
+    "net.respond::":      { "module": "gateway:WebhookRespond", "version": 1, "parameters": {}, "verified": false },
+
+    "ai.agent::":         { "module": "openai-gpt-3:CreateCompletion", "version": 1, "parameters": {}, "verified": false },
+    "ai.llm::":           { "module": "openai-gpt-3:CreateCompletion", "version": 1, "parameters": {}, "verified": false },
+
+    "app.action:openai:message":    { "module": "openai-gpt-3:CreateCompletion", "version": 1, "parameters": {}, "verified": false },
+    "app.action:openai:transcribe": { "module": "openai-gpt-3:CreateTranscription", "version": 1, "parameters": {}, "verified": false },
+
+    "app.action:googleSheets:append": { "module": "google-sheets:addRow",     "version": 2, "parameters": {}, "verified": false },
+    "app.action:googleSheets:read":   { "module": "google-sheets:searchRows", "version": 2, "parameters": {}, "verified": false },
+    "app.action:googleSheets:update": { "module": "google-sheets:updateRow",  "version": 2, "parameters": {}, "verified": false },
+
+    "app.action:gmail:send":  { "module": "google-email:ActionSendEmail", "version": 1, "parameters": {}, "verified": false },
+    "app.action:slack:post":  { "module": "slack:CreateMessage",         "version": 4, "parameters": {}, "verified": false },
+
+    "app.action:airtable:create": { "module": "airtable:ActionCreateRecord",  "version": 3, "parameters": {}, "verified": false },
+    "app.action:airtable:search": { "module": "airtable:ActionSearchRecords", "version": 3, "parameters": {}, "verified": false },
+    "app.action:airtable:update": { "module": "airtable:ActionUpdateRecord",  "version": 3, "parameters": {}, "verified": false },
+
+    "app.action:notion:create":   { "module": "notion:createDatabaseItem", "version": 1, "parameters": {}, "verified": false },
+    "app.action:telegram:send":   { "module": "telegram:SendReplyMessage", "version": 1, "parameters": {}, "verified": false },
+    "app.action:twilio:send":     { "module": "twilio:ActionSendMessage",  "version": 1, "parameters": {}, "verified": false },
+    "app.action:googleDrive:upload": { "module": "google-drive:uploadAFile", "version": 1, "parameters": {}, "verified": false },
+    "app.action:googleDocs:create":  { "module": "google-docs:createADocument", "version": 1, "parameters": {}, "verified": false },
+    "app.action:hubspot:create_contact": { "module": "hubspotcrm:createContact", "version": 1, "parameters": {}, "verified": false },
+
+    "util.json.parse::":  { "module": "json:ParseJSON",  "version": 1, "parameters": {}, "verified": false },
+    "util.json.create::": { "module": "json:CreateJSON", "version": 1, "parameters": {}, "verified": false }
+  },
+
+  "special": {
+    "set_variable": { "module": "util:SetVariable2", "version": 1, "verified": false },
+    "router":       { "module": "builtin:BasicRouter", "version": 1, "verified": false }
+  },
+
+  "fallback": {
+    "note": "Anything uncatalogued becomes a generic HTTP module. It imports, it renders, and it is labelled with the app name — which reads as a deliberate custom-API call rather than a gap.",
+    "app.action": { "module": "http:ActionSendData", "version": 3, "parameters": { "handleErrors": false, "useNewZLibDeCompress": true } },
+    "default":    { "module": "util:SetVariable2",   "version": 1, "parameters": { "scope": "roundtrip" } }
+  }
+}

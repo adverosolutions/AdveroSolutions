@@ -1,0 +1,9 @@
+Summary
+Right now form submissions from GoHighLevel are not landing in Monday.com, so entries have to be copied over by hand and things get missed. I need a simple n8n workflow that connects the two. Every time someone fills out the GoHighLevel form, the submission should trigger the workflow and create a new item on the correct Monday.com board with the form fields mapped to the right columns. This is a small, single-workflow task, not a large build. I already have the GoHighLevel form and the Monday.com board set up, so the work is the connection, field mapping, and testing to confirm submissions sync reliably. Please share a short note on similar n8n integrations you have done.
+
+Scope
+- Connect the GoHighLevel form to n8n via webhook trigger
+- Map form fields to the matching Monday.com board columns
+- Create a new Monday.com item on every submission
+- Test with live submissions and confirm nothing is dropped
+- Short handover note so I can maintain it myself

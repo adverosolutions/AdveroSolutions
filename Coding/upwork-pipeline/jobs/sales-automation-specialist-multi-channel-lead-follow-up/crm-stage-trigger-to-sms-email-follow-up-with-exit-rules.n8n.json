@@ -1,0 +1,803 @@
+{
+  "name": "CRM Stage Trigger to SMS + Email Follow-Up With Exit Rules",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - CRM STAGE CHANGE COMES IN\n\nGoHighLevel or HubSpot fires a webhook when a contact moves stage. We normalize the contact so every stage below reads the same fields.",
+        "height": 900,
+        "width": 460,
+        "color": 5
+      },
+      "id": "ab8ba24b-ff6a-5143-973a-3086dc7276ca",
+      "name": "Section - 1 - CRM STAGE CHANGE COMES IN",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - ROUTE BY PIPELINE STAGE\n\nOne switch, one sequence per stage. Adding a stage later is one more arm, not a rebuild.",
+        "height": 900,
+        "width": 220,
+        "color": 4
+      },
+      "id": "0c4803cc-5b31-58b4-9c2d-bcac15d1690c",
+      "name": "Section - 2 - ROUTE BY PIPELINE STAGE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - NEW LEAD SEQUENCE: SMS, WAIT, EMAIL, WAIT\n\nInstant SMS while the lead is still warm, email an hour later, then a full day before the next check. Every delay timer is visible in its label.",
+        "height": 900,
+        "width": 940,
+        "color": 6
+      },
+      "id": "15dad32e-982d-582e-98e0-55b3a225857c",
+      "name": "Section - 3 - NEW LEAD SEQUENCE: SMS, WAIT, EMAIL, WAIT",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        940,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - EXIT RULES AND TOUCH CAP\n\nIf they replied or booked, the sequence stops. Otherwise one more SMS and back to the day timer, until the touch cap ends it.",
+        "height": 900,
+        "width": 700,
+        "color": 7
+      },
+      "id": "18366263-b565-5603-bd1b-7231ed184d0f",
+      "name": "Section - 4 - EXIT RULES AND TOUCH CAP",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2040,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - NOTIFY THE REP, WRITE BACK TO THE CRM, CATCH ERRORS\n\nThe rep sees every touch in Slack and the CRM holds the sequence state. Any failure alerts with a link to the run.",
+        "height": 900,
+        "width": 940,
+        "color": 1
+      },
+      "id": "e573a0d4-f523-5465-b20e-f6e17ce63a03",
+      "name": "Section - 5 - NOTIFY THE REP, WRITE BACK TO THE CRM, CATCH ERRORS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2900,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "f6ce2307-8585-5f38-af61-94aebec1a859",
+      "name": "1 - CRM Stage Changed - GoHighLevel / HubSpot",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        280
+      ],
+      "webhookId": "2164e958-e301-5b2e-b94d-d9fa159f1ca9"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bb022929-bfc0-5baa-95bd-2fa528f5ae0e",
+              "name": "event",
+              "value": "={{ $json.event }}",
+              "type": "string"
+            },
+            {
+              "id": "ec4d106e-2517-58e6-be8d-4f3636baf76f",
+              "name": "crm",
+              "value": "={{ $json.crm }}",
+              "type": "string"
+            },
+            {
+              "id": "420cc777-7eb4-57f7-976e-eb0ccb27705c",
+              "name": "contact_id",
+              "value": "={{ $json.contact_id }}",
+              "type": "string"
+            },
+            {
+              "id": "89564dc6-d99d-5477-85f6-b1cfca118efe",
+              "name": "first_name",
+              "value": "={{ $json.first_name }}",
+              "type": "string"
+            },
+            {
+              "id": "4730af06-67ec-5ca2-9dbd-cee4dcbf9518",
+              "name": "last_name",
+              "value": "={{ $json.last_name }}",
+              "type": "string"
+            },
+            {
+              "id": "891a07d9-0394-5664-b839-5a94538c58c4",
+              "name": "phone",
+              "value": "={{ $json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "510f926d-6265-5dd8-9511-496bf44bd881",
+              "name": "email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "21eab943-31ad-5272-82a5-558f04f28f08",
+              "name": "pipeline",
+              "value": "={{ $json.pipeline }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "13deeee6-385e-56ad-927a-fc2a16d06530",
+      "name": "2 - Normalize Contact, Stage, Consent and Touch Count",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        240,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b33d0d20-cbee-5275-b4e6-f9d721350ae1",
+                    "leftValue": "={{ $json.pipeline }}",
+                    "rightValue": "New Lead",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "New Lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f80e2248-29c4-59c1-ae99-a8695bf39c0b",
+                    "leftValue": "={{ $json.pipeline }}",
+                    "rightValue": "Proposal Sent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Proposal Sent"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0d8ae765-baab-5f2e-a1b8-c7318da69d82",
+                    "leftValue": "={{ $json.pipeline }}",
+                    "rightValue": "No Response",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "No Response"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "153c995d-283b-5ef4-9d9b-76b3ef9b07f9",
+      "name": "3 - Route by Pipeline Stage",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        620,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sms",
+        "operation": "send",
+        "to": "={{ $json.callback_number || $json.phone }}",
+        "message": "={{ $json.message }}"
+      },
+      "id": "296809eb-722d-5f7b-81d4-3869cfd6db2a",
+      "name": "4 - Instant SMS: Thanks, Quick Question",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "hours"
+      },
+      "id": "c75503e0-2e95-52a4-a356-f447122772b3",
+      "name": "5 - Delay Timer: Wait 1 Hour",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1240,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $json.email }}",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "b2dcba46-da21-5d98-8d28-b463688557c5",
+      "name": "6 - Email: Intro and Booking Link",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1480,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "days"
+      },
+      "id": "69729587-3367-5199-8315-82f1d08446ff",
+      "name": "7 - Delay Timer: Wait 1 Day",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1720,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "01019b1b-bf5c-5971-9203-e2c34b64ad80",
+              "leftValue": "={{ $json.booked_at }}",
+              "rightValue": 8.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e7aeec80-ea10-54c7-8b80-b63944d1e890",
+      "name": "8 - Replied or Booked? - Exit Rule",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2100,
+        80
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "5d0a9658-7935-5395-8e38-ef2682ff54ba",
+      "name": "9 - Stop Sequence: Lead Responded",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2340,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "eaa5e69c-1c51-5109-ad8a-e4b60fe32b15",
+              "leftValue": "={{ $json.sequence_touches_sent }}",
+              "rightValue": 10.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1be13a4c-fbeb-5721-9f30-086ac153d40c",
+      "name": "10 - Under 4 Touches? - Touch Cap",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2340,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sms",
+        "operation": "send",
+        "to": "={{ $json.callback_number || $json.phone }}",
+        "message": "={{ $json.message }}"
+      },
+      "id": "108c9e8a-18e0-5cd2-86aa-966df927ae74",
+      "name": "11 - Next SMS Touch, Then Back to the Day Timer",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        2580,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "days"
+      },
+      "id": "247477f7-4449-563c-9d90-f476ff029fe6",
+      "name": "12 - Proposal Sent: Delay Timer, Wait 2 Days",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1000,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $json.email }}",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "5b9adfec-19b0-5656-a93e-16b5a581c35e",
+      "name": "13 - Email: Any Questions on the Proposal?",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1240,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sms",
+        "operation": "send",
+        "to": "={{ $json.callback_number || $json.phone }}",
+        "message": "={{ $json.message }}"
+      },
+      "id": "42dd8eac-f6a0-57bf-97e5-f5fdf33c831d",
+      "name": "14 - No Response: Breakup SMS, Should I Close Your File?",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "c43fb762-f17d-5374-911a-e31c47fbf293",
+      "name": "15 - Notify the Rep in Slack: Touch Sent or Sequence Ended",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        3440,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/16-crm-update-contact-sequence-status",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "7444b061-0e0b-50f6-837e-8f8857cb3c71",
+      "name": "16 - CRM: Update Contact Sequence Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3680,
+        320
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "72f64c80-f0a6-55ce-9351-ca5b48a54bc6",
+      "name": "17 - Any Node Fails, Anywhere",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        2960,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "64f28835-16a3-56be-b020-785db882265e",
+      "name": "18 - Alert the Rep With a Link to the Failed Run",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        3200,
+        280
+      ]
+    }
+  ],
+  "connections": {
+    "1 - CRM Stage Changed - GoHighLevel / HubSpot": {
+      "main": [
+        [
+          {
+            "node": "2 - Normalize Contact, Stage, Consent and Touch Count",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Normalize Contact, Stage, Consent and Touch Count": {
+      "main": [
+        [
+          {
+            "node": "3 - Route by Pipeline Stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Route by Pipeline Stage": {
+      "main": [
+        [
+          {
+            "node": "4 - Instant SMS: Thanks, Quick Question",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "12 - Proposal Sent: Delay Timer, Wait 2 Days",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "14 - No Response: Breakup SMS, Should I Close Your File?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - Instant SMS: Thanks, Quick Question": {
+      "main": [
+        [
+          {
+            "node": "5 - Delay Timer: Wait 1 Hour",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - Delay Timer: Wait 1 Hour": {
+      "main": [
+        [
+          {
+            "node": "6 - Email: Intro and Booking Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Email: Intro and Booking Link": {
+      "main": [
+        [
+          {
+            "node": "7 - Delay Timer: Wait 1 Day",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - Delay Timer: Wait 1 Day": {
+      "main": [
+        [
+          {
+            "node": "8 - Replied or Booked? - Exit Rule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - Replied or Booked? - Exit Rule": {
+      "main": [
+        [
+          {
+            "node": "9 - Stop Sequence: Lead Responded",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "10 - Under 4 Touches? - Touch Cap",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9 - Stop Sequence: Lead Responded": {
+      "main": [
+        [
+          {
+            "node": "15 - Notify the Rep in Slack: Touch Sent or Sequence Ended",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Under 4 Touches? - Touch Cap": {
+      "main": [
+        [
+          {
+            "node": "11 - Next SMS Touch, Then Back to the Day Timer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "15 - Notify the Rep in Slack: Touch Sent or Sequence Ended",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Next SMS Touch, Then Back to the Day Timer": {
+      "main": [
+        [
+          {
+            "node": "7 - Delay Timer: Wait 1 Day",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 - Proposal Sent: Delay Timer, Wait 2 Days": {
+      "main": [
+        [
+          {
+            "node": "13 - Email: Any Questions on the Proposal?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - Email: Any Questions on the Proposal?": {
+      "main": [
+        [
+          {
+            "node": "15 - Notify the Rep in Slack: Touch Sent or Sequence Ended",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 - No Response: Breakup SMS, Should I Close Your File?": {
+      "main": [
+        [
+          {
+            "node": "15 - Notify the Rep in Slack: Touch Sent or Sequence Ended",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15 - Notify the Rep in Slack: Touch Sent or Sequence Ended": {
+      "main": [
+        [
+          {
+            "node": "16 - CRM: Update Contact Sequence Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "17 - Any Node Fails, Anywhere": {
+      "main": [
+        [
+          {
+            "node": "18 - Alert the Rep With a Link to the Failed Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "373f49d4-58db-592a-8543-7d226e2c2d5c",
+  "pinData": {
+    "1 - CRM Stage Changed - GoHighLevel / HubSpot": [
+      {
+        "json": {
+          "event": "pipeline_stage_changed",
+          "crm": "gohighlevel",
+          "contact_id": "ghl_c_7f3a91",
+          "first_name": "Marcus",
+          "last_name": "Reyes",
+          "phone": "+15125550187",
+          "email": "marcus@reyesroofingtx.com",
+          "pipeline": "Sales Pipeline",
+          "stage_from": "Unassigned",
+          "stage_to": "New Lead",
+          "assigned_rep": "Dana K.",
+          "sms_consent": true,
+          "sequence_touches_sent": 0,
+          "source": "Website Form",
+          "changed_at": "2026-09-07T14:02:11Z"
+        }
+      }
+    ],
+    "16 - CRM: Update Contact Sequence Status": [
+      {
+        "json": {
+          "contact_id": "ghl_c_7f3a91",
+          "sequence": "New Lead",
+          "touches_sent": 2,
+          "touch_log": [
+            {
+              "n": 1,
+              "channel": "sms",
+              "sent_at": "2026-09-07T14:02:14Z",
+              "status": "delivered"
+            },
+            {
+              "n": 2,
+              "channel": "email",
+              "sent_at": "2026-09-07T15:02:20Z",
+              "status": "sent"
+            }
+          ],
+          "exit_rule_checked_at": "2026-09-08T15:02:25Z",
+          "exit_reason": "booked_call",
+          "booked_at": "2026-09-08T09:41:00Z",
+          "sequence_status": "stopped",
+          "rep_notified": "Dana K. via Slack #sales-followups",
+          "crm_write_back": {
+            "field": "sequence_status",
+            "value": "stopped: booked_call",
+            "http_status": 200
+          }
+        }
+      }
+    ]
+  }
+}

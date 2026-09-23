@@ -1,0 +1,8 @@
+- five parts in your post, five sections on the canvas, same order
+- enquiry in, duplicates skipped by hash, missing fields tagged not guessed
+- claude extracts service, summarizes, classifies hot warm cold or unclear
+- unclear routes to the manual review queue with the summary
+- ghl gets contact, custom fields, class tag, opportunity stage, notes
+- follow-ups stop when they reply, book, opt out or pause
+- failures retry after two minutes, then slack alert, every run logged
+- can start [START], working demo by [DRAFT]

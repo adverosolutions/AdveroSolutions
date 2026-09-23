@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Your Bid Follow-Up System</title><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,
+  'Helvetica Neue',Arial,sans-serif;color:#22272f;background:#f6f7f9;
+  -webkit-font-smoothing:antialiased}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:24px;
+  background:#fff;border-bottom:1px solid #e3e7ee;padding:0 20px;height:56px;
+  position:sticky;top:0;z-index:20}
+.tleft{display:flex;align-items:center;gap:12px;min-width:0}
+.back{width:28px;height:28px;border:1px solid #e3e7ee;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;color:#6b7280;
+  font-size:18px;line-height:1;flex:none}
+.wname{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.wsplit{display:flex;align-items:center;gap:10px;margin:34px 0 26px;
+  color:#6b7280;font-size:11px;letter-spacing:.09em;text-transform:uppercase}
+.wsplit::before,.wsplit::after{content:'';flex:1;height:1px;background:#e3e7ee}
+.acct{font-size:12px;color:#6b7280;background:#f6f7f9;border:1px solid #e3e7ee;
+  padding:3px 8px;border-radius:20px;white-space:nowrap}
+.tabs{display:flex;gap:26px;height:100%;align-items:stretch}
+.tab{display:flex;align-items:center;font-size:13px;color:#6b7280;
+  border-bottom:2px solid transparent;white-space:nowrap}
+.tab-on{color:#188bf6;border-bottom-color:#188bf6;font-weight:600}
+.tright{display:flex;align-items:center;gap:10px}
+.toggle{display:flex;align-items:center;gap:6px;border:1px solid #e3e7ee;
+  border-radius:20px;padding:4px 10px 4px 8px}
+.tdot{width:8px;height:8px;border-radius:50%;background:#f0b429;display:block}
+.tlabel{font-size:12px;color:#6b7280}
+.btn-ghost{font:inherit;font-size:13px;color:#22272f;background:#fff;
+  border:1px solid #e3e7ee;border-radius:6px;padding:7px 14px}
+.btn-primary{font:inherit;font-size:13px;font-weight:600;color:#fff;
+  background:#188bf6;border:0;border-radius:6px;padding:8px 16px}
+
+.canvas{padding:44px 24px 90px;display:flex;justify-content:center;background-image:radial-gradient(circle,#c8cfda55 1px,transparent 1px);background-size:22px 22px;}
+.column{width:440px;max-width:100%;display:flex;flex-direction:column;
+  align-items:stretch}
+.column > .card{width:100%;max-width:440px;align-self:center}
+
+.card{background:#ffffff;border:1px solid #e3e7ee;border-radius:10px;
+  box-shadow:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.04)}
+.card-trigger{border-color:#188bf666;box-shadow:0 0 0 3px #e8f2fe,
+  0 1px 3px rgba(16,24,40,.06)}
+.cmain{display:flex;align-items:center;gap:12px;padding:14px}
+.tile{width:38px;height:38px;border-radius:8px;flex:none;color:#fff;
+  font-size:13px;font-weight:700;letter-spacing:.3px;display:flex;
+  align-items:center;justify-content:center}
+.tile-native{background:#f6f7f9;border:1px solid #e3e7ee;color:#6b7280;
+  font-size:15px;font-weight:500}
+.ctext{flex:1;min-width:0}
+.ckick{font-size:11px;font-weight:600;letter-spacing:.4px;color:#6b7280;
+  text-transform:uppercase;margin-bottom:3px;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.capp{font-weight:500;letter-spacing:.2px}
+.num{color:#188bf6}
+.ctitle{font-size:14px;font-weight:600;line-height:1.3}
+.ctitle-muted{font-size:13px;color:#6b7280;padding:2px 0}
+.cnote{font-size:12px;color:#6b7280;line-height:1.45;margin-top:3px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.chip{font-size:10.5px;color:#6b7280;background:#f6f7f9;border:1px solid #e3e7ee;
+  border-radius:5px;padding:2px 7px;white-space:nowrap}
+.chip b{color:#22272f;font-weight:600}
+.cmark{width:18px;height:18px;border-radius:50%;background:#12b76a;color:#fff;
+  font-size:11px;display:flex;align-items:center;justify-content:center;flex:none}
+.cmenu{width:18px;color:#6b7280;font-size:16px;line-height:1;text-align:center;
+  flex:none}
+.card-empty{background:transparent;border-style:dashed;box-shadow:none}
+.card-empty .cmain{padding:10px 14px;justify-content:center}
+
+.data{border-top:1px solid #e3e7ee;padding:10px 14px 12px}
+.dhead{font-size:10px;font-weight:700;letter-spacing:.6px;color:#6b7280;
+  text-transform:uppercase;margin-bottom:7px}
+.dbody{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:11.5px;line-height:1.75}
+.drow{display:flex;gap:10px}
+.dkey{color:#6b7280;flex:none;min-width:104px}
+.dval{color:#22272f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.conn{display:flex;flex-direction:column;align-items:center}
+.cline{width:2px;height:15px;background:#c8cfda}
+.conn-end .cline{height:26px}
+.conn-split .cline{height:20px}
+.cplus{width:22px;height:22px;border-radius:50%;background:#fff;
+  border:1px solid #c8cfda;color:#6b7280;font-size:14px;line-height:1;
+  display:flex;align-items:center;justify-content:center}
+
+.arms{display:flex;gap:26px;position:relative;padding-top:30px;--inset:25%}
+.arms::before{content:"";position:absolute;top:0;left:var(--inset);
+  right:var(--inset);height:2px;background:#c8cfda}
+.arm{flex:1;min-width:0;display:flex;flex-direction:column;position:relative}
+.arm::before{content:"";position:absolute;top:-30px;left:50%;width:2px;
+  height:30px;background:#c8cfda}
+.apill{align-self:center;font-size:11px;font-weight:700;letter-spacing:.4px;
+  text-transform:uppercase;color:#188bf6;background:#fff;border:1px solid #c8cfda;
+  border-radius:20px;padding:3px 12px;margin-bottom:14px;position:relative;
+  z-index:1;max-width:100%;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.arm .cmain{padding:12px 13px}
+.arm .tile{width:34px;height:34px;font-size:12px}
+.arm .ctitle{font-size:13.5px}
+
+/* A recording window is rarely full width. Drop optional chrome rather than
+   let it overlap the workflow name, the one label the client actually reads. */
+@media (max-width:1180px){ .tabs{display:none} }
+@media (max-width:820px){ .acct{display:none} .btn-ghost{display:none} }
+@media (max-width:560px){
+  .canvas{padding:28px 12px 70px}
+  .column{width:100%}
+  .arms{gap:12px}
+}
+</style></head>
+<body><div class="topbar"><div class="tleft"><div class="back">‹</div><div class="wname">Your Bid Follow-Up System</div></div><div class="tabs"><div class="tab tab-on">Builder</div><div class="tab">Settings</div><div class="tab">History</div><div class="tab">Enrollment History</div></div><div class="tright"><div class="toggle"><span class="tdot"></span><span class="tlabel">Draft</span></div><button class="btn-ghost">Save</button><button class="btn-primary">Publish</button></div></div><div class="canvas"><div class="column"><div class="card card-trigger"><div class="cmain"><div class="tile" style="background:#188bf6">GH</div><div class="ctext"><div class="ckick">Trigger<span class="capp"> · ghl</span></div><div class="ctitle">1 - Bid Request Form Submitted</div></div><div class="cmenu">⋯</div></div><div class="data"><div class="dhead">Sample payload</div><div class="dbody"><div class="drow"><span class="dkey">form</span><span class="dval">Bid Request</span></div><div class="drow"><span class="dkey">contact</span><span class="dval">{&quot;first_name&quot;: &quot;Dana&quot;, &quot;last_name&quot;: &quot;Whitfield&quot;, &quot;phone&quot;:…</span></div></div></div></div><div class="conn"><div class="cline"></div><div class="cplus">+</div><div class="cline"></div></div><div class="card"><div class="cmain"><div class="tile" style="background:#188bf6">GH</div><div class="ctext"><div class="ckick">Action<span class="capp"> · ghl</span></div><div class="ctitle">2 - Tag the Contact bid-sent</div></div><div class="cmenu">⋯</div></div></div><div class="conn"><div class="cline"></div><div class="cplus">+</div><div class="cline"></div></div><div class="card"><div class="cmain"><div class="tile" style="background:#188bf6">GH</div><div class="ctext"><div class="ckick">Action<span class="capp"> · ghl</span></div><div class="ctitle">3 - Open the Bid in the Pipeline</div></div><div class="cmenu">⋯</div></div></div><div class="conn"><div class="cline"></div><div class="cplus">+</div><div class="cline"></div></div><div class="card"><div class="cmain"><div class="tile tile-native">◷</div><div class="ctext"><div class="ckick">Delay</div><div class="ctitle">4 - Wait 1 Day</div></div><div class="cmenu">⋯</div></div></div><div class="conn"><div class="cline"></div><div class="cplus">+</div><div class="cline"></div></div><div class="card"><div class="cmain"><div class="tile" style="background:#188bf6">GH</div><div class="ctext"><div class="ckick">Action<span class="capp"> · ghl</span></div><div class="ctitle">5 - Text: Did You Get the Bid</div></div><div class="cmenu">⋯</div></div></div><div class="conn"><div class="cline"></div><div class="cplus">+</div><div class="cline"></div></div><div class="card"><div class="cmain"><div class="tile tile-native">◷</div><div class="ctext"><div class="ckick">Delay</div><div class="ctitle">6 - Wait 2 Days</div></div><div class="cmenu">⋯</div></div></div><div class="conn"><div class="cline"></div><div class="cplus">+</div><div class="cline"></div></div><div class="card"><div class="cmain"><div class="tile" style="background:#188bf6">GH</div><div class="ctext"><div class="ckick">Action<span class="capp"> · ghl</span></div><div class="ctitle">7 - Email: Quick Recap of Your Bid</div></div><div class="cmenu">⋯</div></div></div><div class="conn"><div class="cline"></div><div class="cplus">+</div><div class="cline"></div></div><div class="card"><div class="cmain"><div class="tile tile-native">◷</div><div class="ctext"><div class="ckick">Delay</div><div class="ctitle">8 - Wait 4 Days</div></div><div class="cmenu">⋯</div></div></div><div class="conn"><div class="cline"></div><div class="cplus">+</div><div class="cline"></div></div><div class="card"><div class="cmain"><div class="tile" style="background:#188bf6">GH</div><div class="ctext"><div class="ckick">Action<span class="capp"> · ghl</span></div><div class="ctitle">9 - Text: Still Want to Move Forward</div></div><div class="cmenu">⋯</div></div></div><div class="conn"><div class="cline"></div><div class="cplus">+</div><div class="cline"></div></div><div class="card"><div class="cmain"><div class="tile tile-native">◷</div><div class="ctext"><div class="ckick">Delay</div><div class="ctitle">10 - Wait 7 Days</div></div><div class="cmenu">⋯</div></div></div><div class="conn"><div class="cline"></div><div class="cplus">+</div><div class="cline"></div></div><div class="card"><div class="cmain"><div class="tile" style="background:#188bf6">GH</div><div class="ctext"><div class="ckick">Action<span class="capp"> · ghl</span></div><div class="ctitle">11 - Email: Last Check In</div></div><div class="cmenu">⋯</div></div></div><div class="conn"><div class="cline"></div><div class="cplus">+</div><div class="cline"></div></div><div class="card"><div class="cmain"><div class="tile" style="background:#188bf6">GH</div><div class="ctext"><div class="ckick">Action<span class="capp"> · ghl</span></div><div class="ctitle">12 - Move the Bid to No Response</div></div><div class="cmenu">⋯</div></div></div><div class="conn"><div class="cline"></div><div class="cplus">+</div><div class="cline"></div></div><div class="card"><div class="cmain"><div class="tile" style="background:#188bf6">GH</div><div class="ctext"><div class="ckick">Action<span class="capp"> · ghl</span></div><div class="ctitle">13 - Tag the Contact bid-cold</div></div><div class="cmenu">⋯</div></div></div><div class="conn"><div class="cline"></div><div class="cplus">+</div><div class="cline"></div></div><div class="card"><div class="cmain"><div class="tile" style="background:#188bf6">GH</div><div class="ctext"><div class="ckick">Action<span class="capp"> · ghl</span></div><div class="ctitle">14 - Goal: Customer Replied to the Bid</div><div class="cnote">The companion workflow adds bid-replied the moment the customer replies on any channel, so a reply on day 2 skips every remaining touch and lands here.</div></div><div class="cmenu">⋯</div></div></div><div class="conn"><div class="cline"></div><div class="cplus">+</div><div class="cline"></div></div><div class="card"><div class="cmain"><div class="tile" style="background:#188bf6">GH</div><div class="ctext"><div class="ckick">Action<span class="capp"> · ghl</span></div><div class="ctitle">15 - Remove the bid-sent Tag</div></div><div class="cmenu">⋯</div></div></div><div class="conn"><div class="cline"></div><div class="cplus">+</div><div class="cline"></div></div><div class="card"><div class="cmain"><div class="tile" style="background:#188bf6">GH</div><div class="ctext"><div class="ckick">Action<span class="capp"> · ghl</span></div><div class="ctitle">16 - Move the Bid to Replied</div></div><div class="cmenu">⋯</div></div></div><div class="conn"><div class="cline"></div><div class="cplus">+</div><div class="cline"></div></div><div class="card"><div class="cmain"><div class="tile" style="background:#188bf6">GH</div><div class="ctext"><div class="ckick">Action<span class="capp"> · ghl</span></div><div class="ctitle">17 - Text the Owner</div></div><div class="cmenu">⋯</div></div></div><div class="conn"><div class="cline"></div><div class="cplus">+</div><div class="cline"></div></div><div class="card"><div class="cmain"><div class="tile" style="background:#188bf6">GH</div><div class="ctext"><div class="ckick">Action<span class="capp"> · ghl</span></div><div class="ctitle">18 - Email the Owner</div></div><div class="cmenu">⋯</div></div><div class="data"><div class="dhead">Sample payload</div><div class="dbody"><div class="drow"><span class="dkey">opportunity</span><span class="dval">Dana Whitfield - Kitchen remodel</span></div><div class="drow"><span class="dkey">stage</span><span class="dval">Replied</span></div><div class="drow"><span class="dkey">tags</span><span class="dval">[&quot;bid-replied&quot;]</span></div><div class="drow"><span class="dkey">owner_alert</span><span class="dval">sent by SMS and email</span></div></div></div></div><div class="conn conn-end"><div class="cline"></div></div></div></div></body>
+</html>

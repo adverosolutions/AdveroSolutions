@@ -1,0 +1,225 @@
+{
+  "title": "High Caliber Karting: Stack Audit and Automation Architecture",
+  "platform": "diagram",
+  "client": {
+    "company": "High Caliber Karting",
+    "industry": "indoor karting and entertainment venue",
+    "location": "Okemos, Michigan"
+  },
+  "sections": [
+    {
+      "key": "stack",
+      "label": "1 - YOUR STACK TODAY: INVENTORY AND HOW IT IS USED",
+      "note": "Your parts 1 and 2: validate the inventory, then see how each platform is really used on a venue day. This first pass is built from your post and your public site; the paid audit confirms it with your team."
+    },
+    {
+      "key": "access",
+      "label": "2 - ACCESS, THEN THE SIMPLEST TOOL THAT WORKS",
+      "note": "Your parts 3 and 4: APIs, webhooks and native integrations for each platform, then where n8n, Make, custom code, browser automation or AI agents belong. Native first, custom only when it is the simplest reliable answer, and AI only where it actually belongs in the workflow. Whether Stripe and PayPal flow into QuickBooks natively depends on your edition: QuickBooks Online or Desktop?"
+    },
+    {
+      "key": "manual",
+      "label": "3 - TYPED TWICE, AND WHAT REMAINS HUMAN-CONTROLLED",
+      "note": "Your parts 5 and 6: duplicate data entry and repetitive manual processes, then the systems that should remain human-controlled. Every manual task gets your question: why is this task being done manually?"
+    },
+    {
+      "key": "flow",
+      "label": "4 - HOW INFORMATION FLOWS, AND WHAT HAPPENS WHEN IT FAILS",
+      "note": "Your parts 7 and 8: one source of truth for each kind of record, then security, permissions, logging, retry and failure handling. Each automation gets its own login with only the access it needs."
+    },
+    {
+      "key": "roadmap",
+      "label": "5 - A VERDICT PER PLATFORM, THEN A PHASED ROADMAP",
+      "note": "Your parts 9 and 10: retain, integrate, automate, consolidate, replace or supplement with custom software, then phases ranked by value, complexity and risk. Every platform gets an answer to: should we integrate this system or eventually replace it?"
+    }
+  ],
+  "nodes": [
+    {
+      "key": "inventory",
+      "kind": "data.aggregate",
+      "label": "1 - Validate the Inventory: Dozens of Platforms, 10-20 Hours, Deep Where Money Moves",
+      "section": "stack",
+      "notes": "An even split is under an hour per platform, so the audit goes deep on bookings and money and lists the rest."
+    },
+    {
+      "key": "venue_day",
+      "kind": "data.transform",
+      "label": "2 - Trace One Venue Day: BMI Leisure, Toast, Deputy Shifts, MaintainX Work Orders",
+      "section": "stack"
+    },
+    {
+      "key": "access_check",
+      "kind": "data.transform",
+      "label": "3 - APIs, Webhooks, Native Integrations: Toast and BMI Leisure Access Checked First",
+      "section": "access",
+      "notes": "Your POS and your booking system decide what can be built, so their API access is confirmed before anything else."
+    },
+    {
+      "key": "direct",
+      "kind": "flow.branch",
+      "label": "4 - Can These Systems Communicate Directly?",
+      "section": "access"
+    },
+    {
+      "key": "native",
+      "kind": "data.transform",
+      "label": "4a - Yes: Native First, Like Stripe and PayPal Into QuickBooks, Else n8n or Make",
+      "section": "access"
+    },
+    {
+      "key": "custom",
+      "kind": "data.transform",
+      "label": "4b - No: Browser Automation, or Custom Code Only When It Is Simpler",
+      "section": "access",
+      "notes": "No custom software built simply because it can be built."
+    },
+    {
+      "key": "typed_twice",
+      "kind": "data.transform",
+      "label": "5 - Typed Twice? BMI Leisure Prices on WordPress/Elementor, Jotform Entries in HubSpot",
+      "section": "manual",
+      "notes": "Your pricing page lists the same activities the BMI Leisure shop sells, so every price change is made twice."
+    },
+    {
+      "key": "human_gate",
+      "kind": "flow.branch",
+      "label": "6 - Money, Safety or a Guest's Event at Stake?",
+      "section": "manual"
+    },
+    {
+      "key": "human",
+      "kind": "data.transform",
+      "label": "6a - Remains Human-Controlled: Event Deposits, Refunds, UniFi, Google Admin, Lighting",
+      "section": "manual",
+      "notes": "An event only counts as reserved once the contract is signed and the deposit is in, so a person keeps that step."
+    },
+    {
+      "key": "truth",
+      "kind": "data.transform",
+      "label": "7 - Source of Truth: BMI Leisure Bookings, QuickBooks Money, Guests in BMI or HubSpot?",
+      "section": "flow",
+      "notes": "Guests likely live in both systems today; picking one owner is your decision, not an assumption."
+    },
+    {
+      "key": "failure",
+      "kind": "data.transform",
+      "label": "8 - When an Automation Fails: Logged, Retried, Then a Twilio Text to Its Owner",
+      "section": "flow"
+    },
+    {
+      "key": "verdict",
+      "kind": "data.aggregate",
+      "label": "9 - One Verdict Each: Retain, Integrate, Automate, Consolidate, Replace, Supplement",
+      "section": "roadmap"
+    },
+    {
+      "key": "roadmap_steps",
+      "kind": "data.transform",
+      "label": "10 - Phased Roadmap by Value, Complexity and Risk: Pricing Sync as Phase 1 Candidate",
+      "section": "roadmap"
+    }
+  ],
+  "edges": [
+    {
+      "from": "inventory",
+      "to": "venue_day"
+    },
+    {
+      "from": "venue_day",
+      "to": "access_check"
+    },
+    {
+      "from": "access_check",
+      "to": "direct"
+    },
+    {
+      "from": "direct",
+      "to": "native",
+      "branch": "yes"
+    },
+    {
+      "from": "direct",
+      "to": "custom",
+      "branch": "no"
+    },
+    {
+      "from": "native",
+      "to": "typed_twice"
+    },
+    {
+      "from": "custom",
+      "to": "typed_twice"
+    },
+    {
+      "from": "typed_twice",
+      "to": "human_gate"
+    },
+    {
+      "from": "human_gate",
+      "to": "human",
+      "branch": "yes"
+    },
+    {
+      "from": "human_gate",
+      "to": "truth",
+      "branch": "no: automate"
+    },
+    {
+      "from": "human",
+      "to": "truth"
+    },
+    {
+      "from": "truth",
+      "to": "failure"
+    },
+    {
+      "from": "failure",
+      "to": "verdict"
+    },
+    {
+      "from": "verdict",
+      "to": "roadmap_steps"
+    }
+  ],
+  "input_sample": {
+    "form": "High Caliber Event Request Form",
+    "first_name": "Dana",
+    "last_name": "Kowalczyk",
+    "company_name": "Cedar Street Insurance Group",
+    "email": "dana.kowalczyk@cedarstreetins.com",
+    "party_type": "Corporate Event",
+    "event_date_time": "2026-11-13 18:00",
+    "entertainment_options": [
+      "Speed Track Racing",
+      "Axe Throwing",
+      "Rage Room"
+    ],
+    "event_space": "Trackside VIP Room",
+    "event_duration": "3 hours",
+    "total_attendees": 42,
+    "food_and_beverage": "Bar & Bistro appetizer buffet, drink tickets",
+    "how_did_you_hear": "Google search"
+  },
+  "output_sample": {
+    "record": "Corporate event request - Cedar Street Insurance Group, 42 guests, Trackside VIP Room",
+    "entered_today_in": [
+      "Event Request Form",
+      "HubSpot - to confirm",
+      "BMI Leisure reservation - to confirm",
+      "Deputy shifts - to confirm"
+    ],
+    "typed_by_hand": "to confirm with your events team",
+    "source_of_truth": {
+      "booking": "BMI Leisure",
+      "money": "QuickBooks",
+      "guest_contact": "BMI Leisure or HubSpot - your decision"
+    },
+    "remains_human_controlled": "contract and deposit before the event counts as reserved",
+    "access": {
+      "BMI Leisure": "API access to confirm on your plan",
+      "HubSpot": "public API - plan tier to confirm"
+    },
+    "verdict": "Integrate: form straight into a HubSpot deal, deposit stays with a person",
+    "roadmap_rank": "High value, low complexity, low risk - ranked beside the pricing sync for Phase 1"
+  }
+}

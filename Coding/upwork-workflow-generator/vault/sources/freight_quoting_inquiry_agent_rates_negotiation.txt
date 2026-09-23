@@ -1,0 +1,8 @@
+n8n+Claude Automation for Freight Quoting Workflow (Email Parsing, Rate Sourcing, Negotiation Logic)
+Fixed price $1,000, expert, complex project, contract-to-hire.
+Looking for an experienced n8n + AI automation developer to build an operations automation system for a freight forwarding business.
+What it does: reads inbound email inquiries, extracts shipment details using the Claude API (ports, weight, cargo type, dangerous goods classification); sources rates from a network of agents across multiple countries via automated email requests; runs a structured negotiation/rate-comparison sequence with human review checkpoints; drafts client quotes using pre-built templates and terms and conditions; sends automated follow-up sequences; logs everything to Google Sheets/Drive, connects to Wafeq for invoicing.
+Stack: n8n, Claude API (Anthropic), Google Sheets/Drive API, Outlook/Microsoft Graph API, Wafeq API.
+What I have ready: a complete written specification: system architecture, data schemas, every email template, a working dashboard mockup (HTML/CSS/JS), credentials checklist, and a suggested build phase plan. This is a documented project, not a vague idea. Happy to share the full spec with serious applicants.
+Looking for: someone with real n8n workflow experience and comfort calling LLM APIs for structured data extraction. Freight/logistics domain knowledge is a plus, not required; the business logic is fully documented.
+Please share relevant past projects (especially n8n workflows or AI-integrated automations) and your estimated cost/timeline once you've seen the scope.

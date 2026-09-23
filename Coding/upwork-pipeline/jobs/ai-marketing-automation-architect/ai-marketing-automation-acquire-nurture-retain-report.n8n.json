@@ -1,0 +1,900 @@
+{
+  "name": "Full-Scale Customer Acquisition and Retention System",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - CAPTURE EVERY LEAD AND CUSTOMER EVENT\n\nForm fills, purchases and signups all land in one place and get cleaned into the same shape.",
+        "height": 780,
+        "width": 460,
+        "color": 5
+      },
+      "id": "74a0abf0-824b-5e3e-a56d-680536273d37",
+      "name": "Section - 1 - CAPTURE EVERY LEAD AND CUSTOMER EVENT",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - DECIDE WHO THEY ARE AND WHAT THEY GET NEXT\n\nClaude looks the person up in the CRM and picks the next best message instead of a fixed drip.",
+        "height": 780,
+        "width": 900,
+        "color": 4
+      },
+      "id": "d0936a3c-8ca7-50b8-9ab1-7c6268d20347",
+      "name": "Section - 2 - DECIDE WHO THEY ARE AND WHAT THEY GET NEXT",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        620,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - ACQUISITION: WELCOME THE NEW ONES\n\nBrand new contacts get the welcome and the first offer straight away, while interest is highest.",
+        "height": 780,
+        "width": 220,
+        "color": 6
+      },
+      "id": "76119aad-4cec-512e-9917-184caaac006f",
+      "name": "Section - 3 - ACQUISITION: WELCOME THE NEW ONES",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - NURTURE AND RETENTION: KEEP THEM MOVING\n\nNurture loops a personalized touch every two days until they engage, capped so nobody gets spammed. Quiet customers get a win back instead.",
+        "height": 780,
+        "width": 1040,
+        "color": 7
+      },
+      "id": "dd220128-8eaa-5887-a162-f7404bec05fa",
+      "name": "Section - 4 - NURTURE AND RETENTION: KEEP THEM MOVING",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2060,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - MEASURE, REPORT, AND CATCH FAILURES\n\nEvery send updates the CRM and logs a metrics row, and Monday morning the numbers land in Slack.",
+        "height": 780,
+        "width": 1180,
+        "color": 1
+      },
+      "id": "e006cc4a-aa31-5f01-8040-d3cd677e596c",
+      "name": "Section - 5 - MEASURE, REPORT, AND CATCH FAILURES",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3260,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "f4859d95-1089-5884-bc0f-1a5ce34ecdd4",
+      "name": "1 - New Lead or Customer Event Arrives",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        180
+      ],
+      "webhookId": "d276d42f-2ae9-51da-ab6f-c50169c1c8c4"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bb022929-bfc0-5baa-95bd-2fa528f5ae0e",
+              "name": "event",
+              "value": "={{ $json.event }}",
+              "type": "string"
+            },
+            {
+              "id": "85ba9491-c9b5-58c4-a91e-1172e5c71018",
+              "name": "source",
+              "value": "={{ $json.source }}",
+              "type": "string"
+            },
+            {
+              "id": "7327ad17-1826-53a0-bfc1-0c3147393243",
+              "name": "form",
+              "value": "={{ $json.form }}",
+              "type": "string"
+            },
+            {
+              "id": "ae2867d5-f789-5b7f-9adf-172f43dca442",
+              "name": "contact",
+              "value": "={{ $json.contact }}",
+              "type": "object"
+            },
+            {
+              "id": "c1686f12-10cf-52a0-bd0d-47e29d96d715",
+              "name": "crm_stage",
+              "value": "={{ $json.crm_stage }}",
+              "type": "string"
+            },
+            {
+              "id": "8e57072e-09d8-5d10-b6d4-da47831ae9f7",
+              "name": "last_activity_at",
+              "value": "={{ $json.last_activity_at }}",
+              "type": "string"
+            },
+            {
+              "id": "2ffd2296-2dfb-502b-8199-0315e43d3bd0",
+              "name": "lifetime_value_usd",
+              "value": "={{ $json.lifetime_value_usd }}",
+              "type": "number"
+            },
+            {
+              "id": "66d835f3-7a75-5302-bf33-82e386df62c7",
+              "name": "submitted_at",
+              "value": "={{ $json.submitted_at }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "6a6dc5c3-b410-51a6-bc5d-989531d89806",
+      "name": "2 - Normalize Source, Stage, and Last Activity",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        240,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "auto",
+        "text": "={{ $json.chatInput }}",
+        "options": {}
+      },
+      "id": "e2ce333f-7f15-5f94-a1ee-7a055acc0e1c",
+      "name": "3 - Claude Segments and Picks the Next Best Message",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        820,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "3f7df1cf-5621-55b2-910a-88d632f9d087",
+      "name": "Claude",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        680,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Call a sub-workflow to perform a task",
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "b1b9adbe-ce2b-58c5-b545-4a5ef3bb6aa1",
+      "name": "CRM Lookup: Past Opens, Purchases, and Stage",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"summary\": \"text\",\n  \"score\": 1\n}"
+      },
+      "id": "4e86b7e3-a398-5da0-8c7f-200fa52cecc8",
+      "name": "Force Segment, Campaign, Channel, and Send Time",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1080,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "632dd5d6-fb65-5b5f-b40d-88f90f34cba0",
+                    "leftValue": "={{ $json.journey }}",
+                    "rightValue": "Acquisition",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Acquisition"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "477976cc-dc92-56ad-96a1-4300a321967e",
+                    "leftValue": "={{ $json.journey }}",
+                    "rightValue": "Nurture",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Nurture"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b366207b-5d33-5874-a055-28d49dcc8ecd",
+                    "leftValue": "={{ $json.journey }}",
+                    "rightValue": "Retention",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Retention"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "25248125-2823-5bea-bc15-8bab0c398fa3",
+      "name": "4 - Route by Journey: Acquisition, Nurture, Retention",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1360,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $json.email }}",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "f02a5605-0672-5264-a9c5-f76e5b91e670",
+      "name": "5 - Send the Welcome and First Offer Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1740,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "days"
+      },
+      "id": "8e3336b7-b16c-555c-886d-7c7a102375bc",
+      "name": "6 - Wait Two Days Before the Next Touch",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2120,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=7 - Claude Writes the Personalized Nurture Touch\n\nevent: {{ $json.event }}\nsource: {{ $json.source }}\nform: {{ $json.form }}\ncontact: {{ $json.contact }}",
+        "batching": {}
+      },
+      "id": "ca382c1a-befe-51ba-8f22-a8307b429c73",
+      "name": "7 - Claude Writes the Personalized Nurture Touch",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2360,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $json.email }}",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "4dbd80f3-1618-5e26-bc30-48afe8baf968",
+      "name": "8 - Send the Nurture Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2700,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0880b9df-4360-5766-9f13-1b92acf4f03a",
+              "leftValue": "={{ $json.open_click }}",
+              "rightValue": 9.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "eaa94ede-3f9e-5dd1-bb6e-d8e1cfe9a8d3",
+      "name": "9 - Did They Open or Click It?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2940,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9b816a53-7d4f-5c29-b661-3ef288bb75fa",
+              "leftValue": "={{ $json.quiet_days }}",
+              "rightValue": 10.0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e5e58aed-8506-56fe-b131-19cb1032fcd0",
+      "name": "10 - Quiet for 30 Days or More?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2120,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $json.email }}",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "79df4077-5b9c-5b83-84cd-59d0e95e9a5b",
+      "name": "11 - Send the Win Back Campaign",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2360,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "upsert",
+        "email": "={{ $json.email }}",
+        "additionalFields": {}
+      },
+      "id": "a8569796-16c6-5fed-a27c-f68c87e2a8b2",
+      "name": "12 - Update CRM Stage and Tags",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        4040,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "9a703341-7190-5ff5-a651-da7bf5831490",
+      "name": "13 - Log a Campaign Metrics Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4280,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "35fb92c0-9e25-51be-b0ae-c9ca58b91275",
+      "name": "14 - Every Monday Morning",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        3320,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {},
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "segment"
+            },
+            {
+              "fieldToAggregate": "why"
+            },
+            {
+              "fieldToAggregate": "journey"
+            }
+          ]
+        }
+      },
+      "id": "c9d885b6-f057-57fb-997a-9ecf84e8cbbf",
+      "name": "15 - Roll Up Opens, Clicks, and Conversions",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3560,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "b53ec6b0-e39f-5e11-96ee-ec4237a52a17",
+      "name": "16 - Post the Weekly Performance Digest",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        3800,
+        180
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "aaed3a6d-ae65-5a00-81ec-a4da72b3f48e",
+      "name": "17 - Any Step Fails, Anywhere",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        3320,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "50bef21a-a6e3-54b4-a2d1-336618205856",
+      "name": "18 - Alert With a Link to the Failed Run",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        3560,
+        420
+      ]
+    }
+  ],
+  "connections": {
+    "1 - New Lead or Customer Event Arrives": {
+      "main": [
+        [
+          {
+            "node": "2 - Normalize Source, Stage, and Last Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Normalize Source, Stage, and Last Activity": {
+      "main": [
+        [
+          {
+            "node": "3 - Claude Segments and Picks the Next Best Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Claude Segments and Picks the Next Best Message": {
+      "main": [
+        [
+          {
+            "node": "4 - Route by Journey: Acquisition, Nurture, Retention",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - Route by Journey: Acquisition, Nurture, Retention": {
+      "main": [
+        [
+          {
+            "node": "5 - Send the Welcome and First Offer Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "6 - Wait Two Days Before the Next Touch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "10 - Quiet for 30 Days or More?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - Send the Welcome and First Offer Email": {
+      "main": [
+        [
+          {
+            "node": "12 - Update CRM Stage and Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Wait Two Days Before the Next Touch": {
+      "main": [
+        [
+          {
+            "node": "7 - Claude Writes the Personalized Nurture Touch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - Claude Writes the Personalized Nurture Touch": {
+      "main": [
+        [
+          {
+            "node": "8 - Send the Nurture Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - Send the Nurture Email": {
+      "main": [
+        [
+          {
+            "node": "9 - Did They Open or Click It?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9 - Did They Open or Click It?": {
+      "main": [
+        [
+          {
+            "node": "12 - Update CRM Stage and Tags",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "6 - Wait Two Days Before the Next Touch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Quiet for 30 Days or More?": {
+      "main": [
+        [
+          {
+            "node": "11 - Send the Win Back Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "12 - Update CRM Stage and Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Send the Win Back Campaign": {
+      "main": [
+        [
+          {
+            "node": "12 - Update CRM Stage and Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 - Update CRM Stage and Tags": {
+      "main": [
+        [
+          {
+            "node": "13 - Log a Campaign Metrics Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 - Every Monday Morning": {
+      "main": [
+        [
+          {
+            "node": "15 - Roll Up Opens, Clicks, and Conversions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15 - Roll Up Opens, Clicks, and Conversions": {
+      "main": [
+        [
+          {
+            "node": "16 - Post the Weekly Performance Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "17 - Any Step Fails, Anywhere": {
+      "main": [
+        [
+          {
+            "node": "18 - Alert With a Link to the Failed Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "3 - Claude Segments and Picks the Next Best Message",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM Lookup: Past Opens, Purchases, and Stage": {
+      "ai_tool": [
+        [
+          {
+            "node": "3 - Claude Segments and Picks the Next Best Message",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Force Segment, Campaign, Channel, and Send Time": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "3 - Claude Segments and Picks the Next Best Message",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "feeeff3b-1874-5e3d-a83a-9294f1063dce",
+  "pinData": {
+    "1 - New Lead or Customer Event Arrives": [
+      {
+        "json": {
+          "event": "form_submit",
+          "source": "google_ads_landing_page",
+          "form": "Free Consultation Request",
+          "contact": {
+            "email": "d.whitfield@northlanedental.com",
+            "first_name": "Dana",
+            "company": "Northlane Dental Group",
+            "phone": "+1 512 555 0184"
+          },
+          "crm_stage": "New",
+          "last_activity_at": null,
+          "lifetime_value_usd": 0,
+          "submitted_at": "2026-09-09T14:22:05Z"
+        }
+      }
+    ],
+    "13 - Log a Campaign Metrics Row": [
+      {
+        "json": {
+          "segment": "New Inbound, High Intent",
+          "why": "First touch from a paid landing page, requested a consultation, no prior activity in the CRM, so acquisition rather than nurture.",
+          "journey": "Acquisition",
+          "campaign": "Welcome + First Offer",
+          "channel": "email",
+          "send_time": "2026-09-09T15:00:00Z",
+          "email_sent": {
+            "subject": "Dana, here is what the first 30 days look like",
+            "message_id": "CAF9x2r-welcome-88104"
+          },
+          "crm_update": {
+            "contact_id": "hs_0119482",
+            "stage": "Marketing Qualified",
+            "tags": [
+              "paid_search",
+              "consultation_request",
+              "welcome_sent"
+            ]
+          },
+          "metrics_row": {
+            "date": "2026-09-09",
+            "campaign": "Welcome + First Offer",
+            "journey": "Acquisition",
+            "sends": 1,
+            "opens": 0,
+            "clicks": 0,
+            "conversions": 0
+          },
+          "next_scheduled_touch": "2026-09-11T15:00:00Z (nurture touch 1 of 4 if no open or click)",
+          "weekly_digest_preview": "Last 7 days: 412 sends, 189 opens (45.9%), 61 clicks (14.8%), 9 conversions, 14 win backs sent, 3 reactivated"
+        }
+      }
+    ]
+  }
+}

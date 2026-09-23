@@ -1,0 +1,9 @@
+We need a proper AI support agent built, not a basic FAQ bot. It should answer customer questions accurately from our own content, know when it doesn't know, and hand off cleanly to a human instead of guessing.
+
+Scope for this build:
+
+An AI agent that answers questions grounded strictly in our knowledge base (product info, FAQs, policies), so it only ever tells a customer something that's actually true for us. Confidence-based human handoff, when the agent isn't sure, hits a complaint, or the customer asks for a person, it escalates cleanly rather than inventing an answer. Every conversation captured and logged to our CRM so nothing is lost and our team can pick up where the bot left off. A knowledge base we can update ourselves without touching the workflow. Error handling so failures alert us, and a short Loom walkthrough at handover.
+
+We understand the hard part isn't the answers, it's the grounding and the handoff. If your proposal shows you get that, we want to talk.
+
+Fixed-price project. Ongoing work as we expand it to more channels.

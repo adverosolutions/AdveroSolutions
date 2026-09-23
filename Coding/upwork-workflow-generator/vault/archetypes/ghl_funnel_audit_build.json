@@ -1,0 +1,205 @@
+{
+  "title": "Opt-In → Sales Page → Upsell / Downsell → Pipeline",
+  "platform": "gohighlevel",
+  "sections": [
+    {
+      "key": "optin",
+      "label": "1 · OPT-IN",
+      "color": 0,
+      "note": "One contact record from the first touch, tagged by source and interest at the moment of capture — retagging later never reconstructs what you did not record."
+    },
+    {
+      "key": "sales",
+      "label": "2 · SALES PAGE",
+      "color": 0,
+      "note": "The sequence carries the offer while the pipeline stage tracks it, so the funnel and the CRM never disagree about where someone is."
+    },
+    {
+      "key": "offer",
+      "label": "3 · UPSELL / DOWNSELL",
+      "color": 0,
+      "note": "The branch every funnel needs and most skip: buyers see the upsell, non-buyers see a downsell rather than falling into the same nurture as a cold opt-in."
+    },
+    {
+      "key": "sync",
+      "label": "4 · SYNC",
+      "color": 0,
+      "note": "The Zapier hand-off, scoped deliberately — only where GoHighLevel has no native path, so it stays one integration to maintain instead of six."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.form",
+      "label": "Opt-In Form Submitted",
+      "section": "optin"
+    },
+    {
+      "key": "contact",
+      "kind": "app.action",
+      "label": "Create or Update Contact",
+      "app": "gohighlevel",
+      "op": "create",
+      "section": "optin",
+      "notes": "Matched on phone, then email — the tagging strategy is worthless if the same person exists twice."
+    },
+    {
+      "key": "tag",
+      "kind": "data.transform",
+      "label": "Apply Source, Offer & Interest Tags",
+      "section": "optin"
+    },
+    {
+      "key": "pipe",
+      "kind": "app.action",
+      "label": "Add to Pipeline — New Opt-In",
+      "app": "gohighlevel",
+      "op": "create",
+      "section": "optin"
+    },
+    {
+      "key": "email",
+      "kind": "app.action",
+      "label": "Send the Sales Page Sequence",
+      "app": "gohighlevel",
+      "op": "send",
+      "section": "sales"
+    },
+    {
+      "key": "wait",
+      "kind": "flow.wait",
+      "label": "Wait 15 Minutes",
+      "section": "sales"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "Purchased the core offer",
+      "section": "sales"
+    },
+    {
+      "key": "upsell",
+      "kind": "app.action",
+      "label": "Present the Upsell Offer",
+      "app": "gohighlevel",
+      "op": "send",
+      "section": "offer"
+    },
+    {
+      "key": "thanks",
+      "kind": "app.action",
+      "label": "Thank-You Page & Onboarding",
+      "app": "gohighlevel",
+      "op": "send",
+      "section": "offer"
+    },
+    {
+      "key": "won",
+      "kind": "app.action",
+      "label": "Move Pipeline — Customer Won",
+      "app": "gohighlevel",
+      "op": "update",
+      "section": "offer"
+    },
+    {
+      "key": "down",
+      "kind": "app.action",
+      "label": "Present the Downsell Offer",
+      "app": "gohighlevel",
+      "op": "send",
+      "section": "offer"
+    },
+    {
+      "key": "abandon",
+      "kind": "app.action",
+      "label": "Abandoned Checkout Sequence",
+      "app": "gohighlevel",
+      "op": "send",
+      "section": "offer"
+    },
+    {
+      "key": "zap",
+      "kind": "net.http",
+      "label": "Zapier — Fulfillment & Accounting",
+      "section": "sync"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "contact"
+    },
+    {
+      "from": "contact",
+      "to": "tag"
+    },
+    {
+      "from": "tag",
+      "to": "pipe"
+    },
+    {
+      "from": "pipe",
+      "to": "email"
+    },
+    {
+      "from": "email",
+      "to": "wait"
+    },
+    {
+      "from": "wait",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "upsell",
+      "branch": "true"
+    },
+    {
+      "from": "upsell",
+      "to": "thanks"
+    },
+    {
+      "from": "thanks",
+      "to": "won"
+    },
+    {
+      "from": "won",
+      "to": "zap"
+    },
+    {
+      "from": "gate",
+      "to": "down",
+      "branch": "false"
+    },
+    {
+      "from": "down",
+      "to": "abandon"
+    }
+  ],
+  "input_sample": {
+    "form": "Free Guide Opt-In — Meta Ad",
+    "name": "Dana Reyes",
+    "email": "dana.reyes@gmail.com",
+    "phone": "+1 (512) 555-0148",
+    "utm_source": "meta / lookalike-3pct",
+    "submitted_at": "2026-08-03T09:14:22Z"
+  },
+  "output_sample": {
+    "contact_id": "ct_9f42ab10",
+    "tags": [
+      "Meta Ad",
+      "Free Guide",
+      "Core Offer Buyer",
+      "Upsell Presented"
+    ],
+    "pipeline_stage": "Customer — Won",
+    "core_offer": "$97 — purchased",
+    "upsell": "$297 — presented, declined",
+    "downsell_path": "not entered",
+    "zapier_handoff": "Fulfillment + QuickBooks",
+    "duplicates_prevented": 1
+  },
+  "archetype": "ghl_funnel_audit_build",
+  "learned": true,
+  "learned_at": "2026-08-03"
+}

@@ -1,0 +1,54 @@
+{
+  "title": "Speed to Lead — Inbound Qualification",
+  "platform": "ghl",
+  "account": "Reyes Property Group",
+  "trigger": {
+    "app": "Facebook Lead Ads",
+    "label": "New Lead Form Submission",
+    "note": "Fires the moment a lead submits, day or night."
+  },
+  "steps": [
+    {
+      "type": "action",
+      "app": "GoHighLevel",
+      "label": "Create or Update Contact",
+      "note": "Matches on phone first, then email, so duplicates never split a history."
+    },
+    {
+      "type": "ai",
+      "app": "Claude",
+      "label": "Score Intent & Draft Reply",
+      "note": "Reads the form answers and the ad they came from, returns a 0-100 score."
+    },
+    {
+      "type": "branch",
+      "label": "Intent score is 70 or higher",
+      "branch_labels": ["Qualified", "Nurture"],
+      "yes": [
+        { "type": "action", "app": "Twilio", "label": "Send SMS Within 60 Seconds" },
+        { "type": "action", "app": "GoHighLevel", "label": "Create Opportunity — Hot" },
+        { "type": "action", "app": "Slack", "label": "Alert the Closer on Duty" }
+      ],
+      "no": [
+        { "type": "wait", "label": "Wait 2 Hours" },
+        { "type": "action", "app": "GoHighLevel", "label": "Start 9-Day Nurture Sequence" }
+      ]
+    }
+  ],
+  "input_sample": {
+    "full_name": "Dana Reyes",
+    "phone": "+1 (512) 555-0148",
+    "email": "dana.reyes@gmail.com",
+    "ad_name": "Sell My House Fast — Austin",
+    "timeline": "Within 30 days",
+    "submitted_at": "2026-08-02T14:22:07Z"
+  },
+  "output_sample": {
+    "contact_id": "ct_9f42ab10",
+    "opportunity_id": "opp_8842",
+    "intent_score": 81,
+    "stage": "Hot — Closer Assigned",
+    "first_touch_seconds": 41,
+    "assigned_to": "Marcus Webb"
+  }
+}

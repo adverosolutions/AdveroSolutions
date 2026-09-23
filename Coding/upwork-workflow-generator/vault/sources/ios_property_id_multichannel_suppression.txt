@@ -1,0 +1,19 @@
+Expert Make.com Automation / API Integration Specialist — commercial real estate acquisition platform for Industrial Outdoor Storage (IOS) and industrial properties.
+
+Architect and build a property-centric system connecting multiple SaaS platforms through Make.com, APIs and webhooks. This is not a basic Zapier or simple two-app automation project. I need someone capable of designing the underlying data architecture and building a reliable multichannel automation system.
+
+Primary objective: Upload a targeted property list once -> enrich ownership/contact data -> automatically distribute the appropriate records to SMS, email and calling platforms -> identify interested property owners -> stop unnecessary outreach -> deliver qualified hand raisers into Close CRM.
+
+Stack: Crexi Intelligence (property sourcing), Make.com (orchestration), BatchData (owner/contact enrichment), Close CRM (master property/deal CRM), Lead Sherpa (SMS), Smartlead (cold email), Kixie (power dialer), DocSend (deal room later). Architecture must remain modular so vendors can be replaced without rebuilding.
+
+CRITICAL: ONE PROPERTY = ONE MASTER RECORD IN CLOSE. Every property receives a permanent unique Property ID, e.g. IOS-000001. One property may have multiple owners/decision makers, phone numbers and email addresses. Make must create individual outreach records for these contact points while keeping everything connected to the same parent Property ID: IOS-000001-P01, IOS-000001-P02, IOS-000001-E01, IOS-000001-E02. There should still be only ONE property record in Close.
+
+CRITICAL RESPONSE LOGIC: If any owner responds positively through SMS, email or cold calling, the system should identify the parent Property ID, update the single Close record to OWNER ENGAGED, identify the verified responding contact, record the response source, stop/suppress remaining cold outreach for that property, update the CRM, and notify me so I can take over the seller conversation. DNC, SMS opt-outs, email unsubscribes and other suppression events must be maintained across the system.
+
+Required experience: Make.com, REST APIs, webhooks, HTTP modules, JSON, CRM integrations, data mapping, unique/external IDs, deduplication/idempotency, error handling, retries, data stores and bidirectional SaaS synchronization.
+
+FIRST DELIVERABLE — do not begin by immediately building Make scenarios. I first want: proposed data architecture/schema, complete field-mapping plan, API/webhook capability assessment, Make.com architecture diagram, and identification of limitations or recommended platform changes.
+
+Initial testing: one property with multiple people, ~6 phone numbers and 5 email addresses, demonstrating one upload -> enrichment -> Close -> multichannel outreach -> response -> Property ID lookup -> OWNER ENGAGED -> suppression -> notification. Then ~100 properties before scaling.
+
+Please begin your proposal with the words "PROPERTY ID".

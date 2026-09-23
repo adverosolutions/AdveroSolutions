@@ -1,0 +1,310 @@
+{
+  "title": "Lead In → AI Tier → HubSpot With Retries → Slack → Run Log",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · RECEIVE AND VALIDATE THE LEAD",
+      "color": 0,
+      "note": "Every lead is checked before anything downstream runs. A bad payload is rejected with the missing field named, not failed halfway through."
+    },
+    {
+      "key": "dedupe",
+      "label": "2 · CHECK HUBSPOT FOR AN EXISTING CONTACT",
+      "color": 0,
+      "note": "One search by email before we create anything. A returning contact is logged and never duplicated in the CRM."
+    },
+    {
+      "key": "qualify",
+      "label": "3 · AI QUALIFIES THE LEAD INTO A TIER",
+      "color": 0,
+      "note": "OpenAI reads the form answers and company details and returns one of Hot, Warm or Cold with a reason. The parser forces the shape so the switch below never gets free text."
+    },
+    {
+      "key": "act",
+      "label": "4 · ACT BY TIER, RETRY THE CRM IF IT FAILS",
+      "color": 0,
+      "note": "Hot goes straight into HubSpot as a contact plus a deal. Warm gets a nurture email. Cold is logged only. If HubSpot errors or rate limits, we wait and retry up to three times before giving up."
+    },
+    {
+      "key": "log",
+      "label": "5 · LOG EVERY RUN, ALERT ON ANY FAILURE",
+      "color": 0,
+      "note": "Sales sees every qualified lead in Slack. Every run writes a log row with tier, ids and timing. Anything that breaks anywhere pings the channel with a link to the failed execution."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 · New Lead Arrives From the Website Form",
+      "section": "intake"
+    },
+    {
+      "key": "validate",
+      "kind": "data.code",
+      "label": "2 · Check Required Fields and Clean Up the Data",
+      "section": "intake"
+    },
+    {
+      "key": "valid",
+      "kind": "flow.branch",
+      "label": "3 · Does the Lead Have an Email and a Company?",
+      "section": "intake"
+    },
+    {
+      "key": "reject",
+      "kind": "net.respond",
+      "label": "3b · Reject With the Missing Field Named",
+      "section": "intake"
+    },
+    {
+      "key": "lookup",
+      "kind": "net.http",
+      "label": "4 · HubSpot: Search Contacts by Email",
+      "section": "dedupe"
+    },
+    {
+      "key": "dupe",
+      "kind": "flow.branch",
+      "label": "5 · Is This Contact Already in HubSpot?",
+      "section": "dedupe"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "6 · Qualify the Lead Into Hot, Warm or Cold",
+      "section": "qualify"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "OpenAI GPT-4.1",
+      "app": "openai",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Force One of: Hot, Warm, Cold, Plus a Reason and Score",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "route",
+      "kind": "flow.switch",
+      "label": "7 · Route by Tier",
+      "section": "act"
+    },
+    {
+      "key": "contact",
+      "kind": "app.action",
+      "label": "8a · HubSpot: Create the Contact",
+      "app": "hubspot",
+      "op": "create_contact",
+      "section": "act"
+    },
+    {
+      "key": "crmok",
+      "kind": "flow.branch",
+      "label": "9 · Did the CRM Call Succeed?",
+      "section": "act"
+    },
+    {
+      "key": "wait",
+      "kind": "flow.wait",
+      "label": "9b · Wait 30 Seconds and Retry, Up to 3 Times",
+      "section": "act"
+    },
+    {
+      "key": "deal",
+      "kind": "app.action",
+      "label": "10 · HubSpot: Open a Deal for Sales",
+      "app": "hubspot",
+      "op": "create_deal",
+      "section": "act"
+    },
+    {
+      "key": "nurture",
+      "kind": "app.action",
+      "label": "8b · Send the Warm Lead a Nurture Email",
+      "app": "gmail",
+      "op": "send",
+      "section": "act"
+    },
+    {
+      "key": "coldlog",
+      "kind": "flow.noop",
+      "label": "8c · Cold Lead: Log Only, No Outreach",
+      "section": "act"
+    },
+    {
+      "key": "slack",
+      "kind": "app.action",
+      "label": "11 · Post the Lead, Tier and Reason to the Sales Channel",
+      "app": "slack",
+      "op": "post",
+      "section": "log"
+    },
+    {
+      "key": "logrow",
+      "kind": "app.action",
+      "label": "12 · Write a Run Log Row With Tier, Ids, Retries and Timing",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "log"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "13 · Any Node Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "log"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "14 · Alert the Channel With a Link to the Failed Run",
+      "app": "slack",
+      "op": "post",
+      "section": "log"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "validate"
+    },
+    {
+      "from": "validate",
+      "to": "valid"
+    },
+    {
+      "from": "valid",
+      "to": "reject",
+      "branch": "false"
+    },
+    {
+      "from": "valid",
+      "to": "lookup",
+      "branch": "true"
+    },
+    {
+      "from": "lookup",
+      "to": "dupe"
+    },
+    {
+      "from": "dupe",
+      "to": "logrow",
+      "branch": "true"
+    },
+    {
+      "from": "dupe",
+      "to": "agent",
+      "branch": "false"
+    },
+    {
+      "from": "agent",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "contact",
+      "branch": "Hot"
+    },
+    {
+      "from": "route",
+      "to": "nurture",
+      "branch": "Warm"
+    },
+    {
+      "from": "route",
+      "to": "coldlog",
+      "branch": "Cold"
+    },
+    {
+      "from": "contact",
+      "to": "crmok"
+    },
+    {
+      "from": "crmok",
+      "to": "deal",
+      "branch": "true"
+    },
+    {
+      "from": "crmok",
+      "to": "wait",
+      "branch": "false"
+    },
+    {
+      "from": "wait",
+      "to": "contact",
+      "loop": true
+    },
+    {
+      "from": "deal",
+      "to": "slack"
+    },
+    {
+      "from": "nurture",
+      "to": "slack"
+    },
+    {
+      "from": "coldlog",
+      "to": "logrow"
+    },
+    {
+      "from": "slack",
+      "to": "logrow"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "lead_id": "lead_7c3e91",
+    "source": "website_contact_form",
+    "received_at": "2026-09-07T14:02:18Z",
+    "first_name": "Dana",
+    "last_name": "Whitfield",
+    "email": "dana@ridgelinepropertygroup.com",
+    "company": "Ridgeline Property Group",
+    "phone": "+1 512 555 0147",
+    "role": "Director of Operations",
+    "team_size": "25-50",
+    "message": "We manage about 300 rental units and our leasing inquiries are falling through the cracks. Looking for someone to automate follow-up and get everything into HubSpot. Budget approved for Q4.",
+    "utm_campaign": "google_ads_property_mgmt"
+  },
+  "output_sample": {
+    "lead_id": "lead_7c3e91",
+    "validation": "passed",
+    "hubspot_existing_contact": false,
+    "tier": "Hot",
+    "score": 88,
+    "reason": "Named a live pain (leasing inquiries lost), a concrete volume (300 units), a decision-maker role, and approved Q4 budget.",
+    "actions_taken": {
+      "hubspot_contact_id": "119204877",
+      "hubspot_deal_id": "27718355",
+      "deal_stage": "qualified_to_buy",
+      "crm_attempts": 2,
+      "crm_retry_reason": "429 rate limit on first attempt, succeeded after 30s wait",
+      "slack_message_ts": "1757253770.014200",
+      "nurture_email_sent": false
+    },
+    "run_log_row": {
+      "sheet": "Lead Runs",
+      "row": 1482,
+      "tier": "Hot",
+      "retries": 1,
+      "duration_ms": 34120,
+      "status": "success"
+    },
+    "if_it_had_failed": "Error trigger fires, Slack alert carries the execution link, the run log row still records the failure"
+  },
+  "archetype": "lead_in_ai_tier_hubspot_with_retries_slack_run_l",
+  "learned": true,
+  "learned_at": "2026-09-07"
+}

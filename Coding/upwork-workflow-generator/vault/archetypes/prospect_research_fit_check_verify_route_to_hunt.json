@@ -1,0 +1,394 @@
+{
+  "title": "Prospect Research, Fit-Check, Verify, Route to Hunter Campaign",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "pull",
+      "label": "1 · PULL TODAY'S CANDIDATE COMPANIES",
+      "color": 0,
+      "note": "Runs every weekday morning. Pulls a small batch from the source list and works through it one company at a time."
+    },
+    {
+      "key": "fit",
+      "label": "2 · RESEARCH AND FIT-CHECK AGAINST YOUR CRITERIA",
+      "color": 0,
+      "note": "Claude reads the company site and judges it against your written criteria. Anything it is not sure about gets rejected with the reason, not added."
+    },
+    {
+      "key": "contact",
+      "label": "3 · FIND AND VERIFY THE DECISION-MAKER",
+      "color": 0,
+      "note": "Hunter finds the right person by title, then verifies the address. Unverified emails never reach a campaign."
+    },
+    {
+      "key": "route",
+      "label": "4 · DEDUPE AND ADD TO THE RIGHT CAMPAIGN",
+      "color": 0,
+      "note": "Skips anyone already in a campaign, then routes by segment: local service, medtech, or B2B."
+    },
+    {
+      "key": "digest",
+      "label": "5 · LOG EVERY DECISION, SEND THE DAILY DIGEST",
+      "color": 0,
+      "note": "Every company lands in the log, added or rejected, with the reason. One Slack message a day shows both lists."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "cron",
+      "kind": "trigger.schedule",
+      "label": "1 · Every Weekday at 7am",
+      "section": "pull"
+    },
+    {
+      "key": "source",
+      "kind": "net.http",
+      "label": "2 · Apollo: Pull Candidate Companies by Industry and Size",
+      "app": "apollo",
+      "op": "search_companies",
+      "section": "pull",
+      "notes": "Swap for Google Maps or a CSV of accounts. Same shape downstream."
+    },
+    {
+      "key": "loop",
+      "kind": "data.split",
+      "label": "3 · Work Through One Company at a Time",
+      "section": "pull"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "4 · Fit-Check Against Your Written Criteria",
+      "section": "fit",
+      "notes": "Reads the site, decides fit, names the segment, gives the reason."
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "site",
+      "kind": "ai.tool",
+      "label": "Read the Company Website and About Page",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Force: Fit Yes/No, Segment, Confidence, Reason",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "fits",
+      "kind": "flow.branch",
+      "label": "5 · Does It Fit, With High Confidence?",
+      "section": "fit"
+    },
+    {
+      "key": "finddm",
+      "kind": "net.http",
+      "label": "6 · Hunter: Find Decision-Maker by Domain and Title",
+      "app": "hunter",
+      "op": "domain_search",
+      "section": "contact",
+      "notes": "Owner or founder for local service, VP Marketing or CMO for medtech and B2B."
+    },
+    {
+      "key": "verify",
+      "kind": "net.http",
+      "label": "7 · Hunter: Verify the Email Address",
+      "app": "hunter",
+      "op": "verify_email",
+      "section": "contact"
+    },
+    {
+      "key": "deliverable",
+      "kind": "flow.branch",
+      "label": "8 · Is the Email Deliverable?",
+      "section": "contact"
+    },
+    {
+      "key": "dedupe",
+      "kind": "net.http",
+      "label": "9 · Hunter: Check if Already in Any Campaign",
+      "app": "hunter",
+      "op": "search_leads",
+      "section": "route"
+    },
+    {
+      "key": "isnew",
+      "kind": "flow.branch",
+      "label": "10 · Is This a Brand New Lead?",
+      "section": "route"
+    },
+    {
+      "key": "segment",
+      "kind": "flow.switch",
+      "label": "11 · Route by Segment",
+      "section": "route"
+    },
+    {
+      "key": "addlocal",
+      "kind": "net.http",
+      "label": "12a · Hunter: Add to Local Service Campaign",
+      "app": "hunter",
+      "op": "add_lead_local",
+      "section": "route"
+    },
+    {
+      "key": "addmed",
+      "kind": "net.http",
+      "label": "12b · Hunter: Add to Medtech Campaign",
+      "app": "hunter",
+      "op": "add_lead_medtech",
+      "section": "route"
+    },
+    {
+      "key": "addb2b",
+      "kind": "net.http",
+      "label": "12c · Hunter: Add to B2B Campaign",
+      "app": "hunter",
+      "op": "add_lead_b2b",
+      "section": "route"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "13 · Log the Decision: Added or Rejected, and Why",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "digest"
+    },
+    {
+      "key": "slack",
+      "kind": "app.action",
+      "label": "14 · Slack: Daily Digest of Added, Rejected, and Reasons",
+      "app": "slack",
+      "op": "post",
+      "section": "digest"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "15 · Any Node Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "digest"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "16 · Slack: Alert With a Link to the Failed Run",
+      "app": "slack",
+      "op": "post",
+      "section": "digest"
+    }
+  ],
+  "edges": [
+    {
+      "from": "cron",
+      "to": "source"
+    },
+    {
+      "from": "source",
+      "to": "loop"
+    },
+    {
+      "from": "loop",
+      "to": "agent",
+      "branch": "loop"
+    },
+    {
+      "from": "loop",
+      "to": "slack",
+      "branch": "done"
+    },
+    {
+      "from": "agent",
+      "to": "fits"
+    },
+    {
+      "from": "fits",
+      "to": "finddm",
+      "branch": "true"
+    },
+    {
+      "from": "fits",
+      "to": "log",
+      "branch": "false"
+    },
+    {
+      "from": "finddm",
+      "to": "verify"
+    },
+    {
+      "from": "verify",
+      "to": "deliverable"
+    },
+    {
+      "from": "deliverable",
+      "to": "dedupe",
+      "branch": "true"
+    },
+    {
+      "from": "deliverable",
+      "to": "log",
+      "branch": "false"
+    },
+    {
+      "from": "dedupe",
+      "to": "isnew"
+    },
+    {
+      "from": "isnew",
+      "to": "segment",
+      "branch": "true"
+    },
+    {
+      "from": "isnew",
+      "to": "log",
+      "branch": "false"
+    },
+    {
+      "from": "segment",
+      "to": "addlocal",
+      "branch": "Local Service"
+    },
+    {
+      "from": "segment",
+      "to": "addmed",
+      "branch": "Medtech"
+    },
+    {
+      "from": "segment",
+      "to": "addb2b",
+      "branch": "B2B"
+    },
+    {
+      "from": "addlocal",
+      "to": "log"
+    },
+    {
+      "from": "addmed",
+      "to": "log"
+    },
+    {
+      "from": "addb2b",
+      "to": "log"
+    },
+    {
+      "from": "log",
+      "to": "loop",
+      "loop": true
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "run_date": "2026-09-08",
+    "source": "apollo",
+    "batch_size": 25,
+    "criteria_doc": "ICP Criteria v3 (Google Doc)",
+    "candidates": [
+      {
+        "company": "Brightline Orthopedics",
+        "domain": "brightlineortho.com",
+        "industry": "Medical Devices",
+        "employees": 85,
+        "hq": "Minneapolis, MN"
+      },
+      {
+        "company": "Pinnacle Roofing & Exteriors",
+        "domain": "pinnacleroofingtx.com",
+        "industry": "Roofing Contractors",
+        "employees": 22,
+        "hq": "Plano, TX"
+      },
+      {
+        "company": "Corvid Data Systems",
+        "domain": "corviddata.io",
+        "industry": "B2B SaaS",
+        "employees": 140,
+        "hq": "Denver, CO"
+      },
+      {
+        "company": "Quick Cash Pawn",
+        "domain": "quickcashpawnnc.com",
+        "industry": "Pawn Shops",
+        "employees": 6,
+        "hq": "Raleigh, NC"
+      }
+    ]
+  },
+  "output_sample": {
+    "digest_date": "2026-09-08",
+    "reviewed": 25,
+    "added": 9,
+    "rejected": 16,
+    "added_to_campaigns": [
+      {
+        "company": "Brightline Orthopedics",
+        "contact": "Dana Whitfield, VP Marketing",
+        "email": "dana.whitfield@brightlineortho.com",
+        "verify_status": "deliverable (score 96)",
+        "segment": "Medtech",
+        "campaign": "Medtech - AI Visibility Q4",
+        "fit_reason": "FDA-cleared device maker, 50-200 staff, publishes clinical content but no AI-search presence."
+      },
+      {
+        "company": "Pinnacle Roofing & Exteriors",
+        "contact": "Marcus Bell, Owner",
+        "email": "marcus@pinnacleroofingtx.com",
+        "verify_status": "deliverable (score 91)",
+        "segment": "Local Service",
+        "campaign": "Local Service - Search Visibility",
+        "fit_reason": "Multi-crew roofer in a metro you target, 4.7 stars on 300+ reviews, no earned-media footprint."
+      },
+      {
+        "company": "Corvid Data Systems",
+        "contact": "Priya Natarajan, CMO",
+        "email": "priya@corviddata.io",
+        "verify_status": "deliverable (score 94)",
+        "segment": "B2B",
+        "campaign": "B2B - Authority and Earned Media",
+        "fit_reason": "Series A B2B SaaS, hiring a content marketer, no analyst or press coverage yet."
+      }
+    ],
+    "rejected_with_reasons": [
+      {
+        "company": "Quick Cash Pawn",
+        "stage": "Fit-Check",
+        "reason": "Outside criteria: retail pawn shop, not a service, medtech, or B2B business."
+      },
+      {
+        "company": "Northgate Dental Lab",
+        "stage": "Fit-Check",
+        "reason": "Low confidence (0.55): site does not say whether they sell to practices or consumers. Flagged for your call."
+      },
+      {
+        "company": "Helix Bio Supply",
+        "stage": "Verify Email",
+        "reason": "Hunter returned 'risky' for the only marketing contact found. Not added."
+      },
+      {
+        "company": "Summit HVAC Pros",
+        "stage": "Dedupe",
+        "reason": "Owner already in 'Local Service - Search Visibility' since Aug 14."
+      }
+    ],
+    "hunter_credits_used": 41,
+    "slack_channel": "#prospecting-digest",
+    "log_sheet": "Prospect Decisions 2026 (Google Sheet)"
+  },
+  "archetype": "prospect_research_fit_check_verify_route_to_hunt",
+  "learned": true,
+  "learned_at": "2026-09-07"
+}

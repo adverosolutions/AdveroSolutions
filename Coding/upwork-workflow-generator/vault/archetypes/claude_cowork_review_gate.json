@@ -1,0 +1,216 @@
+{
+  "title": "Pre-Send Review Gate — One Prompt, Four Checks, One Human Skim",
+  "platform": "diagram",
+  "sections": [
+    {
+      "key": "before",
+      "label": "1 · BEFORE THE DRAFT EXISTS",
+      "color": 0,
+      "note": "Most review failures are brief failures. If audience, goal, format and constraints were never written down, the reviewer has nothing to check the work against and the review turns into taste. This step costs 30 seconds and removes the most common argument."
+    },
+    {
+      "key": "pass",
+      "label": "2 · THE REVIEW PROMPT RUNS ITSELF",
+      "color": 0,
+      "note": "One prompt, four passes, run by Claude against its own draft. Separate passes rather than one big instruction, because a single combined check reliably drops whichever item is last in the list."
+    },
+    {
+      "key": "decide",
+      "label": "3 · FIX OR PROCEED",
+      "color": 0,
+      "note": "Anything flagged goes back for one revision with the specific flags attached, not a general request to improve it. The loop runs at most twice, then it goes to a human either way, because a third automated pass means the brief is wrong, not the draft."
+    },
+    {
+      "key": "human",
+      "label": "4 · THE 90-SECOND HUMAN GATE",
+      "color": 0,
+      "note": "The human does not re-read the whole piece. They check two things the model is worst at judging about its own work: whether every claim is actually true for this client, and whether it sounds like you. Everything else was already checked."
+    },
+    {
+      "key": "learn",
+      "label": "5 · THE CHECKLIST IMPROVES ITSELF",
+      "color": 0,
+      "note": "Every miss that reaches a client gets logged as one line and added to the prompt. That is the difference between a checklist that works this month and one that still works in six months."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "brief",
+      "kind": "data.transform",
+      "label": "1 · Lock the Brief: Audience, Goal, Format, Limits",
+      "section": "before"
+    },
+    {
+      "key": "draft",
+      "kind": "ai.llm",
+      "label": "2 · Draft Created in Claude / Cowork",
+      "section": "before"
+    },
+    {
+      "key": "facts",
+      "kind": "ai.llm",
+      "label": "3 · Claim Check: Every Number Traced to a Source",
+      "section": "pass"
+    },
+    {
+      "key": "brand",
+      "kind": "ai.llm",
+      "label": "4 · Brand Check: Voice, Banned Words, Formatting",
+      "section": "pass"
+    },
+    {
+      "key": "scope",
+      "kind": "ai.llm",
+      "label": "5 · Scope Check: Did It Answer the Actual Brief?",
+      "section": "pass"
+    },
+    {
+      "key": "risk",
+      "kind": "ai.llm",
+      "label": "6 · Risk Check: Anything We Cannot Defend to a Client",
+      "section": "pass"
+    },
+    {
+      "key": "flagged",
+      "kind": "flow.branch",
+      "label": "7 · Anything Flagged?",
+      "section": "decide"
+    },
+    {
+      "key": "revise",
+      "kind": "ai.llm",
+      "label": "7b · Revise Against the Specific Flags · Max 2×",
+      "section": "decide"
+    },
+    {
+      "key": "skim",
+      "kind": "flow.noop",
+      "label": "8 · Human Skim: Claims and Tone Only, 90 Seconds",
+      "section": "human"
+    },
+    {
+      "key": "send",
+      "kind": "net.respond",
+      "label": "9 · Send to Client",
+      "section": "human"
+    },
+    {
+      "key": "log",
+      "kind": "data.transform",
+      "label": "10 · Log Anything That Slipped Through",
+      "section": "learn"
+    },
+    {
+      "key": "update",
+      "kind": "data.transform",
+      "label": "11 · Add That Line to the Review Prompt",
+      "section": "learn"
+    }
+  ],
+  "edges": [
+    {
+      "from": "brief",
+      "to": "draft"
+    },
+    {
+      "from": "draft",
+      "to": "facts"
+    },
+    {
+      "from": "facts",
+      "to": "brand"
+    },
+    {
+      "from": "brand",
+      "to": "scope"
+    },
+    {
+      "from": "scope",
+      "to": "risk"
+    },
+    {
+      "from": "risk",
+      "to": "flagged"
+    },
+    {
+      "from": "flagged",
+      "to": "revise",
+      "branch": "Yes — flags raised"
+    },
+    {
+      "from": "revise",
+      "to": "facts",
+      "loop": true
+    },
+    {
+      "from": "flagged",
+      "to": "skim",
+      "branch": "No — clean"
+    },
+    {
+      "from": "skim",
+      "to": "send"
+    },
+    {
+      "from": "send",
+      "to": "log"
+    },
+    {
+      "from": "log",
+      "to": "update"
+    }
+  ],
+  "input_sample": {
+    "deliverable": "Q3 campaign strategy deck — Northwind Cycles",
+    "brief": {
+      "audience": "Marketing director, not technical",
+      "goal": "Approve the channel mix",
+      "format": "12 slides max",
+      "constraints": "No competitor names, GBP not USD"
+    },
+    "draft_stats": {
+      "slides": 14,
+      "claims_made": 9,
+      "sources_cited": 4
+    }
+  },
+  "output_sample": {
+    "verdict": "2 blockers, 3 minor — do not send",
+    "claim_check": [
+      {
+        "slide": 4,
+        "claim": "Paid social delivers 3x the ROAS of search for DTC",
+        "status": "BLOCKER — no source, and not true for this client's category"
+      },
+      {
+        "slide": 7,
+        "claim": "Their email list is ~40k",
+        "status": "BLOCKER — actual figure is 22k, from the brief doc"
+      }
+    ],
+    "brand_check": [
+      {
+        "issue": "Uses 'leverage' twice and 'synergy' once",
+        "status": "banned-word list"
+      },
+      {
+        "issue": "Currency shown in USD on slides 6 and 9",
+        "status": "brief said GBP"
+      }
+    ],
+    "scope_check": {
+      "issue": "14 slides against a 12-slide limit",
+      "status": "minor — cut the two appendix slides"
+    },
+    "risk_check": {
+      "issue": "Names a competitor on slide 11",
+      "status": "brief explicitly excluded this"
+    },
+    "human_gate": "Reviewer confirms the 22k figure and the tone on slides 1 to 3, everything else already checked",
+    "time_to_review": "under 4 minutes vs 25 unstructured",
+    "logged_for_next_time": "Add: flag any currency that does not match the brief"
+  },
+  "archetype": "claude_cowork_review_gate",
+  "learned": true,
+  "learned_at": "2026-08-11"
+}

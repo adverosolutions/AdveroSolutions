@@ -1,0 +1,818 @@
+{
+  "name": "Your Order to Books Pipeline, Watched and Self-Healing",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - AN ORDER COMES IN FROM EITHER CHANNEL\n\nFaire wholesale and Shopify DTC land on separate hooks and get flattened into one shape, so every downstream step reads the same fields no matter which channel sent it.",
+        "height": 760,
+        "width": 460,
+        "color": 5
+      },
+      "id": "7fe23693-f619-5c7a-8c44-32184cca47d0",
+      "name": "Section - 1 - AN ORDER COMES IN FROM EITHER CHANNEL",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - THE THREE PLACES IT USUALLY BREAKS\n\nAn unmapped SKU, an Unleashed call that times out or hits a rate limit, and a Xero call on an expired token. Each one gets a gate, and each gate has somewhere safe to put the order instead of dropping it.",
+        "height": 760,
+        "width": 1420,
+        "color": 4
+      },
+      "id": "436b5776-72e2-5c00-a164-1f4424566cf7",
+      "name": "Section - 2 - THE THREE PLACES IT USUALLY BREAKS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - CLOSE THE LOOP\n\nThe channel gets the fulfilment and invoice number written back, and every run leaves a row behind with timings, so a slow step is visible before it becomes a broken one.",
+        "height": 760,
+        "width": 460,
+        "color": 6
+      },
+      "id": "ad957025-de2c-52d0-89fe-8c40b538f706",
+      "name": "Section - 3 - CLOSE THE LOOP",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2140,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - EVERY MORNING, PROVE IT IS HEALTHY\n\nA 7am pass over yesterday's log and dead letters, counted and posted. Green means the numbers reconcile. Red names the orders that need a human before anyone has to ask.",
+        "height": 760,
+        "width": 940,
+        "color": 7
+      },
+      "id": "05557424-9d66-5240-83af-26b845847c3f",
+      "name": "Section - 4 - EVERY MORNING, PROVE IT IS HEALTHY",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2760,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - NOTHING FAILS QUIETLY\n\nOne error trigger covers every workflow in the instance, so a breakdown announces itself with the workflow, the node and the order id instead of being found days later in a stock count.",
+        "height": 760,
+        "width": 460,
+        "color": 1
+      },
+      "id": "0fa72362-0d99-5806-8f55-c1994a34cf4e",
+      "name": "Section - 5 - NOTHING FAILS QUIETLY",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3860,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "ecaaee86-cc27-552b-acff-20df84ee55d4",
+      "name": "1 - Faire Wholesale Order",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        160
+      ],
+      "webhookId": "d681b0de-e62f-56c9-864e-1bd49f98d749"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "69aa437d-6a05-5cba-9e11-1ae381f8d074",
+      "name": "1b - Shopify Order",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        400
+      ],
+      "webhookId": "66be5ba6-23a4-5c90-ad11-f729c56f217d"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "447f404a-9d64-56b8-b1dd-b6a1f24dfb92",
+              "name": "source",
+              "value": "={{ $json.source }}",
+              "type": "string"
+            },
+            {
+              "id": "4f99c520-cab6-504f-beac-42184d9c95ef",
+              "name": "event",
+              "value": "={{ $json.event }}",
+              "type": "string"
+            },
+            {
+              "id": "5e327182-1550-5623-93e0-7ee116aca1ea",
+              "name": "received_at",
+              "value": "={{ $json.received_at }}",
+              "type": "string"
+            },
+            {
+              "id": "68617b19-c3bc-595e-962c-657dc9de0982",
+              "name": "order",
+              "value": "={{ $json.order }}",
+              "type": "object"
+            },
+            {
+              "id": "ab2b0172-e2e2-5df8-8d7f-4ed8a5668fde",
+              "name": "note",
+              "value": "={{ $json.note }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "6e129eb3-0f15-57c1-a7dc-562c51bbae8f",
+      "name": "2 - Normalize: SKUs, Quantities, Customer, Channel",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        240,
+        280
+      ],
+      "notes": "One payload shape for both channels, so nothing downstream has to know where the order came from.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "eed5c2c4-d54f-5903-b3be-dcaa8b919fa1",
+              "leftValue": "={{ $json.every_sku }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "aba10982-e65e-5294-a3bc-e53eddd1f503",
+      "name": "3 - Every SKU Exists in Unleashed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        620,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "c982f286-1246-53b6-8526-4b5be7d03b80",
+      "name": "3b - Alert: Unmapped SKU, Order Parked",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        860,
+        420
+      ],
+      "notes": "The order waits instead of half-posting a sales order that has to be unpicked later.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/4-unleashed-create-the-sales-order-and-a",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "f5163637-fb7f-5825-942f-7bbd22957d1d",
+      "name": "4 - Unleashed: Create the Sales Order and Allocate Stock",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        860,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6508f7de-2640-5bc3-87ae-aa12600b309d",
+              "leftValue": "={{ $json.unleashed_accepted }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c944a66d-aeab-53d4-87c9-1a9704b6b8d1",
+      "name": "5 - Unleashed Accepted It?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1100,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 60,
+        "unit": "seconds"
+      },
+      "id": "623d4c5b-73b4-52b7-b3f0-abd2140a1783",
+      "name": "5b - Back Off 60 Seconds and Retry",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1340,
+        320
+      ],
+      "notes": "Rate limits and timeouts are temporary, so the retry happens before a human ever hears about it.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/6-xero-create-the-invoice-against-the-ri",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "8983f899-dc1d-5fe1-b308-9f5915b20f01",
+      "name": "6 - Xero: Create the Invoice Against the Right Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1340,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2f15b21a-badd-5b06-afba-576d8637663a",
+              "leftValue": "={{ $json.xero_accepted }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a34013cd-9efe-5f04-bcc5-929814150f11",
+      "name": "7 - Xero Accepted It?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1580,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "2a3e0add-4b1b-5268-8a0e-dd81bdb6cfcb",
+      "name": "7b - Dead Letter: Order, Error, Payload, for Replay",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1820,
+        180
+      ],
+      "notes": "The exact payload is kept, so a fixed order is replayed in one click instead of rebuilt by hand.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/8-shopify-or-faire-write-back-fulfilment",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "cfa20fce-174b-5013-884b-587252cfa4ea",
+      "name": "8 - Shopify or Faire: Write Back Fulfilment and Invoice Number",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "e94e0b23-c44f-5353-b6d9-18b1472e142f",
+      "name": "9 - Run Log: Order, Channel, Each Step, Duration",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2440,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "d871276c-f1e3-5309-895d-de4440be9ab5",
+      "name": "10 - Every Morning at 7am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        2820,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "options": {},
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        }
+      },
+      "id": "fa2caa79-4b33-5186-b5ea-247e4abc65f3",
+      "name": "11 - Read Yesterday's Runs and Dead Letters",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        3060,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {},
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "posted_to"
+            },
+            {
+              "fieldToAggregate": "date"
+            },
+            {
+              "fieldToAggregate": "status"
+            }
+          ]
+        }
+      },
+      "id": "89d4e9e1-9cba-5d47-a3c1-0ea4eaa4574d",
+      "name": "12 - Health Check: Orders In, Invoiced, Parked, Failed",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3300,
+        120
+      ],
+      "notes": "Orders in has to equal invoiced plus parked plus failed. When it does not, that is the bug, found at 7am.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "2ddaab64-f06c-5788-ba89-4b119fc5e097",
+      "name": "13 - Post the Health Report, Green or Red",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        3540,
+        120
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "48fe61aa-9234-52e9-b96c-58730c7e0524",
+      "name": "14 - Any Node Fails, Any Workflow",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        3920,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "068dab9b-41c5-5d04-add9-3afcf7d4854f",
+      "name": "15 - Alert With Workflow, Node, Order Id",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        4160,
+        160
+      ]
+    }
+  ],
+  "connections": {
+    "1 - Faire Wholesale Order": {
+      "main": [
+        [
+          {
+            "node": "2 - Normalize: SKUs, Quantities, Customer, Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1b - Shopify Order": {
+      "main": [
+        [
+          {
+            "node": "2 - Normalize: SKUs, Quantities, Customer, Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Normalize: SKUs, Quantities, Customer, Channel": {
+      "main": [
+        [
+          {
+            "node": "3 - Every SKU Exists in Unleashed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Every SKU Exists in Unleashed?": {
+      "main": [
+        [
+          {
+            "node": "4 - Unleashed: Create the Sales Order and Allocate Stock",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "3b - Alert: Unmapped SKU, Order Parked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - Unleashed: Create the Sales Order and Allocate Stock": {
+      "main": [
+        [
+          {
+            "node": "5 - Unleashed Accepted It?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - Unleashed Accepted It?": {
+      "main": [
+        [
+          {
+            "node": "6 - Xero: Create the Invoice Against the Right Contact",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "5b - Back Off 60 Seconds and Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5b - Back Off 60 Seconds and Retry": {
+      "main": [
+        [
+          {
+            "node": "4 - Unleashed: Create the Sales Order and Allocate Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Xero: Create the Invoice Against the Right Contact": {
+      "main": [
+        [
+          {
+            "node": "7 - Xero Accepted It?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - Xero Accepted It?": {
+      "main": [
+        [
+          {
+            "node": "8 - Shopify or Faire: Write Back Fulfilment and Invoice Number",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "7b - Dead Letter: Order, Error, Payload, for Replay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7b - Dead Letter: Order, Error, Payload, for Replay": {
+      "main": [
+        [
+          {
+            "node": "9 - Run Log: Order, Channel, Each Step, Duration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - Shopify or Faire: Write Back Fulfilment and Invoice Number": {
+      "main": [
+        [
+          {
+            "node": "9 - Run Log: Order, Channel, Each Step, Duration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9 - Run Log: Order, Channel, Each Step, Duration": {
+      "main": [
+        [
+          {
+            "node": "11 - Read Yesterday's Runs and Dead Letters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Every Morning at 7am": {
+      "main": [
+        [
+          {
+            "node": "11 - Read Yesterday's Runs and Dead Letters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Read Yesterday's Runs and Dead Letters": {
+      "main": [
+        [
+          {
+            "node": "12 - Health Check: Orders In, Invoiced, Parked, Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 - Health Check: Orders In, Invoiced, Parked, Failed": {
+      "main": [
+        [
+          {
+            "node": "13 - Post the Health Report, Green or Red",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 - Any Node Fails, Any Workflow": {
+      "main": [
+        [
+          {
+            "node": "15 - Alert With Workflow, Node, Order Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "d873b9cc-7a93-554e-887f-9e2b4c301388",
+  "pinData": {
+    "1 - Faire Wholesale Order": [
+      {
+        "json": {
+          "source": "faire",
+          "event": "order.created",
+          "received_at": "2026-09-21T08:14:07Z",
+          "order": {
+            "faire_order_id": "FO-88213",
+            "retailer": "Maison Verte",
+            "retailer_email": "orders@maisonverte.co.uk",
+            "ship_to": {
+              "line1": "14 Hanbury Street",
+              "city": "London",
+              "postcode": "E1 6QR",
+              "country": "GB"
+            },
+            "currency": "GBP",
+            "payout_terms": "net 60",
+            "items": [
+              {
+                "sku": "CND-VAN-8OZ",
+                "name": "Vanilla Amber Candle 8oz",
+                "qty": 24,
+                "unit_price": 11.5
+              },
+              {
+                "sku": "CND-LAV-8OZ",
+                "name": "Lavender Fig Candle 8oz",
+                "qty": 12,
+                "unit_price": 11.5
+              },
+              {
+                "sku": "DIF-CED-100",
+                "name": "Cedar Reed Diffuser 100ml",
+                "qty": 6,
+                "unit_price": 16.0
+              }
+            ],
+            "order_total": 510.0
+          },
+          "note": "CND-LAV-8OZ has no matching product code in Unleashed, which is exactly the case node 3 catches before anything is written."
+        }
+      }
+    ],
+    "13 - Post the Health Report, Green or Red": [
+      {
+        "json": {
+          "posted_to": "#ops-orders",
+          "date": "2026-09-21",
+          "status": "RED",
+          "headline": "1 order parked, everything else reconciled",
+          "counts": {
+            "orders_in": 41,
+            "faire": 17,
+            "shopify": 24,
+            "invoiced_in_xero": 40,
+            "parked": 1,
+            "failed": 0
+          },
+          "timing": {
+            "avg_order_to_invoice_seconds": 38,
+            "slowest_order_seconds": 96,
+            "retries_that_self_healed": 3
+          },
+          "needs_a_human": [
+            {
+              "order": "FO-88213",
+              "channel": "Faire",
+              "retailer": "Maison Verte",
+              "reason": "SKU CND-LAV-8OZ is not mapped in Unleashed",
+              "parked_at": "2026-09-21 08:14:09",
+              "fix": "add the product code in Unleashed, then replay the row from the dead letter tab"
+            }
+          ],
+          "reconciliation": "41 in = 40 invoiced + 1 parked + 0 failed",
+          "dead_letter_tab": "0 new rows overnight, 1 open row from 2026-09-18 already replayed",
+          "if_nothing_were_wrong": "same message, GREEN, one line: 41 in, 41 invoiced, 0 parked, 0 failed, avg 38 seconds"
+        }
+      }
+    ]
+  }
+}

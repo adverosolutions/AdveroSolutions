@@ -1,0 +1,265 @@
+{
+  "title": "Membership Lifecycle — Purchase → Onboarding → Recurring Billing → Retention → Cancellation, Fully Logged",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "purchase",
+      "label": "1 · PURCHASE & ONBOARDING",
+      "color": 0,
+      "note": "A new purchase grants access, tags the tier, and starts onboarding in one pass, so no one is paying without access or getting access without paying."
+    },
+    {
+      "key": "billing",
+      "label": "2 · RECURRING BILLING & RETENTION",
+      "color": 0,
+      "note": "Every renewal either extends access or starts dunning, with a real wait before access is paused, that's the retention step most setups skip."
+    },
+    {
+      "key": "cancel",
+      "label": "3 · CANCELLATION",
+      "color": 0,
+      "note": "Access ends at period end, not the moment they click, and the win-back sequence starts automatically."
+    },
+    {
+      "key": "qa",
+      "label": "4 · QA & LOGGING",
+      "color": 0,
+      "note": "Every event logs what fired, what tagged, and what charged, and anything that didn't gets flagged immediately, that's how you find out before the customer does."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "purchase_trig",
+      "kind": "trigger.webhook",
+      "label": "New Purchase or Subscription Started",
+      "section": "purchase"
+    },
+    {
+      "key": "normalize",
+      "kind": "data.transform",
+      "label": "Normalize Customer, Plan, Tier, and Payment Terms",
+      "section": "purchase"
+    },
+    {
+      "key": "grant_access",
+      "kind": "net.http",
+      "label": "Grant Membership Access and Tag the Tier",
+      "section": "purchase"
+    },
+    {
+      "key": "start_onboard",
+      "kind": "net.http",
+      "label": "Add to the Onboarding Email and SMS Flow",
+      "section": "purchase"
+    },
+    {
+      "key": "renewal_trig",
+      "kind": "trigger.app",
+      "label": "Recurring Payment Succeeded or Failed",
+      "section": "billing"
+    },
+    {
+      "key": "paid_branch",
+      "kind": "flow.branch",
+      "label": "Did the Payment Fail?",
+      "section": "billing"
+    },
+    {
+      "key": "extend_access",
+      "kind": "net.http",
+      "label": "Extend Access and Update the Renewal Date",
+      "section": "billing"
+    },
+    {
+      "key": "start_dunning",
+      "kind": "net.http",
+      "label": "Start Dunning: Retry Notice by Email and SMS",
+      "section": "billing"
+    },
+    {
+      "key": "wait_3d",
+      "kind": "flow.wait",
+      "label": "Wait 3 Days for a Payment Update",
+      "section": "billing"
+    },
+    {
+      "key": "unpaid_branch",
+      "kind": "flow.branch",
+      "label": "Still Unpaid After 3 Days?",
+      "section": "billing"
+    },
+    {
+      "key": "pause_access",
+      "kind": "net.http",
+      "label": "Pause Access and Tag At-Risk",
+      "section": "billing"
+    },
+    {
+      "key": "mark_recovered",
+      "kind": "data.transform",
+      "label": "Mark Recovered and Clear the At-Risk Tag",
+      "section": "billing"
+    },
+    {
+      "key": "cancel_trig",
+      "kind": "trigger.app",
+      "label": "Cancellation Requested",
+      "section": "cancel"
+    },
+    {
+      "key": "revoke_access",
+      "kind": "net.http",
+      "label": "Revoke Access at Period End and Tag Churned",
+      "section": "cancel"
+    },
+    {
+      "key": "winback",
+      "kind": "net.http",
+      "label": "Start the Win-Back Sequence",
+      "section": "cancel"
+    },
+    {
+      "key": "event_log",
+      "kind": "app.action",
+      "label": "Log Every Event: What Fired, What Tagged, What Charged",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "qa"
+    },
+    {
+      "key": "fail_branch",
+      "kind": "flow.branch",
+      "label": "Did Anything Fail to Fire, Tag, or Charge?",
+      "section": "qa"
+    },
+    {
+      "key": "alert_fail",
+      "kind": "app.action",
+      "label": "Alert With the Customer, the Step, and Why",
+      "app": "slack",
+      "op": "post",
+      "section": "qa"
+    },
+    {
+      "key": "all_clean",
+      "kind": "flow.noop",
+      "label": "All Clean",
+      "section": "qa"
+    }
+  ],
+  "edges": [
+    {
+      "from": "purchase_trig",
+      "to": "normalize"
+    },
+    {
+      "from": "normalize",
+      "to": "grant_access"
+    },
+    {
+      "from": "grant_access",
+      "to": "start_onboard"
+    },
+    {
+      "from": "start_onboard",
+      "to": "event_log"
+    },
+    {
+      "from": "renewal_trig",
+      "to": "paid_branch"
+    },
+    {
+      "from": "paid_branch",
+      "to": "extend_access",
+      "branch": "false"
+    },
+    {
+      "from": "paid_branch",
+      "to": "start_dunning",
+      "branch": "true"
+    },
+    {
+      "from": "start_dunning",
+      "to": "wait_3d"
+    },
+    {
+      "from": "wait_3d",
+      "to": "unpaid_branch"
+    },
+    {
+      "from": "unpaid_branch",
+      "to": "pause_access",
+      "branch": "true"
+    },
+    {
+      "from": "unpaid_branch",
+      "to": "mark_recovered",
+      "branch": "false"
+    },
+    {
+      "from": "extend_access",
+      "to": "event_log"
+    },
+    {
+      "from": "pause_access",
+      "to": "event_log"
+    },
+    {
+      "from": "mark_recovered",
+      "to": "event_log"
+    },
+    {
+      "from": "cancel_trig",
+      "to": "revoke_access"
+    },
+    {
+      "from": "revoke_access",
+      "to": "winback"
+    },
+    {
+      "from": "winback",
+      "to": "event_log"
+    },
+    {
+      "from": "event_log",
+      "to": "fail_branch"
+    },
+    {
+      "from": "fail_branch",
+      "to": "alert_fail",
+      "branch": "true"
+    },
+    {
+      "from": "fail_branch",
+      "to": "all_clean",
+      "branch": "false"
+    }
+  ],
+  "input_sample": {
+    "event": "recurring_payment_failed",
+    "customer": "Dana Reyes",
+    "email": "dana.reyes@gmail.com",
+    "plan": "Pro Membership, monthly",
+    "tier": "pro",
+    "amount": "$97.00",
+    "failure_reason": "card_declined"
+  },
+  "output_sample": {
+    "customer": "Dana Reyes",
+    "dunning_started": true,
+    "retry_notice_sent": [
+      "email",
+      "sms"
+    ],
+    "recovered_within_3_days": true,
+    "access_status": "active",
+    "tags_updated": [
+      "at-risk removed"
+    ],
+    "logged": true,
+    "failures_flagged": 0
+  },
+  "archetype": "membership_lifecycle_billing_retention_qa",
+  "learned": true,
+  "learned_at": "2026-09-02"
+}

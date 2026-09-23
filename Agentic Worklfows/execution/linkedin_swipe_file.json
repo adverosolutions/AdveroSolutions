@@ -1,0 +1,192 @@
+{
+  "_description": "Viral LinkedIn post patterns reverse-engineered from top performers. Used by linkedin_content_generator.py as few-shot examples and structural templates.",
+  "_instructions": "Add your own high-performing posts to the 'user_swipes' array at the bottom. The generator will mix both banks.",
+
+  "hook_formulas": [
+    {
+      "name": "Contrarian Open",
+      "formula": "[Common belief] is wrong. Here's why:",
+      "examples": [
+        "Posting every day on LinkedIn won't grow your business. Here's what will:",
+        "Cold email is dead. Except it's not. We sent 50,000 last month.",
+        "Hiring fast is terrible advice. I learned this the expensive way."
+      ],
+      "why_works": "Pattern interrupt. Reader expects agreement with conventional wisdom, gets challenged instead."
+    },
+    {
+      "name": "Specific Number Open",
+      "formula": "[Specific number] + [unexpected result]",
+      "examples": [
+        "We generated 147 leads in 30 days for a plumbing company with zero ad spend.",
+        "$0 marketing budget. 43 new customers. Here's exactly how.",
+        "I sent 1 email that booked 11 calls in 48 hours."
+      ],
+      "why_works": "Specificity = credibility. Vague claims get scrolled past. Exact numbers stop thumbs."
+    },
+    {
+      "name": "Confession/Vulnerability",
+      "formula": "I [failed/lost/messed up] [specific thing]. [What it taught me]",
+      "examples": [
+        "I lost my biggest client last Tuesday. It was entirely my fault.",
+        "I spent $12K on a marketing campaign that generated zero leads.",
+        "I almost quit 6 months ago. Here's what changed."
+      ],
+      "why_works": "Vulnerability creates connection. LinkedIn is full of highlight reels — failure stands out."
+    },
+    {
+      "name": "Bold Claim",
+      "formula": "[Bold declarative statement that demands attention]",
+      "examples": [
+        "Your website isn't generating leads because you built it for yourself, not your customer.",
+        "The best salespeople never 'sell.' They diagnose.",
+        "Every contractor losing money right now has the same problem: they're invisible online."
+      ],
+      "why_works": "Confidence attracts. People follow those who seem certain about something."
+    },
+    {
+      "name": "Before/After",
+      "formula": "[Time period] ago, I was [bad state]. Now I'm [good state]. Here's the turning point:",
+      "examples": [
+        "6 months ago I was cold calling 100 contractors a day with zero bookings. Last week I booked 23.",
+        "January: 3 clients, barely making rent. Today: 19 clients, hiring my second employee.",
+        "A year ago this company didn't exist. Last month we hit $40K MRR."
+      ],
+      "why_works": "Transformation stories are inherently compelling. Reader wants the 'how.'"
+    },
+    {
+      "name": "Question Hook",
+      "formula": "[Provocative question that reader can't help but answer internally]",
+      "examples": [
+        "What would change in your business if you never had to worry about leads again?",
+        "Why do contractors spend $5K/month on ads but won't spend $500 on their website?",
+        "How many estimates did you give last month that never closed?"
+      ],
+      "why_works": "Questions activate the brain differently than statements. Forces engagement."
+    },
+    {
+      "name": "Pattern Break List",
+      "formula": "[Thing] won't save your business.\n[Thing] won't save your business.\n[Thing] won't save your business.\n\nHere's what will:",
+      "examples": [
+        "A new logo won't save your business.\nA better website won't save your business.\nMore followers won't save your business.\n\nHere's what will:"
+      ],
+      "why_works": "Repetition creates rhythm. Breaking the pattern with the payoff creates anticipation."
+    },
+    {
+      "name": "Unpopular Opinion",
+      "formula": "Unpopular opinion: [statement that challenges the audience's industry]",
+      "examples": [
+        "Unpopular opinion: Most contractors don't have a lead problem. They have a follow-up problem.",
+        "Unpopular opinion: Your 5-star Google reviews are hurting you more than helping.",
+        "Unpopular opinion: The best marketing strategy for contractors is answering the phone faster."
+      ],
+      "why_works": "Signals the reader is about to disagree, which creates tension and engagement."
+    },
+    {
+      "name": "This vs That",
+      "formula": "[Amateur approach] vs [Pro approach] — separated by line breaks",
+      "examples": [
+        "Average contractor: waits for leads to come in\nTop contractor: has 3 systems generating leads while they sleep",
+        "Broke mindset: 'Marketing is too expensive'\nGrowth mindset: 'Not marketing is too expensive'"
+      ],
+      "why_works": "Comparison forces self-identification. Reader asks 'which one am I?'"
+    },
+    {
+      "name": "One Line Story",
+      "formula": "[Entire dramatic story compressed into one punchy line] → then expand",
+      "examples": [
+        "He said 'I'll never pay for leads' then closed his business 8 months later.",
+        "She answered one missed call on a Saturday and it turned into a $47K job.",
+        "The contractor who told me AI was 'a fad' just lost 3 clients to a competitor using it."
+      ],
+      "why_works": "Micro-story in the hook creates instant narrative tension. Must know more."
+    }
+  ],
+
+  "viral_structures": [
+    {
+      "name": "The Breakdown",
+      "structure": "Bold claim/result\n\nHere's exactly how [I/we/they] did it:\n\n1. [Step — 1-2 lines]\n2. [Step — 1-2 lines]\n3. [Step — 1-2 lines]\n4. [Step — 1-2 lines]\n5. [Step — 1-2 lines]\n\n[Key insight/lesson]\n\n[Engagement question or CTA]",
+      "example": "We booked 23 HVAC appointments in one week using cold email.\n\nHere's exactly how we did it:\n\n1. Built a list of 500 HVAC companies in DFW using Google Maps\n2. Found owner emails through their websites (not bought lists)\n3. Wrote 67-word emails focused on their specific pain\n4. Sent 150/day across 3 warmed-up domains\n5. Followed up 3x over 10 days with new angles each time\n\nThe secret wasn't the email. It was the targeting.\n\nWe only emailed companies with bad websites and no Google Ads running — they were hungry for leads but didn't know how to get them.\n\nWhat's your biggest bottleneck with cold outreach right now?"
+    },
+    {
+      "name": "The Lesson Story",
+      "structure": "[Hook — dramatic/vulnerable moment]\n\n[2-3 short paragraphs of story/context]\n\n[The turning point — what changed]\n\n[The lesson in 1-2 lines]\n\n[Engagement driver]",
+      "example": "I lost a $3,000/month client because I sent one wrong email.\n\nNot a typo. Not a broken link. I sent a follow-up to their lead that was supposed to go to a different client's lead.\n\nThe owner called me within 20 minutes. Not angry — disappointed. Said 'If you're mixing up my leads with someone else's, how do I know my leads are actually mine?'\n\nHe was right. I had no system. I was running everything from my inbox and a spreadsheet with 47 tabs.\n\nThat week I built the automation system we still use today. Every lead gets tagged, routed, and tracked without me touching it.\n\nLost $3K/month. Built a system worth $30K/month.\n\nSometimes the most expensive mistake is the cheapest education.\n\nWhat's a failure that forced you to build something better?"
+    },
+    {
+      "name": "The Framework",
+      "structure": "[Problem statement — relatable]\n\nI use this framework:\n\n→ [Step/principle 1]\n→ [Step/principle 2]\n→ [Step/principle 3]\n→ [Step/principle 4]\n\n[Why it works — 1-2 lines]\n\n[CTA or question]",
+      "example": "Most contractors lose deals because they give estimates, not solutions.\n\nI use this framework for every sales conversation:\n\n→ Diagnose: Ask about the problem until they feel heard\n→ Agitate: Show what happens if they don't fix it now\n→ Prescribe: Give them exactly one option (not three)\n→ Close: Ask 'does Tuesday or Thursday work better?'\n\nNotice there's no 'present pricing' step. Price is part of the prescription. You don't ask your doctor to itemize the cost of each pill.\n\nStop selling. Start prescribing.\n\nWhat's your close rate on estimates right now?"
+    },
+    {
+      "name": "The Hot Take Thread",
+      "structure": "[Contrarian statement]\n\n[Line of reasoning — short punchy paragraphs]\n\n[Reframe that makes reader rethink]\n\n[End with question or bold closer]",
+      "example": "Stop asking for referrals.\n\nI know — every business coach says referrals are the best leads. And they're right. Referral leads close at 70%+.\n\nBut here's what nobody says:\n\nReferrals aren't scalable. You can't build a $1M company on 'maybe someone mentions you to a friend.' That's hope, not strategy.\n\nThe contractors making real money have systems that generate leads whether or not anyone refers them.\n\nReferrals are dessert. Outbound is the meal.\n\nBuild the system first. Let referrals be the bonus.\n\nDisagree? Tell me why below."
+    },
+    {
+      "name": "The Data Post",
+      "structure": "[Specific data point — the bigger/more surprising the better]\n\n[Context — how you got this data]\n\n[2-3 key insights from the data]\n\n[What to do about it]\n\n[Question]",
+      "example": "We tracked 3,200 contractor website visitors last month.\n\n91% left without calling, filling a form, or doing anything.\n\nHere's what we found:\n\n• Average time on site: 23 seconds\n• #1 exit page: the 'About Us' page (not pricing, not services)\n• Mobile visitors bounced 2.4x more than desktop\n• Pages with a phone number in the header had 3x more calls\n\nThe fix wasn't a redesign. It was putting the phone number at the top, removing the navigation menu on mobile, and adding a 'Call Now' button that follows you as you scroll.\n\nConversions went from 3% to 11% in two weeks.\n\nWhen's the last time you looked at your website from your phone?"
+    },
+    {
+      "name": "The List of Truths",
+      "structure": "[Provocative setup line]\n\n• [Truth 1]\n• [Truth 2]\n• [Truth 3]\n• [Truth 4]\n• [Truth 5]\n• [Truth 6]\n• [Truth 7]\n\n[Closing thought — 1-2 lines]\n\n[Which one hit hardest?]",
+      "example": "Things I wish I knew before starting a lead gen company:\n\n• Your first 10 clients will teach you more than any course\n• Nobody cares about your process — they care about their results\n• Monthly retainers beat project work every single time\n• The best marketing you can do is get your clients insane results\n• You'll lose clients. The ones who leave teach you who to avoid\n• Saying no to bad-fit clients is the hardest skill to build\n• Your competition isn't other agencies — it's the contractor doing nothing\n\nIf I started over tomorrow, I'd focus on one vertical, one offer, and one channel.\n\nEverything else is distraction dressed up as opportunity.\n\nWhich one of these hit you hardest?"
+    },
+    {
+      "name": "The Carousel Intro",
+      "structure": "[Hook that promises value]\n\n[Brief context — 1-2 lines]\n\n[Tell them to save/share]\n\n[End with what they'll learn]",
+      "example": "I spent $47K testing contractor marketing channels so you don't have to.\n\nHere's what actually works ranked by ROI (save this):\n\n[Carousel slides would follow]\n\nSlide 1: Google LSA — $23 avg cost per lead\nSlide 2: Cold Email — $4 avg cost per lead\nSlide 3: Facebook Ads — $67 avg cost per lead\nSlide 4: SEO — $0 per lead (but 6 months to work)\nSlide 5: Door knocking — $0 but not scalable\n\nIf you're a contractor spending money on marketing, bookmark this.\n\nWhat channel has worked best for your business?"
+    }
+  ],
+
+  "formatting_rules": [
+    "First line must be the hook — no exceptions. Never start with 'I' as the first word.",
+    "One thought per line. Break after every 1-2 sentences.",
+    "Use blank lines between paragraphs (LinkedIn compresses without them).",
+    "Bold (**text**) for emphasis on key phrases — use sparingly (2-3 per post max).",
+    "Bullet points (•) for lists, not dashes or numbers unless it's a sequence.",
+    "Keep total length between 800-1800 characters (sweet spot for engagement).",
+    "End with a question OR a bold one-liner — never both.",
+    "Hashtags go on the absolute last line, separated by a blank line. Max 3-5.",
+    "Never use more than 2 emojis per post. Zero is fine.",
+    "Short sentences hit harder. Use them for emphasis.",
+    "The 'read more' fold on LinkedIn is ~210 characters. Your hook + first line must sell the click."
+  ],
+
+  "engagement_patterns": [
+    {
+      "pattern": "End with 'Which one hit hardest?' or 'Which resonates most?'",
+      "why": "Low-friction response — reader just picks from the list"
+    },
+    {
+      "pattern": "End with a binary choice: 'Agree or disagree?'",
+      "why": "Forces a stance, creates debate in comments"
+    },
+    {
+      "pattern": "End with 'What's your experience with [topic]?'",
+      "why": "Invites personal stories, which get long comments (boosts algorithm)"
+    },
+    {
+      "pattern": "End with a bold statement that some will disagree with",
+      "why": "Disagreement = comments = reach. Polarization works on LinkedIn."
+    },
+    {
+      "pattern": "End with 'Save this for later' or 'Bookmark this'",
+      "why": "Saves/bookmarks signal value to the algorithm"
+    },
+    {
+      "pattern": "End with 'Repost if you agree ♻️'",
+      "why": "Direct CTA for shares — some will do it reflexively"
+    }
+  ],
+
+  "user_swipes": [
+    {
+      "_instructions": "Paste your own high-performing posts here. Format: {text, engagement (likes/comments), why_it_worked (your guess)}",
+      "text": "",
+      "engagement": "",
+      "why_it_worked": ""
+    }
+  ]
+}

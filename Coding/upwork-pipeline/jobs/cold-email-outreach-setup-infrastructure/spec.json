@@ -1,0 +1,194 @@
+{
+  "title": "Your Cold Email Sending Infrastructure - Setup to Handover",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "scope",
+      "label": "1 - SIZE THE SETUP",
+      "color": 0,
+      "note": "How many emails a day you want to send decides how many mailboxes and domains you need. Roughly 30 a day per mailbox, 3 mailboxes per domain, keeps every inbox under the radar."
+    },
+    {
+      "key": "provision",
+      "label": "2 - DOMAINS AND MAILBOXES, NOT ON YOUR MAIN DOMAIN",
+      "color": 0,
+      "note": "Lookalike sending domains and their mailboxes are provisioned together through a mailbox provider, on your account and your card, about $3 to $4 per mailbox a month. Your main domain never sends cold email, so it can never get burned."
+    },
+    {
+      "key": "dns",
+      "label": "3 - AUTHENTICATION THAT KEEPS YOU OUT OF SPAM",
+      "color": 0,
+      "note": "SPF, DKIM, DMARC, MX and a custom tracking domain on every sending domain, verified before a single email goes out."
+    },
+    {
+      "key": "instantly",
+      "label": "4 - INSTANTLY CONFIGURED TO YOUR SPEC",
+      "color": 0,
+      "note": "Every mailbox imported into Instantly, warmup running, daily limits ramped, sending schedule, tracking domain, and one unibox where every reply lands."
+    },
+    {
+      "key": "claude",
+      "label": "5 - CLAUDE CONNECTED, THEN HANDOVER",
+      "color": 0,
+      "note": "Instantly's API wired to Claude so replies get sorted and drafted for you. Everything sits in your accounts with a one page runbook, so you run it without me."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "volume",
+      "kind": "data.transform",
+      "label": "1 - Set Target Volume: Emails per Day and Campaigns Planned",
+      "section": "scope"
+    },
+    {
+      "key": "count",
+      "kind": "data.transform",
+      "label": "2 - Work Out Mailboxes and Domains Needed (30 a Day per Mailbox, 3 per Domain)",
+      "section": "scope"
+    },
+    {
+      "key": "prewarm",
+      "kind": "flow.branch",
+      "label": "3 - Need to Send Right Away?",
+      "section": "provision"
+    },
+    {
+      "key": "prewarmed",
+      "kind": "data.transform",
+      "label": "3a - Use Pre-Warmed Mailboxes So Campaigns Start This Week",
+      "section": "provision"
+    },
+    {
+      "key": "buy",
+      "kind": "data.transform",
+      "label": "4 - Provision Lookalike Domains and Mailboxes on Your Account and Billing",
+      "section": "provision"
+    },
+    {
+      "key": "dns",
+      "kind": "data.transform",
+      "label": "5 - Publish SPF, DKIM, DMARC, MX and a Custom Tracking Domain",
+      "section": "dns"
+    },
+    {
+      "key": "verify",
+      "kind": "flow.branch",
+      "label": "6 - Every Record Passes Verification?",
+      "section": "dns"
+    },
+    {
+      "key": "fix",
+      "kind": "data.transform",
+      "label": "6a - Fix the Failing Record and Re-Check Before Anything Sends",
+      "section": "dns"
+    },
+    {
+      "key": "import",
+      "kind": "data.transform",
+      "label": "7 - Import Every Mailbox Into Instantly",
+      "section": "instantly"
+    },
+    {
+      "key": "warm",
+      "kind": "data.transform",
+      "label": "8 - Warmup On, Daily Limits Ramped, Sending Schedule Set to Your Spec",
+      "section": "instantly"
+    },
+    {
+      "key": "unibox",
+      "kind": "data.transform",
+      "label": "9 - One Unibox: Every Reply From Every Mailbox in One Place",
+      "section": "instantly"
+    },
+    {
+      "key": "claude",
+      "kind": "data.transform",
+      "label": "10 - Connect Instantly to Claude: Replies Sorted and Drafts Written",
+      "section": "claude"
+    },
+    {
+      "key": "handover",
+      "kind": "data.aggregate",
+      "label": "11 - Handover: Your Accounts, Your Billing, One Page Runbook",
+      "section": "claude"
+    }
+  ],
+  "edges": [
+    {
+      "from": "volume",
+      "to": "count"
+    },
+    {
+      "from": "count",
+      "to": "prewarm"
+    },
+    {
+      "from": "prewarm",
+      "to": "prewarmed",
+      "branch": "true"
+    },
+    {
+      "from": "prewarmed",
+      "to": "buy"
+    },
+    {
+      "from": "prewarm",
+      "to": "buy",
+      "branch": "false"
+    },
+    {
+      "from": "buy",
+      "to": "dns"
+    },
+    {
+      "from": "dns",
+      "to": "verify"
+    },
+    {
+      "from": "verify",
+      "to": "fix",
+      "branch": "false"
+    },
+    {
+      "from": "fix",
+      "to": "dns",
+      "loop": true
+    },
+    {
+      "from": "verify",
+      "to": "import",
+      "branch": "true"
+    },
+    {
+      "from": "import",
+      "to": "warm"
+    },
+    {
+      "from": "warm",
+      "to": "unibox"
+    },
+    {
+      "from": "unibox",
+      "to": "claude"
+    },
+    {
+      "from": "claude",
+      "to": "handover"
+    }
+  ],
+  "input_sample": {
+    "target_volume": "300 emails a day",
+    "campaigns": "2 running in instantly",
+    "main_domain": "never used for cold email"
+  },
+  "output_sample": {
+    "domains": 4,
+    "mailboxes": 12,
+    "provider_cost": "about $3 to $4 per mailbox a month, on your card",
+    "dns": "all records verified",
+    "instantly": "12 mailboxes imported, warmup on, 30 a day per mailbox ramp",
+    "unibox": "one inbox for every reply",
+    "claude": "connected via instantly api, replies classified and drafted",
+    "handover": "runbook delivered, everything in your accounts"
+  }
+}

@@ -1,0 +1,565 @@
+{
+  "title": "Your Lead Intake and Qualification System: Reliable, Easy to Maintain",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "capture",
+      "label": "1 - YOUR LEAD CAPTURE FLOW",
+      "color": 0,
+      "note": "Your website form, an ad lead form or anything that can send a webhook posts here. Names, emails and phones are cleaned up first, and blank submissions stop before they cost an OpenAI call."
+    },
+    {
+      "key": "qualify",
+      "label": "2 - QUALIFY EVERY LEAD WITH OPENAI",
+      "color": 0,
+      "note": "OpenAI scores each lead against the qualification rules you write in plain English in Config, and says why in one sentence. A missing budget or timeline lowers the score instead of being guessed."
+    },
+    {
+      "key": "route",
+      "label": "3 - ROUTE QUALIFIED LEADS TO THE RIGHT TEAM",
+      "color": 0,
+      "note": "You list your teams and their inboxes once in Config. OpenAI picks the team, this step finds its inbox, and a lead it cannot place goes to your default inbox."
+    },
+    {
+      "key": "tracker",
+      "label": "4 - YOUR LEAD STATUS TRACKER",
+      "color": 0,
+      "note": "Every lead lands in one Google Sheet, qualified or not, with its score, team and reason. Your team moves the Status column on to Contacted, Booked, Won or Lost."
+    },
+    {
+      "key": "dashboard",
+      "label": "5 - YOUR REPORTING DASHBOARD",
+      "color": 0,
+      "note": "Every morning the Dashboard tab is rebuilt from the tracker: leads today, the last 7 days, the last 30 days and all time, by source, team and status, and who is still waiting for first contact. The same numbers arrive by email."
+    },
+    {
+      "key": "errors",
+      "label": "6 - RELIABLE: IF ANYTHING BREAKS, YOU HEAR ABOUT IT",
+      "color": 0,
+      "note": "Nothing fails quietly. Any failed step emails you the step, the error and a link to the run, and the lead waits in that run for a retry."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 - New Lead From Your Website or Ad Form",
+      "section": "capture",
+      "params": {
+        "path": "lead-intake",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "key": "clean",
+      "kind": "data.transform",
+      "label": "2 - Clean Up Name, Email, Phone and Source",
+      "section": "capture",
+      "params": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000001",
+              "name": "lead_id",
+              "value": "={{ 'lead_' + $now.toFormat('yyyyLLdd') + '_' + $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000002",
+              "name": "received_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000003",
+              "name": "full_name",
+              "value": "={{ ($json.body.full_name || $json.body.name || '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000004",
+              "name": "email",
+              "value": "={{ ($json.body.email || '').trim().toLowerCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000005",
+              "name": "phone",
+              "value": "={{ ($json.body.phone || '').replace(/[^0-9+]/g, '') }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000006",
+              "name": "company",
+              "value": "={{ ($json.body.company || '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000007",
+              "name": "need",
+              "value": "={{ ($json.body.need || $json.body.message || '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000008",
+              "name": "budget_range",
+              "value": "={{ ($json.body.budget_range || '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000009",
+              "name": "timeline",
+              "value": "={{ ($json.body.timeline || '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000010",
+              "name": "source",
+              "value": "={{ ($json.body.source || 'Website form') + ($json.body.utm_source ? ' / ' + $json.body.utm_source : '') }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000011",
+              "name": "has_contact",
+              "value": "={{ !!(($json.body.email || '').trim() || ($json.body.phone || '').trim()) }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      }
+    },
+    {
+      "key": "blank",
+      "kind": "data.filter",
+      "label": "3 - Drop Blank Submissions With No Email or Phone",
+      "section": "capture",
+      "params": {
+        "condition": {
+          "left": "={{ $json.has_contact }}",
+          "op": "true"
+        }
+      }
+    },
+    {
+      "key": "qualify",
+      "kind": "ai.llm",
+      "label": "4 - OpenAI Scores the Lead Against Your Rules",
+      "section": "qualify",
+      "notes": "Your rules live in Config in plain English: change them there and the next lead is judged by them.",
+      "params": {
+        "system_message": "You qualify inbound leads for a business that sends each qualified lead to one of its teams. You receive one lead from the website or ad form, the business's own qualification rules, and its list of teams with what each team handles. Judge the lead only against those rules; never add criteria of your own. score is 0 to 100 for how closely the lead matches the rules. qualified is true only when the rules are met. team is one team name copied exactly from the list; if no team fits, or the lead is not qualified, return Unassigned. When a field the rules depend on is missing or vague (budget, timeline, what they need), do not guess it: lower the score, name the field in missing_info and say so in reason. Spam, sales pitches aimed at the business, job applications and test entries are not qualified, score 0, and reason says which one it is. reason is one plain sentence. summary is two sentences a team member can act on without opening the tracker. Use only facts written in the lead. Never promise the lead anything.",
+        "prompt": "=Your qualification rules:\n{{ $('0 - Config: Your Settings').item.json.qualification_rules }}\n\nYour teams (Team name | what they handle | team inbox):\n{{ $('0 - Config: Your Settings').item.json.routing_table }}\n\nThe lead:\nName: {{ $json.full_name }}\nCompany: {{ $json.company }}\nEmail: {{ $json.email }}\nPhone: {{ $json.phone }}\nWhat they need: {{ $json.need }}\nBudget: {{ $json.budget_range || 'not given' }}\nTimeline: {{ $json.timeline || 'not given' }}\nSource: {{ $json.source }}\n\nReturn score, qualified, team, reason, summary and missing_info.",
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000
+      }
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "OpenAI - Scores and Qualifies the Lead",
+      "app": "openai",
+      "parent": "qualify",
+      "port": "ai_languageModel",
+      "params": {
+        "options": {}
+      }
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Parser - Score, Team and Reason",
+      "parent": "qualify",
+      "port": "ai_outputParser",
+      "params": {
+        "schema": {
+          "score": 72,
+          "qualified": true,
+          "team": "Sales",
+          "reason": "Wants to start this month and asked for a call on Thursday; budget not given, so scored lower.",
+          "summary": "Dana Whitfield of Whitfield Group, a 12-person team, saw your ad and wants to start this month. She asked for a call Thursday afternoon and has not set a budget yet.",
+          "missing_info": "Budget"
+        }
+      }
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "5 - Qualified by Your Rules?",
+      "section": "qualify",
+      "params": {
+        "condition": {
+          "left": "={{ $json.output.qualified }}",
+          "op": "true"
+        }
+      }
+    },
+    {
+      "key": "notq",
+      "kind": "data.transform",
+      "label": "5b - Not Qualified: Keep the Score and Reason",
+      "section": "qualify",
+      "params": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000021",
+              "name": "lead_id",
+              "value": "={{ $('2 - Clean Up Name, Email, Phone and Source').item.json.lead_id }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000022",
+              "name": "received_at",
+              "value": "={{ $('2 - Clean Up Name, Email, Phone and Source').item.json.received_at }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000023",
+              "name": "full_name",
+              "value": "={{ $('2 - Clean Up Name, Email, Phone and Source').item.json.full_name }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000024",
+              "name": "email",
+              "value": "={{ $('2 - Clean Up Name, Email, Phone and Source').item.json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000025",
+              "name": "phone",
+              "value": "={{ $('2 - Clean Up Name, Email, Phone and Source').item.json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000026",
+              "name": "company",
+              "value": "={{ $('2 - Clean Up Name, Email, Phone and Source').item.json.company }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000027",
+              "name": "source",
+              "value": "={{ $('2 - Clean Up Name, Email, Phone and Source').item.json.source }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000028",
+              "name": "need",
+              "value": "={{ $('2 - Clean Up Name, Email, Phone and Source').item.json.need }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000029",
+              "name": "score",
+              "value": "={{ $json.output.score }}",
+              "type": "number"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000030",
+              "name": "qualified",
+              "value": "={{ false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000031",
+              "name": "team",
+              "value": "Unassigned",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000032",
+              "name": "reason",
+              "value": "={{ $json.output.reason }}",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000033",
+              "name": "status",
+              "value": "Not qualified",
+              "type": "string"
+            },
+            {
+              "id": "7c3e9a10-4b2d-4f61-a8e0-000000000034",
+              "name": "routed_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      }
+    },
+    {
+      "key": "route",
+      "kind": "data.code",
+      "label": "6 - Match the Lead to the Right Team From Your Routing Table",
+      "section": "route",
+      "notes": "Add or rename a team by editing one line in Config, not this workflow.",
+      "params": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// 6 - Match the Lead to the Right Team From Your Routing Table\n// Your teams live in 0 - Config, one per line: Team name | what they handle | team inbox\n// Add, rename or remove a team there. Nothing in this node needs editing.\nconst cfg = $('0 - Config: Your Settings').item.json;\nconst lead = $('2 - Clean Up Name, Email, Phone and Source').item.json;\nconst ai = $json.output || {};\n\nconst teams = String(cfg.routing_table || '')\n  .split('\\n')\n  .map(line => line.split('|').map(part => part.trim()))\n  .filter(parts => parts.length >= 3 && parts[2].includes('@'))\n  .map(([name, handles, inbox]) => ({ name, handles, inbox }));\n\nconst wanted = String(ai.team || '').trim().toLowerCase();\nconst match = teams.find(t => t.name.toLowerCase() === wanted);\n\n// A lead OpenAI cannot place goes to your default inbox, never nowhere.\nreturn {\n  json: {\n    ...lead,\n    score: ai.score,\n    qualified: true,\n    team: match ? match.name : 'Unassigned',\n    team_email: match ? match.inbox : cfg.default_team_email,\n    reason: ai.reason,\n    summary: ai.summary,\n    missing_info: ai.missing_info,\n    status: match ? 'Sent to ' + match.name : 'Sent to default inbox',\n    routed_at: $now.toISO(),\n  },\n};"
+      }
+    },
+    {
+      "key": "notify",
+      "kind": "app.action",
+      "label": "7 - Email the Team the Lead and Why It Qualified",
+      "app": "gmail",
+      "op": "send",
+      "section": "route",
+      "params": {
+        "sendTo": "={{ $json.team_email }}",
+        "subject": "=New qualified lead for {{ $json.team }}: {{ $json.full_name }} ({{ $json.score }}/100)",
+        "emailType": "text",
+        "message": "={{ $json.summary }}\n\nWhy it qualified: {{ $json.reason }}\nScore: {{ $json.score }}/100\nStill missing: {{ $json.missing_info || 'nothing' }}\n\nName: {{ $json.full_name }}\nCompany: {{ $json.company }}\nEmail: {{ $json.email }}\nPhone: {{ $json.phone }}\nSource: {{ $json.source }}\nWhat they need: {{ $json.need }}\n\nWhen you reach them, change their Status in the lead tracker (Contacted, Booked, Won or Lost).",
+        "options": {
+          "appendAttribution": false
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000
+      }
+    },
+    {
+      "key": "track",
+      "kind": "app.action",
+      "label": "8 - Add the Lead to Your Status Tracker",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "tracker",
+      "notes": "One row per lead, qualified or not, so nothing gets lost between the form and your team.",
+      "params": {
+        "sheet": "Tracker",
+        "columns": [
+          "received_at",
+          "full_name",
+          "email",
+          "phone",
+          "company",
+          "source",
+          "need",
+          "score",
+          "qualified",
+          "team",
+          "reason",
+          "status",
+          "routed_at",
+          "lead_id"
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000,
+        "operation": "append"
+      }
+    },
+    {
+      "key": "morning",
+      "kind": "trigger.schedule",
+      "label": "9 - Every Morning: Start the Lead Report",
+      "section": "dashboard",
+      "params": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "readall",
+      "kind": "app.action",
+      "label": "10 - Read Every Lead in the Tracker",
+      "app": "googleSheets",
+      "op": "read",
+      "section": "dashboard",
+      "params": {
+        "document": "PASTE-YOUR-TRACKER-GOOGLE-SHEET-ID",
+        "sheet": "Tracker"
+      }
+    },
+    {
+      "key": "stats",
+      "kind": "data.code",
+      "label": "11 - Count Leads by Source, Team and Status",
+      "section": "dashboard",
+      "notes": "Shows which source brings qualified leads, not just the most leads.",
+      "params": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// 11 - Count Leads by Source, Team and Status\n// Rebuilds the Dashboard tab from every row of the Tracker tab:\n// one line per measure, counted for today, the last 7 days, the last 30 days and all time.\nconst rows = $input.all().map(item => item.json);\nconst now = DateTime.now();\nconst since = {\n  today: now.startOf('day'),\n  last_7_days: now.minus({ days: 7 }),\n  last_30_days: now.minus({ days: 30 }),\n};\nconst isTrue = value => String(value).toLowerCase() === 'true';\nconst received = row => DateTime.fromISO(String(row.received_at));\n\nconst lines = [];\nconst count = (metric, test) => {\n  const hits = rows.filter(test);\n  lines.push({\n    metric,\n    today: hits.filter(r => received(r) >= since.today).length,\n    last_7_days: hits.filter(r => received(r) >= since.last_7_days).length,\n    last_30_days: hits.filter(r => received(r) >= since.last_30_days).length,\n    all_time: hits.length,\n    updated_at: now.toISO(),\n  });\n};\n\ncount('All leads', () => true);\ncount('Qualified', r => isTrue(r.qualified));\ncount('Not qualified', r => !isTrue(r.qualified));\ncount('Still waiting for first contact', r => String(r.status || '').startsWith('Sent to'));\n\nconst distinct = key => [...new Set(rows.map(r => r[key]).filter(Boolean))];\n// Which source brings qualified leads, not just the most leads.\ndistinct('source').forEach(s => count('Qualified from ' + s, r => r.source === s && isTrue(r.qualified)));\ndistinct('team').forEach(t => count('Team: ' + t, r => r.team === t));\ndistinct('status').forEach(s => count('Status: ' + s, r => r.status === s));\n\nreturn lines.map(line => ({ json: line }));"
+      }
+    },
+    {
+      "key": "dash",
+      "kind": "app.action",
+      "label": "12 - Refresh Your Dashboard Tab",
+      "app": "googleSheets",
+      "op": "update",
+      "section": "dashboard",
+      "params": {
+        "operation": "appendOrUpdate",
+        "sheet": "Dashboard",
+        "columns": [
+          "metric",
+          "today",
+          "last_7_days",
+          "last_30_days",
+          "all_time",
+          "updated_at"
+        ]
+      }
+    },
+    {
+      "key": "report",
+      "kind": "app.action",
+      "label": "13 - Email You the Morning Lead Numbers",
+      "app": "gmail",
+      "op": "send",
+      "section": "dashboard",
+      "params": {
+        "sendTo": "PASTE-YOUR-EMAIL",
+        "subject": "=Lead report {{ $now.toFormat('LLL d') }}",
+        "emailType": "text",
+        "message": "=Your lead numbers this morning (today / last 7 days / last 30 days / all time):\n\n{{ $('11 - Count Leads by Source, Team and Status').all().map(i => i.json.metric + ': ' + i.json.today + ' / ' + i.json.last_7_days + ' / ' + i.json.last_30_days + ' / ' + i.json.all_time).join('\\n') }}\n\nFull dashboard and every lead: https://docs.google.com/spreadsheets/d/PASTE-YOUR-TRACKER-GOOGLE-SHEET-ID",
+        "options": {
+          "appendAttribution": false
+        },
+        "executeOnce": true
+      }
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "14 - If Any Step Fails",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "errors"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "15 - Email You the Failed Step and a Link to the Run",
+      "app": "gmail",
+      "op": "send",
+      "section": "errors",
+      "notes": "Reliable means nothing fails quietly: you get the step, the error and the run to retry.",
+      "params": {
+        "sendTo": "PASTE-YOUR-EMAIL",
+        "subject": "=Lead intake needs you: {{ $json.execution.lastNodeExecuted }} failed",
+        "emailType": "text",
+        "message": "=Step that failed: {{ $json.execution.lastNodeExecuted }}\nError: {{ $json.execution.error.message }}\nWorkflow: {{ $json.workflow.name }}\n\nOpen the run: {{ $json.execution.url }}\n\nThe lead's details are saved in that run. Fix the step, then press Retry on the run so the lead still reaches your team and the tracker.",
+        "options": {
+          "appendAttribution": false
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "clean"
+    },
+    {
+      "from": "clean",
+      "to": "blank"
+    },
+    {
+      "from": "blank",
+      "to": "qualify"
+    },
+    {
+      "from": "qualify",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "route",
+      "branch": "true"
+    },
+    {
+      "from": "gate",
+      "to": "notq",
+      "branch": "false"
+    },
+    {
+      "from": "route",
+      "to": "notify"
+    },
+    {
+      "from": "route",
+      "to": "track"
+    },
+    {
+      "from": "notq",
+      "to": "track"
+    },
+    {
+      "from": "morning",
+      "to": "readall"
+    },
+    {
+      "from": "readall",
+      "to": "stats"
+    },
+    {
+      "from": "stats",
+      "to": "dash"
+    },
+    {
+      "from": "dash",
+      "to": "report"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "headers": {
+      "content-type": "application/json"
+    },
+    "params": {},
+    "query": {},
+    "body": {
+      "full_name": "Dana Whitfield ",
+      "email": "Dana@WhitfieldGroup.co ",
+      "phone": "(702) 555-0148",
+      "company": "Whitfield Group",
+      "need": "Saw your ad. We're a 12-person team and want to get started this month. What does it cost, and can someone call me Thursday afternoon?",
+      "budget_range": "Not sure yet",
+      "timeline": "This month",
+      "source": "Website form",
+      "utm_source": "paid_social"
+    },
+    "webhookUrl": "https://your-n8n.app.n8n.cloud/webhook/lead-intake",
+    "executionMode": "production"
+  },
+  "output_sample": {
+    "row_number": 57,
+    "received_at": "2026-09-23T15:12:04.318-04:00",
+    "full_name": "Dana Whitfield",
+    "email": "dana@whitfieldgroup.co",
+    "phone": "7025550148",
+    "company": "Whitfield Group",
+    "source": "Website form / paid_social",
+    "need": "Saw your ad. We're a 12-person team and want to get started this month. What does it cost, and can someone call me Thursday afternoon?",
+    "score": 72,
+    "qualified": true,
+    "team": "Sales",
+    "reason": "Wants to start this month and asked for a call on Thursday; budget not given, so scored lower.",
+    "status": "Sent to Sales",
+    "routed_at": "2026-09-23T15:12:09.771-04:00",
+    "lead_id": "lead_20260923_4817"
+  },
+  "archetype": "your_lead_intake_and_qualification_system_reliab",
+  "learned": true,
+  "learned_at": "2026-09-23"
+}

@@ -1,0 +1,470 @@
+{
+  "title": "Your Virtual Receptionist: Every Call, Demo, Invoice and CRM Update",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "calls",
+      "label": "1 - ANSWER EVERY CALL ABOUT YOUR MACHINES",
+      "color": 0,
+      "note": "Usually 2-7 calls a day means one every 1 to 4 hours, so a full-time seat mostly waits by the phone. Retell answers every call on the first ring, after hours too, and greets returning callers by name in English or Spanish."
+    },
+    {
+      "key": "questions",
+      "label": "2 - ANSWER THEIR QUESTIONS FROM YOUR INVENTORY",
+      "color": 0,
+      "note": "Every answer about your excavators, skid steers and forklifts comes from your inventory list, read live on each question. A machine or a detail that is not on the list gets a callback from you, never a guess."
+    },
+    {
+      "key": "demo",
+      "label": "3 - SCHEDULE THE LOOK OR DEMO AT YOUR FACILITY",
+      "color": 0,
+      "note": "The point of every call: get them to your facility to take a look or see a demo in person. It books the time on your calendar and texts them the machine, the time and your address in their language."
+    },
+    {
+      "key": "invoices",
+      "label": "4 - SEND THE INVOICE",
+      "color": 0,
+      "note": "After a sale you fill a short form from your phone and QuickBooks emails the invoice from your company. Nothing is invoiced until you say who bought which machine and for how much."
+    },
+    {
+      "key": "crm",
+      "label": "5 - UPDATE THE CRM",
+      "color": 0,
+      "note": "After every call your CRM gets the caller, the machine they asked about and the next step, written in English even when the call was in Spanish. It is keyed on the caller's phone, so a repeat caller never becomes a duplicate."
+    },
+    {
+      "key": "errors",
+      "label": "6 - IF A STEP FAILS, YOU HEAR ABOUT IT",
+      "color": 0,
+      "note": "One alert covers every step: you get the step that broke and a link to the run, so no caller falls through."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "ring",
+      "kind": "trigger.webhook",
+      "label": "1 - Retell Answers Your Line and Sends the Caller's Number",
+      "section": "calls",
+      "notes": "Retell is the voice on the phone and hands each call here. Shown with a sample call, not on your number yet.",
+      "params": {
+        "path": "dealer-inbound-call",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "key": "lookup",
+      "kind": "net.http",
+      "label": "2 - HubSpot: Look Up the Caller by Phone Number",
+      "section": "calls",
+      "params": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+        "headers": {
+          "Authorization": "Bearer {{ $('0 - Config: Your Settings').item.json.hubspot_token }}"
+        },
+        "body": {
+          "filterGroups": [
+            {
+              "filters": [
+                {
+                  "propertyName": "phone_e164",
+                  "operator": "EQ",
+                  "value": "{{ $json.body.call_inbound.from_number }}"
+                }
+              ]
+            }
+          ],
+          "properties": [
+            "firstname",
+            "lastname",
+            "company",
+            "hs_language",
+            "machine_interest"
+          ],
+          "limit": 1
+        }
+      }
+    },
+    {
+      "key": "greet",
+      "kind": "net.respond",
+      "label": "3 - Greet Them by Name in English or Spanish",
+      "section": "calls",
+      "params": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify((() => { const p = (($json.results || [])[0] || { properties: {} }).properties; return { call_inbound: { dynamic_variables: { caller_name: p.firstname || '', preferred_language: p.hs_language || 'unknown', last_machine: p.machine_interest || '' } } }; })()) }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "key": "ask",
+      "kind": "trigger.webhook",
+      "label": "4 - Caller Asks About a Machine",
+      "section": "questions",
+      "params": {
+        "path": "dealer-machine-question",
+        "httpMethod": "POST",
+        "responseMode": "lastNode"
+      }
+    },
+    {
+      "key": "stock",
+      "kind": "app.action",
+      "label": "5 - Read Your Inventory List, Live",
+      "app": "googleSheets",
+      "op": "read",
+      "section": "questions",
+      "params": {
+        "document": "PASTE-YOUR-INVENTORY-SHEET-ID",
+        "sheet": "Inventory"
+      }
+    },
+    {
+      "key": "answer",
+      "kind": "ai.llm",
+      "label": "6 - Answer From Your Inventory Only, in Their Language",
+      "section": "questions",
+      "notes": "A machine sold this morning is never offered this afternoon, and a question the list cannot answer gets a callback, not a guess.",
+      "params": {
+        "executeOnce": true,
+        "system_message": "You are the phone receptionist for a heavy equipment dealership in New Jersey that sells excavators, skid steers, forklifts and other machines. A caller is on the line right now and Retell will read your answer out loud, so write it the way a person talks on the phone: two to four short sentences, no lists, no symbols, numbers said naturally (about eighteen hundred sixty hours, fifty-two thousand nine hundred dollars). Answer only from the inventory rows you are given (stock_no, type, year, make_model, hours, features, price, status). Never offer a machine whose status is Sold or On Hold as available: say so and offer the closest Available machine of the same type. Quote the listed price only; never discount, negotiate, or promise delivery, financing, trade-in values, warranties or attachments that are not in the row. If the rows do not answer the question, or the caller asks for a machine you do not have, say the sales team will call them back with that, and do not guess. Answer in Spanish when language is es or the question is in Spanish, otherwise in English. End by offering a time to come take a look or see a demo of the machine in person at the facility.",
+        "prompt": "=Caller's question: {{ $('4 - Caller Asks About a Machine').first().json.body.args.question }}\nMachine type they mentioned: {{ $('4 - Caller Asks About a Machine').first().json.body.args.machine_type }}\nCaller's language: {{ $('4 - Caller Asks About a Machine').first().json.body.args.language }}\n\nYour inventory right now, one row per machine:\n{{ JSON.stringify($input.all().map(item => item.json)) }}\n\nReturn only the words to say to the caller."
+      }
+    },
+    {
+      "key": "answer_model",
+      "kind": "ai.model",
+      "label": "Claude - Answers From Your Inventory",
+      "app": "anthropic",
+      "parent": "answer",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "visit",
+      "kind": "trigger.webhook",
+      "label": "7 - Caller Wants to See It in Person",
+      "section": "demo",
+      "params": {
+        "path": "dealer-book-demo",
+        "httpMethod": "POST",
+        "responseMode": "lastNode"
+      }
+    },
+    {
+      "key": "book",
+      "kind": "app.action",
+      "label": "8 - Book the Look or Demo on Your Facility Calendar",
+      "app": "googleCalendar",
+      "op": "create",
+      "section": "demo",
+      "params": {
+        "calendar": {
+          "__rl": true,
+          "mode": "id",
+          "value": "PASTE-YOUR-DEMO-CALENDAR-ID"
+        },
+        "start": "={{ $json.body.args.start_time }}",
+        "end": "={{ DateTime.fromISO($json.body.args.start_time).plus({ hours: 1 }).toISO() }}",
+        "additionalFields": {
+          "summary": "={{ $json.body.args.caller_name }} - {{ $json.body.args.visit_type }}: {{ $json.body.args.machine }} (stock {{ $json.body.args.stock_no }})",
+          "location": "PASTE-YOUR-FACILITY-ADDRESS",
+          "description": "=Caller: {{ $json.body.args.caller_name }}\nPhone: {{ $json.body.call.from_number }}\nLanguage: {{ $json.body.args.language }}\nMachine: {{ $json.body.args.machine }} (stock {{ $json.body.args.stock_no }})\nBooked on the phone by your AI receptionist."
+        }
+      }
+    },
+    {
+      "key": "text",
+      "kind": "app.action",
+      "label": "9 - Text Them the Time, the Machine and Your Address",
+      "app": "twilio",
+      "op": "send",
+      "section": "demo",
+      "notes": "The same words go back to the call, so what they hear matches the text they keep, in English or Spanish.",
+      "params": {
+        "from": "PASTE-YOUR-TEXTING-NUMBER",
+        "to": "={{ $('7 - Caller Wants to See It in Person').first().json.body.call.from_number }}",
+        "message": "={{ (() => { const a = $('7 - Caller Wants to See It in Person').first().json.body.args; const es = a.language === 'es'; const when = DateTime.fromISO(a.start_time).setLocale(es ? 'es' : 'en-US').toFormat('cccc LLL d, h:mm a'); return es ? 'Hola ' + a.caller_name + ', su cita para ver la maquina ' + a.machine + ' (stock ' + a.stock_no + ') es el ' + when + '. Direccion: PASTE-YOUR-FACILITY-ADDRESS. Para cambiarla llame al PASTE-YOUR-BUSINESS-PHONE-NUMBER.' : 'Hi ' + a.caller_name + ', you are booked to see the ' + a.machine + ' (stock ' + a.stock_no + ') on ' + when + '. Address: PASTE-YOUR-FACILITY-ADDRESS. To change it call PASTE-YOUR-BUSINESS-PHONE-NUMBER.'; })() }}"
+      }
+    },
+    {
+      "key": "sold",
+      "kind": "trigger.form",
+      "label": "10 - Tell It Who Bought Which Machine",
+      "section": "invoices",
+      "notes": "Nothing is invoiced until you say who bought which machine; the price is always yours, never the AI's.",
+      "params": {
+        "formTitle": "Send an Invoice for a Sold Machine",
+        "formDescription": "Fill this from your phone after a sale. QuickBooks emails the invoice to the buyer.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Buyer Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Buyer Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Stock Number",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Machine (year, make, model)",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Sale Price",
+              "fieldType": "number",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Deposit Paid",
+              "fieldType": "number"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "invoice",
+      "kind": "app.action",
+      "label": "11 - QuickBooks: Create the Invoice for the Machine",
+      "app": "quickbooks",
+      "op": "create",
+      "section": "invoices"
+    },
+    {
+      "key": "send",
+      "kind": "net.http",
+      "label": "12 - QuickBooks: Email the Invoice to the Buyer",
+      "section": "invoices",
+      "params": {
+        "method": "POST",
+        "url": "https://quickbooks.api.intuit.com/v3/company/PASTE-YOUR-QUICKBOOKS-COMPANY-ID/invoice/{{ $json.Id }}/send?sendTo={{ encodeURIComponent($('10 - Tell It Who Bought Which Machine').first().json['Buyer Email']) }}",
+        "headers": {
+          "Content-Type": "application/octet-stream",
+          "Accept": "application/json"
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "quickBooksOAuth2Api"
+      }
+    },
+    {
+      "key": "ended",
+      "kind": "trigger.webhook",
+      "label": "13 - Call Ends: Retell Sends the Transcript",
+      "section": "crm",
+      "params": {
+        "path": "dealer-call-ended",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "key": "analyzed",
+      "kind": "data.filter",
+      "label": "14 - Keep Only Finished Calls With a Transcript",
+      "section": "crm",
+      "params": {
+        "condition": {
+          "left": "={{ $json.body.event }}",
+          "op": "eq",
+          "right": "call_analyzed"
+        }
+      }
+    },
+    {
+      "key": "extract",
+      "kind": "ai.llm",
+      "label": "15 - Write the CRM Note in English, Even From a Spanish Call",
+      "section": "crm",
+      "params": {
+        "system_message": "You update the CRM for a heavy equipment dealership in New Jersey after each phone call its AI receptionist handles. The dealership sells excavators, skid steers, forklifts and other machines, and buyers come to the facility to take a look or see a demo in person. Read the transcript and return only what the caller actually said: first and last name, company, email if given, the machine or type they asked about (with the stock number if one was mentioned), what they need it for, their budget if they gave one, whether a look or demo was booked and when, and the next step for the sales team. Set call_type to buyer, selling_a_machine, vendor, spam or other. Set needs_callback to true, with the reason, when the caller asked something the receptionist could not answer (financing, trade-in, price offer, delivery). Write crm_note in English in three short sentences even when the call was in Spanish, and set language to es or en. If something was not said on the call, return an empty string; never guess a name, price or date. Do not use double quotes inside any field.",
+        "prompt": "=Caller phone: {{ $json.body.call.from_number }}\nCall started: {{ DateTime.fromMillis($json.body.call.start_timestamp).setZone('America/New_York').toFormat('yyyy-LL-dd HH:mm') }}\nRetell summary: {{ $json.body.call.call_analysis.call_summary }}\n\nTranscript:\n{{ $json.body.call.transcript }}\n\nReturn the CRM fields for this call."
+      }
+    },
+    {
+      "key": "extract_model",
+      "kind": "ai.model",
+      "label": "Claude - Writes the English CRM Note",
+      "app": "anthropic",
+      "parent": "extract",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "crm_fields",
+      "kind": "ai.parser",
+      "label": "CRM Fields: Caller, Machine, Next Step, Note",
+      "parent": "extract",
+      "port": "ai_outputParser",
+      "params": {
+        "schema": {
+          "phone": "+17325550148",
+          "first_name": "Luis",
+          "last_name": "Ortega",
+          "company": "Ortega Site Work LLC",
+          "email": "",
+          "language": "es",
+          "call_type": "buyer",
+          "machine_interest": "2019 Kubota KX040-4 mini excavator, stock EX-2231",
+          "use": "trenching for residential drainage jobs",
+          "budget": "around 50,000",
+          "demo_booked": "2026-10-01 10:00",
+          "next_step": "Luis comes Thursday at 10 AM to see the Kubota run with the thumb attached. Call him back about financing before then.",
+          "needs_callback": true,
+          "callback_reason": "asked about financing",
+          "crm_note": "Luis Ortega of Ortega Site Work called in Spanish about the 2019 Kubota KX040-4, stock EX-2231. He needs it for drainage trenching and asked about financing, which needs a callback. Look and demo booked for Thursday Oct 1 at 10 AM at the facility."
+        }
+      }
+    },
+    {
+      "key": "save",
+      "kind": "net.http",
+      "label": "16 - HubSpot: Save the Caller, the Machine and the Next Step",
+      "section": "crm",
+      "notes": "Keyed on the caller's phone number, so a repeat caller updates one record instead of making a duplicate.",
+      "params": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/batch/upsert",
+        "headers": {
+          "Authorization": "Bearer PASTE-YOUR-HUBSPOT-PRIVATE-APP-TOKEN"
+        },
+        "body": {
+          "inputs": [
+            {
+              "idProperty": "phone_e164",
+              "id": "{{ $json.output.phone }}",
+              "properties": {
+                "phone": "{{ $json.output.phone }}",
+                "firstname": "{{ $json.output.first_name }}",
+                "lastname": "{{ $json.output.last_name }}",
+                "company": "{{ $json.output.company }}",
+                "hs_language": "{{ $json.output.language }}",
+                "call_type": "{{ $json.output.call_type }}",
+                "machine_interest": "{{ $json.output.machine_interest }}",
+                "demo_booked": "{{ $json.output.demo_booked }}",
+                "next_step": "{{ $json.output.next_step }}",
+                "needs_callback": "{{ $json.output.needs_callback }}",
+                "last_call_note": "{{ $json.output.crm_note }}"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "17 - Any Step Fails",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "errors"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "18 - Email You the Step That Broke",
+      "app": "gmail",
+      "op": "send",
+      "section": "errors",
+      "params": {
+        "sendTo": "PASTE-YOUR-EMAIL",
+        "subject": "=Receptionist workflow failed at {{ $json.execution.lastNodeExecuted }}",
+        "emailType": "text",
+        "message": "=Step: {{ $json.execution.lastNodeExecuted }}\nError: {{ $json.execution.error.message }}\nRun: {{ $json.execution.url }}\nIf this was during a call, check the Retell call log for the caller's number and call them back.",
+        "options": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "ring",
+      "to": "lookup"
+    },
+    {
+      "from": "lookup",
+      "to": "greet"
+    },
+    {
+      "from": "ask",
+      "to": "stock"
+    },
+    {
+      "from": "stock",
+      "to": "answer"
+    },
+    {
+      "from": "visit",
+      "to": "book"
+    },
+    {
+      "from": "book",
+      "to": "text"
+    },
+    {
+      "from": "sold",
+      "to": "invoice"
+    },
+    {
+      "from": "invoice",
+      "to": "send"
+    },
+    {
+      "from": "ended",
+      "to": "analyzed"
+    },
+    {
+      "from": "analyzed",
+      "to": "extract"
+    },
+    {
+      "from": "extract",
+      "to": "save"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "body": {
+      "event": "call_inbound",
+      "call_inbound": {
+        "agent_id": "agent_4c1f9e27b8d35a60",
+        "from_number": "+17325550148",
+        "to_number": "+17325550100"
+      }
+    }
+  },
+  "output_sample": {
+    "status": "COMPLETE",
+    "results": [
+      {
+        "id": "90412733021",
+        "new": false,
+        "properties": {
+          "phone_e164": "+17325550148",
+          "firstname": "Luis",
+          "lastname": "Ortega",
+          "company": "Ortega Site Work LLC",
+          "hs_language": "es",
+          "call_type": "buyer",
+          "machine_interest": "2019 Kubota KX040-4 mini excavator, stock EX-2231",
+          "demo_booked": "2026-10-01 10:00",
+          "next_step": "Luis comes Thursday at 10 AM to see the Kubota run with the thumb attached. Call him back about financing before then.",
+          "needs_callback": "true",
+          "last_call_note": "Luis Ortega of Ortega Site Work called in Spanish about the 2019 Kubota KX040-4 mini excavator, stock EX-2231, 1,860 hours, listed at 52,900. He needs it for drainage trenching and asked about financing, which needs a callback. Look and demo booked for Thursday Oct 1 at 10 AM at the facility; confirmation text sent in Spanish."
+        },
+        "updatedAt": "2026-09-28T15:12:44.310Z"
+      }
+    ]
+  },
+  "archetype": "your_virtual_receptionist_every_call_demo_invoic",
+  "learned": true,
+  "learned_at": "2026-09-23"
+}

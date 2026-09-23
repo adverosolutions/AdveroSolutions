@@ -1,0 +1,301 @@
+{
+  "title": "Customer Support Automation System - Answer, Escalate, Learn",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · EVERY TICKET AND CHAT ARRIVES HERE",
+      "color": 0,
+      "note": "One entry point for every channel. Before anything is written we know who is asking and what they asked last time."
+    },
+    {
+      "key": "draft",
+      "label": "2 · CLAUDE WRITES THE ANSWER FROM YOUR OWN DOCS",
+      "color": 0,
+      "note": "It answers from your help center and past tickets, not from guesswork. It also returns how confident it is."
+    },
+    {
+      "key": "reply",
+      "label": "3 · ROUTE THE ANSWER AND SEND THE REPLY",
+      "color": 0,
+      "note": "Simple questions get answered and closed. Anything about an account gets answered but stays open."
+    },
+    {
+      "key": "escalate",
+      "label": "4 · HAND OFF TO A HUMAN, LOG EVERY TICKET",
+      "color": 0,
+      "note": "Low confidence, refunds and complaints go to a person with the draft attached. Every ticket lands in the log either way."
+    },
+    {
+      "key": "learn",
+      "label": "5 · THE SYSTEM GETS MORE ACCURATE EVERY WEEK",
+      "color": 0,
+      "note": "Once a week Claude reads what it got wrong and tells you which help docs to write next."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 · Support Ticket or Chat Message In · From Your Support Platform",
+      "section": "intake"
+    },
+    {
+      "key": "context",
+      "kind": "data.transform",
+      "label": "2 · Identify the Customer, the Channel, and Their Prior Tickets",
+      "section": "intake"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "3 · Claude: Draft the Answer From Your Help Docs and Past Tickets",
+      "section": "draft"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "memory",
+      "kind": "ai.memory",
+      "label": "Remember the Rest of This Conversation",
+      "parent": "agent",
+      "port": "ai_memory"
+    },
+    {
+      "key": "docs",
+      "kind": "ai.tool",
+      "label": "Help Center Search",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "lookup",
+      "kind": "ai.tool",
+      "label": "Order / Account Lookup",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Answer + Confidence + Intent",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "route",
+      "kind": "flow.switch",
+      "label": "4 · Route by Intent",
+      "section": "reply"
+    },
+    {
+      "key": "confident",
+      "kind": "flow.branch",
+      "label": "5 · Confident Enough to Send This Without a Person?",
+      "section": "reply"
+    },
+    {
+      "key": "send",
+      "kind": "net.http",
+      "label": "6 · Support Platform: Post the Reply and Close the Ticket",
+      "section": "reply"
+    },
+    {
+      "key": "account",
+      "kind": "net.http",
+      "label": "7 · Support Platform: Reply With Account Details, Keep It Open",
+      "section": "reply"
+    },
+    {
+      "key": "review",
+      "kind": "app.action",
+      "label": "8 · Send the Draft to a Human to Check Before It Goes Out",
+      "app": "slack",
+      "op": "post",
+      "section": "escalate"
+    },
+    {
+      "key": "escalate",
+      "kind": "app.action",
+      "label": "9 · Escalate to a Human With the Full Ticket History",
+      "app": "slack",
+      "op": "post",
+      "section": "escalate"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "10 · Log the Ticket, Intent, Confidence, and Who Resolved It",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "escalate"
+    },
+    {
+      "key": "weekly",
+      "kind": "trigger.schedule",
+      "label": "11 · Once a Week, Look Back at Every Ticket",
+      "section": "learn"
+    },
+    {
+      "key": "rollup",
+      "kind": "data.aggregate",
+      "label": "12 · Roll Up the Low-Confidence and Escalated Tickets",
+      "section": "learn"
+    },
+    {
+      "key": "improve",
+      "kind": "ai.llm",
+      "label": "13 · Claude: Suggest New Answers and Help Doc Fixes",
+      "section": "learn"
+    },
+    {
+      "key": "report",
+      "kind": "app.action",
+      "label": "14 · Weekly Accuracy Report to Your Team",
+      "app": "slack",
+      "op": "post",
+      "section": "learn"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "15 · Any Node Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "learn"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "16 · Alert With a Link to the Failed Run",
+      "app": "slack",
+      "op": "post",
+      "section": "learn"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "context"
+    },
+    {
+      "from": "context",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "confident",
+      "branch": "FAQ"
+    },
+    {
+      "from": "route",
+      "to": "account",
+      "branch": "Account Issue"
+    },
+    {
+      "from": "route",
+      "to": "escalate",
+      "branch": "Refund or Complaint"
+    },
+    {
+      "from": "confident",
+      "to": "send",
+      "branch": "true"
+    },
+    {
+      "from": "confident",
+      "to": "review",
+      "branch": "false"
+    },
+    {
+      "from": "send",
+      "to": "log"
+    },
+    {
+      "from": "account",
+      "to": "log"
+    },
+    {
+      "from": "review",
+      "to": "log"
+    },
+    {
+      "from": "escalate",
+      "to": "log"
+    },
+    {
+      "from": "weekly",
+      "to": "rollup"
+    },
+    {
+      "from": "rollup",
+      "to": "improve"
+    },
+    {
+      "from": "improve",
+      "to": "report"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "ticket_id": "TKT-48210",
+    "channel": "web_chat",
+    "received_at": "2026-09-09T14:22:07Z",
+    "customer": {
+      "name": "Marisol Reyes",
+      "email": "m.reyes@northlinesupply.com",
+      "plan": "Business",
+      "customer_since": "2024-03-11"
+    },
+    "subject": "Order hasn't shipped and I was charged twice",
+    "message": "Hi - order #40911 still says processing after 6 days, and I see two charges of $189.00 on my card. Can someone tell me what happened?"
+  },
+  "output_sample": {
+    "ticket_id": "TKT-48210",
+    "prior_tickets_found": 2,
+    "intent": "Refund or Complaint",
+    "confidence": 0.41,
+    "drafted_answer": "Marisol, order #40911 is held at our fulfillment partner pending a stock check on the 24-pack. On the billing, I can see one settled charge of $189.00 and one authorization hold of $189.00 that should drop off within 3 business days - I'm sending this to a specialist to confirm and refund if it settled.",
+    "sources_used": [
+      "help-center/shipping-delays-and-holds",
+      "help-center/duplicate-authorization-holds",
+      "past-ticket/TKT-39044"
+    ],
+    "action_taken": "Escalated to a human with the full ticket history, draft attached",
+    "resolved_by": "Human (Dana K.)",
+    "auto_reply_sent": false,
+    "reason_escalated": "Confidence 0.41 and a possible duplicate charge - money moves only with a person's approval",
+    "logged_row": {
+      "date": "2026-09-09",
+      "ticket_id": "TKT-48210",
+      "intent": "Refund or Complaint",
+      "confidence": 0.41,
+      "resolved_by": "Human",
+      "first_response_seconds": 38
+    },
+    "this_week_so_far": {
+      "tickets": 612,
+      "answered_and_closed_automatically": 431,
+      "sent_for_human_review": 97,
+      "escalated": 84,
+      "average_first_response": "41 seconds",
+      "top_gap_claude_flagged": "No help doc exists for duplicate authorization holds - 19 tickets this week"
+    }
+  },
+  "archetype": "customer_support_automation_system_answer_escala",
+  "learned": true,
+  "learned_at": "2026-09-09"
+}

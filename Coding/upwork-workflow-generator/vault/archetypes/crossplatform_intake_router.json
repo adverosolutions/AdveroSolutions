@@ -1,0 +1,176 @@
+{
+  "title": "One Intake → Claude Routing → Airtable Core → GoHighLevel & Ops",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · ONE INTAKE",
+      "color": 0,
+      "note": "Make, Zapier and form sources all post to the same endpoint and are normalized once. Consolidating three platforms starts by giving them one door, not by rebuilding them."
+    },
+    {
+      "key": "decide",
+      "label": "2 · CLAUDE DECIDES",
+      "color": 0,
+      "note": "Classify, enrich against Airtable, and return the action against a fixed schema — an agent with tools rather than a chain of if-statements that grows a branch every quarter."
+    },
+    {
+      "key": "record",
+      "label": "3 · AIRTABLE CORE",
+      "color": 0,
+      "note": "Every item is written before it is acted on, including the ones that go nowhere. That log is what makes troubleshooting possible instead of archaeological."
+    },
+    {
+      "key": "act",
+      "label": "4 · ACT",
+      "color": 0,
+      "note": "Three outcomes, each idempotent — a replayed webhook updates the same record rather than creating a second one."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "Any Source Posts In",
+      "section": "intake",
+      "notes": "Signed and versioned. Make and Zapier scenarios point here, so they can be retired one at a time instead of all at once."
+    },
+    {
+      "key": "norm",
+      "kind": "data.transform",
+      "label": "Normalize to One Schema",
+      "section": "intake"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "Classify, Enrich & Decide the Action",
+      "section": "decide"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "tool",
+      "kind": "ai.tool",
+      "label": "Airtable Lookup",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Action Schema",
+      "parent": "agent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "air",
+      "kind": "app.action",
+      "label": "Write to Airtable — Source of Truth",
+      "app": "airtable",
+      "op": "create",
+      "section": "record"
+    },
+    {
+      "key": "route",
+      "kind": "flow.switch",
+      "label": "Which action",
+      "section": "record"
+    },
+    {
+      "key": "ghl",
+      "kind": "app.action",
+      "label": "Upsert Contact & Opportunity",
+      "app": "gohighlevel",
+      "op": "create",
+      "section": "act"
+    },
+    {
+      "key": "seq",
+      "kind": "app.action",
+      "label": "Trigger the Follow-Up Sequence",
+      "app": "gohighlevel",
+      "op": "send",
+      "section": "act"
+    },
+    {
+      "key": "ticket",
+      "kind": "net.http",
+      "label": "Open a Support Ticket",
+      "section": "act"
+    },
+    {
+      "key": "task",
+      "kind": "app.action",
+      "label": "Assign the Ops Task",
+      "app": "slack",
+      "op": "post",
+      "section": "act"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "norm"
+    },
+    {
+      "from": "norm",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "air"
+    },
+    {
+      "from": "air",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "ghl",
+      "branch": "Sales Lead"
+    },
+    {
+      "from": "ghl",
+      "to": "seq"
+    },
+    {
+      "from": "route",
+      "to": "ticket",
+      "branch": "Support"
+    },
+    {
+      "from": "route",
+      "to": "task",
+      "branch": "Ops"
+    }
+  ],
+  "input_sample": {
+    "arrived_from": "Zapier — legacy Typeform zap",
+    "raw": {
+      "name": "Dana Reyes",
+      "email": "dana.reyes@meridian.com",
+      "message": "Need pricing for 3 locations, also our last invoice looks wrong"
+    },
+    "received_at": "2026-08-03T09:14:22Z"
+  },
+  "output_sample": {
+    "airtable_record": "recA9f42ab10",
+    "classified_as": "Sales Lead  (+ Support secondary)",
+    "confidence": 0.91,
+    "enriched": "Meridian Logistics · existing customer since 2024 · 2 locations",
+    "action_taken": "GoHighLevel opportunity created, follow-up sequence started",
+    "secondary_action": "Billing ticket opened — invoice query",
+    "idempotency_key": "zap-tf-8842",
+    "replay_safe": true
+  },
+  "archetype": "crossplatform_intake_router",
+  "learned": true,
+  "learned_at": "2026-08-03"
+}

@@ -1,0 +1,162 @@
+{
+  "title": "Intake Call → Voice AI → Quote Draft → CRM",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "in",
+      "label": "1 · THE CALL COMES IN",
+      "color": 0,
+      "note": "Every call is answered the same way, day or night."
+    },
+    {
+      "key": "gather",
+      "label": "2 · GATHER THE JOB DETAILS",
+      "color": 0,
+      "note": "Voice AI asks the questions a scheduler would ask."
+    },
+    {
+      "key": "draft",
+      "label": "3 · DRAFT THE PROPOSAL",
+      "color": 0,
+      "note": "A real price range, not a form that goes nowhere."
+    },
+    {
+      "key": "done",
+      "label": "4 · SAVE, NOTIFY, HAND OFF",
+      "color": 0,
+      "note": "CRM updated, team notified, ready for a human to close it."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "call",
+      "kind": "trigger.app",
+      "label": "1 · Phone Rings — Voice AI Picks Up",
+      "app": "twilio",
+      "op": "voice_call",
+      "section": "in"
+    },
+    {
+      "key": "hours",
+      "kind": "flow.branch",
+      "label": "2 · Is This an Emergency or a Normal Job?",
+      "section": "in"
+    },
+    {
+      "key": "urgent",
+      "kind": "app.action",
+      "label": "2b · Page the On-Call Electrician Now",
+      "app": "twilio",
+      "op": "send_sms",
+      "section": "in"
+    },
+    {
+      "key": "gather",
+      "kind": "ai.agent",
+      "label": "3 · Ask What the Job Actually Needs",
+      "section": "gather"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Voice Model",
+      "app": "openai",
+      "parent": "gather",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Force Address, Job Type, Panel Size, Photos",
+      "parent": "gather",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "estimate",
+      "kind": "data.transform",
+      "label": "4 · Price It Against the Rate Sheet",
+      "section": "draft"
+    },
+    {
+      "key": "proposal",
+      "kind": "app.action",
+      "label": "5 · Send the Draft Proposal With a Range",
+      "app": "gmail",
+      "op": "send_email",
+      "section": "draft"
+    },
+    {
+      "key": "crm",
+      "kind": "app.action",
+      "label": "6 · Create the Lead in the CRM",
+      "app": "hubspot",
+      "op": "create_contact",
+      "section": "done"
+    },
+    {
+      "key": "notify",
+      "kind": "app.action",
+      "label": "7 · Notify the Office With the Call Summary",
+      "app": "slack",
+      "op": "send_message",
+      "section": "done"
+    }
+  ],
+  "edges": [
+    {
+      "from": "call",
+      "to": "hours"
+    },
+    {
+      "from": "hours",
+      "to": "urgent",
+      "branch": "Emergency — no power, sparking, smell of burning"
+    },
+    {
+      "from": "hours",
+      "to": "gather",
+      "branch": "Normal job"
+    },
+    {
+      "from": "urgent",
+      "to": "crm"
+    },
+    {
+      "from": "gather",
+      "to": "estimate"
+    },
+    {
+      "from": "estimate",
+      "to": "proposal"
+    },
+    {
+      "from": "proposal",
+      "to": "crm"
+    },
+    {
+      "from": "crm",
+      "to": "notify"
+    }
+  ],
+  "input_sample": {
+    "caller": "+1 (612) 555-0147",
+    "called_at": "2026-08-17T19:42:11-05:00",
+    "transcript_excerpt": "Panel's about 20 years old, we want to add a hot tub circuit, house is a 1998 build in Eden Prairie"
+  },
+  "output_sample": {
+    "call_type": "Normal job",
+    "captured": {
+      "address": "Eden Prairie, MN",
+      "job_type": "New circuit — hot tub",
+      "panel_age": "~20 years",
+      "panel_upgrade_flagged": true
+    },
+    "draft_proposal": "Ballpark $1,400-$2,200 for a dedicated 240V hot tub circuit. Panel age means we'll confirm capacity on site before locking the number.",
+    "crm_contact_created": true,
+    "notified": "#office — new lead, Eden Prairie, hot tub circuit, ballpark sent",
+    "time_from_hangup_to_email": "94 seconds"
+  },
+  "archetype": "voice_intake_quote_crm",
+  "learned": true,
+  "learned_at": "2026-08-18"
+}

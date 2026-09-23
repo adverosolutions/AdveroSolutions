@@ -1,0 +1,137 @@
+{
+  "title": "Website Chatbot — Answer from Site Content, Escalate the Rest",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "chat",
+      "label": "1 · CHAT",
+      "color": 0,
+      "note": "A single embed snippet on the existing site. No replatforming, no page rebuild."
+    },
+    {
+      "key": "answer",
+      "label": "2 · ANSWER",
+      "color": 0,
+      "note": "Answers are retrieved from your own pages and FAQs, so the bot can only say things your site actually says."
+    },
+    {
+      "key": "handle",
+      "label": "3 · REPLY OR ESCALATE",
+      "color": 0,
+      "note": "The important half: when the bot does not know, it says so, captures an email and tells you — instead of guessing at a customer."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.chat",
+      "label": "Visitor Opens the Website Chat",
+      "section": "chat"
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "Answer from Website Content",
+      "section": "answer"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "mem",
+      "kind": "ai.memory",
+      "label": "Conversation Memory",
+      "parent": "agent",
+      "port": "ai_memory"
+    },
+    {
+      "key": "vec",
+      "kind": "ai.vectorstore",
+      "label": "Website Pages & FAQs",
+      "parent": "agent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "emb",
+      "kind": "ai.embed",
+      "label": "Site Content Embeddings",
+      "app": "openai",
+      "parent": "vec",
+      "port": "ai_embedding"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "Answered from the knowledge base",
+      "section": "handle"
+    },
+    {
+      "key": "resp",
+      "kind": "net.respond",
+      "label": "Reply in the Chat Widget",
+      "section": "handle"
+    },
+    {
+      "key": "cap",
+      "kind": "app.action",
+      "label": "Capture Email & Log the Gap",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "handle",
+      "notes": "Every unanswered question becomes the next FAQ, so the bot improves each week without retraining."
+    },
+    {
+      "key": "team",
+      "kind": "app.action",
+      "label": "Notify the Team",
+      "app": "gmail",
+      "op": "send",
+      "section": "handle"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "resp",
+      "branch": "true"
+    },
+    {
+      "from": "gate",
+      "to": "cap",
+      "branch": "false"
+    },
+    {
+      "from": "cap",
+      "to": "team"
+    }
+  ],
+  "input_sample": {
+    "visitor_id": "vis_8f21",
+    "page": "/pricing",
+    "question": "Do you offer a monthly plan or is it annual only?",
+    "messages": 3
+  },
+  "output_sample": {
+    "answer": "Both — monthly is $49 and annual is $490, which works out to two months free.",
+    "answered_from": "/pricing + Billing FAQ",
+    "confidence": 0.93,
+    "escalated": false,
+    "response_time_ms": 1180
+  },
+  "archetype": "simple_site_chatbot",
+  "learned": true,
+  "learned_at": "2026-08-03"
+}

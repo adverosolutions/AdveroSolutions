@@ -1,0 +1,283 @@
+{
+  "title": "Four Weekly Marketing Tasks, Automated — Report, Repurpose, Clean Leads, Triage Replies",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "trigger",
+      "label": "1 · ONE WEEKLY TRIGGER",
+      "color": 0,
+      "note": "One schedule kicks off all four tasks, so nothing depends on someone remembering to start it."
+    },
+    {
+      "key": "report",
+      "label": "2 · TASK 1 · WEEKLY PERFORMANCE REPORT",
+      "color": 0,
+      "note": "Pulls last week's numbers, has AI summarize what actually changed, and posts it before the week starts."
+    },
+    {
+      "key": "content",
+      "label": "3 · TASK 2 · REPURPOSE & SCHEDULE CONTENT",
+      "color": 0,
+      "note": "Turns the week's long-form piece into social posts in the brand voice and pushes them to the scheduler."
+    },
+    {
+      "key": "leads",
+      "label": "4 · TASK 3 · CLEAN LEADS & SYNC THE CRM",
+      "color": 0,
+      "note": "New signups get deduped and checked before they touch the CRM, so the list stays clean without a weekly manual pass."
+    },
+    {
+      "key": "triage",
+      "label": "5 · TASK 4 · TRIAGE REPLIES & DRAFT FOLLOW-UPS",
+      "color": 0,
+      "note": "Unanswered replies get classified hot, warm, or cold, with a follow-up drafted for each, so nothing sits in the inbox."
+    },
+    {
+      "key": "refine",
+      "label": "6 · TEST & REFINE",
+      "color": 0,
+      "note": "Every run logs what ran, what failed, and how long it took, and a failure alerts immediately, that's how the workflows get refined on real data instead of guesswork."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "trig",
+      "kind": "trigger.schedule",
+      "label": "Every Monday, 8am",
+      "section": "trigger"
+    },
+    {
+      "key": "pull_metrics",
+      "kind": "net.http",
+      "label": "Pull Last Week's Ads and Analytics Numbers",
+      "section": "report"
+    },
+    {
+      "key": "summarize_agent",
+      "kind": "ai.agent",
+      "label": "Summarize Performance and Flag What Changed",
+      "section": "report"
+    },
+    {
+      "key": "summarize_model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "summarize_agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "send_report",
+      "kind": "app.action",
+      "label": "Post the Weekly Report to Slack",
+      "app": "slack",
+      "op": "post",
+      "section": "report"
+    },
+    {
+      "key": "pull_content",
+      "kind": "net.http",
+      "label": "Pull This Week's Blog Post or Newsletter",
+      "section": "content"
+    },
+    {
+      "key": "repurpose_agent",
+      "kind": "ai.agent",
+      "label": "Repurpose Into Social Posts in the Brand Voice",
+      "section": "content"
+    },
+    {
+      "key": "repurpose_model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "repurpose_agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "schedule_posts",
+      "kind": "net.http",
+      "label": "Push the Posts to the Scheduler",
+      "section": "content"
+    },
+    {
+      "key": "pull_leads",
+      "kind": "net.http",
+      "label": "Pull New Leads From Forms and Signups",
+      "section": "leads"
+    },
+    {
+      "key": "clean_leads",
+      "kind": "data.filter",
+      "label": "Dedupe and Drop Incomplete Records",
+      "section": "leads"
+    },
+    {
+      "key": "sync_crm",
+      "kind": "app.action",
+      "label": "Create or Update Contacts in the CRM",
+      "app": "hubspot",
+      "op": "upsert",
+      "section": "leads"
+    },
+    {
+      "key": "pull_replies",
+      "kind": "net.http",
+      "label": "Pull Unanswered Replies From the Inbox",
+      "section": "triage"
+    },
+    {
+      "key": "triage_agent",
+      "kind": "ai.agent",
+      "label": "Classify Hot, Warm, or Cold and Draft the Follow-Up",
+      "section": "triage"
+    },
+    {
+      "key": "triage_model",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "triage_agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "create_tasks",
+      "kind": "net.http",
+      "label": "Create Follow-Up Tasks for the Hot Ones",
+      "section": "triage"
+    },
+    {
+      "key": "run_log",
+      "kind": "app.action",
+      "label": "Log the Run: What Ran, What Failed, How Long",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "refine"
+    },
+    {
+      "key": "fail_branch",
+      "kind": "flow.branch",
+      "label": "Did Any Task Fail?",
+      "section": "refine"
+    },
+    {
+      "key": "alert_fail",
+      "kind": "app.action",
+      "label": "Alert Immediately With Which Task and Why",
+      "app": "slack",
+      "op": "post",
+      "section": "refine"
+    },
+    {
+      "key": "all_clean",
+      "kind": "flow.noop",
+      "label": "All Four Ran Clean",
+      "section": "refine"
+    }
+  ],
+  "edges": [
+    {
+      "from": "trig",
+      "to": "pull_metrics"
+    },
+    {
+      "from": "trig",
+      "to": "pull_content"
+    },
+    {
+      "from": "trig",
+      "to": "pull_leads"
+    },
+    {
+      "from": "trig",
+      "to": "pull_replies"
+    },
+    {
+      "from": "pull_metrics",
+      "to": "summarize_agent"
+    },
+    {
+      "from": "summarize_agent",
+      "to": "send_report"
+    },
+    {
+      "from": "pull_content",
+      "to": "repurpose_agent"
+    },
+    {
+      "from": "repurpose_agent",
+      "to": "schedule_posts"
+    },
+    {
+      "from": "pull_leads",
+      "to": "clean_leads"
+    },
+    {
+      "from": "clean_leads",
+      "to": "sync_crm"
+    },
+    {
+      "from": "pull_replies",
+      "to": "triage_agent"
+    },
+    {
+      "from": "triage_agent",
+      "to": "create_tasks"
+    },
+    {
+      "from": "send_report",
+      "to": "run_log"
+    },
+    {
+      "from": "schedule_posts",
+      "to": "run_log"
+    },
+    {
+      "from": "sync_crm",
+      "to": "run_log"
+    },
+    {
+      "from": "create_tasks",
+      "to": "run_log"
+    },
+    {
+      "from": "run_log",
+      "to": "fail_branch"
+    },
+    {
+      "from": "fail_branch",
+      "to": "alert_fail",
+      "branch": "true"
+    },
+    {
+      "from": "fail_branch",
+      "to": "all_clean",
+      "branch": "false"
+    }
+  ],
+  "input_sample": {
+    "week_of": "2026-08-24",
+    "tasks": [
+      "weekly performance report",
+      "repurpose and schedule content",
+      "clean leads and sync crm",
+      "triage replies and draft follow-ups"
+    ],
+    "manual_hours_per_week_before": 6.5
+  },
+  "output_sample": {
+    "week_of": "2026-08-24",
+    "report_posted": true,
+    "social_posts_scheduled": 9,
+    "leads_synced": 47,
+    "duplicates_dropped": 6,
+    "replies_triaged": 23,
+    "hot_follow_ups_drafted": 5,
+    "tasks_failed": 0,
+    "run_time_min": 4,
+    "manual_hours_saved_this_week": 6.5
+  },
+  "archetype": "marketer_four_weekly_tasks_automated",
+  "learned": true,
+  "learned_at": "2026-09-02"
+}

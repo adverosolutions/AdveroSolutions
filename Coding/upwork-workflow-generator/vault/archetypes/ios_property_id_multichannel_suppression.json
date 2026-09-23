@@ -1,0 +1,343 @@
+{
+  "title": "IOS Acquisition Engine — One Property ID, Multichannel Outreach, Response Suppression",
+  "platform": "make",
+  "sections": [
+    {
+      "key": "identity",
+      "label": "1 · YOU UPLOAD THE LIST → ONE PROPERTY ID",
+      "color": 0,
+      "note": "Everything starts with one upload. Before any record is created, the system checks whether it has seen this property before, then gives it a permanent ID and creates exactly one record in Close. Re-uploading the same list updates that record — it never creates a second one."
+    },
+    {
+      "key": "enrich",
+      "label": "2 · FIND THE OWNERS AND THEIR CONTACT POINTS",
+      "color": 0,
+      "note": "BatchData returns however many owners, phone numbers and email addresses exist. Each one becomes a numbered child of the property — P01, P02, E01 — so every phone and email stays tied to the parent. DNC numbers and previous opt-outs are removed here, before anything is sent."
+    },
+    {
+      "key": "dispatch",
+      "label": "3 · REACH OUT ON THREE CHANNELS AT ONCE",
+      "color": 0,
+      "note": "One router splits the contact points by type and hands them to the right platform. The Property ID travels with every record, written into each platform's own ID field. That is what lets you swap a vendor later by rewriting one branch instead of the system."
+    },
+    {
+      "key": "response",
+      "label": "4 · SOMEONE REPLIES — FIND THEIR PROPERTY",
+      "color": 0,
+      "note": "All three platforms report replies into a single webhook. The system reads the child ID in the reply, looks up which property it belongs to, and updates that one master record with who replied and which channel they replied on."
+    },
+    {
+      "key": "suppress",
+      "label": "5 · STOP EVERYTHING ELSE, THEN TELL YOU",
+      "color": 0,
+      "note": "Outreach is shut off across all three platforms in parallel, so nothing else goes out to a property whose owner is already talking to you. Only once that is done do you get pinged to take over the seller conversation."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "upload",
+      "kind": "trigger.webhook",
+      "label": "1 · New Property List Arrives from Crexi",
+      "section": "identity"
+    },
+    {
+      "key": "idem",
+      "kind": "data.filter",
+      "label": "2 · Have We Seen This Property Before?",
+      "section": "identity",
+      "notes": "Matches on parcel number plus normalized address, so the same property never gets two IDs."
+    },
+    {
+      "key": "mint",
+      "kind": "data.transform",
+      "label": "3 · Give It a Permanent ID — IOS-000001",
+      "section": "identity"
+    },
+    {
+      "key": "close",
+      "kind": "net.http",
+      "label": "4 · Create the ONE Master Record in Close",
+      "section": "identity",
+      "notes": "The Property ID is written as Close's unique external ID, so even a retry cannot create a duplicate."
+    },
+    {
+      "key": "batch",
+      "kind": "net.http",
+      "label": "5 · Ask BatchData Who Owns This Property",
+      "section": "enrich"
+    },
+    {
+      "key": "gotdata",
+      "kind": "flow.branch",
+      "label": "6 · Did We Get Phones and Emails Back?",
+      "section": "enrich"
+    },
+    {
+      "key": "requeue",
+      "kind": "net.http",
+      "label": "6b · Retry 3× Then Park for Skip-Trace",
+      "section": "enrich",
+      "notes": "A failed lookup parks the property in a queue instead of killing the whole run."
+    },
+    {
+      "key": "children",
+      "kind": "data.transform",
+      "label": "7 · Split Owners into P01, P02, E01, E02…",
+      "section": "enrich"
+    },
+    {
+      "key": "scrub",
+      "kind": "data.filter",
+      "label": "8 · Remove DNC, Opt-Outs and Unsubscribes",
+      "section": "enrich"
+    },
+    {
+      "key": "router",
+      "kind": "flow.switch",
+      "label": "9 · Send Each Contact Point to Its Channel",
+      "section": "dispatch"
+    },
+    {
+      "key": "sherpa",
+      "kind": "net.http",
+      "label": "9a · Mobile Numbers → Lead Sherpa · SMS",
+      "section": "dispatch"
+    },
+    {
+      "key": "smartlead",
+      "kind": "net.http",
+      "label": "9b · Email Addresses → Smartlead · Cold Email",
+      "section": "dispatch"
+    },
+    {
+      "key": "kixie",
+      "kind": "net.http",
+      "label": "9c · Best Numbers → Kixie · Power Dialer",
+      "section": "dispatch"
+    },
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "10 · Someone Replies — SMS, Email or Phone",
+      "section": "response"
+    },
+    {
+      "key": "lookup",
+      "kind": "data.transform",
+      "label": "11 · Look Up Which Property That Reply Belongs To",
+      "section": "response"
+    },
+    {
+      "key": "engaged",
+      "kind": "net.http",
+      "label": "12 · Mark That Property OWNER ENGAGED in Close",
+      "section": "response"
+    },
+    {
+      "key": "fanout",
+      "kind": "flow.switch",
+      "label": "13 · Shut Off All Other Outreach for This Property",
+      "section": "suppress"
+    },
+    {
+      "key": "stopsms",
+      "kind": "net.http",
+      "label": "13a · Stop the SMS Sequence in Lead Sherpa",
+      "section": "suppress"
+    },
+    {
+      "key": "stopmail",
+      "kind": "net.http",
+      "label": "13b · Pull Them Out of the Smartlead Campaign",
+      "section": "suppress"
+    },
+    {
+      "key": "stopdial",
+      "kind": "net.http",
+      "label": "13c · Remove Them from the Kixie Dial List",
+      "section": "suppress"
+    },
+    {
+      "key": "notify",
+      "kind": "app.action",
+      "label": "14 · Notify You — Take Over the Seller Conversation",
+      "app": "slack",
+      "op": "send_message",
+      "section": "suppress"
+    }
+  ],
+  "edges": [
+    {
+      "from": "upload",
+      "to": "idem"
+    },
+    {
+      "from": "idem",
+      "to": "mint"
+    },
+    {
+      "from": "mint",
+      "to": "close"
+    },
+    {
+      "from": "close",
+      "to": "batch"
+    },
+    {
+      "from": "batch",
+      "to": "gotdata"
+    },
+    {
+      "from": "gotdata",
+      "to": "children",
+      "branch": "Yes — contacts found"
+    },
+    {
+      "from": "gotdata",
+      "to": "requeue",
+      "branch": "No — came back empty"
+    },
+    {
+      "from": "children",
+      "to": "scrub"
+    },
+    {
+      "from": "scrub",
+      "to": "router"
+    },
+    {
+      "from": "router",
+      "to": "sherpa",
+      "branch": "Mobile number"
+    },
+    {
+      "from": "router",
+      "to": "smartlead",
+      "branch": "Email address"
+    },
+    {
+      "from": "router",
+      "to": "kixie",
+      "branch": "Best number to call"
+    },
+    {
+      "from": "hook",
+      "to": "lookup"
+    },
+    {
+      "from": "lookup",
+      "to": "engaged"
+    },
+    {
+      "from": "engaged",
+      "to": "fanout"
+    },
+    {
+      "from": "fanout",
+      "to": "stopsms",
+      "branch": "Stop SMS"
+    },
+    {
+      "from": "fanout",
+      "to": "stopmail",
+      "branch": "Stop email"
+    },
+    {
+      "from": "fanout",
+      "to": "stopdial",
+      "branch": "Stop calling"
+    },
+    {
+      "from": "fanout",
+      "to": "notify",
+      "branch": "Notify you"
+    }
+  ],
+  "input_sample": {
+    "source": "Crexi Intelligence export",
+    "property": {
+      "apn": "141-27-004B",
+      "address": "4820 S 35th Ave, Phoenix, AZ 85041",
+      "asset_type": "IOS — 3.4 acres, fenced, stabilized yard",
+      "zoning": "A-2"
+    },
+    "batchdata_enrichment": {
+      "owners": [
+        {
+          "name": "Randall K. Vosberg",
+          "role": "Managing Member",
+          "entity": "35th Ave Yard Holdings LLC"
+        },
+        {
+          "name": "Ilse Vosberg-Tran",
+          "role": "Member"
+        }
+      ],
+      "phones": [
+        "+16025550143",
+        "+16025550188",
+        "+14805550117",
+        "+16025550260",
+        "+16025550399",
+        "+16025550412"
+      ],
+      "emails": [
+        "randall@35thaveyard.com",
+        "rkv@vosbergcapital.com",
+        "ilse@35thaveyard.com",
+        "accounting@vosbergcapital.com",
+        "r.vosberg@gmail.com"
+      ]
+    }
+  },
+  "output_sample": {
+    "property_id": "IOS-000001",
+    "close_records_created": 1,
+    "child_contact_points": {
+      "IOS-000001-P01": {
+        "value": "+16025550143",
+        "channel": "Lead Sherpa",
+        "status": "suppressed — owner engaged"
+      },
+      "IOS-000001-P03": {
+        "value": "+14805550117",
+        "channel": "Kixie",
+        "status": "blocked — DNC on file"
+      },
+      "IOS-000001-E02": {
+        "value": "rkv@vosbergcapital.com",
+        "channel": "Smartlead",
+        "status": "RESPONDED ✓"
+      }
+    },
+    "totals": {
+      "phones_enriched": 6,
+      "emails_enriched": 5,
+      "dispatched": 9,
+      "blocked_before_sending": 2
+    },
+    "response": {
+      "received_at": "2026-08-11T15:22:04Z",
+      "channel": "Smartlead",
+      "child_id": "IOS-000001-E02",
+      "resolved_parent": "IOS-000001",
+      "verified_contact": "Randall K. Vosberg",
+      "sentiment": "positive — asked for a number"
+    },
+    "close_update": {
+      "status": "OWNER ENGAGED",
+      "response_source": "Email — Smartlead",
+      "verified_contact_id": "IOS-000001-E02"
+    },
+    "outreach_stopped": {
+      "lead_sherpa": "sequence halted (3 pending)",
+      "smartlead": "removed from campaign (2 pending)",
+      "kixie": "pulled from dial list (4 pending)"
+    },
+    "notified": "#acquisitions — take over seller conversation",
+    "duplicate_properties_created": 0
+  },
+  "archetype": "ios_property_id_multichannel_suppression",
+  "learned": true,
+  "learned_at": "2026-08-10"
+}

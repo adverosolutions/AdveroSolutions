@@ -1,0 +1,267 @@
+{
+  "title": "Online Audit → 4-Path Segmentation → Pipeline & Nurture",
+  "platform": "gohighlevel",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · INTAKE & DEDUPE",
+      "color": 0,
+      "note": "Audit start fires the workflow immediately. The contact is created or matched, then pulled out of every competing sequence before anything sends — this is what stops duplicate and conflicting messages later."
+    },
+    {
+      "key": "qualify",
+      "label": "2 · QUALIFY & ROUTE",
+      "color": 0,
+      "note": "Qualification criteria are written to custom fields, then a 24-hour window lets the prospect finish or book before routing. One switch, four mutually exclusive outcomes — no contact can land in two arms."
+    },
+    {
+      "key": "paths",
+      "label": "3 · PATH-SPECIFIC FOLLOW-UP",
+      "color": 0,
+      "note": "Each outcome gets its own tag, pipeline stage and sequence. Your copy drops straight into these — the structure decides who receives it and when."
+    },
+    {
+      "key": "longterm",
+      "label": "4 · LONG-TERM SEGMENTATION",
+      "color": 0,
+      "note": "Every contact exits into exactly one newsletter audience. Re-entry is handled by triggers on tag change, so a not-qualified lead who later qualifies moves lists without a manual cleanup."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "trig",
+      "kind": "trigger.form",
+      "label": "Online Audit Started",
+      "section": "intake"
+    },
+    {
+      "key": "upsert",
+      "kind": "app.action",
+      "label": "Create or Match Contact",
+      "app": "GoHighLevel",
+      "op": "upsert_contact",
+      "section": "intake",
+      "notes": "Matches on phone first, then email, so a repeat visitor never becomes a second record."
+    },
+    {
+      "key": "guard",
+      "kind": "app.action",
+      "label": "Remove From Conflicting Sequences",
+      "app": "GoHighLevel",
+      "op": "remove_from_workflows",
+      "section": "intake",
+      "notes": "Workflow-removal actions run before any send. This is the single fix for duplicate messaging."
+    },
+    {
+      "key": "score",
+      "kind": "data.transform",
+      "label": "Write Qualification Fields",
+      "section": "qualify"
+    },
+    {
+      "key": "wait",
+      "kind": "flow.wait",
+      "label": "Wait 24h — Completion Window",
+      "section": "qualify"
+    },
+    {
+      "key": "route",
+      "kind": "flow.switch",
+      "label": "Audit Outcome",
+      "section": "qualify",
+      "notes": "If/Else with four exclusive branches, evaluated top-down so a booked call always wins over a qualified-no-booking match."
+    },
+    {
+      "key": "abandon",
+      "kind": "app.action",
+      "label": "Tag: Audit Abandoned · Stage: Incomplete",
+      "app": "GoHighLevel",
+      "op": "add_tag_and_stage",
+      "section": "paths"
+    },
+    {
+      "key": "recover",
+      "kind": "app.action",
+      "label": "Resume-Audit Sequence — 3 Touch, Email + SMS",
+      "app": "GoHighLevel",
+      "op": "start_sequence",
+      "section": "paths"
+    },
+    {
+      "key": "notqual",
+      "kind": "app.action",
+      "label": "Tag: Not Yet Qualified · Stage: Nurture",
+      "app": "GoHighLevel",
+      "op": "add_tag_and_stage",
+      "section": "paths"
+    },
+    {
+      "key": "nobook",
+      "kind": "app.action",
+      "label": "Tag: Qualified · Stage: Audit Complete",
+      "app": "GoHighLevel",
+      "op": "add_tag_and_stage",
+      "section": "paths"
+    },
+    {
+      "key": "bookpush",
+      "kind": "app.action",
+      "label": "Booking Push — 5 Touch to Calendar Link",
+      "app": "GoHighLevel",
+      "op": "start_sequence",
+      "section": "paths"
+    },
+    {
+      "key": "booked",
+      "kind": "app.action",
+      "label": "Tag: Call Booked · Stage: Discovery Scheduled",
+      "app": "GoHighLevel",
+      "op": "add_tag_and_stage",
+      "section": "paths"
+    },
+    {
+      "key": "remind",
+      "kind": "app.action",
+      "label": "Confirm + 24h / 1h Reminders + Pre-Call Prep",
+      "app": "GoHighLevel",
+      "op": "appointment_sequence",
+      "section": "paths",
+      "notes": "Appointment-status triggers handle reschedule and no-show without a second workflow."
+    },
+    {
+      "key": "postcall",
+      "kind": "app.action",
+      "label": "Post-Call: Won / No-Show / Follow-Up Stage",
+      "app": "GoHighLevel",
+      "op": "update_opportunity",
+      "section": "paths"
+    },
+    {
+      "key": "listb",
+      "kind": "app.action",
+      "label": "Newsletter B — Not Yet Qualified",
+      "app": "GoHighLevel",
+      "op": "add_to_list",
+      "section": "longterm"
+    },
+    {
+      "key": "lista",
+      "kind": "app.action",
+      "label": "Newsletter A — Qualified Audience",
+      "app": "GoHighLevel",
+      "op": "add_to_list",
+      "section": "longterm"
+    }
+  ],
+  "edges": [
+    {
+      "from": "trig",
+      "to": "upsert"
+    },
+    {
+      "from": "upsert",
+      "to": "guard"
+    },
+    {
+      "from": "guard",
+      "to": "score"
+    },
+    {
+      "from": "score",
+      "to": "wait"
+    },
+    {
+      "from": "wait",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "abandon",
+      "branch": "Started, Not Completed"
+    },
+    {
+      "from": "abandon",
+      "to": "recover"
+    },
+    {
+      "from": "route",
+      "to": "notqual",
+      "branch": "Completed, Not Qualified"
+    },
+    {
+      "from": "notqual",
+      "to": "listb"
+    },
+    {
+      "from": "route",
+      "to": "nobook",
+      "branch": "Qualified, No Booking"
+    },
+    {
+      "from": "nobook",
+      "to": "bookpush"
+    },
+    {
+      "from": "bookpush",
+      "to": "lista"
+    },
+    {
+      "from": "route",
+      "to": "booked",
+      "branch": "Qualified + Booked"
+    },
+    {
+      "from": "booked",
+      "to": "remind"
+    },
+    {
+      "from": "remind",
+      "to": "postcall"
+    }
+  ],
+  "input_sample": {
+    "contact": {
+      "first_name": "Danielle",
+      "last_name": "Mercer",
+      "email": "danielle@northshoredental.com",
+      "phone": "+1 604 555 0182"
+    },
+    "source": "Website — Marketing Audit",
+    "audit": {
+      "started_at": "2026-08-10T14:02:11Z",
+      "completed": false,
+      "progress": "6 of 11 questions"
+    },
+    "answers": {
+      "monthly_ad_spend": "$4,000 - $8,000",
+      "primary_channel": "Google Ads",
+      "team_size": 12
+    }
+  },
+  "output_sample": {
+    "contact_id": "ghl_7f3a91c4",
+    "audit_outcome": "Qualified, No Booking",
+    "qualified": true,
+    "qualification_reason": "Ad spend above $3k threshold · in-house marketing owner identified",
+    "tags_applied": [
+      "audit-complete",
+      "qualified",
+      "no-booking"
+    ],
+    "removed_from": [
+      "Cold Nurture — General",
+      "Snapshot Default Follow-Up"
+    ],
+    "pipeline": {
+      "name": "Agency Sales",
+      "stage": "Audit Complete",
+      "moved_at": "2026-08-11T14:02:11Z"
+    },
+    "enrolled_in": "Booking Push — 5 Touch",
+    "newsletter_list": "Newsletter A — Qualified Audience",
+    "duplicate_sends_prevented": 2
+  },
+  "archetype": "ghl_audit_four_path_segmentation",
+  "learned": true,
+  "learned_at": "2026-08-10"
+}

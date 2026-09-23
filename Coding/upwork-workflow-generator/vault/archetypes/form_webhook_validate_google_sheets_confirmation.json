@@ -1,0 +1,177 @@
+{
+  "title": "Form Webhook → Validate → Google Sheets → Confirmation Email",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · CATCH THE FORM AND CHECK IT",
+      "color": 0,
+      "note": "The form posts to one webhook URL. Missing fields or a bad email get rejected right away with a clear reason, so junk never reaches the sheet."
+    },
+    {
+      "key": "store",
+      "label": "2 · WRITE IT TO GOOGLE SHEETS",
+      "color": 0,
+      "note": "One clean row per submission, with a timestamp and a submission id. The same webhook can feed an AI agent later without touching this part."
+    },
+    {
+      "key": "confirm",
+      "label": "3 · CONFIRM TO THE SUBMITTER AND THE FORM",
+      "color": 0,
+      "note": "A personalized confirmation email goes out, then the form gets a 200 with the submission id."
+    },
+    {
+      "key": "alert",
+      "label": "4 · FAIL LOUDLY",
+      "color": 0,
+      "note": "If Sheets or Gmail ever errors, a Slack alert with a link to the failed run. Nothing drops silently."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 · Form Submitted",
+      "section": "intake"
+    },
+    {
+      "key": "validate",
+      "kind": "data.code",
+      "label": "2 · Validate Required Fields + Email Format",
+      "section": "intake"
+    },
+    {
+      "key": "valid",
+      "kind": "flow.branch",
+      "label": "3 · Valid?",
+      "section": "intake"
+    },
+    {
+      "key": "reject",
+      "kind": "net.respond",
+      "label": "4 · Reject With Field Errors",
+      "section": "intake"
+    },
+    {
+      "key": "sheet",
+      "kind": "app.action",
+      "label": "5 · Add Row to Submissions Sheet",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "store"
+    },
+    {
+      "key": "email",
+      "kind": "app.action",
+      "label": "6 · Send Confirmation Email",
+      "app": "gmail",
+      "op": "send",
+      "section": "confirm"
+    },
+    {
+      "key": "ok",
+      "kind": "net.respond",
+      "label": "7 · 200 OK to the Form",
+      "section": "confirm"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "8 · Any Node Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "alert"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "9 · Alert on Failure",
+      "app": "slack",
+      "op": "post",
+      "section": "alert"
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "validate"
+    },
+    {
+      "from": "validate",
+      "to": "valid"
+    },
+    {
+      "from": "valid",
+      "to": "reject",
+      "branch": "false"
+    },
+    {
+      "from": "valid",
+      "to": "sheet",
+      "branch": "true"
+    },
+    {
+      "from": "sheet",
+      "to": "email"
+    },
+    {
+      "from": "email",
+      "to": "ok"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "headers": {
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0"
+    },
+    "body": {
+      "full_name": "Priya Raman",
+      "email": "priya.raman@northbridgeconsulting.com",
+      "phone": "+1 512 555 0142",
+      "company": "Northbridge Consulting",
+      "message": "Interested in a quote for the onboarding package. Best time to call is mornings.",
+      "source": "website-contact-form",
+      "submitted_at": "2026-09-07T14:22:08Z"
+    }
+  },
+  "output_sample": {
+    "status": 200,
+    "body": {
+      "ok": true,
+      "submission_id": "sub_20260907_0418",
+      "sheet_row": 419,
+      "confirmation_email": {
+        "to": "priya.raman@northbridgeconsulting.com",
+        "subject": "Thanks Priya, we got your message",
+        "sent_at": "2026-09-07T14:22:11Z"
+      },
+      "validation": {
+        "passed": true,
+        "checked": [
+          "full_name",
+          "email",
+          "message"
+        ],
+        "email_format": "valid"
+      }
+    },
+    "if_validation_had_failed": {
+      "status": 400,
+      "body": {
+        "ok": false,
+        "errors": {
+          "email": "not a valid email address",
+          "message": "required"
+        }
+      }
+    },
+    "if_a_node_had_failed": "Error trigger fires, Slack alert with a link to the run, the form still sees a clear error instead of a hang"
+  },
+  "archetype": "form_webhook_validate_google_sheets_confirmation",
+  "learned": true,
+  "learned_at": "2026-09-07"
+}

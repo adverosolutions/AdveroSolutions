@@ -1,0 +1,161 @@
+{
+  "title": "How I Audit a Creator Funnel — Content to Purchase, Metric by Metric",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "engage",
+      "label": "1 · CONTENT → ENGAGEMENT",
+      "color": 0,
+      "note": "Before judging anything downstream, I map exactly where the engagement comes from and how much of it ever turns into a lead."
+    },
+    {
+      "key": "capture",
+      "label": "2 · LEAD CAPTURE",
+      "color": 0,
+      "note": "Every point where a comment or follower is asked to become a lead gets checked on its own capture rate."
+    },
+    {
+      "key": "convert",
+      "label": "3 · LANDING PAGE & CHECKOUT",
+      "color": 0,
+      "note": "Where people actually drop off between clicking and paying, measured, not assumed."
+    },
+    {
+      "key": "recover",
+      "label": "4 · FOLLOW-UP & RETARGETING",
+      "color": 0,
+      "note": "Every automation trigger, follow-up sequence, and retargeting audience checked against what it actually recovers."
+    },
+    {
+      "key": "measure",
+      "label": "5 · ATTRIBUTION & DASHBOARD",
+      "color": 0,
+      "note": "The whole journey traced end to end, so the dashboard shows comments to purchases and the recommendations are backed by real numbers."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "map_engagement",
+      "kind": "data.transform",
+      "label": "Map Where Engagement Comes From: Which Content, Which Platform, Which Comments",
+      "section": "engage"
+    },
+    {
+      "key": "metric_engage",
+      "kind": "data.transform",
+      "label": "Check the Metric: Engagement Volume vs How Much Ever Becomes a Lead",
+      "section": "engage"
+    },
+    {
+      "key": "check_capture",
+      "kind": "data.transform",
+      "label": "Check Every Point Where a Comment or Follower Is Asked to Become a Lead",
+      "section": "capture"
+    },
+    {
+      "key": "metric_capture",
+      "kind": "data.transform",
+      "label": "Check the Metric: Engagement-to-Lead Capture Rate",
+      "section": "capture"
+    },
+    {
+      "key": "check_checkout",
+      "kind": "data.transform",
+      "label": "Check the Landing Page and Checkout Flow, Where People Drop Off",
+      "section": "convert"
+    },
+    {
+      "key": "metric_checkout",
+      "kind": "data.transform",
+      "label": "Check the Metric: Landing Page Conversion and Checkout Abandonment Rate",
+      "section": "convert"
+    },
+    {
+      "key": "check_recover",
+      "kind": "data.transform",
+      "label": "Check Every Automation Trigger, Follow-Up Sequence, and Retargeting Audience",
+      "section": "recover"
+    },
+    {
+      "key": "metric_recover",
+      "kind": "data.transform",
+      "label": "Check the Metric: Recovery Rate on Abandoned Checkouts and Cold Leads",
+      "section": "recover"
+    },
+    {
+      "key": "trace_attribution",
+      "kind": "data.transform",
+      "label": "Trace Attribution End to End: Which Content Actually Produced Purchases",
+      "section": "measure"
+    },
+    {
+      "key": "build_dashboard",
+      "kind": "data.aggregate",
+      "label": "Build the Dashboard: Comments → Leads → Checkouts → Purchases",
+      "section": "measure"
+    },
+    {
+      "key": "recommend",
+      "kind": "data.transform",
+      "label": "Rank Every Leak by Revenue Lost and Recommend the Fix, Stack Included",
+      "section": "measure"
+    }
+  ],
+  "edges": [
+    {
+      "from": "map_engagement",
+      "to": "metric_engage"
+    },
+    {
+      "from": "metric_engage",
+      "to": "check_capture"
+    },
+    {
+      "from": "check_capture",
+      "to": "metric_capture"
+    },
+    {
+      "from": "metric_capture",
+      "to": "check_checkout"
+    },
+    {
+      "from": "check_checkout",
+      "to": "metric_checkout"
+    },
+    {
+      "from": "metric_checkout",
+      "to": "check_recover"
+    },
+    {
+      "from": "check_recover",
+      "to": "metric_recover"
+    },
+    {
+      "from": "metric_recover",
+      "to": "trace_attribution"
+    },
+    {
+      "from": "trace_attribution",
+      "to": "build_dashboard"
+    },
+    {
+      "from": "build_dashboard",
+      "to": "recommend"
+    }
+  ],
+  "input_sample": {
+    "stage": "Lead Capture",
+    "expected": "A clear call to action on every high-engagement post, converting comments into captured emails",
+    "actual": "Comments get replies but no capture step, engagement dies on the platform instead of entering the funnel"
+  },
+  "output_sample": {
+    "stages_reviewed": 5,
+    "leaks_found": 4,
+    "highest_revenue_leak": "Lead Capture: high engagement with no capture step, the biggest gap between attention and revenue",
+    "dashboard_delivered": "Comments → Leads → Checkouts → Purchases, by content piece",
+    "stack_recommendation": "Current CRM is fine, the leak is process, not software"
+  },
+  "archetype": "creator_funnel_audit_thought_process",
+  "learned": true,
+  "learned_at": "2026-09-02"
+}

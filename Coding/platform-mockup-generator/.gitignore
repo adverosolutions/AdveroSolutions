@@ -1,0 +1,10 @@
+# Generated mockups — always regenerable from specs/.
+out/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Specs are the input and must be tracked. Named explicitly because a blanket
+# *.json rule in a parent directory has silently swallowed them before.
+!specs/
+!specs/*.json

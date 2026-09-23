@@ -1,0 +1,200 @@
+{
+  "title": "GoHighLevel Audit — Map Automations, Flag Gaps, Recommend Fixes",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "pull",
+      "label": "1 · PULL CURRENT STATE",
+      "color": 0,
+      "note": "Pulls every active workflow and funnel straight from the account instead of relying on a description of what should be running."
+    },
+    {
+      "key": "diagnose",
+      "label": "2 · MAP & DIAGNOSE",
+      "color": 0,
+      "note": "Maps each workflow's trigger, actions, and exit point, then runs it through three checks a lead can silently fall through."
+    },
+    {
+      "key": "score",
+      "label": "3 · SCORE & PRIORITIZE",
+      "color": 0,
+      "note": "Scores every confirmed gap by lead-flow impact so the fix list is ordered by what actually costs leads, not by what's easiest."
+    },
+    {
+      "key": "deliver",
+      "label": "4 · DELIVER REPORT & RECOMMENDATIONS",
+      "color": 0,
+      "note": "Turns the flagged gaps into specific, named fixes and sends the report rather than a vague punch list."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "trig",
+      "kind": "trigger.webhook",
+      "label": "Audit Requested",
+      "section": "pull"
+    },
+    {
+      "key": "list_workflows",
+      "kind": "app.action",
+      "label": "Pull Every Active Workflow and Funnel from GoHighLevel",
+      "app": "gohighlevel",
+      "op": "list_workflows",
+      "section": "pull"
+    },
+    {
+      "key": "map_flows",
+      "kind": "data.transform",
+      "label": "Map Each Workflow: Trigger, Actions, and Exit Point",
+      "section": "pull"
+    },
+    {
+      "key": "branch_followup",
+      "kind": "flow.branch",
+      "label": "Trigger Fires But No Follow-Up Action Configured?",
+      "section": "diagnose"
+    },
+    {
+      "key": "filter_broken",
+      "kind": "data.filter",
+      "label": "Flag Workflows With Broken or Orphaned Triggers",
+      "section": "diagnose"
+    },
+    {
+      "key": "branch_sla",
+      "kind": "flow.branch",
+      "label": "Step Timing Exceeds Lead Response SLA?",
+      "section": "diagnose"
+    },
+    {
+      "key": "gap_agent",
+      "kind": "ai.agent",
+      "label": "Cross-Check Every Flag Against Common Lead-Flow Gap Checklist",
+      "section": "diagnose"
+    },
+    {
+      "key": "gap_model",
+      "kind": "ai.model",
+      "label": "GPT-4.1",
+      "app": "openai",
+      "parent": "gap_agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "score_impact",
+      "kind": "data.aggregate",
+      "label": "Score Each Confirmed Gap by Lead-Flow Impact",
+      "section": "score"
+    },
+    {
+      "key": "rank_fixes",
+      "kind": "data.transform",
+      "label": "Rank Gaps: Fastest Fix vs Highest Impact",
+      "section": "score"
+    },
+    {
+      "key": "fix_agent",
+      "kind": "ai.agent",
+      "label": "Draft a Specific Recommended Fix for Each Gap",
+      "section": "deliver"
+    },
+    {
+      "key": "fix_model",
+      "kind": "ai.model",
+      "label": "GPT-4.1",
+      "app": "openai",
+      "parent": "fix_agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "compile_report",
+      "kind": "app.action",
+      "label": "Compile Findings Into Audit Report",
+      "app": "google_docs",
+      "op": "create_doc",
+      "section": "deliver"
+    },
+    {
+      "key": "send_report",
+      "kind": "app.action",
+      "label": "Send Audit Report and Recommendations to Client",
+      "app": "gmail",
+      "op": "send_email",
+      "section": "deliver"
+    }
+  ],
+  "edges": [
+    {
+      "from": "trig",
+      "to": "list_workflows"
+    },
+    {
+      "from": "list_workflows",
+      "to": "map_flows"
+    },
+    {
+      "from": "map_flows",
+      "to": "branch_followup"
+    },
+    {
+      "from": "map_flows",
+      "to": "filter_broken"
+    },
+    {
+      "from": "map_flows",
+      "to": "branch_sla"
+    },
+    {
+      "from": "branch_followup",
+      "to": "gap_agent",
+      "branch": "true"
+    },
+    {
+      "from": "filter_broken",
+      "to": "gap_agent"
+    },
+    {
+      "from": "branch_sla",
+      "to": "gap_agent",
+      "branch": "true"
+    },
+    {
+      "from": "gap_agent",
+      "to": "score_impact"
+    },
+    {
+      "from": "score_impact",
+      "to": "rank_fixes"
+    },
+    {
+      "from": "rank_fixes",
+      "to": "fix_agent"
+    },
+    {
+      "from": "fix_agent",
+      "to": "compile_report"
+    },
+    {
+      "from": "compile_report",
+      "to": "send_report"
+    }
+  ],
+  "input_sample": {
+    "workflow_name": "New Lead → SMS Follow-Up",
+    "trigger": "Form Submitted",
+    "actions": [
+      "Send SMS"
+    ],
+    "last_modified": "2026-03-11",
+    "avg_step_delay_min": 47
+  },
+  "output_sample": {
+    "workflows_reviewed": 14,
+    "gaps_found": 6,
+    "high_impact_gaps": 2,
+    "top_recommendation": "New Lead workflow ends after one SMS with no retry or human handoff if the lead doesn't reply within 24 hours. Add a no-response branch before the lead goes cold."
+  },
+  "archetype": "ghl_audit_gap_scoring_report",
+  "learned": true,
+  "learned_at": "2026-08-24"
+}

@@ -1,0 +1,113 @@
+{
+  "title": "How I Diagnose a Broken CRM/Email Automation",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "diagnose",
+      "label": "1 · DIAGNOSE",
+      "color": 0,
+      "note": "I isolate the exact point of failure before touching anything, trigger, condition, or action."
+    },
+    {
+      "key": "fix",
+      "label": "2 · FIX & CONFIRM",
+      "color": 0,
+      "note": "The fix goes exactly where the diagnosis pointed, then gets proven with a real test run."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "confirm_symptom",
+      "kind": "data.transform",
+      "label": "Confirm the Exact Symptom: No Email, Wrong Sequence, Stuck Contact, or Bad Condition",
+      "section": "diagnose"
+    },
+    {
+      "key": "check_trigger",
+      "kind": "data.transform",
+      "label": "Check Whether the Automation Trigger Actually Fired",
+      "section": "diagnose"
+    },
+    {
+      "key": "check_condition",
+      "kind": "data.transform",
+      "label": "Check Every Condition or Filter on the Failing Step",
+      "section": "diagnose"
+    },
+    {
+      "key": "check_action",
+      "kind": "data.transform",
+      "label": "Check the Action Itself: Email Send, Stage Move, or Sequence Assignment",
+      "section": "diagnose"
+    },
+    {
+      "key": "isolate_cause",
+      "kind": "data.transform",
+      "label": "Isolate the Root Cause: Trigger, Condition, or Action",
+      "section": "diagnose"
+    },
+    {
+      "key": "apply_fix",
+      "kind": "data.transform",
+      "label": "Apply the Fix at the Exact Point of Failure",
+      "section": "fix"
+    },
+    {
+      "key": "retest",
+      "kind": "data.transform",
+      "label": "Re-Run the Automation End to End With a Test Contact",
+      "section": "fix"
+    },
+    {
+      "key": "confirm_fix",
+      "kind": "data.transform",
+      "label": "Confirm the Fix Holds Before Handing It Back",
+      "section": "fix"
+    }
+  ],
+  "edges": [
+    {
+      "from": "confirm_symptom",
+      "to": "check_trigger"
+    },
+    {
+      "from": "check_trigger",
+      "to": "check_condition"
+    },
+    {
+      "from": "check_condition",
+      "to": "check_action"
+    },
+    {
+      "from": "check_action",
+      "to": "isolate_cause"
+    },
+    {
+      "from": "isolate_cause",
+      "to": "apply_fix"
+    },
+    {
+      "from": "apply_fix",
+      "to": "retest"
+    },
+    {
+      "from": "retest",
+      "to": "confirm_fix"
+    }
+  ],
+  "input_sample": {
+    "reported_symptom": "New leads from the contact form aren't getting the welcome email",
+    "trigger_status": "fired correctly, contact was created",
+    "condition_check": "welcome sequence has a filter requiring 'source = website', form leads are tagged 'source = web' instead",
+    "root_cause": "condition mismatch on the source field value"
+  },
+  "output_sample": {
+    "root_cause_found": "condition",
+    "fix_applied": "corrected the filter to accept both 'website' and 'web' tag values",
+    "test_result": "test contact received the welcome email within 2 minutes",
+    "status": "confirmed fixed"
+  },
+  "archetype": "crm_email_automation_diagnostic_thought_process",
+  "learned": true,
+  "learned_at": "2026-08-26"
+}

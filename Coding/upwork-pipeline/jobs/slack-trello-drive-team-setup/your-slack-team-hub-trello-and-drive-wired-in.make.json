@@ -1,0 +1,464 @@
+{
+  "name": "Your Slack Team Hub - Trello and Drive Wired In",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 12421,
+        "maxResults": 1
+      },
+      "mapper": {
+        "maxResults": 1
+      },
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "1 - Trello Card or Drive File Event Arrives"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 2,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {
+        "scope": "roundtrip"
+      },
+      "mapper": {
+        "name": "sample_input",
+        "scope": "roundtrip",
+        "value": "{\n  \"trello_event\": {\n    \"action\": \"updateCard\",\n    \"card\": {\n      \"id\": \"66f1a2c9d4\",\n      \"name\": \"Q4 launch thumbnail set\",\n      \"url\": \"https://trello.com/c/66f1a2c9/412-q4-launch-thumbnail-set\",\n      \"due\": \"2026-09-25\"\n    },\n    \"board\": {\n      \"name\": \"Design\"\n    },\n    \"list_before\": \"In Progress\",\n    \"list_after\": \"In Review\",\n    \"member\": {\n      \"fullName\": \"Omar Haddad\",\n      \"username\": \"omarh\"\n    },\n    \"moved_at\": \"2026-09-21T09:14:03Z\"\n  },\n  \"drive_event\": {\n    \"event\": \"file.created\",\n    \"file\": {\n      \"id\": \"1kP9xQ_briefv3\",\n      \"name\": \"client_brief_v3.pdf\",\n      \"mimeType\": \"application/pdf\",\n      \"size_kb\": 418,\n      \"webViewLink\": \"https://drive.google.com/file/d/1kP9xQ_briefv3/view\"\n    },\n    \"folder_path\": \"Writing/Briefs\",\n    \"uploaded_by\": \"maria@company.com\",\n    \"created_at\": \"2026-09-21T09:31:47Z\"\n  }\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Sample Input"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 3,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "2___private_channel_map",
+        "scope": "roundtrip",
+        "value": "{{1.value}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "2 - Private Channel Map"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 4,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "3___pick_the_team_channel_from_the_map",
+        "scope": "roundtrip",
+        "value": "{{1.value}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "3 - Pick the Team Channel From the Map"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 5,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "4___build_the_message",
+        "scope": "roundtrip",
+        "value": "{{1.value}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0,
+          "name": "4 - Build the Message"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 6,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "mapper": null,
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0,
+          "name": "5 - Card Update or File Upload?"
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 7,
+              "module": "slack:CreateMessage",
+              "version": 4,
+              "parameters": {},
+              "mapper": {
+                "channelType": "public",
+                "channel": "#ops",
+                "text": "6 - Post the Card Update to the Team Channel: {{1.value}}",
+                "parseType": "full",
+                "mrkdwn": true
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": -75,
+                  "name": "6 - Post the Card Update to the Team Channel"
+                },
+                "restore": {}
+              },
+              "filter": {
+                "name": "True",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{6.value}}",
+                      "o": "exist"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "id": 8,
+              "module": "builtin:BasicRouter",
+              "version": 1,
+              "mapper": null,
+              "metadata": {
+                "designer": {
+                  "x": 2100,
+                  "y": -75,
+                  "name": "7 - Posted OK?"
+                }
+              },
+              "routes": [
+                {
+                  "flow": [
+                    {
+                      "id": 9,
+                      "module": "google-sheets:addRow",
+                      "version": 2,
+                      "parameters": {},
+                      "mapper": {
+                        "mode": "select",
+                        "insertDataOption": "INSERT_ROWS",
+                        "valueInputOption": "USER_ENTERED",
+                        "includesHeaders": true,
+                        "sheetId": "Sheet1",
+                        "values": {
+                          "0": "{{now}}",
+                          "1": "{{1.value}}"
+                        }
+                      },
+                      "metadata": {
+                        "designer": {
+                          "x": 2400,
+                          "y": -150,
+                          "name": "9 - Log Every Notification"
+                        },
+                        "restore": {}
+                      },
+                      "filter": {
+                        "name": "True",
+                        "conditions": [
+                          [
+                            {
+                              "a": "{{8.value}}",
+                              "o": "exist"
+                            }
+                          ]
+                        ]
+                      }
+                    },
+                    {
+                      "id": 17,
+                      "module": "util:SetVariable2",
+                      "version": 1,
+                      "parameters": {
+                        "scope": "roundtrip"
+                      },
+                      "mapper": {
+                        "name": "final_output",
+                        "scope": "roundtrip",
+                        "value": "{\n  \"channel_map_used\": {\n    \"design\": \"#team-design\",\n    \"editing\": \"#team-editing\",\n    \"writing\": \"#team-writing\",\n    \"ops\": \"#ops\"\n  },\n  \"slack_message_card\": {\n    \"channel\": \"#team-design\",\n    \"text\": \"Q4 launch thumbnail set moved to In Review on the Design board. Moved by Omar Haddad, due 25 Sep. Open the card: https://trello.com/c/66f1a2c9/412-q4-launch-thumbnail-set\",\n    \"ts\": \"1758446043.004200\",\n    \"ok\": true\n  },\n  \"slack_message_file\": {\n    \"channel\": \"#team-writing\",\n    \"text\": \"New file in Writing/Briefs: client_brief_v3.pdf, uploaded by maria@company.com. Open it: https://drive.google.com/file/d/1kP9xQ_briefv3/view\",\n    \"ts\": \"1758446507.008100\",\n    \"ok\": true\n  },\n  \"audit_row\": {\n    \"timestamp\": \"2026-09-21T09:31:49Z\",\n    \"source\": \"Google Drive\",\n    \"team\": \"writing\",\n    \"channel\": \"#team-writing\",\n    \"item\": \"client_brief_v3.pdf\",\n    \"status\": \"posted\"\n  },\n  \"if_slack_refuses\": \"Ops gets an alert in #ops naming the channel, the item and the error, and the audit row is still written with status failed\"\n}"
+                      },
+                      "metadata": {
+                        "designer": {
+                          "x": 2700,
+                          "y": -150,
+                          "name": "Final Output"
+                        },
+                        "restore": {}
+                      }
+                    }
+                  ]
+                },
+                {
+                  "flow": [
+                    {
+                      "id": 10,
+                      "module": "slack:CreateMessage",
+                      "version": 4,
+                      "parameters": {},
+                      "mapper": {
+                        "channelType": "public",
+                        "channel": "#ops",
+                        "text": "8 - Alert Ops That the Post Failed: {{1.value}}",
+                        "parseType": "full",
+                        "mrkdwn": true
+                      },
+                      "metadata": {
+                        "designer": {
+                          "x": 2400,
+                          "y": 0,
+                          "name": "8 - Alert Ops That the Post Failed"
+                        },
+                        "restore": {}
+                      },
+                      "filter": {
+                        "name": "False",
+                        "conditions": [
+                          [
+                            {
+                              "a": "{{8.value}}",
+                              "o": "exist"
+                            }
+                          ]
+                        ]
+                      }
+                    },
+                    {
+                      "id": 11,
+                      "module": "google-sheets:addRow",
+                      "version": 2,
+                      "parameters": {},
+                      "mapper": {
+                        "mode": "select",
+                        "insertDataOption": "INSERT_ROWS",
+                        "valueInputOption": "USER_ENTERED",
+                        "includesHeaders": true,
+                        "sheetId": "Sheet1",
+                        "values": {
+                          "0": "{{now}}",
+                          "1": "{{1.value}}"
+                        }
+                      },
+                      "metadata": {
+                        "designer": {
+                          "x": 2700,
+                          "y": 0,
+                          "name": "9 - Log Every Notification"
+                        },
+                        "restore": {}
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 12,
+              "module": "slack:CreateMessage",
+              "version": 4,
+              "parameters": {},
+              "mapper": {
+                "channelType": "public",
+                "channel": "#ops",
+                "text": "6b - Post the File Link and Who Uploaded It: {{1.value}}",
+                "parseType": "full",
+                "mrkdwn": true
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": 75,
+                  "name": "6b - Post the File Link and Who Uploaded It"
+                },
+                "restore": {}
+              },
+              "filter": {
+                "name": "False",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{6.value}}",
+                      "o": "exist"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "id": 13,
+              "module": "builtin:BasicRouter",
+              "version": 1,
+              "mapper": null,
+              "metadata": {
+                "designer": {
+                  "x": 2100,
+                  "y": 75,
+                  "name": "7 - Posted OK?"
+                }
+              },
+              "routes": [
+                {
+                  "flow": [
+                    {
+                      "id": 14,
+                      "module": "google-sheets:addRow",
+                      "version": 2,
+                      "parameters": {},
+                      "mapper": {
+                        "mode": "select",
+                        "insertDataOption": "INSERT_ROWS",
+                        "valueInputOption": "USER_ENTERED",
+                        "includesHeaders": true,
+                        "sheetId": "Sheet1",
+                        "values": {
+                          "0": "{{now}}",
+                          "1": "{{1.value}}"
+                        }
+                      },
+                      "metadata": {
+                        "designer": {
+                          "x": 2400,
+                          "y": 0,
+                          "name": "9 - Log Every Notification"
+                        },
+                        "restore": {}
+                      },
+                      "filter": {
+                        "name": "True",
+                        "conditions": [
+                          [
+                            {
+                              "a": "{{13.value}}",
+                              "o": "exist"
+                            }
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "flow": [
+                    {
+                      "id": 15,
+                      "module": "slack:CreateMessage",
+                      "version": 4,
+                      "parameters": {},
+                      "mapper": {
+                        "channelType": "public",
+                        "channel": "#ops",
+                        "text": "8 - Alert Ops That the Post Failed: {{1.value}}",
+                        "parseType": "full",
+                        "mrkdwn": true
+                      },
+                      "metadata": {
+                        "designer": {
+                          "x": 2400,
+                          "y": 150,
+                          "name": "8 - Alert Ops That the Post Failed"
+                        },
+                        "restore": {}
+                      },
+                      "filter": {
+                        "name": "False",
+                        "conditions": [
+                          [
+                            {
+                              "a": "{{13.value}}",
+                              "o": "exist"
+                            }
+                          ]
+                        ]
+                      }
+                    },
+                    {
+                      "id": 16,
+                      "module": "google-sheets:addRow",
+                      "version": 2,
+                      "parameters": {},
+                      "mapper": {
+                        "mode": "select",
+                        "insertDataOption": "INSERT_ROWS",
+                        "valueInputOption": "USER_ENTERED",
+                        "includesHeaders": true,
+                        "sheetId": "Sheet1",
+                        "values": {
+                          "0": "{{now}}",
+                          "1": "{{1.value}}"
+                        }
+                      },
+                      "metadata": {
+                        "designer": {
+                          "x": 2700,
+                          "y": 150,
+                          "name": "9 - Log Every Notification"
+                        },
+                        "restore": {}
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com",
+    "notes": []
+  }
+}

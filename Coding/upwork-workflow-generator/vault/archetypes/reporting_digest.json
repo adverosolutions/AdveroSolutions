@@ -1,0 +1,60 @@
+{
+  "archetype": "reporting_digest",
+  "title": "Monday Digest → Pull Metrics → Written Summary → Slack & Email",
+  "platform": "n8n",
+  "sections": [
+    { "key": "gather", "label": "1 · GATHER",   "note": "Every source is queried in parallel for the same window — pipeline, revenue, support and traffic — so the digest is one consistent snapshot rather than four reports pasted together." },
+    { "key": "crunch", "label": "2 · COMPARE",  "note": "Each metric is compared to the prior period and to target. The delta is the story; the absolute number on its own rarely tells anyone whether to do something." },
+    { "key": "write",  "label": "3 · NARRATE",  "note": "A short written summary calls out what moved and what it likely means, in plain language. The point is that it can be read on a phone in ninety seconds." },
+    { "key": "send",   "label": "4 · DELIVER",  "note": "Posted to the leadership channel and emailed to anyone not in Slack, with the full figures archived to a sheet so week-over-week history builds itself." }
+  ],
+  "nodes": [
+    { "key": "cron",    "kind": "trigger.schedule", "label": "Mondays · 7am", "section": "gather" },
+    { "key": "window",  "kind": "data.transform", "label": "Build Date Window", "section": "gather" },
+    { "key": "crm",     "kind": "app.action", "app": "hubspot", "op": "create_contact", "label": "Pipeline Metrics", "section": "gather" },
+    { "key": "rev",     "kind": "app.action", "app": "stripe", "op": "get", "label": "Revenue Metrics", "section": "gather" },
+    { "key": "support", "kind": "app.action", "app": "airtable", "op": "search", "label": "Support Metrics", "section": "gather" },
+    { "key": "merge",   "kind": "data.merge", "label": "Combine Sources", "section": "crunch" },
+    { "key": "delta",   "kind": "data.code", "label": "Compare vs Last Week", "section": "crunch" },
+    { "key": "write",   "kind": "ai.llm", "label": "Write the Narrative", "section": "write" },
+    { "key": "model",   "kind": "ai.model", "app": "anthropic", "label": "Claude", "parent": "write" },
+    { "key": "post",    "kind": "app.action", "app": "slack", "op": "post", "label": "Post to #leadership", "section": "send" },
+    { "key": "email",   "kind": "app.action", "app": "gmail", "op": "send", "label": "Email the Digest", "section": "send" },
+    { "key": "archive", "kind": "app.action", "app": "googleSheets", "op": "append", "label": "Archive Figures", "section": "send" }
+  ],
+  "edges": [
+    { "from": "cron", "to": "window" },
+    { "from": "window", "to": "crm" },
+    { "from": "window", "to": "rev" },
+    { "from": "window", "to": "support" },
+    { "from": "crm", "to": "merge" },
+    { "from": "rev", "to": "merge" },
+    { "from": "support", "to": "merge" },
+    { "from": "merge", "to": "delta" },
+    { "from": "delta", "to": "write" },
+    { "from": "write", "to": "post" },
+    { "from": "post", "to": "email" },
+    { "from": "email", "to": "archive" }
+  ],
+  "input_sample": {
+    "run_at": "2026-07-27T07:00:00Z",
+    "window": { "start": "2026-07-20", "end": "2026-07-26" },
+    "compare_to": { "start": "2026-07-13", "end": "2026-07-19" },
+    "sources": ["hubspot", "stripe", "airtable"],
+    "recipients": ["#leadership", "board@company.com"]
+  },
+  "output_sample": {
+    "period": "20-26 Jul 2026",
+    "metrics": {
+      "new_mrr": { "value": 18400, "prior": 14900, "change_pct": 23.5, "vs_target": "+9%" },
+      "churned_mrr": { "value": 4100, "prior": 2200, "change_pct": 86.4, "vs_target": "-38%" },
+      "demos_booked": { "value": 41, "prior": 44, "change_pct": -6.8, "vs_target": "-4%" },
+      "close_rate": { "value": 0.29, "prior": 0.22, "change_pct": 31.8, "vs_target": "+7%" },
+      "first_response_hours": { "value": 3.1, "prior": 5.4, "change_pct": -42.6, "vs_target": "on target" }
+    },
+    "narrative": "Strong new MRR week — up 23% and ahead of target, driven by a higher close rate rather than more demos, which were actually down slightly. The number to watch is churn: $4.1k is nearly double last week and well past target, and three of the five cancellations named onboarding delays. Support response time improved sharply after the triage change, so that lever appears to be working.",
+    "attention_flags": ["churned_mrr"],
+    "delivered_to": ["#leadership", "board@company.com"],
+    "archived_row": 34
+  }
+}

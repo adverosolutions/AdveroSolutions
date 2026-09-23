@@ -1,0 +1,11 @@
+url: https://www.upwork.com/jobs/~022102058203877831378
+Agentic AI Developer / AI Automation Expert Consultation
+Fixed price $50, intermediate, a paid consultation (about an hour). Client in Ukraine, timezone Asia/Jerusalem, brand new account (0 contracts, 0 feedback). Posted 2026-09-21, 0 hires, 0 invites, bids 45 to 50. Connects to apply: 7.
+Prop: a chart, the "what to automate first" map for their four areas, ranked by realism. Anomaly detection with ML is outside Lorenzo's confirmed experience; frame honestly as the one area he would bring in a data scientist for and scope, and be direct that most of their list is plain automation not AI.
+
+We run a small cryptocurrency trading tool and most of our operations still live in Microsoft Excel: trade logs, lead lists, support tickets, all pulled together by hand. Before we hire anyone to build real automation we want a short paid consultation with someone who actually understands agentic AI and can tell us what's realistic to automate first.
+Most urgent: anomaly detection. Can machine learning or a neural network catch suspicious trading patterns before a human notices, and how much AI work that takes versus simpler statistical rules. Python and TensorFlow are our starting assumption; tell us honestly whether PyTorch or Scikit-Learn fits a dataset our size. A basic neural network might get most of the way, or it might need deep learning.
+We also do manual identity verification for new accounts: someone looks at an uploaded ID and a selfie and approves or rejects by eye. Can computer vision take a real bite out of that queue; what data extraction from those documents would require; whether NLP helps classify after.
+Support tickets: could an AI bot handle the common questions before a person sees them, versus a scripted FAQ bot.
+Growth: marketing automation is aspirational; email marketing runs through a tool nobody trusts; lead generation is spreadsheets updated by hand.
+Everything must sit on AWS. We want to know how much is real API integration work versus something Zapier could handle for now, and which pieces are actually AI versus just automation. A small blockchain project tracked separately should be accounted for in any data work. React and Node.js run the dashboard.

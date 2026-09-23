@@ -1,0 +1,284 @@
+{
+  "title": "Property Preservation Pilot: Photo Review, Bid Build, QA, Submit",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · WORK ORDER INTAKE",
+      "color": 0,
+      "note": "One work order type to start. The feed from PPW is a swappable first step: API if they expose one, scheduled export if not, browser automation as the fallback. Discovery decides which."
+    },
+    {
+      "key": "photos",
+      "label": "2 · BEFORE-PHOTO REVIEW AND SCOPE CHECK",
+      "color": 0,
+      "note": "Every before-photo is described and checked against the work order instructions. Missing or off-scope photos go back to the contractor before anyone builds a bid. Phase 2 runs the same pattern on after-photos once work is approved and completed."
+    },
+    {
+      "key": "bid",
+      "label": "3 · BID SHEET GENERATION",
+      "color": 0,
+      "note": "The bid is built from the photo findings, the measurements, and historical bids for that geography and work order type. Client pricing rules and target margin are tools the model has to call, not text in a prompt."
+    },
+    {
+      "key": "qa",
+      "label": "4 · QA PASS AND HUMAN CHECKPOINT",
+      "color": 0,
+      "note": "A second model reviews the bid for underpriced, overpriced, or incomplete lines. Nothing reaches a client until a person taps approve. The checkpoint stays even after the QA pass earns trust."
+    },
+    {
+      "key": "submit",
+      "label": "5 · SUBMIT, LOG, AND CATCH FAILURES",
+      "color": 0,
+      "note": "The approved bid goes back into PPW and every line is logged with the pricing it was based on, so the pricing model gets better with each order. \"Ready for office\" routing after verification is Phase 2 on this same pattern."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 · New Work Order From PPW (API, Export, or RPA Feed)",
+      "section": "intake"
+    },
+    {
+      "key": "pull",
+      "kind": "net.http",
+      "label": "2 · PPW: Pull Work Order Notes and Photos",
+      "app": "ppw",
+      "op": "get_work_order",
+      "section": "intake"
+    },
+    {
+      "key": "split",
+      "kind": "data.split",
+      "label": "3 · One Photo at a Time",
+      "section": "photos"
+    },
+    {
+      "key": "vision",
+      "kind": "ai.llm",
+      "label": "4 · Claude Vision: Describe Condition and Check Scope vs Instructions",
+      "section": "photos"
+    },
+    {
+      "key": "visionmodel",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "vision",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "combine",
+      "kind": "data.aggregate",
+      "label": "5 · Combine Photo Findings",
+      "section": "photos"
+    },
+    {
+      "key": "photocheck",
+      "kind": "flow.branch",
+      "label": "6 · Photos Complete and In Scope?",
+      "section": "photos"
+    },
+    {
+      "key": "reupload",
+      "kind": "app.action",
+      "label": "6a · Flag: Missing or Off-Scope Photos, Request Re-Upload",
+      "app": "slack",
+      "op": "post",
+      "section": "photos"
+    },
+    {
+      "key": "pricing",
+      "kind": "net.http",
+      "label": "7 · Pricing DB: Historical Bids by Geography and Work Order Type",
+      "app": "pricingdb",
+      "op": "historical_bids",
+      "section": "bid"
+    },
+    {
+      "key": "bidagent",
+      "kind": "ai.agent",
+      "label": "8 · Claude: Build Bid Sheet Line Items",
+      "section": "bid"
+    },
+    {
+      "key": "bidmodel",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "bidagent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "toolhist",
+      "kind": "ai.tool",
+      "label": "Historical Pricing Lookup",
+      "parent": "bidagent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "toolrules",
+      "kind": "ai.tool",
+      "label": "Client Pricing Rules",
+      "parent": "bidagent",
+      "port": "ai_tool"
+    },
+    {
+      "key": "bidparser",
+      "kind": "ai.parser",
+      "label": "Force Line Items, Quantities, Unit Prices, and Margin",
+      "parent": "bidagent",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "qapass",
+      "kind": "ai.llm",
+      "label": "9 · QA Pass: Flag Underpriced, Overpriced, Incomplete",
+      "section": "qa"
+    },
+    {
+      "key": "qamodel",
+      "kind": "ai.model",
+      "label": "Claude",
+      "app": "anthropic",
+      "parent": "qapass",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "qacheck",
+      "kind": "flow.branch",
+      "label": "10 · QA Clean?",
+      "section": "qa"
+    },
+    {
+      "key": "needsreview",
+      "kind": "app.action",
+      "label": "10a · Bid Needs Human Review, With the Reasons Attached",
+      "app": "slack",
+      "op": "post",
+      "section": "qa"
+    },
+    {
+      "key": "approve",
+      "kind": "app.action",
+      "label": "11 · Human Approval: One-Tap Submit",
+      "app": "slack",
+      "op": "post",
+      "section": "qa"
+    },
+    {
+      "key": "submitbid",
+      "kind": "net.http",
+      "label": "12 · PPW: Submit Bid",
+      "app": "ppw",
+      "op": "submit_bid",
+      "section": "submit"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "13 · Log the Bid, the Pricing Basis, and the QA Result",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "submit"
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "14 · Any Step Fails, Anywhere",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "submit"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "15 · Alert Ops With the Work Order Number and a Link to the Run",
+      "app": "slack",
+      "op": "post",
+      "section": "submit"
+    }
+  ],
+  "edges": [
+    { "from": "hook", "to": "pull" },
+    { "from": "pull", "to": "split" },
+    { "from": "split", "to": "vision", "branch": "loop" },
+    { "from": "vision", "to": "split", "loop": true },
+    { "from": "split", "to": "combine", "branch": "done" },
+    { "from": "combine", "to": "photocheck" },
+    { "from": "photocheck", "to": "reupload", "branch": "false" },
+    { "from": "photocheck", "to": "pricing", "branch": "true" },
+    { "from": "pricing", "to": "bidagent" },
+    { "from": "bidagent", "to": "qapass" },
+    { "from": "qapass", "to": "qacheck" },
+    { "from": "qacheck", "to": "needsreview", "branch": "false" },
+    { "from": "qacheck", "to": "approve", "branch": "true" },
+    { "from": "approve", "to": "submitbid" },
+    { "from": "submitbid", "to": "log" },
+    { "from": "err", "to": "alert" }
+  ],
+  "input_sample": {
+    "work_order_id": "WO-4482197",
+    "client": "MCS",
+    "work_order_type": "Initial Secure",
+    "property": {
+      "address": "1841 Kesterson Rd, Toledo, OH 43613",
+      "county": "Lucas",
+      "occupancy_status": "Vacant"
+    },
+    "contractor": {
+      "id": "C-338",
+      "name": "R. Delgado"
+    },
+    "due_date": "2026-09-12",
+    "instructions": "Secure all points of entry, install lockbox on front door, boardup any broken glass, photograph every opening before and after. Grass over 12in, bid separately.",
+    "measurements": {
+      "broken_window_1": "34in x 46in",
+      "broken_window_2": "28in x 40in",
+      "rear_door": "36in x 80in",
+      "lot_size_sqft": 6800
+    },
+    "photos": [
+      { "id": "p1", "label": "front elevation", "url": "https://ppw.example/wo/4482197/p1.jpg" },
+      { "id": "p2", "label": "front door lockbox", "url": "https://ppw.example/wo/4482197/p2.jpg" },
+      { "id": "p3", "label": "broken window, left side", "url": "https://ppw.example/wo/4482197/p3.jpg" },
+      { "id": "p4", "label": "broken window, rear", "url": "https://ppw.example/wo/4482197/p4.jpg" },
+      { "id": "p5", "label": "rear yard, overgrown", "url": "https://ppw.example/wo/4482197/p5.jpg" }
+    ]
+  },
+  "output_sample": {
+    "work_order_id": "WO-4482197",
+    "photo_review": {
+      "photos_reviewed": 5,
+      "in_scope": true,
+      "findings": [
+        { "photo": "p3", "condition": "Single-pane sash broken out, frame intact, glass on interior sill", "matches_instruction": "boardup broken glass" },
+        { "photo": "p4", "condition": "Rear window broken, screen missing, frame square", "matches_instruction": "boardup broken glass" },
+        { "photo": "p5", "condition": "Rear yard grass roughly knee height, debris pile near fence", "matches_instruction": "grass over 12in, bid separately" }
+      ],
+      "missing": [],
+      "note": "Required before-photo set complete for Initial Secure"
+    },
+    "bid_sheet": [
+      { "line": "Boardup, window, 34x46", "qty": 1, "unit": "ea", "unit_price": 78.0, "basis": "Lucas County median of 14 comparable MCS boardups, last 12 months" },
+      { "line": "Boardup, window, 28x40", "qty": 1, "unit": "ea", "unit_price": 68.0, "basis": "Lucas County median of 14 comparable MCS boardups, last 12 months" },
+      { "line": "Lockbox install, front door", "qty": 1, "unit": "ea", "unit_price": 35.0, "basis": "Client allowable, MCS schedule" },
+      { "line": "Initial grass cut, lot 6,800 sqft", "qty": 1, "unit": "ea", "unit_price": 145.0, "basis": "Geo benchmark, 5,000 to 8,000 sqft band" }
+    ],
+    "bid_total": 326.0,
+    "contractor_cost": 214.0,
+    "margin_pct": 34.4,
+    "qa_result": {
+      "status": "flagged",
+      "flags": [
+        { "line": "Initial grass cut, lot 6,800 sqft", "issue": "12% above the 90-day median for this county", "suggestion": "confirm debris removal is bundled or split it to its own line" }
+      ],
+      "incomplete_lines": 0
+    },
+    "routing": "Sent to #bid-review for human approval, not auto-submitted",
+    "approved_by": "pending",
+    "logged_row": "Sheet: Bid Log 2026, row 1,184, pricing basis and QA flags stored with the bid",
+    "phase_2_next": "After-photo verification against approved scope, then ready for office routing"
+  }
+}

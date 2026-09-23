@@ -1,0 +1,352 @@
+{
+  "workflowId": "80520c81-16e3-4688-8550-15180d25c5f1",
+  "workflowName": "Your Cal.com to Call Booked Pipeline System",
+  "locationId": "ebyNANPagaK7ycf1pfge",
+  "url": "https://app.gohighlevel.com/v2/location/ebyNANPagaK7ycf1pfge/automation/workflow/80520c81-16e3-4688-8550-15180d25c5f1",
+  "capturedAt": "2026-09-22T21:03:53.972644Z",
+  "status": "draft",
+  "folder": null,
+  "references": {
+    "other": {
+      "80520c81-16e3-4688-8550-15180d25c5f1": "Your Cal.com to Call Booked Pipeline System",
+      "PwqbumPLfzCHcBZjmum8": "Zapier Tags the Contact call-booked",
+      "7fc79de0-adf4-4e4b-8ca1-dbc07cb4f728": "Clear an Old call-cancelled Tag",
+      "5b096fc5-6add-4bac-ad23-fdc87cc5bc59": "Add the Lead to Call Booked Pipeline",
+      "vNB4nHSeDZlu6URPbtmP": "Call Booked Pipeline",
+      "8132be0b-7e27-4d7a-8589-51dd2445df42": "Call Booked Pipeline/Call Booked",
+      "e5d05532-6e35-4ca1-ba69-db12e027e5ac": "Text the Owner the New Booking",
+      "d3a4ac53-5e99-4b81-853c-c9afa1c87191": "Email the Owner the Booking Details",
+      "6bea56b9-7a3a-48e7-8617-c4ab146ace56": "Email the Lead One Prep Question",
+      "68c891f3-a174-4ff7-b4cc-b71a9f292c9c": "Wait 14 Days While the Call Is Upcoming",
+      "9e65d1fe-bb19-4a4d-8053-59fed4743433": "Task: Close Out the Card After the Call",
+      "7ceb40cd-d494-4de3-b360-12f6301a1f03": "Goal: Call Cancelled in Cal.com",
+      "ead81484-7595-4a39-8ad4-2772a4c74201": "Move the Opportunity to Cancelled",
+      "6affd21a-4144-4ec5-a4aa-df8307b920e2": "Call Booked Pipeline/Cancelled",
+      "a39b770e-deff-46ac-a154-2969ed9a3b11": "Remove the call-booked Tag",
+      "89421ea4-6365-4662-aadb-6666c6e7102c": "Email the Lead a Link to Rebook",
+      "5ca5321f-6f4b-4711-9117-08749cf2c8d8": "Text the Owner the Cancellation"
+    }
+  },
+  "unresolvedReferenceIds": [],
+  "captureComplete": {
+    "triggers": true,
+    "tier": "compiled:upwork_gen"
+  },
+  "triggers": [
+    {
+      "id": "PwqbumPLfzCHcBZjmum8",
+      "date_added": "2026-09-22T21:03:53.972644Z",
+      "deleted": false,
+      "active": false,
+      "actions": [
+        {
+          "workflow_id": "80520c81-16e3-4688-8550-15180d25c5f1",
+          "type": "add_to_workflow",
+          "workflow_name": "Your Cal.com to Call Booked Pipeline System"
+        }
+      ],
+      "conditions": [],
+      "type": "contact_tag",
+      "masterType": "highlevel",
+      "workflow_id": "80520c81-16e3-4688-8550-15180d25c5f1",
+      "location_id": "ebyNANPagaK7ycf1pfge",
+      "name": "Zapier Tags the Contact call-booked",
+      "belongs_to": "workflow",
+      "date_updated": "2026-09-22T21:03:53.972644Z",
+      "status": "draft",
+      "workflow_name": "Your Cal.com to Call Booked Pipeline System"
+    }
+  ],
+  "metadata": {
+    "createdAt": "2026-09-22T21:03:53.972644Z",
+    "updatedAt": "2026-09-22T21:03:53.972644Z",
+    "settings": {
+      "locationId": "ebyNANPagaK7ycf1pfge",
+      "version": 1,
+      "dataVersion": 7,
+      "allowMultiple": true,
+      "timezone": "account",
+      "removeContactFromLastStep": true,
+      "stopOnResponse": false,
+      "autoMarkAsRead": false,
+      "type": "workflow",
+      "deleted": false,
+      "allowMultipleOpportunity": true,
+      "creationSource": "upwork_gen",
+      "originType": "user"
+    }
+  },
+  "nodes": [
+    {
+      "type": "remove_contact_tag",
+      "id": "7fc79de0-adf4-4e4b-8ca1-dbc07cb4f728",
+      "name": "Clear an Old call-cancelled Tag",
+      "attributes": {
+        "tags": [
+          "call-cancelled"
+        ]
+      },
+      "order": 0,
+      "next": "5b096fc5-6add-4bac-ad23-fdc87cc5bc59",
+      "nextName": "Add the Lead to Call Booked Pipeline"
+    },
+    {
+      "type": "create_opportunity",
+      "id": "5b096fc5-6add-4bac-ad23-fdc87cc5bc59",
+      "name": "Add the Lead to Call Booked Pipeline",
+      "attributes": {
+        "pipeline_id": "vNB4nHSeDZlu6URPbtmP",
+        "pipeline_stage_id": "8132be0b-7e27-4d7a-8589-51dd2445df42",
+        "opportunity_name": "{{contact.first_name}} {{contact.last_name}} - Booked Call",
+        "opportunity_source": "",
+        "monetary_value": "",
+        "opportunity_status": "open",
+        "pipeline_name": "Call Booked Pipeline",
+        "pipeline_stage_name": "Call Booked"
+      },
+      "order": 1,
+      "parentKey": "7fc79de0-adf4-4e4b-8ca1-dbc07cb4f728",
+      "parentKeyName": "Clear an Old call-cancelled Tag",
+      "next": "e5d05532-6e35-4ca1-ba69-db12e027e5ac",
+      "nextName": "Text the Owner the New Booking"
+    },
+    {
+      "type": "internal_notification",
+      "id": "e5d05532-6e35-4ca1-ba69-db12e027e5ac",
+      "name": "Text the Owner the New Booking",
+      "attributes": {
+        "type": "sms",
+        "email": null,
+        "sms": {
+          "userType": "assign",
+          "assignedOwners": [
+            "contact_owner"
+          ],
+          "alsoNotifyContactFollowers": false,
+          "alsoNotifyOpportunityFollowers": false,
+          "body": "New call booked: {{contact.first_name}} {{contact.last_name}} for {{contact.call_time}}. It is in the Call Booked Pipeline. Details are in your email."
+        },
+        "userType": "assign",
+        "whatsapp": null,
+        "notification": null
+      },
+      "order": 2,
+      "parentKey": "5b096fc5-6add-4bac-ad23-fdc87cc5bc59",
+      "parentKeyName": "Add the Lead to Call Booked Pipeline",
+      "next": "d3a4ac53-5e99-4b81-853c-c9afa1c87191",
+      "nextName": "Email the Owner the Booking Details"
+    },
+    {
+      "type": "internal_notification",
+      "id": "d3a4ac53-5e99-4b81-853c-c9afa1c87191",
+      "name": "Email the Owner the Booking Details",
+      "attributes": {
+        "type": "email",
+        "email": {
+          "userType": "assign",
+          "assignedOwners": [
+            "contact_owner"
+          ],
+          "alsoNotifyContactFollowers": false,
+          "alsoNotifyOpportunityFollowers": false,
+          "subject": "Call booked: {{contact.first_name}} {{contact.last_name}}, {{contact.call_time}}",
+          "html": "{{contact.first_name}} {{contact.last_name}} booked a call for {{contact.call_time}}. Email {{contact.email}}. Phone {{contact.phone}}. What they wrote on the booking form: {{contact.call_notes}}. The opportunity is in Call Booked Pipeline, stage Call Booked."
+        },
+        "sms": null,
+        "userType": "assign",
+        "whatsapp": null,
+        "notification": null
+      },
+      "order": 3,
+      "parentKey": "e5d05532-6e35-4ca1-ba69-db12e027e5ac",
+      "parentKeyName": "Text the Owner the New Booking",
+      "next": "6bea56b9-7a3a-48e7-8617-c4ab146ace56",
+      "nextName": "Email the Lead One Prep Question"
+    },
+    {
+      "type": "email",
+      "id": "6bea56b9-7a3a-48e7-8617-c4ab146ace56",
+      "name": "Email the Lead One Prep Question",
+      "attributes": {
+        "subject": "Quick question before our call, {{contact.first_name}}",
+        "html": "Hi {{contact.first_name}}, thanks for booking time with {{location.name}}. Your calendar invite already has the details. One question so I can come prepared: what is the one thing you most want to walk away with from our call? Just hit reply. {{user.first_name}}",
+        "from_name": "",
+        "from_email": "",
+        "cc": "",
+        "bcc": "",
+        "preHeader": "",
+        "assignedOwners": [
+          "contact_owner"
+        ],
+        "alsoNotifyContactFollowers": false,
+        "alsoNotifyOpportunityFollowers": false
+      },
+      "order": 4,
+      "parentKey": "d3a4ac53-5e99-4b81-853c-c9afa1c87191",
+      "parentKeyName": "Email the Owner the Booking Details",
+      "next": "68c891f3-a174-4ff7-b4cc-b71a9f292c9c",
+      "nextName": "Wait 14 Days While the Call Is Upcoming"
+    },
+    {
+      "type": "wait",
+      "id": "68c891f3-a174-4ff7-b4cc-b71a9f292c9c",
+      "name": "Wait 14 Days While the Call Is Upcoming",
+      "attributes": {
+        "type": "time",
+        "convertToMultipath": false,
+        "hybridActionType": "wait",
+        "isHybridAction": true,
+        "name": "Wait 14 Days While the Call Is Upcoming",
+        "cat": "action",
+        "transitions": [],
+        "startAfter": {
+          "when": "after",
+          "type": "days",
+          "value": 14
+        },
+        "timePeriodInputMode": "standard",
+        "unitInputMode": "standard"
+      },
+      "order": 5,
+      "parentKey": "6bea56b9-7a3a-48e7-8617-c4ab146ace56",
+      "parentKeyName": "Email the Lead One Prep Question",
+      "next": "9e65d1fe-bb19-4a4d-8053-59fed4743433",
+      "nextName": "Task: Close Out the Card After the Call"
+    },
+    {
+      "type": "create_task",
+      "id": "9e65d1fe-bb19-4a4d-8053-59fed4743433",
+      "name": "Task: Close Out the Card After the Call",
+      "attributes": {
+        "title": "Move {{contact.first_name}} {{contact.last_name}} to Showed or No Show if the card is still in Call Booked",
+        "description": "",
+        "dueIn": {
+          "type": "days",
+          "value": 1
+        },
+        "assignTo": "contact_owner"
+      },
+      "order": 6,
+      "parentKey": "68c891f3-a174-4ff7-b4cc-b71a9f292c9c",
+      "parentKeyName": "Wait 14 Days While the Call Is Upcoming",
+      "next": "7ceb40cd-d494-4de3-b360-12f6301a1f03",
+      "nextName": "Goal: Call Cancelled in Cal.com"
+    },
+    {
+      "type": "workflow_goal",
+      "id": "7ceb40cd-d494-4de3-b360-12f6301a1f03",
+      "name": "Goal: Call Cancelled in Cal.com",
+      "attributes": {
+        "op": "or",
+        "segments": [
+          {
+            "op": "or",
+            "conditions": [
+              {
+                "goal_condition": "contact_tag",
+                "extras": {
+                  "tags": [
+                    "call-cancelled"
+                  ],
+                  "type": "added"
+                },
+                "id": "1ea13730-ce09-4e3a-8f17-684d6878b152"
+              }
+            ]
+          }
+        ],
+        "type": "workflow_goal",
+        "action": "exit"
+      },
+      "order": 7,
+      "parentKey": "9e65d1fe-bb19-4a4d-8053-59fed4743433",
+      "parentKeyName": "Task: Close Out the Card After the Call",
+      "next": "ead81484-7595-4a39-8ad4-2772a4c74201",
+      "nextName": "Move the Opportunity to Cancelled"
+    },
+    {
+      "type": "create_opportunity",
+      "id": "ead81484-7595-4a39-8ad4-2772a4c74201",
+      "name": "Move the Opportunity to Cancelled",
+      "attributes": {
+        "pipeline_id": "vNB4nHSeDZlu6URPbtmP",
+        "pipeline_stage_id": "6affd21a-4144-4ec5-a4aa-df8307b920e2",
+        "opportunity_name": "{{contact.name}}",
+        "opportunity_source": "",
+        "monetary_value": "",
+        "opportunity_status": "open",
+        "pipeline_name": "Call Booked Pipeline",
+        "pipeline_stage_name": "Cancelled"
+      },
+      "order": 8,
+      "parentKey": "7ceb40cd-d494-4de3-b360-12f6301a1f03",
+      "parentKeyName": "Goal: Call Cancelled in Cal.com",
+      "next": "a39b770e-deff-46ac-a154-2969ed9a3b11",
+      "nextName": "Remove the call-booked Tag"
+    },
+    {
+      "type": "remove_contact_tag",
+      "id": "a39b770e-deff-46ac-a154-2969ed9a3b11",
+      "name": "Remove the call-booked Tag",
+      "attributes": {
+        "tags": [
+          "call-booked"
+        ]
+      },
+      "order": 9,
+      "parentKey": "ead81484-7595-4a39-8ad4-2772a4c74201",
+      "parentKeyName": "Move the Opportunity to Cancelled",
+      "next": "89421ea4-6365-4662-aadb-6666c6e7102c",
+      "nextName": "Email the Lead a Link to Rebook"
+    },
+    {
+      "type": "email",
+      "id": "89421ea4-6365-4662-aadb-6666c6e7102c",
+      "name": "Email the Lead a Link to Rebook",
+      "attributes": {
+        "subject": "Want to pick a new time, {{contact.first_name}}?",
+        "html": "Hi {{contact.first_name}}, no problem on cancelling. If you still want to talk, grab any open time here: {{custom_values.booking_link}}. If the timing is just not right, reply and let me know. {{user.first_name}}",
+        "from_name": "",
+        "from_email": "",
+        "cc": "",
+        "bcc": "",
+        "preHeader": "",
+        "assignedOwners": [
+          "contact_owner"
+        ],
+        "alsoNotifyContactFollowers": false,
+        "alsoNotifyOpportunityFollowers": false
+      },
+      "order": 10,
+      "parentKey": "a39b770e-deff-46ac-a154-2969ed9a3b11",
+      "parentKeyName": "Remove the call-booked Tag",
+      "next": "5ca5321f-6f4b-4711-9117-08749cf2c8d8",
+      "nextName": "Text the Owner the Cancellation"
+    },
+    {
+      "type": "internal_notification",
+      "id": "5ca5321f-6f4b-4711-9117-08749cf2c8d8",
+      "name": "Text the Owner the Cancellation",
+      "attributes": {
+        "type": "sms",
+        "email": null,
+        "sms": {
+          "userType": "assign",
+          "assignedOwners": [
+            "contact_owner"
+          ],
+          "alsoNotifyContactFollowers": false,
+          "alsoNotifyOpportunityFollowers": false,
+          "body": "{{contact.first_name}} {{contact.last_name}} cancelled their call for {{contact.call_time}}. The card is in Cancelled and a rebook link went out by email."
+        },
+        "userType": "assign",
+        "whatsapp": null,
+        "notification": null
+      },
+      "order": 11,
+      "parentKey": "89421ea4-6365-4662-aadb-6666c6e7102c",
+      "parentKeyName": "Email the Lead a Link to Rebook",
+      "next": ""
+    }
+  ]
+}

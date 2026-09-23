@@ -1,0 +1,187 @@
+{
+  "title": "Salesforce ↔ HubSpot ↔ AI Agent Platform — Normalize, Sync, Flag Conflicts",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "capture",
+      "label": "1 · CAPTURE FROM BOTH CRMS",
+      "color": 0,
+      "note": "Either CRM can trigger the sync, and a loop guard drops anything this workflow just wrote itself."
+    },
+    {
+      "key": "normalize",
+      "label": "2 · NORMALIZE FOR THE AI AGENT",
+      "color": 0,
+      "note": "Fields get mapped to one common schema before anything moves, and a real conflict gets flagged instead of silently overwritten."
+    },
+    {
+      "key": "sync",
+      "label": "3 · SYNC ACROSS PLATFORMS",
+      "color": 0,
+      "note": "Clean records write to Salesforce, HubSpot, and the AI agent platform together."
+    },
+    {
+      "key": "validate",
+      "label": "4 · VALIDATE & LOG",
+      "color": 0,
+      "note": "Every run logs what updated, what conflicted, and what failed."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "sf_trig",
+      "kind": "trigger.app",
+      "label": "Salesforce Record Created or Updated",
+      "section": "capture"
+    },
+    {
+      "key": "hs_trig",
+      "kind": "trigger.app",
+      "label": "HubSpot Record Created or Updated",
+      "section": "capture"
+    },
+    {
+      "key": "loop_guard",
+      "kind": "flow.branch",
+      "label": "Was This Change Just Written by This Workflow?",
+      "section": "capture"
+    },
+    {
+      "key": "skip_loop",
+      "kind": "flow.noop",
+      "label": "Skip: Prevent Sync Loop",
+      "section": "capture"
+    },
+    {
+      "key": "normalize_agent",
+      "kind": "ai.agent",
+      "label": "Normalize Fields Against One Common Schema",
+      "section": "normalize"
+    },
+    {
+      "key": "normalize_model",
+      "kind": "ai.model",
+      "label": "GPT-4.1",
+      "app": "openai",
+      "parent": "normalize_agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "conflict_branch",
+      "kind": "flow.branch",
+      "label": "Field Values Conflict Between Source and Target?",
+      "section": "normalize"
+    },
+    {
+      "key": "sf_write",
+      "kind": "net.http",
+      "label": "Write Normalized Record to Salesforce",
+      "section": "sync"
+    },
+    {
+      "key": "hs_write",
+      "kind": "app.action",
+      "label": "Write Normalized Record to HubSpot",
+      "app": "hubspot",
+      "op": "upsert",
+      "section": "sync"
+    },
+    {
+      "key": "ai_platform_write",
+      "kind": "net.http",
+      "label": "Push Normalized Record to the AI Agent Platform",
+      "section": "sync"
+    },
+    {
+      "key": "alert_conflict",
+      "kind": "app.action",
+      "label": "Alert: Normalization Conflict Needs Review",
+      "app": "slack",
+      "op": "post",
+      "section": "validate"
+    },
+    {
+      "key": "log_result",
+      "kind": "data.aggregate",
+      "label": "Log Sync Result: Updated, Conflicts, Errors",
+      "section": "validate"
+    }
+  ],
+  "edges": [
+    {
+      "from": "sf_trig",
+      "to": "loop_guard"
+    },
+    {
+      "from": "hs_trig",
+      "to": "loop_guard"
+    },
+    {
+      "from": "loop_guard",
+      "to": "skip_loop",
+      "branch": "true"
+    },
+    {
+      "from": "loop_guard",
+      "to": "normalize_agent",
+      "branch": "false"
+    },
+    {
+      "from": "normalize_agent",
+      "to": "conflict_branch"
+    },
+    {
+      "from": "conflict_branch",
+      "to": "alert_conflict",
+      "branch": "true"
+    },
+    {
+      "from": "conflict_branch",
+      "to": "sf_write",
+      "branch": "false"
+    },
+    {
+      "from": "conflict_branch",
+      "to": "hs_write",
+      "branch": "false"
+    },
+    {
+      "from": "conflict_branch",
+      "to": "ai_platform_write",
+      "branch": "false"
+    },
+    {
+      "from": "sf_write",
+      "to": "log_result"
+    },
+    {
+      "from": "hs_write",
+      "to": "log_result"
+    },
+    {
+      "from": "ai_platform_write",
+      "to": "log_result"
+    },
+    {
+      "from": "alert_conflict",
+      "to": "log_result"
+    }
+  ],
+  "input_sample": {
+    "source": "hubspot",
+    "record_id": "hs_00481923",
+    "patient_name": "Jordan Ellis",
+    "email": "jordan.ellis@gmail.com",
+    "lead_status": "Consultation Scheduled",
+    "last_modified": "2026-08-24T13:10:00Z"
+  },
+  "output_sample": {
+    "records_synced": 47,
+    "conflicts_flagged": 3,
+    "sync_errors": 0,
+    "conflict_example": "lead_status set to 'Consultation Scheduled' in HubSpot but 'New Lead' in Salesforce, flagged instead of overwritten"
+  },
+  "archetype": "healthcare_sf_hubspot_ai_agent_sync",
+  "learned": true,
+  "learned_at": "2026-08-26"
+}

@@ -1,0 +1,213 @@
+{
+  "title": "Prospect & Enrich → AI Score & Personalize → Outreach → CRM → Measure Impact",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "prospect",
+      "label": "1 · PROSPECT & ENRICH",
+      "color": 0,
+      "note": "New prospects get pulled and enriched with firmographic and intent data before anything else touches them."
+    },
+    {
+      "key": "score",
+      "label": "2 · AI SCORE & PERSONALIZE",
+      "color": 0,
+      "note": "One AI step scores fit against the ICP and drafts personalized outreach, only qualified prospects move forward."
+    },
+    {
+      "key": "outreach",
+      "label": "3 · OUTREACH",
+      "color": 0,
+      "note": "Qualified prospects get personalized touches across email and LinkedIn."
+    },
+    {
+      "key": "sync",
+      "label": "4 · SYNC TO CRM",
+      "color": 0,
+      "note": "Every prospect and touch logs to the CRM, so pipeline stage reflects real engagement, not guesswork."
+    },
+    {
+      "key": "measure",
+      "label": "5 · MEASURE IMPACT",
+      "color": 0,
+      "note": "Reply rate, meeting rate, and pipeline generated roll up to the dashboard, and underperformance gets flagged before it wastes a quarter."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "trig",
+      "kind": "trigger.schedule",
+      "label": "Daily Prospect List Refresh",
+      "section": "prospect"
+    },
+    {
+      "key": "pull_prospects",
+      "kind": "net.http",
+      "label": "Pull New Prospects from the Sourcing Tool",
+      "section": "prospect"
+    },
+    {
+      "key": "enrich",
+      "kind": "net.http",
+      "label": "Enrich With Firmographic and Intent Data",
+      "section": "prospect"
+    },
+    {
+      "key": "score_agent",
+      "kind": "ai.agent",
+      "label": "Score Fit Against the ICP and Draft Personalized Outreach",
+      "section": "score"
+    },
+    {
+      "key": "score_model",
+      "kind": "ai.model",
+      "label": "GPT-4.1",
+      "app": "openai",
+      "parent": "score_agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "fit_branch",
+      "kind": "flow.branch",
+      "label": "ICP Fit Score Above Threshold?",
+      "section": "score"
+    },
+    {
+      "key": "send_email",
+      "kind": "app.action",
+      "label": "Send the Personalized Outreach Email",
+      "app": "gmail",
+      "op": "send",
+      "section": "outreach"
+    },
+    {
+      "key": "send_linkedin",
+      "kind": "net.http",
+      "label": "Add to a Personalized LinkedIn Sequence",
+      "section": "outreach"
+    },
+    {
+      "key": "log_crm",
+      "kind": "app.action",
+      "label": "Log the Prospect and Activity in the CRM",
+      "app": "hubspot",
+      "op": "upsert",
+      "section": "sync"
+    },
+    {
+      "key": "update_stage",
+      "kind": "net.http",
+      "label": "Update Pipeline Stage Based on Engagement",
+      "section": "sync"
+    },
+    {
+      "key": "agg_perf",
+      "kind": "data.aggregate",
+      "label": "Aggregate Reply Rate, Meeting Rate, and Pipeline Generated",
+      "section": "measure"
+    },
+    {
+      "key": "perf_branch",
+      "kind": "flow.branch",
+      "label": "Reply Rate Below Benchmark?",
+      "section": "measure"
+    },
+    {
+      "key": "alert_underperform",
+      "kind": "app.action",
+      "label": "Alert: Campaign Underperforming Benchmark",
+      "app": "slack",
+      "op": "post",
+      "section": "measure"
+    },
+    {
+      "key": "dashboard",
+      "kind": "app.action",
+      "label": "Write Metrics to the GTM Performance Dashboard",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "measure"
+    }
+  ],
+  "edges": [
+    {
+      "from": "trig",
+      "to": "pull_prospects"
+    },
+    {
+      "from": "pull_prospects",
+      "to": "enrich"
+    },
+    {
+      "from": "enrich",
+      "to": "score_agent"
+    },
+    {
+      "from": "score_agent",
+      "to": "fit_branch"
+    },
+    {
+      "from": "fit_branch",
+      "to": "send_email",
+      "branch": "true"
+    },
+    {
+      "from": "fit_branch",
+      "to": "send_linkedin",
+      "branch": "true"
+    },
+    {
+      "from": "send_email",
+      "to": "log_crm"
+    },
+    {
+      "from": "send_linkedin",
+      "to": "log_crm"
+    },
+    {
+      "from": "log_crm",
+      "to": "update_stage"
+    },
+    {
+      "from": "update_stage",
+      "to": "agg_perf"
+    },
+    {
+      "from": "agg_perf",
+      "to": "perf_branch"
+    },
+    {
+      "from": "perf_branch",
+      "to": "alert_underperform",
+      "branch": "true"
+    },
+    {
+      "from": "perf_branch",
+      "to": "dashboard",
+      "branch": "false"
+    },
+    {
+      "from": "alert_underperform",
+      "to": "dashboard"
+    }
+  ],
+  "input_sample": {
+    "company": "Northgate Manufacturing",
+    "contact": "Priya Anand",
+    "title": "VP Operations",
+    "intent_signal": "Visited pricing page 3x in past week",
+    "icp_score": 84
+  },
+  "output_sample": {
+    "week_of": "2026-08-24",
+    "prospects_scored": 340,
+    "qualified": 118,
+    "reply_rate_pct": 9.2,
+    "meetings_booked": 14,
+    "pipeline_generated": "$412,000",
+    "flag": "LinkedIn channel underperforming email 3x, reallocate spend"
+  },
+  "archetype": "gtm_prospect_score_outreach_crm_measure",
+  "learned": true,
+  "learned_at": "2026-09-01"
+}

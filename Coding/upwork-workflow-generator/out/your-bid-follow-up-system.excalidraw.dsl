@@ -1,0 +1,20 @@
+@direction LR
+@spacing 60
+
+(1 - Bid Request Form Submitted) -> [2 - Tag the Contact bid-sent]
+[2 - Tag the Contact bid-sent] -> [3 - Open the Bid in the Pipeline]
+[3 - Open the Bid in the Pipeline] -> [4 - Wait 1 Day]
+[4 - Wait 1 Day] -> [5 - Text: Did You Get the Bid]
+[5 - Text: Did You Get the Bid] -> [6 - Wait 2 Days]
+[6 - Wait 2 Days] -> [7 - Email: Quick Recap of Your Bid]
+[7 - Email: Quick Recap of Your Bid] -> [8 - Wait 4 Days]
+[8 - Wait 4 Days] -> [9 - Text: Still Want to Move Forward]
+[9 - Text: Still Want to Move Forward] -> [10 - Wait 7 Days]
+[10 - Wait 7 Days] -> [11 - Email: Last Check In]
+[11 - Email: Last Check In] -> [12 - Move the Bid to No Response]
+[12 - Move the Bid to No Response] -> [13 - Tag the Contact bid-cold]
+[13 - Tag the Contact bid-cold] -> [14 - Goal: Customer Replied to the Bid]
+[14 - Goal: Customer Replied to the Bid] -> [15 - Remove the bid-sent Tag]
+[15 - Remove the bid-sent Tag] -> [16 - Move the Bid to Replied]
+[16 - Move the Bid to Replied] -> [17 - Text the Owner]
+[17 - Text the Owner] -> [18 - Email the Owner]

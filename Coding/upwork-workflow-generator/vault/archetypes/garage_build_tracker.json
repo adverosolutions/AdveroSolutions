@@ -1,0 +1,232 @@
+{
+  "title": "Garage Build Tracker — One Record Per Vehicle, Updates From the Shop Floor",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "job",
+      "label": "1 · ONE RECORD PER VEHICLE",
+      "color": 0,
+      "note": "Every vehicle gets a job number the moment it is booked, and the task list for that job type is created with it. Nobody has to remember what a full rebuild involves, because the checklist arrives with the car. This is what makes the rest of the system possible: one place the vehicle actually lives."
+    },
+    {
+      "key": "floor",
+      "label": "2 · UPDATES FROM THE SHOP FLOOR",
+      "color": 0,
+      "note": "Your techs already take photos. They send one with a voice note or a line of text from their phone, and it becomes a written progress update on the right vehicle. Nobody sits down at a computer to update a system, which is the reason shop tracking usually dies in month two."
+    },
+    {
+      "key": "cust",
+      "label": "3 · THE CUSTOMER STAYS WARM",
+      "color": 0,
+      "note": "Not every update is worth sending. Milestones and anything that changes the timeline go out with the photo attached, small stuff just logs to the record. Customers on long builds call because they are in the dark, and this is the cheapest way to stop that."
+    },
+    {
+      "key": "gaps",
+      "label": "4 · NOTHING SITS STILL WITHOUT SOMEONE KNOWING",
+      "color": 0,
+      "note": "Every morning it checks which vehicles have not moved, splits them by why, and puts one board in front of you. Waiting on parts is a different problem from waiting on customer approval, and both are different from simply forgotten."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "booked",
+      "kind": "trigger.form",
+      "label": "1 · New Job Booked or Vehicle Dropped Off",
+      "section": "job"
+    },
+    {
+      "key": "record",
+      "kind": "app.action",
+      "label": "2 · Create the Vehicle Record + Job Number",
+      "app": "hubspot",
+      "op": "create_deal",
+      "section": "job"
+    },
+    {
+      "key": "tasks",
+      "kind": "data.transform",
+      "label": "3 · Build the Task List for This Job Type",
+      "section": "job"
+    },
+    {
+      "key": "tech",
+      "kind": "trigger.chat",
+      "label": "4 · Tech Sends a Photo, Voice Note or Text",
+      "section": "floor"
+    },
+    {
+      "key": "read",
+      "kind": "ai.agent",
+      "label": "5 · Turn It Into a Progress Update",
+      "section": "floor"
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Reads Voice, Photo and Shorthand",
+      "app": "openai",
+      "parent": "read",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Force Vehicle, Stage, Status",
+      "parent": "read",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "attach",
+      "kind": "app.action",
+      "label": "6 · Attach It to the Right Vehicle",
+      "app": "hubspot",
+      "op": "update_deal",
+      "section": "floor",
+      "notes": "Matched on job number, plate or the last vehicle that tech touched."
+    },
+    {
+      "key": "worth",
+      "kind": "flow.branch",
+      "label": "7 · Worth Telling the Customer?",
+      "section": "cust"
+    },
+    {
+      "key": "tell",
+      "kind": "app.action",
+      "label": "8 · Send the Update With the Photo",
+      "app": "twilio",
+      "op": "send_sms",
+      "section": "cust"
+    },
+    {
+      "key": "quiet",
+      "kind": "app.action",
+      "label": "8b · Just Log It on the Record",
+      "app": "hubspot",
+      "op": "log_activity",
+      "section": "cust"
+    },
+    {
+      "key": "cron",
+      "kind": "trigger.schedule",
+      "label": "9 · Every Morning at 7",
+      "section": "gaps"
+    },
+    {
+      "key": "stalled",
+      "kind": "data.filter",
+      "label": "10 · Which Vehicles Have Not Moved in 3 Days?",
+      "section": "gaps"
+    },
+    {
+      "key": "why",
+      "kind": "flow.switch",
+      "label": "11 · Why Is It Stuck?",
+      "section": "gaps"
+    },
+    {
+      "key": "chase",
+      "kind": "app.action",
+      "label": "11a · Chase the Customer for Approval",
+      "app": "twilio",
+      "op": "send_sms",
+      "section": "gaps"
+    },
+    {
+      "key": "board",
+      "kind": "app.action",
+      "label": "12 · Post the Morning Board to the Team",
+      "app": "slack",
+      "op": "send_message",
+      "section": "gaps"
+    }
+  ],
+  "edges": [
+    {
+      "from": "booked",
+      "to": "record"
+    },
+    {
+      "from": "record",
+      "to": "tasks"
+    },
+    {
+      "from": "tech",
+      "to": "read"
+    },
+    {
+      "from": "read",
+      "to": "attach"
+    },
+    {
+      "from": "attach",
+      "to": "worth"
+    },
+    {
+      "from": "worth",
+      "to": "tell",
+      "branch": "true"
+    },
+    {
+      "from": "worth",
+      "to": "quiet",
+      "branch": "false"
+    },
+    {
+      "from": "cron",
+      "to": "stalled"
+    },
+    {
+      "from": "stalled",
+      "to": "why"
+    },
+    {
+      "from": "why",
+      "to": "chase",
+      "branch": "Waiting on customer"
+    },
+    {
+      "from": "why",
+      "to": "board",
+      "branch": "Waiting on parts"
+    },
+    {
+      "from": "why",
+      "to": "board",
+      "branch": "No reason logged"
+    }
+  ],
+  "input_sample": {
+    "from": "Dev — Bay 3",
+    "sent_at": "2026-08-11T15:22:09Z",
+    "attachment": "IMG_4471.jpg (engine bay, loom routed)",
+    "voice_note_transcript": "alright the LS is in on the blue seventy chevelle, mounts are all welded up, wiring loom is routed, still waiting on the radiator from summit before I can fill it, so probably tuesday before it fires"
+  },
+  "output_sample": {
+    "matched_vehicle": {
+      "job_number": "B-1147",
+      "vehicle": "1970 Chevelle SS — Restomod",
+      "customer": "Ray Mendonca"
+    },
+    "progress_update": "LS swap mounted and welded, wiring loom routed. Waiting on radiator delivery before first fire.",
+    "stage_before": "Fabrication",
+    "stage_after": "Engine Install",
+    "tasks_ticked": [
+      "Fabricate engine mounts",
+      "Route wiring loom"
+    ],
+    "blocker_logged": {
+      "type": "Waiting on parts",
+      "item": "Radiator — Summit",
+      "eta": "2026-08-17"
+    },
+    "timeline_impact": "First fire moved from Aug 14 to Aug 18",
+    "customer_notified": true,
+    "message_sent": "Hi Ray — LS is in and mounted, loom is routed. Photo attached. Radiator lands Monday, so we're looking at first fire midweek rather than Friday. Nothing needed from you.",
+    "photo_attached": true,
+    "time_spent_by_tech": "22 seconds"
+  },
+  "archetype": "garage_build_tracker",
+  "learned": true,
+  "learned_at": "2026-08-11"
+}

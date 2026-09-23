@@ -1,0 +1,103 @@
+{
+  "title": "GoHighLevel Form → Field Mapping → Monday.com Item",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "receive",
+      "label": "1 · RECEIVE & MAP",
+      "color": 0,
+      "note": "Catches the form submission the moment it happens and maps it to your board's actual columns."
+    },
+    {
+      "key": "sync",
+      "label": "2 · SYNC & CONFIRM",
+      "color": 0,
+      "note": "Creates the item, then checks it actually landed instead of assuming it did."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "trig",
+      "kind": "trigger.webhook",
+      "label": "GoHighLevel Form Submitted",
+      "section": "receive"
+    },
+    {
+      "key": "map_fields",
+      "kind": "data.transform",
+      "label": "Map Form Fields to Monday.com Board Columns",
+      "section": "receive"
+    },
+    {
+      "key": "create_item",
+      "kind": "net.http",
+      "label": "Create New Item on the Monday.com Board",
+      "section": "sync"
+    },
+    {
+      "key": "check_branch",
+      "kind": "flow.branch",
+      "label": "Item Created Successfully?",
+      "section": "sync"
+    },
+    {
+      "key": "confirm_ok",
+      "kind": "net.respond",
+      "label": "Return Success to GoHighLevel",
+      "section": "sync"
+    },
+    {
+      "key": "alert_fail",
+      "kind": "app.action",
+      "label": "Alert: Submission Did Not Sync to Monday.com",
+      "app": "slack",
+      "op": "post",
+      "section": "sync"
+    }
+  ],
+  "edges": [
+    {
+      "from": "trig",
+      "to": "map_fields"
+    },
+    {
+      "from": "map_fields",
+      "to": "create_item"
+    },
+    {
+      "from": "create_item",
+      "to": "check_branch"
+    },
+    {
+      "from": "check_branch",
+      "to": "confirm_ok",
+      "branch": "true"
+    },
+    {
+      "from": "check_branch",
+      "to": "alert_fail",
+      "branch": "false"
+    }
+  ],
+  "input_sample": {
+    "form_name": "New Client Intake",
+    "name": "Dana Reyes",
+    "email": "dana.reyes@gmail.com",
+    "phone": "+15125550148",
+    "service_interest": "Kitchen Remodel"
+  },
+  "output_sample": {
+    "monday_item_id": "7291837465",
+    "board": "New Leads",
+    "columns_mapped": [
+      "Name",
+      "Email",
+      "Phone",
+      "Service Interest"
+    ],
+    "sync_status": "success"
+  },
+  "archetype": "ghl_form_monday_item_sync",
+  "learned": true,
+  "learned_at": "2026-08-24"
+}

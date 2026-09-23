@@ -1,0 +1,753 @@
+{
+  "name": "Your Monday.com to PandaDoc Contract Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - CONTRACT REQUEST COMES IN FROM MONDAY\n\nA column change on the board starts the run. We pull the item, its column values, and the source PDF straight from Monday.",
+        "height": 640,
+        "width": 700,
+        "color": 5
+      },
+      "id": "082dabe0-7f88-58d1-a5cd-d20b4f252e99",
+      "name": "Section - 1 - CONTRACT REQUEST COMES IN FROM MONDAY",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - PULL THE FIELDS OUT OF THE PDF\n\nText first, then one extraction step that returns a fixed JSON schema. Scanned PDFs get routed to OCR instead of failing.",
+        "height": 640,
+        "width": 1200,
+        "color": 4
+      },
+      "id": "bcbd4b1d-894c-56c0-9108-95ea892f71e6",
+      "name": "Section - 2 - PULL THE FIELDS OUT OF THE PDF",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        800,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - CHECK EVERYTHING BEFORE ANYTHING IS SENT\n\nRequired fields present, amounts parse as numbers, dates are real dates. Anything short of that stops here and a person looks at it.",
+        "height": 640,
+        "width": 460,
+        "color": 6
+      },
+      "id": "9d59b185-8db8-5aaf-b9a6-f3887bdd120c",
+      "name": "Section - 3 - CHECK EVERYTHING BEFORE ANYTHING IS SENT",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2200,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - BUILD AND SEND THE PANDADOC CONTRACT\n\nPandaDoc builds the document from your template asynchronously, so we wait for draft status before sending it for signature.",
+        "height": 640,
+        "width": 1180,
+        "color": 7
+      },
+      "id": "489778f3-46ba-53e4-9301-49d1037f25b8",
+      "name": "Section - 4 - BUILD AND SEND THE PANDADOC CONTRACT",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2820,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - WHEN SOMETHING BREAKS, EVERYONE KNOWS\n\nAny node failing anywhere in the run posts to Slack and writes the failure back onto the Monday item. Nothing goes quiet.",
+        "height": 640,
+        "width": 700,
+        "color": 1
+      },
+      "id": "64432b6f-6680-5736-b19b-6474e89c3204",
+      "name": "Section - 5 - WHEN SOMETHING BREAKS, EVERYONE KNOWS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4160,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "410205a3-8247-5c81-800e-b8f239fd6ba0",
+      "name": "1 - Monday.com Item Moved to Ready for Contract",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        180
+      ],
+      "webhookId": "1d4bdafd-9025-5162-b7f0-c607f80a6f58"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/2-monday-com-fetch-the-item-and-column-v",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "31674720-06b9-58b6-a5d9-11d2074f2852",
+      "name": "2 - Monday.com: Fetch the Item and Column Values",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        240,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/3-monday-com-download-the-contract-pdf",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "d810b6f6-8f6c-5704-8fda-3faba06f2b19",
+      "name": "3 - Monday.com: Download the Contract PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        480,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "338fe931-7e26-5eb8-a89d-e878acfe0fd3",
+      "name": "4 - Extract Text From PDF",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        860,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ead0a6b3-fc0e-5577-bdd1-daaf8509194e",
+              "leftValue": "={{ $json.text_found }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5263d4e3-2203-5b0a-8603-64cfbba5c413",
+      "name": "5 - Text Found in the PDF?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1100,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/5b-ocr-the-scanned-pages-instead",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "7ec2b5b6-c71a-5a49-82a1-55cf7d075252",
+      "name": "5b - OCR the Scanned Pages Instead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1340,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=6 - Extract Contract Fields to JSON Schema\n\nevent: {{ $json.event }}",
+        "batching": {},
+        "hasOutputParser": true
+      },
+      "id": "b754b7e2-e40c-5a69-a137-51e874dae4a7",
+      "name": "6 - Extract Contract Fields to JSON Schema",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1680,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "id": "4da8beb6-903f-5c24-a142-6e9a2f1d90fb",
+      "name": "GPT-4o",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1640,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"summary\": \"text\",\n  \"score\": 1\n}"
+      },
+      "id": "2be87730-1de0-522e-8f8e-0b392efa9caf",
+      "name": "Schema: Party, Address, Value, Term, Start Date",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1840,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f287c1d9-adf4-55e3-8878-16d65369fd2c",
+              "leftValue": "={{ $json.extracted_fields }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f5b054b3-5ce8-5de6-8594-07e43dc8a722",
+      "name": "7 - Required Fields Present and Amounts Parse?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2260,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "db323ac2-22a4-518d-923c-a6f2d1ba84fc",
+      "name": "7b - Hold the Item and Ask a Human to Confirm",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        2500,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/8-pandadoc-create-document-from-template",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "c8045ef7-05e9-5795-843b-053e95f98945",
+      "name": "8 - PandaDoc: Create Document From Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2880,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 20,
+        "unit": "seconds"
+      },
+      "id": "40145de3-5b5d-558e-9b0e-daa6330641cb",
+      "name": "9 - Wait 20 Seconds for the Draft to Build",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3120,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "91e28408-2ba7-51fb-878b-a82dee991784",
+              "leftValue": "={{ $json.document_draft }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "65496652-bbff-5e83-87e3-8b39ef860874",
+      "name": "10 - Is the Document in Draft Status Yet?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3360,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/11-pandadoc-send-for-signature",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "53f76f01-db2f-585b-b318-282314903fdd",
+      "name": "11 - PandaDoc: Send For Signature",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3600,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/12-monday-com-write-back-the-link-and-st",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "dab73901-7f7f-5ed2-a2fe-a38a2c70f61e",
+      "name": "12 - Monday.com: Write Back the Link and Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3840,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "dff51ae7-5e3b-5684-a072-50575fbc6504",
+      "name": "13 - Any Step Fails, Anywhere in the Run",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        4220,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "fb3397b0-f506-55fe-a677-4eae8945c523",
+      "name": "14 - Alert the Team With the Failed Run Link",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        4460,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/15-monday-com-flag-the-item-as-contract-",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "c05480f1-11f7-5e8e-ace4-36a81a212d45",
+      "name": "15 - Monday.com: Flag the Item as Contract Failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4700,
+        180
+      ]
+    }
+  ],
+  "connections": {
+    "1 - Monday.com Item Moved to Ready for Contract": {
+      "main": [
+        [
+          {
+            "node": "2 - Monday.com: Fetch the Item and Column Values",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Monday.com: Fetch the Item and Column Values": {
+      "main": [
+        [
+          {
+            "node": "3 - Monday.com: Download the Contract PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Monday.com: Download the Contract PDF": {
+      "main": [
+        [
+          {
+            "node": "4 - Extract Text From PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - Extract Text From PDF": {
+      "main": [
+        [
+          {
+            "node": "5 - Text Found in the PDF?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - Text Found in the PDF?": {
+      "main": [
+        [
+          {
+            "node": "6 - Extract Contract Fields to JSON Schema",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "5b - OCR the Scanned Pages Instead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5b - OCR the Scanned Pages Instead": {
+      "main": [
+        [
+          {
+            "node": "6 - Extract Contract Fields to JSON Schema",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Extract Contract Fields to JSON Schema": {
+      "main": [
+        [
+          {
+            "node": "7 - Required Fields Present and Amounts Parse?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - Required Fields Present and Amounts Parse?": {
+      "main": [
+        [
+          {
+            "node": "8 - PandaDoc: Create Document From Template",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "7b - Hold the Item and Ask a Human to Confirm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - PandaDoc: Create Document From Template": {
+      "main": [
+        [
+          {
+            "node": "9 - Wait 20 Seconds for the Draft to Build",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9 - Wait 20 Seconds for the Draft to Build": {
+      "main": [
+        [
+          {
+            "node": "10 - Is the Document in Draft Status Yet?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Is the Document in Draft Status Yet?": {
+      "main": [
+        [
+          {
+            "node": "11 - PandaDoc: Send For Signature",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "9 - Wait 20 Seconds for the Draft to Build",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - PandaDoc: Send For Signature": {
+      "main": [
+        [
+          {
+            "node": "12 - Monday.com: Write Back the Link and Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - Any Step Fails, Anywhere in the Run": {
+      "main": [
+        [
+          {
+            "node": "14 - Alert the Team With the Failed Run Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 - Alert the Team With the Failed Run Link": {
+      "main": [
+        [
+          {
+            "node": "15 - Monday.com: Flag the Item as Contract Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4o": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "6 - Extract Contract Fields to JSON Schema",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schema: Party, Address, Value, Term, Start Date": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "6 - Extract Contract Fields to JSON Schema",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "895b7cfe-1087-5b37-b956-a632db7de0a6",
+  "pinData": {
+    "1 - Monday.com Item Moved to Ready for Contract": [
+      {
+        "json": {
+          "event": {
+            "type": "update_column_value",
+            "boardId": 7412998033,
+            "pulseId": 9013774521,
+            "pulseName": "Acme Logistics - MSA 2026",
+            "columnId": "status",
+            "columnType": "color",
+            "value": {
+              "label": {
+                "text": "Ready for Contract"
+              }
+            },
+            "previousValue": {
+              "label": {
+                "text": "In Review"
+              }
+            },
+            "userId": 41288907,
+            "triggerTime": "2026-09-10T14:22:07.918Z"
+          }
+        }
+      }
+    ],
+    "12 - Monday.com: Write Back the Link and Status": [
+      {
+        "json": {
+          "monday_item": {
+            "board_id": 7412998033,
+            "item_id": 9013774521,
+            "item_name": "Acme Logistics - MSA 2026",
+            "status": "Sent for signature",
+            "pandadoc_link": "https://app.pandadoc.com/a/#/documents/w7Kq2fMxDrN4vTb9",
+            "updated_at": "2026-09-10T14:23:04.512Z"
+          },
+          "pandadoc": {
+            "document_id": "w7Kq2fMxDrN4vTb9",
+            "template": "MSA - Standard Services 2026",
+            "status": "document.sent",
+            "recipient": "dana.reyes@acmelogistics.com",
+            "created_from_draft_in_seconds": 19
+          },
+          "extracted_fields": {
+            "party_name": "Acme Logistics LLC",
+            "party_address": "4188 W Cheyenne Ave, Suite 210, Las Vegas, NV 89032",
+            "contract_value": 84500.0,
+            "currency": "USD",
+            "term_months": 24,
+            "start_date": "2026-10-01",
+            "signer_name": "Dana Reyes",
+            "signer_title": "Director of Operations"
+          },
+          "checks": {
+            "pdf_had_text_layer": true,
+            "required_fields_present": true,
+            "amount_parsed_as_number": true,
+            "dates_valid": true
+          },
+          "if_it_had_failed": "Error trigger fires, Slack gets the failed run link, and the Monday item flips to Contract Failed with the reason"
+        }
+      }
+    ]
+  }
+}

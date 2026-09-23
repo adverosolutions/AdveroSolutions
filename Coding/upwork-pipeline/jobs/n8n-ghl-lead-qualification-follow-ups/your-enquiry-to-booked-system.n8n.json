@@ -1,0 +1,968 @@
+{
+  "name": "Your Enquiry to Booked System",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1 - CAPTURE AND VALIDATE\n\nOne form, one webhook. Every enquiry is de-duplicated, standardized and checked against GoHighLevel before anything is created.",
+        "height": 740,
+        "width": 1420,
+        "color": 5
+      },
+      "id": "3ed1463c-7edb-5469-9673-2c898e2a94cc",
+      "name": "Section - 1 - CAPTURE AND VALIDATE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - AI QUALIFICATION, NEVER INVENTED\n\nClaude extracts the service, summarizes the enquiry and classifies it. Anything it cannot read is flagged, not guessed.",
+        "height": 740,
+        "width": 940,
+        "color": 4
+      },
+      "id": "e039ca49-c2e3-5ca7-87db-091256eaa22a",
+      "name": "Section - 2 - AI QUALIFICATION, NEVER INVENTED",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1580,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - INTO GOHIGHLEVEL\n\nContact, custom fields, tags, opportunity stage and notes. Sales opens one record and sees the whole enquiry.",
+        "height": 740,
+        "width": 940,
+        "color": 6
+      },
+      "id": "8a3509df-dd51-5d91-9d10-41a232518dda",
+      "name": "Section - 3 - INTO GOHIGHLEVEL",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2680,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - FOLLOW UP UNTIL THEY REPLY, BOOK OR OPT OUT\n\nApproved messaging and the booking link go out on a sequence that stops itself the moment the lead responds.",
+        "height": 740,
+        "width": 700,
+        "color": 7
+      },
+      "id": "802934e7-69b4-5d09-ace0-b8ac2cc4f1f1",
+      "name": "Section - 4 - FOLLOW UP UNTIL THEY REPLY, BOOK OR OPT OUT",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3780,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - LOGS, RETRIES AND ALERTS\n\nEvery run writes a log row. A failed step retries once on a delay, then it tells you instead of failing quietly.",
+        "height": 740,
+        "width": 940,
+        "color": 1
+      },
+      "id": "ba4e7175-71df-5dc0-9e3e-d2f520679583",
+      "name": "Section - 5 - LOGS, RETRIES AND ALERTS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4640,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "8defd8a1-4247-547d-9d38-76c82814f655",
+      "name": "1 - Enquiry Arrives From the Website Form",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        80
+      ],
+      "webhookId": "9d071582-505a-57df-a5e1-4ad02afa5648"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d6ccc5d5-2181-5a93-b54d-a3501568fb9b",
+              "name": "form",
+              "value": "={{ $json.form }}",
+              "type": "string"
+            },
+            {
+              "id": "32c51109-db8c-5f98-aeb6-eefe51e20040",
+              "name": "submitted_at",
+              "value": "={{ $json.submitted_at }}",
+              "type": "string"
+            },
+            {
+              "id": "599822ae-f691-5892-bc84-c3613fce014f",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "c411fc15-b359-5130-85ae-e5d5d61cf58d",
+              "name": "phone",
+              "value": "={{ $json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "b4e64543-1526-5a02-bce0-f6d29d7f8caa",
+              "name": "email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "3a447377-73ba-5d8e-bbab-d4671294fa5f",
+              "name": "message",
+              "value": "={{ $json.message }}",
+              "type": "string"
+            },
+            {
+              "id": "3a65dd47-6bfb-5a9a-9588-728e9b4d6044",
+              "name": "page_url",
+              "value": "={{ $json.page_url }}",
+              "type": "string"
+            },
+            {
+              "id": "b076934e-d4c1-5d0b-a294-37873e7aa969",
+              "name": "source",
+              "value": "={{ $json.source }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "357c5534-b2c3-5711-97a7-b8a3103be7a8",
+      "name": "15 - Idempotency Key: Hash of Email Phone and Timestamp, Skip if Seen",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        240,
+        80
+      ],
+      "notes": "Same key seen before means the webhook fired twice. Nothing downstream runs, so no duplicate contact, opportunity or message.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ae9f3226-afce-511d-83c8-8e15066025e2",
+              "name": "form",
+              "value": "={{ $json.form }}",
+              "type": "string"
+            },
+            {
+              "id": "22be5d5d-0e3b-5bac-8f32-3d7b1534dea6",
+              "name": "submitted_at",
+              "value": "={{ $json.submitted_at }}",
+              "type": "string"
+            },
+            {
+              "id": "04e49f52-e778-56f3-aa2a-e11ce25b8032",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "94717a74-61e5-51dc-8bc8-65a9d509acef",
+              "name": "phone",
+              "value": "={{ $json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "d214a004-6692-585f-b0a1-5b058c2126cb",
+              "name": "email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "58b9d350-881b-56cf-8de5-8ad27357c5f2",
+              "name": "message",
+              "value": "={{ $json.message }}",
+              "type": "string"
+            },
+            {
+              "id": "66277fdd-596c-5c1d-86ef-2159a81a9ff7",
+              "name": "page_url",
+              "value": "={{ $json.page_url }}",
+              "type": "string"
+            },
+            {
+              "id": "447f404a-9d64-56b8-b1dd-b6a1f24dfb92",
+              "name": "source",
+              "value": "={{ $json.source }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "155e5930-3a6e-5934-9398-a4fb655c20b4",
+      "name": "2 - Standardize Name, Phone E.164, Email Lowercase",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        480,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5f0f7ddf-245d-50c8-a0ff-d5cdeef53f93",
+              "leftValue": "={{ $json.custom_fields }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e6d5560b-945e-5234-9146-e28461ca0c89",
+      "name": "3 - Required Fields Present?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        720,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/3b-ghl-tag-incomplete-and-ask-for-the-mi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "5de3b88b-a964-5328-b985-c9fbe63bbd56",
+      "name": "3b - GHL: Tag Incomplete and Ask for the Missing Field",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        960,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/4-ghl-look-up-existing-contact-by-email-",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "fb4d4734-d4ed-50ba-94e0-e69077c9d931",
+      "name": "4 - GHL: Look Up Existing Contact by Email or Phone",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        960,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "76df2606-3fe2-53c5-b96a-deaabddde0c3",
+              "leftValue": "={{ $json.already_exists }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9ffe8579-086c-5aef-8c4a-6ee506cba4c4",
+      "name": "5 - Already Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1200,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=6 - Extract Service, Summarize, Classify Hot Warm Cold Unclear\n\nform: {{ $json.form }}\nsubmitted_at: {{ $json.submitted_at }}\nname: {{ $json.name }}\nphone: {{ $json.phone }}",
+        "batching": {},
+        "hasOutputParser": true
+      },
+      "id": "87fe46a0-0418-59ca-bce3-090a1461b04d",
+      "name": "6 - Extract Service, Summarize, Classify Hot Warm Cold Unclear",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1680,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "0447c9dc-ada7-57ce-92f0-0f0a65051124",
+      "name": "Claude",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        1640,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"summary\": \"text\",\n  \"score\": 1\n}"
+      },
+      "id": "0a17f669-9bbb-5657-9581-04fb916f06bf",
+      "name": "Service, Summary, Class, Missing Fields",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1840,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ea4ac5fa-712e-5ba2-8668-c146959ad66e",
+              "leftValue": "={{ $json.clear_enough }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7b56d0a5-2d0a-516f-a5c5-883e5699bbc4",
+      "name": "7 - Clear Enough to Qualify?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2120,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "f69d33c2-4942-5a29-864f-047bb51a2d34",
+      "name": "7b - Manual Review Queue With the Summary",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        2360,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/8-ghl-create-or-update-the-contact-and-c",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "cc61a041-8fde-5da1-b8cf-879e7e2eea9c",
+      "name": "8 - GHL: Create or Update the Contact and Custom Fields",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2740,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/9-ghl-tag-by-class",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "1abaa21c-2378-5988-b03e-ea7cb05b0145",
+      "name": "9 - GHL: Tag by Class",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2980,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/10-ghl-create-or-move-the-opportunity-to",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "1c632e58-d258-5699-9509-0600b984f6d2",
+      "name": "10 - GHL: Create or Move the Opportunity to the Stage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3220,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/11-ghl-write-the-summary-and-result-to-t",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "0ebdf67d-b1e3-53be-bb70-3993728338f7",
+      "name": "11 - GHL: Write the Summary and Result to the Contact Notes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3460,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/12-ghl-enroll-in-the-follow-up-workflow-",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "1d502a37-ba16-54e4-b7d6-4c0fa9cfba9b",
+      "name": "12 - GHL: Enroll in the Follow-Up Workflow With the Booking Link",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4320,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "onReceived"
+      },
+      "id": "4434bc73-3b48-56be-bb38-38edfa8f1111",
+      "name": "13 - GHL: Replied, Booked, Opted Out or Paused",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        3840,
+        80
+      ],
+      "webhookId": "a23de07b-3518-5731-b47f-b96995d4a68c"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.service.example.com/v1/14-ghl-remove-from-the-follow-up-workflo",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      "id": "6b1ac7a2-ad47-5040-bc5f-035e1faf520a",
+      "name": "14 - GHL: Remove From the Follow-Up Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4080,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "a8377120-80ca-530a-b553-4ddb9e712c04",
+      "name": "16 - Execution Log Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        5420,
+        240
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "2f1bca1c-a59f-5d5a-a141-f0dfb7ecd905",
+      "name": "17 - Any Step Fails",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        4700,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      },
+      "id": "940e3409-0e77-534a-a9d8-c43b27d5504a",
+      "name": "18 - Retry After 2 Minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4940,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "text": "={{ $json.summary || $json.reason_for_calling }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "0fd36493-a3d3-58e1-8398-1e40345677fd",
+      "name": "19 - Alert After the Retry",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        5180,
+        80
+      ]
+    }
+  ],
+  "connections": {
+    "1 - Enquiry Arrives From the Website Form": {
+      "main": [
+        [
+          {
+            "node": "15 - Idempotency Key: Hash of Email Phone and Timestamp, Skip if Seen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15 - Idempotency Key: Hash of Email Phone and Timestamp, Skip if Seen": {
+      "main": [
+        [
+          {
+            "node": "2 - Standardize Name, Phone E.164, Email Lowercase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Standardize Name, Phone E.164, Email Lowercase": {
+      "main": [
+        [
+          {
+            "node": "3 - Required Fields Present?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Required Fields Present?": {
+      "main": [
+        [
+          {
+            "node": "4 - GHL: Look Up Existing Contact by Email or Phone",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "3b - GHL: Tag Incomplete and Ask for the Missing Field",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - GHL: Look Up Existing Contact by Email or Phone": {
+      "main": [
+        [
+          {
+            "node": "5 - Already Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - Already Exists?": {
+      "main": [
+        [
+          {
+            "node": "6 - Extract Service, Summarize, Classify Hot Warm Cold Unclear",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "6 - Extract Service, Summarize, Classify Hot Warm Cold Unclear",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Extract Service, Summarize, Classify Hot Warm Cold Unclear": {
+      "main": [
+        [
+          {
+            "node": "7 - Clear Enough to Qualify?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - Clear Enough to Qualify?": {
+      "main": [
+        [
+          {
+            "node": "8 - GHL: Create or Update the Contact and Custom Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "7b - Manual Review Queue With the Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - GHL: Create or Update the Contact and Custom Fields": {
+      "main": [
+        [
+          {
+            "node": "9 - GHL: Tag by Class",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9 - GHL: Tag by Class": {
+      "main": [
+        [
+          {
+            "node": "10 - GHL: Create or Move the Opportunity to the Stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - GHL: Create or Move the Opportunity to the Stage": {
+      "main": [
+        [
+          {
+            "node": "11 - GHL: Write the Summary and Result to the Contact Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - GHL: Write the Summary and Result to the Contact Notes": {
+      "main": [
+        [
+          {
+            "node": "12 - GHL: Enroll in the Follow-Up Workflow With the Booking Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 - GHL: Enroll in the Follow-Up Workflow With the Booking Link": {
+      "main": [
+        [
+          {
+            "node": "16 - Execution Log Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - GHL: Replied, Booked, Opted Out or Paused": {
+      "main": [
+        [
+          {
+            "node": "14 - GHL: Remove From the Follow-Up Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "17 - Any Step Fails": {
+      "main": [
+        [
+          {
+            "node": "18 - Retry After 2 Minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "18 - Retry After 2 Minutes": {
+      "main": [
+        [
+          {
+            "node": "19 - Alert After the Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "6 - Extract Service, Summarize, Classify Hot Warm Cold Unclear",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Service, Summary, Class, Missing Fields": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "6 - Extract Service, Summarize, Classify Hot Warm Cold Unclear",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "98a9ae2d-289e-552d-8ebb-24ef8768a252",
+  "pinData": {
+    "1 - Enquiry Arrives From the Website Form": [
+      {
+        "json": {
+          "form": "Website Contact Form",
+          "submitted_at": "2026-09-21T09:14:22+05:00",
+          "name": "Ayesha Khan",
+          "phone": "0300 1234567",
+          "email": "Ayesha.K@Example.com",
+          "message": "Need a deep clean for a 3 bed flat before Friday, how much?",
+          "page_url": "https://example.com/contact",
+          "source": "Google Organic"
+        }
+      }
+    ],
+    "16 - Execution Log Row": [
+      {
+        "json": {
+          "duplicate": false,
+          "idempotency_key": "a41f9c2e7b3d",
+          "contact": {
+            "ghl_contact_id": "cN7qW2xTfL0a",
+            "first_name": "Ayesha",
+            "last_name": "Khan",
+            "phone": "+923001234567",
+            "email": "ayesha.k@example.com",
+            "action": "created"
+          },
+          "custom_fields": {
+            "service_requested": "deep clean",
+            "property_size": "3 bed flat",
+            "requested_by": "Friday",
+            "enquiry_source": "Website Contact Form"
+          },
+          "qualification": {
+            "service": "deep clean",
+            "class": "hot",
+            "summary": "Wants a deep clean for a 3 bed flat, needs it done before Friday, asking for a price. Timeline and property size given, no address or budget yet.",
+            "missing_fields": [
+              "address",
+              "budget"
+            ],
+            "invented_fields": "none, anything not stated is listed as missing"
+          },
+          "tags": [
+            "enquiry-hot",
+            "service-deep-clean"
+          ],
+          "opportunity": {
+            "pipeline": "Enquiries",
+            "stage": "New Enquiry",
+            "name": "Ayesha Khan - deep clean"
+          },
+          "contact_note": "Deep clean, 3 bed flat, wanted before Friday, price requested. Classified hot. Missing: address, budget.",
+          "follow_up": {
+            "workflow": "Enquiry Follow-Up",
+            "enrolled": true,
+            "booking_link_sent": true,
+            "stops_on": [
+              "replied",
+              "booked",
+              "opted out",
+              "manually paused"
+            ]
+          },
+          "log_row": {
+            "run_id": "exec_20268",
+            "received_at": "2026-09-21T09:14:22+05:00",
+            "email": "ayesha.k@example.com",
+            "class": "hot",
+            "ghl_contact_id": "cN7qW2xTfL0a",
+            "stage": "New Enquiry",
+            "result": "success",
+            "retries": 0
+          }
+        }
+      }
+    ]
+  }
+}

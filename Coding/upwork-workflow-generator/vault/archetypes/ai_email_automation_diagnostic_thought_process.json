@@ -1,0 +1,113 @@
+{
+  "title": "How I Diagnose a Broken AI Email Automation",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "diagnose",
+      "label": "1 · DIAGNOSE",
+      "color": 0,
+      "note": "With AI in the loop there's an extra place it can break, the generation step itself, not just the trigger and the send."
+    },
+    {
+      "key": "fix",
+      "label": "2 · FIX & CONFIRM",
+      "color": 0,
+      "note": "The fix goes exactly where the diagnosis pointed, then gets proven with a real test run, content included."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "confirm_symptom",
+      "kind": "data.transform",
+      "label": "Confirm the Exact Symptom: No Email, Bad Content, or Wrong Recipient",
+      "section": "diagnose"
+    },
+    {
+      "key": "check_trigger",
+      "kind": "data.transform",
+      "label": "Check Whether the Automation Trigger Actually Fired",
+      "section": "diagnose"
+    },
+    {
+      "key": "check_generation",
+      "kind": "data.transform",
+      "label": "Check the AI Generation Step: Valid Output, Timeout, or Malformed Response",
+      "section": "diagnose"
+    },
+    {
+      "key": "check_send",
+      "kind": "data.transform",
+      "label": "Check the Send Step: Correct Recipient, Correct Template Slot",
+      "section": "diagnose"
+    },
+    {
+      "key": "isolate_cause",
+      "kind": "data.transform",
+      "label": "Isolate the Root Cause: Trigger, Generation, or Send",
+      "section": "diagnose"
+    },
+    {
+      "key": "apply_fix",
+      "kind": "data.transform",
+      "label": "Apply the Fix at the Exact Point of Failure",
+      "section": "fix"
+    },
+    {
+      "key": "retest",
+      "kind": "data.transform",
+      "label": "Re-Run the Automation End to End and Read the Generated Email",
+      "section": "fix"
+    },
+    {
+      "key": "confirm_fix",
+      "kind": "data.transform",
+      "label": "Confirm the Fix Holds Before Handing It Back",
+      "section": "fix"
+    }
+  ],
+  "edges": [
+    {
+      "from": "confirm_symptom",
+      "to": "check_trigger"
+    },
+    {
+      "from": "check_trigger",
+      "to": "check_generation"
+    },
+    {
+      "from": "check_generation",
+      "to": "check_send"
+    },
+    {
+      "from": "check_send",
+      "to": "isolate_cause"
+    },
+    {
+      "from": "isolate_cause",
+      "to": "apply_fix"
+    },
+    {
+      "from": "apply_fix",
+      "to": "retest"
+    },
+    {
+      "from": "retest",
+      "to": "confirm_fix"
+    }
+  ],
+  "input_sample": {
+    "reported_symptom": "Emails are sending but the body text is empty half the time",
+    "trigger_status": "fired correctly every time",
+    "generation_check": "AI call succeeds but occasionally returns an empty string when the input record is missing a field the prompt assumes exists",
+    "root_cause": "no fallback when the source record is incomplete, prompt has no guard for missing fields"
+  },
+  "output_sample": {
+    "root_cause_found": "generation",
+    "fix_applied": "added a fallback template and a required-field check before the AI call runs",
+    "test_result": "10 test records with missing fields all produced valid email bodies",
+    "status": "confirmed fixed"
+  },
+  "archetype": "ai_email_automation_diagnostic_thought_process",
+  "learned": true,
+  "learned_at": "2026-09-01"
+}

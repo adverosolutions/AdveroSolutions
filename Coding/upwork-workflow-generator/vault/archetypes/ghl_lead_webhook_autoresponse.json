@@ -1,0 +1,137 @@
+{
+  "title": "Lead Webhook → GoHighLevel Sync → Automated Response",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · LEAD INTAKE",
+      "color": 0,
+      "note": "Catches the lead from its source and normalizes the fields before anything touches GoHighLevel."
+    },
+    {
+      "key": "sync",
+      "label": "2 · SYNC TO GOHIGHLEVEL",
+      "color": 0,
+      "note": "Creates or updates the contact in GoHighLevel over its webhook API."
+    },
+    {
+      "key": "respond",
+      "label": "3 · AUTOMATED LEAD RESPONSE",
+      "color": 0,
+      "note": "Fires the automated response and tags the contact once the sync succeeds."
+    },
+    {
+      "key": "confirm",
+      "label": "4 · CONFIRM & HANDLE ERRORS",
+      "color": 0,
+      "note": "Returns a success confirmation, or alerts if the GoHighLevel sync failed."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "trig",
+      "kind": "trigger.webhook",
+      "label": "New Lead Submitted",
+      "section": "intake"
+    },
+    {
+      "key": "normalize",
+      "kind": "data.transform",
+      "label": "Normalize Name, Phone, Email, and Source",
+      "section": "intake"
+    },
+    {
+      "key": "ghl_sync",
+      "kind": "app.action",
+      "label": "Create or Update Contact in GoHighLevel",
+      "app": "gohighlevel",
+      "op": "upsert_contact",
+      "section": "sync"
+    },
+    {
+      "key": "sync_branch",
+      "kind": "flow.branch",
+      "label": "Contact Synced Successfully?",
+      "section": "sync"
+    },
+    {
+      "key": "ghl_reply",
+      "kind": "app.action",
+      "label": "Send Automated Lead-Response Message",
+      "app": "gohighlevel",
+      "op": "send_message",
+      "section": "respond"
+    },
+    {
+      "key": "ghl_tag",
+      "kind": "app.action",
+      "label": "Tag Contact as Auto-Responded",
+      "app": "gohighlevel",
+      "op": "add_tag",
+      "section": "respond"
+    },
+    {
+      "key": "respond_ok",
+      "kind": "net.respond",
+      "label": "Return Success to Webhook Caller",
+      "section": "confirm"
+    },
+    {
+      "key": "alert_fail",
+      "kind": "app.action",
+      "label": "Alert: GoHighLevel Sync Failed",
+      "app": "slack",
+      "op": "send_message",
+      "section": "confirm"
+    }
+  ],
+  "edges": [
+    {
+      "from": "trig",
+      "to": "normalize"
+    },
+    {
+      "from": "normalize",
+      "to": "ghl_sync"
+    },
+    {
+      "from": "ghl_sync",
+      "to": "sync_branch"
+    },
+    {
+      "from": "sync_branch",
+      "to": "ghl_reply",
+      "branch": "true"
+    },
+    {
+      "from": "ghl_reply",
+      "to": "ghl_tag"
+    },
+    {
+      "from": "ghl_tag",
+      "to": "respond_ok"
+    },
+    {
+      "from": "sync_branch",
+      "to": "alert_fail",
+      "branch": "false"
+    }
+  ],
+  "input_sample": {
+    "lead_source": "Facebook Lead Ad",
+    "name": "Marcus Webb",
+    "phone": "+15551234567",
+    "email": "marcus.webb@gmail.com",
+    "submitted_at": "2026-08-24T14:02:00Z"
+  },
+  "output_sample": {
+    "ghl_contact_id": "c_9f21a8",
+    "sync_status": "success",
+    "auto_response_sent": true,
+    "tag_applied": "Auto-Responded",
+    "response_time_sec": 4
+  },
+  "archetype": "ghl_lead_webhook_autoresponse",
+  "learned": true,
+  "learned_at": "2026-08-24"
+}

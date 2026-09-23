@@ -1,0 +1,63 @@
+{
+  "archetype": "payment_onboarding",
+  "title": "Stripe Payment → Provision → Onboarding Sequence",
+  "platform": "n8n",
+  "sections": [
+    { "key": "paid",   "label": "1 · PAYMENT",     "note": "Stripe fires on successful payment. The signature is verified and the event deduplicated before anything is provisioned — webhooks retry, and provisioning twice is worse than not at all." },
+    { "key": "setup",  "label": "2 · PROVISION",   "note": "The account is created, the plan entitlements applied, and the workspace seeded. Failures here alert immediately, because a customer who paid and got nothing is the most expensive kind of bug." },
+    { "key": "route",  "label": "3 · BY PLAN",     "note": "Enterprise buyers get a human — a real onboarding call booked with their CSM. Self-serve plans get the automated sequence. The split is by plan value, not by guesswork." },
+    { "key": "welcome","label": "4 · ONBOARD",     "note": "Welcome email with credentials goes immediately, then a paced sequence over the first two weeks tied to activation milestones rather than a fixed drip everyone gets regardless of usage." }
+  ],
+  "nodes": [
+    { "key": "hook",    "kind": "trigger.webhook", "label": "Stripe · payment_succeeded", "section": "paid" },
+    { "key": "verify",  "kind": "data.filter", "label": "Verify & Dedupe Event", "section": "paid" },
+    { "key": "customer","kind": "app.action", "app": "stripe", "op": "get", "label": "Fetch Customer & Plan", "section": "paid" },
+    { "key": "account", "kind": "net.http", "label": "Provision Account", "section": "setup" },
+    { "key": "ok",      "kind": "flow.branch", "label": "Provisioned?", "section": "setup" },
+    { "key": "alert",   "kind": "app.action", "app": "slack", "op": "post", "label": "Alert #provisioning", "section": "setup" },
+    { "key": "plan",    "kind": "flow.switch", "label": "Plan Tier", "section": "route" },
+    { "key": "csm",     "kind": "app.action", "app": "slack", "op": "post", "label": "Assign a CSM", "section": "route" },
+    { "key": "welcome", "kind": "app.action", "app": "gmail", "op": "send", "label": "Welcome + Credentials", "section": "welcome" },
+    { "key": "wait",    "kind": "flow.wait", "label": "Wait 3 Days", "section": "welcome" },
+    { "key": "nudge",   "kind": "app.action", "app": "gmail", "op": "send", "label": "Activation Nudge", "section": "welcome" },
+    { "key": "crm",     "kind": "app.action", "app": "hubspot", "op": "create_contact", "label": "Sync to CRM", "section": "welcome" }
+  ],
+  "edges": [
+    { "from": "hook", "to": "verify" },
+    { "from": "verify", "to": "customer" },
+    { "from": "customer", "to": "account" },
+    { "from": "account", "to": "ok" },
+    { "from": "ok", "to": "plan", "branch": "true" },
+    { "from": "ok", "to": "alert", "branch": "false" },
+    { "from": "plan", "to": "csm", "branch": "enterprise" },
+    { "from": "plan", "to": "welcome", "branch": "self_serve" },
+    { "from": "csm", "to": "welcome" },
+    { "from": "welcome", "to": "wait" },
+    { "from": "wait", "to": "nudge" },
+    { "from": "nudge", "to": "crm" }
+  ],
+  "input_sample": {
+    "event_id": "evt_1PxK2mLkd8sQ",
+    "type": "invoice.payment_succeeded",
+    "created": "2026-07-31T10:02:44Z",
+    "customer": { "id": "cus_QeR41vBn", "email": "ops@sandbarlogistics.com", "name": "Sandbar Logistics" },
+    "subscription": { "plan": "Growth — Annual", "seats": 25, "amount": 29400, "currency": "usd", "interval": "year" },
+    "livemode": true
+  },
+  "output_sample": {
+    "event_id": "evt_1PxK2mLkd8sQ",
+    "duplicate": false,
+    "account": { "id": "acct_88f21c", "workspace": "sandbar-logistics", "seats_provisioned": 25, "region": "us-east" },
+    "provisioned": true,
+    "provision_ms": 3410,
+    "plan_tier": "self_serve",
+    "csm_assigned": null,
+    "emails": [
+      { "type": "welcome", "sent_at": "2026-07-31T10:02:49Z", "to": "ops@sandbarlogistics.com" },
+      { "type": "activation_nudge", "scheduled_for": "2026-08-03T10:02:49Z", "condition": "if fewer than 5 seats active" }
+    ],
+    "crm_contact_id": "0-1-91044821",
+    "mrr_added": 2450.0,
+    "status": "onboarding_active"
+  }
+}

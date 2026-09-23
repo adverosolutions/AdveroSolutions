@@ -1,0 +1,95 @@
+{
+  "title": "Real Estate Speed-to-Lead — Correct Pipeline + Instant SMS/Email Follow-Up",
+  "platform": "gohighlevel",
+  "sections": [],
+  "nodes": [
+    {
+      "key": "trig",
+      "kind": "trigger.app",
+      "label": "New Lead Submitted — Form, Ad, or Call"
+    },
+    {
+      "key": "assign",
+      "kind": "app.action",
+      "label": "Move Lead Into the Correct Pipeline · Buyer or Seller",
+      "app": "gohighlevel",
+      "op": "move_pipeline_stage"
+    },
+    {
+      "key": "wait",
+      "kind": "flow.wait",
+      "label": "Wait 2 Minutes Before First Touch"
+    },
+    {
+      "key": "send_sms",
+      "kind": "app.action",
+      "label": "Send Instant SMS Follow-Up",
+      "app": "gohighlevel",
+      "op": "send_sms"
+    },
+    {
+      "key": "send_email",
+      "kind": "app.action",
+      "label": "Send Personalized Email Follow-Up",
+      "app": "gohighlevel",
+      "op": "send_email"
+    },
+    {
+      "key": "tag_lead",
+      "kind": "app.action",
+      "label": "Tag Lead: First Response Sent",
+      "app": "gohighlevel",
+      "op": "add_tag"
+    },
+    {
+      "key": "notify_agent",
+      "kind": "app.action",
+      "label": "Notify the Assigned Agent",
+      "app": "gohighlevel",
+      "op": "notify"
+    }
+  ],
+  "edges": [
+    {
+      "from": "trig",
+      "to": "assign"
+    },
+    {
+      "from": "assign",
+      "to": "wait"
+    },
+    {
+      "from": "wait",
+      "to": "send_sms"
+    },
+    {
+      "from": "send_sms",
+      "to": "send_email"
+    },
+    {
+      "from": "send_email",
+      "to": "tag_lead"
+    },
+    {
+      "from": "tag_lead",
+      "to": "notify_agent"
+    }
+  ],
+  "input_sample": {
+    "lead_name": "Jordan Ellis",
+    "inquiry_type": "Buyer",
+    "source": "Zillow Contact Form",
+    "phone": "+15125550148",
+    "submitted_at": "2026-08-24T15:02:00Z"
+  },
+  "output_sample": {
+    "pipeline": "Buyer Leads — New Inquiry",
+    "sms_sent": true,
+    "email_sent": true,
+    "response_time_min": 2,
+    "assigned_agent": "Marcus Chen"
+  },
+  "archetype": "ghl_real_estate_speed_to_lead",
+  "learned": true,
+  "learned_at": "2026-08-26"
+}

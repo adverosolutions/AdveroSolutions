@@ -1,0 +1,14 @@
+# The repo root .gitignore blanket-ignores *.json and *.csv as "data
+# intermediates". Here they are the opposite of intermediates: the archetypes,
+# the harvested catalogs and the keyword index are precisely the parts that
+# cannot be regenerated. Re-include them, then re-exclude what really is
+# generated. Order matters — later rules win.
+!*.json
+!*.csv
+
+# Genuinely disposable: one file per generation run.
+out/*.json
+
+__pycache__/
+*.pyc
+.DS_Store

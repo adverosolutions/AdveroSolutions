@@ -1,0 +1,273 @@
+{
+  "title": "AI Operating System — Task Intake → Model Routing → QA → Deliver",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 · TASK INTAKE",
+      "color": 0,
+      "note": "Anyone on the team submits work through one form instead of each person improvising in their own ChatGPT tab. This single entry point is what makes the rest measurable — you cannot standardize what you cannot see."
+    },
+    {
+      "key": "route",
+      "label": "2 · MODEL ROUTING",
+      "color": 0,
+      "note": "A router classifies the task and picks the right tool for it. Long-form writing, structured extraction and live research have genuinely different best answers, and routing them by hand is where teams silently lose the quality gains."
+    },
+    {
+      "key": "execute",
+      "label": "3 · EXECUTE",
+      "color": 0,
+      "note": "Each lane runs the task with the prompt and SOP built for that work type. Prompts live in the workflow, versioned, so improving one improves it for everyone at once rather than living in one person's notes."
+    },
+    {
+      "key": "qa",
+      "label": "4 · QUALITY GATE",
+      "color": 0,
+      "note": "Every output is scored against the SOP rubric before anyone sees it. Work that clears the bar ships; work that does not routes to a human with the reason attached, instead of quietly reaching a client."
+    },
+    {
+      "key": "deliver",
+      "label": "5 · DELIVER & MEASURE",
+      "color": 0,
+      "note": "The result comes back to the requester, and every run logs which tool was used, what it cost and how long it took. That log is what turns \"we use AI\" into a number you can put in front of leadership."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "form",
+      "kind": "trigger.form",
+      "label": "Team Submits Task",
+      "section": "intake"
+    },
+    {
+      "key": "norm",
+      "kind": "data.transform",
+      "label": "Normalize Request",
+      "section": "intake"
+    },
+    {
+      "key": "router",
+      "kind": "ai.agent",
+      "label": "Classify Task & Pick Tool",
+      "section": "route"
+    },
+    {
+      "key": "rmodel",
+      "kind": "ai.model",
+      "label": "Claude — Router",
+      "app": "anthropic",
+      "parent": "router",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "rparser",
+      "kind": "ai.parser",
+      "label": "Routing Schema",
+      "parent": "router",
+      "port": "ai_outputParser"
+    },
+    {
+      "key": "switch",
+      "kind": "flow.switch",
+      "label": "Best Tool for the Job",
+      "section": "route"
+    },
+    {
+      "key": "writing",
+      "kind": "ai.llm",
+      "label": "Long-Form Writing",
+      "section": "execute"
+    },
+    {
+      "key": "wmodel",
+      "kind": "ai.model",
+      "label": "Claude Opus",
+      "app": "anthropic",
+      "parent": "writing",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "extract",
+      "kind": "ai.llm",
+      "label": "Structured Extraction",
+      "section": "execute"
+    },
+    {
+      "key": "emodel",
+      "kind": "ai.model",
+      "label": "GPT-4.1",
+      "app": "openai",
+      "parent": "extract",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "research",
+      "kind": "net.http",
+      "label": "Live Research · Perplexity",
+      "section": "execute"
+    },
+    {
+      "key": "qa",
+      "kind": "ai.llm",
+      "label": "Score Against SOP Rubric",
+      "section": "qa"
+    },
+    {
+      "key": "qmodel",
+      "kind": "ai.model",
+      "label": "Claude — Reviewer",
+      "app": "anthropic",
+      "parent": "qa",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "Meets Standard?",
+      "section": "qa"
+    },
+    {
+      "key": "deliver",
+      "kind": "app.action",
+      "label": "Deliver to Requester",
+      "app": "slack",
+      "op": "post",
+      "section": "deliver"
+    },
+    {
+      "key": "review",
+      "kind": "app.action",
+      "label": "Route to Human Review",
+      "app": "slack",
+      "op": "post",
+      "section": "deliver"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "Log Tool, Cost & Time Saved",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "deliver"
+    }
+  ],
+  "edges": [
+    {
+      "from": "form",
+      "to": "norm"
+    },
+    {
+      "from": "norm",
+      "to": "router"
+    },
+    {
+      "from": "router",
+      "to": "switch"
+    },
+    {
+      "from": "switch",
+      "to": "writing",
+      "branch": "writing"
+    },
+    {
+      "from": "switch",
+      "to": "extract",
+      "branch": "extraction"
+    },
+    {
+      "from": "switch",
+      "to": "research",
+      "branch": "research"
+    },
+    {
+      "from": "writing",
+      "to": "qa"
+    },
+    {
+      "from": "extract",
+      "to": "qa"
+    },
+    {
+      "from": "research",
+      "to": "qa"
+    },
+    {
+      "from": "qa",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "deliver",
+      "branch": "true"
+    },
+    {
+      "from": "gate",
+      "to": "review",
+      "branch": "false"
+    },
+    {
+      "from": "deliver",
+      "to": "log"
+    },
+    {
+      "from": "review",
+      "to": "log"
+    }
+  ],
+  "input_sample": {
+    "submitted_at": "2026-07-31T10:14:22Z",
+    "submitted_by": "renee.박@agency.com",
+    "team": "RevOps",
+    "task_type": "(unclassified — the workflow decides)",
+    "request": "Take the Q3 pipeline review call transcript and turn it into a client-ready summary with the three risks called out and a recommended next step for each.",
+    "attachments": [
+      "q3-pipeline-review-transcript.txt"
+    ],
+    "client": "Halvorsen Group",
+    "due": "2026-07-31T17:00:00Z",
+    "current_manual_time_minutes": 45
+  },
+  "output_sample": {
+    "run_id": "AIOS-2026-0731-0188",
+    "submitted_by": "renee.박@agency.com",
+    "classified_as": "long_form_writing",
+    "routing_rationale": "Synthesis and client-facing tone over a long transcript — favors Claude for sustained voice and instruction-following across 8k tokens. Not an extraction task despite the structured output, because the judgement about which risks matter is the actual work.",
+    "tool_used": "Claude Opus",
+    "tools_considered": [
+      "Claude Opus",
+      "GPT-4.1",
+      "Perplexity"
+    ],
+    "sop_applied": "SOP-014 · Client-Ready Call Summary",
+    "qa_score": 9.1,
+    "qa_rubric": [
+      {
+        "criterion": "Client-safe tone, no internal shorthand",
+        "pass": true
+      },
+      {
+        "criterion": "Every risk has a named owner and next step",
+        "pass": true
+      },
+      {
+        "criterion": "No claim not present in the transcript",
+        "pass": true
+      },
+      {
+        "criterion": "Under 400 words",
+        "pass": true
+      }
+    ],
+    "passed_gate": true,
+    "delivered_to": "#revops · renee",
+    "cost_usd": 0.14,
+    "elapsed_seconds": 38,
+    "manual_baseline_minutes": 45,
+    "time_saved_minutes": 44,
+    "running_total_hours_saved_this_month": 212
+  },
+  "archetype": "ai_ops_router",
+  "learned": true,
+  "learned_at": "2026-07-31"
+}

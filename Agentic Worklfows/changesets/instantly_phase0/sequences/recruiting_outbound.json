@@ -1,0 +1,56 @@
+{
+  "sequences": [
+    {
+      "steps": [
+        {
+          "type": "email",
+          "delay": 3,
+          "delay_unit": "days",
+          "pre_delay_unit": "days",
+          "variants": [
+            {
+              "subject": "{{firstName}}, question",
+              "body": "<div>{{personalization}}</div><div><br /></div><div>I build outbound systems for recruiting agencies. I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days.</div><div><br /></div><div>Here's what this would look like for {{companyName}}: I watch for {{specialty}} roles sitting open on job boards, run outreach to the hiring managers under your name, and put the intro calls straight on your calendar.</div><div><br /></div><div>I'm so confident this works that I guarantee at least $40,000 in new placement fees from those calls within 180 days, or I return your money and throw in a $200 gift card.</div><div><br /></div><div>{{RANDOM | Open to a quick 15 minute call? | Worth a quick 15 minute call? | Want to give it 15 minutes?}} Just say yes and I'll {{RANDOM | shoot a calendar invite over | send a calendar invite | get an invite over to you}}.</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it, | Cheers,}}</div><div>Lorenzo</div>"
+            },
+            {
+              "subject": "{{firstName}}, question",
+              "body": "<div>{{personalization}}</div><div><br /></div><div>{{RANDOM | Quick one: | Straight to it: | Here is the short version:}} I build outbound systems for recruiting agencies. I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days.</div><div><br /></div><div>For {{companyName}} it looks like this: every {{specialty}} role that has sat open on a job board for more than three weeks is a hiring manager who is stuck. I reach them under your name and the intro calls land on your calendar. {{RANDOM | You only talk to managers who already have a req. | Your recruiters just take the calls. | No cold calling on your side.}}</div><div><br /></div><div>If those calls don't produce at least $40,000 in new placement fees within 180 days, I return your money and throw in a $200 gift card.</div><div><br /></div><div>{{RANDOM | Want me to send the open reqs I'd start with? | Want to see the first 10 hiring managers I'd go after? | Should I send this week's stuck roles in your specialty?}} Reply yes and I'll get it over.</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it, | Talk soon,}}</div><div>Lorenzo</div>"
+            }
+          ]
+        },
+        {
+          "type": "email",
+          "delay": 4,
+          "delay_unit": "days",
+          "pre_delay_unit": "days",
+          "variants": [
+            {
+              "subject": "",
+              "body": "<div>{{RANDOM | Hey | Hi | Hello}} {{firstName}},</div><div><br /></div><div>{{RANDOM | Checking in, in case the first one got buried. | Bumping this in case it got buried. | Following up in case my last note slipped through.}} Quick version:</div><div>- I want to build an outbound system for {{companyName}}. Goal is to find {{specialty}} roles sitting open on job boards, reach the hiring managers under your name, and put the intro calls on your calendar.</div><div>- I did this for a commercial roofer doing $150M/yr and generated about $180K in new contracts in 90 days.</div><div>- If you don't see $40K in new placement fees within 180 days, I return your money and throw in a $200 gift card.</div><div><br /></div><div>{{RANDOM | Worth a quick 15 minute call? | Open to a quick 15 minute call? | Want to give it 15 minutes?}} Just reply yes and I'll send a calendar invite.</div><div><br /></div><div>{{RANDOM | Thanks for the time, | Appreciate the time, | Thanks,}}</div><div>Lorenzo</div>"
+            },
+            {
+              "subject": "",
+              "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | One question instead of another pitch. | Rather than pitch you again, one question. | One question, then I will leave it there.}} When a {{specialty}} role sits open for a month in your market, does anyone at {{companyName}} call that hiring manager?</div><div><br /></div><div>For context: I did this for a commercial roofer doing $150M/yr and generated about $180K in new contracts in 90 days.</div><div><br /></div><div>The guarantee does not change either: $40,000 in new placement fees within 180 days, or your money back plus the $200 gift card.</div><div><br /></div><div>{{RANDOM | If the timing is wrong, reply 'not now' and I'll come back later in the year. | If it is not a priority, reply 'not now' and I'll leave it there. | Wrong quarter for this? Reply 'not now' and I'll check back.}}</div><div><br /></div><div>{{RANDOM | Thanks for the time, | Appreciate the time, | Thanks,}}</div><div>Lorenzo</div>"
+            }
+          ]
+        },
+        {
+          "type": "email",
+          "delay": 3,
+          "delay_unit": "days",
+          "pre_delay_unit": "days",
+          "variants": [
+            {
+              "subject": "open reqs",
+              "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | Last one from me on this. | Closing the loop on this. | One more, then I'll leave it alone.}} Right now there are {{specialty}} roles in your market that have been open for a month or more. {{RANDOM | Every one of those is a hiring manager who would take a call from a recruiter this week. | Those managers are the easiest intro calls you will ever book. | Nobody is calling them, which is the whole opportunity.}}</div><div><br /></div><div>I pull those reqs weekly, reach the hiring manager under {{companyName}}'s name, and the intro calls land on your calendar. Guarantee stands: $40,000 in new placement fees within 180 days or your money back plus the gift card.</div><div><br /></div><div>{{RANDOM | Want this week's list of stuck reqs in your specialty? | Reply with your specialty and I'll send the hiring managers I'd go after first. | Want the first ten reqs I'd start with?}}</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div><div><br /></div><div>P.S. An agency I set this up for went from nothing to $10k/mo on it. Same mechanics.</div>"
+            },
+            {
+              "subject": "open reqs",
+              "body": "<div>{{RANDOM | Hey | Hi}} {{firstName}},</div><div><br /></div><div>{{RANDOM | I'll close the file on this one. | Closing the file on this one. | I'll put this down to bad timing and close the file.}} No hard feelings if the timing is off.</div><div><br /></div><div>One thing before I do. Every {{specialty}} req that has been open a month in your market is a hiring manager who is behind, and nobody is calling them.</div><div><br /></div><div>Whenever you want those calls booked, the offer and the guarantee are unchanged.</div><div><br /></div><div>{{RANDOM | If that changes, reply here and I'll pick it straight back up. | If it changes, this thread is the fastest way back to me. | If that changes later, reply here and I'll pick it up.}}</div><div><br /></div><div>{{RANDOM | Thanks, | Appreciate it,}}</div><div>Lorenzo</div><div><br /></div><div>P.S. An agency I set this up for went from nothing to $10k/mo on it. Same mechanics.</div>"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

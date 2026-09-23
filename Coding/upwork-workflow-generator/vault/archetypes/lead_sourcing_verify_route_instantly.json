@@ -1,0 +1,220 @@
+{
+  "title": "Apollo → MillionVerifier → Segment Router → Instantly + HighLevel",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "source",
+      "label": "1 · LEAD SOURCING",
+      "color": 0,
+      "note": "Pulls each Apollo saved search on a schedule and tags every lead with its source segment so audiences never mix."
+    },
+    {
+      "key": "verify",
+      "label": "2 · VERIFY & FILTER",
+      "color": 0,
+      "note": "Every email goes through MillionVerifier. Only clean, deliverable addresses move on — protects sender reputation."
+    },
+    {
+      "key": "route",
+      "label": "3 · DEDUPE & SEGMENT ROUTER",
+      "color": 0,
+      "note": "Checks the master log so nobody gets contacted twice, then routes each lead to its own campaign lane."
+    },
+    {
+      "key": "deliver",
+      "label": "4 · CAMPAIGNS & CRM SYNC",
+      "color": 0,
+      "note": "Leads land in the right Instantly campaign and sync into HighLevel with the segment recorded. Add a new segment by duplicating one lane."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "trig",
+      "kind": "trigger.schedule",
+      "label": "Every Morning — Pull New Leads",
+      "section": "source"
+    },
+    {
+      "key": "apollo",
+      "kind": "app.action",
+      "label": "Apollo: Run Each Saved Search",
+      "app": "apollo",
+      "op": "search",
+      "section": "source"
+    },
+    {
+      "key": "tag",
+      "kind": "data.transform",
+      "label": "Tag Lead With Its Source Segment",
+      "section": "source"
+    },
+    {
+      "key": "mv",
+      "kind": "app.action",
+      "label": "MillionVerifier: Check Deliverability",
+      "app": "millionverifier",
+      "op": "verify_email",
+      "section": "verify"
+    },
+    {
+      "key": "filt",
+      "kind": "data.filter",
+      "label": "Keep Only Valid, Non-Risky Emails",
+      "section": "verify"
+    },
+    {
+      "key": "look",
+      "kind": "app.action",
+      "label": "Look Up Email in Master Contact Log",
+      "app": "google_sheets",
+      "op": "lookup",
+      "section": "route"
+    },
+    {
+      "key": "seen",
+      "kind": "flow.branch",
+      "label": "Already Contacted Before?",
+      "section": "route"
+    },
+    {
+      "key": "skip",
+      "kind": "flow.noop",
+      "label": "Skip — Already in a Campaign",
+      "section": "route"
+    },
+    {
+      "key": "router",
+      "kind": "flow.switch",
+      "label": "Route by Audience Segment",
+      "section": "route"
+    },
+    {
+      "key": "instA",
+      "kind": "app.action",
+      "label": "Add to Instantly — Campaign A",
+      "app": "instantly",
+      "op": "add_lead",
+      "section": "deliver"
+    },
+    {
+      "key": "instB",
+      "kind": "app.action",
+      "label": "Add to Instantly — Campaign B",
+      "app": "instantly",
+      "op": "add_lead",
+      "section": "deliver"
+    },
+    {
+      "key": "flag",
+      "kind": "app.action",
+      "label": "No Segment Match — Flag for Review",
+      "app": "slack",
+      "op": "post_message",
+      "section": "deliver"
+    },
+    {
+      "key": "ghl",
+      "kind": "app.action",
+      "label": "Sync Contact Into HighLevel",
+      "app": "gohighlevel",
+      "op": "create_contact",
+      "section": "deliver"
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "Write to Master Log · Dedupe Source of Truth",
+      "app": "google_sheets",
+      "op": "append",
+      "section": "deliver"
+    }
+  ],
+  "edges": [
+    {
+      "from": "trig",
+      "to": "apollo"
+    },
+    {
+      "from": "apollo",
+      "to": "tag"
+    },
+    {
+      "from": "tag",
+      "to": "mv"
+    },
+    {
+      "from": "mv",
+      "to": "filt"
+    },
+    {
+      "from": "filt",
+      "to": "look"
+    },
+    {
+      "from": "look",
+      "to": "seen"
+    },
+    {
+      "from": "seen",
+      "to": "skip",
+      "branch": "true"
+    },
+    {
+      "from": "seen",
+      "to": "router",
+      "branch": "false"
+    },
+    {
+      "from": "router",
+      "to": "instA",
+      "branch": "Segment A"
+    },
+    {
+      "from": "router",
+      "to": "instB",
+      "branch": "Segment B"
+    },
+    {
+      "from": "router",
+      "to": "flag",
+      "branch": "no match"
+    },
+    {
+      "from": "instA",
+      "to": "ghl"
+    },
+    {
+      "from": "instB",
+      "to": "ghl"
+    },
+    {
+      "from": "ghl",
+      "to": "log"
+    }
+  ],
+  "input_sample": {
+    "first_name": "Dana",
+    "last_name": "Whitfield",
+    "email": "dana@brightpath-consulting.com",
+    "company": "BrightPath Consulting",
+    "title": "Managing Partner",
+    "apollo_saved_search": "Segment A — Consultancies 10-50",
+    "pulled_at": "2026-08-14T07:00:12Z"
+  },
+  "output_sample": {
+    "email": "dana@brightpath-consulting.com",
+    "verification": {
+      "result": "valid",
+      "score": 98,
+      "catch_all": false
+    },
+    "segment": "Segment A — Consultancies 10-50",
+    "instantly_campaign": "A — Consultancies (warm intro angle)",
+    "highlevel_contact_id": "ghl_8f24c1",
+    "duplicate": false,
+    "processed_in": "3.4s"
+  },
+  "archetype": "lead_sourcing_verify_route_instantly",
+  "learned": true,
+  "learned_at": "2026-08-13"
+}

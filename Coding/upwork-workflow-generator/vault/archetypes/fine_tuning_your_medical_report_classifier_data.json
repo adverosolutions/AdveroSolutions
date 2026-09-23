@@ -1,0 +1,205 @@
+{
+  "title": "Fine Tuning Your Medical Report Classifier: Data to Adapter",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "data",
+      "label": "1 - PREPARE THE TRAINING DATA",
+      "color": 0,
+      "note": "Your CSV in, a clean labeled dataset out. Duplicates and unusable rows removed, suspect labels returned to you, then a stratified validation and test split held out before any training so the eval is honest."
+    },
+    {
+      "key": "model",
+      "label": "2 - SELECT THE MODEL AND TRAINING FORMAT",
+      "color": 0,
+      "note": "An existing lightweight open source model, not trained from scratch. Classifier head on a small encoder if you only need the label, LoRA on a small instruct model if you also want a written reason. Rows converted to that model's fine tuning format."
+    },
+    {
+      "key": "train",
+      "label": "3 - BASELINE, FINE TUNE, ITERATE",
+      "color": 0,
+      "note": "The untouched model is scored on the held out set first, so the before number is measured. Then a LoRA adapter is trained for a few epochs on your hardware or cloud, evaluated per category, and the loop repeats until it beats the baseline where it matters."
+    },
+    {
+      "key": "deliver",
+      "label": "4 - DELIVERABLES YOU CAN REUSE",
+      "color": 0,
+      "note": "Adapter files, an inference script for new reports, the full training and inference code with setup instructions, and a short summary of dataset, model, approach, results, and limitations."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "clean",
+      "kind": "data.transform",
+      "label": "1 - Clean the CSV: Dedupe, Normalize Formatting, Drop Unusable Rows",
+      "section": "data"
+    },
+    {
+      "key": "labels",
+      "kind": "flow.branch",
+      "label": "2 - Any Labels Look Inconsistent or Mislabeled?",
+      "section": "data"
+    },
+    {
+      "key": "confirm",
+      "kind": "data.transform",
+      "label": "2a - Return Suspect Rows to You to Confirm or Relabel",
+      "section": "data"
+    },
+    {
+      "key": "split",
+      "kind": "data.transform",
+      "label": "3 - Hold Out a Stratified Validation and Test Set",
+      "section": "data"
+    },
+    {
+      "key": "select",
+      "kind": "data.transform",
+      "label": "4 - Select a Lightweight Open Source Model for Your Categories",
+      "section": "model"
+    },
+    {
+      "key": "format",
+      "kind": "data.transform",
+      "label": "5 - Convert Rows to the Model's Fine Tuning Format",
+      "section": "model"
+    },
+    {
+      "key": "baseline",
+      "kind": "data.transform",
+      "label": "6 - Score the Base Model on the Test Set · Before Number",
+      "section": "train"
+    },
+    {
+      "key": "tune",
+      "kind": "data.transform",
+      "label": "7 - Train a LoRA Adapter, a Few Epochs, on Your Hardware or Cloud",
+      "section": "train"
+    },
+    {
+      "key": "eval",
+      "kind": "data.transform",
+      "label": "8 - Evaluate: Accuracy, per Category Precision and Recall, Confusion Matrix",
+      "section": "train"
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "9 - Beats Baseline, Including Recall on Urgent?",
+      "section": "train"
+    },
+    {
+      "key": "iterate",
+      "kind": "data.transform",
+      "label": "9a - Iterate: Fix Labels, Reweight Classes, Adjust Epochs, Retrain",
+      "section": "train"
+    },
+    {
+      "key": "save",
+      "kind": "data.transform",
+      "label": "10 - Save the Adapter Files and Inference Script",
+      "section": "deliver"
+    },
+    {
+      "key": "handoff",
+      "kind": "data.aggregate",
+      "label": "11 - Reproducible Code, Setup Instructions, Results Summary and Limitations",
+      "section": "deliver"
+    }
+  ],
+  "edges": [
+    {
+      "from": "clean",
+      "to": "labels"
+    },
+    {
+      "from": "labels",
+      "to": "confirm",
+      "branch": "true"
+    },
+    {
+      "from": "confirm",
+      "to": "split"
+    },
+    {
+      "from": "labels",
+      "to": "split",
+      "branch": "false"
+    },
+    {
+      "from": "split",
+      "to": "select"
+    },
+    {
+      "from": "select",
+      "to": "format"
+    },
+    {
+      "from": "format",
+      "to": "baseline"
+    },
+    {
+      "from": "baseline",
+      "to": "tune"
+    },
+    {
+      "from": "tune",
+      "to": "eval"
+    },
+    {
+      "from": "eval",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "iterate",
+      "branch": "false"
+    },
+    {
+      "from": "iterate",
+      "to": "tune",
+      "loop": true
+    },
+    {
+      "from": "gate",
+      "to": "save",
+      "branch": "true"
+    },
+    {
+      "from": "save",
+      "to": "handoff"
+    }
+  ],
+  "input_sample": {
+    "row_id": 417,
+    "report_text": "CT chest without contrast. Lungs clear, no focal consolidation. Small 4 mm nodule right lower lobe, unchanged from prior study. No pleural effusion. Recommend interval imaging in 12 months.",
+    "category": "Follow-up needed",
+    "source_file": "reports_export_2026.csv"
+  },
+  "output_sample": {
+    "test_set_size": 120,
+    "categories": [
+      "Normal",
+      "Follow-up needed",
+      "Urgent",
+      "Incomplete"
+    ],
+    "baseline_accuracy": 0.68,
+    "fine_tuned_accuracy": 0.91,
+    "urgent_recall_baseline": 0.55,
+    "urgent_recall_fine_tuned": 0.94,
+    "worst_confusion": "Incomplete misread as Normal, 4 of 120",
+    "training_time": "18 minutes on one T4 GPU",
+    "gpu_cost_usd": 0.0,
+    "api_cost_usd": 0.0,
+    "deliverables": [
+      "adapter files",
+      "classify.py",
+      "train.py",
+      "README.md"
+    ]
+  },
+  "archetype": "fine_tuning_your_medical_report_classifier_data",
+  "learned": true,
+  "learned_at": "2026-09-09"
+}
