@@ -151,11 +151,15 @@ def test_case_display_name_fallback_token_with_braille_blank(env):
 
 
 def test_case_text_after_the_booking_link(env):
+    # first replies carry no booking link (2026-09-23): text or a link glued
+    # after the slot question is refused the same way
     g, ev, cls = _first_reply(env)
-    body = g.body_text.replace(LINK, LINK + " or text 555 0100 and we skip the call entirely", 1)
+    ask = "work for a 15-minute call?"
+    assert ask in g.body_text and LINK not in g.body_text
+    body = g.body_text.replace(ask, ask + " or text 555 0100 and we skip the call entirely", 1)
     assert body != g.body_text
     assert _refused(_fr_verdict(g.model_copy(update={"body_text": body}), ev, cls))
-    glued = g.body_text.replace(LINK, LINK + "?ref=evil.example", 1)
+    glued = g.body_text.replace(ask, ask + " " + LINK + "?ref=evil.example", 1)
     assert _refused(_fr_verdict(g.model_copy(update={"body_text": glued}), ev, cls))
 
 
@@ -637,9 +641,12 @@ def test_r3_a_bad_booking_link_in_a_first_reply_is_refused_bound_or_not(env, lin
     """The first-reply copy gate refuses a body without the configured link
     first; the conformance check refuses it on its own too."""
     g, ev, cls = _first_reply(env)
-    assert LINK in g.body_text
-    assert gate.conforms(g.template_id, g.body_text, g.subject, bindings={"booking_url": LINK})
-    bad = g.body_text.replace(LINK, link)
+    # first replies carry no booking link (2026-09-23); one added is refused
+    assert LINK not in g.body_text
+    assert gate.conforms(g.template_id, g.body_text, g.subject, bindings=None)
+    ask = "work for a 15-minute call?"
+    bad = g.body_text.replace(ask, ask + " Or grab a time here: " + link, 1)
+    assert bad != g.body_text
     for bindings in (None, {"booking_url": link}):
         assert not _fr_verdict(g.model_copy(update={"body_text": bad}), ev, cls, bindings=bindings).allowed
         assert gate.conforms(g.template_id, bad, g.subject, bindings=bindings) is False, (link, bindings)

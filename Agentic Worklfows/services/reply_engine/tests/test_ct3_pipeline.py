@@ -208,7 +208,7 @@ def test_approved_first_reply_is_allowed_and_stamped(env):
     assert d.template_id == PRICING_ID and d.template_hash == gate.current_hash(PRICING_ID)
     # the bindings pin what was rendered
     b = info["bindings"]
-    assert b["first_name"] == "Sopio" and b["slots"] in d.body_text and b["booking_url"] in d.body_text
+    assert b["first_name"] == "Sopio" and b["slots"] in d.body_text and "booking_url" not in b  # no link in first replies
 
 
 def test_unapproved_first_reply_is_a_card(env):
