@@ -51,20 +51,24 @@ def _build(ev, cls, busy=None):
 
 # ------------------------------------------------ items 2 and 4: pricing
 def test_bookkeeping_pricing_has_no_list_size_discount():
-    """offers.md gives the smaller-cut-on-a-bigger-list term to cleaning only."""
+    """No numbers over email (2026-09-24): the price answer is the "asked
+    something else" answer, so no term, cut or figure is stated at all."""
     assert D.PRICING["bookkeeping_reactivation"] == (
-        "Nothing up front. I take 20 to 30 percent of first-year fees from the clients who come back, "
-        "and $0 if nothing closes.")
+        "Good question. The short version is that I build sequences to lost inquiries and former clients, timed to "
+        "tax season, quarterly estimates and year-end cleanup, and the ones ready to come back get booked onto your "
+        "calendar. The rest is easier to cover on a quick call.")
 
 
 def test_recruiting_pricing_states_the_fee_once():
-    assert D.PRICING["recruiting_reactivation"] == (
-        "Nothing up front. I take 20 to 30 percent of the first placement fee on the accounts that come back, "
-        "and $0 if nothing closes.")
+    """The fee is stated nowhere now (2026-09-24): it is covered on the call."""
+    assert "fee" not in D.PRICING["recruiting_reactivation"]
+    assert D.PRICING["recruiting_reactivation"].endswith("The rest is easier to cover on a quick call.")
 
 
 def test_only_cleaning_reactivation_quotes_the_list_size_term():
-    assert [k for k, v in D.PRICING.items() if "smaller cut" in v] == ["cleaning_reactivation"]
+    """No price answer quotes the list size term any more; offers.md keeps it
+    for the call."""
+    assert [k for k, v in D.PRICING.items() if "smaller cut" in v] == []
     assert "smaller cut on bigger lists" in settings.OFFERS_MD
 
 

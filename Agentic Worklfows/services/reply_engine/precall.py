@@ -161,7 +161,9 @@ def offer_block(campaign_key: str) -> Dict[str, Any]:
     return {
         "key": key,
         "mechanism": draft_mod.MECHANISM.get(key, ""),
-        "pricing_answer": draft_mod.PRICING.get(key, ""),
+        # the call's price answer (and the proposal's), never an email's: the
+        # first reply's price answer states no number (2026-09-24)
+        "pricing_answer": draft_mod.CALL_PRICING.get(key, ""),
         "minimum": draft_mod.MINIMUM.get(key, ""),
         # The three trigger rows carry the guarantee AND the retainer range in
         # one cell, and the retainer is TO CONFIRM. Printing the cell verbatim
