@@ -39,9 +39,9 @@ What is not covered: a first reply after the LLM polishes it and any body you ed
 
 ## Approving, step by step
 
-Approvals come only from your own terminal. This is a permanent rule: a Claude session must never run `--approve`, `--approve-all-shown` or `--revoke`, and must never write `config/approved_templates.json` in any other way. The command refuses without an interactive terminal, but that check is not bulletproof (a pseudo-terminal wrapper gets past it).
+Approvals come from your own terminal, with one exception. This is a permanent rule: a Claude session must never run `--approve`, `--approve-all-shown` or `--revoke`, and must never write `config/approved_templates.json` in any other way, except this one (Lorenzo's rule of 2026-09-23): after Lorenzo types "done" in chat about the one Google Doc, the section 4 chat may run `tools/template_doc/record_doc_approvals.py --write` on that doc's export, with `--doc-id` of that doc and his exact words as `--done-quote`, as described in "From the Google Doc" below. That tool only adds or refreshes approvals for templates the doc showed unchanged; it never revokes and never touches the kill switch. Nothing else a Claude session does may write the registry. The terminal command refuses without an interactive terminal, but that check is not bulletproof (a pseudo-terminal wrapper gets past it).
 
-The real protection is the registry file itself. It is committed to git, and you review it with `git diff -- config/approved_templates.json` (run from the `Agentic Worklfows` folder) before every commit. `git diff` only shows changes to a file git already tracks, so the empty registry has to be committed first. Treat any approval record you did not make yourself as an incident. The live-write guard (`.claude/hooks/guard_live_writes.py`, rule d) also blocks the approve and revoke commands and writes to the registry, but it is only a tripwire. You still have to apply it from your own terminal (`changesets/claude_guard/README.md`); until then it does not run in sessions started from `Coding/` or any other folder. Even applied, it reads command text, so it cannot catch an arbitrary script, code decoded at run time, or a git command with no path (`git stash`, `git reset`).
+The real protection is the registry file itself. It is committed to git, and you review it with `git diff -- config/approved_templates.json` (run from the `Agentic Worklfows` folder) before every commit. `git diff` only shows changes to a file git already tracks, so the empty registry has to be committed first. Treat any approval record you did not make yourself as an incident. The live-write guard (`.claude/hooks/guard_live_writes.py`, rule d) also blocks the approve and revoke commands and commands that name `config/approved_templates.json`, but it is only a tripwire. It does not block `tools/template_doc/record_doc_approvals.py --write`: it denies only when the command text names the registry file or the approve and revoke modes, and the recorder writes the registry from inside Python. You still have to apply it from your own terminal (`changesets/claude_guard/README.md`); until then it does not run in sessions started from `Coding/` or any other folder. Even applied, it reads command text, so it cannot catch an arbitrary script, code decoded at run time, or a git command with no path (`git stash`, `git reset`).
 
 1. Export the review document:
 
@@ -67,6 +67,66 @@ The real protection is the registry file itself. It is committed to git, and you
 5. To approve a few ids instead of the whole file: `python3 jobs/approve_templates.py --approve cadence.d1 cadence.d3`. First read each one with `--show <id>`.
 
 `--list` prints every id with its kind and status. Every approve and revoke run writes a Job_Log row (job `approve_templates`) with the ids and hashes, never the text.
+
+## From the Google Doc ("done")
+
+Lorenzo's rule of 2026-09-23: when he types "done" in chat about the one Google Doc, everything in the doc counts as approved. That word replaces the terminal approve step for the doc. It is the one case where a Claude session writes `config/approved_templates.json` (see "Approving, step by step"): only with `tools/template_doc/record_doc_approvals.py`, only after his "done" in chat, only for the doc he said it about, and only with his exact words passed as `--done-quote` (they must contain "done"). "Go live" is a separate yes and is not part of this.
+
+The principle: a template is approved only if Lorenzo could see every part of its hashed text in the doc he said "done" on, he changed and commented on none of it (anywhere in the doc, not only in the email bodies), and the code still renders exactly that.
+
+### Builds, uploads and the fingerprint
+
+`tools/template_doc/build.py` builds the doc from `jobs/approve_templates.py --export` output. Every build has a fingerprint (a hash of every block's tag, text and template hash, plus every line outside the block bodies). It is printed in the doc as the line `Doc build: <fingerprint> (tag: X-BUILD)` at the end of the top section, and it names the build folder `tools/template_doc/builds/<fingerprint>/` (html and manifest). `tools/template_doc/uploads.json` records which Google Doc holds which build. The top-level `manifest.json` and `advero_all_emails.html` are the build of the doc currently in Drive. Today that is the doc `1jTg1ccYJT8CugDdCf3BQHqzgHUKC4oFG9rgolUILO4U`, uploaded 2026-09-23T17:59Z, which predates fingerprints: it can be diffed and dry-run, but never approved from. To approve from a doc, upload a fingerprinted build first (`tools/template_doc/README.txt`, "Upload and promote").
+
+The build shows every part of every template's hashed text: the main text, each variant (as its changed lines, as a note that quotes the lines it drops, or skipped only when it is the main text with example times in exactly the formatters' shapes, or with the missing-data fallbacks the top section describes), the fallback subjects (a note), and the full time formats block (`formats.1`, one tagged block per distinct text) that every template with a time depends on.
+
+### When and how
+
+The section 4 chat, right after Lorenzo says "done" about the doc. The chat runs in its worktree, so point the Job_Log at the main folder's log (the job log uses `JOB_LOG_PATH`) or the row stays in the worktree's `.tmp/`:
+
+1. Read the doc's open comments and suggestions: Drive `read_file_content` with `includeComments: true`. Suggestions are not in a text/plain export. If any comment or suggestion is open, stop and ask Lorenzo; do not run `--write`.
+2. Export the doc as plain text (Drive `download_file_content`, `exportMimeType=text/plain`; see `tools/template_doc/README.txt`) and save it as `tools/template_doc/exports/<UTC time>.txt`.
+3. Dry run (writes nothing, prints the plan; exits 1 when `--write` would refuse the whole doc):
+
+   ```bash
+   cd "<worktree>/Agentic Worklfows"
+   export JOB_LOG_PATH="/Users/lorenzovillarreal/Desktop/AdveroSolutions/Agentic Worklfows/.tmp/job_log.csv"
+   python3 tools/template_doc/record_doc_approvals.py tools/template_doc/exports/<UTC time>.txt
+   ```
+
+4. Record the approvals, with the doc's id and his exact words:
+
+   ```bash
+   python3 tools/template_doc/record_doc_approvals.py tools/template_doc/exports/<UTC time>.txt --write --doc-id <doc id> --done-quote "<his exact words>"
+   ```
+
+5. The tool ends by printing the command `git diff -- config/approved_templates.json`. Run it, show Lorenzo the output, and commit, quoting his words in the commit message. `approved_by` on every new record carries his quote and the short build fingerprint, so the diff shows which "done" it came from.
+
+### How a template qualifies
+
+The export's `X-BUILD` line names its build; `builds/<fingerprint>/manifest.json` must exist and hash to that fingerprint. With `--write`, `uploads.json` must map `--doc-id` to that fingerprint. The export is compared with that build, and the build with a fresh build of the current code (made in a temp folder by `tools/template_doc/fresh_manifest.py`). A template is approved only when all of these hold:
+
+- every block of it (main text, subject, every variant) and its time formats block are in the doc unchanged; differences Google makes on its own (curly quotes, non-breaking spaces, blank lines, runs of spaces) do not count;
+- its heading, variant labels and notes (fallback subjects, dropped lines) are unchanged, and no line changed or was typed outside the emails in its section;
+- no new block tagged for it was added (a tag that starts with its id and `/` or `.`);
+- no copy of any of its words was edited elsewhere in the doc: the doc says "changing it once is enough; it changes everywhere", so an edit refuses every template that carries the same block text or any line the edit changed or removed;
+- for day 2, 4 and 5 of the cadence, the day and the lines spliced into it are all unrefused;
+- it is not a first reply the doc says "starts as an approval card" (`other` and `referral` question types, `tools/template_doc/doc_rules.py`);
+- its hash in the doc's build equals its hash now, and the doc's build shows it exactly as a build of the current code would; the catalogue hash is checked again just before writing.
+
+The hash recorded is the current catalogue hash, the same value `--approve-all-shown` would record.
+
+### What gets refused, and why
+
+- An edited or deleted block, heading, label or note: Lorenzo wants words the code does not send yet. The owning section changes the code first (`tools/template_doc/route_doc.py` says which section and file), a new doc is built and uploaded, and the template is approved on the next "done".
+- The same words or a changed line in other templates (the repeat rule), and cadence days with their spliced lines: refused together with the edited one.
+- `other` and `referral` first replies: never approved from the doc.
+- Code changed since the doc was built, or during the run: build and upload a new doc.
+- The whole doc, with nothing written: a doc without a build fingerprint (`this doc predates build fingerprints; rebuild and re-upload`), a `--doc-id` that `uploads.json` does not map to the export's build, duplicate tags, copies of one sentence changed differently, a change in the top section or outside the engine sections (Instantly headings and notes, the closing section, the build line), a tag that matches no email, a doc with no tags, or a fresh build that fails.
+
+A refused template keeps whatever approval it had: the plan says it "keeps sending its previously approved text" when that approval still matches the code. The tool only adds or refreshes approvals, never revokes, and never touches the kill switch (`auto_send`). It writes through the registry's own `plan_approve` (with the fresh hashes as `expected`) and `apply_approve`, so the records have the same format as the terminal path's. One Job_Log row per `--write` run (job `approve_templates`, action `approve_from_doc`): the doc id, the build fingerprint, the sha256 of the build's manifest and of the export, the HEAD commit, the approvals file path, the quote, the ids and hashes approved and the ids refused with their reasons. Instantly blocks are not approvals: the tool counts the unchanged and changed ones, and changed ones go through `changesets/instantly_copy/`.
+
+The terminal path above (`--export`, `--approve-all-shown`, `--approve`, `--revoke`, typed `APPROVE`) is unchanged and still the only way to revoke.
 
 ## Statuses
 
