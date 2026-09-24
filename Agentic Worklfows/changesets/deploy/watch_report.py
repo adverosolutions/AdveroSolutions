@@ -101,6 +101,9 @@ HEALTHY_STATUSES = frozenset([
     # cadence: a touch held because its template is not approved (counted in
     # the FYI), and a ladder resumed after such a stop.
     "template_held", "template_hold_resumed",
+    # cadence (section 1, P3b): the tick found Lorenzo's own first reply in the
+    # Instantly thread and recorded it as day 0 (cadence.detect_manual_first_reply).
+    "first_reply_from_thread",
 ])
 # Statuses the deployed code is known to write that FAIL the watch. Listed so
 # the classification is complete and reviewable; failing does not depend on
