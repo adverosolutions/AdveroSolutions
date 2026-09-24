@@ -53,8 +53,8 @@ Ids
 ---
     first_reply.<offer>.<branch>.full          composed first reply (what Lorenzo approves)
     first_reply.<offer>.greeting | .answer.<branch> | .slots   reference pieces (not approved alone)
-    cadence.<d1..d30, d6_noinvite>             prompts/cadence_*.md plus build_touch variants
-    cadence.<fragment>...                      text build_touch splices into d2/d4/d5
+    cadence.<e1..e10>                          prompts/cadence_e*.md plus build_touch variants
+    cadence.<fragment>...                      text build_touch splices into e2/e4/e5/e6/e9
     booking.<...>                              confirmation, counter-proposals, already-booked
     show_rate.<template_key>[.<niche|offer|niche_offer>]
     no_show.<template_key>[...]
@@ -109,7 +109,7 @@ KIND_ORDER = (
 KIND_TITLES = {
     "first_reply": "First reply to an interested lead (full body per offer and question type)",
     "cadence": "Daily follow-up cadence (prompts/cadence_*.md)",
-    "cadence_fragment": "Cadence: lines spliced into day 2, day 4 and day 5",
+    "cadence_fragment": "Cadence: lines spliced into E2, E4, E5, E6 and E9",
     "booking": "Booking: confirmation, counter-proposals, already booked",
     "show_rate": "Show-rate: confirmation, pre-read and reminders",
     "no_show": "No-show recovery",
@@ -183,8 +183,10 @@ VARIABLE_NOTES = {
     "referral_first_name": "first word of referral_name",
     "specialty": "recruiting specialty from the lead record",
     "research_line": "one LLM-written line about the business (not covered by this approval)",
-    "case_study": "the offer type's proof line (cadence.d4.case_study.*)",
-    "free_work": "the niche and offer sample-of-work line (cadence.d5.free_work.*)",
+    "offer_proof": "the offer type's proof (cadence.e4.offer_proof.*)",
+    "offer_line": "what the call would show, by offer (cadence.e5.offer_line.*)",
+    "preview": "the call preview for the campaign (cadence.e6.preview.*)",
+    "observation": "the observation for the campaign (cadence.e9.observation.*)",
     "loom_url": "Loom walkthrough URL",
     "original_subject": "the thread's own subject, reply prefixes stripped",
 }
@@ -428,13 +430,13 @@ def _first_reply_pieces() -> List[Dict[str, Any]]:
 
 # -------------------------------------------------------------- cadence
 def cadence_template_names() -> List[str]:
-    """Every prompts/cadence_d*.md, as the name cadence.render() takes ('d1', 'd6_noinvite')."""
+    """Every prompts/cadence_e*.md, as the name cadence.render() takes ('e1' .. 'e10')."""
     from services.reply_engine import cadence
 
-    names = [p.stem[len("cadence_"):] for p in Path(cadence.PROMPTS_DIR).glob("cadence_d*.md")]
+    names = [p.stem[len("cadence_"):] for p in Path(cadence.PROMPTS_DIR).glob("cadence_e*.md")]
 
     def order(name: str) -> Tuple[int, str]:
-        m = re.match(r"d(\d+)(.*)$", name)
+        m = re.match(r"e(\d+)(.*)$", name)
         return (int(m.group(1)), m.group(2)) if m else (10 ** 6, name)
     return sorted(names, key=order)
 
@@ -443,8 +445,12 @@ class _State(types.SimpleNamespace):
     pass
 
 
-def _cadence_state(missing: bool = False, subject: Optional[str] = S_SUBJECT) -> Any:
-    return _State(first_name=None if missing else S_FIRST, company=None if missing else S_COMPANY,
+def _cadence_state(missing: bool = False, subject: Optional[str] = S_SUBJECT, keep_company: bool = False) -> Any:
+    """The dummy lead. ``missing`` drops the first name and (unless
+    ``keep_company``) the company: a cadence email that names the company is
+    held without one, so its missing_lead_data variant keeps it."""
+    return _State(first_name=None if missing else S_FIRST,
+                  company=None if (missing and not keep_company) else S_COMPANY,
                   niche="cleaning", offer="reactivation", campaign_key="cleaning_reactivation", campaign_id=None,
                   phone=None, specialty=None, website=None, last_subject=subject, subject=None, thread_subject=None,
                   lead_email=DUMMY_LEAD_EMAIL, ghl_contact_id=None, cadence={})
@@ -478,13 +484,18 @@ def _cadence_entries() -> List[Dict[str, Any]]:
 
     out = []  # type: List[Dict[str, Any]]
     notes = {
-        "d2": "{research_line} is cadence.d2.research_fallback.<offer>, the fixed fallback line, which is what the "
-              "engine uses by default (CT3). A line written per lead by the LLM (cadence.d2.research_line) is not "
-              "covered by any approval, so a day 2 touch carrying one is always held, never sent.",
-        "d4": "{case_study} is cadence.d4.case_study.<offer>; the variants show the reactivation line in place.",
-        "d5": "{free_work} is cadence.d5.free_work.<niche>_<offer>; the variants show the cleaning line in place.",
-        "d6": "Needs Lorenzo's one-tap OK on the calendar hold today (Touch.requires_approval).",
-        "d7": "No slots.",
+        "e2": "No times on purpose. {research_line} is cadence.e2.research_fallback.<offer>, the fixed fallback "
+              "line, which is what the engine uses by default (CT3). A line written per lead by the LLM "
+              "(cadence.e2.research_line) is not covered by any approval, so an E2 carrying one is always held, "
+              "never sent. Without a company on file the email is held.",
+        "e4": "{offer_proof} is cadence.e4.offer_proof.<offer>; the variants show the reactivation line in place. "
+              "Without a company on file the email is held.",
+        "e5": "{offer_line} is cadence.e5.offer_line.<reactivation|reactivation_bookkeeping|outbound>; the "
+              "variants show the cleaning reactivation line in place. Without a company on file the email is held.",
+        "e6": "{preview} is cadence.e6.preview.<niche>_<offer>; the variants show the cleaning reactivation line "
+              "in place.",
+        "e9": "{observation} is cadence.e9.observation.<niche>_<offer>; the variants show the cleaning "
+              "reactivation line in place.",
     }
     two = [_ct(2030, 1, 8, 13, 47), _ct(2030, 1, 10, 16, 13)]
     for name in cadence_template_names():
@@ -493,21 +504,17 @@ def _cadence_entries() -> List[Dict[str, Any]]:
 
         def build(tid=tid, name=name, path=path):
             text = cadence._load_template(name)
-            m = re.match(r"d(\d+)(_noinvite)?$", name)
+            m = re.match(r"e(\d+)$", name)
             variants = []  # type: List[Tuple[str, str]]
             if m:
                 day = int(m.group(1))
-                invite = not m.group(2)
+                offered = [] if day in cadence.SLOTLESS_DAYS else two
 
                 def touch(state, slots_):
-                    return cadence.build_touch(state, day, [s.isoformat() for s in slots_], research_line=S_RESEARCH,
-                                               invite_created=invite)
-                if day == 6 and invite:
-                    variants.append(("missing_lead_data", _touch_text(touch(_cadence_state(missing=True), two), two)))
-                    variants.append(("one_slot", _touch_text(touch(_cadence_state(), two[:1]), two[:1])))
-                else:
-                    variants.append(("missing_lead_data", _touch_text(touch(_cadence_state(missing=True), two), two)))
-                    variants.append(("no_slots", _touch_text(touch(_cadence_state(), []), [])))
+                    return cadence.build_touch(state, day, [s.isoformat() for s in slots_], research_line=S_RESEARCH)
+                variants.append(("missing_lead_data", _touch_text(touch(_cadence_state(missing=True,
+                                                                                        keep_company=True), offered),
+                                                                  offered)))
             variants.append(("subject", _cadence_subject_variant()))
             return [_entry(tid, "cadence", text, path, notes=notes.get(name, ""), variants=variants)]
         out.extend(_guard(tid, "cadence", path, build))
@@ -519,38 +526,44 @@ def _cadence_fragments() -> List[Dict[str, Any]]:
 
     kind = "cadence_fragment"
     out = []  # type: List[Dict[str, Any]]
-    for offer in ("reactivation", "outbound"):
-        tid = "cadence.d4.case_study.%s" % offer
-        out.extend(_guard(tid, kind, "services/reply_engine/cadence.py:case_study_line", lambda tid=tid, offer=offer: [
-            _entry(tid, kind, cadence.case_study_line(offer),
-                   "services/reply_engine/cadence.py:case_study_line (config/offers.md proof table)")]))
-    for niche in ("cleaning", "bookkeeping", "recruiting", "generic"):
-        for offer in ("reactivation", "outbound"):
-            variants = [("", None)]
-            if niche == "recruiting" and offer == "outbound":
-                variants.append(("_specialty", S_SPECIALTY))
-            for suffix, specialty in variants:
-                tid = "cadence.d5.free_work.%s_%s%s" % (niche, offer, suffix)
-
-                def build(tid=tid, niche=niche, offer=offer, specialty=specialty):
-                    text = cadence.free_work_line(niche, S_COMPANY, specialty, offer=offer)
-                    return [_entry(tid, kind, _swap(text, _base_mapping()),
-                                   "services/reply_engine/cadence.py:free_work_line",
-                                   notes="'generic' is any niche the function does not name. Without a company "
-                                         "the cadence passes its own fallback (see the cadence variants).")]
-                out.extend(_guard(tid, kind, "services/reply_engine/cadence.py:free_work_line", build))
-    for offer in ("reactivation", "outbound"):
-        tid = "cadence.d2.research_fallback.%s" % offer
+    for offer in cadence.OFFERS:
+        tid = "cadence.e2.research_fallback.%s" % offer
         out.extend(_guard(tid, kind, "services/reply_engine/cadence.py:fallback_research_line",
                           lambda tid=tid, offer=offer: [
                               _entry(tid, kind, _swap(cadence.fallback_research_line(S_COMPANY, offer), _base_mapping()),
                                      "services/reply_engine/cadence.py:fallback_research_line",
-                                     notes="Used when the research model returns nothing usable.")]))
+                                     notes="E2's line by default, and whenever the research model returns nothing "
+                                           "usable.")]))
     out.append(_unextractable(
-        "cadence.d2.research_line", kind, "services/reply_engine/cadence.py:generate_research_line",
+        "cadence.e2.research_line", kind, "services/reply_engine/cadence.py:generate_research_line",
         "Written per lead by the LLM (shared.llm role 'research') from the prompt in prompts/cadence_research.md, "
-        "so there is no fixed text to hash. CT3: day 2 uses the fallback line by default; a touch carrying an "
+        "so there is no fixed text to hash. CT3: E2 uses the fallback line by default; a touch carrying an "
         "LLM line is always held, never sent."))
+    for offer in cadence.OFFERS:
+        tid = "cadence.e4.offer_proof.%s" % offer
+        out.extend(_guard(tid, kind, "services/reply_engine/cadence.py:offer_proof_line",
+                          lambda tid=tid, offer=offer: [
+                              _entry(tid, kind, cadence.offer_proof_line(offer),
+                                     "services/reply_engine/cadence.py:OFFER_PROOF",
+                                     notes="One proof per offer type, never mixed (config/offers.md).")]))
+    for key in cadence.OFFER_LINES:
+        tid = "cadence.e5.offer_line.%s" % key
+        niche, offer = {"reactivation": ("cleaning", "reactivation"),
+                        "reactivation_bookkeeping": ("bookkeeping", "reactivation"),
+                        "outbound": ("cleaning", "outbound")}[key]
+        out.extend(_guard(tid, kind, "services/reply_engine/cadence.py:offer_line_text",
+                          lambda tid=tid, niche=niche, offer=offer: [
+                              _entry(tid, kind, _swap(cadence.offer_line_text(niche, offer, S_COMPANY),
+                                                      _base_mapping()),
+                                     "services/reply_engine/cadence.py:OFFER_LINES",
+                                     notes="'reactivation' is cleaning and recruiting; 'outbound' is every niche.")]))
+    for label, fn in (("e6.preview", cadence.preview_line), ("e9.observation", cadence.observation_line)):
+        for niche in cadence.NICHES:
+            for offer in cadence.OFFERS:
+                tid = "cadence.%s.%s_%s" % (label, niche, offer)
+                source = "services/reply_engine/cadence.py:%s" % fn.__name__
+                out.extend(_guard(tid, kind, source, lambda tid=tid, fn=fn, niche=niche, offer=offer, source=source: [
+                    _entry(tid, kind, fn(niche, offer), source)]))
     return out
 
 
@@ -985,8 +998,6 @@ EXCLUDED = (
      "why": "a GHL task for Lorenzo; the suggested text inside it is sent by hand from his phone"},
     {"what": "no_show ns_call_task and ns_d1_other_channel_task", "source": "services/reply_engine/no_show.py:render",
      "why": "tasks for Lorenzo with a voicemail script and a suggested text he sends by hand"},
-    {"what": "cadence day 6 channel_note", "source": "services/reply_engine/cadence.py:build_touch",
-     "why": "a manual second-channel suggestion shown to Lorenzo, not sent by the engine"},
     {"what": "booking 'NOT SENT - for Lorenzo' card", "source": "services/reply_engine/booking.py:_unbookable_result",
      "why": "a card for Lorenzo, never prospect-facing"},
     {"what": "GHL appointment title ('Lorenzo <> {company}: 15-min ... plan')",
