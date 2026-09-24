@@ -260,10 +260,12 @@ def test_first_miss_ladder_timing_fresh_slots_and_nurture(tmp_env, shadow_mode):
     assert last_email()["subject"] == "Still want to talk?"
     assert ("Trying once more to get our call back on the calendar. I can do Wed 1:00pm or Thu 2:00pm CT. "
             "Just reply with the one that works.") in last_email()["message"]
-    assert sorted(store.get(ns.OFFERED_SLOTS_KEY)) == PAIRS[3]  # fresh times, the day-2 pair given back
+    # fresh times, and the day-2 pair stays held: N9 never told the lead it was taken
+    assert sorted(store.get(ns.OFFERED_SLOTS_KEY)) == sorted(PAIRS[2] + PAIRS[3])
     assert out["stage_moves"] == [] and out["nurture"] == []
     assert [e["template"] for e in run("ns_d5_yes_no_email")["would_do"]] == ["ns_d5_yes_no_email"]
     assert last_email()["subject"] == "Quick one"
+    assert sorted(store.get(ns.OFFERED_SLOTS_KEY)) == PAIRS[4]  # "the last two times got taken": both pairs back
 
     out = run("ns_d7_breakup_email")
     assert [e["template"] for e in out["would_do"]] == ["ns_d7_breakup_email"]
@@ -307,8 +309,11 @@ def test_n5_without_a_campaign_is_skipped_and_the_ladder_goes_on(tmp_env, shadow
     assert out["would_do"] == [] and [e["reason"] for e in out["skipped"]] == ["no_niche_point"]
     out = ns.run_recovery(slots.parse_iso(armed(store, "ns_d3_retry_email", appt)), store, ghl, slots_fn=picker)
     assert [e["template"] for e in out["would_do"]] == ["ns_d3_retry_email"]
+    # N5 skipped: the day-1 pair stays held next to N9's (N9 never called it taken)
+    assert sorted(store.get(ns.OFFERED_SLOTS_KEY)) == sorted(PAIRS[1] + PAIRS[2])
     out = ns.run_recovery(slots.parse_iso(armed(store, "ns_d5_yes_no_email", appt)), store, ghl, slots_fn=picker)
     assert [e["template"] for e in out["would_do"]] == ["ns_d5_yes_no_email"]
+    assert sorted(store.get(ns.OFFERED_SLOTS_KEY)) == PAIRS[3]
     assert rec.requests == []
 
 
@@ -384,3 +389,229 @@ def test_a_reply_after_the_call_stops_the_ladder_and_emails_go_in_the_thread(tmp
     assert out["cancelled"][0]["touches"] == 5
     assert store.get(ns.state_key(appt["id"]))["done_reason"] == "replied"
     assert rec.requests == [] and irec.requests == []
+
+
+# ------------------------------------------------------------ a late email never meets the next one
+def subjects_sent():
+    return [r["payload"].get("subject") for r in job_log.read_shadow_log()
+            if r["action"] in ("send_message", "reply_to_email")]
+
+
+class HoldOne(object):
+    """dispatch_touch wrapper: the CT3 template gate holds ``template`` while
+    ``on`` is True; everything else goes through the real dispatch."""
+
+    def __init__(self, real, template):
+        self.real, self.template, self.on = real, template, True
+
+    def __call__(self, touch, *a, **kw):
+        if self.on and touch.template_key == self.template:
+            return {"status": ns.HELD, "hold": "template", "reason": "template_unapproved",
+                    "template_id": "no_show.%s" % touch.template_key, "kind": "no_show"}
+        return self.real(touch, *a, **kw)
+
+
+def ticks(first, last, step):
+    t = first
+    while t <= last:
+        yield t
+        t += step
+
+
+REAL_DISPATCH = ns.sr.dispatch_touch
+
+
+class FreshSlots(object):
+    """A pair never handed out before, inside the offer rules for ``now``
+    (12:00-18:00 CT, 1 to 3 business days out): a held touch re-picks on
+    every tick once its own pair drifts out of range, and RotatingSlots'
+    five pairs would come round again."""
+
+    def __init__(self):
+        self.n = 0
+
+    def __call__(self, now):
+        self.n += 1
+        day = ns._add_business_days(slots.to_tz(now, settings.TZ).date(), 1 + (self.n // 12) % 3)
+        first = settings.TZ.localize(datetime(day.year, day.month, day.day, 12, 0)) + timedelta(
+            minutes=30 * (self.n % 12))
+        two = [first, first + timedelta(minutes=15)]
+        return {"slots": [t.isoformat() for t in two], "text": slots.format_slots(two), "source": "ghl"}
+
+
+def slots_of(store, key, appt=APPT):
+    return _isos([t for t in touches(store, appt) if t["template_key"] == key][0].get("slots"))
+
+
+def _isos(info):
+    return list((info or {}).get("slots") or [])
+
+
+def held_until(store, ghl, picker, hold, release_at, last, appt=APPT, down=None):
+    """Tick every 10 minutes (the tick's cadence) from the held template's
+    armed time to ``last``, the template gate holding it until ``release_at``.
+    ``down`` = (from, to): no tick runs in between (the tick was down)."""
+    out = []
+    first = slots.parse_iso(armed(store, hold.template, appt))
+    for now in ticks(first, last, timedelta(minutes=10)):
+        if down and down[0] < now < down[1]:
+            continue
+        hold.on = now < release_at
+        out.append((now, ns.run_recovery(now, store, ghl, slots_fn=picker)))
+    return out
+
+
+def _held_setup(store_path, monkeypatch, template, upto, appt=APPT):
+    store = JsonFileStore(store_path)
+    ghl, rec = make_ghl()
+    picker = FreshSlots()
+    ns.process(slots.parse_iso(appt["start_iso"]) + timedelta(minutes=10), appt, [host(appt)], store, ghl,
+               slots_fn=picker)
+    for key in upto:
+        ns.run_recovery(slots.parse_iso(armed(store, key, appt)), store, ghl, slots_fn=picker)
+    hold = HoldOne(REAL_DISPATCH, template)
+    monkeypatch.setattr(ns.sr, "dispatch_touch", hold)
+    return store, ghl, rec, picker, hold
+
+
+def test_a_held_day_2_email_released_minutes_before_day_3_is_superseded(tmp_env, shadow_mode, monkeypatch):
+    n5_at, release = slots.parse_iso("2026-09-28T09:00:00-05:00"), slots.parse_iso("2026-09-29T08:50:00-05:00")
+    # the tick running every 10 minutes; and the tick down from just after
+    # N5's hold until N9's time, so the first run after it sees both due
+    n9_due = release + timedelta(minutes=10)
+    for name, down in (("every_tick", None), ("tick_down", (n5_at, n9_due))):
+        store, ghl, rec, picker, hold = _held_setup(tmp_env / ("s-%s.json" % name), monkeypatch, ns.N5,
+                                                    ("ns_reschedule_email", "ns_d1_email"))
+        n9_at = slots.parse_iso(armed(store, "ns_d3_retry_email"))
+        assert slots.parse_iso(armed(store, ns.N5)) == n5_at and n9_at == release + timedelta(minutes=10)
+        before = len(subjects_sent())
+        runs = held_until(store, ghl, picker, hold, release, slots.parse_iso("2026-09-29T09:30:00-05:00"),
+                          down=down)
+        got = subjects_sent()[before:]
+        assert got == ["Still want to talk?"], name  # N9 only; the day-2 email never went out
+        n5 = [t for t in touches(store) if t["template_key"] == ns.N5][0]
+        assert n5["skipped"] and n5["skip_reason"] == "superseded" and not n5.get("sent")
+        # closed once: as soon as N9 was within the margin (a pending email
+        # cannot go out after that point, held or not), or on the first run
+        # after the outage
+        closed = [(now, e["reason"]) for now, out in runs for e in out["skipped"]]
+        assert [r for _, r in closed] == ["superseded"]
+        assert closed[0][0] == (n9_at - ns.SUPERSEDE_MARGIN if down is None else n9_at)
+        # N5's own claims never reached the lead: given back. N4's offer and N9's stay held.
+        n4, n9 = slots_of(store, ns.N4), slots_of(store, ns.N9)
+        assert slots_of(store, ns.N5) == [] and len(set(n4 + n9)) == 4
+        assert sorted(store.get(ns.OFFERED_SLOTS_KEY)) == sorted(n4 + n9)
+        assert [(n, e["template"]) for n, out in runs for e in out["would_do"]] == [(n9_at, ns.N9)]  # on time
+        assert rec.requests == []
+
+
+def test_a_held_day_1_email_released_minutes_before_day_2_is_superseded(tmp_env, shadow_mode, monkeypatch):
+    # a Monday call: N4 Tuesday 10:00 ET, N5 Wednesday 10:00 ET (one business day apart, inside N4's day of lateness)
+    monday = dict(APPT, id="appt-monday", start_iso="2026-09-28T15:00:00-05:00", end_iso="2026-09-28T15:15:00-05:00")
+    store, ghl, rec, picker, hold = _held_setup(tmp_env / "s.json", monkeypatch, ns.N4, ("ns_reschedule_email",),
+                                                appt=monday)
+    assert armed(store, ns.N5, monday) == "2026-09-30T09:00:00-05:00"
+    before = len(subjects_sent())
+    held_until(store, ghl, picker, hold, slots.parse_iso("2026-09-30T08:50:00-05:00"),
+               slots.parse_iso("2026-09-30T09:30:00-05:00"), appt=monday)
+    assert subjects_sent()[before:] == ["One thing for Taxfo Accounting"]  # N5 only
+    assert "The last two times got taken" in last_email()["message"]  # true: N3's offer reached the lead
+    n4 = [t for t in touches(store, monday) if t["template_key"] == ns.N4][0]
+    assert n4["skip_reason"] == "superseded" and not n4.get("sent")
+    # N3's pair back (taken), N4's never offered; only N5's is held
+    assert slots_of(store, ns.N4, monday) == []
+    assert sorted(store.get(ns.OFFERED_SLOTS_KEY)) == sorted(slots_of(store, ns.N5, monday))
+    assert rec.requests == []
+
+
+def test_a_held_email_released_the_same_afternoon_still_goes(tmp_env, shadow_mode, monkeypatch):
+    """Lateness well short of the next email (N5 held from 09:00 to 14:00 on
+    Monday, N9 at 09:00 Tuesday): N5 goes when released, N9 on time."""
+    store, ghl, rec, picker, hold = _held_setup(tmp_env / "s.json", monkeypatch, ns.N5,
+                                                ("ns_reschedule_email", "ns_d1_email"))
+    before = len(subjects_sent())
+    held_until(store, ghl, picker, hold, slots.parse_iso("2026-09-28T14:00:00-05:00"),
+               slots.parse_iso("2026-09-29T09:30:00-05:00"))
+    assert subjects_sent()[before:] == ["One thing for Taxfo Accounting", "Still want to talk?"]
+    assert rec.requests == []
+
+
+def test_a_held_email_never_goes_after_a_later_one_went_out():
+    base = {"appointment_id": APPT["id"], "contact_id": APPT["contact_id"], "channel": "email", "body": "x"}
+    rec = {"touches": [dict(base, key="a", template_key=ns.N5, when_iso="2026-09-28T09:00:00-05:00"),
+                       dict(base, key="b", template_key=ns.N9, when_iso="2026-10-09T09:00:00-05:00", sent=True)]}
+    now = slots.parse_iso("2026-09-28T09:30:00-05:00")
+    assert ns._superseded_reason("a", rec, APPT, now) == "superseded"
+    rec["touches"][1].pop("sent")
+    assert ns._superseded_reason("a", rec, APPT, now) is None  # the next one is days away
+    assert ns._superseded_reason("b", rec, APPT, now) is None  # the last touch is never superseded
+
+
+def test_the_on_time_ladder_never_supersedes_anything(tmp_env, shadow_mode):
+    for tz in ("America/New_York", "America/Chicago", "America/Los_Angeles", "Europe/London"):
+        store = JsonFileStore(tmp_env / ("s-%s.json" % tz.replace("/", "-")))
+        ghl, rec = make_ghl()
+        picker = RotatingSlots()
+        appt = dict(APPT, lead_tz=tz)
+        for start in ("2026-09-24T12:00:00-05:00", "2026-09-25T18:00:00-05:00"):  # Thu noon, Fri 18:00 (latest)
+            a = dict(appt, id="appt-%s-%s" % (tz, start[:10]), start_iso=start,
+                     end_iso=(slots.parse_iso(start) + timedelta(minutes=15)).isoformat())
+            ns.process(slots.parse_iso(start) + timedelta(minutes=10), a, [host(a)], store, ghl, slots_fn=picker)
+            for t in touches(store, a):
+                out = ns.run_recovery(slots.parse_iso(t["when_iso"]), store, ghl, appointment_id=a["id"],
+                                      slots_fn=picker)
+                assert out["skipped"] == [], (tz, start, t["template_key"])
+                assert [e["template"] for e in out["would_do"]] == [t["template_key"]], (tz, start)
+        assert rec.requests == []
+
+
+# ------------------------------------------------------------ N9 keeps the earlier offer held
+def _registry(store):
+    return sorted(r["slot"] for r in store.get("offered_slots") or [] if r.get("lead") == APPT["email"])
+
+
+def test_n9_keeps_the_day_2_pair_claimed_until_n6_says_it_was_taken(tmp_env, shadow_mode):
+    from services.reply_engine import approval
+
+    store = JsonFileStore(tmp_env / "s.json")
+    ghl, rec = make_ghl()
+    picker = RotatingSlots()
+    ns.process(START + timedelta(minutes=10), APPT, [host(APPT)], store, ghl, slots_fn=picker)
+    for key in ("ns_reschedule_email", "ns_d1_email", "ns_d2_value_email"):
+        ns.run_recovery(slots.parse_iso(armed(store, key)), store, ghl, slots_fn=picker)
+    assert _registry(store) == sorted(store.get(ns.OFFERED_SLOTS_KEY)) == PAIRS[2]
+
+    n9_at = slots.parse_iso(armed(store, "ns_d3_retry_email"))
+    ns.run_recovery(n9_at, store, ghl, slots_fn=picker)
+    both = sorted(PAIRS[2] + PAIRS[3])
+    assert _registry(store) == sorted(store.get(ns.OFFERED_SLOTS_KEY)) == both
+    # another lead cannot be offered the day-2 times while this lead may still pick one
+    assert approval.claim_slots(store, "other@lead.test", PAIRS[2], n9_at) == PAIRS[2]
+    # N6 picks around both pairs: an injected picker offering the day-2 times again is refused
+    record = store.get(ns.recovery_key(APPT["id"], START.isoformat()))
+    assert sorted(record["held_offers"]) == both
+
+    n6_at = slots.parse_iso(armed(store, "ns_d5_yes_no_email"))
+    out = ns.run_recovery(n6_at, store, ghl, slots_fn=picker)
+    assert [e["template"] for e in out["would_do"]] == ["ns_d5_yes_no_email"]
+    assert "the last two times got taken" in last_email()["message"]
+    assert _registry(store) == sorted(store.get(ns.OFFERED_SLOTS_KEY)) == PAIRS[4]  # both earlier pairs given back
+    assert approval.claim_slots(store, "other@lead.test", PAIRS[2], n6_at) == []
+    assert rec.requests == []
+
+
+def test_n6_never_reoffers_a_time_the_lead_still_holds(tmp_env, shadow_mode):
+    store = JsonFileStore(tmp_env / "s.json")
+    ghl, rec = make_ghl()
+    picker = RotatingSlots()
+    ns.process(START + timedelta(minutes=10), APPT, [host(APPT)], store, ghl, slots_fn=picker)
+    for key in ("ns_reschedule_email", "ns_d1_email", "ns_d2_value_email", "ns_d3_retry_email"):
+        ns.run_recovery(slots.parse_iso(armed(store, key)), store, ghl, slots_fn=picker)
+
+    def day_2_again(now):  # the day-2 pair, which N9 did not call taken
+        return {"slots": PAIRS[2], "text": "x or y", "source": "ghl"}
+
+    out = ns.run_recovery(slots.parse_iso(armed(store, "ns_d5_yes_no_email")), store, ghl, slots_fn=day_2_again)
+    assert out["would_do"] == [] and [e["error"] for e in out["errors"]] == ["no_slots"]
+    assert sorted(store.get(ns.OFFERED_SLOTS_KEY)) == sorted(PAIRS[2] + PAIRS[3])  # still both held
+    assert rec.requests == []

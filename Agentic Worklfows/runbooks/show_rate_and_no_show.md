@@ -57,10 +57,15 @@ Repeat rules (SOP-005 counter per contact):
 - Second miss: N1, N3 `.repeat` ("Missed you again") at S+25, N6 three business days after, then nurture (+ pattern note).
 - Third miss: N1, N8 ("Closing this out") at S+25, then nurture and stage Lost.
 
-Slot emails claim two fresh times the lead was never offered, and give back the previous offer once
-they reach the lead, so "those times got taken" is true. N4/N5/N6 go out only after an earlier slot
-email in the same ladder reached the lead (else `no_prior_offer`); N9 does not say the earlier times
-were taken, so it has no such condition.
+Slot emails claim two fresh times the lead was never offered. Only the emails that say "those times
+got taken" (N4/N5/N6) give the earlier times back, once they reach the lead; they go out only after an
+earlier slot email in the same ladder reached the lead (else `no_prior_offer`). N9 does not say the
+earlier times were taken, so it has no such condition and gives nothing back: after N9 the lead holds
+two pairs (N9's and N5's, or N4's when N5 was skipped) until N6 reaches them or the times pass.
+
+A late email (held, deferred, waiting for times, or the tick was down) never goes out once the next
+email of its ladder is due within 8 hours or already went out: it closes as `superseded` and the next
+one carries on. On time, ladder emails are never that close.
 
 Stops: any reply from the lead since the call's start stops the rest (`replied`). A rebooking
 cancels it (`rebooked`). A late join reverses the flag (`late_show`).

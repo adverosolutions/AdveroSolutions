@@ -135,7 +135,7 @@ SCHEDULES = {
     "precall_tick": Schedule(
         "*/5 * * * *", "every 5 minutes, beside appointments_tick; one container at a time (max_containers=1)",
         "sales", RUNTIME_MODAL, ("--scheduled",)),
-    # The "I'm on" nudge 3 minutes after a call starts (N1). Every minute in
+    # The "I'm on" nudge 5 minutes after a call starts (N1). Every minute in
     # call hours; a run with no call on does nothing. Its file lock
     # (jobs/appointments_tick._run_lock) covers one container's disk only, so
     # max_containers=1 (MODAL_MAX_CONTAINERS) keeps one run at a time.
@@ -844,7 +844,7 @@ def precall_tick():
 
 
 def no_show_watch():
-    """The "I'm on" nudge 3 minutes after a booked call starts (N1). argv is
+    """The "I'm on" nudge 5 minutes after a booked call starts (N1). argv is
     ``--no-show-watch``; a run with no call on does nothing."""
     _run_job("jobs.appointments_tick", SCHEDULES["no_show_watch"].argv, "no_show_watch")
 
