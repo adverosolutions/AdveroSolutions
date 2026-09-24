@@ -1,15 +1,48 @@
 # Section 2 status
 
-**2026-09-23 (evening):** research done for both sequences; Lorenzo picked both cadences; reminder copy signed off (`reminders_final.md`, with one rework pending, see below); no-show copy walkthrough in progress (N1, N3, N4 done). No engine code changed yet. Nothing approved in the template registry or live.
+**2026-09-24 (cloud chat).** The reminder and no-show rebuild is on main: email only, every email a reply in the lead's thread, no booking link anywhere. Nothing auto-sends until Lorenzo approves the new template ids (list below). Everything runs in shadow.
 
-## Resume here (next chat)
-All copy is signed off: **`copy_signed_off.md` is the source of truth** (supersedes `reminders_final.md` and `no_show_final.md`). Build briefs: `build_briefs.md`.
+## Done in the cloud chat (2026-09-24)
+- Rebased `wip/section-2-build` onto main (only conflict: the catalogue id count, now 102). Integration items a to e were already finished by the stopped worker.
+- Two tests fixed: the already-booked reply test still expected the booking-link sentence; the deploy watch report did not classify `show_rate_maybe_sent`, `show_rate_needs_attention`, `no_show_maybe_sent`, `no_show_needs_attention` (now KNOWN_FAILURES, so the watch fails on them and Lorenzo checks them by hand). `shared:` change to `changesets/deploy/watch_report.py`.
+- Digest line "NOT COVERED ... no confirmation, pre-read, reminder or no-show check" no longer mentions the pre-read.
+- Shadow replay on `jobs/tests/fixtures/appointments_2026-09-21.json` (R2, R4, N1 through `--no-show-watch`, flag, N3): every email held by the template gate (no approvals yet), nothing sent, 0 requests.
+- One combined review (reviewer, max effort). A1 `thread_reply.py`: no blockers (right recipient on every route, every refusal holds, never a GHL fallback when a thread exists, writes only through the guarded clients). Copy: every reminder and no-show email matches `copy_signed_off.md` word for word, no booking link anywhere. Three blockers, each reproduced and fixed in one round, with regression tests in `services/reply_engine/tests/test_one_email_per_run.py`:
+  1. Duplicate send, no-show: the tick ran the ladder twice (inside `no_show.process` and again in the recovery sweep), so a no-show marked by hand the next morning got N3 and N4 in the same minute (live repro: two POSTs, also after a 500 on the first). Fix: the tick calls `process(..., run_ladder=False)`, so the sweep is the only place ladder emails go; the sweep caps one email per lead per run across records too.
+  2. Duplicate send, reminders: `show_rate.run` sent every due touch of a schedule (R3 and R4 together after a tick gap or a hold; confirmation and R4 after a late release). Fix: only the latest due reminder that can still go is sent; earlier ones close as `superseded` (a too-late one keeps `too_late`).
+  3. Unchecked subject: the in-thread "Re:" subject check ran on its own lookup and was skipped when that lookup raised. Fix: `thread_reply.send_lead_email(..., subject_check=)` checks the exact subject it sends, from the lookup it sends with; a problem or an error holds (`thread_subject_refused`).
+- Full suite after the fixes: 12,065 passed, 0 egress. The only failures are the 75 `changesets/tests/test_claude_guard.py` tests, which fail the same way on a clean main in the cloud container (the guard's self-test is 1502/1536 on Linux paths); they pass on Lorenzo's Mac.
+- Pushing: the repo's live-write guard hook (rule c) blocks pushes from a cloud session, and Lorenzo chose to push through the GitHub connector instead. The connector cannot delete a branch: **Lorenzo, delete `wip/section-2-build`** (GitHub, Branches page).
 
-**Build progress (2026-09-23 night).** Unreviewed work in progress is snapshotted to the GitHub branch `wip/section-2-build` (not the section branch). If this chat died, check that branch out into a worktree, diff it against `section/2-booked-calls`, and continue the review loop below.
-- Wave 1, piece C (booking replies without the booking link): **approved on re-review and committed** (a `shared:` commit for 3 lines in section 4's app.py, then booking.py + tests). The 8 counter replies lost the "Or if it's easier, grab a time here" line; the no-open-slots case now asks "Could you send me a couple of times that work for you next week?" (Lorenzo approved it in full); counter, slot-taken and "Locked in" confirmation drafts no longer store a booking link, so editing them never demands one (a behaviour change on the confirmation card; its text is unchanged). Lorenzo must re-approve the counter/slot-taken templates (text changed). Parked polish: tests test_send_safety_round3.py:165, round4.py:76, round5.py:619 paste a now-None `draft.booking_link` into edited bodies (harmless "None" in test text). Section 4 follow-up: `booking.already_booked.*` replies (app.py:424) and first replies still carry a booking link.
-- Wave 1, piece A1 (`thread_reply.py`): built; reviewer-max REJECTED (row not checked against the appointment email, so a mis-keyed row could email another person; possibly-sent failures looked retryable, so duplicates were possible; plus 6 smaller items). Being fixed by worker-heavy; then back to reviewer-max.
-- Wave 2 (A2 reminders, B no-show ladder) starts after A1 is approved. Note for A2 from the A1 review: the subject actually sent in-thread is `cadence.subject_for(state)`, not the touch subject the gate checks; A2 must gate the subject actually sent or accept it explicitly. A2/B must not auto-retry A1's "maybe sent" reasons.
-- After C lands on main: tell section 1 that booking.py no longer imports `draft.BOOKING_LINE`.
+## New and changed template ids (for Lorenzo's approval and section 4's parity/Doc rebuild)
+Nothing here auto-sends until Lorenzo approves it in his own terminal (`runbooks/template_approvals.md`).
+- Reminders: `show_rate.confirm_email.<niche>_<offer>` (8: cleaning, bookkeeping, recruiting, generic x reactivation, outbound; copy unchanged), `show_rate.reminder_24h_email` (new copy), `show_rate.reminder_morning_email` (new), `show_rate.reminder_1h_email` (new).
+- No-show: `no_show.ns_still_on_email`, `no_show.ns_reschedule_email`, `no_show.ns_reschedule_email.repeat`, `no_show.ns_d1_email` (new), `no_show.ns_d3_value_email.<niche>_<offer>` (6: cleaning, bookkeeping, recruiting x reactivation, outbound; no generic), `no_show.ns_d7_yes_no_email`, `no_show.ns_d14_breakup_email`, `no_show.ns_third_miss_email` (new).
+- Changed text: `booking.already_booked.awaiting_approval`, `.invite_withheld`, `.invite_on_calendar` (booking-link sentence removed, approved by Lorenzo 2026-09-23).
+- Removed: `show_rate.confirm_sms`, `show_rate.preread_email.*`, `show_rate.reminder_24h_sms`, `show_rate.unconfirmed_task`, `show_rate.reminder_1h_sms`, `show_rate.reminder_15m_sms`, `no_show.ns_still_on_sms`, `no_show.ns_call_task`, `no_show.ns_d1_other_channel*`, the generic `no_show.ns_d3_value_email.generic_*`.
+- Catalogue total: 102 approvable ids.
+
+## What was built
+- **A1 `services/reply_engine/thread_reply.py`**: sends a lead email as a reply in the lead's Instantly thread (`instantly.reply_to_email(..., to=)` behind `cadence.thread_recipient_ok`), GHL email only when the lead is known and has no thread anywhere. Checks the lead row's own `lead_email` against the appointment email on every route (holds `lead_row_mismatch`, never GHL). Record fields: transport, sent, skipped, reason, result, shadow, route, lead_key, request_issued, maybe_sent, retryable, needs_attention; tuples RETRYABLE_REASONS, NEEDS_ATTENTION_REASONS, MAYBE_SENT_REASONS, GHL_FALLBACK_REASONS. No contact-id lookup (Lorenzo's call): a booking with no email holds `no_lead_email` and is flagged.
+- **A2 `show_rate.py`**: SEQUENCE confirm_email (widget bookings), reminder_24h_email (R2), reminder_morning_email (R3), reminder_1h_email (R4); 6 h, weekend and same-day rules; local time in `{time}`; dispatch through thread_reply; retryable -> pending, needs_attention -> hold + Job_Log, maybe_sent -> closed, never retried; the in-thread "Re:" subject gets the gate's subject rules (`thread_subject_refused`). Old removed-key touches close as `retired_template`.
+- **B `no_show.py`, `jobs/appointments_tick.py`**: N1 at S+3..S+10 with Zoom evidence (claim key, `--no-show-watch` mode); N3 at max(flag, S+25), N4 next business day, N5 3 business days (skipped with no campaign), N6 day 7, N7 day 14, 10:00 lead time; second miss N3.repeat + N6 at 3 business days; third miss N8; nurture.enroll after the last one (idempotent) plus the existing stage moves; fresh slots per email, old pair released after send; "taken" emails only after an earlier slot email reached the lead; reply stop on `last_inbound_at` after the call start; one email per lead per run.
+
+## Parked (not blocking; tell Lorenzo)
+- An out-of-office auto-reply counts as a reply and stops the no-show ladder.
+- A no-show Lorenzo marks by hand hours later still says "today" in N3; later touches whose day passed may go on consecutive runs.
+- Widget-booking confirmation made on a weekend goes Monday 07:00 lead time; a rescheduled call counts as newly booked (6 h rule uses the reschedule time).
+- A1: non-ASCII case folding in email comparison; a thread stored under an odd key is not found (falls back to GHL, correct recipient).
+- Tests test_send_safety_round3.py:165, round4.py:76, round5.py:619 paste a None `draft.booking_link` into edited bodies (harmless).
+- `show_rate.scan_ghl_confirmations` is a no-op stub; drop it once nothing calls it (the digest's "4 h 'has not confirmed' task" warning goes with it).
+- Lorenzo's actions: connect Zoom in GHL (N1 needs it); approve the new/changed template ids (nothing auto-sends before that).
+- From the 2026-09-24 review (not blockers):
+  - While N3 is held, deferred or waiting for times, an N4/N5/N6 that comes due is closed `no_prior_offer` for good; the lead then only gets N7.
+  - `_after_skipped_task` opens a "Recovery ended with nothing sent" task when the last touch was `maybe_sent` (it may have been delivered).
+  - On Modal, `_run_lock` is a per-container flock, so the watch and the full tick are not serialized; the store claims still stop a double send, but a flag race can build the ladder from a count read before the bump (first-miss copy on a second miss).
+  - Schedules created before the deploy keep the old R2 timing and never get the new R3/R4 keys (`ensure_scheduled` does not add keys to an existing schedule).
+  - `niche_of` guesses the niche from the title or company name, so N5 can pick its niche line from that guess when only the offer is on file.
+  - `show_rate.touch_bindings` still binds `booking_url` (no template uses it; clean-up only).
+  - When two reminders are due at the same minute, the later one in the sequence wins: a weekend widget booking for a Monday call from a lead on Atlantic time gets R3 at Mon 07:00 CT instead of the confirmation.
 
 ## Lorenzo's rules from this walkthrough (apply everywhere)
 - **Email only.** No texts, no phone calls, no call tasks in either sequence. Every lead has an email; phone is hit or miss. SMS legs and call/voicemail tasks come out of the code (not "off until A2P").
@@ -28,19 +61,12 @@ All copy is signed off: **`copy_signed_off.md` is the source of truth** (superse
 ## Copy status
 Every reminder (R2, R3, R4) and no-show message (N1, N3 and its second-miss variant, N4 to N8) was shown to Lorenzo in full and approved on 2026-09-23. Texts: `copy_signed_off.md`. Dropped: R1 pre-read, R5 personal call, N2 call/voicemail, every SMS.
 
-## Build plan (after copy sign-off; worker-heavy + reviewer)
-Map: `build_map.md`. In order:
-1. `show_rate.py`: new SEQUENCE (R2, R3, R4 only; drop confirm_sms, preread, 24 h SMS, unconfirmed task, 1 h and 15 m SMS), the 6 h skip rule, R3 at 08:30 lead time, `MAX_LATENESS` for new keys, local time in `{time}`, new copy, send window at dispatch.
-2. In-thread sending: resolve the lead's `lead:` row (campaign id, appointment row, or email scan), send with `instantly.reply_to_email(..., to=)` behind `cadence.thread_recipient_ok`, GHL email fallback when no thread.
-3. `no_show.py`: new ladder and keys, N1 at S+3 off Zoom join data (needs a per-minute check in call hours or a webhook trigger), repeat rules, reply-stop for all bookings, `nurture.enroll` (on main, 41e50d9), slots with "taken" copy, no booking link anywhere.
-4. `booking.py`: drop the booking-link line (`draft.BOOKING_LINE`, section 1's constant) from the 8 counter-proposal replies (booking.counter.window_no_fit, outside_window_early, outside_window_late, weekend, too_soon, beyond_horizon, slot_taken, booking.slot_already_taken); then tell section 1 we no longer import it so it can delete the constant. Show Lorenzo the changed replies.
-5. `shared:` commit: register new template keys in `template_approvals.py` tuples; hand section 4 the id list for parity and the Google Doc.
-6. Tests, runbook `runbooks/show_rate_and_no_show.md`, Job_Log rows, shadow replay.
-
 ## Waiting on Lorenzo
-- Connect Zoom in GHL.
-- The remaining copy sign-offs above.
+- Connect Zoom in GHL (N1 and no-show detection need join data; on Meet, detection says `unknown` and nothing starts until he marks the no-show).
+- Approve the new and changed template ids above (they are on main).
+- Delete the `wip/section-2-build` branch.
 
 ## For other sections
+- Section 4 (written here because a cloud chat cannot message local sessions): (1) the id list above: re-run the parity reference (`changesets/deploy/template_parity.py --write`) and rebuild the Google Doc; (2) add the schedule entry `python3 -m jobs.appointments_tick --no-show-watch`, every minute on weekdays 12:00-18:59 CT (`* 17-23 * * 1-5` UTC on CDT), one container at a time, the 10-minute tick stays; (3) `changesets/deploy/watch_report.py` gained the four section 2 statuses in KNOWN_FAILURES (`shared:` commit).
 - Section 1: `nurture.enroll` is called after N7, after N6 on a second no-show, after N8 on a third. Research suggests the first nurture touch no sooner than 3 to 4 weeks after the hand-off.
 - Sections 1 and 4: no booking link anywhere; earlier times always "taken" (Lorenzo, 2026-09-23).

@@ -32,10 +32,9 @@ MEET = "https://meet.google.com/abc-defg-hij"
 SLOTS = "Wed 2:00pm or Thu 3:30pm CT"
 OFFERS = open(str(ta.BASE_DIR / "config" / "offers.md"), encoding="utf-8").read()
 NICHES = ("cleaning", "bookkeeping", "recruiting", "generic")
-SHOW_RATE_KEYS = ("confirm_email", "confirm_sms", "preread_email", "reminder_24h_sms", "reminder_24h_email",
-                  "reminder_1h_sms", "reminder_15m_sms")
-NO_SHOW_KEYS = ("ns_still_on_sms", "ns_still_on_email", "ns_reschedule_email", "ns_d1_other_channel",
-                "ns_d3_value_email", "ns_d7_yes_no_email", "ns_d14_breakup_email")
+SHOW_RATE_KEYS = ("confirm_email", "reminder_24h_email", "reminder_morning_email", "reminder_1h_email")
+NO_SHOW_KEYS = ("ns_still_on_email", "ns_reschedule_email", "ns_d1_email", "ns_d3_value_email",
+                "ns_d7_yes_no_email", "ns_d14_breakup_email", "ns_third_miss_email")
 
 
 def appt(niche="cleaning", offer="reactivation", **extra):
@@ -76,8 +75,7 @@ def _touches(store):
 def test_item7_an_engine_confirmed_call_skips_the_ladders_confirmation(tmp_path):
     """Held by booking.register_booking, released by approval.send_approved
     (reason "approved") once the engine's own unedited confirming draft is
-    out: confirm_email and confirm_sms are skipped, the pre-read goes 15
-    minutes after the release."""
+    out: confirm_email is skipped, the reminders anchored to the call stay."""
     store = JsonFileStore(str(tmp_path / "s.json"))
     sr.hold(store, "zc-appt", reason="awaiting_approval", now=BOOKED_AT)
     sr.ensure_scheduled(store, _call(), BOOKED_AT, a2p=True)
@@ -85,13 +83,10 @@ def test_item7_an_engine_confirmed_call_skips_the_ladders_confirmation(tmp_path)
     out = sr.release_hold(store, "zc-appt", approved, a2p=True, reason="approved")
     assert out["released"] is True and "error" not in out
     key, t = _touches(store)
-    for k in ("confirm_email", "confirm_sms"):
-        assert t[k]["skipped"] is True and t[k]["skip_reason"] == "engine_confirmation_sent", k
-    assert not t["preread_email"]["skipped"]
-    assert t["preread_email"]["when_iso"] == (approved + timedelta(minutes=15)).isoformat()
+    assert t["confirm_email"]["skipped"] is True and t["confirm_email"]["skip_reason"] == "engine_confirmation_sent"
     assert store.get(key)["engine_confirmation_sent_at"] == approved.isoformat()
     # the reminders anchored to the call are untouched
-    assert not t["reminder_24h_email"]["skipped"] and not t["reminder_1h_sms"]["skipped"]
+    assert not t["reminder_24h_email"]["skipped"] and not t["reminder_1h_email"]["skipped"]
 
 
 def test_item7_a_widget_or_hand_made_booking_keeps_its_confirmation(tmp_path):
@@ -100,7 +95,7 @@ def test_item7_a_widget_or_hand_made_booking_keeps_its_confirmation(tmp_path):
     store = JsonFileStore(str(tmp_path / "s.json"))
     sr.ensure_scheduled(store, _call(), BOOKED_AT + timedelta(minutes=5), a2p=True)
     _, t = _touches(store)
-    assert not t["confirm_email"]["skipped"] and not t["confirm_sms"]["skipped"]
+    assert not t["confirm_email"]["skipped"]
 
 
 @pytest.mark.parametrize("reason", ["approved_edited", "marked_sent", "released", "manual_release"])
@@ -116,7 +111,7 @@ def test_item7_only_the_engines_own_text_counts_as_a_sent_confirmation(tmp_path,
     out = sr.release_hold(store, "zc-appt", released, a2p=True, reason=reason)
     assert out["released"] is True and out["reason"] == reason
     key, t = _touches(store)
-    for k in ("confirm_email", "confirm_sms"):
+    for k in ("confirm_email",):
         assert not t[k]["skipped"] and t[k]["when_iso"] == released.isoformat(), k
     assert "engine_confirmation_sent_at" not in store.get(key)
     assert sr.ENGINE_CONFIRMED_RELEASE_REASONS == ("approved",)
@@ -140,7 +135,7 @@ def _held_world_call(st, created):
 
 def _confirmations(st, key):
     touches = dict((t["template_key"], t) for t in st.get(key)["touches"])
-    return dict((k, touches[k]) for k in ("confirm_email", "confirm_sms"))
+    return dict((k, touches[k]) for k in ("confirm_email",))
 
 
 def test_item7_approving_the_engines_unedited_draft_skips_the_ladders_confirmation(world):
@@ -189,8 +184,8 @@ def test_item8_every_show_rate_and_no_show_time_has_am_or_pm():
     assert sr.fmt_when(START) == "Tue, Jan 8 at 1:00pm CT"
     assert sr.fmt_when(ta._ct(2030, 1, 8, 12, 5), lead) == "Tue, Jan 8 at 12:05pm CT (10:05am PT)"
     assert sr.fmt_time_only(ta._ct(2030, 1, 8, 16, 30)) == "4:30pm CT"
-    assert sr_copy("reminder_24h_email")["subject"] == "Tomorrow at 1:00pm CT, still good?"
-    assert "I was on the line at 1:00pm CT" in ns_copy("ns_reschedule_email")["body"]
+    assert sr_copy("reminder_1h_email")["subject"] == "See you at 1:00pm CT"
+    assert sr_copy("reminder_1h_email", lead_tz="America/New_York")["subject"] == "See you at 1:00pm CT (2:00pm ET)"
     block = ta.value_formats_text()
     assert "{time_ct}: 12:05pm CT | 4:30pm CT" in block
     assert "{weekday}" not in block
@@ -211,38 +206,22 @@ def test_item12_the_guarantee_bullet_reads_as_a_sentence(niche, terms, offer_she
     assert offer_sheet in OFFERS            # the figures are config/offers.md's
 
 
-# ------------------------------------------------------------------ item 13
-def test_item13_the_sms_confirmation_has_one_parenthetical():
-    body = sr_copy("confirm_sms", lead_tz="America/New_York")["body"]
-    assert body == ("Hey Jordan, Lorenzo here. We are locked in for a 15-min call on Tue, Jan 8 at 1:00pm CT "
-                    "(2:00pm ET). Call link: %s. Reply here if anything changes." % ZOOM)
-    assert ") (" not in body
-
-
 # ------------------------------------------------------------------ item 14
 def test_item14_the_second_no_show_keeps_the_call_and_never_offers_writing():
     body = ns_copy("ns_reschedule_email", count=2)["body"]
-    assert ("I know this is the second time the timing did not work out, so if a shorter call or a different "
-            "day works better, just tell me.") in body
+    assert "Today didn't line up, and no problem if now is a bad time." in body
+    assert "I can do %s. Just reply with the one that works." % SLOTS in body
     assert "in writing" not in body and "numbers" not in body
-
-
-# ------------------------------------------------------------------ item 17
-@pytest.mark.parametrize("start", [START, ta._ct(2030, 1, 7, 15, 0), ta._ct(2030, 1, 11, 13, 0)])
-def test_item17_the_preread_subject_names_no_weekday(start):
-    copy = sr.render("preread_email", appt(), start, NOW)
-    assert copy["subject"] == "Before our call: the one-page version"
 
 
 # ------------------------------------------------------------------ item 21
 @pytest.mark.parametrize("key,count", [("ns_reschedule_email", 1), ("ns_reschedule_email", 2),
-                                       ("ns_d1_other_channel", 1), ("ns_d3_value_email", 1)])
-def test_item21_no_orphan_or_without_the_times(key, count):
-    bare = ns_copy(key, slots_text="", count=count)["body"]
-    assert "Grab any time that suits you here: %s" % LINK in bare
-    assert "Or " not in bare and "Two times" not in bare
+                                       ("ns_d1_email", 1), ("ns_d3_value_email", 1), ("ns_d7_yes_no_email", 1)])
+def test_item21_no_times_is_never_sendable_and_never_a_link(key, count):
+    bare = ns_copy(key, slots_text="", count=count)
+    assert ns.unfilled(bare) == "no_slots"  # the slot email waits for two held times
     full = ns_copy(key, count=count)["body"]
-    assert "Two times that work on my side: %s. Or grab any time here: %s" % (SLOTS, LINK) in full
+    assert SLOTS in full and LINK not in full and "http" not in full
 
 
 # ------------------------------------------------------------------ item 22
@@ -253,11 +232,9 @@ def test_item22_generic_outbound_gets_outbound_copy():
                  "- the guarantee and what it would cost"):
         assert line in body
     assert "dormant" not in body
-    d3 = ns_copy("ns_d3_value_email", niche="generic", offer="outbound")["body"]
-    assert ("the first step is the same: watching for the events that put a buyer in the market and putting "
-            "those calls on your calendar under your name.") in d3
-    assert "went quiet" not in d3
-    assert "reactivation" not in ns_copy("ns_d1_other_channel", niche="generic", offer="outbound")["body"]
+    # no niche on file: no approved N5 line, never a generic one
+    assert ns.unfilled(ns_copy("ns_d3_value_email", niche="generic", offer="outbound")) == "no_niche_point"
+    assert "watch for new leases" in ns_copy("ns_d3_value_email", niche="cleaning", offer="outbound")["body"]
     # generic reactivation keeps the reactivation copy
     assert "dormant" in sr_copy("confirm_email", niche="generic", offer="reactivation")["body"]
 
@@ -275,25 +252,25 @@ def test_item23_the_confirmation_subject_names_no_company():
 def test_item24_the_breakup_email_signs_off_plainly():
     for kw in ({}, {"company": None}):
         body = ns_copy("ns_d14_breakup_email", **kw)["body"]
-        assert "Best of luck with everything.\n\nLorenzo" in body
+        assert body.endswith("just reply here and I'll send over a couple of times.\n\nLorenzo")
         assert "at your business" not in body and "Brightline" not in body
 
 
 # ------------------------------------------------------------------ item 29
 @pytest.mark.parametrize("niche", NICHES)
-def test_item29_day_one_says_the_plan(niche):
-    body = ns_copy("ns_d1_other_channel", niche=niche)["body"]
-    assert "Still happy to walk through the plan for Brightline Test Co." in body
+def test_item29_day_one_is_one_email_for_every_niche(niche):
+    body = ns_copy("ns_d1_email", niche=niche)["body"]
+    assert "Those two times got taken, but I can do %s if you still want to find 15 minutes." % SLOTS in body
     for word in ("cleaning plan", "bookkeeping plan", "recruiting plan", "reactivation plan"):
         assert word not in body
     idx = ta.catalogue_index()
-    assert "no_show.ns_d1_other_channel" in idx
-    assert not [i for i in idx if i.startswith("no_show.ns_d1_other_channel.")]
+    assert "no_show.ns_d1_email" in idx
+    assert not [i for i in idx if i.startswith("no_show.ns_d1_email.")]
 
 
 def test_day_seven_has_no_comma_splice():
     body = ns_copy("ns_d7_yes_no_email")["body"]
-    assert "Either answer is fine. It just helps me update my notes." in body
+    assert "A one-word answer is plenty. If it's later, just tell me roughly when." in body
 
 
 # --------------------------------------------------------- the call link
@@ -304,7 +281,7 @@ def test_lead_facing_copy_never_says_zoom(link, niche, offer):
         text = text_of(sr_copy(key, niche=niche, offer=offer, zoom_link=link))
         assert "Zoom" not in text and "zoom" not in text.replace(ZOOM, ""), key
         if link:
-            assert link in text or key in ("preread_email", "reminder_24h_sms", "reminder_24h_email"), key
+            assert link in text, key
     for key in NO_SHOW_KEYS:
         text = text_of(ns_copy(key, niche=niche, offer=offer, zoom_link=link))
         assert "Zoom" not in text and "zoom" not in text.replace(ZOOM, ""), key
@@ -314,20 +291,14 @@ def test_no_link_on_file_claims_no_link_in_the_message():
     body = sr_copy("confirm_email", zoom_link=None)["body"]
     assert "Locked in for Tue, Jan 8 at 1:00pm CT. The calendar invite is on its way with the call link.\n" in body
     assert "here it is too" not in body
-    for key in ("confirm_sms", "reminder_1h_sms", "reminder_15m_sms"):
-        assert "The link is on your calendar invite." in sr_copy(key, zoom_link=None)["body"], key
-    for key in ("ns_still_on_sms", "ns_still_on_email"):
-        body = ns_copy(key, zoom_link=None)["body"]
-        assert "I am on the call now. The link is on your calendar invite." in body, key
+    for key, where in (("reminder_24h_email", "The link is on your calendar invite."),
+                       ("reminder_morning_email", "The link's on your calendar invite."),
+                       ("reminder_1h_email", "The call link is on the calendar invite from when we booked.")):
+        assert where in sr_copy(key, zoom_link=None)["body"], key
+    body = ns_copy("ns_still_on_email", zoom_link=None)["body"]
+    assert "I'm on the call now, no rush. The link is on your calendar invite." in body
     assert sr.call_link_of({"meeting_link": MEET}) == MEET
     assert sr.call_link_of({}) == ""
-
-
-def test_the_task_for_lorenzo_is_platform_neutral_too():
-    for link in (ZOOM, None):
-        body = sr_copy("unconfirmed_task", zoom_link=link)["body"]
-        assert "Zoom" not in body
-        assert ("Call link: %s" % link) in body if link else "The link is on your calendar invite." in body
 
 
 # ------------------------------------------------- appointments_tick's link pick

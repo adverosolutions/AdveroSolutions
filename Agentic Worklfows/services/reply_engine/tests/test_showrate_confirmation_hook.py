@@ -93,11 +93,6 @@ def test_an_out_of_office_does_not_confirm_the_call(tmp_env, shadow_mode):
     assert out[0]["reason"] == "label:ooo"
     assert store.get(sr.confirmed_key(APPT_ID)) is None
     assert sr.is_confirmed(store, ILMI) is False
-    # ...and the 4 h "text or call them personally" task still fires
-    ghl, _rec = make_ghl()
-    four_hours_before = slots.parse_iso(START) - timedelta(hours=3, minutes=59)
-    res = sr.run(four_hours_before, store, ghl)
-    assert "unconfirmed_task" in [e["template"] for e in res["would_do"]]
 
 
 @pytest.mark.parametrize("label", ["auto_reply_unmonitored", "unsubscribe", "negative_hostile",
@@ -119,9 +114,6 @@ def test_ilmis_sure_lets_get_together_monday_is_a_reschedule_not_a_confirmation(
     assert names(out) == ["confirmation_skipped"]
     assert out[0]["reason"] == "reschedule_request"
     assert store.get(sr.confirmed_key(APPT_ID)) is None
-    ghl, _rec = make_ghl()
-    res = sr.run(slots.parse_iso(START) - timedelta(hours=3, minutes=59), store, ghl)
-    assert "unconfirmed_task" in [e["template"] for e in res["would_do"]]
 
 
 def test_a_question_that_uses_the_word_confirm_does_not_confirm(tmp_env, shadow_mode):
