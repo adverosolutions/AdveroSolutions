@@ -25,8 +25,7 @@ A lead replies "interested" to a cold email. Lorenzo answers by hand with two ca
 
 ## Open questions for Lorenzo
 Answered 2026-09-23 (details in `sequence_final.md` and `STATUS.md`): 1 wholesaler line dropped; 2 E2 frame plus research rules approved once, auto-send only when the line passes every check; 3 a "not now" reply stops the run and goes to nurture; 4 E5 kept (with an offer line), "Last one from me this week" kept.
-Still open:
-5. **First reply:** now that he sends it himself, does the engine still draft a suggested first reply for him to copy, or just alert him?
+5 (answered): the engine drafts the first reply for him with two held times; he sends it himself. No free times: wait a day, alert after two misses.
 
 ## What this section owns (paths under `Agentic Worklfows/`)
 - `services/reply_engine/cadence.py`, `prompts/cadence_*.md`, `jobs/cadence_tick.py`
