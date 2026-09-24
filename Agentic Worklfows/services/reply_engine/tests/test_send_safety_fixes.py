@@ -328,24 +328,6 @@ def test_live_d1_whose_window_opened_is_held_if_base_url_is_gone_at_send_time(tm
     assert len(pings) == 1
 
 
-def test_live_d6_card_without_a_base_url_carries_no_dead_buttons(tmp_env, monkeypatch):
-    store = JsonFileStore(tmp_env / "store.json")
-    monkeypatch.delenv("BASE_URL", raising=False)
-    monkeypatch.delenv("REPLY_ENGINE_BASE_URL", raising=False)
-    monkeypatch.setenv("CADENCE_D6_HOLD", "1")
-    _go_live(monkeypatch)
-    state = _d1_state()
-    state.cadence["day"] = 5
-    now = ct(2026, 9, 28, 10, 0)
-    state.cadence["next_send_at"] = now.isoformat()
-    pings = []
-    res = cadence.tick_lead(state, now, store=store, instantly=FakeInstantly(sender="tiffany@flowerhillfs.com"),
-                            free_slots=["2026-09-29T13:00:00-05:00", "2026-09-30T14:00:00-05:00"],
-                            notify_fn=lambda *a, **k: pings.append((a, k)))
-    assert res["action"] == "awaiting_invite_ok" and res["card_undeliverable"] is True
-    assert len(pings) == 1 and not pings[0][1].get("actions") and "no BASE_URL" in pings[0][0][0]
-
-
 def test_shadow_d1_without_a_base_url_carries_on_as_before(tmp_env, monkeypatch):
     store = JsonFileStore(tmp_env / "store.json")
     monkeypatch.delenv("BASE_URL", raising=False)

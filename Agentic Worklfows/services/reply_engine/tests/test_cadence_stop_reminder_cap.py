@@ -22,7 +22,7 @@ STOP = ct(2026, 9, 24, 10, 0)  # stall() stops the ladder on Thu 2026-09-24 at 1
 
 
 def _stopped(store, approvals_file):
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     state = at_day(2, ct(2026, 9, 21, 10, 0))
     pushes = []
     stall(state, store, pushes)
@@ -178,7 +178,7 @@ def test_after_the_push_cap_approving_the_ids_sends_exactly_one_ready_push(store
     _, res = tick_stored(store, ct(2026, 10, 3, 7, 0), lambda *a, **k: pushes.append((a, k)))
     assert res["action"] == "already_stopped" and len(pushes) == 9 and _hold(store)["link_count"] == 8
 
-    approvals_file.approve_ids("cadence.d3")
+    approvals_file.approve_ids("cadence.e3")
     _, res = tick_stored(store, ct(2026, 10, 3, 11, 0), lambda *a, **k: pushes.append((a, k)))
     assert res["action"] == "resume_link_sent" and res["ready"] is True and len(pushes) == 10
     assert "approved" in pushes[-1][0][0] and pushes[-1][1]["priority"] == "high"
@@ -199,7 +199,7 @@ def test_after_the_day_cap_approving_the_ids_sends_exactly_one_ready_push(store,
     _, res = tick_stored(store, ct(2026, 10, 9, 7, 0), lambda *a, **k: pushes.append((a, k)))
     assert res["action"] == "already_stopped" and len(pushes) == 1
 
-    approvals_file.approve_ids("cadence.d3")
+    approvals_file.approve_ids("cadence.e3")
     _, res = tick_stored(store, ct(2026, 10, 9, 8, 0), lambda *a, **k: pushes.append((a, k)))
     assert res["action"] == "resume_link_sent" and res["ready"] is True and len(pushes) == 2
     for when in (ct(2026, 10, 9, 9, 0), ct(2026, 10, 10, 7, 0)):
@@ -212,7 +212,7 @@ def test_after_the_day_cap_approving_the_ids_sends_exactly_one_ready_push(store,
 def test_the_ready_push_is_withheld_for_a_nurture_lead(store, tmp_env, secret, email_leg, approvals_file):
     pushes = _stopped(store, approvals_file)
     nurture.enroll(LEAD, "no_reply_after_sequence", ct(2026, 9, 24, 12, 0), store=store)
-    approvals_file.approve_ids("cadence.d3")
+    approvals_file.approve_ids("cadence.e3")
     for when in (ct(2026, 9, 25, 7, 0), ct(2026, 10, 9, 7, 0)):
         _, res = tick_stored(store, when, lambda *a, **k: pushes.append((a, k)))
         assert res["action"] == "already_stopped" and res["resume_withheld"] == "nurture"

@@ -1,8 +1,9 @@
-"""Copy-fix round Z (piece ZB): the cadence wording Lorenzo approves word for
-word. One test per fix: the day-2 fallback line (item 1), day 14 (9), the
-outbound free-work lines (10), the comma splices (11 and day 7), days 1 and 3
-(15), the no-slot bodies (19), the fallback subject (23) and day 6's
-no-invite body. Lead data is made up. No network, no live flags.
+"""Copy-fix round Z (piece ZB), carried over to the ten-email ladder agreed on
+2026-09-23: the E2 fallback line (item 1), the fallback subject (item 23), no
+sentence said twice, and a touch with no first name that still passes the
+gate. The old day 1/3/5/6/7/14/30 wording and the no-slot bodies are gone with
+the old ladder (test_cadence_ladder_e1_e10.py pins the new text). Lead data
+is made up. No network, no live flags.
 """
 import re
 import types
@@ -14,7 +15,7 @@ from services.reply_engine import template_gate as gate
 from services.reply_engine.tests.template_fixtures import template_env  # noqa: F401
 
 TWO = ["2030-01-08T13:00:00-06:00", "2030-01-10T15:30:00-06:00"]
-SLOT_DAYS = (1, 2, 3, 4, 5, 14, 30)
+SLOT_DAYS = (1, 3, 4, 5, 6, 7, 8, 9, 10)
 
 
 def _state(first="Dana", company="Brightline Test Co", niche="cleaning", offer="reactivation",
@@ -27,13 +28,12 @@ def _state(first="Dana", company="Brightline Test Co", niche="cleaning", offer="
 
 
 def _body(day, slots=TWO, **kw):
-    invite = kw.pop("invite_created", True)
-    return cadence.build_touch(_state(**kw), day, list(slots), invite_created=invite).body_text
+    return cadence.build_touch(_state(**kw), day, list(slots)).body_text
 
 
-# ---------------------------------------------------------- item 1 (d2)
+# ---------------------------------------------------------- item 1 (E2)
 @pytest.mark.parametrize("offer", ["reactivation", "outbound"])
-def test_d2_fallback_line_is_one_clause_and_says_fifteen_minutes_once(offer):
+def test_e2_fallback_line_is_one_clause_and_says_fifteen_minutes_once(offer):
     line = cadence.fallback_research_line("Brightline Test Co", offer)
     assert line.startswith("The quickest place to start is usually the ")
     assert line.count(",") == 0 and line.endswith(".")
@@ -43,126 +43,55 @@ def test_d2_fallback_line_is_one_clause_and_says_fifteen_minutes_once(offer):
     assert "The quickest place to start is usually" in body
 
 
-def test_d2_fallback_line_exact_wording():
+def test_e2_fallback_line_exact_wording():
     assert cadence.fallback_research_line("X", "reactivation") == (
         "The quickest place to start is usually the accounts that already know you and went quiet.")
     assert cadence.fallback_research_line("X", "outbound") == (
         "The quickest place to start is usually the prospects who are in market right now.")
 
 
-def test_d2_without_a_company_does_not_say_start_with_your_team():
-    body = _body(2, first=None, company=None)
-    assert "start with your team" not in body and "Hey there," in body
+def test_e2_without_a_company_does_not_say_your_team():
+    """No company on file: the {company} is left unfilled for the copy check to
+    refuse (the tick holds the email before it builds it), never "your team"."""
+    t = cadence.build_touch(_state(first=None, company=None), 2, list(TWO))
+    assert "your team" not in t.body_text and "Hey there," in t.body_text
+    assert "unfilled_placeholder" in t.problems
 
 
-# ---------------------------------------------------------- item 9 (d14)
-def test_d14_does_not_promise_the_slots_are_this_week():
-    body = _body(14)
-    assert "this week" not in body
-    assert "Circling back in case the timing is better now. I have Tue 1:00pm or Thu 3:30pm CT open, or grab " \
-           "a time here: " in body
-
-
-# ---------------------------------------------------------- item 10 (d5 outbound)
-@pytest.mark.parametrize("niche,specialty", [("cleaning", None), ("bookkeeping", None), ("recruiting", None),
-                                             ("recruiting", "ICU nurse")])
-def test_d5_outbound_offers_to_pull_a_list_and_never_claims_one_exists(niche, specialty):
-    line = cadence.free_work_line(niche, "Brightline Test Co", specialty, offer="outbound")
-    assert line.startswith("I can pull the "), line
-    assert "I pulled" not in line and not re.search(r"\b15\b", line), line
-    assert "near Brightline" not in line
-    assert line.endswith(". Want the list?"), line
-    if specialty:
-        assert "ICU nurse roles" in line
-
-
-# ---------------------------------------------------------- item 11 and d7 (comma splices)
-@pytest.mark.parametrize("niche", ["cleaning", "bookkeeping", "recruiting", "aviation"])
-@pytest.mark.parametrize("offer", ["reactivation", "outbound"])
-def test_free_work_lines_have_no_comma_splice(niche, offer):
-    line = cadence.free_work_line(niche, "Brightline Test Co", None, offer=offer)
-    assert not re.search(r", (want|Want) ", line), line
-    assert re.search(r"\. Want (to see (them|it)|the list)\?$", line), line
-
-
-def test_d5_recruiting_reactivation_wording():
-    line = cadence.free_work_line("recruiting", "Hire Test Co", None, offer="reactivation")
-    assert line == ("I can draft the first two emails for the clients Hire Test Co made one placement for and "
-                    "never heard from again. Want to see them?")
-
-
-def test_d5_walkthrough_line():
-    body = _body(5)
-    assert "Happy to walk through it together. I have Tue 1:00pm or Thu 3:30pm CT, or grab a time here: " in body
-    assert "If you want, I can walk you through it live" not in body
-
-
-def test_d7_has_no_comma_splice():
-    body = cadence.build_touch(_state(), 7, []).body_text
-    assert "Either answer is fine. I just want to keep my notes straight." in body
-
-
-# ---------------------------------------------------------- item 15 (d1, d3)
-def test_d1_and_d3_do_not_say_the_times_were_lost():
-    d1 = _body(1)
-    d3 = _body(3)
-    assert "Here are two new times in case the first ones did not suit: Tue 1:00pm or Thu 3:30pm CT." in d1
-    assert "A couple more options if those did not work: Tue 1:00pm or Thu 3:30pm CT." in d3
-    for body in (d1, d3):
-        assert "lost" not in body and "went too" not in body and "I still have" not in body, body
-
-
-def test_d6_noinvite_does_not_claim_times_opened_up():
-    body = _body(6, invite_created=False)
-    assert "opened up" not in body and "windows" not in body
-    assert "Here are two more times on my side: Tue 1:00pm or Thu 3:30pm CT." in body
-
-
-# ---------------------------------------------------------- item 19 (no free slot)
-@pytest.mark.parametrize("day", SLOT_DAYS + (6,))
-def test_no_slot_bodies_read_correctly_and_name_no_open_time(day):
-    t = cadence.build_touch(_state(), day, [], invite_created=False)
+# ---------------------------------------------------------- no sentence said twice
+@pytest.mark.parametrize("day", list(range(1, 11)))
+@pytest.mark.parametrize("niche,offer", [("cleaning", "reactivation"), ("bookkeeping", "outbound"),
+                                         ("recruiting", "reactivation")])
+def test_no_email_says_the_same_sentence_twice(day, niche, offer):
+    t = cadence.build_touch(_state(niche=niche, offer=offer), day, list(TWO))
     body = t.body_text
-    assert t.slots == []
-    for banned in ("afternoon", "this week", "windows", "{slots}", "two new", "two more", "A couple more",
-                   "I have", "open,"):
-        assert banned not in body, (day, banned, body)
-    assert cadence.DEFAULT_BOOKING_URL in body
     assert body.startswith("Hey Dana,\n\n") and body.rstrip().endswith("Lorenzo")
     assert t.problems == [], (day, t.problems, body)
-    # no sentence says the same thing twice (the old "open this week" doubling)
     sentences = [s.strip() for s in re.split(r"(?<=[.?])\s+", body) if s.strip()]
     assert len(sentences) == len(set(sentences)), body
 
 
-def test_no_slot_body_exact_wording_d14():
-    body = _body(14, slots=[])
-    assert body == ("Hey Dana,\n\nCircling back in case the timing is better now. Grab any open time here: %s\n\n"
-                    "Lorenzo\n" % cadence.DEFAULT_BOOKING_URL)
-
-
-def test_every_slot_day_has_a_no_slot_body():
-    names = set(p.stem[len("cadence_"):] for p in cadence.PROMPTS_DIR.glob("cadence_d*.md"))
-    slot_templates = set(n for n in names if "{slots}" in cadence._load_template(n))
-    assert slot_templates == set(cadence.NO_SLOTS_BODIES), (slot_templates, set(cadence.NO_SLOTS_BODIES))
-
-
-def test_d6_one_slot_names_no_afternoon():
-    body = _body(6, slots=TWO[:1])
-    assert "If another time is better, say the word and I will move it." in body
-    assert "afternoon" not in body
-
-
 @pytest.mark.parametrize("day", SLOT_DAYS)
-def test_no_slot_touch_with_no_lead_data_conforms_once_approved(template_env, day):
-    """Built through the day's no_slots variant plus the missing-data
-    fallbacks, a touch still passes the gate once its ids are approved."""
-    t = cadence.build_touch(_state(first=None, company=None), day, [])
-    main, parts = cadence.touch_template_ids(day, _state(), research_source="fallback", has_slots=False)
+def test_every_email_that_offers_times_says_the_earlier_ones_are_gone(day):
+    """Rule 2 (sequence_final.md): an email offering new times after unbooked
+    ones says the earlier ones got taken. E1 says it as "got filled", E5 as
+    "the slots keep getting filled"."""
+    body = _body(day)
+    said = ("got filled", "got taken", "got booked", "are gone", "went too", "long gone", "keep getting filled")
+    assert any(w in body for w in said), (day, body)
+
+
+@pytest.mark.parametrize("day", list(range(1, 11)))
+def test_a_touch_with_no_first_name_conforms_once_approved(template_env, day):
+    """Built with the "there" fallback, a touch still passes the gate once its
+    ids are approved (the missing_lead_data variant)."""
+    state = _state(first=None)
+    t = cadence.build_touch(state, day, list(TWO))
+    main, parts = cadence.touch_template_ids(day, state, research_source="fallback")
     template_env.approve_ids(main, *parts)
     gate.stamp(t, main, parts)
     v = gate.touch_verdict(t)
-    assert v.allowed, (day, v, t.body_text)
+    assert v.allowed, (day, v.reason, t.body_text)
 
 
 # ---------------------------------------------------------- item 23 (subject)

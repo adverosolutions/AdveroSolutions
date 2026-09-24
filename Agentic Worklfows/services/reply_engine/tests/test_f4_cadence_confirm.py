@@ -1,7 +1,7 @@
 """F4: the cadence decision links confirm on GET and act only on POST.
 
-/cadence/veto (the D1 30-minute Veto), /cadence/approve (the D6 "Send hold")
-and /cadence/veto-invite (the D6 "Email only") used to record the decision on
+/cadence/veto (the D1 30-minute Veto), /cadence/approve (the old D6 "Send
+hold") and /cadence/veto-invite (the old D6 "Email only") used to record the decision on
 a plain GET. Email link scanners and chat previewers fetch URLs with GET, so a
 scanner could record a signed decision with no human involved, and for
 /cadence/approve that puts a calendar hold in front of a lead.
@@ -17,6 +17,10 @@ What is pinned here:
 * POST with a bad token writes nothing, so it cannot overwrite a real
   decision the tick acts on;
 * the pushed card's actions are ntfy ``view`` actions that open the page.
+
+The D6 hold card itself is gone (2026-09-23, E6 is a plain email): no tick
+mints an approve / veto-invite link any more, but app.py still serves those
+routes, so their confirm-and-POST behaviour stays pinned here.
 
 Every lead here is invented. Live mode is set in-process only and every
 client is an in-process fake: nothing leaves the process.
@@ -43,7 +47,7 @@ COMPANY = "Quillfield Facility Group"
 OTHER = "sam.otter@example-cleaning.test"
 CAMPAIGN = "8086b41e-b546-4b36-9fa0-2d01f5cc119a"
 D1_FREE = ["2026-09-23T13:00:00-05:00", "2026-09-24T14:00:00-05:00"]
-D6_FREE = ["2026-09-29T13:00:00-05:00", "2026-09-30T14:00:00-05:00"]
+E6_FREE = ["2026-09-29T13:00:00-05:00", "2026-09-30T14:00:00-05:00"]
 KINDS = ("veto", "approve", "veto-invite")
 BUTTON = {"veto": "Veto", "approve": "Send hold", "veto-invite": "Email only"}
 
@@ -235,52 +239,22 @@ def test_a_d1_veto_window_link_only_opened_sends_as_before(world, monkeypatch):
     assert res["action"] == "sent" and len(inst.sent) == 1
 
 
-def _d6_ready(world):
+def test_e6_sends_no_hold_card_and_books_no_hold(world, monkeypatch):
+    """The D6 calendar-hold card is gone (2026-09-23): E6 is a plain email.
+    Even with the old CADENCE_D6_HOLD opt-in set, the tick sends it with no
+    Send hold / Email only card and writes nothing to the calendar."""
+    monkeypatch.setenv("CADENCE_D6_HOLD", "1")
     state = LeadState.from_store(world["store"].get(world["state"].key))
     state.cadence["day"] = 5
     state.cadence["next_send_at"] = ct(2026, 9, 28, 10, 0).isoformat()
     world["store"].set(state.key, state.to_store())
     world["clock"]["now"] = ct(2026, 9, 28, 10, 5)
-    return state
-
-
-def _d6_card(world, monkeypatch):
-    monkeypatch.setenv("CADENCE_D6_HOLD", "1")
-    _d6_ready(world)
-    pings = []
-    res, _ = _live_tick(world["store"], ct(2026, 9, 28, 10, 0), D6_FREE, monkeypatch, pings)
-    assert res["action"] == "awaiting_invite_ok"
-    return dict((label, _path(url)) for label, url in pings[-1][1]["actions"])
-
-
-def test_a_posted_send_hold_books_the_hold_and_sends_d6(world, monkeypatch):
-    links = _d6_card(world, monkeypatch)
-    page = world["client"].get(links["Send hold"])
-    assert page.status_code == 200
-    assert world["client"].post(_form_target(links["Send hold"], page.text)).status_code == 200
-    ghl, inst = Recorder(), FakeInstantly(sender=LEAD)
-    res, _ = _live_tick(world["store"], ct(2026, 9, 28, 10, 10), D6_FREE, monkeypatch, ghl=ghl, inst=inst)
-    assert res["action"] == "sent" and res["day"] == 6
-    assert len(ghl.named("create_appointment")) == 1 and len(inst.sent) == 1
-
-
-def test_a_posted_email_only_sends_d6_without_a_hold(world, monkeypatch):
-    links = _d6_card(world, monkeypatch)
-    page = world["client"].get(links["Email only"])
-    assert world["client"].post(_form_target(links["Email only"], page.text)).status_code == 200
-    ghl, inst = Recorder(), FakeInstantly(sender=LEAD)
-    res, _ = _live_tick(world["store"], ct(2026, 9, 28, 10, 10), D6_FREE, monkeypatch, ghl=ghl, inst=inst)
+    pings, ghl, inst = [], Recorder(), FakeInstantly(sender=LEAD)
+    res, _ = _live_tick(world["store"], ct(2026, 9, 28, 10, 0), E6_FREE, monkeypatch, pings, ghl=ghl, inst=inst)
     assert res["action"] == "sent" and res["day"] == 6
     assert ghl.named("create_appointment") == [] and len(inst.sent) == 1
-
-
-def test_opening_the_d6_pages_without_pressing_leaves_the_day_waiting(world, monkeypatch):
-    links = _d6_card(world, monkeypatch)
-    for url in links.values():
-        assert world["client"].get(url).status_code == 200
-    ghl = Recorder()
-    res, _ = _live_tick(world["store"], ct(2026, 9, 28, 11, 0), D6_FREE, monkeypatch, ghl=ghl)
-    assert res["action"] == "awaiting_invite_ok" and ghl.calls == []
+    assert not any(label in ("Send hold", "Email only") for _, k in pings for label, _url in k.get("actions") or [])
+    assert world["store"].get(cadence.approval_key(world["state"], "d6")) is None
 
 
 @pytest.mark.parametrize("kind", KINDS)
@@ -311,21 +285,6 @@ def test_a_forged_post_cannot_overwrite_a_real_veto(world, monkeypatch):
     assert res["action"] == "vetoed" and inst.sent == []
 
 
-def test_a_forged_send_hold_post_books_nothing(world, monkeypatch):
-    links = _d6_card(world, monkeypatch)
-    for bad in _bad_links(world, "approve").values():
-        assert world["client"].post(bad).status_code == 403
-    # a real Email only stays in force against a forged Send hold
-    page = world["client"].get(links["Email only"])
-    assert world["client"].post(_form_target(links["Email only"], page.text)).status_code == 200
-    for bad in _bad_links(world, "approve").values():
-        assert world["client"].post(bad).status_code == 403
-    assert world["store"].get(cadence.approval_key(world["state"], "d6"))["decision"] == "veto"
-    ghl = Recorder()
-    res, _ = _live_tick(world["store"], ct(2026, 9, 28, 10, 10), D6_FREE, monkeypatch, ghl=ghl)
-    assert res["action"] == "sent" and ghl.named("create_appointment") == []
-
-
 # ------------------------------------------------------------ the pushes
 def test_the_d1_card_action_is_a_view_that_opens_the_confirm_page(world, monkeypatch):
     pings = []
@@ -338,21 +297,6 @@ def test_the_d1_card_action_is_a_view_that_opens_the_confirm_page(world, monkeyp
     page = world["client"].get(_path(kwargs["actions"][0][1]))
     assert page.status_code == 200 and ">Veto</button>" in page.text
     assert world["store"].get(cadence.veto_key(world["state"])) is None
-
-
-def test_the_d6_card_actions_are_views_that_open_the_confirm_pages(world, monkeypatch):
-    monkeypatch.setenv("CADENCE_D6_HOLD", "1")
-    _d6_ready(world)
-    pings = []
-    _live_tick(world["store"], ct(2026, 9, 28, 10, 0), D6_FREE, monkeypatch, pings)
-    kwargs = pings[-1][1]
-    header = notify.format_actions(kwargs["actions"])
-    assert header.startswith("view, Send hold, %s/cadence/approve/" % BASE)
-    assert "; view, Email only, %s/cadence/veto-invite/" % BASE in header and "http," not in header
-    for label, url in kwargs["actions"]:
-        page = world["client"].get(_path(url))
-        assert page.status_code == 200 and ">%s</button>" % label in page.text
-    assert world["store"].get(cadence.approval_key(world["state"], "d6")) is None
 
 
 def test_the_email_leg_carries_the_confirm_page_urls_only(world, monkeypatch):

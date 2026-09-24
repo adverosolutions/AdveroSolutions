@@ -305,7 +305,7 @@ def test_a_gate_wide_hold_does_not_advance_the_stall_clock(store, tmp_env, appro
         cadence.tick_lead(state, now, store=store, free_slots=cadence.default_slot_grid(now),
                           notify_fn=lambda *a, **k: None)
     approvals_file.kill_switch(False)
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     actions = []
     for day in (24, 25, 28, 29):
         now = ct(2026, 9, day, 10, 0)
@@ -335,7 +335,7 @@ def test_an_approval_hold_then_the_kill_switch_never_stops_on_a_kill_switch_tick
     they do not count. Still unapproved once the switch is off: the second
     approval hold continues the count (Mon 28 is the third held day, Tue 29
     the fourth), and the stop is worded for that cause."""
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     state = at_day(2, ct(2026, 9, 21, 10, 0))
     pushes = []
     _, ticks = _ten_oclock_ticks(state, store, (21, 22, 23, 24, 25, 28, 29), pushes, before={
@@ -361,11 +361,11 @@ def test_an_id_approved_during_the_kill_switch_goes_out_once_it_is_off(store, tm
     approved while it is on. Nothing stops the ladder in the meantime (the
     old clock stopped it on Thursday, a kill-switch tick); the day goes out
     on the first tick after the switch is off."""
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     state = at_day(2, ct(2026, 9, 21, 10, 0))
     pushes = []
     _, ticks = _ten_oclock_ticks(state, store, (21, 22, 23, 24, 25, 28), pushes, before={
-        23: lambda: approvals_file.kill_switch(True), 24: lambda: approvals_file.approve_ids("cadence.d3"),
+        23: lambda: approvals_file.kill_switch(True), 24: lambda: approvals_file.approve_ids("cadence.e3"),
         28: lambda: approvals_file.kill_switch(False)})
     assert [t[1] for t in ticks] == ["held_template"] * 5 + ["would_send"]
     assert [t[2] for t in ticks[2:5]] == ["system"] * 3
@@ -379,7 +379,7 @@ def test_unapproved_kill_switch_unapproved_counts_only_the_unapproved_days(store
     never stopped on a kill-switch tick (Thu 24 and Mon 28 are three and
     five business days after the first hold), and it stops on the fourth
     unapproved day."""
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     state = at_day(2, ct(2026, 9, 21, 10, 0))
     pushes = []
     on, off = (lambda: approvals_file.kill_switch(True)), (lambda: approvals_file.kill_switch(False))
@@ -397,12 +397,12 @@ def test_the_stall_counts_across_causes_and_the_stop_names_the_last_one(store, t
     """Unapproved Mon to Wed, then approved on Thursday, when the lead's first
     name fails the placeholder rules: the count goes on, and the stop's
     advice is about the lead's data, not "approve the ids"."""
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     state = at_day(2, ct(2026, 9, 21, 10, 0))
     state.first_name = "N/A"
     pushes = []
     results, ticks = _ten_oclock_ticks(state, store, (21, 22, 23, 24), pushes,
-                                       before={24: lambda: approvals_file.approve_ids("cadence.d3")})
+                                       before={24: lambda: approvals_file.approve_ids("cadence.e3")})
     assert [t[1:4] for t in ticks] == [("held_template", "approve", "unapproved")] * 3 + [
         ("stopped", "lead_data", "nonconforming")]
     assert len(pushes) == 1
@@ -471,7 +471,7 @@ def client(store):
 
 
 def test_template_stop_resume_end_to_end(store, tmp_env, secret, email_leg, approvals_file, client):
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     state = at_day(2, ct(2026, 9, 21, 10, 0))
     pushes = []
     stall(state, store, pushes)
@@ -482,14 +482,14 @@ def test_template_stop_resume_end_to_end(store, tmp_env, secret, email_leg, appr
 
     # before the ids are approved: the page says so, GET changes nothing
     page = client.get(path)
-    assert page.status_code == 200 and "do NOT pass" in page.text and "cadence.d3" in page.text
+    assert page.status_code == 200 and "do NOT pass" in page.text and "cadence.e3" in page.text
     assert LEAD not in page.text and COMPANY not in page.text
     assert store.get(_key())["cadence"]["stopped_reason"] == "template_unapproved"
     assert client.post(path.split("?")[0]).status_code == 403
     assert client.post(path.split("?")[0] + "?t=2026-09-30T00:00:00-05:00.deadbeef").status_code == 403
 
     # approved: the next tick re-signs the link at once, on the email leg
-    approvals_file.approve_ids("cadence.d3")
+    approvals_file.approve_ids("cadence.e3")
     later = []
     _, res = tick_stored(store, ct(2026, 9, 24, 11, 0), lambda *a, **k: later.append((a, k)))
     assert res["action"] == "resume_link_sent" and res["ready"] is True and len(later) == 1
@@ -515,7 +515,7 @@ def test_template_stop_resume_end_to_end(store, tmp_env, secret, email_leg, appr
 
 def test_resume_before_approval_sends_nothing_and_holds_again(store, tmp_env, secret, email_leg, approvals_file,
                                                               client):
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     state = at_day(2, ct(2026, 9, 21, 10, 0))
     pushes = []
     stall(state, store, pushes)
@@ -533,12 +533,12 @@ def test_resume_with_an_opted_out_lead_still_sends_nothing(store, tmp_env, secre
                                                            client):
     """An approved template never bypasses a send check: the opt-out marker
     set while the ladder was stopped still stops it after the Resume."""
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     state = at_day(2, ct(2026, 9, 21, 10, 0))
     pushes = []
     stall(state, store, pushes)
     path = link_of(pushes[0])[len("https://engine.test"):]
-    approvals_file.approve_ids("cadence.d3")
+    approvals_file.approve_ids("cadence.e3")
     assert client.post(path).status_code == 200
     resumed = LeadState.from_store(store.get(_key()))
     resumed.opt_out = {"reason": "unsubscribe"}
@@ -550,7 +550,7 @@ def test_resume_with_an_opted_out_lead_still_sends_nothing(store, tmp_env, secre
 
 def test_the_resume_link_is_re_signed_every_day_the_ladder_stays_stopped(store, tmp_env, secret, email_leg,
                                                                           approvals_file):
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     state = at_day(2, ct(2026, 9, 21, 10, 0))
     pushes = []
     stall(state, store, pushes)
@@ -575,7 +575,7 @@ def test_the_resume_link_is_re_signed_every_day_the_ladder_stays_stopped(store, 
 
 def test_no_secret_means_no_link_and_says_so(store, tmp_env, email_leg, approvals_file, monkeypatch):
     monkeypatch.delenv("REPLY_ENGINE_SECRET", raising=False)
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     state = at_day(2, ct(2026, 9, 21, 10, 0))
     pushes = []
     res = stall(state, store, pushes)
@@ -589,7 +589,7 @@ def test_no_secret_means_no_link_and_says_so(store, tmp_env, email_leg, approval
 def test_the_hourly_job_persists_the_re_signed_link(store, tmp_env, secret, email_leg, approvals_file):
     from jobs import cadence_tick as job
 
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     state = at_day(2, ct(2026, 9, 21, 10, 0))
     stall(state, store, [])
     pushes = []
@@ -611,7 +611,7 @@ def test_a_protected_topic_without_email_carries_the_link_in_the_push(store, tmp
     shows what a live run would put on each leg."""
     from shared import notify
 
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     state = at_day(2, ct(2026, 9, 21, 10, 0))
     notify.reset_for_tests()
     res = stall(state, store, None, notify_fn=notify.notify)
@@ -632,7 +632,7 @@ def test_a_protected_topic_without_email_carries_the_link_in_the_push(store, tmp
     assert again["action"] == "resume_link_sent" and again["resume_link_via"] == "ntfy"
     url = ntfy_link_of(pushes[0])
     assert "fresh Resume link was sent in the push" in cadence.summarize_touch(dict(again, lead_email=LEAD))
-    approvals_file.approve_ids("cadence.d3")
+    approvals_file.approve_ids("cadence.e3")
     path = url[len("https://engine.test"):]
     assert client.post(path).status_code == 200
     assert not LeadState.from_store(store.get(_key())).cadence.get("stopped_reason")
@@ -642,7 +642,7 @@ def test_a_public_topic_with_email_carries_the_link_on_the_email_leg_only(store,
                                                                            approvals_file):
     from shared import notify
 
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     state = at_day(2, ct(2026, 9, 21, 10, 0))
     notify.reset_for_tests()
     res = stall(state, store, None, notify_fn=notify.notify)
@@ -663,7 +663,7 @@ def test_a_public_topic_without_email_says_no_channel_and_records_no_link(store,
     """No leg can carry the link: the push says so and what to set, the
     result and the row do not claim a link went out, and no daily
     reminder claims one either. Once a leg exists, the next tick sends it."""
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     state = at_day(2, ct(2026, 9, 21, 10, 0))
     pushes = []
     res = stall(state, store, pushes)
@@ -707,7 +707,7 @@ def test_no_reminder_and_no_ready_push_for_a_lead_the_ladder_is_over_for(store, 
     opted out, was blocklisted, booked or answered for good while the ladder
     was stopped, no daily link and no "ready to resume" push goes out, even
     after the held ids are approved."""
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     state = at_day(2, ct(2026, 9, 21, 10, 0))
     pushes = []
     stall(state, store, pushes)
@@ -715,7 +715,7 @@ def test_no_reminder_and_no_ready_push_for_a_lead_the_ladder_is_over_for(store, 
     for field, value in mark.items():
         setattr(stopped, field, value)
     store.set(stopped.key, stopped.to_store())
-    approvals_file.approve_ids("cadence.d3")
+    approvals_file.approve_ids("cadence.e3")
     for when in (ct(2026, 9, 24, 11, 0), ct(2026, 9, 25, 7, 0), ct(2026, 9, 28, 7, 0)):
         _, res = tick_stored(store, when, lambda *a, **k: pushes.append((a, k)))
         assert res["action"] == "already_stopped" and res["resume_withheld"] == expected

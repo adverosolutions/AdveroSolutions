@@ -70,29 +70,29 @@ def test_an_approved_day_carries_its_template_id_and_goes_out(store, tmp_env):
     now = ct(2026, 9, 22, 10, 0)
     res = cadence.tick_lead(at_day(2, now), now, store=store, free_slots=FREE, notify_fn=lambda *a, **k: None)
     assert res["action"] == "would_send"
-    assert res["touch"]["template_id"] == "cadence.d3" and res["touch"]["template_hash"]
-    assert "cadence.d3" in cadence.summarize_touch(res)
+    assert res["touch"]["template_id"] == "cadence.e3" and res["touch"]["template_hash"]
+    assert "cadence.e3" in cadence.summarize_touch(res)
     assert len(replies()) == 1
 
 
 def test_an_unapproved_day_is_held_not_sent_and_reported_once_a_day(store, tmp_env, approvals_file):
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     state = at_day(2, ct(2026, 9, 22, 10, 0))
     first = cadence.tick_lead(state, ct(2026, 9, 22, 10, 0), store=store, free_slots=FREE,
                               notify_fn=lambda *a, **k: None)
-    assert first["action"] == "held_template" and first["template_id"] == "cadence.d3"
+    assert first["action"] == "held_template" and first["template_id"] == "cadence.e3"
     assert first["reason"] == "unapproved" and not first["quiet"]
     line = cadence.summarize_touch(first)
-    assert "HELD" in line and "cadence.d3" in line and "Those times went" not in line
+    assert "HELD" in line and "cadence.e3" in line and "got taken" not in line
     again = cadence.tick_lead(state, ct(2026, 9, 22, 11, 0), store=store, free_slots=FREE,
                               notify_fn=lambda *a, **k: None)
     assert again["action"] == "held_template" and again["quiet"]
     assert replies() == [] and state.cadence["day"] == 2 and state.cadence["touches"] == []
-    assert state.cadence["template_hold"]["template_id"] == "cadence.d3"
+    assert state.cadence["template_hold"]["template_id"] == "cadence.e3"
     # counted once for the FYI, not once per tick
-    assert gate.drain_fyi(store)[1] == {"cadence.d3": 1}
+    assert gate.drain_fyi(store)[1] == {"cadence.e3": 1}
     # approved: the same day goes out and the hold is cleared
-    approvals_file.approve_ids("cadence.d3")
+    approvals_file.approve_ids("cadence.e3")
     sent = cadence.tick_lead(state, ct(2026, 9, 22, 12, 0), store=store, free_slots=FREE,
                              notify_fn=lambda *a, **k: None)
     assert sent["action"] == "would_send" and "template_hold" not in state.cadence
@@ -100,15 +100,15 @@ def test_an_unapproved_day_is_held_not_sent_and_reported_once_a_day(store, tmp_e
 
 
 def test_an_unapproved_part_holds_the_day(store, tmp_env, approvals_file):
-    approvals_file.revoke_ids("cadence.d4.case_study.reactivation")
+    approvals_file.revoke_ids("cadence.e4.offer_proof.reactivation")
     now = ct(2026, 9, 22, 10, 0)
     res = cadence.tick_lead(at_day(3, now), now, store=store, free_slots=FREE, notify_fn=lambda *a, **k: None)
-    assert res["action"] == "held_template" and "cadence.d4.case_study.reactivation" in res["ids"]
+    assert res["action"] == "held_template" and "cadence.e4.offer_proof.reactivation" in res["ids"]
     assert replies() == []
 
 
 def test_a_dry_run_previews_the_hold(store, tmp_env, approvals_file):
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     now = ct(2026, 9, 22, 10, 0)
     state = at_day(2, now)
     before = json.dumps(cadence.state_to_dict(state), sort_keys=True, default=str)
@@ -128,7 +128,7 @@ def test_d1_unapproved_sends_no_veto_ping_and_approval_opens_a_fresh_window(stor
         return httpx.Response(200, json={"id": "sent-1"})
 
     inst = Instantly(api_key="x", transport=httpx.MockTransport(handler))
-    approvals_file.revoke_ids("cadence.d1")
+    approvals_file.revoke_ids("cadence.e1")
     state = cadence.arm(make_state(), ct(2026, 9, 21, 16, 0))
     pings = []
 
@@ -139,7 +139,7 @@ def test_d1_unapproved_sends_no_veto_ping_and_approval_opens_a_fresh_window(stor
     assert tick(9, 30)["action"] == "held_template"
     assert tick(10)["action"] == "held_template"
     assert pings == [] and calls == [] and state.cadence.get("veto_notified_at") is None
-    approvals_file.approve_ids("cadence.d1")
+    approvals_file.approve_ids("cadence.e1")
     opened = tick(11)
     assert opened["action"] == "veto_window_opened" and len(pings) == 1 and calls == []
     pinged = slot_rules.parse_iso(state.cadence["veto_notified_at"])
@@ -156,14 +156,14 @@ def test_d1_revoked_after_the_ping_drops_the_window(store, live_mode, tmp_env, a
     res = cadence.tick_lead(state, ct(2026, 9, 22, 9, 30), store=store, free_slots=FREE,
                             notify_fn=lambda *a, **k: {"email": True})
     assert res["action"] == "veto_window_opened" and state.cadence["veto_notified_at"]
-    approvals_file.revoke_ids("cadence.d1")
+    approvals_file.revoke_ids("cadence.e1")
     held = cadence.tick_lead(state, ct(2026, 9, 22, 10, 0), store=store, free_slots=FREE,
                              notify_fn=lambda *a, **k: None)
     assert held["action"] == "held_template" and state.cadence["veto_notified_at"] is None
 
 
 def test_three_business_days_held_stops_the_ladder_and_resume_works(store, tmp_env, approvals_file):
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     state = at_day(2, ct(2026, 9, 21, 10, 0))  # Monday
     pushes = []
     actions = []
@@ -175,17 +175,17 @@ def test_three_business_days_held_stops_the_ladder_and_resume_works(store, tmp_e
     stopped = actions[-1]
     assert stopped["reason"] == "template_unapproved" and stopped["days"] == cadence.TEMPLATE_HOLD_STALL_DAYS
     assert state.cadence["stopped_reason"] == "template_unapproved"
-    assert "cadence.d3" in cadence.summarize_touch(stopped)
+    assert "cadence.e3" in cadence.summarize_touch(stopped)
     # one push, ids and counts only
     assert len(pushes) == 1
     title, message = pushes[0][0][:2]
     for private in (LEAD, COMPANY, "Dana", "http"):
         assert private not in title and private not in message
-    assert "cadence.d3" in message
+    assert "cadence.e3" in message
     assert cadence.tick_lead(state, ct(2026, 9, 24, 11, 0), store=store, free_slots=FREE,
                              notify_fn=lambda *a, **k: None)["action"] == "already_stopped"
     # resumable
-    approvals_file.approve_ids("cadence.d3")
+    approvals_file.approve_ids("cadence.e3")
     resumed = cadence.resume_after_recipient_hold(state, ct(2026, 9, 24, 12, 0))
     assert resumed["resumed"] and resumed["day"] == 3 and "template_hold" not in state.cadence
     now = ct(2026, 9, 24, 13, 0)
@@ -194,13 +194,13 @@ def test_three_business_days_held_stops_the_ladder_and_resume_works(store, tmp_e
     assert sent["action"] == "would_send" and sent["day"] == 3
 
 
-def test_d2_by_default_never_calls_the_research_model(store, tmp_env):
+def test_e2_by_default_never_calls_the_research_model(store, tmp_env):
     calls = []
     llm.register_fake("research", lambda system, user, json_mode: calls.append(1) or "A line about them")
     try:
         touch = cadence.build_touch(make_state(), 2, FREE)
         assert touch.meta["research_source"] == "fallback"
-        assert list(touch.template_parts) == ["cadence.d2.research_fallback.reactivation"]
+        assert list(touch.template_parts) == ["cadence.e2.research_fallback.reactivation"]
         now = ct(2026, 9, 22, 10, 0)
         res = cadence.tick_lead(at_day(1, now), now, store=store, free_slots=FREE, notify_fn=lambda *a, **k: None)
         assert res["action"] == "would_send" and calls == []
@@ -208,24 +208,23 @@ def test_d2_by_default_never_calls_the_research_model(store, tmp_env):
         llm.clear_fakes()
 
 
-def test_d2_with_a_model_line_is_held_never_sent(store, tmp_env):
+def test_e2_with_a_model_line_is_held_never_sent(store, tmp_env):
     llm.register_fake("research", lambda system, user, json_mode: "Your crews cover three towns, which is a lot")
     try:
         now = ct(2026, 9, 22, 10, 0)
         res = cadence.tick_lead(at_day(1, now), now, store=store, free_slots=FREE, notify_fn=lambda *a, **k: None,
                                 research_mode="llm")
-        assert res["action"] == "held_template" and "cadence.d2.research_line" in res["ids"]
+        assert res["action"] == "held_template" and "cadence.e2.research_line" in res["ids"]
         assert replies() == []
     finally:
         llm.clear_fakes()
 
 
-def test_d6_is_the_no_invite_body_whenever_there_is_no_invite_or_no_slot():
+def test_e2_carries_no_slots_even_when_some_are_passed():
     state = make_state()
-    assert cadence.touch_template_ids(6, state, invite_created=True, has_slots=True)[0] == "cadence.d6"
-    assert cadence.touch_template_ids(6, state, invite_created=False, has_slots=True)[0] == "cadence.d6_noinvite"
-    assert cadence.touch_template_ids(6, state, invite_created=True, has_slots=False)[0] == "cadence.d6_noinvite"
-    assert cadence.build_touch(state, 6, [], invite_created=True).template_id == "cadence.d6_noinvite"
+    touch = cadence.build_touch(state, 2, FREE)
+    assert touch.template_id == "cadence.e2" and touch.slots == []
+    assert "slots" not in cadence.touch_bindings(state, touch)
 
 
 def test_slots_are_bound_to_the_ones_offered(store, tmp_env):

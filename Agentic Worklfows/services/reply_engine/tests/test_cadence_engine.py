@@ -83,14 +83,18 @@ def test_arm_monday_night_schedules_tuesday():
 
 
 def test_schedule_after_walks_the_week_and_skips_weekends():
-    # D5 sent Friday -> D6 Monday; D7 -> D14 a week later (rolled to a business day); D14 -> D30
+    # E5 sent Friday -> E6 Monday; E7 -> E8 two weeks later (rolled to a business day); E8 -> E9 -> E10 weekly
     assert cadence.schedule_after(5, ct(2026, 9, 25, 10, 0)).isoformat() == "2026-09-28T10:00:00-05:00"
-    d14 = cadence.schedule_after(7, ct(2026, 9, 26, 10, 0))  # a Saturday send date (should not happen, but roll forward)
-    assert d14.weekday() < 5
-    d30 = cadence.schedule_after(14, d14)
-    assert d30.weekday() < 5 and d30 > d14
-    assert cadence.schedule_after(30, d30) is None
-    assert cadence.next_day_number(7) == 14 and cadence.next_day_number(14) == 30 and cadence.next_day_number(30) is None
+    e8 = cadence.schedule_after(7, ct(2026, 9, 26, 10, 0))  # a Saturday send date (should not happen, but roll forward)
+    assert e8.weekday() < 5 and e8.isoformat() == "2026-10-12T10:00:00-05:00"
+    e9 = cadence.schedule_after(8, e8)
+    assert e9.weekday() < 5 and e9 > e8
+    e10 = cadence.schedule_after(9, e9)
+    assert e10.weekday() < 5 and e10 > e9
+    assert cadence.schedule_after(10, e10) is None
+    assert cadence.next_day_number(7) == 8 and cadence.next_day_number(9) == 10 and cadence.next_day_number(10) is None
+    # the old ladder's days are not in the sequence: nothing follows them
+    assert cadence.next_day_number(14) is None and cadence.next_day_number(30) is None
 
 
 def test_due_only_on_business_days_at_or_after_10_within_send_window():
@@ -233,29 +237,29 @@ def test_resolve_free_slots_uses_ghl_when_token_present():
 SLOTS = ["2026-09-23T14:00:00-05:00", "2026-09-24T15:30:00-05:00"]
 
 
-@pytest.mark.parametrize("day", [1, 2, 3, 4, 5, 6, 7, 14, 30])
+@pytest.mark.parametrize("day", list(range(1, 11)))
 def test_build_touch_every_day_is_clean(day):
     touch = cadence.build_touch(make_state(), day, SLOTS)
     assert touch.subject == "Re: Tiffany, question"
     assert touch.body_text.startswith("Hey Tiffany,")
     assert touch.problems == [], (day, touch.problems, touch.body_text)
     assert touch.intent == cadence.INTENTS[day]
-    if day == 7:
-        assert touch.slots == [] and "close your file" in touch.body_text
+    if day == 2:
+        assert touch.slots == [] and "Wed 2:00pm" not in touch.body_text
     else:
         assert touch.slots == SLOTS
-        assert "Wed 2:00pm" in touch.body_text and "Thu 3:30pm" in touch.body_text
-        if day != 6:
-            assert "Wed 2:00pm or Thu 3:30pm CT" in touch.body_text
-        assert cadence.DEFAULT_BOOKING_URL in touch.body_text
+        assert "Wed 2:00pm or Thu 3:30pm CT" in touch.body_text
+    # no booking link in any follow-up (Lorenzo, 2026-09-23)
+    assert cadence.DEFAULT_BOOKING_URL not in touch.body_text and "http" not in touch.body_text
 
 
 def test_day_intents_exact_wording():
-    assert "Here are two new times in case the first ones did not suit: Wed 2:00pm or Thu 3:30pm CT." in \
-        cadence.build_touch(make_state(), 1, SLOTS).body_text
-    assert "A couple more options if those did not work: Wed 2:00pm or Thu 3:30pm CT." in \
+    assert "The time slots I sent got filled. Here are 2 more, let me know if they work: Wed 2:00pm or Thu 3:30pm CT." \
+        in cadence.build_touch(make_state(), 1, SLOTS).body_text
+    assert "Those last two times got taken too.\n\nWould Wed 2:00pm or Thu 3:30pm CT work instead?" in \
         cadence.build_touch(make_state(), 3, SLOTS).body_text
-    assert "Should I close your file, or is a different week better?" in cadence.build_touch(make_state(), 7, []).body_text
+    assert "Should I keep trying to find a time, or is now just not the right moment?" in \
+        cadence.build_touch(make_state(), 7, SLOTS).body_text
 
 
 def test_d2_research_line_from_llm_fake_and_override():
@@ -265,78 +269,43 @@ def test_d2_research_line_from_llm_fake_and_override():
     assert "!" not in t2.body_text and "4.9 stars" in t2.body_text
 
 
-def test_d4_case_study_matches_offer_type():
+def test_e4_proof_matches_offer_type():
     react = cadence.build_touch(make_state(campaign_id=CLEANING_REACT), 4, SLOTS)
     assert "$6M" in react.body_text and "6 months" in react.body_text
+    assert "$180,000" not in react.body_text
     out = cadence.build_touch(make_state(campaign_id=CLEANING_TRIG), 4, SLOTS)
     assert "$180,000" in out.body_text and "90 days" in out.body_text
     assert "$6M" not in out.body_text
 
 
-def test_d5_free_work_matches_the_offers_md_mechanism():
-    """Every campaign's D5 sample names the mechanism config/offers.md defines
-    for that offer, and none of the other offer's. cleaning_trigger used to get
-    "15 lost-bid candidates from your reviews and Maps footprint": lost bids are
-    the *reactivation* mechanism (offers.md: the two sets are "never mixed"), and
-    they cannot be derived from a Maps listing."""
+def test_e6_preview_matches_the_offers_md_mechanism():
+    """Every campaign's E6 preview names the mechanism config/offers.md defines
+    for that offer, and none of the other offer's ("never mixed")."""
     # offers.md: cleaning_trigger watches "new leases, office expansions, PM changes"
-    clean_trigger = cadence.build_touch(make_state(campaign_id=CLEANING_TRIG), 5, SLOTS).body_text
-    assert "new lease" in clean_trigger and "property managers" in clean_trigger
-    assert "lost-bid" not in clean_trigger and "Maps" not in clean_trigger
+    clean_trigger = cadence.build_touch(make_state(campaign_id=CLEANING_TRIG), 6, SLOTS).body_text
+    assert "office leases" in clean_trigger and "property managers" in clean_trigger
+    assert "cancelled or never signed" not in clean_trigger
     # offers.md: bookkeeping_trigger watches "new business formations, part-time bookkeeper posts"
-    assert "bookkeeper" in cadence.build_touch(make_state(campaign_id=BOOKKEEPING_TRIG, company="Taxfo"), 5, SLOTS).body_text
-    # offers.md: recruiting_outbound watches roles opening, outreach to hiring managers
-    assert "hiring manager" in cadence.build_touch(make_state(campaign_id=RECRUITING_OUT), 5, SLOTS).body_text
-    # an unknown niche must not fall back to another offer's mechanism
-    unknown = cadence.free_work_line("aviation", "Acme Co", offer="outbound")
-    assert "lost-bid" not in unknown and "new lease" not in unknown and "bookkeeper" not in unknown
+    assert "part-time bookkeeper" in cadence.build_touch(make_state(campaign_id=BOOKKEEPING_TRIG, company="Taxfo"),
+                                                         6, SLOTS).body_text
+    # offers.md: recruiting_outbound watches roles opening on job boards
+    assert "job boards" in cadence.build_touch(make_state(campaign_id=RECRUITING_OUT), 6, SLOTS).body_text
 
 
-def test_d5_free_work_matches_offer_type_not_just_niche():
-    # reactivation prospects are working their own dormant list: offers.md says the
-    # two mechanisms are never mixed, so no "just formed" / job-post / "opened this week"
-    book = cadence.build_touch(make_state(campaign_id=BOOKKEEPING_REACT, company="Taxfo"), 5, SLOTS).body_text
-    assert "just formed" not in book and "job post" not in book and "bookkeeper role" not in book
-    assert "lost or quoted and never closed" in book
-    rec = cadence.build_touch(make_state(campaign_id=RECRUITING_REACT, company="Hire Co"), 5, SLOTS).body_text
-    assert "opened this week" not in rec and "job board" not in rec
-    assert "made one placement for" in rec
-    clean = cadence.build_touch(make_state(campaign_id=CLEANING_REACT), 5, SLOTS).body_text
-    assert "I pulled" not in clean and "I can pull" not in clean
+def test_e6_preview_matches_offer_type_not_just_niche():
+    # reactivation prospects are working their own dormant list: no trigger watching
+    book = cadence.build_touch(make_state(campaign_id=BOOKKEEPING_REACT, company="Taxfo"), 6, SLOTS).body_text
+    assert "newly registered" not in book and "part-time bookkeeper" not in book
+    assert "former clients and old inquiries" in book
+    rec = cadence.build_touch(make_state(campaign_id=RECRUITING_REACT, company="Hire Co"), 6, SLOTS).body_text
+    assert "job boards" not in rec and "clients who've gone quiet" in rec
+    clean = cadence.build_touch(make_state(campaign_id=CLEANING_REACT), 6, SLOTS).body_text
+    assert "office leases" not in clean and "cancelled or never signed" in clean
 
 
-def test_d6_requires_approval_and_names_the_hold():
-    t = cadence.build_touch(make_state(), 6, SLOTS)
-    assert t.requires_approval is True
-    assert "Wed 2:00pm CT" in t.body_text
-    # the copy only promises what GHL can deliver: no "marked it free" claim
-    assert "marked it free" not in t.body_text and "free" not in t.body_text
-    assert "hold on my calendar" in t.body_text
-    assert t.meta["invite_slot"] == SLOTS[0]
-    assert t.channel_note and "Second channel" in t.channel_note
-    fallback = cadence.build_touch(make_state(), 6, SLOTS, invite_created=False)
-    assert fallback.requires_approval is True and "hold" not in fallback.body_text.lower()
-    assert cadence.build_touch(make_state(), 1, SLOTS).requires_approval is False
-
-
-def test_d6_tick_in_shadow_records_would_do_with_approval_flag(store, monkeypatch):
-    """With the hold opted in, shadow records the create_appointment intent."""
-    monkeypatch.setenv("CADENCE_D6_HOLD", "1")
-    state = cadence.arm(make_state(ghl_contact_id="tE3tyj5iIAXfBpD52rFM"), NOW)
-    state.cadence["day"] = 5
-    now = ct(2026, 9, 28, 10, 0)
-    state.cadence["next_send_at"] = now.isoformat()
-    res = cadence.tick_lead(state, now, store=store, free_slots=cadence.default_slot_grid(now))
-    assert res["action"] == "would_send" and res["day"] == 6
-    assert res["touch"]["requires_approval"] is True
-    rec = state.cadence["touches"][-1]
-    assert rec["requires_approval"] is True and rec["kind"] == "would_do" and rec["shadow"] is True
-    assert any(r.get("action") == "create_appointment" for r in res["records"])
-
-
-def test_d6_shadow_without_the_opt_in_previews_the_no_hold_day(store, tmp_env):
-    """Shadow is Lorenzo's preview of live, so it takes the same default: no
-    hold, no calendar write, the day still goes out."""
+def test_e6_is_a_plain_email_with_no_calendar_hold(store, tmp_env):
+    """The D6 calendar hold is gone: E6 is a plain email like the rest. No
+    hold, no calendar write, no approval flag, and the day goes out."""
     state = cadence.arm(make_state(ghl_contact_id="tE3tyj5iIAXfBpD52rFM"), NOW)
     state.cadence["day"] = 5
     now = ct(2026, 9, 28, 10, 0)
@@ -344,55 +313,9 @@ def test_d6_shadow_without_the_opt_in_previews_the_no_hold_day(store, tmp_env):
     res = cadence.tick_lead(state, now, store=store, free_slots=cadence.default_slot_grid(now))
     assert res["action"] == "would_send" and res["day"] == 6
     assert "hold" not in res["touch"]["body_text"].lower()
+    assert "requires_approval" not in res["touch"] and "channel_note" not in res["touch"]
     assert not any(r.get("action") == "create_appointment" for r in res["records"])
     assert [r for r in read_shadow_log() if r["action"] == "create_appointment"] == []
-
-
-def test_d6_live_waits_for_lorenzos_ok(store, live_mode, tmp_env, monkeypatch):
-    monkeypatch.setenv("CADENCE_D6_HOLD", "1")
-    state = cadence.arm(make_state(ghl_contact_id="tE3tyj5iIAXfBpD52rFM"), NOW)
-    state.cadence["day"] = 5
-    now = ct(2026, 9, 28, 10, 0)
-    state.cadence["next_send_at"] = now.isoformat()
-    sent = []
-    # no GHL token -> default grid -> unverified in live -> refuse to send times we cannot vouch for
-    res = cadence.tick_lead(state, now, store=store, ghl=GHL(token=None, transport=raising_transport()), notify_fn=lambda *a, **k: sent.append((a, k)))
-    assert res["action"] == "skipped_unverified_slots" and sent == []
-    ghl_free = ["2026-09-29T13:00:00-05:00", "2026-09-30T14:00:00-05:00"]
-    res = cadence.tick_lead(state, now, store=store, free_slots=ghl_free, notify_fn=lambda *a, **k: sent.append((a, k)))
-    # free_slots injected explicitly counts as 'provided' (verified by the caller)
-    assert res["action"] == "awaiting_invite_ok"
-    assert sent and sent[-1][1]["actions"][0][0] == "Send hold"
-    assert sent[-1][1]["actions"][1][0] == "Email only"
-    assert "goes out either way" in sent[-1][0][1]
-    assert state.cadence["touches"] == []
-
-
-def test_d6_hold_is_opt_in_in_live_and_defaults_to_the_no_hold_body(store, live_mode, tmp_env):
-    """The hold lands on the Discovery Call calendar, which the show-rate job
-    reads as a booked call. Without CADENCE_D6_HOLD the day still goes out, as
-    the no-hold variant, and nothing is written to the calendar."""
-    calls = []
-
-    def handler(request):
-        calls.append((request.method, str(request.url)))
-        if request.method == "GET":  # the recipient re-read must CONFIRM the lead (decision R6)
-            return httpx.Response(200, json={"id": "e-1", "from_address_email": "tiffany@flowerhillfs.com"})
-        return httpx.Response(200, json={"id": "sent-d6"})
-
-    inst = Instantly(api_key="x", transport=httpx.MockTransport(handler))
-    state = cadence.arm(make_state(ghl_contact_id="tE3tyj5iIAXfBpD52rFM"), NOW)
-    state.cadence["day"] = 5
-    now = ct(2026, 9, 28, 10, 0)
-    state.cadence["next_send_at"] = now.isoformat()
-    res = cadence.tick_lead(state, now, store=store, instantly=inst,
-                            ghl=GHL(token="fake-token", transport=raising_transport()),
-                            free_slots=["2026-09-29T13:00:00-05:00", "2026-09-30T14:00:00-05:00"],
-                            notify_fn=lambda *a, **k: None)
-    assert res["action"] == "sent" and res["day"] == 6
-    assert "hold" not in res["touch"]["body_text"].lower()
-    assert not any(r.get("action") == "create_appointment" for r in res["records"])
-    assert [m for m, _ in calls] == ["GET", "POST"]  # recipient re-read, then the reply
 
 
 def test_d1_live_opens_veto_window_then_sends_via_mock(store, live_mode, tmp_env):
@@ -422,7 +345,7 @@ def test_d1_live_opens_veto_window_then_sends_via_mock(store, live_mode, tmp_env
     assert method == "POST" and url.endswith("/emails/reply")
     assert body["reply_to_uuid"] == "01a0c5aa-0000-7000-8000-000000000001" and body["eaccount"] == "lorenzo@adveromedia.com"
     assert body["to"] == "tiffany@flowerhillfs.com"
-    assert "Here are two new times in case the first ones did not suit" in body["body"]["text"]
+    assert "The time slots I sent got filled. Here are 2 more" in body["body"]["text"]
     assert state.cadence["touches"][-1]["kind"] == "done"
 
 
@@ -441,7 +364,7 @@ def test_zero_http_in_shadow_full_week(store, tmp_env):
     state = cadence.arm(make_state(), ct(2026, 9, 18, 16, 0))  # Friday -> D1 Monday 21st
     day = ct(2026, 9, 21, 10, 0)
     seen_days = []
-    for _ in range(9):
+    for _ in range(10):
         free = cadence.default_slot_grid(day)
         res = cadence.tick_lead(state, day, store=store, instantly=inst, ghl=ghl, free_slots=free)
         if res["action"] == "would_send":
@@ -450,16 +373,16 @@ def test_zero_http_in_shadow_full_week(store, tmp_env):
         day = slot_rules.parse_iso(state.cadence["next_send_at"]) if state.cadence.get("next_send_at") else day + timedelta(days=1)
         if state.cadence.get("stopped_reason"):
             break
-    assert seen_days == [1, 2, 3, 4, 5, 6, 7, 14, 30]
+    assert seen_days == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     assert state.cadence["stopped_reason"] == "exhausted"
     log = read_shadow_log()
     replies = [r for r in log if r["system"] == "instantly" and r["action"] == "reply_to_email"]
-    assert len(replies) == 9
+    assert len(replies) == 10
     assert all(r["payload"]["eaccount"] == "lorenzo@adveromedia.com" for r in replies)
     # each touch that offered times used two never-before-offered slots
     offered = [tuple(t["slots"]) for t in state.cadence["touches"] if t["slots"]]
     flat = [s for pair in offered for s in pair]
-    assert len(flat) == len(set(flat)) == 16
+    assert len(flat) == len(set(flat)) == 18  # nine emails with two times each; E2 has none
 
 
 def test_state_roundtrip_through_store(store):
@@ -471,11 +394,10 @@ def test_state_roundtrip_through_store(store):
 
 
 # --------------------------------------------------- recipient safety (to=)
-@pytest.mark.parametrize("day", [1, 2, 3, 4, 5, 6, 7, 14, 30])
+@pytest.mark.parametrize("day", list(range(1, 11)))
 def test_cadence_send_passes_to_for_recipient_validation(day, store, live_mode, tmp_env, monkeypatch):
-    """Instantly validates `to` against the thread before sending. Nine touches
+    """Instantly validates `to` against the thread before sending. Ten emails
     go out with no human in the loop, so every one of them carries it."""
-    monkeypatch.setenv("CADENCE_D6_HOLD", "1")
     bodies = []
 
     def handler(request):
@@ -490,7 +412,6 @@ def test_cadence_send_passes_to_for_recipient_validation(day, store, live_mode, 
     state.cadence["veto_notified_at"] = "2026-09-22T09:30:00-05:00"
     now = ct(2026, 9, 22, 10, 0)
     state.cadence["next_send_at"] = now.isoformat()
-    cadence.record_invite_decision(store, state, "approve", ct(2026, 9, 22, 9, 45))
     res = cadence.tick_lead(state, now, store=store, instantly=inst,
                             ghl=GHL(token="fake-token", transport=httpx.MockTransport(
                                 lambda r: httpx.Response(200, json={"id": "appt-1"}))),
@@ -514,7 +435,7 @@ def test_cadence_send_records_the_recipient_in_the_shadow_payload(store, tmp_env
 
 # ------------------------------------------------------- copy gate / failures
 def test_touch_with_copy_problems_is_not_sent(store, tmp_env):
-    """A D2 research line that breaks the copy rules must never reach a lead:
+    """An E2 research line that breaks the copy rules must never reach a lead:
     approval.send_approved blocks on draft.problems and the unattended path
     applies the same bar."""
     from shared import llm
@@ -548,7 +469,7 @@ def test_copy_problems_catches_capitalised_automation_and_invented_money():
 
 
 def test_render_flags_a_missing_placeholder_instead_of_emptying_the_sentence():
-    body = cadence.render("d1", first_name="Ann", booking_url="https://example.test")
+    body = cadence.render("e1", first_name="Ann")
     assert "{slots}" in body
     assert "unfilled_placeholder" in cadence.copy_problems(body)
 
@@ -585,21 +506,6 @@ def test_a_crash_after_the_send_does_not_send_the_day_twice(store, tmp_env):
     assert len([r for r in read_shadow_log() if r["action"] == "reply_to_email"]) == 1
 
 
-def test_d6_hold_without_a_contact_id_falls_through_to_the_no_hold_body(store, tmp_env, monkeypatch):
-    """contactId "pending" is a 422 in GHL, and the day used to be lost to it."""
-    monkeypatch.setenv("CADENCE_D6_HOLD", "1")
-    state = cadence.arm(make_state(), NOW)  # no ghl_contact_id
-    state.cadence["day"] = 5
-    now = ct(2026, 9, 28, 10, 0)
-    state.cadence["next_send_at"] = now.isoformat()
-    res = cadence.tick_lead(state, now, store=store, free_slots=cadence.default_slot_grid(now))
-    assert res["action"] == "would_send" and res["day"] == 6
-    assert res["hold_error"] == "no_ghl_contact_id"
-    assert "hold" not in res["touch"]["body_text"].lower()
-    appts = [r for r in read_shadow_log() if r["action"] == "create_appointment"]
-    assert all(a["payload"].get("contactId") != "pending" for a in appts)
-
-
 # ------------------------------------------------------------ state lifecycle
 def test_rearm_after_inbound_reply_resumes_at_the_next_day(store):
     state = cadence.arm(make_state(), ct(2026, 9, 21, 16, 0))
@@ -616,7 +522,7 @@ def test_rearm_after_inbound_reply_resumes_at_the_next_day(store):
     assert res["day"] == 5
     intents = [t["intent"] for t in state.cadence["touches"]]
     assert len(intents) == len(set(intents)), intents
-    assert "Here are two new times" not in res["touch"]["body_text"]
+    assert "The time slots I sent got filled" not in res["touch"]["body_text"]
 
 
 def test_arm_with_restart_starts_the_ladder_again():
@@ -642,17 +548,6 @@ def test_veto_does_not_survive_a_rearm(store, live_mode, tmp_env):
                             free_slots=["2026-10-07T13:00:00-05:00", "2026-10-08T14:00:00-05:00"],
                             notify_fn=lambda *a, **k: None)
     assert res["action"] != "vetoed"
-
-
-def test_a_stale_d6_approval_does_not_satisfy_the_new_run(store, live_mode, tmp_env, monkeypatch):
-    monkeypatch.setenv("CADENCE_D6_HOLD", "1")
-    state = cadence.arm(make_state(ghl_contact_id="c-1"), ct(2026, 9, 21, 16, 0))
-    cadence.record_invite_decision(store, state, "approve", ct(2026, 9, 22, 9, 45))
-    cadence.arm(state, ct(2026, 10, 5, 9, 0), store=store)  # re-armed: the old tap is void
-    assert store.get(cadence.approval_key(state, "d6")) is None
-    # even a record that survives the delete is ignored, because it is stamped with the old run
-    store.set(cadence.approval_key(state, "d6"), {"decision": "approve", "armed_at": "2026-09-21T16:00:00-05:00"})
-    assert cadence.decision_is_current(store.get(cadence.approval_key(state, "d6")), state) is False
 
 
 def test_decision_urls_carry_a_signed_token(monkeypatch):
@@ -1009,7 +904,7 @@ def test_an_unverifiable_slot_source_is_reported_once_and_then_escalates(store, 
     and put a line in every hourly digest."""
     state = cadence.arm(make_state(), ct(2026, 9, 21, 16, 0))
     state.cadence["veto_notified_at"] = "2026-09-22T09:30:00-05:00"
-    state.cadence["day"] = 1  # D2 carries slots and needs no veto window
+    state.cadence["day"] = 2  # E3 carries slots and needs no veto window (E2 has none)
     pings = []
     actions = []
     for hour in range(10, 19):
@@ -1123,52 +1018,7 @@ def test_two_workers_cannot_claim_the_same_cadence_day(store, tmp_env):
     assert len([r for r in read_shadow_log() if r["action"] == "reply_to_email"]) == 1
 
 
-def test_a_failed_d6_send_cancels_the_hold(store, live_mode, tmp_env, monkeypatch):
-    """The hold is created before the copy gate and before the send, and neither
-    path advanced the day, so every retry left another orphan HOLD on the
-    Discovery Call calendar while the prospect heard nothing."""
-    monkeypatch.setenv("CADENCE_D6_HOLD", "1")
-    state = cadence.arm(make_state(ghl_contact_id="tE3tyj5iIAXfBpD52rFM"), ct(2026, 9, 21, 16, 0))
-    state.cadence["day"] = 5
-    store.set(cadence.approval_key(state, "d6"), {"decision": "approve", "armed_at": state.cadence["armed_at"]})
-    now = ct(2026, 9, 22, 10, 0)
-    state.cadence["next_send_at"] = now.isoformat()
-    ghl_calls = []
-
-    def ghl_handler(request):
-        ghl_calls.append("%s %s" % (request.method, request.url.path))
-        return httpx.Response(200, json={"id": "appt-hold-1"})
-
-    def inst_handler(request):
-        if request.url.path.endswith("/emails/reply"):
-            return httpx.Response(500, json={"error": "boom"})
-        return httpx.Response(200, json={"from_address_email": "tiffany@flowerhillfs.com"})
-
-    ghl = GHL(token="fake-token", transport=httpx.MockTransport(ghl_handler))
-    inst = Instantly(api_key="x", transport=httpx.MockTransport(inst_handler))
-    free = ["2026-09-23T13:00:00-05:00", "2026-09-24T14:00:00-05:00"]
-    res = cadence.tick_lead(state, now, store=store, instantly=inst, ghl=ghl, free_slots=free,
-                            notify_fn=lambda *a, **k: None)
-    assert res["action"] == "send_failed", res["action"]
-    creates = [c for c in ghl_calls if c.startswith("POST") and "appointments" in c]
-    cancels = [c for c in ghl_calls if c.startswith("PUT") and "appointments" in c]
-    assert len(creates) == 1 and len(cancels) == 1, ghl_calls
-
-
-def test_d6_body_does_not_promise_an_invite_that_to_notify_suppresses():
-    """_create_hold writes the appointment with toNotify=False on purpose (the
-    prospect never agreed to this time), so the body must not say an invite was
-    sent: the next touch lands on somebody who thinks they are booked."""
-    state = make_state(ghl_contact_id="tE3tyj5iIAXfBpD52rFM")
-    payload = cadence._create_hold(state, slot_rules.parse_iso(SLOTS[0]), None, NOW).get("payload") or {}
-    assert payload.get("toNotify") is False
-    body = cadence.build_touch(state, 6, SLOTS).body_text
-    assert "hold on my calendar" in body
-    for banned in ("invite", "sent the invite", "calendar invite"):
-        assert banned not in body.lower(), body
-
-
-def test_d2_fallback_line_matches_the_offer_type():
+def test_e2_fallback_line_matches_the_offer_type():
     """The fallback fires on every LLM error and in every LLM_FAKE dry run, so
     it is the line Lorenzo reviews. It used to open "I had a look at {company}"
     (research nobody did) and use reactivation wording for outbound prospects."""
@@ -1180,7 +1030,7 @@ def test_d2_fallback_line_matches_the_offer_type():
         assert banned not in out.lower(), out
     assert cadence.copy_problems(react + "\n\nLorenzo") == []
     assert cadence.copy_problems(out + "\n\nLorenzo") == []
-    # and the rendered D2 body for an outbound campaign carries the outbound one
+    # and the rendered E2 body for an outbound campaign carries the outbound one
     body = cadence.build_touch(make_state(campaign_id=CLEANING_TRIG), 2, SLOTS).body_text
     assert "went quiet" not in body.lower()
 

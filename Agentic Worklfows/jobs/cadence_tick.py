@@ -10,8 +10,8 @@ through Instantly's reply endpoint (guarded: would_do in MODE=shadow), writes a
 Job_Log row and sends Lorenzo one digest per tick that had anything to say.
 
 Safe to run hourly: a lead gets at most one touch per day, D1 waits for the
-30-minute veto window in live mode, D6 waits for the invite OK, and sends only
-happen 10:00-19:00 CT on business days. ``--dry-run`` plans and prints; it
+30-minute veto window in live mode, and sends only happen 10:00-19:00 CT on
+business days. ``--dry-run`` plans and prints; it
 never mutates the store, never calls a client, never notifies.
 
 CT3: a touch goes out only when its text is an approved template
@@ -50,7 +50,7 @@ JOB = "cadence_tick"
 # Everything Lorenzo must see in the digest. "error", "send_failed" and
 # "blocked_copy" are in here on purpose: a lead that silently stops advancing is
 # the failure mode that costs a positive reply.
-ACTIONABLE = ("would_send", "sent", "stopped", "follow_up_later", "awaiting_invite_ok", "veto_window_opened",
+ACTIONABLE = ("would_send", "sent", "stopped", "follow_up_later", "veto_window_opened",
               "skipped_no_slots", "skipped_unverified_slots", "vetoed", "error", "send_failed", "blocked_copy",
               "blocked_copy_stalled", "veto_undeliverable",
               "already_sent", "awaiting_fresh_draft", "resumed_after_auto_reply", "held_template")
@@ -344,10 +344,9 @@ def _print_table(summary: Dict[str, Any]) -> None:
             line += " template=%s" % tid
         touch = r.get("touch")
         if touch:
-            line += " slots=%s src=%s%s" % (
+            line += " slots=%s src=%s" % (
                 ",".join(slot_rules.format_slot(slot_rules.parse_iso(s)) for s in touch.get("slots") or []) or "-",
                 touch.get("slots_source"),
-                " NEEDS_OK" if touch.get("requires_approval") else "",
             )
         print(line)
     if summary["digest"]:
@@ -362,8 +361,6 @@ def _print_touch_bodies(summary: Dict[str, Any]) -> None:
         if not touch:
             continue
         print("\n--- %s D%s (%s) ---\nSubject: %s\n%s" % (r.get("lead_email"), touch["day"], touch["intent"], touch["subject"], touch["body_text"]))
-        if touch.get("channel_note"):
-            print("[channel note] %s" % touch["channel_note"])
 
 
 def main(argv: Optional[List[str]] = None, store: Optional[Store] = None, now: Optional[datetime] = None) -> int:

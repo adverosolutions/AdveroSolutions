@@ -71,7 +71,7 @@ def _stopped_state(store, reason="recipient_unconfirmed", email=LEAD):
     state = cadence.arm(state, ct(2026, 9, 21, 16, 0))
     cadence.stop(state, reason, ct(2026, 9, 22, 12, 0))
     if reason == "template_unapproved":
-        state.cadence["template_hold"] = {"day": 3, "template_id": "cadence.d3", "ids": ["cadence.d3"],
+        state.cadence["template_hold"] = {"day": 3, "template_id": "cadence.e3", "ids": ["cadence.e3"],
                                           "reason": "unapproved"}
     store.set(state.key, state.to_store())
     return state
@@ -104,7 +104,7 @@ def test_resume_get_with_a_valid_token_renders_the_template_hold_page_as_before(
     state = _stopped_state(world["store"], reason="template_unapproved")
     token = cadence.make_decision_token("resume", state, NOW)
     page = world["client"].get(_path(token=token))
-    assert page.status_code == 200 and "Resume the follow-ups?" in page.text and "cadence.d3" in page.text
+    assert page.status_code == 200 and "Resume the follow-ups?" in page.text and "cadence.e3" in page.text
 
 
 @pytest.mark.parametrize("reason", ["recipient_unconfirmed", "template_unapproved"])
