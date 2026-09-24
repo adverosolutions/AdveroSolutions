@@ -5,7 +5,7 @@
 **Earlier on 2026-09-23:** the follow-up pipeline and price guard are committed and tested. One real read-only run is done (drafts only). Not scheduled yet. The GHL Upwork pipeline doesn't exist yet (Lorenzo creates it).
 
 ## Next
-1. **Touch walkthrough** (Lorenzo said yes, 2026-09-23): T1 to T7 and the check-in are agreed; the reply prompt is the last item. Every decision and sample is in `walkthrough.md`. Samples are written by hand on a made-up client, no model spend.
+1. **Touch walkthrough: done** (2026-09-23). All 9 prompts agreed; every decision and sample is in `walkthrough.md`.
 2. **Then apply the agreed edits to all 9 prompts in one piece** (worker, then reviewer), per `walkthrough.md`:
    - normal capitalization (drop "Lowercase-casual is fine");
    - the no-Claudeisms rule with its examples;

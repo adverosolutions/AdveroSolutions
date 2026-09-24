@@ -30,7 +30,7 @@ signed off; then all the edits below go in at once, through review.
 | T6, day 23, next step | Keep the purpose and day. | agreed |
 | T7, day 30, close-out | Keep the purpose and day. | agreed |
 | checkin.md | Keep as is. | agreed |
-| reply.md | | shown |
+| reply.md | Keep as is. | agreed |
 
 ## Sample drafts shown
 
@@ -69,3 +69,12 @@ signed off; then all the edits below go in at once, through review.
   said to come back once the summer rush was over. One thing I'd add from
   before: the review requests could also go out to the jobs you closed this
   summer, not just new ones. Is the timing better now?"
+- Reply (Dana asked about setup time and whether the estimate follow-up stops
+  on approval): "Hey Dana, no worries at all. On setup time, happy to walk
+  through the timeline on a quick Upwork call. I'm free Thursday at 1 pm CT or
+  Friday at 3 pm CT. And yes on the estimates: once a customer approves their
+  estimate in Housecall Pro, the follow-up for that estimate stops on its
+  own." NEEDS_YOU: "Dana asked how long setup takes. Add your timeline, or
+  leave it for the call."
+
+Walkthrough complete 2026-09-23. Next: apply the agreed edits to the prompts.
