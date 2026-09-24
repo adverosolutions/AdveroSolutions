@@ -151,6 +151,10 @@ def test_cli_json_round_trips(tmp_path, capsys):
     assert loaded["export_sha256"] == hashlib.sha256(raw).hexdigest()
     assert loaded == json.loads(json.dumps(expected))
     assert "cadence.d2" in out_md.read_text(encoding="utf-8")
+    # JSON keeps the full also_in list; only text and md cap it at 15.
+    d1 = next(e for e in loaded["sections"]["1"] if e["tag"] == "cadence.d1")
+    assert sum(len(v) for v in d1["also_in"].values()) == 110
+    assert len(d1["also_in"]["1"]) > route_doc.ALSO_IN_SHOW
 
 
 def test_cli_unreadable_export_exits_2(tmp_path):
@@ -278,3 +282,204 @@ def test_brace_in_a_note_does_not_flag_the_copy(tmp_path):
     assert e["invalid_placeholders"] == []
     assert e["wrong_placeholder_style"] == []
     assert e["stray_braces"] == []
+
+
+# --- also_in: the other blocks that carry the text Lorenzo edited ---------
+
+TIME_OFFER = "Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}"
+EASIER = "Or if it's easier, grab a time here: {booking_url}"
+
+
+def _all_also_in(e):
+    return [t for tags in e["also_in"].values() for t in tags]
+
+
+def _write(tmp_path, lines):
+    path = tmp_path / "edited.txt"
+    path.write_text(u"\n".join(lines), encoding="utf-8")
+    return _read(str(path))
+
+
+def test_also_in_for_the_first_real_edits():
+    manifest = route_doc.diff_doc.load_manifest(MANIFEST)
+    by_tag = dict((b["tag"], b) for b in manifest["blocks"])
+    e = _entries(_report(_read(FIRST_EDITS)))
+    # cadence.d1 dropped "Or if it's easier, grab a time here: {booking_url}",
+    # a line the first replies and the booking counter-proposals also carry.
+    d1 = e["cadence.d1"]
+    want = [b["tag"] for b in manifest["blocks"]
+            if EASIER in b["text"] and b["tag"] not in (
+                "cadence.d1", "cadence.d2", "cadence.d1/no_slots", "cadence.d2/no_slots")]
+    assert _all_also_in(d1) == sorted(want, key=lambda t: (route_doc.route(t, by_tag[t])[0],
+                                                             want.index(t)))
+    assert len(want) == 110
+    assert set(d1["also_in"]) == {"1", "2"}
+    assert "first_reply.cleaning_reactivation.default.full" in d1["also_in"]["1"]
+    assert "booking.counter.window_no_fit" in d1["also_in"]["2"]
+    # No other cadence block holds d1's lines.
+    assert not [t for t in _all_also_in(d1) if t.startswith("cadence.")]
+    # d2 dropped "I have {slots} open, or grab a time here: {booking_url}",
+    # a sentence cadence.d14 also has.
+    assert e["cadence.d2"]["also_in"] == {"1": ["cadence.d14"]}
+    # Deleting d2/no_slots removes "Grab any open time here: {booking_url}",
+    # which the d4, d5 and d14 no_slots bodies share; d1/no_slots shares
+    # nothing. Every no_slots body still has a text_group of its own.
+    assert e["cadence.d2/no_slots"]["also_in"] == {
+        "1": ["cadence.d4/no_slots", "cadence.d5/no_slots", "cadence.d14/no_slots"]}
+    assert e["cadence.d1/no_slots"]["also_in"] == {}
+    groups = [b["text_group"] for b in manifest["blocks"] if route_doc.NO_SLOTS_RE.match(b["tag"])]
+    assert len(groups) == len(set(groups)) == 8  # one per NO_SLOTS_BODIES key
+    text = route_doc.render_text(_report(_read(FIRST_EDITS)))
+    assert "also appears in 110 other blocks (section 1: first_reply." in text
+    assert " and %d more" % (len(d1["also_in"]["1"]) - 15) in text
+    assert "section 2: booking.counter.window_no_fit" in text
+
+
+def test_time_offer_edit_lists_the_other_first_replies(tmp_path):
+    lines = _read(UPLOAD_EXPORT).split("\n")
+    tag = "first_reply.cleaning_reactivation.default.full"
+    _edit_first_body_line(lines, tag, lambda l: l)  # sanity: the block exists
+    start = next(i for i, l in enumerate(lines) if "(tag: %s)" % tag in l)
+    idx = next(i for i in range(start, len(lines)) if lines[i].strip() == TIME_OFFER)
+    lines[idx] = lines[idx].replace("15-minute call", "quick call")
+    r = _report(_write(tmp_path, lines))
+    e = _entries(r)
+    assert list(e) == [tag]
+    manifest = route_doc.diff_doc.load_manifest(MANIFEST)
+    carriers = [b["tag"] for b in manifest["blocks"] if TIME_OFFER in b["text"] and b["tag"] != tag]
+    assert len(carriers) == 59
+    got = _all_also_in(e[tag])
+    assert set(carriers) == set(got)
+    assert all(t.startswith("first_reply.") for t in carriers)
+    assert "first_reply.bookkeeping_trigger.pricing.full" in e[tag]["also_in"]["1"]
+    md = route_doc.render_md(r)
+    assert "- also appears in %d other blocks (section 1: " % len(got) in md
+
+
+def test_booking_link_sentence_edit_inside_a_time_offer_line(tmp_path):
+    # The booking-link sentence shares a doc line with the time offer; the
+    # edit is matched per sentence, so every block with that sentence counts.
+    lines = _read(UPLOAD_EXPORT).split("\n")
+    tag = "first_reply.cleaning_reactivation.default.full"
+    start = next(i for i, l in enumerate(lines) if "(tag: %s)" % tag in l)
+    idx = next(i for i in range(start, len(lines)) if lines[i].strip() == TIME_OFFER)
+    lines[idx] = lines[idx].replace("Or if it's easier, grab a time here", "Or just grab a time here")
+    e = _entries(_report(_write(tmp_path, lines)))
+    assert list(e) == [tag]
+    manifest = route_doc.diff_doc.load_manifest(MANIFEST)
+    carriers = [b["tag"] for b in manifest["blocks"] if EASIER in b["text"] and b["tag"] != tag]
+    assert len(carriers) == 110
+    assert sorted(_all_also_in(e[tag])) == sorted(carriers)
+    assert set(e[tag]["also_in"]) == {"1", "2"}
+
+
+def test_short_heading_edit_lists_the_other_prereads(tmp_path):
+    # "Proof" is one word but not a greeting or sign-off, so it counts.
+    lines = _read(UPLOAD_EXPORT).split("\n")
+    tag = "show_rate.preread_email.cleaning_reactivation"
+    start = next(i for i, l in enumerate(lines) if "(tag: %s)" % tag in l)
+    idx = next(i for i in range(start, len(lines)) if lines[i].strip() == "Proof")
+    lines[idx] = lines[idx].replace("Proof", "Proof points")
+    e = _entries(_report(_write(tmp_path, lines)))
+    assert list(e) == [tag]
+    others = ["show_rate.preread_email.%s" % k for k in (
+        "cleaning_outbound", "bookkeeping_reactivation", "bookkeeping_outbound",
+        "recruiting_reactivation", "recruiting_outbound", "generic_reactivation",
+        "generic_outbound")]
+    assert e[tag]["also_in"] == {"2": others}
+
+
+def _edit_in_block(tmp_path, tag, old, new):
+    """Replace old with new in the first line under `tag` that holds it."""
+    lines = _read(UPLOAD_EXPORT).split("\n")
+    start = next(i for i, l in enumerate(lines) if "(tag: %s)" % tag in l)
+    idx = next(i for i in range(start + 1, len(lines)) if old in lines[i])
+    assert not [l for l in lines[start + 1:idx]
+                if "(tag:" in l and not re.search(r"/subject\)\s*$", l)], "%s not under %s" % (old, tag)
+    lines[idx] = lines[idx].replace(old, new, 1)
+    e = _entries(_report(_write(tmp_path, lines)))
+    assert list(e) == [tag]
+    return e[tag]
+
+
+def test_words_added_in_front_of_a_shared_sentence_count(tmp_path):
+    # The old sentence is still inside the new one, but no longer starts a
+    # sentence, so it counts as edited.
+    tag = "no_show.ns_d3_value_email.cleaning_reactivation"
+    e = _edit_in_block(tmp_path, tag, "I built a similar system", "Last year I built a similar system")
+    manifest = route_doc.diff_doc.load_manifest(MANIFEST)
+    built = "I built a similar system for a commercial roofer doing $150M/year."
+    carriers = [b["tag"] for b in manifest["blocks"] if built in b["text"] and b["tag"] != tag]
+    assert len(carriers) == 11
+    assert sorted(_all_also_in(e)) == sorted(carriers)
+    assert "cadence.d4.case_study.reactivation" in e["also_in"]["1"]
+    assert "instantly.cleaning_reactivation.step1" in e["also_in"]["4"]
+    e = _edit_in_block(tmp_path, "cadence.d2", "I have {slots} open", "Right now I have {slots} open")
+    assert e["also_in"] == {"1": ["cadence.d14"]}
+
+
+def test_sentence_rules():
+    assert route_doc._edited_sentences(
+        "Plan for {company}. Think about it. Proof",
+        "Plan for {company}.Think about it. Proof points") == ["Proof"]
+    assert route_doc._edited_sentences(
+        "Hi. I have {slots} open.", "Hi. Honestly, I have {slots} open.") == ["I have {slots} open."]
+    assert route_doc._edited_sentences("Hi. I have {slots} open.", "Hi.I have {slots} open.") == []
+    for s in ("Hey {first_name},", "Hi {first_name},", "Hey there,", "Lorenzo",
+              "Thanks,", "Talk soon,", "{booking_url}", "{first_name},",
+              "Hey {{firstName}},", "Hi {{firstName}},"):
+        assert route_doc._boilerplate(s), s
+    for s in ("Proof", "What it costs", "Hey {first_name}, Lorenzo again."):
+        assert not route_doc._boilerplate(s), s
+
+
+def test_shared_subject_edit_lists_every_copy(tmp_path):
+    lines = _read(UPLOAD_EXPORT).split("\n")
+    idx = next(i for i, l in enumerate(lines) if "(tag: cadence.d1/subject)" in l)
+    lines[idx] = lines[idx].replace("Re: {original_subject}", "Re: {original_subject} (times)")
+    e = _entries(_report(_write(tmp_path, lines)))
+    assert list(e) == ["cadence.d1/subject"]
+    manifest = route_doc.diff_doc.load_manifest(MANIFEST)
+    group = [b["tag"] for b in manifest["blocks"]
+             if b.get("text_group") == "6379c4faef3d" and b["tag"] != "cadence.d1/subject"]
+    assert len(group) == 58
+    assert sorted(_all_also_in(e["cadence.d1/subject"])) == sorted(group)
+    assert "booking.already_booked.awaiting_approval/subject" in e["cadence.d1/subject"]["also_in"]["2"]
+
+
+def test_greeting_and_sign_off_edits_do_not_list_everything(tmp_path):
+    lines = _read(UPLOAD_EXPORT).split("\n")
+    start = next(i for i, l in enumerate(lines) if "(tag: cadence.d14)" in l)
+    g = next(i for i in range(start, len(lines)) if lines[i].strip() == "Hey {first_name},")
+    lines[g] = "Hi {first_name},"
+    s = next(i for i in range(g, len(lines)) if lines[i].strip() == "Lorenzo")
+    lines[s] = "Lorenzo V"
+    e = _entries(_report(_write(tmp_path, lines)))
+    assert list(e) == ["cadence.d14"]
+    assert e["cadence.d14"]["also_in"] == {}
+    assert route_doc.also_in_summary(e["cadence.d14"]) is None
+
+
+def test_lines_in_more_than_half_the_blocks_do_not_count():
+    common = "This line is everywhere in the doc"
+    blocks = [{"tag": "first_reply.x%d" % i, "text": "Hey {first_name},\n\n%s\n\nLorenzo" % common,
+               "text_group": "g%d" % i} for i in range(5)]
+    blocks.append({"tag": "cadence.d9", "text": "Something rare but long enough", "text_group": "r"})
+    blocks.append({"tag": "cadence.d10", "text": "Something rare but long enough\n" + common,
+                   "text_group": "s"})
+    normed = dict((b["tag"], route_doc.diff_doc.norm(b["text"])) for b in blocks)
+    got = route_doc._also_in("first_reply.x0", blocks[0]["text"], "Hey,", blocks, normed, set(), {})
+    assert got == {}  # common line in 6 of 7 blocks; greeting and sign-off ignored
+    got = route_doc._also_in("cadence.d9", blocks[5]["text"], None, blocks, normed, set(), {})
+    assert got == {"1": ["cadence.d10"]}
+    got = route_doc._also_in("cadence.d9", blocks[5]["text"], None, blocks, normed, {"cadence.d10"}, {})
+    assert got == {}
+
+
+def test_new_entries_have_no_also_in_and_clean_export_stays_empty(tmp_path):
+    lines = _read(UPLOAD_EXPORT).split("\n") + [
+        "Brand new email (tag: something.new)", EASIER, ""]
+    e = _entries(_report(_write(tmp_path, lines)))
+    assert "also_in" not in e["something.new"]
+    r = _report(_read(UPLOAD_EXPORT))
+    assert r["counts"]["routed"] == 0 and all(v == [] for v in r["sections"].values())
