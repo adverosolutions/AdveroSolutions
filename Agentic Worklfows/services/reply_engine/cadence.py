@@ -2503,11 +2503,12 @@ def first_reply_skip_reason(state: Any, now: datetime) -> Optional[str]:
     holds a booked lead's call does (the invite and the show-rate hold
     released) belongs to approval.py (send_approved, mark_sent_manually).
 
-    The lookback and the tick's newest-first order read ``last_inbound_at``,
-    not the reply the card answers (first_reply_cutoff needs the card, so a
-    store read): it is never earlier than that reply, so an auto-responder's
-    answer after Lorenzo's send only keeps the lead a candidate longer, never
-    drops it."""
+    The lookback and the tick's newest-first order read ``last_inbound_at``
+    here, not the reply the card answers (first_reply_cutoff needs the card,
+    so a store read): it is never earlier than that reply, so this never
+    drops a lead too soon. detect_manual_first_reply then applies the
+    lookback to the card's reply itself (``reply_too_old``) before it reads
+    the thread."""
     if _reply_sent_recorded(state):
         return "reply_recorded"
     if (getattr(state, "cadence", None) or {}).get("armed_at"):
@@ -2760,6 +2761,16 @@ def detect_manual_first_reply(state: Any, now: datetime, instantly: Any, store: 
         return dict(base, action="not_candidate", reason="no_pending_card")
     approval_id = str(card.token).split(".", 1)[0]
     base["approval"] = approval_id
+    from services.reply_engine import approval as approval_mod
+
+    # The lookback bounds day 0 by the reply the card answers, before any
+    # read: first_reply_skip_reason's ``last_inbound_at`` moves with any later
+    # inbound (an auto-responder answering one of his later follow-ups), and
+    # an old reply found now would arm a ladder weeks in the past over a lead
+    # he has been working by hand.
+    cutoff = first_reply_cutoff(state, card, approval_mod.card_context(store, approval_id))
+    if cutoff is not None and cutoff < ct - timedelta(days=FIRST_REPLY_LOOKBACK_DAYS):
+        return dict(base, action="not_candidate", reason="reply_too_old", after=cutoff.isoformat())
     if instantly is None:
         return dict(base, action="no_instantly_client")
     try:
@@ -2776,9 +2787,6 @@ def detect_manual_first_reply(state: Any, now: datetime, instantly: Any, store: 
         rows = page
     else:
         rows = []
-    from services.reply_engine import approval as approval_mod
-
-    cutoff = first_reply_cutoff(state, card, approval_mod.card_context(store, approval_id))
     found = manual_first_reply_in(state, rows, after=cutoff)
     if found is None:
         # ``more``: the page was full and older rows were not read. The reply
