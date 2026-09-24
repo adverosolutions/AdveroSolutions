@@ -1,0 +1,395 @@
+{
+  "title": "Your Custom Product Options Into HubSpot Deals, Line Items, Contacts",
+  "platform": "make",
+  "sections": [
+    {
+      "key": "capture",
+      "label": "1 - CAPTURE LINE-ITEM PROPERTIES AND METAFIELDS",
+      "color": 0,
+      "note": "Your parts 1 and 2: Shopify's order webhooks feed Make directly, so the native integration's limits never apply. One Shopify call pulls every line-item property and metafield, which steps 4a, 5 and 8 map onto your Contact, Deal and Line Item properties."
+    },
+    {
+      "key": "dedup",
+      "label": "2 - NO DUPLICATE CONTACTS OR CORRUPTED DEALS",
+      "color": 0,
+      "note": "Your part 3: step 3 looks up the Shopify order ID before any deal is made, step 4a matches the contact on email, and shopify_order_id is set to unique values in HubSpot. If the native HubSpot app stays installed, its deal sync needs to be off, or orders can land as two deals."
+    },
+    {
+      "key": "tokens",
+      "label": "3 - DEAL WITH OPTIONS FOR YOUR EMAIL TOKENS",
+      "color": 0,
+      "note": "Your parts 4 to 6: the deal carries the order's options and the contact its last-order tokens and product image, which your post-purchase, upsell and re-engagement sequences and drag-and-drop templates pull in. Abandoned checkout is room to add next, the same mapping on Shopify's checkout webhook; step 6 sends the deal ID back to the order for the two-way sync."
+    },
+    {
+      "key": "report",
+      "label": "4 - EVERY OPTION ON ITS LINE ITEM FOR REPORTING",
+      "color": 0,
+      "note": "Your part 7: each line item keeps its own option and metafield values beside the deal's revenue and the contact's lifetime spend, the fields your dashboards group by for revenue, CLV and sales by product option variation. Line items with custom properties do this without HubSpot custom objects."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 - Shopify Order Created or Updated: Webhook Fires",
+      "section": "capture"
+    },
+    {
+      "key": "shop",
+      "kind": "net.http",
+      "label": "2 - Shopify: Pull Line-Item Properties and Metafields",
+      "section": "capture",
+      "notes": "The webhook has no metafields; this one call returns the options, the metafields and the customer's lifetime spend.",
+      "params": {
+        "method": "POST",
+        "url": "https://PASTE-YOUR-STORE.myshopify.com/admin/api/2026-07/graphql.json",
+        "headers": {
+          "X-Shopify-Access-Token": "PASTE-YOUR-SHOPIFY-ADMIN-API-TOKEN"
+        },
+        "body": {
+          "query": "query OrderOptions($id: ID!) { order(id: $id) { name customer { amountSpent { amount currencyCode } numberOfOrders } lineItems(first: 50) { nodes { title variantTitle sku quantity originalUnitPriceSet { shopMoney { amount } } image { url } customAttributes { key value } product { metafields(first: 10, namespace: \"custom\") { nodes { key value } } } } } } }",
+          "variables": {
+            "id": "{{1.admin_graphql_api_id}}"
+          }
+        }
+      }
+    },
+    {
+      "key": "finddeal",
+      "kind": "net.http",
+      "label": "3 - HubSpot: Search Deals for This Shopify Order ID",
+      "section": "dedup",
+      "notes": "Order ID lookup first, so a Shopify retry or an edited order updates the deal already there.",
+      "params": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/search",
+        "headers": {
+          "Authorization": "Bearer PASTE-YOUR-HUBSPOT-PRIVATE-APP-TOKEN"
+        },
+        "body": {
+          "filterGroups": [
+            {
+              "filters": [
+                {
+                  "propertyName": "shopify_order_id",
+                  "operator": "EQ",
+                  "value": "{{1.id}}"
+                }
+              ]
+            }
+          ],
+          "properties": [
+            "dealname",
+            "amount",
+            "dealstage",
+            "shopify_order_id"
+          ],
+          "limit": 1
+        }
+      }
+    },
+    {
+      "key": "gate",
+      "kind": "flow.switch",
+      "label": "4 - New Order or Already a Deal?",
+      "section": "dedup",
+      "notes": "The search total decides: 0 goes to New Order, 1 goes to Already Synced."
+    },
+    {
+      "key": "contact",
+      "kind": "net.http",
+      "label": "4a - HubSpot: Upsert the Contact by Email",
+      "section": "dedup",
+      "notes": "Email is the match key, so a returning customer updates the contact already there.",
+      "params": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/batch/upsert",
+        "headers": {
+          "Authorization": "Bearer PASTE-YOUR-HUBSPOT-PRIVATE-APP-TOKEN"
+        },
+        "body": {
+          "inputs": [
+            {
+              "idProperty": "email",
+              "id": "{{1.email}}",
+              "properties": {
+                "email": "{{1.email}}",
+                "firstname": "{{1.customer.first_name}}",
+                "lastname": "{{1.customer.last_name}}",
+                "shopify_customer_id": "{{1.customer.id}}",
+                "shopify_lifetime_value": "{{3.data.data.order.customer.amountSpent.amount}}",
+                "shopify_order_count": "{{3.data.data.order.customer.numberOfOrders}}",
+                "last_order_number": "{{1.name}}",
+                "last_order_date": "{{formatDate(1.created_at; YYYY-MM-DD)}}",
+                "last_order_product": "{{3.data.data.order.lineItems.nodes[1].title}}",
+                "last_order_image_url": "{{3.data.data.order.lineItems.nodes[1].image.url}}",
+                "last_order_engraving": "{{first(map(3.data.data.order.lineItems.nodes[1].customAttributes; value; key; Engraving Text))}}"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "upddeal",
+      "kind": "net.http",
+      "label": "4b - HubSpot: Update That Deal's Amount and Status",
+      "section": "dedup",
+      "notes": "Amount and status only; your HubSpot workflow moves the stage, so the pipeline never runs backward.",
+      "params": {
+        "method": "PATCH",
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/{{4.data.results[1].id}}",
+        "headers": {
+          "Authorization": "Bearer PASTE-YOUR-HUBSPOT-PRIVATE-APP-TOKEN"
+        },
+        "body": {
+          "properties": {
+            "amount": "{{1.total_price}}",
+            "shopify_financial_status": "{{1.financial_status}}",
+            "shopify_fulfillment_status": "{{1.fulfillment_status}}"
+          }
+        }
+      }
+    },
+    {
+      "key": "deal",
+      "kind": "net.http",
+      "label": "5 - HubSpot: Create the Deal With Its Options",
+      "section": "tokens",
+      "params": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/deals",
+        "headers": {
+          "Authorization": "Bearer PASTE-YOUR-HUBSPOT-PRIVATE-APP-TOKEN"
+        },
+        "body": {
+          "properties": {
+            "dealname": "{{1.name}} - {{1.customer.first_name}} {{1.customer.last_name}}",
+            "amount": "{{1.total_price}}",
+            "pipeline": "PASTE-YOUR-SHOPIFY-ORDERS-PIPELINE-ID",
+            "dealstage": "PASTE-YOUR-ORDER-PLACED-STAGE-ID",
+            "closedate": "{{1.created_at}}",
+            "shopify_order_id": "{{1.id}}",
+            "shopify_order_number": "{{1.name}}",
+            "shopify_financial_status": "{{1.financial_status}}",
+            "order_options": "{{join(map(flatten(map(3.data.data.order.lineItems.nodes; customAttributes)); value; key; Engraving Text,Font,Gift Wrap); / )}}"
+          },
+          "associations": [
+            {
+              "to": {
+                "id": "{{6.data.results[1].id}}"
+              },
+              "types": [
+                {
+                  "associationCategory": "HUBSPOT_DEFINED",
+                  "associationTypeId": 3
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "writeback",
+      "kind": "net.http",
+      "label": "6 - Shopify: Save the HubSpot Deal ID on the Order",
+      "section": "tokens",
+      "notes": "The return leg of your bi-directional sync: the deal ID shows in the order's metafields in Shopify admin.",
+      "params": {
+        "method": "POST",
+        "url": "https://PASTE-YOUR-STORE.myshopify.com/admin/api/2026-07/graphql.json",
+        "headers": {
+          "X-Shopify-Access-Token": "PASTE-YOUR-SHOPIFY-ADMIN-API-TOKEN"
+        },
+        "body": {
+          "query": "mutation SaveDealId($metafields: [MetafieldsSetInput!]!) { metafieldsSet(metafields: $metafields) { metafields { key value } userErrors { field message } } }",
+          "variables": {
+            "metafields": [
+              {
+                "ownerId": "{{1.admin_graphql_api_id}}",
+                "namespace": "hubspot",
+                "key": "deal_id",
+                "type": "single_line_text_field",
+                "value": "{{7.data.id}}"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "key": "split",
+      "kind": "data.split",
+      "label": "7 - Split the Order Into Its Line Items",
+      "section": "report",
+      "params": {
+        "array": "{{3.data.data.order.lineItems.nodes}}"
+      }
+    },
+    {
+      "key": "lineitem",
+      "kind": "net.http",
+      "label": "8 - HubSpot: Create Each Line Item With Its Options",
+      "section": "report",
+      "notes": "Each option and metafield gets its own line item property, the field your reports group by.",
+      "params": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/line_items",
+        "headers": {
+          "Authorization": "Bearer PASTE-YOUR-HUBSPOT-PRIVATE-APP-TOKEN"
+        },
+        "body": {
+          "properties": {
+            "name": "{{9.title}}",
+            "quantity": "{{9.quantity}}",
+            "price": "{{9.originalUnitPriceSet.shopMoney.amount}}",
+            "hs_sku": "{{9.sku}}",
+            "shopify_variant": "{{9.variantTitle}}",
+            "option_engraving_text": "{{first(map(9.customAttributes; value; key; Engraving Text))}}",
+            "option_font": "{{first(map(9.customAttributes; value; key; Font))}}",
+            "option_gift_wrap": "{{first(map(9.customAttributes; value; key; Gift Wrap))}}",
+            "shopify_configuration_id": "{{first(map(9.customAttributes; value; key; _Configuration ID))}}",
+            "product_material": "{{first(map(9.product.metafields.nodes; value; key; material))}}",
+            "product_lead_time": "{{first(map(9.product.metafields.nodes; value; key; lead_time))}}"
+          },
+          "associations": [
+            {
+              "to": {
+                "id": "{{7.data.id}}"
+              },
+              "types": [
+                {
+                  "associationCategory": "HUBSPOT_DEFINED",
+                  "associationTypeId": 20
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "shop"
+    },
+    {
+      "from": "shop",
+      "to": "finddeal"
+    },
+    {
+      "from": "finddeal",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "contact",
+      "branch": "New Order"
+    },
+    {
+      "from": "gate",
+      "to": "upddeal",
+      "branch": "Already Synced"
+    },
+    {
+      "from": "contact",
+      "to": "deal"
+    },
+    {
+      "from": "deal",
+      "to": "writeback"
+    },
+    {
+      "from": "writeback",
+      "to": "split"
+    },
+    {
+      "from": "split",
+      "to": "lineitem"
+    }
+  ],
+  "input_sample": {
+    "id": 5550123456789,
+    "admin_graphql_api_id": "gid://shopify/Order/5550123456789",
+    "name": "#1042",
+    "email": "jenna.alvarez@gmail.com",
+    "created_at": "2026-09-24T10:14:32-06:00",
+    "updated_at": "2026-09-24T10:14:35-06:00",
+    "financial_status": "paid",
+    "fulfillment_status": null,
+    "total_price": "132.00",
+    "currency": "USD",
+    "customer": {
+      "id": 7012345678901,
+      "first_name": "Jenna",
+      "last_name": "Alvarez",
+      "email": "jenna.alvarez@gmail.com"
+    },
+    "line_items": [
+      {
+        "id": 14123456789012,
+        "product_id": 8123456789012,
+        "title": "Custom Walnut Cutting Board",
+        "variant_title": "Large",
+        "sku": "CB-WAL-L",
+        "quantity": 1,
+        "price": "132.00",
+        "properties": [
+          {
+            "name": "Engraving Text",
+            "value": "The Alvarez Family - Est. 2019"
+          },
+          {
+            "name": "Font",
+            "value": "Serif"
+          },
+          {
+            "name": "Gift Wrap",
+            "value": "Yes"
+          },
+          {
+            "name": "_Configuration ID",
+            "value": "cfg_88213"
+          }
+        ]
+      }
+    ]
+  },
+  "output_sample": {
+    "shopify_order": "#1042",
+    "duplicate_check": "No deal had shopify_order_id 5550123456789, so one new deal was created",
+    "hubspot_contact": {
+      "id": "98765432101",
+      "email": "jenna.alvarez@gmail.com",
+      "last_order_product": "Custom Walnut Cutting Board",
+      "last_order_engraving": "The Alvarez Family - Est. 2019",
+      "last_order_image_url": "https://cdn.shopify.com/s/files/1/0612/3456/7890/files/walnut-board-large.jpg",
+      "shopify_lifetime_value": "412.00",
+      "shopify_order_count": "3"
+    },
+    "hubspot_deal": {
+      "id": "18877332211",
+      "dealname": "#1042 - Jenna Alvarez",
+      "amount": "132.00",
+      "stage": "Order placed",
+      "order_options": "The Alvarez Family - Est. 2019 / Serif / Yes"
+    },
+    "hubspot_line_item": {
+      "name": "Custom Walnut Cutting Board",
+      "shopify_variant": "Large",
+      "option_engraving_text": "The Alvarez Family - Est. 2019",
+      "option_font": "Serif",
+      "option_gift_wrap": "Yes",
+      "shopify_configuration_id": "cfg_88213",
+      "product_material": "Black walnut",
+      "product_lead_time": "10 business days",
+      "associated_deal": "18877332211"
+    },
+    "shopify_order_metafield": "hubspot.deal_id = 18877332211"
+  },
+  "archetype": "your_custom_product_options_into_hubspot_deals_l",
+  "learned": true,
+  "learned_at": "2026-09-24"
+}
