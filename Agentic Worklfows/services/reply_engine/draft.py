@@ -34,14 +34,6 @@ BUFFER_MINUTES = 15  # calendar buffer (config/ids.json discovery_call.buffer_mi
 # ------------------------------------------------------------ offer copy
 # Every sentence here is derived from config/offers.md. Dollar figures and percentages must
 # exist in offers.md or validate_draft() rejects the draft.
-PRICING = {
-    "cleaning_reactivation": "Nothing up front. I take 20 to 30 percent of first-year contract value on the accounts that come back, a smaller cut on a bigger list, and $0 if nothing closes.",
-    "bookkeeping_reactivation": "Nothing up front. I take 20 to 30 percent of first-year fees from the clients who come back, and $0 if nothing closes.",
-    "recruiting_reactivation": "Nothing up front. I take 20 to 30 percent of the first placement fee on the accounts that come back, and $0 if nothing closes.",
-    "cleaning_trigger": "Setup plus a monthly retainer, sized to your service area, and the guarantee covers it: $24,000 a year in new cleaning contracts signed within 90 days or your money back plus a $200 steakhouse gift card.",
-    "bookkeeping_trigger": "Setup plus a monthly retainer, sized to your target client profile, and the guarantee covers it: $15,000 in new annual client fees within 90 days or your money back plus a $200 gift card.",
-    "recruiting_outbound": "Setup plus a monthly retainer, sized to your specialty and geography, and the guarantee covers it: $40,000 in new placement fees within 180 days or your money back plus a $200 gift card.",
-}
 MECHANISM = {
     "cleaning_reactivation": "I build email and text sequences to every account that cancelled, stopped renewing, or never closed, and the ones ready to come back land on your calendar.",
     "bookkeeping_reactivation": "I build sequences to lost inquiries and former clients, timed to tax season, quarterly estimates and year-end cleanup, and the ones ready to come back get booked onto your calendar.",
@@ -50,6 +42,36 @@ MECHANISM = {
     "bookkeeping_trigger": "I watch for triggers like new business formations, part-time bookkeeper job posts and second locations, run the outreach under your name, and land the discovery calls on your calendar.",
     "recruiting_outbound": "I watch job boards for your specialty roles as they open, reach the hiring managers under your agency's name, and land the intro calls on your calendar.",
 }
+
+
+# "We never talk numbers over email" (Lorenzo, 2026-09-24): a first reply to a
+# price question states no price, percentage, dollar amount or guarantee
+# figure. It gives the same answer as any other question for that offer (the
+# "other" branch below) and the price is covered on the call. PRICING keeps its
+# keys, so the pricing template id and its variants stay as they are.
+OTHER_ANSWER = "Good question. The short version is that %s The rest is easier to cover on a quick call."
+
+
+def _as_clause(sentence: str) -> str:
+    """A MECHANISM sentence continuing "The short version is that ...": its
+    first letter lower-cased unless the sentence opens with "I"."""
+    if not sentence or sentence.startswith("I ") or sentence.startswith("I'"):
+        return sentence
+    return sentence[0].lower() + sentence[1:]
+
+
+PRICING = dict((k, OTHER_ANSWER % _as_clause(v)) for k, v in MECHANISM.items())
+# The price said out loud on the call (precall brief) and written in the
+# proposal after it: call only, never in an email. No email draft reads these.
+CALL_PRICING = {
+    "cleaning_reactivation": "Nothing up front. I take 20 to 30 percent of first-year contract value on the accounts that come back, a smaller cut on a bigger list, and $0 if nothing closes.",
+    "bookkeeping_reactivation": "Nothing up front. I take 20 to 30 percent of first-year fees from the clients who come back, and $0 if nothing closes.",
+    "recruiting_reactivation": "Nothing up front. I take 20 to 30 percent of the first placement fee on the accounts that come back, and $0 if nothing closes.",
+    "cleaning_trigger": "Setup plus a monthly retainer, sized to your service area, and the guarantee covers it: $24,000 a year in new cleaning contracts signed within 90 days or your money back plus a $200 steakhouse gift card.",
+    "bookkeeping_trigger": "Setup plus a monthly retainer, sized to your target client profile, and the guarantee covers it: $15,000 in new annual client fees within 90 days or your money back plus a $200 gift card.",
+    "recruiting_outbound": "Setup plus a monthly retainer, sized to your specialty and geography, and the guarantee covers it: $40,000 in new placement fees within 180 days or your money back plus a $200 gift card.",
+}
+
 MINIMUM = {
     "cleaning_reactivation": "All I need to start is a list of 60 or more lost or dormant accounts or lost proposals.",
     "bookkeeping_reactivation": "All I need to start is a list of 60 or more former clients or lost inquiries.",
@@ -344,17 +366,8 @@ def answer_paragraph(event: ReplyEvent, classification: Classification) -> str:
     if branch == "mechanism":
         return "%s %s" % (MECHANISM[key], MINIMUM[key])
     if branch == "other":
-        return "Good question. The short version is that %s The rest is easier to cover on a quick call." % _as_clause(
-            MECHANISM[key])
+        return OTHER_ANSWER % _as_clause(MECHANISM[key])
     return "Glad to hear it. %s" % MINIMUM[key]
-
-
-def _as_clause(sentence: str) -> str:
-    """A MECHANISM sentence continuing "The short version is that ...": its
-    first letter lower-cased unless the sentence opens with "I"."""
-    if not sentence or sentence.startswith("I ") or sentence.startswith("I'"):
-        return sentence
-    return sentence[0].lower() + sentence[1:]
 
 
 def slot_paragraph(two: List[datetime], booking_link: Optional[str] = None, confirmed: Optional[datetime] = None,
@@ -909,6 +922,13 @@ def build_draft(
             probs = validate_draft(polished, booking_link=booking_link, campaign_key=_key(event), allow_terms=terms,
                                    first_reply=True)
             keeps_slots = (not two) or slots.format_slots(two) in polished
+            # No numbers over email (2026-09-24): a polish may not add a price,
+            # percentage or guarantee figure the template does not carry.
+            added = sorted(set("$" + f for f in _norm_dollars(polished)) - set("$" + f for f in _norm_dollars(skel))
+                           | set(f + "%" for f in _norm_percents(polished)) - set(f + "%" for f in _norm_percents(skel)))
+            if added:
+                probs = list(probs) + ["states a price, percentage or guarantee figure (%s); never in an email"
+                                       % ", ".join(added)]
             if polished and not probs and keeps_slots:
                 body, model = polished, llm.model_for("draft")
                 rationale += "; polished by %s" % model

@@ -370,10 +370,10 @@ def test_the_reviewers_hidden_cases_now_show(built, tmp_path):
     by = dict(entries)
     pricing = "first_reply.cleaning_reactivation.pricing.full"
     other = "first_reply.cleaning_reactivation.default.full"
-    answer = next(j for j in by[pricing]["no_slots"] if lines[j].startswith("Nothing up front."))
+    answer = next(j for j in by[pricing]["no_slots"] if lines[j].startswith("Good question."))
     greeting = next(j for j in by[other]["no_slots"] if lines[j] == "Hey {first_name},")
     base = doc_areas.DocReader(built["plain"])
-    for tid, j, note in ((pricing, answer, 'Instead of "Nothing up front.'),
+    for tid, j, note in ((pricing, answer, 'Instead of "Good question.'),
                          (other, greeting, 'Leaves out "Hey {first_name},".')):
         src, out = str(tmp_path / "m.md"), str(tmp_path / ("out_" + tid))
         io.open(src, "w", encoding="utf-8").write(_apply(lines, {j: None}))

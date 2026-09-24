@@ -361,7 +361,7 @@ def _spy_llm(monkeypatch):
         calls.append(task)
         skel = system.split("Skeleton for this reply")[1]
         return skel.split(":", 1)[1].split("Return only the email body")[0].strip().replace(
-            "Nothing up front.", "Nothing up front at all.")
+            "Good question.", "Fair question.")
     monkeypatch.setattr(llm, "is_fake", lambda: False)
     monkeypatch.setattr(llm, "complete", complete)
     return calls
@@ -379,7 +379,7 @@ def test_an_unapproved_template_is_polished_and_is_a_card(env, monkeypatch):
     calls = _spy_llm(monkeypatch)
     d, info, v, _ = _verdict(env, _event(), cls=_cls(question_type="pricing"))
     assert calls.count("draft") == 1
-    assert d.model != "template" and "Nothing up front at all." in d.body_text and d.template_id is None
+    assert d.model != "template" and "Fair question." in d.body_text and d.template_id is None
     assert (v.allowed, v.reason) == (False, "not_template_render")
 
 

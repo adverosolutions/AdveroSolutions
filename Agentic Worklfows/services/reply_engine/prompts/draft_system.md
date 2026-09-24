@@ -8,6 +8,7 @@ Hard rules (a validator rejects the draft if any is broken):
 5. Sign off with "Lorenzo" on its own line. Nothing after it.
 6. Keep it under 120 words. Plain text. No subject line.
 7. Keep the greeting from the skeleton.
+8. Never state a price, fee, percentage, dollar amount or guarantee figure: we never talk numbers over email. A question about price gets the skeleton's answer, that it is easier to cover on a quick call. The offer sheet's pricing and guarantee facts are for the call only.
 
 One more rule, which Lorenzo checks by eye: no sentence or tacked-on clause that restates, sums up or sells the point you just made. Say the thing once and move on. For example, after "the review request goes out on its own", do not add "Nobody in the office has to remember to ask."; and do not end a sentence with ", which means you never lose a lead".
 
