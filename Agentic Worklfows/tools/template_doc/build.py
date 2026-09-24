@@ -871,8 +871,8 @@ HAS_TEXTS = any("sms" in re.split(r"[._]", t) for t in approvable_ids)
 doc.top_p("Every email%s the system sends, in the order a lead meets them." % (" and text" if HAS_TEXTS else ""))
 doc.top_p("How to use it: Change any words you like. Keep the words in {curly brackets}: they are filled in for "
           "each lead. When you are done, tell Claude 'done'. Nothing goes live until you say so.")
-doc.top_p("When you say 'done', everything in this doc counts as approved. Emails still only go out after you "
-          "tell Claude 'go live'.")
+doc.top_p("When you say 'done', everything in this doc counts as approved, except the first replies: those are "
+          "not approved yet. Emails still only go out after you tell Claude 'go live'.")
 doc.top_p("Approved does not mean every email goes out on its own. First replies never do: the system drafts them "
           "and you send them yourself from the email thread. The other replies to a lead go out on their own only "
           "after a reply of yours has reached that lead, except the Locked in booking confirmation. Every send "
@@ -970,6 +970,7 @@ doc.section(1, "First reply when a lead replies interested")
 doc.note("The system drafts one of these when a lead answers a cold email and sounds interested or asks a "
          "question, picked by their offer and what they asked. It never goes out on its own: it comes to you as a "
          "draft and you send it yourself from the email thread.")
+doc.note(doc_rules.HELD_INTRO)
 FIRST = OrderedDict()  # offer -> [ids]
 for _tid in section_ids("first_reply"):
     _p = _tid.split(".")

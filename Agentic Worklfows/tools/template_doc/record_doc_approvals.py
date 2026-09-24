@@ -41,7 +41,7 @@ exemption for greetings, sign-offs, placeholder-only or common sentences
 (route_doc's "also appears in" list is applied too); a cadence email and the
 lines spliced into it together (the pairs come from the builds and the
 catalogue's ids, doc_rules.splice_host); the first replies the doc says
-"done" does not approve (doc_rules.HELD_QT); an email whose text, read back
+"done" does not approve (every first reply, doc_rules.is_held); an email whose text, read back
 out of the doc's build or the fresh build (fresh_manifest.readback_mismatches),
 does not hash to its template hash; code changed since the build.
 Only the ids the fresh build hashes as approvable are ever candidates, so a
@@ -576,7 +576,7 @@ def evaluate(export_text: str, doc: Dict[str, Any], fresh: Dict[str, Any], appro
         whole_doc("copies of one sentence were changed differently: %s"
                   % "; ".join(", ".join(tags) for tags in groups.values()))
 
-    # 1. the first replies the doc says "done" does not approve (doc_rules.HELD_QT)
+    # 1. the first replies the doc says "done" does not approve (all of them, doc_rules.is_held)
     held = set(b.get("template_id") for m in (dm, fm) for b in m.get("blocks", []) if b.get("held"))
     for tid in ids:
         if is_held(tid) or tid in held:

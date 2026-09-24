@@ -115,7 +115,7 @@ The export's `X-BUILD` line names its build; `builds/<fingerprint>/manifest.json
 - none of the words it shows was edited elsewhere in the doc: the doc says "changing it once is enough; it changes everywhere", so a line or sentence an edit removed from a block, or a quoted line, written-out spliced line or fallback subject an edit removed from a note, refuses every template that shows it, in a block or in a note. There are no exemptions: a greeting, the sign-off, a sentence that is only a placeholder and a sentence most emails share count too (editing "Hey {first_name}," once refuses almost every email). A deleted version or Subject line counts only for the words the email's main text no longer has. The templates `tools/template_doc/route_doc.py` lists under "also appears in" are refused as well;
 - its text, read back out of the doc's build and out of a fresh build of the current code (`fresh_manifest.readback_mismatches`), hashes to its template hash;
 - for a follow-up email with spliced lines (`cadence.e2`, `e4`, `e5`, `e6` and `e9` today; the pairs are read from the catalogue's ids), the email and all its lines are unrefused;
-- it is not one of the first replies the doc says "done" does not approve (`other` and `referral` question types, `tools/template_doc/doc_rules.py`);
+- it is not a first reply: every `first_reply.*` id, main text and every variant, is refused as held (`R_HELD`, `doc_rules.is_held` in `tools/template_doc/doc_rules.py`). Lorenzo decided on 2026-09-24 that first replies stay drafts he writes himself until they are rebuilt from his own replies, and the doc marks each one "Not approved yet";
 - it is approvable in the catalogue: an entry that is not (`cadence.e2.research_line`, the first-reply reference pieces) is never recorded;
 - its hash in the doc's build equals its hash now, and the doc's build shows it exactly as a build of the current code would; the catalogue hash is checked again just before writing.
 
@@ -125,7 +125,7 @@ The hash recorded is the current catalogue hash, the same value `--approve-all-s
 
 - An edited or deleted block, heading, label or note (a change note's quoted lines included), or a note moved within its block: Lorenzo wants words the code does not send yet. The owning section changes the code first (`tools/template_doc/route_doc.py` says which section and file), a new doc is built and uploaded, and the template is approved on the next "done".
 - Other templates with the same block text or a sentence the edit changed or removed (the repeat rule), and follow-up emails with their spliced lines: refused together with the edited one. An edit to the read-only research-line note refuses Follow-up email 2 and its lines.
-- `other` and `referral` first replies: never approved from the doc.
+- Every first reply (`first_reply.*`, every id and variant): refused as held, never approved from the doc (Lorenzo, 2026-09-24: first replies stay drafts he writes himself until they are rebuilt from his own replies).
 - Code changed since the doc was built, or during the run: build and upload a new doc.
 - The whole doc, with nothing written: a doc without a build fingerprint (`this doc predates build fingerprints; rebuild and re-upload`), a `--doc-id` that `uploads.json` does not map to the export's build, a build `uploads.json` maps to more than one doc, anything the HTML export shows (struck-through, highlighted or coloured text the build did not set, suggestion or comment markup, or an HTML file that is not the same doc as the text export), duplicate tags, copies of one sentence changed differently, a change in the top section or outside the engine sections (Instantly headings and notes, the closing section, the build line), a tag that matches no email, a doc with no tags, or a fresh build that fails.
 
@@ -182,10 +182,9 @@ Once the CT3 integration phase is deployed, a cadence, show-rate or no-show mess
 
    It exits 0 when it could build the report and 2 when it could not (for example an unreadable approvals file). The deploy preflight (`install_schedules.sh --preflight`, step 8) runs it, prints the report, warns when the kill switch is on (every cadence, show-rate and no-show message would be held), and asks you to type `HOLD` to deploy while either count is not 0. Those messages are held until approved; a show-rate or no-show message whose send time passes while it is held is dropped. Any malformed line or a failed run stops the preflight.
 
-First replies and booking emails can be approved later, a few at a time. Until one is approved, that email stays a card. At first leave these unapproved:
+Booking emails can be approved later, a few at a time. Until one is approved, that email stays a card.
 
-- `first_reply.*.other.full`: it answers any question with a generic answer;
-- `first_reply.*.referral.full`: it repeats a name the lead typed and offers slots to someone you have never spoken to, so read a few of these as cards first.
+First replies are not approved from the doc at all: when you say "done", the recorder refuses every `first_reply.*` id and variant as held (`R_HELD`). Reason: Lorenzo's decision of 2026-09-24 that first replies stay drafts he writes himself until they are rebuilt from his own replies. Each one stays a card you send yourself from the thread.
 
 Approving the counter-proposal ids (`booking.counter.*`) rarely changes anything: a counter usually answers a lead who asked for a time the slot rules refuse, and the gate keeps those as a card (`requested_override`) whatever is approved.
 
