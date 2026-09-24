@@ -2,50 +2,47 @@
 
 Read in order: the lead said "interested", Lorenzo replied by hand with two times, silence, then these ten in the same thread. E1 to E7 go out on consecutive business days, E8 two weeks after E7, E9 and E10 weekly. Every email offers {slots} and {booking_url}, opens "Hey {first_name}," and closes "Lorenzo". The scarcity idea builds across E1, E3 and E5 (gone, gone again, they keep filling) rather than repeating.
 
-## E1 · Day 1 · Two fresh times, lightest nudge
+## Lorenzo's rules for this sequence (2026-09-23, apply to every email)
+1. No booking link anywhere. The lead picks one of the two times offered and Lorenzo sends the calendar invite. {booking_url} is gone from every email (set in the section 2 chat, "everywhere").
+2. Any email that offers new times after earlier unbooked ones says the earlier times got taken, every time, in different words each time.
+3. Email only: no texts or phone steps.
+4. No Claudeisms: no sentence or tacked-on clause that restates, sums up or sells the point just made. Test: delete it; if no fact, question or next step is lost, it goes.
+5. Normal capitalization.
+
+Walkthrough status: E1, E2 and E3 agreed 2026-09-23. E4 onward still show the editor's drafts below; rules 1 and 2 are applied as each email is walked through.
+
+## E1 · Day 1 · Two fresh times, lightest nudge (AGREED 2026-09-23)
 Hey {first_name},
 
-It looks like those two slots got grabbed up. Here are two more: {slots}.
-
-Let me know if either of these works better for you. Or grab any time here: {booking_url}
+The time slots I sent got filled. Here are 2 more, let me know if they work: {slots}.
 
 Lorenzo
 
-Alternate: none
+Agreed with Lorenzo 2026-09-23: his own edit from the Google Doc (cadence.d1), with "from yesterday" changed to "I sent" because E1 goes out the next business day (a Friday reply means a Monday E1). No booking link. No no-slots variant (he deleted it).
 
-## E2 · Day 2 · Why this call fits them
+## E2 · Day 2 · Why this call matters for them (AGREED 2026-09-23)
 Hey {first_name},
 
-I think this call will be really valuable for you. {research_line}
+{research_line}
 
-Could you do {slots}? If neither works, pick any time here: {booking_url}
+Fifteen minutes is enough for me to show you how this would run for {company}. Let me know when a good time is to get a call on the books.
 
 Lorenzo
 
-Alternate: none
-Per-offer: {research_line} is written per lead by the research step (rules, one example per offer and the two fallback lines are in the Research line section below). When the step returns NONE, the fallback line for that offer goes in its place and E2 becomes a fixed template.
+Agreed with Lorenzo 2026-09-23, from his Google Doc edit (cadence.d2): typos fixed ("{company name}" is {company}, missing space), and his "I think this would really benefit {company}" cut because the research line already gives the reason (no-Claudeisms). No times on purpose (his call); E3 brings two times back. No booking link. No no-slots variant (he deleted it).
+Approval (his call, 2026-09-23): he approves this frame plus the research-line rules below once. E2 then sends on its own when the line passes every check; any failed check or NONE uses the fixed fallback line for the offer. This is the one engine email whose text is not an exact approved template, so the template gate needs a "frame plus validated research line" path (section 4's `template_gate.py`).
+His note on the doc: the research line must tie back into the offer; the email is essentially "here's why I think this call is important".
 
-## E3 · Day 3 · I want this booked
+## E3 · Day 3 · I want this booked (AGREED 2026-09-23)
 Hey {first_name},
 
-I really want to get this call on the books with you. Those last two got taken too.
+I really want to get this call on the books with you. Those last two times got taken too.
 
-Do these work instead? {slots}
-
-If not, grab whatever suits you here: {booking_url}
+Would {slots} work instead?
 
 Lorenzo
 
-Alternate (your wording; it reuses E1's opener, which is why it is the alternate):
-Hey {first_name},
-
-Looks like those slots got grabbed up again. I really want to get this call on the books.
-
-Do these two times work? {slots}
-
-If not, grab whatever suits you here: {booking_url}
-
-Lorenzo
+Agreed with Lorenzo 2026-09-23 (the editor's pick, booking link removed). "Those last two" are E1's times, since E2 offers none. Not chosen: his original wording "Looks like those slots got grabbed up again. I really want to get this call on the books. Do either of these work: {slots}?", because it opens the same way E1 does.
 
 ## E4 · Day 4 · Proof it works
 Hey {first_name},
@@ -197,31 +194,34 @@ If the timing changes before then, either {slots} works, or grab any time here w
 
 Lorenzo
 
-## Research line (E2): instructions for the AI step
+## Research line (E2): instructions for the AI step (rewritten 2026-09-23 for the agreed E2)
 Inputs: the lead's company name, website, city, and which campaign they came from (cleaning, bookkeeping or recruiting; reactivation or outbound). Output: the line only, or the single word NONE. For the log only, never in the email, list the page URL each fact came from.
 
+Where it sits: it is the first thing in the email, right after "Hey {first_name},", and the next sentence is "Fifteen minutes is enough for me to show you how this would run for {company}." So the line is the whole reason for the email: here's why a call is worth it for you.
+
 Rules
-1. One or two sentences, 35 words or fewer. It sits right after "I think this call will be really valuable for you." and must read as the reason. Don't start with "I think this call", don't mention times or booking, don't ask a question, and don't open every line with "I saw" or "I noticed".
-2. Lorenzo's first person, plain and spoken, the way he'd say it out loud. Contractions are fine.
-3. Facts only from their own website, their reviews, or their listing (Google, Yelp, BBB), after confirming the name and the city or phone number match this lead. Every fact must have a page you can point to.
-4. Numbers exactly as found ("since 2011", "180 Google reviews") or rounded down ("over 200"), never up. Quote the year, don't do date math. Review counts, not star ratings.
-5. One to three facts, and the line must say why they make the offer fit. Reactivation: signs of a base of past or lost clients (years in business, review count, service areas, seasonal or recurring work, stated client counts or partner lists, the specialties they place in). Outbound: signs that the triggers we watch turn into work for them (cleaning: office or commercial clients, post-construction, property managers, areas covered; bookkeeping: setup packages, monthly books, clients with more than one location, catch-up work; recruiting: the exact roles and industries they place). The link may state the obvious conclusion of a fact (years in business means past clients) but may not add a new claim about their business (churn, revenue, headcount, problems, plans).
-6. Never: guess ("must be", "probably", "I bet", "looks like you"); market facts not on their own pages; a line that is only praise; anything negative; pricing, fees, percentages, guarantees or results; names of competitors, owners, staff, reviewers or their clients; quoted reviews; dates that could be wrong on the day it sends; any mention of research, tools or AI; URLs, placeholders, em or en dashes, exclamation marks, emojis.
-7. Company name the way a person says it: drop LLC, Inc. and taglines.
-8. Return NONE when the business can't be confirmed as theirs, the site is down or empty, the only facts are generic, nothing connects to the offer, or the line would need a guess. NONE always beats a stretch.
-9. Final check: 35 words or fewer, a source URL per fact, at least one fact tied to the offer, nothing from the Never list.
+1. One or two sentences, 35 words or fewer. One to three facts about their business, then what that means we could do for them under this offer. Stop there.
+2. It must tie back into the offer. Reactivation: the facts point to a base of past or lost clients we could win back (years in business, review count, service areas, seasonal or recurring work, stated client counts or partner lists, the specialties they place in). Outbound: the facts point to the triggers we'd watch turning into work for them (cleaning: office or commercial clients, post-construction, property managers, areas covered; bookkeeping: setup packages, monthly books, clients with more than one location, catch-up work; recruiting: the exact roles and industries they place). The tie-back may state the obvious conclusion of a fact (years in business means past clients) but may not add a new claim about their business (churn, revenue, headcount, problems, plans).
+3. Lorenzo's first person, plain and spoken, the way he'd say it out loud. Contractions are fine. Normal capitalization. Don't start with "I think", don't open every line with "I saw" or "I noticed", don't mention times, calls or booking (the next sentence does), don't ask a question.
+4. No Claudeisms. After the tie-back, stop. Never add a sentence or clause that restates, sums up or sells the point just made. Test: delete it; if no fact is lost, it goes. Wrong: "...so there's a long list of past accounts we could win back for you. That's a real opportunity." Wrong: "...which means more revenue without more ad spend."
+5. Facts only from their own website, their reviews, or their listing (Google, Yelp, BBB), after confirming the name and the city or phone number match this lead. Every fact must have a page you can point to.
+6. Numbers exactly as found ("since 2011", "180 Google reviews") or rounded down ("over 200"), never up. Quote the year, don't do date math. Review counts, not star ratings.
+7. Never: guess ("must be", "probably", "I bet", "looks like you"); market facts not on their own pages; a line that is only praise; anything negative; pricing, fees, percentages, guarantees or results; names of competitors, owners, staff, reviewers or their clients; quoted reviews; dates that could be wrong on the day it sends; any mention of research, tools, AI or automation; URLs, placeholders, em or en dashes, exclamation marks, emojis.
+8. Company name the way a person says it: drop LLC, Inc. and taglines.
+9. Return NONE when the business can't be confirmed as theirs, the site is down or empty, the only facts are generic, nothing connects to the offer, or the line would need a guess. NONE always beats a stretch.
+10. Final check: 35 words or fewer, a source URL per fact, at least one fact tied to the offer, ends at the tie-back, nothing from the Never list.
 
 One example per offer (made-up businesses, for style only; never reuse these names or facts)
-- Cleaning, reactivation: Brightline has been cleaning offices around Tampa since 2011 and has over 200 Google reviews. That's a lot of past accounts worth reaching back out to.
-- Bookkeeping, reactivation: Your site offers quarterly estimates and monthly books for contractors and restaurants, and you've got 95 reviews. Those quarterly deadlines give you a natural reason to get back in touch with past clients.
-- Recruiting, reactivation: Northgate has been placing accounting and finance people around Charlotte since 2009, so there's a long list of clients who've hired through you before and could use you again.
-- Cleaning, outbound: Your site says you handle post-construction cleanup and nightly janitorial for offices around Denver. New leases and buildouts are exactly where that work starts, and that's what I'd be watching for.
-- Bookkeeping, outbound: Tallgrass has a setup package for brand-new businesses in Omaha. New business filings there are the first thing I'd watch, since that's exactly who the package is built for.
-- Recruiting, outbound: Ironclad focuses on controls engineers and maintenance techs for manufacturers. When a plant posts one of those roles, I'd want you talking to the hiring manager behind it.
+- Cleaning, reactivation: Brightline has been cleaning offices around Tampa since 2011 and has over 200 Google reviews, so there's a long list of past accounts we could win back for you.
+- Bookkeeping, reactivation: You offer quarterly estimates and monthly books for contractors and restaurants, so every quarterly deadline is a reason we could get your past clients back in touch.
+- Recruiting, reactivation: Northgate has been placing accounting and finance people around Charlotte since 2009, so there's a long list of clients who've hired through you before that we could bring back.
+- Cleaning, outbound: You handle post-construction cleanup and nightly janitorial for offices around Denver, so every new lease and buildout in town is a job we could put in front of you.
+- Bookkeeping, outbound: Tallgrass has a setup package for brand-new businesses in Omaha, so every new business filing there is an owner we could get talking to you.
+- Recruiting, outbound: Ironclad places controls engineers and maintenance techs for manufacturers, so every plant that posts one of those roles is a hiring manager we could get you in front of.
 
-Fallback lines (used when the step returns NONE; neither claims anything about their business)
-- Reactivation (cleaning, bookkeeping, recruiting): I'll show you how we'd win back your past and lost clients and get the ones who are ready onto your calendar.
-- Outbound (cleaning, bookkeeping, recruiting): I'll show you what we'd watch for that tells us a business is about to need you, and how we'd get those conversations onto your calendar.
+Fallback lines (used when the step returns NONE or any check fails; neither claims anything about their business). AGREED 2026-09-23 (the lines already in the Google Doc, tags cadence.d2.research_fallback.*):
+- Reactivation (cleaning, bookkeeping, recruiting): The quickest place to start is usually the accounts that already know you and went quiet.
+- Outbound (cleaning, bookkeeping, recruiting): The quickest place to start is usually the prospects who are in market right now.
 
 ## Notes for Lorenzo
 - What changed across the set: E3 now leads with your "I really want to get this call on the books" and E5 keeps your "slots keep getting filled, busy time of year", so the scarcity builds (gone, gone again, they keep filling) instead of repeating E1's line three times. E6 is the value version rather than the priority check, because E7 ("is now the right moment") and E8 ("bad time or not a priority") already carry that beat. Every opener, slot line and booking line is worded differently. E2 drops "in particular" so the fallback version never claims research that didn't happen.
