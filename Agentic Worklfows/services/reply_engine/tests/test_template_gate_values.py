@@ -421,12 +421,12 @@ def test_zoom_and_loom_links(env, monkeypatch):
     assert gate.appointment_touch_verdict(ok, kind="show_rate").allowed
     bad = _sr(env, "confirm_email", zoom_link="https://zoom.us.evil.example/j/1")
     assert _refused(gate.appointment_touch_verdict(bad, kind="show_rate"))
+    # the confirmation carries no Loom line since 2026-09-24: a configured
+    # Loom URL adds nothing and the touch still passes
     monkeypatch.setenv("LOOM_URL_CLEANING", "https://www.loom.com/share/abc")
     loom = _sr(env, "confirm_email", zoom_link="https://us06web.zoom.us/j/1")
-    assert "loom.com/share/abc" in loom.body
+    assert "loom.com" not in loom.body
     assert gate.appointment_touch_verdict(loom, kind="show_rate").allowed
-    monkeypatch.setenv("LOOM_URL_CLEANING", "https://www.loom.com/share/other")
-    assert _refused(gate.appointment_touch_verdict(loom, kind="show_rate"))
 
 
 # ======================================================= booking classification
@@ -644,13 +644,12 @@ def test_r3_bound_zoom_and_loom_links_are_still_checked(env, monkeypatch):
     assert gate.appointment_touch_verdict(t, kind="show_rate", bindings={"zoom_link": REAL_ZOOM}).allowed
     assert _refused(gate.appointment_touch_verdict(t, kind="show_rate",
                                                    bindings={"zoom_link": "https://us06web.zoom.us/j/1"}))
+    # no Loom line in the confirmation since 2026-09-24
     loom = "https://www.loom.com/share/abc"
     monkeypatch.setenv("LOOM_URL_CLEANING", loom)
     t = _sr(env, "confirm_email", zoom_link=REAL_ZOOM)
-    assert loom in t.body
-    assert gate.appointment_touch_verdict(t, kind="show_rate", bindings={"loom_url": loom}).allowed
-    monkeypatch.setenv("LOOM_URL_CLEANING", "https://www.loom.com/share/other")
-    assert _refused(gate.appointment_touch_verdict(t, kind="show_rate", bindings={"loom_url": loom}))
+    assert loom not in t.body
+    assert gate.appointment_touch_verdict(t, kind="show_rate", bindings={"zoom_link": REAL_ZOOM}).allowed
 
 
 @pytest.mark.parametrize("name,value", [
@@ -1379,9 +1378,10 @@ def test_zc_the_link_variants_are_catalogued():
         assert "no_call_link" in names, tid
     ce = idx["show_rate.confirm_email.cleaning_reactivation"]
     names = [v["name"] for v in ce["variants"]]
-    assert {"no_call_link", "no_loom_url", "no_call_link_or_loom"} <= set(names)
-    both = [v for v in ce["variants"] if v["name"] == "no_call_link_or_loom"][0]["text"]
-    assert "{zoom_link}" not in both and "{loom_url}" not in both
+    assert "no_call_link" in names
+    assert "no_loom_url" not in names and "no_call_link_or_loom" not in names
+    no_link = [v for v in ce["variants"] if v["name"] == "no_call_link"][0]["text"]
+    assert "{zoom_link}" not in no_link and "{loom_url}" not in no_link
 
 
 # ---- am/pm: the gate accepts the new format and still refuses wrong times

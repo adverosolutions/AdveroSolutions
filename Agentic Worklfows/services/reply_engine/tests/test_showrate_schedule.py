@@ -233,14 +233,78 @@ def test_copy_rules_no_booking_link_no_reply_c_signed_lorenzo(monkeypatch):
     assert "Wed, Sep 23 at 11:30am CT (12:30pm ET)" in body  # lead tz shown, am/pm on both (ZC item 8)
 
 
-def test_loom_url_from_env_replaces_placeholder(monkeypatch):
+def test_the_confirmation_has_no_loom_line_even_with_a_loom_url(monkeypatch):
+    """The Loom walkthrough line was dropped from the confirmation (Lorenzo,
+    2026-09-24): a configured Loom URL no longer adds a sentence."""
     monkeypatch.setenv("LOOM_URL_CLEANING", "https://www.loom.com/share/abc")
+    monkeypatch.setenv("LOOM_URL_GENERIC", "https://www.loom.com/share/def")
     body = by_key(sr.schedule_for(ILMI, NOW))["confirm_email"].body
-    assert "https://www.loom.com/share/abc" in body and "[Loom:" not in body
+    assert "loom.com" not in body and "walkthrough" not in body and "[Loom:" not in body
     assert not sr.has_unresolved_placeholder(body)
     assert sr.niche_of({"company": "Taxfo Accounting"}) == "bookkeeping"
     assert sr.niche_of({"campaign_key": "recruiting_outbound"}) == "recruiting"
     assert sr.offer_of({"campaign_key": "cleaning_trigger"}) == "outbound"
+
+
+# The confirmation Lorenzo approved on 2026-09-24, word for word: [A] and [B]
+# per (niche, offer).
+CONFIRM_AGENDA = {
+    ("cleaning", "reactivation"): (
+        "your accounts, which ones cancelled or went quiet, and how you win work today",
+        "winning those accounts back"),
+    ("cleaning", "outbound"): (
+        "your crews, the buildings you want more of, and how you win new contracts today",
+        "getting in front of new buildings"),
+    ("bookkeeping", "reactivation"): (
+        "your practice, your client base, and where past clients went",
+        "winning those clients back"),
+    ("bookkeeping", "outbound"): (
+        "your practice, the clients you want more of, and how new ones find you today",
+        "getting in front of new clients"),
+    ("recruiting", "reactivation"): (
+        "your agency, the clients you've placed with, and which ones went quiet",
+        "winning those clients back"),
+    ("recruiting", "outbound"): (
+        "your agency, the roles you fill best, and how you land new clients today",
+        "getting in front of new hiring managers"),
+    ("generic", "reactivation"): (
+        "your company, your past customers, and how you bring work in today",
+        "winning those customers back"),
+    ("generic", "outbound"): (
+        "your company, who you sell to, and how you bring work in today",
+        "getting in front of new customers"),
+}
+CONFIRM_TEMPLATE = (
+    "Hey {first_name},\n\n"
+    "Locked in for {when_ct}. {invite}\n\n"
+    "Here is what I want to cover in the 15 minutes:\n"
+    "- what made you write back now\n"
+    "- {a}\n"
+    "- if it makes sense to work together, a concrete plan for {b}. If it doesn't, I'll still send you a plan "
+    "I think would help where you are now.\n\n"
+    "If anything comes up before then, reply here and we will move it.\n\n"
+    "Lorenzo"
+)
+
+
+@pytest.mark.parametrize("niche,offer", sorted(CONFIRM_AGENDA))
+@pytest.mark.parametrize("with_link", [True, False])
+def test_the_confirmation_is_the_approved_text(niche, offer, with_link, monkeypatch):
+    monkeypatch.setenv("LOOM_URL_GENERIC", "https://www.loom.com/share/def")
+    # a neutral company: "Cleaning" in the name would infer the niche
+    appt = dict(ILMI, niche=niche, offer=offer, company="Shining Armor NJ")
+    assert sr.niche_of(appt) == niche
+    if not with_link:
+        appt.pop("zoom_link")
+    start = slots.parse_iso(appt["start_iso"])
+    copy = sr.render("confirm_email", appt, start, NOW)
+    when_ct = "Wed, Sep 23 at 11:30am CT (12:30pm ET)"
+    invite = ("The calendar invite is on its way with the call link, and here it is too so you do not have to "
+              "dig: https://zoom.us/j/000000000001") if with_link else \
+        "The calendar invite is on its way with the call link."
+    a, b = CONFIRM_AGENDA[(niche, offer)]
+    assert copy["subject"] == "Confirmed: %s, 15 minutes with Lorenzo" % when_ct
+    assert copy["body"] == CONFIRM_TEMPLATE.format(first_name="Ilmi", when_ct=when_ct, invite=invite, a=a, b=b)
 
 
 # ------------------------------------------------------------ re-entry
@@ -353,27 +417,15 @@ def test_sender_ghl_switch_schedules_but_never_dispatches(tmp_env, shadow_mode, 
 MONEY_RE = __import__("re").compile(r"\$[\d][\d,]*(?:\.\d+)?[A-Za-z]*")
 
 
-def test_money_claims_match_the_offer_sheet():
-    """Every currency figure the engine puts in writing has to appear in
-    config/offers.md for that offer: it is what Lorenzo defends on the call."""
-    from shared.settings import OFFERS_MD
-
-    seen = set()
+def test_the_show_rate_emails_quote_no_money():
+    """The confirmation's agenda no longer quotes prices or guarantees
+    (2026-09-24) and the reminders never did: no currency figure in writing."""
     for niche in ("cleaning", "bookkeeping", "recruiting", "generic"):
         for offer in ("reactivation", "outbound"):
             appt = dict(ILMI, niche=niche, offer=offer)
             for t in sr.schedule_for(appt, NOW):
-                for token in MONEY_RE.findall((t.subject or "") + "\n" + t.body):
-                    seen.add(token)
-                    assert token in OFFERS_MD, (niche, offer, t.template_key, token)
-                    assert t.template_key == "confirm_email", t.template_key   # the reminders quote no money
-    assert {"$24,000", "$15,000", "$40,000", "$0"} <= seen
-
-
-def test_the_cleaning_guarantee_keeps_its_annualised_qualifier():
-    body = by_key(sr.schedule_for(dict(ILMI, niche="cleaning", offer="outbound"), NOW))["confirm_email"].body
-    assert "$24,000 a year in new cleaning contracts signed within 90 days" in body
-    assert "the $24,000 in new contracts within 90 days" not in body
+                text = (t.subject or "") + "\n" + t.body
+                assert not MONEY_RE.findall(text), (niche, offer, t.template_key)
 
 
 # ------------------------------------------------------------ send windows
@@ -603,8 +655,8 @@ def test_offer_of_reads_the_ghl_offer_tag():
     assert sr.offer_of(dict(outbound, tags=["offer-mystery"])) == "reactivation"
     # the copy follows the tag
     t = by_key(sr.schedule_for(outbound, NOW))
-    assert "$24,000 a year in new cleaning contracts signed within 90 days" in t["confirm_email"].body
-    assert "commission-only numbers" not in t["confirm_email"].body
+    assert "- your crews, the buildings you want more of" in t["confirm_email"].body
+    assert "which ones cancelled or went quiet" not in t["confirm_email"].body
 
 
 def test_nothing_is_sent_once_the_call_has_started():
