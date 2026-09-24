@@ -2962,6 +2962,29 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
         return dict(base, action="resumed_after_auto_reply", day=pending_day(state), next_send_at=nxt.isoformat())
 
     if cad.get("stopped_reason"):
+        # A "not now" answer that arrived while the ladder ran: the reply's own
+        # pipeline stopped the ladder as inbound_reply before the router set
+        # the not-now status, so the follow_up_later branch below never runs
+        # for it. The 90-day nurture is enrolled here instead, once: an active
+        # record is left alone (one read per tick, no write). An error rides
+        # on this tick's result as post_errors and never crashes the tick.
+        stopped_errors = []  # type: List[str]
+        if not dry_run and terminal_reason(state) == "follow_up_later":
+            try:
+                enrolled_now = in_nurture(state, store)
+            except Exception as exc:  # noqa: BLE001 - surface, retry next tick
+                logger.warning("could not read the nurture record of %s: %s", email, exc)
+                enrolled_now, stopped_errors = True, ["nurture: %s" % exc]
+            if not enrolled_now:
+                failed = _enroll_nurture(state, "not_now_reply", ct, store)
+                if failed:
+                    stopped_errors.append(failed)
+
+        def _stopped(out: Dict[str, Any]) -> Dict[str, Any]:
+            if stopped_errors:
+                out["post_errors"] = list(stopped_errors)
+            return out
+
         if cad.get("stopped_reason") == "inbound_reply" and cad.get("needs_fresh_draft") and not cad.get("stall_notified_at"):
             # Say it once: a human replied, the cadence is parked until Lorenzo
             # approves the fresh answer. Silence here loses positive leads.
@@ -2976,8 +2999,8 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
                 card_open = None
             if not dry_run:
                 state.cadence = dict(cad, stall_notified_at=ct.isoformat())
-            return dict(base, action="awaiting_fresh_draft", reason="inbound_reply", day=pending_day(state),
-                        card_open=card_open)
+            return _stopped(dict(base, action="awaiting_fresh_draft", reason="inbound_reply",
+                                 day=pending_day(state), card_open=card_open))
         if cad.get("stopped_reason") == "template_unapproved" and not dry_run:
             # Keeps a live, signed Resume link in Lorenzo's hands while the
             # ladder stays stopped (daily, and at once when the ids pass),
@@ -2987,7 +3010,8 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
             # "ready to resume" push.
             ended = terminal_reason(state)
             if ended:
-                return dict(base, action="already_stopped", reason=cad["stopped_reason"], resume_withheld=ended)
+                return _stopped(dict(base, action="already_stopped", reason=cad["stopped_reason"],
+                                     resume_withheld=ended))
             # A lead in the 90-day nurture is done with the ladder too. A
             # nurture record that cannot be read still reminds: the push only
             # reaches Lorenzo, and the send path holds on that error anyway.
@@ -2997,11 +3021,12 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
                 logger.warning("could not read the nurture record of %s: %s", email, exc)
                 nurtured = False
             if nurtured:
-                return dict(base, action="already_stopped", reason=cad["stopped_reason"], resume_withheld="nurture")
+                return _stopped(dict(base, action="already_stopped", reason=cad["stopped_reason"],
+                                     resume_withheld="nurture"))
             reminded = _template_stop_reminder(state, ct, notify_fn)
             if reminded is not None:
-                return dict(base, **reminded)
-        return dict(base, action="already_stopped", reason=cad["stopped_reason"])
+                return _stopped(dict(base, **reminded))
+        return _stopped(dict(base, action="already_stopped", reason=cad["stopped_reason"]))
 
     reason = stop_reason(state, ct)
     if reason:

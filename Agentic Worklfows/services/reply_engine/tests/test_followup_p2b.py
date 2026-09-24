@@ -13,9 +13,13 @@ from shared.job_log import read_shadow_log
 from shared.settings import TZ
 from shared.store import JsonFileStore
 
+from services.reply_engine import app as app_mod
 from services.reply_engine import cadence
 from services.reply_engine import nurture
 from services.reply_engine.cadence import LeadState
+from services.reply_engine.models import Classification, ReplyEvent
+from services.reply_engine.tests import test_core_app as T
+from services.reply_engine.tests.test_core_app import env  # noqa: F401 - the app fixture, reused
 
 LEAD = "dana@examplecleaning.test"
 CAMPAIGN = "8086b41e-b546-4b36-9fa0-2d01f5cc119a"  # cleaning, reactivation
@@ -154,6 +158,49 @@ def test_a_not_now_answer_enrolls_the_lead_in_nurture(store, tmp_env):
     assert res["action"] == "follow_up_later" and "post_errors" not in res
     rec = nurture.get(LEAD, store)
     assert rec["status"] == "active" and rec["reason"] == "not_now_reply"
+
+
+def test_a_not_now_reply_mid_ladder_enrolls_the_lead_in_nurture_once(env, monkeypatch):
+    """The real order: the reply's pipeline stops the running ladder as
+    inbound_reply before the router sets the not-now status, so the tick
+    meets an already-stopped ladder. It still enrolls, once, and not in dry
+    run."""
+    lead = "sopiosvanishvili@taxfoaccounting.com"
+    state, token = T._positive(env)
+    assert env["client"].post("/approve/%s" % token).status_code == 200
+    key = T.state_key(state)
+    assert env["store"].get(key)["cadence"]["armed_at"]
+    event = ReplyEvent.from_webhook(T.webhook_payload("rob@cjsglobal.com", "2026-09-15T22:58",
+                                                      timestamp="2026-09-21T20:58:00.000Z",
+                                                      reply_text="Not right now, maybe next quarter."))
+    event.campaign_id, event.lead_email, event.email_id = T.CAMPAIGN, lead, "fresh-notnow"
+    real = app_mod.classify
+
+    def classify(ev, *a, **k):
+        if ev.email_id == "fresh-notnow":
+            return Classification(label="negative_notnow", confidence=0.95, reason="not now")
+        return real(ev, *a, **k)
+    monkeypatch.setattr(app_mod, "classify", classify)
+    app_mod.process_event(event, deps=env["deps"], now=ct(2026, 9, 21, 16, 0))
+    raw = env["store"].get(key)
+    assert raw["status"] == "follow_up_later" and raw["cadence"]["stopped_reason"] == "inbound_reply"
+
+    def tick(when, dry_run=False):
+        st = LeadState(**env["store"].get(key))
+        out = cadence.tick_lead(st, when, store=env["store"], free_slots=[], notify_fn=quiet, dry_run=dry_run)
+        if not dry_run:
+            env["store"].set(key, cadence.state_to_dict(st))
+        return out
+
+    assert tick(ct(2026, 9, 22, 9, 0), dry_run=True)["action"] == "awaiting_fresh_draft"
+    assert nurture.get(lead, env["store"]) is None
+    first = tick(ct(2026, 9, 22, 10, 0))
+    assert first["action"] == "awaiting_fresh_draft" and "post_errors" not in first
+    rec = nurture.get(lead, env["store"])
+    assert rec["status"] == "active" and rec["reason"] == "not_now_reply" and rec["campaign_id"] == T.CAMPAIGN
+    later = [tick(ct(2026, 9, 22, 11, 0)), tick(ct(2026, 9, 23, 10, 0))]
+    assert [(r["action"], r["reason"]) for r in later] == [("already_stopped", "inbound_reply")] * 2
+    assert nurture.get(lead, env["store"]) == rec and len(rec["events"]) == 1
 
 
 def test_an_enroll_error_neither_crashes_the_tick_nor_stops_the_ghl_move(store, tmp_env, monkeypatch):
