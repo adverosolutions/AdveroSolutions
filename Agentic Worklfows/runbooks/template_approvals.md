@@ -35,7 +35,29 @@ Each template is recorded with a sha256 of its exact text. The text you approve 
 
 A change to any of that wording, in code or in a prompt file, changes the hash. That includes the way times are written: a change to a time or slot formatter (the "or" between two times, "CT", the date format) sends every template with a time or slot in it back for approval.
 
-What is not covered: a first reply after the LLM polishes it and any body you edit by hand on a card always go through a card. A day 2 cadence touch with a per-lead LLM research line is always held; by default day 2 uses the fixed fallback line (`cadence.d2.research_fallback.<offer>`), which you can approve. `booking.slot_already_taken` is always a card. A first reply that accepts the time the lead asked for with no booking behind it (the `confirmed_time` variant: "... CT works on my end, I will send the invite over") is always a card too, even when its id is approved, because the gate cannot know an invite was actually booked. Booking confirmations (`booking.confirmation.*`: "Locked in ..., invite on the way") are different: once approved they send on their own, after the classification check. The day 2 research line (`cadence.d2.research_line`) cannot be rendered for review by design, so it is never approvable. The review document's last section lists the other exclusions.
+What is not covered: a first reply after the LLM polishes it and any body you edit by hand on a card always go through a card. A day 2 cadence touch with a per-lead LLM research line is always held; by default day 2 uses the fixed fallback line (`cadence.d2.research_fallback.<offer>`), which you can approve. `booking.slot_already_taken` is always a card. A first reply that accepts the time the lead asked for with no booking behind it (the `confirmed_time` variant: "... CT works on my end, I will send the invite over") is always a card too, even when its id is approved, because the gate cannot know an invite was actually booked. Booking confirmations (`booking.confirmation.*`: "Locked in ..., invite on the way") are different: once approved they send on their own, after the classification check. The day 2 research line (`cadence.d2.research_line`) cannot be rendered for review by design, so it is never approvable; a researched line goes through the approved rules instead (next section). The review document's last section lists the other exclusions.
+
+## Day 2 research line (E2)
+
+Day 2 can carry a line about the lead's own business instead of the fixed fallback line. You approve two things once:
+
+- the day 2 frame, `cadence.d2` (and the fallback lines `cadence.d2.research_fallback.reactivation` and `.outbound`, which stay the default);
+- the research rules, `cadence.d2.research_rules`: the rules text from `services/reply_engine/research_rules.py` (`RULES_TEXT`) followed by a `RULES_VERSION: N` line. It is not an email; it is the list of things a researched line must satisfy. It shows up in the review document under "Cadence day 2: the rules a researched line must pass" and is approved with `jobs/approve_templates.py` like any other id.
+
+Until section 1 adds `research_rules.py`, `cadence.d2.research_rules` is listed as not extractable ("the research rules module is not there yet") and cannot be approved. The approvable count and the parity digest do not change because of it.
+
+When a day 2 email with a researched line auto-sends: `cadence.d2` and `cadence.d2.research_rules` are both approved at their current text, the kill switch is off, parity is ok, and at send time the gate itself:
+
+- checks the body is the approved day 2 text with the line in its place: one line, at most 300 characters, no braces, every other value (name, company, slots, link) checked as usual;
+- checks that line is the one the touch recorded (`meta["research_line"]`), with its evidence (`meta["research_evidence"]`) and the lead's company, website domain, offer and niche;
+- runs `research_rules.validate` on the line again (a result stored earlier is never trusted), and needs a pass under the same rules you approved;
+- runs the usual copy check on the whole body (no em dash, no "!", no AI wording, no figure that is not in offers.md).
+
+What falls back: the cadence decides before building day 2. If research found nothing (NONE) or the line fails the rules, day 2 goes out with the approved fallback line instead, exactly as today.
+
+What holds: a day 2 touch with a researched line that the gate refuses is held like any other refused touch (nothing is sent). The reasons are `research_line_missing`, `research_evidence_missing`, `research_context_missing`, `research_line_mismatch`, `research_rules_failed` (the rules' own reasons are in the detail), `research_rules_error` (the rules check raised), `research_rules_sha_mismatch`, `research_rules_unavailable`, plus the usual `nonconforming` and `copy_gate`. A line written with no rules check (`cadence.d2.research_line`) is never approvable and always held.
+
+Changing the rules unapproves them: any edit to `RULES_TEXT` or a new `RULES_VERSION` changes the hash of `cadence.d2.research_rules`, so it drops to `changed_since_approval` and every researched day 2 is held until you review and approve it again (the fallback line keeps going out meanwhile). Section 1 bumps `RULES_VERSION` whenever it changes how `validate` judges a line, even when the text stays the same. As with any catalogue change, run the parity preflight (`template_parity.py --write`, then `--check`) before the deploy.
 
 ## Approving, step by step
 

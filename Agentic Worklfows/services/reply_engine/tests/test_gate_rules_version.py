@@ -19,6 +19,9 @@ GATE_SOURCE = Path(template_gate.__file__).resolve()
 # {GATE_RULES_VERSION: sha256 of template_gate.py without its version line}
 RECORDED = {
     1: "20c52877dee5a894ee85c765641f4488365d1d30dd3e5159ab9dfa82d342080f",
+    # 2: the researched day 2 line (E2): cadence.d2.research_rules and the
+    # verdict-time research_rules.validate check
+    2: "417fa18454bb552e3c8dfb579f4e174d7c00d7fae88dc13110d5b83578ec101f",
 }
 
 _VERSION_LINE = re.compile(r"^GATE_RULES_VERSION = \d+\s*$")

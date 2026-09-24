@@ -55,12 +55,15 @@ Ids
     first_reply.<offer>.greeting | .answer.<branch> | .slots   reference pieces (not approved alone)
     cadence.<d1..d30, d6_noinvite>             prompts/cadence_*.md plus build_touch variants
     cadence.<fragment>...                      text build_touch splices into d2/d4/d5
+    cadence.d2.research_rules                  the rules a researched day 2 line must pass (not an email;
+                                               see research_rules_review_text)
     booking.<...>                              confirmation, counter-proposals, already-booked
     show_rate.<template_key>[.<niche|offer|niche_offer>]
     no_show.<template_key>[...]
 """
 import copy as copy_mod
 import hashlib
+import importlib
 import importlib.util
 import json
 import logging
@@ -101,6 +104,7 @@ KIND_ORDER = (
     "first_reply",
     "cadence",
     "cadence_fragment",
+    "research_rules",
     "booking",
     "show_rate",
     "no_show",
@@ -110,6 +114,7 @@ KIND_TITLES = {
     "first_reply": "First reply to an interested lead (full body per offer and question type)",
     "cadence": "Daily follow-up cadence (prompts/cadence_*.md)",
     "cadence_fragment": "Cadence: lines spliced into day 2, day 4 and day 5",
+    "research_rules": "Cadence day 2: the rules a researched line must pass (not an email)",
     "booking": "Booking: confirmation, counter-proposals, already booked",
     "show_rate": "Show-rate: confirmation, pre-read and reminders",
     "no_show": "No-show recovery",
@@ -120,6 +125,8 @@ HOOKS = {
     "first_reply_piece": "services/reply_engine/draft.py:skeleton (not sent on its own)",
     "cadence": "services/reply_engine/cadence.py:build_touch -> tick_lead -> _send",
     "cadence_fragment": "services/reply_engine/cadence.py:build_touch (spliced into the day body) -> tick_lead -> _send",
+    "research_rules": "services/reply_engine/research_rules.py:validate <- template_gate.touch_verdict (cadence day 2, "
+                      "run again at verdict time for every researched line)",
     "show_rate": "services/reply_engine/show_rate.py:render <- schedule_for; sent by show_rate.dispatch_touch (run)",
     "no_show": "services/reply_engine/no_show.py:render <- recovery_touches; sent by show_rate.dispatch_touch (run_recovery)",
 }
@@ -182,7 +189,9 @@ VARIABLE_NOTES = {
     "referral_name": "the person the lead referred us to, as written",
     "referral_first_name": "first word of referral_name",
     "specialty": "recruiting specialty from the lead record",
-    "research_line": "one LLM-written line about the business (not covered by this approval)",
+    "research_line": "one line about the business: the approved fallback (cadence.d2.research_fallback.*), or a "
+                     "researched line that passes the approved rules (cadence.d2.research_rules) when the gate "
+                     "checks it",
     "case_study": "the offer type's proof line (cadence.d4.case_study.*)",
     "free_work": "the niche and offer sample-of-work line (cadence.d5.free_work.*)",
     "loom_url": "Loom walkthrough URL",
@@ -478,9 +487,10 @@ def _cadence_entries() -> List[Dict[str, Any]]:
 
     out = []  # type: List[Dict[str, Any]]
     notes = {
-        "d2": "{research_line} is cadence.d2.research_fallback.<offer>, the fixed fallback line, which is what the "
-              "engine uses by default (CT3). A line written per lead by the LLM (cadence.d2.research_line) is not "
-              "covered by any approval, so a day 2 touch carrying one is always held, never sent.",
+        "d2": "{research_line} is cadence.d2.research_fallback.<offer>, the fixed fallback line, or a researched "
+              "line that the approved rules (cadence.d2.research_rules) pass at send time. A line written per lead "
+              "with no rules check (cadence.d2.research_line) is not covered by any approval, so a day 2 touch "
+              "carrying one is always held, never sent.",
         "d4": "{case_study} is cadence.d4.case_study.<offer>; the variants show the reactivation line in place.",
         "d5": "{free_work} is cadence.d5.free_work.<niche>_<offer>; the variants show the cleaning line in place.",
         "d6": "Needs Lorenzo's one-tap OK on the calendar hold today (Touch.requires_approval).",
@@ -552,6 +562,111 @@ def _cadence_fragments() -> List[Dict[str, Any]]:
         "so there is no fixed text to hash. CT3: day 2 uses the fallback line by default; a touch carrying an "
         "LLM line is always held, never sent."))
     return out
+
+
+# ------------------------------------------------ day 2 research rules
+# Lorenzo approves the rules a researched day 2 line must pass, once, as the
+# catalogue entry RESEARCH_RULES_ID. The rules live in section 1's module
+# RESEARCH_RULES_MODULE (pure: no network, no model, no clock):
+#
+#     RULES_TEXT: str          what Lorenzo reads and approves
+#     RULES_VERSION: int       bumped with any change to how validate() judges
+#     validate(line, evidence, context) -> ResearchVerdict(ok, line, reasons, rules_sha)
+#     rules_sha() -> str       optional; see template_gate.research_rules_sha
+#
+# The entry's review text is RULES_TEXT plus a "RULES_VERSION: N" line, and its
+# sha256 is text_hash() of that like every entry, so a change to RULES_TEXT or
+# RULES_VERSION drops the approval to changed_since_approval. Until the module
+# is there (or while it is broken) the entry is unextractable and not
+# approvable, so the approvable count and the parity digest do not move.
+RESEARCH_RULES_MODULE = "services.reply_engine.research_rules"
+RESEARCH_RULES_ID = "cadence.d2.research_rules"
+RESEARCH_RULES_KIND = "research_rules"
+RESEARCH_RULES_SOURCE = "services/reply_engine/research_rules.py:RULES_TEXT"
+RESEARCH_RULES_VERSION_LINE = "RULES_VERSION: %d"
+RESEARCH_RULES_ABSENT = "the research rules module is not there yet"
+
+
+def load_research_rules() -> Tuple[Optional[Any], Optional[str], bool]:
+    """(module, why_not, absent_by_design). Imported lazily, by name, every
+    call (a module already imported comes straight from sys.modules). Never
+    raises: a missing module is (None, RESEARCH_RULES_ABSENT, True); a module
+    that fails to import is (None, why, False)."""
+    try:
+        return importlib.import_module(RESEARCH_RULES_MODULE), None, False
+    except ModuleNotFoundError as exc:
+        if getattr(exc, "name", None) == RESEARCH_RULES_MODULE:
+            return None, RESEARCH_RULES_ABSENT, True
+        return None, "the research rules module could not be imported (%s: %s)" % (type(exc).__name__, exc), False
+    except Exception as exc:  # noqa: BLE001 - a broken rules module is no rules, never a broken catalogue
+        return None, "the research rules module could not be imported (%s: %s)" % (type(exc).__name__, exc), False
+
+
+def research_rules_parts(module: Any) -> Tuple[Optional[str], Optional[int], Optional[str]]:
+    """(RULES_TEXT, RULES_VERSION, why_not) of an imported rules module.
+    why_not is None only when RULES_TEXT is non-empty text, RULES_VERSION an
+    int (not a bool) and validate callable. Never raises."""
+    try:
+        text = getattr(module, "RULES_TEXT", None)
+        version = getattr(module, "RULES_VERSION", None)
+        if not isinstance(text, str) or not text.strip():
+            return None, None, "the research rules module has no RULES_TEXT"
+        if isinstance(version, bool) or not isinstance(version, int):
+            return None, None, "the research rules module's RULES_VERSION is not an integer"
+        if not callable(getattr(module, "validate", None)):
+            return None, None, "the research rules module has no validate()"
+        return text, version, None
+    except Exception as exc:  # noqa: BLE001
+        return None, None, "the research rules module could not be read (%s)" % type(exc).__name__
+
+
+def research_rules_review_text(text: str, version: int) -> str:
+    """What the RESEARCH_RULES_ID entry shows Lorenzo and hashes: RULES_TEXT,
+    a blank line, then "RULES_VERSION: N"."""
+    return "%s\n\n%s" % ((text or "").rstrip("\n"), RESEARCH_RULES_VERSION_LINE % int(version))
+
+
+def research_rules_sha(text: str, version: int) -> str:
+    """text_hash(research_rules_review_text(text, version)): the entry's
+    sha256, and the rules_sha a module without rules_sha() must report."""
+    return text_hash(research_rules_review_text(text, version))
+
+
+def research_rules_fingerprint() -> str:
+    """What the RESEARCH_RULES_ID entry depends on, for the catalogue cache
+    key (_source_key): the rules text, version and whether validate is there,
+    or why the module is not usable (its exception type only, so the key is
+    the same on every call). Never raises."""
+    mod, _why, absent = load_research_rules()
+    if mod is None:
+        return "absent" if absent else "broken"
+    try:
+        raw = json.dumps([repr(getattr(mod, "RULES_TEXT", None)), repr(getattr(mod, "RULES_VERSION", None)),
+                          callable(getattr(mod, "validate", None))])
+        return "module:" + hashlib.sha256(raw.encode("utf-8")).hexdigest()
+    except Exception as exc:  # noqa: BLE001
+        return "unreadable:%s" % type(exc).__name__
+
+
+def _research_rules_entries() -> List[Dict[str, Any]]:
+    kind = RESEARCH_RULES_KIND
+    notes = ("Not an email. Approving this approves the rules a researched day 2 line must pass: cadence.d2 then "
+             "auto-sends with a per-lead line only when services/reply_engine/research_rules.py:validate passes it "
+             "again at send time. A change to RULES_TEXT or RULES_VERSION needs approval again.")
+    mod, why, absent = load_research_rules()
+    if mod is None:
+        entry = _unextractable(RESEARCH_RULES_ID, kind, RESEARCH_RULES_SOURCE, why or RESEARCH_RULES_ABSENT)
+        if absent:
+            entry["unextractable_by_design"] = True
+        return [entry]
+    text, version, why = research_rules_parts(mod)
+    if why:
+        return [_unextractable(RESEARCH_RULES_ID, kind, RESEARCH_RULES_SOURCE, why)]
+    entry = _entry(RESEARCH_RULES_ID, kind, research_rules_review_text(text, version), RESEARCH_RULES_SOURCE,
+                   notes=notes)
+    # Rules prose, not a template: whatever braces it quotes are not placeholders.
+    entry["variables"] = []
+    return [entry]
 
 
 # -------------------------------------------------------------- booking
@@ -1017,7 +1132,7 @@ class _DummyLeadLogFilter(logging.Filter):
 _CACHE = {"key": None, "entries": None}  # type: Dict[str, Any]
 _SOURCE_MODULES = ("services.reply_engine.draft", "services.reply_engine.cadence", "services.reply_engine.booking",
                    "services.reply_engine.show_rate", "services.reply_engine.no_show", "services.reply_engine.app",
-                   "services.reply_engine.models", "shared.slots", "shared.settings", __name__)
+                   "services.reply_engine.models", "shared.slots", "shared.settings", RESEARCH_RULES_MODULE, __name__)
 
 
 def _module_file(name: str) -> Optional[str]:
@@ -1047,7 +1162,10 @@ def _source_key() -> Tuple[Any, ...]:
     """A sha256 of the CONTENT of every file the catalogue is rendered from:
     the copy modules, every prompt file, config/offers.md and config/ids.json.
     Content, not mtime and size, so a same-size edit whose mtime was put back
-    still invalidates the cache. A different prompts directory does too."""
+    still invalidates the cache. A different prompts directory does too. Plus
+    research_rules_fingerprint(): the rules module's RULES_TEXT, RULES_VERSION
+    and whether it imports, as loaded now (a module with no file of its own,
+    or one that appears or goes away, changes the key too)."""
     from services.reply_engine import cadence, show_rate
     from shared import paths
 
@@ -1057,6 +1175,7 @@ def _source_key() -> Tuple[Any, ...]:
     files.extend([str(paths.OFFERS_PATH), str(paths.IDS_PATH)])
     key = [str(cadence.PROMPTS_DIR), str(show_rate.PROMPTS_DIR)]  # type: List[Any]
     key.extend((f, _file_digest(f)) for f in files)
+    key.append(("research_rules", research_rules_fingerprint()))
     return tuple(key)
 
 
@@ -1074,6 +1193,7 @@ def _build_catalogue() -> List[Dict[str, Any]]:
         for build in (_first_reply_entries, _cadence_entries, _cadence_fragments, _booking_entries,
                       _show_rate_entries, _no_show_entries, _first_reply_pieces):
             out.extend(build())
+        out.extend(_guard(RESEARCH_RULES_ID, RESEARCH_RULES_KIND, RESEARCH_RULES_SOURCE, _research_rules_entries))
         out = _add_value_formats(out)
     finally:
         booking_logger.removeFilter(flt)

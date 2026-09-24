@@ -36,9 +36,12 @@ Gate order (the first failure wins; any exception is ``registry_error``):
 7. requested override     ``requested`` is None (requested_override)
 8. copy gate              the kind's copy rules pass on the body, and the
                           subject passes the same banned-word, figure, "!"
-                          and link checks (copy_gate)
+                          and link checks (copy_gate); a researched day 2
+                          touch also runs cadence.copy_problems on its body
+                          here, whatever touch.problems says
 9. conforms               the text is the template with only its placeholders
-                          filled, each with a value of its type (nonconforming)
+                          filled, each with a value of its type (nonconforming);
+                          a researched day 2 touch is checked as below
 
 How a placeholder is checked (step 9)
 -------------------------------------
@@ -98,6 +101,40 @@ time here: {booking_url}") never auto-sends: the gate cannot know the
 invite was actually booked, so a body that matches only that variant is
 nonconforming.
 
+The researched day 2 line (E2)
+------------------------------
+Day 2 auto-sends with a per-lead line in {research_line} only when its parts
+are exactly [template_approvals.RESEARCH_RULES_ID] ("cadence.d2.research_rules",
+the rules Lorenzo approved, checked by steps 4 and 5 like any part) on
+cadence.d2 (RESEARCH_RULES_MAINS). The per-lead line with no rules
+(cadence.d2.research_line) stays not approvable, and the fallback parts
+(cadence.d2.research_fallback.*) are checked as before. For a researched
+touch, after step 8 (touch_verdict only; everywhere else the rules part is
+refused as unknown_id or nonconforming):
+
+- touch.meta is a dict with a non-empty "research_line" (research_line_missing)
+  and a dict "research_evidence" (research_evidence_missing);
+- the bindings carry RESEARCH_CONTEXT_KEYS (company, website_domain,
+  offer_branch, niche), each non-empty text, offer_branch "reactivation" or
+  "outbound" (research_context_missing);
+- the body matches the approved cadence.d2 text or one of its variants with
+  every placeholder checked as above and {research_line} a bounded capture:
+  one line (no line break at all, so never a blank line), at most
+  RESEARCH_LINE_MAX_CHARS characters, no "{" or "}", no leading or trailing
+  space, NFKC-stable, no control or format characters (nonconforming);
+- the captured line equals normalise(touch.meta["research_line"])
+  (research_line_mismatch);
+- the rules module imports and is complete (research_rules_unavailable), and
+  its rules still hash to the catalogue entry just checked
+  (changed_since_approval);
+- research_rules.validate(line, evidence, context) is called HERE, at verdict
+  time, on a copy of the evidence; a stored verdict is never read. An
+  exception, or anything but a verdict, is research_rules_error;
+  verdict.rules_sha must equal research_rules_sha() of the module now
+  (research_rules_sha_mismatch); verdict.ok must be True
+  (research_rules_failed, with the validator's reasons in the detail); and
+  verdict.line must equal the captured line (research_line_mismatch).
+
 ``Verdict.to_record()`` carries ids, statuses and the reason, never any text.
 The FYI queue and the held counters carry ids, statuses and counts only.
 
@@ -105,6 +142,7 @@ Engine modules that are edited alongside this one (draft, cadence, classify,
 models, booking, show_rate) are imported inside the functions that need them,
 by name.
 """
+import copy as copy_mod
 import hashlib
 import itertools
 import json
@@ -126,7 +164,11 @@ logger = logging.getLogger("reply_engine.template_gate")
 
 REASONS = ("ok", "kill_switch", "parity_failed", "no_template", "not_template_render", "unknown_id",
            "unapproved", "changed_since_approval", "not_approvable", "stale_render", "classification",
-           "requested_override", "copy_gate", "nonconforming", "registry_error")
+           "requested_override", "copy_gate", "nonconforming", "registry_error",
+           # the researched day 2 line (see "The researched day 2 line" above)
+           "research_line_missing", "research_evidence_missing", "research_context_missing",
+           "research_line_mismatch", "research_rules_unavailable", "research_rules_error",
+           "research_rules_failed", "research_rules_sha_mismatch")
 
 FYI_KEY = "autosend_fyi:pending"
 HELD_KEY_PREFIX = "autosend_fyi:held:"
@@ -160,14 +202,27 @@ PART_KIND = {"cadence": "cadence_fragment"}
 PART_PLACEHOLDERS = (
     ("cadence.d2.research_fallback.", "research_line"),
     ("cadence.d2.research_line", "research_line"),
+    (ta.RESEARCH_RULES_ID, "research_line"),
     ("cadence.d4.case_study.", "case_study"),
     ("cadence.d5.free_work.", "free_work"),
 )
 PART_FILLED = tuple(sorted(set(ph for _, ph in PART_PLACEHOLDERS)))
 LADDER_PREFIXES = ("cadence.", "show_rate.", "no_show.")
 # Ladder ids that are unextractable on purpose (never approvable), so the
-# deploy preflight does not count them as a failed extraction.
+# deploy preflight does not count them as a failed extraction. An entry that
+# carries "unextractable_by_design" is skipped too: cadence.d2.research_rules
+# while its module is not there yet (a rules module that is there but broken
+# IS counted).
 UNEXTRACTABLE_BY_DESIGN = ("cadence.d2.research_line",)
+# The researched day 2 line: the rules part may only be given to these main
+# ids, of these gated kinds, and fills this placeholder with a capture.
+RESEARCH_RULES_MAINS = ("cadence.d2",)
+RESEARCH_RULES_KINDS = ("cadence",)
+RESEARCH_PLACEHOLDER = "research_line"
+RESEARCH_LINE_MAX_CHARS = 300
+# The context research_rules.validate gets, read from the bindings.
+RESEARCH_CONTEXT_KEYS = ("company", "website_domain", "offer_branch", "niche")
+RESEARCH_OFFER_BRANCHES = ("reactivation", "outbound")
 # Variants that never auto-send even when approved (see the module docstring).
 NEVER_AUTO_VARIANTS = ("confirmed_time",)
 SUBJECT_VARIANT = "subject"
@@ -188,7 +243,7 @@ MAX_SUBJECT_CHARS = 300
 # Resume on its stop (runbooks/template_approvals.md, "Cadence holds, stalls
 # and resume"). tests/test_gate_rules_version.py pins this module's source
 # per version, so a change to this file without a bump fails the suite.
-GATE_RULES_VERSION = 1
+GATE_RULES_VERSION = 2
 
 # Placeholder types.
 NAME_PLACEHOLDERS = ("first_name", "referral_name", "referral_first_name")
@@ -260,6 +315,8 @@ _TEXT_CLASS = r"(?:[^\W_]|[ &.,'\u2019()/+#-]){1,%d}?" % TEXT_MAX_CHARS
 # + and - for the numeric zone labels pytz writes ("-03", "+0530").
 _TIME_CLASS = r"(?:[^\W_]|[ :,()+-]){1,%d}?" % TIME_MAX_CHARS
 _URL_CLASS = r"[!#-;=?-~]{1,%d}?" % URL_MAX_CHARS   # printable ASCII except space, < and >
+# A researched day 2 line: one line, no braces. _research_capture_ok checks it in full.
+_RESEARCH_CLASS = r"[^{}\n]{1,%d}?" % RESEARCH_LINE_MAX_CHARS
 
 _NAME_WORD_RE = re.compile(r"(?:[^\W\d_]\.)+|[^\W\d_]+(?:['\u2019-][^\W\d_]+)*")
 _TEXT_CHARS_RE = re.compile(r"(?:[^\W_]|[ &.,'\u2019()/+#-])+")
@@ -482,7 +539,8 @@ def unextractable_ladder_ids(index: Optional[Dict[str, Dict[str, Any]]] = None) 
     held until the code is fixed."""
     idx = index if index is not None else _index()
     return sorted(tid for tid, e in idx.items()
-                  if tid.startswith(LADDER_PREFIXES) and not e.get("extractable") and tid not in UNEXTRACTABLE_BY_DESIGN)
+                  if tid.startswith(LADDER_PREFIXES) and not e.get("extractable") and tid not in UNEXTRACTABLE_BY_DESIGN
+                  and not e.get("unextractable_by_design"))
 
 
 # --------------------------------------------------------------- parity
@@ -1172,17 +1230,33 @@ def _class_for(name: str) -> str:
     return r"(?!)"
 
 
+def _research_capture_ok(value: Any) -> bool:
+    """The shape of a researched day 2 line as captured from the body: text,
+    1 to RESEARCH_LINE_MAX_CHARS characters, one line, no braces, no leading
+    or trailing space, NFKC-stable, no control, format or blank-rendering
+    characters. What it says is research_rules.validate's to judge."""
+    if not isinstance(value, str) or not value or len(value) > RESEARCH_LINE_MAX_CHARS:
+        return False
+    if "\n" in value or "{" in value or "}" in value or value != value.strip():
+        return False
+    return _nfkc_stable(value) and _clean_chars(value, allow_newline=False)
+
+
 _PATTERN_CACHE = {}  # type: Dict[Any, Any]
 
 
-def _pattern(text: str, fallbacks: Optional[Dict[str, set]] = None) -> "re.Pattern":
+def _pattern(text: str, fallbacks: Optional[Dict[str, set]] = None,
+             captures: frozenset = frozenset()) -> "re.Pattern":
     """The template text as an anchored regex: literals escaped, each
     placeholder a bounded run of the characters its type can hold (or one of
     its approved fallback wordings), a repeated placeholder the same value as
-    its first use."""
+    its first use. A placeholder in ``captures`` (the researched day 2 line)
+    is _RESEARCH_CLASS and never takes a fallback wording."""
     names = set(m.group(1) for m in ta._PLACEHOLDER_RE.finditer(text))
-    fb = dict((n, tuple(sorted(v, key=lambda x: (-len(x), x)))) for n, v in (fallbacks or {}).items() if n in names and v)
-    ck = (text, tuple(sorted(fb.items())))
+    fb = dict((n, tuple(sorted(v, key=lambda x: (-len(x), x)))) for n, v in (fallbacks or {}).items()
+              if n in names and v and n not in captures)
+    captures = frozenset(c for c in captures if c in names)
+    ck = (text, tuple(sorted(fb.items())), tuple(sorted(captures)))
     cached = _PATTERN_CACHE.get(ck)
     if cached is not None:
         return cached
@@ -1197,7 +1271,7 @@ def _pattern(text: str, fallbacks: Optional[Dict[str, set]] = None) -> "re.Patte
         else:
             seen.add(name)
             alts = "".join(re.escape(v) + "|" for v in fb.get(name, ()))
-            out.append("(?P<%s>%s%s)" % (name, alts, _class_for(name)))
+            out.append("(?P<%s>%s%s)" % (name, alts, _RESEARCH_CLASS if name in captures else _class_for(name)))
         pos = m.end()
     out.append(re.escape(text[pos:]))
     pat = re.compile("".join(out))
@@ -1257,14 +1331,23 @@ def _fallback_values(entry: Dict[str, Any], texts: List[str], filled: frozenset 
     return out
 
 
-def _matches(template_text: str, text: str, bindings: Dict[str, str],
-             fallbacks: Optional[Dict[str, set]] = None) -> bool:
-    fb = fallbacks or {}
-    m = _pattern(ta.normalise(template_text), fb).fullmatch(ta.normalise(text))
+def _match_values(template_text: str, text: str, bindings: Dict[str, str],
+                  fallbacks: Optional[Dict[str, set]] = None,
+                  captures: frozenset = frozenset()) -> Optional[Dict[str, str]]:
+    """The placeholder values of ``text`` read against ``template_text``, or
+    None when it does not match or a value fails its check. A placeholder in
+    ``captures`` (the researched day 2 line) must pass _research_capture_ok
+    and equal its binding when it has one; the caller checks the rest."""
+    fb = dict((n, v) for n, v in (fallbacks or {}).items() if n not in captures)
+    m = _pattern(ta.normalise(template_text), fb, captures).fullmatch(ta.normalise(text))
     if m is None:
-        return False
+        return None
     captured = dict((k, v) for k, v in m.groupdict().items() if v is not None)
     for name, value in captured.items():
+        if name in captures:
+            if not _research_capture_ok(value) or (name in bindings and value != bindings[name]):
+                return None
+            continue
         if name not in bindings and value in fb.get(name, ()):
             # Approved variant wording for this placeholder. The referral's
             # first name only when the referral name is a fallback too.
@@ -1272,8 +1355,13 @@ def _matches(template_text: str, text: str, bindings: Dict[str, str],
                     fb.get("referral_name", ())):
                 continue
         if not _value_ok(name, value, captured, bindings):
-            return False
-    return True
+            return None
+    return captured
+
+
+def _matches(template_text: str, text: str, bindings: Dict[str, str],
+             fallbacks: Optional[Dict[str, set]] = None) -> bool:
+    return _match_values(template_text, text, bindings, fallbacks) is not None
 
 
 def _split_subject(text: str) -> Tuple[Optional[str], str]:
@@ -1303,7 +1391,8 @@ def _family_texts(index: Dict[str, Dict[str, Any]]) -> List[Tuple[str, str]]:
     out = []  # type: List[Tuple[str, str]]
     for tid, e in index.items():
         ph = _part_placeholder(tid)
-        if ph and e.get("extractable") and e.get("text"):
+        # the research rules are prose, never a line spliced into a body
+        if ph and e.get("kind") != ta.RESEARCH_RULES_KIND and e.get("extractable") and e.get("text"):
             out.append((e["text"], ph))
     return sorted(out, key=lambda t: len(t[0]), reverse=True)
 
@@ -1339,6 +1428,8 @@ def fallback_wordings(index: Optional[Dict[str, Dict[str, Any]]] = None) -> Dict
         e = idx[tid]
         if not (e.get("approvable") and e.get("extractable") and e.get("text")):
             continue
+        if e.get("kind") == ta.RESEARCH_RULES_KIND:
+            continue              # rules prose, not an email
         spliced = frozenset(ph for ph in PART_FILLED if "{%s}" % ph in e["text"])
         for filled in ((frozenset(), spliced) if spliced else (frozenset(),)):
             texts = _candidate_texts(idx, e, filled) + _subject_patterns(e)
@@ -1348,7 +1439,13 @@ def fallback_wordings(index: Optional[Dict[str, Dict[str, Any]]] = None) -> Dict
 
 
 def _conforms(index: Dict[str, Dict[str, Any]], template_id: str, body: str, subject: Optional[str],
-              parts: Sequence[str], bindings: Optional[Dict[str, str]] = None) -> bool:
+              parts: Sequence[str], bindings: Optional[Dict[str, str]] = None,
+              research_lines: Optional[List[str]] = None) -> bool:
+    """``research_lines``: only touch_verdict's research check passes a list.
+    With the research rules part among ``parts`` and a list, {research_line}
+    is captured (_RESEARCH_CLASS) and every captured line of a matching text
+    is appended to the list for the caller to check; without a list, a body
+    with that part never conforms."""
     bindings = dict(bindings or {})
     entry = index.get(template_id)
     if not entry or not entry.get("extractable") or not entry.get("text"):
@@ -1359,36 +1456,54 @@ def _conforms(index: Dict[str, Dict[str, Any]], template_id: str, body: str, sub
                                 or not _clean_chars(subject, allow_newline=False)):
         return False
     fills = {}  # type: Dict[str, str]
+    captures = frozenset()  # type: frozenset
     for pid in parts or ():
         pe = index.get(pid)
         ph = _part_placeholder(pid)
-        if not pe or not pe.get("extractable") or not pe.get("text") or ph is None or ph in fills:
+        if pid == ta.RESEARCH_RULES_ID:
+            # the researched line: captured, checked by the caller
+            if (research_lines is None or template_id not in RESEARCH_RULES_MAINS or not pe
+                    or not pe.get("approvable") or ph is None or ph in fills or ph in captures):
+                return False
+            captures = frozenset([ph])
+            continue
+        if not pe or not pe.get("extractable") or not pe.get("text") or ph is None or ph in fills or ph in captures:
             return False
         fills[ph] = pe["text"]
-    filled = frozenset(fills)
+    filled = frozenset(fills) | captures
     candidates = _candidate_texts(index, entry, filled)
     subject_patterns = _subject_patterns(entry)
     fallbacks = _fallback_values(entry, candidates + subject_patterns, filled)
     subject_needed = subject is not None
+    matched = False
     for cand in candidates:
         for ph, fill_text in fills.items():
             cand = cand.replace("{%s}" % ph, fill_text)
         # a spliced line nobody supplied (the LLM research line) never conforms
-        if any("{%s}" % ph in cand for ph in PART_FILLED):
+        if any("{%s}" % ph in cand for ph in PART_FILLED if ph not in captures):
+            continue
+        # a researched touch carries its line: a text without the slot is not it
+        if any("{%s}" % ph not in cand for ph in captures):
             continue
         cand_subject, cand_body = _split_subject(cand)
         if cand_subject is not None:
             if subject is not None:
-                if _matches(cand, "%s%s\n\n%s" % (SUBJECT_PREFIX, subject, body), bindings, fallbacks):
-                    return True
-            elif _matches(cand_body, body, bindings, fallbacks):
-                return True
-        elif _matches(cand, body, bindings, fallbacks):
-            if not subject_needed:
-                return True
-            if any(_matches(p, subject, bindings, fallbacks) for p in subject_patterns):
-                return True
-    return False
+                got = _match_values(cand, "%s%s\n\n%s" % (SUBJECT_PREFIX, subject, body), bindings, fallbacks,
+                                    captures)
+            else:
+                got = _match_values(cand_body, body, bindings, fallbacks, captures)
+        else:
+            got = _match_values(cand, body, bindings, fallbacks, captures)
+            if got is not None and subject_needed and not any(
+                    _matches(p, subject, bindings, fallbacks) for p in subject_patterns):
+                got = None
+        if got is None:
+            continue
+        if not captures:
+            return True
+        research_lines.extend(got[ph] for ph in sorted(captures))
+        matched = True
+    return matched
 
 
 def conforms(template_id: str, body: str, subject: Optional[str] = None, parts: Sequence[str] = (),
@@ -1429,7 +1544,14 @@ def _check_ids(index: Dict[str, Dict[str, Any]], kind: Optional[str], template_i
         if not entry.get("approvable"):
             raise _Fail("not_approvable", "%s cannot be approved" % tid)
         if kind is not None:
-            want = MAIN_KIND.get(kind) if n == 0 else PART_KIND.get(kind)
+            if n == 0:
+                want = MAIN_KIND.get(kind)
+            elif tid == ta.RESEARCH_RULES_ID:
+                # the research rules are a part of cadence.d2 only
+                want = (ta.RESEARCH_RULES_KIND if kind in RESEARCH_RULES_KINDS and template_id in RESEARCH_RULES_MAINS
+                        else None)
+            else:
+                want = PART_KIND.get(kind)
             if want is None or entry.get("kind") != want:
                 raise _Fail("unknown_id", "%s is not a %s template" % (tid, "main" if n == 0 else "part"))
         st = statuses[tid]
@@ -1571,9 +1693,131 @@ def draft_verdict(draft: Any, *, kind: str, campaign_key: Optional[str] = None, 
     return _verdict(run)
 
 
+# ------------------------------------------------ the researched day 2 line
+def research_rules_sha(module: Any = None) -> str:
+    """The rules_sha a research_rules.ResearchVerdict must carry: what the
+    rules module reports for its own rules NOW. Raises when it cannot say.
+
+    Contract for services/reply_engine/research_rules.py (section 1):
+
+    - with a callable ``rules_sha()``, that is the answer: a non-empty str,
+      and validate() must put exactly it in ResearchVerdict.rules_sha;
+    - without one, the answer is
+      ``template_approvals.research_rules_sha(RULES_TEXT, RULES_VERSION)``:
+      sha256 hex of normalise(RULES_TEXT.rstrip("\\n") + "\\n\\nRULES_VERSION: " +
+      str(RULES_VERSION)), which is also the catalogue hash of
+      cadence.d2.research_rules that Lorenzo approves.
+
+    ``module`` defaults to the module imported by name now."""
+    mod = module
+    if mod is None:
+        mod, why, _absent = ta.load_research_rules()
+        if mod is None:
+            raise RuntimeError(why or ta.RESEARCH_RULES_ABSENT)
+    fn = getattr(mod, "rules_sha", None)
+    if fn is not None:
+        if not callable(fn):
+            raise TypeError("research_rules.rules_sha is not callable")
+        got = fn()
+    else:
+        text, version, why = ta.research_rules_parts(mod)
+        if why:
+            raise RuntimeError(why)
+        got = ta.research_rules_sha(text, version)
+    if not isinstance(got, str) or not got:
+        raise ValueError("research_rules.rules_sha() gave no sha")
+    return got
+
+
+def _research_context(bindings: Optional[Dict[str, str]]) -> Dict[str, str]:
+    """RESEARCH_CONTEXT_KEYS from the bindings, each non-empty text;
+    offer_branch one of RESEARCH_OFFER_BRANCHES."""
+    b = bindings or {}
+    missing = [k for k in RESEARCH_CONTEXT_KEYS if not isinstance(b.get(k), str) or not b[k].strip()]
+    if missing:
+        raise _Fail("research_context_missing", "no %s in the bindings" % ", ".join(missing))
+    context = dict((k, str(b[k])) for k in RESEARCH_CONTEXT_KEYS)
+    if context["offer_branch"] not in RESEARCH_OFFER_BRANCHES:
+        raise _Fail("research_context_missing", "offer_branch is not one of %s" % ", ".join(RESEARCH_OFFER_BRANCHES))
+    return context
+
+
+def _check_research(index: Dict[str, Dict[str, Any]], template_id: str, touch: Any, body: str,
+                    subject: Optional[str], parts: Sequence[str], bindings: Optional[Dict[str, str]]) -> None:
+    """Step 9 for a researched day 2 touch (see the module docstring). The
+    ids and the stamp of the rules part were checked by steps 4 and 5."""
+    meta = getattr(touch, "meta", None)
+    if not isinstance(meta, dict):
+        raise _Fail("research_line_missing", "the touch carries no meta")
+    line = meta.get("research_line")
+    if not isinstance(line, str) or not ta.normalise(line):
+        raise _Fail("research_line_missing", "touch.meta has no research_line")
+    evidence = meta.get("research_evidence")
+    if not isinstance(evidence, dict):
+        raise _Fail("research_evidence_missing", "touch.meta has no research_evidence dict")
+    context = _research_context(bindings)
+    captured = []  # type: List[str]
+    if not _conforms(index, template_id, body, subject, parts, bindings, research_lines=captured):
+        raise _Fail("nonconforming", "the text is not the approved day 2 template with valid placeholder values "
+                                     "and one research line of at most %d characters" % RESEARCH_LINE_MAX_CHARS)
+    want = ta.normalise(line)
+    if want not in captured:
+        raise _Fail("research_line_mismatch", "the line in the body is not touch.meta's research_line")
+    mod, why, _absent = ta.load_research_rules()
+    if mod is None:
+        raise _Fail("research_rules_unavailable", why or ta.RESEARCH_RULES_ABSENT)
+    text, version, why = ta.research_rules_parts(mod)
+    if why:
+        raise _Fail("research_rules_unavailable", why)
+    if ta.research_rules_sha(text, version) != _hash_of(index, ta.RESEARCH_RULES_ID):
+        raise _Fail("changed_since_approval", "%s changed after the catalogue was read" % ta.RESEARCH_RULES_ID)
+    try:
+        expected = research_rules_sha(mod)
+    except Exception as exc:  # noqa: BLE001 - no expected sha, no send
+        raise _Fail("research_rules_unavailable", "the rules sha could not be computed (%s)" % type(exc).__name__)
+    try:
+        evidence_copy = copy_mod.deepcopy(evidence)
+    except Exception as exc:  # noqa: BLE001
+        raise _Fail("research_evidence_missing", "research_evidence cannot be copied (%s)" % type(exc).__name__)
+    try:
+        result = mod.validate(want, evidence_copy, dict(context))
+    except Exception as exc:  # noqa: BLE001 - a validator that raised has passed nothing
+        logger.warning("research_rules.validate raised for %s: %s", template_id, type(exc).__name__)
+        raise _Fail("research_rules_error", "validate raised %s: %s" % (type(exc).__name__, exc))
+    try:
+        ok, vline = getattr(result, "ok"), getattr(result, "line")
+        reasons, vsha = getattr(result, "reasons"), getattr(result, "rules_sha")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("research_rules.validate gave no verdict for %s: %s", template_id, type(result).__name__)
+        raise _Fail("research_rules_error", "validate returned %s, not a ResearchVerdict (%s)"
+                    % (type(result).__name__, type(exc).__name__))
+    if not isinstance(vsha, str) or vsha != expected:
+        raise _Fail("research_rules_sha_mismatch", "the verdict was reached under other rules than the module's own")
+    if ok is not True:
+        try:
+            why_not = "; ".join(str(r) for r in reasons) if isinstance(reasons, (list, tuple)) else str(reasons)
+        except Exception:  # noqa: BLE001
+            why_not = ""
+        raise _Fail("research_rules_failed", why_not or "no reasons given")
+    if not isinstance(vline, str) or ta.normalise(vline) != want:
+        raise _Fail("research_line_mismatch", "the validator judged another line than the one in the body")
+
+
+def _research_copy_problems(touch: Any, body: str) -> List[str]:
+    """cadence.copy_problems on the body itself, for a researched touch: the
+    line is the lead's own, so its copy check is not taken on trust from
+    touch.problems."""
+    from services.reply_engine import cadence
+
+    return list(cadence.copy_problems(body, allow=[a for a in (getattr(touch, "allow_terms", None) or []) if a],
+                                      campaign_key=getattr(touch, "campaign_key", None)))
+
+
 def touch_verdict(touch: Any, bindings: Optional[Dict[str, str]] = None) -> Verdict:
     """The verdict for a cadence.Touch: the tick's copy gate already ran, the
-    gate re-asserts touch.problems is empty and checks the subject."""
+    gate re-asserts touch.problems is empty and checks the subject. A
+    researched day 2 touch (parts [cadence.d2.research_rules]) also gets the
+    copy gate run here on its body and the research checks at step 9."""
     def run(st: Dict[str, Any]) -> None:
         template_id, stamped_parts, parts = _read_ids(st, touch)
         stamped = getattr(touch, "template_hash", None)
@@ -1586,11 +1830,17 @@ def touch_verdict(touch: Any, bindings: Optional[Dict[str, str]] = None) -> Verd
             raise _Fail("no_template", "no template id")
         _check_ids(index, "cadence", template_id, parts, st["statuses"])
         _check_stamp(index, template_id, stamped, stamped_parts)
+        researched = ta.RESEARCH_RULES_ID in parts
         problems = list(getattr(touch, "problems", None) or [])
+        if researched:
+            problems += [p for p in _research_copy_problems(touch, body) if p not in problems]
         problems += _subject_problems(subject, getattr(touch, "campaign_key", None),
                                       getattr(touch, "allow_terms", None))
         if problems:
             raise _Fail("copy_gate", "; ".join(str(p) for p in problems))
+        if researched:
+            _check_research(index, template_id, touch, body, subject, parts, bindings)
+            return
         if not _conforms(index, template_id, body, subject, parts, bindings):
             raise _Fail("nonconforming", "the text is not the approved template with valid placeholder values")
     return _verdict(run)
