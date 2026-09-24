@@ -202,6 +202,98 @@ def _entry(tag, what, block, old, new, change=None):
     return e
 
 
+ALSO_IN_SHOW = 15
+SENTENCE_SPLIT_RE = re.compile(r"(?<=[.?!])\s+")
+# Sentences that only greet or sign off: every email has one, so an edit to
+# them says nothing about which other blocks carry the edited copy.
+GREETING_RE = re.compile(
+    r"^(hey|hi|hello|morning|good morning)(\s+(\{\{[^{}]*\}\}|\{[^{}]*\}|there|all|team|everyone|folks))?\s*[,.!]?$",
+    re.IGNORECASE)
+SIGN_OFF_RE = re.compile(
+    r"^-*\s*(lorenzo(\s+v\.?|\s+villarreal)?|thanks|thank you|thanks again|talk soon|speak soon|"
+    r"best|best regards|regards|cheers|all the best|warmly|sincerely)\s*[,.!]?$",
+    re.IGNORECASE)
+
+
+def _sentences(text):
+    """Sentences of the normalised text: split at line ends and at . ? or !
+    followed by whitespace."""
+    out = []
+    for line in diff_doc.norm(text or u"").split(u"\n"):
+        for s in SENTENCE_SPLIT_RE.split(line):
+            s = s.strip()
+            if s and s not in out:
+                out.append(s)
+    return out
+
+
+def _edited_sentences(old, new):
+    """Sentences of old that no longer appear anywhere in the new normalised
+    text (the whole text, so "{company}.Think" with a lost space does not
+    count as removing "{company}."). Here a sentence must start a sentence
+    of the new text too (a line start, or right after . ? or ! and at most one
+    space), so words added in front of it count as an edit; see _sentence_re
+    for where it may end."""
+    new_n = diff_doc.norm(new or u"")
+    return [s for s in _sentences(old) if not _sentence_re(s, strict_start=True).search(new_n)]
+
+
+def _boilerplate(sentence):
+    """A greeting, a sign-off, or nothing but placeholders and punctuation."""
+    if GREETING_RE.match(sentence) or SIGN_OFF_RE.match(sentence):
+        return True
+    return not re.sub(r"[\W_]+", u"", BRACE_TOKEN_RE.sub(u"", sentence), flags=re.UNICODE)
+
+
+def _sentence_re(sentence, strict_start=False):
+    """The sentence as a whole sentence of a text: it starts after whitespace,
+    . ? or ! (or at the start); with strict_start only at a line start or
+    right after . ? or ! plus at most one space (norm leaves single spaces).
+    The loose start finds carriers like "- I built ..." or "About me: I
+    build ...". One that ends in . ? or ! may be followed by
+    anything; one that does not (the end of a line, like the "Proof" heading)
+    must be followed by a line end or by . ? ! then whitespace, so "Proof"
+    is not found in "Proof points"."""
+    if strict_start:
+        head = r"(?:^|(?<=[.?!])|(?<=[.?!] ))"
+    else:
+        head = r"(?:^|(?<=\s)|(?<=[.?!]))"
+    if re.search(r"[.?!]$", sentence):
+        tail = u""
+    else:
+        tail = r"(?=[.?!,;:]*$|[.?!]+\s)"
+    return re.compile(head + re.escape(sentence) + tail, re.MULTILINE)
+
+
+def _also_in(tag, old, new, blocks, normed, skip, count_cache):
+    """Other manifest tags carrying the same text: the same text_group as the
+    edited block, or a sentence the edit changed or removed. Greetings,
+    sign-offs, placeholder-only sentences and sentences found in more than
+    half of all blocks do not count. Grouped by owning section."""
+    this = next((b for b in blocks if b["tag"] == tag), None)
+    group = (this or {}).get("text_group") if diff_doc.norm(old or u"") else None
+    keys = []
+    for s in _edited_sentences(old, new):
+        if _boilerplate(s):
+            continue
+        if s not in count_cache:
+            rx = _sentence_re(s)
+            hits = set(t for t, text in normed.items() if rx.search(text))
+            count_cache[s] = (rx, hits)
+        rx, hits = count_cache[s]
+        if len(hits) * 2 > len(blocks):
+            continue
+        keys.append(hits)
+    out = OrderedDict()
+    for b in blocks:
+        t = b["tag"]
+        if t == tag or t in skip:
+            continue
+        if (group is not None and b.get("text_group") == group) or any(t in h for h in keys):
+            out.setdefault(str(route(t, b)[0]), []).append(t)
+    return OrderedDict((k, out[k]) for k in sorted(out))
+
+
 def build_report(text, manifest, export_name=None, raw=None):
     """raw: the export file's bytes, hashed as they are (default: text as UTF-8)."""
     info = parse_with_info(text)
@@ -218,6 +310,13 @@ def build_report(text, manifest, export_name=None, raw=None):
         entries.append(_entry(tag, "deleted", by_tag.get(tag), by_tag[tag]["text"], None))
     for tag in d["unknown"]:
         entries.append(_entry(tag, "new", None, None, info["blocks"][tag]))
+    blocks = manifest["blocks"]
+    normed = dict((b["tag"], diff_doc.norm(b["text"] or u"")) for b in blocks)
+    skip = set(c["tag"] for c in d["changed"]) | set(d["missing"])
+    count_cache = {}
+    for e in entries:
+        if e["what"] in ("changed", "deleted"):
+            e["also_in"] = _also_in(e["tag"], e["old"], e["new"], blocks, normed, skip, count_cache)
     sections = OrderedDict((str(s), []) for s in (1, 2, 3, 4))
     for e in entries:
         sections[str(e["section"])].append(e)
@@ -249,6 +348,21 @@ FLAG_KEYS = ("typed", "placeholders_added", "placeholders_removed",
              "invalid_placeholders", "wrong_placeholder_style", "stray_braces")
 
 
+def also_in_summary(e):
+    """'also appears in N other blocks (section X: ...)' or None."""
+    groups = e.get("also_in") or {}
+    n = sum(len(v) for v in groups.values())
+    if not n:
+        return None
+    parts = []
+    for key, tags in groups.items():
+        shown = ", ".join(tags[:ALSO_IN_SHOW])
+        if len(tags) > ALSO_IN_SHOW:
+            shown += " and %d more" % (len(tags) - ALSO_IN_SHOW)
+        parts.append("section %s: %s" % (key, shown))
+    return "also appears in %d other block%s (%s)" % (n, "" if n == 1 else "s", "; ".join(parts))
+
+
 def render_text(r):
     out = []
     c = r["counts"]
@@ -276,6 +390,8 @@ def render_text(r):
             out.append("   source: %s" % (e.get("source") or "-"))
             if e.get("route_note"):
                 out.append("   note: %s" % e["route_note"])
+            if also_in_summary(e):
+                out.append("   " + also_in_summary(e))
             if e["old"] is not None:
                 out.append("-- old:\n" + e["old"])
             if e["new"] is not None:
@@ -313,6 +429,8 @@ def render_md(r):
                     "- source: `%s`" % (e.get("source") or "-")]
             if e.get("route_note"):
                 out.append("- note: %s" % e["route_note"])
+            if also_in_summary(e):
+                out.append("- " + also_in_summary(e))
             if e["new"] is not None:
                 for k in FLAG_KEYS:
                     if e[k]:
