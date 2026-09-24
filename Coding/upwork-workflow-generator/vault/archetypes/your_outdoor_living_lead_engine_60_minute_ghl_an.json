@@ -1,0 +1,227 @@
+{
+  "title": "Your Outdoor Living Lead Engine: 60-Minute GHL and Claude Review",
+  "platform": "diagram",
+  "sections": [
+    {
+      "key": "review",
+      "label": "1 - WORKFLOW REVIEW (20 MIN)",
+      "color": 0,
+      "note": "Your intake/lead-routing workflow, then the 8 follow-ups: speed-to-lead, consult reminders, proposal chase, nurture, reactivation, reviews and referrals. 9 workflows in 20 minutes is about 2 minutes each, so we go straight to triggers, branching, timing and routing."
+    },
+    {
+      "key": "strategy",
+      "label": "2 - CLAUDE STRATEGY (15 MIN)",
+      "color": 1,
+      "note": "Claude already reads and writes your contacts, tags and opportunities through the API/MCP connector. Anything on a clock stays native in GHL (workflows, webhooks, custom actions, AI steps); anything that needs judgment across your data goes to Claude through the API."
+    },
+    {
+      "key": "testing",
+      "label": "3 - TESTING AND REPORTING (15 MIN)",
+      "color": 2,
+      "note": "Your two silent failures: empty merge fields and leads that never enter a workflow. The first is caught inside GHL before the send, the second by a missing entry tag."
+    },
+    {
+      "key": "next",
+      "label": "4 - NEXT STEPS (10 MIN)",
+      "color": 3,
+      "note": "The prioritized list of improvements to make, in writing after the call. If Buildertrend should get won jobs from your sales pipeline, it goes on the list as its own item."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "trace",
+      "kind": "data.transform",
+      "label": "1 - Trace One Lead Through Your Intake and Lead-Routing Workflow",
+      "section": "review"
+    },
+    {
+      "key": "followups",
+      "kind": "data.transform",
+      "label": "2 - Your 8 Follow-Ups: Triggers, Branching, Timing and Routing",
+      "section": "review"
+    },
+    {
+      "key": "collide",
+      "kind": "flow.branch",
+      "label": "3 - Collides With One of Your Older Workflows?",
+      "section": "review",
+      "notes": "Two workflows on the same trigger send one lead two texts, or undo each other's tags."
+    },
+    {
+      "key": "keep",
+      "kind": "data.transform",
+      "label": "3a - Mark Which One Stays; the Other Goes on the Fix List",
+      "section": "review"
+    },
+    {
+      "key": "native",
+      "kind": "data.transform",
+      "label": "4 - Stays in GHL: Speed-to-Lead, Discovery Call and In-Home Consult Reminders",
+      "section": "strategy"
+    },
+    {
+      "key": "decide",
+      "kind": "data.transform",
+      "label": "5 - Claude Decides and Writes a Tag; the Tag Starts the GHL Workflow",
+      "section": "strategy",
+      "notes": "Your connector already writes tags, so Claude hands off to GHL without running a workflow itself."
+    },
+    {
+      "key": "audit",
+      "kind": "data.transform",
+      "label": "6 - Claude Reads Tags, Not Steps: Every Workflow Stamps an Entry Tag",
+      "section": "strategy",
+      "notes": "Your connector reads contacts, tags and opportunities, not who is enrolled, so enrollment has to leave a tag."
+    },
+    {
+      "key": "blank",
+      "kind": "flow.branch",
+      "label": "7 - Merge Field Empty When the Message Is Due?",
+      "section": "testing"
+    },
+    {
+      "key": "hold",
+      "kind": "data.transform",
+      "label": "7a - Hold the Message, Open a Task to Fill the Field",
+      "section": "testing"
+    },
+    {
+      "key": "filter",
+      "kind": "data.transform",
+      "label": "8 - Filter ~2,400 Contacts for No Entry Tag; Claude Reviews Only Those",
+      "section": "testing",
+      "notes": "Claude reads only the contacts that fail the filter, not all ~2,400 on every run."
+    },
+    {
+      "key": "report",
+      "kind": "data.aggregate",
+      "label": "9 - One Report: Blanks, Never Enrolled, Stuck in Sales, Careers, Reactivation",
+      "section": "testing"
+    },
+    {
+      "key": "list",
+      "kind": "data.aggregate",
+      "label": "10 - Your Prioritized List: Leads at Risk First, Cleanup Last",
+      "section": "next",
+      "notes": "Ranked by leads at risk, in writing after the call."
+    }
+  ],
+  "edges": [
+    {
+      "from": "trace",
+      "to": "followups"
+    },
+    {
+      "from": "followups",
+      "to": "collide"
+    },
+    {
+      "from": "collide",
+      "to": "keep",
+      "branch": "yes"
+    },
+    {
+      "from": "collide",
+      "to": "native",
+      "branch": "no"
+    },
+    {
+      "from": "keep",
+      "to": "native"
+    },
+    {
+      "from": "native",
+      "to": "decide"
+    },
+    {
+      "from": "decide",
+      "to": "audit"
+    },
+    {
+      "from": "audit",
+      "to": "blank"
+    },
+    {
+      "from": "blank",
+      "to": "hold",
+      "branch": "yes"
+    },
+    {
+      "from": "blank",
+      "to": "filter",
+      "branch": "no"
+    },
+    {
+      "from": "hold",
+      "to": "filter"
+    },
+    {
+      "from": "filter",
+      "to": "report"
+    },
+    {
+      "from": "report",
+      "to": "list"
+    }
+  ],
+  "input_sample": {
+    "contact": {
+      "firstName": "",
+      "lastName": "Whitaker",
+      "phone": "+1 512-555-0187",
+      "email": "rwhitaker.atx@gmail.com",
+      "city": "Round Rock",
+      "state": "TX",
+      "source": "Website form - Outdoor Kitchen"
+    },
+    "customFields": {
+      "project_type": "Outdoor kitchen + pergola",
+      "property_type": "Single family, existing concrete patio"
+    },
+    "tags": [
+      "new-lead",
+      "outdoor-kitchen"
+    ],
+    "opportunity": {
+      "pipeline": "Sales",
+      "stage": "New Lead"
+    },
+    "calendar": {
+      "discovery_call": null,
+      "in_home_consult": null
+    },
+    "created": "2026-09-22 18:41 CT"
+  },
+  "output_sample": {
+    "prioritized_improvements": [
+      {
+        "rank": 1,
+        "area": "Testing and reporting",
+        "fix": "If/Else before every send in the 8 follow-ups: a blank first name holds the message and opens a task",
+        "why": "A blank merge field reaches the homeowner as is"
+      },
+      {
+        "rank": 2,
+        "area": "Claude strategy",
+        "fix": "Each of the 9 workflows adds an entry tag in its first step; Claude lists contacts past intake with none",
+        "why": "A lead that never enters a workflow gets no follow-up and nobody sees it"
+      },
+      {
+        "rank": 3,
+        "area": "Workflow review",
+        "fix": "Older workflow on the same trigger as speed-to-lead: turn it off",
+        "why": "One lead, two first texts"
+      },
+      {
+        "rank": 4,
+        "area": "Claude strategy",
+        "fix": "Claude tags the reply category; the tag starts proposal chase or nurture in GHL",
+        "why": "Judgment stays with Claude, timing stays in GHL"
+      }
+    ],
+    "delivered": "In writing after the 60-minute call"
+  },
+  "archetype": "your_outdoor_living_lead_engine_60_minute_ghl_an",
+  "learned": true,
+  "learned_at": "2026-09-24"
+}
