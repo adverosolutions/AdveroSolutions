@@ -384,16 +384,21 @@ def test_an_unapproved_template_is_polished_and_is_a_card(env, monkeypatch):
 
 
 # ------------------------------------------------------------ pipeline
-def test_process_event_auto_sends_an_approved_first_reply(env):
+def test_process_event_never_auto_sends_an_approved_first_reply(env):
+    """Lorenzo's rule (2026-09-23): the gate allows the approved first reply,
+    but first replies are drafts he sends himself, so it is a card
+    (approval.FIRST_REPLY_LOCK_REASON)."""
     env["tpl"].approve_ids(PRICING_ID)
     res = app_mod.process_event(_event(), deps=env["deps"], now=NOW_BUSINESS)
     assert res["auto_send"]["allowed"] is True and res["auto_send"]["template_id"] == PRICING_ID
-    assert res["auto_send"]["status"] in ("sent", "ok"), res["auto_send"]
-    assert len(_replies()) == 1
+    assert res["auto_send"]["status"] == "pending" and res["auto_send"]["ok"] is False, res["auto_send"]
+    assert _replies() == []
     card = A.load(res["approval_token"], env["store"])
-    assert card.approved_by == "template" and card.status == "sent"
-    # no card push: the push was deferred and the send went out
-    assert not [n for n in notify.sent_in_test if n["title"].startswith("Reply to approve")]
+    assert card.approved_by is None and card.status == "pending"
+    assert card.auto_send["reason"] == A.FIRST_REPLY_LOCK_REASON
+    pushed = [n for n in notify.sent_in_test if n["title"].startswith("Reply to approve")]
+    assert len(pushed) == 1 and pushed[0]["message"].startswith(
+        "Not auto-sent: %s\n" % A.REASON_TEXT["first_reply_draft_only"])
     rows = [r for r in csv.reader(job_log.job_log_path().read_text().splitlines())
             if len(r) > 1 and r[1] == "reply_engine.process_event"]
     detail = json.loads(rows[-1][-1])

@@ -5,7 +5,9 @@ A reply whose draft is exactly an approved template is sent with no tap,
 through the same path as Approve (_approve_loaded(actor="template"), then
 send_approved with every check it runs, and the gate run again inside it).
 Anything else is an ordinary approval card, with a "Not auto-sent: <reason>"
-line when the gate refused it. Plus the three S-rest round 6 prerequisites
+line when the gate refused it. A first reply is never auto-sent, whatever the
+gate says (test_first_reply_draft_only.py), so the auto-send path is driven
+here with a counter-proposal template (TID). Plus the three S-rest round 6 prerequisites
 (flags 18-20): guarded supersede and orphan-owner writes, the time-mark race,
 and the Book-as-asked undo that never resets the opportunity or interest
 under another call or an opt-out.
@@ -20,16 +22,17 @@ from datetime import datetime, timedelta
 import pytest
 import pytz
 
-from shared import job_log, notify, settings
+from shared import job_log, notify, settings, slots
 from shared.paths import BASE_DIR
 from shared.store import JsonFileStore
 
 from services.reply_engine import app as app_mod
 from services.reply_engine import approval as A
+from services.reply_engine import booking as B
 from services.reply_engine import draft as D
 from services.reply_engine import poller as P
 from services.reply_engine import template_gate as gate
-from services.reply_engine.models import Classification, LeadState, ReplyEvent
+from services.reply_engine.models import Classification, Draft, LeadState, ReplyEvent
 from services.reply_engine.tests import template_fixtures as tf
 
 CT = pytz.timezone("America/Chicago")
@@ -43,7 +46,12 @@ EACCOUNT = "lorenzo@advero-example.com"
 THREAD = "thread-ct3-1"
 LINK = "https://example.invalid/book"
 OFFER = sorted(D.PRICING)[0]
-TID = "first_reply.%s.default.full" % OFFER
+# The auto-sendable template these tests drive the card machinery with: a
+# counter-proposal (kind booking, two offered times). First replies are never
+# auto-sent (approval.FIRST_REPLY_LOCK_REASON, Lorenzo's rule of 2026-09-23):
+# FIRST_TID is the first reply the lock tests below use.
+TID = "booking.counter.window_no_fit"
+FIRST_TID = "first_reply.%s.default.full" % OFFER
 
 
 def ct(*args):
@@ -110,10 +118,30 @@ def _event(email_id="e-1", now=NOW):
                       subject="Quick question", text="Sounds good, tell me more.", received_at=now)
 
 
+def _counter_draft(ev, cls, state, now):
+    """The counter-proposal the pipeline writes when nothing inside the
+    lead's window is open (app._reply_draft's counter branch), offering the
+    two times a first reply would, and its gate bindings."""
+    d = D.build_draft(ev, cls, now=now, booking_link=LINK, use_llm=False, already_offered=[], busy_blocks=[])
+    times = [slots.parse_iso(iso) for iso in d.offered_slots[:2]]
+    match = B.BookingMatch(slot=None, status=B.WINDOW_NO_FIT, counter_slots=times)
+    body = B.counter_proposal_text(match, state)
+    link = B.cadence.DEFAULT_BOOKING_URL          # the link the counter text writes
+    counter = Draft(subject=D.reply_subject(ev.subject), body_text=body,
+                    offered_slots=[t.isoformat() for t in times], booking_link=link, model="template",
+                    label=cls.label, rationale="counter-proposal (window_no_fit)",
+                    problems=D.validate_draft(body, booking_link=link, campaign_key=OFFER,
+                                              allow_terms=D.lead_terms(ev, state)),
+                    template_id=B.counter_template_id(match))
+    assert counter.template_id == TID
+    return counter, B.counter_bindings(match, state)
+
+
 def _card(world, now=NOW, approve=True, email_id="e-1", cls=None, verdict=True):
     """The pipeline's steps for one positive reply, piece B's half: a
-    template draft, stamped, its verdict, the card (create_approval(auto=)),
-    and the lead row saved as the pipeline saves it."""
+    template draft (the counter-proposal, TID), stamped, its verdict, the
+    card (create_approval(auto=)), and the lead row saved as the pipeline
+    saves it."""
     st = world["store"]
     if approve:
         world["tpl"].approve_ids(TID)
@@ -122,10 +150,10 @@ def _card(world, now=NOW, approve=True, email_id="e-1", cls=None, verdict=True):
     raw = st.get("lead:%s:%s" % (CAMPAIGN, LEAD))
     state = LeadState.from_store(raw, ev)
     state.classification = cls
-    d = D.build_draft(ev, cls, now=now, booking_link=LINK, use_llm=False, already_offered=[], busy_blocks=[])
+    d, bindings = _counter_draft(ev, cls, state, now)
     gate.stamp(d, TID)
-    v = gate.draft_verdict(d, kind="first_reply", campaign_key=OFFER, allow_terms=D.lead_terms(ev, state),
-                           classification=cls, bindings={"first_name": FIRST, "company": COMPANY})
+    v = gate.draft_verdict(d, kind="booking", campaign_key=OFFER, allow_terms=D.lead_terms(ev, state),
+                           classification=cls, bindings=bindings)
     card = A.create_approval(state, d, ev, store=st, now=now, campaign_key=OFFER, auto=v if verdict else None)
     state.processed_email_ids.append(email_id)
     state.history.append({"at": now.isoformat(), "event": "inbound", "email_id": email_id,
@@ -151,7 +179,7 @@ def _fyi_entries(world):
 
 
 # ======================================================= the auto-send path
-def test_an_approved_first_reply_in_shadow_is_one_would_do_no_push_and_one_fyi_entry(world):
+def test_an_approved_template_reply_in_shadow_is_one_would_do_no_push_and_one_fyi_entry(world):
     card, v = _card(world)
     assert (v.allowed, v.reason) == (True, "ok"), v.detail
     stored = _stored(world, card)
@@ -216,7 +244,7 @@ def test_a_card_raised_without_a_verdict_is_pushed_as_before(world):
 
 def test_a_verdict_for_another_template_is_never_honoured(world):
     card, v = _card(world)
-    wrong = gate.Verdict(True, "ok", "first_reply.%s.pricing.full" % OFFER, [], {})
+    wrong = gate.Verdict(True, "ok", "booking.counter.weekend", [], {})
     out = A.auto_send_approved(card, world["inst"], store=world["store"], now=NOW, verdict=wrong)
     assert out["ok"] is False and out["reason"] == "the template check was for another draft."
     assert world["inst"].sent == []
@@ -297,7 +325,7 @@ def test_the_gate_runs_again_inside_send_approved_even_in_the_sending_window(wor
     world["tpl"].revoke_ids(TID)
     out = A.auto_send_approved(card, world["inst"], store=world["store"], now=NOW, verdict=v)
     assert out["ok"] is False and out["status"] == "pending" and out["reason"] == "unapproved"
-    assert seen == [(card.draft.subject, card.draft.body_text, "first_reply", None)]
+    assert seen == [(card.draft.subject, card.draft.body_text, "booking", None)]
     assert world["inst"].sent == [] and len(_pushes()) == 1
 
 
@@ -388,6 +416,11 @@ def test_every_reason_code_has_a_plain_sentence_with_no_lead_data(world):
     assert A.reason_text("something_new") == "something_new"
     card, v = _card(world, approve=False)
     assert _pushes()[0]["message"].startswith("Not auto-sent: its template is not approved yet")
+    assert A.REASON_TEXT["unapproved"] == 'its template is not approved yet; approve it in the emails doc, then tell Claude "done".'
+    assert A.REASON_TEXT["changed_since_approval"] == ('its template changed since you approved it; review it and '
+                                                       'approve it again in the emails doc, then tell Claude "done".')
+    assert A.REASON_TEXT["first_reply_draft_only"] == "first replies are drafts you send yourself from the thread."
+    assert "approve_templates" not in "".join(A.REASON_TEXT.values())
     assert _stored(world, card).auto_send["reason"] == "unapproved"
     cancel = gate.Verdict(False, "cancel_pending", TID, [TID], {})
     note = A._auto_decision(cancel, card.draft)
@@ -477,7 +510,7 @@ def test_run_once_sweeps_orphans_and_sends_the_fyi(world):
     card, v = _card(world)
     st = world["store"]
     later = NOW + timedelta(minutes=3)
-    gate.record_auto_send(st, kind="first_reply", template_id=TID, approval_id="other", status="sent", now=NOW)
+    gate.record_auto_send(st, kind="booking", template_id=TID, approval_id="other", status="sent", now=NOW)
 
     class NoReplies(object):
         def list_emails(self, **kw):
@@ -511,6 +544,8 @@ def test_the_fyi_on_a_public_topic_carries_counts_only(world):
                    A._approval_id(card)):
         assert secret not in public, secret
     assert TID in c["message"] and "cadence.d3: 1 held" in c["message"]
+    assert c["message"].endswith('To stop these, set the kill switch, or revoke a template from your terminal '
+                                 '(jobs/approve_templates.py --revoke <id>).')
     # the email leg (Lorenzo's inbox) has the per-card line and a Veto link
     assert LEAD in c["email_message"] and ("/veto/%s" % stored.token) in c["email_message"]
     assert "/approve/" not in c["email_message"]
@@ -524,23 +559,23 @@ def test_one_fyi_per_30_minute_bucket(world):
     def capture(title, message, **kw):
         calls.append(title)
         return {"sent": True}
-    gate.record_auto_send(st, kind="first_reply", template_id=TID, approval_id="a1", status="sent", now=NOW)
+    gate.record_auto_send(st, kind="booking", template_id=TID, approval_id="a1", status="sent", now=NOW)
     assert A.flush_auto_send_fyi(st, now=ct(2030, 1, 7, 10, 1), notify_fn=capture)["sent"] is True
-    gate.record_auto_send(st, kind="first_reply", template_id=TID, approval_id="a2", status="sent", now=NOW)
+    gate.record_auto_send(st, kind="booking", template_id=TID, approval_id="a2", status="sent", now=NOW)
     assert A.flush_auto_send_fyi(st, now=ct(2030, 1, 7, 10, 20), notify_fn=capture) is None   # same bucket
     assert len(calls) == 1 and len(st.get(gate.FYI_KEY)) == 1
     assert A.flush_auto_send_fyi(st, now=ct(2030, 1, 7, 10, 31), notify_fn=capture)["entries"] == 1
     assert len(calls) == 2
     # nothing pending: no push, and the bucket is not spent
     assert A.flush_auto_send_fyi(st, now=ct(2030, 1, 7, 11, 1), notify_fn=capture) is None
-    gate.record_auto_send(st, kind="first_reply", template_id=TID, approval_id="a3", status="sent", now=NOW)
+    gate.record_auto_send(st, kind="booking", template_id=TID, approval_id="a3", status="sent", now=NOW)
     assert A.flush_auto_send_fyi(st, now=ct(2030, 1, 7, 11, 2), notify_fn=capture)["sent"] is True
 
 
 @pytest.mark.parametrize("failure", ["not_sent", "raises"])
 def test_a_failed_fyi_push_restores_the_entries(world, failure):
     st = world["store"]
-    gate.record_auto_send(st, kind="first_reply", template_id=TID, approval_id="a1", status="sent", now=NOW)
+    gate.record_auto_send(st, kind="booking", template_id=TID, approval_id="a1", status="sent", now=NOW)
     gate.note_held(st, kind="show_rate", template_id="show_rate.t24", reason="unapproved", now=NOW)
 
     def bad(title, message, **kw):

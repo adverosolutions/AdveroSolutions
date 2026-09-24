@@ -1,13 +1,15 @@
 """Approval cards for every first reply, and the one auto-send path (CT3).
 
-Rule (2026-09-22): an engine email (first reply, counter-proposal, booking
-confirmation, cadence touch, show-rate or no-show message) is sent
-automatically only when its text is exactly a template Lorenzo approved with
+Rule (2026-09-22): an engine email (counter-proposal, booking confirmation,
+cadence touch, show-rate or no-show message) is sent automatically only when
+its text is exactly a template Lorenzo approved with
 jobs/approve_templates.py and unchanged since, the template kill switch is
 off, and every send check passes (copy gate, opt-out marker, lead reply hold,
 07:00-19:00 CT send window, recipient check, slot rules); anything else goes
 to Lorenzo as an approval card (replies) or is held (cadence, show-rate,
-no-show). This module is the card half.
+no-show). A first reply is never auto-sent (rule of 2026-09-23,
+FIRST_REPLY_LOCK_REASON): it is always a card, and he sends it himself from
+the thread. This module is the card half.
 
 create_approval(state, draft, event, auto=verdict) -> Approval (token =
 <id>.<hmac>) persisted in the store under 'approval:<id>' for 48 h. Without an
@@ -1181,8 +1183,14 @@ def create_approval(
         logger.exception("could not record the context of a card for %s; no card raised", state.lead_email)
         raise
     deferred, note = _auto_decision(auto, draft)
+    locked = first_reply_locked(draft.template_id)
     if auto is not None:
         approval.auto_send = _auto_record(auto, state)
+        if locked:
+            # The stored reason is the lock, whatever the gate said (kept
+            # beside it as gate_reason).
+            approval.auto_send = dict(approval.auto_send, allowed=False, reason=FIRST_REPLY_LOCK_REASON,
+                                      gate_reason=approval.auto_send.get("reason"))
     if deferred:
         # Nothing is pushed now: the pipeline calls auto_send_approved next,
         # and every way that ends short of a send or a queue pushes the card
@@ -1197,7 +1205,8 @@ def create_approval(
     job_log.log_run("reply_engine.approval", "created", {"lead": state.lead_email, "campaign_id": state.campaign_id, "approval": approval_id,
                                                         "label": draft.label, "slots": draft.offered_slots,
                                                         "reply_at": context.get("reply_at"),
-                                                        "template_id": draft.template_id, "auto": deferred})
+                                                        "template_id": draft.template_id, "auto": deferred,
+                                                        "auto_reason": FIRST_REPLY_LOCK_REASON if locked else None})
     return approval
 
 
@@ -1230,8 +1239,11 @@ REASON_TEXT = {
     "no_template": "this draft was not written from a catalogue template.",
     "not_template_render": "this draft is not the plain template text (it was polished or edited).",
     "unknown_id": "its template is not in the catalogue for this kind of email.",
-    "unapproved": "its template is not approved yet (jobs/approve_templates.py).",
-    "changed_since_approval": "its template changed since you approved it; review it and approve it again.",
+    "unapproved": "its template is not approved yet; approve it in the emails doc, then tell Claude \"done\".",
+    "changed_since_approval": ("its template changed since you approved it; review it and approve it again in the "
+                               "emails doc, then tell Claude \"done\"."),
+    # FIRST_REPLY_LOCK_REASON: Lorenzo's rule, checked before the gate.
+    "first_reply_draft_only": "first replies are drafts you send yourself from the thread.",
     "not_approvable": "its template cannot be approved for auto-send.",
     "stale_render": "the template changed after this draft was written.",
     "classification": "the reply was not read as a clear positive with enough confidence.",
@@ -1283,12 +1295,41 @@ def auto_kind(template_id: Optional[str]) -> Optional[str]:
     return head if head in ("first_reply", "booking") else None
 
 
+# Lorenzo's rule (2026-09-23): first replies are never auto-sent. The engine
+# drafts the first reply (two held times, no booking link) and he sends it
+# himself from the thread; the engine sees his send as day 0. A first_reply.*
+# draft is always an approval card, whatever the approvals file, the kill
+# switch or the template gate say. Checked before the gate's verdict at every
+# point a card can go out with no tap: create_approval (_auto_decision),
+# auto_send_approved, send_approved's re-check of a "template" card
+# (_template_verdict) and the old timer path (auto_send_due).
+FIRST_REPLY_LOCK_REASON = "first_reply_draft_only"
+# A gate refusal a locked first reply's card still shows after the lock's
+# line: something to check before Lorenzo sends it himself.
+LOCK_KEEPS_REASONS = ("cancel_pending",)
+
+
+def first_reply_locked(template_id: Optional[str]) -> bool:
+    """True for a first reply's template id (first segment "first_reply",
+    read case- and space-insensitively so a look-alike id fails closed):
+    never auto-sent (FIRST_REPLY_LOCK_REASON)."""
+    return str(template_id or "").strip().lower().split(".", 1)[0] == "first_reply"
+
+
 def _auto_decision(auto: Any, draft: Draft):
     """(deferred, note) for create_approval: deferred only for an allowed
     verdict on this very draft (its template id), a template render with no
     problem on it (create_approval adds one when a time was taken meanwhile)
     and a template kind this module sends. ``note`` is the card's "Not
-    auto-sent" line when a verdict was given and it is not deferred."""
+    auto-sent" line when a verdict was given and it is not deferred. A first
+    reply (first_reply_locked) is never deferred, whatever the verdict, and
+    its card says so."""
+    if first_reply_locked(getattr(draft, "template_id", None)):
+        note = _not_auto_sent(FIRST_REPLY_LOCK_REASON)
+        refused = getattr(auto, "reason", None) if auto is not None and not getattr(auto, "allowed", False) else None
+        if refused in LOCK_KEEPS_REASONS:
+            note = "%s Also, %s" % (note, reason_text(refused))
+        return False, note
     if auto is None:
         return False, None
     try:
@@ -1721,6 +1762,17 @@ def auto_send_approved(approval: Approval, instantly, store=None, now: Optional[
         card = _approval_row(st, approval_id)
         if card is None:
             return {"ok": False, "status": None, "error": "no such card", "auto": False}
+        if first_reply_locked(card.draft.template_id):
+            # Before the card's state and the verdict: a first reply is never
+            # auto-sent. A card still waiting on its deferred push (raised
+            # before this lock) is pushed now, once; any other is left as is.
+            why = reason_text(FIRST_REPLY_LOCK_REASON)
+            logger.info("not auto-sending %s: first replies are drafts Lorenzo sends himself", approval_id)
+            job_log.log_run("reply_engine.approval", "template_auto_send_refused",
+                            {"lead": card.lead_email, "approval": approval_id,
+                             "template_id": card.draft.template_id, "reason": FIRST_REPLY_LOCK_REASON})
+            pushed = _push_deferred(st, approval_id, ts, _not_auto_sent(FIRST_REPLY_LOCK_REASON), statuses=("pending",))
+            return {"ok": False, "status": card.status, "auto": False, "reason": why, "pushed": pushed}
         nr = card.notify_result if isinstance(card.notify_result, dict) else {}
         if card.status != "pending" or not nr.get("deferred"):
             return {"ok": False, "status": card.status, "auto": False,
@@ -1768,6 +1820,10 @@ def _template_verdict(approval: Approval, state_raw: Optional[Dict[str, Any]]):
     auto-sent). Any error is a refusal."""
     gate = _gate()
     try:
+        if first_reply_locked(approval.draft.template_id):
+            # Before the gate, whatever it would say: never auto-sent.
+            return gate.Verdict(False, FIRST_REPLY_LOCK_REASON, approval.draft.template_id, [], {},
+                                "first replies are never auto-sent")
         from types import SimpleNamespace
 
         from services.reply_engine.draft import lead_terms
@@ -1957,7 +2013,8 @@ def flush_auto_send_fyi(store=None, now: Optional[datetime] = None, notify_fn=No
         lines.append("Held (not sent, template not approved or refused):")
         for tid in sorted(held):
             lines.append("%s: %d held" % (tid, held[tid]))
-    lines.append("Revoke a template (jobs/approve_templates.py) or set the kill switch to stop these.")
+    lines.append("To stop these, set the kill switch, or revoke a template from your terminal "
+                 "(jobs/approve_templates.py --revoke <id>).")
     message = "\n".join(lines)
     email_message = message
     detail = _fyi_email_lines(st, entries)
@@ -7424,6 +7481,20 @@ def auto_send_due(instantly, store=None, now: Optional[datetime] = None) -> List
         except Exception:  # noqa: BLE001
             continue
         if created + timedelta(minutes=minutes) > ts or _expired(approval, ts) or approval.draft.problems:
+            continue
+        # Lorenzo's rule (FIRST_REPLY_LOCK_REASON): a first reply is never
+        # auto-sent, by its template id or, for any other body, by the lead
+        # row (no reply of ours sent yet, or no row at all).
+        try:
+            row = st.get(approval.state_key)
+            first = first_reply_locked(approval.draft.template_id) or _is_first_reply(
+                LeadState.from_store(row) if row else None)
+        except Exception:  # noqa: BLE001 - any doubt is no auto-send
+            first = True
+        if first:
+            job_log.log_run("reply_engine.approval", "auto_send_refused_first_reply",
+                            {"lead": approval.lead_email, "approval": key.split(":", 1)[-1],
+                             "reason": FIRST_REPLY_LOCK_REASON})
             continue
         pushed = approval.notify_result if isinstance(approval.notify_result, dict) else {}
         if not (pushed.get("sent") and pushed.get("actionable", True)):

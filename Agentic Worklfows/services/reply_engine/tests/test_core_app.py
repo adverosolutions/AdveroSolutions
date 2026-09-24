@@ -505,8 +505,9 @@ def LeadStateFrom(raw):
 def test_no_send_path_exists_without_a_token_or_an_approved_template(env, monkeypatch, tmp_path):
     """With an empty template registry the first reply is never auto-sent:
     AUTO_SEND_AFTER_MINUTES is 0 by default, auto_send_due() is live-only, and
-    every other send goes through approve(token). Once its template is
-    approved (CT3), the same reply sends exactly once, approved_by "template"."""
+    every other send goes through approve(token). With its template approved
+    it is still never auto-sent (Lorenzo's rule of 2026-09-23: first replies
+    are drafts he sends himself): a pending card, nothing sent."""
     tpl = template_fixtures.make_template_env(monkeypatch, tmp_path / "tpl")
     monkeypatch.delenv("AUTO_SEND_AFTER_MINUTES", raising=False)
     assert A.auto_send_minutes() == 0
@@ -529,9 +530,10 @@ def test_no_send_path_exists_without_a_token_or_an_approved_template(env, monkey
     res = app_mod.process_event(ReplyEvent.from_webhook(payload), deps=env["deps"], now=NOW_BUSINESS)
     assert res["auto_send"]["allowed"] is True, res["auto_send"]
     sent = [x for x in job_log.read_shadow_log() if x["action"] == "reply_to_email"]
-    assert len(sent) == 2 and sent[-1]["payload"]["to"] == "another.lead@example.invalid"
+    assert len(sent) == 1
     card = A.load(res["approval_token"], env["store"])
-    assert card.approved_by == "template" and card.status == "sent"
+    assert card.approved_by is None and card.status == "pending"
+    assert card.auto_send["reason"] == A.FIRST_REPLY_LOCK_REASON
 
 
 def test_accepted_booking_slot_stays_reserved_against_other_leads(env):
