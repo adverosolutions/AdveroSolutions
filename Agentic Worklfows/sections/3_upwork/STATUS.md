@@ -1,5 +1,7 @@
 # Section 3 status
 
+**2026-09-24 (local chat): the watch is live in shadow.** Claude desktop scheduled task `upwork-followup-watch` (every 30 min, 08:00-18:30 CT, weekdays; prompt in `~/.claude/scheduled-tasks/upwork-followup-watch/SKILL.md`, adapted from `watch_task_prompt.md`). It runs from the **run folder** `.worktrees/run` (detached at main, with symlinks to the main folder's `.env`, `Agentic Worklfows/.env`, `Agentic Worklfows/credentials.json` and `Agentic Worklfows/.tmp`), because the main folder is checked out on another chat's branch (`claude/maker-school-wins-tracking-...`). Every `--run` sets `NOTIFY_SHADOW_SEND=1` so Lorenzo gets the draft alert. To ship new section 3 code to it: push to main, then `git -C .worktrees/run fetch -q origin && git -C .worktrees/run checkout -q --detach origin/main`. `wip/section-3-watch` was already deleted on 2026-09-23.
+
 **2026-09-24 (cloud chat):** the watch trigger is on main (`9f7048b`, landed 2026-09-23 22:07 CT). In the cloud chat the live-write guard blocks `git push` (rule c), so on Lorenzo's OK (2026-09-24) the cloud chat pushes through the GitHub connector instead, one file per commit, to `main` only. `section/3-upwork` stays at `9f7048b` behind main (a fast-forward); the next chat with a working `git push` fast-forwards it.
 
 **2026-09-23 (split day):** Lorenzo's new voice rule (no Claudeisms, normal capitalization) is in `sections/README.md`, his global CLAUDE.md and a `claudeisms` skill.
@@ -17,8 +19,7 @@
 
 ## Next
 1. **GHL Upwork pipeline ids**, as soon as Lorenzo says the pipeline exists: read its ids (read only) into `config/ids.json` `ghl.pipelines.upwork` (only that key; the placeholder with the six stage keys is already there), one reviewer pass, push (GitHub connector from the cloud chat).
-2. **The watch schedule:** Lorenzo creates the Claude desktop scheduled task from the desktop app (cloud can't): prompt = `watch_task_prompt.md`, cron `*/30 8-18 * * 1-5` plus `0 19 * * 1-5`, after `git pull` in the main folder; turn off any 08:30 task.
-3. **First real run** with the new prompts: main folder, after `git pull` there, with Lorenzo's OK for the model spend (read only, drafts to a file). The one quiet chat's T1 was due 09-24.
+2. **First real run:** started 2026-09-24 as a "Run now" of the scheduled task (full sweep, read only, a few cents of drafting).
 
 ## Parked (optional, only if Lorenzo wants)
 - The copy gate has no backstop for the new rules (a T3 quoting "$750M+" still passes, since the figure is in `upwork_offers.md`); they are prompt-only. Lorenzo sends every draft himself.
@@ -27,7 +28,4 @@
 - Watch polish (reviewer, parked): the processed mark is also written when `sequence.run` fails as a whole or drafts are held by the run budget (waits for the next trigger; the error card tells Lorenzo); `--watch-plan` help text and the runbook CLI row omit mode `run`; a hand-forced full run writes no start marker; a card with a story id but no time re-flags every run; rooms in `missing_messages` aren't retried by the watch; a revived old linked room waits until the next day.
 
 ## Waiting on Lorenzo
-- **Delete `wip/section-3-watch`** from his terminal (the connector can't).
-- **The GHL Upwork pipeline** (he is creating it): six stages in this order, New reply, Proposal sent, Call booked, Follow up later, Won, Lost (code keys `new_reply`, `proposal_sent`, `call_booked`, `follow_up_later`, `won`, `lost`). A move to New reply or Proposal sent makes the engine draft.
-- **The watch schedule:** his yes, then he creates the task (Next, item 2).
-- Pricing: settled 2026-09-23, never. He sets each job's price; drafts never state one (`config/upwork_offers.md`).
+- **The GHL Upwork pipeline** (he is creating it): stages New reply, Proposal sent, Call booked, Follow up later, Won, Lost. Note: card moves only work once the GHL mirror writes live (cards are created by the engine); in shadow mode the mirror writes nothing, so the card-move trigger needs his go-live call for GHL writes.

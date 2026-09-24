@@ -644,3 +644,15 @@ python3 -m pytest services/upwork_followup/tests -q
 
 Tests mock every model call and use invented client names only. Real room data
 lives in `.tmp/` and never in the repo.
+
+## Where the watch runs (2026-09-24)
+
+The scheduled task `upwork-followup-watch` runs from the run folder
+`/Users/lorenzovillarreal/Desktop/AdveroSolutions/.worktrees/run/Agentic Worklfows`,
+a checkout of main with symlinks to the main folder's `.env` files,
+`credentials.json` and `.tmp`, so state and credentials are shared with the
+main folder while its code stays on main whatever branch the main folder has
+checked out. Update it after a push to main:
+`git -C /Users/lorenzovillarreal/Desktop/AdveroSolutions/.worktrees/run fetch -q origin && git -C /Users/lorenzovillarreal/Desktop/AdveroSolutions/.worktrees/run checkout -q --detach origin/main`.
+Every `--run` in the task sets `NOTIFY_SHADOW_SEND=1`, so draft alerts reach
+Lorenzo in shadow mode.
