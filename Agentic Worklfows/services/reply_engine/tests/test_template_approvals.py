@@ -175,7 +175,11 @@ def test_no_sentinel_or_unexpected_unextractable_entry():
         assert "zqx" not in e["review_text"].lower(), e["id"]
         assert "leadconnectorhq" not in e["review_text"], e["id"]
         if not e["extractable"]:
-            assert e["id"] == "cadence.d2.research_line", e["id"]
+            # cadence.d2.research_rules is unextractable only while its module
+            # is not there yet (tests/test_e2_research_gate.py covers it with one)
+            assert e["id"] in ("cadence.d2.research_line", ta.RESEARCH_RULES_ID), e["id"]
+            if e["id"] == ta.RESEARCH_RULES_ID:
+                assert e["explanation"] == ta.RESEARCH_RULES_ABSENT and e.get("unextractable_by_design")
             assert e["explanation"]
             assert not e["approvable"]
         else:
