@@ -153,7 +153,7 @@ def test_cadence_and_show_rate_templates_match_real_renders():
     copy = show_rate.render("reminder_24h_email", appt, start, start)
     tpl = _index()["show_rate.reminder_24h_email"]["text"]
     filled = ta.fill(tpl, first_name="Tamsin", company="Kettleby Staffing", when_ct=show_rate.fmt_when(start),
-                     time_ct=show_rate.fmt_time_only(start), booking_url="https://book.example.test/z")
+                     time_ct=show_rate.fmt_time_only(start), zoom_link="https://zoom.example.test/j/1")
     assert filled == "Subject: %s\n\n%s" % (copy["subject"], copy["body"])
 
 
@@ -489,7 +489,8 @@ def _edited_copy(module, old, new, tmp_path, monkeypatch):
 FORMATTER_EDITS = [
     ("slots", '"%s or %s %s"', '"%s and %s %s"', "cadence.d1", ta.TIME_PLACEHOLDERS),
     ("slots", 'return "CT"', 'return "Central"', "booking.already_booked.invite_on_calendar", ta.TIME_PLACEHOLDERS),
-    ("show_rate", 'return "%s CT"', 'return "%s Central"', "show_rate.reminder_1h_sms", ta.TIME_PLACEHOLDERS),
+    ("show_rate", '"%s CT" % _clock(ct)', '"%s Central" % _clock(ct)', "show_rate.reminder_1h_email",
+     ta.TIME_PLACEHOLDERS),
     # ZA item 5: the lead's proposed time in their own zone (slots.format_asked_time)
     ("slots", 'return "%s %s" % (text, _tz_label(local, tz))', 'return "%s (%s)" % (text, _tz_label(local, tz))',
      "booking.counter.weekend", ta.TIME_PLACEHOLDERS),
@@ -503,16 +504,19 @@ FORMATTER_EDITS = [
 FALLBACK_EDITS = [
     ("show_rate", "60-second walkthrough", "90-second walkthrough", "show_rate.confirm_email.cleaning_reactivation",
      ()),
-    ("show_rate", "Hopping on now. The link is on your calendar invite.",
-     "Hopping on now. The link is in your calendar invite.", "show_rate.reminder_15m_sms", ()),
-    ("show_rate", '"your business"', '"your firm"', "show_rate.reminder_24h_email", ()),
-    ("show_rate", '"there"', '"friend"', "show_rate.reminder_1h_sms", ()),
+    ("show_rate", "The call link is on the calendar invite from when we booked.",
+     "The call link is on the invite from when we booked.", "show_rate.reminder_1h_email", ()),
+    ("show_rate", '"The link is on your calendar invite."', '"The link is in your calendar invite."',
+     "show_rate.reminder_24h_email", ()),
+    ("show_rate", '"The link\'s on your calendar invite."', '"The link is on your invite."',
+     "show_rate.reminder_morning_email", ()),
+    ("show_rate", '"there"', '"friend"', "show_rate.reminder_1h_email", ()),
     ("show_rate", '"The calendar invite is on its way with the call link."', '"The calendar invite is on its way."',
      "show_rate.confirm_email.cleaning_reactivation", ()),
-    ("no_show", "I am on the call now. The link is on your calendar invite.",
-     "I am on the call now. The link is in the invite.", "no_show.ns_still_on_email", ()),
-    ("no_show", '"Grab any time that suits you here: %s"', '"Grab a time here: %s"',
-     "no_show.ns_reschedule_email.repeat", ()),
+    ("no_show", "I'm on the call now, no rush. The link is on your calendar invite.",
+     "I'm on the call now. The link is in the invite.", "no_show.ns_still_on_email", ()),
+    ("no_show", "Today didn't line up, and no problem if now is a bad time.",
+     "Today didn't work out, and no problem if now is a bad time.", "no_show.ns_reschedule_email.repeat", ()),
     ("booking", "your time)", "your local time)", "booking.confirmation.zoom_link", ()),
     ("booking", "Could you send me a couple of times that work for you next week?",
      "Could you send me a few times that work for you next week?", "booking.counter.weekend", ()),
@@ -607,7 +611,6 @@ def test_catalogue_hashes_do_not_depend_on_the_environment(monkeypatch):
         monkeypatch.setattr(mod, "DEFAULT_BOOKING_URL", "https://other.example.test/booking")
     monkeypatch.setattr(settings, "BOOKING_URL", "https://other.example.test/booking")
     monkeypatch.setattr(sr_mod, "BOOKING_URL", "https://other.example.test/booking")
-    monkeypatch.setattr(ns_mod, "BOOKING_URL", "https://other.example.test/booking")
     ta.clear_cache()
     other = dict((e["id"], e["sha256"]) for e in ta.catalogue())
     assert [k for k in base if base[k] != other.get(k)] == []

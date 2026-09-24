@@ -168,9 +168,9 @@ def test_case_slots_placeholder_with_arbitrary_text(env):
         assert _refused(_fr_verdict(g.model_copy(update={"body_text": body}), ev, cls)), fake
 
 
-def test_case_show_rate_sms_first_name_from_the_booking_form(env):
+def test_case_show_rate_first_name_from_the_booking_form(env):
     first = "Jordan. Your parcel is held, pay the release fee at parcel-help.example today"
-    t = _sr(env, "reminder_24h_sms", first=first)
+    t = _sr(env, "reminder_1h_email", first=first)
     assert _refused(gate.appointment_touch_verdict(t, kind="show_rate", allow_terms=[first, COMPANY]))
     assert not gate.appointment_touch_verdict(t, kind="show_rate").allowed
 
@@ -397,24 +397,6 @@ def test_bindings_pin_values(env):
     assert _refused(_fr_verdict(g, ev, cls, bindings={"slots": "Mon 12:00pm or Tue 12:15pm CT"}))
 
 
-def test_a_bound_link_is_still_type_checked(env):
-    """A binding only narrows (round 3): a bound reschedule link must also be
-    an allowed link, here a GHL booking widget; an off-host one is refused
-    bound or not."""
-    ghl = "https://api.leadconnectorhq.com/widget/booking/TestCalendar01"
-    t = _sr(env, "reminder_24h_email", reschedule_link=ghl)
-    assert ghl in t.body
-    assert gate.appointment_touch_verdict(t, kind="show_rate").allowed
-    v = gate.appointment_touch_verdict(t, kind="show_rate", bindings={"booking_url": ghl})
-    assert v.allowed, (v.reason, v.detail)
-    assert _refused(gate.appointment_touch_verdict(t, kind="show_rate", bindings={"booking_url": LINK}))
-    resched = "https://example.org/reschedule/abc123"
-    t = _sr(env, "reminder_24h_email", reschedule_link=resched)
-    assert resched in t.body
-    assert _refused(gate.appointment_touch_verdict(t, kind="show_rate"))
-    assert _refused(gate.appointment_touch_verdict(t, kind="show_rate", bindings={"booking_url": resched}))
-
-
 def test_zoom_and_loom_links(env, monkeypatch):
     monkeypatch.setattr(gate, "ZOOM_HOST_SUFFIXES", ("zoom.us",))
     ok = _sr(env, "confirm_email", zoom_link="https://us06web.zoom.us/j/123456789?pwd=abc")
@@ -618,15 +600,6 @@ BAD_LINKS = ("http://evil.example/book", "javascript:alert(document.cookie)", "h
 
 
 @pytest.mark.parametrize("link", BAD_LINKS)
-def test_r3_a_bad_reschedule_link_is_refused_bound_or_not(env, link):
-    t = _sr(env, "reminder_24h_email", reschedule_link=link)
-    assert link in t.body
-    for bindings in (None, {"booking_url": link}):
-        v = gate.appointment_touch_verdict(t, kind="show_rate", allow_terms=[FIRST, COMPANY], bindings=bindings)
-        assert _refused(v), (link, bindings, v.reason, v.detail)
-
-
-@pytest.mark.parametrize("link", BAD_LINKS)
 def test_r3_a_bad_booking_link_in_a_first_reply_is_refused_bound_or_not(env, link):
     """The first-reply copy gate refuses a body without the configured link
     first; the conformance check refuses it on its own too."""
@@ -637,16 +610,6 @@ def test_r3_a_bad_booking_link_in_a_first_reply_is_refused_bound_or_not(env, lin
     for bindings in (None, {"booking_url": link}):
         assert not _fr_verdict(g.model_copy(update={"body_text": bad}), ev, cls, bindings=bindings).allowed
         assert gate.conforms(g.template_id, bad, g.subject, bindings=bindings) is False, (link, bindings)
-
-
-def test_r3_allowed_links_pass_and_a_binding_pins_them(env):
-    for link in (LINK, GHL):
-        t = _sr(env, "reminder_24h_email", reschedule_link=link)
-        assert link in t.body
-        assert gate.appointment_touch_verdict(t, kind="show_rate").allowed, link
-        assert gate.appointment_touch_verdict(t, kind="show_rate", bindings={"booking_url": link}).allowed, link
-        other = GHL if link == LINK else LINK
-        assert _refused(gate.appointment_touch_verdict(t, kind="show_rate", bindings={"booking_url": other})), link
 
 
 def test_r3_bound_zoom_and_loom_links_are_still_checked(env, monkeypatch):
@@ -769,7 +732,15 @@ def test_r3_every_kind_conforms_in_a_lead_zone(env, zone, season):
     for kind, keys in (("show_rate", ta.SHOW_RATE_LEAD_FACING), ("no_show", ta.NO_SHOW_LEAD_FACING)):
         for key in keys:
             t = _appointment_touch(kind, key, appt, start, now)
-            for bindings in (None, bound):
+            options = (None, bound)
+            if kind == "show_rate":
+                # Section 2: the reminders' {time} carries the lead's clock in
+                # brackets, which only the engine's own binding vouches for
+                # (show_rate.touch_bindings, what dispatch_touch hands the gate)
+                dispatch = show_rate.touch_bindings(t, dict(appt, start_iso=start.isoformat()))
+                options = (dispatch,) if "{time_ct}" in ta.catalogue_index()[t.template_id]["text"] else (
+                    None, bound, dispatch)
+            for bindings in options:
                 v = gate.appointment_touch_verdict(t, kind=kind, allow_terms=[FIRST, COMPANY], bindings=bindings)
                 assert v.allowed, (zone, season, key, bindings is not None, v.reason, v.detail)
     d, _ = booking._confirmation_draft(_state(), start, zone, ZOOM, True)
@@ -911,11 +882,10 @@ def test_r3_a_company_carrying_a_sentence_is_refused_in_every_kind(env, company)
     g, ev, _ = _first_reply(env, company=company, cls=cls, branch="send_info")
     assert company in g.body_text
     assert _refused(_fr_verdict(g, ev, cls)), company
-    s = _sr(env, "confirm_email", company=company)
-    assert company not in s.subject + s.body       # item 23: no company in the confirmation any more
-    s = _sr(env, "reminder_24h_email", company=company)
-    assert company in s.body
-    assert _refused(gate.appointment_touch_verdict(s, kind="show_rate", allow_terms=[FIRST, company])), company
+    # item 23 and section 2: no show-rate message names the company any more
+    for key in ta.SHOW_RATE_LEAD_FACING:
+        s = _sr(env, key, company=company)
+        assert company not in (s.subject or "") + s.body, key
 
 
 @pytest.mark.parametrize("company,ok", [
@@ -979,7 +949,8 @@ EXPECTED_FALLBACKS = {
     # ZB: no "slots" entry. A no-slot cadence day renders its own body with
     # nothing in the times' place.
     # ZC item 8: am/pm (the lead_in_other_timezone variants keep their example times)
-    "time_ct": ["1:47pm CT"],
+    # Section 2: the reminders' {time} carries the lead's clock too
+    "time_ct": ["1:47pm CT (2:47pm ET)"],
     "when_ct": ["Tue, Jan 8 at 1:47pm CT (2:47pm ET)"],
     # ZC: no zoom_link entry any more. With no call link on file the
     # show-rate and no-show messages use their own no_call_link wording, so
@@ -1140,14 +1111,10 @@ def test_polish_a_ghl_link_to_our_calendar_passes_and_a_strangers_is_refused(env
     for cal in ours:
         link = "https://api.leadconnectorhq.com/widget/booking/%s" % cal
         assert gate._url_ok("booking_url", link), cal
-        t = _sr(env, "reminder_24h_email", reschedule_link=link)
-        assert gate.appointment_touch_verdict(t, kind="show_rate").allowed, cal
+    # (section 2: no show-rate message carries a booking link any more, so
+    # the link is judged on its own here)
     stranger = "https://api.leadconnectorhq.com/widget/booking/StrangerCalendar99"
     assert gate._url_ok("booking_url", stranger) is False
-    t = _sr(env, "reminder_24h_email", reschedule_link=stranger)
-    assert stranger in t.body
-    for bindings in (None, {"booking_url": stranger}):
-        assert _refused(gate.appointment_touch_verdict(t, kind="show_rate", bindings=bindings)), bindings
     # the test calendar of the fixture is not ours in the real file
     assert gate._url_ok("booking_url", GHL) is False
     assert REAL_IDS.read_bytes() == before
@@ -1282,9 +1249,9 @@ def test_zc_bad_call_links_are_refused_even_as_the_appointments_own(env, monkeyp
     assert gate._url_ok("zoom_link", value, engine_link=True) is False
 
 
-@pytest.mark.parametrize("kind,key", [("show_rate", "confirm_email"), ("show_rate", "confirm_sms"),
-                                      ("show_rate", "reminder_1h_sms"), ("show_rate", "reminder_15m_sms"),
-                                      ("no_show", "ns_still_on_sms"), ("no_show", "ns_still_on_email")])
+@pytest.mark.parametrize("kind,key", [("show_rate", "confirm_email"), ("show_rate", "reminder_24h_email"),
+                                      ("show_rate", "reminder_morning_email"), ("show_rate", "reminder_1h_email"),
+                                      ("no_show", "ns_still_on_email")])
 def test_zc_a_meet_link_passes_only_bound_to_its_appointment(env, monkeypatch, kind, key):
     """jobs/appointments_tick hands a widget booking's Meet link over as the
     call link. It used to be held (zoom.us only) until the touch expired. Now
@@ -1339,9 +1306,9 @@ def test_zc_the_dispatch_path_binds_the_appointments_own_link(env, monkeypatch):
 
 
 # ---- no call link on file: the no_call_link variant, never a phrase in the link's place
-@pytest.mark.parametrize("kind,key", [("show_rate", "confirm_email"), ("show_rate", "confirm_sms"),
-                                      ("show_rate", "reminder_1h_sms"), ("show_rate", "reminder_15m_sms"),
-                                      ("no_show", "ns_still_on_sms"), ("no_show", "ns_still_on_email")])
+@pytest.mark.parametrize("kind,key", [("show_rate", "confirm_email"), ("show_rate", "reminder_24h_email"),
+                                      ("show_rate", "reminder_morning_email"), ("show_rate", "reminder_1h_email"),
+                                      ("no_show", "ns_still_on_email")])
 def test_zc_no_call_link_wording_conforms_and_claims_no_link(env, kind, key):
     env.approve_ladders()
     for first in (FIRST, None):
@@ -1350,7 +1317,10 @@ def test_zc_no_call_link_wording_conforms_and_claims_no_link(env, kind, key):
         if first is None:
             appt.pop("first_name")
         t = _appointment_touch(kind, key, appt, START, NOW)
-        assert "The link is on your calendar invite." in t.body or "invite is on its way with the call link." in t.body
+        assert any(w in t.body for w in ("The link is on your calendar invite.",
+                                         "invite is on its way with the call link.",
+                                         "The link's on your calendar invite.",
+                                         "The call link is on the calendar invite from when we booked.")), t.body
         assert "Zoom" not in t.body + (t.subject or "")
         assert "https://" not in t.body.replace(LINK, "")
         v = gate.appointment_touch_verdict(t, kind=kind, allow_terms=[FIRST, COMPANY])
@@ -1368,7 +1338,7 @@ def test_zc_every_show_rate_and_no_show_text_is_platform_neutral(env):
     are on Google Meet."""
     idx = gate._index()
     ids = [i for i in idx if i.startswith(("show_rate.", "no_show.")) and idx[i].get("approvable")]
-    assert len(ids) > 30
+    assert len(ids) > 20
     for tid in ids:
         assert "Zoom" not in idx[tid]["review_text"], tid
         assert "zoom" not in idx[tid]["review_text"].replace("{zoom_link}", ""), tid
@@ -1376,8 +1346,8 @@ def test_zc_every_show_rate_and_no_show_text_is_platform_neutral(env):
 
 def test_zc_the_link_variants_are_catalogued():
     idx = gate._index()
-    for tid in ("show_rate.confirm_sms", "show_rate.reminder_1h_sms", "show_rate.reminder_15m_sms",
-                "no_show.ns_still_on_sms", "no_show.ns_still_on_email"):
+    for tid in ("show_rate.reminder_24h_email", "show_rate.reminder_morning_email", "show_rate.reminder_1h_email",
+                "no_show.ns_still_on_email"):
         names = [v["name"] for v in idx[tid]["variants"]]
         assert "no_call_link" in names, tid
     ce = idx["show_rate.confirm_email.cleaning_reactivation"]
@@ -1407,7 +1377,7 @@ def test_zc_times_carry_am_pm_and_a_wrong_half_is_refused_when_bound(env):
     env.approve_ladders()
     appt = _appointment("America/New_York")
     t = _appointment_touch("show_rate", "reminder_24h_email", appt, START, NOW)
-    assert "1:00pm CT (2:00pm ET)" in t.body and t.subject == "Tomorrow at 1:00pm CT, still good?"
+    assert "1:00pm CT (2:00pm ET)" in t.body and t.subject == "Tomorrow's call"
     bound = gate.appointment_bindings(appt, START)
     assert gate.appointment_touch_verdict(t, kind="show_rate", allow_terms=[FIRST, COMPANY], bindings=bound).allowed
     t.body = t.body.replace("1:00pm CT (2:00pm ET)", "1:00am CT (2:00am ET)")

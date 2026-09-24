@@ -291,22 +291,20 @@ def test_approving_the_reply_starts_the_ladder_at_the_approval_moment(tmp_env, s
     approved_at = BOOK_NOW + timedelta(hours=3, minutes=40)
     # the engine's own unedited draft went out (send_approved passes "approved")
     released = approval_mod.release_show_rate_hold(state, store, approved_at, reason="approved")
-    assert released["released"] is True and released["rearmed"] >= 1
+    assert released["released"] is True
     key = show_rate.schedule_key(appt_id, slot_rules.to_tz(slot_rules.parse_iso(BOOK_SLOT)).isoformat())
     assert "held" not in store.get(key)
     touches = dict((t["template_key"], t) for t in store.get(key)["touches"])
     # ZC item 7: the approved reply WAS the confirmation, so the ladder's own
-    # "Locked in ..." is skipped; the pre-read is re-anchored to the approval
+    # "Locked in ..." is skipped (section 2: there is no pre-read any more)
     assert touches["confirm_email"]["skipped"] is True
     assert touches["confirm_email"]["skip_reason"] == show_rate.ENGINE_CONFIRMATION_SKIP
     assert store.get(key)["engine_confirmation_sent_at"] == approved_at.isoformat()
-    preread = touches["preread_email"]
-    assert preread["when_iso"] == (approved_at + timedelta(minutes=15)).isoformat()
     summary = show_rate.run(approved_at, store, GHL())
     spoken = [e["template"] for e in summary["would_do"] + summary["sent"]]
-    assert "confirm_email" not in spoken and "preread_email" not in spoken
-    summary = show_rate.run(approved_at + timedelta(minutes=15), store, GHL())
-    assert [e["template"] for e in summary["would_do"]] == ["preread_email"]
+    assert "confirm_email" not in spoken
+    # the reminders anchored to the call are untouched by the release
+    assert not touches["reminder_1h_email"]["skipped"]
 
 
 def test_a_vetoed_booking_leaves_zero_armed_touches_and_no_appointment_row(tmp_env, shadow_mode):

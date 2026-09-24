@@ -329,16 +329,18 @@ def test_a_failed_release_is_retried_every_tick_and_logged_once(tmp_env, shadow_
     assert show_rate.read_hold(store, APPT) == (None, None)
     assert "held" not in store.get(key)
     # ZC item 7: the approved reply was the confirmation, so the ladder's own
-    # is skipped and the pre-read (re-anchored to this release) follows
+    # is skipped; the reminders anchored to the call follow
     touches = dict((t["template_key"], t) for t in store.get(key)["touches"])
     assert touches["confirm_email"]["skip_reason"] == show_rate.ENGINE_CONFIRMATION_SKIP
     assert _spoken(summary) == []
     started = [n for n in notify.sent_in_test if n["title"].startswith("Show-rate reminders started")]
     assert len(started) == 1
-    # and nothing is retried after that; the pre-read goes out
+    # and nothing is retried after that; the day-before reminder goes out
     later = show_rate.run(tick + timedelta(minutes=15), store, _shadow_ghl(), a2p=False, appointments=[_appt()])
-    assert "release_retried" not in later
-    assert [e["template"] for e in _spoken(later)] == ["preread_email"]
+    assert "release_retried" not in later and _spoken(later) == []
+    r2 = show_rate.slots.parse_iso(CALL) - timedelta(hours=24)
+    later = show_rate.run(r2, store, _shadow_ghl(), a2p=False, appointments=[_appt()])
+    assert [e["template"] for e in _spoken(later)] == ["reminder_24h_email"]
 
 
 def test_without_the_retry_the_surviving_marker_would_re_hold_the_call(tmp_env, shadow_mode):
@@ -353,9 +355,9 @@ def test_without_the_retry_the_surviving_marker_would_re_hold_the_call(tmp_env, 
     summary = show_rate.run(BOOKED_AT + timedelta(minutes=40), store, _shadow_ghl(), a2p=False,
                             appointments=[_appt()])
     assert "held" not in store.get(key)
-    # the retried release re-anchored the pre-read to +40; it goes out 15 minutes on
-    summary = show_rate.run(BOOKED_AT + timedelta(minutes=55), store, _shadow_ghl(), a2p=False,
-                            appointments=[_appt()])
+    # the released ladder speaks again: the day-before reminder goes out
+    summary = show_rate.run(show_rate.slots.parse_iso(CALL) - timedelta(hours=24), store, _shadow_ghl(),
+                            a2p=False, appointments=[_appt()])
     assert "held" not in store.get(key) and _spoken(summary)
 
 

@@ -47,7 +47,6 @@ CADENCE_PY = "services/reply_engine/cadence.py"
 OFFERS_MD = "config/offers.md"
 PROMPTS = "services/reply_engine/prompts/"
 NO_SLOTS_RE = re.compile(r"^cadence\.(d[0-9]+(?:_noinvite)?)/no_slots$")
-PREREAD_RE = re.compile(r"^show_rate\.preread_email\.([a-z]+)_(reactivation|outbound)$")
 
 
 def _override(tag):
@@ -65,12 +64,6 @@ def _override(tag):
         return PROMPTS + "cadence_d6.md", (
             'the sentence is in cadence_d6.md with {slot2}; the words "another time" are '
             "build_touch's slot2 fallback in cadence.py")
-    m = PREREAD_RE.match(tag)
-    if m:
-        niche, offer = m.groups()
-        name = "show_rate_preread_%s.md" % niche if offer == "reactivation" else (
-            "show_rate_preread_%s_outbound.md" % niche)
-        return PROMPTS + name, "show_rate.py loads this body from the prompt file (preread_path)"
     return None
 
 

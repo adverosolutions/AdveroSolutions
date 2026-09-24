@@ -119,83 +119,15 @@ def test_no_show_flag_marks_ghl_noshow_and_schedules_full_recovery(tmp_env, shad
     assert not any(r["action"] == "update_opportunity_stage" for r in job_log.read_shadow_log())
     rec_key = ns.recovery_key(SOPIO["id"], START.isoformat())
     touches = store.get(rec_key)["touches"]
-    timeline = [(t["template_key"], t["channel"], t["when_iso"], t["skipped"], t["skip_reason"]) for t in touches]
-    f = flagged
-    assert timeline == [
-        ("ns_still_on_sms", "sms", (f + timedelta(minutes=5)).isoformat(), True, "a2p_not_registered"),
-        ("ns_still_on_email", "email", (f + timedelta(minutes=5)).isoformat(), False, None),
-        ("ns_call_task", "task", (f + timedelta(minutes=10)).isoformat(), False, None),
-        ("ns_reschedule_email", "email", (f + timedelta(hours=1)).isoformat(), False, None),
-        ("ns_d1_other_channel_task", "task", (f + timedelta(days=1)).isoformat(), False, None),
-        # +3 days lands on a Sunday, so the email leg is deferred to Monday
-        # 07:00 CT like every other proactive email the engine sends
-        ("ns_d3_value_email", "email", "2026-09-28T07:00:00-05:00", False, None),
-        ("ns_d7_yes_no_email", "email", (f + timedelta(days=7)).isoformat(), False, None),
-        ("ns_d14_breakup_email", "email", (f + timedelta(days=14)).isoformat(), False, None),
-    ]
-    assert touches[-1]["meta"]["after"] == "stage:follow_up_later"
-    # +5 m touch is due right at the flag? no: nothing due yet at flag time
-    assert res["run"]["would_do"] == []
+    assert [(t["template_key"], t["channel"], t["skipped"]) for t in touches] == [
+        ("ns_reschedule_email", "email", False), ("ns_d1_email", "email", False),
+        ("ns_d3_value_email", "email", False), ("ns_d7_yes_no_email", "email", False),
+        ("ns_d14_breakup_email", "email", False)]
+    assert touches[-1]["meta"]["after"] == "stage:follow_up_later" and touches[-1]["meta"]["nurture"] is True
+    assert res["run"]["would_do"] == []  # nothing due at the flag (N3 is at S+25)
     assert rec.requests == []
-    # the two offered slots are reserved so nobody else gets them, in BOTH
-    # registries: the recovery-only key (bare ISO strings) and approval.py's
-    # "offered_slots" (dict rows), which is the one cadence and approval read.
-    assert store.get(ns.OFFERED_SLOTS_KEY) == fixed_slots(None)["slots"]
-    shared_rows = store.get("offered_slots")
-    assert all(isinstance(r, dict) for r in shared_rows)
-    assert sorted(r["slot"] for r in shared_rows) == sorted(fixed_slots(None)["slots"])
-    assert {r["source"] for r in shared_rows} == {"no_show_recovery"}
-
-
-def test_recovery_timing_and_copy(tmp_env, shadow_mode):
-    store = JsonFileStore(tmp_env / "s.json")
-    ghl, rec = make_ghl(token=None)
-    flagged = START + timedelta(minutes=10)
-    ns.process(flagged, SOPIO, [HOST], store, ghl, slots_fn=fixed_slots)
-
-    assert ns.run_recovery(flagged + timedelta(minutes=4), store, ghl)["would_do"] == []
-    r5 = ns.run_recovery(flagged + timedelta(minutes=5), store, ghl)
-    assert [e["template"] for e in r5["would_do"]] == ["ns_still_on_email"]
-    assert r5["skipped"] == []  # the SMS leg was already skipped (a2p_not_registered) when scheduled
-    sms = [t for t in store.get(ns.recovery_key(SOPIO["id"], START.isoformat()))["touches"] if t["channel"] == "sms"][0]
-    assert sms["skipped"] and sms["skip_reason"] == "a2p_not_registered" and not sms["sent"]
-    email = job_log.read_shadow_log()[-1]["payload"]
-    assert email["subject"] == "Still on?" and "10 more minutes" in email["message"] and SOPIO["zoom_link"] in email["message"]
-
-    r10 = ns.run_recovery(flagged + timedelta(minutes=10), store, ghl)
-    assert [e["template"] for e in r10["would_do"]] == ["ns_call_task"]
-    task = job_log.read_shadow_log()[-1]["payload"]
-    assert "237-791-5700" in task["body"] and "voicemail" in task["body"].lower() and "Lorenzo Villarreal" in task["body"]
-
-    r60 = ns.run_recovery(flagged + timedelta(hours=1), store, ghl)
-    assert [e["template"] for e in r60["would_do"]] == ["ns_reschedule_email"]
-    body = job_log.read_shadow_log()[-1]["payload"]["message"]
-    assert "Fri 2:00pm or Mon 3:30pm CT" in body and settings.BOOKING_URL in body and "Missed you" in job_log.read_shadow_log()[-1]["payload"]["subject"]
-
-    r1d = ns.run_recovery(flagged + timedelta(days=1), store, ghl)
-    assert [e["template"] for e in r1d["would_do"]] == ["ns_d1_other_channel_task"]  # SMS leg replaced by a task until A2P
-    # the +3 day email was deferred off the Sunday; run it at the time it is armed
-    d3_at = slots.parse_iso(armed_at(store, "ns_d3_value_email"))
-    r3d = ns.run_recovery(d3_at, store, ghl, slots_fn=fixed_slots)
-    assert [e["template"] for e in r3d["would_do"]] == ["ns_d3_value_email"]
-    assert "$150M/year" in job_log.read_shadow_log()[-1]["payload"]["message"]  # offer-sheet proof line, reactivation
-    r7d = ns.run_recovery(flagged + timedelta(days=7), store, ghl)
-    assert [e["template"] for e in r7d["would_do"]] == ["ns_d7_yes_no_email"]
-    assert job_log.read_shadow_log()[-1]["payload"]["subject"] == "Should I close your file?"
-    r14 = ns.run_recovery(flagged + timedelta(days=14), store, ghl)
-    assert [e["template"] for e in r14["would_do"]] == ["ns_d14_breakup_email"]
-    assert r14["stage_moves"] and r14["stage_moves"][0]["payload"]["stage"] == "follow_up_later"
-    move = [r for r in job_log.read_shadow_log() if r["action"] == "update_opportunity_stage"][-1]["payload"]
-    assert move["pipelineStageId"] == settings.GHL_STAGES["follow_up_later"] and move["opportunity_id"] == SOPIO["opportunity_id"]
-    assert store.get(ns.state_key(SOPIO["id"]))["state"] == "done"
-    assert rec.requests == []
-
-    # copy rules across the whole sequence
-    for t in store.get(ns.recovery_key(SOPIO["id"], START.isoformat()))["touches"]:
-        text = (t["subject"] or "") + t["body"]
-        assert "—" not in text and "automat" not in text.lower()
-        if t["channel"] == "email":
-            assert t["body"].rstrip().endswith("Lorenzo")
+    # nothing is held at the flag: each slot email claims its own times
+    assert store.get(ns.OFFERED_SLOTS_KEY) is None and not store.get("offered_slots")
 
 
 def test_late_show_after_flag_cancels_recovery_and_flips_status(tmp_env, shadow_mode):
@@ -208,7 +140,7 @@ def test_late_show_after_flag_cancels_recovery_and_flips_status(tmp_env, shadow_
     assert res["actions"][0]["payload"] == {"status": "showed"} and res["actions"][0]["status"] == "would_do"
     touches = store.get(ns.recovery_key(SOPIO["id"], START.isoformat()))["touches"]
     assert all(t["skipped"] for t in touches)
-    assert {t["skip_reason"] for t in touches} == {"late_show", "a2p_not_registered"}
+    assert {t["skip_reason"] for t in touches} == {"late_show"}
     # nothing goes out afterwards
     assert ns.run_recovery(flagged + timedelta(hours=2), store, ghl)["would_do"] == []
     assert rec.requests == []
@@ -227,45 +159,12 @@ def test_showed_path_marks_showed_once(tmp_env, shadow_mode):
     assert rec.requests == []
 
 
-def test_repeat_policy_full_then_two_then_one_then_lost(tmp_env, shadow_mode):
-    store = JsonFileStore(tmp_env / "s.json")
-    ghl, rec = make_ghl(token=None)
-    first = SOPIO
-    second = dict(SOPIO, id="appt2", start_iso="2026-09-29T14:00:00-05:00", end_iso="2026-09-29T14:15:00-05:00")
-    third = dict(SOPIO, id="appt3", start_iso="2026-10-06T14:00:00-05:00", end_iso="2026-10-06T14:15:00-05:00")
-
-    r1 = ns.process(slots.parse_iso(first["start_iso"]) + timedelta(minutes=10), first, [host_join_for(first)], store, ghl, slots_fn=fixed_slots)
-    r2 = ns.process(slots.parse_iso(second["start_iso"]) + timedelta(minutes=10), second, [host_join_for(second)], store, ghl, slots_fn=fixed_slots)
-    r3 = ns.process(slots.parse_iso(third["start_iso"]) + timedelta(minutes=10), third, [host_join_for(third)], store, ghl, slots_fn=fixed_slots)
-    assert (r1["no_show_count"], r2["no_show_count"], r3["no_show_count"]) == (1, 2, 3)
-    assert (r1["recovery_touches"], r2["recovery_touches"], r3["recovery_touches"]) == (8, 3, 2)
-    assert store.get("no_show_count:%s" % SOPIO["contact_id"]) == 3
-
-    t2 = store.get(ns.recovery_key("appt2", "2026-09-29T14:00:00-05:00"))["touches"]
-    assert [t["template_key"] for t in t2] == ["ns_still_on_sms", "ns_still_on_email", "ns_reschedule_email"]
-    assert t2[-1]["meta"]["after"] == "note:second_no_show_pattern"
-    assert "second time" in t2[-1]["body"]
-
-    t3 = store.get(ns.recovery_key("appt3", "2026-10-06T14:00:00-05:00"))["touches"]
-    assert [t["template_key"] for t in t3] == ["ns_still_on_sms", "ns_still_on_email"]
-    assert t3[-1]["meta"]["after"] == "stage:lost"
-
-    # third sequence: the single email goes out, then the opportunity moves to Lost
-    flagged3 = slots.parse_iso(third["start_iso"]) + timedelta(minutes=10)
-    out = ns.run_recovery(flagged3 + timedelta(minutes=5), store, ghl, appointment_id="appt3")
-    assert [e["template"] for e in out["would_do"]] == ["ns_still_on_email"]
-    assert out["stage_moves"][0]["payload"]["stage"] == "lost" and out["stage_moves"][0]["status"] == "would_do"
-    lost = [r for r in job_log.read_shadow_log() if r["action"] == "update_opportunity_stage"][-1]["payload"]
-    assert lost["pipelineStageId"] == settings.GHL_STAGES["lost"] and lost["status"] == "lost"
-    assert rec.requests == []
-
-
 def test_rebooking_cancels_pending_recovery(tmp_env, shadow_mode):
     store = JsonFileStore(tmp_env / "s.json")
     ghl, rec = make_ghl(token=None)
     ns.process(START + timedelta(minutes=10), SOPIO, [HOST], store, ghl, slots_fn=fixed_slots)
     n = ns.cancel_recovery_for_rebooking(store, SOPIO["id"])
-    assert n == 7  # everything except the already-skipped SMS leg
+    assert n == 5  # the whole first-miss ladder
     assert store.get(ns.state_key(SOPIO["id"]))["state"] == "done"
     assert ns.run_recovery(START + timedelta(days=3), store, ghl)["would_do"] == []
 
@@ -294,16 +193,19 @@ def test_fresh_two_slots_uses_ghl_when_token_present(tmp_env, shadow_mode):
 
 
 def test_synthetic_slots_are_never_sent_live(tmp_env, live_mode):
-    touches = ns.recovery_touches(SOPIO, START + timedelta(minutes=10), 1, slots_text="Fri 2:00pm or Mon 3:30pm CT", slots_source="synthetic_open_hours")
-    body = [t for t in touches if t.template_key == "ns_reschedule_email"][0].body
-    assert "Two times" not in body and settings.BOOKING_URL in body
+    store = JsonFileStore(tmp_env / "s.json")
+    synthetic = {"slots": fixed_slots(None)["slots"], "text": "Fri 2:00pm or Mon 3:30pm CT",
+                 "source": "synthetic_open_hours"}
+    info = ns._slots_for_touch({}, {}, SOPIO, START + timedelta(minutes=25), None, store,
+                               slots_fn=lambda now: synthetic)
+    assert info["slots"] == [] and ns.offer_text(info) == ""  # the touch waits; no times, no link
 
 
 def test_inbound_reply_cancels_recovery(tmp_env, shadow_mode):
     store = JsonFileStore(tmp_env / "s.json")
     ghl, rec = make_ghl(token=None)
     ns.process(START + timedelta(minutes=10), SOPIO, [HOST], store, ghl, slots_fn=fixed_slots)
-    assert ns.cancel_recovery(store, SOPIO["id"], "replied") == 7
+    assert ns.cancel_recovery(store, SOPIO["id"], "replied") == 5
     assert store.get(ns.state_key(SOPIO["id"]))["done_reason"] == "replied"
     assert ns.run_recovery(START + timedelta(hours=2), store, ghl)["would_do"] == [] and rec.requests == []
 
@@ -402,7 +304,7 @@ def test_a_rescheduled_call_on_the_same_appointment_id_can_no_show_again(tmp_env
     ghl, rec = make_ghl(token=None)
     flagged = START + timedelta(minutes=10)
     ns.process(flagged, SOPIO, [HOST], store, ghl, slots_fn=fixed_slots)
-    assert ns.cancel_recovery(store, SOPIO["id"], "replied") == 7
+    assert ns.cancel_recovery(store, SOPIO["id"], "replied") == 5
     assert store.get(ns.state_key(SOPIO["id"]))["state"] == "done"
 
     later_start = datetime.fromisoformat("2026-10-01T15:00:00-05:00")
@@ -424,7 +326,7 @@ def test_a_rebooking_stops_the_recovery_before_the_breakup_email(tmp_env, shadow
     new_start = datetime.fromisoformat("2026-10-01T12:00:00-05:00")
     rebooked = dict(SOPIO, start_iso=new_start.isoformat(), end_iso=(new_start + timedelta(minutes=15)).isoformat())
     res = ns.process(flagged + timedelta(hours=2), rebooked, [], store, ghl, slots_fn=fixed_slots)
-    assert res["events"] == ["rebooked"] and res["rebooked_cancelled"] == 7
+    assert res["events"] == ["rebooked"] and res["rebooked_cancelled"] == 5
     out = ns.run_recovery(flagged + timedelta(days=14), store, ghl)
     assert out["would_do"] == [] and out["stage_moves"] == []
     assert not [r for r in job_log.read_shadow_log() if r["action"] == "update_opportunity_stage"]
@@ -465,7 +367,7 @@ def test_a_held_call_resets_the_no_show_counter(tmp_env, shadow_mode):
     third = dict(SOPIO, id="appt_missed_again", start_iso=third_start.isoformat(),
                  end_iso=(third_start + timedelta(minutes=15)).isoformat())
     res = ns.process(third_start + timedelta(minutes=10), third, [host_join_for(third)], store, ghl, slots_fn=fixed_slots)
-    assert res["no_show_count"] == 1 and res["recovery_touches"] == 8  # full sequence, not the 3-touch repeat one
+    assert res["no_show_count"] == 1 and res["recovery_touches"] == 5  # full ladder, not the 2-touch repeat one
     assert rec.requests == []
 
 
@@ -537,8 +439,8 @@ def test_a_crash_after_a_send_does_not_re_send_the_touch(tmp_env, shadow_mode):
     assert breakup["sent"] is True  # persisted before the stage move ran
     ghl.update_opportunity_stage = real_stage_move
     out = ns.run_recovery(flagged + timedelta(days=15), store, ghl)
-    assert out["would_do"] == []  # "Closing your file" is not sent twice
-    sent = [r for r in job_log.read_shadow_log() if r.get("payload", {}).get("subject") == "Closing your file"]
+    assert out["would_do"] == []  # "Leaving the door open" is not sent twice
+    sent = [r for r in job_log.read_shadow_log() if r.get("payload", {}).get("subject") == "Leaving the door open"]
     assert len(sent) == 1
 
 
@@ -550,19 +452,22 @@ def test_a_failed_send_leaves_the_recovery_touch_pending_for_the_next_tick(tmp_e
     flagged = START + timedelta(minutes=10)
     ns.process(flagged, SOPIO, [HOST], store, ghl, slots_fn=fixed_slots)
 
+    from shared.ghl import GHLError
+
     def boom(*a, **k):
-        raise RuntimeError("ghl_token_missing")
+        raise GHLError("ghl_token_missing: no write token")  # raised before any request
 
     real_send = ghl.send_message
     ghl.send_message = boom
-    out = ns.run_recovery(flagged + timedelta(minutes=5), store, ghl)
+    due = START + timedelta(minutes=25)
+    out = ns.run_recovery(due, store, ghl, slots_fn=fixed_slots)
     assert out["sent"] == [] and out["would_do"] == [] and len(out["errors"]) == 1
     touch = [t for t in store.get(ns.recovery_key(SOPIO["id"], START.isoformat()))["touches"]
-             if t["template_key"] == "ns_still_on_email"][0]
+             if t["template_key"] == "ns_reschedule_email"][0]
     assert not touch.get("sent") and not touch.get("skipped")  # still pending
     ghl.send_message = real_send
-    again = ns.run_recovery(flagged + timedelta(minutes=6), store, ghl)
-    assert [e["template"] for e in again["would_do"]] == ["ns_still_on_email"]
+    again = ns.run_recovery(due + timedelta(minutes=1), store, ghl, slots_fn=fixed_slots)
+    assert [e["template"] for e in again["would_do"]] == ["ns_reschedule_email"]
     # and the retryable-skip path is covered too
     assert "ghl_token_missing" in ns.RETRYABLE_SKIP_REASONS
 
@@ -581,6 +486,7 @@ def test_recovery_slots_do_not_corrupt_the_approval_registry(tmp_env, shadow_mod
     # test_hold_status_and_hold_checks.py, the claim_slots race tests)
     approval_mod.reserve_slots(store, "someone@else.com", ["2026-09-30T13:00:00-05:00"], "ap1", now)
     ns.process(now, SOPIO, [HOST], store, ghl, slots_fn=fixed_slots)
+    ns.run_recovery(START + timedelta(minutes=25), store, ghl, slots_fn=fixed_slots)  # N3 claims its times
     assert all(isinstance(r, dict) for r in store.get("offered_slots"))
     # both registries now describe the same reservations: approval.offered_slots
     # (which cadence and every positive-reply draft read) sees the recovery
@@ -706,8 +612,8 @@ def test_the_miss_is_claimed_before_any_ghl_write(tmp_env, shadow_mode):
     assert store.get("no_show_count:%s" % SOPIO["contact_id"]) == 1
     assert res["state"] == "no_show"
     touches = store.get(ns.recovery_key(SOPIO["id"], START.isoformat()))["touches"]
-    assert len(touches) == 8  # the FULL first-no-show ladder, not the 2-touch second one
-    assert not any("second time the timing did not work out" in (t["body"] or "") for t in touches)
+    assert len(touches) == 5  # the FULL first-no-show ladder, not the 2-touch second one
+    assert not any("Today didn't line up" in (t["body"] or "") for t in touches)
 
 
 def test_a_crash_between_the_send_and_the_store_write_does_not_re_send(tmp_env, shadow_mode):
@@ -718,42 +624,20 @@ def test_a_crash_between_the_send_and_the_store_write_does_not_re_send(tmp_env, 
     flagged = START + timedelta(minutes=10)
     ns.process(flagged, SOPIO, [HOST], store, ghl, slots_fn=fixed_slots)
     key = ns.recovery_key(SOPIO["id"], START.isoformat())
-    out = ns.run_recovery(flagged + timedelta(minutes=5), store, ghl)
-    assert [e["template"] for e in out["would_do"]] == ["ns_still_on_email"]
+    due = START + timedelta(minutes=25)
+    out = ns.run_recovery(due, store, ghl, slots_fn=fixed_slots)
+    assert [e["template"] for e in out["would_do"]] == ["ns_reschedule_email"]
     # simulate the crash: the dispatch happened, the record write did not
     crashed = store.get(key)
     for t in crashed["touches"]:
-        if t["template_key"] == "ns_still_on_email":
+        if t["template_key"] == "ns_reschedule_email":
             t["sent"], t["sent_at"], t["result"] = False, None, None
     store.set(key, crashed)
-    again = ns.run_recovery(flagged + timedelta(minutes=6), store, ghl)
+    again = ns.run_recovery(due + timedelta(minutes=1), store, ghl, slots_fn=fixed_slots)
     assert again["would_do"] == []
     assert [e["reason"] for e in again["skipped"]] == ["already_dispatched"]
     sends = [r for r in job_log.read_shadow_log() if r.get("action") == "send_message"]
     assert len(sends) == 1
-
-
-def test_the_recovery_slot_line_is_re_rendered_at_dispatch_time(tmp_env, shadow_mode):
-    """Every touch used to be rendered once, at flag time, so the +1 day and
-    +3 day messages quoted two slots that had already passed, while the engine
-    went on holding those slots against every other lead."""
-    store = JsonFileStore(tmp_env / "s.json")
-    ghl, rec = make_ghl(token=None)
-    flagged = START + timedelta(minutes=10)
-    ns.process(flagged, SOPIO, [HOST], store, ghl, slots_fn=fixed_slots)
-    assert store.get(ns.OFFERED_SLOTS_KEY) == fixed_slots(None)["slots"]
-
-    later = {"slots": ["2026-09-29T13:00:00-05:00", "2026-09-30T16:00:00-05:00"],
-             "text": "Tue 1:00pm or Wed 4:00pm CT", "source": "ghl"}
-    d3_at = slots.parse_iso(armed_at(store, "ns_d3_value_email"))   # Monday 07:00 CT
-    out = ns.run_recovery(d3_at, store, ghl, slots_fn=lambda now: later)
-    assert [e["template"] for e in out["would_do"]] == ["ns_d3_value_email"]
-    body = job_log.read_shadow_log()[-1]["payload"]["message"]
-    assert "Tue 1:00pm or Wed 4:00pm CT" in body
-    assert "Fri 2:00pm" not in body           # the dead Friday slot is gone from the copy
-    # ...and released, so it is not held against every other lead any more
-    assert "2026-09-25T14:00:00-05:00" not in store.get(ns.OFFERED_SLOTS_KEY)
-    assert sorted(store.get(ns.OFFERED_SLOTS_KEY)) == sorted(later["slots"] + ["2026-09-28T15:30:00-05:00"])
 
 
 def test_the_whole_backlog_does_not_fire_after_a_tick_outage(tmp_env, shadow_mode):
@@ -764,12 +648,11 @@ def test_the_whole_backlog_does_not_fire_after_a_tick_outage(tmp_env, shadow_mod
     flagged = START + timedelta(minutes=10)
     ns.process(flagged, SOPIO, [HOST], store, ghl, slots_fn=fixed_slots)
     out = ns.run_recovery(flagged + timedelta(days=1), store, ghl, slots_fn=fixed_slots)
-    late = {e["template"] for e in out["skipped"] if e.get("reason") == "too_late"}
-    assert "ns_still_on_email" in late and "ns_call_task" in late and "ns_reschedule_email" in late
-    assert not any("I am on the Zoom now" in (r.get("payload", {}).get("message") or "")
-                   for r in job_log.read_shadow_log())
-    # the day-1 leg itself is on time and still goes out
-    assert [e["template"] for e in out["would_do"]] == ["ns_d1_other_channel_task"]
+    reasons = dict((e["template"], e.get("reason")) for e in out["skipped"])
+    assert reasons == {"ns_reschedule_email": "too_late",
+                       # on time, but its "those two times got taken" would be false: nothing was offered
+                       "ns_d1_email": "no_prior_offer"}
+    assert out["would_do"] == [] and not [r for r in job_log.read_shadow_log() if r["action"] == "send_message"]
 
 
 def test_a_reply_during_a_tick_is_not_lost_by_the_ticks_write_back(tmp_env, shadow_mode):
@@ -882,7 +765,8 @@ def test_the_third_no_show_lost_move_carries_a_no_show_reason(tmp_env, shadow_mo
     ghl = GHLWithLostReason()
     flagged = START + timedelta(minutes=10)
     ns.process(flagged, SOPIO, [HOST], store, ghl, slots_fn=fixed_slots)
-    out = ns.run_recovery(flagged + timedelta(minutes=5), store, ghl, slots_fn=fixed_slots)
+    out = ns.run_recovery(START + timedelta(minutes=25), store, ghl, slots_fn=fixed_slots)
+    assert [e["template"] for e in out["would_do"]] == ["ns_third_miss_email"]
     assert out["stage_moves"] and seen["status"] == "lost"
     assert seen["lost_reason"] == ns.LOST_REASON_NO_SHOW
     # and that wording is what the S8 mirror looks for
@@ -895,47 +779,31 @@ def test_the_third_no_show_lost_move_carries_a_no_show_reason(tmp_env, shadow_mo
 
 def test_recovery_emails_never_land_on_a_weekend():
     """cadence.py gates on ct.weekday() >= 5 and shared/slots.is_send_time
-    exists precisely because within_send_window answers True on a Saturday.
-    The recovery ladder used to bypass both."""
+    exists precisely because within_send_window answers True on a Saturday."""
     thursday = datetime.fromisoformat("2026-09-24T15:10:00-05:00")
     friday_evening = datetime.fromisoformat("2026-09-25T18:30:00-05:00")
     for flagged, appt in ((thursday, SOPIO),
                           (friday_evening, dict(SOPIO, start_iso="2026-09-25T18:15:00-05:00",
                                                 end_iso="2026-09-25T18:30:00-05:00"))):
-        for t in ns.recovery_touches(appt, flagged, 1, slots_text="Tue 1:00pm or Wed 4:00pm CT", a2p=True):
-            armed = slots.parse_iso(t.when_iso)
-            if t.template_key == "ns_still_on_email":
-                continue  # the call itself is on a weekday; this one goes out now
-            if t.channel in ("email", "sms"):
+        for count in (1, 2, 3):
+            for t in ns.recovery_touches(appt, flagged, count):
+                armed = slots.parse_iso(t.when_iso)
                 assert armed.weekday() < 5, (t.template_key, t.when_iso)
                 assert 7 <= armed.hour < 19, (t.template_key, t.when_iso)
 
 
-MONEY_RE = __import__("re").compile(r"\$[\d,]+(?:\.\d+)?[KMB]?|\b\d+\s*(?:to|-)\s*\d+%")
-
-
-def test_recovery_copy_has_no_exclamation_mark_and_only_offer_sheet_money():
+def test_recovery_copy_has_no_exclamation_mark_and_no_money():
     """offers.md rule 8 forbids exclamation marks and rule 9 restricts pricing
-    to the table. S4 has both guards; S5 had neither, so any future edit to
-    PROOF, MECHANISM or the d3/d7/d14 bodies could slip past a green suite."""
-    from shared.settings import OFFERS_MD
-
-    seen = set()
+    to the table; the signed-off no-show copy quotes no figures at all."""
     for niche in ("cleaning", "bookkeeping", "recruiting", "generic"):
         for offer in ("reactivation", "outbound"):
-            for count in (1, 2, 3):
-                appt = dict(SOPIO, niche=niche, offer=offer)
-                for t in ns.recovery_touches(appt, START + timedelta(minutes=10), count,
-                                             slots_text="Tue 1:00pm or Wed 4:00pm CT", a2p=True):
-                    text = (t.subject or "") + "\n" + t.body
-                    assert "!" not in text, (niche, offer, count, t.template_key)
-                    assert "—" not in text and "automat" not in text.lower()
-                    if t.channel == "sms":
-                        assert "Lorenzo" in t.body and len(t.body) <= ns.SMS_MAX_LEN
-                    for token in MONEY_RE.findall(text):
-                        seen.add(token)
-                        assert token in OFFERS_MD, (niche, offer, count, t.template_key, token)
-    assert {"$150M", "$6M", "$180,000"} <= seen
+            appt = dict(SOPIO, niche=niche, offer=offer)
+            for key, count in [(k, 1) for k, _, _ in ns.FULL_SEQUENCE] + [(ns.N3, 2)]:
+                copy = ns.render(key, appt, START, "Tue 1:00pm or Wed 4:00pm CT", count)
+                text = (copy["subject"] or "") + "\n" + copy["body"]
+                assert "!" not in text and "$" not in text, (niche, offer, key)
+                assert "\u2014" not in text and "automat" not in text.lower()
+                assert copy["body"].endswith("Lorenzo")
 
 
 # ------------------------------------------------ S3 item 4: held -> interest 3

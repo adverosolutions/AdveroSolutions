@@ -75,7 +75,7 @@ def test_tick_schedules_and_sends_confirmations_in_shadow(tmp_env, shadow_mode):
     assert result["appointments"] == {"upcoming": 2, "started": 0, "cancelled": 0}
     assert result["show_rate"]["scheduled"] == 2 and result["show_rate"]["would_do"] == 2 and result["show_rate"]["sent"] == 0
     assert result["no_show"] == [] and result["recovery"]["would_do"] == 0
-    assert result["pending_touches"] > 0 and result["next_touch"]["template_key"] == "preread_email"
+    assert result["pending_touches"] > 0 and result["next_touch"]["template_key"] == "reminder_24h_email"
     assert rec.requests == []
     text = tick_mod.digest_text(result)
     assert "MODE=shadow" in text and "2 upcoming" in text and "2 would_do" in text
@@ -124,9 +124,10 @@ def test_tick_flags_no_show_at_start_plus_10_when_zoom_reported_the_meeting(tmp_
     assert ns["state"] == "no_show" and ns["events"] == ["no_show"] and ns["no_show_count"] == 1
     assert {a["action"] for a in ns["actions"]} == {"update_appointment_status", "create_note"}
     assert all(a["status"] == "would_do" for a in ns["actions"])
-    # +5 min later the "still on?" email is due
-    result2 = tick_mod.tick(now + timedelta(minutes=5), store, ghl, appts, joins_override=joins)
+    # the reschedule email (N3) is due at start + 25 min
+    result2 = tick_mod.tick(now + timedelta(minutes=15), store, ghl, appts, joins_override=joins)
     assert result2["recovery"]["would_do"] == 1
+    assert result2["recovery_detail"]["would_do"][0]["template"] == "ns_reschedule_email"
     assert rec.requests == []
 
 
@@ -359,15 +360,15 @@ def test_normalise_carries_the_contacts_timezone_into_lead_tz():
     assert "CT" in subject and "ET" in subject
 
 
-def test_a_pacific_contacts_confirmation_sms_waits_for_their_own_morning():
+def test_a_pacific_contacts_confirmation_waits_for_their_own_morning():
     from services.reply_engine import show_rate as sr
 
     ev = ghl_event()
     ev["contact"] = dict(ev["contact"], timezone="America/Los_Angeles")
     a = tick_mod.normalise_ghl_event(ev)
-    friday_night = datetime.fromisoformat("2026-09-21T21:10:00-05:00")
-    t = {x.template_key: x for x in sr.schedule_for(a, friday_night, a2p=True)}
-    armed = slots.parse_iso(t["confirm_sms"].when_iso)
+    monday_night = datetime.fromisoformat("2026-09-21T21:10:00-05:00")
+    t = {x.template_key: x for x in sr.schedule_for(a, monday_night)}
+    armed = slots.parse_iso(t["confirm_email"].when_iso)
     assert armed.isoformat() == "2026-09-22T09:00:00-05:00"   # 07:00 PDT, not 05:00
 
 
@@ -380,10 +381,10 @@ def test_an_outbound_booking_from_ghl_keeps_its_offer_type():
     a = tick_mod.normalise_ghl_event(ghl_event())
     assert a["offer"] == "outbound" and a["niche"] == "cleaning"
     assert sr.offer_of(a) == "outbound" and sr.niche_of(a) == "cleaning"
-    t = {x.template_key: x for x in sr.schedule_for(a, NOW, a2p=True)}
-    preread = t["preread_email"].body
-    assert "$24,000" in preread
-    assert "20 to 30%" not in preread and "$6M" not in preread
+    t = {x.template_key: x for x in sr.schedule_for(a, NOW)}
+    confirm = t["confirm_email"].body
+    assert "$24,000" in confirm
+    assert "20 to 30%" not in confirm and "$6M" not in confirm
 
 
 def test_a_real_booking_with_status_new_is_not_mistaken_for_a_cadence_hold():
@@ -467,7 +468,7 @@ def test_a_fixture_replay_never_cancels_the_schedules_it_cannot_see(tmp_env, sha
                 start_iso="2026-09-25T13:00:00-05:00", end_iso="2026-09-25T13:15:00-05:00",
                 booked_at=(NOW - timedelta(minutes=1)).isoformat())
     tick_mod.tick(NOW, store, ghl, [real])
-    assert len(sr.pending_touches(store, "ev-real-999")) >= 3
+    assert len(sr.pending_touches(store, "ev-real-999")) >= 2
 
     fetched = tick_mod.fetch_appointments(ghl, NOW, FIXTURE)
     assert fetched["source"].startswith("fixture:")
@@ -476,7 +477,7 @@ def test_a_fixture_replay_never_cancels_the_schedules_it_cannot_see(tmp_env, sha
     assert fetched["replay"] is True
     tick_mod.tick(NOW + timedelta(minutes=5), store, ghl, fetched["appointments"],
                   active_ids=fetched["active_ids"], window=fetched["window"])
-    assert len(sr.pending_touches(store, "ev-real-999")) >= 3     # untouched
+    assert len(sr.pending_touches(store, "ev-real-999")) >= 2     # untouched
 
 
 def test_a_dry_run_without_store_uses_a_scratch_store(tmp_env, monkeypatch, capsys):
@@ -522,91 +523,20 @@ def test_calls_that_have_already_happened_drop_off_the_not_covered_list():
     assert tick_mod.manual_calendar_calls(late) == []
 
 
-# ------------------------------------------------- the other half of "reply C"
-def _schedule_awaiting_a_c(store, now):
-    from services.reply_engine import show_rate
-
-    appt = {"id": "appt-c-1", "start_iso": (now + timedelta(days=1)).isoformat(),
-            "contact_id": "cnfZoGRCRi3JMqZfo0XD", "email": "ilmi@shiningarmorcleaningnj.com",
-            "first_name": "Ilmi", "niche": "cleaning", "booked_at": now.isoformat()}
-    show_rate.ensure_scheduled(store, appt, now)
-    return appt
-
-
-def _ghl_with_conversation(body, direction="inbound"):
-    def handler(request):
-        return httpx.Response(200, json={"conversations": [
-            {"id": "conv-1", "contactId": "cnfZoGRCRi3JMqZfo0XD", "lastMessageBody": body,
-             "lastMessageDirection": direction, "lastMessageDate": "2026-09-21T18:00:00-05:00"}]})
-
-    return GHL(token="test-token", transport=httpx.MockTransport(handler))
-
-
-def test_a_c_sent_to_the_ghl_reminder_is_read_and_the_chase_task_never_fires(tmp_path, monkeypatch):
-    """dispatch_touch sends the 24 h reminder through GHL conversations, from
-    the GHL address, so a lead who replies "C" answers GHL. The Instantly
-    poller is the only confirmation reader, so the C never arrived and the 4 h
-    "has not confirmed" task fired on essentially every booking - the opposite
-    of the S4 design."""
+# ------------------------------------------------- the retired "reply C" scan
+def test_the_retired_reply_c_scan_is_a_no_op_that_makes_no_request(tmp_path, monkeypatch):
+    """Section 2 (2026-09-23): no 4 h "has not confirmed" task any more, so
+    nothing waits on a C. The scan the tick still calls reads nothing."""
     from services.reply_engine import show_rate
 
     monkeypatch.setenv("ADVERO_TMP_DIR", str(tmp_path))
     store = JsonFileStore(str(tmp_path / "store.json"))
-    appt = _schedule_awaiting_a_c(store, NOW)
-    assert show_rate.pending_confirmation_touches(store), "nothing was waiting on a C"
-
-    out = show_rate.scan_ghl_confirmations(NOW + timedelta(hours=2), store, _ghl_with_conversation("C"))
-    assert [c["appointment_id"] for c in out["confirmed"]] == ["appt-c-1"]
-    assert show_rate.is_confirmed(store, appt) is True
-    # and the 4 h task is skipped rather than raised when its time comes
-    due = slots.parse_iso(appt["start_iso"]) - timedelta(hours=4)
-    summary = show_rate.run(due, store, GHL())
-    task = [e for e in summary["skipped"] if e["template"] == "unconfirmed_task"]
-    assert task and task[0]["reason"] == "confirmed"
-
-
-def test_an_out_of_office_or_a_new_time_is_not_a_confirmation(tmp_path, monkeypatch):
-    """The same predicates the Instantly path uses, so the two cannot drift:
-    eleven of the 44 recorded replies open with words that match the
-    confirmation regex and are auto-responders."""
-    from services.reply_engine import show_rate
-
-    monkeypatch.setenv("ADVERO_TMP_DIR", str(tmp_path))
-    for body in ("Sure, thanks for reaching out. I am currently out of the office until Monday.",
-                 "Sure, let's get together Thursday at 3 instead."):
-        store = JsonFileStore(str(tmp_path / ("store-%d.json" % len(body))))
-        appt = _schedule_awaiting_a_c(store, NOW)
-        out = show_rate.scan_ghl_confirmations(NOW + timedelta(hours=2), store, _ghl_with_conversation(body))
-        assert out["confirmed"] == [], body
-        assert show_rate.is_confirmed(store, appt) is False, body
-
-
-def test_an_outbound_message_never_confirms_anything(tmp_path, monkeypatch):
-    from services.reply_engine import show_rate
-
-    monkeypatch.setenv("ADVERO_TMP_DIR", str(tmp_path))
-    store = JsonFileStore(str(tmp_path / "store.json"))
-    _schedule_awaiting_a_c(store, NOW)
+    show_rate.ensure_scheduled(store, {"id": "appt-c-1", "start_iso": (NOW + timedelta(days=1)).isoformat(),
+                                       "contact_id": "cnfZoGRCRi3JMqZfo0XD", "first_name": "Ilmi",
+                                       "email": "ilmi@shiningarmorcleaningnj.com", "booked_at": NOW.isoformat()},
+                               NOW)
+    rec = Recorder()
     out = show_rate.scan_ghl_confirmations(NOW + timedelta(hours=2), store,
-                                           _ghl_with_conversation("Confirmed, see you then", direction="outbound"))
-    assert out["confirmed"] == []
-
-
-def test_without_the_ghl_token_the_scan_says_so_instead_of_confirming(tmp_path, monkeypatch):
-    """Today's state: no token, so the loop cannot close and the digest has to
-    say which calls are waiting on a C nobody can read."""
-    from services.reply_engine import show_rate
-
-    monkeypatch.setenv("ADVERO_TMP_DIR", str(tmp_path))
-    store = JsonFileStore(str(tmp_path / "store.json"))
-    _schedule_awaiting_a_c(store, NOW)
-    out = show_rate.scan_ghl_confirmations(NOW + timedelta(hours=2), store, GHL(token=None))
-    assert out["confirmed"] == []
-    assert out["skipped"][0]["reason"] == "ghl_token_missing" and out["skipped"][0]["waiting"] == 1
-    text = tick_mod.digest_text({
-        "now": NOW.isoformat(), "mode": "shadow", "a2p_registered": False,
-        "appointments": {"upcoming": 1, "started": 0, "cancelled": 0},
-        "show_rate": {}, "no_show": [], "recovery": {}, "pending_touches": 1,
-        "manual_calendar_calls": [], "confirmations": out,
-    })
-    assert "waiting on a 'reply C' nobody can read" in text
+                                           GHL(token="test-token", transport=httpx.MockTransport(rec)))
+    assert out == {"checked": 0, "confirmed": [], "skipped": [], "errors": []}
+    assert rec.requests == []

@@ -1,20 +1,29 @@
-"""Show-rate sequence (Blueprint S4): confirmation, pre-read, 24 h "reply C",
-4 h unconfirmed task, 1 h and 15 m SMS.
+"""Show-rate sequence (Blueprint S4, rebuilt for section 2 on 2026-09-23):
+the widget-booking confirmation and three pre-call reminder emails.
 
-Everything here is pure scheduling plus guarded GHL writes:
+    confirm_email            T+0 (widget bookings; an engine booking's approved
+                             reply already confirmed it, see release_hold)
+    reminder_24h_email  R2   24 h before the call
+    reminder_morning_email R3  08:30 lead-local on the call day, only when R2
+                             was skipped and the call is not on the day it was
+                             booked (CT when the lead's zone is unknown)
+    reminder_1h_email   R4   1 h before the call, everyone
+
+Email only: no texts, no tasks for Lorenzo, no pre-read, no booking link, no
+"reply C" (copy: sections/2_booked_calls/copy_signed_off.md).
 
 * ``schedule_for(appointment, now)`` returns the exact list of Touch objects
-  for one appointment. SMS legs are generated but ``skipped=True`` with reason
-  ``a2p_not_registered`` until ``A2P_10DLC_REGISTERED=1``. Touches whose time
-  is already in the past at scheduling time are skipped with ``past_time``
-  (a booking made inside 24 h simply has no 24 h reminder).
+  for one appointment. A reminder that does not apply is still listed, with
+  ``skipped=True`` and its reason (``booked_late``, ``not_needed``,
+  ``same_day``, ``past_time``, ...).
 * ``ensure_scheduled(store, appointment, now)`` is re-entry safe: the schedule
   is keyed by appointment id + start time, so a reschedule creates a new
   schedule and marks the old one's pending touches ``rescheduled``.
-* ``run(now, store, ghl)`` sends due touches through ``ghl.send_message`` /
-  ``ghl.create_task``. Both are guarded by ``shared.settings.guard_write``;
-  in MODE=shadow they return a ``{"shadow": True, ...}`` record and no HTTP
-  request is made.
+* ``run(now, store, ghl, instantly=...)`` sends due touches. Emails go out
+  through ``thread_reply.send_lead_email``: a reply in the lead's own Instantly
+  thread, a GHL email only when the lead has no thread. Every write is guarded
+  by ``shared.settings.guard_write``; in MODE=shadow the clients return a
+  ``{"shadow": True, ...}`` record and no HTTP request is made.
 
 Clocks are always injected (``now``); nothing here reads the wall clock.
 Copy rules: no em dashes, signed "Lorenzo", never mentions automation.
@@ -39,9 +48,13 @@ logger = logging.getLogger("reply_engine.show_rate")
 
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 NICHES = ("cleaning", "bookkeeping", "recruiting")
+# A2P/SMS: the show-rate ladder sends no texts any more (section 2, email
+# only). a2p_registered() stays because no_show and jobs/appointments_tick
+# still import it; nothing in this module gates on it.
 A2P_ENV = "A2P_10DLC_REGISTERED"
 SENDER_ENV = "SHOW_RATE_SENDER"  # "engine" (default) or "ghl": never both
-SEND_WINDOW = settings.SEND_WINDOW  # SMS never goes out at night
+SEND_WINDOW = settings.SEND_WINDOW
+# Read by template_gate for an SMS touch; no show-rate touch is SMS any more.
 SMS_MAX_LEN = 320
 LOOM_PLACEHOLDER_RE = re.compile(r"\[Loom:[^\]]*\]")
 # A booking older than this was not made "just now": the T+0 confirmation copy
@@ -49,9 +62,8 @@ LOOM_PLACEHOLDER_RE = re.compile(r"\[Loom:[^\]]*\]")
 # late, so it is skipped instead of sent. See jobs/appointments_tick LOOKAHEAD.
 BOOKING_STALE_AFTER = timedelta(hours=2)
 # dispatch reasons that mean "try again next tick", not "this touch is done".
-# no_contact_id is retryable because GHL's contact upsert often has not
-# returned an id yet on the tick that creates the schedule; burning the touch
-# there loses the lead's whole sequence (confirmation, pre-read, reminders).
+# Emails no longer use these (thread_reply's record says whether a retry is
+# safe, see _email_outcome); a task still does.
 RETRYABLE_SKIP_REASONS = ("ghl_token_missing", "no_contact_id")
 # ...but not forever. A permanently broken contact used to produce an error row
 # on every 10-minute tick with no cap.
@@ -64,33 +76,32 @@ BOOTSTRAP_KEY = "showrate_bootstrap"
 FIRST_SEEN_PREFIX = "showrate_seen:"
 # How late a touch may be before it is dropped instead of sent. The tick can
 # pause (a deploy, a held lock, a retryable error keeping a touch pending), and
-# "Tomorrow at 2:00 CT, still good?" on the day of the call is worse than
-# silence.
+# "Still good for tomorrow?" on the day of the call is worse than silence.
 MAX_LATENESS = {
     "confirm_email": BOOKING_STALE_AFTER,
-    "confirm_sms": BOOKING_STALE_AFTER,
-    "preread_email": BOOKING_STALE_AFTER,
     "reminder_24h_email": timedelta(hours=6),
-    "reminder_24h_sms": timedelta(hours=6),
-    "unconfirmed_task": timedelta(hours=2),
-    "reminder_1h_sms": timedelta(minutes=30),
-    "reminder_15m_sms": timedelta(minutes=10),
+    "reminder_morning_email": timedelta(hours=3),
+    "reminder_1h_email": timedelta(minutes=30),
 }
 
 # Touch template keys in send order. The tuple is (key, channel, offset).
-# Offsets are relative to the appointment start unless the key starts with
-# "confirm"/"preread", which are relative to the scheduling moment (T+0).
+# confirm_email is relative to the scheduling moment (T+0); the reminders are
+# relative to the call's start, except the morning reminder, whose time is a
+# clock time (MORNING_REMINDER_AT, lead-local) and has no offset.
 SEQUENCE = (
     ("confirm_email", "email", timedelta(0)),
-    ("confirm_sms", "sms", timedelta(0)),
-    ("preread_email", "email", timedelta(minutes=15)),
-    ("reminder_24h_sms", "sms", timedelta(hours=-24)),
     ("reminder_24h_email", "email", timedelta(hours=-24)),
-    ("unconfirmed_task", "task", timedelta(hours=-4)),
-    ("reminder_1h_sms", "sms", timedelta(hours=-1)),
-    ("reminder_15m_sms", "sms", timedelta(minutes=-15)),
+    ("reminder_morning_email", "email", None),
+    ("reminder_1h_email", "email", timedelta(hours=-1)),
 )
-RELATIVE_TO_BOOKING = ("confirm_email", "confirm_sms", "preread_email")
+SEQUENCE_KEYS = tuple(k for k, _, _ in SEQUENCE)
+RELATIVE_TO_BOOKING = ("confirm_email",)
+# R3 goes out at this lead-local clock time on the call day.
+MORNING_REMINDER_AT = (8, 30)
+# R2 is skipped (booked_late) when the lead booked less than this long before
+# R2's send time: "still good for tomorrow?" minutes after booking reads oddly.
+R2_MIN_AFTER_BOOKING = timedelta(hours=6)
+BOOKED_LATE = "booked_late"
 
 
 # --------------------------------------------------------------------- model
@@ -231,9 +242,17 @@ def fmt_when(dt: datetime, lead_tz=None) -> str:
     return text
 
 
-def fmt_time_only(dt: datetime) -> str:
-    """'4:30pm CT'."""
-    return "%s CT" % _clock(slots.to_tz(dt, TZ))
+def fmt_time_only(dt: datetime, lead_tz=None) -> str:
+    """'4:30pm CT' (+ ' (5:30pm ET)' when the lead's tz is known and not
+    Central, as fmt_when). Called with one argument it is exactly the old
+    Central-only form, which no_show and the template gate's checks use."""
+    ct = slots.to_tz(dt, TZ)
+    text = "%s CT" % _clock(ct)
+    if lead_tz is not None and getattr(lead_tz, "zone", "") not in ("", "America/Chicago"):
+        local = ct.astimezone(lead_tz)
+        label = slots._tz_label(local, lead_tz)  # noqa: SLF001 - small shared helper
+        text += " (%s %s)" % (_clock(local), label)
+    return text
 
 
 def lead_tz_of(appointment: Dict[str, Any]):
@@ -275,53 +294,6 @@ def loom_line(niche: str) -> str:
 
 def has_unresolved_placeholder(text: str) -> bool:
     return bool(LOOM_PLACEHOLDER_RE.search(text or "")) or "{{" in (text or "")
-
-
-def preread_path(niche: str, offer: str = "reactivation") -> Path:
-    """Pre-reads are keyed on (niche, offer) like AGENDA and MECHANISM.
-
-    An outbound/trigger booking must never receive the reactivation mechanism
-    and reactivation pricing fifteen minutes after a confirmation email that
-    promised the guarantee.
-    """
-    offer = (offer or "reactivation").strip().lower()
-    candidates = []
-    if offer and offer != "reactivation":
-        candidates.append("show_rate_preread_%s_%s.md" % (niche, offer))
-        candidates.append("show_rate_preread_generic_%s.md" % offer)
-    candidates.append("show_rate_preread_%s.md" % niche)
-    candidates.append("show_rate_preread_generic.md")
-    for name in candidates:
-        path = PROMPTS_DIR / name
-        if path.exists():
-            return path
-    return PROMPTS_DIR / "show_rate_preread_generic.md"
-
-
-def load_preread(niche: str, offer: str = "reactivation") -> str:
-    try:
-        return preread_path(niche, offer).read_text(encoding="utf-8")
-    except OSError:
-        return "Hey {first_name}, short version before {when_ct}: I will show how the system would work for {company}, what it costs, and what I need from you to start.\n\nLorenzo"
-
-
-def markdown_to_text(md: str) -> str:
-    """Plain-text email body: drop the H1 (it becomes the subject), keep
-    section headings as plain lines, keep bullets."""
-    out = []
-    seen_h1 = False
-    for line in md.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("# ") and not seen_h1:
-            seen_h1 = True
-            continue
-        if stripped.startswith("#"):
-            stripped = stripped.lstrip("#").strip()
-            if stripped:
-                out.append(stripped)
-            continue
-        out.append(line.rstrip())
-    return re.sub(r"\n{3,}", "\n\n", "\n".join(out)).strip()
 
 
 AGENDA = {
@@ -376,21 +348,26 @@ def agenda_for(niche: str, offer: str) -> List[str]:
 
 # ------------------------------------------------------------------- copy
 def render(template_key: str, appointment: Dict[str, Any], start: datetime, now: datetime) -> Dict[str, str]:
-    """Return {'subject', 'body'} for a template key. All copy lives here."""
+    """Return {'subject', 'body'} for a template key. All copy lives here.
+
+    The reminders are word for word sections/2_booked_calls/copy_signed_off.md
+    (Lorenzo signed off every word, 2026-09-23), with its no-link variants.
+    The subject is used only when the lead has no thread and the email goes
+    as a GHL email; in the thread the reply carries "Re: <thread subject>"."""
     first = first_name_of(appointment)
-    company = company_of(appointment)
     niche = niche_of(appointment)
     offer = offer_of(appointment)
     lead_tz = lead_tz_of(appointment)
     when_ct = fmt_when(start, lead_tz)
-    time_ct = fmt_time_only(start)
+    # {time}: the lead's own clock in brackets when their zone is known and
+    # not Central, as {when}: "2:00pm CT (3:00pm ET)".
+    time_local = fmt_time_only(start, lead_tz)
     # The call's join link (a Zoom or Google Meet link), or "" when none is on
     # file. Platform-neutral wording: widget bookings are on Google Meet. With
     # no link, each message says where the link is instead of quoting one;
     # that wording is its own catalogue variant (no_call_link), never a phrase
     # standing in for the link.
     link = call_link_of(appointment)
-    booking = appointment.get("reschedule_link") or appointment.get("booking_url") or BOOKING_URL or ""
 
     if template_key == "confirm_email":
         bullets = "\n".join("- %s" % b for b in agenda_for(niche, offer))
@@ -410,56 +387,42 @@ def render(template_key: str, appointment: Dict[str, Any], start: datetime, now:
         ) % (first, when_ct, invite, bullets, (loom + "\n\n") if loom else "")
         return {"subject": "Confirmed: %s, 15 minutes with Lorenzo" % when_ct, "body": body}
 
-    if template_key == "confirm_sms":
-        where = ("Call link: %s." % link) if link else "The link is on your calendar invite."
-        body = "Hey %s, Lorenzo here. We are locked in for a 15-min call on %s. %s Reply here if anything changes." % (
-            first, when_ct, where)
-        return {"subject": None, "body": body[:SMS_MAX_LEN]}
-
-    if template_key == "preread_email":
-        text = markdown_to_text(load_preread(niche, offer)).format(first_name=first, company=company, when_ct=when_ct)
-        # "Before Tuesday: ..." read oddly when the pre-read lands on the day
-        # of the call (a same-day booking).
-        return {"subject": "Before our call: the one-page version", "body": text}
-
     if template_key == "reminder_24h_email":
+        # R2, the day-before check. Any reply counts as a yes.
+        link_line = ("Link for tomorrow: %s" % link) if link else "The link is on your calendar invite."
         body = (
             "Hey %s,\n\n"
-            "We are on for tomorrow, %s. Reply C to confirm and I will have everything ready for %s.\n\n"
-            "If the time no longer works, grab a new one here instead: %s\n\n"
+            "Still good for tomorrow? I have you down for %s. A quick yes works.\n\n"
+            "%s\n\n"
+            "If the time doesn't work anymore, just reply and I'll send a couple of other times.\n\n"
             "Lorenzo"
-        ) % (first, when_ct, company, booking)
-        return {"subject": "Tomorrow at %s, still good?" % time_ct, "body": body}
+        ) % (first, when_ct, link_line)
+        return {"subject": "Tomorrow's call", "body": body}
 
-    if template_key == "reminder_24h_sms":
-        body = "Hey %s, Lorenzo here. We are on tomorrow at %s for the 15-min call about %s. Reply C to confirm, or grab a new time: %s" % (
-            first, time_ct, company, booking)
-        return {"subject": None, "body": body[:SMS_MAX_LEN]}
-
-    if template_key == "unconfirmed_task":
-        phone = appointment.get("phone") or "no phone on file"
-        email = appointment.get("email") or "no email on file"
-        suggested = ("Still good for %s today? Call link: %s" % (time_ct, link)) if link else (
-            "Still good for %s today? The link is on your calendar invite." % time_ct)
+    if template_key == "reminder_morning_email":
+        # R3, the morning-of check (only when R2 was skipped). Any reply counts as a yes.
+        where = ("Link's here: %s" % link) if link else "The link's on your calendar invite."
         body = (
-            "%s (%s) has not confirmed the %s call. Text or call personally.\n"
-            "Phone: %s\nEmail: %s\nCall link: %s\n\n"
-            "Text: \"Hey %s, Lorenzo here. %s\"\n"
-            "If no answer, leave a 15-second voicemail and send the text."
-        ) % (first, company, time_ct, phone, email, link or "none on file (it is on the invite)", first, suggested)
-        return {"subject": "Unconfirmed call at %s: text or call %s (%s)" % (time_ct, first, company), "body": body}
+            "Hey %s,\n\n"
+            "Morning. Are we still set for %s today? %s\n\n"
+            "If something came up, just reply and we'll find another time.\n\n"
+            "Lorenzo"
+        ) % (first, time_local, where)
+        return {"subject": "Today's call", "body": body}
 
-    if template_key == "reminder_1h_sms":
-        where = ("Call link: %s" % link) if link else "The link is on your calendar invite."
-        body = "Hey %s, Lorenzo here. Talk in an hour at %s. %s" % (first, time_ct, where)
-        return {"subject": None, "body": body[:SMS_MAX_LEN]}
-
-    if template_key == "reminder_15m_sms":
-        # names Lorenzo: from a number the prospect has not saved, a bare link
-        # and their own first name reads like a phishing text.
-        where = ("Hopping on now: %s." % link) if link else "Hopping on now. The link is on your calendar invite."
-        body = "Hey %s, Lorenzo here. %s See you in a few." % (first, where)
-        return {"subject": None, "body": body[:SMS_MAX_LEN]}
+    if template_key == "reminder_1h_email":
+        # R4, the one-hour heads-up, to everyone (confirmed or not).
+        if link:
+            opener = "Talk in an hour. Here's the link:\n%s" % link
+        else:
+            opener = "Talk in an hour. The call link is on the calendar invite from when we booked."
+        body = (
+            "Hey %s,\n\n"
+            "%s\n\n"
+            "If %s won't work after all, reply here and we'll move it.\n\n"
+            "Lorenzo"
+        ) % (first, opener, time_local)
+        return {"subject": "See you at %s" % time_local, "body": body}
 
     raise KeyError("unknown template %s" % template_key)
 
@@ -550,7 +513,15 @@ def touch_bindings(touch: "Touch", appointment: Dict[str, Any], slots_text: Opti
     try:
         from services.reply_engine import template_gate
 
-        out.update(template_gate.appointment_bindings(appointment, _touch_start(touch, appointment)))
+        start = _touch_start(touch, appointment)
+        out.update(template_gate.appointment_bindings(appointment, start))
+        if "time_ct" in out and template_kind(touch.template_key) == "show_rate":
+            # The reminders' {time} carries the lead's own clock in brackets
+            # (fmt_time_only with the lead's zone, as render() writes it);
+            # appointment_bindings binds the Central-only form the no-show
+            # copy uses. Same formatter, same appointment: an engine value.
+            out["time_ct"] = template_gate._EngineTime(  # noqa: SLF001 - the gate's own engine-value marker
+                fmt_time_only(start, lead_tz_of(appointment)))
     except Exception as exc:  # noqa: BLE001 - unbound times still get the typed check
         logger.warning("no time bindings for %s: %s", touch.key, type(exc).__name__)
     out["first_name"] = first_name_of(appointment)
@@ -657,8 +628,8 @@ def schedule_key(appointment_id: str, start_iso: str) -> str:
     return "showrate:%s:%s" % (appointment_id, start_iso)
 
 
-def _localize(tz, date_, hour: int) -> datetime:
-    naive = datetime(date_.year, date_.month, date_.day, hour, 0)
+def _localize(tz, date_, hour: int, minute: int = 0) -> datetime:
+    naive = datetime(date_.year, date_.month, date_.day, hour, minute)
     if hasattr(tz, "localize"):
         return tz.localize(naive)
     return naive.replace(tzinfo=tz)
@@ -683,7 +654,8 @@ def next_send_window_open(dt: datetime, lead_tz=None, weekdays_only: bool = Fals
     """Move ``dt`` to the next moment inside 07:00-19:00 Central AND, when the
     lead's timezone is known, inside 07:00-19:00 there too.
 
-    ``weekdays_only`` (used for SMS) also pushes a Saturday or Sunday arming to
+    ``weekdays_only`` (every email since section 2: the in-thread send refuses
+    a weekend, slots.is_send_time) also pushes a Saturday or Sunday arming to
     Monday 07:00 local. Without the lead-side check a Friday-night booking from
     a Pacific lead deferred to 07:00 CT, which is 05:00 Saturday for them.
     The returned instant is always expressed in Central.
@@ -704,36 +676,124 @@ def next_send_window_open(dt: datetime, lead_tz=None, weekdays_only: bool = Fals
     return ct
 
 
+def booking_moment(appointment: Dict[str, Any], now: datetime) -> datetime:
+    """When the lead booked: ``min(booked_at, now)`` when ``booked_at`` is on
+    the appointment and readable, else ``now`` (the schedule is being created
+    the tick after the booking). Central."""
+    now = slots.to_tz(slots.ensure_aware(now, TZ), TZ)
+    raw = appointment.get("booked_at")
+    if not raw:
+        return now
+    try:
+        booked = slots.to_tz(slots.parse_iso(raw), TZ)
+    except (ValueError, TypeError):
+        return now
+    return min(booked, now)
+
+
+def morning_reminder_time(start: datetime, lead_tz=None) -> datetime:
+    """08:30 on the call day in the lead's zone (Central when it is unknown),
+    expressed in Central."""
+    zone = lead_tz or TZ
+    local_day = slots.to_tz(start, TZ).astimezone(zone).date()
+    hour, minute = MORNING_REMINDER_AT
+    return slots.to_tz(_localize(zone, local_day, hour, minute), TZ)
+
+
+def reminder_plan(start: datetime, now: datetime, booked: datetime, lead_tz=None) -> Dict[str, Dict[str, Any]]:
+    """{template_key: {"when": datetime, "skip": reason|None, "why": detail|None}}
+    for R2, R3 and R4 (copy_signed_off.md, "Reminders").
+
+    R2 (-24 h) is skipped ``booked_late`` when its time is already past, when
+    the booking moment is later than R2's time minus six hours, or when R2's
+    time is outside the send window (a Saturday or Sunday: slots.is_send_time
+    is weekdays only, so a Monday call gets R3 instead).
+
+    R3 (08:30 lead-local on the call day) is scheduled only when R2 was
+    skipped and the call is not on the booking's own lead-local day. 08:30
+    lead-local before the Central window opens (a zone east of Eastern) moves
+    to the window's opening. It is skipped ``past_time`` when its time is gone
+    and ``too_close_to_call`` when it would land at or after R4.
+
+    R4 (-1 h) goes to everyone unless its time is already past."""
+    start = slots.to_tz(start, TZ)
+    now = slots.to_tz(now, TZ)
+    booked = slots.to_tz(booked, TZ)
+    late = now - timedelta(seconds=1)
+    plan = {}  # type: Dict[str, Dict[str, Any]]
+
+    r2 = start - timedelta(hours=24)  # absolute-instant arithmetic: 24 real hours, DST-safe
+    why = None
+    if r2 < late:
+        why = "past"
+    elif booked > r2 - R2_MIN_AFTER_BOOKING:
+        why = "within_6h_of_booking"
+    elif not slots.is_send_time(r2):
+        why = "weekend" if r2.weekday() >= 5 else "outside_send_window"
+    plan["reminder_24h_email"] = {"when": r2, "skip": BOOKED_LATE if why else None, "why": why}
+
+    r4 = start - timedelta(hours=1)
+    plan["reminder_1h_email"] = {"when": r4, "skip": "past_time" if r4 < late else None, "why": None}
+
+    zone = lead_tz or TZ
+    r3 = morning_reminder_time(start, lead_tz)
+    skip, why = None, None
+    if plan["reminder_24h_email"]["skip"] is None:
+        skip = "not_needed"            # R2 goes: R3 is only its stand-in
+    elif start.astimezone(zone).date() == booked.astimezone(zone).date():
+        skip = "same_day"              # booked on the call day: the confirmation and R4 are enough
+    else:
+        moved = next_send_window_open(r3, lead_tz=lead_tz, weekdays_only=True)
+        if moved != r3:
+            why, r3 = "deferred_from %s" % r3.isoformat(), moved
+        if r3 < late:
+            skip = "past_time"
+        elif r3 >= r4:
+            skip = "too_close_to_call"
+    plan["reminder_morning_email"] = {"when": r3, "skip": skip, "why": why}
+    return plan
+
+
 def schedule_for(
     appointment: Dict[str, Any],
     now: datetime,
     a2p: Optional[bool] = None,
     stale_booking: Optional[bool] = None,
+    booked: Optional[datetime] = None,
 ) -> List[Touch]:
     """Exactly the S4 touches for one appointment, in send order.
 
     appointment: id, contact_id, start_iso, end_iso, zoom_link|None, email,
-    phone, niche, first_name, company, confirmed (bool, optional), lead_tz.
+    niche, first_name, company, lead_tz, booked_at (optional).
 
     ``stale_booking`` is the caller's verdict on "was this booked just now".
     ``ensure_scheduled`` decides it from the store (which knows whether the
     engine has seen this appointment before); passing None falls back to the
     ``booked_at`` field alone, which is all a bare ``schedule_for`` can know.
+
+    ``booked`` is the booking moment the R2/R3 rules measure from; default
+    ``booking_moment(appointment, now)``. ensure_scheduled passes ``now`` for
+    a reschedule (GHL's dateAdded does not move when the lead moves the call).
+    ``a2p`` is accepted for old callers and ignored: nothing here is SMS.
     """
     now = slots.to_tz(slots.ensure_aware(now, TZ), TZ)
     start = slots.to_tz(slots.parse_iso(appointment["start_iso"]), TZ)
     start_iso = start.isoformat()
     appt_id = str(appointment.get("id"))
     contact_id = appointment.get("contact_id")
-    sms_ok = a2p_registered(a2p)
     lead_tz = lead_tz_of(appointment)
     if stale_booking is None:
         stale_booking = _booking_is_stale(appointment, now)
+    booked = booking_moment(appointment, now) if booked is None else slots.to_tz(booked, TZ)
+    plan = reminder_plan(start, now, booked, lead_tz)
     touches = []  # type: List[Touch]
     for template_key, channel, offset in SEQUENCE:
-        base = now if template_key in RELATIVE_TO_BOOKING else start
-        when = base + offset  # absolute-instant arithmetic: "24 h before" is 24 real hours, DST-safe
-        when = slots.to_tz(when, TZ)
+        if template_key in RELATIVE_TO_BOOKING:
+            when = slots.to_tz(now + offset, TZ)
+            step = {"skip": None, "why": None}  # type: Dict[str, Any]
+        else:
+            step = plan[template_key]
+            when = step["when"]
         copy = render(template_key, appointment, start, now)
         touch = Touch(
             key="%s:%s:%s" % (appt_id, start_iso, template_key),
@@ -747,33 +807,25 @@ def schedule_for(
             meta={"niche": niche_of(appointment), "offer": offer_of(appointment), "start_iso": start_iso},
         )
         stamp_touch(touch, appointment, "show_rate")
-        # only the touches armed off the booking moment can land at a bad local
-        # hour. A reminder anchored to the call the lead chose is by definition
-        # at a time they picked, and must never move past it.
-        proactive = template_key in RELATIVE_TO_BOOKING
-        if channel in ("sms", "email") and proactive:
-            # email too: the widget takes bookings at any hour, and CLAUDE.md's
-            # engine rule is "sends only 07:00-19:00 CT". A 02:04 booking used
-            # to email "Locked in ..." at 02:05 because only SMS was gated.
-            # Weekends still hold for SMS only: a Saturday booking should not
-            # wait until Monday for its confirmation.
-            moved = next_send_window_open(when, lead_tz=lead_tz, weekdays_only=(channel == "sms"))
+        if template_key in RELATIVE_TO_BOOKING:
+            # only the touch armed off the booking moment can land at a bad
+            # local hour: the widget takes bookings at any hour, and the engine
+            # sends 07:00-19:00 CT on weekdays only (the in-thread send refuses
+            # anything else, slots.is_send_time). A Saturday booking's
+            # confirmation goes on Monday morning rather than never. A reminder
+            # anchored to the call is at a time the lead picked and never moves.
+            moved = next_send_window_open(when, lead_tz=lead_tz, weekdays_only=True)
             if moved != when:
                 touch.when_iso = moved.isoformat()
                 touch.meta["deferred_from"] = when.isoformat()
-        if channel == "sms":
-            if not sms_ok:
-                touch.skipped, touch.skip_reason = True, "a2p_not_registered"
-        if not touch.skipped and stale_booking and template_key in RELATIVE_TO_BOOKING:
-            # picked up long after the lead booked: "Locked in ... the invite is
-            # on its way" would arrive days late, so it is not sent at all.
-            touch.skipped, touch.skip_reason = True, "stale_booking"
-        if not touch.skipped and when < now - timedelta(seconds=1):
-            touch.skipped, touch.skip_reason = True, "past_time"
-        if not touch.skipped and slots.parse_iso(touch.when_iso) >= start and template_key not in RELATIVE_TO_BOOKING:
-            touch.skipped, touch.skip_reason = True, "past_time"
-        if template_key == "unconfirmed_task" and appointment.get("confirmed"):
-            touch.skipped, touch.skip_reason = True, "confirmed"
+            if stale_booking:
+                # picked up long after the lead booked: "Locked in ... the invite
+                # is on its way" would arrive days late, so it is not sent at all.
+                touch.skipped, touch.skip_reason = True, "stale_booking"
+        elif step["skip"]:
+            touch.skipped, touch.skip_reason = True, step["skip"]
+        if step.get("why"):
+            touch.meta["why"] = step["why"]
         touches.append(touch)
     return touches
 
@@ -854,7 +906,7 @@ def ensure_scheduled(store, appointment: Dict[str, Any], now: datetime, a2p: Opt
 
     Returns {'key', 'created', 'rearmed', 'touches': [dict], 'cancelled': [keys]}.
     A reschedule marks the other schedules' pending touches ``rescheduled`` and
-    clears the confirmation flag (a new time needs a fresh C reply). Coming
+    clears the confirmation flag (it belonged to the old time). Coming
     *back* to a slot the appointment already used re-arms that schedule instead
     of returning a record whose every touch is dead.
     """
@@ -913,7 +965,12 @@ def ensure_scheduled(store, appointment: Dict[str, Any], now: datetime, a2p: Opt
         return {"key": key, "created": False, "rearmed": rearmed, "touches": touches, "cancelled": cancelled,
                 "held": holding, "hold_unreadable": hold_error}
     stale = _staleness(store, appointment, now, cold_start)
-    touches = [t.to_dict() for t in schedule_for(appointment, now, a2p=a2p, stale_booking=stale["stale"])]
+    # A reschedule: GHL's dateAdded (booked_at) does not move when the lead
+    # moves the call, so the booking moment the R2 six-hour rule measures from
+    # is now, when the new time was chosen.
+    booked = now if stale.get("reason") == "rescheduled" else None
+    touches = [t.to_dict() for t in schedule_for(appointment, now, a2p=a2p, stale_booking=stale["stale"],
+                                                  booked=booked)]
     rec = {
         "appointment": _appointment_snapshot(appointment),
         "scheduled_at": now.isoformat(),
@@ -940,7 +997,7 @@ def _rearm_touches(appointment: Dict[str, Any], touches: List[Dict[str, Any]], n
         return False
     # coming back to a slot this appointment already used IS a reschedule, so
     # the T+0 copy is about a time the lead just chose: never stale.
-    fresh = {t.key: t for t in schedule_for(appointment, now, a2p=a2p, stale_booking=False)}
+    fresh = {t.key: t for t in schedule_for(appointment, now, a2p=a2p, stale_booking=False, booked=now)}
     for t in touches:
         if not (t.get("skipped") and t.get("skip_reason") == "rescheduled"):
             continue
@@ -993,17 +1050,17 @@ HOLD_PREFIX = "showrate_hold:"
 # that KEEPS the booked call has gone out, and say what went out:
 #   "approved"         the engine's own unedited draft, which restates exactly
 #                      the booked slot (Keep by its recorded intent). The
-#                      ladder's own T+0 confirmation (and its SMS twin) would
-#                      repeat "Locked in ..." minutes later, so this release
-#                      skips them; the pre-read still goes.
+#                      ladder's own T+0 confirmation would repeat
+#                      "Locked in ..." minutes later, so this release skips
+#                      it; the reminders anchored to the call still go.
 #   "approved_edited"  a body Lorenzo edited (Keep on the Edit page), and
 #   "marked_sent"      a reply he sent by hand (Mark sent): the engine did not
 #                      write or did not see that text, so it is never taken for
-#                      the confirmation and confirm_email / confirm_sms stay.
+#                      the confirmation and confirm_email stays.
 # Any reason not listed here keeps them too. Widget and hand-made bookings are
 # never held, so they keep confirm_email.
 ENGINE_CONFIRMED_RELEASE_REASONS = ("approved",)
-ENGINE_CONFIRMATION_DUPLICATES = ("confirm_email", "confirm_sms")
+ENGINE_CONFIRMATION_DUPLICATES = ("confirm_email",)
 ENGINE_CONFIRMATION_SKIP = "engine_confirmation_sent"
 
 
@@ -1175,8 +1232,8 @@ def release_hold(store, appointment_id: Any, now: datetime, a2p: Optional[bool] 
 
     With ``reason="approved"`` (the engine's own unedited confirming draft is
     out, see ENGINE_CONFIRMED_RELEASE_REASONS) the ladder's own confirmation
-    touches are skipped as ``engine_confirmation_sent`` instead
-    (ENGINE_CONFIRMATION_DUPLICATES); the pre-read is re-anchored as above.
+    touch is skipped as ``engine_confirmation_sent`` instead
+    (ENGINE_CONFIRMATION_DUPLICATES).
     Any other reason ("approved_edited", "marked_sent") re-anchors them and
     they go. A retried release keeps the reason it was recorded with.
 
@@ -1221,7 +1278,7 @@ def release_hold(store, appointment_id: Any, now: datetime, a2p: Optional[bool] 
                 if engine_confirmed and t.get("template_key") in ENGINE_CONFIRMATION_DUPLICATES:
                     # the approved reply that just went out already said
                     # "Locked in ...": a second confirmation minutes later is
-                    # noise. The pre-read still goes.
+                    # noise.
                     t["skipped"], t["skip_reason"] = True, ENGINE_CONFIRMATION_SKIP
                     continue
                 new = fresh.get(t.get("key"))
@@ -1367,202 +1424,145 @@ def is_confirmed(store, appointment: Dict[str, Any]) -> bool:
     return True
 
 
-# ------------------------------------------- the other half of "reply C"
-# The 24 h reminder goes out through GHL conversations, from the GHL/LC email
-# address, so a lead who does what it asks and replies "C" answers GHL, not the
-# Instantly cold thread. app._appointment_hooks is driven by the Instantly
-# poller and never sees it, so the 4 h "has not confirmed yet" task fired on
-# essentially every booking - the opposite of the S4 design, where the task is
-# the exception.
-#
-# This reads the GHL side before the task is raised. It needs the Private
-# Integration token: without one, ghl.search_conversations returns None and the
-# scan is a no-op, which is exactly today's behaviour, no worse.
-CONFIRMATION_SOURCE_GHL = "reply_c_ghl"
-_INBOUND_DIRECTIONS = ("inbound", "in", "received")
-
-
-def pending_confirmation_touches(store) -> List[Dict[str, Any]]:
-    """Every schedule still waiting on a C, with the contact to ask about."""
-    out = []  # type: List[Dict[str, Any]]
-    for key in store.keys("showrate:"):
-        rec = store.get(key) or {}
-        if rec.get("cancelled") or rec.get("held"):
-            continue
-        appt = rec.get("appointment") or {}
-        for t in rec.get("touches", []):
-            if t.get("template_key") != "unconfirmed_task":
-                continue
-            if t.get("sent") or t.get("skipped"):
-                continue
-            out.append({"key": key, "appointment_id": str(appt.get("id")),
-                        "start_iso": appt.get("start_iso"),
-                        "contact_id": appt.get("contact_id") or t.get("contact_id"),
-                        "due_iso": t.get("when_iso"), "appointment": appt})
-            break
-    return out
-
-
-def _iter_messages(payload: Any):
-    """Yield message-ish dicts from a GHL conversations/search response.
-
-    The exact envelope is unverified (nobody has held the token yet), so this
-    walks both the conversation summaries and any nested message list and
-    tolerates either shape. Anything it cannot read yields nothing, which
-    leaves the 4 h task armed: unreadable is never "confirmed".
-    """
-    if isinstance(payload, dict):
-        rows = payload.get("conversations") or payload.get("messages") or payload.get("items") or []
-    elif isinstance(payload, list):
-        rows = payload
-    else:
-        return
-    for row in rows or []:
-        if not isinstance(row, dict):
-            continue
-        nested = row.get("messages")
-        if isinstance(nested, dict):
-            nested = nested.get("messages")
-        if isinstance(nested, list) and nested:
-            for msg in nested:
-                if isinstance(msg, dict):
-                    yield msg
-            continue
-        yield row
-
-
-def _message_body(msg: Dict[str, Any]) -> str:
-    for field in ("body", "lastMessageBody", "message", "text"):
-        value = msg.get(field)
-        if isinstance(value, str) and value.strip():
-            return value
-    return ""
-
-
-def _message_is_inbound(msg: Dict[str, Any]) -> bool:
-    for field in ("direction", "lastMessageDirection", "messageDirection"):
-        value = msg.get(field)
-        if isinstance(value, str) and value.strip():
-            return value.strip().lower() in _INBOUND_DIRECTIONS
-    return False
-
-
-def _message_time(msg: Dict[str, Any]):
-    for field in ("dateAdded", "lastMessageDate", "dateUpdated", "createdAt", "date"):
-        value = msg.get(field)
-        if not value:
-            continue
-        try:
-            return slots.to_tz(slots.parse_iso(str(value)), TZ)
-        except (ValueError, TypeError):
-            continue
-    return None
-
-
-def _confirmation_checks():
-    """The SAME predicates the Instantly path uses, imported lazily so this
-    module never depends on FastAPI at import time and the two can not drift."""
-    from services.reply_engine import app as app_mod
-
-    return app_mod._looks_like_confirmation, app_mod._body_is_out_of_office, app_mod._text_names_another_time
-
-
+# ------------------------------------------- the retired "reply C" scan
 def scan_ghl_confirmations(now: datetime, store, ghl) -> Dict[str, Any]:
-    """Mark a call confirmed when the lead replied C to the GHL reminder.
+    """Retired with the 4 h "has not confirmed" task (section 2, 2026-09-23).
 
-    Conservative by construction: an out-of-office body, a body naming a
-    different time, and anything published before the call was booked are all
-    ignored, and an unreadable payload confirms nothing.
-    """
-    now = slots.to_tz(slots.ensure_aware(now, TZ), TZ)
-    out = {"checked": 0, "confirmed": [], "skipped": [], "errors": []}  # type: Dict[str, Any]
-    pending = pending_confirmation_touches(store)
-    if not pending:
-        return out
-    if not getattr(ghl, "has_token", False):
-        out["skipped"].append({"reason": "ghl_token_missing", "waiting": len(pending)})
-        return out
-    try:
-        looks_like_confirmation, body_is_ooo, names_another_time = _confirmation_checks()
-    except Exception as exc:  # noqa: BLE001
-        out["errors"].append({"where": "predicates", "error": str(exc)})
-        return out
-    seen_contacts = {}  # type: Dict[str, Any]
-    for row in pending:
-        contact_id = row.get("contact_id")
-        appt_id = row.get("appointment_id")
-        if not contact_id:
-            out["skipped"].append({"appointment_id": appt_id, "reason": "no_contact_id"})
-            continue
-        if is_confirmed(store, row.get("appointment") or {}):
-            continue
-        if contact_id not in seen_contacts:
-            try:
-                seen_contacts[contact_id] = ghl.search_conversations(contact_id)
-            except Exception as exc:  # noqa: BLE001 - one bad contact must not stop the scan
-                logger.warning("search_conversations failed for %s: %s", contact_id, exc)
-                out["errors"].append({"appointment_id": appt_id, "error": str(exc)})
-                seen_contacts[contact_id] = None
-        payload = seen_contacts.get(contact_id)
-        if payload is None:
-            continue
-        out["checked"] += 1
-        start_iso = row.get("start_iso")
-        booked_at = None
-        try:
-            booked_at = slots.parse_iso((row.get("appointment") or {}).get("booked_at")) if (
-                row.get("appointment") or {}).get("booked_at") else None
-        except (ValueError, TypeError):
-            booked_at = None
-        for msg in _iter_messages(payload):
-            if not _message_is_inbound(msg):
-                continue
-            body = _message_body(msg)
-            if not body.strip():
-                continue
-            when = _message_time(msg)
-            if booked_at is not None and when is not None and when < booked_at:
-                continue  # said before this call existed
-            if body_is_ooo(body) or (start_iso and names_another_time(body, start_iso, now)):
-                out["skipped"].append({"appointment_id": appt_id, "reason": "not_a_confirmation"})
-                continue
-            if not looks_like_confirmation(body):
-                continue
-            mark_confirmed(store, appt_id, now, source=CONFIRMATION_SOURCE_GHL, start_iso=start_iso)
-            out["confirmed"].append({"appointment_id": appt_id, "contact_id": contact_id,
-                                     "at": (when or now).isoformat()})
-            break
-    return out
+    It read the GHL conversations for a "C" so that task would not fire on a
+    lead who had confirmed. Nothing is gated on a confirmation any more (R4
+    goes to everyone, and every reminder is a reply in the lead's own thread,
+    where the Instantly poller sees the answer), so there is nothing to scan.
+    Kept as a no-op with the old result shape because jobs/appointments_tick
+    still calls it; drop it once that call is gone. Makes no request."""
+    return {"checked": 0, "confirmed": [], "skipped": [], "errors": []}
 
 
 # --------------------------------------------------------------- dispatch
+# Dispatch outcomes of an email (thread_reply.send_lead_email's record mapped
+# by _email_outcome). Shaped so the old per-status handling stays safe:
+#   "sent" / "would_do"   delivered / recorded in shadow;
+#   "error" + retryable   nothing left the process: the touch stays pending and
+#                         the next tick tries again (an attempt is counted, up
+#                         to MAX_TOUCH_ATTEMPTS; MAX_LATENESS still expires it);
+#   "error" + deferred    outside the send window: pending, no attempt counted;
+#   HELD + hold "thread"  the thread lookup needs a look (ambiguous or foreign
+#                         lead row, broken thread, recipient mismatch): pending,
+#                         surfaced as needs_attention for Lorenzo;
+#   MAYBE_SENT            the write went out and failed or came back empty: the
+#                         email may be in the lead's inbox, so the touch is
+#                         closed with an error and NEVER retried automatically.
+MAYBE_SENT = "maybe_sent"
+THREAD_HOLD = "thread"
+THREAD_SUBJECT_REFUSED = "thread_subject_refused"
+REPLY_PREFIX = "Re: "
+
+
+def _email_outcome(rec: Dict[str, Any]) -> Dict[str, Any]:
+    """Map thread_reply.send_lead_email's record to a dispatch outcome."""
+    from services.reply_engine import thread_reply
+
+    reason = rec.get("reason")
+    base = {"transport": rec.get("transport"), "route": rec.get("route"), "lead_key": rec.get("lead_key")}
+    if rec.get("shadow"):
+        return dict(base, status="would_do", record=rec.get("result"), reason=reason)
+    if rec.get("sent"):
+        return dict(base, status="sent", response=rec.get("result"), reason=reason)
+    if rec.get("maybe_sent"):
+        err = (rec.get("result") or {}).get("error") if isinstance(rec.get("result"), dict) else None
+        return dict(base, status=MAYBE_SENT, reason=reason, error=err or reason)
+    if reason == thread_reply.OUTSIDE_SEND_WINDOW:
+        return dict(base, status="error", reason=reason, error=reason, deferred=True, retryable=True)
+    if rec.get("needs_attention") or reason in thread_reply.NEEDS_ATTENTION_REASONS:
+        return dict(base, status=HELD, reason=reason, hold=THREAD_HOLD)
+    if rec.get("retryable"):
+        return dict(base, status="error", reason=reason, error=reason, retryable=True)
+    # anything this mapping does not know: fail closed, pending and surfaced
+    return dict(base, status=HELD, reason=reason or "unknown_transport_outcome", hold=THREAD_HOLD)
+
+
+def in_thread_subject(store, appointment: Optional[Dict[str, Any]]) -> Optional[str]:
+    """The subject the in-thread reply will actually carry
+    (cadence.subject_for on the lead row thread_reply.find_thread resolves), or
+    None when the email will not go in a thread (no thread: the GHL fallback
+    sends the touch's own subject) or the row cannot be resolved (send_lead_email
+    then holds and sends nothing). Store reads only."""
+    from services.reply_engine import cadence, thread_reply
+
+    try:
+        found = thread_reply.find_thread(store, appointment or {})
+    except Exception:  # noqa: BLE001 - send_lead_email repeats the lookup and holds on the same error
+        return None
+    state = found.get("state")
+    if state is None:
+        return None
+    return cadence.subject_for(state)
+
+
+def thread_subject_problems(subject: str, appointment: Optional[Dict[str, Any]]) -> List[str]:
+    """The template gate judges the touch's own subject, which is what a GHL
+    fallback email carries. In the thread the reply carries "Re: <the thread's
+    subject>" instead, a text the catalogue does not hold, so it gets the same
+    checks the cadence gate applies to its "Re: {original_subject}": the copy
+    rules for a subject (banned words, figures, "!", no link or address:
+    template_gate._subject_problems) and the free-text rule for the thread
+    subject itself (template_gate._free_text_ok, the {original_subject} rule).
+    Empty when it passes. Fails closed: an error is a problem."""
+    appointment = appointment or {}
+    try:
+        from services.reply_engine import template_gate
+
+        problems = list(template_gate._subject_problems(  # noqa: SLF001 - the gate's own subject rules
+            subject, appointment.get("campaign_key") or None, appointment_allow_terms(appointment)))
+        if not subject.startswith(REPLY_PREFIX):
+            problems.append("thread subject: not a reply subject")
+        elif not template_gate._free_text_ok(subject[len(REPLY_PREFIX):]):  # noqa: SLF001
+            problems.append("thread subject: fails the original_subject rule")
+        return problems
+    except Exception as exc:  # noqa: BLE001 - a check that cannot run holds the email
+        return ["thread subject check failed: %s" % type(exc).__name__]
+
+
 def dispatch_touch(touch: Touch, ghl, now: datetime, a2p: Optional[bool] = None, store=None,
                    appointment: Optional[Dict[str, Any]] = None, kind: Optional[str] = None,
-                   slots_text: Optional[str] = None) -> Dict[str, Any]:
-    """Send one touch through the guarded GHL client. Never raises for a
-    missing token; returns {'status': 'would_do'|'sent'|'skipped'|'held'|'error', ...}.
+                   slots_text: Optional[str] = None, instantly=None) -> Dict[str, Any]:
+    """Send one touch. Never raises for a missing token; returns
+    {'status': 'would_do'|'sent'|'skipped'|'held'|'error'|'maybe_sent', ...}.
 
     The one choke point for every show-rate and no-show message. After the
-    sender, A2P, placeholder and contact checks:
+    sender and placeholder checks:
 
     1. opt-out: a lead row carrying the sticky opt-out marker skips the touch
        (``opt_out``, burned); a store that cannot be read holds it;
-    2. CT3 template gate, email and SMS only (tasks are Lorenzo's): the exact
-       subject and body must be an approved template with only its
-       placeholders filled (template_gate.appointment_touch_verdict, with the
-       lead's own values allowed and the rendered values bound). A refusal is
-       ``{"status": "held", "reason": ...}``: the touch stays pending.
+    2. CT3 template gate, email only (tasks are Lorenzo's): the exact subject
+       and body must be an approved template with only its placeholders filled
+       (template_gate.appointment_touch_verdict, with the lead's own values
+       allowed and the rendered values bound). A refusal is
+       ``{"status": "held", "reason": ...}``: the touch stays pending;
+    3. an email that will go in the lead's thread carries "Re: <thread
+       subject>", not the touch's subject: that subject gets the gate's
+       subject checks too (thread_subject_problems), or the email is held
+       (``thread_subject_refused``);
+    4. the email goes through thread_reply.send_lead_email (``instantly`` is
+       the Instantly client; the GHL client is the fallback for a lead with no
+       thread) and its record is mapped by _email_outcome (see the table
+       above). A task is still a GHL task.
 
+    An SMS touch (none is scheduled any more) is skipped ``sms_removed``.
     ``kind`` is "show_rate" or "no_show" (default: from the template key);
-    ``slots_text`` is the slot line a no-show touch rendered."""
+    ``slots_text`` is the slot line a no-show touch rendered; ``a2p`` is
+    accepted for old callers and ignored."""
     if os.environ.get(SENDER_ENV, "engine").strip().lower() == "ghl":
         # the published GHL workflow carries the sequence; the engine only schedules and logs
         return {"status": "skipped", "reason": "sender_is_ghl"}
-    if touch.channel == "sms" and not a2p_registered(a2p):
-        return {"status": "skipped", "reason": "a2p_not_registered"}
-    if touch.channel in ("email", "sms") and settings.is_live() and has_unresolved_placeholder(touch.body):
+    if touch.channel == "sms":
+        # section 2 (2026-09-23): email only. A legacy SMS touch still in a
+        # store is closed, never sent.
+        return {"status": "skipped", "reason": "sms_removed"}
+    if touch.channel == "email" and settings.is_live() and has_unresolved_placeholder(touch.body):
         return {"status": "skipped", "reason": "unresolved_placeholder"}
-    if not touch.contact_id:
+    if touch.channel == "task" and not touch.contact_id:
+        # an email needs no GHL contact when it goes in the lead's thread;
+        # thread_reply asks for one only for the GHL fallback
         return {"status": "skipped", "reason": "no_contact_id"}
     try:
         opted_out = lead_opted_out(store, appointment, touch.appointment_id)
@@ -1572,23 +1572,35 @@ def dispatch_touch(touch: Touch, ghl, now: datetime, a2p: Optional[bool] = None,
                 "kind": kind or template_kind(touch.template_key)}
     if opted_out:
         return {"status": "skipped", "reason": "opt_out"}
+    kind = kind or template_kind(touch.template_key)
     if touch.channel in GATED_CHANNELS:
-        kind = kind or template_kind(touch.template_key)
         verdict = gate_touch(touch, appointment, kind=kind, slots_text=slots_text)
         if not verdict.allowed:
             return {"status": HELD, "reason": verdict.reason, "template_id": verdict.template_id,
                     "kind": kind, "verdict": verdict.to_record()}
+    if touch.channel == "email":
+        subject = in_thread_subject(store, appointment)
+        if subject is not None:
+            problems = thread_subject_problems(subject, appointment)
+            if problems:
+                logger.warning("holding %s: the thread's subject fails the subject checks (%s)", touch.key,
+                               "; ".join(problems))
+                return {"status": HELD, "reason": THREAD_SUBJECT_REFUSED, "template_id": touch.template_id,
+                        "kind": kind, "problems": problems}
+        try:
+            from services.reply_engine import thread_reply
+
+            rec = thread_reply.send_lead_email(store, appointment or {}, touch.subject or "", touch.body, now,
+                                               instantly=instantly, ghl=ghl, contact_id=touch.contact_id)
+        except Exception as exc:  # noqa: BLE001 - send_lead_email catches its writes; this is a lookup bug
+            logger.error("dispatch %s failed before any send: %s", touch.key, exc)
+            return {"status": "error", "error": str(exc), "retryable": True}
+        return _email_outcome(rec)
+    if touch.channel != "task":
+        return {"status": "skipped", "reason": "unknown_channel"}
     try:
-        if touch.channel == "email":
-            res = ghl.send_message(touch.contact_id, type="Email", subject=touch.subject, message=touch.body,
-                                   html=_text_to_html(touch.body))
-        elif touch.channel == "sms":
-            res = ghl.send_message(touch.contact_id, type="SMS", message=touch.body)
-        elif touch.channel == "task":
-            due = slots.to_tz(slots.parse_iso(touch.when_iso), TZ).isoformat()
-            res = ghl.create_task(touch.contact_id, touch.subject or touch.template_key, due, body=touch.body)
-        else:
-            return {"status": "skipped", "reason": "unknown_channel"}
+        due = slots.to_tz(slots.parse_iso(touch.when_iso), TZ).isoformat()
+        res = ghl.create_task(touch.contact_id, touch.subject or touch.template_key, due, body=touch.body)
     except Exception as exc:  # noqa: BLE001
         logger.error("dispatch %s failed: %s", touch.key, exc)
         return {"status": "error", "error": str(exc)}
@@ -1600,6 +1612,8 @@ def dispatch_touch(touch: Touch, ghl, now: datetime, a2p: Optional[bool] = None,
 
 
 def _text_to_html(text: str) -> str:
+    """The HTML body of the GHL fallback email (thread_reply keeps its own
+    copy so its send path has no late import; the two must stay equal)."""
     esc = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     return "<p>%s</p>" % esc.replace("\n\n", "</p><p>").replace("\n", "<br>")
 
@@ -1629,7 +1643,8 @@ def _touch_claim_key(touch_key: str) -> str:
 
 def _stays_pending(out: Dict[str, Any]) -> bool:
     """True when this dispatch outcome leaves the touch to be retried (a CT3
-    template hold included)."""
+    template hold, a thread hold and a send-window deferral included). Never
+    for MAYBE_SENT: its claim stays, so no later tick can send it again."""
     if out.get("status") in ("error", HELD):
         return True
     return out.get("status") == "skipped" and out.get("reason") in RETRYABLE_SKIP_REASONS
@@ -1679,8 +1694,13 @@ def run(
     appointments: Optional[List[Dict[str, Any]]] = None,
     active_ids: Optional[Any] = None,
     window: Optional[Any] = None,
+    instantly=None,
 ) -> Dict[str, Any]:
     """Send every due show-rate touch. Returns a summary dict.
+
+    ``instantly`` is the Instantly client the in-thread emails go out through
+    (thread_reply.send_lead_email); ``ghl`` is the GHL fallback for a lead
+    with no thread. In shadow neither makes a request.
 
     If ``appointments`` is given they are (re)scheduled first; otherwise only
     schedules already in the store are processed.
@@ -1694,9 +1714,14 @@ def run(
     """
     now = slots.to_tz(slots.ensure_aware(now, TZ), TZ)
     # "held": schedules awaiting Lorenzo's approval card; "held_template":
-    # touches the CT3 template gate refused (they stay pending).
+    # touches the CT3 template gate refused (they stay pending);
+    # "needs_attention": emails the thread lookup held (pending, for Lorenzo);
+    # "deferred": emails due outside the send window (pending);
+    # "maybe_sent": emails that may have gone out and are never retried (also
+    # counted in "errors" so the tick reports partial).
     summary = {"sent": [], "would_do": [], "skipped": [], "errors": [], "scheduled": [],
-               "cancelled": [], "rearmed": [], "held": [], "held_template": []}  # type: Dict[str, List[Any]]
+               "cancelled": [], "rearmed": [], "held": [], "held_template": [], "needs_attention": [],
+               "deferred": [], "maybe_sent": []}  # type: Dict[str, List[Any]]
     fresh = {}  # type: Dict[str, Dict[str, Any]]
     # one claim for the whole run: see claim_bootstrap()
     cold_start = claim_bootstrap(store, now) if appointments else False
@@ -1757,16 +1782,18 @@ def run(
             if when > now:
                 continue
             entry = {"key": touch.key, "channel": touch.channel, "template": touch.template_key, "when": touch.when_iso}
+            if touch.template_key not in SEQUENCE_KEYS:
+                # a touch from the retired sequence (SMS legs, the pre-read, the
+                # 4 h task) still in a store written before 2026-09-23: closed.
+                raw["skipped"], raw["skip_reason"] = True, "retired_template"
+                _persist_touch(store, key, touch.key, {"skipped": True, "skip_reason": "retired_template"})
+                summary["skipped"].append(dict(entry, reason="retired_template"))
+                continue
             blocked = dispatch_block_reason(touch, start, now)
             if blocked is not None:
                 raw["skipped"], raw["skip_reason"] = True, blocked
                 _persist_touch(store, key, touch.key, {"skipped": True, "skip_reason": blocked})
                 summary["skipped"].append(dict(entry, reason=blocked))
-                continue
-            if touch.template_key == "unconfirmed_task" and is_confirmed(store, appt):
-                raw["skipped"], raw["skip_reason"] = True, "confirmed"
-                _persist_touch(store, key, touch.key, {"skipped": True, "skip_reason": "confirmed"})
-                summary["skipped"].append(dict(entry, reason="confirmed"))
                 continue
             # resolve the contact id from the REFRESHED snapshot, not from the
             # Touch: a schedule created before GHL returned a contact id used
@@ -1788,19 +1815,25 @@ def run(
                                {"sent": True, "sent_at": now.isoformat(), "result": raw["result"]})
                 summary["skipped"].append(dict(entry, reason="already_dispatched"))
                 continue
-            out = dispatch_touch(touch, ghl, now, a2p=a2p, store=store, appointment=appt, kind="show_rate")
+            out = dispatch_touch(touch, ghl, now, a2p=a2p, store=store, appointment=appt, kind="show_rate",
+                                 instantly=instantly)
             _record_result(raw, out, entry, summary, now)
-            if out.get("status") == HELD:
+            if out.get("status") == HELD and out.get("hold") == THREAD_HOLD:
+                note_thread_hold(raw, out, entry, now)
+            elif out.get("status") == HELD:
                 note_template_hold(store, raw, out, now)
-            elif raw.get("template_hold"):
-                raw["template_hold"] = None
+            else:
+                if raw.get("template_hold"):
+                    raw["template_hold"] = None
+                if raw.get("thread_hold"):
+                    raw["thread_hold"] = None
             if _stays_pending(out):
                 store.delete(claim)  # retryable: let the next tick try again
             # persist immediately: a crash after a send must never re-send it
             _persist_touch(store, key, touch.key, {k: raw.get(k) for k in
                                                    ("sent", "sent_at", "result", "skipped", "skip_reason",
                                                     "attempts", "contact_id", "subject", "body", "template_id",
-                                                    "template_hash", "template_hold")})
+                                                    "template_hash", "template_hold", "thread_hold")})
     return summary
 
 
@@ -1818,17 +1851,46 @@ def _record_result(raw: Dict[str, Any], out: Dict[str, Any], entry: Dict[str, An
                    summary: Dict[str, List[Any]], now: datetime) -> None:
     """Fold one dispatch result into the touch record and the summary.
 
-    A retryable skip (no GHL token, transport error) leaves the touch PENDING
-    and counts as an error, so a token rotation does not silently destroy an
-    appointment's whole sequence one touch at a time.
+    A retryable outcome (no GHL token, nothing left the process) leaves the
+    touch PENDING and counts as an error, so a token rotation does not silently
+    destroy an appointment's whole sequence one touch at a time. A send-window
+    deferral is pending without an attempt. MAYBE_SENT closes the touch with
+    the error: it may be in the lead's inbox, so it is never retried.
     """
+    if out.get("transport"):
+        entry["transport"] = out["transport"]
     if out["status"] in ("sent", "would_do"):
         raw["sent"], raw["sent_at"], raw["result"] = True, now.isoformat(), out
         entry["shadow"] = out["status"] == "would_do"
         summary[out["status"]].append(entry)
         return
+    if out["status"] == HELD and out.get("hold") == THREAD_HOLD:
+        entry["reason"] = out.get("reason")
+        summary.setdefault("needs_attention", []).append(entry)
+        return
     if out["status"] == HELD:
         record_held(entry, out, summary)
+        return
+    if out["status"] == MAYBE_SENT:
+        raw["skipped"], raw["skip_reason"], raw["result"] = True, MAYBE_SENT, out
+        entry["reason"], entry["error"] = MAYBE_SENT, out.get("error")
+        summary.setdefault("maybe_sent", []).append(entry)
+        summary["errors"].append(entry)
+        logger.error("%s may have been delivered (%s); closed, never retried: check the lead's thread or GHL "
+                     "conversation by hand", entry.get("key"), out.get("reason"))
+        try:
+            from shared import job_log
+
+            job_log.log_run("reply_engine.show_rate", "show_rate_maybe_sent",
+                            {"touch": entry.get("key"), "template": entry.get("template"),
+                             "transport": out.get("transport"), "reason": out.get("reason")})
+        except Exception as exc:  # noqa: BLE001 - the summary still carries it
+            logger.warning("could not log the maybe-sent touch %s: %s", entry.get("key"), exc)
+        return
+    if out["status"] == "error" and out.get("deferred"):
+        raw["result"] = out
+        entry["reason"] = out.get("reason")
+        summary.setdefault("deferred", []).append(entry)
         return
     if out["status"] == "skipped":
         reason = out.get("reason")
@@ -1840,6 +1902,27 @@ def _record_result(raw: Dict[str, Any], out: Dict[str, Any], entry: Dict[str, An
         summary["skipped"].append(entry)
         return
     _record_retry(raw, out, entry, summary, out.get("error"))
+
+
+def note_thread_hold(raw: Dict[str, Any], out: Dict[str, Any], entry: Dict[str, Any], now: datetime) -> None:
+    """Remember a thread hold on the touch (reason and since when). The touch
+    stays pending until the data is fixed or MAX_LATENESS expires it; the
+    first tick that meets a new reason writes one Job_Log row, later ticks
+    only count it in the summary's needs_attention."""
+    prev = raw.get("thread_hold") or {}
+    raw["thread_hold"] = {"reason": out.get("reason"), "transport": out.get("transport"),
+                          "lead_key": out.get("lead_key"), "since": prev.get("since") or now.isoformat()}
+    if prev.get("reason") == out.get("reason"):
+        return
+    logger.warning("holding %s: the lead's thread needs a look (%s)", entry.get("key"), out.get("reason"))
+    try:
+        from shared import job_log
+
+        job_log.log_run("reply_engine.show_rate", "show_rate_needs_attention",
+                        {"touch": entry.get("key"), "template": entry.get("template"), "reason": out.get("reason"),
+                         "lead_key": out.get("lead_key")})
+    except Exception as exc:  # noqa: BLE001 - the summary still carries it
+        logger.warning("could not log the thread hold on %s: %s", entry.get("key"), exc)
 
 
 def record_held(entry: Dict[str, Any], out: Dict[str, Any], summary: Dict[str, List[Any]]) -> None:

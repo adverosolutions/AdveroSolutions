@@ -17,6 +17,12 @@ Every run:
   4. sends the due recovery touches for older no-shows;
   5. writes a Job_Log row and a digest notification.
 
+``--no-show-watch`` is the light mode for every minute in call hours: only
+N1 ("I'm on" at S+3) and no-show detection, for calls that started in the
+last 30 minutes (no show-rate run, no ladder sweep, no rebooking scan). It
+reads GHL only when the store knows of a call in that window, and it logs and
+notifies only when something happened.
+
 ``--dry-run`` forces MODE=shadow and NOTIFY=off for the process: no write can
 happen even if the environment says live, and no outbound HTTP request is made
 at all (the digest is recorded, not posted to ntfy). Runs every 5 minutes in
@@ -66,6 +72,8 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     p.add_argument("--joins", help="JSON file {'<appointment_id>': [join, ...]} to replay Zoom joins")
     p.add_argument("--store", help="path of the JSON store (default STORE_PATH or .tmp/store.json)")
     p.add_argument("--no-notify", action="store_true", help="skip the digest notification")
+    p.add_argument("--no-show-watch", action="store_true",
+                   help="light mode: N1 and no-show detection only, for calls started in the last 30 minutes")
     p.add_argument("--quiet", action="store_true")
     return p.parse_args(argv)
 
@@ -211,7 +219,8 @@ def manual_calendar_calls(now: datetime) -> List[Dict[str, Any]]:
     return out
 
 
-def fetch_appointments(ghl, now: datetime, fixture_path: Optional[str]) -> Dict[str, Any]:
+def fetch_appointments(ghl, now: datetime, fixture_path: Optional[str], lookback: timedelta = LOOKBACK,
+                       lookahead: timedelta = LOOKAHEAD) -> Dict[str, Any]:
     """Read the Discovery Call window.
 
     This is the ONLY appointment source, by design: engine-made and widget-made
@@ -235,8 +244,8 @@ def fetch_appointments(ghl, now: datetime, fixture_path: Optional[str]) -> Dict[
         logger.warning("ghl_token_missing: calendar read skipped, no appointment source from GHL")
     else:
         try:
-            start_ms = int((now - LOOKBACK).timestamp() * 1000)
-            end_ms = int((now + LOOKAHEAD).timestamp() * 1000)
+            start_ms = int((now - lookback).timestamp() * 1000)
+            end_ms = int((now + lookahead).timestamp() * 1000)
             raw = ghl.get_calendar_events(GHL_CALENDAR_ID, start_ms, end_ms)
             if raw is None:
                 error = "ghl_read_returned_none"
@@ -269,7 +278,7 @@ def fetch_appointments(ghl, now: datetime, fixture_path: Optional[str]) -> Dict[
         "appointments": appts,
         "cancelled": cancelled,
         "active_ids": set(str(a["id"]) for a in appts if a.get("id")) if authoritative else None,
-        "window": (now - LOOKBACK, now + LOOKAHEAD),
+        "window": (now - lookback, now + lookahead),
         "error": error,
         "replay": replay,
         "authoritative": authoritative,
@@ -323,6 +332,10 @@ def tick(
 ) -> Dict[str, Any]:
     """Pure-ish core: everything the CLI does after loading inputs.
 
+    ``a2p`` is accepted for old callers and ignored: nothing sends SMS any
+    more (section 2, 2026-09-23). ``instantly`` is the Instantly client the
+    in-thread reminder and no-show emails go out through.
+
     ``active_ids`` (the ids GHL just reported alive) and ``window`` let the
     show-rate sequence stop for a cancelled or deleted appointment. Both are
     None when the GHL read failed, and nothing is then treated as cancelled.
@@ -353,12 +366,11 @@ def tick(
         logger.exception("scan_ghl_confirmations failed")
         confirmations = {"checked": 0, "confirmed": [], "skipped": [], "errors": [{"error": str(exc)[:400]}]}
 
-    show = show_rate.run(now, store, ghl, a2p=a2p, appointments=upcoming,
-                         active_ids=active_ids, window=window)
+    show = show_rate.run(now, store, ghl, appointments=upcoming, active_ids=active_ids, window=window,
+                         **_instantly_kwarg(show_rate.run, instantly))
     no_show_results = []
     errors = []  # type: List[Dict[str, Any]]
-    recovery = {"sent": [], "would_do": [], "skipped": [], "errors": [], "stage_moves": [], "cancelled": [],
-                "held_template": []}  # type: Dict[str, List[Any]]
+    recovery = no_show._new_summary()  # type: Dict[str, List[Any]]
     for appt in started:
         # One appointment must never take the tick with it. A single HTTP 500
         # on PUT /calendars/events/appointments/{id} used to propagate out of
@@ -370,7 +382,7 @@ def tick(
             joins = (joins_override or {}).get(str(appt.get("id")))
             if joins is None:
                 joins = zoom_webhook.joins_for_appointment(store, appt)
-            res = no_show.process(now, appt, joins, store, ghl, a2p=a2p,
+            res = no_show.process(now, appt, joins, store, ghl,
                                   meeting_signals=zoom_webhook.meeting_signals(store, appt),
                                   instantly=instantly)
         except Exception as exc:  # noqa: BLE001
@@ -389,7 +401,8 @@ def tick(
     # Its own try/except: an appointment-level failure above must not take the
     # recovery sweep for every other lead with it, and vice versa.
     try:
-        for k, v in no_show.run_recovery(now, store, ghl, a2p=a2p, upcoming_appointments=upcoming).items():
+        for k, v in no_show.run_recovery(now, store, ghl, upcoming_appointments=upcoming,
+                                         instantly=instantly).items():
             recovery.setdefault(k, []).extend(v)
     except Exception as exc:  # noqa: BLE001
         logger.exception("no_show.run_recovery failed")
@@ -404,7 +417,6 @@ def tick(
         "errors": errors,
         "now": now.isoformat(),
         "mode": os.environ.get("MODE", "shadow"),
-        "a2p_registered": show_rate.a2p_registered(a2p),
         "appointments": {"upcoming": len(upcoming), "started": len(started), "cancelled": len(cancelled or [])},
         "manual_calendar_calls": manual_calendar_calls(now),
         "confirmations": confirmations,
@@ -420,6 +432,124 @@ def tick(
         # (ids and counts only). They stay pending until approved or expired.
         "held_template": held_ids,
     }
+
+
+def _instantly_kwarg(fn, instantly) -> Dict[str, Any]:
+    """{"instantly": client} when ``fn`` takes that keyword (show_rate.run
+    does since section 2's reminder rebuild), else {}. Decided from the
+    signature, never by catching a TypeError from the call itself: a
+    TypeError raised inside a run that already sent something must not run it
+    a second time."""
+    import inspect
+
+    try:
+        params = inspect.signature(fn).parameters
+    except (TypeError, ValueError):
+        return {}
+    return {"instantly": instantly} if "instantly" in params else {}
+
+
+# --no-show-watch: calls that started this long ago or less. N1 is due at S+3
+# and expires at S+10; the flag is due at S+10. The margin covers a slow run.
+WATCH_WINDOW = timedelta(minutes=30)
+
+
+def watch_candidates(store, now: datetime) -> List[str]:
+    """Appointment ids the store knows of (a show-rate schedule,
+    ``showrate:<id>:<start_iso>``) whose call started in the watch window.
+    Reading keys only: a minute-by-minute run with no call on makes no
+    request at all."""
+    from shared import slots
+
+    out = []  # type: List[str]
+    for key in store.keys("showrate:"):
+        rest = key[len("showrate:"):]
+        if ":" not in rest:
+            continue
+        appt_id, start_iso = rest.split(":", 1)
+        try:
+            start = slots.parse_iso(start_iso)
+        except (ValueError, TypeError):
+            continue
+        if now - WATCH_WINDOW <= start <= now and appt_id not in out:
+            out.append(appt_id)
+    return out
+
+
+def watch(now: datetime, store, ghl, appointments: List[Dict[str, Any]],
+          joins_override: Optional[Dict[str, List[Dict[str, Any]]]] = None, instantly=None) -> Dict[str, Any]:
+    """The --no-show-watch core: for every call that started in the last 30
+    minutes, no_show.process with the ladder off (N1 at S+3 and detection;
+    the flag still marks GHL, writes the note and records the ladder, which
+    the regular tick then sends). Nothing else runs."""
+    from services.reply_engine import no_show, zoom_webhook
+    from shared import slots
+    from shared.settings import TZ
+
+    now = slots.to_tz(slots.ensure_aware(now, TZ), TZ)
+    started = [a for a in appointments
+               if now - WATCH_WINDOW <= slots.parse_iso(a["start_iso"]) <= now and not a.get("cancelled")]
+    results = []  # type: List[Dict[str, Any]]
+    errors = []  # type: List[Dict[str, Any]]
+    run = no_show._new_summary()  # type: Dict[str, List[Any]]
+    for appt in started:
+        try:
+            joins = (joins_override or {}).get(str(appt.get("id")))
+            if joins is None:
+                joins = zoom_webhook.joins_for_appointment(store, appt)
+            res = no_show.process(now, appt, joins, store, ghl,
+                                  meeting_signals=zoom_webhook.meeting_signals(store, appt),
+                                  instantly=instantly, run_ladder=False)
+        except Exception as exc:  # noqa: BLE001 - one call must not take the others with it
+            logger.exception("no_show.process (watch) failed for %s", appt.get("id"))
+            errors.append({"appointment_id": str(appt.get("id")), "where": "no_show.process",
+                           "error": str(exc)[:400]})
+            continue
+        for k, v in (res.get("run") or {}).items():
+            run.setdefault(k, []).extend(v)
+        results.append({k: v for k, v in res.items() if k != "run"})
+    return {"now": now.isoformat(), "mode": os.environ.get("MODE", "shadow"), "checked": len(started),
+            "no_show": results, "recovery": {k: len(v) for k, v in run.items()}, "recovery_detail": run,
+            "errors": errors}
+
+
+def watch_digest(result: Dict[str, Any]) -> str:
+    lines = ["no-show watch %s (MODE=%s): %d call(s) checked" % (result["now"], result["mode"], result["checked"])]
+    for r in result["no_show"]:
+        if r.get("events"):
+            lines.append("  %s: state=%s events=%s" % (r.get("appointment_id"), r.get("state"),
+                                                       ",".join(r.get("events") or [])))
+    for err in result.get("errors") or []:
+        lines.append("ERROR %s on %s: %s" % (err.get("where"), err.get("appointment_id"), err.get("error")))
+    return "\n".join(lines)
+
+
+def _run_watch(args, now, store, ghl, instantly) -> int:
+    """main() for --no-show-watch."""
+    from shared import job_log, notify
+
+    fixture = args.appointments
+    if not fixture and not watch_candidates(store, now):
+        return 0  # no call in the window: no request, no log row
+    fetched = fetch_appointments(ghl, now, fixture, lookback=WATCH_WINDOW + timedelta(minutes=15),
+                                 lookahead=timedelta(minutes=1))
+    with _run_lock():
+        result = watch(now, store, ghl, fetched["appointments"], joins_override=load_joins_file(args.joins),
+                       instantly=instantly)
+    happened = [r for r in result["no_show"] if r.get("events")]
+    if result["checked"] or result["errors"]:
+        job_log.log_run(JOB + ":no_show_watch", "partial" if result["errors"] or fetched.get("error") else "ok",
+                        {"dry_run": args.dry_run, "source": fetched["source"], "read_error": fetched.get("error"),
+                         "checked": result["checked"], "recovery": result["recovery"],
+                         "no_show": [{"id": r.get("appointment_id"), "state": r.get("state"),
+                                      "events": r.get("events")} for r in result["no_show"]],
+                         "errors": result["errors"]})
+    text = watch_digest(result)
+    if (happened or result["errors"]) and not args.no_notify:
+        notify.notify("No-show watch", text, priority="high" if result["errors"] else "default")
+    if not args.quiet:
+        print(text)
+    return 0
 
 
 def _cancel_recovery_for_rebookings(now, store, upcoming: List[Dict[str, Any]], no_show, slots) -> List[Dict[str, Any]]:
@@ -459,7 +589,7 @@ def _cancel_recovery_for_rebookings(now, store, upcoming: List[Dict[str, Any]], 
 def digest_text(result: Dict[str, Any]) -> str:
     sr = result["show_rate"]
     lines = [
-        "appointments_tick %s (MODE=%s, A2P=%s)" % (result["now"], result["mode"], "on" if result["a2p_registered"] else "off"),
+        "appointments_tick %s (MODE=%s)" % (result["now"], result["mode"]),
         "appointments: %d upcoming, %d started, %d cancelled"
         % (result["appointments"]["upcoming"], result["appointments"]["started"], result["appointments"].get("cancelled", 0)),
         "show-rate: %d scheduled, %d sent, %d would_do (shadow), %d skipped, %d errors, %d held (template)"
@@ -480,6 +610,15 @@ def digest_text(result: Dict[str, Any]) -> str:
     lines.append("recovery: %d sent, %d would_do, %d skipped, %d stage moves, %d cancelled, %d held (template)"
                  % (rec.get("sent", 0), rec.get("would_do", 0), rec.get("skipped", 0), rec.get("stage_moves", 0),
                     rec.get("cancelled", 0), rec.get("held_template", 0)))
+    if rec.get("nurture"):
+        lines.append("recovery: %d lead(s) handed to the 90-day nurture" % rec["nurture"])
+    detail = result.get("recovery_detail") or {}
+    for row in detail.get("maybe_sent") or []:
+        lines.append("CHECK BY HAND: no-show email %s may have been delivered (%s); it will not be retried"
+                     % (row.get("template"), row.get("key")))
+    for row in detail.get("needs_attention") or []:
+        lines.append("NEEDS A LOOK: no-show email %s is held, the lead's thread: %s" % (row.get("template"),
+                                                                                         row.get("reason")))
     held = result.get("held_template") or {}
     if held:
         lines.append("HELD, not sent (template not approved for auto-send, retried every tick until it expires): %s"
@@ -529,15 +668,34 @@ def main(argv: Optional[List[str]] = None) -> int:
     else:
         store = get_store()
     ghl = GHL()
-    # S3 item 4: a call that was held moves the lead to Instantly interest 3
-    # (meeting_completed). Guarded like every other write, and the client is
-    # built here rather than inside no_show so the tick owns its lifetime.
+    # The Instantly client (shared.instantly.default_client, as every job
+    # builds it): the reminder and no-show emails go out as replies in the
+    # lead's thread through it, and a held call moves the lead to interest 3
+    # (S3 item 4). Its writes are guarded (a shadow record in MODE=shadow, no
+    # request) and in shadow nothing reads through it either. Built here so
+    # the tick owns its lifetime.
     instantly = None
     try:
         from shared.instantly import default_client
         instantly = default_client()
-    except Exception as exc:  # noqa: BLE001 - the tick runs without it, just without interest 3
+    except Exception as exc:  # noqa: BLE001 - live emails then hold (no_instantly_client); shadow records them
         logger.warning("could not build the Instantly client: %s", exc)
+    if args.no_show_watch:
+        try:
+            return _run_watch(args, now, store, ghl, instantly)
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("no-show watch failed")
+            job_log.log_run(JOB + ":no_show_watch", "error", {"error": str(exc), "dry_run": args.dry_run})
+            if not args.no_notify:
+                notify.notify("no-show watch failed", str(exc), priority="high")
+            return 1
+        finally:
+            ghl.close()
+            if instantly is not None:
+                try:
+                    instantly.close()
+                except Exception:  # noqa: BLE001
+                    pass
     try:
         fetched = fetch_appointments(ghl, now, args.appointments)
         joins_override = load_joins_file(args.joins)
