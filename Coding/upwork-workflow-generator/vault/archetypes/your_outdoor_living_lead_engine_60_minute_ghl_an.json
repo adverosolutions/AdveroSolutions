@@ -6,107 +6,106 @@
       "key": "review",
       "label": "1 - WORKFLOW REVIEW (20 MIN)",
       "color": 0,
-      "note": "Your intake/lead-routing workflow, then the 8 follow-ups: speed-to-lead, consult reminders, proposal chase, nurture, reactivation, reviews and referrals. 9 workflows in 20 minutes is about 2 minutes each, so we go straight to triggers, branching, timing and routing."
+      "note": "Your intake/lead-routing workflow first, then the 8 follow-ups: speed-to-lead, consult reminders, proposal chase, nurture, reactivation, reviews and referrals. Anything that overlaps an older workflow goes on your list."
     },
     {
       "key": "strategy",
       "label": "2 - CLAUDE STRATEGY (15 MIN)",
       "color": 1,
-      "note": "Claude already reads and writes your contacts, tags and opportunities through the API/MCP connector. Anything on a clock stays native in GHL (workflows, webhooks, custom actions, AI steps); anything that needs judgment across your data goes to Claude through the API. To monitor, audit and maintain the system over time, Claude runs the section 3 check on a schedule you set, and a lead it finds outside every workflow gets the tag that starts the right one."
+      "note": "Claude already reads and writes your contacts, tags and opportunities through the connector. Timed messages stay in GHL, judgment calls go to Claude, and tags pass the work between them."
     },
     {
       "key": "testing",
       "label": "3 - TESTING AND REPORTING (15 MIN)",
       "color": 2,
-      "note": "Your two silent failures: empty merge fields and leads that never enter a workflow. The first is caught inside GHL before the send, the second by a missing entry tag."
+      "note": "Your two silent failures: empty merge fields and leads that never enter a workflow. GHL catches the first before the send, and Claude finds the second by the missing tag."
     },
     {
       "key": "next",
       "label": "4 - NEXT STEPS (10 MIN)",
       "color": 3,
-      "note": "The prioritized list of improvements to make, in writing after the call. If Buildertrend should get won jobs from your sales pipeline, it goes on the list as its own item."
+      "note": "Your prioritized list of improvements, in writing after the call. The fixes that protect the most leads come first."
     }
   ],
   "nodes": [
     {
+      "key": "meet",
+      "kind": "data.transform",
+      "label": "1 - We meet for 60 minutes on Zoom or Google Meet, with your GHL on screen",
+      "section": "review"
+    },
+    {
       "key": "trace",
       "kind": "data.transform",
-      "label": "1 - Trace One Lead Through Your Intake and Lead-Routing Workflow",
+      "label": "2 - We follow one new lead through your intake and lead-routing workflow",
       "section": "review"
     },
     {
       "key": "followups",
       "kind": "data.transform",
-      "label": "2 - Your 8 Follow-Ups: Triggers, Branching, Timing and Routing",
+      "label": "3 - We check the triggers, branching, timing and routing of your 8 follow-ups",
       "section": "review"
     },
     {
       "key": "collide",
-      "kind": "flow.branch",
-      "label": "3 - Collides With One of Your Older Workflows?",
-      "section": "review",
-      "notes": "Two workflows on the same trigger send one lead two texts, or undo each other's tags."
-    },
-    {
-      "key": "keep",
       "kind": "data.transform",
-      "label": "3a - Mark Which One Stays; the Other Goes on the Fix List",
+      "label": "4 - Does an older workflow fire on the same trigger? We mark which one stays",
       "section": "review"
     },
     {
       "key": "native",
       "kind": "data.transform",
-      "label": "4 - Stays in GHL: Speed-to-Lead, Discovery Call and In-Home Consult Reminders",
+      "label": "5 - Anything on a timer stays in GHL, like speed-to-lead and consult reminders",
       "section": "strategy"
     },
     {
       "key": "decide",
       "kind": "data.transform",
-      "label": "5 - Claude Reads Each Reply and Tags It; the Tag Starts Proposal Chase or Nurture in GHL",
-      "section": "strategy",
-      "notes": "Your connector already writes tags, so Claude hands off to GHL without running a workflow itself."
+      "label": "6 - Claude reads each reply and tags it, and the tag starts proposal chase or nurture",
+      "section": "strategy"
     },
     {
-      "key": "audit",
+      "key": "entrytag",
       "kind": "data.transform",
-      "label": "6 - Claude Reads Tags, Not Steps: Every Workflow Stamps an Entry Tag",
-      "section": "strategy",
-      "notes": "Your connector reads contacts, tags and opportunities, not who is enrolled, so enrollment has to leave a tag."
+      "label": "7 - Each workflow adds an entry tag in its first step, so Claude can see who entered it",
+      "section": "strategy"
     },
     {
-      "key": "blank",
-      "kind": "flow.branch",
-      "label": "7 - Merge Field Empty When the Message Is Due?",
+      "key": "check",
+      "kind": "data.transform",
+      "label": "8 - Before a message goes out, GHL checks that its merge fields are filled in",
       "section": "testing"
     },
     {
       "key": "hold",
       "kind": "data.transform",
-      "label": "7a - Hold the Message, Open a Task to Fill the Field",
+      "label": "9 - A field is blank? The message waits and you get a task to fill it in",
       "section": "testing"
     },
     {
       "key": "filter",
       "kind": "data.transform",
-      "label": "8 - New Leads With No Entry Tag: Claude Reviews Only Those, Not All ~2,400",
-      "section": "testing",
-      "notes": "Contacts added before the entry tags went in have none, so the filter starts from leads added since."
+      "label": "10 - Claude checks only new leads with no entry tag, not all ~2,400 contacts",
+      "section": "testing"
     },
     {
       "key": "report",
       "kind": "data.aggregate",
-      "label": "9 - One Report: Blanks, Never Enrolled, Stuck in Sales, Careers, Reactivation",
+      "label": "11 - Claude sends you one report: blank fields, missed leads, anyone stuck in a pipeline",
       "section": "testing"
     },
     {
       "key": "list",
       "kind": "data.aggregate",
-      "label": "10 - Your Prioritized List: Leads at Risk First, Cleanup Last",
-      "section": "next",
-      "notes": "Ranked by leads at risk, in writing after the call."
+      "label": "12 - After the call, you get your prioritized list in writing, leads at risk first",
+      "section": "next"
     }
   ],
   "edges": [
+    {
+      "from": "meet",
+      "to": "trace"
+    },
     {
       "from": "trace",
       "to": "followups"
@@ -117,16 +116,6 @@
     },
     {
       "from": "collide",
-      "to": "keep",
-      "branch": "yes"
-    },
-    {
-      "from": "collide",
-      "to": "native",
-      "branch": "no"
-    },
-    {
-      "from": "keep",
       "to": "native"
     },
     {
@@ -135,21 +124,15 @@
     },
     {
       "from": "decide",
-      "to": "audit"
+      "to": "entrytag"
     },
     {
-      "from": "audit",
-      "to": "blank"
+      "from": "entrytag",
+      "to": "check"
     },
     {
-      "from": "blank",
-      "to": "hold",
-      "branch": "yes"
-    },
-    {
-      "from": "blank",
-      "to": "filter",
-      "branch": "no"
+      "from": "check",
+      "to": "hold"
     },
     {
       "from": "hold",
