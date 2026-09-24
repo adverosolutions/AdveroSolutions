@@ -9,6 +9,8 @@ Plan and reasoning: `MAKER_SCHOOL_WINS_PLAN.md`. Code: `services/offer_intel/`, 
 3. **report** (free) maps industries and mechanisms to the fixed lists in `config/offer_intel/taxonomy.json`, ranks industry x mechanism patterns by **different winners in the last 90 days**, and writes:
    - `.tmp/offer_intel/out/wins.csv`, `patterns.csv`, `winners.csv`: import these into a Google Sheet called "Offer Intel"
    - `.tmp/offer_intel/out/digest_<date>.md`: top patterns, 3 to test, risers, unmatched terms
+
+   Price medians (setup, monthly, deal) count only `new_client` and `first_client` wins, because month totals and call quotes are not one client's price.
    - `.tmp/offer_intel/out/hand_check.md` (with `--review`): each post next to what the models took from it
 
 Nothing here posts to Skool, and nothing here feeds an email, a reply-engine draft or a proof line (a test fails if a copy path imports it). Other members' numbers are research; `config/offers.md` stays the only proof.
@@ -33,7 +35,7 @@ python3 jobs/offer_intel.py collect --via mcp \
   --url "https://www.skool.com/makerschool?c=03d09fffe79e4cd4bb492e2f954cbc1d&s=newest" \
   --since 2026-06-25 --max-pages 12 --max-posts 400
 ```
-Each Skool call waits 2.5 to 4.5 seconds after the one before. 90 days of wins takes roughly 15 to 20 minutes. `--no-threads` skips the comments calls. `--headless` does nothing here.
+Each Skool call waits 2.5 to 4.5 seconds after the one before, and each call starts node. 90 days of wins is roughly 360 Skool calls (feed pages plus one comments call per post with comments), so it takes roughly 25 to 35 minutes. `--no-threads` skips the comments calls. `--headless` does nothing here.
 
 Statuses (the `status` field, and the Job_Log row `collect_<status>`):
 
@@ -41,7 +43,7 @@ Statuses (the `status` field, and the Job_Log row `collect_<status>`):
 |---|---|
 | `ok` | the walk finished; see `counts` |
 | `logged_out` | the feed came back without a logged-in user. Nothing from that page was saved. Log skool-mcp back in |
-| `fetch_failed` | a feed call failed. Posts saved before it stay saved; run again later |
+| `fetch_failed` | a feed call failed; `detail` gives the error class and message (for example the node script's last stderr line). Posts saved before it stay saved; run again later |
 | `mcp_unavailable` | the client or node was not found; `detail` says which |
 | `bad_url` | the URL is not a Skool group URL or has no `c=<category id>` |
 
@@ -53,7 +55,7 @@ Known limits:
 
 ## First real run (Lorenzo's Mac, about 15 minutes)
 
-It has to run on the Mac: the Skool login lives in the Chrome profile there, and the cloud sessions cannot reach skool.com.
+It has to run on the Mac: the cloud sessions cannot reach skool.com. The mcp path uses skool-mcp's own login on the Mac; Playwright's Chrome profile only matters for the Playwright path (`look` and `collect --via playwright`).
 
 The code is on branch `claude/maker-school-wins-tracking-153w0r` until it is merged into `main`. From `/Users/lorenzovillarreal/Desktop/AdveroSolutions`:
 
@@ -69,13 +71,13 @@ python3 jobs/offer_intel.py rehearse
 ```
 Expect `"wins": 11`, `"escalated": 1`, `"fields_dropped": 2`, and a first pick of `Dental x Lead / database reactivation`. These are made-up posts.
 
-**2. Look (read-only).** Opens Chrome with the saved Skool profile. If the login expired, log in in that window; the script waits.
+**2. Look (optional, Playwright path only; skip it on the Mac).** Needs Playwright's Chromium and a saved Skool profile, which the Mac does not have today. Where it runs, it opens Chrome with the saved Skool profile; if the login expired, log in in that window and the script waits.
 ```bash
 python3 jobs/offer_intel.py look
 ```
 It prints the group's categories and any that look like Wins (`wins_labels`), and saves the payload keys (no post text) to `.tmp/offer_intel/look.json`. If it bounces you to the about page, the slug is wrong: try `--group maker-school`.
 
-**3. Collect 40 posts (read-only, about 3 minutes).** `look` is Playwright-only; on the Mac skip it and use the Wins URL below.
+**3. Collect 40 posts (read-only, about 3 minutes).** Uses the Wins URL below, so step 2 is not needed.
 ```bash
 python3 jobs/offer_intel.py collect --via mcp \
   --url "https://www.skool.com/makerschool?c=03d09fffe79e4cd4bb492e2f954cbc1d&s=newest" --max-posts 40
@@ -103,7 +105,7 @@ In `hand_check.md`, check each post: is the win call right, and does each value 
 ## After the hand check
 
 - **Backfill:** `collect --via mcp --url ... --max-pages 50 --max-posts 2000`, then `analyze --preflight` (no `--sample`) for the full price, then the billed run. About $6 per 1,000 posts. The shared spend ceiling in `config/llm_budget.json` is $10 across every job, so a big backfill needs a one-time raise (your call).
-- **Weekly (proposed, not installed):** Sunday 06:00 CT (`0 11 * * 0` UTC while daylight time holds), before the list factory: `collect --since <14 days ago>`, `analyze`, `report`. It re-reads comments on posts younger than 14 days because authors keep answering questions. Install only after you OK it.
+- **Weekly (proposed, not installed):** Sunday 06:00 CT (`0 11 * * 0` UTC while daylight time holds), before the list factory: `collect --via mcp --url ... --since <14 days ago>`, `analyze`, `report`. It re-reads comments on posts younger than 14 days because authors keep answering questions. Install only after you OK it.
 - **Offer card (next build):** for a pattern you pick, a draft in the `offers.md` shape plus an ICP rubric draft and the evidence posts. Never written into `offers.md` or `config/icp/` automatically.
 
 ## Job_Log rows (job `offer_intel`)
@@ -125,7 +127,7 @@ In `hand_check.md`, check each post: is the win call right, and does each value 
 |---|---|---|
 | `look` exits "can't see /makerschool" | wrong slug or not a member on that Chrome profile | `look --group maker-school`; log in with the paid account |
 | `look` lists no Wins category | the category key in the payload is not the guessed one | click the category in Chrome and pass its URL to `collect`; nothing else depends on the label list |
-| `collect` saves 0 posts | the feed payload shape changed | send `.tmp/offer_intel/look.json` (keys only) to a Claude session |
+| `collect --via mcp` saves 0 posts | see `status` and `detail` in the printed result or the `collect_*` Job_Log row | `logged_out`: skool-mcp's login expired, log it back in; `fetch_failed`: `detail` says why; `ok` with `seen: 0`: the feed payload shape changed, send the printed result (counts only) to a Claude session |
 | `collect_mcp_unavailable` | skool-mcp not built, or node not found | build `Coding/skool-mcp`, or set `SKOOL_MCP_CLIENT` / `NODE_BIN` |
 | `collect_logged_out` on `--via mcp` | skool-mcp's login expired | log skool-mcp back in, then rerun |
 | `STOPPED: ALLOW_PAID_CALLS is not set` | by design | run `--preflight`, then prefix `ALLOW_PAID_CALLS=1` |

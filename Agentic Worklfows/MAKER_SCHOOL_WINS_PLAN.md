@@ -1,6 +1,6 @@
 # Offer Intel: mining Maker School wins for proven offers (plan, 2026-09-24)
 
-Status (2026-09-24): **phases 1 to 3 built** (collect, gate + extract, roll up + CSVs + digest) and rehearsed offline on made-up posts. The first real run happens on Lorenzo's Mac: `runbooks/offer_intel.md`, "First real run". Not built yet: the Google Sheet push (CSVs for now), the weekly schedule, the offer card. Decisions for Lorenzo are at the bottom.
+Status (2026-09-24): **phases 1 to 3 built; first real run done 2026-09-23** (90 days of Wins, 257 posts, $2.15 of model calls, delivered to the Google Sheet "Offer Intel: Maker School Wins"). Fixes from that run are in: `collect --via mcp` (the skool-mcp client; Playwright can't run on the Mac), tolerant JSON parsing, one-client price rules and pricing-model definitions in the extract prompt, closed-deal-only price medians, sorted author replies and First Last author names. Runbook: `runbooks/offer_intel.md`. Not built yet: the Sheet push in code (the first Sheet was written by hand), the weekly schedule, the offer card. Decisions for Lorenzo are at the bottom.
 
 ## The idea in one paragraph
 
@@ -94,7 +94,7 @@ A **pattern** is one industry x mechanism pair (for example "dental x AI recepti
 
 - **distinct winners** (the main rank), all time and last 90 days
 - wins in the last 30 days vs the 30 before (rising or fading)
-- median setup, monthly and deal size
+- median setup, monthly and deal size, from new_client and first_client wins only
 - cold email share, and the cold email numbers people reported
 - evidence strength mix
 - **crowding flag:** a pattern everyone is piling into right now also means those owners' inboxes are full of the same pitch. The adjacent industries with the same mechanism are often the better test.

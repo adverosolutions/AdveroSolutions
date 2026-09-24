@@ -97,7 +97,8 @@ def test_collect_mcp_statuses(data_dir, monkeypatch):
     assert _run(logged_out)["status"] == "logged_out"
     assert files.all_raw() == []
 
-    assert _run(FakeMcp(fail_feed=[1]))["status"] == "fetch_failed"
+    out = _run(FakeMcp(fail_feed=[1]))
+    assert out["status"] == "fetch_failed" and out["detail"] == "McpError: feed exit 1: boom"
     out = _run(FakeMcp(fail_feed=[2]))
     assert out["status"] == "fetch_failed" and out["counts"]["new"] == 4  # page 1 stays saved
 

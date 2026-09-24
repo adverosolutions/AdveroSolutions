@@ -535,18 +535,18 @@ class McpTransport(object):
         argv = [str(self.node), str(self.script), str(self.client)] + [str(a) for a in args]
         try:
             proc = subprocess.run(argv, capture_output=True, text=True, timeout=self.timeout, check=False)
-        except subprocess.TimeoutExpired:
-            raise McpError("%s timed out after %ds" % (args[0], self.timeout))
+        except subprocess.TimeoutExpired:  # its context carries partial stdout: never chain it
+            raise McpError("%s timed out after %ds" % (args[0], self.timeout)) from None
         except OSError as exc:
-            raise McpError("%s could not start node: %s" % (args[0], exc.__class__.__name__))
+            raise McpError("%s could not start node: %s" % (args[0], exc.__class__.__name__)) from None
         if proc.returncode != 0:
             lines = (proc.stderr or "").strip().splitlines()
             raise McpError("%s exit %d: %s" % (args[0], proc.returncode, (lines[-1] if lines else "")[:300]))
         out = proc.stdout or ""
         try:
             data = json.loads(out)
-        except ValueError:
-            raise McpError("%s returned %d bytes that are not JSON" % (args[0], len(out)))
+        except ValueError:  # a JSONDecodeError holds the whole stdout as .doc
+            raise McpError("%s returned %d bytes that are not JSON" % (args[0], len(out))) from None
         if not isinstance(data, dict):
             raise McpError("%s returned JSON that is not an object" % args[0])
         logger.debug("%s: %d bytes", args[0], len(out))
@@ -611,6 +611,7 @@ def collect_mcp(category_url: str, max_pages: int = 3, max_posts: int = 40,
         except Exception as exc:  # noqa: BLE001 - a failed page ends the walk; saved posts stay saved
             logger.warning("feed page %d failed: %s", page_num, exc)
             result["status"] = "fetch_failed"
+            result["detail"] = "%s: %s" % (exc.__class__.__name__, str(exc)[:200])
             break
         counts["pages"] += 1
         if not props.get("self"):
