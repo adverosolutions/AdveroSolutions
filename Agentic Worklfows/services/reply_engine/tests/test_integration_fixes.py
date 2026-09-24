@@ -200,12 +200,14 @@ def test_reserving_the_same_slot_twice_does_not_grow_the_registry(tmp_env, shado
 
 
 # ------------------------------------------------------- the copy stays in step
-def test_booking_copy_uses_the_one_booking_line():
-    """Three hardcoded copies of the booking-link sentence drifted from
-    draft.BOOKING_LINE whenever the approved wording changed."""
+def test_booking_copy_carries_no_booking_link_line():
+    """booking.py writes no booking-link sentence anywhere: no hardcoded copy,
+    no draft.BOOKING_LINE and no "grab a time" ask (Lorenzo, 2026-09-23: the
+    lead picks one of the offered times and Lorenzo sends the invite)."""
     src = (Path(__file__).resolve().parents[1] / "booking.py").read_text(encoding="utf-8")
     assert "Or grab whatever works here" not in src
-    assert "draft_mod.BOOKING_LINE" in src
+    assert "BOOKING_LINE" not in src
+    assert "grab a time" not in src
 
 
 def test_the_lost_move_can_carry_a_reason(tmp_env, live_mode):

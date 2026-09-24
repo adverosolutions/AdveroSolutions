@@ -514,14 +514,14 @@ FALLBACK_EDITS = [
     ("no_show", '"Grab any time that suits you here: %s"', '"Grab a time here: %s"',
      "no_show.ns_reschedule_email.repeat", ()),
     ("booking", "your time)", "your local time)", "booking.confirmation.zoom_link", ()),
-    ("booking", "Could you grab a time that suits you here instead?",
-     "Could you pick a time that suits you here instead?", "booking.counter.weekend", ()),
+    ("booking", "Could you send me a couple of times that work for you next week?",
+     "Could you send me a few times that work for you next week?", "booking.counter.weekend", ()),
     ("booking", '"That time does not work on my side"', '"That day does not work on my side"',
      "booking.counter.weekend", ()),
     ("booking", '"%s %s %d %s" % (local.strftime("%a")', '"%s, %s %d %s" % (local.strftime("%a")',
      "booking.counter.too_soon", ()),
-    ("booking", "Could you grab a time that suits you here instead?",
-     "Could you choose any time that suits you here instead?", "booking.slot_already_taken", ()),
+    ("booking", "Could you send me a couple of times that work for you next week?",
+     "Could you send me some times that work for you next week?", "booking.slot_already_taken", ()),
     ("draft", '"Hey there,"', '"Hi there,"', "first_reply.cleaning_reactivation.default.full", ()),
     ("draft", '"your business"', '"your company"', "first_reply.cleaning_trigger.send_info.full", ()),
     ("draft", '"the right person"', '"the best contact"', "first_reply.bookkeeping_trigger.referral.full", ()),
@@ -581,10 +581,11 @@ def test_variants_are_in_the_hash_and_in_the_review_document():
     assert {"missing_lead_data", "no_alternatives", "no_proposed_time", "dated", "subject"} <= set(names)
     texts = dict((v["name"], v["text"]) for v in e["variants"])
     assert "Hey there," in texts["missing_lead_data"]
-    assert "Could you grab a time that suits you here instead? {booking_url}" in texts["no_alternatives"]
+    assert "Could you send me a couple of times that work for you next week?" in texts["no_alternatives"]
+    assert "{booking_url}" not in texts["no_alternatives"] and "grab a time" not in texts["no_alternatives"]
     assert "That time does not work on my side" in texts["no_proposed_time"]
     assert "Re: your reply" in texts["subject"] and "Re: there, question" not in texts["subject"]
-    assert "{booking_url}" in texts["dated"]
+    assert "{booking_url}" not in texts["dated"] and "grab a time" not in texts["dated"]
     md = ta.render_catalogue_markdown()
     for v in e["variants"]:
         assert v["text"].rstrip("\n") in md

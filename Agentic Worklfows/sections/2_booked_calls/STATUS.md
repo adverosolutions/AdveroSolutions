@@ -3,7 +3,13 @@
 **2026-09-23 (evening):** research done for both sequences; Lorenzo picked both cadences; reminder copy signed off (`reminders_final.md`, with one rework pending, see below); no-show copy walkthrough in progress (N1, N3, N4 done). No engine code changed yet. Nothing approved in the template registry or live.
 
 ## Resume here (next chat)
-All copy is signed off: **`copy_signed_off.md` is the source of truth** (supersedes `reminders_final.md` and `no_show_final.md`). Next is the build, see "Build plan" below. Nothing built yet.
+All copy is signed off: **`copy_signed_off.md` is the source of truth** (supersedes `reminders_final.md` and `no_show_final.md`). Build briefs: `build_briefs.md`.
+
+**Build progress (2026-09-23 night).** Unreviewed work in progress is snapshotted to the GitHub branch `wip/section-2-build` (not the section branch). If this chat died, check that branch out into a worktree, diff it against `section/2-booked-calls`, and continue the review loop below.
+- Wave 1, piece C (booking replies without the booking link): **approved on re-review and committed** (a `shared:` commit for 3 lines in section 4's app.py, then booking.py + tests). The 8 counter replies lost the "Or if it's easier, grab a time here" line; the no-open-slots case now asks "Could you send me a couple of times that work for you next week?" (Lorenzo approved it in full); counter, slot-taken and "Locked in" confirmation drafts no longer store a booking link, so editing them never demands one (a behaviour change on the confirmation card; its text is unchanged). Lorenzo must re-approve the counter/slot-taken templates (text changed). Parked polish: tests test_send_safety_round3.py:165, round4.py:76, round5.py:619 paste a now-None `draft.booking_link` into edited bodies (harmless "None" in test text). Section 4 follow-up: `booking.already_booked.*` replies (app.py:424) and first replies still carry a booking link.
+- Wave 1, piece A1 (`thread_reply.py`): built; reviewer-max REJECTED (row not checked against the appointment email, so a mis-keyed row could email another person; possibly-sent failures looked retryable, so duplicates were possible; plus 6 smaller items). Being fixed by worker-heavy; then back to reviewer-max.
+- Wave 2 (A2 reminders, B no-show ladder) starts after A1 is approved. Note for A2 from the A1 review: the subject actually sent in-thread is `cadence.subject_for(state)`, not the touch subject the gate checks; A2 must gate the subject actually sent or accept it explicitly. A2/B must not auto-retry A1's "maybe sent" reasons.
+- After C lands on main: tell section 1 that booking.py no longer imports `draft.BOOKING_LINE`.
 
 ## Lorenzo's rules from this walkthrough (apply everywhere)
 - **Email only.** No texts, no phone calls, no call tasks in either sequence. Every lead has an email; phone is hit or miss. SMS legs and call/voicemail tasks come out of the code (not "off until A2P").

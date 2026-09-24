@@ -114,9 +114,11 @@ def test_live_edited_booking_confirmation_released_by_choice_reserves_the_new_ti
     st = env["store"]
     r = _sopio_confirm_card(env)
     _go_live(monkeypatch)
-    link = A.load(r["approval_token"], st).draft.booking_link
-    body = ("Hey Sopio,\n\nThursday at 3 just got taken on my side, sorry. Could you do Fri 1:00pm CT instead? "
-            "Or grab any time here: %s\n\nLorenzo" % link)
+    # The confirmation draft stores no booking link (2026-09-23), so the edit
+    # needs none.
+    assert A.load(r["approval_token"], st).draft.booking_link is None
+    body = ("Hey Sopio,\n\nThursday at 3 just got taken on my side, sorry. Could you do Fri 1:00pm CT instead?"
+            "\n\nLorenzo")
     ed = A.edit(r["approval_token"], body, store=st, now=ct(2026, 9, 21, 16, 10), booking_choice="release")
     assert ed["ok"] and ed["offered_slots"] == [FRI_1PM] and ed["booking_choice"] == "release"
     assert FRI_1PM in A.offered_slots(st, ct(2026, 9, 21, 16, 10))          # the time written is reserved

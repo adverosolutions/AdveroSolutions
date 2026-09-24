@@ -35,7 +35,6 @@ from shared import slots as slot_rules
 from shared.settings import TZ, guard_write
 
 from services.reply_engine import cadence
-from services.reply_engine import draft as draft_mod
 from services.reply_engine.cadence import Draft, _field, company_of, first_name_of, niche_and_offer, subject_for
 
 logger = logging.getLogger("reply_engine.booking")
@@ -412,10 +411,10 @@ def _crosses_a_week(proposed: Optional[datetime], counters: List[datetime]) -> b
 
 def _counter_values(match: BookingMatch, state: Any) -> Dict[str, Any]:
     """What a counter-proposal writes, computed once for the text and for
-    its template-gate bindings: the greeting name, the link, the
-    alternatives and the refused time (None where the text is worded
-    without it: the booking link instead of alternatives, "That time does
-    not work on my side" instead of the refused time).
+    its template-gate bindings: the greeting name, the alternatives and the
+    refused time (None where the text is worded without it: a request for
+    the lead's own times instead of alternatives, "That time does not work
+    on my side" instead of the refused time).
 
     The refused time is written back in the zone the lead wrote it in, with
     its label ("Thu 11:00am ET"), and "CT" when they named Central or no
@@ -433,7 +432,7 @@ def _counter_values(match: BookingMatch, state: Any) -> Dict[str, Any]:
         asked = None
     else:
         asked = slot_rules.format_asked_time(match.proposed, match.lead_tz, dated=dated)
-    return {"first": first_name_of(state), "link": cadence.DEFAULT_BOOKING_URL, "alts": alts, "asked": asked}
+    return {"first": first_name_of(state), "alts": alts, "asked": asked}
 
 
 def _counter_early(match: BookingMatch) -> bool:
@@ -459,10 +458,11 @@ def counter_template_id(match: Optional[BookingMatch]) -> Optional[str]:
 
 def counter_bindings(match: BookingMatch, state: Any) -> Dict[str, str]:
     """{placeholder: value} for what counter_proposal_text wrote: the lead's
-    first name (when one is on file), the alternatives, the refused time and
-    the booking link. Only values actually written."""
+    first name (when one is on file), the alternatives and the refused time.
+    Never the booking link: no counter-proposal carries one (Lorenzo,
+    2026-09-23). Only values actually written."""
     v = _counter_values(match, state)
-    out = {"booking_url": v["link"]}  # type: Dict[str, str]
+    out = {}  # type: Dict[str, str]
     if _field(state, "first_name") and v["first"]:
         out["first_name"] = v["first"]
     if v["alts"]:
@@ -472,14 +472,17 @@ def counter_bindings(match: BookingMatch, state: Any) -> Dict[str, str]:
     return dict((k, val) for k, val in out.items() if val)
 
 
-def _counter_ask(alts: Optional[str], link: str, question: str = "Could you do %s instead?") -> str:
-    """The ask after the refusal line: the alternatives and then the booking
-    link on its own line, or, with no alternative to offer, the booking
-    link in the ask itself (never "any afternoon slot", which offers
-    nothing)."""
+NO_ALTERNATIVES_ASK = "Could you send me a couple of times that work for you next week?"
+
+
+def _counter_ask(alts: Optional[str], question: str = "Could you do %s instead?") -> str:
+    """The ask after the refusal line: the two alternatives or, with no
+    alternative to offer, a request for the lead's own times (never "any
+    afternoon slot", which offers nothing). Never a booking link (Lorenzo,
+    2026-09-23: the lead picks a time and Lorenzo sends the invite)."""
     if alts:
-        return "%s\n\n%s" % (question % alts, draft_mod.BOOKING_LINE % link)
-    return "Could you grab a time that suits you here instead? %s" % link
+        return question % alts
+    return NO_ALTERNATIVES_ASK
 
 
 def counter_proposal_text(match: BookingMatch, state: Any) -> Optional[str]:
@@ -488,13 +491,12 @@ def counter_proposal_text(match: BookingMatch, state: Any) -> Optional[str]:
         return None
     v = _counter_values(match, state)
     first = v["first"]
-    link = v["link"]
     alts = v["alts"]
     if match.status == NO_TIME:
         return None
     if match.status == WINDOW_NO_FIT:
         return ("Hey %s,\n\nNothing inside that window is open on my side in the next week. %s\n\nLorenzo"
-                % (first, _counter_ask(alts, link, "Could you do %s?")))
+                % (first, _counter_ask(alts, "Could you do %s?")))
     asked = v["asked"]
     if asked is None:
         # No readable time: nothing to say about it beyond that it does not
@@ -510,7 +512,7 @@ def counter_proposal_text(match: BookingMatch, state: Any) -> Optional[str]:
         lead_line = "%s is further out than I can lock in right now" % asked
     else:
         lead_line = "%s just got taken on my calendar" % asked
-    return "Hey %s,\n\n%s. %s\n\nLorenzo" % (first, lead_line, _counter_ask(alts, link))
+    return "Hey %s,\n\n%s. %s\n\nLorenzo" % (first, lead_line, _counter_ask(alts))
 
 
 # ----------------------------------------------------------------- booking
@@ -543,8 +545,9 @@ def _extract_zoom(resp: Any) -> Optional[str]:
     return None
 
 
-def _draft(subject: str, body: str, slot: datetime, problems: List[str], template_id: Optional[str] = None) -> Any:
-    kwargs = dict(subject=subject, body_text=body, offered_slots=[slot.isoformat()], booking_link=cadence.DEFAULT_BOOKING_URL,
+def _draft(subject: str, body: str, slot: datetime, problems: List[str], template_id: Optional[str] = None,
+           booking_link: Optional[str] = cadence.DEFAULT_BOOKING_URL) -> Any:
+    kwargs = dict(subject=subject, body_text=body, offered_slots=[slot.isoformat()], booking_link=booking_link,
                   rationale="booking confirmation", model="template", label="booking_confirmation", problems=problems,
                   template_id=template_id)
     try:
@@ -605,7 +608,7 @@ def _unbookable_result(state: Any, start: datetime, problem: str, now_ct: dateti
         # A genuine counter-proposal: the slot is gone and we know it. The
         # taken time carries its zone like every other time in the reply.
         body = ("Hey %s,\n\n%s CT just got taken on my calendar. %s\n\nLorenzo"
-                % (first, slot_rules.format_slot(start), _counter_ask(open_times or None, cadence.DEFAULT_BOOKING_URL)))
+                % (first, slot_rules.format_slot(start), _counter_ask(open_times or None)))
     else:
         body = ("NOT SENT - for Lorenzo.\n\n%s asked for %s and nothing was written to the Discovery Call "
                 "calendar (%s). There is no appointment and no invite. Put it on the calendar by hand, then "
@@ -615,8 +618,12 @@ def _unbookable_result(state: Any, start: datetime, problem: str, now_ct: dateti
     problems += [p for p in (extra_problems or []) if p]
     # booking.slot_already_taken is catalogued, but its draft always carries
     # the slot_already_taken problem, so it stays a card (CT3 decision 6).
+    # The slot-already-taken counter carries no booking link (Lorenzo,
+    # 2026-09-23), so its draft stores none: an edit re-validates against the
+    # stored link and would otherwise demand it back in.
     draft = _draft(subject_for(state), body, start, problems,
-                   template_id=SLOT_ALREADY_TAKEN_ID if problem == SLOT_ALREADY_TAKEN else None)
+                   template_id=SLOT_ALREADY_TAKEN_ID if problem == SLOT_ALREADY_TAKEN else None,
+                   booking_link=None if problem == SLOT_ALREADY_TAKEN else cadence.DEFAULT_BOOKING_URL)
     logger.warning("booking refused for %s at %s: %s", _field(state, "lead_email"), start.isoformat(), problem)
     return BookingResult(slot=start, draft=draft, contact_id=_field(state, "ghl_contact_id"), appointment=None,
                          opportunity=None, interest_status=None, zoom_not_connected=not zoom_connected_default(),
@@ -640,7 +647,10 @@ def _confirmation_draft(state: Any, start: datetime, lead_tz: Optional[str], zoo
     problems = cadence.copy_problems(body, campaign_key=cadence.campaign_key_of(state))
     if not zoom_connected:
         problems = problems + ["zoom_not_connected"]
-    return _draft(subject_for(state), body, start, problems, template_id=confirmation_template_id(zoom_link)), problems
+    # The confirmation carries no booking link, so its draft stores none: an
+    # edit re-validates against the stored link and would demand it back in.
+    return _draft(subject_for(state), body, start, problems, template_id=confirmation_template_id(zoom_link),
+                  booking_link=None), problems
 
 
 def confirmation_template_id(zoom_link: Optional[str]) -> str:
