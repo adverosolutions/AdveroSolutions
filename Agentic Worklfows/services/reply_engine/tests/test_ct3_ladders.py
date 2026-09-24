@@ -405,40 +405,39 @@ def test_a_held_no_show_touch_stays_pending_then_sends_after_approval(store, tmp
     ghl, requests = make_ghl()
     flagged = START + timedelta(minutes=10)
     ns.process(flagged, NS_APPT, [HOST], store, ghl, slots_fn=fixed_slots)
-    tid = recovery_touch(store, "ns_still_on_email")["template_id"]
-    assert tid and tid.startswith("no_show.ns_still_on_email")
+    tid = recovery_touch(store, "ns_reschedule_email")["template_id"]
+    assert tid and tid.startswith("no_show.ns_reschedule_email")
     approvals_file.revoke_ids(tid)
-    out = ns.run_recovery(flagged + timedelta(minutes=5), store, ghl)
-    assert [e["template"] for e in out["held_template"]] == ["ns_still_on_email"] and out["would_do"] == []
-    t = recovery_touch(store, "ns_still_on_email")
+    due = START + timedelta(minutes=25)
+    out = ns.run_recovery(due, store, ghl, slots_fn=fixed_slots)
+    assert [e["template"] for e in out["held_template"]] == ["ns_reschedule_email"] and out["would_do"] == []
+    t = recovery_touch(store, "ns_reschedule_email")
     assert not t["sent"] and not t["skipped"] and not t.get("attempts")
     assert store.get("touch_sent:%s" % t["key"]) is None
     approvals_file.approve_ids(tid)
-    out = ns.run_recovery(flagged + timedelta(minutes=6), store, ghl)
-    assert [e["template"] for e in out["would_do"]] == ["ns_still_on_email"]
-    assert recovery_touch(store, "ns_still_on_email")["sent"]
+    out = ns.run_recovery(due + timedelta(minutes=1), store, ghl, slots_fn=fixed_slots)
+    assert [e["template"] for e in out["would_do"]] == ["ns_reschedule_email"]
+    assert recovery_touch(store, "ns_reschedule_email")["sent"]
 
 
 def test_the_reschedule_email_is_bound_to_its_slots(store, tmp_env):
     ghl, _ = make_ghl()
     flagged = START + timedelta(minutes=10)
     ns.process(flagged, NS_APPT, [HOST], store, ghl, slots_fn=fixed_slots)
-    out = ns.run_recovery(flagged + timedelta(hours=1), store, ghl)
+    out = ns.run_recovery(flagged + timedelta(hours=1), store, ghl, slots_fn=fixed_slots)
     assert "ns_reschedule_email" in [e["template"] for e in out["would_do"]]
     assert "Fri 2:00pm or Mon 3:30pm CT" in job_log.read_shadow_log()[-1]["payload"]["message"]
 
 
-def test_one_free_slot_renders_link_only(store, tmp_env):
+def test_one_free_slot_is_never_sent_and_never_replaced_by_a_link(store, tmp_env):
     ghl, _ = make_ghl()
     flagged = START + timedelta(minutes=10)
     ns.process(flagged, NS_APPT, [HOST], store, ghl, slots_fn=one_slot)
-    body = recovery_touch(store, "ns_reschedule_email")["body"]
-    assert "Two times" not in body and "Fri 2:00pm" not in body
-    # ZC item 21: no "Or ..." with nothing before it
-    assert "Grab any time that suits you here: " in body and "Or grab" not in body
-    assert store.get(ns.recovery_key(NS_APPT["id"], START.isoformat()))["slots"]["withheld"] == "one_slot"
-    out = ns.run_recovery(flagged + timedelta(hours=1), store, ghl)
-    assert "ns_reschedule_email" in [e["template"] for e in out["would_do"]]
+    out = ns.run_recovery(START + timedelta(minutes=25), store, ghl, slots_fn=one_slot)
+    assert out["would_do"] == [] and [e["error"] for e in out["errors"]] == ["no_slots"]
+    t = recovery_touch(store, "ns_reschedule_email")
+    assert not t["sent"] and not t["skipped"] and t["attempts"] == 1
+    assert "Fri 2:00pm" not in t["body"] and "http" not in t["body"]
 
 
 def test_fresh_two_slots_with_one_candidate_offers_none(store, tmp_env):
@@ -458,7 +457,7 @@ def test_the_kill_switch_holds_all_three_ladders(store, tmp_env, approvals_file)
     assert out["would_do"] == [] and {e["reason"] for e in out["held_template"]} == {"kill_switch"}
     flagged = START + timedelta(minutes=10)
     ns.process(flagged, NS_APPT, [HOST], store, ghl, slots_fn=fixed_slots)
-    rec = ns.run_recovery(flagged + timedelta(minutes=5), store, ghl)
+    rec = ns.run_recovery(START + timedelta(minutes=25), store, ghl, slots_fn=fixed_slots)
     assert rec["would_do"] == [] and {e["reason"] for e in rec["held_template"]} == {"kill_switch"}
     assert replies() == [] and requests == []
 

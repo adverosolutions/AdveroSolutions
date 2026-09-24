@@ -187,10 +187,13 @@ def test_a_hold_read_error_never_lifts_the_hold_and_sends_nothing(tmp_env, shado
 
     # only the approval starts the ladder
     # (the approved reply was the confirmation: ZC item 7 skips the ladder's
-    # own, so the first thing the ladder says is the pre-read)
+    # own, so the first thing the ladder says is the day-before reminder)
     show_rate.release_hold(store, APPT, tick + timedelta(minutes=15))
     summary = show_rate.run(tick + timedelta(minutes=30), store, _shadow_ghl(), a2p=False, appointments=[_appt()])
-    assert [e["template"] for e in _spoken(summary)] == ["preread_email"]
+    assert _spoken(summary) == []
+    r2 = show_rate.slots.parse_iso(CALL) - timedelta(hours=24)
+    summary = show_rate.run(r2, store, _shadow_ghl(), a2p=False, appointments=[_appt()])
+    assert [e["template"] for e in _spoken(summary)] == ["reminder_24h_email"]
 
 
 def test_an_unheld_schedule_is_skipped_for_the_tick_when_the_hold_cannot_be_read(tmp_env, shadow_mode):
@@ -329,6 +332,9 @@ def test_process_never_emails_a_time_another_card_claimed_in_the_gap(tmp_env, sh
             "is_host": True}
     out = ns.process(FLAG_AT, appt, [host], store, _shadow_ghl())
     assert out["state"] == "no_show"
+    # the reschedule email (S+25) claims its two times when it goes out
+    sent = ns.run_recovery(slot_rules.parse_iso(CALL) + timedelta(minutes=25), store, _shadow_ghl())
+    assert [e["template"] for e in sent["would_do"]] == ["ns_reschedule_email"]
     rec = store.get(ns.recovery_key(appt["id"], CALL))
     offered = rec["slots"]["slots"]
     assert len(offered) == 2 and not set(offered) & set(first)
@@ -392,14 +398,14 @@ def test_an_unreadable_registry_offers_no_times(tmp_env, shadow_mode, monkeypatc
     assert info["slots"] == [] and info["text"] == "" and info["withheld"] == "registry_unavailable"
 
 
-def test_a_failed_recovery_record_write_gives_the_claim_back(tmp_env, shadow_mode, monkeypatch):
+def test_nothing_is_held_at_the_flag_even_when_the_record_write_fails(tmp_env, shadow_mode, monkeypatch):
     monkeypatch.setattr(ns, "free_slot_list", lambda now, ghl: (list(FREE), "ghl"))
 
     class FailingRecordStore(JsonFileStore):
-        def set(self, key, value):
+        def set_if_absent(self, key, value):
             if str(key).startswith("recovery:"):
                 raise OSError("disk full")
-            return super(FailingRecordStore, self).set(key, value)
+            return super(FailingRecordStore, self).set_if_absent(key, value)
 
     store = FailingRecordStore(tmp_env / "s.json")
     host = {"at_iso": "2026-09-24T14:59:00-05:00", "name": "Host", "email": "host@adverosolutions.example",
@@ -410,15 +416,17 @@ def test_a_failed_recovery_record_write_gives_the_claim_back(tmp_env, shadow_mod
     assert store.get(ns.OFFERED_SLOTS_KEY, []) in ([], None)
 
 
-def test_a_failed_re_render_gives_the_new_claim_back(tmp_env, shadow_mode, monkeypatch):
+def test_a_slot_email_that_is_skipped_gives_its_claim_back(tmp_env, shadow_mode, monkeypatch):
     monkeypatch.setattr(ns, "free_slot_list", lambda now, ghl: (list(FREE), "ghl"))
     store = JsonFileStore(tmp_env / "s.json")
-    appt = {"id": "appt-ns-2", "email": LEAD, "contact_id": "contact-ns-2"}  # no start_iso: render fails
-    touch = Touch(key="appt-ns-2:x:ns1:ns_reschedule_email", appointment_id="appt-ns-2", contact_id="contact-ns-2",
-                  when_iso=FLAG_AT.isoformat(), channel="email", template_key="ns_reschedule_email", body="old",
-                  subject="Missed you on our call", meta={"no_show_count": 1})
-    out = ns._refresh_slot_copy(touch, {"slots": {}}, appt, FLAG_AT, None, store)
-    assert out is None
+    appt = _recovery_appt()
+    host = {"at_iso": "2026-09-24T14:59:00-05:00", "name": "Host", "email": "host@adverosolutions.example",
+            "is_host": True}
+    ns.process(FLAG_AT, appt, [host], store, _shadow_ghl())
+    store.set("lead:camp-1:%s" % LEAD, {"lead_email": LEAD, "campaign_id": "camp-1",
+                                        "opt_out": {"label": "unsubscribe", "set_at": FLAG_AT.isoformat()}})
+    out = ns.run_recovery(slot_rules.parse_iso(CALL) + timedelta(minutes=25), store, _shadow_ghl())
+    assert [e["reason"] for e in out["skipped"]] == ["opt_out"]
     assert [r for r in store.get(A.OFFERED_KEY, []) or [] if r.get("lead") == LEAD] == []
 
 
@@ -427,11 +435,6 @@ def test_live_unverified_times_are_not_held(tmp_env, live_mode, monkeypatch):
     them for every other lead while nobody was offered them."""
     monkeypatch.setattr(ns, "free_slot_list", lambda now, ghl: (list(FREE), "synthetic_open_hours"))
     store = JsonFileStore(tmp_env / "s.json")
-    appt = _recovery_appt()
-    touch = Touch(key="appt-ns-1:%s:ns1:ns_reschedule_email" % CALL, appointment_id=appt["id"],
-                  contact_id=appt["contact_id"], when_iso=FLAG_AT.isoformat(), channel="email",
-                  template_key="ns_reschedule_email", body="old", subject="Missed you on our call",
-                  meta={"no_show_count": 1})
-    out = ns._refresh_slot_copy(touch, {"slots": {}}, appt, FLAG_AT, None, store)
-    assert out is not None and "Two times" not in out["body"]
+    info = ns._slots_for_touch({}, {}, _recovery_appt(), FLAG_AT, None, store)
+    assert info["slots"] == [] and ns.offer_text(info) == ""
     assert [r for r in store.get(A.OFFERED_KEY, []) or [] if r.get("lead") == LEAD] == []
