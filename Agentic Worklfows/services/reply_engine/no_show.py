@@ -54,11 +54,16 @@ the lead's zone (CT when unknown); business days skip Saturday and Sunday.
   Third miss (count 3+): N1, N8 ns_third_miss_email at S+25 (no slots)
                            -> nurture.enroll + stage Lost
 
-A slot email claims two fresh times (never ones this lead was offered before)
-and, once it reaches the lead, gives the previous offer back, so "those times
-got taken" is true. N4 / N5 / N6 say so, and go out only after an earlier
-slot email of the same ladder reached the lead (else ``no_prior_offer``);
-N9 offers fresh times without saying the earlier ones were taken.
+A slot email claims two fresh times (never ones this lead was offered before).
+N4 / N5 / N6 say the earlier times "got taken": once one of them reaches the
+lead it gives back every earlier time still held for the lead, and they go out
+only after an earlier slot email of the same ladder reached the lead (else
+``no_prior_offer``). N3 and N9 give nothing back: N9 offers fresh times
+without saying the earlier ones were taken, so after N9 the lead holds two
+pairs (N9's and the one before) until N6 reaches them or the times pass.
+
+A late email never goes out once the next email of its ladder is due within
+SUPERSEDE_MARGIN or already went out: it closes as ``superseded``.
 
 Any reply from the lead since the call's start stops the rest (``replied``,
 read from the lead row's ``last_inbound_at`` via thread_reply.find_thread);
@@ -177,7 +182,9 @@ NURTURE_REASON = "no_show_no_rebook"
 # The emails that offer two times ({slots}); each claims two fresh ones.
 SLOT_TEMPLATES = (N3, N4, N5, N9, N6)
 # The emails that say the earlier times "got taken": only after an earlier slot
-# email of the same ladder reached the lead. N9 offers times without that line.
+# email of the same ladder reached the lead, and only they give the earlier
+# times back. N9 offers times without that line, so the offer before it stays
+# held until N6 (_offer_reached_lead).
 TAKEN_TEMPLATES = (N4, N5, N6)
 
 # Placeholders render() leaves in place when it has no value. A text carrying
@@ -1231,6 +1238,7 @@ def process(
         "flagged_at": now.isoformat(),
         "no_show_count": count,
         "slots": {},  # the last offer that reached the lead
+        "held_offers": [],  # every time offered to the lead and not yet called taken
         "touches": [t.to_dict() for t in touches],
     })
     state.update({"state": "no_show", "flagged_at": now.isoformat(), "count": count, "start_iso": start_iso})
@@ -1325,7 +1333,7 @@ def _cancel_recovery(store, appt_id: str, start_iso: str, reason: str) -> int:
                 t["skipped"], t["skip_reason"] = True, reason
                 counted["n"] += 1
                 # times a pending slot email was holding never reached the lead.
-                # The last offer that did (rec["slots"]) stays held: a lead
+                # The offers that did (rec["held_offers"]) stay held: a lead
                 # who replied may be picking one of them.
                 held.extend(_isos(t.get("slots")))
                 t["slots"] = {}
@@ -1484,11 +1492,13 @@ def run_recovery(
             if touch.when() > now:
                 continue
             entry = {"key": touch.key, "channel": touch.channel, "template": touch.template_key, "when": touch.when_iso}
-            skip = _too_late_reason(touch, now) or _ladder_skip_reason(touch, rec, appt)
+            skip = (_too_late_reason(touch, now) or _ladder_skip_reason(touch, rec, appt)
+                    or _superseded_reason(touch.key, rec, appt, now))
             if skip is not None:
                 # came due during an outage ("I'm on the call now" a day after
-                # the call), or nothing true can be said (no niche line, no
-                # earlier offer for "those times got taken")
+                # the call), nothing true can be said (no niche line, no
+                # earlier offer for "those times got taken"), or the next
+                # email of the ladder is due (or went out) already
                 _close_touch(store, key, raw, appt, skip)
                 entry["reason"] = skip
                 summary["skipped"].append(entry)
@@ -1547,7 +1557,7 @@ def run_recovery(
             reached = out.get("status") in ("sent", "would_do", MAYBE_SENT)
             if touch.template_key in SLOT_TEMPLATES:
                 if reached:
-                    _offer_reached_lead(store, key, rec, appt, raw.get("slots") or {})
+                    _offer_reached_lead(store, key, rec, appt, raw.get("slots") or {}, touch.template_key)
                 elif raw.get("skipped"):
                     release_recovery_claim(store, appt, _isos(raw.get("slots")))
                     raw["slots"] = {}
@@ -1649,11 +1659,49 @@ MAX_LATENESS = {
 }
 
 
+# A late ladder email never goes out once the NEXT email of the same ladder is
+# due, due within this margin, or already went out: it is closed as
+# ``superseded`` (show_rate closes a reminder overtaken by a later one the same
+# way) and the next email carries on. Since 2026-09-24 the day emails are one
+# business day apart while MAX_LATENESS keeps a day, so without this a held
+# N5 released at 08:50 went out ten minutes before N9, with other times. The
+# on-time path never meets the margin: sends only happen 07:00-19:00 CT (and
+# lead-local), so an email the evening before is at least 12 h ahead of the
+# next 10:00 lead-local email, while a late one released the same morning is
+# at most about 3 h ahead of it.
+SUPERSEDE_MARGIN = timedelta(hours=8)
+SUPERSEDED = "superseded"
+
+
 def _too_late_reason(touch: Touch, now: datetime) -> Optional[str]:
     limit = MAX_LATENESS.get(touch.template_key)
     if limit is None:
         return None
     return "too_late" if (now - touch.when()) > limit else None
+
+
+def _superseded_reason(touch_key: str, rec: Dict[str, Any], appt: Dict[str, Any], now: datetime) -> Optional[str]:
+    """``superseded`` when a LATER email of this ladder already reached the
+    lead, or the next later email that can still go is due by
+    ``now + SUPERSEDE_MARGIN``; else None. A later touch that will be closed
+    anyway (too late, or a _ladder_skip_reason such as N5's no_niche_point)
+    does not count as the next email. The last touch of a ladder is never
+    superseded, so its stage move and nurture hand-off are unaffected."""
+    all_touches = rec.get("touches") or []
+    keys = [t.get("key") for t in all_touches]
+    if touch_key not in keys:
+        return None
+    later = all_touches[keys.index(touch_key) + 1:]
+    if any(t.get("sent") or t.get("maybe_sent") for t in later):
+        return SUPERSEDED
+    for raw in later:
+        if raw.get("skipped"):
+            continue
+        nxt = Touch.from_dict(raw)
+        if _too_late_reason(nxt, now) or _ladder_skip_reason(nxt, rec, appt):
+            continue
+        return SUPERSEDED if nxt.when() - now <= SUPERSEDE_MARGIN else None
+    return None
 
 
 def _ladder_skip_reason(touch: Touch, rec: Dict[str, Any], appt: Dict[str, Any]) -> Optional[str]:
@@ -1698,9 +1746,9 @@ def _slot_still_offerable(iso: str, now: datetime) -> bool:
 def _slots_for_touch(raw: Dict[str, Any], rec: Dict[str, Any], appt: Dict[str, Any], now: datetime,
                      ghl, store, slots_fn=None) -> Dict[str, Any]:
     """The two times this slot email offers: its own earlier claim when both
-    are still offerable (a retried touch), else two fresh ones, never the ones
-    the lead was last offered (``rec["slots"]``). ``slots: []`` when none can
-    be held (the touch then waits)."""
+    are still offerable (a retried touch), else two fresh ones, never any the
+    lead still holds from an earlier email (``rec["held_offers"]``).
+    ``slots: []`` when none can be held (the touch then waits)."""
     held = raw.get("slots") or {}
     isos = _isos(held)
     live_ok = held.get("source") == "ghl" or not settings.is_live()
@@ -1708,7 +1756,10 @@ def _slots_for_touch(raw: Dict[str, Any], rec: Dict[str, Any], appt: Dict[str, A
         return held
     if isos:
         release_recovery_claim(store, appt, isos)
-    previous = _isos(rec.get("slots"))
+    # never any time the lead holds from an earlier email (after N9 that is
+    # two pairs, N9's and the one before it)
+    previous = _held_offer_isos(rec)
+    previous += [i for i in _isos(rec.get("slots")) if i not in previous]
     try:
         # picked AND held in one step (claim_slots): never double-offered
         info = claim_recovery_slots(now, ghl, store, appt, slots_fn=slots_fn, exclude=previous)
@@ -1723,25 +1774,48 @@ def _slots_for_touch(raw: Dict[str, Any], rec: Dict[str, Any], appt: Dict[str, A
     return info
 
 
+def _held_offer_isos(rec: Dict[str, Any]) -> List[str]:
+    """Every time this ladder's emails have put in front of the lead and no
+    later email has called taken: ``rec["held_offers"]``, or the last offer
+    (``rec["slots"]``) on a record written before that field existed."""
+    held = rec.get("held_offers")
+    if isinstance(held, list):
+        return [i for i in held if isinstance(i, str) and i]
+    return _isos(rec.get("slots"))
+
+
 def _offer_reached_lead(store, record_key: str, rec: Dict[str, Any], appt: Dict[str, Any],
-                        info: Dict[str, Any]) -> None:
-    """A slot email went out: its two times are now the lead's offer, and the
-    previous offer is given back (the email just told the lead those were
-    taken)."""
+                        info: Dict[str, Any], template_key: str) -> None:
+    """A slot email went out: its two times are now the lead's latest offer
+    (``rec["slots"]``) and join the times held for the lead
+    (``rec["held_offers"]``).
+
+    Only an email that says the earlier times "got taken" (TAKEN_TEMPLATES:
+    N4 / N5 / N6) gives the earlier ones back. N3 and N9 say nothing about
+    them, so after N9 the previous offer (N5's, or N4's when N5 was skipped)
+    stays claimed in both registries next to N9's pair, until N6 reaches the
+    lead or the times pass (both registries prune past times on read):
+    handing it to another lead while this one may still pick it would be a
+    double offer."""
     new = _isos(info)
+    taken = template_key in TAKEN_TEMPLATES
     box = {"previous": []}  # type: Dict[str, List[str]]
 
     def _apply(cur):
         cur = cur or {}
-        box["previous"] = _isos(cur.get("slots"))
+        previous = _held_offer_isos(cur)
+        box["previous"] = previous
         cur["slots"] = info
+        cur["held_offers"] = list(new) if taken else previous + [i for i in new if i not in previous]
         return cur
 
     store.mutate(record_key, _apply, default={})
     rec["slots"] = info
-    stale = [i for i in box["previous"] if i not in new]
-    if stale:
-        release_recovery_claim(store, appt, stale)
+    rec["held_offers"] = list(new) if taken else box["previous"] + [i for i in new if i not in box["previous"]]
+    if taken:
+        stale = [i for i in box["previous"] if i not in new]
+        if stale:
+            release_recovery_claim(store, appt, stale)
 
 
 def _close_touch(store, record_key: str, raw: Dict[str, Any], appt: Dict[str, Any], reason: str) -> None:

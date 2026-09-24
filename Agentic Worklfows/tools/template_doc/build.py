@@ -727,7 +727,7 @@ KEY_LABELS = {
     "reminder_24h_email": ("Reminder email, 24 hours before", None),
     "reminder_morning_email": ("Reminder email, the morning of the call", None),
     "reminder_1h_email": ("Reminder email, 1 hour before", None),
-    "ns_still_on_email": ("Still on? email", None),
+    "ns_still_on_email": ("I'm on email", None),
     "ns_reschedule_email": ("Missed you email", None),
     "ns_reschedule_email.repeat": ("Missed you email, second no-show", None),
     "ns_d1_email": ("Day 1 email after a no-show", None),
