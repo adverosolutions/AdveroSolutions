@@ -9,7 +9,7 @@ Read in order: the lead said "interested", Lorenzo replied by hand with two time
 4. No Claudeisms: no sentence or tacked-on clause that restates, sums up or sells the point just made. Test: delete it; if no fact, question or next step is lost, it goes.
 5. Normal capitalization.
 
-Walkthrough status: E1 to E4 agreed 2026-09-23. E5 onward still show the editor's drafts below; rules 1 and 2 are applied as each email is walked through.
+Walkthrough status: E1 to E5 agreed 2026-09-23. E6 onward still show the editor's drafts below; rules 1 and 2 are applied as each email is walked through.
 
 ## E1 · Day 1 · Two fresh times, lightest nudge (AGREED 2026-09-23)
 Hey {first_name},
@@ -47,37 +47,37 @@ Agreed with Lorenzo 2026-09-23 (the editor's pick, booking link removed). "Those
 ## E4 · Day 4 · Proof it works (AGREED 2026-09-23)
 Hey {first_name},
 
-I really think there's a lot of room for growth at {company}. I've done this across numerous industries. A few of my favorites:
+I really think there's a lot of room for growth at {company}. I've built these systems across numerous industries. A few of my favorites:
 
-- about $6M worth of contracts recovered within 6 months for a commercial roofer doing $150M a year
-- qualified lead volume up 35% for a software consultancy
+- {offer_proof}
+- an outbound system that raised a software consultancy's qualified lead volume 35%
 - $5M in loan applications in 30 days on $1,500 of ad spend for a lender
 
-Those last two times got booked. Would {slots} work to go over it?
+The first one is the same kind of system I'd build for {company}. Those last two times got booked. Would {slots} work to go over it?
 
 Lorenzo
 
-Agreed with Lorenzo 2026-09-23: his own list, the same for every lead (no per-offer {niche_proof}), framed as "a few of my favorites" so it doesn't read as if these were picked as the closest match to their industry. He rejected a version with the industries stripped out ("they get confused, like they're garbage"). Wholesaler line dropped (no number on file). "Those last two times" are E3's.
+{offer_proof} by offer type (config/offers.md: one proof per offer type, never mixed):
+- Reactivation (cleaning, bookkeeping, recruiting): a win-back system for a commercial roofer doing $150M a year that recovered about $6M worth of contracts within 6 months
+- Outbound (cleaning, bookkeeping, recruiting): an outbound system for a commercial roofer doing $150M a year that brought in about $180,000 in new contracts in 90 days
 
-## E5 · Day 5 · Busy season, two more
+Agreed with Lorenzo 2026-09-23, in three steps: (1) his own list with the industries kept, framed as favorites so it doesn't read as the closest match to their industry (he rejected an industry-free version: "they get confused, like they're garbage"); (2) every item tied back to the offer by naming the system, plus "The first one is the same kind of system I'd build for {company}" ("they need to be applicable to the offer, or else they're useless"); (3) two versions, reactivation and outbound. Wholesaler line dropped (no number on file). "Those last two times" are E3's. Note: config/offers.md words the consultancy proof as "+35% reply rate"; Lorenzo's own case-study wording (used here) is qualified lead volume up 35%.
+
+## E5 · Day 5 · Busy season, two more, what the call is for (AGREED 2026-09-23)
 Hey {first_name},
 
 Haven't heard back yet, no worries. It's a busy time of year and the slots keep getting filled.
 
-Wanted to shoot you two more and see if either works: {slots}.
-
-If neither fits, any time here works too: {booking_url}
+I'd still like to show you how we'd {offer_line}. Would {slots} work?
 
 Lorenzo
 
-Alternate (turns the busy season into a favor; true because the engine never double-offers a time):
-Hey {first_name},
+{offer_line} by offer type:
+- Reactivation, cleaning and recruiting: win back {company}'s past accounts
+- Reactivation, bookkeeping: win back {company}'s past clients
+- Outbound (cleaning, bookkeeping, recruiting): get {company} in front of new clients right when they need you
 
-It's a busy stretch right now, so I'm holding these two for you: {slots}.
-
-Reply with whichever works and it's yours. If neither fits, any time here works too: {booking_url}
-
-Lorenzo
+Agreed with Lorenzo 2026-09-23: his wording plus one line tying it to the offer. "The slots keep getting filled" covers the earlier times being gone. Kept (not dropped).
 
 ## E6 · Day 6 · A preview of the call
 Hey {first_name},
