@@ -6,7 +6,7 @@
       "key": "capture",
       "label": "1 - CAPTURE LEADS FROM YOUR ADS AND WEBSITE FORMS",
       "color": 0,
-      "note": "Your website and ad landing-page forms post every lead to one webhook, carrying the UTM tag your Google and Facebook ads add. That tag becomes the lead's source in Zoho."
+      "note": "Your website and ad landing-page forms post every lead to one webhook, carrying the UTM tag your Google and Facebook ads add. That tag becomes the lead's source in Zoho. A form that drops the tag files the lead as Website, and your by-source report goes flat."
     },
     {
       "key": "enrich",
@@ -209,6 +209,7 @@
       "app": "googleSheets",
       "op": "update",
       "section": "report",
+      "notes": "One row per source (Facebook, Google Ads, Website): leads in the last 30 days, converted, conversion rate.",
       "params": {
         "operation": "appendOrUpdate",
         "document": "PASTE-YOUR-DASHBOARD-GOOGLE-SHEET-ID",
@@ -292,12 +293,9 @@
     "executionMode": "production"
   },
   "output_sample": {
-    "row_number": 3,
-    "source": "Facebook",
-    "leads_last_30_days": 41,
-    "converted": 6,
-    "conversion_rate": "15%",
-    "updated_at": "2026-09-28"
+    "to": "+17575550184",
+    "status": "queued",
+    "body": "Hi Alicia, it's PASTE-YOUR-SENDER-NAME from PASTE-YOUR-COMPANY-NAME. I emailed you yesterday about your inquiry. If a quick call is easier, pick a time here: PASTE-YOUR-BOOKING-LINK Reply STOP to opt out."
   },
   "archetype": "your_leads_into_zoho_crm_enriched_deduped_follow",
   "learned": true,
