@@ -32,4 +32,6 @@ work.
 
 ## Pricing
 
-No Upwork pricing yet: Lorenzo adds it. Until then no draft may state a price.
+None, by design (Lorenzo, 2026-09-23): he sets the price for each job
+himself, so no draft ever states a price. When a client asks about price, the
+reply leaves it for Lorenzo in NEEDS_YOU.

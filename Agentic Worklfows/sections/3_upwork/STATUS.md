@@ -18,4 +18,6 @@
 - The monthly-rate gap in `copy_gate.py` (`_RATE_AGREED_RE`).
 
 ## Waiting on Lorenzo
-The 08:30 scheduled task (yes/no), the GHL Upwork pipeline, the pricing lines in `config/upwork_offers.md`.
+- **The GHL Upwork pipeline** (he is creating it): six stages in this order, New reply, Proposal sent, Call booked, Follow up later, Won, Lost (code keys `new_reply`, `proposal_sent`, `call_booked`, `follow_up_later`, `won`, `lost`). A move to New reply or Proposal sent makes the engine draft. When it exists, read its ids (read only) into `config/ids.json` `ghl.pipelines.upwork`.
+- **The watch schedule** (being built): a Claude scheduled task every 30 min on weekdays; first run of the day is the full sweep. Replaces the 08:30 daily run. Created only on his yes.
+- Pricing: settled 2026-09-23, never. He sets each job's price; drafts never state one (`config/upwork_offers.md`).

@@ -488,7 +488,8 @@ def test_volume_numbers_are_not_prices():
 
 
 def test_pricing_section_figures_are_allowed_as_prices():
-    offers = OFFERS.replace("No Upwork pricing yet: Lorenzo adds it.", "Intake builds start at $1,200 fixed.")
+    offers = OFFERS.split("## Pricing")[0] + "## Pricing\n\nIntake builds start at $1,200 fixed.\n"
+    assert "$1,200" not in OFFERS and "$1,200" in offers
     assert "figure_not_in_offers" not in check(BESPOKE + " the intake alone is $1,200 fixed.", "reply", room(),
                                                offers)
     assert "figure_not_in_offers" in check(BESPOKE + " the intake alone is $1,300 fixed.", "reply", room(), offers)
