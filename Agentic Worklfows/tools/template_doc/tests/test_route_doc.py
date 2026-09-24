@@ -214,12 +214,27 @@ def test_every_entry_shows_its_source_in_text_and_md():
 REPO = os.path.dirname(os.path.dirname(TOOL_DIR))
 
 
+# The committed manifest describes the doc uploaded on 2026-09-23, which still
+# uses the legacy cadence.d* ids. Section 1 renamed the cadence emails to
+# cadence.e1..e10 and removed the d prompt files; the doc rebuild (README step 3)
+# replaces this manifest. Once the d prompt files are gone, the legacy
+# cadence.d* blocks (their files and their no_slots text) are skipped; every
+# other block must still resolve and hold its text.
+LEGACY_CADENCE = re.compile(r"^cadence\.d\d")
+CADENCE_RENAMED = not os.path.isfile(
+    os.path.join(REPO, "services/reply_engine/prompts/cadence_d1.md"))
+
+
 def test_every_routed_file_exists_and_overrides_hold_the_text():
     manifest = route_doc.diff_doc.load_manifest(MANIFEST)
+    checked = 0
     for b in manifest["blocks"]:
         _, path, _ = route_doc.route(b["tag"], b)
         if path in (route_doc.REVIEW_BY_HAND, route_doc.INSTANTLY_CHANGESET):
             continue
+        if CADENCE_RENAMED and LEGACY_CADENCE.match(b["tag"]):
+            continue
+        checked += 1
         assert os.path.isfile(os.path.join(REPO, path)), (b["tag"], path)
         if route_doc._override(b["tag"]) and b["tag"] != "cadence.d6/one_slot":
             held = _read(os.path.join(REPO, path))
@@ -230,6 +245,7 @@ def test_every_routed_file_exists_and_overrides_hold_the_text():
             assert pieces, b["tag"]
             for p in pieces:
                 assert p in held, (b["tag"], path, p)
+    assert checked > 200, checked
 
 
 def test_stray_braces_in_engine_and_instantly_blocks(tmp_path):
