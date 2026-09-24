@@ -62,14 +62,16 @@ class ThreadInstantly(FakeInstantly):
         return {"items": list(self.rows), "next_starting_after": None}
 
 
-def _row(email_id, when, outbound=True, thread=THREAD):
+def _row(email_id, when, outbound=True, thread=THREAD, ue_type=None, lead=LEAD):
     """One GET /emails?email_type=manual row in the live shape
-    (instantly_emails_api_shape_2026-09-21.json): ue_type 3 is ours, 2 theirs."""
+    (instantly_emails_api_shape_2026-09-21.json): ue_type 3 is ours by hand,
+    2 theirs; 1 and 4 (a campaign step, a scheduled send) come from the inbox
+    too."""
     return {"id": email_id, "thread_id": thread, "eaccount": EACCOUNT, "campaign_id": CAMPAIGN,
             "timestamp_created": when.astimezone(pytz.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
-            "ue_type": 3 if outbound else 2,
-            "from_address_email": EACCOUNT if outbound else LEAD,
-            "to_address_email_list": LEAD if outbound else EACCOUNT,
+            "ue_type": ue_type if ue_type is not None else (3 if outbound else 2),
+            "from_address_email": EACCOUNT if outbound else lead,
+            "to_address_email_list": lead if outbound else EACCOUNT,
             "subject": "Re: Jordan, question"}
 
 
@@ -93,23 +95,23 @@ def env(tmp_env, monkeypatch):
     return {"store": JsonFileStore(tmp_env / "day0.json"), "rows": rows}
 
 
-def _seed(store):
+def _seed(store, lead=LEAD, thread=THREAD, slots=SLOTS, reply_at=REPLY_AT, card_at=CARD_AT):
     """The lead as the reply pipeline leaves it: the inbound on its history,
     the first-reply card (two held times, no booking link) pending."""
-    ev = ReplyEvent(email_id="in-1", thread_id=THREAD, campaign_id=CAMPAIGN, eaccount=EACCOUNT, lead_email=LEAD,
+    ev = ReplyEvent(email_id="in-1", thread_id=thread, campaign_id=CAMPAIGN, eaccount=EACCOUNT, lead_email=lead,
                     first_name="Jordan", company="Brightline Cleaning", subject="Jordan, question",
-                    text="Sounds good, tell me more.", received_at=REPLY_AT)
+                    text="Sounds good, tell me more.", received_at=reply_at)
     state = LeadState.from_store(None, ev)
     state.status = "positive_interested"
-    state.last_inbound_at = REPLY_AT.isoformat()
+    state.last_inbound_at = reply_at.isoformat()
     state.last_email_id = "in-1"
     state.last_subject = "Re: Jordan, question"
-    state.history.append({"at": CARD_AT.isoformat(), "event": "inbound", "email_id": "in-1",
-                          "label": "positive_interested", "received_at": REPLY_AT.isoformat()})
+    state.history.append({"at": card_at.isoformat(), "event": "inbound", "email_id": "in-1",
+                          "label": "positive_interested", "received_at": reply_at.isoformat()})
     draft = Draft(subject="Re: Jordan, question", label="positive_interested", model="template",
                   body_text="Hey Jordan, happy to walk you through it. Does Monday at 1pm or Tuesday at 2pm work?",
-                  offered_slots=list(SLOTS), template_id="first_reply.reactivation.default.full")
-    card = A.create_approval(state, draft, ev, store=store, now=CARD_AT)
+                  offered_slots=list(slots), template_id="first_reply.reactivation.default.full")
+    card = A.create_approval(state, draft, ev, store=store, now=card_at)
     state.processed_email_ids.append("in-1")
     store.set(state.key, state.to_store())
     return state, card
@@ -121,6 +123,22 @@ def _card_id(card):
 
 def _lead(store, state):
     return cadence.state_from_dict(store.get(state.key))
+
+
+def _inbound(store, state, email_id, when, label):
+    """Another reply of the lead's, as the router records it: on the history,
+    processed, and moving ``last_inbound_at`` (router.route does that for
+    every label, an auto-responder's included). No card is raised for it."""
+    row = _lead(store, state)
+    row.history.append({"at": (when + timedelta(minutes=4)).isoformat(), "event": "inbound", "email_id": email_id,
+                        "label": label, "received_at": when.isoformat()})
+    row.processed_email_ids.append(email_id)
+    row.last_inbound_at = when.isoformat()
+    row.last_email_id = email_id
+    if label == "auto_reply_unmonitored":
+        row.status = "auto_reply"
+    store.set(state.key, cadence.state_to_dict(row))
+    return row
 
 
 # ====================================================== the detection itself
@@ -168,11 +186,59 @@ def test_an_outbound_before_the_reply_one_in_another_thread_and_an_inbound_are_n
     state, card = _seed(store)
     rows = [_row("cold-1", REPLY_AT - timedelta(days=3)),                 # the cold email, before the reply
             _row("other-1", SENT_AT, thread="thread-someone-else"),       # his reply to another lead
-            _row("in-2", SENT_AT, outbound=False)]                         # the lead writing again
+            _row("in-2", SENT_AT, outbound=False),                         # the lead writing again
+            _row("step-2", SENT_AT, ue_type=1),                            # a campaign step from the inbox
+            _row("sched-1", SENT_AT, ue_type=4)]                           # a scheduled send from the inbox
     before = store.get(state.key)
     res = cadence.detect_manual_first_reply(state, TICK, ThreadInstantly(rows), store)
-    assert res["action"] == "no_reply_found" and res["rows_read"] == 3
+    assert res["action"] == "no_reply_found" and res["rows_read"] == 5
     assert store.get(state.key) == before and not cadence.is_armed(_lead(store, state))
+
+
+def test_an_auto_responders_answer_to_his_reply_does_not_hide_it(env):
+    """B1: the lead's info@ auto-responder answers Lorenzo's reply a minute
+    later. The router moves last_inbound_at to it and raises no card; the
+    cutoff is the reply the card answers, so his reply is still found."""
+    store = env["store"]
+    state, card = _seed(store)
+    auto_at = SENT_AT + timedelta(minutes=1)
+    state = _inbound(store, state, "auto-1", auto_at, "auto_reply_unmonitored")
+    assert state.last_inbound_at == auto_at.isoformat()
+    assert cadence.first_reply_cutoff(state, card) == REPLY_AT
+    rows = [_row("auto-1", auto_at, outbound=False, lead="info@example.com"), _row("out-1", SENT_AT)]
+    res = cadence.detect_manual_first_reply(state, TICK, ThreadInstantly(rows), store)
+    assert res["action"] == "ladder_started" and res["email_id"] == "out-1" and res["next_send_at"] == E1_AT
+    assert _lead(store, state).cadence["armed_at"] == SENT_AT.isoformat()
+
+
+def test_an_old_card_is_not_read_even_when_a_machine_answered_recently(env):
+    """The lookback bounds day 0 by the reply the card answers, not by
+    last_inbound_at: a reply 40 days old whose card expired, then the lead's
+    auto-responder answering one of Lorenzo's later hand follow-ups 3 days
+    ago, must not arm a ladder 40 days in the past. No read, no arm."""
+    store = env["store"]
+    old = TICK - timedelta(days=40)
+    state, card = _seed(store, slots=["2029-12-04T13:00:00-06:00", "2029-12-05T14:00:00-06:00"],
+                        reply_at=old, card_at=old + timedelta(minutes=5))
+    raw = store.get(A.APPROVAL_PREFIX + _card_id(card))
+    store.set(A.APPROVAL_PREFIX + _card_id(card), dict(raw, status="expired"))
+    state = _inbound(store, state, "auto-9", TICK - timedelta(days=3), "auto_reply_unmonitored")
+    assert cadence.is_first_reply_candidate(state, TICK)          # last_inbound_at alone would let it through
+    inst = ThreadInstantly([_row("out-old", old + timedelta(hours=2)), _row("out-late", TICK - timedelta(days=3, hours=1))])
+    summary = cadence_tick.run(TICK, store, instantly=inst)
+    assert summary["first_reply_counts"] == {"not_candidate": 1}
+    assert summary["first_reply_results"][0]["reason"] == "reply_too_old"
+    assert inst.reads == [] and summary["digest"] == []
+    assert not _lead(store, state).cadence.get("armed_at")
+
+
+def test_a_lead_the_ladder_is_over_for_is_not_read(env):
+    store = env["store"]
+    state, card = _seed(store)
+    state.status = "negative_notnow"
+    inst = ThreadInstantly([_row("out-1", SENT_AT)])
+    res = cadence.detect_manual_first_reply(state, TICK, inst, store)
+    assert (res["action"], res["reason"]) == ("not_candidate", "follow_up_later") and inst.reads == []
 
 
 def test_nothing_happens_once_a_reply_is_recorded_even_when_mark_sent_lands_during_the_read(env):
@@ -254,17 +320,57 @@ def test_one_hourly_tick_starts_the_ladder_counts_it_and_e1_goes_out_on_monday(e
     assert [(r["action"], r["day"]) for r in summary["results"]] == [("would_send", 1)]
 
 
-def test_an_instantly_error_is_counted_never_raised_and_the_next_tick_retries(env):
+def test_an_instantly_error_is_counted_never_raised_stops_the_reads_and_the_next_tick_retries(env):
     store = env["store"]
     state, card = _seed(store)
+    other, _ = _seed(store, lead="second@example.com", thread="thread-day0-2",
+                     slots=["2030-01-14T15:00:00-06:00", "2030-01-15T16:00:00-06:00"])
     before = store.get(state.key)
     inst = ThreadInstantly([_row("out-1", SENT_AT)], error=InstantlyError("Instantly GET /emails -> HTTP 429"))
     summary = cadence_tick.run(TICK, store, instantly=inst)
-    assert summary["first_reply_counts"] == {"check_failed": 1} and summary["problems"] == 1
-    assert summary["first_reply_results"][0]["reason"] == "instantly_read_failed"
+    # one failed read, then the other candidate waits for the next tick (the
+    # tick's Modal time limit): no second read
+    assert summary["first_reply_counts"] == {"check_failed": 1, "deferred": 1} and summary["problems"] == 1
+    assert len(inst.reads) == 1
+    by_action = {r["action"]: r for r in summary["first_reply_results"]}
+    assert by_action["check_failed"]["reason"] == "instantly_read_failed"
+    assert by_action["deferred"]["reason"] == "after_read_failure"
     assert any("thread check for your replies failed" in line for line in summary["digest"])
     assert store.get(state.key) == before
     inst.error = None
     summary = cadence_tick.run(TICK + timedelta(hours=1), store, instantly=inst)
-    assert summary["first_reply_counts"] == {"ladder_started": 1} and summary["problems"] == 0
+    # Lorenzo's reply is in the first lead's thread only
+    assert summary["first_reply_counts"] == {"ladder_started": 1, "no_reply_found": 1} and summary["problems"] == 0
     assert _lead(store, state).cadence["next_send_at"] == E1_AT
+    assert not _lead(store, other).cadence.get("armed_at")
+
+
+def test_a_reply_recorded_but_refused_by_arm_refusal_is_counted_in_the_digest(env):
+    """The lead wrote again after his send (and no card was raised for it):
+    his reply is recorded, the ladder is not armed (approval.arm_refusal,
+    newer_inbound), and the digest says so in counts."""
+    store = env["store"]
+    state, card = _seed(store)
+    _inbound(store, state, "in-2", SENT_AT + timedelta(minutes=15), "positive_question")
+    notify.reset_for_tests()
+    summary = cadence_tick.run(TICK, store, instantly=ThreadInstantly([_row("out-1", SENT_AT)]))
+    assert summary["first_reply_counts"] == {"reply_recorded": 1} and summary["ladders_started"] == 0
+    assert summary["first_reply_results"][0]["reason"] == "newer_inbound:in-2"
+    line = "1 reply of yours seen in the thread, no ladder started (the lead wrote again, or another card of theirs " \
+           "is waiting)"
+    assert summary["digest"] == [line] and notify.sent_in_test[0]["message"] == line
+    lead = _lead(store, state)
+    assert [e["email_id"] for e in lead.history if e.get("event") == "reply_sent_manually"] == ["out-1"]
+    assert lead.last_outbound_at == SENT_AT.isoformat() and not lead.cadence.get("armed_at")
+
+
+def test_one_bad_row_does_not_end_the_tick(env, monkeypatch):
+    store = env["store"]
+    _seed(store)
+
+    def _broken(state, now):
+        raise ValueError("unreadable row")
+
+    monkeypatch.setattr(cadence, "is_first_reply_candidate", _broken)
+    summary = cadence_tick.run(TICK, store, instantly=ThreadInstantly([_row("out-1", SENT_AT)]))
+    assert summary["first_reply_counts"] == {"check_failed": 1} and summary["problems"] == 1
