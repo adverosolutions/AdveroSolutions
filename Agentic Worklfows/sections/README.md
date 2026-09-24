@@ -62,7 +62,7 @@ This is what Lorenzo asked for on 2026-09-23 and what section 1 already did:
 2. One writer agent per email, each writing three versions.
 3. One editor agent (Lorenzo asked for Fable here) ties the set together: one pick per email, openers that differ, a sequence that builds.
 4. Walk Lorenzo through it **one email at a time in chat** and take his edits. Only then change code.
-5. Voice rules he enforces: short, plain, casual, sounds like him texting; no em or en dashes, no exclamation marks, no emojis; never mention AI or automation; no invented facts, results or client names. Proof and prices only from `config/offers.md` and the proof list in the writer brief.
+5. Voice rules he enforces: short, plain, casual, sounds like him texting; no em or en dashes, no exclamation marks, no emojis; never mention AI or automation; no invented facts, results or client names. No "Claudeisms" (Lorenzo, 2026-09-23): never add a sentence or tacked-on clause that restates, sums up or sells the point just made ("Nobody in the office has to remember to ask.", "No more chasing leads.", "...which means you never lose a lead"); say the thing and stop. Normal capitalization, not all-lowercase. Prompts that generate copy need this written into the prompt itself. Proof and prices only from `config/offers.md` and the proof list in the writer brief.
 
 ## Things no section touches
 
