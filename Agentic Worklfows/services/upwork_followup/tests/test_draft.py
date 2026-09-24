@@ -814,6 +814,19 @@ def test_copy_rules_t3_hints_at_a_similar_client_without_naming_it():
     assert "Share one result from UPWORK_OFFERS" not in text
 
 
+def test_copy_rules_t3_allows_what_was_built_but_no_name_or_figures():
+    text = (PROMPTS_DIR / "touch_t3.md").read_text(encoding="utf-8")
+    assert "Never name the client from the proof line" in text
+    assert "is the one exception" in text
+    assert "percentage or result from the proof line" not in text
+
+
+@pytest.mark.parametrize("name", sorted(PROMPT_PURPOSES))
+def test_copy_rules_greeting_example_is_capitalized(name):
+    text = (PROMPTS_DIR / name).read_text(encoding="utf-8")
+    assert '("hey,"' not in text
+
+
 @pytest.mark.parametrize("name", sorted(n for n in PROMPT_PURPOSES if n != "reply.md"))
 def test_copy_rules_touches_and_checkin_never_repeat_the_proposal_results(name):
     text = (PROMPTS_DIR / name).read_text(encoding="utf-8")

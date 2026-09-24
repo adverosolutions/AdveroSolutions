@@ -246,8 +246,10 @@ Every touch must add something new, never "just checking in":
 3. **T3 (day 7), proof:** when a line in `config/upwork_offers.md` truly matches
    their vertical or problem, one short line that their project reminds Lorenzo
    of a past client with a very similar setup ("a contractor I worked with"),
-   never naming the client and never repeating the line's figures or result,
-   which the proposal already carried. If none fits, a relevant insight instead.
+   never naming the client and never repeating the line's figures or
+   percentages, which the proposal already carried. A plain-words line on what
+   was built for them, taken only from the proof line, is allowed. If none
+   fits, a relevant insight instead.
 4. **T4 (day 11), catch:** one risk or edge case in what they described that is
    easy to miss. It must be grounded in their post or messages, and must never
    invent a problem they did not state.

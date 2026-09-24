@@ -4,14 +4,18 @@
 
 **Earlier on 2026-09-23:** the follow-up pipeline and price guard are committed and tested. One real read-only run is done (drafts only). Not scheduled yet. The GHL Upwork pipeline doesn't exist yet (Lorenzo creates it).
 
+## Done 2026-09-23
+- **Touch walkthrough** with Lorenzo: all 9 prompts agreed (`walkthrough.md` has every decision and sample).
+- **Prompts updated** (reviewed, APPROVE twice): normal capitalization; the no-Claudeisms rule; T3 hints at a similar past client (no name, no figures, a plain-words line on what was built is fine); no touch repeats a result the proposal already states (reply only when asked). All 9 agreed samples pass the copy gate.
+
 ## Next
-1. **Touch walkthrough: done** (2026-09-23). All 9 prompts agreed; every decision and sample is in `walkthrough.md`.
-2. **Then apply the agreed edits to all 9 prompts in one piece** (worker, then reviewer), per `walkthrough.md`:
-   - normal capitalization (drop "Lowercase-casual is fine");
-   - the no-Claudeisms rule with its examples;
-   - T3 rework: a vague line about a similar past client, no name and no figures, only when a proof line truly matches; no touch repeats a result the proposal already states.
-   Update the tests that pin prompt text, then run the full suite and push to main.
-   **In progress:** worker done (full suite green, all 9 agreed samples pass the gate), reviewer running. If this chat ends before it lands, the unreviewed edits are on GitHub as branch `wip/section-3-prompt-edits`: review them, commit to `section/3-upwork`, push to main, delete the wip branch.
+1. Lorenzo's "say yes" items below.
+2. First real run with the new prompts: main folder, after `git pull` there, with Lorenzo's OK for the model spend (read only, drafts to a file). The one quiet chat's T1 was due 09-24.
+
+## Parked (optional, only if Lorenzo wants)
+- The copy gate has no backstop for the new rules (a T3 quoting "$750M+" still passes, since the figure is in `upwork_offers.md`); they are prompt-only. Lorenzo sends every draft himself.
+- Reviewer insurance notes on `touch_t3.md`: append "(what was built, never its figures)" to the "one exception" line; say "when the proof line says what was built" so the roofing example isn't reused for the lender or agency lines.
+- The monthly-rate gap in `copy_gate.py` (`_RATE_AGREED_RE`).
 
 ## Waiting on Lorenzo
 The 08:30 scheduled task (yes/no), the GHL Upwork pipeline, the pricing lines in `config/upwork_offers.md`.
