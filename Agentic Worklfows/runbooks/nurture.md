@@ -6,13 +6,14 @@ Owner: Sales agent. Status: enrollment hook built 2026-09-23, MODE=shadow, nothi
 A lead who is not buying now should not be dropped. Nurture keeps them on a slow, 90-day track so they hear from us again later, instead of getting more daily follow-ups or nothing at all. This piece only records who is in nurture and why. It sends nothing.
 
 ## Who enrolls a lead, and why
-Nothing calls `enroll` yet (2026-09-23); the callers below are planned.
+Wired (2026-09-23): the cadence enrolls `no_reply_after_sequence` when E10 goes out (beside the Follow Up Later move) and `not_now_reply` on a "not now" answer; an enroll error goes in the tick's `post_errors` and never stops the GHL move. Section 2's `no_show_no_rebook` is still planned.
+`nurture.leave(lead_email, reason, now, store=None)` (reason `booked` or `re_engaged`) sets an active record to `status: "left"` with `left_at`, `left_reason` and one event; already left: unchanged; never enrolled: returns None. No callers yet (section 2 and a later piece).
 
-| Reason | Called by (planned) | When |
+| Reason | Called by | When |
 | --- | --- | --- |
-| `no_reply_after_sequence` | the follow-up cadence (section 1) | the ladder ran out (D30 went out) and the lead never answered |
-| `not_now_reply` | the reply handling (section 1) | the lead answered "not now" / "maybe later" |
-| `no_show_no_rebook` | booked-calls section (section 2) | the lead missed the call and never rebooked |
+| `no_reply_after_sequence` | the follow-up cadence (section 1) | the ladder ran out (E10 went out) and the lead never answered |
+| `not_now_reply` | the follow-up cadence on a "not now" answer (section 1) | the lead answered "not now" / "maybe later" |
+| `no_show_no_rebook` | booked-calls section (section 2, planned) | the lead missed the call and never rebooked |
 
 ## The call
 ```python
@@ -45,5 +46,5 @@ Enrolling makes no network call and does not go through `guard_write`. It only w
 ## Not built yet
 - The nurture emails themselves.
 - The nurture tick job that would send them.
-- The callers: the cadence enrolling a lead when the ladder runs out, the reply handling enrolling on a "not now" reply, and section 2's no-show job.
-- Leaving nurture when a lead books or replies with interest (and ending it after 90 days). Until then, a nurtured lead whose reply re-arms the ladder is stopped again as `nurture` on the next tick; to take a lead out by hand, delete its `nurture:<email>` key.
+- Section 2's no-show caller (`no_show_no_rebook`).
+- Callers of `leave`: section 2 on a booking, and the day-0 detection when a nurtured lead re-engages. Ending nurture after 90 days. Until then, a nurtured lead whose reply re-arms the ladder is stopped again as `nurture` on the next tick; to take a lead out by hand, call `nurture.leave` or delete its `nurture:<email>` key.

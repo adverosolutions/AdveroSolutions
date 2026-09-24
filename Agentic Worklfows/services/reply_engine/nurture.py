@@ -1,12 +1,12 @@
 """90-day nurture enrollment (section 1): the hook other code calls when a lead
 leaves the active follow-up and should hear from us again later.
 
-This is the enrollment contract only. The nurture emails, the nurture tick job
-and leaving nurture when a lead books are not built yet; ``touches`` is
-reserved for them.
+This is the enrollment contract (and ``leave``). The nurture emails and the
+nurture tick job are not built yet; ``touches`` is reserved for them.
 
     enroll(lead_email, reason, now)            # the positional contract
     enroll(lead_email, reason, now, store=None, campaign_id=None, note=None)
+    leave(lead_email, reason, now, store=None)   # reason: "booked" / "re_engaged"
 
 The record lives at its own key ``nurture:<lead email, stripped and
 lowercased>``, not on the lead row, so enrolling never writes a
@@ -48,9 +48,11 @@ from shared.settings import TZ
 logger = logging.getLogger("reply_engine.nurture")
 
 REASONS = ("no_reply_after_sequence", "not_now_reply", "no_show_no_rebook")
+LEAVE_REASONS = ("booked", "re_engaged")
 NURTURE_DAYS = 90   # the plan's length; content and cadence come later
 PREFIX = "nurture:"
 ACTIVE = "active"
+LEFT = "left"
 
 
 def _normalize(lead_email: Any) -> str:
@@ -150,6 +152,46 @@ def enroll(lead_email: Any, reason: str, now: datetime, store: Any = None,
     if box.get("created"):
         logger.info("nurture: enrolled %s (%s) until %s", email, reason, stored.get("ends_at"))
     return dict(stored, created=bool(box.get("created")))
+
+
+def leave(lead_email: Any, reason: str, now: datetime, store: Any = None) -> Optional[Dict[str, Any]]:
+    """Take ``lead_email`` out of the nurture: an active record gets
+    ``status`` "left", ``left_at``, ``left_reason`` and one event. Returns the
+    stored record, or None when the lead has no nurture record.
+
+    Idempotent: a record that is not active (already left, or ended) is
+    returned unchanged. Raises ValueError for an empty email or one without an
+    "@", a reason outside LEAVE_REASONS, or a naive ``now``."""
+    email = _normalize(lead_email)
+    if reason not in LEAVE_REASONS:
+        raise ValueError("unknown nurture leave reason %r (expected one of %s)" % (reason, ", ".join(LEAVE_REASONS)))
+    if not isinstance(now, datetime) or now.tzinfo is None or now.tzinfo.utcoffset(now) is None:
+        raise ValueError("nurture.leave needs a timezone-aware now, got %r" % (now,))
+    at = slot_rules.to_tz(now).isoformat()
+    box = {"left": False}
+
+    def apply(current: Any) -> Any:
+        box["left"] = False
+        if not isinstance(current, dict) or current.get("status") != ACTIVE:
+            return current  # not enrolled, or already out: nothing changes
+        box["left"] = True
+        rec = dict(current)
+        events = [e for e in (rec.get("events") or []) if isinstance(e, dict)] \
+            if isinstance(rec.get("events"), list) else []
+        events.append({"reason": reason, "at": at, "campaign_id": rec.get("campaign_id"), "note": "left"})
+        rec.update(status=LEFT, left_at=at, left_reason=reason, events=events)
+        return rec
+
+    st = _store(store)
+    seen = st.get(nurture_key(email))
+    if not isinstance(seen, dict):
+        return None  # never enrolled: write nothing
+    if seen.get("status") != ACTIVE:
+        return seen  # already out: write nothing
+    stored = st.mutate(nurture_key(email), apply)
+    if box["left"]:
+        logger.info("nurture: %s left (%s)", email, reason)
+    return stored if isinstance(stored, dict) else None
 
 
 def get(lead_email: Any, store: Any = None) -> Optional[Dict[str, Any]]:

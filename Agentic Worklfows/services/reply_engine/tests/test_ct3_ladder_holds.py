@@ -118,7 +118,7 @@ def test_d1_whose_full_check_fails_sends_no_veto_ping_all_day(store, tmp_env, d1
     assert veto_pings(pings) == [] and pings == []
     assert state.cadence.get("veto_notified_at") is None and replies() == []
     line = cadence.summarize_touch(results[0])
-    assert "Approving changes nothing" in line and "first name" in line and "Approve the ids" not in line
+    assert "Approving changes nothing" in line and "first name" in line and "emails doc" not in line
 
 
 def test_d1_fixed_lead_data_reopens_a_fresh_full_window(store, tmp_env, d1_live):
@@ -229,7 +229,7 @@ def test_kill_switch_for_a_week_holds_never_stops_and_sends_late_once_off(store,
     assert not state.cadence.get("stopped_reason") and pushes == []
     assert state.cadence["template_hold"]["since"] is None
     line = cadence.summarize_touch(results[0])
-    assert "kill switch" in line and "Approve the ids" not in line and "Nothing is stopped" in line
+    assert "kill switch" in line and "emails doc" not in line and "Nothing is stopped" in line
     approvals_file.kill_switch(False)
     now = ct(2026, 9, 28, 11, 0)
     sent = cadence.tick_lead(state, now, store=store, free_slots=cadence.default_slot_grid(now),
@@ -286,7 +286,7 @@ def test_three_days_nonconforming_stops_with_lead_data_advice(store, tmp_env, se
     assert state.cadence["stopped_reason"] == "template_unapproved"
     assert len(pushes) == 1
     (title, message), kw = pushes[0]
-    assert "Approving changes nothing" in message and "Approve the ids" not in message
+    assert "Approving changes nothing" in message and "emails doc" not in message
     line = cadence.summarize_touch(results[-1])
     assert "Approving changes nothing" in line and "Resume" in line
     for private in (LEAD, COMPANY, "Dana", "http"):
@@ -410,7 +410,7 @@ def test_the_stall_counts_across_causes_and_the_stop_names_the_last_one(store, t
     assert "reason: nonconforming" in message and cadence.hold_advice("nonconforming") in message
     assert cadence.hold_advice("unapproved") not in message
     line = cadence.summarize_touch(results[-1])
-    assert "(nonconforming)" in line and "Approving changes nothing" in line and "Approve the ids" not in line
+    assert "(nonconforming)" in line and "Approving changes nothing" in line and "emails doc" not in line
 
 
 # ======================================================== 2. resume link
@@ -561,7 +561,7 @@ def test_the_resume_link_is_re_signed_every_day_the_ladder_stays_stopped(store, 
             _, res = tick_stored(store, ct(2026, 9, day, h, 0), lambda *a, **k: pushes.append((a, k)))
             if len(pushes) > before:
                 assert res["action"] == "resume_link_sent" and res["ready"] is False
-                assert pushes[-1][1]["priority"] == "low" and "Approve the ids" in pushes[-1][0][1]
+                assert pushes[-1][1]["priority"] == "low" and "approve it in the emails doc" in pushes[-1][0][1]
                 links.append(link_of(pushes[-1]))
             else:
                 assert res["action"] == "already_stopped"
