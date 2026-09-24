@@ -1,0 +1,350 @@
+{
+ "_about": "Hand-written stand-ins for model answers, keyed by post id. Not recordings of a real model. p-008's first gate answer is below 0.8 so it escalates; p-010's monthly_usd (750 vs '$500/mo') and guarantee (not in the post) are wrong on purpose so the quote check has something to drop.",
+ "p-001": {
+  "extract": {
+   "buyer_role": {
+    "quote": "I targeted the practice owners directly",
+    "value": "practice owners"
+   },
+   "calls_booked": {
+    "quote": "5 calls booked",
+    "value": 5
+   },
+   "copy_angle": null,
+   "deal_usd": null,
+   "emails_sent": {
+    "quote": "sent about 1,200 emails",
+    "value": 1200
+   },
+   "experience": {
+    "quote": "Just closed my 3rd client!",
+    "value": "third client"
+   },
+   "geo": {
+    "quote": "dental practice in Ohio",
+    "value": "Ohio"
+   },
+   "guarantee": null,
+   "industry": {
+    "quote": "A 4-location dental practice in Ohio",
+    "value": "dental practice"
+   },
+   "list_source": {
+    "quote": "Leads came from Apollo",
+    "value": "Apollo"
+   },
+   "mechanism": {
+    "quote": "database reactivation campaign",
+    "value": "database reactivation campaign"
+   },
+   "monthly_usd": {
+    "quote": "$1,500/mo retainer",
+    "value": 1500
+   },
+   "offer_one_line": {
+    "quote": "We're running a database reactivation campaign on their 6,000 old patients",
+    "value": "Database reactivation campaign for a multi-location dental practice"
+   },
+   "positive_replies": {
+    "quote": "got 14 positive replies",
+    "value": 14
+   },
+   "pricing_model": {
+    "quote": "$2,500 setup and $1,500/mo retainer",
+    "value": "setup_plus_retainer"
+   },
+   "reply_rate_pct": null,
+   "setup_usd": {
+    "quote": "$2,500 setup",
+    "value": 2500
+   },
+   "time_to_result": null,
+   "tools": {
+    "quote": "sent about 1,200 emails with Instantly",
+    "value": [
+     "Instantly"
+    ]
+   }
+  },
+  "gate": {
+   "channel": "cold_email",
+   "confidence": 0.93,
+   "is_win": true,
+   "reason": "states a signed client",
+   "win_type": "new_client"
+  }
+ },
+ "p-002": {
+  "extract": {
+   "emails_sent": {
+    "quote": "about 900 sends",
+    "value": 900
+   },
+   "experience": {
+    "quote": "After 4 months in Maker School I finally got my first client",
+    "value": "first client after 4 months"
+   },
+   "industry": {
+    "quote": "Dental office",
+    "value": "dental office"
+   },
+   "mechanism": {
+    "quote": "AI receptionist that answers missed calls and books appointments",
+    "value": "AI receptionist that answers missed calls and books appointments"
+   },
+   "offer_one_line": {
+    "quote": "we set up an AI receptionist that answers missed calls and books appointments",
+    "value": "AI receptionist that answers missed calls and books appointments"
+   },
+   "setup_usd": {
+    "quote": "$3k setup",
+    "value": 3000
+   }
+  },
+  "gate": {
+   "channel": "cold_email",
+   "confidence": 0.93,
+   "is_win": true,
+   "reason": "states a signed client",
+   "win_type": "first_client"
+  }
+ },
+ "p-003": {
+  "extract": {
+   "industry": {
+    "quote": "Second dental client this month",
+    "value": "dental"
+   },
+   "mechanism": {
+    "quote": "same reactivation offer",
+    "value": "reactivation offer"
+   },
+   "offer_one_line": {
+    "quote": "same reactivation offer",
+    "value": "Dental patient reactivation on revenue share"
+   },
+   "pricing_model": {
+    "quote": "They pay 20% of revenue from reactivated patients",
+    "value": "rev_share"
+   }
+  },
+  "gate": {
+   "channel": "cold_email",
+   "confidence": 0.93,
+   "is_win": true,
+   "reason": "states a signed client",
+   "win_type": "new_client"
+  }
+ },
+ "p-004": {
+  "extract": {
+   "industry": {
+    "quote": "Another dental clinic",
+    "value": "dental clinic"
+   },
+   "mechanism": {
+    "quote": "signed for reactivation",
+    "value": "reactivation"
+   },
+   "setup_usd": {
+    "quote": "$2,000 setup",
+    "value": 2000
+   }
+  },
+  "gate": {
+   "channel": "cold_email",
+   "confidence": 0.93,
+   "is_win": true,
+   "reason": "states a signed client",
+   "win_type": "new_client"
+  }
+ },
+ "p-005": {
+  "extract": {
+   "industry": {
+    "quote": "Signed an HVAC company",
+    "value": "HVAC company"
+   },
+   "mechanism": {
+    "quote": "missed call text back and speed to lead",
+    "value": "missed call text back and speed to lead"
+   },
+   "monthly_usd": {
+    "quote": "$997/mo",
+    "value": 997
+   },
+   "pricing_model": {
+    "quote": "$997/mo",
+    "value": "retainer"
+   }
+  },
+  "gate": {
+   "channel": "referral",
+   "confidence": 0.93,
+   "is_win": true,
+   "reason": "states a signed client",
+   "win_type": "new_client"
+  }
+ },
+ "p-006": {
+  "extract": {
+   "emails_sent": {
+    "quote": "Sent 2,000 emails",
+    "value": 2000
+   },
+   "geo": {
+    "quote": "Roofing contractor in Texas",
+    "value": "Texas"
+   },
+   "industry": {
+    "quote": "Roofing contractor in Texas",
+    "value": "roofing contractor"
+   },
+   "mechanism": {
+    "quote": "Reactivating their old estimates list",
+    "value": "reactivating old estimates"
+   },
+   "pricing_model": {
+    "quote": "Performance deal, 10% of closed jobs",
+    "value": "performance"
+   },
+   "reply_rate_pct": {
+    "quote": "1.8% reply rate",
+    "value": 1.8
+   }
+  },
+  "gate": {
+   "channel": "cold_email",
+   "confidence": 0.93,
+   "is_win": true,
+   "reason": "signed roofing client, emails stated",
+   "win_type": "new_client"
+  }
+ },
+ "p-007": {
+  "gate": {
+   "channel": "unknown",
+   "confidence": 0.95,
+   "is_win": false,
+   "reason": "a question, no result",
+   "win_type": "other_win"
+  }
+ },
+ "p-008": {
+  "extract": {},
+  "gate": {
+   "channel": "unknown",
+   "confidence": 0.6,
+   "is_win": true,
+   "reason": "claims a win, numbers only in an image",
+   "win_type": "revenue_milestone"
+  },
+  "gate_escalate": {
+   "channel": "unknown",
+   "confidence": 0.85,
+   "is_win": true,
+   "reason": "win claimed, screenshot only",
+   "win_type": "revenue_milestone"
+  }
+ },
+ "p-009": {
+  "extract": {
+   "deal_usd": {
+    "quote": "$5,000 one-off build",
+    "value": 5000
+   },
+   "industry": {
+    "quote": "a personal injury law firm",
+    "value": "personal injury law firm"
+   },
+   "mechanism": {
+    "quote": "an AI intake chatbot",
+    "value": "AI intake chatbot"
+   },
+   "pricing_model": {
+    "quote": "$5,000 one-off build",
+    "value": "one_off_build"
+   }
+  },
+  "gate": {
+   "channel": "upwork",
+   "confidence": 0.93,
+   "is_win": true,
+   "reason": "states a signed client",
+   "win_type": "new_client"
+  }
+ },
+ "p-010": {
+  "extract": {
+   "guarantee": {
+    "quote": "30 new reviews in 60 days or money back",
+    "value": "30 new reviews in 60 days or money back"
+   },
+   "industry": {
+    "quote": "Med spa signed",
+    "value": "med spa"
+   },
+   "mechanism": {
+    "quote": "review generation",
+    "value": "review generation"
+   },
+   "monthly_usd": {
+    "quote": "$500/mo",
+    "value": 750
+   }
+  },
+  "gate": {
+   "channel": "cold_email",
+   "confidence": 0.93,
+   "is_win": true,
+   "reason": "states a signed client",
+   "win_type": "new_client"
+  }
+ },
+ "p-011": {
+  "extract": {
+   "industry": {
+    "quote": "Staffing agency client signed",
+    "value": "staffing agency"
+   },
+   "mechanism": {
+    "quote": "we watch job posts and email hiring managers for them",
+    "value": "watch job posts and email hiring managers"
+   },
+   "monthly_usd": {
+    "quote": "$4k/mo",
+    "value": 4000
+   }
+  },
+  "gate": {
+   "channel": "cold_email",
+   "confidence": 0.93,
+   "is_win": true,
+   "reason": "states a signed client",
+   "win_type": "new_client"
+  }
+ },
+ "p-012": {
+  "extract": {
+   "industry": {
+    "quote": "Janitorial company signed",
+    "value": "janitorial company"
+   },
+   "mechanism": {
+    "quote": "reactivating lost bids",
+    "value": "reactivating lost bids"
+   },
+   "setup_usd": {
+    "quote": "$1,500 setup",
+    "value": 1500
+   }
+  },
+  "gate": {
+   "channel": "cold_email",
+   "confidence": 0.93,
+   "is_win": true,
+   "reason": "states a signed client",
+   "win_type": "new_client"
+  }
+ }
+}
