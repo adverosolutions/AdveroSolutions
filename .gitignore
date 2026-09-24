@@ -115,6 +115,8 @@ Supabase/Untitled Document (1).txt
 !Coding/apify-lead-engine/scrape-leads-skill/input_schema.json
 !Coding/lead-scrape-2026/tests/*.json
 !Coding/lead-scrape-2026/instantly_campaigns.json
+# Apify filter settings per niche (no lead data); the list factory and its tests read them.
+!Coding/lead-scrape-2026/niches/*.json
 !Agentic\ Worklfows/products/**/*.json
 !Agentic\ Worklfows/products/**/*.csv
 !Agentic\ Worklfows/execution/style_cards/*.json

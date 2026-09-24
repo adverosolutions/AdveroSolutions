@@ -1,0 +1,2104 @@
+﻿Every email the system sends
+Every email and text the system sends, in the order a lead meets them.
+How to use it: Change any words you like. Keep the words in {curly brackets}: they are filled in for each lead. When you are done, tell Claude 'done'. Nothing goes live until you say so.
+When you say 'done', everything in this doc counts as approved. Emails still only go out after you tell Claude 'go live'.
+If a sentence appears in many emails (like the time-offer line in first replies), changing it once is enough; it changes everywhere. If you change two copies differently, Claude will ask.
+Leave the small grey tags at the end of each heading as they are: they tell Claude which email is which. Grey lines marked note or section are only there to help you read.
+Words in brackets: {first_name} their first name, {company} their company, {slots} two open times, {slot} one time, {booking_url} your booking link, {zoom_link} the call link, {loom_url} your Loom video, {original_subject} the subject of their email. The cold emails use Instantly's double brackets, like {{firstName}}.
+If we don't have their first name, 'Hey {first_name},' becomes 'Hey there,'. If we don't have their company name, {company} becomes 'your business' ('your team' in the Day 2, 4, 5 and 30 follow-ups). In a referral reply with no name, {referral_name} becomes 'the right person' and {referral_first_name} becomes 'them'.
+How times are written
+Every time is Central (CT). The engine writes them like this:
+{slots}: Tue 12:05pm or Thu 4:30pm CT (just Tue 12:05pm CT when only one time is free)
+{slot}: Tue 12:05pm (the email adds CT after it)
+{slot1} and {slot2}: Tue 12:05pm CT
+{when_ct}: Tue, Jan 8 at 12:05pm CT, and in another timezone Tue, Jan 8 at 12:05pm CT (1:05pm ET)
+{time_ct}: 12:05pm CT
+{asked_time}: the time they asked for, in their own zone, like Mon 10:45am ET
+{lead_local_time}: their own time, like 1:05pm ET (only added when they are not on Central)
+{alt_slots}: like {slots}; when the times are in another week the dates are added, like Tue Jan 15 12:05pm or Thu Jan 17 4:30pm CT
+Zones are written CT, ET, MT, PT, and MST for Arizona.
+Cold emails in Instantly (live copy, checked 2026-09-23) (section)
+Instantly sends these. Step 2 goes out 3 days after step 1, in the same email thread, and only if they haven't replied. {{personalization}} is the opening line written for each lead. (note)
+Cleaning, reactivation offer (section)
+Campaign: 2026 Cleaning - Client Reactivation. Sends between 7am and 7pm Eastern time. (note)
+Step 1: first email (tag: instantly.cleaning_reactivation.step1)
+Subject: {{firstName}}, question (tag: instantly.cleaning_reactivation.step1/subject)
+{{personalization}}
+
+
+Know this is out of left field, if I could help recover the money from accounts that cancelled or stopped renewing their contracts in exchange for a commission on the accounts I bring back, would you be open? I work mostly on performance and am building my network.
+
+
+About me: I build client reactivation systems. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months. Would cost you nothing upfront.
+
+
+Let me know.
+
+
+Thanks,
+Lorenzo
+Step 2: 3 days later, if they haven't replied (tag: instantly.cleaning_reactivation.step2)
+Subject: (tag: instantly.cleaning_reactivation.step2/subject)
+No subject of its own: it goes as a reply in the same thread. (note)
+Hey {{firstName}},
+
+
+Checking in, in case the first one got buried. Quick version:
+- I want to build a reactivation system for {{companyName}}. Goal is to bring back the accounts that cancelled or stopped renewing, without you chasing anyone.
+- I did this for a commercial roofer doing $150M/yr and recovered about $6M in contracts in 6 months.
+- Nothing up front. I only take a commission on the accounts I bring back.
+
+
+Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.
+
+
+Thanks for the time,
+Lorenzo
+Cleaning, outbound offer (section)
+Campaign: 2026 Cleaning - Trigger Outbound. Sends between 7am and 7pm Eastern time. (note)
+Step 1: first email (tag: instantly.cleaning_trigger.step1)
+Subject: {{firstName}}, question (tag: instantly.cleaning_trigger.step1/subject)
+{{personalization}}
+
+
+I build outbound acquisition systems. I recently implemented the same system for a commercial roofing company doing around $150M/yr and was able to generate around $180,000 in 90 days.
+
+
+I do this by watching for triggers (new leases, office expansions, property management changes, new construction) and run outreach under {{companyName}}'s name. All the walkthroughs would land straight on your calendar.
+
+
+I'm so confident that I guarantee at least $24,000 a year in new cleaning contracts signed within 90 days, or I give your money back and throw in a $200 gift card to your favorite steakhouse.
+
+
+If this interests you, let's hop on a short 15 minute call. Just reply Yes and I can shoot you over a calendar invite.
+
+
+Thanks,
+Lorenzo
+Step 2: 3 days later, if they haven't replied (tag: instantly.cleaning_trigger.step2)
+Subject: (tag: instantly.cleaning_trigger.step2/subject)
+No subject of its own: it goes as a reply in the same thread. (note)
+Hey {{firstName}},
+
+
+Checking in, in case the first one got buried. Quick version:
+- I want to build an outbound system for {{companyName}}. Goal is to catch businesses signing new leases or expanding, reach them under your name, and land the walkthroughs on your calendar.
+- I did this for a commercial roofer doing $150M/yr and generated about $180K in new contracts in 90 days.
+- If you don't have at least $24K a year in new cleaning contracts signed within 90 days, I give your money back and throw in a $200 gift card to your favorite steakhouse.
+
+
+Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.
+
+
+Thanks for the time,
+Lorenzo
+Bookkeeping, reactivation offer (section)
+Campaign: 2026 Bookkeeping - Client Reactivation. Sends between 7am and 7pm Eastern time. (note)
+Step 1: first email (tag: instantly.bookkeeping_reactivation.step1)
+Subject: {{firstName}}, question (tag: instantly.bookkeeping_reactivation.step1/subject)
+{{personalization}}
+
+
+I build client reactivation systems. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.
+
+
+TLDR: I'd recover lost revenue by building email sequences that would go out to any lost inquiries and former clients, timed to tax season, quarterly estimates, and year-end cleanup. Booked straight onto your calendar.
+
+
+I'm so certain this would work for you that I won't charge you a single cent up front, only a percentage of first-year fees from clients I bring back, $0 if nothing closes. I truly believe I can benefit {{companyName}}.
+
+
+Would you be open to a quick 15 minute call about this? If so just say yes and I'll shoot a calendar invite over.
+
+
+Thanks,
+Lorenzo
+Step 2: 3 days later, if they haven't replied (tag: instantly.bookkeeping_reactivation.step2)
+Subject: (tag: instantly.bookkeeping_reactivation.step2/subject)
+No subject of its own: it goes as a reply in the same thread. (note)
+Hey {{firstName}},
+
+
+Checking in, in case the first one got buried. Quick version:
+- I want to build a reactivation system for {{companyName}}. Goal is to bring back lost inquiries and former clients with sequences timed to tax season, quarterly estimates, and year-end cleanup.
+- I did this for a commercial roofer doing $150M/yr and recovered about $6M in contracts in 6 months.
+- Nothing up front. I only take a percentage of first-year fees on clients I bring back, $0 if nothing closes.
+
+
+Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.
+
+
+Thanks for the time,
+Lorenzo
+Bookkeeping, outbound offer (section)
+Campaign: 2026 Bookkeeping - Trigger Outbound. Sends between 7am and 7pm Eastern time. (note)
+Step 1: first email (tag: instantly.bookkeeping_trigger.step1)
+Subject: {{firstName}}, question (tag: instantly.bookkeeping_trigger.step1/subject)
+{{personalization}}
+
+
+I build outbound acquisition systems. I recently implemented the same system for a commercial roofing company doing around $150M/yr and was able to generate around $180,000 in 90 days.
+
+
+I do this by watching for triggers (new business formations, companies posting part time bookkeeper or admin roles, second location openings) and run outreach under {{companyName}}'s name. All the discovery calls land straight on your calendar.
+
+
+I'm so confident that I guarantee at least $15,000 in new annual client fees signed within 90 days, or I give your money back and throw in a $200 gift card to your favorite steakhouse.
+
+
+If this interests you, let's hop on a short 15 minute call. Just reply Yes and I can shoot you over a calendar invite.
+
+
+Thanks,
+Lorenzo
+Step 2: 3 days later, if they haven't replied (tag: instantly.bookkeeping_trigger.step2)
+Subject: (tag: instantly.bookkeeping_trigger.step2/subject)
+No subject of its own: it goes as a reply in the same thread. (note)
+Hey {{firstName}},
+
+
+Checking in, in case the first one got buried. Quick version:
+- I want to build an outbound system for {{companyName}}. Goal is to catch new business formations and second locations opening, reach them under your name, and land the discovery calls on your calendar.
+- I did this for a commercial roofer doing $150M/yr and generated about $180K in new contracts in 90 days.
+- If you don't have at least $15K in new annual client fees signed within 90 days, I give your money back and throw in a $200 gift card to your favorite steakhouse.
+
+
+Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.
+
+
+Thanks for the time,
+Lorenzo
+Recruiting, reactivation offer (section)
+Campaign: 2026 Recruiting - Client Reactivation. Sends between 7am and 7pm Eastern time. (note)
+Step 1: first email (tag: instantly.recruiting_reactivation.step1)
+Subject: {{firstName}}, question (tag: instantly.recruiting_reactivation.step1/subject)
+{{personalization}}
+
+
+I build client reactivation systems. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.
+
+
+TLDR: I'd recover lost revenue by building email and text sequences that would go out to any dormant or near miss candidate accounts.
+
+
+I'm so certain this would work for you that I won't charge you a single cent up front, only a percentage of placement fees from accounts I bring back, $0 if nothing closes. I truly believe I can benefit {{companyName}}.
+
+
+Would you be open to a quick 15 minute call about this? If so just say yes and I'll shoot a calendar invite over.
+
+
+Thanks,
+Lorenzo
+Step 2: 3 days later, if they haven't replied (tag: instantly.recruiting_reactivation.step2)
+Subject: (tag: instantly.recruiting_reactivation.step2/subject)
+No subject of its own: it goes as a reply in the same thread. (note)
+Hey {{firstName}},
+
+
+Checking in, in case the first one got buried. Quick version:
+- I want to build a reactivation system for {{companyName}}. Goal is to bring back the accounts that went quiet on you, with email and text sequences that run on their own.
+- I did this for a commercial roofer doing $150M/yr and recovered about $6M in contracts in 6 months.
+- Nothing up front. I only take a percentage of placement fees on accounts I bring back, $0 if nothing closes.
+
+
+Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.
+
+
+Thanks for the time,
+Lorenzo
+Recruiting, outbound offer (section)
+Campaign: 2026 Recruiting - Outbound (specialty roles). Sends between 8am and 5pm Central time. (note)
+Step 1: first email (tag: instantly.recruiting_outbound.step1)
+Subject: {{firstName}}, question (tag: instantly.recruiting_outbound.step1/subject)
+{{personalization}}
+
+
+I build outbound systems for recruiting agencies. I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days.
+
+
+Here's what this would look like for {{companyName}}: I watch for {{specialty}} roles sitting open on job boards, run outreach to the hiring managers under your name, and put the intro calls straight on your calendar.
+
+
+I'm so confident this works that I guarantee at least $40,000 in new placement fees from those calls within 180 days, or I return your money and throw in a $200 gift card to your favorite steakhouse.
+
+
+Open to a quick 15 minute call? Just say yes and I'll send a calendar invite.
+
+
+Thanks,
+Lorenzo
+Step 2: 3 days later, if they haven't replied (tag: instantly.recruiting_outbound.step2)
+Subject: (tag: instantly.recruiting_outbound.step2/subject)
+No subject of its own: it goes as a reply in the same thread. (note)
+Hey {{firstName}},
+
+
+Checking in, in case the first one got buried. Quick version:
+- I want to build an outbound system for {{companyName}}. Goal is to find {{specialty}} roles sitting open on job boards, reach the hiring managers under your name, and put the intro calls on your calendar.
+- I did this for a commercial roofer doing $150M/yr and generated about $180K in new contracts in 90 days.
+- If you don't see $40K in new placement fees within 180 days, I return your money and throw in a $200 gift card to your favorite steakhouse.
+
+
+Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.
+
+
+Thanks for the time,
+Lorenzo
+First reply when a lead replies interested (section)
+Goes out when a lead answers a cold email and sounds interested or asks a question. The version depends on their offer and what they asked. Replies only go out between 7am and 7pm Central. (note)
+Cleaning, reactivation offer (section)
+First reply: cleaning (reactivation), they said yes (tag: first_reply.cleaning_reactivation.default.full)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_reactivation.default.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Glad to hear it. All I need to start is a list of 60 or more lost or dormant accounts or lost proposals.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_reactivation.default.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.cleaning_reactivation.default.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_reactivation.default.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: cleaning (reactivation), they asked about price (tag: first_reply.cleaning_reactivation.pricing.full)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_reactivation.pricing.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Nothing up front. I take 20 to 30 percent of first-year contract value on the accounts that come back, a smaller cut on a bigger list, and $0 if nothing closes.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_reactivation.pricing.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.cleaning_reactivation.pricing.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_reactivation.pricing.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: cleaning (reactivation), they asked you to send info (tag: first_reply.cleaning_reactivation.send_info.full)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_reactivation.send_info.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+I build email and text sequences to every account that cancelled, stopped renewing, or never closed, and the ones ready to come back land on your calendar. Instead of sending a deck, I would rather walk you through it in 15 minutes and show you what it would look like for {company}.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_reactivation.send_info.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.cleaning_reactivation.send_info.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_reactivation.send_info.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: cleaning (reactivation), they asked how it works (tag: first_reply.cleaning_reactivation.mechanism.full)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_reactivation.mechanism.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+I build email and text sequences to every account that cancelled, stopped renewing, or never closed, and the ones ready to come back land on your calendar. All I need to start is a list of 60 or more lost or dormant accounts or lost proposals.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_reactivation.mechanism.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.cleaning_reactivation.mechanism.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_reactivation.mechanism.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: cleaning (reactivation), they asked something else (tag: first_reply.cleaning_reactivation.other.full)
+Starts as an approval card to you until you say otherwise. (note)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_reactivation.other.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Good question. The short version is that I build email and text sequences to every account that cancelled, stopped renewing, or never closed, and the ones ready to come back land on your calendar. The rest is easier to cover on a quick call.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_reactivation.other.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.cleaning_reactivation.other.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_reactivation.other.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: cleaning (reactivation), they pointed you to someone else (tag: first_reply.cleaning_reactivation.referral.full)
+Starts as an approval card to you until you say otherwise. (note)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_reactivation.referral.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Appreciate you pointing me to {referral_name}. Would you mind looping {referral_first_name} in on this thread so I can send the details over?
+
+
+Would {slots} work for {referral_first_name}? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_reactivation.referral.full/no_slots)
+Would {referral_first_name} have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.cleaning_reactivation.referral.full/confirmed_time)
+{slot} CT works on my end. Once {referral_first_name} is on the thread, I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+Cleaning, outbound offer (section)
+First reply: cleaning (outbound), they said yes (tag: first_reply.cleaning_trigger.default.full)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_trigger.default.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Glad to hear it. All I need to start is your service area and the building types you want.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_trigger.default.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.cleaning_trigger.default.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_trigger.default.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: cleaning (outbound), they asked about price (tag: first_reply.cleaning_trigger.pricing.full)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_trigger.pricing.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Setup plus a monthly retainer, sized to your service area, and the guarantee covers it: $24,000 a year in new cleaning contracts signed within 90 days or your money back plus a $200 steakhouse gift card.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_trigger.pricing.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.cleaning_trigger.pricing.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_trigger.pricing.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: cleaning (outbound), they asked you to send info (tag: first_reply.cleaning_trigger.send_info.full)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_trigger.send_info.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+I watch for triggers like new leases, office expansions, property management changes and new construction, run the outreach under your name, and land the walkthroughs on your calendar. Instead of sending a deck, I would rather walk you through it in 15 minutes and show you what it would look like for {company}.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_trigger.send_info.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.cleaning_trigger.send_info.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_trigger.send_info.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: cleaning (outbound), they asked how it works (tag: first_reply.cleaning_trigger.mechanism.full)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_trigger.mechanism.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+I watch for triggers like new leases, office expansions, property management changes and new construction, run the outreach under your name, and land the walkthroughs on your calendar. All I need to start is your service area and the building types you want.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_trigger.mechanism.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.cleaning_trigger.mechanism.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_trigger.mechanism.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: cleaning (outbound), they asked something else (tag: first_reply.cleaning_trigger.other.full)
+Starts as an approval card to you until you say otherwise. (note)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_trigger.other.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Good question. The short version is that I watch for triggers like new leases, office expansions, property management changes and new construction, run the outreach under your name, and land the walkthroughs on your calendar. The rest is easier to cover on a quick call.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_trigger.other.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.cleaning_trigger.other.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_trigger.other.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: cleaning (outbound), they pointed you to someone else (tag: first_reply.cleaning_trigger.referral.full)
+Starts as an approval card to you until you say otherwise. (note)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_trigger.referral.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Appreciate you pointing me to {referral_name}. Would you mind looping {referral_first_name} in on this thread so I can send the details over?
+
+
+Would {slots} work for {referral_first_name}? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_trigger.referral.full/no_slots)
+Would {referral_first_name} have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.cleaning_trigger.referral.full/confirmed_time)
+{slot} CT works on my end. Once {referral_first_name} is on the thread, I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+Bookkeeping, reactivation offer (section)
+First reply: bookkeeping (reactivation), they said yes (tag: first_reply.bookkeeping_reactivation.default.full)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_reactivation.default.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Glad to hear it. All I need to start is a list of 60 or more former clients or lost inquiries.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_reactivation.default.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.bookkeeping_reactivation.default.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_reactivation.default.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: bookkeeping (reactivation), they asked about price (tag: first_reply.bookkeeping_reactivation.pricing.full)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_reactivation.pricing.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Nothing up front. I take 20 to 30 percent of first-year fees from the clients who come back, and $0 if nothing closes.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_reactivation.pricing.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.bookkeeping_reactivation.pricing.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_reactivation.pricing.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: bookkeeping (reactivation), they asked you to send info (tag: first_reply.bookkeeping_reactivation.send_info.full)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_reactivation.send_info.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+I build sequences to lost inquiries and former clients, timed to tax season, quarterly estimates and year-end cleanup, and the ones ready to come back get booked onto your calendar. Instead of sending a deck, I would rather walk you through it in 15 minutes and show you what it would look like for {company}.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_reactivation.send_info.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.bookkeeping_reactivation.send_info.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_reactivation.send_info.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: bookkeeping (reactivation), they asked how it works (tag: first_reply.bookkeeping_reactivation.mechanism.full)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_reactivation.mechanism.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+I build sequences to lost inquiries and former clients, timed to tax season, quarterly estimates and year-end cleanup, and the ones ready to come back get booked onto your calendar. All I need to start is a list of 60 or more former clients or lost inquiries.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_reactivation.mechanism.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.bookkeeping_reactivation.mechanism.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_reactivation.mechanism.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: bookkeeping (reactivation), they asked something else (tag: first_reply.bookkeeping_reactivation.other.full)
+Starts as an approval card to you until you say otherwise. (note)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_reactivation.other.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Good question. The short version is that I build sequences to lost inquiries and former clients, timed to tax season, quarterly estimates and year-end cleanup, and the ones ready to come back get booked onto your calendar. The rest is easier to cover on a quick call.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_reactivation.other.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.bookkeeping_reactivation.other.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_reactivation.other.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: bookkeeping (reactivation), they pointed you to someone else (tag: first_reply.bookkeeping_reactivation.referral.full)
+Starts as an approval card to you until you say otherwise. (note)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_reactivation.referral.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Appreciate you pointing me to {referral_name}. Would you mind looping {referral_first_name} in on this thread so I can send the details over?
+
+
+Would {slots} work for {referral_first_name}? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_reactivation.referral.full/no_slots)
+Would {referral_first_name} have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.bookkeeping_reactivation.referral.full/confirmed_time)
+{slot} CT works on my end. Once {referral_first_name} is on the thread, I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+Bookkeeping, outbound offer (section)
+First reply: bookkeeping (outbound), they said yes (tag: first_reply.bookkeeping_trigger.default.full)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_trigger.default.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Glad to hear it. All I need to start is the client profile you want more of.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_trigger.default.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.bookkeeping_trigger.default.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_trigger.default.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: bookkeeping (outbound), they asked about price (tag: first_reply.bookkeeping_trigger.pricing.full)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_trigger.pricing.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Setup plus a monthly retainer, sized to your target client profile, and the guarantee covers it: $15,000 in new annual client fees within 90 days or your money back plus a $200 gift card.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_trigger.pricing.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.bookkeeping_trigger.pricing.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_trigger.pricing.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: bookkeeping (outbound), they asked you to send info (tag: first_reply.bookkeeping_trigger.send_info.full)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_trigger.send_info.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+I watch for triggers like new business formations, part-time bookkeeper job posts and second locations, run the outreach under your name, and land the discovery calls on your calendar. Instead of sending a deck, I would rather walk you through it in 15 minutes and show you what it would look like for {company}.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_trigger.send_info.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.bookkeeping_trigger.send_info.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_trigger.send_info.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: bookkeeping (outbound), they asked how it works (tag: first_reply.bookkeeping_trigger.mechanism.full)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_trigger.mechanism.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+I watch for triggers like new business formations, part-time bookkeeper job posts and second locations, run the outreach under your name, and land the discovery calls on your calendar. All I need to start is the client profile you want more of.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_trigger.mechanism.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.bookkeeping_trigger.mechanism.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_trigger.mechanism.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: bookkeeping (outbound), they asked something else (tag: first_reply.bookkeeping_trigger.other.full)
+Starts as an approval card to you until you say otherwise. (note)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_trigger.other.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Good question. The short version is that I watch for triggers like new business formations, part-time bookkeeper job posts and second locations, run the outreach under your name, and land the discovery calls on your calendar. The rest is easier to cover on a quick call.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_trigger.other.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.bookkeeping_trigger.other.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_trigger.other.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: bookkeeping (outbound), they pointed you to someone else (tag: first_reply.bookkeeping_trigger.referral.full)
+Starts as an approval card to you until you say otherwise. (note)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_trigger.referral.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Appreciate you pointing me to {referral_name}. Would you mind looping {referral_first_name} in on this thread so I can send the details over?
+
+
+Would {slots} work for {referral_first_name}? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_trigger.referral.full/no_slots)
+Would {referral_first_name} have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.bookkeeping_trigger.referral.full/confirmed_time)
+{slot} CT works on my end. Once {referral_first_name} is on the thread, I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+Recruiting, reactivation offer (section)
+First reply: recruiting (reactivation), they said yes (tag: first_reply.recruiting_reactivation.default.full)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_reactivation.default.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Glad to hear it. All I need to start is a list of 60 or more dormant client accounts.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_reactivation.default.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.recruiting_reactivation.default.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_reactivation.default.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: recruiting (reactivation), they asked about price (tag: first_reply.recruiting_reactivation.pricing.full)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_reactivation.pricing.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Nothing up front. I take 20 to 30 percent of the first placement fee on the accounts that come back, and $0 if nothing closes.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_reactivation.pricing.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.recruiting_reactivation.pricing.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_reactivation.pricing.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: recruiting (reactivation), they asked you to send info (tag: first_reply.recruiting_reactivation.send_info.full)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_reactivation.send_info.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+I build sequences to your dormant and near-miss client accounts, and the ones ready to work with you again land on your calendar. Instead of sending a deck, I would rather walk you through it in 15 minutes and show you what it would look like for {company}.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_reactivation.send_info.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.recruiting_reactivation.send_info.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_reactivation.send_info.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: recruiting (reactivation), they asked how it works (tag: first_reply.recruiting_reactivation.mechanism.full)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_reactivation.mechanism.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+I build sequences to your dormant and near-miss client accounts, and the ones ready to work with you again land on your calendar. All I need to start is a list of 60 or more dormant client accounts.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_reactivation.mechanism.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.recruiting_reactivation.mechanism.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_reactivation.mechanism.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: recruiting (reactivation), they asked something else (tag: first_reply.recruiting_reactivation.other.full)
+Starts as an approval card to you until you say otherwise. (note)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_reactivation.other.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Good question. The short version is that I build sequences to your dormant and near-miss client accounts, and the ones ready to work with you again land on your calendar. The rest is easier to cover on a quick call.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_reactivation.other.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.recruiting_reactivation.other.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_reactivation.other.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: recruiting (reactivation), they pointed you to someone else (tag: first_reply.recruiting_reactivation.referral.full)
+Starts as an approval card to you until you say otherwise. (note)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_reactivation.referral.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Appreciate you pointing me to {referral_name}. Would you mind looping {referral_first_name} in on this thread so I can send the details over?
+
+
+Would {slots} work for {referral_first_name}? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_reactivation.referral.full/no_slots)
+Would {referral_first_name} have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.recruiting_reactivation.referral.full/confirmed_time)
+{slot} CT works on my end. Once {referral_first_name} is on the thread, I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+Recruiting, outbound offer (section)
+First reply: recruiting (outbound), they said yes (tag: first_reply.recruiting_outbound.default.full)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_outbound.default.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Glad to hear it. All I need to start is your specialty and geography.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_outbound.default.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.recruiting_outbound.default.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_outbound.default.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: recruiting (outbound), they asked about price (tag: first_reply.recruiting_outbound.pricing.full)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_outbound.pricing.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Setup plus a monthly retainer, sized to your specialty and geography, and the guarantee covers it: $40,000 in new placement fees within 180 days or your money back plus a $200 gift card.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_outbound.pricing.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.recruiting_outbound.pricing.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_outbound.pricing.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: recruiting (outbound), they asked you to send info (tag: first_reply.recruiting_outbound.send_info.full)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_outbound.send_info.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+I watch job boards for your specialty roles as they open, reach the hiring managers under your agency's name, and land the intro calls on your calendar. Instead of sending a deck, I would rather walk you through it in 15 minutes and show you what it would look like for {company}.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_outbound.send_info.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.recruiting_outbound.send_info.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_outbound.send_info.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: recruiting (outbound), they asked how it works (tag: first_reply.recruiting_outbound.mechanism.full)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_outbound.mechanism.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+I watch job boards for your specialty roles as they open, reach the hiring managers under your agency's name, and land the intro calls on your calendar. All I need to start is your specialty and geography.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_outbound.mechanism.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.recruiting_outbound.mechanism.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_outbound.mechanism.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: recruiting (outbound), they asked something else (tag: first_reply.recruiting_outbound.other.full)
+Starts as an approval card to you until you say otherwise. (note)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_outbound.other.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Good question. The short version is that I watch job boards for your specialty roles as they open, reach the hiring managers under your agency's name, and land the intro calls on your calendar. The rest is easier to cover on a quick call.
+
+
+Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_outbound.other.full/no_slots)
+Do you have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.recruiting_outbound.other.full/confirmed_time)
+{slot} CT works on my end. I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_outbound.other.full/proposed_time_refused)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call? Or if it's easier, grab a time here: {booking_url}
+First reply: recruiting (outbound), they pointed you to someone else (tag: first_reply.recruiting_outbound.referral.full)
+Starts as an approval card to you until you say otherwise. (note)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_outbound.referral.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Appreciate you pointing me to {referral_name}. Would you mind looping {referral_first_name} in on this thread so I can send the details over?
+
+
+Would {slots} work for {referral_first_name}? Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_outbound.referral.full/no_slots)
+Would {referral_first_name} have 15 minutes this week or next? Or if it's easier, grab a time here: {booking_url}
+If they asked for a time that works: (tag: first_reply.recruiting_outbound.referral.full/confirmed_time)
+{slot} CT works on my end. Once {referral_first_name} is on the thread, I will send the invite over, and if anything shifts, you can grab a different time here: {booking_url}
+This version always comes to you as a card first. (note)
+Daily follow-up sequence (day 1 to day 30) (section)
+Starts the business day after your first reply goes out. Each one goes at 10am Central on a business day and offers fresh times. It stops as soon as the lead books, replies or asks to stop. (note)
+Day 1 follow-up (tag: cadence.d1)
+Day 1: the business day after your first reply, if they haven't booked or replied. You get a 9:30am heads-up with a Veto button first. (note)
+Subject: Re: {original_subject} (tag: cadence.d1/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+The time slots from yesterday got filled. Here are 2 more, let me know if they work: {slots}.
+
+
+Lorenzo
+
+
+Day 2 follow-up (tag: cadence.d2)
+Day 2: 2 business days after your first reply, if they haven't booked or replied. (note)
+{research_line} is one of the two lines right below this email, picked by offer. (note)
+Subject: Re: {original_subject} (tag: cadence.d2/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note) NOTE FOR CLAUDE MAKE SURE THAT THE RESEARCH LINE TIES BACK INTO THE OFFER THE EMAIL NEEDS TO BE ESENTIALLY HERES WHY I THINK THIS CALL IS IMPORTANT
+Hey {first_name},
+
+
+{research_line}
+
+
+Fifteen minutes is enough for me to show you how this would run for {company}.Think this would really benefit {company name} let me know when a good time is to get a call on the books.
+
+
+Lorenzo
+Reactivation offers (line used inside Day 2) (tag: cadence.d2.research_fallback.reactivation)
+The engine uses this fixed line by default. A line written per lead by AI is never sent on its own; that day would be held. (note)
+The quickest place to start is usually the accounts that already know you and went quiet.
+Outbound offers (line used inside Day 2) (tag: cadence.d2.research_fallback.outbound)
+The quickest place to start is usually the prospects who are in market right now.
+Day 3 follow-up (tag: cadence.d3)
+Day 3: 3 business days after your first reply, if they haven't booked or replied. (note)
+Subject: Re: {original_subject} (tag: cadence.d3/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+A couple more options if those did not work: {slots}.
+
+
+Or pick whatever suits you here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: cadence.d3/no_slots)
+If none of those times worked, pick whatever suits you here: {booking_url}
+Day 4 follow-up (tag: cadence.d4)
+Day 4: 4 business days after your first reply, if they haven't booked or replied. (note)
+{case_study} is one of the two lines right below this email, picked by offer. (note)
+Subject: Re: {original_subject} (tag: cadence.d4/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+Quick bit of context on why I keep nudging. {case_study}
+
+
+Happy to walk through what that would look like for {company}. I have {slots}, or grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: cadence.d4/no_slots)
+Happy to walk through what that would look like for {company}. Grab any open time here: {booking_url}
+Reactivation offers (line used inside Day 4) (tag: cadence.d4.case_study.reactivation)
+I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.
+Outbound offers (line used inside Day 4) (tag: cadence.d4.case_study.outbound)
+I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days.
+Day 5 follow-up (tag: cadence.d5)
+Day 5: 5 business days after your first reply, if they haven't booked or replied. (note)
+{free_work} is one of the lines right below this email, picked by niche and offer. (note)
+Subject: Re: {original_subject} (tag: cadence.d5/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+{free_work}
+
+
+Happy to walk through it together. I have {slots}, or grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: cadence.d5/no_slots)
+Happy to walk through it together. Grab any open time here: {booking_url}
+Cleaning, reactivation (line used inside Day 5) (tag: cadence.d5.free_work.cleaning_reactivation)
+I can draft the first two emails for the accounts {company} lost or bid on and never closed. Want to see them?
+Cleaning, outbound (line used inside Day 5) (tag: cadence.d5.free_work.cleaning_outbound)
+I can pull the buildings in your area that just signed a new lease, expanded, or changed property managers this month. Want the list?
+Bookkeeping, reactivation (line used inside Day 5) (tag: cadence.d5.free_work.bookkeeping_reactivation)
+I can draft the first two emails for the clients {company} lost or quoted and never closed. Want to see them?
+Bookkeeping, outbound (line used inside Day 5) (tag: cadence.d5.free_work.bookkeeping_outbound)
+I can pull the businesses in your area that just formed or posted a part-time bookkeeper role this month. Want the list?
+Recruiting, reactivation (line used inside Day 5) (tag: cadence.d5.free_work.recruiting_reactivation)
+I can draft the first two emails for the clients {company} made one placement for and never heard from again. Want to see them?
+Recruiting, outbound, specialty unknown (line used inside Day 5) (tag: cadence.d5.free_work.recruiting_outbound)
+I can pull the roles in your specialty that opened this week in your market, with the hiring manager for each. Want the list?
+Recruiting, outbound, specialty known (line used inside Day 5) (tag: cadence.d5.free_work.recruiting_outbound_specialty)
+I can pull the {specialty} roles that opened this week in your market, with the hiring manager for each. Want the list?
+Any other niche, reactivation (line used inside Day 5) (tag: cadence.d5.free_work.generic_reactivation)
+I can draft the first two emails for the accounts {company} lost or bid on and never closed. Want to see them?
+Any other niche, outbound (line used inside Day 5) (tag: cadence.d5.free_work.generic_outbound)
+I can put together a short sample of the first two emails I would send for {company}. Want to see it?
+Day 6 follow-up (tag: cadence.d6_noinvite)
+Day 6: 6 business days after your first reply, if they haven't booked or replied. This is the Day 6 that goes out today. (note)
+Subject: Re: {original_subject} (tag: cadence.d6_noinvite/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+Here are two more times on my side: {slots}. Either one works for a 15-minute walkthrough.
+
+
+Or grab any time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: cadence.d6_noinvite/no_slots)
+If a 15-minute walkthrough would help, grab any open time here: {booking_url}
+Day 6 follow-up, calendar hold version (off for now) (tag: cadence.d6)
+Only used if the Day 6 calendar hold is turned on, and then each one needs your OK first. (note)
+Subject: Re: {original_subject} (tag: cadence.d6/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+I put a 15-minute hold on my calendar for {slot1}. If {slot2} is better, say the word and I will move it.
+
+
+Or grab any time here: {booking_url}
+
+
+Lorenzo
+If only one time is free: (tag: cadence.d6/one_slot)
+I put a 15-minute hold on my calendar for {slot1}. If another time is better, say the word and I will move it.
+Day 7 follow-up (tag: cadence.d7)
+Day 7: 7 business days after your first reply, if they haven't booked or replied. No times offered. (note)
+Subject: Re: {original_subject} (tag: cadence.d7/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+Should I close your file, or is a different week better?
+
+
+Either answer is fine. I just want to keep my notes straight.
+
+
+Lorenzo
+Day 14 follow-up (tag: cadence.d14)
+Day 14: one week after Day 7, if they still haven't booked or replied. (note)
+Subject: Re: {original_subject} (tag: cadence.d14/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+Circling back in case the timing is better now. I have {slots} open, or grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: cadence.d14/no_slots)
+Circling back in case the timing is better now. Grab any open time here: {booking_url}
+Day 30 follow-up (tag: cadence.d30)
+Day 30: 16 days after Day 14. After this the lead stays in Follow Up Later. (note)
+Subject: Re: {original_subject} (tag: cadence.d30/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+Last one from me for a while. If {company} still wants a look, I have {slots}, or grab a time here: {booking_url}
+
+
+If not, I will leave it here and check back in a few months.
+
+
+Lorenzo
+If there are no free times: (tag: cadence.d30/no_slots)
+Last one from me for a while. If {company} still wants a look, grab any open time here: {booking_url}
+Booking emails (section)
+These go out when a lead replies about a time for the call. (note)
+Booking confirmation, with Zoom link (tag: booking.confirmation.zoom_link)
+When they pick a time that works, the call is booked and this goes out. Used when the call has a Zoom link. (note)
+Subject: Re: {original_subject} (tag: booking.confirmation.zoom_link/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+Locked in {slot} CT, invite on the way. Here is the Zoom link:
+{zoom_link}
+
+
+I will keep it to 15 minutes.
+
+
+Lorenzo
+If they are in another timezone: (tag: booking.confirmation.zoom_link/lead_in_other_timezone)
+Locked in {slot} CT ({lead_local_time} your time), invite on the way. Here is the Zoom link:
+Booking confirmation, no Zoom link (tag: booking.confirmation.no_zoom_link)
+Same moment, when the call has no Zoom link yet (the calendar invite carries the video link). (note)
+Subject: Re: {original_subject} (tag: booking.confirmation.no_zoom_link/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+Locked in {slot} CT. The calendar invite with the video link follows in a separate email. I will keep it to 15 minutes.
+
+
+Lorenzo
+If they are in another timezone: (tag: booking.confirmation.no_zoom_link/lead_in_other_timezone)
+Locked in {slot} CT ({lead_local_time} your time). The calendar invite with the video link follows in a separate email. I will keep it to 15 minutes.
+Other times: nothing free in their window (tag: booking.counter.window_no_fit)
+When they give a window, like Tuesday afternoon, and nothing in it is free. (note)
+Subject: Re: {original_subject} (tag: booking.counter.window_no_fit/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+Nothing inside that window is open on my side in the next week. Could you do {alt_slots}?
+
+
+Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no other free times: (tag: booking.counter.window_no_fit/no_alternatives)
+Nothing inside that window is open on my side in the next week. Could you grab a time that suits you here instead? {booking_url}
+Other times: too early (tag: booking.counter.outside_window_early)
+When the time they ask for is before your first slot of the day (noon Central). (note)
+For a time your rules don't allow (too early, too late, weekend, too soon, too far out), the reply comes to you as a card first, so you can book it anyway or send this. (note)
+Subject: Re: {original_subject} (tag: booking.counter.outside_window_early/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+{asked_time} is a touch early on my side. Could you do {alt_slots} instead?
+
+
+Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no other free times: (tag: booking.counter.outside_window_early/no_alternatives)
+{asked_time} is a touch early on my side. Could you grab a time that suits you here instead? {booking_url}
+If we couldn't read the time they asked for: (tag: booking.counter.outside_window_early/no_proposed_time)
+That time does not work on my side. Could you do {alt_slots} instead?
+Other times: too late (tag: booking.counter.outside_window_late)
+When the time they ask for is after your last slot of the day. (note)
+Subject: Re: {original_subject} (tag: booking.counter.outside_window_late/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+{asked_time} is past my last slot. Could you do {alt_slots} instead?
+
+
+Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no other free times: (tag: booking.counter.outside_window_late/no_alternatives)
+{asked_time} is past my last slot. Could you grab a time that suits you here instead? {booking_url}
+If we couldn't read the time they asked for: (tag: booking.counter.outside_window_late/no_proposed_time)
+That time does not work on my side. Could you do {alt_slots} instead?
+Other times: weekend (tag: booking.counter.weekend)
+When the time they ask for is on a weekend. (note)
+Subject: Re: {original_subject} (tag: booking.counter.weekend/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+{asked_time} lands on a weekend for me. Could you do {alt_slots} instead?
+
+
+Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no other free times: (tag: booking.counter.weekend/no_alternatives)
+{asked_time} lands on a weekend for me. Could you grab a time that suits you here instead? {booking_url}
+If we couldn't read the time they asked for: (tag: booking.counter.weekend/no_proposed_time)
+That time does not work on my side. Could you do {alt_slots} instead?
+Other times: too soon (tag: booking.counter.too_soon)
+When the time they ask for is less than 4 hours away. (note)
+Subject: Re: {original_subject} (tag: booking.counter.too_soon/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+{asked_time} is a little tight on my end. Could you do {alt_slots} instead?
+
+
+Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no other free times: (tag: booking.counter.too_soon/no_alternatives)
+{asked_time} is a little tight on my end. Could you grab a time that suits you here instead? {booking_url}
+If we couldn't read the time they asked for: (tag: booking.counter.too_soon/no_proposed_time)
+That time does not work on my side. Could you do {alt_slots} instead?
+Other times: too far out (tag: booking.counter.beyond_horizon)
+When the time they ask for is more than 5 business days out. (note)
+Subject: Re: {original_subject} (tag: booking.counter.beyond_horizon/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+{asked_time} is further out than I can lock in right now. Could you do {alt_slots} instead?
+
+
+Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no other free times: (tag: booking.counter.beyond_horizon/no_alternatives)
+{asked_time} is further out than I can lock in right now. Could you grab a time that suits you here instead? {booking_url}
+If we couldn't read the time they asked for: (tag: booking.counter.beyond_horizon/no_proposed_time)
+That time does not work on my side. Could you do {alt_slots} instead?
+Other times: already taken (tag: booking.counter.slot_taken)
+When the time they ask for is already taken on your calendar. (note)
+Subject: Re: {original_subject} (tag: booking.counter.slot_taken/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+{asked_time} just got taken on my calendar. Could you do {alt_slots} instead?
+
+
+Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no other free times: (tag: booking.counter.slot_taken/no_alternatives)
+{asked_time} just got taken on my calendar. Could you grab a time that suits you here instead? {booking_url}
+If we couldn't read the time they asked for: (tag: booking.counter.slot_taken/no_proposed_time)
+That time does not work on my side. Could you do {alt_slots} instead?
+Their time filled up before the booking went through (tag: booking.slot_already_taken)
+When the time they picked got taken between your offer and the booking. Always comes to you as a card first. (note)
+Subject: Re: {original_subject} (tag: booking.slot_already_taken/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+{slot} CT just got taken on my calendar. Could you do {alt_slots} instead?
+
+
+Or if it's easier, grab a time here: {booking_url}
+
+
+Lorenzo
+If there are no other free times: (tag: booking.slot_already_taken/no_alternatives)
+{slot} CT just got taken on my calendar. Could you grab a time that suits you here instead? {booking_url}
+Already booked, confirmation not sent yet (tag: booking.already_booked.awaiting_approval)
+When a lead with a call booked writes again before your confirmation to them has gone out. (note)
+Subject: Re: {original_subject} (tag: booking.already_booked.awaiting_approval/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+You are locked in for {slot} CT, invite on the way. If that no longer works, grab another time here: {booking_url}
+
+
+Lorenzo
+If no booking link is set up: (tag: booking.already_booked.awaiting_approval/no_booking_link)
+You are locked in for {slot} CT, invite on the way.
+Already booked, invite not sent (tag: booking.already_booked.invite_withheld)
+When a lead with a call booked writes again and the calendar invite did not go out. (note)
+Subject: Re: {original_subject} (tag: booking.already_booked.invite_withheld/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+We are already set for {slot} CT. If that no longer works, grab another time here: {booking_url}
+
+
+Lorenzo
+If no booking link is set up: (tag: booking.already_booked.invite_withheld/no_booking_link)
+We are already set for {slot} CT.
+Already booked, invite on their calendar (tag: booking.already_booked.invite_on_calendar)
+When a lead with a call booked writes again and the invite is on their calendar. (note)
+Subject: Re: {original_subject} (tag: booking.already_booked.invite_on_calendar/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+We are already set for {slot} CT and the invite is on your calendar. If that no longer works, grab another time here: {booking_url}
+
+
+Lorenzo
+If no booking link is set up: (tag: booking.already_booked.invite_on_calendar/no_booking_link)
+We are already set for {slot} CT and the invite is on your calendar.
+Show-rate messages (confirmation, pre-read, reminders) (section)
+These go to every lead with a call on your calendar, however they booked. Texts only go out once your texting number is registered (A2P); until then they are skipped. (note)
+Call confirmation email: cleaning (reactivation) (tag: show_rate.confirm_email.cleaning_reactivation)
+Right after the call is booked. Skipped when the lead booked by replying and your Locked in email already went out unchanged. (note)
+Subject: Confirmed: {when_ct}, 15 minutes with Lorenzo (tag: show_rate.confirm_email.cleaning_reactivation/subject)
+Hey {first_name},
+
+
+Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+
+Here is what I want to cover in the 15 minutes:
+- which of your lost or dormant accounts are worth going after first
+- what the email and text sequences say, so it sounds like you and not a vendor
+- the commission-only numbers, so you know exactly what a returned account pays me
+
+
+Here is a 60-second walkthrough of what I will show you, if you want a head start: {loom_url}
+
+
+If anything comes up before then, reply here and we will move it.
+
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.confirm_email.cleaning_reactivation/no_call_link)
+Locked in for {when_ct}. The calendar invite is on its way with the call link.
+If no Loom link is set up, the walkthrough line is left out. (note)
+Call confirmation email: cleaning (outbound) (tag: show_rate.confirm_email.cleaning_outbound)
+Right after the call is booked. Skipped when the lead booked by replying and your Locked in email already went out unchanged. (note)
+Subject: Confirmed: {when_ct}, 15 minutes with Lorenzo (tag: show_rate.confirm_email.cleaning_outbound/subject)
+Hey {first_name},
+
+
+Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+
+Here is what I want to cover in the 15 minutes:
+- which building types and trigger events (new leases, expansions, PM changes) fit your crews
+- how the outreach runs under your name and books walkthroughs on your calendar
+- the guarantee ($24,000 a year in new cleaning contracts signed within 90 days) and what it would cost
+
+
+Here is a 60-second walkthrough of what I will show you, if you want a head start: {loom_url}
+
+
+If anything comes up before then, reply here and we will move it.
+
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.confirm_email.cleaning_outbound/no_call_link)
+Locked in for {when_ct}. The calendar invite is on its way with the call link.
+If no Loom link is set up, the walkthrough line is left out. (note)
+Call confirmation email: bookkeeping (reactivation) (tag: show_rate.confirm_email.bookkeeping_reactivation)
+Right after the call is booked. Skipped when the lead booked by replying and your Locked in email already went out unchanged. (note)
+Subject: Confirmed: {when_ct}, 15 minutes with Lorenzo (tag: show_rate.confirm_email.bookkeeping_reactivation/subject)
+Hey {first_name},
+
+
+Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+
+Here is what I want to cover in the 15 minutes:
+- which former clients and lost inquiries to go after first, timed to tax season and year-end
+- what the email and text sequences say, so it reads like your practice
+- the numbers: $0 up front, 20 to 30% of first-year fees on clients that come back
+
+
+Here is a 60-second walkthrough of what I will show you, if you want a head start: {loom_url}
+
+
+If anything comes up before then, reply here and we will move it.
+
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.confirm_email.bookkeeping_reactivation/no_call_link)
+Locked in for {when_ct}. The calendar invite is on its way with the call link.
+If no Loom link is set up, the walkthrough line is left out. (note)
+Call confirmation email: bookkeeping (outbound) (tag: show_rate.confirm_email.bookkeeping_outbound)
+Right after the call is booked. Skipped when the lead booked by replying and your Locked in email already went out unchanged. (note)
+Subject: Confirmed: {when_ct}, 15 minutes with Lorenzo (tag: show_rate.confirm_email.bookkeeping_outbound/subject)
+Hey {first_name},
+
+
+Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+
+Here is what I want to cover in the 15 minutes:
+- which triggers (new formations, bookkeeper job posts, second locations) fit your ideal client
+- how the outreach runs under your name and books discovery calls on your calendar
+- the guarantee ($15,000 in new annual client fees within 90 days) and what it would cost
+
+
+Here is a 60-second walkthrough of what I will show you, if you want a head start: {loom_url}
+
+
+If anything comes up before then, reply here and we will move it.
+
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.confirm_email.bookkeeping_outbound/no_call_link)
+Locked in for {when_ct}. The calendar invite is on its way with the call link.
+If no Loom link is set up, the walkthrough line is left out. (note)
+Call confirmation email: recruiting (reactivation) (tag: show_rate.confirm_email.recruiting_reactivation)
+Right after the call is booked. Skipped when the lead booked by replying and your Locked in email already went out unchanged. (note)
+Subject: Confirmed: {when_ct}, 15 minutes with Lorenzo (tag: show_rate.confirm_email.recruiting_reactivation/subject)
+Hey {first_name},
+
+
+Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+
+Here is what I want to cover in the 15 minutes:
+- which dormant and near-miss client accounts are worth going after first
+- what the sequences say to a hiring manager who used you once
+- the numbers: $0 up front, a cut of the first placement fee on accounts that come back
+
+
+Here is a 60-second walkthrough of what I will show you, if you want a head start: {loom_url}
+
+
+If anything comes up before then, reply here and we will move it.
+
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.confirm_email.recruiting_reactivation/no_call_link)
+Locked in for {when_ct}. The calendar invite is on its way with the call link.
+If no Loom link is set up, the walkthrough line is left out. (note)
+Call confirmation email: recruiting (outbound) (tag: show_rate.confirm_email.recruiting_outbound)
+Right after the call is booked. Skipped when the lead booked by replying and your Locked in email already went out unchanged. (note)
+Subject: Confirmed: {when_ct}, 15 minutes with Lorenzo (tag: show_rate.confirm_email.recruiting_outbound/subject)
+Hey {first_name},
+
+
+Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+
+Here is what I want to cover in the 15 minutes:
+- which specialties and geographies to watch for open roles
+- how the outreach reaches hiring managers under your agency's name
+- the guarantee ($40,000 in new placement fees within 180 days) and what it would cost
+
+
+Here is a 60-second walkthrough of what I will show you, if you want a head start: {loom_url}
+
+
+If anything comes up before then, reply here and we will move it.
+
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.confirm_email.recruiting_outbound/no_call_link)
+Locked in for {when_ct}. The calendar invite is on its way with the call link.
+If no Loom link is set up, the walkthrough line is left out. (note)
+Call confirmation email: any other niche (reactivation) (tag: show_rate.confirm_email.generic_reactivation)
+Right after the call is booked. Skipped when the lead booked by replying and your Locked in email already went out unchanged. (note)
+Subject: Confirmed: {when_ct}, 15 minutes with Lorenzo (tag: show_rate.confirm_email.generic_reactivation/subject)
+Hey {first_name},
+
+
+Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+
+Here is what I want to cover in the 15 minutes:
+- which of your dormant accounts are worth going after first
+- what the sequences say, so it sounds like you
+- the numbers, so you know exactly what it pays me and what it costs you
+
+
+Here is a 60-second walkthrough of what I will show you, if you want a head start: {loom_url}
+
+
+If anything comes up before then, reply here and we will move it.
+
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.confirm_email.generic_reactivation/no_call_link)
+Locked in for {when_ct}. The calendar invite is on its way with the call link.
+If no Loom link is set up, the walkthrough line is left out. (note)
+Call confirmation email: any other niche (outbound) (tag: show_rate.confirm_email.generic_outbound)
+Right after the call is booked. Skipped when the lead booked by replying and your Locked in email already went out unchanged. (note)
+Subject: Confirmed: {when_ct}, 15 minutes with Lorenzo (tag: show_rate.confirm_email.generic_outbound/subject)
+Hey {first_name},
+
+
+Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+
+Here is what I want to cover in the 15 minutes:
+- who is in market for what you sell right now
+- how the outreach runs under your name and books calls on your calendar
+- the guarantee and what it would cost
+
+
+Here is a 60-second walkthrough of what I will show you, if you want a head start: {loom_url}
+
+
+If anything comes up before then, reply here and we will move it.
+
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.confirm_email.generic_outbound/no_call_link)
+Locked in for {when_ct}. The calendar invite is on its way with the call link.
+If no Loom link is set up, the walkthrough line is left out. (note)
+Call confirmation text (tag: show_rate.confirm_sms)
+Right after the call is booked, with the confirmation email. (note)
+Hey {first_name}, Lorenzo here. We are locked in for a 15-min call on {when_ct}. Call link: {zoom_link}. Reply here if anything changes.
+If there is no call link yet: (tag: show_rate.confirm_sms/no_call_link)
+Hey {first_name}, Lorenzo here. We are locked in for a 15-min call on {when_ct}. The link is on your calendar invite. Reply here if anything changes.
+Pre-read email: cleaning (reactivation) (tag: show_rate.preread_email.cleaning_reactivation)
+15 minutes after the call is booked. (note)
+Subject: Before our call: the one-page version (tag: show_rate.preread_email.cleaning_reactivation/subject)
+Hey {first_name}, here is the short version of what I will walk through on {when_ct}, so the call itself can be about {company} and not about me.
+
+
+What the reactivation system does
+- We take every account that cancelled, stopped renewing, or never closed, and run a short email plus text sequence to each one under your name.
+- The messages are timed to when a facility manager actually re-bids janitorial (budget season, a bad month with the current vendor, a lease change), not "checking in."
+- Anyone who bites lands straight on your calendar as a walkthrough or a call. You never chase.
+
+
+What it costs
+- $0 up front. I take 20 to 30% of the first-year contract value on accounts that come back, a smaller cut on bigger lists, and $0 if nothing closes.
+
+
+What I need from you to start
+- A list of 60 or more lost or dormant accounts, or lost proposals, with a contact name and email. A CSV export from your CRM or accounting system is fine.
+- Ten minutes on the call to tell me which accounts you would actually want back.
+
+
+Proof
+- I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.
+
+
+The three questions I will ask
+1. How many accounts have you lost or let go quiet in the last three years?
+2. What does a typical account bill per year?
+3. Who on your side signs off if we move forward today?
+
+
+Lorenzo
+Pre-read email: cleaning (outbound) (tag: show_rate.preread_email.cleaning_outbound)
+15 minutes after the call is booked. (note)
+Subject: Before our call: the one-page version (tag: show_rate.preread_email.cleaning_outbound/subject)
+Hey {first_name}, here is the short version of what I will walk through on {when_ct}, so the call itself can be about {company} and not about me.
+
+
+What the system does
+- We watch the events that put a building in the market for a new janitorial vendor: a new lease signed, an office expansion, a property manager change, a new build coming online in your service area.
+- The moment one of those fires, the building gets a short email plus text sequence under your name, written the way you would write it.
+- Anyone who bites lands straight on your calendar as a walkthrough. You never chase.
+
+
+What it costs
+- Setup plus a monthly retainer, sized to your service area, and the guarantee covers it.
+- The guarantee: $24,000 a year in new cleaning contracts signed within 90 days, or you get your money back plus a $200 steakhouse gift card.
+
+
+What I need from you to start
+- Your service area and the building types your crews are actually set up for.
+- Ten minutes on the call to tell me which buildings you would take tomorrow and which ones you would pass on.
+
+
+Proof
+- I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days.
+
+
+The three questions I will ask
+1. What does a typical account bill per year for you?
+2. How many buildings can your crews take on in the next 90 days?
+3. Who on your side signs off if we move forward today?
+
+
+Lorenzo
+Pre-read email: bookkeeping (reactivation) (tag: show_rate.preread_email.bookkeeping_reactivation)
+15 minutes after the call is booked. (note)
+Subject: Before our call: the one-page version (tag: show_rate.preread_email.bookkeeping_reactivation/subject)
+Hey {first_name}, here is the short version of what I will walk through on {when_ct}, so the call itself can be about {company} and not about me.
+
+
+What the reactivation system does
+- We take your lost inquiries and former clients and run a short email plus text sequence to each one under your name.
+- The messages are timed to the moments they actually hire a bookkeeper again: tax season, quarterly estimates, year-end cleanup, a new entity.
+- Anyone who responds lands straight on your calendar. You never chase.
+
+
+What it costs
+- $0 up front. I take 20 to 30% of first-year fees from clients brought back, and $0 if nothing closes.
+
+
+What I need from you to start
+- A list of 60 or more former clients or lost inquiries with a name and email. An export from your practice management tool or QuickBooks customer list works.
+- Ten minutes on the call to flag the ones you would want back and the ones you would not.
+
+
+Proof
+- I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.
+
+
+The three questions I will ask
+1. How many clients or inquiries have gone quiet in the last three years?
+2. What does a typical client pay you per year?
+3. Who signs off if we move forward today?
+
+
+Lorenzo
+Pre-read email: bookkeeping (outbound) (tag: show_rate.preread_email.bookkeeping_outbound)
+15 minutes after the call is booked. (note)
+Subject: Before our call: the one-page version (tag: show_rate.preread_email.bookkeeping_outbound/subject)
+Hey {first_name}, here is the short version of what I will walk through on {when_ct}, so the call itself can be about {company} and not about me.
+
+
+What the system does
+- We watch the events that put a business in the market for a bookkeeper: a new entity formed, a part-time bookkeeper or admin role posted, a second location opening.
+- The moment one of those fires, that owner gets a short email plus text sequence under your name, written the way you would write it.
+- Anyone who responds lands straight on your calendar as a discovery call. You never chase.
+
+
+What it costs
+- Setup plus a monthly retainer, sized to your target client profile, and the guarantee covers it.
+- The guarantee: $15,000 in new annual client fees within 90 days, or you get your money back plus a $200 gift card.
+
+
+What I need from you to start
+- Your target client profile: entity size, industries you are good at, and the geography you want.
+- Ten minutes on the call to tell me which clients you would take tomorrow and which ones you would pass on.
+
+
+Proof
+- I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days.
+
+
+The three questions I will ask
+1. What does a typical client pay you per year?
+2. How many new clients can you onboard in the next 90 days?
+3. Who signs off if we move forward today?
+
+
+Lorenzo
+Pre-read email: recruiting (reactivation) (tag: show_rate.preread_email.recruiting_reactivation)
+15 minutes after the call is booked. (note)
+Subject: Before our call: the one-page version (tag: show_rate.preread_email.recruiting_reactivation/subject)
+Hey {first_name}, here is the short version of what I will walk through on {when_ct}, so the call itself can be about {company} and not about me.
+
+
+What the reactivation system does
+- We take your dormant and near-miss client accounts, the hiring managers who used you once or almost did, and run a short email plus text sequence to each one under your name.
+- The messages are timed to when they are actually hiring again: a new role posted, a team expanding, a competitor's placement falling through.
+- Anyone who responds lands straight on your calendar as an intro call. You never chase.
+
+
+What it costs
+- $0 up front. I take a percentage of the placement fees from accounts brought back (20 to 30% of the first placement fee), and $0 if nothing closes.
+
+
+What I need from you to start
+- A list of 60 or more dormant client accounts with a hiring manager name and email. An ATS or CRM export is fine.
+- Ten minutes on the call to tell me which accounts and specialties you want back.
+
+
+Proof
+- I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.
+
+
+The three questions I will ask
+1. How many client accounts have gone quiet in the last two years?
+2. What does a typical placement fee look like for you?
+3. Who signs off if we move forward today?
+
+
+Lorenzo
+Pre-read email: recruiting (outbound) (tag: show_rate.preread_email.recruiting_outbound)
+15 minutes after the call is booked. (note)
+Subject: Before our call: the one-page version (tag: show_rate.preread_email.recruiting_outbound/subject)
+Hey {first_name}, here is the short version of what I will walk through on {when_ct}, so the call itself can be about {company} and not about me.
+
+
+What the system does
+- We watch the job boards for roles opening in your specialty, so we reach a hiring manager in the days after the role goes live and before they have committed to anyone.
+- Each one gets a short email plus text sequence under your agency's name, written the way you would write it.
+- Anyone who responds lands straight on your calendar as an intro call. You never chase.
+
+
+What it costs
+- Setup plus a monthly retainer, sized to your specialty and geography, and the guarantee covers it.
+- The guarantee: $40,000 in new placement fees within 180 days, or you get your money back plus a $200 gift card.
+
+
+What I need from you to start
+- The specialty and the geography you want roles watched in.
+- Ten minutes on the call to tell me which roles you would take tomorrow and which ones you would pass on.
+
+
+Proof
+- I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days.
+
+
+The three questions I will ask
+1. What does a typical placement fee look like for you?
+2. How many roles can your recruiters work in the next 90 days?
+3. Who signs off if we move forward today?
+
+
+Lorenzo
+Pre-read email: any other niche (reactivation) (tag: show_rate.preread_email.generic_reactivation)
+15 minutes after the call is booked. (note)
+Subject: Before our call: the one-page version (tag: show_rate.preread_email.generic_reactivation/subject)
+Hey {first_name}, here is the short version of what I will walk through on {when_ct}, so the call itself can be about {company} and not about me.
+
+
+What the reactivation system does
+- We take every account that went quiet, cancelled, or never closed and run a short email plus text sequence to each one under your name.
+- The messages are timed to the moments those accounts actually buy again, not "checking in."
+- Anyone who responds lands straight on your calendar. You never chase.
+
+
+What it costs
+- $0 up front. I take 20 to 30% of the first-year value on accounts that come back, and $0 if nothing closes.
+
+
+What I need from you to start
+- A list of 60 or more lost or dormant accounts with a name and email.
+- Ten minutes on the call to tell me which ones you would actually want back.
+
+
+Proof
+- I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.
+
+
+Lorenzo
+Pre-read email: any other niche (outbound) (tag: show_rate.preread_email.generic_outbound)
+15 minutes after the call is booked. (note)
+Subject: Before our call: the one-page version (tag: show_rate.preread_email.generic_outbound/subject)
+Hey {first_name}, here is the short version of what I will walk through on {when_ct}, so the call itself can be about {company} and not about me.
+
+
+What the system does
+- We watch for the events that put a buyer in the market for what you sell, so we reach them in the window where they are actually deciding.
+- Each one gets a short email plus text sequence under your name, written the way you would write it.
+- Anyone who responds lands straight on your calendar. You never chase.
+
+
+What it costs
+- Setup plus a monthly retainer, sized to your market. The guarantee is a set amount of new signed business within a fixed window, which I will size for you on the call. If we miss it, you get your money back plus a $200 gift card.
+
+
+What I need from you to start
+- The market you want watched: who the buyer is, where they are, and what you will not take.
+- Ten minutes on the call to tell me which accounts you would take tomorrow.
+
+
+Proof
+- I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days.
+
+
+Lorenzo
+Reminder text, 24 hours before (tag: show_rate.reminder_24h_sms)
+24 hours before the call. (note)
+Hey {first_name}, Lorenzo here. We are on tomorrow at {time_ct} for the 15-min call about {company}. Reply C to confirm, or grab a new time: {booking_url}
+Reminder email, 24 hours before (tag: show_rate.reminder_24h_email)
+24 hours before the call. (note)
+If they haven't replied C by 4 hours before the call, you get a task to text them yourself. (note)
+Subject: Tomorrow at {time_ct}, still good? (tag: show_rate.reminder_24h_email/subject)
+Hey {first_name},
+
+
+We are on for tomorrow, {when_ct}. Reply C to confirm and I will have everything ready for {company}.
+
+
+If the time no longer works, grab a new one here instead: {booking_url}
+
+
+Lorenzo
+Reminder text, 1 hour before (tag: show_rate.reminder_1h_sms)
+1 hour before the call. (note)
+Hey {first_name}, Lorenzo here. Talk in an hour at {time_ct}. Call link: {zoom_link}
+If there is no call link yet: (tag: show_rate.reminder_1h_sms/no_call_link)
+Hey {first_name}, Lorenzo here. Talk in an hour at {time_ct}. The link is on your calendar invite.
+Reminder text, 15 minutes before (tag: show_rate.reminder_15m_sms)
+15 minutes before the call. (note)
+Hey {first_name}, Lorenzo here. Hopping on now: {zoom_link}. See you in a few.
+If there is no call link yet: (tag: show_rate.reminder_15m_sms/no_call_link)
+Hey {first_name}, Lorenzo here. Hopping on now. The link is on your calendar invite. See you in a few.
+No-show recovery (section)
+These start when a lead misses the call. The engine can only tell from Zoom join data; until Zoom is connected you get a task to mark it by hand. A second no-show gets only the first three messages. A third gets only the two Still on messages, and the lead moves to Lost. (note)
+Still on? text (tag: no_show.ns_still_on_sms)
+About 15 minutes after the start time, if they haven't joined. (note)
+Hey {first_name}, Lorenzo here. I am on the call now: {zoom_link}. I will stay on for 10 more minutes. If today fell apart, grab another time: {booking_url}
+If there is no call link yet: (tag: no_show.ns_still_on_sms/no_call_link)
+Hey {first_name}, Lorenzo here. I am on the call now. The link is on your calendar invite. I will stay on for 10 more minutes. If today fell apart, grab another time: {booking_url}
+Still on? email (tag: no_show.ns_still_on_email)
+Same time as the text. 10 minutes later you get a task to call them, with a voicemail script. (note)
+Subject: Still on? (tag: no_show.ns_still_on_email/subject)
+Hey {first_name},
+
+
+Still on? I am on the call now: {zoom_link}
+
+
+I will stay on for 10 more minutes in case you are running behind. If today fell apart, no worries, grab another time here: {booking_url}
+
+
+Lorenzo
+If there is no call link yet: (tag: no_show.ns_still_on_email/no_call_link)
+Still on? I am on the call now. The link is on your calendar invite.
+Missed you email (tag: no_show.ns_reschedule_email)
+1 hour after the no-show. (note)
+Subject: Missed you on our call (tag: no_show.ns_reschedule_email/subject)
+Hey {first_name},
+
+
+I was on the line at {time_ct} but did not see you join. No worries, things come up.
+
+
+Two times that work on my side: {slots}. Or grab any time here: {booking_url}
+
+
+If something changed and this is no longer a fit, just say so and I will close it out.
+
+
+Lorenzo
+If there are no free times: (tag: no_show.ns_reschedule_email/no_slots)
+Grab any time that suits you here: {booking_url}
+Missed you email, second no-show (tag: no_show.ns_reschedule_email.repeat)
+Used instead of the one above the second time the same lead misses a call. (note)
+Subject: Missed you on our call (tag: no_show.ns_reschedule_email.repeat/subject)
+Hey {first_name},
+
+
+I was on the line at {time_ct} but did not see you join. No worries, things come up.
+
+
+I know this is the second time the timing did not work out, so if a shorter call or a different day works better, just tell me. Two times that work on my side: {slots}. Or grab any time here: {booking_url}
+
+
+If something changed and this is no longer a fit, just say so and I will close it out.
+
+
+Lorenzo
+If there are no free times: (tag: no_show.ns_reschedule_email.repeat/no_slots)
+I know this is the second time the timing did not work out, so if a shorter call or a different day works better, just tell me. Grab any time that suits you here: {booking_url}
+Day 1 text after a no-show (tag: no_show.ns_d1_other_channel)
+1 day after the no-show. If texting isn't set up yet, you get a task to text or LinkedIn them yourself instead. (note)
+Hey {first_name}, Lorenzo again. Still happy to walk through the plan for {company}. Two times that work on my side: {slots}. Or grab any time here: {booking_url}
+If there are no free times: (tag: no_show.ns_d1_other_channel/no_slots)
+Hey {first_name}, Lorenzo again. Still happy to walk through the plan for {company}. Grab any time that suits you here: {booking_url}
+Day 3 email after a no-show: cleaning (reactivation) (tag: no_show.ns_d3_value_email.cleaning_reactivation)
+3 days after the no-show. (note)
+Subject: One thing worth knowing before you decide (tag: no_show.ns_d3_value_email.cleaning_reactivation/subject)
+Hey {first_name},
+
+
+Quick thought while this is still on your desk. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.
+
+
+For {company} the first step is the same: email and text sequences to every account that cancelled or went quiet, timed to when they re-bid, with the ready ones landing on your calendar.
+
+
+Two times that work on my side: {slots}. Or grab any time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: no_show.ns_d3_value_email.cleaning_reactivation/no_slots)
+Grab any time that suits you here: {booking_url}
+Day 3 email after a no-show: cleaning (outbound) (tag: no_show.ns_d3_value_email.cleaning_outbound)
+3 days after the no-show. (note)
+Subject: One thing worth knowing before you decide (tag: no_show.ns_d3_value_email.cleaning_outbound/subject)
+Hey {first_name},
+
+
+Quick thought while this is still on your desk. I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days.
+
+
+For {company} the first step is the same: watching new leases, expansions and PM changes in your area and putting walkthroughs on your calendar under your name.
+
+
+Two times that work on my side: {slots}. Or grab any time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: no_show.ns_d3_value_email.cleaning_outbound/no_slots)
+Grab any time that suits you here: {booking_url}
+Day 3 email after a no-show: bookkeeping (reactivation) (tag: no_show.ns_d3_value_email.bookkeeping_reactivation)
+3 days after the no-show. (note)
+Subject: One thing worth knowing before you decide (tag: no_show.ns_d3_value_email.bookkeeping_reactivation/subject)
+Hey {first_name},
+
+
+Quick thought while this is still on your desk. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.
+
+
+For {company} the first step is the same: sequences to your lost inquiries and former clients timed to tax season and year-end, with the ready ones landing on your calendar.
+
+
+Two times that work on my side: {slots}. Or grab any time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: no_show.ns_d3_value_email.bookkeeping_reactivation/no_slots)
+Grab any time that suits you here: {booking_url}
+Day 3 email after a no-show: bookkeeping (outbound) (tag: no_show.ns_d3_value_email.bookkeeping_outbound)
+3 days after the no-show. (note)
+Subject: One thing worth knowing before you decide (tag: no_show.ns_d3_value_email.bookkeeping_outbound/subject)
+Hey {first_name},
+
+
+Quick thought while this is still on your desk. I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days.
+
+
+For {company} the first step is the same: watching new formations and bookkeeper job posts and putting discovery calls on your calendar under your name.
+
+
+Two times that work on my side: {slots}. Or grab any time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: no_show.ns_d3_value_email.bookkeeping_outbound/no_slots)
+Grab any time that suits you here: {booking_url}
+Day 3 email after a no-show: recruiting (reactivation) (tag: no_show.ns_d3_value_email.recruiting_reactivation)
+3 days after the no-show. (note)
+Subject: One thing worth knowing before you decide (tag: no_show.ns_d3_value_email.recruiting_reactivation/subject)
+Hey {first_name},
+
+
+Quick thought while this is still on your desk. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.
+
+
+For {company} the first step is the same: sequences to your dormant and near-miss client accounts, with the hiring managers who bite landing on your calendar.
+
+
+Two times that work on my side: {slots}. Or grab any time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: no_show.ns_d3_value_email.recruiting_reactivation/no_slots)
+Grab any time that suits you here: {booking_url}
+Day 3 email after a no-show: recruiting (outbound) (tag: no_show.ns_d3_value_email.recruiting_outbound)
+3 days after the no-show. (note)
+Subject: One thing worth knowing before you decide (tag: no_show.ns_d3_value_email.recruiting_outbound/subject)
+Hey {first_name},
+
+
+Quick thought while this is still on your desk. I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days.
+
+
+For {company} the first step is the same: watching open roles in your specialty and putting intro calls with hiring managers on your calendar under your agency's name.
+
+
+Two times that work on my side: {slots}. Or grab any time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: no_show.ns_d3_value_email.recruiting_outbound/no_slots)
+Grab any time that suits you here: {booking_url}
+Day 3 email after a no-show: any other niche (reactivation) (tag: no_show.ns_d3_value_email.generic_reactivation)
+3 days after the no-show. (note)
+Subject: One thing worth knowing before you decide (tag: no_show.ns_d3_value_email.generic_reactivation/subject)
+Hey {first_name},
+
+
+Quick thought while this is still on your desk. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.
+
+
+For {company} the first step is the same: sequences to every account that went quiet, with the ready ones landing on your calendar.
+
+
+Two times that work on my side: {slots}. Or grab any time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: no_show.ns_d3_value_email.generic_reactivation/no_slots)
+Grab any time that suits you here: {booking_url}
+Day 3 email after a no-show: any other niche (outbound) (tag: no_show.ns_d3_value_email.generic_outbound)
+3 days after the no-show. (note)
+Subject: One thing worth knowing before you decide (tag: no_show.ns_d3_value_email.generic_outbound/subject)
+Hey {first_name},
+
+
+Quick thought while this is still on your desk. I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days.
+
+
+For {company} the first step is the same: watching for the events that put a buyer in the market and putting those calls on your calendar under your name.
+
+
+Two times that work on my side: {slots}. Or grab any time here: {booking_url}
+
+
+Lorenzo
+If there are no free times: (tag: no_show.ns_d3_value_email.generic_outbound/no_slots)
+Grab any time that suits you here: {booking_url}
+Day 7 email after a no-show (tag: no_show.ns_d7_yes_no_email)
+7 days after the no-show. (note)
+Subject: Should I close your file? (tag: no_show.ns_d7_yes_no_email/subject)
+Hey {first_name},
+
+
+I know you were interested enough to book, so I wanted to check in directly before I close things out.
+
+
+Still want to talk through the plan for {company}, or has the timing changed? Either answer is fine. It just helps me update my notes.
+
+
+If yes: {booking_url}
+
+
+Lorenzo
+Day 14 email after a no-show (tag: no_show.ns_d14_breakup_email)
+14 days after the no-show. After this the lead moves to Follow Up Later. (note)
+Subject: Closing your file (tag: no_show.ns_d14_breakup_email/subject)
+Hey {first_name},
+
+
+Have not heard back, so I am going to assume the timing is not right and close out your file for now.
+
+
+If things change down the road, this link will still work: {booking_url}
+
+
+Best of luck with everything.
+
+
+Lorenzo
+Upwork pricing lines (section)
+Your Upwork follow-up drafts can only quote a price that is written here. Right now there is none, so drafts never state a price. Write one price per box, the way you would say it to a client. Leave a box empty if you don't need it. (note)
+Pricing line 1 (tag: U-PRICE-1)
+
+
+	Pricing line 2 (tag: U-PRICE-2)
+
+
+	Pricing line 3 (tag: U-PRICE-3)
+
+
+	After you finish (tag: X-AFTER)
+1. Tell Claude "done". Claude reads this doc, puts your wording into the system and tests it. It then shows you any line a send check would stop, for example an exclamation mark or a price that is not on your offer sheet.
+2. Nothing goes live until you tell Claude "go live".
+3. Only you can do these, whenever you have a minute: change the passwords and keys that were saved in the code, register your texting number (A2P), and connect Zoom in GoHighLevel (optional; Google Meet works today).
+4. Say "yes" to Claude for any of these and Claude does them: create the Upwork pipeline in GoHighLevel, start the 8:30 Upwork morning drafts, and send test alerts to your phone during the test week.

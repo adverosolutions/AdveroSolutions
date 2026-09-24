@@ -22,6 +22,16 @@ every ordering pair shares one runtime, exactly one schedule drives the 07:30
 O3 sweep, and the Modal app registers exactly the deployed schedules plus the
 web endpoint. ``changesets/tests/test_schedules.py`` runs it.
 
+``--check`` is path-independent. The generated files hold absolute paths
+(the checkout's ``Agentic Worklfows`` folder, the runner under it, and the
+launchd log folder derived from its home), and they are committed as written
+from the main folder (CANONICAL_BASE_DIR). Before comparing, the running
+checkout's root and log folder in the fresh render, and the canonical or
+running root and log folder in the file on disk, are all replaced with the
+same placeholders. So a worktree passes against the committed files, while a
+file that points at any third root, or differs in anything else, is stale.
+Write mode is unchanged: it writes the running checkout's real paths.
+
 This script writes files under changesets/schedules/ and nothing else. It
 installs nothing, deploys nothing and contacts nothing. Python 3.9.
 """
@@ -53,8 +63,19 @@ CRONTAB_NAME = "crontab.txt"
 # ~/Desktop where the repo lives, so a blocked run still leaves its error here.
 # The home is taken from BASE_DIR, not $HOME, so the generated files do not
 # change with the shell that builds them.
-_HOME = os.path.join(*Path(BASE_DIR).parts[:3]) if BASE_DIR.startswith("/Users/") else os.path.expanduser("~")
-LAUNCHD_LOG_DIR = os.path.join(_HOME, "Library", "Logs", "advero")
+def _log_dir_for(base_dir: str) -> str:
+    home = os.path.join(*Path(base_dir).parts[:3]) if base_dir.startswith("/Users/") else os.path.expanduser("~")
+    return os.path.join(home, "Library", "Logs", "advero")
+
+
+LAUNCHD_LOG_DIR = _log_dir_for(BASE_DIR)
+
+# The checkout the committed generated files are written from (the main
+# folder). --check accepts paths under it, or under the running checkout, and
+# nothing else; see the module docstring.
+CANONICAL_BASE_DIR = "/Users/lorenzovillarreal/Desktop/AdveroSolutions/Agentic Worklfows"
+BASE_PLACEHOLDER = "<BASE_DIR>"
+LOG_PLACEHOLDER = "<LAUNCHD_LOG_DIR>"
 
 # America/Chicago is UTC-5 in daylight time and UTC-6 in standard time. CDT ends
 # 2026-11-01 and CST ends 2027-03-14.
@@ -698,6 +719,33 @@ def _render_all() -> Dict[str, str]:
     return files
 
 
+def _substitute(content: str, pairs) -> str:
+    """Replace each (path, placeholder), longest path first, so a root that
+    contains another is not split by the shorter one."""
+    for path, placeholder in sorted(pairs, key=lambda p: len(p[0]), reverse=True):
+        if path:
+            content = content.replace(path, placeholder)
+    return content
+
+
+def normalise_rendered(content: str) -> str:
+    """A fresh render with the running checkout's root and log folder as
+    placeholders."""
+    return _substitute(content, [(BASE_DIR, BASE_PLACEHOLDER), (LAUNCHD_LOG_DIR, LOG_PLACEHOLDER)])
+
+
+def normalise_on_disk(content: str) -> str:
+    """A file on disk with the canonical or the running root (and their log
+    folders) as placeholders. Any other root stays literal, so it compares as
+    stale."""
+    pairs = []
+    for base in sorted(set([CANONICAL_BASE_DIR, BASE_DIR])):
+        pairs.append((base, BASE_PLACEHOLDER))
+    for log_dir in sorted(set([_log_dir_for(CANONICAL_BASE_DIR), LAUNCHD_LOG_DIR])):
+        pairs.append((log_dir, LOG_PLACEHOLDER))
+    return _substitute(content, pairs)
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--check", action="store_true",
@@ -723,7 +771,7 @@ def main(argv=None) -> int:
         for path, content in sorted(rendered.items()):
             try:
                 with open(path, "r", encoding="utf-8") as fh:
-                    if fh.read() != content:
+                    if normalise_on_disk(fh.read()) != normalise_rendered(content):
                         stale.append(path)
             except OSError:
                 stale.append(path)

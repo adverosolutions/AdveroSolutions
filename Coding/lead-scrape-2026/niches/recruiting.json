@@ -1,0 +1,46 @@
+{
+  "niche": "recruiting",
+  "label": "Boutique perm recruiting agencies",
+  "filters": {
+    "company_industry": [
+      "staffing & recruiting"
+    ],
+    "company_keywords": [
+      "permanent placement",
+      "executive search",
+      "direct hire",
+      "retained search"
+    ],
+    "company_not_keywords": [
+      "temp staffing",
+      "temporary staffing",
+      "contract staffing",
+      "locum tenens",
+      "travel nursing",
+      "light industrial",
+      "household staffing",
+      "home care",
+      "franchise",
+      "per diem",
+      "temp-to-hire"
+    ],
+    "seniority_level": [
+      "owner",
+      "founder",
+      "partner"
+    ],
+    "email_status": [
+      "validated"
+    ],
+    "size": [
+      "1-10",
+      "11-20",
+      "21-50"
+    ],
+    "contact_not_job_title": [
+      "franchise"
+    ]
+  },
+  "target": 1350,
+  "fill_rate": 0.97
+}

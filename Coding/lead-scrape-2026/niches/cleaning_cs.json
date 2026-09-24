@@ -1,0 +1,83 @@
+{
+  "niche": "cleaning_cs",
+  "label": "Cleaning (consumer-services pool)",
+  "filters": {
+    "company_industry": [
+      "consumer services"
+    ],
+    "company_keywords": [
+      "commercial cleaning",
+      "janitorial",
+      "office cleaning",
+      "commercial janitorial",
+      "commercial and residential cleaning"
+    ],
+    "company_not_keywords": [
+      "auto detailing",
+      "baby",
+      "car detailing",
+      "car wash",
+      "carpet",
+      "carpet cleaning only",
+      "chimney",
+      "disaster recovery",
+      "dry clean",
+      "duct",
+      "electrical contractor",
+      "equipment",
+      "fire damage",
+      "franchise opportunity",
+      "gutter",
+      "handyman",
+      "home cleaning",
+      "house cleaning",
+      "hvac",
+      "kitchen equipment",
+      "landscaping",
+      "laundromat",
+      "laundry",
+      "lawn",
+      "linen",
+      "maid service",
+      "mold remediation",
+      "moving",
+      "pest control",
+      "plumbing",
+      "pool",
+      "power wash",
+      "pressure wash",
+      "property management",
+      "rental",
+      "residential cleaning",
+      "restoration",
+      "rug",
+      "security guard",
+      "servicemaster",
+      "servpro",
+      "storage",
+      "upholstery",
+      "water damage",
+      "window cleaning only"
+    ],
+    "size": [
+      "1-10",
+      "11-20",
+      "21-50",
+      "51-100",
+      "101-200"
+    ],
+    "seniority_level": [
+      "owner",
+      "founder",
+      "partner"
+    ],
+    "email_status": [
+      "validated"
+    ],
+    "contact_not_job_title": [
+      "franchise"
+    ]
+  },
+  "target": 600,
+  "fill_rate": 0.4
+}

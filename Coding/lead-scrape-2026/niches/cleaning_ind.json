@@ -1,0 +1,77 @@
+{
+  "niche": "cleaning_ind",
+  "label": "Cleaning (facilities-services, industry-only)",
+  "target": 700,
+  "fill_rate": 0.35,
+  "filters": {
+    "company_industry": [
+      "facilities services"
+    ],
+    "company_not_keywords": [
+      "car wash",
+      "carpet cleaning only",
+      "consult",
+      "disaster recovery",
+      "electrical",
+      "electrical contractor",
+      "elevator",
+      "fire damage",
+      "franchise opportunity",
+      "handyman",
+      "home cleaning",
+      "house cleaning",
+      "hvac",
+      "landscap",
+      "landscaping",
+      "laundry",
+      "linen",
+      "maid service",
+      "mold remediation",
+      "moving",
+      "paint",
+      "parking",
+      "pest",
+      "pest control",
+      "plumb",
+      "plumbing",
+      "property management",
+      "real estate",
+      "recycl",
+      "residential cleaning",
+      "restoration",
+      "roof",
+      "security",
+      "security guard",
+      "servicemaster",
+      "servpro",
+      "software",
+      "staffing",
+      "storage",
+      "uniform",
+      "vending",
+      "waste",
+      "water damage"
+    ],
+    "size": [
+      "1-10",
+      "11-20",
+      "21-50",
+      "51-100",
+      "101-200"
+    ],
+    "seniority_level": [
+      "owner",
+      "founder",
+      "partner"
+    ],
+    "email_status": [
+      "validated"
+    ],
+    "company_not_industry": [
+      "consumer services"
+    ],
+    "contact_not_job_title": [
+      "franchise"
+    ]
+  }
+}

@@ -472,3 +472,127 @@ def test_the_store_key_scan_follows_constants_helpers_and_imports(tmp_path, monk
     assert sorted(found) == ["fake.counter", "fake:*", "fake:claim:*", "fake:thing:*"]
     assert sorted(sc.written) == ["fake:claim:*", "fake:thing:*"]
     assert len(unresolved) == 1 and "mystery" in unresolved[0]
+
+
+# ------------------------------------------------ --check is path-independent
+def _committed_copy(tmp_path):
+    """A tmp copy of the committed schedules.json and laptop/ files. The real
+    files are never touched."""
+    import shutil
+
+    out = tmp_path / "schedules.json"
+    shutil.copy(str(SCHEDULES_JSON), str(out))
+    laptop = tmp_path / "laptop"
+    shutil.copytree(str(SCHEDULES_DIR / "laptop"), str(laptop))
+    return out, laptop
+
+
+def _pretend_checkout(build, monkeypatch, base_dir, out, laptop, log_dir=None):
+    monkeypatch.setattr(build, "BASE_DIR", base_dir)
+    monkeypatch.setattr(build, "LAUNCHD_LOG_DIR", log_dir or build._log_dir_for(base_dir))
+    monkeypatch.setattr(build, "OUT_PATH", str(out))
+    monkeypatch.setattr(build, "LAPTOP_DIR", str(laptop))
+
+
+def _other_checkout(tmp_path):
+    """Another path to this same checkout (a symlink), so the builder's module
+    lookups under BASE_DIR still resolve while every rendered path differs."""
+    root = tmp_path / "other_clone"
+    root.mkdir()
+    link = root / "Agentic Worklfows"
+    os.symlink(str(BASE_DIR), str(link))
+    return str(link)
+
+
+def test_check_passes_from_another_checkout_path(tmp_path, monkeypatch):
+    """A worktree (or a clone under another home) renders its own paths; the
+    committed files hold the main folder's. That is not staleness."""
+    build = _builder()
+    out, laptop = _committed_copy(tmp_path)
+    other = _other_checkout(tmp_path)
+    for log_dir in (None, "/Users/someone/Library/Logs/advero"):
+        _pretend_checkout(build, monkeypatch, other, out, laptop, log_dir)
+        assert build.main(["--check"]) == 0, log_dir
+    # and the files on disk still hold the main folder's paths, untouched
+    assert build.CANONICAL_BASE_DIR in (laptop / "crontab.txt").read_text(encoding="utf-8")
+
+
+def test_check_still_fails_on_a_real_difference_from_another_checkout(tmp_path, monkeypatch):
+    build = _builder()
+    out, laptop = _committed_copy(tmp_path)
+    _pretend_checkout(build, monkeypatch, _other_checkout(tmp_path), out, laptop)
+    assert build.main(["--check"]) == 0
+    crontab = laptop / "crontab.txt"
+    text = crontab.read_text(encoding="utf-8")
+    assert "\n0 18 * * * cd " in text
+    crontab.write_text(text.replace("\n0 18 * * * cd ", "\n0 19 * * * cd ", 1), encoding="utf-8")
+    assert build.main(["--check"]) == 1
+
+
+def test_check_fails_on_a_changed_cron_in_schedules_json(tmp_path, monkeypatch):
+    build = _builder()
+    out, laptop = _committed_copy(tmp_path)
+    _pretend_checkout(build, monkeypatch, _other_checkout(tmp_path), out, laptop)
+    data = json.loads(out.read_text(encoding="utf-8"))
+    data["schedules"][0]["cron_ct"] = "1 2 * * *"
+    out.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    assert build.main(["--check"]) == 1
+
+
+def test_check_fails_on_a_missing_or_extra_staged_file_from_another_checkout(tmp_path, monkeypatch):
+    build = _builder()
+    out, laptop = _committed_copy(tmp_path)
+    _pretend_checkout(build, monkeypatch, _other_checkout(tmp_path), out, laptop)
+    (laptop / "com.advero.extra_job.plist").write_text("x", encoding="utf-8")
+    assert build.main(["--check"]) == 1
+    (laptop / "com.advero.extra_job.plist").unlink()
+    assert build.main(["--check"]) == 0
+    (laptop / "com.advero.self_test.plist").unlink()
+    assert build.main(["--check"]) == 1
+
+
+def test_check_fails_when_a_committed_file_points_at_a_third_root(tmp_path, monkeypatch):
+    """Only the canonical main folder, or the running checkout, is accepted as
+    the root recorded in a committed file."""
+    build = _builder()
+    other = _other_checkout(tmp_path)
+    for name in ("crontab.txt", "com.advero.self_test.plist"):
+        sub = tmp_path / name
+        sub.mkdir()
+        out, laptop = _committed_copy(sub)
+        _pretend_checkout(build, monkeypatch, other, out, laptop)
+        assert build.main(["--check"]) == 0, name
+        target = laptop / name
+        text = target.read_text(encoding="utf-8")
+        assert build.CANONICAL_BASE_DIR in text
+        target.write_text(text.replace(build.CANONICAL_BASE_DIR, "/opt/elsewhere/Agentic Worklfows"),
+                          encoding="utf-8")
+        assert build.main(["--check"]) == 1, name
+
+
+def test_write_mode_from_the_main_folder_reproduces_the_committed_bytes(tmp_path, monkeypatch):
+    """The normalisation is only in --check: written from the main folder the
+    generated files are byte-identical to what is committed."""
+    build = _builder()
+    out = tmp_path / "schedules.json"
+    laptop = tmp_path / "laptop"
+    _pretend_checkout(build, monkeypatch, build.CANONICAL_BASE_DIR, out, laptop)
+    # The main folder need not exist where this runs; the turned-off-module
+    # check looks under BASE_DIR, so point it at this checkout for the check.
+    real_validate_turned_off = build.validate_turned_off
+
+    def validate_here(modal_app, turned_off):
+        monkeypatch.setattr(build, "BASE_DIR", str(BASE_DIR))
+        try:
+            return real_validate_turned_off(modal_app, turned_off)
+        finally:
+            monkeypatch.setattr(build, "BASE_DIR", build.CANONICAL_BASE_DIR)
+
+    monkeypatch.setattr(build, "validate_turned_off", validate_here)
+    assert build.LAUNCHD_LOG_DIR == "/Users/lorenzovillarreal/Library/Logs/advero"
+    assert build.main([]) == 0
+    assert out.read_bytes() == SCHEDULES_JSON.read_bytes()
+    committed = sorted(os.listdir(str(SCHEDULES_DIR / "laptop")))
+    assert sorted(os.listdir(str(laptop))) == committed
+    for name in committed:
+        assert (laptop / name).read_bytes() == (SCHEDULES_DIR / "laptop" / name).read_bytes(), name

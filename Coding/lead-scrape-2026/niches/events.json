@@ -1,0 +1,21 @@
+{
+  "niche": "events",
+  "label": "Corporate event agencies",
+  "target": 100,
+  "fill_rate": 0.9,
+  "filters": {
+    "company_industry": ["events services"],
+    "company_keywords": [
+      "corporate events", "corporate event planning", "event management",
+      "meeting planning", "trade show", "experiential marketing",
+      "incentive travel", "conference planning", "corporate meetings"
+    ],
+    "company_not_keywords": [
+      "wedding", "bridal", "party rental", "birthday", "quinceanera",
+      "photo booth", "dj service", "funeral", "bounce house", "prom"
+    ],
+    "size": ["1-10", "11-20", "21-50"],
+    "seniority_level": ["owner", "founder", "partner"],
+    "email_status": ["validated"]
+  }
+}

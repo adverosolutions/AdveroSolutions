@@ -1,0 +1,47 @@
+{
+  "niche": "dental",
+  "label": "Dental practices",
+  "filters": {
+    "company_industry": [
+      "medical practice"
+    ],
+    "company_keywords": [
+      "dental",
+      "dentistry",
+      "dentist",
+      "orthodontics",
+      "periodontics"
+    ],
+    "company_not_keywords": [
+      "dental laboratory",
+      "dental supply",
+      "veterinary",
+      "addiction",
+      "detox",
+      "rehabilitation",
+      "home health",
+      "speech therapy",
+      "sleep apnea",
+      "autism",
+      "behavioral health",
+      "mental health",
+      "dermatology",
+      "chiropractic"
+    ],
+    "seniority_level": [
+      "owner",
+      "founder",
+      "partner"
+    ],
+    "email_status": [
+      "validated"
+    ],
+    "size": [
+      "1-10",
+      "11-20",
+      "21-50"
+    ]
+  },
+  "target": 1350,
+  "fill_rate": 0.97
+}

@@ -1,0 +1,46 @@
+{
+  "niche": "bookkeeping",
+  "label": "Bookkeeping & tax firms",
+  "target": 1350,
+  "fill_rate": 0.62,
+  "filters": {
+    "company_industry": [
+      "accounting"
+    ],
+    "company_keywords": [
+      "bookkeeping",
+      "tax preparation",
+      "tax services",
+      "accounting services",
+      "small business accounting",
+      "cpa firm",
+      "tax accounting",
+      "payroll services"
+    ],
+    "company_not_keywords": [
+      "software",
+      "saas",
+      "franchise opportunity",
+      "big four",
+      "deloitte",
+      "kpmg",
+      "ernst",
+      "pwc",
+      "audit only",
+      "forensic"
+    ],
+    "size": [
+      "1-10",
+      "11-20",
+      "21-50"
+    ],
+    "seniority_level": [
+      "owner",
+      "founder",
+      "partner"
+    ],
+    "email_status": [
+      "validated"
+    ]
+  }
+}

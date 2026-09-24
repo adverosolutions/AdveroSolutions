@@ -1,0 +1,64 @@
+{
+  "niche": "cleaning_csuite",
+  "label": "Cleaning (CEO/President-titled owners)",
+  "target": 420,
+  "fill_rate": 0.43,
+  "filters": {
+    "company_industry": [
+      "facilities services"
+    ],
+    "company_keywords": [
+      "commercial cleaning",
+      "janitorial",
+      "office cleaning",
+      "janitorial services",
+      "commercial janitorial",
+      "building maintenance cleaning"
+    ],
+    "company_not_keywords": [
+      "residential cleaning",
+      "maid service",
+      "house cleaning",
+      "home cleaning",
+      "carpet cleaning only",
+      "franchise opportunity",
+      "pest control",
+      "landscaping",
+      "security guard",
+      "servpro",
+      "servicemaster",
+      "restoration",
+      "water damage",
+      "fire damage",
+      "mold remediation",
+      "disaster recovery",
+      "property management",
+      "handyman",
+      "car wash",
+      "plumbing",
+      "linen",
+      "laundry",
+      "hvac",
+      "electrical contractor"
+    ],
+    "size": [
+      "1-10",
+      "11-20",
+      "21-50",
+      "51-100",
+      "101-200"
+    ],
+    "seniority_level": [
+      "c_suite"
+    ],
+    "email_status": [
+      "validated"
+    ],
+    "company_not_industry": [
+      "consumer services"
+    ],
+    "contact_not_job_title": [
+      "franchise"
+    ]
+  }
+}

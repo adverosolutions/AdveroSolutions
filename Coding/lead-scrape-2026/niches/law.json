@@ -1,0 +1,47 @@
+{
+  "niche": "law",
+  "label": "Personal injury & immigration law firms",
+  "filters": {
+    "company_industry": [
+      "law practice",
+      "legal services"
+    ],
+    "company_keywords": [
+      "personal injury",
+      "trial lawyer",
+      "accident attorney",
+      "immigration law",
+      "immigration attorney",
+      "immigration"
+    ],
+    "company_not_keywords": [
+      "patent",
+      "corporate law",
+      "intellectual property",
+      "legalshield",
+      "legal aid",
+      "legal outsourcing",
+      "legal staffing"
+    ],
+    "seniority_level": [
+      "owner",
+      "founder",
+      "partner"
+    ],
+    "email_status": [
+      "validated"
+    ],
+    "size": [
+      "1-10",
+      "11-20",
+      "21-50",
+      "51-100"
+    ],
+    "contact_not_job_title": [
+      "product owner",
+      "technical"
+    ]
+  },
+  "target": 1350,
+  "fill_rate": 0.97
+}

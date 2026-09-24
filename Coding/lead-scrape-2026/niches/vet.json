@@ -1,0 +1,14 @@
+{
+  "niche": "vet",
+  "label": "Veterinary practices",
+  "target": 100,
+  "fill_rate": 0.9,
+  "filters": {
+    "company_industry": ["veterinary"],
+    "company_keywords": ["veterinary", "animal hospital", "veterinarian", "pet clinic", "animal clinic"],
+    "company_not_keywords": ["pharmaceutical", "distributor", "supply", "laboratory"],
+    "size": ["1-10", "11-20", "21-50"],
+    "seniority_level": ["owner", "founder", "partner"],
+    "email_status": ["validated"]
+  }
+}
