@@ -13,18 +13,20 @@ Other allowed proof (P.S. bullets only, from Lorenzo's case studies): lender $5M
 
 ## The six offers
 
-| Key | Mechanism (what we build) | Guarantee / pricing answer | Minimum to start |
+**Pricing and guarantee figures are call only, never in an email** (Lorenzo, 2026-09-24: "We never talk numbers over email."). No email (draft, first reply or follow-up) states a pricing or guarantee figure: no price, fee, commission percentage or guarantee amount. Case-study proof lines from this file (the proof points above and the P.S. bullets) are allowed where a template already carries them. A price question gets the offer's short answer on how it works and "The rest is easier to cover on a quick call." The figures in the Guarantee / pricing column stay here as reference for the call.
+
+| Key | Mechanism (what we build) | Guarantee / pricing (call only, never in an email) | Minimum to start |
 |---|---|---|---|
 | cleaning_reactivation | Email + text sequences to every account that cancelled, stopped renewing, or never closed; ready ones land on the calendar | $0 up front. Commission on accounts brought back: **20–30% of first-year contract value**, smaller cut on bigger lists, $0 if nothing closes | List of 60+ lost/dormant accounts or lost proposals |
 | bookkeeping_reactivation | Sequences to lost inquiries + former clients timed to tax season, quarterly estimates, year-end cleanup; booked onto the calendar | $0 up front. **20–30% of first-year fees** from clients brought back, $0 if nothing closes | 60+ former clients / lost inquiries |
 | recruiting_reactivation | Sequences to dormant and near-miss client accounts | $0 up front. **Percentage of placement fees** from accounts brought back (quote 20–30% of the first placement fee), $0 if nothing closes | 60+ dormant client accounts |
-| cleaning_trigger | Watch triggers (new leases, office expansions, PM changes, new construction); outreach under the client's name; walkthroughs on their calendar | Guarantee **$24,000/yr in new cleaning contracts signed within 90 days** or money back + $200 steakhouse gift card. Pricing: setup + monthly retainer, **$2,500–5,000/mo** (TO CONFIRM with Lorenzo before quoting in writing; until then answer "setup plus a monthly retainer, sized to your service area, and the guarantee covers it") | Service area + building types |
+| cleaning_trigger | Watch triggers (new leases, office expansions, PM changes, new construction); outreach under the client's name; walkthroughs on their calendar | Guarantee **$24,000/yr in new cleaning contracts signed within 90 days** or money back + $200 steakhouse gift card. Pricing: setup + monthly retainer, **$2,500–5,000/mo** (TO CONFIRM with Lorenzo before quoting in writing; until then say on the call "setup plus a monthly retainer, sized to your service area, and the guarantee covers it") | Service area + building types |
 | bookkeeping_trigger | Watch triggers (new business formations, part-time bookkeeper/admin job posts, second locations); outreach under the client's name; discovery calls on their calendar | Guarantee **$15,000 in new annual client fees within 90 days** or money back + $200 gift card. Pricing as above (TO CONFIRM) | Target client profile |
 | recruiting_outbound | Watch {{specialty}} roles open on job boards; outreach to hiring managers under the agency's name; intro calls on their calendar | Guarantee **$40,000 in new placement fees within 180 days** or money back + $200 gift card. Pricing as above (TO CONFIRM) | Specialty + geography |
 
 ## Reply rules the engine must obey
 
-1. Answer the question first, in one or two sentences, using only the table above.
+1. Answer the question first, in one or two sentences, using only the table above. Never state a pricing or guarantee figure (price, fee, commission percentage, guarantee amount) in an email: a price question gets "The short version is that ..." (the offer's mechanism) and "The rest is easier to cover on a quick call."
 2. Then offer two specific afternoon slots (12:00–18:00 CT, Mon–Fri, ≥4 h out, within 5 business days, never a slot already offered to someone else that day). Never send a booking link: the lead picks one of the two times and Lorenzo sends the calendar invite (Lorenzo, 2026-09-23, every email). When an email offers new times after earlier times the lead did not book, it says those earlier times got taken, in varied wording.
 3. "Send me info" → one-line mechanism + offer to walk through it on a 15-minute call. No attachments, no decks.
 4. "Not now" → Follow Up Later with a date; never argue.
