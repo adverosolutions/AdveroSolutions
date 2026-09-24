@@ -16,6 +16,7 @@
         "approval_escalation",
         "cadence_tick",
         "cadence_veto_ping",
+        "no_show_watch",
         "pipeline_sweep",
         "pipeline_sync",
         "poller",
@@ -308,6 +309,26 @@
       "why_laptop": "stages a CSV, keeps its resumable run state and cost ledger on disk, and needs the real source and suppression files",
       "launchd_label": "com.advero.list_factory",
       "shadow_note": "This is the ONE scheduled job that spends through ALLOW_PAID_CALLS. Shadow stops the Instantly writes, but Apify, Perplexity, MillionVerifier and this job's own model calls are gated by ALLOW_PAID_CALLS=1 ALONE (owner decision R7): a shadow run with the flag set spends. The laptop runner passes ALLOW_PAID_CALLS=0 unless LAPTOP_PAID_JOBS names list_factory; keep it that way until Lorenzo approves a figure (DECISIONS R14: the preflight prices about $10.20 a niche, and the cost-per-contact cap halts every real run before Apify until then). The flag does not stop Anthropic spend anywhere else."
+    },
+    {
+      "name": "no_show_watch",
+      "module": "jobs.appointments_tick",
+      "tier": "sales",
+      "runtime": "modal",
+      "purpose": "The \"I'm on\" nudge 3 minutes after a booked call starts (S5 N1); does nothing when no call is on.",
+      "command": "python3 -m jobs.appointments_tick --no-show-watch",
+      "cron_ct": "* 12-18 * * 1-5",
+      "timezone": "America/Chicago",
+      "when_ct": "every minute 12:00-18:59 CT weekdays; one container at a time (max_containers=1)",
+      "cron_utc_cdt": "* 17-23 * * 1-5",
+      "cron_utc_cst": "* 12-18 * * 1-5  # CROSSES MIDNIGHT UTC: split this range by hand",
+      "mode": "shadow",
+      "shadow_safe": true,
+      "writes": "the N1 I'm-on email in the lead's thread and the no-show flag (guarded; a one-time claim per call stops a second email when it overlaps the 10-minute tick)",
+      "needs": [
+        "GHL_PRIVATE_INTEGRATION_TOKEN",
+        "INSTANTLY_API_KEY"
+      ]
     },
     {
       "name": "pipeline_sweep",

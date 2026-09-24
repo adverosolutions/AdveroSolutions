@@ -23,7 +23,7 @@ def test_modal_app_imports_cleanly_and_declares_schedules():
     # positive_sweep is no longer scheduled (GOL-13: one O3 entry).
     assert set(mod.SCHEDULES) == {
         "poller", "approval_escalation", "cadence_tick", "cadence_veto_ping", "appointments_tick",
-        "precall_tick", "pipeline_sync", "pipeline_sweep",
+        "precall_tick", "no_show_watch", "pipeline_sync", "pipeline_sweep",
         "inbox_placement", "autoresponder_canary", "deliverability_monitor", "inbox_inventory",
         "retro_packet", "client_scorecard", "daily_metrics", "list_factory",
     }
@@ -36,17 +36,19 @@ def test_modal_app_imports_cleanly_and_declares_schedules():
         assert all(name not in pair[:1] and name != producer for producer, pair in mod.SCHEDULE_ORDERING.items())
     # precall_tick's lock is a file on its container's disk: max_containers=1
     # is what stops two overlapping Modal runs.
-    assert mod.MODAL_MAX_CONTAINERS == {"precall_tick": 1}
+    assert mod.MODAL_MAX_CONTAINERS == {"precall_tick": 1, "no_show_watch": 1}
     assert "takes its own lock" not in mod.SCHEDULES["precall_tick"].when
     # R3: the default deploy is the sales tier, and all of it runs on Modal.
     assert mod.DEPLOY_TIERS == ("sales",)
     assert set(mod.SCHEDULED_FUNCTIONS) == {
         "poller", "approval_escalation", "cadence_tick", "cadence_veto_ping", "appointments_tick",
-        "precall_tick", "pipeline_sync", "pipeline_sweep",
+        "precall_tick", "no_show_watch", "pipeline_sync", "pipeline_sweep",
     }
     assert mod.SCHEDULES["poller"][0] == "*/5 * * * *"
     assert mod.SCHEDULES["appointments_tick"][0] == "*/10 * * * *"
     assert mod.SCHEDULES["precall_tick"][0] == "*/5 * * * *"
+    assert mod.SCHEDULES["no_show_watch"][0] == "* 12-18 * * 1-5"
+    assert tuple(mod.SCHEDULES["no_show_watch"].argv) == ("--no-show-watch",)
     # The reply SLA is five minutes, and the chase has to survive the poller
     # failing: run_once calls fetch_new_replies, unguarded, before it reaches
     # the chase, so any Instantly error silences the SLA unless this tick exists.
@@ -383,9 +385,9 @@ def test_an_unknown_deploy_tier_fails_the_import_and_so_the_deploy():
 def test_deploy_summary_counts_the_crons_for_the_plan_quota_check():
     mod = importlib.import_module("services.reply_engine.modal_app")
     summary = mod.deploy_summary()
-    assert summary["crons"] == len(mod.SCHEDULED_FUNCTIONS) == 8
+    assert summary["crons"] == len(mod.SCHEDULED_FUNCTIONS) == 9
     assert summary["web_endpoints"] == 1
-    assert summary["modal_functions"] == 9
+    assert summary["modal_functions"] == 10
     assert set(summary["laptop_schedules"]) == set(mod.LAPTOP_SCHEDULES)
 
 

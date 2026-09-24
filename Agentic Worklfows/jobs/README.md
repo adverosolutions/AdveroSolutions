@@ -2,7 +2,7 @@
 
 Deterministic scripts that run on a schedule or by hand. Where each scheduled job runs (owner decisions R3 and R4, `runbooks/deployment.md` "What runs where"):
 
-- **Modal, 8 schedules, the sales tier:** `poller`, `approval_escalation`, `cadence_tick`, `cadence_veto_ping`, `appointments_tick`, `precall_tick`, `pipeline_sync`, `pipeline_sweep`. The poller, the approval chase, the cadence, the appointments tick and the sync call their `services/reply_engine/` entrypoints directly; `precall_tick` and `pipeline_sweep` run the scripts in this folder.
+- **Modal, 9 schedules, the sales tier:** `poller`, `approval_escalation`, `cadence_tick`, `cadence_veto_ping`, `appointments_tick`, `precall_tick`, `no_show_watch`, `pipeline_sync`, `pipeline_sweep`. The poller, the approval chase, the cadence, the appointments tick and the sync call their `services/reply_engine/` entrypoints directly; `precall_tick`, `no_show_watch` (appointments_tick --no-show-watch) and `pipeline_sweep` run the scripts in this folder.
 - **Laptop, 8 schedules:** `inbox_placement`, `autoresponder_canary`, `deliverability_monitor`, `inbox_inventory`, `list_factory` (marketing), `retro_packet`, `daily_metrics` (ops), `client_scorecard` (fulfillment). They hand work to each other through files, so they run through `changesets/schedules/laptop_runner.py` from launchd (or `crontab.txt`), in shadow unless their tier is named in `LAPTOP_LIVE_TIERS` in `.env`.
 - **Turned off, 3:** `campaign_verdicts`, `upwork_rooms_am`, `upwork_rooms_pm`. Lorenzo runs them by hand; their code stays. `config/turned_off_jobs.json` names them with the by-hand command, and `changesets/schedules/build_schedules.py --check` fails if one is scheduled again.
 
