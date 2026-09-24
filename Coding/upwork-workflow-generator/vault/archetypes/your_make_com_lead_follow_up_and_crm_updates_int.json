@@ -6,25 +6,25 @@
       "key": "follow",
       "label": "1 - LEAD FOLLOW-UP",
       "color": 0,
-      "note": "A new enquiry from your website form is read the moment it arrives and a first reply is written from what they actually asked. Spam and test entries stop at step 3, before anything is sent."
+      "note": "A new enquiry from your website form is read the moment it arrives and a first reply is written from what they actually asked. Spam and test entries stop at step 3, before anything is sent. If your form tool cannot send to a webhook, step 1 becomes a Make mailhook on the form's notification email and nothing after it changes."
     },
     {
       "key": "crm",
       "label": "2 - CRM UPDATES",
       "color": 0,
-      "note": "The lead is created in GoHighLevel, or updated if they are already there, and what they asked is saved on the contact as a note for whoever calls them back."
+      "note": "The lead is created in GoHighLevel, or updated if they are already there, matched on email and phone so each person is one contact, with UK mobiles saved as +44 so GoHighLevel can text them."
     },
     {
       "key": "reliable",
       "label": "3 - RELIABLE, CONNECTED, DATA FLOWING CORRECTLY",
       "color": 0,
-      "note": "Your parts 3, 4 and 5: form, Make and GoHighLevel in one scenario, and a lead GoHighLevel refuses comes to your inbox with the reason. Failed runs nobody sees are the first gap I check in your current setup."
+      "note": "Your reliable process, connected systems and data flowing correctly between platforms, grouped here: form, Make and GoHighLevel in one scenario, and a lead GoHighLevel refuses comes to your inbox with the reason. Failed runs nobody sees are the first gap I check in your current setup."
     },
     {
       "key": "ongoing",
       "label": "4 - ONGOING LEAD MANAGEMENT",
       "color": 0,
-      "note": "New leads get a card in your pipeline, the first text and your follow-up sequence, and someone already in GoHighLevel who enquires again becomes a task for you. Room to add a booking step next, so the card moves when they book."
+      "note": "What they asked is saved on the contact as a note for whoever calls them back. New leads then get a card in your pipeline, the first text and your follow-up sequence, and someone already in GoHighLevel who enquires again becomes a task for you. Room to add a booking step next, so the card moves when they book."
     }
   ],
   "nodes": [
@@ -44,8 +44,8 @@
       "section": "follow",
       "notes": "Writes the reply from what they asked and saves UK numbers as +44 so GoHighLevel can text them.",
       "params": {
-        "system_message": "You read new website enquiries for PASTE-YOUR-BUSINESS-NAME, a UK business that manages its leads in GoHighLevel. Services: PASTE-YOUR-SERVICE-LIST. Booking link: PASTE-YOUR-BOOKING-LINK. Write in British English, warm and brief, as the business (we), with no emojis and no exclamation marks. Never quote a price, promise a time slot or add anything the enquiry does not say.\nReturn one JSON object with these keys and nothing else:\nis_real_lead: true for anyone asking about a service, however short the message. false for spam, test entries, sales pitches, SEO or web design offers, link-only messages and gibberish.\nfirst_name, last_name: split from the full name with normal capitalisation. If only one name is given, leave last_name empty.\nemail: lowercased and trimmed. Empty if missing or clearly fake.\nphone: international format with no spaces, so GoHighLevel can text it. A UK mobile starting 07 becomes +447...; a number that already starts with + stays as it is; if you cannot tell the country, return it exactly as typed. Empty if there is none.\nservice: the closest match from the services list, or other.\nsummary: one sentence a colleague reads before calling them back, including anything time-sensitive they mentioned.\nsms_reply: the first text back, under 320 characters (two SMS segments). Use their first name, answer what they asked in one line and end with the booking link. If the message is empty, thank them for getting in touch and ask what they need help with.",
-        "prompt": "New enquiry from {{1.form_name}}, received {{1.submitted_at}}.\nFull name: {{1.full_name}}\nEmail: {{1.email}}\nPhone: {{1.phone}}\nMessage: {{1.message}}\n\nReturn the JSON object: is_real_lead, first_name, last_name, email, phone, service, summary, sms_reply.",
+        "system_message": "You read new website enquiries for PASTE-YOUR-BUSINESS-NAME, a UK business that manages its leads in GoHighLevel. Services: PASTE-YOUR-SERVICE-LIST. Booking link: PASTE-YOUR-BOOKING-LINK. Write in British English, warm and brief, as the business (we), with no emojis and no exclamation marks. Never quote a price, promise a time slot or add anything the enquiry does not say.\nReturn one JSON object with these keys and nothing else:\nis_real_lead: true for anyone asking about a service, however short the message. false for spam, test entries, sales pitches, SEO or web design offers, link-only messages and gibberish.\nfirst_name, last_name: split from the full name with normal capitalisation. If only one name is given, leave last_name empty.\nemail: lowercased and trimmed. Empty if missing or clearly fake.\nphone: international format with no spaces, so GoHighLevel can text it. A UK mobile starting 07 becomes +447...; a number that already starts with + stays as it is; if you cannot tell the country, return it exactly as typed. Empty if there is none.\nservice: the closest match from the services list, or other.\nmessage_clean: their message on one line, line breaks replaced with spaces and double quotes with single quotes.\nsummary: one sentence a colleague reads before calling them back, including anything time-sensitive they mentioned.\nsms_reply: the first text back, under 320 characters (two SMS segments). Use their first name, answer what they asked in one line and end with the booking link. If the message is empty, thank them for getting in touch and ask what they need help with.\nNo value may contain a line break or a double quote.",
+        "prompt": "New enquiry from {{1.form_name}}, received {{1.submitted_at}}.\nFull name: {{1.full_name}}\nEmail: {{1.email}}\nPhone: {{1.phone}}\nMessage: {{1.message}}\n\nReturn the JSON object: is_real_lead, first_name, last_name, email, phone, service, message_clean, summary, sms_reply.",
         "response_format": "json_object"
       }
     },
@@ -93,8 +93,8 @@
     {
       "key": "note",
       "kind": "net.http",
-      "label": "5 - GoHighLevel: Save the Enquiry as a Note",
-      "section": "crm",
+      "label": "6 - GoHighLevel: Save the Enquiry as a Note",
+      "section": "ongoing",
       "params": {
         "service": "gohighlevel",
         "method": "POST",
@@ -105,20 +105,20 @@
           "Accept": "application/json"
         },
         "body": {
-          "body": "Website enquiry via {{1.form_name}} ({{3.result.service}}), {{1.submitted_at}}\n\nThey wrote: {{1.message}}\n\nSummary: {{3.result.summary}}"
+          "body": "Website enquiry via {{1.form_name}} ({{3.result.service}}), {{1.submitted_at}}\n\nThey wrote: {{3.result.message_clean}}\n\nSummary: {{3.result.summary}}"
         }
       }
     },
     {
       "key": "saved",
       "kind": "flow.branch",
-      "label": "6 - Did GoHighLevel Save the Lead?",
+      "label": "5 - Did GoHighLevel Save the Lead?",
       "section": "reliable"
     },
     {
       "key": "alert",
       "kind": "app.action",
-      "label": "6b - Email You the Lead and What Went Wrong",
+      "label": "5b - Email You the Lead and What Went Wrong",
       "app": "gmail",
       "op": "send",
       "section": "reliable",
@@ -237,30 +237,30 @@
     {
       "from": "real",
       "to": "upsert",
-      "branch": "true"
+      "branch": "real enquiry"
     },
     {
       "from": "real",
       "to": "spam",
-      "branch": "false"
+      "branch": "spam or test entry"
     },
     {
       "from": "upsert",
-      "to": "note"
-    },
-    {
-      "from": "note",
       "to": "saved"
     },
     {
       "from": "saved",
-      "to": "newlead",
-      "branch": "true"
+      "to": "note",
+      "branch": "saved"
     },
     {
       "from": "saved",
       "to": "alert",
-      "branch": "false"
+      "branch": "not saved"
+    },
+    {
+      "from": "note",
+      "to": "newlead"
     },
     {
       "from": "newlead",
