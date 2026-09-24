@@ -2495,16 +2495,26 @@ def first_reply_skip_reason(state: Any, now: datetime) -> Optional[str]:
     None when it is a candidate. Cheap: no store, no network. A candidate has
     no reply of ours recorded, an unarmed ladder, a thread id and an inbox to
     read it in, an inbound within FIRST_REPLY_LOOKBACK_DAYS and at least one
-    card (pending_first_reply_card then reads which). A booked lead is not
-    one: its ladder would stop as ``booked`` at once, and what sending the
-    card that holds its call does (the invite and the show-rate hold released)
-    belongs to approval.py (send_approved, mark_sent_manually)."""
+    card (pending_first_reply_card then reads which).
+
+    A lead the ladder is over for (terminal_reason: booked, unsubscribed or
+    blocklisted, hostile, lost or wrong person, not now, the opt-out marker)
+    is not one: its ladder would stop at once, and what sending the card that
+    holds a booked lead's call does (the invite and the show-rate hold
+    released) belongs to approval.py (send_approved, mark_sent_manually).
+
+    The lookback and the tick's newest-first order read ``last_inbound_at``,
+    not the reply the card answers (first_reply_cutoff needs the card, so a
+    store read): it is never earlier than that reply, so an auto-responder's
+    answer after Lorenzo's send only keeps the lead a candidate longer, never
+    drops it."""
     if _reply_sent_recorded(state):
         return "reply_recorded"
     if (getattr(state, "cadence", None) or {}).get("armed_at"):
         return "armed"
-    if terminal_reason(state) == "booked":
-        return "booked"
+    ended = terminal_reason(state)
+    if ended:
+        return ended
     if not _field(state, "thread_id"):
         return "no_thread_id"
     if not _field(state, "eaccount"):
@@ -2556,30 +2566,76 @@ def _email_time(row: Dict[str, Any]) -> Optional[datetime]:
     return parse_ts(row.get("timestamp_created") or row.get("timestamp_email"))
 
 
-def manual_first_reply_in(state: Any, emails: Any) -> Optional[Dict[str, Any]]:
-    """Lorenzo's reply among GET /emails rows: sent by us
-    (pipeline_sweep.is_outbound: ue_type, else the sender, else the
-    recipients) from the lead's inbox, in the lead's ``thread_id``, strictly
-    after ``last_inbound_at``. The earliest when several qualify. Returns
-    {"email_id", "sent_at" (aware datetime)} or None. Pure; every filter is
-    applied here, whatever the API was asked to filter (an ignored filter
-    must not change what a row means)."""
-    from jobs.pipeline_sweep import is_outbound
+def first_reply_cutoff(state: Any, card: Any, context: Optional[Dict[str, Any]] = None) -> Optional[datetime]:
+    """When the lead sent the reply ``card`` answers: Lorenzo's answer to it
+    is the first email of ours in the thread after this. The history
+    ``inbound`` entry for the card's email (models.entry_received_at: its
+    received_at, else when it was processed), else the card context's
+    ``reply_at`` (approval.card_context), else ``last_inbound_at``.
 
+    Not ``last_inbound_at`` first: the router moves it for every inbound, an
+    auto-responder's answer to Lorenzo's reply included, and that raises no
+    card; read as the cutoff, it put his reply before the cutoff for good."""
+    from services.reply_engine.models import entry_received_at
+
+    email_id = str(getattr(card, "email_id", None) or "")
+    if email_id:
+        for entry in list(getattr(state, "history", None) or []):
+            if isinstance(entry, dict) and entry.get("event") == "inbound" and str(entry.get("email_id")) == email_id:
+                try:
+                    at = entry_received_at(entry)
+                except Exception:  # noqa: BLE001 - an unreadable time is no time
+                    at = None
+                if at is not None:
+                    return slot_rules.to_tz(at)
+                break
+    reply_at = _parse((context or {}).get("reply_at"))
+    if reply_at is not None:
+        return reply_at
+    return _parse(_field(state, "last_inbound_at"))
+
+
+def _sent_by_hand(row: Dict[str, Any]) -> bool:
+    """True for a row of the inbox's manual list that Lorenzo sent himself.
+    A row carrying ``ue_type`` is his only at 3 (pipeline_sweep's
+    UE_TYPE_OUTBOUND, a manual send from the inbox): any other value (2 the
+    lead's, 1 or 4 a campaign step or a scheduled send) is not his reply,
+    although pipeline_sweep.is_outbound would take a 1 or a 4 from the inbox
+    for an outbound. Only a row without ``ue_type`` falls back to
+    is_outbound's sender, then recipients."""
+    from jobs.pipeline_sweep import UE_TYPE_OUTBOUND, is_outbound
+
+    ue_type = row.get("ue_type")
+    if ue_type not in (None, ""):
+        try:
+            return int(ue_type) == UE_TYPE_OUTBOUND
+        except (TypeError, ValueError):
+            return False
+    return is_outbound(row)
+
+
+def manual_first_reply_in(state: Any, emails: Any, after: Optional[datetime] = None) -> Optional[Dict[str, Any]]:
+    """Lorenzo's reply among GET /emails rows: sent by him from the lead's
+    inbox (_sent_by_hand), in the lead's ``thread_id``, strictly after
+    ``after`` (first_reply_cutoff: the reply the card answers;
+    ``last_inbound_at`` when not given). The earliest when several qualify.
+    Returns {"email_id", "sent_at" (aware datetime)} or None. Pure; every
+    filter is applied here, whatever the API was asked to filter (an ignored
+    filter must not change what a row means)."""
     thread = str(_field(state, "thread_id") or "")
     inbox = str(_field(state, "eaccount") or "").strip().lower()
-    last_in = _parse(_field(state, "last_inbound_at"))
-    if not thread or not inbox or last_in is None:
+    cutoff = after if after is not None else _parse(_field(state, "last_inbound_at"))
+    if not thread or not inbox or cutoff is None:
         return None
     found = []  # type: List[Tuple[datetime, str]]
     for row in list(emails or []):
         if not isinstance(row, dict) or str(row.get("thread_id") or "") != thread:
             continue
         row_inbox = str(row.get("eaccount") or inbox).strip().lower()
-        if row_inbox != inbox or not is_outbound(dict(row, eaccount=row_inbox)):
+        if row_inbox != inbox or not _sent_by_hand(dict(row, eaccount=row_inbox)):
             continue
         sent_at = _email_time(row)
-        if sent_at is None or sent_at <= last_in:
+        if sent_at is None or sent_at <= cutoff:
             continue
         found.append((sent_at, str(row.get("id") or "")))
     if not found:
@@ -2670,8 +2726,9 @@ def detect_manual_first_reply(state: Any, now: datetime, instantly: Any, store: 
     Lorenzo sends by hand (pending_first_reply_card). One read-only GET
     /emails per call: the inbox's manual rows (``email_type=manual``,
     ``eaccount``, and ``campaign_id`` when known), from which
-    manual_first_reply_in picks the reply. Shadow and live alike: it is a
-    read, and only the engine's own store is written.
+    manual_first_reply_in picks the reply sent after the reply the card
+    answers (first_reply_cutoff). Shadow and live alike: it is a read, and
+    only the engine's own store is written.
 
     On a find (not ``dry_run``): the lead leaves the 90-day nurture
     (``nurture.leave(email, "re_engaged", now)``) when enrolled, first, so a
@@ -2719,11 +2776,15 @@ def detect_manual_first_reply(state: Any, now: datetime, instantly: Any, store: 
         rows = page
     else:
         rows = []
-    found = manual_first_reply_in(state, rows)
+    from services.reply_engine import approval as approval_mod
+
+    cutoff = first_reply_cutoff(state, card, approval_mod.card_context(store, approval_id))
+    found = manual_first_reply_in(state, rows, after=cutoff)
     if found is None:
         # ``more``: the page was full and older rows were not read. The reply
         # sought is recent, so it would be on this page; said, not guessed at.
-        return dict(base, action="no_reply_found", rows_read=len(rows), more=more)
+        return dict(base, action="no_reply_found", rows_read=len(rows), more=more,
+                    after=cutoff.isoformat() if cutoff is not None else None)
     sent_at = slot_rules.to_tz(found["sent_at"])
     out = dict(base, email_id=found.get("email_id"), sent_at=sent_at.isoformat())
     if dry_run:
@@ -2734,7 +2795,6 @@ def detect_manual_first_reply(state: Any, now: datetime, instantly: Any, store: 
         return dict(out, action="ladder_would_start", dry_run=True, would_leave_nurture=enrolled,
                     next_send_at=next_business_day_send(sent_at).isoformat())
 
-    from services.reply_engine import approval as approval_mod
     from services.reply_engine import nurture as nurture_mod
 
     # Read again after the Instantly call, outside the row's lock (the locked
