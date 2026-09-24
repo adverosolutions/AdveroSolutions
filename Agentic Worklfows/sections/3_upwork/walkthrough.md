@@ -26,10 +26,11 @@ signed off; then all the edits below go in at once, through review.
 | T2, day 4, show | Keep the purpose and day; no question needed at the end. | agreed |
 | T3, day 7, proof | Rework (Lorenzo 2026-09-23): the proposal already carries all four case studies, so T3 must not quote them again. Instead, one vague line about a past client like theirs ("reminds me of a contractor I worked with, very similar setup to yours"), no name, no figures, only when a proof line in UPWORK_OFFERS truly matches their vertical or problem; what it says about that build comes only from the proof line. No match: insight, as now. Every touch: never repeat a result LORENZO_PROPOSAL already states (reply.md may still quote one when the client asks for examples). | agreed |
 | T4, day 11, catch | Keep the purpose and day. | agreed |
-| T5, day 16, easy reply | | shown |
-| T6, day 23, next step | | shown |
-| T7, day 30, close-out | | |
-| reply.md, checkin.md | | |
+| T5, day 16, easy reply | Keep the purpose and day. | agreed |
+| T6, day 23, next step | Keep the purpose and day. | agreed |
+| T7, day 30, close-out | | shown |
+| checkin.md | | shown |
+| reply.md | | |
 
 ## Sample drafts shown
 
@@ -61,3 +62,10 @@ signed off; then all the edits below go in at once, through review.
   just the instant text on new form leads as a first milestone. The estimate
   follow-up and review requests could come after. Want me to scope it that
   way?"
+- T7: "Hey Dana, I'll close this out on my end. If you went another way on
+  the Housecall Pro setup, no worries at all. If the estimates are still
+  sitting later on, message me here and I'll pick it back up."
+- Check-in (Dana had said to come back after the summer rush): "Hey Dana, you
+  said to come back once the summer rush was over. One thing I'd add from
+  before: the review requests could also go out to the jobs you closed this
+  summer, not just new ones. Is the timing better now?"
