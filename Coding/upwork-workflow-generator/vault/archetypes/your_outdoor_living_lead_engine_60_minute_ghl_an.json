@@ -55,13 +55,13 @@
     {
       "key": "native",
       "kind": "data.transform",
-      "label": "5 - Anything on a timer stays in GHL, like speed-to-lead and consult reminders",
+      "label": "5 - Anything instant or timed stays in GHL, like speed-to-lead and consult reminders",
       "section": "strategy"
     },
     {
       "key": "decide",
       "kind": "data.transform",
-      "label": "6 - Claude reads each reply and tags it, and the tag starts proposal chase or nurture",
+      "label": "6 - A webhook sends each reply to Claude, and Claude's tag starts proposal chase or nurture",
       "section": "strategy"
     },
     {
@@ -73,7 +73,7 @@
     {
       "key": "check",
       "kind": "data.transform",
-      "label": "8 - Before a message goes out, GHL checks that its merge fields are filled in",
+      "label": "8 - An If/Else step before each message checks that its merge fields are filled in",
       "section": "testing"
     },
     {
@@ -85,7 +85,7 @@
     {
       "key": "filter",
       "kind": "data.transform",
-      "label": "10 - Claude checks only new leads with no entry tag, not all ~2,400 contacts",
+      "label": "10 - Claude looks only for new leads with no entry tag, not through all ~2,400 contacts",
       "section": "testing"
     },
     {
