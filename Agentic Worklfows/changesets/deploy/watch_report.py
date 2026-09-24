@@ -104,6 +104,9 @@ HEALTHY_STATUSES = frozenset([
     # cadence (section 1, P3b): the tick found Lorenzo's own first reply in the
     # Instantly thread and recorded it as day 0 (cadence.detect_manual_first_reply).
     "first_reply_from_thread",
+    # approval: that first reply's pending card closed as sent_manually
+    # (approval.mark_answered_in_thread); nothing sent, nothing pushed.
+    "card_closed_from_thread",
 ])
 # Statuses the deployed code is known to write that FAIL the watch. Listed so
 # the classification is complete and reviewable; failing does not depend on

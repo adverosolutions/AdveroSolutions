@@ -448,6 +448,19 @@ nothing more; if the second one needs a word of explanation, write it by
 hand. Retry and Mark sent are refused on a sent card, and nothing in the
 lead's record needs repairing.
 
+## A first reply you sent yourself, found in the thread
+
+**What you see.** Nothing: no push. When the follow-up tick finds the first
+reply you sent from the Instantly thread, it records it on the lead, starts
+the ladder, and closes that "Reply to send yourself" card as `sent_manually`
+(`approval.mark_answered_in_thread`, Job_Log `card_closed_from_thread`). The
+card stops being chased and keeps its held times.
+
+**What to do.** Nothing. A Mark sent tapped before the card is closed
+closes it and records nothing twice. Approve on it (an old or hand-made link) is refused with
+"this reply is already in the Instantly thread, so nothing was sent." and
+the card is left as it is.
+
 ## "Call for {lead} still held after Mark sent"
 
 **What you see.** A high-priority push right after you pressed Mark sent. It

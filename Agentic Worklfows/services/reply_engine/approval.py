@@ -1264,7 +1264,11 @@ REASON_TEXT = {
                               "check the thread in Instantly."),
     "send_raised": ("the send stopped on an error, so the reply may or may not have gone out; check the thread in "
                     "Instantly before you press anything."),
+    # ANSWERED_IN_THREAD: approve() / send_approved() on a card whose reply
+    # the lead's history already records (cadence.answered_card_ids).
+    "already_answered_in_thread": "this reply is already in the Instantly thread, so nothing was sent.",
 }
+ANSWERED_IN_THREAD = "already_answered_in_thread"
 # Statuses a template send can end in that are pushed as the "send failed"
 # card (push_card's recovery variant): Retry / Veto / Mark sent, never
 # Approve, which a send_failed card refuses.
@@ -1380,7 +1384,31 @@ def pending_mark_sent_ok(card: Any, store=None) -> bool:
         card = Approval.model_validate(card)
     if getattr(card, "status", None) != "pending":
         return False
-    return first_contact(card.draft.template_id, _stored_row(_store(store), card.state_key))
+    row = _stored_row(_store(store), card.state_key)
+    # A card whose reply the thread check already recorded on the lead
+    # (cadence.detect_manual_first_reply) is taken too: the lead reads as
+    # answered now, by that very reply.
+    return first_contact(card.draft.template_id, row) or answered_in_thread(row, card)
+
+
+def answered_in_thread(row: Any, card: Any) -> bool:
+    """Is ``card`` (an Approval, a stored card row, or an approval id) one
+    whose reply the lead's history already records
+    (cadence.answered_card_ids on ``row``, a stored lead row or LeadState)?
+    False when there is no row."""
+    if not row:
+        return False
+    if isinstance(card, str):
+        approval_id = card.split(".", 1)[0]
+    elif isinstance(card, dict):
+        approval_id = str(card.get("token") or "").split(".", 1)[0]
+    else:
+        approval_id = _approval_id(card)
+    if not approval_id:
+        return False
+    from services.reply_engine import cadence  # noqa: WPS433 - cadence imports this module
+
+    return approval_id in cadence.answered_card_ids(row)
 
 
 def mark_sent_takes(card: Any, store=None) -> bool:
@@ -3201,13 +3229,28 @@ def _arm_under_lock(approval: Approval, open_cards: Dict[str, bool], now: dateti
     status stays whatever the newer reply set. Armed, the ladder records which
     inbound this answer covered (armed_for_email_id), so the pipeline of that
     same reply, if it is still writing, does not stop what its own approval
-    armed (app._inbound_stop_hook)."""
+    armed (app._inbound_stop_hook).
+
+    A ladder already running on the row for this very answer (armed_at set,
+    not stopped, a next send due, and armed_for_email_id is this card's
+    email_id: the thread check, cadence.detect_manual_first_reply, armed it
+    from the reply Lorenzo sent himself) is left exactly as it is:
+    ``already_armed``. A stopped ladder, or one armed for an earlier reply
+    (a newer reply answered before its own pipeline stopped the ladder), is
+    re-armed as before (arm's resume)."""
 
     def _finish(merged: Dict[str, Any]) -> Dict[str, Any]:
         why = arm_refusal(merged, approval, open_cards, seen_before=seen_before, reply_at=reply_at)
         if why:
             box["result"] = {"armed": False, "reason": why}
             logger.warning("not arming the cadence for %s: %s", approval.lead_email, why)
+            return merged
+        cad_now = merged.get("cadence") if isinstance(merged, dict) else None
+        cad_now = cad_now if isinstance(cad_now, dict) else {}
+        if (cad_now.get("armed_at") and not cad_now.get("stopped_reason") and cad_now.get("next_send_at")
+                and approval.email_id and cad_now.get("armed_for_email_id") == approval.email_id):
+            box["result"] = {"armed": False, "reason": "already_armed", "armed_at": cad_now.get("armed_at"),
+                             "next_send_at": cad_now.get("next_send_at")}
             return merged
         try:
             holder = LeadState.from_store(merged)
@@ -3393,6 +3436,11 @@ def send_approved(approval: Approval, instantly, store=None, now: Optional[datet
     ts = _now(now)
     draft = approval.draft
     approval_id = approval.token.split(".", 1)[0]
+    # Its reply is already in the thread (answered_in_thread): nothing moves,
+    # not even the blocked write below.
+    refused = _answered_in_thread_refusal(approval, st)
+    if refused is not None:
+        return refused
     problems = list(draft.problems)
     if problems:
         approval.status = "blocked"
@@ -4637,7 +4685,37 @@ def approve(token: str, instantly, store=None, now: Optional[datetime] = None, g
     approval = load(token, st)
     if approval is None:
         return {"ok": False, "error": "unknown or invalid token"}
+    refused = _answered_in_thread_refusal(approval, st)
+    if refused is not None:
+        return refused
     return _approve_loaded(approval, instantly, st, ts, ghl, actor="lorenzo")
+
+
+def _answered_in_thread_refusal(approval: Approval, st) -> Optional[Dict[str, Any]]:
+    """approve() and send_approved() refuse a card whose reply the lead's
+    history already records (answered_in_thread): it is in the thread, and a
+    hand-made Approve link must not send a second copy. A refusal, not an
+    error: the card is left exactly as it is. None when the card may go on,
+    or is not sendable anyway (its stored status, which the checks that
+    follow report), and when the lead row cannot be read."""
+    try:
+        row = st.get(approval.state_key)
+        answered = answered_in_thread(row, approval)
+    except Exception as exc:  # noqa: BLE001 - the send path's own reads decide
+        logger.warning("could not check whether %s is answered in the thread: %s", _approval_id(approval), exc)
+        return None
+    if not answered:
+        return None
+    try:
+        current = (st.get(APPROVAL_PREFIX + _approval_id(approval)) or {}).get("status") or approval.status
+    except Exception:  # noqa: BLE001
+        current = approval.status
+    if current not in SENDABLE_STATUSES:
+        # Sent, sending, vetoed, expired...: the paths that follow say so.
+        return None
+    logger.warning("not sending %s: its reply is already recorded from the thread", _approval_id(approval))
+    return {"ok": False, "status": current, "reason": ANSWERED_IN_THREAD, "refused": True,
+            "error": reason_text(ANSWERED_IN_THREAD)}
 
 
 def _approve_loaded(approval: Approval, instantly, st, ts: datetime, ghl, actor: str) -> Dict[str, Any]:
@@ -6221,7 +6299,10 @@ def mark_sent_manually(approval_id: str, now: Optional[datetime], by: str = "lor
       Lorenzo sent it himself from the thread. Same bookkeeping, and the
       reply_sent_manually history entry releases draft_only's lock. It never
       confirms a call the card holds (no GHL invite): that stays held and an
-      alert says so. Any other pending card is refused as before.
+      alert says so. Any other pending card is refused as before, except one
+      whose reply the thread check already recorded on the lead
+      (answered_in_thread): the card moves to sent_manually and the lead row
+      is left exactly as it is (no second reply_sent_manually, no arm).
     * Never for a card its recipient check held (recipient_held: the record
       on the card, checked again under the card's lock, or the hold's own
       row): refused with RECIPIENT_HELD_REFUSAL, nothing moved or recorded.
@@ -6377,6 +6458,15 @@ def mark_sent_manually(approval_id: str, now: Optional[datetime], by: str = "lor
         except Exception as exc:  # noqa: BLE001
             row_problem = "the lead's row could not be parsed (%s)" % exc
     why, refusal = (None, None) if state is None else _lead_reply_verdict(state_raw, card, seen_before, reply_at)
+    # The thread check (cadence.detect_manual_first_reply) already recorded
+    # this card's reply on the lead and armed the ladder from it: the row is
+    # left as it is (never a second reply_sent_manually) and, as from
+    # pending, no call is confirmed.
+    try:
+        thread_recorded = state is not None and answered_in_thread(state_raw, approval_id)
+    except Exception as exc:  # noqa: BLE001 - unknown: recorded as before
+        logger.warning("Mark sent for %s: could not read the thread record: %s", approval_id, exc)
+        thread_recorded = False
 
     invite = None
     show_rate_release = None
@@ -6385,7 +6475,7 @@ def mark_sent_manually(approval_id: str, now: Optional[datetime], by: str = "lor
     if state is not None and owns_booking(card, state):
         booking = booking_of(state)
         try:
-            if from_status == "pending":
+            if from_status == "pending" or thread_recorded:
                 # Nothing ever went through the engine for this card, so
                 # Mark sent sends nothing on its behalf either: no invite.
                 left_why, todo = ("it was marked sent straight from a pending card (a reply you sent yourself), "
@@ -6417,7 +6507,11 @@ def mark_sent_manually(approval_id: str, now: Optional[datetime], by: str = "lor
     # (_is_first_reply would say True): None, never a guess.
     first_reply = _is_first_reply(state) if state is not None else None
     cadence_result = None  # type: Optional[Dict[str, Any]]
-    if state is not None:
+    if thread_recorded:
+        first_reply = None
+        cadence_result = {"armed": False, "reason": ANSWERED_IN_THREAD,
+                          "note": "recorded from the thread; the lead row was left as it is"}
+    if state is not None and not thread_recorded:
         state.last_outbound_at = ts.isoformat()
         for iso in card.draft.offered_slots:
             if iso not in state.offered_slots:
@@ -6455,14 +6549,102 @@ def mark_sent_manually(approval_id: str, now: Optional[datetime], by: str = "lor
                      "from_status": from_status, "send_started_at": started_at,
                      "show_rate_released": bool((show_rate_release or {}).get("released")),
                      "booking_left_held": left, "lead_reply": why, "cadence_armed": armed,
+                     "answered_in_thread": thread_recorded,
                      "cadence_not_armed": None if armed else
                      ((cadence_result or {}).get("reason") or (cadence_result or {}).get("error"))})
     return {"ok": True, "status": "sent_manually", "shadow": False, "reply": None, "interest": None,
             "interest_value": None, "interest_error": None, "cadence": cadence_result, "invite": invite,
             "show_rate": show_rate_release, "booking_released": None, "by": by, "marked_at": ts.isoformat(),
             "send_failed_at": failed_at, "first_reply": first_reply, "lead_reply": why,
-            "booking_left_held": left, "alerts": alerts, "from_status": from_status, "send_started_at": started_at}
+            "booking_left_held": left, "alerts": alerts, "from_status": from_status, "send_started_at": started_at,
+            "answered_in_thread": thread_recorded}
 
+
+
+# Statuses mark_answered_in_thread closes: the ones Mark sent takes a
+# first-contact card from (pending only; blocked, stale_slots and expired
+# cards are not taken by Mark sent, and escalate_pending chases pending only).
+THREAD_CLOSE_FROM = ("pending",)
+# Where it answers "nothing to do": the card is already closed.
+THREAD_CLOSED_STATUSES = SENT_STATUSES + ("vetoed", "superseded", "expired")
+
+
+def mark_answered_in_thread(approval_id: str, sent_at: Any, email_id: Any, store=None,
+                            now: Optional[datetime] = None) -> Dict[str, Any]:
+    """Close a pending first-contact card whose reply the thread check
+    (cadence.detect_manual_first_reply) found and already recorded on the lead
+    row: Lorenzo sent it himself from the Instantly thread and never tapped
+    Mark sent. Called by section 1 after that row write.
+
+    ``approval_id`` may be the card's token. ``sent_at`` is the reply's own
+    time (datetime or ISO string), ``email_id`` its Instantly id.
+
+    * Only a pending card (THREAD_CLOSE_FROM) listed on its lead row by
+      cadence.answered_card_ids. Through the status-guarded _transition, as
+      Mark sent: one winner against a send, a Veto, the expiry or a second
+      call. Won, it takes the send claim (_claim_send) as a sent card holds
+      one, so nothing can send it afterwards.
+    * Status ``sent_manually``; notify_result[MARK_SENT_KEY] =
+      {"by": "thread", "at": <sent_at>, "email_id", "from": "pending",
+      "recorded_at": <now>}. Its offered times stay reserved.
+    * Never touches the lead row, sends nothing and pushes nothing. One
+      Job_Log row (card_closed_from_thread), not the metrics' sent_manually.
+
+    Returns {"closed": bool, "status": <card status now>, "reason": str}:
+    reason ``closed`` when it closed the card, else ``already_closed`` (sent,
+    sent_manually, vetoed, superseded, expired: a second call lands here),
+    ``not_pending`` (any other status), ``not_answered_on_row`` (the lead row
+    does not list the card), ``unknown_card``, ``card_unreadable``,
+    ``row_unreadable`` or ``card_changed`` (lost the guarded write)."""
+    st = _store(store)
+    ts = _now(now)
+    approval_id = str(approval_id or "").strip().split(".", 1)[0]
+    try:
+        card = _approval_row(st, approval_id) if approval_id else None
+    except Exception as exc:  # noqa: BLE001 - nothing moves on a card that cannot be read
+        return {"closed": False, "status": None, "reason": "card_unreadable", "error": str(exc)}
+    if card is None:
+        return {"closed": False, "status": None, "reason": "unknown_card"}
+    if card.status in THREAD_CLOSED_STATUSES:
+        return {"closed": False, "status": card.status, "reason": "already_closed"}
+    if card.status not in THREAD_CLOSE_FROM:
+        return {"closed": False, "status": card.status, "reason": "not_pending"}
+    try:
+        listed = answered_in_thread(st.get(card.state_key), approval_id)
+    except Exception as exc:  # noqa: BLE001 - unknown: left open
+        return {"closed": False, "status": card.status, "reason": "row_unreadable", "error": str(exc)}
+    if not listed:
+        return {"closed": False, "status": card.status, "reason": "not_answered_on_row"}
+    if isinstance(sent_at, datetime):
+        sent_iso = slots.to_tz(slots.ensure_aware(sent_at)).isoformat()
+    else:
+        sent_iso = str(sent_at or "") or None
+    record = {"by": "thread", "at": sent_iso, "email_id": email_id, "from": "pending",
+              "recorded_at": ts.isoformat(), "send_failed_at": None}
+
+    def _close(row):
+        result = dict(row.get("notify_result") or {})
+        result[MARK_SENT_KEY] = dict(record)
+        row["notify_result"] = result
+        row["status"] = "sent_manually"
+        row["decided_at"] = ts.isoformat()
+        row["send_after"] = None
+        return row
+
+    if not _transition(st, approval_id, THREAD_CLOSE_FROM, _close):
+        try:
+            current = (st.get(APPROVAL_PREFIX + approval_id) or {}).get("status")
+        except Exception:  # noqa: BLE001
+            current = None
+        if current in THREAD_CLOSED_STATUSES:
+            return {"closed": False, "status": current, "reason": "already_closed"}
+        return {"closed": False, "status": current, "reason": "card_changed"}
+    # Only after the win, as Mark sent: a sent card holds a send claim.
+    _claim_send(st, approval_id, ts)
+    job_log.log_run("reply_engine.approval", "card_closed_from_thread",
+                    {"lead": card.lead_email, "approval": approval_id, "email_id": email_id, "sent_at": sent_iso,
+                     "closed_at": ts.isoformat()})
+    return {"closed": True, "status": "sent_manually", "reason": "closed"}
 
 def _approval_row(st, approval_id: str) -> Optional[Approval]:
     """The stored card for this id, without the token check. Never raises."""
