@@ -21,7 +21,7 @@ Endpoints: POST /webhooks/instantly (X-Advero-Secret required), GET|POST /approv
 (GET renders a confirmation page, POST sends), GET|POST /veto/{token} (same split),
 GET|POST /edit/{token}, GET|POST /accept/{token}, GET|POST /retry/{token},
 GET|POST /mark-sent/{token} (a card stuck at send_failed, or at sending past its
-lease, whose reply did go out),
+lease, whose reply did go out; or a pending first-contact card Lorenzo sent himself),
 GET|POST /expired/{token}/{keep|release} (a card that expired holding a call),
 GET|POST /cadence/{veto|approve|veto-invite}/{campaign_id}/{email} (GET renders a
 confirmation page for a signed link, POST records the decision), GET|POST
@@ -2317,7 +2317,8 @@ def retry_endpoint(token: str):
 # The statuses "Mark sent" acts on (approval.MARK_SENT_FROM): send_failed,
 # and sending once its send claim is approval.SEND_CLAIM_LEASE_MINUTES old.
 # approval.mark_sent_manually moves the card to sent_manually and checks the
-# claim again itself.
+# claim again itself. A pending first-contact card (a reply Lorenzo sends
+# himself from the thread) is taken too: approval.mark_sent_takes.
 MARK_SENT_STATUSES = approval_mod.MARK_SENT_FROM
 
 
@@ -2368,7 +2369,7 @@ def mark_sent_confirm(token: str):
     approval = approval_mod.load(token, DEPS.store)
     if approval is None:
         return _page("Unknown token", "<p>Nothing to mark.</p>", status=400)
-    if approval.status not in MARK_SENT_STATUSES:
+    if not approval_mod.mark_sent_takes(approval, DEPS.store):
         return _page("Nothing to mark", "<p>This approval is %s.</p>" % _esc(approval.status), status=400)
     refusal = _mark_sent_refusal(approval)
     if refusal:
@@ -2397,7 +2398,7 @@ def mark_sent_endpoint(token: str):
     approval = approval_mod.load(token, DEPS.store)
     if approval is None:
         return _page("Not recorded", "<p>unknown or invalid token</p>", status=400)
-    if approval.status not in MARK_SENT_STATUSES:
+    if not approval_mod.mark_sent_takes(approval, DEPS.store):
         return _page("Not recorded", "<p>Nothing to mark: this approval is %s.</p>" % _esc(approval.status),
                      status=400)
     approval_id = approval.token.split(".", 1)[0]

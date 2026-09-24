@@ -1172,6 +1172,7 @@ def create_approval(
         requested_slot=(requested or {}).get("slot"),
         requested_status=(requested or {}).get("status"),
         requested_lead_tz=(requested or {}).get("lead_tz"),
+        lead_reply=lead_reply_excerpt(getattr(event, "text", None)),
     )
     # The context row first, and fail closed (re-review R1 item 4): a card
     # with no context skips arm_refusal's crash-gap check, so a newer reply
@@ -1349,6 +1350,77 @@ def _template_draft_only(template_id: Optional[str], state: Any) -> bool:
     return bool(str(template_id or "").strip()) and draft_only(template_id, state)
 
 
+# A first-contact card (Lorenzo, 2026-09-23): a reply to a lead nothing of
+# ours has reached yet, which he sends himself from the Instantly thread. Its
+# card has no Approve and no Edit: Mark sent (from pending, first_contact
+# cards only: mark_sent_manually) and Veto, and Book as asked as before.
+SEND_YOURSELF_LINE = "Send this yourself from the thread in Instantly, then tap Mark sent."
+# Between the lead's reply and the draft on a card that shows both.
+DRAFT_RULE = "----------"
+DRAFT_HEAD_YOURSELF = "Your reply, to send yourself from the thread:"
+DRAFT_HEAD_APPROVE = "Your reply (Approve sends it):"
+
+
+def first_contact(template_id: Optional[str], state: Any) -> bool:
+    """True while the lead is not answered yet (draft_only's rule and its
+    fail-closed read of ``state``: a LeadState, a stored lead row, or None
+    when it could not be read), for any draft but a booking confirmation
+    (UNANSWERED_ALLOWED_PREFIX). A draft with no template id counts."""
+    if str(template_id or "").strip().lower().startswith(UNANSWERED_ALLOWED_PREFIX):
+        return False
+    return draft_only(None, state)
+
+
+def pending_mark_sent_ok(card: Any, store=None) -> bool:
+    """Mark sent takes a pending card only when it is a first-contact card
+    (first_contact on its lead row as stored now; a row that cannot be read
+    counts as not answered yet). Every other pending card is refused, as
+    before."""
+    if isinstance(card, dict):
+        card = Approval.model_validate(card)
+    if getattr(card, "status", None) != "pending":
+        return False
+    return first_contact(card.draft.template_id, _stored_row(_store(store), card.state_key))
+
+
+def mark_sent_takes(card: Any, store=None) -> bool:
+    """Does Mark sent take this card at its status: MARK_SENT_FROM, or a
+    pending first-contact card (pending_mark_sent_ok)? mark_sent_manually
+    runs its own checks after this one."""
+    status = card.get("status") if isinstance(card, dict) else getattr(card, "status", None)
+    if status in MARK_SENT_FROM:
+        return True
+    try:
+        return pending_mark_sent_ok(card, store)
+    except Exception as exc:  # noqa: BLE001 - unknown: refused
+        logger.warning("could not tell whether Mark sent takes a pending card: %s", exc)
+        return False
+
+
+# The lead's reply as a card shows it (Approval.lead_reply).
+LEAD_REPLY_MAX_CHARS = 1500
+LEAD_REPLY_CUT = "\n[cut: the rest is in the Instantly thread]"
+
+
+def lead_reply_excerpt(text: Any) -> Optional[str]:
+    """What the lead wrote, for the card: quoted history cut
+    (classify.strip_quoted; the raw text when that leaves nothing, a
+    bottom-posted reply), capped at LEAD_REPLY_MAX_CHARS with the cut
+    marked. None when there is no text."""
+    raw = str(text or "").replace("\r\n", "\n").strip()
+    if not raw:
+        return None
+    try:
+        from services.reply_engine import classify
+        top = classify.strip_quoted(raw)
+    except Exception:  # noqa: BLE001 - the raw text beats no text
+        top = raw
+    top = (top or raw).strip()
+    if len(top) > LEAD_REPLY_MAX_CHARS:
+        top = top[:LEAD_REPLY_MAX_CHARS].rstrip() + LEAD_REPLY_CUT
+    return top
+
+
 def _stored_row(st, state_key: Optional[str]) -> Optional[Dict[str, Any]]:
     """The lead row for draft_only, or None when it cannot be read."""
     try:
@@ -1433,10 +1505,20 @@ def push_card(approval: Approval, st, state: Optional[LeadState], notify_fn=None
     company = getattr(state, "company", None) if state is not None else None
     urls = action_urls(approval.token)
     who = " ".join(p for p in (first, company) if p) or lead_email
-    title = "Reply to approve: %s (%s)" % (who, draft.label or "positive")
+    # A first-contact card (first_contact on the lead as read above; None,
+    # unreadable, counts as not answered yet): Lorenzo sends it himself, so
+    # Mark sent replaces Approve and Edit, and a tap opens Mark sent.
+    fresh = first_contact(draft.template_id, state)
+    mark_url = None  # type: Optional[str]
+    if fresh:
+        mark_url = "%s/mark-sent/%s" % (base_url(), approval.token)
+        title = "Reply to send yourself: %s (%s)" % (who, draft.label or "positive")
+        actions = [("Mark sent", mark_url), ("Veto", urls["veto"])]
+    else:
+        title = "Reply to approve: %s (%s)" % (who, draft.label or "positive")
+        actions = [("Approve", urls["approve"]), ("Veto", urls["veto"]), ("Edit", urls["edit"])]
     problems = ("\nVALIDATION: " + "; ".join(draft.problems)) if draft.problems else ""
     rationale = ("\nNote: " + draft.rationale) if draft.rationale else ""
-    actions = [("Approve", urls["approve"]), ("Veto", urls["veto"]), ("Edit", urls["edit"])]
     asked = ""
     if approval.requested_slot:
         label = _slot_label(approval.requested_slot)
@@ -1448,19 +1530,29 @@ def push_card(approval: Approval, st, state: Optional[LeadState], notify_fn=None
     # safe-link scanner would fetch every URL in it. GET /approve only renders a
     # confirmation page now, so following one cannot send anything. The push
     # itself is a guarded write inside shared.notify (shadow records a would_do).
+    # What the lead wrote goes above the draft, and the draft is labelled as
+    # the text Lorenzo sends. Lead text: the email leg and a protected topic
+    # only (_public_card_push keeps it off a public one).
+    body = draft.body_text
+    if approval.lead_reply:
+        body = "They wrote:\n%s\n\n%s\n%s\n%s" % (
+            approval.lead_reply, DRAFT_RULE,
+            DRAFT_HEAD_YOURSELF if fresh else DRAFT_HEAD_APPROVE, draft.body_text)
     message = "%s <%s>\nReply to: %s\nSubject: %s\nSlots: %s%s%s\n\n%s%s" % (
         who, lead_email, approval.reply_to or lead_email, draft.subject,
-        ", ".join(draft.offered_slots) or "none", problems, rationale, draft.body_text, asked)
+        ", ".join(draft.offered_slots) or "none", problems, rationale, body, asked)
     card_text = message
     if note:
         message = "%s\n%s" % (note, message)
+    if fresh:
+        message = "%s\n%s" % (SEND_YOURSELF_LINE, message)
     kwargs = {"priority": "high", "actions": actions, "tags": ["email", "reply-engine"],
-              "click": urls["approve"]}  # type: Dict[str, Any]
+              "click": mark_url if fresh else urls["approve"]}  # type: Dict[str, Any]
     if approval.status in FAILED_PUSH_STATUSES:
         title, message, kwargs = _failed_card_push(approval, st, who, draft.label, card_text, note)
     elif not _topic_protected():
         title, message, kwargs = _public_card_push(draft.label, message, kwargs, note,
-                                                   bool(approval.requested_slot))
+                                                   bool(approval.requested_slot), fresh=fresh)
     fn = notify_fn or notify.notify
     try:
         result = stored_notify_result(fn(title, message, **kwargs))
@@ -1607,7 +1699,7 @@ def _label_words(label: Optional[str]) -> str:
 
 
 def _public_card_push(label: Optional[str], full: str, kwargs: Dict[str, Any], note: Optional[str],
-                      asked: bool):
+                      asked: bool, fresh: bool = False):
     """``(title, message, kwargs)`` for an ordinary card on the public ntfy
     topic (no NTFY_TOKEN / NTFY_ALLOW_SENSITIVE), the rule _failed_card_push
     follows: the title names the classification only, and the push carries
@@ -1616,14 +1708,20 @@ def _public_card_push(label: Optional[str], full: str, kwargs: Dict[str, Any], n
     so the lead's first name and company used to reach the topic in the
     title). ``full`` is the ordinary card text; it and the buttons (which
     shared.notify renders as lines) go to the email leg (``email_message``).
-    A protected topic keeps the ordinary card."""
-    lines = [note] if note else []
-    lines.append("A reply is waiting for your approval: Approve, Veto or Edit it.")
+    A protected topic keeps the ordinary card. A first-contact card
+    (``fresh``) is titled and worded as one Lorenzo sends himself, with the
+    same redaction."""
+    lines = [SEND_YOURSELF_LINE] if fresh else []
+    if note:
+        lines.append(note)
+    if not fresh:
+        lines.append("A reply is waiting for your approval: Approve, Veto or Edit it.")
     if asked:
         lines.append("They asked for a time outside your slot rule; Book as asked is on the card.")
     lines.append("The card, with its links, is in the email.")
     kwargs = dict(kwargs, email_message=full)
-    return "Reply to approve: %s" % _label_words(label), "\n".join(lines), kwargs
+    return ("Reply to send yourself: %s" if fresh else "Reply to approve: %s") % _label_words(label), \
+        "\n".join(lines), kwargs
 
 
 def _topic_protected() -> bool:
@@ -1810,7 +1908,8 @@ def auto_send_approved(approval: Approval, instantly, store=None, now: Optional[
             # to a lead not answered yet) is never auto-sent. A card still waiting on its deferred push (raised
             # before this lock) is pushed now, once; any other is left as is.
             why = reason_text(FIRST_REPLY_LOCK_REASON)
-            logger.info("not auto-sending %s: first replies are drafts Lorenzo sends himself", approval_id)
+            logger.info("not auto-sending %s: a reply to an unanswered lead is a draft Lorenzo sends himself",
+                        approval_id)
             job_log.log_run("reply_engine.approval", "template_auto_send_refused",
                             {"lead": card.lead_email, "approval": approval_id,
                              "template_id": card.draft.template_id, "reason": FIRST_REPLY_LOCK_REASON})
@@ -6118,6 +6217,11 @@ def mark_sent_manually(approval_id: str, now: Optional[datetime], by: str = "lor
       Job_Log row (from_status, send_started_at). A card taken from sending
       also writes a send_never_finished Job_Log row (_send_never_finished):
       its worker wrote nothing, and the deploy watch must see it.
+    * From pending, for a first-contact card only (pending_mark_sent_ok):
+      Lorenzo sent it himself from the thread. Same bookkeeping, and the
+      reply_sent_manually history entry releases draft_only's lock. It never
+      confirms a call the card holds (no GHL invite): that stays held and an
+      alert says so. Any other pending card is refused as before.
     * Never for a card its recipient check held (recipient_held: the record
       on the card, checked again under the card's lock, or the hold's own
       row): refused with RECIPIENT_HELD_REFUSAL, nothing moved or recorded.
@@ -6168,7 +6272,7 @@ def mark_sent_manually(approval_id: str, now: Optional[datetime], by: str = "lor
         return {"ok": False, "error": "unknown card"}
     if card.status in SENT_STATUSES:
         return {"ok": False, "error": "already %s" % card.status, "status": card.status}
-    if card.status not in MARK_SENT_FROM:
+    if card.status not in MARK_SENT_FROM and not pending_mark_sent_ok(card, st):
         return {"ok": False, "status": card.status,
                 "error": "only a card stuck at send_failed, or at sending once its send is %d minutes old, can be "
                          "marked sent; this one is %s" % (SEND_CLAIM_LEASE_MINUTES, card.status)}
@@ -6223,6 +6327,9 @@ def mark_sent_manually(approval_id: str, now: Optional[datetime], by: str = "lor
         if from_status == "sending":
             result[MARK_SENT_KEY] = {"at": ts.isoformat(), "by": by, "send_failed_at": None, "from": "sending",
                                      "send_claim": dict(claim or {})}
+        elif from_status == "pending":
+            # A first-contact card Lorenzo sent himself from the thread.
+            result[MARK_SENT_KEY] = {"at": ts.isoformat(), "by": by, "send_failed_at": None, "from": "pending"}
         else:
             result[MARK_SENT_KEY] = {"at": ts.isoformat(), "by": by, "send_failed_at": row.get("decided_at")}
         row["notify_result"] = result
@@ -6278,7 +6385,14 @@ def mark_sent_manually(approval_id: str, now: Optional[datetime], by: str = "lor
     if state is not None and owns_booking(card, state):
         booking = booking_of(state)
         try:
-            left_why, todo = _left_held(card, booking, why, st, state, ts)
+            if from_status == "pending":
+                # Nothing ever went through the engine for this card, so
+                # Mark sent sends nothing on its behalf either: no invite.
+                left_why, todo = ("it was marked sent straight from a pending card (a reply you sent yourself), "
+                                  "which confirms nothing on its own",
+                                  "Confirm the call in GHL, or cancel it there without notifying the lead.")
+            else:
+                left_why, todo = _left_held(card, booking, why, st, state, ts)
         except Exception as exc:  # noqa: BLE001 - unreadable choice: confirm nothing, say so
             logger.warning("Mark sent for %s: the booking choice could not be read: %s", approval_id, exc)
             left_why, todo = ("its Keep or Release choice could not be read (%s)" % exc,

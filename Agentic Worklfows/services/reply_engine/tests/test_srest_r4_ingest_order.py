@@ -786,7 +786,16 @@ def test_mark_sent_refuses_a_bad_token_and_a_card_that_is_not_stuck(world, monke
 
     pending = _reply(world, "s-2", "Interested but I have to ask, this is not a scam is it? How much does it cost?",
                      ct(2026, 9, 28, 9, 50), ct(2026, 9, 28, 9, 51))["approval_token"]
-    assert A.load(pending, st).status == "pending"
+    card = A.load(pending, st)
+    assert card.status == "pending"
+    # No reply of ours reached this lead yet: a first-contact card, which
+    # Mark sent takes from pending (Lorenzo sent it himself from the thread).
+    assert client.get("/mark-sent/%s" % pending).status_code == 200
+    # Once a reply of ours reached the lead it is an ordinary pending card,
+    # which Mark sent refuses as before.
+    row = st.get(card.state_key)
+    row["history"].append({"event": "reply_sent", "at": ct(2026, 9, 28, 9, 52).isoformat()})
+    st.set(card.state_key, row)
     assert client.get("/mark-sent/%s" % pending).status_code == 400
     refused = client.post("/mark-sent/%s" % pending)
     assert refused.status_code == 400 and "Nothing to mark" in refused.text

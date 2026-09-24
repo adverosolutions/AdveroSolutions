@@ -214,7 +214,7 @@ def test_approval_card_links_use_the_configured_base_url(env, monkeypatch):
     res = _process(env, webhook_payload(SOPIO, "2026-09-21T14:42"), NOW_BUSINESS)
     token = res["approval_token"]
     card = notify.sent_in_test[-1]
-    assert card["click"] == "https://reply.advero.example/approve/%s" % token
+    assert card["click"] == "https://reply.advero.example/mark-sent/%s" % token   # a first-contact card
     assert "https://reply.advero.example/veto/%s" % token in card["actions"]
     assert "localhost" not in json.dumps(card)
 
