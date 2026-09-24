@@ -18,7 +18,7 @@ All ten emails agreed with Lorenzo in chat; final text, per-campaign lines, rese
 
 ## Next
 1. **Engine rewrite for the agreed sequence** (plan the pieces, workers build, reviewer approves each; see README next steps 3 and the engine notes at the bottom of `sequence_final.md`): new schedule (E1 to E7 business days 1 to 7 after Lorenzo's own reply, E8 two weeks after E7, E9 and E10 weekly, then nurture); new templates replace `prompts/cadence_d*.md` and `NO_SLOTS_BODIES` (retire d6_noinvite, d14, d30 and the deleted d1/d2 no-slots variants); per-campaign fills; release previous holds when new times go out (`shared/slots.py`, a small `shared:` commit); detect Lorenzo's own manual reply as day 0 and never send a first reply; stop logic with `nurture.enroll` callers (`not_now_reply`, `no_reply_after_sequence`) plus leaving nurture when a nurtured lead books or replies with interest; `research_rules.py` + the research step (Sonnet at runtime, mocked in tests); send the new template ids to section 4 (parity check, doc rebuild); update `runbooks/cadence_and_booking.md` and tests.
-2. Open question 5 (below) decides whether `draft.py` keeps drafting a first reply.
+2. First-reply draft for Lorenzo (decided above): `draft.py` keeps drafting, never sends; booking line out of the first replies (section 2 no longer imports `BOOKING_LINE`; delete the constant once their piece is on main, then tell section 4 to fix `shared/llm.py` `_fake_draft`).
 3. **Booking link out of every email** (his rule): `draft.py` `BOOKING_LINE` (first replies: full, /no_slots, /proposed_time_refused) is mine; section 2's 8 booking replies import it, so coordinate: I stop using it in first replies, section 2 stops importing it, then remove the constant. Section 4 edits `shared/llm.py` `_fake_draft` (~671, ends with the booking line) after my change lands. No-slots first replies need new wording from Lorenzo (the link was their only call to action). Cadence `{booking_url}` goes with the engine rewrite.
 4. **E2 auto-send path**: tell section 4 the template gate needs "approved frame + validated research line" for E2 (his decision above). The research step itself is mine (Sonnet at runtime, mocked in tests).
 5. Nurture follow-ups: wire the callers (end of ladder, "not now" reply), a way to leave nurture when a nurtured lead books or replies with interest (reviewer: must be settled before the `not_now_reply` caller lands, since approval re-arms the ladder via `arm()` and the next tick stops it again), then the 90-day content plan for Lorenzo.
@@ -33,7 +33,9 @@ All ten emails agreed with Lorenzo in chat; final text, per-campaign lines, rese
 - Race: a lead enrolled between the tick's check and the send still gets that send; `changed_in_store` does not read the nurture key. Every planned caller is covered by the existing pre-send re-read.
 - `resume_after_recipient_hold` reports `resumed: True` once for an enrolled lead (the next tick stops it before sending).
 
+## Decided 2026-09-23 (after the walkthrough)
+- **First reply:** the engine drafts it for Lorenzo (alert with the lead's reply plus a ready draft with two open times it holds for that lead, so E1 never re-offers them). He copies, edits if he likes, and sends it himself from the thread; that send is day 0. The engine never sends a first reply itself.
+- **No free times:** a follow-up that needs two times and finds none in the next 5 business days waits a day and tries again; if it happens twice in a row, alert Lorenzo.
+
 ## Waiting on Lorenzo
-- README open question 5: now that he sends the first reply himself, does the engine still draft one for him to copy, or just alert him?
-- What E3 to E10 should do on a day with no free slots (hold the touch and alert him, or skip to the next day).
 - Later: the 90-day nurture plan (how often, what each touch offers, when it ends, engine vs Instantly subsequence).
