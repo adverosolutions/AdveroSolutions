@@ -98,3 +98,10 @@ Do not touch: the Upwork application flow and Demo Library loop; live campaign `
 Runtime models: Haiku for classification (escalate < 0.8 confidence to Sonnet), Sonnet for drafts and research lines, Opus 5 weekly for retro/proposals and the 20-draft/50-classification audit. Build models: Opus 5 for sales/marketing design, Sonnet for fulfillment/ops scripts. (Fable was the original pick; Lorenzo's weekly Fable allowance ran out on 2026-09-21, so Opus 5 is the heavy model everywhere. shared/llm.py MODEL_POLICY is the single place to change it back.)
 
 Definition of done for any brief: pytest green, dry-run/replay shadow log, runbook in `runbooks/`, Job_Log rows, evidence in the report.
+
+## Working in sections (from 2026-09-23)
+
+The revenue build is split into 4 sections, each run in its own chat at the same time: (1) email follow-up after an interested lead goes quiet, plus the 90-day nurture; (2) booked calls: confirmation, reminders, no-show recovery; (3) Upwork follow-ups; (4) core engine, the one Google Doc, cold campaigns, go-live. `Agentic Worklfows/sections/README.md` has the rules, who owns which files, and the kickoff message for each chat; each section's folder has its handoff `README.md` and a `STATUS.md` to keep current.
+- Each chat works in its own git worktree under `.worktrees/` on branch `section/<name>`, never in the main folder.
+- **Push every change to GitHub** (Lorenzo, 2026-09-23; replaces the earlier "no push"): commit by path, push the section branch, then rebase on `origin/main`, run the full suite and push to `main`. Pushing deploys nothing; every live-write rule above still applies. Before every push, `git rev-list --max-parents=0 HEAD` must print only `fe95263e92f15c9b2f8dc20a8806c00343c1ef32`; never push `--all`, `--mirror`, `--tags` or an `archive/*` ref (old history holds live credentials).
+- Test command (from `Agentic Worklfows/`): `PYTHONPATH=tools/netguard python3 -c "import netguard, pytest, sys; sys.exit(pytest.main(['-q','-p','no:cacheprovider']))"`.

@@ -125,3 +125,8 @@ Supabase/Untitled Document (1).txt
 Agentic\ Worklfows/execution/.sessions/
 .claude/settings.local.json
 .mcp.json
+
+# Sections split (2026-09-23): per-chat git worktrees, and the one-doc tooling's JSON
+.worktrees/
+!Agentic\ Worklfows/tools/**/*.json
+Agentic Worklfows/tools/template_doc/roundtrip_export.txt
