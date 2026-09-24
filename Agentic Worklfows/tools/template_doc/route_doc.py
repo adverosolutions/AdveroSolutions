@@ -128,7 +128,7 @@ def stray_braces(text):
     """Braces left over once every brace token is taken out: the valid
     placeholders for either style, and the tokens invalid_placeholders and
     wrong_placeholder_style already report. Each is shown as the run of
-    non-space text around it, e.g. "{{first_name}}," or "{slots}}"."""
+    non-space text around it, e.g. "{{first_name}," or "{slots}}"."""
     text = text or ""
     covered = [False] * len(text)
     for m in BRACE_TOKEN_RE.finditer(text):
