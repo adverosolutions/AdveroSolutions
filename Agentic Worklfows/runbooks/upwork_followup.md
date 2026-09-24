@@ -27,7 +27,7 @@ for context and never written.
 | Orchestration and cards | `services/upwork_followup/tick.py` |
 | CLI | `jobs/upwork_followup.py` (laptop only, not a Modal schedule) |
 | Proof and pricing source | `config/upwork_offers.md` |
-| Schedule | 08:30 CT on weekdays, as a Claude desktop scheduled task Lorenzo creates |
+| Schedule | the watch: every 30 minutes on weekdays, 08:00 to 19:00 CT, as a Claude desktop scheduled task Lorenzo creates (prompt `services/upwork_followup/watch_task_prompt.md`); the first run of each CT day is a full run |
 | Reads | `.tmp/upwork_followup/snapshot.json`, the store, the job folders under `Coding/upwork-pipeline/jobs/` |
 | Writes | the store (`upwork:<room_id>` threads, `upwork_meta`, and the tick's own `upwork_followup:tick` record (summary card, blocked rooms already listed) and `upwork_followup:lock` run lease), `.tmp/upwork_followup/drafts_<date>.md`, one Job_Log row, cards on `--run` (alias `--now`), GHL would-do rows in shadow once the Upwork pipeline is configured |
 
@@ -55,10 +55,69 @@ thread only exists after the client opens the room. Every draft stays on
 Upwork: no email address, phone number, outside chat app, outside calendar or
 booking link. Loom links are fine.
 
-## The morning batch (08:30 CT)
+## The watch (every 30 minutes, 08:00 to 19:00 CT)
 
-The scheduled task runs the read-only collect, the ingest and the tick. What
-arrives:
+Each watch run makes one read-only call (`list_rooms`, first page), saves it to
+`.tmp/upwork_followup/watch_rooms.json` and asks the plan what to do:
+
+| plan | when | what the run does |
+| --- | --- | --- |
+| `none` | nothing new since the last pull, or a full run must wait (see below) | stops; one summary line, no tick |
+| `run` | the data is in but no `--run` finished on it (the last one was locked out, failed, lost its lease or never started) | `--run` only |
+| `light` | a tracked room shows a client message or a room event the snapshot does not have yet, or (GHL mirror on) Lorenzo moved a thread's card in GHL | `list_messages` for those rooms only, `--ingest-light`, then `--run` |
+| `full` | the first run of the CT day, no snapshot, an unreadable rooms file, a brand-new room, a contract on a tracked room, or more than one page of rooms moved | `--mark-full-start`, the whole collect (`scheduled_task_prompt.md`), `--ingest`, then `--run` |
+
+A full run marks its start (`.tmp/upwork_followup/full_start.json`). Until
+its `--ingest` lands, the watch does not start another: for 45 minutes it
+counts as in progress, after that as failed, and it is retried 2 hours after
+its start, not every 30 minutes. The `_run` reason says which, and when the
+next try is. A light pull that comes back without the card's newest message
+(empty, or only older messages) marks nothing as seen, so the next watch asks
+again; after 3 such pulls for the same message it stops asking, and the next
+full run reads the room.
+
+A message Lorenzo sent himself is never a trigger (a room event on his side,
+such as "System event: meeting_scheduled", is); the next full run (or the
+next light pull of that room) picks it up. A room the day's full collect
+already listed and left out (no linked proposal, too old) is not a trigger
+either until the next day's full run. The exact rules are in
+`services/upwork_followup/watch.py`.
+
+**Run a watch by hand** (from the repo folder, in a Claude session with the
+Upwork MCP): make the `list_rooms` call with `{"limit": 50, "room_type":
+"ALL"}`, save the response to `.tmp/upwork_followup/watch_rooms.json`, then
+
+```bash
+python3 -m jobs.upwork_followup --watch-plan .tmp/upwork_followup/watch_rooms.json
+```
+
+It prints one JSON line, for example
+`{"checked": 23, "mode": "light", "reasons": {"room_...": "new client activity"}, "rooms": ["room_..."]}`.
+`rooms` is the list of rooms to read (only for `light`); `reasons` gives one
+short reason per room, or under `"_run"` for the run as a whole (`"no new
+activity"`, `"first run of the CT day (last full collect <date>)"`); `checked`
+is the number of rooms on the page. The plan only reads: no store write, no
+Job_Log row, no model call, and GHL is read only when the Upwork pipeline is
+configured. For `light`, read each listed room's messages, save them as
+`.tmp/upwork_followup/raw_light.json` (layout in `collect_calls.md`, "The
+light path"), then
+
+```bash
+python3 -m jobs.upwork_followup --ingest-light .tmp/upwork_followup/raw_light.json \
+    --rooms .tmp/upwork_followup/watch_rooms.json
+python3 -m jobs.upwork_followup --run
+```
+
+**Force a full run:** ignore the plan and run the full collect by hand
+(`--print-collect`, the calls, `--ingest`, `--run`), or run the morning
+prompt (`scheduled_task_prompt.md`) once in a session. A successful full
+`--ingest` resets the day: later watches compare against it. To lift a
+waiting full run's 2-hour hold, delete `.tmp/upwork_followup/full_start.json`.
+
+## The batch
+
+Every run that reaches `--run` (the full one and each light one) writes the
+batch. What arrives:
 
 1. **A card** through `shared.notify` (push and email, the same channel as the
    other jobs), on `--run` only. One card per new draft, plus one summary card
@@ -357,8 +416,10 @@ is in brackets):
 The AI and automation word ban from the cold-email gate does not apply here,
 because Upwork clients post automation jobs.
 
-Pricing: `config/upwork_offers.md` has no Upwork pricing today, so no draft may
-state a price. Proof lines come only from that file.
+Pricing: there are no Upwork pricing lines, and there never will be. This is
+by design (Lorenzo, 2026-09-23): he sets each job's price himself, so no draft
+states a price, and a client's price question goes to NEEDS_YOU for him to
+answer. Proof lines come only from `config/upwork_offers.md`.
 
 ## CLI reference
 
@@ -370,6 +431,9 @@ changes nothing and lists the candidates.
 | --- | --- |
 | `python3 -m jobs.upwork_followup --print-collect` | prints the exact read-only MCP calls and the current `org_uid` (from `collect.collect_instructions()`) |
 | `python3 -m jobs.upwork_followup --ingest .tmp/upwork_followup/raw.json` | turns the raw MCP responses into `.tmp/upwork_followup/snapshot.json` and prints the room counts, the omitted counts and the sections; refuses a broken file, keeps the old snapshot and exits 1 |
+| `python3 -m jobs.upwork_followup --watch-plan .tmp/upwork_followup/watch_rooms.json` | the watch plan for the saved `list_rooms` page: one JSON line with `mode` (`none`, `light`, `full`), `rooms`, `reasons`, `checked`. Read only |
+| `python3 -m jobs.upwork_followup --mark-full-start` | records that a full collect starts now (`.tmp/upwork_followup/full_start.json`), so the watch does not start a second one while it runs |
+| `python3 -m jobs.upwork_followup --ingest-light .tmp/upwork_followup/raw_light.json --rooms .tmp/upwork_followup/watch_rooms.json` | merges the light pull's messages into the existing snapshot, those rooms only; refuses a broken file (or one that merges no room), keeps the snapshot and exits 1 |
 | `python3 -m jobs.upwork_followup --dry-run` | the default (no flag does the same); runs the tick on a throwaway copy of the store with no model call (replies classify as neutral), writes the drafts file (with "Would draft" where a draft is due) and the Job_Log row; saves nothing, calls no GHL, sends no card |
 | `python3 -m jobs.upwork_followup --run` (alias `--now`) | runs the tick for real: classifies replies (Haiku), writes the drafts (Sonnet), saves the store, mirrors GHL when configured, sends the cards; it first prints that the run spends Anthropic tokens. One run at a time (a second one prints that another run is in progress and does nothing), within the per-run spend cap |
 | `python3 -m jobs.upwork_followup --status` | a table of every thread: client, job title, stage (set by), status, pending draft, next due, room id. "Next due" says "blocked on Upwork since <date>" for a blocked room (a blocked room that was never enrolled gets a row too, status "not enrolled"), "closed: the room was blocked on Upwork; --resume or --stage reopens it" once the room is open again, and "reply skipped on <date>; client waiting since <date>" for a client left waiting |
@@ -391,9 +455,11 @@ and Job_Log, and the exit code stays 0.
 ## Going live checklist
 
 1. **Create the scheduled task.** In the Claude desktop app, create a scheduled
-   task for 08:30 CT on weekdays and paste the prompt from
-   `services/upwork_followup/scheduled_task_prompt.md` exactly. Persistent
-   config is his action; no agent creates it.
+   task that runs every 30 minutes on weekdays, 08:00 to 19:00 CT, and paste
+   the prompt from `services/upwork_followup/watch_task_prompt.md` exactly (its
+   first run each day is the full run). If the older 08:30 task from
+   `scheduled_task_prompt.md` exists, turn it off. Persistent config is his
+   action; no agent creates it.
 2. **A supervised shadow week, on `--run`.** A dry run writes no draft text,
    no Needs you lines and no For-you block, so it cannot be reviewed. The
    shadow week runs the real tick (`--run`) with `MODE` left at its default,
@@ -434,9 +500,9 @@ and Job_Log, and the exit code stays 0.
    GHL move always wins. DECISIONS Q-O6 (dated stage changes from GHL) stays
    open and is not settled by this rehearsal. Until it passes, the GHL mirror
    stays in shadow.
-5. **Pricing, only if wanted.** If he wants drafts to quote prices, he adds them
-   to the Pricing section of `config/upwork_offers.md`. Any figure written there
-   becomes quotable. Leave it empty and drafts never state a price.
+5. **No pricing step.** Drafts never state a price, by design and for good:
+   Lorenzo sets each job's price himself, and a price question goes to
+   NEEDS_YOU. `config/upwork_offers.md` holds proof lines only.
 
 Live GHL writes still need `MODE=live` plus `ALLOW_LIVE_WRITES=1`, set by him
 after sign-off. No Upwork write exists to switch on.
@@ -454,6 +520,9 @@ after sign-off. No Upwork write exists to switch on.
 | An LLM SPEND CEILING warning, card title "(LLM spend ceiling reached)", Job_Log `budget_hit: ceiling` | `shared.llm` refused a call at its cumulative ceiling (`config/llm_budget.json`; the laptop counter `llm.spend_usd` in `.tmp/store.json`, shared by every laptop job that calls the model, such as `retro_packet` and `list_factory`), not this run's own cap | the replies and drafts it lists wait unread; nothing was marked `neutral`. Check the laptop counter from the repo folder with `python3 -c 'from shared import llm; print(llm.budget_status())'`. It repeats every run until Lorenzo raises `budget_usd` or resets the laptop counter; raising the per-run cap does not help, and neither does resetting the Modal reply engine's counter, which is a separate one |
 | "Needs you" lists a client | the client wrote last and the reply drafted for them was never sent (it expired twice, or was cleared); no new draft comes | answer in the room, or `--resume TARGET` for a fresh reply draft on the next run, or `--stop` / `--stage` if it should not be answered |
 | "Blocked on Upwork (no drafts)" | the client blocked the chat on Upwork (the pull's newest room event is "blocked") | nothing can be sent there. The thread is closed and listed once; `--status` keeps showing it. A client message after an unblock reopens it on its own, or `--resume` / `--stage` do |
+| The watch says "the full run started at ... did not finish; next try after ..." | the full run failed or the session died (no snapshot from today) | open the task's run log for the full run's error. The watch retries every 2 hours; after a fix, delete `.tmp/upwork_followup/full_start.json` to retry at the next watch |
+| The watch says `run` again and again | `--run` keeps being locked out or failing before its end | read the `--run` output in the task's run log (a stuck lease frees itself 30 minutes after its last heartbeat) |
+| `--ingest-light` refuses the file | no snapshot yet, the light file is broken, or every listed room's `list_messages` failed | nothing is overwritten; the next watch plans the same rooms again (or `full` when there is no snapshot) |
 | The ingest refuses the file | `list_rooms` or `proposals` is missing or an error, `proposal_rooms` is absent, or the file is empty or an error. Also refused: a `collected_at` more than 10 minutes in the future (the session wrote the wrong date or UTC offset); `live_threads` missing or not a list; any MCP error response in a required slot (a `status` other than ok or success, `success: false`, an `error` or `errors` field, or a top-level message with no data) | nothing is overwritten. Re-run the collect and read the error |
 | The batch says "Upwork data incomplete: N room links failed; sections missing: ..." | a `get_room` call failed for N proposals (their rooms are left out of the batch), or the proposals, contracts or offers section was not collected | the run status is `attention` and the rest of the batch is fine. Re-run the collect; the line clears when the data comes back |
 | A section was not collected | a `get_room`, `list_messages`, contracts or offers call failed. The snapshot marks it `false` in `sections` and lists the ids in `link_errors` or `missing_messages` | rooms without messages get a `needs_review` (`messages_missing`) instead of a draft. Re-run the collect; the flag clears when messages come back |

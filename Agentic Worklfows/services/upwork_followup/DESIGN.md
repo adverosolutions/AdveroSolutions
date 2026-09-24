@@ -16,7 +16,9 @@ anything below that disagrees.**
 - **Bespoke, never automated.** Upwork stays hand-sent. Every draft goes to
   Lorenzo and nothing is ever sent for him. Drafts must read as written for that
   one client, never as a sequence template.
-- **Morning drafts.** One morning batch (08:30 CT) holds a draft for every job in a
+- **Drafts through the day.** The first run of each weekday (08:00 CT) is a full
+  run; the watch then drafts within about 30 minutes of a client message or a
+  GHL card move (see "How it runs"). The batch holds a draft for every job in a
   drafting stage (see Stages) that needs one: a reply when the client wrote last,
   or the next follow-up when it is due. Every other job in a drafting stage
   appears in the same batch as one line with its next due date.
@@ -77,9 +79,19 @@ anything below that disagrees.**
    prints the exact read-only MCP calls. The session runs them and saves the raw
    responses as one JSON file, then runs
    `python3 -m jobs.upwork_followup --ingest <raw.json>`, which writes
-   `.tmp/upwork_followup/snapshot.json`. Planned schedule: one morning run, 08:30 CT on weekdays, as
-   a Claude desktop scheduled task that Lorenzo creates (persistent config is his
-   action). Until then it runs by hand.
+   `.tmp/upwork_followup/snapshot.json`. Planned schedule: the watch
+   (`watch.py`, prompt `watch_task_prompt.md`), a Claude desktop scheduled task
+   Lorenzo creates (persistent config is his action) that runs every 30 minutes
+   on weekdays, 08:00 to 19:00 CT. Each run makes one `list_rooms` call and asks
+   `--watch-plan`: `none` stops; `run` only runs the tick (the last ingest
+   has no finished `--run` yet); `light` reads `list_messages` for the few
+   tracked rooms with new client activity or a room event (or a card Lorenzo
+   moved in GHL), merges them with `--ingest-light` and runs the tick; `full`
+   (always the first run of the CT day, and any brand-new room) runs
+   `--mark-full-start`, the whole collect and `--ingest` as before. A full run
+   in progress (45 minutes) is not started again, and a failed one is retried
+   every 2 hours. The rules are in `watch.py`'s docstring. Until the task
+   exists it runs by hand.
 2. **Tick (plain Python, laptop).** `python3 -m jobs.upwork_followup --dry-run | --now`
    reads the snapshot and the store, advances each thread, drafts what is due,
    and emits cards. It makes no Upwork call of any kind.
@@ -596,7 +608,7 @@ services/upwork_followup/
   ghl_sync.py          U4  GHL mirror (shadow)
   tests/               each piece adds its own test file
 jobs/upwork_followup.py   U4  CLI
-config/upwork_offers.md   U3  new file: proof lines from Coding/upwork-pipeline/templates/ps-case-studies.md, verbatim; no pricing until Lorenzo adds it
+config/upwork_offers.md   U3  new file: proof lines from Coding/upwork-pipeline/templates/ps-case-studies.md, verbatim; never any pricing, by design (Lorenzo sets each job's price himself; a price question goes to NEEDS_YOU)
 shared/ghl.py             U4  optional email on upsert_contact (additive)
 runbooks/upwork_followup.md  U5
 ```
@@ -753,7 +765,7 @@ The new setup:
 - **`upwork_followup:lock`**: the `--run` lease, on the real clock only (never `--as-of`). Held: `{owner, acquired_at, heartbeat_at, expires_at, beats, pid, as_of}`, plus `clock_suspect_at` once a blocked run saw its stamp more than `LOCK_DRIFT_MINUTES` (2) ahead of its own clock. Released: `{owner: null, released_at, released_by}`. It is live until the earliest of `expires_at`, the newest stamp + `LOCK_TTL_MINUTES` (30), and, for a stamp from the future, the checking run's clock + TTL and `clock_suspect_at` + TTL (so a skewed lease blocks one TTL at most from the first run it blocks). The holder renews it (`expires_at` = now + TTL) before every model call (each classify and escalate call as well as each draft call), every store write (each draft record included) and every card; a renewal, a store read or a classifier call made while one of the run's mutates is open raises `NestedStoreCall` instead of waiting on the store's lock. Every lease write is a compare-and-set on `owner` inside `store.mutate` (else `compare_and_set`, else a write and a re-read, see `tick._lease_write`). A renewal that finds another owner or no lease stops the run: `lock_lost` in the result, the batch and Job_Log, no model call, record or card after that point.
 
 ### Day rules
-Every day-based rule counts America/Chicago calendar days from 00:00 CT, so a day-N rule is ready for the day-N 08:30 batch. This covers touch gaps, resurface, skip, close-out, dormant, revivable age, `follow_up_at` and the not-in-pull week.
+Every day-based rule counts America/Chicago calendar days from 00:00 CT, so a day-N rule is ready for the day-N first (full) run. This covers touch gaps, resurface, skip, close-out, dormant, revivable age, `follow_up_at` and the not-in-pull week.
 
 ### Classifier
 - Only `label` drives the state machine.

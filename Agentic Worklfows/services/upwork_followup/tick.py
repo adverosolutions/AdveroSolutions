@@ -54,6 +54,9 @@ One tick, in order:
    title as its first line, rides on the email leg (``email_message``), as in
    ``jobs/upwork_rooms.py``.
 8. **Job_Log.** One ``log_run("upwork_followup", status, details)`` row.
+9. **Processed mark** (``run`` only, lease kept). ``TICK_KEY[PROCESSED]``
+   records ``collect.snapshot_revision`` of the snapshot this run went
+   through, so the watch knows whether an ingest still waits for a --run.
 
 Idempotent: a second ``run`` on the same snapshot drafts nothing and sends no
 card (the summary card is sent once per snapshot per Central day, or when
@@ -161,6 +164,11 @@ CLAIM_KEY = "draft_claim"
 # Blocked rooms (collect.py room["blocked"]) are listed in the batch once:
 # TICK_KEY[BLOCKED_LISTED] = {room_id: {blocked_at, listed_at}}.
 BLOCKED_LISTED = "blocked_listed"
+# The snapshot a completed --run processed: TICK_KEY[PROCESSED] =
+# {"revision": collect.snapshot_revision(snapshot), "as_of"}. Written at the
+# end of a --run that kept its lease; the watch (watch.py) runs --run again
+# while it differs from the current snapshot's revision.
+PROCESSED = "processed"
 # sequence.py's stop reason for a thread whose room is blocked on Upwork.
 ROOM_BLOCKED = "room_blocked"
 # Per-run spend cap (worst-case projection of every model call this run) and a
@@ -1874,9 +1882,29 @@ def _tick(real, now: datetime, dry: bool, result: Dict[str, Any], snapshot_path,
                 # the batch is written: the next run lists these rooms again
                 _on_lock_lost(lease, result, now)
                 result["status"] = _status(result)
+        if not dry and result.get("lock_lost") is None and (lease is None or lease.lost is None):
+            # bookkeeping after the batch, like the summary fingerprint: written
+            # under the lease's store, not through a renewal
+            _remember_processed(_unleased(real), snapshot, now)
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+def _remember_processed(store, snapshot: Dict[str, Any], now: datetime) -> None:
+    """Record that this --run went through the whole snapshot (see PROCESSED).
+    A store failure is only logged: the watch then asks for one more --run."""
+    revision = collect.snapshot_revision(snapshot)
+
+    def fn(cur):
+        rec = dict(cur or {}) if isinstance(cur, dict) else {}
+        rec[PROCESSED] = {"revision": revision, "as_of": _utc_iso(now)}
+        return rec
+
+    try:
+        store.mutate(TICK_KEY, fn)
+    except Exception as exc:  # noqa: BLE001 - bookkeeping never fails the run
+        logger.warning("upwork_followup: could not record the processed snapshot: %s", exc)
 
 
 def _blocked_now(store, snapshot: Dict[str, Any]) -> List[Dict[str, Any]]:

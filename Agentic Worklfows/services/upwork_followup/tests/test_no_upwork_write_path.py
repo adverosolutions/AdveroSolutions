@@ -122,3 +122,15 @@ def test_test_files_are_held_to_identifiers_only():
     source = "assert 'send_message' not in draft\n"
     assert references(source, include_strings=False) == []
     assert references("api.send_message()\n", include_strings=False) != []
+
+
+# ------------------------------------------------------- the watch task prompt
+WATCH_PROMPT = PACKAGE / "watch_task_prompt.md"
+
+
+def test_the_watch_prompt_names_no_upwork_write_tool():
+    """The watch runs up to 23 times a day from a scheduled task: its prompt
+    allows only the read tools by name and never spells out a write tool."""
+    text = WATCH_PROMPT.read_text(encoding="utf-8")
+    hits = [m.group(1) for m in _WORD_RE.finditer(text.replace("upwork__", "upwork "))]
+    assert hits == [], "watch_task_prompt.md names Upwork write tools: %s" % hits

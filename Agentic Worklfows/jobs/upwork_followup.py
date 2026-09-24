@@ -2,13 +2,20 @@
 follow-ups; he sends every one himself. Nothing here writes to Upwork.
 
 Laptop only. It is not a Modal schedule: the Upwork MCP exists only inside a
-Claude session, so the morning run is a Claude desktop scheduled task (08:30 CT
-weekdays, prompt in services/upwork_followup/scheduled_task_prompt.md) that
-runs the read-only collect, then --ingest, then the tick.
+Claude session, so the runs are Claude desktop scheduled tasks. The watch
+(every 30 minutes on weekdays, 08:00-19:00 CT, prompt in
+services/upwork_followup/watch_task_prompt.md) makes one list_rooms call and
+asks --watch-plan what to do: nothing, a light pull of a few rooms
+(--ingest-light), or the full collect (scheduled_task_prompt.md: the
+read-only collect, then --ingest), then the tick.
 
 CLI (from "Agentic Worklfows/"):
     python3 -m jobs.upwork_followup --print-collect          # the read-only MCP calls to make
     python3 -m jobs.upwork_followup --ingest .tmp/upwork_followup/raw.json
+    python3 -m jobs.upwork_followup --watch-plan .tmp/upwork_followup/watch_rooms.json
+    python3 -m jobs.upwork_followup --mark-full-start       # before a full collect
+    python3 -m jobs.upwork_followup --ingest-light .tmp/upwork_followup/raw_light.json \
+        --rooms .tmp/upwork_followup/watch_rooms.json
     python3 -m jobs.upwork_followup                          # same as --dry-run (the default)
     python3 -m jobs.upwork_followup --dry-run                # no model call, nothing saved, no card
     python3 -m jobs.upwork_followup --run                    # (alias --now) drafts, cards; spends tokens
@@ -43,7 +50,7 @@ from shared import slots  # noqa: E402
 from shared.job_log import log_run  # noqa: E402
 from shared.store import get_store  # noqa: E402
 
-from services.upwork_followup import collect, sequence, tick  # noqa: E402
+from services.upwork_followup import collect, sequence, tick, watch  # noqa: E402
 
 logger = logging.getLogger("jobs.upwork_followup")
 
@@ -168,6 +175,77 @@ def cmd_ingest(source: str, now: datetime, snapshot_path: Optional[str]) -> int:
         "truncated": bool(snap.get("truncated")),
         "path": str(target),
     })
+    return 0
+
+
+def _ghl_client():
+    from shared.ghl import GHL
+    return GHL()
+
+
+def cmd_watch_plan(rooms_path: str, now: datetime, snapshot_path: Optional[str], store=None) -> int:
+    """One JSON object on stdout: {"mode", "rooms", "reasons", "checked"}.
+    Read only: no store write, no Job_Log row, no model call; GHL is read
+    only when the Upwork pipeline is configured."""
+    rooms_raw, rooms_err = watch.read_json(rooms_path)
+    snapshot, snap_err = collect.load_snapshot(snapshot_path)
+    marker, _marker_err = watch.read_json(watch.full_marker_path())
+    if store is None:
+        try:
+            store = get_store()
+        except Exception as exc:  # noqa: BLE001 - the plan degrades without the store
+            logger.warning("upwork watch: store unavailable: %s", type(exc).__name__)
+            store = None
+    result = watch.plan(rooms_raw, snapshot, store, now, ghl_factory=_ghl_client,
+                        snapshot_error=snap_err, rooms_error=rooms_err, marker=marker)
+    print(json.dumps(result, sort_keys=True))
+    return 0
+
+
+def cmd_mark_full_start(now: datetime, snapshot_path: Optional[str]) -> int:
+    """Record that a full collect starts now (``watch.full_wait`` reads it)."""
+    snapshot, _err = collect.load_snapshot(snapshot_path)
+    target = watch.write_full_marker(watch.full_marker(snapshot, now))
+    print("full run start recorded in %s" % target)
+    return 0
+
+
+def cmd_ingest_light(source: str, rooms_path: Optional[str], now: datetime, snapshot_path: Optional[str]) -> int:
+    raw, err = watch.read_json(source)
+    if err:
+        print("could not read %s: %s. Nothing was written." % (source, err), file=sys.stderr)
+        log_run(JOB_NAME, "ingest_light_refused", {"input": source, "reason": err})
+        return 1
+    rooms_raw = None
+    if rooms_path:
+        rooms_raw, rerr = watch.read_json(rooms_path)
+        if rerr:
+            print("note: rooms file %s %s; merging without the room cards" % (rooms_path, rerr), file=sys.stderr)
+            rooms_raw = None
+    snapshot, snap_err = collect.load_snapshot(snapshot_path)
+    try:
+        snap, report = watch.ingest_light(snapshot, raw, now, rooms_raw)
+        target = collect.write_snapshot(snap, snapshot_path)
+    except collect.IngestError as exc:
+        why = str(exc) if snapshot is not None else "%s (snapshot %s)" % (exc, snap_err)
+        print("refusing to merge the light pull: %s" % why, file=sys.stderr)
+        log_run(JOB_NAME, "ingest_light_refused", {"input": source, "reason": why[:300]})
+        return 1
+    print("merged %d room(s) into %s: %s" % (len(report["merged"]), target, ", ".join(report["merged"])))
+    again = [r for r in report["behind"] if r not in report["gave_up"]]
+    if again:
+        print("  the pull did not hold the newest message yet, asked again next watch: %s" % ", ".join(again))
+    if report["gave_up"]:
+        print("  stopped asking after %d pulls without the newest message (the next full run reads it): %s"
+              % (watch.LIGHT_MISS_CAP, ", ".join(report["gave_up"])))
+    if report["failed"]:
+        print("  not merged, list_messages failed: %s" % ", ".join(report["failed"]))
+    if report["not_in_snapshot"]:
+        print("  not merged, not in the snapshot (the next full run links them): %s"
+              % ", ".join(report["not_in_snapshot"]))
+    log_run(JOB_NAME, "ingest_light", {"merged": report["merged"], "behind": report["behind"],
+                                       "gave_up": report["gave_up"], "failed": report["failed"],
+                                       "not_in_snapshot": report["not_in_snapshot"], "path": str(target)})
     return 0
 
 
@@ -330,6 +408,12 @@ def build_parser() -> argparse.ArgumentParser:
     g = p.add_mutually_exclusive_group()
     g.add_argument("--print-collect", action="store_true", help="print the read-only MCP calls to make")
     g.add_argument("--ingest", metavar="RAW", help="turn the raw MCP JSON file into the snapshot")
+    g.add_argument("--watch-plan", metavar="ROOMS",
+                   help="plan a watch run from the saved list_rooms result: none, light or full (JSON)")
+    g.add_argument("--mark-full-start", action="store_true",
+                   help="record that a full collect starts now, so the watch does not start a second one")
+    g.add_argument("--ingest-light", metavar="RAW_LIGHT",
+                   help="merge a light pull (list_messages for the planned rooms) into the snapshot")
     g.add_argument("--dry-run", action="store_true",
                    help="the default: run the tick on a copy of the store, no model call, no card")
     g.add_argument("--run", "--now", dest="run", action="store_true",
@@ -343,6 +427,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--as-of", help="ISO timestamp to evaluate at (default: now); the --run lease always uses "
                                    "the real clock")
     p.add_argument("--snapshot", help="snapshot path (default: .tmp/%s)" % collect.SNAPSHOT_NAME)
+    p.add_argument("--rooms", help="with --ingest-light: the watch's saved list_rooms result")
     p.add_argument("--json", action="store_true",
                    help="print the tick result as JSON on stdout (a run skipped for the lock too)")
     return p
@@ -356,6 +441,12 @@ def main(argv: Optional[List[str]] = None) -> int:
         return cmd_print_collect()
     if args.ingest:
         return cmd_ingest(args.ingest, now, args.snapshot)
+    if args.watch_plan:
+        return cmd_watch_plan(args.watch_plan, now, args.snapshot)
+    if args.mark_full_start:
+        return cmd_mark_full_start(now, args.snapshot)
+    if args.ingest_light:
+        return cmd_ingest_light(args.ingest_light, args.rooms, now, args.snapshot)
     if args.status:
         return cmd_status(get_store(), args.snapshot, now)
     if args.stage:

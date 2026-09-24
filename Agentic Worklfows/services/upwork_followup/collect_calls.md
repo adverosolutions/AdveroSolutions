@@ -243,3 +243,40 @@ unlinked rules still apply to live rooms.
 The snapshot also reports what was left out: `omitted_unlinked` (candidate
 rooms with no linked proposal), and `omitted_contracted` plus
 `contracted_rooms` (candidate rooms with any contract id).
+It also lists `listed_rooms`, every room id on the `list_rooms` pages.
+
+## The light path (the watch)
+
+The watch (`watch_task_prompt.md`, every 30 minutes on weekdays) does not run
+the steps above unless its plan says `full`. It makes one call, step 1's first
+page only (`list_rooms`, `{"limit": 50, "room_type": "ALL"}`), saves it
+verbatim to `.tmp/upwork_followup/watch_rooms.json` and runs
+`python3 -m jobs.upwork_followup --watch-plan .tmp/upwork_followup/watch_rooms.json`.
+
+When the plan says `light`, the session calls `list_messages` (step 6's call,
+`{"room_id": "<room id>", "limit": 30}`, no paging) for each listed room and
+nothing else, and saves `.tmp/upwork_followup/raw_light.json`:
+
+```
+{
+  "collected_at": "<ISO-8601 time the light pull started, with offset or Z>",
+  "messages":     {"<room_id>": <list_messages response>, ...}
+}
+```
+
+`messages` has exactly the format of the full file's `messages`. Then:
+
+```
+python3 -m jobs.upwork_followup --ingest-light .tmp/upwork_followup/raw_light.json \
+    --rooms .tmp/upwork_followup/watch_rooms.json
+```
+
+This merges those rooms' messages into the existing snapshot and changes
+nothing else (a pull that does not hold the room card's newest message is
+merged but marks nothing seen, so the next watch asks again): `generated_at` stays the time of the last full collect, and every
+other room, proposal, contract and offer is left as it was. A room whose call
+failed is left untouched (the next watch asks for it again); a room that is not
+in the snapshot is skipped (only the full collect can link it). The merge is
+refused, and the snapshot kept, when there is no snapshot, the file is not an
+object or is an error, `collected_at` is missing, unreadable or in the future,
+`messages` is not a map of room ids, or no room could be merged.

@@ -72,6 +72,10 @@ line is an event too and also carries ``event_name`` (see ``mcp_event_name``).
 Every room carries ``blocked`` (bool) and ``blocked_at`` (ISO or null): true
 when its newest named event is ``blocked`` with nothing spoken after it. The
 snapshot lists those rooms in ``blocked_rooms`` (sorted room ids).
+``listed_rooms`` is every room id on the pull's list_rooms pages, in scope or
+not; the watch (``watch.py``) reads it to tell a room this pull already
+judged from a brand-new one. ``pulled_messages`` and ``room_state`` are the
+per-room steps, shared with the watch's light ingest.
 
 Untrusted content: room names, messages and job posts are client-written. The
 MCP wraps every participant string in ``<untrusted_participant_content>``;
@@ -683,6 +687,72 @@ def _card_last_side(card: Dict[str, Any]) -> str:
     if awaiting == "them":
         return "freelancer"
     return "unknown"
+
+
+def pulled_messages(pulled: Any, self_ids: Set[str]) -> Tuple[bool, List[Dict[str, Any]]]:
+    """(ok, messages oldest first) for one room's ``messages`` entry in an
+    envelope. ``[]`` or null is "not pulled" (a real list_messages call always
+    returns a page, so an empty value proves nothing), and any page that is an
+    error or not a messages page makes the pull not ok. When not ok the
+    messages are ``[]``: a partial pull may have lost the newest page, so
+    nothing from it decides ``last_side``; the room card does. Shared by the
+    full ingest and ``watch.ingest_light``."""
+    messages = []  # type: List[Dict[str, Any]]
+    ok = pulled not in (None, [])
+    for page in (_as_pages(pulled) if ok else []):
+        items = None if _is_error_response(page) else _message_items(page)
+        if items is None:
+            ok = False
+            continue
+        messages.extend(normalize_message(m, self_ids) for m in items)
+    if not ok:
+        return False, []
+    return True, _order_messages(messages)
+
+
+def room_state(messages: List[Dict[str, Any]], card: Dict[str, Any], card_last_at: Any,
+               self_ids: Set[str]) -> Tuple[str, Optional[str], bool, Optional[str]]:
+    """(last_side, last_message_at, blocked, blocked_at) of a room from its
+    messages (oldest first) and its list_rooms card (``{}`` when there is
+    none). ``card_last_at`` is the card's activity time (``normalize_room``'s
+    ``last_message_at``). Shared by the full ingest and ``watch.ingest_light``.
+
+    Last side: the last message that is not a room event, backfilled from the
+    room card when the card's latest story is that same message (or no
+    messages came back). A room event never sets last_side, and the latest
+    spoken message sets last_message_at. Mutates the last spoken message's
+    ``side`` when the card backfills it, as the ingest always did."""
+    card_side = _card_last_side(card)
+    story = card.get("latestStory") if isinstance(card.get("latestStory"), dict) else {}
+    spoken = [m for m in messages if not m["event"]]
+    story_text = participant_text(story.get("message"))
+    # An MCP system-event line is an event only on Lorenzo's side: the
+    # story's own side fields, else the card's claim about its last
+    # message. A client-side copy still supplies last_side.
+    story_side = message_side(story, self_ids)
+    if story_side == "unknown":
+        story_side = card_side
+    story_is_mcp_event = story_side == "freelancer" and (
+        mcp_event_name(story_text) is not None
+        or mcp_event_name(story_text.split(": ", 1)[-1]) is not None)
+    story_is_event = is_system_line(story_text.split(": ", 1)[-1]) or story_is_mcp_event \
+        or any(m["id"] == story.get("id") and m["event"] for m in messages)
+    if story_is_event:
+        card_side = "unknown"
+    if spoken:
+        last = spoken[-1]
+        if last["side"] == "unknown" and card_side != "unknown" and story.get("id") \
+                and story.get("id") == last["id"]:
+            last["side"] = card_side
+        last_side = last["side"]
+        last_at = last["at"] or _iso(card_last_at)
+    else:
+        last_side = card_side
+        last_at = _iso(card_last_at)
+    # A blocked room (MCP "System event: blocked." with nothing spoken
+    # after it) cannot take a message; only the messages decide.
+    blocked, blocked_at = blocked_state(messages)
+    return last_side, last_at, blocked, blocked_at
 
 
 # --------------------------------------------------------- contracts/offers
@@ -1378,57 +1448,11 @@ def ingest(raw: Any, now: datetime, pipeline_dir: Optional[Any] = None) -> Dict[
 
         # messages
         pulled = raw_messages.get(rid) if raw_messages is not None else None
-        messages = []  # type: List[Dict[str, Any]]
-        # [] or null for a room is "not pulled": a real list_messages call
-        # always returns a page, so an empty value proves nothing.
-        ok = pulled not in (None, [])
-        for page in (_as_pages(pulled) if ok else []):
-            items = None if _is_error_response(page) else _message_items(page)
-            if items is None:
-                ok = False
-                continue
-            messages.extend(normalize_message(m, self_ids) for m in items)
-        messages = _order_messages(messages)
+        ok, messages = pulled_messages(pulled, self_ids)
         if not ok:
-            # A partial pull may have lost the newest page: nothing from it
-            # decides last_side; the room card does.
             missing_messages.append(rid)
-            messages = []
-
-        # last side: the last message that is not a room event, backfilled from
-        # the room card when the card's latest story is that same message (or
-        # no messages came back). A room event never sets last_side, and the
-        # latest spoken message sets last_message_at.
-        card_side = _card_last_side(card)
-        story = card.get("latestStory") if isinstance(card.get("latestStory"), dict) else {}
-        spoken = [m for m in messages if not m["event"]]
-        story_text = participant_text(story.get("message"))
-        # An MCP system-event line is an event only on Lorenzo's side: the
-        # story's own side fields, else the card's claim about its last
-        # message. A client-side copy still supplies last_side.
-        story_side = message_side(story, self_ids)
-        if story_side == "unknown":
-            story_side = card_side
-        story_is_mcp_event = story_side == "freelancer" and (
-            mcp_event_name(story_text) is not None
-            or mcp_event_name(story_text.split(": ", 1)[-1]) is not None)
-        story_is_event = is_system_line(story_text.split(": ", 1)[-1]) or story_is_mcp_event \
-            or any(m["id"] == story.get("id") and m["event"] for m in messages)
-        if story_is_event:
-            card_side = "unknown"
-        if spoken:
-            last = spoken[-1]
-            if last["side"] == "unknown" and card_side != "unknown" and story.get("id") \
-                    and story.get("id") == last["id"]:
-                last["side"] = card_side
-            last_side = last["side"]
-            last_at = last["at"] or _iso(base.get("last_message_at"))
-        else:
-            last_side = card_side
-            last_at = _iso(base.get("last_message_at"))
-        # A blocked room (MCP "System event: blocked." with nothing spoken
-        # after it) cannot take a message; only the messages decide.
-        blocked, blocked_at = blocked_state(messages)
+        last_side, last_at, blocked, blocked_at = room_state(messages, card, base.get("last_message_at"),
+                                                             self_ids)
 
         # offers link to a room only through the proposal's job id. A room in
         # scope has no contract id (see above), so ``contract`` is null here;
@@ -1486,8 +1510,23 @@ def ingest(raw: Any, now: datetime, pipeline_dir: Optional[Any] = None) -> Dict[
         "missing_messages": sorted(missing_messages),
         "blocked_rooms": sorted(r["room_id"] for r in rooms if r["blocked"]),
         "link_errors": sorted(link_errors),
+        # every room id on this pull's list_rooms pages, in scope or not: the
+        # watch (watch.py) needs a full collect only for a room not listed here
+        "listed_rooms": sorted(cards),
         "rooms": rooms,
     }
+
+
+def snapshot_revision(snapshot: Optional[Dict[str, Any]]) -> Optional[str]:
+    """Which data a snapshot holds: the last full collect (``generated_at``)
+    plus the last light merge (``last_light``: its ``collected_at`` and rooms).
+    The tick records the revision a completed ``--run`` processed
+    (``tick.PROCESSED``); the watch runs ``--run`` again until they match."""
+    if not isinstance(snapshot, dict):
+        return None
+    light = snapshot.get("last_light") if isinstance(snapshot.get("last_light"), dict) else {}
+    return "%s|%s|%s" % (snapshot.get("generated_at"), light.get("collected_at") or "",
+                         ",".join(str(r) for r in (light.get("rooms") or [])))
 
 
 # ------------------------------------------------------------------ files
