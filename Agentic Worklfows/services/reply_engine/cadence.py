@@ -349,7 +349,7 @@ def _offers_text() -> str:
 
 def _flat(text: str) -> str:
     """Whitespace-free, dash-normalised, for verbatim comparison against the sheet."""
-    return re.sub(r"\s+", "", (text or "").replace("—", "-").replace("–", "-"))
+    return re.sub(r"\s+", "", (text or "").replace("\u2014", "-").replace("\u2013", "-"))
 
 
 def _redact(text: str, allow: Optional[List[str]] = None) -> str:
@@ -500,7 +500,7 @@ def copy_problems(text: str, allow: Optional[List[str]] = None,
         if code not in out:
             out.append(code)
 
-    if "—" in text or "–" in text:
+    if "\u2014" in text or "\u2013" in text:
         add("dash")
     if "!" in text:
         add("exclamation")
@@ -1477,7 +1477,7 @@ def render(template_name: str, **values: Any) -> str:
 
 def sanitize_line(text: str) -> str:
     text = (text or "").strip().strip('"').strip()
-    text = text.replace("—", ",").replace("–", ",").replace("!", ".")
+    text = text.replace("\u2014", ",").replace("\u2013", ",").replace("!", ".")
     text = re.sub(r"\s+", " ", text)
     return text
 
