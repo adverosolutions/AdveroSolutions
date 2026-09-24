@@ -698,7 +698,6 @@ def _booking_entries() -> List[Dict[str, Any]]:
             main = _swap(render(S_FIRST, S_BOOKING), m)
             variants = [
                 ("missing_lead_data", _swap(render(None, S_BOOKING), m)),
-                ("no_booking_link", _swap(render(S_FIRST, None), m)),
                 ("subject", _reply_subject_variant()),
             ]
             return [_entry(tid, kind, main, "services/reply_engine/app.py:_already_booked_body",
@@ -753,10 +752,9 @@ def loom_sentence() -> Optional[str]:
     return found[0].replace("%s", "{loom_url}")
 
 
-SHOW_RATE_LEAD_FACING = ("confirm_email", "confirm_sms", "preread_email", "reminder_24h_sms",
-                         "reminder_24h_email", "reminder_1h_sms", "reminder_15m_sms")
-NO_SHOW_LEAD_FACING = ("ns_still_on_sms", "ns_still_on_email", "ns_reschedule_email", "ns_d1_other_channel",
-                       "ns_d3_value_email", "ns_d7_yes_no_email", "ns_d14_breakup_email")
+SHOW_RATE_LEAD_FACING = ("confirm_email", "reminder_24h_email", "reminder_morning_email", "reminder_1h_email")
+NO_SHOW_LEAD_FACING = ("ns_still_on_email", "ns_reschedule_email", "ns_d1_email", "ns_d3_value_email",
+                       "ns_d7_yes_no_email", "ns_d14_breakup_email", "ns_third_miss_email")
 LOOM_ANCHOR = "If anything comes up before then"
 
 
@@ -813,7 +811,8 @@ def _show_rate_entries() -> List[Dict[str, Any]]:
                 main_raw = render()
                 variants = [("missing_lead_data", _swap(render(missing=True), mapping)),
                             ("no_call_link", _swap(render(no_link=True), mapping))]
-                if "{when_ct}" in _swap(main_raw, mapping):
+                swapped = _swap(main_raw, mapping)
+                if "{when_ct}" in swapped or "{time_ct}" in swapped:
                     # example times kept: the lead-zone format is part of what is approved
                     tz_map = dict(mapping)
                     tz_map.pop(show_rate.fmt_when(start, None))
@@ -862,6 +861,8 @@ def _no_show_entries() -> List[Dict[str, Any]]:
             mapping[show_rate.fmt_time_only(start)] = "{time_ct}"
             texts = {}  # type: Dict[Tuple[str, str], Any]
             for niche, offer in NICHE_COMBOS:
+                if key == "ns_d3_value_email" and niche not in show_rate.NICHES:
+                    continue  # no approved niche line without a campaign: N5 is skipped, never generic
                 def render(slots_text=S_SLOTS_TEXT, **kw):
                     return _swap(_with_subject(no_show.render(key, _appointment(niche, offer, **kw), start,
                                                               slots_text, count)), mapping)
