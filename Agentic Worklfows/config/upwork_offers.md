@@ -14,9 +14,12 @@ quotable in an Upwork draft, so only Lorenzo adds figures.
 ## Proof
 
 Copied verbatim from `Coding/upwork-pipeline/templates/ps-case-studies.md`.
-Use at most one line per draft: the one that matches the client's vertical or
-problem. If none fits, use a relevant insight instead of proof, never a
-stretched match.
+Every proposal already carries these, so follow-up touches never quote them
+(Lorenzo, 2026-09-23). T3 only hints at a past client like theirs, with no
+name and no figures, when one line matches the client's vertical or problem;
+if none fits, it shares a relevant insight instead, never a stretched match.
+A reply may quote one line when the client asks for examples, proof or past
+work.
 
 - Vertical: trades, bids and estimates (commercial roofing contractor).
   $750M+ in annual bid volume runs through a routing and follow-up system I built for a commercial roofing contractor, every estimate request tracked and followed up on, none lost to manual chasing.

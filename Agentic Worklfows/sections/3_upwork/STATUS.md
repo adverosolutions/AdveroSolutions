@@ -11,6 +11,7 @@
    - the no-Claudeisms rule with its examples;
    - T3 rework: a vague line about a similar past client, no name and no figures, only when a proof line truly matches; no touch repeats a result the proposal already states.
    Update the tests that pin prompt text, then run the full suite and push to main.
+   **In progress:** worker done (full suite green, all 9 agreed samples pass the gate), reviewer running. If this chat ends before it lands, the unreviewed edits are on GitHub as branch `wip/section-3-prompt-edits`: review them, commit to `section/3-upwork`, push to main, delete the wip branch.
 
 ## Waiting on Lorenzo
 The 08:30 scheduled task (yes/no), the GHL Upwork pipeline, the pricing lines in `config/upwork_offers.md`.

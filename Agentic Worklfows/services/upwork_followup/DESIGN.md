@@ -243,8 +243,11 @@ Every touch must add something new, never "just checking in":
 2. **T2 (day 4), show:** point to the Loom or the demo already made for them
    (`loom_url`, `beats`). If there is no Loom, describe one specific piece of the
    build in two sentences.
-3. **T3 (day 7), proof:** one result from `config/upwork_offers.md` that matches their
-   vertical or problem. If none fits, use a relevant insight instead of proof.
+3. **T3 (day 7), proof:** when a line in `config/upwork_offers.md` truly matches
+   their vertical or problem, one short line that their project reminds Lorenzo
+   of a past client with a very similar setup ("a contractor I worked with"),
+   never naming the client and never repeating the line's figures or result,
+   which the proposal already carried. If none fits, a relevant insight instead.
 4. **T4 (day 11), catch:** one risk or edge case in what they described that is
    easy to miss. It must be grounded in their post or messages, and must never
    invent a problem they did not state.

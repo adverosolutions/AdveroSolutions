@@ -794,6 +794,38 @@ def test_r10_every_drafting_prompt_has_the_figure_rules(name):
     assert "dollar figures, percentages and proof come only from UPWORK_OFFERS" in text
 
 
+# ================================================================ copy rules agreed in the section 3 walkthrough
+@pytest.mark.parametrize("name", sorted(PROMPT_PURPOSES))
+def test_copy_rules_no_prompt_asks_for_lowercase(name):
+    text = (PROMPTS_DIR / name).read_text(encoding="utf-8")
+    assert "Lowercase-casual" not in text and "lowercase-casual" not in text
+
+
+@pytest.mark.parametrize("name", sorted(PROMPT_PURPOSES))
+def test_copy_rules_every_prompt_has_capitalization_and_no_claudeisms(name):
+    text = (PROMPTS_DIR / name).read_text(encoding="utf-8")
+    assert "Normal capitalization" in text
+    assert "Say the thing and stop" in text
+
+
+def test_copy_rules_t3_hints_at_a_similar_client_without_naming_it():
+    text = (PROMPTS_DIR / "touch_t3.md").read_text(encoding="utf-8")
+    assert "Never name the client" in text
+    assert "Share one result from UPWORK_OFFERS" not in text
+
+
+@pytest.mark.parametrize("name", sorted(n for n in PROMPT_PURPOSES if n != "reply.md"))
+def test_copy_rules_touches_and_checkin_never_repeat_the_proposal_results(name):
+    text = (PROMPTS_DIR / name).read_text(encoding="utf-8")
+    assert "Never repeat a result, figure or case study that LORENZO_PROPOSAL already states" in text
+
+
+def test_copy_rules_reply_repeats_proposal_results_only_when_asked():
+    text = (PROMPTS_DIR / "reply.md").read_text(encoding="utf-8")
+    assert "only when the client asks for examples, proof or past work" in text
+    assert "Never repeat a result, figure or case study that LORENZO_PROPOSAL already states" not in text
+
+
 # ================================================================ round 11: the client's own figures are public
 # The reviewer's p44, synthetic: the client states a list size and the same
 # number sits in the private assessment's pricing section.

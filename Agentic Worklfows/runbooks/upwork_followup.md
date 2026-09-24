@@ -285,7 +285,7 @@ counted from the previous touch he actually sent):
 | --- | --- | --- |
 | T1 | 2 | one concrete idea for their project, tied to their post or the room, plus one easy question |
 | T2 | 4 | points to the Loom or demo made for them, or describes one specific piece of the build |
-| T3 | 7 | one matching result from `config/upwork_offers.md`, or a relevant insight if none fits |
+| T3 | 7 | one short line that their project reminds him of a past client with a similar setup (a matching line in `config/upwork_offers.md`; no client name, no figures), or a relevant insight if none fits |
 | T4 | 11 | one risk or edge case grounded in what they wrote, never an invented problem |
 | T5 | 16 | a yes/no or pick-one question on scope or timing |
 | T6 | 23 | a concrete low-effort next step: a short Upwork call or a small first milestone |
