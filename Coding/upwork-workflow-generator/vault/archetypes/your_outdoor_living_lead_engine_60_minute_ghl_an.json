@@ -12,7 +12,7 @@
       "key": "strategy",
       "label": "2 - CLAUDE STRATEGY (15 MIN)",
       "color": 1,
-      "note": "Claude already reads and writes your contacts, tags and opportunities through the API/MCP connector. Anything on a clock stays native in GHL (workflows, webhooks, custom actions, AI steps); anything that needs judgment across your data goes to Claude through the API. To monitor, audit and maintain the system over time, Claude runs the band 3 check on a schedule you set, and a lead it finds outside every workflow gets the tag that starts the right one."
+      "note": "Claude already reads and writes your contacts, tags and opportunities through the API/MCP connector. Anything on a clock stays native in GHL (workflows, webhooks, custom actions, AI steps); anything that needs judgment across your data goes to Claude through the API. To monitor, audit and maintain the system over time, Claude runs the section 3 check on a schedule you set, and a lead it finds outside every workflow gets the tag that starts the right one."
     },
     {
       "key": "testing",
