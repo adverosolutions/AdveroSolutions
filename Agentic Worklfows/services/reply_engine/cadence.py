@@ -169,12 +169,19 @@ SLOTLESS_DAYS = (2,)
 # Calendar days from the email before to E8, E9 and E10 (rolled to a business day).
 LONG_GAP_DAYS = {7: 14, 8: 7, 9: 7}
 VETO_WINDOW_MINUTES = 30
-# CT3: where E2's research line comes from. "fallback" (the default) is the
-# fixed line fallback_research_line() writes, which Lorenzo can approve
-# (cadence.e2.research_fallback.<offer>), and shared.llm role "research" is
-# never called. "llm" asks the model first; a line it writes is covered by no
-# approval (cadence.e2.research_line), so that E2 is always held.
+# CT3 / P4: where E2's research line comes from. "fallback" (the default) is
+# the fixed line fallback_research_line() writes, which Lorenzo can approve
+# (cadence.e2.research_fallback.<offer>): no page is read and shared.llm role
+# "research" is never called. "llm" runs research.research_e2 (the lead's own
+# site, identity by code, one model call, excerpt check, research_rules): a
+# line that passes every check goes out under E2_RESEARCH_RULES_ID (the frame
+# plus the rules Lorenzo approves once, checked again by template_gate);
+# anything else, and any failure, uses the fallback line exactly as in
+# "fallback" mode. The tick only researches when that rules part passes the
+# gate's id check, so nothing is paid for a line that could not go out.
 E2_RESEARCH_MODE = "fallback"
+# The part id of a researched E2 (section 4's template_gate uses the same string).
+E2_RESEARCH_RULES_ID = "cadence.e2.research_rules"
 # CT3: a day held because its template is not approved (or its text is not an
 # auto-sendable form of it) is reported once a day. The stall counts the
 # business days on which the day was held for a cause that is not gate-wide
@@ -594,6 +601,48 @@ def known_company(state: Any) -> Optional[str]:
     they are held (missing_lead_data), never sent with a generic guess."""
     value = str(_field(state, "company", "company_name", default="") or "").strip()
     return value or None
+
+
+# A tagline after " - ", " | " (or an en or em dash with spaces) or ": " (a
+# colon inside a name, "Re:Source Staffing", is kept).
+_TAGLINE_RE = re.compile(r"\s+[-|\u2013\u2014]\s+|:(?:\s|$)")
+# A trailing legal form, with or without a comma before it.
+_LEGAL_TAIL_RE = re.compile(
+    r"(?:,\s*|\s+)(?:L\.?\s?L\.?\s?C\.?|P\.?\s?L\.?\s?L\.?\s?C\.?|L\.?\s?L\.?\s?P\.?|Inc\.?|Corp\.?|Co\.|Ltd\.?)\s*$",
+    re.I)
+
+
+def spoken_company(name: Any) -> str:
+    """The company the way a person says it (sequence_final.md rule 8):
+    a tagline after " - ", " | " or ": " and a trailing LLC / L.L.C. / PLLC /
+    LLP / Inc. / Inc / Corp / Co. / Ltd (with or without a comma) dropped,
+    then a trailing period. "Brightline Cleaning LLC" -> "Brightline
+    Cleaning", "Acme, Inc." -> "Acme", "Tallgrass Bookkeeping | Omaha's ..."
+    -> "Tallgrass Bookkeeping". A legal form is kept when nothing, or only
+    "Smith &", would be left ("Smith & Co." -> "Smith & Co"). May be ""."""
+    # Internal whitespace is left as it is: an odd space (NBSP, tab) in the
+    # record is the template gate's to refuse, not this function's to hide.
+    text = str(name or "").strip()
+    text = _TAGLINE_RE.split(text, 1)[0].strip()
+    while True:
+        m = _LEGAL_TAIL_RE.search(text)
+        if not m:
+            break
+        rest = text[:m.start()].rstrip(" ,")
+        if not rest or re.search(r"(?:&|\band)$", rest, re.I):
+            break
+        text = rest
+    text = text.rstrip(" ,;")
+    trimmed = text.rstrip(".").rstrip()
+    return trimmed or text
+
+
+def spoken_company_of(state: Any) -> Optional[str]:
+    """spoken_company() of the recorded company, or None when there is none
+    or nothing is left of it: E2, E4 and E5 are then held (missing_lead_data)."""
+    company = known_company(state)
+    spoken = spoken_company(company) if company else ""
+    return spoken or None
 
 
 def lead_niche(state: Any) -> Optional[str]:
@@ -1525,28 +1574,37 @@ def observation_line(niche: Optional[str], offer: Optional[str]) -> Optional[str
     return OBSERVATIONS.get(_combo(niche, offer) or "")
 
 
-def generate_research_line(state: Any, facts: Optional[Dict[str, Any]] = None) -> str:
-    """One researched sentence via shared.llm role 'research' (faked with LLM_FAKE=1)."""
-    niche, offer = niche_and_offer(state)
-    company = company_of(state)
-    payload = {
-        "company": company,
-        "website": _field(state, "website"),
-        "niche": niche,
-        "offer": offer,
-        "first_name": first_name_of(state),
-    }
-    payload.update(facts or {})
-    system = _load_template("research")
+def _research_e2(state: Any, now: Optional[datetime] = None, store: Any = None, dry_run: bool = False) -> Dict[str, Any]:
+    """research.research_e2, the one research path (P4), failing to the
+    fallback line: it never raises, whatever goes wrong inside."""
+    offer = lead_offer(state)
+    fallback = fallback_research_line("", offer) if offer else None
     try:
-        out = llm.complete("research", system, json.dumps(payload, ensure_ascii=False), max_tokens=120)
-    except Exception as exc:  # noqa: BLE001 - a research hiccup must not block the day-2 touch
-        logger.warning("research line failed: %s", exc)
-        out = ""
-    out = out if isinstance(out, str) else ""
-    if not out or out.startswith("FAKE[") or len(out) > 240:
-        out = fallback_research_line(company, offer)
-    return sanitize_line(out)
+        from services.reply_engine import research
+
+        got = research.research_e2(state, now, store, dry_run=dry_run)
+        if isinstance(got, dict) and got.get("source") in ("researched", "fallback"):
+            if got["source"] == "fallback" or (isinstance(got.get("line"), str) and got["line"]
+                                               and isinstance(got.get("evidence"), dict)):
+                return got
+        reasons = ["research_malformed"]
+    except Exception as exc:  # noqa: BLE001 - research never holds E2: the fallback goes instead
+        logger.warning("research step failed, E2 uses the fallback line: %s", type(exc).__name__)
+        reasons = ["research_error"]
+    return {"line": fallback, "evidence": None, "verdict": None, "source": "fallback", "reasons": reasons,
+            "context": None, "cached": False, "model_called": False, "model_line": None}
+
+
+def generate_research_line(state: Any, now: Optional[datetime] = None, store: Any = None, dry_run: bool = False,
+                           research_mode: Optional[str] = None) -> Optional[str]:
+    """E2's line for ``state``: in "llm" mode (``research_mode``, default
+    E2_RESEARCH_MODE) the validated researched line, else the fixed fallback
+    line for the offer (None when the offer is unknown). A thin wrapper over
+    research_e2, kept for callers; build_touch is the path the ladder uses."""
+    offer = lead_offer(state)
+    if (research_mode or E2_RESEARCH_MODE) != "llm":
+        return fallback_research_line("", offer) if offer else None
+    return _research_e2(state, now, store, dry_run=dry_run).get("line")
 
 
 def fallback_research_line(company: str, offer: str) -> str:
@@ -1594,7 +1652,7 @@ def missing_lead_data(state: Any, day: int) -> List[str]:
         need.append("niche")
     if day in (2, 4, 5, 6, 9):
         need.append("offer")
-    have = {"company": known_company(state), "niche": niche, "offer": offer}
+    have = {"company": spoken_company_of(state), "niche": niche, "offer": offer}
     return [k for k in need if not have[k]]
 
 
@@ -1603,15 +1661,17 @@ def touch_template_ids(day: int, state: Any, research_source: str = "fallback") 
     ``day``: cadence.e<day>, plus the id of the per-lead line spliced into
     it (E2 research line, E4 proof, E5 offer line, E6 preview, E9
     observation). ``research_source`` is "fallback" when E2 carries the fixed
-    fallback line, anything else for a line the model wrote (that part,
-    cadence.e2.research_line, can never be approved). A part whose lead data
-    is missing is left out: the tick holds that email before it looks."""
+    fallback line; any other E2 line ("researched", or an "override" passed
+    to build_touch) is under E2_RESEARCH_RULES_ID, which the template gate
+    lets out only when the line passes research_rules again. A part whose
+    lead data is missing is left out: the tick holds that email before it
+    looks."""
     niche, offer = lead_niche(state), lead_offer(state)
     main = "cadence.e%d" % day
     parts = []  # type: List[str]
     if day == 2:
         if research_source != "fallback":
-            parts.append("cadence.e2.research_line")
+            parts.append(E2_RESEARCH_RULES_ID)
         elif offer:
             parts.append("cadence.e2.research_fallback.%s" % offer)
     elif day == 4 and offer:
@@ -1626,25 +1686,31 @@ def touch_template_ids(day: int, state: Any, research_source: str = "fallback") 
 
 
 def build_touch(state: Any, day: int, slots: List[Any], research_line: Optional[str] = None,
-                slots_source: str = "provided", research_mode: Optional[str] = None) -> Touch:
+                slots_source: str = "provided", research_mode: Optional[str] = None,
+                now: Optional[datetime] = None, store: Any = None, dry_run: bool = False) -> Touch:
     """Subject 'Re: ...' + body for email E<day> (day 1..10).
 
     ``slots`` are the two fresh slots (datetime or ISO, CT); E2 offers none,
-    whatever is passed. ``research_line`` overrides E2's line. Without it,
-    ``research_mode`` (default E2_RESEARCH_MODE, "fallback") picks the fixed
-    fallback line for the offer, or "llm" asks shared.llm role "research"
-    first. A value the email needs that the lead record lacks
-    (missing_lead_data) is left as its placeholder, which the copy check
-    refuses; the tick holds such an email before it builds it. The touch
-    carries the template ids it was rendered from (touch_template_ids),
-    unstamped."""
+    whatever is passed. ``research_line`` overrides E2's line (research
+    source "override", under E2_RESEARCH_RULES_ID unless it is the fallback
+    line). Without it, ``research_mode`` (default E2_RESEARCH_MODE,
+    "fallback") picks the fixed fallback line for the offer, or "llm" runs
+    the research step (research.research_e2 with ``now``, ``store`` for its
+    per-lead cache and ``dry_run``): a line that passes research_rules and
+    the copy check is used with its evidence in meta, anything else is the
+    fallback line exactly as in "fallback" mode. Never raises for research
+    reasons. {company} is the spoken form (spoken_company). A value the
+    email needs that the lead record lacks (missing_lead_data) is left as
+    its placeholder, which the copy check refuses; the tick holds such an
+    email before it builds it. The touch carries the template ids it was
+    rendered from (touch_template_ids), unstamped."""
     if day not in INTENTS:
         raise ValueError("cadence day must be one of %s, got %r" % (DAY_SEQUENCE, day))
     two = [] if day in SLOTLESS_DAYS else [slot_rules.to_tz(slot_rules.parse_iso(s)) for s in (slots or [])][:2]
     isos = [s.isoformat() for s in two]
     niche, offer = lead_niche(state), lead_offer(state)
     first = first_name_of(state)
-    company = known_company(state)
+    company = spoken_company_of(state)
     meta = {"niche": niche, "offer": offer}  # type: Dict[str, Any]
     # A missing value is simply not passed: _Safe leaves "{name}" in place and
     # the copy check blocks it (no "your team", no guessed line).
@@ -1661,11 +1727,19 @@ def build_touch(state: Any, day: int, slots: List[Any], research_line: Optional[
         line = research_line
         if line:
             line = sanitize_line(line)
+            research_source = "fallback" if line == fallback else "override"
         elif mode == "llm" and offer:
-            line = generate_research_line(state)
+            found = _research_e2(state, now, store, dry_run=dry_run)
+            line = found.get("line") if found.get("source") == "researched" else fallback
+            research_source = "researched" if found.get("source") == "researched" else "fallback"
+            meta["research_reasons"] = list(found.get("reasons") or [])
+            meta["research_cached"] = bool(found.get("cached"))
+            if research_source == "researched":
+                meta["research_evidence"] = found.get("evidence")
+                meta["research_context"] = found.get("context")
+                meta["research_rules_sha"] = getattr(found.get("verdict"), "rules_sha", None)
         else:
             line = fallback
-        research_source = "fallback" if (line is not None and line == fallback) else "llm"
         meta["research_line"] = line
         meta["research_source"] = research_source
         if line:
@@ -1686,7 +1760,7 @@ def build_touch(state: Any, day: int, slots: List[Any], research_line: Optional[
     body = render("e%d" % day, **values)
 
     template_id, parts = touch_template_ids(day, state, research_source=research_source)
-    return Touch(
+    touch = Touch(
         day=day,
         intent=INTENTS[day],
         subject=subject_for(state),
@@ -1696,14 +1770,44 @@ def build_touch(state: Any, day: int, slots: List[Any], research_line: Optional[
         meta=meta,
         # Only the prose is judged by the copy gate: "Automation Depot" is the
         # prospect's own name, not a copy failure, and blocking on it used to lose
-        # that lead every day from D2 onwards.
-        allow_terms=[t for t in (company, first) if t],
+        # that lead every day from D2 onwards. Both the spoken form (in the body)
+        # and the name on record.
+        allow_terms=list(dict.fromkeys(t for t in (company, known_company(state), first) if t)),
         # ... and the copy gate needs to know whose offer sheet row this is, or
         # another vertical's guarantee reads as a number that "exists in offers.md".
         campaign_key=campaign_key_of(state),
         template_id=template_id,
         template_parts=dict((p, None) for p in parts),
     )
+    if research_source == "researched" and touch.problems:
+        # The researched line passed its rules but not the copy check: E2 goes
+        # out with the fallback line instead of stalling on a research reason.
+        logger.info("E2 research line refused by the copy check (%s); using the fallback line",
+                    ", ".join(touch.problems))
+        fb = build_touch(state, day, slots, slots_source=slots_source, research_mode="fallback")
+        fb.meta["research_reasons"] = ["copy_gate:%s" % p for p in touch.problems]
+        fb.meta["research_cached"] = meta.get("research_cached", False)
+        return fb
+    return touch
+
+
+def research_bindings(state: Any) -> Dict[str, str]:
+    """research_rules.validate's context for this lead as bindings, for an
+    E2 whose line is not the fallback: company_spoken (what {company} says),
+    company_record (the name on record; the validator's "company"),
+    website_domain, offer_branch, niche, and city when known. {} when it
+    cannot be read (the gate then refuses the researched line)."""
+    try:
+        from services.reply_engine import research
+
+        ctx, _missing = research.research_context(state)
+    except Exception as exc:  # noqa: BLE001 - no context, no researched send
+        logger.warning("research context unreadable: %s", type(exc).__name__)
+        return {}
+    out = {"company_spoken": ctx.get("company_spoken"), "company_record": ctx.get("company"),
+           "website_domain": ctx.get("website_domain"), "offer_branch": ctx.get("offer_branch"),
+           "niche": ctx.get("niche"), "city": ctx.get("city")}
+    return dict((k, str(v)) for k, v in out.items() if v not in (None, ""))
 
 
 def touch_bindings(state: Any, touch: Touch) -> Dict[str, str]:
@@ -1711,11 +1815,16 @@ def touch_bindings(state: Any, touch: Touch) -> Dict[str, str]:
     template_gate's conformance check (flag 13): the captured value must
     equal it. The slot placeholder is bound to the slots the touch offers,
     so a body naming other times never conforms. Only values that were
-    rendered are bound (no slots or no company on file, no binding)."""
+    rendered are bound (no slots or no company on file, no binding).
+    ``company`` is the spoken form the body carries. An E2 whose line is not
+    the fallback also carries research_bindings(): the context the gate
+    re-runs research_rules.validate with, read from the lead record."""
     out = {
         "first_name": first_name_of(state),
-        "company": known_company(state),
+        "company": spoken_company_of(state),
     }  # type: Dict[str, Any]
+    if touch.day == 2 and (touch.meta or {}).get("research_source") not in (None, "fallback"):
+        out.update(research_bindings(state))
     specialty = _field(state, "specialty")
     if specialty:
         out["specialty"] = str(specialty)
@@ -3330,6 +3439,42 @@ def _d1_gate_hold(state: Any, now: datetime, store: Any,
     return None, False
 
 
+def _e2_research_mode(state: Any, day: int, research_mode: Optional[str]) -> str:
+    """The research mode this tick builds E2 with: ``research_mode`` (default
+    E2_RESEARCH_MODE), except that "llm" becomes "fallback" when the research
+    rules part (E2_RESEARCH_RULES_ID on cadence.e2) does not pass the gate's
+    id check, so no page is read and nothing is paid for a line that could
+    not go out."""
+    mode = research_mode or E2_RESEARCH_MODE
+    if day != 2 or mode != "llm":
+        return mode
+    main, parts = touch_template_ids(2, state, research_source="researched")
+    verdict = _template_ids_verdict(main, parts)
+    if not verdict.allowed:
+        logger.info("E2 research skipped for %s: %s is not auto-sendable (%s)", _field(state, "lead_email"),
+                    E2_RESEARCH_RULES_ID, getattr(verdict, "reason", "?"))
+        return "fallback"
+    return mode
+
+
+def _e2_verdict(state: Any, touch: Touch, two: List[Any], source: str) -> Tuple[Touch, Any]:
+    """(touch, verdict): the full template verdict on ``touch``. A researched
+    E2 the gate refuses is rebuilt with the fallback line and judged again,
+    so the ladder is never held for a research reason alone; the refusal is
+    kept in the new touch's meta (research_reasons)."""
+    verdict = _template_touch_verdict(state, touch)
+    if verdict.allowed or touch.day != 2 or (touch.meta or {}).get("research_source") != "researched":
+        return touch, verdict
+    fb = build_touch(state, 2, two, slots_source=source, research_mode="fallback")
+    if fb.problems:
+        return touch, verdict
+    fb.meta["research_reasons"] = ["gate:%s" % getattr(verdict, "reason", "refused")]
+    fb.meta["research_cached"] = bool(touch.meta.get("research_cached"))
+    logger.info("E2 researched line refused by the template gate (%s) for %s; using the fallback line",
+                getattr(verdict, "reason", "?"), _field(state, "lead_email"))
+    return fb, _template_touch_verdict(state, fb)
+
+
 def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = None, ghl: Any = None,
               free_slots: Optional[List[Any]] = None, dry_run: bool = False, notify_fn: Any = notify,
               research_mode: Optional[str] = None) -> Dict[str, Any]:
@@ -3347,7 +3492,10 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
     tick that re-signs its Resume link (_template_stop_reminder).
 
     ``dry_run=True`` plans the touch and mutates nothing (no store, no send).
-    ``research_mode`` is passed to build_touch (default E2_RESEARCH_MODE)."""
+    ``research_mode`` (default E2_RESEARCH_MODE) is passed to build_touch
+    with ``now`` and ``store``; "llm" becomes "fallback" when the research
+    rules part is not auto-sendable (_e2_research_mode), and a researched E2
+    the gate refuses goes out with the fallback line (_e2_verdict)."""
     ct = slot_rules.to_tz(now)
     email = _field(state, "lead_email")
     base = {"lead_email": email, "campaign_id": _field(state, "campaign_id"), "now": ct.isoformat()}
@@ -3697,8 +3845,10 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
 
     # CT3 pre-check: the day's template (and every line spliced into it that
     # is known before the body is built) is approved, before a research line
-    # is paid for.
-    mode = research_mode or E2_RESEARCH_MODE
+    # is paid for. E2 is only researched when the research rules part passes
+    # the gate's id check (approved, unchanged, kill switch off): a line that
+    # could not go out is never paid for, and E2 goes with the fallback line.
+    mode = _e2_research_mode(state, day, research_mode)
     pre_main, pre_parts = touch_template_ids(day, state, research_source="fallback")
     if day == 2 and mode == "llm":
         pre_parts = []  # the line is not written yet; the full verdict below judges it
@@ -3707,21 +3857,21 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
         return _hold_for_template(state, day, pre, ct, store, base, notify_fn, dry_run=dry_run)
 
     if dry_run:
-        touch = build_touch(state, day, two, slots_source=source, research_mode=research_mode)
+        touch = build_touch(state, day, two, slots_source=source, research_mode=mode, now=ct, store=store,
+                            dry_run=True)
         # Touch.problems is a property, so it is not in to_dict(): a --dry-run
         # preview that hid the copy verdict is the one Lorenzo signs off on.
         if touch.problems:
             return dict(base, action="blocked_copy", day=day, problems=list(touch.problems),
                         touch=touch.to_dict(), dry_run=True)
-        verdict = _template_touch_verdict(state, touch)
+        touch, verdict = _e2_verdict(state, touch, two, source)
         if not verdict.allowed:
             return dict(_hold_for_template(state, day, verdict, ct, store, base, notify_fn, dry_run=True),
                         touch=touch.to_dict())
         return dict(base, action="would_send", day=day, touch=touch.to_dict(), dry_run=True)
 
     # The copy gate refused this day already today: nothing about the lead has
-    # changed since, so do not rebuild the touch (E2 in "llm" mode rebuilds it
-    # with a fresh paid research line) and do not notify again.
+    # changed since, so do not rebuild the touch and do not notify again.
     prev_blocked = (getattr(state, "cadence", None) or {}).get("last_blocked") or {}
     prev_blocked_at = _parse(prev_blocked.get("at"))
     if prev_blocked.get("day") == day and prev_blocked_at is not None and prev_blocked_at.date() == ct.date():
@@ -3730,7 +3880,7 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
                     days=int(prev_blocked.get("days") or 1), reason="already_reported_today")
 
     records = []  # type: List[Dict[str, Any]]
-    touch = build_touch(state, day, two, slots_source=source, research_mode=research_mode)
+    touch = build_touch(state, day, two, slots_source=source, research_mode=mode, now=ct, store=store)
 
     # The copy gate: approval.send_approved refuses a draft with problems, and an
     # unattended touch must clear the same bar before it reaches a customer.
@@ -3767,7 +3917,7 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
     # CT3: the exact subject and body are an approved template with only its
     # placeholders filled (the slots bound to the ones offered). Before the
     # base-URL hold, the marker claim, the slot claim and the send.
-    verdict = _template_touch_verdict(state, touch)
+    touch, verdict = _e2_verdict(state, touch, two, source)
     if not verdict.allowed:
         if day == 1:
             # The next Veto window waits for a change that could make it pass.

@@ -307,7 +307,7 @@ def test_the_template_ids_follow_the_campaign(combo):
     line = "reactivation_bookkeeping" if combo == ("bookkeeping", "reactivation") else offer
     assert cadence.touch_template_ids(1, state) == ("cadence.e1", [])
     assert cadence.touch_template_ids(2, state) == ("cadence.e2", ["cadence.e2.research_fallback.%s" % offer])
-    assert cadence.touch_template_ids(2, state, research_source="llm") == ("cadence.e2", ["cadence.e2.research_line"])
+    assert cadence.touch_template_ids(2, state, research_source="researched") == ("cadence.e2", [cadence.E2_RESEARCH_RULES_ID])
     assert cadence.touch_template_ids(4, state) == ("cadence.e4", ["cadence.e4.offer_proof.%s" % offer])
     assert cadence.touch_template_ids(5, state) == ("cadence.e5", ["cadence.e5.offer_line.%s" % line])
     assert cadence.touch_template_ids(6, state) == ("cadence.e6", ["cadence.e6.preview.%s_%s" % (niche, offer)])
@@ -553,3 +553,17 @@ def test_the_gate_maps_each_part_to_its_placeholder():
     assert gate._part_placeholder("cadence.e9.observation.recruiting_reactivation") == "observation"
     assert gate._part_placeholder("cadence.d4.case_study.reactivation") is None
     assert gate.UNEXTRACTABLE_BY_DESIGN == ("cadence.e2.research_line",)
+
+
+@pytest.mark.parametrize("record, spoken", [
+    ("Brightline Cleaning LLC", "Brightline Cleaning"),
+    ("Acme, Inc.", "Acme"),
+    ("Tallgrass Bookkeeping | Omaha's small-business bookkeeper", "Tallgrass Bookkeeping"),
+    ("Northside Staffing - Tulsa", "Northside Staffing"),
+    ("Keystone Tax: bookkeeping and payroll", "Keystone Tax"),
+    ("Re:Source Staffing LLC", "Re:Source Staffing"),
+    ("Smith & Co.", "Smith & Co"),
+    ("Acme:", "Acme"),
+])
+def test_company_is_said_the_way_a_person_says_it(record, spoken):
+    assert cadence.spoken_company(record) == spoken
