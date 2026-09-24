@@ -41,7 +41,7 @@ START = ta._ct(2030, 1, 8, 13, 0)
 TWO = [ta._ct(2030, 1, 8, 13, 0), ta._ct(2030, 1, 10, 15, 30)]
 FALLBACK = models.Classification(label="neutral_question", confidence=0.0, method="fallback",
                                  reason="LLM unavailable")
-SEPARATORS = (" ", " ", "\u0085", "\x0b", "\x0c")
+SEPARATORS = ("\N{LINE SEPARATOR}", "\N{PARAGRAPH SEPARATOR}", "\x85", "\x0b", "\x0c")
 
 
 @pytest.fixture(autouse=True)
@@ -140,12 +140,12 @@ def test_case_first_name_carrying_a_sentence(env):
 def test_case_display_name_fallback_token_with_braille_blank(env):
     item = {"id": "e1", "campaign_id": None, "lead": "lead@example.invalid",
             "from_address_email": "lead@example.invalid",
-            "from_address_name": "Jordan⠀your⠀account⠀is⠀locked,⠀reset⠀at⠀"
+            "from_address_name": "Jordan\N{BRAILLE PATTERN BLANK}your\N{BRAILLE PATTERN BLANK}account\N{BRAILLE PATTERN BLANK}is\N{BRAILLE PATTERN BLANK}locked,\N{BRAILLE PATTERN BLANK}reset\N{BRAILLE PATTERN BLANK}at\N{BRAILLE PATTERN BLANK}"
                                  "evil.example Smith",
             "subject": "Re: hello", "body": {"text": "Yes interested, what's next?"},
             "timestamp_created": NOW.isoformat()}
     ev = models.ReplyEvent.from_poller_item(item, lead={})
-    assert "⠀" in ev.first_name
+    assert "\N{BRAILLE PATTERN BLANK}" in ev.first_name
     g, ev2, cls = _first_reply(env, first=ev.first_name)
     assert _refused(_fr_verdict(g, ev2, cls))
 
@@ -251,16 +251,16 @@ def test_case_line_separator_inside_a_placeholder(env, sep):
     assert _refused(gate.touch_verdict(t)), repr(sep)
 
 
-@pytest.mark.parametrize("ch", ["​", "‍", "⁠", "﻿", "⠀", "ㅤ", " ", "\t"])
+@pytest.mark.parametrize("ch", ["\N{ZERO WIDTH SPACE}", "\N{ZERO WIDTH JOINER}", "\N{WORD JOINER}", "\N{ZERO WIDTH NO-BREAK SPACE}", "\N{BRAILLE PATTERN BLANK}", "\N{HANGUL FILLER}", "\xa0", "\t"])
 def test_case_invisible_characters_anywhere(env, ch):
     t = _cadence(env, 4, company="Brightline%sCleaning" % ch)
     assert _refused(gate.touch_verdict(t)), repr(ch)
 
 
 def test_case_value_that_changes_under_nfkc(env):
-    g, ev, cls = _first_reply(env, first="Ｊordan")    # fullwidth J
+    g, ev, cls = _first_reply(env, first="\N{FULLWIDTH LATIN CAPITAL LETTER J}ordan")    # fullwidth J
     assert _refused(_fr_verdict(g, ev, cls))
-    t = _cadence(env, 4, company="Brightline Ⅷ Cleaning")   # roman numeral eight
+    t = _cadence(env, 4, company="Brightline \N{ROMAN NUMERAL EIGHT} Cleaning")   # roman numeral eight
     assert _refused(gate.touch_verdict(t))
 
 
@@ -284,7 +284,7 @@ def test_company_values_refused(env, company):
 
 
 # ================================================================ positives
-@pytest.mark.parametrize("first", ["Mary-Jane", "O'Neil", "J. R.", "J.R.", "José", "Mary Ann", "D’Angelo",
+@pytest.mark.parametrize("first", ["Mary-Jane", "O'Neil", "J. R.", "J.R.", "Jos\xe9", "Mary Ann", "D\N{RIGHT SINGLE QUOTATION MARK}Angelo",
                                    "Anne-Marie Claire"])
 def test_real_first_names_pass(env, first):
     g, ev, cls = _first_reply(env, first=first)
@@ -303,7 +303,7 @@ def test_malformed_first_names_refused(env, first):
 
 @pytest.mark.parametrize("company", ["Smith & Co. Ltd", "J. R. Cleaning", "A1 Books", "24/7 Cleaning",
                                      "O'Neil Facility Services (North)", "Brightline Commercial Cleaning Inc.",
-                                     "Café Clean LLC", "Acme Staffing, Inc."])
+                                     "Caf\xe9 Clean LLC", "Acme Staffing, Inc."])
 def test_real_company_names_pass(env, company):
     t = _cadence(env, 4, company=company)
     v = gate.touch_verdict(t)
