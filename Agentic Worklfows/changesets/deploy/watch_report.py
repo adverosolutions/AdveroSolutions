@@ -135,6 +135,12 @@ KNOWN_FAILURES = frozenset([
     "template_auto_send_failed", "template_auto_send_orphan_pushed",
     "orphan_sweep_failed", "autosend_fyi_failed",
     "template_unapproved_stop",
+    # Section 2 (show_rate, no_show): a reminder or no-show email whose send
+    # request went out and failed or returned nothing (it may have reached
+    # the lead; never retried, checked by hand), and one held because the
+    # lead's thread or row could not be trusted (fix the data).
+    "show_rate_maybe_sent", "show_rate_needs_attention",
+    "no_show_maybe_sent", "no_show_needs_attention",
 ])
 FAIL_PREFIXES = ("skipped_", "blocked_", "live_write")
 LIVE_WRITE_PREFIX = "live_write"
