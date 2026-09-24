@@ -9,7 +9,7 @@ Read in order: the lead said "interested", Lorenzo replied by hand with two time
 4. No Claudeisms: no sentence or tacked-on clause that restates, sums up or sells the point just made. Test: delete it; if no fact, question or next step is lost, it goes.
 5. Normal capitalization.
 
-Walkthrough status: E1, E2 and E3 agreed 2026-09-23. E4 onward still show the editor's drafts below; rules 1 and 2 are applied as each email is walked through.
+Walkthrough status: E1 to E4 agreed 2026-09-23. E5 onward still show the editor's drafts below; rules 1 and 2 are applied as each email is walked through.
 
 ## E1 · Day 1 · Two fresh times, lightest nudge (AGREED 2026-09-23)
 Hey {first_name},
@@ -44,40 +44,20 @@ Lorenzo
 
 Agreed with Lorenzo 2026-09-23 (the editor's pick, booking link removed). "Those last two" are E1's times, since E2 offers none. Not chosen: his original wording "Looks like those slots got grabbed up again. I really want to get this call on the books. Do either of these work: {slots}?", because it opens the same way E1 does.
 
-## E4 · Day 4 · Proof it works
+## E4 · Day 4 · Proof it works (AGREED 2026-09-23)
 Hey {first_name},
 
-I've done this across numerous industries, and I think there's a lot of room for growth at {company}. {niche_proof}
-
-Two more:
-- $5M in loan applications in 30 days on $1,500 of ad spend for a lender
-- qualified lead volume up 35% for a software consultancy
-
-Would {slots} work to go over it? Or pick your own here: {booking_url}
-
-Lorenzo
-
-Alternate (your full list; fill the wholesaler bracket or delete that line before approving):
-Hey {first_name},
-
-I really think there's a lot of room for growth at {company}. I've done this across numerous industries:
+I really think there's a lot of room for growth at {company}. I've done this across numerous industries. A few of my favorites:
 
 - about $6M worth of contracts recovered within 6 months for a commercial roofer doing $150M a year
 - qualified lead volume up 35% for a software consultancy
 - $5M in loan applications in 30 days on $1,500 of ad spend for a lender
-- outbound campaigns for wholesalers: [WHOLESALER RESULT: Lorenzo to fill]
 
-Would {slots} work to go over it? Or pick your own here: {booking_url}
+Those last two times got booked. Would {slots} work to go over it?
 
 Lorenzo
 
-Per-offer lines ({niche_proof}; every number is copied from the proof list):
-Cleaning, reactivation: The closest match: a commercial roofer doing $150M a year recovered about $6M worth of contracts within 6 months with the same kind of win-back system. Yours would work the accounts that cancelled, stopped renewing or never closed.
-Bookkeeping, reactivation: The closest match: a commercial roofer doing $150M a year recovered about $6M worth of contracts within 6 months with the same kind of win-back system. Yours would work lost inquiries and former clients, timed to tax season and year-end.
-Recruiting, reactivation: The closest match: a commercial roofer doing $150M a year recovered about $6M worth of contracts within 6 months with the same kind of win-back system. Yours would work your dormant and near-miss client accounts.
-Cleaning, outbound: The closest match: a commercial roofer doing $150M a year brought in about $180,000 in new contracts in 90 days with outbound. Yours would reach companies right after a new lease, an office expansion or a property-manager change.
-Bookkeeping, outbound: The closest match: a commercial roofer doing $150M a year brought in about $180,000 in new contracts in 90 days with outbound. Yours would reach new businesses, companies posting for a part-time bookkeeper and ones opening a second location.
-Recruiting, outbound: The closest match: a commercial roofer doing $150M a year brought in about $180,000 in new contracts in 90 days with outbound. Yours would reach hiring managers with specialty roles open on the job boards.
+Agreed with Lorenzo 2026-09-23: his own list, the same for every lead (no per-offer {niche_proof}), framed as "a few of my favorites" so it doesn't read as if these were picked as the closest match to their industry. He rejected a version with the industries stripped out ("they get confused, like they're garbage"). Wholesaler line dropped (no number on file). "Those last two times" are E3's.
 
 ## E5 · Day 5 · Busy season, two more
 Hey {first_name},
