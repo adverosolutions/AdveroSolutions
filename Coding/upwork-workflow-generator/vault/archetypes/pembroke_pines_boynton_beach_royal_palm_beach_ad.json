@@ -12,13 +12,13 @@
       "key": "sources",
       "label": "2 - EVERY CALL, CLICK AND FORM KEEPS ITS SOURCE",
       "color": 0,
-      "note": "Your parts 3, 4 and 5, milestone 2, plus milestone 4's offline conversions. Google gets the click ID, stage and time, never a treatment detail; hashed contact data for enhanced conversions goes only if your compliance advisor signs off."
+      "note": "Your parts 3, 4 and 5, milestone 2, plus milestone 4's offline conversions; Google takes each stage up to 90 days after the click, so later ortho starts count on your dashboard only. Google gets the click ID, stage and time, never a treatment detail, and hashed contact data for enhanced conversions only if your compliance advisor signs off."
     },
     {
       "key": "followup",
       "label": "3 - FOLLOW-UP THAT STOPS WHEN STATUS CHANGES",
       "color": 0,
-      "note": "Your parts 6 and 7, milestone 3. Your 12 follow-up situations are 12 workflows for all 3 locations, not 36 copies, and each checks the stage before it sends."
+      "note": "Your parts 6 and 7, milestone 3. Your 12 follow-up situations, missed calls through treatment follow-up and review requests, are 12 workflows for all 3 locations, not 36 copies, and each checks the stage before it sends."
     },
     {
       "key": "pms",
