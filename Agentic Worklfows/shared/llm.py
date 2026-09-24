@@ -667,8 +667,7 @@ def _fake_draft(system: str, user: str, json_mode: bool) -> str:
     return (
         "Hey there,\n\n"
         "Thanks for getting back to me. Quick answer to your note (%s).\n\n"
-        "Would Tue 2:00 or Thu 3:30 CT work for a 15 minute call? "
-        "Or if it's easier, grab a time here: <booking_link>\n\n"
+        "Would Tue 2:00 or Thu 3:30 CT work for a 15 minute call?\n\n"
         "Lorenzo" % snippet
     )
 

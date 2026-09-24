@@ -21,6 +21,8 @@ RECORDED = {
     1: "20c52877dee5a894ee85c765641f4488365d1d30dd3e5159ab9dfa82d342080f",
     # 2026-09-23: the cadence part ids moved to the ten-email ladder (E2 / E4 / E5 / E6 / E9 lines).
     2: "923652d6849a40c43868ba014eaab13d7c6e5cc8b1471317f47a33416e6d96bf",
+    # 2026-09-24: first replies are checked with the draft's first_reply (no link of any kind) rule.
+    3: "77cf1f24acc7a3d1de7931e0dc36dfa052d1c4e26c0e97236eb16f0c50f372cf",
 }
 
 _VERSION_LINE = re.compile(r"^GATE_RULES_VERSION = \d+\s*$")

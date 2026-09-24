@@ -160,7 +160,9 @@ def test_case_text_after_the_booking_link(env):
     assert body != g.body_text
     assert _refused(_fr_verdict(g.model_copy(update={"body_text": body}), ev, cls))
     glued = g.body_text.replace(ask, ask + " " + LINK + "?ref=evil.example", 1)
-    assert _refused(_fr_verdict(g.model_copy(update={"body_text": glued}), ev, cls))
+    # the draft's first_reply rule (no link of any kind) refuses it before conformance
+    v = _fr_verdict(g.model_copy(update={"body_text": glued}), ev, cls)
+    assert _refused(v, "copy_gate") and "contains a booking link" in v.detail
 
 
 def test_case_slots_placeholder_with_arbitrary_text(env):

@@ -92,10 +92,9 @@ engine's own formatters: equal to it, the value is accepted even for a lead
 zone outside the list (a legacy name such as America/Indianapolis).
 
 The ``confirmed_time`` variant of a first reply ("{slot} CT works on my end. I
-will send the invite over, and if anything shifts, you can grab a different
-time here: {booking_url}") never auto-sends: the gate cannot know the
+will send the invite over.") never auto-sends: the gate cannot know the
 invite was actually booked, so a body that matches only that variant is
-nonconforming.
+nonconforming. (No first reply auto-sends at all: approval.draft_only.)
 
 ``Verdict.to_record()`` carries ids, statuses and the reason, never any text.
 The FYI queue and the held counters carry ids, statuses and counts only.
@@ -189,7 +188,7 @@ MAX_SUBJECT_CHARS = 300
 # Resume on its stop (runbooks/template_approvals.md, "Cadence holds, stalls
 # and resume"). tests/test_gate_rules_version.py pins this module's source
 # per version, so a change to this file without a bump fails the suite.
-GATE_RULES_VERSION = 2
+GATE_RULES_VERSION = 3
 
 # Placeholder types.
 NAME_PLACEHOLDERS = ("first_name", "referral_name", "referral_first_name")
@@ -1558,11 +1557,14 @@ def draft_verdict(draft: Any, *, kind: str, campaign_key: Optional[str] = None, 
         if not problems:
             from services.reply_engine import draft as draft_mod
 
-            # A booking confirmation carries the booking link as a field but not
-            # in its body; conformance (step 9) already fixes where a link goes.
+            # A first reply carries no link of any kind (2026-09-23): the
+            # draft's own first_reply check, with the draft's link field (None
+            # for a first reply) and settings.BOOKING_URL as known links. A
+            # booking card's links are fixed by conformance (step 9).
             problems = list(draft_mod.validate_draft(body, booking_link=link if kind == "first_reply" else None,
                                                      campaign_key=campaign_key,
-                                                     allow_terms=list(allow_terms) if allow_terms else None))
+                                                     allow_terms=list(allow_terms) if allow_terms else None,
+                                                     first_reply=kind == "first_reply"))
         problems += _subject_problems(subject, campaign_key, allow_terms)
         if problems:
             raise _Fail("copy_gate", "; ".join(str(p) for p in problems))
