@@ -167,8 +167,12 @@ def test_resume_get_with_no_signing_secret_is_refused_like_the_post(world, monke
 
 
 # ================================================== 2. the card push
-def _card(store, recorder, label="positive_question", requested=None):
+def _card(store, recorder, label="positive_question", requested=None, answered=True):
+    """``answered``: a reply of ours already reached the lead, so the card is
+    the ordinary Approve / Veto / Edit one (False: a first-contact card)."""
     state = LeadState(lead_email=LEAD, campaign_id=CAMPAIGN, first_name=FIRST, company=COMPANY)
+    if answered:
+        state.history.append({"event": "reply_sent", "at": ct(2026, 9, 21, 10, 0).isoformat()})
     event = ReplyEvent(email_id="e-f3", thread_id="thr-f3", campaign_id=CAMPAIGN,
                        eaccount="sender@advero-test.example", lead_email=LEAD, first_name=FIRST, company=COMPANY,
                        subject=SUBJECT, text="How much is it?", received_at=ct(2026, 9, 22, 9, 55))
@@ -238,7 +242,9 @@ def test_protected_topic_card_is_unchanged(world, monkeypatch, protect):
     card = _card(world["store"], fn)
     push = sent[0]
     assert push["title"] == "Reply to approve: %s %s (positive_question)" % (FIRST, COMPANY)
-    assert push["message"] == "%s %s <%s>\nReply to: %s\nSubject: %s\nSlots: none\n\n%s" % (
+    # the lead's reply above the draft, and the draft labelled
+    assert push["message"] == ("%s %s <%s>\nReply to: %s\nSubject: %s\nSlots: none\n\nThey wrote:\nHow much is it?\n\n"
+                               "----------\nYour reply (Approve sends it):\n%s") % (
         FIRST, COMPANY, LEAD, LEAD, SUBJECT, BODY)
     assert "email_message" not in push["kw"]
     assert push["kw"]["click"] == "https://engine.test/approve/%s" % card.token

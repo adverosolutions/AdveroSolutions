@@ -396,9 +396,10 @@ def test_process_event_never_auto_sends_an_approved_first_reply(env):
     card = A.load(res["approval_token"], env["store"])
     assert card.approved_by is None and card.status == "pending"
     assert card.auto_send["reason"] == A.FIRST_REPLY_LOCK_REASON
-    pushed = [n for n in notify.sent_in_test if n["title"].startswith("Reply to approve")]
+    # a first-contact card: Lorenzo sends it himself, then Mark sent
+    pushed = [n for n in notify.sent_in_test if n["title"].startswith("Reply to send yourself")]
     assert len(pushed) == 1 and pushed[0]["message"].startswith(
-        "Not auto-sent: %s\n" % A.REASON_TEXT["first_reply_draft_only"])
+        "%s\nNot auto-sent: %s\n" % (A.SEND_YOURSELF_LINE, A.REASON_TEXT["first_reply_draft_only"]))
     rows = [r for r in csv.reader(job_log.job_log_path().read_text().splitlines())
             if len(r) > 1 and r[1] == "reply_engine.process_event"]
     detail = json.loads(rows[-1][-1])
@@ -410,7 +411,7 @@ def test_process_event_unapproved_is_an_ordinary_card(env):
     assert res["auto_send"] == {"allowed": False, "reason": "unapproved", "template_id": PRICING_ID, "status": None}
     assert _replies() == []
     assert A.load(res["approval_token"], env["store"]).status == "pending"
-    assert [n for n in notify.sent_in_test if n["title"].startswith("Reply to approve")]
+    assert [n for n in notify.sent_in_test if n["title"].startswith("Reply to send yourself")]   # first contact
 
 
 def test_process_event_kill_switch_is_a_card(env):
@@ -460,7 +461,7 @@ def test_a_first_reply_is_never_auto_sent_while_the_previous_call_is_being_cance
     card = A.load(res["approval_token"], env["store"])
     assert card.status == "pending" and card.draft.problems == []
     assert "still being cancelled in GHL" in card.draft.rationale
-    pushed = [n for n in notify.sent_in_test if n["title"].startswith("Reply to approve")]
+    pushed = [n for n in notify.sent_in_test if n["title"].startswith("Reply to send yourself")]   # first contact
     assert len(pushed) == 1 and A.REASON_TEXT["cancel_pending"] in pushed[0]["message"]
     rows = [r for r in csv.reader(job_log.job_log_path().read_text().splitlines())
             if len(r) > 1 and r[1] == "reply_engine.process_event"]

@@ -579,7 +579,10 @@ def test_mark_sent_records_the_reply_as_sent_and_arms_the_ladder(world):
 
 def test_mark_sent_takes_the_token_too_and_refuses_anything_but_send_failed(world):
     st = world["store"]
-    card = _plain(st)
+    # A lead a reply of ours already reached: a pending card is not a
+    # first-contact card, so Mark sent still refuses it (a first-contact one
+    # it takes: test_card_lead_reply_and_first_contact).
+    card = _plain(st, history=[_entry("e-1", "positive_question", T_POS), {"event": "reply_sent", "at": T_POS.isoformat()}])
     other = _direct_card(st, "c2", status="pending", email_id="e-3", offered=[])
     assert A.mark_sent_manually("nope", IN_HOURS, store=st) == {"ok": False, "error": "unknown card"}
     refused = A.mark_sent_manually("c2", IN_HOURS, store=st)
