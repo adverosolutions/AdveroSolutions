@@ -14,7 +14,7 @@ participant-join events (normalised by zoom_webhook.py into the store under
   and "we have no Zoom telemetry" are not the same thing: the Discovery Call
   calendar is still on Google Meet and no Zoom app exists, so treating silence
   as a no-show flags every held call. ``process`` leaves the appointment
-  pending and asks Lorenzo to mark it by hand instead.
+  pending and asks Lorenzo to mark it by hand instead (an internal GHL task).
 
 An evidence channel means: at least one join was recorded for this meeting
 (host, bot or lead), or Zoom told us the meeting started or ended, or a
@@ -24,39 +24,56 @@ GHL ``appointmentStatus`` of showed/noshow (which always wins).
 ``process`` is the state machine the tick calls for every appointment past
 its start. On the first 'no_show' it marks the GHL appointment ``noshow``
 (guarded write), moves nothing in the pipeline, stores ``no_show_count`` per
-contact and schedules the recovery sequence. A non-host join arriving after
-the flag produces a 'late_show' event: recovery is cancelled and the
-appointment is set back to ``showed`` (guarded).
+contact and schedules the recovery ladder. A non-host join arriving after the
+flag produces a 'late_show' event: recovery is cancelled and the appointment
+is set back to ``showed`` (guarded).
 
-Recovery sequence (first no-show, full):
-  +5 m  SMS + email  "Still on? I'll stay on 10 more minutes" + link
-  +10 m task         call + 30-second voicemail script
-  +1 h  email        reschedule link + two fresh slots (shared.slots)
-  +1 d  SMS (task fallback when A2P is not registered)  two slots
-  +3 d  email        value add + re-ask
-  +7 d  email        yes / no
-  +14 d email        breakup, then stage -> Follow Up Later
-Second no-show: +5 m and +1 h only, note the pattern. Third: +5 m only,
-then stage -> Lost.
+Recovery (section 2 rebuild, 2026-09-23; copy in
+sections/2_booked_calls/copy_signed_off.md, word for word). Email only, every
+email a reply in the lead's cold-email thread (thread_reply.send_lead_email;
+the subject is only used for the GHL fallback), never a booking link.
+S = scheduled start, "10:00 lead" = 10:00 in the lead's zone (CT when unknown).
 
-All copy: no em dashes, signed "Lorenzo", nothing about automation.
+  N1 ns_still_on_email     S+3, BEFORE the flag, only with Zoom evidence (the
+                           meeting started or the host joined) and no lead
+                           join; once per appointment + start; never after S+10
+  First miss (count 1):
+  N3 ns_reschedule_email   max(flag, S+25 min)                two fresh slots
+  N4 ns_d1_email           next business day, 10:00 lead      two fresh slots
+  N5 ns_d3_value_email     3 business days after, 10:00 lead  two fresh slots
+                           (skipped ``no_niche_point`` with no niche/offer on file)
+  N6 ns_d7_yes_no_email    7 days after, next weekday, 10:00  two fresh slots
+  N7 ns_d14_breakup_email  14 days after, next weekday, 10:00
+                           -> nurture.enroll(no_show_no_rebook) + stage Follow Up Later
+  Second miss (count 2): N1, N3 ``.repeat`` at S+25, N6 3 business days after
+                           -> nurture.enroll (+ the SOP-005 pattern note)
+  Third miss (count 3+): N1, N8 ns_third_miss_email at S+25
+                           -> nurture.enroll + stage Lost
+
+A slot email claims two fresh times (never ones this lead was offered before)
+and, once it reaches the lead, gives the previous offer back, so "those times
+got taken" is true. N4 / N5 / N6 say so, and go out only after an earlier
+slot email of the same ladder reached the lead (else ``no_prior_offer``).
+
+Any reply from the lead since the call's start stops the rest (``replied``,
+read from the lead row's ``last_inbound_at`` via thread_reply.find_thread);
+a rebooking cancels it (``rebooked``).
 """
 import logging
 import re
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from shared import settings, slots
-from shared.settings import BOOKING_URL, TZ
+from shared.settings import TZ
 
+from services.reply_engine import show_rate as sr
 from services.reply_engine.show_rate import (
     HELD,
-    SMS_MAX_LEN,
+    NICHES,
     Touch,
-    a2p_registered,
     call_link_of,
     company_of,
-    dispatch_touch,
     first_name_of,
     fmt_time_only,
     fmt_when,
@@ -64,9 +81,9 @@ from services.reply_engine.show_rate import (
     next_send_window_open,
     niche_of,
     note_template_hold,
-    offer_of,
     record_held,
     stamp_touch,
+    tagged_offer,
 )
 
 logger = logging.getLogger("reply_engine.no_show")
@@ -104,35 +121,79 @@ RETRYABLE_SKIP_REASONS = ("ghl_token_missing", "no_contact_id")
 # row every 5 minutes until someone notices.
 MAX_TOUCH_ATTEMPTS = 12
 
-# (template_key, channel, offset from the no-show flag time)
-FULL_SEQUENCE = (
-    ("ns_still_on_sms", "sms", timedelta(minutes=5)),
-    ("ns_still_on_email", "email", timedelta(minutes=5)),
-    ("ns_call_task", "task", timedelta(minutes=10)),
-    ("ns_reschedule_email", "email", timedelta(hours=1)),
-    ("ns_d1_other_channel", "sms", timedelta(days=1)),
-    ("ns_d3_value_email", "email", timedelta(days=3)),
-    ("ns_d7_yes_no_email", "email", timedelta(days=7)),
-    ("ns_d14_breakup_email", "email", timedelta(days=14)),
-)
-SECOND_SEQUENCE_KEYS = ("ns_still_on_sms", "ns_still_on_email", "ns_reschedule_email")
-THIRD_SEQUENCE_KEYS = ("ns_still_on_sms", "ns_still_on_email")
+# ------------------------------------------------------------ the ladder
+N1 = "ns_still_on_email"
+N3 = "ns_reschedule_email"
+N4 = "ns_d1_email"
+N5 = "ns_d3_value_email"
+N6 = "ns_d7_yes_no_email"
+N7 = "ns_d14_breakup_email"
+N8 = "ns_third_miss_email"
+REPEAT_SUFFIX = ".repeat"  # the second miss's N3 (catalogue id no_show.ns_reschedule_email.repeat)
 
-MECHANISM = {
-    ("cleaning", "reactivation"): "email and text sequences to every account that cancelled or went quiet, timed to when they re-bid, with the ready ones landing on your calendar",
-    ("cleaning", "outbound"): "watching new leases, expansions and PM changes in your area and putting walkthroughs on your calendar under your name",
-    ("bookkeeping", "reactivation"): "sequences to your lost inquiries and former clients timed to tax season and year-end, with the ready ones landing on your calendar",
-    ("bookkeeping", "outbound"): "watching new formations and bookkeeper job posts and putting discovery calls on your calendar under your name",
-    ("recruiting", "reactivation"): "sequences to your dormant and near-miss client accounts, with the hiring managers who bite landing on your calendar",
-    ("recruiting", "outbound"): "watching open roles in your specialty and putting intro calls with hiring managers on your calendar under your agency's name",
-    # no niche on file: the offer still decides (an outbound prospect used to
-    # get the reactivation line below)
-    ("generic", "outbound"): "watching for the events that put a buyer in the market and putting those calls on your calendar under your name",
+# Timing rules, (kind, value):
+#   ("start", td)          S + td, and never before the flag (the flag is S+10 or later)
+#   ("business_days", n)   n business days after the call's day, 10:00 lead-local
+#   ("days", n)            n calendar days after the call's day, moved to the next
+#                          weekday, 10:00 lead-local
+STILL_ON_AFTER = timedelta(minutes=3)
+RESCHEDULE_AFTER = timedelta(minutes=25)
+LADDER_HOUR = 10
+AT_S3 = ("start", STILL_ON_AFTER)
+AT_S25 = ("start", RESCHEDULE_AFTER)
+
+# Every lead-facing message the ladder can send, in order, as (template_key,
+# channel, timing rule). template_approvals._no_show_entries enumerates this
+# (plus ns_reschedule_email.repeat) to build the catalogue, so every key is
+# here, N8 included. N1 goes out before the flag (still_on_nudge); which of
+# the others a miss gets is LADDERS[count].
+FULL_SEQUENCE = (
+    (N1, "email", AT_S3),
+    (N3, "email", AT_S25),
+    (N4, "email", ("business_days", 1)),
+    (N5, "email", ("business_days", 3)),
+    (N6, "email", ("days", 7)),
+    (N7, "email", ("days", 14)),
+    (N8, "email", AT_S25),
+)
+# The touches after the flag, per miss count (1, 2, 3+): (template_key, rule).
+LADDERS = {
+    1: ((N3, AT_S25), (N4, ("business_days", 1)), (N5, ("business_days", 3)), (N6, ("days", 7)),
+        (N7, ("days", 14))),
+    2: ((N3, AT_S25), (N6, ("business_days", 3))),
+    3: ((N8, AT_S25),),
 }
-GENERIC_MECHANISM = "sequences to every account that went quiet, with the ready ones landing on your calendar"
-PROOF = {
-    "reactivation": "I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.",
-    "outbound": "I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days.",
+# What happens once the LAST touch of a ladder has gone out.
+LADDER_AFTER = {1: "stage:follow_up_later", 2: "note:second_no_show_pattern", 3: "stage:lost"}
+NURTURE_REASON = "no_show_no_rebook"
+
+# The emails that offer two times ({slots}); each claims two fresh ones.
+SLOT_TEMPLATES = (N3, N4, N5, N6)
+# The emails that say the earlier times "got taken": only after an earlier slot
+# email of the same ladder reached the lead.
+TAKEN_TEMPLATES = (N4, N5, N6)
+
+# Placeholders render() leaves in place when it has no value. A text carrying
+# one is never sent (a slot email with no two held times, N5 with no niche
+# line); the catalogue shows them as {slots} / {niche_point}.
+SLOTS_PLACEHOLDER = "{slots}"
+NICHE_POINT_PLACEHOLDER = "{niche_point}"
+
+# N5's line per (niche, offer), verbatim from copy_signed_off.md. No campaign
+# on file: no line, and N5 is skipped (never a generic one).
+NICHE_POINT = {
+    ("cleaning", "reactivation"): "I'd set up emails and texts to every account that cancelled, stopped renewing "
+                                  "or never closed, and the ones ready to talk land on your calendar.",
+    ("bookkeeping", "reactivation"): "I'd reach back out to your lost inquiries and former clients, timed around "
+                                     "tax season, quarterly estimates and year-end cleanup.",
+    ("recruiting", "reactivation"): "I'd set up follow-up sequences to your dormant and near-miss client accounts.",
+    ("cleaning", "outbound"): "I'd watch for new leases, office expansions, property-manager changes and new "
+                              "construction, then reach out under your name and put walkthroughs on your "
+                              "calendar.",
+    ("bookkeeping", "outbound"): "I'd watch for new business formations, part-time bookkeeper job posts and "
+                                 "second locations, then reach out to those businesses under your name.",
+    ("recruiting", "outbound"): "I'd watch job boards for open roles in your specialties, then reach out to the "
+                                "hiring managers under your agency's name.",
 }
 
 
@@ -309,109 +370,163 @@ def detect(
 
 
 # ---------------------------------------------------------------- copy
+def known_offer(appointment: Dict[str, Any]) -> Optional[str]:
+    """The offer on file, or None. offer_of() falls back to "reactivation";
+    N5 must not: with no offer on file there is no approved line."""
+    offer = str(appointment.get("offer") or "").strip().lower()
+    if offer in ("reactivation", "outbound"):
+        return offer
+    tagged = tagged_offer(appointment)
+    if tagged:
+        return tagged
+    camp = settings.CAMPAIGNS.get(appointment.get("campaign_key") or "") or settings.CAMPAIGN_BY_ID.get(
+        appointment.get("campaign_id"))
+    if camp and camp.get("offer") in ("reactivation", "outbound"):
+        return camp["offer"]
+    return None
+
+
+def niche_point(appointment: Dict[str, Any]) -> Optional[str]:
+    """N5's approved line for this lead's campaign, or None (no campaign or no
+    offer on file: N5 is skipped, never a generic line)."""
+    niche = niche_of(appointment)
+    offer = known_offer(appointment)
+    if niche not in NICHES or offer is None:
+        return None
+    return NICHE_POINT.get((niche, offer))
+
+
 def render(template_key: str, appointment: Dict[str, Any], start: datetime, slots_text: str, count: int) -> Dict[str, Any]:
+    """{"subject", "body"} for one ladder email, word for word from
+    copy_signed_off.md. ``count`` picks the second miss's N3 (``.repeat``).
+    ``slots_text`` empty leaves "{slots}" in place and a missing niche line
+    leaves "{niche_point}": such a text is never sent (unfilled())."""
     first = first_name_of(appointment)
     company = company_of(appointment)
-    niche = niche_of(appointment)
-    offer = offer_of(appointment)
-    when_ct = fmt_when(start, lead_tz_of(appointment))
-    time_ct = fmt_time_only(start)
-    # The call's join link (Zoom, or Google Meet for widget bookings). With no
-    # link on file the sentence says where it is instead (the no_call_link
-    # catalogue variant), never a phrase in the link's place.
     link = call_link_of(appointment)
-    booking = appointment.get("reschedule_link") or appointment.get("booking_url") or BOOKING_URL or ""
-    mechanism = MECHANISM.get((niche, offer), GENERIC_MECHANISM)
-    # "Or <link>" only follows the two offered times; with no times the link
-    # line stands on its own.
-    if slots_text:
-        times_line = "Two times that work on my side: %s. " % slots_text
-        grab_line = "Or grab any time here: %s" % booking
-    else:
-        times_line = ""
-        grab_line = "Grab any time that suits you here: %s" % booking
+    two = slots_text or SLOTS_PLACEHOLDER
 
-    if template_key == "ns_still_on_sms":
-        on_now = ("I am on the call now: %s." % link) if link else "I am on the call now. The link is on your calendar invite."
-        body = "Hey %s, Lorenzo here. %s I will stay on for 10 more minutes. If today fell apart, grab another time: %s" % (first, on_now, booking)
-        return {"subject": None, "body": body[:SMS_MAX_LEN]}
-    if template_key == "ns_still_on_email":
-        on_now = ("I am on the call now: %s" % link) if link else "I am on the call now. The link is on your calendar invite."
-        body = (
-            "Hey %s,\n\nStill on? %s\n\n"
-            "I will stay on for 10 more minutes in case you are running behind. If today fell apart, no worries, grab another time here: %s\n\nLorenzo"
-        ) % (first, on_now, booking)
-        return {"subject": "Still on?", "body": body}
-    if template_key == "ns_call_task":
-        phone = appointment.get("phone") or "no phone on file"
-        body = (
-            "Call %s (%s) now. Phone: %s. If no answer, leave this 30-second voicemail:\n\n"
-            "\"Hey %s, Lorenzo Villarreal. We had a call on the books at %s today. I stayed on the line for a bit but did not see you join, and I know things come up. "
-            "I am sending you a link to grab a new time, or just text me back at this number and we will sort it out. Talk soon.\"\n\n"
-            "Then send the text: \"Hey %s, Lorenzo here, just left you a voicemail. Grab a new time whenever works: %s\""
-        ) % (first, company, phone, first, time_ct, first, booking)
-        return {"subject": "No-show at %s: call %s (%s) + voicemail" % (time_ct, first, company), "body": body}
-    if template_key == "ns_reschedule_email":
-        # second no-show: offer a shorter call or another day. Never "the
-        # numbers in writing": the sale closes on one call.
-        pattern = "" if count < 2 else ("I know this is the second time the timing did not work out, so if a shorter "
-                                        "call or a different day works better, just tell me. ")
-        body = (
-            "Hey %s,\n\n"
-            "I was on the line at %s but did not see you join. No worries, things come up.\n\n"
-            "%s%s%s\n\n"
-            "If something changed and this is no longer a fit, just say so and I will close it out.\n\nLorenzo"
-        ) % (first, time_ct, pattern, times_line, grab_line)
-        return {"subject": "Missed you on our call", "body": body}
-    if template_key == "ns_d1_other_channel":
-        body = "Hey %s, Lorenzo again. Still happy to walk through the plan for %s. %s%s" % (
-            first, company, times_line, grab_line)
-        return {"subject": None, "body": body[:SMS_MAX_LEN]}
-    if template_key == "ns_d1_other_channel_task":
-        body = (
-            "Texting is not enabled yet, so reach %s (%s) on a second channel by hand: LinkedIn note or a text from your phone.\n"
-            "Phone: %s\nSuggested text: \"Hey %s, Lorenzo again. Still happy to walk through the plan for %s. %s%s\""
-        ) % (first, company, appointment.get("phone") or "no phone on file", first, company, times_line, grab_line)
-        return {"subject": "Day 1 after no-show: LinkedIn or text %s (%s)" % (first, company), "body": body}
-    if template_key == "ns_d3_value_email":
-        body = (
-            "Hey %s,\n\n"
-            "Quick thought while this is still on your desk. %s\n\n"
-            "For %s the first step is the same: %s.\n\n"
-            "%s%s\n\nLorenzo"
-        ) % (first, PROOF.get(offer, PROOF["reactivation"]), company, mechanism, times_line, grab_line)
-        return {"subject": "One thing worth knowing before you decide", "body": body}
-    if template_key == "ns_d7_yes_no_email":
-        body = (
-            "Hey %s,\n\n"
-            "I know you were interested enough to book, so I wanted to check in directly before I close things out.\n\n"
-            "Still want to talk through the plan for %s, or has the timing changed? Either answer is fine. It just helps me update my notes.\n\n"
-            "If yes: %s\n\nLorenzo"
-        ) % (first, company, booking)
-        return {"subject": "Should I close your file?", "body": body}
-    if template_key == "ns_d14_breakup_email":
-        body = (
-            "Hey %s,\n\n"
-            "Have not heard back, so I am going to assume the timing is not right and close out your file for now.\n\n"
-            "If things change down the road, this link will still work: %s\n\n"
-            "Best of luck with everything.\n\nLorenzo"
-        ) % (first, booking)
-        return {"subject": "Closing your file", "body": body}
+    if template_key == N1:
+        if link:
+            on_now = "I'm on the call now, no rush. Here's the link:\n%s" % link
+        else:
+            on_now = "I'm on the call now, no rush. The link is on your calendar invite."
+        body = ("Hey %s,\n\n%s\n\n"
+                "If now doesn't work anymore, just reply and we'll find another time.\n\nLorenzo") % (first, on_now)
+        return {"subject": "I'm on", "body": body}
+    if template_key == N3 and int(count or 1) >= 2:
+        body = ("Hey %s,\n\n"
+                "Today didn't line up, and no problem if now is a bad time.\n\n"
+                "If you still want to talk, I can do %s. Just reply with the one that works.\n\nLorenzo") % (first, two)
+        return {"subject": "Whenever works for you", "body": body}
+    if template_key == N3:
+        body = ("Hey %s,\n\n"
+                "Looks like I missed you on our call today. I understand things come up, so let's get another "
+                "call on the books at a time that works well for you.\n\n"
+                "Could we do %s? Just reply with the one that works.\n\nLorenzo") % (first, two)
+        return {"subject": "New time for our call", "body": body}
+    if template_key == N4:
+        body = ("Hey %s,\n\n"
+                "Those two times got taken, but I can do %s if you still want to find 15 minutes. "
+                "Just reply with the one that works.\n\nLorenzo") % (first, two)
+        return {"subject": "Two open times", "body": body}
+    if template_key == N5:
+        point = niche_point(appointment) or NICHE_POINT_PLACEHOLDER
+        body = ("Hey %s,\n\n"
+                "One thing I was going to walk you through on our call:\n\n"
+                "%s\n\n"
+                "The last two times got taken, but if that's worth 15 minutes, I've got %s open. "
+                "Just say which one works.\n\nLorenzo") % (first, point, two)
+        return {"subject": "One thing for %s" % company, "body": body}
+    if template_key == N6:
+        body = ("Hey %s,\n\n"
+                "Quick one on the call: still want to chat, later, or not a fit?\n\n"
+                "A one-word answer is plenty. If it's later, just tell me roughly when. If you still want to chat, "
+                "the last two times got taken, but I can do %s.\n\nLorenzo") % (first, two)
+        return {"subject": "Quick one", "body": body}
+    if template_key == N7:
+        body = ("Hey %s,\n\n"
+                "I'll leave this with you for now.\n\n"
+                "If the timing gets better later on, just reply here and I'll send over a couple of times.\n\n"
+                "Lorenzo") % first
+        return {"subject": "Leaving the door open", "body": body}
+    if template_key == N8:
+        body = ("Hey %s,\n\n"
+                "Seems like the timing isn't right at the moment. I'll stop sending times.\n\n"
+                "If things change for %s, just reply here.\n\nLorenzo") % (first, company)
+        return {"subject": "If things change", "body": body}
     raise KeyError("unknown template %s" % template_key)
 
 
+def unfilled(copy_or_body: Any) -> Optional[str]:
+    """Why this text must not go out, or None: a slot line with no times
+    (``no_slots``) or N5 with no niche line (``no_niche_point``)."""
+    text = copy_or_body if isinstance(copy_or_body, str) else (
+        "%s\n%s" % ((copy_or_body or {}).get("subject") or "", (copy_or_body or {}).get("body") or ""))
+    if NICHE_POINT_PLACEHOLDER in text:
+        return "no_niche_point"
+    if SLOTS_PLACEHOLDER in text:
+        return "no_slots"
+    return None
+
+
 # ------------------------------------------------------------ scheduling
-def sequence_for_count(count: int):
-    if count <= 1:
-        return list(FULL_SEQUENCE)
-    if count == 2:
-        return [s for s in FULL_SEQUENCE if s[0] in SECOND_SEQUENCE_KEYS]
-    return [s for s in FULL_SEQUENCE if s[0] in THIRD_SEQUENCE_KEYS]
+def ladder_for_count(count: int) -> Tuple[Tuple[str, Any], ...]:
+    """(template_key, rule) for the touches after the Nth flag (count >= 1)."""
+    return LADDERS[max(1, min(3, int(count or 1)))]
+
+
+def sequence_for_count(count: int) -> List[Tuple[str, str, Any]]:
+    """(template_key, channel, rule) for the Nth miss: N1 first (it goes out
+    before the flag), then the ladder."""
+    return [(N1, "email", AT_S3)] + [(k, "email", rule) for k, rule in ladder_for_count(count)]
+
+
+def _local_ten(day: date, tz) -> datetime:
+    naive = datetime(day.year, day.month, day.day, LADDER_HOUR, 0)
+    local = tz.localize(naive) if hasattr(tz, "localize") else naive.replace(tzinfo=tz)
+    return slots.to_tz(local, TZ)
+
+
+def _next_weekday(day: date) -> date:
+    while day.weekday() >= 5:
+        day = day + timedelta(days=1)
+    return day
+
+
+def _add_business_days(day: date, n: int) -> date:
+    count = 0
+    while count < n:
+        day = day + timedelta(days=1)
+        if day.weekday() < 5:
+            count += 1
+    return day
+
+
+def touch_time(rule: Any, start: datetime, flagged_at: datetime, lead_tz=None) -> datetime:
+    """When a ladder touch is armed (CT). ``start`` rules: S + offset, never
+    before the flag. Day rules: 10:00 lead-local (CT when the zone is unknown)
+    on the day the rule names, counted from the call's own (lead-local) day,
+    then kept inside the 07:00-19:00 weekday send window for CT and the lead."""
+    kind, value = rule
+    start = slots.to_tz(slots.ensure_aware(start, TZ), TZ)
+    flagged_at = slots.to_tz(slots.ensure_aware(flagged_at, TZ), TZ)
+    if kind == "start":
+        return max(flagged_at, start + value)
+    tz = lead_tz if lead_tz is not None else TZ
+    miss_day = start.astimezone(tz).date()
+    if kind == "business_days":
+        day = _add_business_days(miss_day, int(value))
+    elif kind == "days":
+        day = _next_weekday(miss_day + timedelta(days=int(value)))
+    else:
+        raise ValueError("unknown timing rule %r" % (rule,))
+    return next_send_window_open(_local_ten(day, tz), lead_tz=lead_tz, weekdays_only=True)
 
 
 def synthetic_free_slots(now: datetime, days: int = 7) -> List[datetime]:
     """Open-hours grid (12:00-18:00 CT, 15-min) used only when GHL cannot
-    answer. Marked synthetic; live sends fall back to link-only copy."""
+    answer. Marked synthetic; live never offers these times (the slot email waits)."""
     now_ct = slots.to_tz(slots.ensure_aware(now, TZ), TZ)
     out = []
     for d in range(0, days + 1):
@@ -463,41 +578,6 @@ def recovery_offered(store, now: Optional[datetime] = None) -> List[str]:
         except Exception as exc:  # noqa: BLE001
             logger.warning("pruning %s failed: %s", OFFERED_SLOTS_KEY, exc)
     return keep
-
-
-def _approval_offered_key() -> str:
-    """approval.py's global registry key, without importing it at module import
-    time (approval is another brief's module and may be mid-edit)."""
-    try:
-        from services.reply_engine import approval as approval_mod
-
-        return approval_mod.OFFERED_KEY
-    except Exception:  # noqa: BLE001
-        return "offered_slots"
-
-
-def release_recovery_slots(store, slot_isos: List[str]) -> None:
-    """Give slots back when the recovery copy that advertised them is re-rendered.
-
-    Holding a reservation for a time we no longer offer blocks it for every
-    other lead while nobody has been promised it."""
-    wanted = set(slot_isos or [])
-    if not wanted:
-        return
-    try:
-        store.mutate(OFFERED_SLOTS_KEY,
-                     lambda cur: [r for r in (cur or []) if (r.get("slot") if isinstance(r, dict) else r) not in wanted],
-                     default=[])
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("releasing %s failed: %s", sorted(wanted), exc)
-    try:
-        store.mutate(_approval_offered_key(),
-                     lambda cur: [r for r in (cur or [])
-                                  if not (isinstance(r, dict) and r.get("source") == "no_show_recovery"
-                                          and r.get("slot") in wanted)],
-                     default=[])
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("releasing %s from the shared registry failed: %s", sorted(wanted), exc)
 
 
 def free_slot_list(now: datetime, ghl) -> Tuple[List[Any], str]:
@@ -560,14 +640,15 @@ def release_recovery_claim(store, appointment: Dict[str, Any], slot_isos: List[s
 
 
 def _withheld(info: Optional[Dict[str, Any]], reason: str) -> Dict[str, Any]:
-    """Link-only: no times in the copy, so nothing to double-offer."""
+    """No times held: the slot email waits (never a single time, never a link)."""
     info = info or {}
     return {"slots": [], "text": "", "source": info.get("source") or "unavailable", "withheld": reason}
 
 
 def claim_recovery_slots(now: datetime, ghl, store, appointment: Dict[str, Any],
                          slots_fn: Optional[Callable[[datetime], Dict[str, Any]]] = None,
-                         attempts: int = RECOVERY_CLAIM_ATTEMPTS) -> Dict[str, Any]:
+                         attempts: int = RECOVERY_CLAIM_ATTEMPTS,
+                         exclude: Optional[List[str]] = None) -> Dict[str, Any]:
     """Pick two times AND hold them for this lead, all or nothing.
 
     The recovery ladder used to pick from a registry read and append its
@@ -578,17 +659,18 @@ def claim_recovery_slots(now: datetime, ghl, store, appointment: Dict[str, Any],
 
     On a conflict the times are re-picked from the SAME free-slot list (the
     other lead's claim is excluded), up to ``attempts`` times. When no
-    conflict-free pair is left, or the registry cannot be read, the copy goes
-    out link-only (``slots: []``, ``text: ""``) - like the cadence's
-    ``slot_taken`` path, a time is never offered twice; unlike it, the touch
-    is not deferred, because a recovery email is time-bound. A later slot
-    touch re-picks (``_refresh_slot_copy``). Returns the fresh_two_slots dict.
+    conflict-free pair is left, or the registry cannot be read, it offers
+    nothing (``slots: []``, ``text: ""``): a time is never offered twice, and
+    the slot email waits for the next run (run_recovery). A later slot touch
+    re-picks. ``exclude``: times never to pick (the lead's previous
+    offer, so "those times got taken" is true). Returns the fresh_two_slots
+    dict (``slots: []`` when nothing could be held).
     """
     now_ct = slots.to_tz(slots.ensure_aware(now, TZ), TZ)
     lead = _recovery_claim_lead(appointment)
     fields = _recovery_claim_fields(appointment)
     free = None  # type: Optional[Tuple[List[Any], str]]
-    excluded = []  # type: List[str]
+    excluded = [i for i in (exclude or []) if isinstance(i, str)]  # type: List[str]
     info = None  # type: Optional[Dict[str, Any]]
     for _attempt in range(max(1, int(attempts))):
         if slots_fn is not None:
@@ -603,13 +685,15 @@ def claim_recovery_slots(now: datetime, ghl, store, appointment: Dict[str, Any],
             return info  # nothing to offer, nothing to hold
         if len(isos) < 2:
             return _withheld(info, "one_slot")  # never "Two times ...: <one time>"
+        if set(isos) & set(exclude or []):
+            return _withheld(info, "not_fresh")  # an injected picker offered the previous times again
         if store is None:
             return info
         try:
             from services.reply_engine import approval as approval_mod
 
             taken = approval_mod.claim_slots(store, lead, isos, now_ct, fields=fields)
-        except Exception as exc:  # noqa: BLE001 - an unreadable registry is link-only, never a double-offer
+        except Exception as exc:  # noqa: BLE001 - an unreadable registry offers nothing, never a double-offer
             logger.warning("could not claim the recovery slots %s for %s: %s", isos, appointment.get("id"), exc)
             return _withheld(info, "registry_unavailable")
         if not taken:
@@ -640,8 +724,8 @@ def fresh_two_slots(now: datetime, ghl, store, already_offered: Optional[List[st
     cands = slots.candidate_slots(free, now_ct, already_offered=offered)
     two = slots.pick_two(cands)
     if len(two) < 2:
-        # "Two times that work on my side: Tue 2:00pm CT." names one time.
-        # The copy goes link-only instead (render drops the line), as the
+        # "Could we do Tue 2:00pm CT?" would name one time.
+        # Nothing is offered instead (the slot email waits), as the
         # cadence never offers a single slot either.
         return {"slots": [], "text": "", "source": source, "withheld": "one_slot" if two else "no_slots"}
     return {"slots": [t.isoformat() for t in two], "text": slots.format_slots(two), "source": source}
@@ -668,66 +752,36 @@ def recovery_touches(
     appointment: Dict[str, Any],
     flagged_at: datetime,
     count: int,
-    slots_text: str = "",
-    a2p: Optional[bool] = None,
-    slots_source: str = "ghl",
 ) -> List[Touch]:
-    """The recovery touches for the Nth no-show (count starts at 1)."""
+    """The ladder touches after the Nth flag (count starts at 1), armed per
+    LADDERS / touch_time. Bodies are rendered without times ("{slots}"): a
+    slot email claims its two times when it is dispatched."""
     flagged_at = slots.to_tz(slots.ensure_aware(flagged_at, TZ), TZ)
     start = slots.to_tz(slots.parse_iso(appointment["start_iso"]), TZ)
     appt_id = str(appointment.get("id"))
-    sms_ok = a2p_registered(a2p)
-    if slots_source != "ghl" and settings.is_live():
-        slots_text = ""  # never send unverified times live; link-only copy
+    lead_tz = lead_tz_of(appointment)
     touches = []  # type: List[Touch]
-    seq = sequence_for_count(count)
-    for template_key, channel, offset in seq:
-        key = template_key
-        if template_key == "ns_d1_other_channel" and not sms_ok:
-            key, channel = "ns_d1_other_channel_task", "task"
-        when = slots.to_tz(flagged_at + offset, TZ)
-        copy = render(key, appointment, start, slots_text, count)
+    for template_key, rule in ladder_for_count(count):
+        when = touch_time(rule, start, flagged_at, lead_tz)
+        copy = render(template_key, appointment, start, "", count)
         touch = Touch(
-            key="%s:%s:ns%d:%s" % (appt_id, start.isoformat(), count, key),
+            key="%s:%s:ns%d:%s" % (appt_id, start.isoformat(), count, template_key),
             appointment_id=appt_id,
             contact_id=appointment.get("contact_id"),
             when_iso=when.isoformat(),
-            channel=channel,
-            template_key=key,
+            channel="email",
+            template_key=template_key,
             subject=copy.get("subject"),
             body=copy["body"],
-            meta={"no_show_count": count, "slots_source": slots_source, "start_iso": start.isoformat()},
+            meta={"no_show_count": count, "start_iso": start.isoformat(), "rule": "%s %s" % rule},
         )
         stamp_touch(touch, appointment, "no_show", count)
-        if channel == "sms":
-            # recovery touches are armed off the flag time, not off a time the
-            # lead picked, so they respect the lead's own 07:00-19:00 Mon-Fri.
-            moved = next_send_window_open(when, lead_tz=lead_tz_of(appointment), weekdays_only=True)
-            if moved != when:
-                touch.when_iso = moved.isoformat()
-                touch.meta["deferred_from"] = when.isoformat()
-            if not sms_ok:
-                touch.skipped, touch.skip_reason = True, "a2p_not_registered"
-        if channel == "email" and template_key != "ns_still_on_email":
-            # weekdays_only, like every other proactive email the engine sends:
-            # "Missed you on our call" and the day-3 value email used to be
-            # deferred by hour only, so a Thursday no-show put the day-3 email
-            # on a Sunday and a Friday evening miss put the reschedule email on
-            # a Saturday morning.
-            moved = next_send_window_open(when, weekdays_only=True)
-            if moved != when:
-                touch.when_iso = moved.isoformat()
-                touch.meta["deferred_from"] = when.isoformat()
         touches.append(touch)
-    # the last touch of the sequence carries the stage move
+    # the last touch of the ladder carries the stage move and the nurture hand-off
     if touches:
         last = touches[-1]
-        if count >= 3:
-            last.meta["after"] = "stage:lost"
-        elif count == 1:
-            last.meta["after"] = "stage:follow_up_later"
-        else:
-            last.meta["after"] = "note:second_no_show_pattern"
+        last.meta["after"] = LADDER_AFTER[max(1, min(3, int(count or 1)))]
+        last.meta["nurture"] = True
     return touches
 
 
@@ -746,7 +800,7 @@ RECOVERY_SNAPSHOT_KEYS = ("id", "contact_id", "opportunity_id", "start_iso", "en
 
 def offer_text(info: Optional[Dict[str, Any]]) -> str:
     """The slot line a recovery touch may carry: two held times, and in live
-    only times GHL verified. Anything else is link-only ("")."""
+    only times GHL verified. Anything else is "" (the slot email waits)."""
     info = info or {}
     isos = [i for i in (info.get("slots") or []) if isinstance(i, str) and i]
     if len(isos) < 2:
@@ -756,24 +810,148 @@ def offer_text(info: Optional[Dict[str, Any]]) -> str:
     return info.get("text") or ""
 
 
-def rerender_for_dispatch(touch: Touch, rec: Dict[str, Any], appt: Dict[str, Any]) -> bool:
-    """Re-render a lead-facing recovery touch from the current code, the
-    record's appointment snapshot and its current slot line, and re-stamp it
-    (CT3 flag 3: a redeploy that changed a template's hash must not leave the
+def rerender_for_dispatch(touch: Touch, appt: Dict[str, Any], slots_text: str = "") -> bool:
+    """Re-render a ladder touch from the current code, the record's
+    appointment snapshot and the times it offers now, and re-stamp it (CT3
+    flag 3: a redeploy that changed a template's hash must not leave the
     pending touches stale). True when re-rendered; on an error the touch
     keeps its copy and stamp, and the gate judges those."""
-    if touch.channel not in ("email", "sms"):
+    if touch.channel != "email":
         return False
     count = int((touch.meta or {}).get("no_show_count") or 1)
     try:
         start = slots.to_tz(slots.parse_iso((touch.meta or {}).get("start_iso") or appt["start_iso"]), TZ)
-        copy = render(touch.template_key, appt, start, offer_text(rec.get("slots")), count)
+        copy = render(touch.template_key, appt, start, slots_text, count)
     except (KeyError, ValueError, TypeError) as exc:
         logger.warning("re-rendering %s for dispatch failed: %s", touch.key, type(exc).__name__)
         return False
     touch.subject, touch.body = copy.get("subject"), copy["body"]
     stamp_touch(touch, appt, "no_show", count)
     return True
+
+
+# ------------------------------------------------------------ reply stop
+def _row_inbound_at(row: Any) -> Optional[datetime]:
+    raw = row.get("last_inbound_at") if isinstance(row, dict) else getattr(row, "last_inbound_at", None)
+    if not raw:
+        return None
+    try:
+        return slots.ensure_aware(slots.parse_iso(str(raw)), TZ)
+    except (ValueError, TypeError):
+        return None
+
+
+def lead_replied_since(store, appointment: Dict[str, Any], since: datetime) -> Tuple[bool, Optional[str]]:
+    """``(replied, error)``: has the lead written in since ``since``?
+
+    The lead's rows are the ones thread_reply.find_thread resolves (the
+    thread row, and every row of the lead's own address it looked at when
+    there are several or none carries a thread); a reply is a
+    ``last_inbound_at`` (the reply engine's router stamps it with the reply's
+    received time) later than ``since``. Rows that name somebody else never
+    count. ``error`` is set when the rows cannot be read: the caller holds
+    rather than risk mailing a lead who already answered."""
+    from services.reply_engine import thread_reply
+
+    since = slots.ensure_aware(since, TZ)
+    try:
+        found = thread_reply.find_thread(store, appointment or {})
+    except Exception as exc:  # noqa: BLE001 - an unreadable row may hide the reply
+        return False, type(exc).__name__
+    reason = found.get("reason")
+    if reason == getattr(thread_reply, "LEAD_ROW_UNREADABLE", "lead_row_unreadable"):
+        return False, reason
+    rows = []  # type: List[Any]
+    if found.get("state") is not None:
+        rows.append(found["state"])
+    if reason in (None, getattr(thread_reply, "AMBIGUOUS_THREAD", "ambiguous_thread"),
+                  getattr(thread_reply, "NO_THREAD_IDS", "no_thread_ids")):
+        for key in found.get("candidates") or []:
+            try:
+                rows.append(store.get(key))
+            except Exception as exc:  # noqa: BLE001
+                return False, type(exc).__name__
+    for row in rows:
+        at = _row_inbound_at(row)
+        if at is not None and at > since:
+            return True, None
+    return False, None
+
+
+# ------------------------------------------------------------ N1 (before the flag)
+def still_on_key(appointment_id: str, start_iso: str) -> str:
+    return "ns_still_on:%s:%s" % (appointment_id, start_iso)
+
+
+def zoom_evidence(appointment: Dict[str, Any], joins: List[Dict[str, Any]],
+                  meeting_signals: Optional[Dict[str, Any]] = None) -> bool:
+    """Zoom told us the call is live on our side: the meeting started, or the
+    host joined inside this appointment's window."""
+    if meeting_signals and meeting_signals.get("started"):
+        return True
+    return any(is_host(j) for j in joins_in_window(appointment, joins))
+
+
+def _new_summary() -> Dict[str, List[Any]]:
+    return {"sent": [], "would_do": [], "skipped": [], "errors": [], "stage_moves": [], "cancelled": [],
+            "held_template": [], "needs_attention": [], "maybe_sent": [], "deferred": [], "nurture": []}
+
+
+def still_on_nudge(now: datetime, appointment: Dict[str, Any], joins: List[Dict[str, Any]], store, ghl,
+                   instantly=None, meeting_signals: Optional[Dict[str, Any]] = None,
+                   summary: Optional[Dict[str, List[Any]]] = None) -> Optional[str]:
+    """N1 "I'm on": at S+3, when Zoom shows the call is live (meeting started
+    or host joined) and the lead has not joined. Once per appointment + start
+    (``ns_still_on:<id>:<start>`` claim), never at or after S+10 (MAX_LATENESS,
+    the moment detection flags the miss).
+    A dispatch that stays pending (send window, template hold, retryable
+    transport) gives the claim back so the next run inside the window tries
+    again; anything else keeps it. Returns the dispatch status, or None when
+    nothing was due."""
+    now = slots.to_tz(slots.ensure_aware(now, TZ), TZ)
+    start = slots.to_tz(slots.parse_iso(appointment["start_iso"]), TZ)
+    due = start + STILL_ON_AFTER
+    if now < due or (now - due) >= MAX_LATENESS[N1]:
+        return None  # N1 is a pre-flag nudge: S+3 up to (not including) S+10, the flag's moment
+    if lead_joins(joins_in_window(appointment, joins), None, lead_emails_of(appointment)):
+        return None
+    if not zoom_evidence(appointment, joins, meeting_signals):
+        return None
+    appt_id = str(appointment.get("id"))
+    claim = still_on_key(appt_id, start.isoformat())
+    if not store.set_if_absent(claim, {"at": now.isoformat(), "state": "dispatching"}):
+        return None  # sent (or being sent) already
+    summary = summary if summary is not None else _new_summary()
+    copy = render(N1, appointment, start, "", 1)
+    touch = Touch(key="%s:%s:%s" % (appt_id, start.isoformat(), N1), appointment_id=appt_id,
+                  contact_id=appointment.get("contact_id"), when_iso=due.isoformat(), channel="email",
+                  template_key=N1, subject=copy["subject"], body=copy["body"],
+                  meta={"start_iso": start.isoformat(), "no_show_count": 1})
+    stamp_touch(touch, appointment, "no_show", 1)
+    entry = {"key": touch.key, "channel": "email", "template": N1, "when": touch.when_iso}
+    replied, error = lead_replied_since(store, appointment, start)
+    if error:
+        store.delete(claim)
+        entry.update(reason="reply_check_failed", error=error)
+        summary["errors"].append(entry)
+        return "error"
+    if replied:
+        store.set(claim, {"at": now.isoformat(), "state": "done", "skip_reason": "replied"})
+        entry["reason"] = "replied"
+        summary["skipped"].append(entry)
+        return "skipped"
+    out = sr.dispatch_touch(touch, ghl, now, store=store, appointment=appointment, kind="no_show",
+                            instantly=instantly)
+    raw = touch.to_dict()
+    _record_recovery_result(raw, out, entry, summary, now)
+    if out.get("status") == HELD and out.get("hold") != THREAD_HOLD:
+        note_template_hold(store, raw, out, now)
+    if _stays_pending(out):
+        store.delete(claim)
+    else:
+        store.set(claim, {"at": now.isoformat(), "state": "done", "status": out.get("status"),
+                          "skip_reason": raw.get("skip_reason"), "transport": out.get("transport")})
+    return out.get("status")
 
 
 def state_key(appointment_id: str) -> str:
@@ -893,15 +1071,20 @@ def process(
     store,
     ghl,
     fireflies_transcript_len: Optional[int] = None,
-    a2p: Optional[bool] = None,
     slots_fn: Optional[Callable[[datetime], Dict[str, Any]]] = None,
     meeting_signals: Optional[Dict[str, Any]] = None,
     instantly=None,
+    run_ladder: bool = True,
 ) -> Dict[str, Any]:
     """Advance one appointment. Returns {'state', 'events': [...], 'actions': [...]}.
 
     States: pending -> showed | no_show | unknown; no_show -> late_show (lead
     joined after the flag) | rebooked (the call moved) | done.
+
+    Before the flag it sends N1 (still_on_nudge) when it is due. After the
+    flag it runs this appointment's ladder (run_recovery) unless
+    ``run_ladder`` is False (the --no-show-watch mode: N1 and detection only).
+    ``out["run"]`` is the dispatch summary of both.
     """
     now = slots.to_tz(slots.ensure_aware(now, TZ), TZ)
     appt_id = str(appointment.get("id"))
@@ -958,8 +1141,18 @@ def process(
             out["state"] = "late_show"
             return out
         # keep the sequence moving
-        out["run"] = run_recovery(now, store, ghl, appointment_id=appt_id, a2p=a2p)
+        if run_ladder:
+            out["run"] = run_recovery(now, store, ghl, appointment_id=appt_id, slots_fn=slots_fn,
+                                      instantly=instantly)
         return out
+
+    # N1 "I'm on" at S+3, before the verdict (it is only ever sent pre-flag)
+    run = _new_summary()
+    status = still_on_nudge(now, appointment, joins, store, ghl, instantly=instantly,
+                            meeting_signals=meeting_signals, summary=run)
+    if status is not None:
+        out["events"].append("still_on:%s" % status)
+        out["run"] = run
 
     verdict = detect(now, appointment, joins, fireflies_transcript_len=fireflies_transcript_len,
                      meeting_signals=meeting_signals)
@@ -1014,48 +1207,26 @@ def process(
     else:
         count = _bump_no_show_count(store, contact_id or appt_id, 1)
         store.set(flag_key, {"at": now.isoformat(), "contact_id": contact_id, "count": count})
-    # A recovery record left by an attempt that died before the state write
-    # is about to be replaced: its times are given back once the new record
-    # is in, or they would stay held for nobody.
+    # The ladder record is written once per miss. A record left by an attempt
+    # that died before the state write is kept as it is: run_recovery may
+    # already have sent from it, and rebuilding it would send those again.
+    # Nothing is held at the flag: each slot email claims its own two times
+    # when it goes out.
     rkey = recovery_key(appt_id, start.isoformat())
-    try:
-        prior_slots = [i for i in (((store.get(rkey) or {}).get("slots") or {}).get("slots") or [])
-                       if isinstance(i, str)]
-    except Exception:  # noqa: BLE001
-        prior_slots = []
-    # picked AND held in one step (claim_slots): never double-offered
-    slot_info = claim_recovery_slots(now, ghl, store, appointment, slots_fn=slots_fn)
-    claimed = [i for i in (slot_info.get("slots") or []) if isinstance(i, str)]
-    if claimed and slot_info.get("source") != "ghl" and settings.is_live():
-        # recovery_touches sends unverified times link-only in live: the copy
-        # will not name these, so they are not held for this lead either
-        release_recovery_claim(store, appointment, claimed)
-        slot_info, claimed = dict(slot_info, slots=[], text=""), []
-    try:
-        touches = recovery_touches(appointment, now, count, slots_text=slot_info.get("text", ""), a2p=a2p,
-                                   slots_source=slot_info.get("source", "ghl"))
-        # every store record is written BEFORE the GHL calls, so a failed write
-        # cannot make the next tick treat this as a fresh, second miss.
-        store.set(rkey, {
-            "appointment": {k: appointment.get(k) for k in RECOVERY_SNAPSHOT_KEYS if appointment.get(k) is not None},
-            "flagged_at": now.isoformat(),
-            "no_show_count": count,
-            "slots": slot_info,
-            "touches": [t.to_dict() for t in touches],
-        })
-    except Exception:
-        # no record carries these times, so no touch will ever offer them
-        release_recovery_claim(store, appointment, claimed)
-        raise
-    stale_prior = [i for i in prior_slots if i not in claimed]
-    if stale_prior:
-        release_recovery_claim(store, appointment, stale_prior)
+    touches = recovery_touches(appointment, now, count)
+    store.set_if_absent(rkey, {
+        "appointment": {k: appointment.get(k) for k in RECOVERY_SNAPSHOT_KEYS if appointment.get(k) is not None},
+        "flagged_at": now.isoformat(),
+        "no_show_count": count,
+        "slots": {},  # the last offer that reached the lead
+        "touches": [t.to_dict() for t in touches],
+    })
     state.update({"state": "no_show", "flagged_at": now.isoformat(), "count": count, "start_iso": start_iso})
     store.set(state_key(appt_id), state)
     res = ghl.update_appointment_status(appt_id, "noshow")
     out["actions"].append(_action("update_appointment_status", {"status": "noshow"}, res))
-    note = "No-show #%d at %s (flagged %s). Recovery sequence %s started. Pipeline stage unchanged." % (
-        count, fmt_when(start), now.isoformat(), "full" if count == 1 else ("2-touch" if count == 2 else "1-touch then Lost"))
+    note = "No-show #%d at %s (flagged %s). Recovery emails started (%s). Pipeline stage unchanged." % (
+        count, fmt_when(start), now.isoformat(), ", ".join(k for k, _ in ladder_for_count(count)))
     if contact_id:
         nres = ghl.create_note(contact_id, note)
         out["actions"].append(_action("create_note", {"body": note}, nres))
@@ -1063,7 +1234,17 @@ def process(
     out["state"] = "no_show"
     out["no_show_count"] = count
     out["recovery_touches"] = len(touches)
-    out["run"] = run_recovery(now, store, ghl, appointment_id=appt_id, a2p=a2p)
+    if run_ladder:
+        out["run"] = _merge_summaries(out.get("run"), run_recovery(now, store, ghl, appointment_id=appt_id,
+                                                                    slots_fn=slots_fn, instantly=instantly))
+    return out
+
+
+def _merge_summaries(*parts: Optional[Dict[str, List[Any]]]) -> Dict[str, List[Any]]:
+    out = _new_summary()
+    for part in parts:
+        for k, v in (part or {}).items():
+            out.setdefault(k, []).extend(v)
     return out
 
 
@@ -1120,19 +1301,33 @@ def _cancel_recovery(store, appt_id: str, start_iso: str, reason: str) -> int:
     mutate) merge instead of clobbering.
     """
     counted = {"n": 0}
+    held = []  # type: List[str]
+    appts = []  # type: List[Dict[str, Any]]
 
     def _apply(rec):
         rec = rec or {}
+        del held[:], appts[:]  # mutate may call this more than once
+        counted["n"] = 0
         for t in rec.get("touches", []):
             if not t.get("sent") and not t.get("skipped"):
                 t["skipped"], t["skip_reason"] = True, reason
                 counted["n"] += 1
+                # times a pending slot email was holding never reached the lead.
+                # The last offer that did (rec["slots"]) stays held: a lead
+                # who replied may be picking one of them.
+                held.extend(_isos(t.get("slots")))
+                t["slots"] = {}
         rec["cancelled"] = reason
+        appts.append(rec.get("appointment") or {"id": appt_id})
         return rec
 
+    total = 0
     for key in store.keys("recovery:%s:" % appt_id):
         store.mutate(key, _apply, default={})
-    return counted["n"]
+        total += counted["n"]
+        if held:
+            release_recovery_claim(store, appts[-1], list(held))
+    return total
 
 
 def _persist_touch(store, key: str, touch_key: str, patch: Dict[str, Any]) -> None:
@@ -1214,34 +1409,60 @@ def run_recovery(
     store,
     ghl,
     appointment_id: Optional[str] = None,
-    a2p: Optional[bool] = None,
     upcoming_appointments: Optional[List[Dict[str, Any]]] = None,
     slots_fn: Optional[Callable[[datetime], Dict[str, Any]]] = None,
+    instantly=None,
 ) -> Dict[str, Any]:
-    """Send due recovery touches; apply the 'after' stage move when the last
-    touch of a sequence actually goes out.
+    """Send due ladder emails; after the LAST email of a ladder goes out,
+    apply its stage move and enroll the lead in nurture.
 
     ``upcoming_appointments`` is the list of appointments the caller just read
     from GHL: any recovery record whose contact has a call in the future is
-    cancelled as ``rebooked`` instead of being advanced.
+    cancelled as ``rebooked`` instead of being advanced. Before anything is
+    sent for a record, a reply from the lead since the call's start cancels
+    the rest (``replied``). At most one email per record goes out per run.
+    ``instantly`` is the client the in-thread replies go through.
     """
     now = slots.to_tz(slots.ensure_aware(now, TZ), TZ)
-    summary = {"sent": [], "would_do": [], "skipped": [], "errors": [], "stage_moves": [],
-               "cancelled": [], "held_template": []}  # type: Dict[str, List[Any]]
+    summary = _new_summary()
     rebooked = rebooked_contact_ids(now, upcoming_appointments) if upcoming_appointments is not None else set()
     prefix = "recovery:%s:" % appointment_id if appointment_id else "recovery:"
+    reached_leads = set()  # one email per lead per run, across records too
     for key in store.keys(prefix):
         rec = store.get(key) or {}
         if rec.get("cancelled"):
             continue
         appt = rec.get("appointment", {})
+        appt_id = str(appt.get("id"))
+        lead = str(appt.get("email") or "").strip().lower() or str(appt.get("contact_id") or "") or appt_id
+        if lead in reached_leads:
+            continue
         if rebooked and str(appt.get("contact_id") or "") in rebooked:
-            n = _cancel_recovery(store, str(appt.get("id")), str(appt.get("start_iso") or ""), reason="rebooked")
+            n = _cancel_recovery(store, appt_id, str(appt.get("start_iso") or ""), reason="rebooked")
             summary["cancelled"].append({"key": key, "reason": "rebooked", "touches": n})
             continue
         if _appointment_was_held(store, appt):
-            n = _cancel_recovery(store, str(appt.get("id")), str(appt.get("start_iso") or ""), reason="showed")
+            n = _cancel_recovery(store, appt_id, str(appt.get("start_iso") or ""), reason="showed")
             summary["cancelled"].append({"key": key, "reason": "showed", "touches": n})
+            continue
+        due = [raw for raw in rec.get("touches", [])
+               if not raw.get("sent") and not raw.get("skipped") and Touch.from_dict(raw).when() <= now]
+        if not due:
+            continue
+        # Reply stop, for every booking (engine or widget): any reply since the
+        # call's start (the flag comes after it) ends the ladder; Lorenzo and
+        # the reply engine take the conversation from there.
+        try:
+            since = slots.parse_iso(appt["start_iso"])
+        except (KeyError, ValueError, TypeError):
+            since = slots.parse_iso(rec.get("flagged_at")) if rec.get("flagged_at") else now
+        replied, error = lead_replied_since(store, appt, since)
+        if error:
+            summary["errors"].append({"key": key, "reason": "reply_check_failed", "error": error})
+            continue
+        if replied:
+            n = cancel_recovery(store, appt_id, "replied")
+            summary["cancelled"].append({"key": key, "reason": "replied", "touches": n})
             continue
         pending_after = None  # the stage move runs after the touch loop, never inside it
         for raw in rec.get("touches", []):
@@ -1251,25 +1472,46 @@ def run_recovery(
             if touch.when() > now:
                 continue
             entry = {"key": touch.key, "channel": touch.channel, "template": touch.template_key, "when": touch.when_iso}
-            late = _too_late_reason(touch, now)
-            if late is not None:
-                # came due during an outage: "I am on the Zoom now" a day after
-                # the call, or a reschedule email that names a dead slot.
-                raw["skipped"], raw["skip_reason"] = True, late
-                entry["reason"] = late
+            skip = _too_late_reason(touch, now) or _ladder_skip_reason(touch, rec, appt)
+            if skip is not None:
+                # came due during an outage ("I'm on the call now" a day after
+                # the call), or nothing true can be said (no niche line, no
+                # earlier offer for "those times got taken")
+                _close_touch(store, key, raw, appt, skip)
+                entry["reason"] = skip
                 summary["skipped"].append(entry)
-                _persist_touch(store, key, touch.key, {"skipped": True, "skip_reason": late})
+                after = (touch.meta or {}).get("after")
+                if after:
+                    mv = _after_skipped_task(after, appt, ghl, now, skip)
+                    if mv:
+                        summary["stage_moves"].append(mv)
                 continue
             # contact ids are resolved from the record, not from the frozen
             # Touch: an id that arrived on a later tick must revive the ladder.
             touch.contact_id = appt.get("contact_id") or touch.contact_id
-            refreshed = _refresh_slot_copy(touch, rec, appt, now, ghl, store, slots_fn, key)
-            if refreshed:
-                raw.update(refreshed)
-                _persist_touch(store, key, touch.key, refreshed)
-            elif rerender_for_dispatch(touch, rec, appt):
-                raw.update({"subject": touch.subject, "body": touch.body})
-            raw.update({"template_id": touch.template_id, "template_hash": touch.template_hash})
+            slots_text = ""
+            if touch.template_key in SLOT_TEMPLATES:
+                info = _slots_for_touch(raw, rec, appt, now, ghl, store, slots_fn)
+                raw["slots"] = info
+                _persist_touch(store, key, touch.key, {"slots": info})
+                slots_text = offer_text(info)
+                if not slots_text:
+                    # never a slot email without two held times, and never a
+                    # booking link instead: pending, retried until MAX_LATENESS
+                    out = {"status": "error", "error": "no_slots", "reason": "no_slots"}
+                    _record_retry(raw, out, entry, summary, "no_slots")
+                    _persist_touch(store, key, touch.key, {k: raw.get(k) for k in ("attempts", "result", "skipped",
+                                                                                   "skip_reason")})
+                    continue
+            rerender_for_dispatch(touch, appt, slots_text)
+            raw.update({"subject": touch.subject, "body": touch.body, "template_id": touch.template_id,
+                        "template_hash": touch.template_hash})
+            missing = unfilled({"subject": touch.subject, "body": touch.body})
+            if missing is not None:
+                _record_retry(raw, {"status": "error", "error": missing}, entry, summary, missing)
+                _persist_touch(store, key, touch.key, {k: raw.get(k) for k in ("attempts", "result", "skipped",
+                                                                               "skip_reason")})
+                continue
             claim = _touch_claim_key(touch.key)
             if not store.set_if_absent(claim, {"at": now.isoformat(), "template": touch.template_key}):
                 # a previous run already dispatched this touch and died before
@@ -1281,34 +1523,78 @@ def run_recovery(
                 _persist_touch(store, key, touch.key, {"sent": True, "sent_at": now.isoformat(),
                                                        "result": raw["result"]})
                 continue
-            out = dispatch_touch(touch, ghl, now, a2p=a2p, store=store, appointment=appt, kind="no_show",
-                                 slots_text=offer_text(rec.get("slots")) or None)
+            out = sr.dispatch_touch(touch, ghl, now, store=store, appointment=appt, kind="no_show",
+                                    slots_text=slots_text or None, instantly=instantly)
             _record_recovery_result(raw, out, entry, summary, now)
-            if out.get("status") == HELD:
+            if out.get("status") == HELD and out.get("hold") != THREAD_HOLD:
                 note_template_hold(store, raw, out, now)
             elif raw.get("template_hold"):
                 raw["template_hold"] = None
             if _stays_pending(out):
-                store.delete(claim)  # retryable (or held by the template gate): the next tick tries again
+                store.delete(claim)  # retryable (or held): the next tick tries again
+            reached = out.get("status") in ("sent", "would_do", MAYBE_SENT)
+            if touch.template_key in SLOT_TEMPLATES:
+                if reached:
+                    _offer_reached_lead(store, key, rec, appt, raw.get("slots") or {})
+                elif raw.get("skipped"):
+                    release_recovery_claim(store, appt, _isos(raw.get("slots")))
+                    raw["slots"] = {}
             # persist immediately: an exception later must not re-send this touch
             _persist_touch(store, key, touch.key, {k: raw.get(k) for k in
                                                    ("sent", "sent_at", "result", "skipped", "skip_reason", "attempts",
                                                     "subject", "body", "template_id", "template_hash",
-                                                    "template_hold")})
+                                                    "template_hold", "thread_hold", "maybe_sent", "slots")})
             after = (touch.meta or {}).get("after")
-            if after and out["status"] in ("sent", "would_do"):
-                pending_after = (after, touch.key)
-            elif after and out["status"] == "skipped":
-                # nothing was actually said to the lead, so do not move the
-                # pipeline; hand it to Lorenzo instead.
-                mv = _after_skipped_task(after, appt, ghl, now, out.get("reason"))
+            if after and out.get("status") in ("sent", "would_do"):
+                pending_after = (after, bool((touch.meta or {}).get("nurture")))
+            elif after and raw.get("skipped"):
+                # nothing (or maybe nothing) reached the lead, so do not move
+                # the pipeline; hand it to Lorenzo instead.
+                mv = _after_skipped_task(after, appt, ghl, now, raw.get("skip_reason") or out.get("reason"))
                 if mv:
                     summary["stage_moves"].append(mv)
+            if reached:
+                reached_leads.add(lead)
+                break  # one email per lead per run, even after an outage
         if pending_after is not None:
             mv = _apply_after(pending_after[0], appt, ghl, store, now)
             if mv:
                 summary["stage_moves"].append(mv)
+            if pending_after[1]:
+                summary["nurture"].append(enroll_nurture(store, key, appt, now))
     return summary
+
+
+def enroll_nurture(store, record_key: str, appt: Dict[str, Any], now: datetime) -> Dict[str, Any]:
+    """The ladder ended with no reply and no rebooking: 90-day nurture
+    (nurture.enroll(lead_email, "no_show_no_rebook", now, note=<appointment
+    id>)). Once per recovery record (``nurture`` on the record); enroll itself
+    is idempotent too. Never raises."""
+    from services.reply_engine import nurture
+
+    appt_id = str(appt.get("id"))
+    rec = store.get(record_key) or {}
+    if (rec.get("nurture") or {}).get("status") == "enrolled":
+        return {"action": "nurture_enroll", "payload": {"appointment_id": appt_id}, "status": "skipped:already_enrolled"}
+    email, campaign_id = _lead_identity(store, appt, appt_id)
+    payload = {"lead_email": email, "reason": NURTURE_REASON, "campaign_id": campaign_id, "note": appt_id}
+    if not email:
+        return {"action": "nurture_enroll", "payload": payload, "status": "skipped:no_lead_email"}
+    try:
+        res = nurture.enroll(email, NURTURE_REASON, slots.ensure_aware(now, TZ), store=store,
+                             campaign_id=campaign_id, note=appt_id)
+    except Exception as exc:  # noqa: BLE001 - the ladder is over either way; surface it
+        logger.warning("nurture.enroll failed for appointment %s: %s", appt_id, exc)
+        return {"action": "nurture_enroll", "payload": payload, "status": "error", "error": str(exc)[:200]}
+
+    def _apply(cur):
+        cur = cur or {}
+        cur["nurture"] = {"status": "enrolled", "at": slots.to_tz(now, TZ).isoformat(),
+                          "created": bool(res.get("created"))}
+        return cur
+
+    store.mutate(record_key, _apply, default={})
+    return {"action": "nurture_enroll", "payload": payload, "status": "done", "created": bool(res.get("created"))}
 
 
 def _touch_claim_key(touch_key: str) -> str:
@@ -1317,7 +1603,8 @@ def _touch_claim_key(touch_key: str) -> str:
 
 def _stays_pending(out: Dict[str, Any]) -> bool:
     """True when this dispatch outcome leaves the touch to be retried (a CT3
-    template hold included)."""
+    template hold, a thread hold and a send-window deferral included). A
+    maybe-sent email never stays pending."""
     if out.get("status") in ("error", HELD):
         return True
     return out.get("status") == "skipped" and out.get("reason") in RETRYABLE_SKIP_REASONS
@@ -1333,20 +1620,19 @@ def _appointment_was_held(store, appt: Dict[str, Any]) -> bool:
     return st.get("state") in ("showed", "late_show")
 
 
-# How late a recovery touch may be before it is dropped instead of sent. The
-# tick can pause (a deploy, a held lock, an appointment that used to crash the
-# whole run), and without this the entire backlog fires at once: "Still on? I
-# am on the Zoom now" a day after the call ended.
+# How late a touch may be before it is dropped instead of sent. The tick can
+# pause (a deploy, a held lock, a retryable error keeping a touch pending), and
+# without this the backlog fires at once: "I'm on the call now" a day after
+# the call ended. N1 is bound to S+10 (armed at S+3); N3 / N8 speak about
+# "today"; the day touches have the rest of their day and the next.
 MAX_LATENESS = {
-    "ns_still_on_sms": timedelta(minutes=15),
-    "ns_still_on_email": timedelta(minutes=15),
-    "ns_call_task": timedelta(hours=2),
-    "ns_reschedule_email": timedelta(hours=6),
-    "ns_d1_other_channel": timedelta(hours=12),
-    "ns_d1_other_channel_task": timedelta(hours=12),
-    "ns_d3_value_email": timedelta(days=1),
-    "ns_d7_yes_no_email": timedelta(days=1),
-    "ns_d14_breakup_email": timedelta(days=1),
+    N1: timedelta(minutes=7),
+    N3: timedelta(hours=6),
+    N4: timedelta(days=1),
+    N5: timedelta(days=1),
+    N6: timedelta(days=1),
+    N7: timedelta(days=1),
+    N8: timedelta(hours=6),
 }
 
 
@@ -1357,9 +1643,36 @@ def _too_late_reason(touch: Touch, now: datetime) -> Optional[str]:
     return "too_late" if (now - touch.when()) > limit else None
 
 
-# The recovery templates whose body carries "Two times that work on my side".
-SLOT_TEMPLATES = ("ns_reschedule_email", "ns_d1_other_channel", "ns_d1_other_channel_task",
-                  "ns_d3_value_email")
+def _ladder_skip_reason(touch: Touch, rec: Dict[str, Any], appt: Dict[str, Any]) -> Optional[str]:
+    """Why this touch can never be sent truthfully, or None.
+
+    - a key this ladder no longer has (an SMS, call task or day-1 other-channel
+      touch left in a record from before the 2026-09-23 rebuild):
+      ``removed_touch``;
+    - N5 with no niche line for the lead's campaign: ``no_niche_point``;
+    - N4 / N5 / N6 say the earlier times "got taken": only after an earlier
+      slot email of this ladder reached the lead, else ``no_prior_offer``.
+    """
+    if touch.channel != "email" or touch.template_key not in (N3, N4, N5, N6, N7, N8):
+        return "removed_touch"
+    if touch.template_key == N5 and niche_point(appt) is None:
+        return "no_niche_point"
+    if touch.template_key in TAKEN_TEMPLATES and not _earlier_offer_reached(rec, touch.key):
+        return "no_prior_offer"
+    return None
+
+
+def _earlier_offer_reached(rec: Dict[str, Any], touch_key: str) -> bool:
+    for raw in rec.get("touches", []):
+        if raw.get("key") == touch_key:
+            return False
+        if raw.get("template_key") in SLOT_TEMPLATES and (raw.get("sent") or raw.get("maybe_sent")):
+            return True
+    return False
+
+
+def _isos(info: Any) -> List[str]:
+    return [i for i in ((info or {}).get("slots") or []) if isinstance(i, str) and i] if isinstance(info, dict) else []
 
 
 def _slot_still_offerable(iso: str, now: datetime) -> bool:
@@ -1369,77 +1682,123 @@ def _slot_still_offerable(iso: str, now: datetime) -> bool:
         return False
 
 
-def _refresh_slot_copy(touch: Touch, rec: Dict[str, Any], appt: Dict[str, Any], now: datetime,
-                       ghl, store, slots_fn=None, record_key: Optional[str] = None) -> Optional[Dict[str, Any]]:
-    """Re-render the slot line at dispatch time.
-
-    Every touch used to be rendered once, at flag time, so the +1 day SMS and
-    the +3 day email quoted two times that had already passed (and the engine
-    went on holding those slots against every other lead). Only the template
-    key and its parameters are durable; the times are decided now.
-    """
-    if touch.template_key not in SLOT_TEMPLATES:
-        return None
-    stored = rec.get("slots") or {}
-    stored_isos = [i for i in (stored.get("slots") or []) if isinstance(i, str)]
-    good = [i for i in stored_isos if _slot_still_offerable(i, now)]
-    if stored_isos and len(good) == len(stored_isos):
-        return None  # the frozen copy is still true
-    dead = [i for i in stored_isos if i not in good]
-    if dead:
-        release_recovery_slots(store, dead)
+def _slots_for_touch(raw: Dict[str, Any], rec: Dict[str, Any], appt: Dict[str, Any], now: datetime,
+                     ghl, store, slots_fn=None) -> Dict[str, Any]:
+    """The two times this slot email offers: its own earlier claim when both
+    are still offerable (a retried touch), else two fresh ones, never the ones
+    the lead was last offered (``rec["slots"]``). ``slots: []`` when none can
+    be held (the touch then waits)."""
+    held = raw.get("slots") or {}
+    isos = _isos(held)
+    live_ok = held.get("source") == "ghl" or not settings.is_live()
+    if len(isos) >= 2 and live_ok and all(_slot_still_offerable(i, now) for i in isos):
+        return held
+    if isos:
+        release_recovery_claim(store, appt, isos)
+    previous = _isos(rec.get("slots"))
     try:
         # picked AND held in one step (claim_slots): never double-offered
-        info = claim_recovery_slots(now, ghl, store, appt, slots_fn=slots_fn)
-    except Exception as exc:  # noqa: BLE001 - a dead slot line is worse than none
-        logger.warning("re-offering recovery slots failed: %s", exc)
+        info = claim_recovery_slots(now, ghl, store, appt, slots_fn=slots_fn, exclude=previous)
+    except Exception as exc:  # noqa: BLE001 - no times is a wait, never a dead line
+        logger.warning("claiming recovery slots failed: %s", exc)
         info = {"slots": [], "text": "", "source": "unavailable"}
-    claimed = [i for i in (info.get("slots") or []) if isinstance(i, str)]
-    slots_text = (info.get("text") or "") if len(claimed) >= 2 else ""  # one time is link-only
-    if info.get("source") != "ghl" and settings.is_live():
-        slots_text = ""  # never send unverified times live; link-only copy
-        if claimed:
-            # the copy will not name them, so nobody is holding them for this lead
-            release_recovery_claim(store, appt, claimed)
-            info, claimed = dict(info, slots=[], text=""), []
-    try:
-        start = slots.to_tz(slots.parse_iso(appt["start_iso"]), TZ)
-        copy = render(touch.template_key, appt, start, slots_text, int((touch.meta or {}).get("no_show_count") or 1))
-    except (KeyError, ValueError, TypeError) as exc:
-        logger.warning("re-rendering %s failed: %s", touch.key, exc)
-        release_recovery_claim(store, appt, claimed)  # the frozen copy goes out; these times never do
-        return None
-    touch.subject, touch.body = copy.get("subject"), copy["body"]
-    stamp_touch(touch, appt, "no_show", int((touch.meta or {}).get("no_show_count") or 1))
-    if record_key:
-        def _apply(cur):
-            cur = cur or {}
-            cur["slots"] = info
-            return cur
+    claimed = _isos(info)
+    if claimed and info.get("source") != "ghl" and settings.is_live():
+        # never send unverified times live: they are not held for this lead either
+        release_recovery_claim(store, appt, claimed)
+        info = dict(info, slots=[], text="")
+    return info
 
-        try:
-            store.mutate(record_key, _apply, default={})
-        except Exception:
-            # the record still names the old times; this run dies before the send
-            release_recovery_claim(store, appt, claimed)
-            raise
+
+def _offer_reached_lead(store, record_key: str, rec: Dict[str, Any], appt: Dict[str, Any],
+                        info: Dict[str, Any]) -> None:
+    """A slot email went out: its two times are now the lead's offer, and the
+    previous offer is given back (the email just told the lead those were
+    taken)."""
+    new = _isos(info)
+    box = {"previous": []}  # type: Dict[str, List[str]]
+
+    def _apply(cur):
+        cur = cur or {}
+        box["previous"] = _isos(cur.get("slots"))
+        cur["slots"] = info
+        return cur
+
+    store.mutate(record_key, _apply, default={})
     rec["slots"] = info
-    return {"subject": touch.subject, "body": touch.body, "template_id": touch.template_id,
-            "template_hash": touch.template_hash,
-            "meta": dict(touch.meta or {}, slots_source=info.get("source"), rerendered_at=now.isoformat())}
+    stale = [i for i in box["previous"] if i not in new]
+    if stale:
+        release_recovery_claim(store, appt, stale)
+
+
+def _close_touch(store, record_key: str, raw: Dict[str, Any], appt: Dict[str, Any], reason: str) -> None:
+    """Skip a touch for good and give back any times it was holding."""
+    held = _isos(raw.get("slots"))
+    if held:
+        release_recovery_claim(store, appt, held)
+    raw["skipped"], raw["skip_reason"], raw["slots"] = True, reason, {}
+    _persist_touch(store, record_key, raw["key"], {"skipped": True, "skip_reason": reason, "slots": {}})
+
+
+MAYBE_SENT = getattr(sr, "MAYBE_SENT", "maybe_sent")
+THREAD_HOLD = getattr(sr, "THREAD_HOLD", "thread")
 
 
 def _record_recovery_result(raw: Dict[str, Any], out: Dict[str, Any], entry: Dict[str, Any],
                             summary: Dict[str, List[Any]], now: datetime) -> None:
-    if out["status"] in ("sent", "would_do"):
+    """Fold one dispatch result into the touch record and the summary, the
+    same way show_rate._record_result does for the reminders:
+
+    - sent / would_do: done;
+    - held by the template gate: pending, no attempt (``held_template``);
+    - held by the thread lookup (thread_reply.NEEDS_ATTENTION_REASONS, a
+      refused thread subject): pending, no attempt, ``needs_attention``;
+    - maybe_sent (the write went out and failed or came back empty): closed
+      with the error and NEVER retried; ``maybe_sent`` + ``errors``, and a
+      Job_Log row for Lorenzo to check the thread by hand;
+    - outside the send window: pending, no attempt (``deferred``);
+    - anything else retryable: pending, one attempt (up to MAX_TOUCH_ATTEMPTS);
+    - any other skip (opt-out, sender is GHL): closed.
+    """
+    if out.get("transport"):
+        entry["transport"] = out["transport"]
+    status = out.get("status")
+    if status in ("sent", "would_do"):
         raw["sent"], raw["sent_at"], raw["result"] = True, now.isoformat(), out
-        entry["shadow"] = out["status"] == "would_do"
-        summary[out["status"]].append(entry)
+        raw["thread_hold"] = None
+        entry["shadow"] = status == "would_do"
+        summary[status].append(entry)
         return
-    if out["status"] == HELD:
+    if status == HELD and out.get("hold") == THREAD_HOLD:
+        entry["reason"] = out.get("reason")
+        summary["needs_attention"].append(entry)
+        _note_thread_hold(raw, out, entry, now)
+        return
+    if status == HELD:
         record_held(entry, out, summary)  # pending, no attempt counted
         return
-    if out["status"] == "skipped":
+    if status == MAYBE_SENT:
+        raw["skipped"], raw["skip_reason"], raw["maybe_sent"], raw["result"] = True, MAYBE_SENT, True, out
+        entry["reason"], entry["error"] = MAYBE_SENT, out.get("error")
+        summary["maybe_sent"].append(entry)
+        summary["errors"].append(entry)
+        logger.error("%s may have been delivered (%s); closed, never retried: check the lead's thread or GHL "
+                     "conversation by hand", entry.get("key"), out.get("reason"))
+        try:
+            from shared import job_log
+
+            job_log.log_run("reply_engine.no_show", "no_show_maybe_sent",
+                            {"touch": entry.get("key"), "template": entry.get("template"),
+                             "transport": out.get("transport"), "reason": out.get("reason")})
+        except Exception as exc:  # noqa: BLE001 - the summary still carries it
+            logger.warning("could not log the maybe-sent touch %s: %s", entry.get("key"), exc)
+        return
+    if status == "error" and out.get("deferred"):
+        raw["result"] = out
+        entry["reason"] = out.get("reason")
+        summary["deferred"].append(entry)
+        return
+    if status == "skipped":
         reason = out.get("reason")
         if reason in RETRYABLE_SKIP_REASONS:
             _record_retry(raw, out, entry, summary, reason)
@@ -1448,7 +1807,26 @@ def _record_recovery_result(raw: Dict[str, Any], out: Dict[str, Any], entry: Dic
         entry["reason"] = reason
         summary["skipped"].append(entry)
         return
-    _record_retry(raw, out, entry, summary, out.get("error"))
+    _record_retry(raw, out, entry, summary, out.get("error") or out.get("reason"))
+
+
+def _note_thread_hold(raw: Dict[str, Any], out: Dict[str, Any], entry: Dict[str, Any], now: datetime) -> None:
+    """Remember a thread hold on the touch; the first run that meets a new
+    reason writes one Job_Log row, later runs only count it."""
+    prev = raw.get("thread_hold") or {}
+    raw["thread_hold"] = {"reason": out.get("reason"), "transport": out.get("transport"),
+                          "lead_key": out.get("lead_key"), "since": prev.get("since") or now.isoformat()}
+    if prev.get("reason") == out.get("reason"):
+        return
+    logger.warning("holding %s: the lead's thread needs a look (%s)", entry.get("key"), out.get("reason"))
+    try:
+        from shared import job_log
+
+        job_log.log_run("reply_engine.no_show", "no_show_needs_attention",
+                        {"touch": entry.get("key"), "template": entry.get("template"), "reason": out.get("reason"),
+                         "lead_key": out.get("lead_key")})
+    except Exception as exc:  # noqa: BLE001 - the summary still carries it
+        logger.warning("could not log the thread hold on %s: %s", entry.get("key"), exc)
 
 
 def _record_retry(raw: Dict[str, Any], out: Dict[str, Any], entry: Dict[str, Any],
