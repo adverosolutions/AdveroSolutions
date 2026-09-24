@@ -26,10 +26,12 @@ Signed off: R2, R3, R4 (texts in `reminders_final.md`; their "grab a new slot he
 
 No-show (`no_show_final.md` has the editor's set; these overrides win):
 - N1 (approved): "Hey {first_name},\n\nI'm on the call now, no rush. Here's the link:\n{call_link}\n\nIf now doesn't work anymore, just reply and we'll find another time.\n\nLorenzo" (no-link: "I'm on the call now, no rush. The link is on your calendar invite.")
-- N3 (approved opener; link removed per the new rule, show again): "Hey {first_name},\n\nLooks like I missed you on our call today.\n\nCould we do {slots}? Just reply with the one that works.\n\nLorenzo". Lorenzo: never "All good" after the miss ("It's not all good").
-- N3 second-no-show variant: Lorenzo approved the link-only text, but the no-link rule overrides it. Proposed: "Hey {first_name},\n\nToday didn't line up, and no problem if now is a bad time.\n\nIf you still want to talk, I can do {slots}. Just reply with the one that works.\n\nLorenzo" (show him).
+- N3 (approved): "Hey {first_name},\n\nLooks like I missed you on our call today. I understand things come up, so let's get another call on the books at a time that works well for you.\n\nCould we do {slots}? Just reply with the one that works.\n\nLorenzo". Lorenzo: never "All good" after the miss ("It's not all good"); he wanted a bridge sentence between the miss and the times.
+- N3 second-no-show variant (approved): "Hey {first_name},\n\nToday didn't line up, and no problem if now is a bad time.\n\nIf you still want to talk, I can do {slots}. Just reply with the one that works.\n\nLorenzo"
 - N4 (approved): "Hey {first_name},\n\nThose two times got taken, but I can do {slots} if you still want to find 15 minutes. Just reply with the one that works.\n\nLorenzo"
-- N5, N6, N7 need the no-link and "taken" rework before showing; N8 has no link already. Proposals: N5 ask "If that's worth 15 minutes, the times I sent got taken, but I've got {slots} open. Just say which one works."; N6 "...If it's later, just tell me roughly when. If you still want to chat, the last two times got taken, but I can do {slots}."; N7 "I'll leave this with you for now. If the timing gets better later on, just reply here and I'll send over a couple of times."
+- N5 (approved, with the six {niche_point} lines in `no_show_final.md` unchanged): "Hey {first_name},\n\nOne thing I was going to walk you through on our call:\n\n{niche_point}\n\nThe last two times got taken, but if that's worth 15 minutes, I've got {slots} open. Just say which one works.\n\nLorenzo"
+- N6 (approved): "Hey {first_name},\n\nQuick one on the call: still want to chat, later, or not a fit?\n\nA one-word answer is plenty. If it's later, just tell me roughly when. If you still want to chat, the last two times got taken, but I can do {slots}.\n\nLorenzo"
+- N7 needs the no-link rework before showing; proposal: "I'll leave this with you for now. If the timing gets better later on, just reply here and I'll send over a couple of times." N8 has no link already (show as is).
 - Subjects (no-thread fallback only) capitalized.
 
 ## Build plan (after copy sign-off; worker-heavy + reviewer)
