@@ -231,16 +231,23 @@ def _detect_first_replies(candidates: List[Any], ct: datetime, store: Store, ins
     """Lorenzo's own first replies (cadence.detect_manual_first_reply), one
     thread read per candidate, at most cadence.FIRST_REPLY_MAX_READS per tick
     (GET /emails is 20 a minute per workspace): newest reply first, the rest
-    ``deferred`` to the next tick. Each lead under the same claim as the
-    ladder's per-lead work; detect_manual_first_reply writes the row through
-    save_stale_write under the row's lock. An error is a ``check_failed``
-    result, never the end of the tick."""
+    ``deferred`` to the next tick. After the first Instantly read failure the
+    rest are ``deferred`` too: a failing read can take minutes of retries,
+    and the tick has a Modal time limit with its Job_Log row and digest still
+    to write. Each lead under the same claim as the ladder's per-lead work;
+    detect_manual_first_reply writes the row through save_stale_write under
+    the row's lock. An error is a ``check_failed`` result, never the end of
+    the tick."""
     out = []  # type: List[Dict[str, Any]]
     reads = 0
+    read_failed = False
     for key, state in sorted(candidates, key=_newest_reply_first):
         email = getattr(state, "lead_email", None)
+        if read_failed:
+            out.append({"key": key, "lead_email": email, "action": "deferred", "reason": "after_read_failure"})
+            continue
         if reads >= cadence.FIRST_REPLY_MAX_READS:
-            out.append({"key": key, "lead_email": email, "action": "deferred"})
+            out.append({"key": key, "lead_email": email, "action": "deferred", "reason": "read_cap"})
             continue
         if not _claim(store, key, ct, dry_run):
             out.append({"key": key, "lead_email": email, "action": "locked"})
@@ -254,6 +261,8 @@ def _detect_first_replies(candidates: List[Any], ct: datetime, store: Store, ins
             _release(store, key, dry_run)
         if res.get("action") not in ("not_candidate", "no_instantly_client"):
             reads += 1
+        if res.get("action") == "check_failed" and res.get("reason") == "instantly_read_failed":
+            read_failed = True
         res["key"] = key
         out.append(res)
     return out
@@ -271,8 +280,8 @@ def _first_reply_lines(counts: Dict[str, int]) -> List[str]:
         lines.append("%d ladder%s started after your reply" % (started, "" if started == 1 else "s"))
     recorded = counts.get("reply_recorded", 0)
     if recorded:
-        lines.append("%d repl%s of yours seen in the thread, no ladder started (the lead wrote again, or opted "
-                     "out)" % (recorded, "y" if recorded == 1 else "ies"))
+        lines.append("%d repl%s of yours seen in the thread, no ladder started (the lead wrote again, or another "
+                     "card of theirs is waiting)" % (recorded, "y" if recorded == 1 else "ies"))
     failed = counts.get("check_failed", 0)
     if failed:
         lines.append("%d thread check%s for your replies failed (Instantly or the store), retried next tick"
@@ -291,6 +300,7 @@ def run(now: datetime, store: Store, instantly: Any = None, ghl: Any = None, dry
     ct = slot_rules.to_tz(now)
     results = []  # type: List[Dict[str, Any]]
     candidates = []  # type: List[Any]
+    candidate_errors = []  # type: List[Dict[str, Any]]
     keys = store.keys("lead:")
     for key in keys:
         raw = store.get(key)
@@ -303,8 +313,13 @@ def run(now: datetime, store: Store, instantly: Any = None, ghl: Any = None, dry
             results.append({"key": key, "action": "error", "error": str(exc)})
             continue
         if not (getattr(state, "cadence", None) or {}).get("armed_at"):
-            if cadence.is_first_reply_candidate(state, ct):
-                candidates.append((key, state))
+            try:
+                if cadence.is_first_reply_candidate(state, ct):
+                    candidates.append((key, state))
+            except Exception as exc:  # noqa: BLE001 - one bad row must not stop the tick
+                logger.warning("could not tell whether %s is a first-reply candidate: %s", key, exc)
+                candidate_errors.append({"key": key, "lead_email": getattr(state, "lead_email", None),
+                                         "action": "check_failed", "error": str(exc)})
             continue
         if not _claim(store, key, ct, dry_run):
             results.append({"key": key, "lead_email": getattr(state, "lead_email", None), "action": "locked"})
@@ -360,7 +375,7 @@ def run(now: datetime, store: Store, instantly: Any = None, ghl: Any = None, dry
         res["key"] = key
         results.append(res)
 
-    first_replies = _detect_first_replies(candidates, ct, store, instantly, dry_run)
+    first_replies = candidate_errors + _detect_first_replies(candidates, ct, store, instantly, dry_run)
     first_reply_counts = {}  # type: Dict[str, int]
     for r in first_replies:
         first_reply_counts[r.get("action", "?")] = first_reply_counts.get(r.get("action", "?"), 0) + 1
