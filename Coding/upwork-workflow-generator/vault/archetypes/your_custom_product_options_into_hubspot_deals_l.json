@@ -16,9 +16,9 @@
     },
     {
       "key": "tokens",
-      "label": "3 - DEAL WITH OPTIONS FOR YOUR EMAIL TOKENS",
+      "label": "3 - OPTIONS FOR YOUR EMAIL TOKENS AND ABANDONED CHECKOUT",
       "color": 0,
-      "note": "Your Automated HubSpot Workflows & Personalization and Email Template Setup: the deal carries the order's options and the contact its last-order tokens and product image, which your post-purchase, upsell and re-engagement sequences and drag-and-drop templates pull in. Abandoned checkout is room to add next, the same mapping on Shopify's checkout webhook; step 6 sends the deal ID back to the order for the two-way sync."
+      "note": "Your Automated HubSpot Workflows & Personalization and Email Template Setup: the deal carries the order's options and the contact its last-order tokens and product image, which your post-purchase, upsell and re-engagement sequences and drag-and-drop templates pull in. Abandoned checkout runs on Shopify's checkout webhook: the cart's options and recovery link land on the contact, so your abandoned cart sequence shows exactly what they picked, and a completed order clears the link. Step 6 sends the deal ID back to the order for the two-way sync."
     },
     {
       "key": "report",
@@ -123,7 +123,8 @@
                 "last_order_date": "{{formatDate(1.created_at; YYYY-MM-DD)}}",
                 "last_order_product": "{{3.data.data.order.lineItems.nodes[1].title}}",
                 "last_order_image_url": "{{3.data.data.order.lineItems.nodes[1].image.url}}",
-                "last_order_engraving": "{{first(map(3.data.data.order.lineItems.nodes[1].customAttributes; value; key; Engraving Text))}}"
+                "last_order_engraving": "{{first(map(3.data.data.order.lineItems.nodes[1].customAttributes; value; key; Engraving Text))}}",
+                "abandoned_cart_url": ""
               }
             }
           ]
@@ -268,6 +269,45 @@
           ]
         }
       }
+    },
+    {
+      "key": "cart_hook",
+      "kind": "trigger.webhook",
+      "label": "9 - Shopify Checkout Created or Updated: Webhook Fires",
+      "section": "tokens",
+      "notes": "Shopify's checkout webhook carries each cart line's properties and the recovery link."
+    },
+    {
+      "key": "cart_contact",
+      "kind": "net.http",
+      "label": "10 - HubSpot: Save the Cart's Options and Recovery Link on the Contact",
+      "section": "tokens",
+      "notes": "Your abandoned cart workflow in HubSpot reads these, and the next order clears the link.",
+      "params": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/batch/upsert",
+        "headers": {
+          "Authorization": "Bearer PASTE-YOUR-HUBSPOT-PRIVATE-APP-TOKEN"
+        },
+        "body": {
+          "inputs": [
+            {
+              "idProperty": "email",
+              "id": "{{12.email}}",
+              "properties": {
+                "email": "{{12.email}}",
+                "firstname": "{{12.customer.first_name}}",
+                "abandoned_cart_product": "{{12.line_items[1].title}} {{12.line_items[1].variant_title}}",
+                "abandoned_cart_engraving": "{{first(map(12.line_items[1].properties; value; name; Engraving Text))}}",
+                "abandoned_cart_font": "{{first(map(12.line_items[1].properties; value; name; Font))}}",
+                "abandoned_cart_value": "{{12.total_price}}",
+                "abandoned_cart_url": "{{12.abandoned_checkout_url}}",
+                "abandoned_cart_date": "{{formatDate(12.updated_at; YYYY-MM-DD)}}"
+              }
+            }
+          ]
+        }
+      }
     }
   ],
   "edges": [
@@ -308,6 +348,10 @@
     {
       "from": "split",
       "to": "lineitem"
+    },
+    {
+      "from": "cart_hook",
+      "to": "cart_contact"
     }
   ],
   "input_sample": {
@@ -387,7 +431,15 @@
       "product_lead_time": "10 business days",
       "associated_deal": "18877332211"
     },
-    "shopify_order_metafield": "hubspot.deal_id = 18877332211"
+    "shopify_order_metafield": "hubspot.deal_id = 18877332211",
+    "abandoned_checkout": {
+      "email": "marcus.reid@outlook.com",
+      "abandoned_cart_product": "Custom Walnut Cutting Board Medium",
+      "abandoned_cart_engraving": "Reid Kitchen",
+      "abandoned_cart_font": "Script",
+      "abandoned_cart_value": "96.00",
+      "abandoned_cart_url": "https://walnut-and-oak.myshopify.com/61234567890/checkouts/ac1f4e9b2d/recover?key=9d2e71"
+    }
   },
   "archetype": "your_custom_product_options_into_hubspot_deals_l",
   "learned": true,
