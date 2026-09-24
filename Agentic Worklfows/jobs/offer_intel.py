@@ -7,7 +7,8 @@ Runbook: runbooks/offer_intel.md.
 CLI (from "Agentic Worklfows/"):
     python3 jobs/offer_intel.py rehearse                    # whole pipeline on made-up posts, free, no network
     python3 jobs/offer_intel.py look                        # Mac: log-in check, categories, payload keys
-    python3 jobs/offer_intel.py collect --url "<wins category URL>" --max-posts 40
+    python3 jobs/offer_intel.py collect --via mcp --url "<wins category URL>" --max-posts 40   # the Mac path
+    python3 jobs/offer_intel.py collect --url "<wins category URL>" --max-posts 40   # Playwright
     python3 jobs/offer_intel.py analyze --sample 30 --preflight          # price only, spends nothing
     ALLOW_PAID_CALLS=1 python3 jobs/offer_intel.py analyze --sample 30   # gate + extract, billed
     python3 jobs/offer_intel.py report [--review]           # free: CSVs, digest, hand-check sheet
@@ -52,9 +53,13 @@ def do_look(group: str, headless: bool) -> Dict[str, Any]:
 
 
 def do_collect(url: str, max_pages: int, max_posts: int, since: Optional[datetime], threads: bool,
-               headless: bool) -> Dict[str, Any]:
-    result = asyncio.run(skool_read.collect(url, max_pages=max_pages, max_posts=max_posts, since=since,
-                                            threads=threads, headless=headless))
+               headless: bool, via: str = "playwright") -> Dict[str, Any]:
+    if via == "mcp":  # skool-mcp's logged-in client; --headless does not apply
+        result = skool_read.collect_mcp(url, max_pages=max_pages, max_posts=max_posts, since=since,
+                                        threads=threads)
+    else:
+        result = asyncio.run(skool_read.collect(url, max_pages=max_pages, max_posts=max_posts, since=since,
+                                                threads=threads, headless=headless))
     log_run(JOB, "collect_%s" % result["status"], result)
     return result
 
@@ -144,7 +149,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--max-posts", type=int, default=40)
     p.add_argument("--since", help="YYYY-MM-DD: skip posts created before this day")
     p.add_argument("--no-threads", action="store_true", help="skip opening each post for the author's replies")
-    p.add_argument("--headless", action="store_true")
+    p.add_argument("--headless", action="store_true", help="Playwright only")
+    p.add_argument("--via", choices=("playwright", "mcp"), default="playwright",
+                   help="mcp: skool-mcp's logged-in client (the path that works on the Mac)")
 
     p = sub.add_parser("analyze", help="gate + extract the posts not analyzed yet (billed)")
     p.add_argument("--sample", type=int, default=0, help="only the N newest pending posts")
@@ -168,7 +175,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             result = do_look(args.group, args.headless)
         elif args.cmd == "collect":
             result = do_collect(args.url, args.max_pages, args.max_posts, _parse_day(args.since),
-                                not args.no_threads, args.headless)
+                                not args.no_threads, args.headless, via=args.via)
         elif args.cmd == "analyze":
             result = do_analyze(args.sample, args.force, args.preflight, now)
         elif args.cmd == "report":
