@@ -1,6 +1,7 @@
 """Section 2 no-show ladder (2026-09-23; go-live timing and copy 2026-09-24):
 N1 at S+5, the count 1 / 2 / 3 ladders and their timing, fresh slots with the "taken" line, the nurture
-hand-off, the reply stop, the signed-off copy, zero HTTP in shadow."""
+hand-off, the reply stop, the signed-off copy, the 8 h spacing between ladder emails (late emails, and
+no-shows flagged late by hand), zero HTTP in shadow."""
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -614,4 +615,424 @@ def test_n6_never_reoffers_a_time_the_lead_still_holds(tmp_env, shadow_mode):
     out = ns.run_recovery(slots.parse_iso(armed(store, "ns_d5_yes_no_email")), store, ghl, slots_fn=day_2_again)
     assert out["would_do"] == [] and [e["error"] for e in out["errors"]] == ["no_slots"]
     assert sorted(store.get(ns.OFFERED_SLOTS_KEY)) == sorted(PAIRS[2] + PAIRS[3])  # still both held
+    assert rec.requests == []
+
+
+# ------------------------------------------------------------ a no-show flagged late
+# The go-live path while the Discovery Call calendar is on Google Meet: no Zoom
+# data, so detection says "unknown" at S+10 and asks Lorenzo; he sets noshow in
+# GHL by hand and the 10-minute tick picks it up, up to a day later or more. N3
+# goes at the flag. No email of the ladder may then reach the lead less than
+# SUPERSEDE_MARGIN (8 h) after it: N4 due minutes later ("Those two times got
+# taken") closes, the next day email goes on its own day, and the ladder's last
+# email waits for the end of the margin instead of closing.
+TICK = timedelta(minutes=10)
+
+
+def ct(text):
+    """A Central (CDT) time: ct("2026-09-25 08:40")."""
+    return datetime.fromisoformat(text.replace(" ", "T") + ":00-05:00")
+
+
+class LateRun(object):
+    def __init__(self):
+        self.sent = []          # (when, template)
+        self.emails = {}        # template -> the shadow-log payload
+        self.skipped = []       # (when, template, reason)
+        self.deferred = []      # (when, template, reason, until)
+        self.stage_moves = []   # (when, stage / note)
+        self.nurture = []       # (when, status)
+        self.held_after = {}    # template -> the times held for the lead right after it went
+        self.registry_errors = []
+
+
+def held_times(store, appt, now):
+    """(record, recovery-only key, approval's registry): the times held for
+    this lead from ``now`` on. The record's view is every offer that reached
+    the lead and no later email called taken (held_offers) plus the claims of
+    slot emails still pending; both registries must hold exactly those."""
+    record = store.get(ns.recovery_key(appt["id"], slots.parse_iso(appt["start_iso"]).isoformat())) or {}
+    mine = set(record.get("held_offers") or [])
+    for t in record.get("touches") or []:
+        if not t.get("sent") and not t.get("skipped"):
+            mine |= set(_isos(t.get("slots")))
+    recovery = [r.get("slot") if isinstance(r, dict) else r for r in store.get(ns.OFFERED_SLOTS_KEY) or []]
+    approval_rows = [r["slot"] for r in store.get("offered_slots") or []
+                     if r.get("lead") == appt["email"] and r.get("source") == ns.RECOVERY_CLAIM_SOURCE
+                     and r.get("appointment") == appt["id"]]
+
+    def ahead(isos):
+        return sorted(i for i in isos if slots.parse_iso(i) >= now)
+
+    return ahead(mine), ahead(recovery), ahead(approval_rows)
+
+
+def run_ticks(store, ghl, appt, first, last, run=None, joins=None, step=TICK):
+    """The tick from ``first`` to ``last`` every ``step`` (10 minutes), as
+    jobs/appointments_tick runs it (no_show.process with run_ladder=False,
+    then the recovery sweep), with GHL's free times replaced by the synthetic
+    grid (no token). The slot registries are checked after every tick."""
+    run = run or LateRun()
+    for now in ticks(first, last, step):
+        ns.process(now, appt, joins or [], store, ghl, run_ladder=False)
+        out = ns.run_recovery(now, store, ghl, upcoming_appointments=[])
+        for e in out["would_do"]:
+            run.sent.append((now, e["template"]))
+            run.emails[e["template"]] = last_email()
+            run.held_after[e["template"]] = held_times(store, appt, now)[1]
+        run.skipped += [(now, e["template"], e["reason"]) for e in out["skipped"]]
+        run.deferred += [(now, e["template"], e["reason"], e.get("until")) for e in out["deferred"]]
+        run.stage_moves += [(now, (m.get("payload") or {}).get("stage") or (m.get("payload") or {}).get("note"))
+                            for m in out["stage_moves"]]
+        run.nurture += [(now, n["status"]) for n in out["nurture"]]
+        mine, recovery, approval_rows = held_times(store, appt, now)
+        if not mine == recovery == approval_rows:
+            run.registry_errors.append((now, mine, recovery, approval_rows))
+    return run
+
+
+def meet_miss(store, ghl, appt, flag, last, count_before=0):
+    """No Zoom data at S+10 ("unknown", a task for Lorenzo), then GHL says
+    noshow and the tick flags the miss at ``flag``."""
+    start = slots.parse_iso(appt["start_iso"])
+    if count_before:
+        store.set(ns.count_key_for(appt["contact_id"]), count_before)
+    first = ns.process(start + timedelta(minutes=10), appt, [], store, ghl, run_ladder=False)
+    assert first["verdict"] == "unknown" and first["events"] == ["no_telemetry"]
+    marked = dict(appt, ghl_status="noshow")
+    res = ns.process(flag, marked, [], store, ghl, run_ladder=False)
+    assert res["events"] == ["no_show"] and res["no_show_count"] == count_before + 1
+    return run_ticks(store, ghl, marked, flag, last)
+
+
+def assert_spaced(run):
+    """No two ladder emails reached the lead less than SUPERSEDE_MARGIN apart."""
+    for (t1, k1), (t2, k2) in zip(run.sent, run.sent[1:]):
+        assert t2 - t1 >= ns.SUPERSEDE_MARGIN, (k1, t1, k2, t2)
+
+
+def assert_fresh_offers(store, appt):
+    """Every slot email that went out offered two times this lead was never
+    offered before, and each "taken" email came after an earlier offer."""
+    seen, offered_before = [], False
+    for t in touches(store, appt):
+        if not t.get("sent"):
+            continue
+        if t["template_key"] in ns.TAKEN_TEMPLATES:
+            assert offered_before, t["template_key"]
+        if t["template_key"] in ns.SLOT_TEMPLATES:
+            pair = _isos(t.get("slots"))
+            assert len(pair) == 2 and not set(pair) & set(seen), (t["template_key"], pair, seen)
+            seen += pair
+            offered_before = True
+
+
+def pair_of(store, key, appt):
+    return sorted(_isos([t for t in touches(store, appt) if t["template_key"] == key][0].get("slots")))
+
+
+def ahead_of(isos, now):
+    return sorted(i for i in isos if slots.parse_iso(i) >= now)
+
+
+def test_marked_by_hand_the_next_morning_before_n4_n3_goes_and_n4_closes(tmp_env, shadow_mode):
+    """Thursday 15:00 CT call, Eastern lead, marked Friday 08:40 CT: N4 is due
+    at 09:00 CT (10:00 ET). It never goes; N5 goes Monday on its own day."""
+    store = JsonFileStore(tmp_env / "s.json")
+    ghl, rec = make_ghl()
+    appt = dict(APPT, id="appt-late-am")
+    run = meet_miss(store, ghl, appt, ct("2026-09-25 08:40"), ct("2026-10-06 12:00"))
+    assert [(t["template_key"], t["when_iso"]) for t in touches(store, appt)] == [
+        (ns.N3, "2026-09-25T08:40:00-05:00"), (ns.N4, "2026-09-25T09:00:00-05:00"),
+        (ns.N5, "2026-09-28T09:00:00-05:00"), (ns.N9, "2026-09-29T09:00:00-05:00"),
+        (ns.N6, "2026-10-01T09:00:00-05:00"), (ns.N7, "2026-10-05T09:00:00-05:00")]
+    assert run.sent == [(ct("2026-09-25 08:40"), ns.N3), (ct("2026-09-28 09:00"), ns.N5),
+                        (ct("2026-09-29 09:00"), ns.N9), (ct("2026-10-01 09:00"), ns.N6),
+                        (ct("2026-10-05 09:00"), ns.N7)]
+    assert run.skipped == [(ct("2026-09-25 09:00"), ns.N4, "superseded")]
+    assert_spaced(run)
+    assert_fresh_offers(store, appt)
+    assert run.registry_errors == []
+    n3, n5, n9, n6 = (pair_of(store, k, appt) for k in (ns.N3, ns.N5, ns.N9, ns.N6))
+    assert pair_of(store, ns.N4, appt) == []  # N4 never held anything
+    assert run.held_after[ns.N3] == n3
+    # N5's "taken" line is true (N3's pair reached the lead) and gives N3's pair back
+    assert "The last two times got taken" in run.emails[ns.N5]["message"]
+    assert ahead_of(n3, ct("2026-09-28 09:00"))  # N3 offered a time still ahead on Monday morning...
+    assert run.held_after[ns.N5] == ahead_of(n5, ct("2026-09-28 09:00"))  # ...released once N5 called it taken
+    assert run.held_after[ns.N9] == ahead_of(n5 + n9, ct("2026-09-29 09:00"))
+    assert run.held_after[ns.N6] == ahead_of(n6, ct("2026-10-01 09:00"))
+    assert run.stage_moves == [(ct("2026-10-05 09:00"), "follow_up_later")]
+    assert run.nurture == [(ct("2026-10-05 09:00"), "done")]
+    assert rec.requests == []
+
+
+def test_marked_by_hand_the_next_afternoon_after_n4_time(tmp_env, shadow_mode):
+    """Marked Friday 14:00 CT, after N4's 09:00: N3 at the flag, N4 closes on
+    the next tick instead of going ten minutes after N3."""
+    store = JsonFileStore(tmp_env / "s.json")
+    ghl, rec = make_ghl()
+    appt = dict(APPT, id="appt-late-pm")
+    run = meet_miss(store, ghl, appt, ct("2026-09-25 14:00"), ct("2026-10-06 12:00"))
+    assert run.sent == [(ct("2026-09-25 14:00"), ns.N3), (ct("2026-09-28 09:00"), ns.N5),
+                        (ct("2026-09-29 09:00"), ns.N9), (ct("2026-10-01 09:00"), ns.N6),
+                        (ct("2026-10-05 09:00"), ns.N7)]
+    assert run.skipped == [(ct("2026-09-25 14:10"), ns.N4, "superseded")]
+    assert_spaced(run)
+    assert_fresh_offers(store, appt)
+    assert run.registry_errors == []
+    assert "The last two times got taken" in run.emails[ns.N5]["message"]
+    assert run.held_after[ns.N5] == ahead_of(pair_of(store, ns.N5, appt), ct("2026-09-28 09:00"))
+    assert run.stage_moves == [(ct("2026-10-05 09:00"), "follow_up_later")]
+    assert rec.requests == []
+
+
+def test_marked_by_hand_two_and_three_business_days_later(tmp_env, shadow_mode):
+    ghl, rec = make_ghl()
+    # Monday 14:00 CT (business day 2): N4 (Friday) and N5 (Monday 09:00) are
+    # past. N3 at the flag; N4 is too late and N5 closes; N9 goes Tuesday on
+    # its own day and keeps N3's pair held next to its own (it calls nothing
+    # taken), N6 gives both back.
+    store = JsonFileStore(tmp_env / "s-monday.json")
+    appt = dict(APPT, id="appt-late-bd2")
+    run = meet_miss(store, ghl, appt, ct("2026-09-28 14:00"), ct("2026-10-06 12:00"))
+    assert run.sent == [(ct("2026-09-28 14:00"), ns.N3), (ct("2026-09-29 09:00"), ns.N9),
+                        (ct("2026-10-01 09:00"), ns.N6), (ct("2026-10-05 09:00"), ns.N7)]
+    assert run.skipped == [(ct("2026-09-28 14:10"), ns.N4, "too_late"), (ct("2026-09-28 14:10"), ns.N5, "superseded")]
+    assert_spaced(run)
+    assert_fresh_offers(store, appt)
+    assert run.registry_errors == []
+    n3, n9, n6 = (pair_of(store, k, appt) for k in (ns.N3, ns.N9, ns.N6))
+    assert run.held_after[ns.N9] == ahead_of(n3 + n9, ct("2026-09-29 09:00"))
+    assert "the last two times got taken" in run.emails[ns.N6]["message"]
+    assert run.held_after[ns.N6] == ahead_of(n6, ct("2026-10-01 09:00"))
+    assert run.stage_moves == [(ct("2026-10-05 09:00"), "follow_up_later")]
+
+    # Tuesday 10:00 CT (business day 3), after N9's 09:00: N9 is due already,
+    # so N3 closes under the rule for a late email (the next email that can
+    # still go is due) and N9 is the first email; N6 then says N9's times were
+    # taken, which is true.
+    store = JsonFileStore(tmp_env / "s-tuesday.json")
+    appt = dict(APPT, id="appt-late-bd3")
+    run = meet_miss(store, ghl, appt, ct("2026-09-29 10:00"), ct("2026-10-06 12:00"))
+    assert run.sent == [(ct("2026-09-29 10:00"), ns.N9), (ct("2026-10-01 09:00"), ns.N6),
+                        (ct("2026-10-05 09:00"), ns.N7)]
+    assert run.skipped == [(ct("2026-09-29 10:00"), ns.N3, "superseded"), (ct("2026-09-29 10:00"), ns.N4, "too_late"),
+                           (ct("2026-09-29 10:00"), ns.N5, "too_late")]
+    assert_spaced(run)
+    assert_fresh_offers(store, appt)
+    assert run.registry_errors == []
+    assert pair_of(store, ns.N3, appt) == []
+    assert run.held_after[ns.N9] == ahead_of(pair_of(store, ns.N9, appt), ct("2026-09-29 10:00"))
+    assert "the last two times got taken" in run.emails[ns.N6]["message"]
+    assert run.stage_moves == [(ct("2026-10-05 09:00"), "follow_up_later")]
+    assert rec.requests == []
+
+
+def test_a_second_miss_flagged_late_still_hands_off(tmp_env, shadow_mode):
+    """Second miss: N3 (.repeat) at the flag, N6 3 business days after the
+    call, then the pattern note and nurture. N6 is the ladder's last email: when
+    the flag comes on N6's own day it waits 8 h after N3 instead of closing."""
+    ghl, rec = make_ghl()
+    # flagged the next morning: N6 on its own day
+    store = JsonFileStore(tmp_env / "s-next-day.json")
+    appt = dict(APPT, id="appt-2nd-a")
+    run = meet_miss(store, ghl, appt, ct("2026-09-25 08:40"), ct("2026-10-01 12:00"), count_before=1)
+    assert [(t["template_key"], t["when_iso"]) for t in touches(store, appt)] == [
+        (ns.N3, "2026-09-25T08:40:00-05:00"), (ns.N6, "2026-09-29T09:00:00-05:00")]
+    assert run.sent == [(ct("2026-09-25 08:40"), ns.N3), (ct("2026-09-29 09:00"), ns.N6)]
+    assert run.emails[ns.N3]["subject"] == "Missed you again"
+    assert run.skipped == [] and run.deferred == []
+    assert run.stage_moves == [(ct("2026-09-29 09:00"), "note:second_no_show_pattern")]
+    assert run.nurture == [(ct("2026-09-29 09:00"), "done")]
+    assert_spaced(run)
+    assert_fresh_offers(store, appt)
+    assert run.registry_errors == []
+
+    # flagged on N6's morning, before its 09:00: N6 waits until N3 + 8 h
+    store = JsonFileStore(tmp_env / "s-same-morning.json")
+    appt = dict(APPT, id="appt-2nd-b", contact_id="contact-2nd-b", email="b@taxfo.test")
+    run = meet_miss(store, ghl, appt, ct("2026-09-29 08:40"), ct("2026-10-01 12:00"), count_before=1)
+    assert run.sent == [(ct("2026-09-29 08:40"), ns.N3), (ct("2026-09-29 16:40"), ns.N6)]
+    assert run.deferred == [(ct("2026-09-29 09:00"), ns.N6, "spacing_wait", "2026-09-29T16:40:00-05:00")]
+    assert run.skipped == []
+    n6 = [t for t in touches(store, appt) if t["template_key"] == ns.N6][0]
+    assert (n6["rearmed_from"], n6["when_iso"]) == ("2026-09-29T09:00:00-05:00", "2026-09-29T16:40:00-05:00")
+    assert "the last two times got taken" in run.emails[ns.N6]["message"]  # true: N3's pair reached the lead
+    assert run.held_after[ns.N6] == ahead_of(pair_of(store, ns.N6, appt), ct("2026-09-29 16:40"))
+    assert run.stage_moves == [(ct("2026-09-29 16:40"), "note:second_no_show_pattern")]
+    assert run.nurture == [(ct("2026-09-29 16:40"), "done")]
+    assert_spaced(run)
+    assert_fresh_offers(store, appt)
+    assert run.registry_errors == []
+
+    # a Tuesday call, N6 due Friday 09:00; flagged Friday 14:00: the end of the
+    # margin is Friday night, so N6 goes Monday 07:00 CT (08:00 ET), within its
+    # lateness from the new time, and still hands off
+    tuesday = dict(APPT, id="appt-2nd-c", contact_id="contact-2nd-c", email="c@taxfo.test",
+                   start_iso="2026-09-29T15:00:00-05:00", end_iso="2026-09-29T15:15:00-05:00")
+    store = JsonFileStore(tmp_env / "s-friday.json")
+    run = meet_miss(store, ghl, tuesday, ct("2026-10-02 14:00"), ct("2026-10-06 12:00"), count_before=1)
+    assert run.sent == [(ct("2026-10-02 14:00"), ns.N3), (ct("2026-10-05 07:00"), ns.N6)]
+    assert run.deferred == [(ct("2026-10-02 14:10"), ns.N6, "spacing_wait", "2026-10-05T07:00:00-05:00")]
+    assert run.skipped == []
+    assert run.stage_moves == [(ct("2026-10-05 07:00"), "note:second_no_show_pattern")]
+    assert run.nurture == [(ct("2026-10-05 07:00"), "done")]
+    assert_spaced(run)
+    assert_fresh_offers(store, tuesday)
+    assert run.registry_errors == []
+    assert rec.requests == []
+
+
+def test_a_third_miss_flagged_late_closes_the_file(tmp_env, shadow_mode):
+    store = JsonFileStore(tmp_env / "s.json")
+    ghl, rec = make_ghl()
+    appt = dict(APPT, id="appt-3rd")
+    run = meet_miss(store, ghl, appt, ct("2026-09-25 08:40"), ct("2026-09-26 12:00"), count_before=2)
+    assert run.sent == [(ct("2026-09-25 08:40"), ns.N8)]
+    assert run.emails[ns.N8]["subject"] == "Closing this out"
+    assert run.stage_moves == [(ct("2026-09-25 08:40"), "lost")]
+    assert run.nurture == [(ct("2026-09-25 08:40"), "done")]
+    assert_spaced(run)
+    assert run.skipped == [] and run.registry_errors == []
+    assert store.get(ns.OFFERED_SLOTS_KEY) is None  # N8 offers no times
+    assert rec.requests == []
+
+
+def test_an_email_that_may_have_gone_counts_for_the_spacing(tmp_env, shadow_mode, monkeypatch):
+    """N3's send may have been delivered (maybe_sent: closed, never retried).
+    It counts as having reached the lead: N4 ten minutes later closes."""
+    store = JsonFileStore(tmp_env / "s.json")
+    ghl, rec = make_ghl()
+
+    def maybe_n3(touch, *a, **kw):
+        if touch.template_key == ns.N3:
+            return {"status": ns.MAYBE_SENT, "reason": "send_failed", "error": "timeout",
+                    "transport": "instantly_thread"}
+        return REAL_DISPATCH(touch, *a, **kw)
+
+    monkeypatch.setattr(ns.sr, "dispatch_touch", maybe_n3)
+    appt = dict(APPT, id="appt-maybe")
+    run = meet_miss(store, ghl, appt, ct("2026-09-25 08:40"), ct("2026-09-25 09:10"))
+    n3 = [t for t in touches(store, appt) if t["template_key"] == ns.N3][0]
+    assert n3["maybe_sent"] and n3["maybe_sent_at"] == "2026-09-25T08:40:00-05:00" and not n3.get("sent")
+    assert run.sent == [] and run.skipped == [(ct("2026-09-25 09:00"), ns.N4, "superseded")]
+    # N3's times may have reached the lead: they stay held until an email calls them taken
+    n3_pair = pair_of(store, ns.N3, appt)
+    assert len(n3_pair) == 2
+    assert held_times(store, appt, ct("2026-09-25 09:10"))[1] == ahead_of(n3_pair, ct("2026-09-25 09:10"))
+    run = run_ticks(store, ghl, dict(appt, ghl_status="noshow"), ct("2026-09-25 09:20"), ct("2026-09-28 12:00"),
+                    run=run)
+    assert run.sent == [(ct("2026-09-28 09:00"), ns.N5)]
+    assert run.sent[0][0] - slots.parse_iso(n3["maybe_sent_at"]) >= ns.SUPERSEDE_MARGIN
+    assert run.held_after[ns.N5] == ahead_of(pair_of(store, ns.N5, appt), ct("2026-09-28 09:00"))
+    assert run.registry_errors == []
+    assert rec.requests == []
+
+
+def test_the_spacing_rule_on_a_bare_record():
+    base = {"appointment_id": APPT["id"], "contact_id": APPT["contact_id"], "channel": "email", "body": "x"}
+    rec = {"touches": [
+        dict(base, key="n3", template_key=ns.N3, when_iso="2026-09-25T08:40:00-05:00", sent=True,
+             sent_at="2026-09-25T08:40:00-05:00"),
+        dict(base, key="n4", template_key=ns.N4, when_iso="2026-09-25T09:00:00-05:00"),
+        dict(base, key="n5", template_key=ns.N5, when_iso="2026-09-28T09:00:00-05:00"),
+        dict(base, key="n7", template_key=ns.N7, when_iso="2026-09-25T09:00:00-05:00",
+             meta={"after": "stage:follow_up_later", "nurture": True})]}
+    # N4 less than 8 h after N3 reached the lead: closed; 8 h and more: free to go
+    assert ns._superseded_reason("n4", rec, APPT, ct("2026-09-25 09:00")) == "superseded"
+    assert ns._superseded_reason("n4", rec, APPT, ct("2026-09-25 16:39")) == "superseded"
+    assert ns._superseded_reason("n4", rec, APPT, ct("2026-09-25 16:40")) is None
+    # the last touch is never superseded: it waits for the end of the margin,
+    # moved into the send window (16:40 CT is 17:40 ET, inside both)
+    assert ns._superseded_reason("n7", rec, APPT, ct("2026-09-25 09:00")) is None
+    assert ns._spacing_wait("n7", rec, APPT, ct("2026-09-25 09:00")) == ct("2026-09-25 16:40")
+    assert ns._spacing_wait("n7", rec, APPT, ct("2026-09-25 16:40")) is None
+    assert ns._spacing_wait("n4", rec, APPT, ct("2026-09-25 09:00")) is None  # only the last touch waits
+    # the end of the margin past 19:00 CT on a Friday: Monday 07:00 CT (08:00 ET)
+    late = {"touches": [dict(rec["touches"][0], sent_at="2026-09-25T13:00:00-05:00"), rec["touches"][3]]}
+    assert ns._spacing_wait("n7", late, APPT, ct("2026-09-25 13:10")) == ct("2026-09-28 07:00")
+    # maybe sent counts, from its own stamp; an older record without one uses the armed time
+    maybe = {"touches": [dict(rec["touches"][0], sent=False, sent_at=None, skipped=True, maybe_sent=True,
+                              maybe_sent_at="2026-09-25T08:50:00-05:00"), rec["touches"][1], rec["touches"][2]]}
+    assert ns._superseded_reason("n4", maybe, APPT, ct("2026-09-25 16:45")) == "superseded"
+    maybe["touches"][0].pop("maybe_sent_at")
+    assert ns._superseded_reason("n4", maybe, APPT, ct("2026-09-25 16:45")) is None
+    # nothing reached the lead yet: no spacing (the other rules still apply)
+    fresh = {"touches": [dict(rec["touches"][0], sent=False, sent_at=None)] + rec["touches"][1:]}
+    assert ns._last_reached_before(fresh, "n4") is None
+
+
+def test_on_time_n3_and_the_first_day_email_are_always_more_than_12_hours_apart():
+    """The proof behind "the on-time ladder never meets the margin": for every
+    call start in the offer window (12:00-17:45 CT), every weekday and a spread
+    of zones, N3 at S+25 goes by 18:10 CT and the first day email (N4, or N6 on
+    a second miss) at 07:00 CT on the next business day at the earliest, at
+    least 12 h 50 min later."""
+    zones = [None, "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
+             "America/Anchorage", "Pacific/Honolulu", "America/Sao_Paulo", "Europe/London", "Europe/Berlin",
+             "Asia/Kolkata", "Asia/Singapore", "Asia/Tokyo", "Australia/Sydney", "Pacific/Auckland"]
+    closest = None
+    for day in range(21, 26):  # Monday 2026-09-21 .. Friday 2026-09-25
+        for minutes in range(0, 6 * 60, 15):  # 12:00 .. 17:45
+            start = ct("2026-09-%02d 12:00" % day) + timedelta(minutes=minutes)
+            flagged = start + timedelta(minutes=10)
+            n3 = ns.touch_time(ns.AT_S25, start, flagged)
+            assert n3 == start + timedelta(minutes=25) and (n3.hour, n3.minute) <= (18, 10)
+            next_day = ns._add_business_days(start.date(), 1)
+            for zone in zones:
+                lead_tz = ns.lead_tz_of({"lead_tz": zone})  # as the engine reads it; None is Central
+                assert (lead_tz is None) == (zone is None)
+                for rule in (ns.LADDERS[1][1][1], ns.LADDERS[2][1][1]):
+                    first_day = ns.touch_time(rule, start, flagged, lead_tz)
+                    assert first_day >= settings.TZ.localize(datetime(next_day.year, next_day.month, next_day.day, 7))
+                    gap = first_day - n3
+                    assert gap >= timedelta(hours=12, minutes=50), (start, zone, rule, first_day)
+                    closest = gap if closest is None else min(closest, gap)
+    assert closest == timedelta(hours=12, minutes=50)  # a 17:45 call, N4 at 07:00 CT the next business day
+
+
+def test_leads_in_asia_and_australia_on_time(tmp_env, shadow_mode):
+    """touch_time keeps each day email inside 07:00-19:00 for both CT and the
+    lead. For these zones the two windows overlap only an hour or three on a
+    CT afternoon (the next morning there), so an email for a Friday there
+    moves past the weekend and can land on the same CT afternoon as the next
+    email of the ladder. The earlier one then closes (superseded: the next is
+    due within 8 h) and the later one goes, so no two emails reach the lead
+    less than 8 h apart. Documented, not redesigned."""
+    ghl, rec = make_ghl()
+    cases = [
+        # Tokyo (07:00-09:00 JST is 17:00-19:00 CDT), Wednesday call: day 1 (Friday in Tokyo) and day 2
+        # (Monday) both land on Monday 17:00 CT
+        ("Asia/Tokyo", "2026-09-23 15:00",
+         [("2026-09-23 15:30", ns.N3), ("2026-09-28 17:00", ns.N5), ("2026-09-29 17:00", ns.N9),
+          ("2026-10-01 17:00", ns.N6), ("2026-10-05 17:00", ns.N7)],
+         [("2026-09-28 17:00", ns.N4, "superseded")]),
+        ("Asia/Singapore", "2026-09-23 15:00",
+         [("2026-09-23 15:30", ns.N3), ("2026-09-28 18:00", ns.N5), ("2026-09-29 18:00", ns.N9),
+          ("2026-10-01 18:00", ns.N6), ("2026-10-05 18:00", ns.N7)],
+         [("2026-09-28 18:00", ns.N4, "superseded")]),
+        # Sydney, Thursday call: day 5 (a Friday there) moves to Monday 15:00 CT, three hours before day 7
+        ("Australia/Sydney", "2026-09-24 15:00",
+         [("2026-09-24 15:30", ns.N3), ("2026-09-28 16:00", ns.N4), ("2026-09-29 16:00", ns.N5),
+          ("2026-09-30 16:00", ns.N9), ("2026-10-05 18:00", ns.N7)],
+         [("2026-10-05 15:00", ns.N6, "superseded")]),
+    ]
+    for zone, start_text, sent, skipped in cases:
+        store = JsonFileStore(tmp_env / ("s-%s.json" % zone.replace("/", "-")))
+        start = ct(start_text)
+        appt = dict(APPT, id="appt-%s" % zone, lead_tz=zone, start_iso=start.isoformat(),
+                    end_iso=(start + timedelta(minutes=15)).isoformat())
+        # Zoom data: flagged on time at S+10; then a tick on every half hour
+        # (every armed time here is on the hour or S+25)
+        assert ns.process(start + timedelta(minutes=10), appt, [host(appt)], store, ghl,
+                          run_ladder=False)["events"] == ["no_show"]
+        run = run_ticks(store, ghl, appt, start + timedelta(minutes=30), ct(sent[-1][0]) + TICK,
+                        joins=[host(appt)], step=timedelta(minutes=30))
+        assert run.sent == [(ct(w), k) for w, k in sent], zone
+        assert run.skipped == [(ct(w), k, r) for w, k, r in skipped], zone
+        assert_spaced(run)
+        assert_fresh_offers(store, appt)
+        assert run.registry_errors == [], zone
+        assert run.stage_moves == [(ct(sent[-1][0]), "follow_up_later")]
     assert rec.requests == []
