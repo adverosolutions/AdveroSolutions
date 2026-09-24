@@ -1,5 +1,11 @@
 # Section 1 status
 
+## NOW (2026-09-24, cloud chat)
+- P3a is on main (78d8720 has both commits); no rebase needed.
+- **P3b in progress**: builder running from `briefs/P3b_day0_detection.md`; then one reviewer round, section branch, full suite, main.
+- **P4 brief written**: `briefs/P4_e2_research_step.md` (research step, P1 review, spoken company name without LLC/Inc.). Finding: current Instantly leads carry `website` but no city or phone, so the agreed identity rule (city or phone on their own page) can only be met for list-factory leads (`phone`, `metro`); others get the approved fallback line. The step stays off (`E2_RESEARCH_MODE = "fallback"`) until Lorenzo OKs paid research calls.
+- Cloud test setup: the clone was shallow (the root check printed a graft; `git fetch --unshallow` fixes it); tests run on a uv Python 3.9 venv.
+
 ## HANDOFF (2026-09-23, end of the local chat; Lorenzo moved to the cloud)
 **On main:** nurture.enroll/leave, push privacy + Resume reminder cap + held-ladder digest line, the ten agreed follow-up emails E1..E10 (ladder rewrite, ids `cadence.e1`..`e10`), P2b (release earlier times, no-free-times retry, nurture handoffs). All reviewed, full suite green each time.
 **On `section/1-email-followup` but not yet on main:** P3a (first replies carry no booking link, reviewed APPROVE) as 1c4b230 + 86f54cb `shared:`. If main doesn't have them yet, first thing: rebase on origin/main, run the full suite, push to main.
