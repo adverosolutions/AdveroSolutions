@@ -1,0 +1,307 @@
+{
+  "title": "Your Make.com Lead Follow-Up and CRM Updates Into GoHighLevel",
+  "platform": "make",
+  "sections": [
+    {
+      "key": "follow",
+      "label": "1 - LEAD FOLLOW-UP",
+      "color": 0,
+      "note": "A new enquiry from your website form is read the moment it arrives and a first reply is written from what they actually asked. Spam and test entries stop at step 3, before anything is sent."
+    },
+    {
+      "key": "crm",
+      "label": "2 - CRM UPDATES",
+      "color": 0,
+      "note": "The lead is created in GoHighLevel, or updated if they are already there, and what they asked is saved on the contact as a note for whoever calls them back."
+    },
+    {
+      "key": "reliable",
+      "label": "3 - RELIABLE, CONNECTED, DATA FLOWING CORRECTLY",
+      "color": 0,
+      "note": "Your parts 3, 4 and 5: form, Make and GoHighLevel in one scenario, and a lead GoHighLevel refuses comes to your inbox with the reason. Failed runs nobody sees are the first gap I check in your current setup."
+    },
+    {
+      "key": "ongoing",
+      "label": "4 - ONGOING LEAD MANAGEMENT",
+      "color": 0,
+      "note": "New leads get a card in your pipeline, the first text and your follow-up sequence, and someone already in GoHighLevel who enquires again becomes a task for you. Room to add a booking step next, so the card moves when they book."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 - New Lead From Your Website Form",
+      "section": "follow",
+      "params": {
+        "path": "website-enquiries"
+      }
+    },
+    {
+      "key": "read",
+      "kind": "ai.llm",
+      "label": "2 - Read the Enquiry and Write the First Reply",
+      "section": "follow",
+      "notes": "Writes the reply from what they asked and saves UK numbers as +44 so GoHighLevel can text them.",
+      "params": {
+        "system_message": "You read new website enquiries for PASTE-YOUR-BUSINESS-NAME, a UK business that manages its leads in GoHighLevel. Services: PASTE-YOUR-SERVICE-LIST. Booking link: PASTE-YOUR-BOOKING-LINK. Write in British English, warm and brief, as the business (we), with no emojis and no exclamation marks. Never quote a price, promise a time slot or add anything the enquiry does not say.\nReturn one JSON object with these keys and nothing else:\nis_real_lead: true for anyone asking about a service, however short the message. false for spam, test entries, sales pitches, SEO or web design offers, link-only messages and gibberish.\nfirst_name, last_name: split from the full name with normal capitalisation. If only one name is given, leave last_name empty.\nemail: lowercased and trimmed. Empty if missing or clearly fake.\nphone: international format with no spaces, so GoHighLevel can text it. A UK mobile starting 07 becomes +447...; a number that already starts with + stays as it is; if you cannot tell the country, return it exactly as typed. Empty if there is none.\nservice: the closest match from the services list, or other.\nsummary: one sentence a colleague reads before calling them back, including anything time-sensitive they mentioned.\nsms_reply: the first text back, under 320 characters (two SMS segments). Use their first name, answer what they asked in one line and end with the booking link. If the message is empty, thank them for getting in touch and ask what they need help with.",
+        "prompt": "New enquiry from {{1.form_name}}, received {{1.submitted_at}}.\nFull name: {{1.full_name}}\nEmail: {{1.email}}\nPhone: {{1.phone}}\nMessage: {{1.message}}\n\nReturn the JSON object: is_real_lead, first_name, last_name, email, phone, service, summary, sms_reply.",
+        "response_format": "json_object"
+      }
+    },
+    {
+      "key": "real",
+      "kind": "flow.branch",
+      "label": "3 - Is It a Real Enquiry?",
+      "section": "follow"
+    },
+    {
+      "key": "spam",
+      "kind": "flow.noop",
+      "label": "3b - Spam or Test Entry: Stop, Nothing Sent",
+      "section": "follow"
+    },
+    {
+      "key": "upsert",
+      "kind": "net.http",
+      "label": "4 - GoHighLevel: Create or Update the Contact",
+      "section": "crm",
+      "notes": "Matched on email and phone, so a second enquiry updates the same contact instead of creating a duplicate.",
+      "params": {
+        "service": "gohighlevel",
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/contacts/upsert",
+        "headers": {
+          "Authorization": "Bearer PASTE-YOUR-GHL-API-KEY",
+          "Version": "2021-07-28",
+          "Accept": "application/json"
+        },
+        "body": {
+          "locationId": "PASTE-YOUR-GHL-LOCATION-ID",
+          "firstName": "{{3.result.first_name}}",
+          "lastName": "{{3.result.last_name}}",
+          "email": "{{3.result.email}}",
+          "phone": "{{3.result.phone}}",
+          "source": "Website form - {{1.form_name}}",
+          "tags": [
+            "website enquiry",
+            "{{3.result.service}}"
+          ]
+        }
+      }
+    },
+    {
+      "key": "note",
+      "kind": "net.http",
+      "label": "5 - GoHighLevel: Save the Enquiry as a Note",
+      "section": "crm",
+      "params": {
+        "service": "gohighlevel",
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/contacts/{{5.data.contact.id}}/notes",
+        "headers": {
+          "Authorization": "Bearer PASTE-YOUR-GHL-API-KEY",
+          "Version": "2021-07-28",
+          "Accept": "application/json"
+        },
+        "body": {
+          "body": "Website enquiry via {{1.form_name}} ({{3.result.service}}), {{1.submitted_at}}\n\nThey wrote: {{1.message}}\n\nSummary: {{3.result.summary}}"
+        }
+      }
+    },
+    {
+      "key": "saved",
+      "kind": "flow.branch",
+      "label": "6 - Did GoHighLevel Save the Lead?",
+      "section": "reliable"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "6b - Email You the Lead and What Went Wrong",
+      "app": "gmail",
+      "op": "send",
+      "section": "reliable",
+      "notes": "Their name, number and message, plus the reason GoHighLevel gave.",
+      "params": {
+        "to": [
+          "PASTE-YOUR-EMAIL"
+        ],
+        "subject": "Lead not saved in GoHighLevel: {{1.full_name}}",
+        "html": "<p>GoHighLevel did not save this enquiry, so it has not been texted or added to your follow-up sequence.</p><p>Name: {{1.full_name}}<br>Phone: {{1.phone}}<br>Email: {{1.email}}<br>Form: {{1.form_name}}<br>Received: {{1.submitted_at}}<br>Message: {{1.message}}</p><p>GoHighLevel said: {{5.statusCode}} {{5.data.message}}</p><p>The run is kept in Make under Incomplete executions; re-run it once the cause is fixed.</p>"
+      }
+    },
+    {
+      "key": "newlead",
+      "kind": "flow.switch",
+      "label": "7 - New Lead or Already in GoHighLevel?",
+      "section": "ongoing",
+      "notes": "Repeat enquiries go to you as a task rather than restarting the follow-up sequence."
+    },
+    {
+      "key": "opp",
+      "kind": "net.http",
+      "label": "8 - GoHighLevel: Add the Lead to Your Pipeline",
+      "section": "ongoing",
+      "params": {
+        "service": "gohighlevel",
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/opportunities/",
+        "headers": {
+          "Authorization": "Bearer PASTE-YOUR-GHL-API-KEY",
+          "Version": "2021-07-28",
+          "Accept": "application/json"
+        },
+        "body": {
+          "locationId": "PASTE-YOUR-GHL-LOCATION-ID",
+          "pipelineId": "PASTE-YOUR-GHL-PIPELINE-ID",
+          "pipelineStageId": "PASTE-YOUR-GHL-STAGE-ID",
+          "contactId": "{{5.data.contact.id}}",
+          "name": "{{3.result.first_name}} {{3.result.last_name}} - {{3.result.service}}",
+          "status": "open",
+          "source": "Website form"
+        }
+      }
+    },
+    {
+      "key": "text",
+      "kind": "net.http",
+      "label": "9 - GoHighLevel: Text the First Reply",
+      "section": "ongoing",
+      "params": {
+        "service": "gohighlevel",
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "headers": {
+          "Authorization": "Bearer PASTE-YOUR-GHL-API-KEY",
+          "Version": "2021-04-15",
+          "Accept": "application/json"
+        },
+        "body": {
+          "type": "SMS",
+          "contactId": "{{5.data.contact.id}}",
+          "message": "{{3.result.sms_reply}}"
+        }
+      }
+    },
+    {
+      "key": "sequence",
+      "kind": "net.http",
+      "label": "10 - GoHighLevel: Start Your Follow-Up Sequence",
+      "section": "ongoing",
+      "notes": "Your GoHighLevel follow-up texts and emails run from here until they reply or book.",
+      "params": {
+        "service": "gohighlevel",
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/contacts/{{5.data.contact.id}}/workflow/PASTE-YOUR-GHL-WORKFLOW-ID",
+        "headers": {
+          "Authorization": "Bearer PASTE-YOUR-GHL-API-KEY",
+          "Version": "2021-07-28",
+          "Accept": "application/json"
+        },
+        "body": {}
+      }
+    },
+    {
+      "key": "task",
+      "kind": "net.http",
+      "label": "7b - GoHighLevel: Task for You to Call Them Back",
+      "section": "ongoing",
+      "params": {
+        "service": "gohighlevel",
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/contacts/{{5.data.contact.id}}/tasks",
+        "headers": {
+          "Authorization": "Bearer PASTE-YOUR-GHL-API-KEY",
+          "Version": "2021-07-28",
+          "Accept": "application/json"
+        },
+        "body": {
+          "title": "Call back {{3.result.first_name}}: enquired again about {{3.result.service}}",
+          "body": "{{3.result.summary}}\n\nSuggested reply: {{3.result.sms_reply}}",
+          "dueDate": "{{addHours(now; 2)}}",
+          "completed": false
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "read"
+    },
+    {
+      "from": "read",
+      "to": "real"
+    },
+    {
+      "from": "real",
+      "to": "upsert",
+      "branch": "true"
+    },
+    {
+      "from": "real",
+      "to": "spam",
+      "branch": "false"
+    },
+    {
+      "from": "upsert",
+      "to": "note"
+    },
+    {
+      "from": "note",
+      "to": "saved"
+    },
+    {
+      "from": "saved",
+      "to": "newlead",
+      "branch": "true"
+    },
+    {
+      "from": "saved",
+      "to": "alert",
+      "branch": "false"
+    },
+    {
+      "from": "newlead",
+      "to": "opp",
+      "branch": "new lead"
+    },
+    {
+      "from": "newlead",
+      "to": "task",
+      "branch": "returning lead"
+    },
+    {
+      "from": "opp",
+      "to": "text"
+    },
+    {
+      "from": "text",
+      "to": "sequence"
+    }
+  ],
+  "input_sample": {
+    "full_name": "hannah whitlock",
+    "email": "Hannah.Whitlock@outlook.com",
+    "phone": "07700 900418",
+    "message": "Hi, I'd like to book an initial consultation. Are you free any evenings next week? Thanks",
+    "form_name": "Website contact form",
+    "submitted_at": "2026-09-24T18:42:00+01:00"
+  },
+  "output_sample": {
+    "ghl_contact_id": "vQ4nX8LrT2pZk6WmJ3sB",
+    "new_lead": true,
+    "contact": "Hannah Whitlock",
+    "phone_saved_as": "+447700900418",
+    "email_saved_as": "hannah.whitlock@outlook.com",
+    "service": "Initial consultation",
+    "note_saved": "They wrote: Hi, I'd like to book an initial consultation. Are you free any evenings next week?",
+    "pipeline_stage": "New enquiry",
+    "first_text_sent": "Hi Hannah, thanks for getting in touch about an initial consultation. You can see next week's evening availability and book straight in here: (your booking link). Any questions, just reply to this text.",
+    "follow_up_sequence": "started, stops when Hannah replies or books"
+  },
+  "archetype": "your_make_com_lead_follow_up_and_crm_updates_int",
+  "learned": true,
+  "learned_at": "2026-09-24"
+}
