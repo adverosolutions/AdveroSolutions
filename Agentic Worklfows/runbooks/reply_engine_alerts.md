@@ -832,24 +832,31 @@ answer the card as usual.
 
 # Template auto-send (CT3)
 
-Rule (2026-09-22): an engine email (first reply, counter-proposal, booking
-confirmation, cadence touch, show-rate or no-show message) is sent
-automatically only when its text is exactly a template you approved with
-jobs/approve_templates.py and unchanged since, the template kill switch is
-off, and every send check passes (copy gate, opt-out marker, lead reply hold,
-07:00-19:00 CT send window, recipient check, slot rules); anything else goes
-to you as an approval card (replies) or is held (cadence, show-rate,
-no-show). These are the pushes and Job_Log rows that rule adds. Approving,
-revoking and the kill switch are in `template_approvals.md`. Nothing auto-sends
-until you approve templates from your own terminal.
+Rule (2026-09-22): an engine email (counter-proposal, booking confirmation,
+cadence touch, show-rate or no-show message) is sent automatically only when
+its text is exactly a template you approved and unchanged since, the template
+kill switch is off, and every send check passes (copy gate, opt-out marker,
+lead reply hold, 07:00-19:00 CT send window, recipient check, slot rules);
+anything else goes to you as an approval card (replies) or is held (cadence,
+show-rate, no-show). These are the pushes and Job_Log rows that rule adds.
+Approving, revoking and the kill switch are in `template_approvals.md`.
+Nothing auto-sends until you approve its template in the emails doc and tell
+Claude "done".
+
+First replies are never auto-sent (rule of 2026-09-23). The engine drafts the
+first reply (two held times, no booking link) and it always comes to you as a
+card, whatever the approvals, the kill switch or the gate say; you send it
+yourself from the thread. Its card says "Not auto-sent: first replies are
+drafts you send yourself from the thread." (reason `first_reply_draft_only`
+below).
 
 ## "Auto-sent from approved templates: {n} sent, {q} queued, {h} held"
 
 **What you see.** A normal-priority push, at most one per 30 minutes, only
 when something happened. The push lists counts per template id (for example
-`first_reply.<offer>.pricing.full: 2 sent`) and a "Held" list with a count
-per template id, then "Revoke a template (jobs/approve_templates.py) or set
-the kill switch to stop these." It has no buttons and no names, addresses,
+`booking.counter.weekend: 2 sent`) and a "Held" list with a count per
+template id, then "To stop these, set the kill switch, or revoke a template
+from your terminal (jobs/approve_templates.py --revoke <id>)." It has no buttons and no names, addresses,
 subjects, bodies or links, because the ntfy topic is public unless `NTFY_TOKEN` is set. The email copy
 adds a "Per card" list: the lead's address, the template id and the status,
 and for a reply queued until 07:00 CT when it goes out and a **Veto** link.
@@ -1007,8 +1014,9 @@ did not let it go on its own. The reason sentences (`approval.REASON_TEXT`):
 | `no_template` | this draft was not written from a catalogue template. |
 | `not_template_render` | this draft is not the plain template text (it was polished or edited). |
 | `unknown_id` | its template is not in the catalogue for this kind of email. |
-| `unapproved` | its template is not approved yet (jobs/approve_templates.py). |
-| `changed_since_approval` | its template changed since you approved it; review it and approve it again. |
+| `unapproved` | its template is not approved yet; approve it in the emails doc, then tell Claude "done". |
+| `changed_since_approval` | its template changed since you approved it; review it and approve it again in the emails doc, then tell Claude "done". |
+| `first_reply_draft_only` | first replies are drafts you send yourself from the thread. |
 | `not_approvable` | its template cannot be approved for auto-send. |
 | `stale_render` | the template changed after this draft was written. |
 | `classification` | the reply was not read as a clear positive with enough confidence. |
@@ -1023,6 +1031,17 @@ did not let it go on its own. The reason sentences (`approval.REASON_TEXT`):
 | `send_raised` | the send stopped on an error, so the reply may or may not have gone out; check the thread in Instantly before you press anything. |
 
 The last four are a send that ended at `send_failed`: see the next section.
+
+A first reply's card always says `first_reply_draft_only`: that check runs
+before the gate, so approving the template, the kill switch and the gate's
+own reason make no difference to it, and the `unapproved` advice never
+appears on it. The one gate reason still shown after it is a pending GHL
+cancel: "... from the thread. Also, the lead's previous call is still being
+cancelled in GHL; check the calendar before sending." The Job_Log `created`
+row carries `auto_reason: first_reply_draft_only`, and a first reply the
+engine was about to auto-send anyway (a card raised before this rule, or one
+queued overnight) is turned back into a card with a
+`template_auto_send_refused` row with that reason.
 
 A few lines come from the card path rather than the gate: "the template check
 was for another draft.", "the draft has a problem to fix first (see
