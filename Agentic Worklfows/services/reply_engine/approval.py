@@ -1230,7 +1230,8 @@ REASON_TEXT = {
     "no_template": "this draft was not written from a catalogue template.",
     "not_template_render": "this draft is not the plain template text (it was polished or edited).",
     "unknown_id": "its template is not in the catalogue for this kind of email.",
-    "unapproved": "its template is not approved yet (jobs/approve_templates.py).",
+    "unapproved": ("its template is not approved yet; approve it in the emails doc (edit it there if needed), "
+                   "then tell Claude \"done\"."),
     "changed_since_approval": "its template changed since you approved it; review it and approve it again.",
     "not_approvable": "its template cannot be approved for auto-send.",
     "stale_render": "the template changed after this draft was written.",
@@ -1957,7 +1958,8 @@ def flush_auto_send_fyi(store=None, now: Optional[datetime] = None, notify_fn=No
         lines.append("Held (not sent, template not approved or refused):")
         for tid in sorted(held):
             lines.append("%s: %d held" % (tid, held[tid]))
-    lines.append("Revoke a template (jobs/approve_templates.py) or set the kill switch to stop these.")
+    lines.append("To stop these, set the kill switch, or revoke a template from your terminal "
+                 "(jobs/approve_templates.py --revoke <id>).")
     message = "\n".join(lines)
     email_message = message
     detail = _fyi_email_lines(st, entries)

@@ -1,10 +1,24 @@
 """Build the one Google-Docs-ready HTML file with every email the system sends,
 plus manifest.json (one record per editable block).
 
-Local only: reads the template export and the Instantly snapshot, writes into
-this folder. No network. Python 3.9.
+Local only: reads the template export and the Instantly snapshot. No network.
+Python 3.9.
 
-    python3 build.py
+    python3 build.py [--export PATH] [--snapshot PATH] [--out-dir DIR]
+
+Every build carries a fingerprint (doc_areas.fingerprint: every block's tag,
+text and hash plus every line outside block bodies). It is printed in the doc
+as the "(tag: X-BUILD)" line and stored in the manifest. Without --out-dir the
+build goes to builds/<fingerprint>/ (html + manifest); the top-level
+advero_all_emails.html and manifest.json are the build of the doc currently in
+Drive and change only when a new doc is uploaded and promoted (README.txt).
+
+Every part of every template's hashed review text is shown in the doc, so a
+code change to any of it changes the doc: the main text, each variant (as its
+changes, or a note listing the lines it drops, or skipped only when it is the
+main text with example times the formatters write, or the documented missing-
+data fallbacks), the fallback subjects (a note), and the full value_formats
+block (one tagged block per distinct text, formats.N).
 
 Parser contract (parse_doc.py implements it; the manifest mirrors it):
 - A line with "(tag: X)" starts block X. For a tag ending in "/subject" the
@@ -25,6 +39,8 @@ import re
 import subprocess
 from collections import OrderedDict
 
+import doc_areas
+from doc_rules import HELD_NOTE, SPLICED, is_held
 from export_parse import parse_export, variant, source_of
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -32,8 +48,28 @@ REPO = os.path.dirname(os.path.dirname(HERE))  # tools/template_doc -> Agentic W
 EXPORT = os.path.join(HERE, "templates_export_final.md")
 SNAPSHOT_REL = "config/snapshots/instantly_campaigns_2026-09-21.json"
 SNAPSHOT = os.path.join(REPO, SNAPSHOT_REL)
-OUT_HTML = os.path.join(HERE, "advero_all_emails.html")
-OUT_MANIFEST = os.path.join(HERE, "manifest.json")
+BUILDS_DIR = os.path.join(HERE, "builds")
+OUT_DIR = None  # builds/<fingerprint>/ unless --out-dir is given
+
+if __name__ == "__main__":
+    # Optional paths (record_doc_approvals.py builds a fresh doc into a temp
+    # folder this way).
+    import argparse
+    _ap = argparse.ArgumentParser(description="Build advero_all_emails.html and manifest.json.")
+    _ap.add_argument("--export", default=EXPORT, help="jobs/approve_templates.py --export markdown to read")
+    _ap.add_argument("--out-dir", default=None,
+                     help="folder for advero_all_emails.html and manifest.json (default builds/<fingerprint>/)")
+    _ap.add_argument("--snapshot", default=SNAPSHOT, help="Instantly campaigns snapshot JSON")
+    _args = _ap.parse_args()
+    EXPORT = os.path.abspath(_args.export)
+    OUT_DIR = os.path.abspath(_args.out_dir) if _args.out_dir else None
+    if os.path.abspath(_args.snapshot) != os.path.abspath(SNAPSHOT):
+        SNAPSHOT = os.path.abspath(_args.snapshot)
+        _rel = os.path.relpath(SNAPSHOT, REPO)
+        SNAPSHOT_REL = SNAPSHOT if _rel.startswith("..") else _rel.replace(os.sep, "/")
+
+HTML_NAME = "advero_all_emails.html"
+MANIFEST_NAME = "manifest.json"
 
 PH_RE = re.compile(r"\{[A-Za-z_][A-Za-z0-9_]*\}")
 
@@ -87,6 +123,17 @@ class Doc(object):
     def note(self, text):
         AUTHORED.append(text)
         self.raw('<p><span style="%s">%s</span> %s</p>' % (S_NOTE, esc(text), marker_span("note")))
+
+    def note_quoting(self, text, quoted):
+        """A note that quotes template lines (not authored text, so not
+        checked for dashes and "!")."""
+        AUTHORED.append(text)
+        body = text + " " + " / ".join('"%s"' % q for q in quoted)
+        self.raw('<p><span style="%s">%s</span> %s</p>' % (S_NOTE, esc(body), marker_span("note")))
+
+    def build_line(self, text, tag):
+        AUTHORED.append(text)
+        self.raw('<p><span style="%s">%s %s</span> %s</p>' % (S_NOTE, esc(text), doc_areas.FP_PLACEHOLDER, tag_span(tag)))
 
     def lines(self, lines):
         for ln in lines:
@@ -165,15 +212,19 @@ approvable_ids = [e["id"] for e in entries if e["approvable"]]
 assert len(approvable_ids) == data["counts"]["approvable"] == 108, (len(approvable_ids), data["counts"])
 export_sha = hashlib.sha256(open(EXPORT, "rb").read()).hexdigest()
 
-# value_formats: one canonical block
-vf_blocks = set()
+# value_formats: one tagged block per distinct text (formats.1, formats.2, ...),
+# shown in full; every template that carries it depends on its block.
+VF_TAGS = OrderedDict()  # text -> tag
+VF_OF = {}  # template id -> tag
 for e in entries:
     v = variant(e, "value_formats")
-    if v:
-        vf_blocks.add("\n".join(v["lines"]))
-assert len(vf_blocks) == 1, "value_formats differ between templates"
-VF = list(vf_blocks)[0]
-for needle in ("Two times, {slots} and {alt_slots}: Tue 12:05pm or Thu 4:30pm CT",
+    if v and e["approvable"]:
+        t = "\n".join(v["lines"])
+        if t not in VF_TAGS:
+            VF_TAGS[t] = "formats.%d" % (len(VF_TAGS) + 1)
+        VF_OF[e["id"]] = VF_TAGS[t]
+assert VF_TAGS, "no value_formats block"
+VF_NEEDLES = ("Two times, {slots} and {alt_slots}: Tue 12:05pm or Thu 4:30pm CT",
                "One time, {slots}, {alt_slots}, {slot1} and {slot2}: Tue 12:05pm CT",
                "A time without its zone, {slot}: Tue 12:05pm",
                "{alt_slots}: Tue Jan 15 12:05pm or Thu Jan 17 4:30pm CT",
@@ -182,8 +233,40 @@ for needle in ("Two times, {slots} and {alt_slots}: Tue 12:05pm or Thu 4:30pm CT
                "The call time, {when_ct}: Tue, Jan 8 at 12:05pm CT",
                "America/New_York = Tue, Jan 8 at 12:05pm CT (1:05pm ET)",
                "The clock time only, {time_ct}: 12:05pm CT",
-               "America/Phoenix = MST"):
-    assert needle in VF, needle
+               "America/Phoenix = MST")
+for _vf in VF_TAGS:
+    for needle in VF_NEEDLES:  # the top section's "How times are written" claims
+        assert needle in _vf, needle
+
+DAYS_RE = re.compile(r"\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b")
+MONTHS_RE = re.compile(r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b")
+
+
+def value_shape(s):
+    """A value with its day names, month names, numbers and am/pm abstracted:
+    Tue Jan 15 2:43pm CT and Mon Jan 7 9:45am CT have the same shape."""
+    s = DAYS_RE.sub("<day>", s)
+    s = MONTHS_RE.sub("<mon>", s)
+    s = re.sub(r"\d+", "<n>", s)
+    return re.sub(r"(?<=<n>)(?:am|pm)\b", "<ap>", s)
+
+
+def vf_examples(vf_text):
+    """placeholder -> shapes of the example values the formatters wrote for
+    it in a value_formats block ("{slots} and {alt_slots}: X", "{p}: A = X | B = Y")."""
+    ex = {}
+    for ln in vf_text.split("\n"):
+        phs = PH_RE.findall(ln)
+        if not phs:
+            continue
+        rest = ln[ln.rfind(phs[-1]) + len(phs[-1]):]
+        if not rest.startswith(": "):
+            continue
+        for seg in rest[2:].split(" | "):
+            val = seg.split(" = ", 1)[1] if " = " in seg else seg
+            for p in phs:
+                ex.setdefault(p, set()).add(value_shape(val))
+    return ex
 
 # spliced fragments, for normalising variant text back to the placeholder
 FRAGMENTS = {
@@ -239,9 +322,13 @@ def missing_data_explained(main, vlines):
     return None
 
 
-def fill_only(h):
-    """A hunk that only fills placeholders with example values (dated forms,
-    example times in another zone): covered by 'How times are written'."""
+def fill_only(h, examples):
+    """A hunk that only fills placeholders with example times (dated forms,
+    another zone). Every filled value must be the placeholder itself or have
+    exactly the shape of one of the formatter's example values for that
+    placeholder in the template's own value_formats block (shown in the doc):
+    any other word in a value (", or wire the deposit today") shows the
+    variant instead."""
     if len(h["old"]) != len(h["new"]):
         return False
     for o, n in zip(h["old"], h["new"]):
@@ -249,10 +336,15 @@ def fill_only(h):
             continue
         if not PH_RE.search(o):
             return False
-        pat = "^" + "".join("(.+?)" if PH_RE.fullmatch(p) else re.escape(p)
-                            for p in re.split(r"(\{[A-Za-z_][A-Za-z0-9_]*\})", o)) + "$"
-        if not re.match(pat, n):
+        parts = re.split(r"(\{[A-Za-z_][A-Za-z0-9_]*\})", o)
+        phs = [p for p in parts if PH_RE.fullmatch(p)]
+        pat = "^" + "".join("(.+?)" if PH_RE.fullmatch(p) else re.escape(p) for p in parts) + "$"
+        m = re.match(pat, n)
+        if not m:
             return False
+        for ph, val in zip(phs, m.groups()):
+            if val != ph and value_shape(val) not in examples.get(ph, ()):
+                return False
     return True
 
 
@@ -267,9 +359,11 @@ VARIANT_LABELS = {
     "no_booking_link": "If no booking link is set up:",
     "no_call_link": "If there is no call link yet:",
     "missing_lead_data": "If we don't have their details:",
+    "dated": "If the other times fall in another week:",
+    "no_loom_url": "If no Loom link is set up:",
 }
 DELETION_NOTES = {
-    "no_loom_url": "If no Loom link is set up, the walkthrough line is left out.",
+    "no_loom_url": "If no Loom link is set up, these lines are left out:",
 }
 VARIANT_NOTES = {
     "confirmed_time": "This version always comes to you as a card first.",
@@ -313,6 +407,23 @@ def base_rec(e):
     ])
 
 
+def place_formats(doc):
+    """The full value_formats blocks, right after 'How times are written'."""
+    for text, tag in VF_TAGS.items():
+        lines = text.split("\n")
+        dependents = [tid for tid, t in VF_OF.items() if t == tag]
+        rec = OrderedDict([("tag", None), ("kind", "value_formats"), ("template_id", None), ("variant", None),
+                           ("source", "services/reply_engine/template_approvals.py:value_formats_text"),
+                           ("dependents", dependents), ("sha256", hashlib.sha256(text.encode("utf-8")).hexdigest())])
+        rec["text"] = doc_text(lines)
+        rec["text_group"] = text_group(rec["text"])
+        label = ("Exactly how the engine writes times, from its own code "
+                 "(part of every email with a time in it):") if len(VF_TAGS) == 1 else (
+                 "Exactly how the engine writes times, version %s, from its own code:" % tag.split(".")[1])
+        doc.variant_label(label, tag, rec)
+        doc.lines(lines)
+
+
 def place_template(doc, tid, heading, notes=(), spliced_into=None, level=3):
     e = by_id[tid]
     assert e["approvable"], tid
@@ -329,6 +440,8 @@ def place_template(doc, tid, heading, notes=(), spliced_into=None, level=3):
     if spliced_into:
         rec["spliced_into"] = spliced_into
     rec["text_group"] = text_group(rec["text"])
+    rec["held"] = is_held(tid)
+    rec["depends_on"] = [VF_OF[tid]] if tid in VF_OF else []
     doc.email_heading(heading, tid, rec, level=level)
     for n in notes:
         doc.note(n)
@@ -352,6 +465,11 @@ def place_template(doc, tid, heading, notes=(), spliced_into=None, level=3):
     for v in e["variants"]:
         name = v["name"]
         if name in ("value_formats", "subject"):
+            # shown elsewhere: the formats.N block, or the Subject line plus its fallback note
+            if name == "subject" and inline:
+                raise SystemExit("%s has an inline subject and a subject variant; the variant would not be shown" % tid)
+            if name == "value_formats":
+                assert VF_OF.get(tid) and VF_TAGS.get("\n".join(v["lines"])) == VF_OF[tid], tid
             skip(name, "covered at the top / Subject block")
             continue
         vl = unsplice(e["main"], v["lines"])
@@ -367,7 +485,8 @@ def place_template(doc, tid, heading, notes=(), spliced_into=None, level=3):
         if not hs:
             skip(name, "same as main")
             continue
-        if name in ("dated", "lead_in_other_timezone") and all(fill_only(h) for h in hs):
+        examples = vf_examples("\n".join(variant(e, "value_formats")["lines"])) if variant(e, "value_formats") else {}
+        if name in ("dated", "lead_in_other_timezone") and all(fill_only(h, examples) for h in hs):
             skip(name, "example values only")
             continue
         if inline and any(h["at"][0] == 0 for h in hs):
@@ -419,7 +538,9 @@ def place_template(doc, tid, heading, notes=(), spliced_into=None, level=3):
         assert sorted(map(key, combo)) == sorted(map(key, parts)), tid
         skip("no_call_link_or_loom", "the two cases above together")
     for name, hs in deletion:
-        doc.note(DELETION_NOTES[name])
+        dropped = [l for h in hs for l in h["old"] if l.strip()]
+        assert dropped, (tid, name)
+        doc.note_quoting(DELETION_NOTES[name], dropped)
         stats["deletion_notes"] += 1
 
 
@@ -448,7 +569,6 @@ QT = OrderedDict([
     ("other", "they asked something else"),
     ("referral", "they pointed you to someone else"),
 ])
-HELD_QT = ("other", "referral")
 SR_KEYS = OrderedDict([
     ("cleaning_reactivation", "cleaning (reactivation)"),
     ("cleaning_outbound", "cleaning (outbound)"),
@@ -569,6 +689,12 @@ for ln in (
         "{alt_slots}: like {slots}; when the times are in another week the dates are added, like Tue Jan 15 12:05pm or Thu Jan 17 4:30pm CT",
         "Zones are written CT, ET, MT, PT, and MST for Arizona."):
     doc.top_p(ln)
+place_formats(doc)
+doc.build_line("Doc build:", doc_areas.BUILD_TAG)
+_brec = OrderedDict([("tag", None), ("kind", "build"), ("template_id", None), ("variant", None),
+                     ("source", "build.py"), ("text", "")])
+_brec["tag"] = doc_areas.BUILD_TAG
+doc._record(_brec)
 
 # ---- 1. Instantly
 snap = json.load(open(SNAPSHOT, encoding="utf-8"))
@@ -625,8 +751,8 @@ for key, label in NICHE_OFFER.items():
     for qt, qlabel in QT.items():
         tid = "first_reply.%s.%s.full" % (key, qt)
         notes = []
-        if qt in HELD_QT:
-            notes.append("Starts as an approval card to you until you say otherwise.")
+        if is_held(tid):
+            notes.append(HELD_NOTE)
         place_template(doc, tid, "First reply: %s, %s" % (label, qlabel), notes)
 
 # ---- 3. Cadence
@@ -658,27 +784,6 @@ CAD = [
     ("cadence.d30", "Day 30 follow-up",
      ["Day 30: 16 days after Day 14. After this the lead stays in Follow Up Later."]),
 ]
-SPLICED = {
-    "cadence.d2": [
-        ("cadence.d2.research_fallback.reactivation", "Reactivation offers (line used inside Day 2)"),
-        ("cadence.d2.research_fallback.outbound", "Outbound offers (line used inside Day 2)"),
-    ],
-    "cadence.d4": [
-        ("cadence.d4.case_study.reactivation", "Reactivation offers (line used inside Day 4)"),
-        ("cadence.d4.case_study.outbound", "Outbound offers (line used inside Day 4)"),
-    ],
-    "cadence.d5": [
-        ("cadence.d5.free_work.cleaning_reactivation", "Cleaning, reactivation (line used inside Day 5)"),
-        ("cadence.d5.free_work.cleaning_outbound", "Cleaning, outbound (line used inside Day 5)"),
-        ("cadence.d5.free_work.bookkeeping_reactivation", "Bookkeeping, reactivation (line used inside Day 5)"),
-        ("cadence.d5.free_work.bookkeeping_outbound", "Bookkeeping, outbound (line used inside Day 5)"),
-        ("cadence.d5.free_work.recruiting_reactivation", "Recruiting, reactivation (line used inside Day 5)"),
-        ("cadence.d5.free_work.recruiting_outbound", "Recruiting, outbound, specialty unknown (line used inside Day 5)"),
-        ("cadence.d5.free_work.recruiting_outbound_specialty", "Recruiting, outbound, specialty known (line used inside Day 5)"),
-        ("cadence.d5.free_work.generic_reactivation", "Any other niche, reactivation (line used inside Day 5)"),
-        ("cadence.d5.free_work.generic_outbound", "Any other niche, outbound (line used inside Day 5)"),
-    ],
-}
 SPLICE_NOTES = {
     "cadence.d2": "The engine uses this fixed line by default. A line written per lead by AI is never sent on its own; that day would be held.",
 }
@@ -813,14 +918,39 @@ team_days = sorted(stats["company_fallback_team"])
 assert team_days == ["cadence.d2", "cadence.d30", "cadence.d4", "cadence.d5"], team_days
 
 html_out = re.sub(r"(</(?:p|h[1-4]|li|tr|table)>)", r"\1\n", "".join(doc.parts))
+
+# the doc as Drive's text export gives it: its block bodies must read back as
+# the manifest texts exactly, and its other lines are the build's area lines
+from diff_doc import diff as _diff, is_clean as _is_clean  # noqa: E402
+from parse_doc import parse_with_info as _parse  # noqa: E402
+
+plain = doc_areas.html_string_to_text(html_out)
+_info = _parse(plain)
+_rt = _diff(_info, {"blocks": doc.manifest})
+assert _is_clean(_rt), dict((k, _rt[k]) for k in ("changed", "missing", "unknown", "duplicates"))
+assert all(_info["blocks"].get(r["tag"]) == r["text"] for r in doc.manifest), "round trip is not exact"
+visible = doc_areas.area_pairs(plain)
+FINGERPRINT = doc_areas.fingerprint(doc.manifest, visible)
+assert html_out.count(doc_areas.FP_PLACEHOLDER) == 1
+html_out = html_out.replace(doc_areas.FP_PLACEHOLDER, FINGERPRINT)
+assert doc_areas.read_fingerprint(doc_areas.html_string_to_text(html_out)) == (FINGERPRINT, None)
+
+if OUT_DIR is None:
+    OUT_DIR = os.path.join(BUILDS_DIR, FINGERPRINT)
+OUT_HTML = os.path.join(OUT_DIR, HTML_NAME)
+OUT_MANIFEST = os.path.join(OUT_DIR, MANIFEST_NAME)
+if not os.path.isdir(OUT_DIR):
+    os.makedirs(OUT_DIR)
 open(OUT_HTML, "w", encoding="utf-8").write(html_out)
 
 try:
-    head = subprocess.check_output(["git", "-C", REPO, "rev-parse", "--short", "HEAD"]).decode().strip()
+    head = subprocess.check_output(["git", "-C", REPO, "rev-parse", "--short", "HEAD"],
+                                   stderr=subprocess.DEVNULL).decode().strip()
 except Exception:  # noqa: BLE001
     head = None
 manifest = OrderedDict([
     ("doc", os.path.basename(OUT_HTML)),
+    ("fingerprint", FINGERPRINT),
     ("repo_head", head),
     ("export", os.path.basename(EXPORT)),
     ("export_sha256", export_sha),
@@ -829,8 +959,10 @@ manifest = OrderedDict([
     ("parser_rules", __doc__.split("Parser contract")[1].strip()),
     ("text_note", "text is the block as parse_doc returns it from the plain-text export (blank edges stripped, "
                   "lines right-stripped). Compare with diff_doc.norm, which also ignores blank lines, runs of "
-                  "spaces, curly quotes and non-breaking spaces."),
+                  "spaces, curly quotes and non-breaking spaces. visible is every line outside block bodies "
+                  "as [area, doc_areas.canon(line)] (see doc_areas.py); the fingerprint covers blocks and visible."),
     ("blocks", doc.manifest),
+    ("visible", visible),
 ])
 json.dump(manifest, open(OUT_MANIFEST, "w", encoding="utf-8"), indent=1, ensure_ascii=False)
 
@@ -841,6 +973,7 @@ emails = sum(1 for r in doc.manifest if r["kind"] in ("template_main", "instantl
              and not r.get("spliced_into"))
 print("wrote", OUT_HTML, os.path.getsize(OUT_HTML), "bytes")
 print("wrote", OUT_MANIFEST)
+print("fingerprint:", FINGERPRINT)
 print("blocks by kind:", kinds)
 print("emails (bodies, not counting spliced lines):", emails)
 print("spliced lines (approvable, kind template_main):", spliced_count)

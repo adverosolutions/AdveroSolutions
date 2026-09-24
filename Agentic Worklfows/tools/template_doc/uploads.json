@@ -1,0 +1,12 @@
+{
+ "note": "Which Google Doc holds which build. record_doc_approvals.py --write refuses unless the export's build fingerprint is the fingerprint recorded here for --doc-id. Add an entry when a build is uploaded as a new doc (README.txt, 'Upload and promote'). A null fingerprint is a doc built before fingerprints: it can be read and diffed, never approved from.",
+ "uploads": [
+  {
+   "doc_id": "1jTg1ccYJT8CugDdCf3BQHqzgHUKC4oFG9rgolUILO4U",
+   "title": "Advero emails: edit here (every email, one doc)",
+   "fingerprint": null,
+   "build": "manifest.json + advero_all_emails.html (top level, legacy build without a fingerprint)",
+   "uploaded_at": "2026-09-23T17:59Z"
+  }
+ ]
+}

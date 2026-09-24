@@ -388,6 +388,9 @@ def test_every_reason_code_has_a_plain_sentence_with_no_lead_data(world):
     assert A.reason_text("something_new") == "something_new"
     card, v = _card(world, approve=False)
     assert _pushes()[0]["message"].startswith("Not auto-sent: its template is not approved yet")
+    assert A.REASON_TEXT["unapproved"] == ('its template is not approved yet; approve it in the emails doc (edit it '
+                                           'there if needed), then tell Claude "done".')
+    assert "approve_templates" not in "".join(A.REASON_TEXT.values())
     assert _stored(world, card).auto_send["reason"] == "unapproved"
     cancel = gate.Verdict(False, "cancel_pending", TID, [TID], {})
     note = A._auto_decision(cancel, card.draft)
@@ -511,6 +514,8 @@ def test_the_fyi_on_a_public_topic_carries_counts_only(world):
                    A._approval_id(card)):
         assert secret not in public, secret
     assert TID in c["message"] and "cadence.d3: 1 held" in c["message"]
+    assert c["message"].endswith('To stop these, set the kill switch, or revoke a template from your terminal '
+                                 '(jobs/approve_templates.py --revoke <id>).')
     # the email leg (Lorenzo's inbox) has the per-card line and a Veto link
     assert LEAD in c["email_message"] and ("/veto/%s" % stored.token) in c["email_message"]
     assert "/approve/" not in c["email_message"]
