@@ -349,7 +349,7 @@ def _offers_text() -> str:
 
 def _flat(text: str) -> str:
     """Whitespace-free, dash-normalised, for verbatim comparison against the sheet."""
-    return re.sub(r"\s+", "", (text or "").replace("\u2014", "-").replace("\u2013", "-"))
+    return re.sub(r"\s+", "", (text or "").replace("—", "-").replace("–", "-"))
 
 
 def _redact(text: str, allow: Optional[List[str]] = None) -> str:
@@ -500,7 +500,7 @@ def copy_problems(text: str, allow: Optional[List[str]] = None,
         if code not in out:
             out.append(code)
 
-    if "\u2014" in text or "\u2013" in text:
+    if "—" in text or "–" in text:
         add("dash")
     if "!" in text:
         add("exclamation")
@@ -1477,7 +1477,7 @@ def render(template_name: str, **values: Any) -> str:
 
 def sanitize_line(text: str) -> str:
     text = (text or "").strip().strip('"').strip()
-    text = text.replace("\u2014", ",").replace("\u2013", ",").replace("!", ".")
+    text = text.replace("—", ",").replace("–", ",").replace("!", ".")
     text = re.sub(r"\s+", " ", text)
     return text
 
@@ -2357,18 +2357,46 @@ def _hold_d1_without_base_url(state: Any, now: datetime, base: Dict[str, Any], n
                 since=since or ct.isoformat(), held=True)
 
 
+def answered_card_ids(state_or_row: Any) -> List[str]:
+    """The ids of the cards the lead's history records a reply for (a
+    ``reply_sent`` or ``reply_sent_manually`` event naming the card).
+    ``state_or_row`` is a LeadState or a stored lead row.
+
+    Such a card answers nothing any more, whatever its own status says: a
+    first reply Lorenzo sent himself from the thread is recorded on the lead
+    by detect_manual_first_reply while its card still reads pending
+    (approval.py does not retire that card yet), and until it expires that
+    card must not stop the ladder its own reply started."""
+    from services.reply_engine import approval as approval_mod
+
+    if isinstance(state_or_row, dict):
+        history = state_or_row.get("history")
+    else:
+        history = getattr(state_or_row, "history", None)
+    out = []  # type: List[str]
+    for entry in list(history or []):
+        if not isinstance(entry, dict) or entry.get("event") not in approval_mod.REPLY_SENT_EVENTS:
+            continue
+        approval_id = str(entry.get("approval") or "").split(".", 1)[0]
+        if approval_id and approval_id not in out:
+            out.append(approval_id)
+    return out
+
+
 def open_cards(state: Any, store: Any, now: datetime) -> List[str]:
     """The ids of this lead's cards still waiting on Lorenzo (pending or queued,
-    inside their TTL; approval.open_card_ids). Each one is a reply of the
-    lead's that nobody has answered yet, so nothing of the ladder's goes out
-    while one is open. Empty without a store; a store that cannot be read
-    raises, and the caller holds."""
+    inside their TTL; approval.open_card_ids), less the ones whose reply the
+    lead's history already records as sent (answered_card_ids). Each one is a
+    reply of the lead's that nobody has answered yet, so nothing of the
+    ladder's goes out while one is open. Empty without a store; a store that
+    cannot be read raises, and the caller holds."""
     tokens = list(getattr(state, "approvals", None) or [])
     if store is None or not tokens:
         return []
     from services.reply_engine import approval as approval_mod
 
-    return approval_mod.open_card_ids(store, tokens, now)
+    answered = answered_card_ids(state)
+    return [c for c in approval_mod.open_card_ids(store, tokens, now) if c not in answered]
 
 
 def changed_in_store(state: Any, store: Any, now: Optional[datetime] = None) -> Optional[str]:
@@ -2412,12 +2440,359 @@ def changed_in_store(state: Any, store: Any, now: Optional[datetime] = None) -> 
         try:
             from services.reply_engine import approval as approval_mod
 
-            if approval_mod.open_card_ids(store, list(row.get("approvals") or []), slot_rules.to_tz(now)):
+            answered = answered_card_ids(row)
+            if [c for c in approval_mod.open_card_ids(store, list(row.get("approvals") or []), slot_rules.to_tz(now))
+                    if c not in answered]:
                 return "open_card"
         except Exception as exc:  # noqa: BLE001 - a card that cannot be read holds the day
             logger.warning("could not read the cards of %s before the send: %s", key, exc)
             return "open_card_unreadable"
     return None
+
+
+# ------------------------------------------- day 0: Lorenzo's own first reply
+# Lorenzo's rule (2026-09-23): the engine never sends a first reply. It drafts
+# one (two held times, no booking link) on a card, and Lorenzo sends it
+# himself from the Instantly thread. detect_manual_first_reply finds that send
+# in the thread and records it the way Mark sent does
+# (approval.mark_sent_manually): its time is day 0, so E1 goes out the next
+# business day. The hourly tick runs it for every candidate
+# (jobs/cadence_tick.py).
+#
+# The card statuses a hand-sent first reply can answer: waiting on Lorenzo,
+# held for a problem he can fix while he copies it, or past its 48 h TTL (a
+# reply sent after the weekend still starts the ladder). Never approved_queued,
+# sending, send_failed or sent: the engine owns those sends and records them
+# itself (send_approved), and Mark sent closes a failed one.
+FIRST_REPLY_CARD_STATUSES = ("pending", "blocked", "stale_slots", "expired")
+# How long an unanswered reply is looked for in its thread, from the lead's
+# last inbound: pipeline_sweep's LOOKBACK_DAYS. An older one costs no more
+# GET /emails calls; the sweep and Mark sent still cover it.
+FIRST_REPLY_LOOKBACK_DAYS = 14
+# Thread reads per tick, at most. GET /emails is limited to 20 requests a
+# minute per workspace (config/instantly_api_contract.md), shared with the
+# poller and the sweep; the rest wait for the next tick, newest reply first.
+FIRST_REPLY_MAX_READS = 10
+# One page of the inbox's manual rows (both directions of every thread it
+# answered by hand); the lead's thread is picked out of it here.
+FIRST_REPLY_PAGE_SIZE = 100
+
+
+def _reply_sent_recorded(state_or_row: Any) -> bool:
+    """True when the lead's history records a reply of ours as sent
+    (approval.REPLY_SENT_EVENTS; a shadow reply_would_send is not one)."""
+    from services.reply_engine import approval as approval_mod
+
+    if isinstance(state_or_row, dict):
+        history = state_or_row.get("history")
+    else:
+        history = getattr(state_or_row, "history", None)
+    return any(isinstance(e, dict) and e.get("event") in approval_mod.REPLY_SENT_EVENTS for e in (history or []))
+
+
+def first_reply_skip_reason(state: Any, now: datetime) -> Optional[str]:
+    """Why this lead's thread is not read for Lorenzo's own first reply, or
+    None when it is a candidate. Cheap: no store, no network. A candidate has
+    no reply of ours recorded, an unarmed ladder, a thread id and an inbox to
+    read it in, an inbound within FIRST_REPLY_LOOKBACK_DAYS and at least one
+    card (pending_first_reply_card then reads which). A booked lead is not
+    one: its ladder would stop as ``booked`` at once, and what sending the
+    card that holds its call does (the invite and the show-rate hold released)
+    belongs to approval.py (send_approved, mark_sent_manually)."""
+    if _reply_sent_recorded(state):
+        return "reply_recorded"
+    if (getattr(state, "cadence", None) or {}).get("armed_at"):
+        return "armed"
+    if terminal_reason(state) == "booked":
+        return "booked"
+    if not _field(state, "thread_id"):
+        return "no_thread_id"
+    if not _field(state, "eaccount"):
+        return "no_eaccount"
+    last_in = _parse(_field(state, "last_inbound_at"))
+    if last_in is None:
+        return "no_inbound"
+    if last_in < slot_rules.to_tz(now) - timedelta(days=FIRST_REPLY_LOOKBACK_DAYS):
+        return "inbound_too_old"
+    if not list(getattr(state, "approvals", None) or []):
+        return "no_card"
+    return None
+
+
+def is_first_reply_candidate(state: Any, now: datetime) -> bool:
+    return first_reply_skip_reason(state, now) is None
+
+
+def pending_first_reply_card(state: Any, store: Any) -> Any:
+    """The card whose draft Lorenzo would send by hand: the lead's newest card
+    (the last token on ``approvals``), when its status is one of
+    FIRST_REPLY_CARD_STATUSES. None otherwise: no card, or the newest one's
+    send belongs to the engine, or it was vetoed or superseded. Raises when
+    the store cannot be read."""
+    from services.reply_engine import approval as approval_mod
+    from services.reply_engine.models import Approval
+
+    tokens = list(getattr(state, "approvals", None) or [])
+    if not tokens:
+        return None
+    approval_id = str(tokens[-1]).split(".", 1)[0]
+    raw = store.get(approval_mod.APPROVAL_PREFIX + approval_id) if approval_id else None
+    if not isinstance(raw, dict):
+        return None
+    try:
+        card = Approval.model_validate(raw)
+    except Exception as exc:  # noqa: BLE001 - a card that cannot be parsed answers nothing
+        logger.warning("could not parse card %s of %s: %s", approval_id, _field(state, "lead_email"), exc)
+        return None
+    return card if card.status in FIRST_REPLY_CARD_STATUSES else None
+
+
+def _email_time(row: Dict[str, Any]) -> Optional[datetime]:
+    """A GET /emails row's time, read as the poller reads an inbound's
+    (timestamp_created, else timestamp_email): the same clock
+    ``last_inbound_at`` was set from."""
+    from jobs.pipeline_sweep import parse_ts
+
+    return parse_ts(row.get("timestamp_created") or row.get("timestamp_email"))
+
+
+def manual_first_reply_in(state: Any, emails: Any) -> Optional[Dict[str, Any]]:
+    """Lorenzo's reply among GET /emails rows: sent by us
+    (pipeline_sweep.is_outbound: ue_type, else the sender, else the
+    recipients) from the lead's inbox, in the lead's ``thread_id``, strictly
+    after ``last_inbound_at``. The earliest when several qualify. Returns
+    {"email_id", "sent_at" (aware datetime)} or None. Pure; every filter is
+    applied here, whatever the API was asked to filter (an ignored filter
+    must not change what a row means)."""
+    from jobs.pipeline_sweep import is_outbound
+
+    thread = str(_field(state, "thread_id") or "")
+    inbox = str(_field(state, "eaccount") or "").strip().lower()
+    last_in = _parse(_field(state, "last_inbound_at"))
+    if not thread or not inbox or last_in is None:
+        return None
+    found = []  # type: List[Tuple[datetime, str]]
+    for row in list(emails or []):
+        if not isinstance(row, dict) or str(row.get("thread_id") or "") != thread:
+            continue
+        row_inbox = str(row.get("eaccount") or inbox).strip().lower()
+        if row_inbox != inbox or not is_outbound(dict(row, eaccount=row_inbox)):
+            continue
+        sent_at = _email_time(row)
+        if sent_at is None or sent_at <= last_in:
+            continue
+        found.append((sent_at, str(row.get("id") or "")))
+    if not found:
+        return None
+    sent_at, email_id = min(found)
+    return {"email_id": email_id or None, "sent_at": sent_at}
+
+
+def _row_shape(row: Dict[str, Any]) -> Dict[str, Any]:
+    """A stored lead row in the shape this module writes (the tick's
+    _normalize_row), so the merge compares like with like."""
+    return state_to_dict(state_from_dict(row))
+
+
+def _record_first_reply_under_lock(card: Any, found: Dict[str, Any], open_card_map: Dict[str, bool],
+                                   context: Dict[str, Any], now: datetime, box: Dict[str, Any]):
+    """save_stale_write's ``finish`` for a first reply found in the thread:
+    decided on the lead row as it stands under the row's lock, never on the
+    copy read before the Instantly call. Pure: it must not touch the store.
+
+    A reply of ours already recorded there (the card's Mark sent, or the
+    engine's own send, won the race) or an armed ladder leaves the row
+    exactly as it is. Otherwise it records what mark_sent_manually records:
+    ``last_outbound_at`` (the email's own time), the card's held times on
+    ``offered_slots``, a ``reply_sent_manually`` history entry of the same
+    shape with ``source`` "thread" and the Instantly ``email_id``; and arms
+    the ladder with day 0 = the send time, unless approval.arm_refusal
+    refuses (the lead's own words since the reply the card answers, or
+    another open card), as the send and Mark sent do."""
+    from services.reply_engine import approval as approval_mod
+
+    approval_id = str(card.token).split(".", 1)[0]
+    sent_at = slot_rules.to_tz(found["sent_at"])
+    ct = slot_rules.to_tz(now)
+
+    def _finish(merged: Dict[str, Any]) -> Dict[str, Any]:
+        if _reply_sent_recorded(merged):
+            box["result"] = {"recorded": False, "reason": "reply_already_recorded"}
+            return merged
+        if (merged.get("cadence") or {}).get("armed_at"):
+            box["result"] = {"recorded": False, "reason": "already_armed"}
+            return merged
+        holder = state_from_dict(merged)
+        last_out = _parse(_field(holder, "last_outbound_at"))
+        if last_out is None or last_out < sent_at:
+            holder.last_outbound_at = sent_at.isoformat()
+        if getattr(holder, "offered_slots", None) is None:
+            holder.offered_slots = []
+        for iso in card.draft.offered_slots or []:
+            if iso not in holder.offered_slots:
+                holder.offered_slots.append(iso)
+        holder.history.append({"at": ct.isoformat(), "event": "reply_sent_manually", "approval": approval_id,
+                               "by": "lorenzo", "reply_at": context.get("reply_at"), "sent_at": sent_at.isoformat(),
+                               "send_failed_at": None, "first_reply": True, "from_status": card.status,
+                               "send_started_at": None, "source": "thread", "email_id": found.get("email_id")})
+        seen_before = context.get("processed_before")
+        why = approval_mod.arm_refusal(merged, card, open_card_map,
+                                       seen_before=seen_before if isinstance(seen_before, list) else None,
+                                       reply_at=context.get("reply_at"))
+        if why:
+            box["result"] = {"recorded": True, "armed": False, "reason": why}
+            logger.warning("recorded %s's first reply from the thread, not arming the cadence: %s",
+                           _field(holder, "lead_email"), why)
+            return state_to_dict(holder)
+        arm(holder, sent_at)
+        # As approval._arm_under_lock records it: the inbound this answer
+        # covered, so that reply's own pipeline never stops what it armed.
+        holder.cadence = dict(holder.cadence or {}, armed_for_email_id=card.email_id)
+        holder.status = "replied_awaiting_booking"
+        box["result"] = {"recorded": True, "armed": True, "armed_at": holder.cadence.get("armed_at"),
+                         "next_send_at": holder.cadence.get("next_send_at")}
+        return state_to_dict(holder)
+
+    return _finish
+
+
+def detect_manual_first_reply(state: Any, now: datetime, instantly: Any, store: Any,
+                              dry_run: bool = False) -> Dict[str, Any]:
+    """Find the first reply Lorenzo sent himself from the Instantly thread and
+    start the ladder from it (day 0 = its send time, E1 the next business
+    day). Returns a result dict with ``action`` in: not_candidate |
+    no_instantly_client | no_reply_found | ladder_would_start (dry run) |
+    ladder_started | reply_recorded (recorded, not armed: ``reason`` is
+    arm_refusal's) | already_recorded | check_failed (``error``; nothing was
+    recorded, the next tick tries again).
+
+    For a candidate only (first_reply_skip_reason) whose newest card is one
+    Lorenzo sends by hand (pending_first_reply_card). One read-only GET
+    /emails per call: the inbox's manual rows (``email_type=manual``,
+    ``eaccount``, and ``campaign_id`` when known), from which
+    manual_first_reply_in picks the reply. Shadow and live alike: it is a
+    read, and only the engine's own store is written.
+
+    On a find (not ``dry_run``): the lead leaves the 90-day nurture
+    (``nurture.leave(email, "re_engaged", now)``) when enrolled, first, so a
+    tick never stops the fresh ladder as ``nurture``; then the lead row is
+    written through approval.save_stale_write under the row's lock, where
+    _record_first_reply_under_lock checks again that no reply of ours was
+    recorded meanwhile, so the ladder is never armed twice. ``state`` is
+    updated with what was written. The card itself is left as it is
+    (approval.py owns it): answered_card_ids keeps it from stopping the
+    ladder.
+
+    ``dry_run`` reads the thread and reports what it would do; it writes
+    nothing (no lead row, no nurture record, no Job_Log row). Never raises
+    for an Instantly or store error: that is ``check_failed``."""
+    ct = slot_rules.to_tz(now)
+    email = _field(state, "lead_email")
+    base = {"lead_email": email, "campaign_id": _field(state, "campaign_id"), "now": ct.isoformat()}
+    skip = first_reply_skip_reason(state, ct)
+    if skip:
+        return dict(base, action="not_candidate", reason=skip)
+    if store is None:
+        return dict(base, action="not_candidate", reason="no_store")
+    try:
+        card = pending_first_reply_card(state, store)
+    except Exception as exc:  # noqa: BLE001 - retried next tick
+        logger.warning("could not read the cards of %s: %s", email, exc)
+        return dict(base, action="check_failed", error="could not read this lead's cards: %s" % exc)
+    if card is None:
+        return dict(base, action="not_candidate", reason="no_pending_card")
+    approval_id = str(card.token).split(".", 1)[0]
+    base["approval"] = approval_id
+    if instantly is None:
+        return dict(base, action="no_instantly_client")
+    try:
+        page = instantly.list_emails(email_type="manual", eaccount=_field(state, "eaccount"),
+                                     campaign_id=_field(state, "campaign_id"), limit=FIRST_REPLY_PAGE_SIZE)
+    except Exception as exc:  # noqa: BLE001 - an Instantly failure is counted, never raised
+        logger.warning("could not read the thread of %s: %s", email, exc)
+        return dict(base, action="check_failed", reason="instantly_read_failed", error=str(exc)[:200])
+    more = False
+    if isinstance(page, dict):
+        rows = page.get("items") or []
+        more = bool(page.get("next_starting_after"))
+    elif isinstance(page, list):
+        rows = page
+    else:
+        rows = []
+    found = manual_first_reply_in(state, rows)
+    if found is None:
+        # ``more``: the page was full and older rows were not read. The reply
+        # sought is recent, so it would be on this page; said, not guessed at.
+        return dict(base, action="no_reply_found", rows_read=len(rows), more=more)
+    sent_at = slot_rules.to_tz(found["sent_at"])
+    out = dict(base, email_id=found.get("email_id"), sent_at=sent_at.isoformat())
+    if dry_run:
+        try:
+            enrolled = in_nurture(state, store)  # type: Optional[bool]
+        except Exception:  # noqa: BLE001 - a report only
+            enrolled = None
+        return dict(out, action="ladder_would_start", dry_run=True, would_leave_nurture=enrolled,
+                    next_send_at=next_business_day_send(sent_at).isoformat())
+
+    from services.reply_engine import approval as approval_mod
+    from services.reply_engine import nurture as nurture_mod
+
+    # Read again after the Instantly call, outside the row's lock (the locked
+    # decision cannot read the store): the card, its context, the other cards
+    # (for arm_refusal, as approval._open_other_cards reads them) and the
+    # nurture record.
+    try:
+        now_card = pending_first_reply_card(state, store)
+        tokens = list(getattr(state, "approvals", None) or [])
+        open_ids = approval_mod.open_card_ids(store, tokens, ct)
+        context = approval_mod.card_context(store, approval_id)
+        enrolled = in_nurture(state, store)
+    except Exception as exc:  # noqa: BLE001 - retried next tick
+        logger.warning("could not re-read the cards of %s: %s", email, exc)
+        return dict(out, action="check_failed", error="could not re-read this lead's cards: %s" % exc)
+    if now_card is None or str(now_card.token).split(".", 1)[0] != approval_id:
+        return dict(out, action="already_recorded", reason="card_moved")
+    open_card_map = {}  # type: Dict[str, bool]
+    for token in tokens:
+        other = str(token).split(".", 1)[0]
+        if other and other != approval_id:
+            open_card_map[other] = other in open_ids
+    left = None
+    if enrolled:
+        try:
+            left = nurture_mod.leave(email, "re_engaged", ct, store)
+        except Exception as exc:  # noqa: BLE001 - nothing recorded yet; retried next tick
+            logger.warning("nurture.leave(re_engaged) failed for %s: %s", email, exc)
+            return dict(out, action="check_failed", error="could not take the lead out of the nurture: %s" % exc)
+
+    snapshot = state_to_dict(state)
+    box = {}  # type: Dict[str, Any]
+    try:
+        written = approval_mod.save_stale_write(
+            store, state.key, snapshot, snapshot, normalize=_row_shape,
+            finish=_record_first_reply_under_lock(now_card, found, open_card_map, context, ct, box))
+    except Exception as exc:  # noqa: BLE001 - one lead's row must not end the tick; retried next tick
+        logger.error("could not write %s's first reply from the thread: %s", email, exc)
+        return dict(out, action="check_failed", error="the lead row could not be written: %s" % exc)
+    result = box.get("result")
+    if result is None:
+        return dict(out, action="check_failed", error="the record decision did not run")
+    if not result.get("recorded"):
+        return dict(out, action="already_recorded", reason=result.get("reason"))
+    if isinstance(written, dict):
+        now_state = state_from_dict(written)
+        for field in ("last_outbound_at", "offered_slots", "history", "cadence", "status"):
+            setattr(state, field, getattr(now_state, field, None))
+    armed = bool(result.get("armed"))
+    _log_job("first_reply_from_thread", {
+        "lead": email, "approval": approval_id, "email_id": found.get("email_id"),
+        "reply_at": context.get("reply_at"), "sent_at": sent_at.isoformat(), "cadence_armed": armed,
+        "cadence_not_armed": None if armed else result.get("reason"), "next_send_at": result.get("next_send_at"),
+        "left_nurture": bool(left)})
+    if armed:
+        return dict(out, action="ladder_started", day=0, next_send_at=result.get("next_send_at"),
+                    left_nurture=bool(left))
+    return dict(out, action="reply_recorded", reason=result.get("reason"), left_nurture=bool(left))
 
 
 def hold_cause(reason: Optional[str]) -> str:
