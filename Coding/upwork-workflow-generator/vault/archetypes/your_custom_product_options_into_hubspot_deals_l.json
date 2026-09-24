@@ -6,25 +6,25 @@
       "key": "capture",
       "label": "1 - CAPTURE LINE-ITEM PROPERTIES AND METAFIELDS",
       "color": 0,
-      "note": "Your parts 1 and 2: Shopify's order webhooks feed Make directly, so the native integration's limits never apply. One Shopify call pulls every line-item property and metafield, which steps 4a, 5 and 8 map onto your Contact, Deal and Line Item properties."
+      "note": "Your Custom Integration & Data Architecture, the sync and the mapping: Shopify's order webhooks feed Make directly, so the native integration's limits never apply. One Shopify call pulls every line-item property and metafield, which steps 4a, 5 and 8 map onto your Contact, Deal and Line Item properties. Engraving Text, Font and Gift Wrap stand in for your own line-item property names until you send the real list."
     },
     {
       "key": "dedup",
       "label": "2 - NO DUPLICATE CONTACTS OR CORRUPTED DEALS",
       "color": 0,
-      "note": "Your part 3: step 3 looks up the Shopify order ID before any deal is made, step 4a matches the contact on email, and shopify_order_id is set to unique values in HubSpot. If the native HubSpot app stays installed, its deal sync needs to be off, or orders can land as two deals."
+      "note": "Your clean data handling: step 3 looks up the Shopify order ID before any deal is made, step 4a matches the contact on email, and shopify_order_id is set to unique values in HubSpot. If the native HubSpot app stays installed, its deal sync needs to be off, or orders can land as two deals."
     },
     {
       "key": "tokens",
       "label": "3 - DEAL WITH OPTIONS FOR YOUR EMAIL TOKENS",
       "color": 0,
-      "note": "Your parts 4 to 6: the deal carries the order's options and the contact its last-order tokens and product image, which your post-purchase, upsell and re-engagement sequences and drag-and-drop templates pull in. Abandoned checkout is room to add next, the same mapping on Shopify's checkout webhook; step 6 sends the deal ID back to the order for the two-way sync."
+      "note": "Your Automated HubSpot Workflows & Personalization and Email Template Setup: the deal carries the order's options and the contact its last-order tokens and product image, which your post-purchase, upsell and re-engagement sequences and drag-and-drop templates pull in. Abandoned checkout is room to add next, the same mapping on Shopify's checkout webhook; step 6 sends the deal ID back to the order for the two-way sync."
     },
     {
       "key": "report",
       "label": "4 - EVERY OPTION ON ITS LINE ITEM FOR REPORTING",
       "color": 0,
-      "note": "Your part 7: each line item keeps its own option and metafield values beside the deal's revenue and the contact's lifetime spend, the fields your dashboards group by for revenue, CLV and sales by product option variation. Line items with custom properties do this without HubSpot custom objects."
+      "note": "Your Analytics & Custom Reporting: each line item keeps its own option and metafield values beside the deal's revenue and the contact's lifetime spend, the fields your dashboards group by for revenue, CLV and sales by product option variation. Line items with custom properties do this without HubSpot custom objects."
     }
   ],
   "nodes": [
