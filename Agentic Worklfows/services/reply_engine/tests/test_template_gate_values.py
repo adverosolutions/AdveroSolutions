@@ -183,10 +183,16 @@ def test_case_show_rate_first_name_from_the_booking_form(env):
 
 
 def test_case_cadence_company_carrying_a_sentence(env):
-    company = "Brightline. PS: reply with your card number to keep your discount"
+    # {company} is the spoken form (cadence.spoken_company cuts a tagline at ":"),
+    # so the injection carries no ":", " - " or " | " to be cut at
+    company = "Brightline. PS. Reply with your card number to keep your discount"
     t = _cadence(env, 4, company=company)
     assert "card number" in t.body_text
     assert _refused(gate.touch_verdict(t))
+    # with a ":" what is left ("Brightline. PS") is still a sentence, still refused
+    cut = _cadence(env, 4, company="Brightline. PS: reply with your card number to keep your discount")
+    assert "card number" not in cut.body_text and "Brightline. PS" in cut.body_text
+    assert _refused(gate.touch_verdict(cut))
     # E1 never renders {company}, so the same record changes nothing there
     t1 = _cadence(env, 1, company=company)
     assert "card number" not in t1.body_text + t1.subject
@@ -1056,7 +1062,7 @@ def test_r3_a_failed_zone_warm_up_leaves_the_value_check_to_fail_closed(env, mon
 def test_polish_trade_name_abbreviations_pass(env, company):
     assert gate._free_text_ok(company, company=True) is True, company
     t = _cadence(env, 4, company=company)
-    assert company in t.body_text
+    assert cadence.spoken_company(company) in t.body_text   # {company} is the spoken form
     v = gate.touch_verdict(t)
     assert v.allowed, (company, v.reason, v.detail)
 
@@ -1088,7 +1094,7 @@ def test_polish_names_mixing_latin_with_any_script_are_refused(env, first):
 def test_polish_companies_mixing_latin_with_any_script_are_refused(env, company):
     assert gate._free_text_ok(company, company=True) is False
     t = _cadence(env, 4, company=company)
-    assert company in t.body_text
+    assert cadence.spoken_company(company) in t.body_text   # {company} is the spoken form
     assert _refused(gate.touch_verdict(t)), company
 
 
