@@ -450,9 +450,11 @@ lead's record needs repairing.
 
 ## A first reply you sent yourself, found in the thread
 
-**What you see.** Nothing: no push. When the follow-up tick finds the first
-reply you sent from the Instantly thread, it records it on the lead, starts
-the ladder, and closes that "Reply to send yourself" card as `sent_manually`
+**What you see.** Nothing: no push.
+
+**What it means.** The follow-up tick found the first reply you sent from the
+Instantly thread. It recorded it on the lead, started the ladder, and closed
+that "Reply to send yourself" card as `sent_manually`
 (`approval.mark_answered_in_thread`, Job_Log `card_closed_from_thread`). The
 card stops being chased and keeps its held times.
 
