@@ -11,7 +11,8 @@ Owns the ``cadence`` dict on LeadState:
       "next_send_at": ISO|None,   # next 10:00 CT send instant
       "touches": [ {...}, ... ],  # one record per touch (or would_do in shadow)
       "stopped_reason": str|None, # booked | inbound_reply | unsubscribe | hostile |
-                                  # follow_up_later | opt_out | vetoed | exhausted
+                                  # follow_up_later | opt_out | vetoed | exhausted |
+                                  # nurture (enrolled in the 90-day nurture, nurture.py)
       "veto_notified_at": ISO|None,
       "d6_notified_at": ISO|None,
       "stall_notified_at": ISO|None,          # "waiting on your fresh draft" said once
@@ -649,8 +650,21 @@ def arm(state: Any, now: datetime, store: Any = None, restart: bool = False) -> 
 
 
 def resume(state: Any, now: datetime, store: Any = None) -> Any:
-    """Explicit alias for the resume path (arm keeps the completed day)."""
+    """Explicit alias for the resume path (arm keeps the completed day).
+    Refuses (returns the state untouched) while the lead is enrolled in the
+    90-day nurture: that lead gets no more follow-up touches."""
+    if in_nurture(state, store):
+        return state
     return arm(state, now, store=store, restart=False)
+
+
+def in_nurture(state: Any, store: Any = None) -> bool:
+    """True while the lead has an active 90-day nurture record
+    (nurture.enroll). Read from the record's own key, in the shared store when
+    none is passed. A store that cannot be read raises; callers hold."""
+    from services.reply_engine import nurture as nurture_mod
+
+    return nurture_mod.is_enrolled(_field(state, "lead_email"), store)
 
 
 RESUMABLE_STOPS = ("recipient_unconfirmed", "template_unapproved")
@@ -2681,6 +2695,22 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
     if not cad.get("armed_at"):
         return dict(base, action="not_armed")
 
+    pause = is_auto_reply_pause(state)
+    # A lead enrolled in the 90-day nurture (nurture.enroll) gets no more
+    # follow-up touches: a running ladder is stopped for it before anything
+    # else is looked at, and an auto-reply pause is not resumed past it. A
+    # nurture record that cannot be read holds the lead this tick.
+    if pause or not cad.get("stopped_reason"):
+        try:
+            enrolled = in_nurture(state, store)
+        except Exception as exc:  # noqa: BLE001 - never let an unreadable nurture record through
+            logger.warning("could not read the nurture record of %s: %s", email, exc)
+            return dict(base, action="error", error="could not read this lead's nurture record: %s" % exc)
+        if enrolled:
+            if not dry_run:
+                stop(state, "nurture", ct)
+            return dict(base, action="stopped", reason="nurture", needs_fresh_draft=False)
+
     # A card waiting on Lorenzo is a reply of the lead's that nobody has
     # answered yet. Nothing of the ladder's goes out on top of it, whatever the
     # ladder's own fields say (a pause resumed on a copy read before the reply
@@ -2692,7 +2722,6 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
     # hostile or not-now lead, or a newer inbound, is stopped for that below,
     # and nothing goes out either way; the open card stops a ladder that
     # nothing else would.
-    pause = is_auto_reply_pause(state)
     waiting = []  # type: List[str]
     if pause or not cad.get("stopped_reason"):
         try:
