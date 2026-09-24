@@ -4,7 +4,7 @@ nothing here runs unless a test asks for it.
     from services.reply_engine.tests.template_fixtures import template_env, template_env_ladders  # noqa: F401
 
     def test_x(template_env):
-        template_env.approve_ids("cadence.d1")
+        template_env.approve_ids("cadence.e1")
         template_env.kill_switch(True)             # "auto_send": false in the tmp file
         template_env.kill_switch(True, via="env")  # AUTO_SEND_TEMPLATES=0
 

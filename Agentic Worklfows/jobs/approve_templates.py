@@ -1,11 +1,11 @@
 """Approve cold-email templates once, so emails of that type can send without a per-email Approve.
 
     python3 jobs/approve_templates.py --list
-    python3 jobs/approve_templates.py --show cadence.d1
+    python3 jobs/approve_templates.py --show cadence.e1
     python3 jobs/approve_templates.py --export .tmp/templates_for_approval.md
-    python3 jobs/approve_templates.py --approve cadence.d1 cadence.d3
+    python3 jobs/approve_templates.py --approve cadence.e1 cadence.e3
     python3 jobs/approve_templates.py --approve-all-shown .tmp/templates_for_approval.md
-    python3 jobs/approve_templates.py --revoke cadence.d1
+    python3 jobs/approve_templates.py --revoke cadence.e1
 
 --approve, --approve-all-shown and --revoke write config/approved_templates.json.
 They need an interactive terminal: you type APPROVE to confirm, or pass --yes,
