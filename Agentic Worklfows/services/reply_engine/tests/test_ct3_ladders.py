@@ -209,13 +209,25 @@ def test_e2_by_default_never_calls_the_research_model(store, tmp_env):
 
 
 def test_e2_with_a_model_line_is_held_never_sent(store, tmp_env):
-    llm.register_fake("research", lambda system, user, json_mode: "Your crews cover three towns, which is a lot")
+    """P4: a line that is not the fallback sits under cadence.e2.research_rules,
+    which the gate refuses until Lorenzo approves it; in "llm" mode the tick
+    then researches nothing and E2 goes with the approved fallback line."""
+    model_line = "Your crews cover three towns, which is a lot"
+    calls = []
+    llm.register_fake("research", lambda system, user, json_mode: calls.append(1) or model_line)
     try:
+        state = make_state()
+        touch = cadence.build_touch(state, 2, FREE, research_line=model_line)
+        assert touch.meta["research_source"] == "override"
+        assert list(touch.template_parts) == [cadence.E2_RESEARCH_RULES_ID]
+        assert not cadence._template_touch_verdict(state, touch).allowed
         now = ct(2026, 9, 22, 10, 0)
         res = cadence.tick_lead(at_day(1, now), now, store=store, free_slots=FREE, notify_fn=lambda *a, **k: None,
                                 research_mode="llm")
-        assert res["action"] == "held_template" and "cadence.e2.research_line" in res["ids"]
-        assert replies() == []
+        assert res["action"] == "would_send" and calls == []
+        sent = replies()
+        assert sent and all(model_line not in json.dumps(r) for r in sent)
+        assert cadence.fallback_research_line("", "reactivation") in json.dumps(sent[-1])
     finally:
         llm.clear_fakes()
 

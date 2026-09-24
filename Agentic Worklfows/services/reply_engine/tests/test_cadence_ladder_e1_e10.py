@@ -307,7 +307,7 @@ def test_the_template_ids_follow_the_campaign(combo):
     line = "reactivation_bookkeeping" if combo == ("bookkeeping", "reactivation") else offer
     assert cadence.touch_template_ids(1, state) == ("cadence.e1", [])
     assert cadence.touch_template_ids(2, state) == ("cadence.e2", ["cadence.e2.research_fallback.%s" % offer])
-    assert cadence.touch_template_ids(2, state, research_source="llm") == ("cadence.e2", ["cadence.e2.research_line"])
+    assert cadence.touch_template_ids(2, state, research_source="researched") == ("cadence.e2", [cadence.E2_RESEARCH_RULES_ID])
     assert cadence.touch_template_ids(4, state) == ("cadence.e4", ["cadence.e4.offer_proof.%s" % offer])
     assert cadence.touch_template_ids(5, state) == ("cadence.e5", ["cadence.e5.offer_line.%s" % line])
     assert cadence.touch_template_ids(6, state) == ("cadence.e6", ["cadence.e6.preview.%s_%s" % (niche, offer)])
