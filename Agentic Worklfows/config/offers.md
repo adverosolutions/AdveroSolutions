@@ -25,7 +25,7 @@ Other allowed proof (P.S. bullets only, from Lorenzo's case studies): lender $5M
 ## Reply rules the engine must obey
 
 1. Answer the question first, in one or two sentences, using only the table above.
-2. Then offer two specific afternoon slots (12:00–18:00 CT, Mon–Fri, ≥4 h out, within 5 business days, never a slot already offered to someone else that day), then the booking link: "or if it's easier, grab a time here".
+2. Then offer two specific afternoon slots (12:00–18:00 CT, Mon–Fri, ≥4 h out, within 5 business days, never a slot already offered to someone else that day). Never send a booking link: the lead picks one of the two times and Lorenzo sends the calendar invite (Lorenzo, 2026-09-23, every email). When an email offers new times after earlier times the lead did not book, it says those earlier times got taken, in varied wording.
 3. "Send me info" → one-line mechanism + offer to walk through it on a 15-minute call. No attachments, no decks.
 4. "Not now" → Follow Up Later with a date; never argue.
 5. Referral ("talk to X") → thank, ask for the intro, offer the same two slots for X.
