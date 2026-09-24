@@ -18,10 +18,10 @@ ladder. Such a card is a first-contact card ("Reply to send yourself"): Mark sen
 Edit. Tapping **Mark sent** after sending (`approval.mark_sent_manually`, which takes a pending
 first-contact card) records a `reply_sent_manually` history event, closes the card, releases the lock and
 arms E1 for the next business day. If he does not tap it, the hourly cadence tick finds his send in the
-thread and records the same event (`runbooks/cadence_and_booking.md`, "How the ladder starts"); the card is
-not closed by that yet (an `approval.py` change, section 4): it stays `pending` and chased until it expires
-after 48 hours, and Mark sent on it is refused because the lead now counts as answered. Leave it to
-expire.
+thread and records the same event (`runbooks/cadence_and_booking.md`, "How the ladder starts"), then
+closes the pending card (`approval.mark_answered_in_thread`: status `sent_manually`, marked by "thread");
+a `blocked` or `stale_slots` card stays as it is. Mark sent on a card already answered in the thread
+closes it without a second event, and a hand-made Approve link on it is refused.
 
 A card the template gate allowed is created with its push deferred and sent at once through the same
 path an Approve tap takes (`approval.auto_send_approved`), in the same pipeline run, so it normally leaves
