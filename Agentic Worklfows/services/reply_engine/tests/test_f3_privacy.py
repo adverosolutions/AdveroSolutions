@@ -136,6 +136,27 @@ def test_resume_get_for_a_lead_with_no_state_is_the_same_neutral_page(world):
     assert "nobody" not in page.text and "lead:" not in page.text
 
 
+def test_resume_post_for_a_lead_with_no_state_is_the_same_neutral_403_as_a_bad_token(world):
+    """The POST used to answer 404 "No state at lead:..." before checking the
+    token, which said whether the lead exists and echoed the store key."""
+    state = _stopped_state(world["store"])
+    unknown = world["client"].post(_path(email="nobody@brightpath-test.example", token="x.y"))
+    bad = world["client"].post(_path(token="x.y"))
+    assert unknown.status_code == bad.status_code == 403
+    assert unknown.text == bad.text
+    assert "not signed for this lead, or it has expired" in unknown.text
+    assert "nobody" not in unknown.text and "lead:" not in unknown.text
+    assert world["store"].get(state.key)["cadence"]["stopped_reason"] == "recipient_unconfirmed"
+
+
+def test_resume_post_with_a_valid_token_still_resumes(world):
+    state = _stopped_state(world["store"])
+    token = cadence.make_decision_token("resume", state, NOW)
+    page = world["client"].post(_path(token=token))
+    assert page.status_code == 200 and "Resumed" in page.text
+    assert not world["store"].get(state.key)["cadence"].get("stopped_reason")
+
+
 def test_resume_get_with_no_signing_secret_is_refused_like_the_post(world, monkeypatch):
     state = _stopped_state(world["store"])
     token = cadence.make_decision_token("resume", state, NOW)

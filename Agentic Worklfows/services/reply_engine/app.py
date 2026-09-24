@@ -2756,13 +2756,12 @@ def cadence_resume(campaign_id: str, email: str, t: Optional[str] = Query(defaul
     cadence = _optional("cadence")
     if cadence is None:
         return _page("Cadence unavailable", "<p>The cadence module is not deployed.</p>", status=503)
-    state, key = _cadence_state(unquote(campaign_id), unquote(email))
-    if state is None:
-        return _page("Unknown lead", "<p>No state at %s.</p>" % _esc(key), status=404)
+    state, _key = _cadence_state(unquote(campaign_id), unquote(email))
     now = DEPS.now()
     # Must verify True: an unsigned resume (no secret configured, or no token)
-    # never restarts a stopped ladder.
-    if cadence.verify_decision_token("resume", state, t, now) is not True:
+    # never restarts a stopped ladder. A lead with no state gets the same
+    # neutral 403 as a bad token, like the GET: nothing says whether it exists.
+    if state is None or cadence.verify_decision_token("resume", state, t, now) is not True:
         return _page("Not resumed", "<p>That link is not signed for this lead, or it has expired.</p>", status=403)
     base = state.to_store()
     stopped = (state.cadence or {}).get("stopped_reason")

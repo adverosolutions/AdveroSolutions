@@ -1,4 +1,9 @@
 # AdveroSolutions System Dependencies
+#
+# This file serves the old execution/ scripts. The reply engine's own pins
+# live in services/reply_engine/requirements.txt, and it shares this python3,
+# so every package pinned in both files must have the same pin (enforced by
+# changesets/tests/test_requirements_agree.py).
 
 # Core
 python-dotenv==1.0.0
@@ -11,7 +16,7 @@ google-auth-oauthlib==1.2.0
 gspread==5.12.4
 
 # Anthropic (Claude API)
-anthropic==0.39.0
+anthropic==0.92.0
 
 # Date/Time handling
 pytz==2023.3
@@ -21,14 +26,16 @@ python-dateutil==2.8.2
 pandas==2.1.4
 openpyxl==3.1.2
 
-# Modal (Cloud Functions)
-modal==0.63.64
+# Modal (Cloud Functions). The same modal deploys the reply engine
+# (runbooks/deployment.md is written against 1.2.6), so keep this at the
+# version installed on the laptop.
+modal==1.2.6
 
 # HTTP utilities
-httpx==0.25.2
+httpx==0.28.1
 
 # Validation
-pydantic==2.5.3
+pydantic==2.12.5
 
 # Templating (Free Value generator)
 jinja2>=3.1.0

@@ -186,7 +186,8 @@ MAX_SUBJECT_CHARS = 300
 # such D1 is then checked afresh once after the deploy. Without the bump it
 # stays held until the lead's data or the template changes, or Lorenzo taps
 # Resume on its stop (runbooks/template_approvals.md, "Cadence holds, stalls
-# and resume").
+# and resume"). tests/test_gate_rules_version.py pins this module's source
+# per version, so a change to this file without a bump fails the suite.
 GATE_RULES_VERSION = 1
 
 # Placeholder types.

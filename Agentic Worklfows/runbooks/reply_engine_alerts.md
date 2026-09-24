@@ -887,8 +887,8 @@ If the mismatch comes back after a fresh preflight and redeploy, the laptop
 and Modal render some template differently, so redeploying again will not
 help. The laptop already runs the same pydantic (2.12.5) and pytz (2023.3) as
 the Modal image, which installs `services/reply_engine/requirements.txt`; the
-pydantic 2.5.3 pin in the top-level `requirements.txt` is not what either one
-runs. So the real difference today is Python: 3.9.6 on the laptop against
+top-level `requirements.txt` now pins the same versions for every package the
+two files share (`changesets/tests/test_requirements_agree.py`). So the real difference today is Python: 3.9.6 on the laptop against
 3.11 in the image. That difference has been checked: on 2026-09-23 a local
 Python 3.11 rendered every approvable template of the catalogue of that time
 (111) exactly as the laptop's 3.9.6 does (fastapi was stubbed out). The check
