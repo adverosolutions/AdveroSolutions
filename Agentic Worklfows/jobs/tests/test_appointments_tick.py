@@ -383,8 +383,8 @@ def test_an_outbound_booking_from_ghl_keeps_its_offer_type():
     assert sr.offer_of(a) == "outbound" and sr.niche_of(a) == "cleaning"
     t = {x.template_key: x for x in sr.schedule_for(a, NOW)}
     confirm = t["confirm_email"].body
-    assert "$24,000" in confirm
-    assert "20 to 30%" not in confirm and "$6M" not in confirm
+    assert "a concrete plan for getting in front of new buildings." in confirm
+    assert "winning those accounts back" not in confirm
 
 
 def test_a_real_booking_with_status_new_is_not_mistaken_for_a_cadence_hold():

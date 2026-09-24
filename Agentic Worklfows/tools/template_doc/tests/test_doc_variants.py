@@ -116,12 +116,10 @@ def test_a_version_block_quotes_what_it_replaces(built):
     assert len(replaced) == 1 and "{slots}" in replaced[0]
     assert reader.notes(tid + "/no_slots") == ['Instead of "%s":' % replaced[0]]
     assert reader.body(tid + "/no_slots") == added
-    loom = [t for t in by if any(x["name"] == "no_loom_url" for x in by[t]["variants"])]
-    assert loom
-    for t in loom:
-        assert reader.notes(t + "/no_loom_url")[0].startswith('Leaves out "') and not reader.body(t + "/no_loom_url")
-        assert "{loom_url}" in reader.notes(t + "/no_loom_url")[0]
-        assert reader.notes(t + "/no_call_link_or_loom") == [doc_rules.COMBOS["no_call_link_or_loom"][1]]
+    # the confirmation's no_loom_url / no_call_link_or_loom versions left the
+    # catalogue with its Loom line (2026-09-24): no template has them now
+    assert not [t for t in by if any(x["name"] in ("no_loom_url", "no_call_link_or_loom")
+                                     for x in by[t]["variants"])]
     # a follow-up email whose versions write one spliced line out says which (a note); one whose versions keep
     # the placeholder (follow-up email 2 keeps {research_line}) does not
     manifest = json.load(io.open(built["manifest_path"], encoding="utf-8"))
@@ -345,7 +343,7 @@ def test_no_part_of_any_template_can_change_unseen(built, tmp_path):
         assert by_mode[m] > len(entries) // 2, (m, by_mode)
     parts_seen = set(k[0] for k, v in results.items() if v["shown"])
     assert {"main", "subject", "value_formats", "missing_lead_data", "no_slots", "dated",
-            "lead_in_other_timezone", "no_loom_url", "no_call_link_or_loom"} <= parts_seen, parts_seen
+            "lead_in_other_timezone", "no_call_link"} <= parts_seen, parts_seen
 
 
 def test_a_version_the_change_notes_cannot_say_is_shown_in_full(built, tmp_path):

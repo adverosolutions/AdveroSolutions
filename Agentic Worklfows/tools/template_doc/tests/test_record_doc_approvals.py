@@ -839,17 +839,6 @@ def _index_from(build):
     return dict((tid, {"sha256": h, "approvable": True, "extractable": True}) for tid, h in build["hashes"].items())
 
 
-def test_dropped_lines_are_shown(doc):
-    areas = doc_areas.areas(doc["manifest"]["visible"])
-    loom = [tid for tid, e in ta.catalogue_index().items()
-            if e.get("approvable") and any(v["name"] == "no_loom_url" for v in e["variants"])]
-    assert loom
-    for tid in loom:
-        notes = areas[tid + "/no_loom_url"]
-        assert notes[0] == "If no Loom link is set up: (tag: %s/no_loom_url)" % tid
-        assert notes[1].startswith('Leaves out "') and "{loom_url}" in notes[1] and notes[1].endswith('". (note) @0')
-
-
 VARIANT_RE = re.compile(r"^=== variant: (\S+) \((.*)\) ===$")
 
 
