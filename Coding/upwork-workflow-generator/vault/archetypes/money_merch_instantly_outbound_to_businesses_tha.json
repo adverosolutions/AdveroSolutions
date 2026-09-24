@@ -62,7 +62,7 @@
     {
       "key": "clean",
       "kind": "data.transform",
-      "label": "5 - Clean the List: Duplicates, Catch-Alls and Current Customers Out",
+      "label": "5 - Clean the List: Remove Duplicates, Risky Emails and Current Customers",
       "section": "verify"
     },
     {
@@ -74,7 +74,7 @@
     {
       "key": "domains",
       "kind": "data.transform",
-      "label": "7 - Separate Sending Domains: One Mailbox Per 175 Companies a Month",
+      "label": "7 - Separate Sending Domains Protect Your Main One: 1 Mailbox Per 175 Companies a Month",
       "section": "instantly",
       "notes": "Your main domain never carries cold sends."
     },
