@@ -9,7 +9,7 @@ Read in order: the lead said "interested", Lorenzo replied by hand with two time
 4. No Claudeisms: no sentence or tacked-on clause that restates, sums up or sells the point just made. Test: delete it; if no fact, question or next step is lost, it goes.
 5. Normal capitalization.
 
-Walkthrough status: E1 to E5 agreed 2026-09-23. E6 onward still show the editor's drafts below; rules 1 and 2 are applied as each email is walked through.
+Walkthrough status: E1 to E6 agreed 2026-09-23. E7 onward still show the editor's drafts below; rules 1 and 2 are applied as each email is walked through.
 
 ## E1 · Day 1 · Two fresh times, lightest nudge (AGREED 2026-09-23)
 Hey {first_name},
@@ -79,33 +79,26 @@ Lorenzo
 
 Agreed with Lorenzo 2026-09-23: his wording plus one line tying it to the offer. "The slots keep getting filled" covers the earlier times being gone. Kept (not dropped).
 
-## E6 · Day 6 · A preview of the call
+## E6 · Day 6 · A preview of the call (AGREED 2026-09-23)
 Hey {first_name},
 
 Here's a preview of what I'd show you on the call.
 
-The first two messages I'd send accounts that cancelled or never signed: "Quick question, who's handling your cleaning these days?" and "Happy to take another look at the space and send a fresh quote. Want me to set that up?"
+{preview}
 
-The rest takes about 15 minutes. I've got {slots} open, or pick whatever's easiest here: {booking_url}
-
-Lorenzo
-
-Alternate (the priority check, if you'd rather not send a preview; E7 and E8 already carry this beat, so use one or the other):
-Hey {first_name},
-
-Want to make sure this is still a priority for you.
-
-If it is, I've got {slots} open, or pick whatever's easiest here: {booking_url}
+The rest takes about 15 minutes. Those last two times are gone, but I've got {slots} open.
 
 Lorenzo
 
-Per-offer lines (the middle paragraph swaps per campaign, so E6 is six fixed templates; the email above shows Cleaning, reactivation):
-Cleaning, reactivation: The first two messages I'd send accounts that cancelled or never signed: "Quick question, who's handling your cleaning these days?" and "Happy to take another look at the space and send a fresh quote. Want me to set that up?"
-Bookkeeping, reactivation: The first two messages I'd send former clients and old inquiries: "Checking in, who's keeping your books these days?" and "Want us to get everything caught up before your next quarterly estimate is due?"
-Recruiting, reactivation: The first two messages I'd send clients who've gone quiet: "Anything you're hiring for this quarter that we could help with?" and "If a role's been open longer than you'd like, send it over and we'll take a first pass."
-Cleaning, outbound: The three things I'd watch for in your area: new office leases, companies moving into bigger space, and buildings that just changed property managers. Each one is a fresh reason to pick a cleaner, and the outreach goes out under your name.
-Bookkeeping, outbound: The three things I'd watch for in your area: newly registered businesses, companies posting for a part-time bookkeeper, and businesses opening a second location. Each one is an owner with a new reason to hand off the books, and the outreach goes out under your name.
-Recruiting, outbound: What I'd watch for in your market: specialty roles hitting the job boards, especially ones that sit open for weeks or get reposted. Each one is a hiring manager with a reason to take your call, and the outreach goes out under your name.
+{preview} by campaign (six fixed templates; Claudeism kickers cut from the outbound lines 2026-09-23):
+- Cleaning, reactivation: The first two messages I'd send accounts that cancelled or never signed: "Quick question, who's handling your cleaning these days?" and "Happy to take another look at the space and send a fresh quote. Want me to set that up?"
+- Bookkeeping, reactivation: The first two messages I'd send former clients and old inquiries: "Checking in, who's keeping your books these days?" and "Want us to get everything caught up before your next quarterly estimate is due?"
+- Recruiting, reactivation: The first two messages I'd send clients who've gone quiet: "Anything you're hiring for this quarter that we could help with?" and "If a role's been open longer than you'd like, send it over and we'll take a first pass."
+- Cleaning, outbound: The three things I'd watch for in your area: new office leases, companies moving into bigger space, and buildings that just changed property managers. The outreach goes out under your name.
+- Bookkeeping, outbound: The three things I'd watch for in your area: newly registered businesses, companies posting for a part-time bookkeeper, and businesses opening a second location. The outreach goes out under your name.
+- Recruiting, outbound: What I'd watch for in your market: specialty roles hitting the job boards, especially ones that sit open for weeks or get reposted. The outreach goes out under your name.
+
+Agreed with Lorenzo 2026-09-23: the preview version (not the priority check, which E7 and E8 carry). Booking link removed; "Those last two times are gone" added (rule 2). The sample messages are the editor's draft of his first touch per niche.
 
 ## E7 · Day 7 · Close the week's loop
 Hey {first_name},
