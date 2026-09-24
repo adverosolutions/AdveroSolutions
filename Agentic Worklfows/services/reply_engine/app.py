@@ -421,16 +421,15 @@ def _already_booked_body(state: LeadState, slot_iso: str, booking_link: Optional
         pass
     booking = (state.cadence or {}).get("booking") or {}
     first = state.first_name or "there"
-    link = " If that no longer works, grab another time here: %s" % booking_link if booking_link else ""
     parts = ["Hey %s," % first, ""]
     if answer:
         parts += [answer, ""]
     if booking.get("awaiting_approval"):
-        line = "You are locked in for %s, invite on the way.%s" % (when, link)
+        line = "You are locked in for %s, invite on the way." % when
     elif booking.get("invite_released") is False:
-        line = "We are already set for %s.%s" % (when, link)
+        line = "We are already set for %s." % when
     else:
-        line = "We are already set for %s and the invite is on your calendar.%s" % (when, link)
+        line = "We are already set for %s and the invite is on your calendar." % when
     parts += [line, "", "Lorenzo"]
     return "\n".join(parts)
 
@@ -459,7 +458,7 @@ def _already_booked_template_id(state: LeadState, slot_iso: str, answer: Optiona
 
 def _already_booked_bindings(state: LeadState, slot_iso: str, booking_link: Optional[str]) -> Dict[str, str]:
     """{placeholder: value} for what _already_booked_body wrote: the lead's
-    first name (when on file), the call time and the booking link."""
+    first name (when on file) and the call time. No booking link (section 2)."""
     out = {}  # type: Dict[str, str]
     if state.first_name:
         out["first_name"] = state.first_name
@@ -467,8 +466,6 @@ def _already_booked_bindings(state: LeadState, slot_iso: str, booking_link: Opti
         out["slot"] = slots.format_slot(slots.to_tz(slots.parse_iso(slot_iso)))
     except (ValueError, TypeError):
         pass
-    if booking_link:
-        out["booking_url"] = booking_link
     return out
 
 
@@ -560,9 +557,9 @@ def _already_booked_draft(event: ReplyEvent, classification, state: LeadState, s
     body = _already_booked_body(state, slot_iso, booking_link, answer=answer)
     key = campaign_key_for(event)
     return Draft(subject=reply_subject(event.subject), body_text=body, offered_slots=[slot_iso],
-                 booking_link=booking_link, model="template", label=classification.label,
+                 booking_link=None, model="template", label=classification.label,
                  rationale="already booked for %s; answered without offering new times" % slot_iso,
-                 problems=validate_draft(body, booking_link=booking_link, campaign_key=key,
+                 problems=validate_draft(body, booking_link=None, campaign_key=key,
                                          allow_terms=lead_terms(event, state)),
                  template_id=_already_booked_template_id(state, slot_iso, answer))
 
