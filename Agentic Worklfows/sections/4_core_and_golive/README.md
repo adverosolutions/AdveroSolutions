@@ -37,9 +37,8 @@ This section keeps the shared engine safe and working, turns Lorenzo's edits in 
 
    The instant kill for anything deployed is `python3 -m modal app stop advero-reply-engine`.
 5. **Known small items** (reviewed, none blocking):
-   - cadence pushes on the public ntfy topic still show the lead's company: fix them, or narrow the sentence in `runbooks/reply_engine_alerts.md` (handed to section 1 on 2026-09-23: the code is in `cadence.py`);
-   - daily Resume reminders have no cap (handed to section 1 on 2026-09-23, same file);
-   - fixed on 2026-09-23: the resume page's POST no longer says "not found" before checking the signed link; `GATE_RULES_VERSION` has a pin test (`services/reply_engine/tests/test_gate_rules_version.py`); the top-level `requirements.txt` now pins the engine's anthropic, httpx and pydantic, and modal 1.2.6.
+   - fixed on 2026-09-23 by section 1 (`cadence.py`): cadence pushes on a public ntfy topic say "a lead" and carry no email or company; daily Resume reminders stop after 8 pushes or 14 days (the ladder stays stopped);
+   - fixed on 2026-09-23 by section 4: the resume page's POST no longer says "not found" before checking the signed link; `GATE_RULES_VERSION` has a pin test (`services/reply_engine/tests/test_gate_rules_version.py`); the top-level `requirements.txt` now pins the engine's anthropic, httpx and pydantic, and modal 1.2.6.
 
 ## Known test gaps (fresh worktree)
 A clean checkout of `main` on 2026-09-23 gave 11,635 passed and 2 failed, with 0 egress and 0 credential-file opens. Both failures depend on where the checkout sits, and both pass in the main folder:
