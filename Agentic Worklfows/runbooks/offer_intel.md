@@ -9,9 +9,9 @@ Plan and reasoning: `MAKER_SCHOOL_WINS_PLAN.md`. Code: `services/offer_intel/`, 
 3. **report** (free) maps industries and mechanisms to the fixed lists in `config/offer_intel/taxonomy.json`, ranks industry x mechanism patterns by **different winners in the last 90 days**, and writes:
    - `.tmp/offer_intel/out/wins.csv`, `patterns.csv`, `winners.csv`: import these into a Google Sheet called "Offer Intel"
    - `.tmp/offer_intel/out/digest_<date>.md`: top patterns, 3 to test, risers, unmatched terms
+   - `.tmp/offer_intel/out/hand_check.md` (with `--review`): each post next to what the models took from it
 
    Price medians (setup, monthly, deal) count only `new_client` and `first_client` wins, because month totals and call quotes are not one client's price.
-   - `.tmp/offer_intel/out/hand_check.md` (with `--review`): each post next to what the models took from it
 
 Nothing here posts to Skool, and nothing here feeds an email, a reply-engine draft or a proof line (a test fails if a copy path imports it). Other members' numbers are research; `config/offers.md` stays the only proof.
 
@@ -35,7 +35,7 @@ python3 jobs/offer_intel.py collect --via mcp \
   --url "https://www.skool.com/makerschool?c=03d09fffe79e4cd4bb492e2f954cbc1d&s=newest" \
   --since 2026-06-25 --max-pages 12 --max-posts 400
 ```
-Each Skool call waits 2.5 to 4.5 seconds after the one before, and each call starts node. 90 days of wins is roughly 360 Skool calls (feed pages plus one comments call per post with comments), so it takes roughly 25 to 35 minutes. `--no-threads` skips the comments calls. `--headless` does nothing here.
+Each Skool call waits 2.5 to 4.5 seconds after the one before, and each call starts node. 90 days of wins is roughly 270 Skool calls (the 2026-09-23 run: about 12 feed pages plus one comments call for each of about 256 posts with comments), so it takes roughly 25 to 35 minutes. `--no-threads` skips the comments calls. `--headless` does nothing here.
 
 Statuses (the `status` field, and the Job_Log row `collect_<status>`):
 
