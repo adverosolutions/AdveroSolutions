@@ -23,7 +23,7 @@ ENDED = "daily reminders ended"
 def _held(**cad):
     return LeadState(lead_email=LEAD, campaign_id="c", cadence=dict(
         {"armed_at": "2026-09-01T10:00:00-05:00", "stopped_reason": "template_unapproved",
-         "stopped_at": STOP.isoformat(), "template_hold": {"template_id": "cadence.d3", "link_count": 1}}, **cad))
+         "stopped_at": STOP.isoformat(), "template_hold": {"template_id": "cadence.e3", "link_count": 1}}, **cad))
 
 
 # -- the helper ---------------------------------------------------------------
@@ -49,7 +49,7 @@ def test_helper_false_below_both_and_when_not_a_template_stop():
 
 
 def test_helper_reads_a_legacy_row_without_the_count():
-    state = _held(template_hold={"template_id": "cadence.d3"})
+    state = _held(template_hold={"template_id": "cadence.e3"})
     assert not cadence.template_reminders_ended(state, STOP + timedelta(days=5))
     assert cadence.template_reminders_ended(state, STOP + timedelta(days=15))
     # no stopped_at either: only the count could end it, and there is none
@@ -62,7 +62,7 @@ def test_helper_reads_a_legacy_row_without_the_count():
 def _capped(store, approvals_file):
     """A stopped ladder whose reminders ended by the 14-day rule (no reminder
     sent at all: link_count absent)."""
-    approvals_file.revoke_ids("cadence.d3")
+    approvals_file.revoke_ids("cadence.e3")
     state = at_day(2, ct(2026, 9, 21, 10, 0))
     stall(state, store, [])
     return state

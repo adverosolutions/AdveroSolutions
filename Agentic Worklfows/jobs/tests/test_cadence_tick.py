@@ -146,8 +146,8 @@ def test_cli_dry_run_with_now_and_store(store, tmp_env, capsys):
     rc = cadence_tick.main(["--dry-run", "--now", "2026-09-22T10:05:00-05:00", "--store", str(store.path), "--bodies"])
     assert rc == 0
     out = capsys.readouterr().out
-    assert "dry_run=True" in out and "would_send" in out and "Here are two new times in case the first ones did not suit" in out
-    assert "A couple more options if those did not work" in out
+    assert "dry_run=True" in out and "would_send" in out and "The time slots I sent got filled. Here are 2 more" in out
+    assert "Those last two times got taken too." in out
     rc = cadence_tick.main(["--dry-run", "--now", "2026-09-22T10:05:00-05:00", "--store", str(store.path), "--json"])
     assert rc == 0
     data = json.loads(capsys.readouterr().out)
@@ -321,13 +321,13 @@ def test_a_template_hold_is_actionable_and_a_problem():
 
 def test_a_held_day_shows_its_template_id_in_the_digest_never_the_body(store, tmp_env, approvals_file):
     a, b, _, _ = seed(store, ct(2026, 9, 21, 16, 0))
-    approvals_file.revoke_ids("cadence.d3")  # Sopio is on D3
+    approvals_file.revoke_ids("cadence.e3")  # Sopio is on D3
     pushes = []
     summary = cadence_tick.run(ct(2026, 9, 22, 10, 5), store, log_fn=lambda *x: None,
                                notify_fn=lambda *x, **k: pushes.append((x, k)))
     assert summary["counts"].get("held_template") == 1
     held = [line for line in summary["digest"] if "HELD" in line]
-    assert len(held) == 1 and "cadence.d3" in held[0] and "unapproved" in held[0]
+    assert len(held) == 1 and "cadence.e3" in held[0] and "unapproved" in held[0]
     assert "A couple more options" not in "\n".join(summary["digest"])
     assert pushes and "A couple more options" not in pushes[-1][0][1]
     assert not [r for r in read_shadow_log() if r["action"] == "reply_to_email" and "Sopio" in r["payload"]["body"]["text"]]

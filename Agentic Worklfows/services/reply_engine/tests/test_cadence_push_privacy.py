@@ -25,7 +25,6 @@ EMAIL = "tiffany@flowerhillfs.com"
 COMPANY = "Flowerhill Facility Services"
 FIRST = "Tiffany"
 PRIVATE = (EMAIL, COMPANY, FIRST)
-D6_FREE = ["2026-09-29T13:00:00-05:00", "2026-09-30T14:00:00-05:00"]
 D1_FREE = ["2026-09-23T13:00:00-05:00", "2026-09-24T14:00:00-05:00"]
 
 
@@ -101,42 +100,13 @@ def test_cadence_stopped_for_no_bookable_times(topic, linked, tmp_env, monkeypat
     store = JsonFileStore(tmp_env / "s.json")
     state = cadence.arm(_d1_state(), ct(2026, 9, 21, 16, 0))
     state.cadence["veto_notified_at"] = "2026-09-22T09:30:00-05:00"
-    state.cadence["day"] = 1
+    state.cadence["day"] = 2   # E3 is next: a slot email (E2 carries no times)
     pings = []
     for now in (ct(2026, 9, 22, 10, 5), ct(2026, 9, 23, 10, 5)):
         state.cadence["next_send_at"] = now.replace(minute=0).isoformat()
         res = _tick(state, now, store, pings, ghl=GHL(token=None))
     assert res["action"] == "stopped" and res["reason"] == "slots_unavailable" and len(pings) == 1
     _check(pings[0], topic, "no bookable times")
-
-
-def _d6_state():
-    state = _d1_state()
-    state.cadence["day"] = 5
-    state.cadence["next_send_at"] = ct(2026, 9, 28, 10, 0).isoformat()
-    return state
-
-
-def test_d6_card_without_base_url(topic, unlinked, tmp_env, monkeypatch):
-    monkeypatch.setenv("CADENCE_D6_HOLD", "1")
-    _go_live(monkeypatch)
-    pings = []
-    res = _tick(_d6_state(), ct(2026, 9, 28, 10, 0), JsonFileStore(tmp_env / "s.json"), pings,
-                instantly=FakeInstantly(sender=EMAIL), free_slots=D6_FREE)
-    assert res["action"] == "awaiting_invite_ok" and res["card_undeliverable"] is True and len(pings) == 1
-    _check(pings[0], topic, "could not be sent: no BASE_URL")
-
-
-def test_d6_calendar_hold_card(topic, linked, tmp_env, monkeypatch):
-    monkeypatch.setenv("CADENCE_D6_HOLD", "1")
-    _go_live(monkeypatch)
-    pings = []
-    res = _tick(_d6_state(), ct(2026, 9, 28, 10, 0), JsonFileStore(tmp_env / "s.json"), pings,
-                instantly=FakeInstantly(sender=EMAIL), free_slots=D6_FREE)
-    assert res["action"] == "awaiting_invite_ok" and len(pings) == 1
-    _check(pings[0], topic, "OK to put a calendar hold on")
-    (title, message), kw = pings[0]
-    assert "1:00pm CT" in message   # the slot is not lead-identifying
 
 
 def test_blocked_copy_push_keeps_the_body_off_a_public_topic(topic, tmp_env):

@@ -493,14 +493,14 @@ def test_run_once_sweeps_orphans_and_sends_the_fyi(world):
 def test_the_fyi_on_a_public_topic_carries_counts_only(world):
     card, v = _card(world, now=NIGHT)
     A.auto_send_approved(card, world["inst"], store=world["store"], now=NIGHT, verdict=v)
-    gate.note_held(world["store"], kind="cadence", template_id="cadence.d3", reason="unapproved", now=NIGHT)
+    gate.note_held(world["store"], kind="cadence", template_id="cadence.e3", reason="unapproved", now=NIGHT)
     calls = []
 
     def capture(title, message, **kw):
         calls.append(dict(kw, title=title, message=message))
         return {"sent": True}
     out = A.flush_auto_send_fyi(world["store"], now=NIGHT + timedelta(minutes=1), notify_fn=capture)
-    assert out["sent"] is True and out["entries"] == 1 and out["held"] == {"cadence.d3": 1}
+    assert out["sent"] is True and out["entries"] == 1 and out["held"] == {"cadence.e3": 1}
     assert len(calls) == 1
     c = calls[0]
     assert c["actions"] is None and c["click"] is None
@@ -510,7 +510,7 @@ def test_the_fyi_on_a_public_topic_carries_counts_only(world):
     for secret in (LEAD, FIRST, COMPANY, stored.draft.subject, body_line, "http", "example.com", "engine.test",
                    A._approval_id(card)):
         assert secret not in public, secret
-    assert TID in c["message"] and "cadence.d3: 1 held" in c["message"]
+    assert TID in c["message"] and "cadence.e3: 1 held" in c["message"]
     # the email leg (Lorenzo's inbox) has the per-card line and a Veto link
     assert LEAD in c["email_message"] and ("/veto/%s" % stored.token) in c["email_message"]
     assert "/approve/" not in c["email_message"]

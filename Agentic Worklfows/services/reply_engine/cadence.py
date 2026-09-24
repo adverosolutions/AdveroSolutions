@@ -1,5 +1,8 @@
-"""Daily follow-up cadence for positive replies (Blueprint S2, Eric's framework
-extended to 7 days, then D14 / D30 re-touches, then Follow Up Later).
+"""Follow-up cadence for positive replies that went quiet: the ten emails E1..E10
+agreed with Lorenzo on 2026-09-23 (sections/1_email_followup/sequence_final.md).
+E1..E7 go out on consecutive business days, E8 two weeks after E7, E9 and E10
+a week apart; after E10 the ladder is exhausted (Follow Up Later). The cadence
+"day" is the email number: day 1 is E1, day 10 is E10.
 
 Owns the ``cadence`` dict on LeadState:
 
@@ -14,7 +17,6 @@ Owns the ``cadence`` dict on LeadState:
                                   # follow_up_later | opt_out | vetoed | exhausted |
                                   # nurture (enrolled in the 90-day nurture, nurture.py)
       "veto_notified_at": ISO|None,
-      "d6_notified_at": ISO|None,
       "stall_notified_at": ISO|None,          # "waiting on your fresh draft" said once
       "resumed_after_auto_reply_at": ISO|None, # the auto-reply's own received time: the
                                   # inbound baseline stop_reason reads after a pause
@@ -38,13 +40,15 @@ shared.settings.guard_write first, so in MODE=shadow a touch is a would_do
 record and no HTTP request is made. Every send passes ``to=recipient_for(state)``
 - the address that actually wrote the thread, which is not always the CRM
 ``lead_email`` - so Instantly validates the recipient against the thread. D1
-auto-sends only in live mode after a 30-minute veto window, and only when that
-veto link was actually delivered and points at a usable BASE_URL
+(E1) auto-sends only in live mode after a 30-minute veto window, and only when
+that veto link was actually delivered and points at a usable BASE_URL
 (``veto_undeliverable`` otherwise); a live touch goes out only when the thread
-re-read CONFIRMS the recipient (decision R6: a read error holds it); D6's
-calendar hold needs Lorenzo's OK and, in live, the CADENCE_D6_HOLD opt-in. A
-touch whose copy fails copy_problems() is never sent (action ``blocked_copy``),
-and a send that did not happen never advances the day (action ``send_failed``).
+re-read CONFIRMS the recipient (decision R6: a read error holds it). No email
+carries a booking link. A touch whose copy fails copy_problems() is never sent
+(action ``blocked_copy``), a touch whose lead data it needs is missing (the
+company, the niche or the offer) is held (``held_template``, reason
+``missing_lead_data``), and a send that did not happen never advances the day
+(action ``send_failed``).
 
 Idempotency: the touch marker is claimed with ``store.set_if_absent`` before the
 POST, so two overlapping ticks cannot both send a day. It is deleted only for
@@ -141,27 +145,36 @@ logger = logging.getLogger("reply_engine.cadence")
 
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
-# Day sequence: seven daily touches, then two re-touches from Follow Up Later.
-DAY_SEQUENCE = (1, 2, 3, 4, 5, 6, 7, 14, 30)
+# The ten emails (sequence_final.md): day N is EN. E1..E7 on consecutive
+# business days, E8 two weeks after E7, E9 and E10 a week apart (schedule_after).
+# A stored row whose day is not in this sequence (the old D14 / D30 ladder)
+# never sends again: pending_day() is None for it and the tick stops it as
+# ``exhausted``.
+DAY_SEQUENCE = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+LAST_DAY = DAY_SEQUENCE[-1]
 INTENTS = {
-    1: "lost_times",
+    1: "times_filled",
     2: "research",
-    3: "times_went",
-    4: "case_study",
-    5: "free_work",
-    6: "calendar_invite",
-    7: "yes_no_close",
-    14: "retouch",
-    30: "retouch_final",
+    3: "want_booked",
+    4: "proof",
+    5: "busy_offer",
+    6: "preview",
+    7: "week_close",
+    8: "restart",
+    9: "observation",
+    10: "pause",
 }
-SLOTLESS_DAYS = (7,)
+# E2 offers no times (Lorenzo's call): it never picks, claims or reserves a slot.
+SLOTLESS_DAYS = (2,)
+# Calendar days from the email before to E8, E9 and E10 (rolled to a business day).
+LONG_GAP_DAYS = {7: 14, 8: 7, 9: 7}
 VETO_WINDOW_MINUTES = 30
-# CT3: where day 2's research line comes from. "fallback" (the default) is the
+# CT3: where E2's research line comes from. "fallback" (the default) is the
 # fixed line fallback_research_line() writes, which Lorenzo can approve
-# (cadence.d2.research_fallback.<offer>), and shared.llm role "research" is
+# (cadence.e2.research_fallback.<offer>), and shared.llm role "research" is
 # never called. "llm" asks the model first; a line it writes is covered by no
-# approval (cadence.d2.research_line), so that day 2 is always held.
-D2_RESEARCH_MODE = "fallback"
+# approval (cadence.e2.research_line), so that E2 is always held.
+E2_RESEARCH_MODE = "fallback"
 # CT3: a day held because its template is not approved (or its text is not an
 # auto-sendable form of it) is reported once a day. The stall counts the
 # business days on which the day was held for a cause that is not gate-wide
@@ -184,10 +197,11 @@ TEMPLATE_STOP_REMINDER_MAX_DAYS = 14
 # does not list is treated the same way (it holds, it never stops).
 SYSTEM_HOLD_REASONS = ("kill_switch", "parity_failed", "registry_error", "not_ready")
 APPROVE_HOLD_REASONS = ("unapproved", "changed_since_approval")
-LEAD_DATA_HOLD_REASONS = ("nonconforming", "copy_gate")
+# ``missing_lead_data`` is the cadence's own: the email needs a value the lead
+# record does not have (missing_lead_data()), so it is held before it is built.
+LEAD_DATA_HOLD_REASONS = ("nonconforming", "copy_gate", "missing_lead_data")
 CODE_HOLD_REASONS = ("no_template", "not_template_render", "unknown_id", "not_approvable", "stale_render",
                      "classification", "requested_override")
-D6_FALLBACK_HOUR = 18  # if Lorenzo has not answered the invite request by then, send the no-invite variant
 SLOT_MINUTES = slot_rules.SLOT_MINUTES
 GRID_STEP_MINUTES = 30
 
@@ -214,12 +228,68 @@ UNSUBSCRIBE_STATUSES = ("unsubscribe", "unsubscribed", "blocklisted")
 HOSTILE_STATUSES = ("negative_hostile", "hostile", "lost", "negative_notfit", "wrong_person")
 NOT_NOW_STATUSES = ("negative_notnow", "not_now", "follow_up_later")
 
+# No cadence email carries a booking link (Lorenzo, 2026-09-23). Kept for
+# booking.py and the template gate, which still read it.
 DEFAULT_BOOKING_URL = settings.BOOKING_URL or "https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu"
 
-# Fallback proof lines (offers.md is the source of truth; these are only used if the table cannot be parsed)
-_FALLBACK_PROOF = {
-    "reactivation": "I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.",
-    "outbound": "I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days.",
+# ------------------------------------------------ per-lead lines (sequence_final.md)
+# The niches and offer branches every per-campaign line is written for. A lead
+# whose niche or offer is not one of these gets no guess: the email that needs
+# it is held (missing_lead_data).
+NICHES = ("cleaning", "bookkeeping", "recruiting")
+CLEANING_NICHE_ALIASES = ("cleaning", "commercial_cleaning", "janitorial")
+OFFERS = ("reactivation", "outbound")
+
+# E4 {offer_proof}: one proof per offer type, never mixed (config/offers.md).
+OFFER_PROOF = {
+    "reactivation": "a win-back system for a commercial roofer doing $150M a year that recovered about $6M worth of "
+                    "contracts within 6 months",
+    "outbound": "an outbound system for a commercial roofer doing $150M a year that brought in about $180,000 in new "
+                "contracts in 90 days",
+}
+# E4's fixed third bullet. Lorenzo's case-study wording writes the lender's
+# ad spend as "$1,500"; offers.md has the same figure as "$1.5k". The cadence's
+# verbatim money check (copy_problems) accepts it on exactly this line.
+E4_LENDER_LINE = "$5M in loan applications in 30 days on $1,500 of ad spend for a lender"
+# E5 {offer_line}, by offer_line_key(). Each names {company}.
+OFFER_LINES = {
+    "reactivation": "win back {company}'s past accounts",
+    "reactivation_bookkeeping": "win back {company}'s past clients",
+    "outbound": "get {company} in front of new clients right when they need you",
+}
+# E6 {preview}, by "<niche>_<offer>".
+PREVIEWS = {
+    "cleaning_reactivation": 'The first two messages I\'d send accounts that cancelled or never signed: "Quick '
+                             'question, who\'s handling your cleaning these days?" and "Happy to take another look '
+                             'at the space and send a fresh quote. Want me to set that up?"',
+    "bookkeeping_reactivation": 'The first two messages I\'d send former clients and old inquiries: "Checking in, '
+                                'who\'s keeping your books these days?" and "Want us to get everything caught up '
+                                'before your next quarterly estimate is due?"',
+    "recruiting_reactivation": 'The first two messages I\'d send clients who\'ve gone quiet: "Anything you\'re hiring '
+                               'for this quarter that we could help with?" and "If a role\'s been open longer than '
+                               'you\'d like, send it over and we\'ll take a first pass."',
+    "cleaning_outbound": "The three things I'd watch for in your area: new office leases, companies moving into "
+                         "bigger space, and buildings that just changed property managers. The outreach goes out "
+                         "under your name.",
+    "bookkeeping_outbound": "The three things I'd watch for in your area: newly registered businesses, companies "
+                            "posting for a part-time bookkeeper, and businesses opening a second location. The "
+                            "outreach goes out under your name.",
+    "recruiting_outbound": "What I'd watch for in your market: specialty roles hitting the job boards, especially "
+                           "ones that sit open for weeks or get reposted. The outreach goes out under your name.",
+}
+# E9 {observation}, by "<niche>_<offer>".
+OBSERVATIONS = {
+    "cleaning_reactivation": "An account that cancelled or never signed already knows your name, so it's usually an "
+                             "easier conversation than a brand-new lead.",
+    "bookkeeping_reactivation": "Quarterly estimates, year-end and tax season each give you a natural reason to "
+                                "check back in with former clients and old inquiries.",
+    "recruiting_reactivation": "Clients who hired through you before, or almost did, already know how you work, so "
+                               "they're an easier conversation than any cold account.",
+    "cleaning_outbound": "A company moving into new space has to sort out cleaning around move-in.",
+    "bookkeeping_outbound": "A company posting a part-time bookkeeper job has already said out loud it needs help "
+                            "with its books.",
+    "recruiting_outbound": "An open specialty role on a job board is a hiring manager saying in public they need "
+                           "someone.",
 }
 
 
@@ -231,8 +301,6 @@ class Touch(object):
     subject: str
     body_text: str
     slots: List[str] = dataclasses.field(default_factory=list)  # ISO strings, CT
-    requires_approval: bool = False
-    channel_note: Optional[str] = None
     slots_source: str = "provided"
     meta: Dict[str, Any] = dataclasses.field(default_factory=dict)
     # Values that came from the lead's own record (company, first name). They are
@@ -244,7 +312,7 @@ class Touch(object):
     # new contracts within 90 days" sailed through inside a bookkeeping thread.
     campaign_key: Optional[str] = None
     # CT3: the catalogue id this body was rendered from and the ids of the
-    # lines spliced into it (day 2, 4 and 5). build_touch sets the ids only;
+    # lines spliced into it (E2, E4, E5, E6 and E9). build_touch sets the ids only;
     # tick_lead stamps the hashes (template_gate.stamp) right before the gate.
     template_id: Optional[str] = None
     template_hash: Optional[str] = None
@@ -308,6 +376,16 @@ def _unverified_money(text: str) -> List[str]:
         if token and token not in flat:
             bad.append(token)
     return bad
+
+
+def _without_agreed_proof_lines(text: str) -> str:
+    """``text`` with E4's fixed lender bullet (E4_LENDER_LINE, a whole line of
+    its own) blanked, for the verbatim money check only. Its "$1,500" is
+    offers.md's "$1.5k" written out, which draft.validate_draft already reads
+    as the same figure; anywhere else, or on a line that says anything more,
+    "$1,500" is still refused."""
+    line = "- %s\n" % E4_LENDER_LINE
+    return (text or "").replace(line, "\n")
 
 
 def _unverified_percent(text: str) -> List[str]:
@@ -433,7 +511,7 @@ def copy_problems(text: str, allow: Optional[List[str]] = None,
         add("unsigned")
     if re.search(r"\{[a-z_0-9]+\}", text):
         add("unfilled_placeholder")
-    if _unverified_money(judged):
+    if _unverified_money(_without_agreed_proof_lines(judged)):
         add("money_not_in_offer_sheet")
     if _unverified_percent(judged):
         add("percentage_not_in_offer_sheet")
@@ -510,6 +588,32 @@ def company_of(state: Any) -> str:
     return str(_field(state, "company", "company_name", default="your team")).strip()
 
 
+def known_company(state: Any) -> Optional[str]:
+    """The lead's company as recorded, or None. Unlike company_of() there is
+    no "your team" stand-in: E2, E4 and E5 name the company, and without one
+    they are held (missing_lead_data), never sent with a generic guess."""
+    value = str(_field(state, "company", "company_name", default="") or "").strip()
+    return value or None
+
+
+def lead_niche(state: Any) -> Optional[str]:
+    """One of NICHES from the lead or its campaign, or None when it is not
+    one of them. Unlike niche_and_offer() nothing is guessed."""
+    niche = str(niche_and_offer(state)[0] or "").strip().lower()
+    if niche in CLEANING_NICHE_ALIASES:
+        return "cleaning"
+    return niche if niche in NICHES else None
+
+
+def lead_offer(state: Any) -> Optional[str]:
+    """"reactivation" or "outbound" from the lead or its campaign, or None.
+    Unlike niche_and_offer() an unknown offer is not read as reactivation."""
+    offer = str(_field(state, "offer") or campaign_meta(state).get("offer") or "").strip().lower()
+    if offer in ("trigger", "outbound"):
+        return "outbound"
+    return offer if offer == "reactivation" else None
+
+
 # Reply prefixes a mail client stacks up, and the auto-responder prefixes a
 # robot stacks on top of them. app.py records ``last_subject`` on EVERY inbound,
 # including out-of-office mail, so without this the touch after a resumed
@@ -578,6 +682,11 @@ def next_business_day_send(after: datetime, tz=TZ) -> datetime:
 
 
 def next_day_number(day_done: int) -> Optional[int]:
+    """The email after ``day_done``. A day that is neither 0 nor in
+    DAY_SEQUENCE (a row from the old ladder, D14 / D30) has none: it never
+    sends again."""
+    if day_done != 0 and day_done not in DAY_SEQUENCE:
+        return None
     for d in DAY_SEQUENCE:
         if d > day_done:
             return d
@@ -585,14 +694,16 @@ def next_day_number(day_done: int) -> Optional[int]:
 
 
 def schedule_after(day_done: int, sent_at: datetime, tz=TZ) -> Optional[datetime]:
-    """When the touch after ``day_done`` should go out."""
+    """When the touch after ``day_done`` should go out: after E1..E6 the next
+    business day at 10:00 CT; E8 14 calendar days after E7, E9 and E10 7 days
+    after the one before (rolled to a business day, 10:00 CT); after E10 (or
+    a day outside DAY_SEQUENCE) None, the ladder is exhausted."""
     ct = slot_rules.to_tz(sent_at, tz)
-    if day_done < 7:
+    if day_done in DAY_SEQUENCE[:6]:
         return next_business_day_send(ct, tz)
-    if day_done == 7:  # D14 = one week later
-        return cadence_send_time(roll_to_business_day(ct.date() + timedelta(days=7)), tz)
-    if day_done == 14:  # D30 = ~16 days after D14
-        return cadence_send_time(roll_to_business_day(ct.date() + timedelta(days=16)), tz)
+    gap = LONG_GAP_DAYS.get(day_done)
+    if gap:
+        return cadence_send_time(roll_to_business_day(ct.date() + timedelta(days=gap)), tz)
     return None
 
 
@@ -601,13 +712,15 @@ def arm(state: Any, now: datetime, store: Any = None, restart: bool = False) -> 
     """Arm (or re-arm) the cadence right after Lorenzo approves a reply.
 
     A lead who replies mid-cadence and gets a fresh approved answer **resumes**:
-    the completed day is kept, so a lead stopped at D4 comes back at D5 instead
-    of hearing "I lost both of those times" a second time. ``restart=True``
-    starts the ladder again from D1.
+    the completed day is kept, so a lead stopped at E4 comes back at E5 instead
+    of hearing the same email a second time. ``restart=True`` starts the
+    ladder again from E1.
 
-    Any veto / D6 decision from the previous run is dropped: decisions are
-    stamped with the ``armed_at`` they belong to (and deleted outright when a
-    store is passed), so a two-week-old tap can never govern this run."""
+    Any veto from the previous run is dropped: decisions are stamped with the
+    ``armed_at`` they belong to (and deleted outright when a store is passed),
+    so a two-week-old tap can never govern this run. A row from before the
+    D6 calendar hold was removed may still carry ``d6_notified_at``; it is
+    dropped here and read by nothing."""
     now = slot_rules.to_tz(now)
     cad = dict(state.cadence or {})
     touches = list(cad.get("touches") or [])
@@ -620,13 +733,13 @@ def arm(state: Any, now: datetime, store: Any = None, restart: bool = False) -> 
         "stopped_reason": None,
         "stopped_at": None,
         "veto_notified_at": None,
-        "d6_notified_at": None,
         "needs_fresh_draft": False,
         "stall_notified_at": None,
         "resumed": bool(day_done) or bool(cad.get("resumed")),
     })
     cad.pop("paused", None)
     cad.pop("resume_at", None)
+    cad.pop("d6_notified_at", None)
     cad.pop("last_blocked", None)
     cad.pop("last_skipped", None)
     cad.pop("veto_undeliverable_at", None)
@@ -645,11 +758,11 @@ def arm(state: Any, now: datetime, store: Any = None, restart: bool = False) -> 
     if getattr(state, "offered_slots", None) is None:
         state.offered_slots = []
     if store is not None:
-        for key in (veto_key(state), approval_key(state, "d6")):
-            try:
-                store.delete(key)
-            except Exception as exc:  # noqa: BLE001 - a store without delete must not break arming
-                logger.warning("could not clear %s: %s", key, exc)
+        key = veto_key(state)
+        try:
+            store.delete(key)
+        except Exception as exc:  # noqa: BLE001 - a store without delete must not break arming
+            logger.warning("could not clear %s: %s", key, exc)
     return state
 
 
@@ -1008,6 +1121,10 @@ def veto_key(state: Any) -> str:
 
 
 def approval_key(state: Any, item: str = "d6") -> str:
+    """Where record_invite_decision writes. Only app.py's legacy
+    /cadence/approve and /cadence/veto-invite endpoints still reach it: E6 is
+    a plain email and nothing reads the record since the D6 calendar hold
+    was removed (2026-09-23)."""
     return "approval:%s:%s:%s" % (_field(state, "campaign_id", default="unknown"), _field(state, "lead_email"), item)
 
 
@@ -1088,7 +1205,8 @@ def record_veto(store: Any, state: Any, now: datetime, token: Optional[str] = No
 
 
 def record_invite_decision(store: Any, state: Any, decision: str, now: datetime, token: Optional[str] = None) -> Dict[str, Any]:
-    """Called by the approval endpoint for the D6 calendar invite: 'approve' | 'veto'."""
+    """Kept for app.py's legacy D6 endpoints ('approve' | 'veto'). The tick no
+    longer sends a D6 hold card nor reads this record (see approval_key)."""
     kind = "approve" if decision == "approve" else "veto-invite"
     rec = _decision_record(kind, state, now, token, decision=decision)
     store.set(approval_key(state, "d6"), rec)
@@ -1312,52 +1430,6 @@ def render(template_name: str, **values: Any) -> str:
     return _load_template(template_name).format_map(_Safe(values)).rstrip() + "\n"
 
 
-# The body a slot day takes when there is no free slot to offer. tick_lead
-# never sends one (it skips a touch with fewer than two slots), but
-# build_touch renders it and the catalogue shows it as the day's no_slots
-# variant, which Lorenzo approves word for word. So each one reads as its own
-# email and names no open time: it points at the booking link only. Splicing a
-# stand-in phrase into {slots} gave "any afternoon this week open this week".
-NO_SLOTS_BODIES = {
-    "d1": "Hey {first_name},\n\n"
-          "In case the first times did not suit, grab any open time that works for you here: {booking_url}\n\n"
-          "Lorenzo\n",
-    "d2": "Hey {first_name},\n\n"
-          "{research_line}\n\n"
-          "Fifteen minutes is enough for me to show you how this would run for {company}. "
-          "Grab any open time here: {booking_url}\n\n"
-          "Lorenzo\n",
-    "d3": "Hey {first_name},\n\n"
-          "If none of those times worked, pick whatever suits you here: {booking_url}\n\n"
-          "Lorenzo\n",
-    "d4": "Hey {first_name},\n\n"
-          "Quick bit of context on why I keep nudging. {case_study}\n\n"
-          "Happy to walk through what that would look like for {company}. Grab any open time here: {booking_url}\n\n"
-          "Lorenzo\n",
-    "d5": "Hey {first_name},\n\n"
-          "{free_work}\n\n"
-          "Happy to walk through it together. Grab any open time here: {booking_url}\n\n"
-          "Lorenzo\n",
-    "d6_noinvite": "Hey {first_name},\n\n"
-                   "If a 15-minute walkthrough would help, grab any open time here: {booking_url}\n\n"
-                   "Lorenzo\n",
-    "d14": "Hey {first_name},\n\n"
-           "Circling back in case the timing is better now. Grab any open time here: {booking_url}\n\n"
-           "Lorenzo\n",
-    "d30": "Hey {first_name},\n\n"
-           "Last one from me for a while. If {company} still wants a look, grab any open time here: {booking_url}\n\n"
-           "If not, I will leave it here and check back in a few months.\n\n"
-           "Lorenzo\n",
-}  # type: Dict[str, str]
-
-
-def render_day(template_name: str, has_slots: bool, **values: Any) -> str:
-    """render() for a day with two slots, NO_SLOTS_BODIES without one."""
-    if has_slots or template_name not in NO_SLOTS_BODIES:
-        return render(template_name, **values)
-    return NO_SLOTS_BODIES[template_name].format_map(_Safe(values)).rstrip() + "\n"
-
-
 def sanitize_line(text: str) -> str:
     text = (text or "").strip().strip('"').strip()
     text = text.replace("\u2014", ",").replace("\u2013", ",").replace("!", ".")
@@ -1365,51 +1437,47 @@ def sanitize_line(text: str) -> str:
     return text
 
 
-def case_study_line(offer: str) -> str:
-    """Verbatim proof line for the offer type, parsed from config/offers.md."""
-    want = "Outbound / trigger" if offer == "outbound" else "Reactivation"
-    for line in (settings.OFFERS_MD or "").splitlines():
-        if line.startswith("| %s |" % want):
-            cells = [c.strip() for c in line.strip().strip("|").split("|")]
-            if len(cells) >= 2:
-                return cells[1].strip().strip('"')
-    return _FALLBACK_PROOF["outbound" if offer == "outbound" else "reactivation"]
+def offer_proof_line(offer: Optional[str]) -> Optional[str]:
+    """E4's {offer_proof} for the offer type (OFFER_PROOF), or None when the
+    offer is unknown. One proof per offer type, never mixed (config/offers.md)."""
+    return OFFER_PROOF.get(offer or "")
 
 
-def free_work_line(niche: str, company: str, specialty: Optional[str] = None, offer: str = "outbound") -> str:
-    """The D5 sample of work. It must match the mechanism the lead was pitched
-    (config/offers.md): a reactivation prospect is working their own dormant
-    list, so offering them brand-new business formations or fresh job posts
-    mixes two offers and reads like a different pitch."""
-    niche = (niche or "").lower()
-    offer = (offer or "outbound").lower()
-    # Outbound lines offer to pull a list; they never say one was pulled. The
-    # touch goes out on a timer, and nobody built a list for this lead.
-    if offer == "reactivation":
-        if niche == "bookkeeping":
-            return ("I can draft the first two emails for the clients %s lost or quoted and never closed. "
-                    "Want to see them?" % company)
-        if niche == "recruiting":
-            return ("I can draft the first two emails for the clients %s made one placement for and never heard "
-                    "from again. Want to see them?" % company)
-        return ("I can draft the first two emails for the accounts %s lost or bid on and never closed. "
-                "Want to see them?" % company)
-    if niche == "bookkeeping":
-        return ("I can pull the businesses in your area that just formed or posted a part-time bookkeeper role "
-                "this month. Want the list?")
-    if niche == "recruiting":
-        what = "%s roles" % specialty if specialty else "roles in your specialty"
-        return ("I can pull the %s that opened this week in your market, with the hiring manager for each. "
-                "Want the list?" % what)
-    if niche in ("cleaning", "commercial_cleaning", "janitorial"):
-        # offers.md defines cleaning_trigger as "new leases, office expansions, PM
-        # changes, new construction". Lost bids are the *reactivation* mechanism,
-        # and the sheet says the two sets are never mixed. They also cannot be
-        # derived from a prospect's reviews and Maps listing.
-        return ("I can pull the buildings in your area that just signed a new lease, expanded, or changed "
-                "property managers this month. Want the list?")
-    # Unknown niche: say nothing about a mechanism we have not defined for it.
-    return "I can put together a short sample of the first two emails I would send for %s. Want to see it?" % company
+def offer_line_key(niche: Optional[str], offer: Optional[str]) -> Optional[str]:
+    """Which E5 {offer_line} a lead gets: "reactivation" (cleaning and
+    recruiting), "reactivation_bookkeeping" or "outbound" (every niche), or
+    None when the offer, or a reactivation lead's niche, is unknown."""
+    if offer == "outbound":
+        return "outbound"
+    if offer != "reactivation" or niche not in NICHES:
+        return None
+    return "reactivation_bookkeeping" if niche == "bookkeeping" else "reactivation"
+
+
+def offer_line_text(niche: Optional[str], offer: Optional[str], company: Optional[str]) -> Optional[str]:
+    """E5's {offer_line} with the company filled in, or None when the line or
+    the company is unknown."""
+    key = offer_line_key(niche, offer)
+    if key is None or not company:
+        return None
+    return OFFER_LINES[key].replace("{company}", company)
+
+
+def _combo(niche: Optional[str], offer: Optional[str]) -> Optional[str]:
+    """"<niche>_<offer>" for a known niche and offer, else None."""
+    if niche not in NICHES or offer not in OFFERS:
+        return None
+    return "%s_%s" % (niche, offer)
+
+
+def preview_line(niche: Optional[str], offer: Optional[str]) -> Optional[str]:
+    """E6's {preview} for the campaign (PREVIEWS), or None."""
+    return PREVIEWS.get(_combo(niche, offer) or "")
+
+
+def observation_line(niche: Optional[str], offer: Optional[str]) -> Optional[str]:
+    """E9's {observation} for the campaign (OBSERVATIONS), or None."""
+    return OBSERVATIONS.get(_combo(niche, offer) or "")
 
 
 def generate_research_line(state: Any, facts: Optional[Dict[str, Any]] = None) -> str:
@@ -1463,152 +1531,128 @@ research_line_for = generate_research_line
 # Builders return pure id strings and never touch the catalogue: the catalogue
 # is itself rendered through build_touch, so a hash lookup here would recurse.
 # tick_lead stamps the hashes (template_gate.stamp) outside builder code.
-FREE_WORK_CLEANING_NICHES = ("cleaning", "commercial_cleaning", "janitorial")
+# The lead data each email needs beyond its first name and slots. Without it
+# the email is held (missing_lead_data), never sent with a generic guess.
+_E5_NEEDS_NICHE = ("reactivation",)
 
 
-def _offer_branch(offer: Optional[str]) -> str:
-    """The two offer branches every cadence line is written for (case_study_line
-    and free_work_line treat anything that is not reactivation as outbound)."""
-    return "reactivation" if (offer or "").strip().lower() == "reactivation" else "outbound"
+def missing_lead_data(state: Any, day: int) -> List[str]:
+    """What the lead record lacks for email ``day``, in the order company,
+    niche, offer: E2 and E4 need the company and the offer, E5 the company,
+    the offer and, for reactivation, the niche; E6 and E9 the niche and the
+    offer. Empty when nothing is missing (always for E1, E3, E7, E8, E10)."""
+    niche, offer = lead_niche(state), lead_offer(state)
+    need = []  # type: List[str]
+    if day in (2, 4, 5):
+        need.append("company")
+    if day in (6, 9) or (day == 5 and offer in _E5_NEEDS_NICHE):
+        need.append("niche")
+    if day in (2, 4, 5, 6, 9):
+        need.append("offer")
+    have = {"company": known_company(state), "niche": niche, "offer": offer}
+    return [k for k in need if not have[k]]
 
 
-def free_work_template_id(niche: Optional[str], offer: Optional[str], specialty: Optional[str] = None) -> str:
-    """cadence.d5.free_work.<niche>_<offer>[_specialty], following the branches
-    of free_work_line (an unnamed niche is 'generic')."""
-    niche = (niche or "").strip().lower()
-    branch = _offer_branch(offer)
-    if niche in ("bookkeeping", "recruiting"):
-        key = niche
-    elif niche in FREE_WORK_CLEANING_NICHES:
-        key = "cleaning"
-    else:
-        key = "generic"
-    suffix = "_specialty" if (key == "recruiting" and branch == "outbound" and specialty) else ""
-    return "cadence.d5.free_work.%s_%s%s" % (key, branch, suffix)
-
-
-def touch_template_ids(day: int, state: Any, invite_created: bool = True, research_source: str = "fallback",
-                       has_slots: bool = True) -> Tuple[str, List[str]]:
-    """(main id, part ids) of the cadence touch build_touch renders for
-    ``day``. ``research_source`` is "fallback" when day 2 carries the fixed
+def touch_template_ids(day: int, state: Any, research_source: str = "fallback") -> Tuple[str, List[str]]:
+    """(main id, part ids) of the cadence email build_touch renders for
+    ``day``: cadence.e<day>, plus the id of the per-lead line spliced into
+    it (E2 research line, E4 proof, E5 offer line, E6 preview, E9
+    observation). ``research_source`` is "fallback" when E2 carries the fixed
     fallback line, anything else for a line the model wrote (that part,
-    cadence.d2.research_line, can never be approved). Day 6 is the no-invite
-    body whenever there is no invite or no slot to hold (flag 11)."""
-    niche, offer = niche_and_offer(state)
+    cadence.e2.research_line, can never be approved). A part whose lead data
+    is missing is left out: the tick holds that email before it looks."""
+    niche, offer = lead_niche(state), lead_offer(state)
+    main = "cadence.e%d" % day
     parts = []  # type: List[str]
-    if day == 6:
-        main = "cadence.d6" if (invite_created and has_slots) else "cadence.d6_noinvite"
-    else:
-        main = "cadence.d%d" % day
     if day == 2:
-        if research_source == "fallback":
-            parts.append("cadence.d2.research_fallback.%s" % _offer_branch(offer))
-        else:
-            parts.append("cadence.d2.research_line")
-    elif day == 4:
-        parts.append("cadence.d4.case_study.%s" % _offer_branch(offer))
-    elif day == 5:
-        parts.append(free_work_template_id(niche, offer, _field(state, "specialty")))
+        if research_source != "fallback":
+            parts.append("cadence.e2.research_line")
+        elif offer:
+            parts.append("cadence.e2.research_fallback.%s" % offer)
+    elif day == 4 and offer:
+        parts.append("cadence.e4.offer_proof.%s" % offer)
+    elif day == 5 and offer_line_key(niche, offer):
+        parts.append("cadence.e5.offer_line.%s" % offer_line_key(niche, offer))
+    elif day == 6 and _combo(niche, offer):
+        parts.append("cadence.e6.preview.%s" % _combo(niche, offer))
+    elif day == 9 and _combo(niche, offer):
+        parts.append("cadence.e9.observation.%s" % _combo(niche, offer))
     return main, parts
 
 
 def build_touch(state: Any, day: int, slots: List[Any], research_line: Optional[str] = None,
-                invite_created: bool = True, slots_source: str = "provided",
-                research_mode: Optional[str] = None) -> Touch:
-    """Subject 'Re: ...' + body for cadence day 1..7, 14, 30.
+                slots_source: str = "provided", research_mode: Optional[str] = None) -> Touch:
+    """Subject 'Re: ...' + body for email E<day> (day 1..10).
 
-    ``slots`` are the two fresh slots (datetime or ISO, CT). ``research_line``
-    overrides day 2's line. Without it, ``research_mode`` (default
-    D2_RESEARCH_MODE, "fallback") picks the fixed fallback line, or "llm" asks
-    shared.llm role "research" first. For day 6 ``invite_created=False`` (or
-    no slot) renders the no-invite fallback body. The touch carries the
-    template ids it was rendered from (touch_template_ids), unstamped."""
+    ``slots`` are the two fresh slots (datetime or ISO, CT); E2 offers none,
+    whatever is passed. ``research_line`` overrides E2's line. Without it,
+    ``research_mode`` (default E2_RESEARCH_MODE, "fallback") picks the fixed
+    fallback line for the offer, or "llm" asks shared.llm role "research"
+    first. A value the email needs that the lead record lacks
+    (missing_lead_data) is left as its placeholder, which the copy check
+    refuses; the tick holds such an email before it builds it. The touch
+    carries the template ids it was rendered from (touch_template_ids),
+    unstamped."""
     if day not in INTENTS:
         raise ValueError("cadence day must be one of %s, got %r" % (DAY_SEQUENCE, day))
-    two = [slot_rules.to_tz(slot_rules.parse_iso(s)) for s in (slots or [])][:2]
+    two = [] if day in SLOTLESS_DAYS else [slot_rules.to_tz(slot_rules.parse_iso(s)) for s in (slots or [])][:2]
     isos = [s.isoformat() for s in two]
-    niche, offer = niche_and_offer(state)
+    niche, offer = lead_niche(state), lead_offer(state)
     first = first_name_of(state)
-    company = company_of(state)
-    booking_url = DEFAULT_BOOKING_URL
-    has_slots = bool(two)
-    # Without a slot the day renders its NO_SLOTS_BODIES text, which has no
-    # {slots}; if one ever did, _Safe leaves "{slots}" and the copy gate blocks it.
-    slot_values = {"slots": slot_rules.format_slots(two)} if two else {}  # type: Dict[str, Any]
-    slot1 = slot_rules.format_slots(two[:1]) if two else "an afternoon this week"
-    # d6 with one slot: "If another time is better, say the word and I will
-    # move it." It names no afternoon Lorenzo has not checked.
-    slot2 = slot_rules.format_slots(two[1:2]) if len(two) > 1 else "another time"
+    company = known_company(state)
     meta = {"niche": niche, "offer": offer}  # type: Dict[str, Any]
-    requires_approval = False
-    channel_note = None
-    line = research_line
+    # A missing value is simply not passed: _Safe leaves "{name}" in place and
+    # the copy check blocks it (no "your team", no guessed line).
+    values = {"first_name": first}  # type: Dict[str, Any]
+    if company:
+        values["company"] = company
+    if two:
+        values["slots"] = slot_rules.format_slots(two)
     research_source = "fallback"
 
     if day == 2:
-        mode = research_mode or D2_RESEARCH_MODE
-        fallback = fallback_research_line(company, offer)
+        mode = research_mode or E2_RESEARCH_MODE
+        fallback = fallback_research_line(company or "", offer) if offer else None
+        line = research_line
         if line:
             line = sanitize_line(line)
-        elif mode == "llm":
+        elif mode == "llm" and offer:
             line = generate_research_line(state)
         else:
             line = fallback
-        research_source = "fallback" if line in (fallback, sanitize_line(fallback)) else "llm"
+        research_source = "fallback" if (line is not None and line == fallback) else "llm"
         meta["research_line"] = line
         meta["research_source"] = research_source
-        body = render_day("d2", has_slots, first_name=first, company=company, research_line=line,
-                          booking_url=booking_url, **slot_values)
+        if line:
+            values["research_line"] = line
     elif day == 4:
-        case = case_study_line(offer)
-        meta["case_study"] = case
-        body = render_day("d4", has_slots, first_name=first, company=company, case_study=case,
-                          booking_url=booking_url, **slot_values)
+        values["offer_proof"] = offer_proof_line(offer)
     elif day == 5:
-        fw = free_work_line(niche, company, _field(state, "specialty"), offer=offer)
-        meta["free_work"] = fw
-        body = render_day("d5", has_slots, first_name=first, free_work=fw, booking_url=booking_url, **slot_values)
+        values["offer_line"] = offer_line_text(niche, offer, company)
     elif day == 6:
-        requires_approval = True
-        if invite_created and two:
-            body = render("d6", first_name=first, slot1=slot1, slot2=slot2, booking_url=booking_url)
-            meta["invite_slot"] = isos[0]
-        else:
-            body = render_day("d6_noinvite", has_slots, first_name=first, booking_url=booking_url, **slot_values)
-            meta["invite_slot"] = None
-        phone = _field(state, "phone")
-        if phone:
-            channel_note = ("Second channel (manual until A2P clears): text %s: 'Hey %s, Lorenzo here. Put a hold on your calendar for %s, "
-                            "shout if another day is better.'" % (phone, first, slot1))
-        else:
-            channel_note = "Second channel: no phone on file; a LinkedIn note is optional."
-    elif day == 7:
-        body = render("d7", first_name=first)
-        isos = []
-    elif day == 14:
-        body = render_day("d14", has_slots, first_name=first, booking_url=booking_url, **slot_values)
-    elif day == 30:
-        body = render_day("d30", has_slots, first_name=first, company=company, booking_url=booking_url,
-                          **slot_values)
-    else:  # 1 and 3
-        body = render_day("d%d" % day, has_slots, first_name=first, booking_url=booking_url, **slot_values)
+        values["preview"] = preview_line(niche, offer)
+    elif day == 9:
+        values["observation"] = observation_line(niche, offer)
+    for key in ("offer_proof", "offer_line", "preview", "observation"):
+        if key in values:
+            meta[key] = values[key]
+            if values[key] is None:
+                del values[key]
+    body = render("e%d" % day, **values)
 
-    template_id, parts = touch_template_ids(day, state, invite_created=invite_created,
-                                            research_source=research_source, has_slots=bool(two))
+    template_id, parts = touch_template_ids(day, state, research_source=research_source)
     return Touch(
         day=day,
         intent=INTENTS[day],
         subject=subject_for(state),
         body_text=body,
         slots=isos,
-        requires_approval=requires_approval,
-        channel_note=channel_note,
         slots_source=slots_source,
         meta=meta,
         # Only the prose is judged by the copy gate: "Automation Depot" is the
         # prospect's own name, not a copy failure, and blocking on it used to lose
         # that lead every day from D2 onwards.
-        allow_terms=[company, first],
+        allow_terms=[t for t in (company, first) if t],
         # ... and the copy gate needs to know whose offer sheet row this is, or
         # another vertical's guarantee reads as a number that "exists in offers.md".
         campaign_key=campaign_key_of(state),
@@ -1620,13 +1664,12 @@ def build_touch(state: Any, day: int, slots: List[Any], research_line: Optional[
 def touch_bindings(state: Any, touch: Touch) -> Dict[str, str]:
     """What build_touch actually put into each placeholder of ``touch``, for
     template_gate's conformance check (flag 13): the captured value must
-    equal it. The slot placeholders are bound to the slots the touch offers,
+    equal it. The slot placeholder is bound to the slots the touch offers,
     so a body naming other times never conforms. Only values that were
-    rendered are bound (no slots, no binding for them)."""
+    rendered are bound (no slots or no company on file, no binding)."""
     out = {
         "first_name": first_name_of(state),
-        "company": company_of(state),
-        "booking_url": DEFAULT_BOOKING_URL,
+        "company": known_company(state),
     }  # type: Dict[str, Any]
     specialty = _field(state, "specialty")
     if specialty:
@@ -1643,9 +1686,6 @@ def touch_bindings(state: Any, touch: Touch) -> Dict[str, str]:
     two = two[:2]
     if two:
         out["slots"] = slot_rules.format_slots(two)
-        out["slot1"] = slot_rules.format_slots(two[:1])
-        if len(two) > 1:
-            out["slot2"] = slot_rules.format_slots(two[1:2])
     return dict((k, str(v)) for k, v in out.items() if v not in (None, ""))
 
 
@@ -1865,8 +1905,6 @@ def _record_touch(state: Any, touch: Touch, now: datetime, result: Dict[str, Any
         "subject": touch.subject,
         "slots": list(touch.slots),
         "slots_source": touch.slots_source,
-        "requires_approval": touch.requires_approval,
-        "channel_note": touch.channel_note,
         "shadow": bool(result.get("shadow", True)),
         "result_id": (result.get("id") if isinstance(result, dict) else None),
         "problems": touch.problems,
@@ -1915,8 +1953,6 @@ def _repair_from_marker(state: Any, day: int, marker: Dict[str, Any], now: datet
         "subject": marker.get("subject"),
         "slots": list(marker.get("slots") or []),
         "slots_source": marker.get("slots_source"),
-        "requires_approval": bool(marker.get("requires_approval")),
-        "channel_note": None,
         "shadow": bool(marker.get("shadow", False)),
         "result_id": marker.get("result_id"),
         "problems": [],
@@ -1992,40 +2028,6 @@ def actions_delivered(result: Any) -> Optional[bool]:
     if result.get("email"):
         return True  # the email leg carries the link, because it is passed as click=
     return False
-
-
-def _cancel_hold(appointment_id: Optional[str], ghl: Any) -> Dict[str, Any]:
-    """Take back a D6 hold whose email never went out (guarded).
-
-    ``to_notify=False``, as on every cancel the engine starts (SAL-9): the
-    prospect was never told about the hold, and GHL's default notification
-    setting must not decide whether they hear about its cancel."""
-    if not appointment_id:
-        return {"skipped": "no_appointment_id"}
-    try:
-        if ghl is not None:
-            rec = ghl.update_appointment_status(appointment_id, "cancelled", to_notify=False)
-        else:
-            rec = guard_write("ghl", "update_appointment_status", {"appointment_id": appointment_id, "status": "cancelled",
-                                                                   "toNotify": False})
-    except Exception as exc:  # noqa: BLE001 - surface the orphan, never raise out of the tick
-        logger.warning("could not cancel hold %s: %s", appointment_id, exc)
-        return {"error": str(exc), "appointment_id": appointment_id}
-    return rec if isinstance(rec, dict) else {"result": rec}
-
-
-def _hold_appointment_id(rec: Any) -> Optional[str]:
-    if not isinstance(rec, dict) or rec.get("shadow"):
-        return None
-    for path in ("id", "appointment.id", "event.id"):
-        cur = rec  # type: Any
-        for part in path.split("."):
-            cur = cur.get(part) if isinstance(cur, dict) else None
-            if cur is None:
-                break
-        if cur:
-            return str(cur)
-    return None
 
 
 def _note_skip(state: Any, day: int, kind: str, now: datetime) -> Tuple[bool, int]:
@@ -2329,6 +2331,9 @@ def hold_advice(reason: Optional[str]) -> str:
                 "(see /health) and the day goes out on the next tick." % (reason or "registry_error"))
     if cause == "approve":
         return "Approve the ids with jobs/approve_templates.py."
+    if reason == "missing_lead_data":
+        return ("Approving changes nothing: this email needs the lead's company, niche or offer, and the lead's "
+                "record does not have it. Fix the lead's record, or answer the lead by hand.")
     if reason == "copy_gate":
         return ("Approving changes nothing: the copy check refused the text, most likely a banned word or a "
                 "figure in the lead's company or name. Fix the lead's record, or answer the lead by hand.")
@@ -2643,6 +2648,20 @@ def _template_stop_reminder(state: Any, now: datetime, notify_fn: Any) -> Option
             "ids": ids, "held_reason": reason, "ready": ready, "resume_link_via": via}
 
 
+class _MissingDataVerdict(object):
+    """A hold for an email whose lead data is missing (missing_lead_data):
+    decided by the cadence before the template gate is asked."""
+
+    allowed = False
+    reason = "missing_lead_data"
+
+    def __init__(self, day: int, state: Any, missing: List[str]) -> None:
+        self.template_id, parts = touch_template_ids(day, state)
+        self.ids = [self.template_id] + list(parts)
+        self.statuses = {}  # type: Dict[str, str]
+        self.detail = "missing: %s" % ", ".join(missing)
+
+
 class _HeldVerdict(object):
     """A D1 hold repeated without a change (see _d1_gate_hold)."""
 
@@ -2722,7 +2741,7 @@ def _d1_gate_hold(state: Any, now: datetime, store: Any,
             return None, True
     except Exception as exc:  # noqa: BLE001 - a D1 that cannot be rendered is held, never pinged
         logger.warning("D1 pre-check failed closed: %s", type(exc).__name__)
-        return _GateUnavailable("cadence.d1", (), type(exc).__name__), False
+        return _GateUnavailable("cadence.e1", (), type(exc).__name__), False
     verdict = _template_touch_verdict(state, touch)
     if not verdict.allowed:
         _note_d1_gate_hold(state, touch, verdict, ct)
@@ -2732,7 +2751,7 @@ def _d1_gate_hold(state: Any, now: datetime, store: Any,
         unchanged = bool(refused.get("fp")) and refused["fp"] == _d1_gate_fingerprint(state, touch, verdict)
     except Exception as exc:  # noqa: BLE001
         logger.warning("could not fingerprint the D1 pre-check: %s", type(exc).__name__)
-        return _GateUnavailable("cadence.d1", (), type(exc).__name__), False
+        return _GateUnavailable("cadence.e1", (), type(exc).__name__), False
     if unchanged:
         reason = str(refused.get("reason") or "nonconforming")
         return _HeldVerdict(verdict.template_id, list(verdict.ids), reason), False
@@ -2745,7 +2764,7 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
     """Evaluate one lead at ``now`` and act. Returns a result dict with
     ``action`` in: not_armed | already_stopped | awaiting_fresh_draft |
     resumed_after_auto_reply | stopped | follow_up_later | not_due |
-    veto_window_opened | vetoed | awaiting_invite_ok | skipped_no_slots |
+    veto_window_opened | vetoed | skipped_no_slots |
     skipped_unverified_slots | already_sent | blocked_copy | held_template |
     send_failed | slot_taken | would_send | sent | resume_link_sent.
 
@@ -2756,7 +2775,7 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
     tick that re-signs its Resume link (_template_stop_reminder).
 
     ``dry_run=True`` plans the touch and mutates nothing (no store, no send).
-    ``research_mode`` is passed to build_touch (default D2_RESEARCH_MODE)."""
+    ``research_mode`` is passed to build_touch (default E2_RESEARCH_MODE)."""
     ct = slot_rules.to_tz(now)
     email = _field(state, "lead_email")
     base = {"lead_email": email, "campaign_id": _field(state, "campaign_id"), "now": ct.isoformat()}
@@ -2914,7 +2933,7 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
     # reported as blocked_copy when it falls due.
     d1_copy_blocked = False
     if day == 1 and not dry_run and ((is_live() and veto_notify_due(state, ct)) or due(state, ct)):
-        pre = _template_ids_verdict("cadence.d1")
+        pre = _template_ids_verdict("cadence.e1")
         if not pre.allowed:
             return _hold_for_template(state, 1, pre, ct, store, base, notify_fn)
         if is_live() and not (state.cadence or {}).get("veto_notified_at"):
@@ -3018,7 +3037,18 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
             return dict(base, action="send_failed", day=day, reason="previous_attempt_unconfirmed",
                         started_at=marker.get("ts"), needs_manual_check=True)
 
-    # Fresh slots (skip for the slotless yes/no close)
+    # The email needs a value the lead record does not have (the company, the
+    # niche or the offer): held before anything is picked or built, the way a
+    # lead value the template refuses is held (cause lead_data), never sent
+    # with a generic stand-in.
+    missing = missing_lead_data(state, day)
+    if missing:
+        held = _hold_for_template(state, day, _MissingDataVerdict(day, state, missing), ct, store, base, notify_fn,
+                                  dry_run=dry_run)
+        held["missing"] = list(missing)
+        return held
+
+    # Fresh slots (E2 offers none: it never picks, claims or reserves one)
     two = []  # type: List[datetime]
     source = "provided"
     if day not in SLOTLESS_DAYS:
@@ -3027,13 +3057,13 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
         two = fresh_slots(state, ct, free_slots, store)
         skip = None
         if len(two) < 2:
-            # Every slot-bearing body offers two times ("here are two new ones");
+            # Every slot-bearing body offers two times ("here are 2 more");
             # one slot would render a sentence Lorenzo did not write.
             skip = "skipped_no_slots"
         elif is_live() and source == "default_grid":
             skip = "skipped_unverified_slots"
         if skip:
-            # Eight of the nine cadence days carry slots, so a skip that never
+            # Nine of the ten cadence emails carry slots, so a skip that never
             # advances, never stops and never stamps anything is a lead getting
             # zero follow-ups while the digest repeats the same line every hour.
             # Say it once a day, and after SKIP_STALL_DAYS stop the ladder with a
@@ -3058,95 +3088,11 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
                 return dict(base, action="stopped", reason="slots_unavailable", day=day, skipped=skip, days=days)
             return dict(base, action=skip, day=day, slots_found=len(two), quiet=quiet, days=days)
 
-    # D6: the calendar invite needs Lorenzo's OK
-    invite_created = False
-    if day == 6:
-        raw_decision = store.get(approval_key(state, "d6")) if store is not None else None
-        decision = raw_decision if decision_is_current(raw_decision, state) else None
-        if not hold_enabled():
-            # Default: no hold, in shadow and live alike, so the shadow run is a
-            # true preview, and D6 renders the no-invite wording.
-            #
-            # The dependency this used to wait on is DONE: jobs/appointments_tick
-            # .is_cadence_hold() drops events whose title starts with "HOLD: ",
-            # so a hold is no longer read as a booked call, confirmed to the
-            # prospect and then chased as a no-show. _create_hold also writes
-            # to_notify=False, so GHL sends no booking notice.
-            #
-            # It stays off anyway, because the blueprint's D6 is "a calendar
-            # invite for one of the slots, marked free so it does not block
-            # their day" and this is not that: a GHL appointment carries no
-            # transparency flag and the prospect receives nothing at all. What
-            # ships today is a private hold on Lorenzo's own calendar. The real
-            # touch needs an ICS attachment with TRANSP:TRANSPARENT sent from
-            # the Instantly reply, which is a design change, recorded as out of
-            # scope for Phase 1 in runbooks/PHASE1_SHADOW_REPORT.md.
-            # CADENCE_D6_HOLD=1 turns the private hold on; it does not make the
-            # blueprint's touch exist.
-            invite_created = False
-        elif is_live() and not decision:
-            if not (state.cadence or {}).get("d6_notified_at"):
-                if not dry_run and links_base_url() is None:
-                    # "Send hold" / "Email only" would be dead links. Say so once
-                    # and fall through to the no-hold wording at 18:00, exactly
-                    # like an undeliverable card: it costs the hold, never the touch.
-                    state.cadence = dict(state.cadence, d6_notified_at=ct.isoformat())
-                    logger.error("D6 hold card for %s not sent: BASE_URL is unset or local-only", email)
-                    _log_job("d6_card_no_base_url", {"lead": email, "campaign_id": _field(state, "campaign_id")})
-                    who, message, private = _lead_push(
-                        state,
-                        "The 'Send hold' / 'Email only' links need BASE_URL (unset or localhost). No hold will be "
-                        "booked; the no-hold follow-up goes out at %d:00 CT." % D6_FALLBACK_HOUR)
-                    notify_fn(
-                        "D6 hold card for %s could not be sent: no BASE_URL" % who,
-                        message,
-                        priority="high",
-                        tags=["warning"],
-                        **private
-                    )
-                    return dict(base, action="awaiting_invite_ok", day=6, slot=_iso(two[0]),
-                                card_undeliverable=True, reason="no_base_url")
-                if not dry_run:
-                    approve_url = _decision_url("approve", state, ct)
-                    state.cadence = dict(state.cadence, d6_notified_at=ct.isoformat())
-                    who, message, private = _lead_push(
-                        state,
-                        "Day 6. The follow-up email goes out either way: 'Send hold' also books the %s CT "
-                        "hold on the Discovery Call calendar, 'Email only' sends the no-hold wording."
-                        % slot_rules.format_slot(two[0]))
-                    sent = notify_fn(
-                        "OK to put a calendar hold on %s?" % who,
-                        message,
-                        priority="high",
-                        actions=[("Send hold", approve_url),
-                                 ("Email only", _decision_url("veto-invite", state, ct))],
-                        # See the D1 card: this is the leg that survives an
-                        # unauthenticated topic. Without an answer the day falls
-                        # through to the no-hold wording at 18:00 anyway, so an
-                        # undeliverable card costs the hold, never the touch.
-                        click=approve_url,
-                        tags=["calendar"],
-                        **private
-                    )
-                    if actions_delivered(sent) is False:
-                        logger.warning("D6 hold card for %s carried no buttons; the no-hold body will be sent", email)
-                        return dict(base, action="awaiting_invite_ok", day=6, slot=_iso(two[0]),
-                                    card_undeliverable=True)
-                return dict(base, action="awaiting_invite_ok", day=6, slot=_iso(two[0]))
-            if ct.hour < D6_FALLBACK_HOUR:
-                return dict(base, action="awaiting_invite_ok", day=6, slot=_iso(two[0]))
-            invite_created = False  # no answer by 18:00 CT: send the no-invite variant
-        elif is_live():
-            invite_created = decision.get("decision") == "approve"
-        else:
-            invite_created = True  # shadow: record the intent; requires_approval stays on the record
-
     # CT3 pre-check: the day's template (and every line spliced into it that
-    # is known before the body is built) is approved, before a D6 hold is
-    # put on the calendar or a research line is paid for.
-    mode = research_mode or D2_RESEARCH_MODE
-    pre_main, pre_parts = touch_template_ids(day, state, invite_created=invite_created,
-                                             research_source="fallback", has_slots=bool(two))
+    # is known before the body is built) is approved, before a research line
+    # is paid for.
+    mode = research_mode or E2_RESEARCH_MODE
+    pre_main, pre_parts = touch_template_ids(day, state, research_source="fallback")
     if day == 2 and mode == "llm":
         pre_parts = []  # the line is not written yet; the full verdict below judges it
     pre = _template_ids_verdict(pre_main, pre_parts)
@@ -3154,8 +3100,7 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
         return _hold_for_template(state, day, pre, ct, store, base, notify_fn, dry_run=dry_run)
 
     if dry_run:
-        touch = build_touch(state, day, two, invite_created=invite_created, slots_source=source,
-                            research_mode=research_mode)
+        touch = build_touch(state, day, two, slots_source=source, research_mode=research_mode)
         # Touch.problems is a property, so it is not in to_dict(): a --dry-run
         # preview that hid the copy verdict is the one Lorenzo signs off on.
         if touch.problems:
@@ -3168,8 +3113,8 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
         return dict(base, action="would_send", day=day, touch=touch.to_dict(), dry_run=True)
 
     # The copy gate refused this day already today: nothing about the lead has
-    # changed since, so do not rebuild the touch (D2 rebuilds it with a fresh
-    # paid research line), do not notify again, and do not re-create the D6 hold.
+    # changed since, so do not rebuild the touch (E2 in "llm" mode rebuilds it
+    # with a fresh paid research line) and do not notify again.
     prev_blocked = (getattr(state, "cadence", None) or {}).get("last_blocked") or {}
     prev_blocked_at = _parse(prev_blocked.get("at"))
     if prev_blocked.get("day") == day and prev_blocked_at is not None and prev_blocked_at.date() == ct.date():
@@ -3177,27 +3122,8 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
                     problems=list(prev_blocked.get("problems") or []),
                     days=int(prev_blocked.get("days") or 1), reason="already_reported_today")
 
-    # The D6 body claims a hold exists, so the hold is attempted first; if it
-    # cannot be created the day falls through to the no-hold wording instead of
-    # being lost (and the lead is never told about a hold that is not there).
     records = []  # type: List[Dict[str, Any]]
-    hold_error = None
-    hold_appointment_id = None
-    if day == 6 and invite_created and two:
-        try:
-            appt = _create_hold(state, two[0], ghl, ct)
-        except Exception as exc:  # noqa: BLE001 - a calendar failure must not sit between the OK and the email
-            logger.warning("D6 hold failed for %s: %s", email, exc)
-            appt = {"error": str(exc)}
-        if isinstance(appt, dict) and not appt.get("error") and not appt.get("skipped"):
-            records.append(appt)
-            hold_appointment_id = _hold_appointment_id(appt)
-        else:
-            hold_error = (appt or {}).get("error") or (appt or {}).get("skipped") or "hold_failed"
-            invite_created = False
-
-    touch = build_touch(state, day, two, invite_created=invite_created, slots_source=source,
-                        research_mode=research_mode)
+    touch = build_touch(state, day, two, slots_source=source, research_mode=research_mode)
 
     # The copy gate: approval.send_approved refuses a draft with problems, and an
     # unattended touch must clear the same bar before it reaches a customer.
@@ -3206,11 +3132,6 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
         state.cadence = dict(state.cadence or {},
                              last_blocked={"day": day, "at": ct.isoformat(), "problems": list(touch.problems),
                                            "days": days})
-        # The hold was created before the copy check; the email is not going out,
-        # so the afternoon goes back on the calendar instead of leaving one orphan
-        # HOLD per retry.
-        if hold_appointment_id:
-            records.append(_cancel_hold(hold_appointment_id, ghl))
         stalled = days >= BLOCKED_COPY_STALL_DAYS
         if stalled:
             stop(state, "blocked_copy", ct)
@@ -3241,8 +3162,6 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
     # base-URL hold, the marker claim, the slot claim and the send.
     verdict = _template_touch_verdict(state, touch)
     if not verdict.allowed:
-        if hold_appointment_id:
-            records.append(_cancel_hold(hold_appointment_id, ghl))
         if day == 1:
             # The next Veto window waits for a change that could make it pass.
             _note_d1_gate_hold(state, touch, verdict, ct)
@@ -3262,8 +3181,6 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
     if day == 1 and is_live():
         held = _hold_d1_without_base_url(state, ct, base, notify_fn)
         if held is not None:
-            if hold_appointment_id:
-                held["records"] = records + [_cancel_hold(hold_appointment_id, ghl)]
             return held
 
     # Claim the day. set_if_absent is the atomic half of what used to be a
@@ -3272,8 +3189,7 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
     if store is not None:
         pre = {"ts": ct.isoformat(), "day": day, "sent": False,
                "subject": touch.subject, "slots": list(touch.slots),
-               "slots_source": touch.slots_source,
-               "requires_approval": touch.requires_approval}
+               "slots_source": touch.slots_source}
         try:
             claimed = store.set_if_absent(touch_marker_key(state, day), pre)
             if not claimed:
@@ -3291,8 +3207,6 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
             store.set(touch_marker_key(state, day), pre)
             claimed = True
         if not claimed:
-            if hold_appointment_id:
-                records.append(_cancel_hold(hold_appointment_id, ghl))
             return dict(base, action="locked", day=day, quiet=True,
                         reason="another worker owns this cadence day", records=records)
     # Last look before the POST. A reply (or a booking, or a fresh approval)
@@ -3304,8 +3218,6 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
             store.delete(touch_marker_key(state, day))  # nothing was sent: the day stays unspent
         except Exception as exc:  # noqa: BLE001
             logger.warning("could not clear touch marker: %s", exc)
-        if hold_appointment_id:
-            records.append(_cancel_hold(hold_appointment_id, ghl))
         return dict(base, action="stopped", day=day, reason="changed_while_ticking:%s" % changed,
                     records=records)
     # The two times were picked from a registry read made at the top of this
@@ -3327,8 +3239,6 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
                 store.delete(touch_marker_key(state, day))  # nothing was sent: the day stays unspent
             except Exception as exc:  # noqa: BLE001
                 logger.warning("could not clear touch marker: %s", exc)
-            if hold_appointment_id:
-                records.append(_cancel_hold(hold_appointment_id, ghl))
             return dict(base, action="slot_taken", day=day, slots=taken, quiet=True, records=records,
                         reason="another lead took %s while this tick ran; retried next tick" % ", ".join(taken))
     result = _send(state, touch, instantly, ct)
@@ -3356,8 +3266,6 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
                 # the identical body on the next hourly tick.
                 logger.warning("D%d to %s failed after the request was issued (%s): holding the day",
                                day, recipient_for(state), failure)
-        if hold_appointment_id:
-            records.append(_cancel_hold(hold_appointment_id, ghl))
         out = dict(base, action="send_failed", day=day, reason=failure, records=records, touch=touch.to_dict())
         if not nothing_left_the_process(failure):
             out["needs_manual_check"] = True
@@ -3394,7 +3302,6 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
                                                  "kind": "would_do" if result.get("shadow", True) else "done",
                                                  "subject": touch.subject, "slots": list(touch.slots),
                                                  "slots_source": touch.slots_source,
-                                                 "requires_approval": touch.requires_approval,
                                                  "shadow": bool(result.get("shadow", True)),
                                                  "result_id": result.get("id")})
     else:
@@ -3406,9 +3313,9 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
     _clear_skip(state)
     rec = _record_touch(state, touch, ct, result, kind)
     post_errors = []  # type: List[str]
-    if touch.day == 30:
-        # D30 done: the lead stays in Follow Up Later. A GHL hiccup here must not
-        # discard the touch we just sent.
+    if touch.day == LAST_DAY:
+        # E10 done: the ladder is exhausted and the lead stays in Follow Up
+        # Later. A GHL hiccup here must not discard the touch we just sent.
         try:
             moved = move_to_follow_up_later(state, ghl, ct, reason="exhausted")
             if isinstance(moved, dict) and moved.get("error"):
@@ -3418,84 +3325,9 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
             post_errors.append("follow_up_later: %s" % exc)
     out = dict(base, action=("would_send" if kind == "would_do" else "sent"), day=day, touch=touch.to_dict(),
                records=records, record=rec)
-    if hold_error:
-        out["hold_error"] = hold_error
     if post_errors:
         out["post_errors"] = post_errors
     return out
-
-
-HOLD_TITLE_PREFIX = "HOLD: "
-
-
-def hold_enabled() -> bool:
-    """Whether D6 may write a calendar hold in live mode (runbook open item 7).
-
-    Off by default, and safe to turn on: jobs/appointments_tick.is_cadence_hold
-    drops events whose TITLE starts with ``HOLD: `` (the title is the
-    discriminating half; appointmentStatus "new" alone is not, because a real
-    Discovery Call booking is "new" whenever the calendar's auto-confirm is
-    off), so a hold is no longer read as a booked call and confirmed to the
-    prospect, and _create_hold writes ``to_notify=False`` so GHL does not email
-    them a booking notice for a call they never agreed to.
-
-    What it does NOT do is send the prospect anything. The blueprint's D6 is a
-    transparent invite in THEIR calendar; this is a private block in Lorenzo's.
-    Set CADENCE_D6_HOLD=1 for the private block; see PHASE1_SHADOW_REPORT
-    "not built yet" for the real touch."""
-    return str(os.environ.get("CADENCE_D6_HOLD", "")).strip().lower() in ("1", "true", "yes", "on")
-
-
-def _create_hold(state: Any, slot: datetime, ghl: Any, now: datetime) -> Dict[str, Any]:
-    """D6 calendar hold on the Discovery Call calendar (guarded). GHL has no
-    'free' transparency flag on appointments; the title is prefixed HOLD: so the
-    show-rate job and Lorenzo can tell it from a booked call.
-
-    Returns a record carrying ``skipped``/``error`` when no hold was created, so
-    the caller falls back to the no-hold body instead of telling the lead about
-    a hold that does not exist."""
-    start = slot_rules.to_tz(slot)
-    end = start + timedelta(minutes=SLOT_MINUTES)
-    title = "%sLorenzo <> %s: 15-min %s plan" % (HOLD_TITLE_PREFIX, company_of(state),
-                                                 "reactivation" if niche_and_offer(state)[1] == "reactivation" else "outbound")
-    contact_id = _field(state, "ghl_contact_id")
-    payload = {
-        "calendarId": settings.GHL_CALENDAR_ID,
-        "contactId": contact_id,
-        "startTime": start.isoformat(),
-        "endTime": end.isoformat(),
-        "title": title,
-        "appointmentStatus": "new",
-        # the prospect never agreed to this time; GHL must not email them about it
-        "toNotify": False,
-    }
-    if not contact_id:
-        # GHL rejects a contactId of "pending" (422) and the whole day used to be
-        # lost to that; fall through to the no-hold body instead.
-        logger.info("D6 hold skipped for %s: no ghl_contact_id", _field(state, "lead_email"))
-        return {"skipped": "no_ghl_contact_id", "payload": payload}
-    if ghl is None:
-        # shadow: record the intent (that is the deliverable). live: nothing was
-        # created, so say so and let the caller fall back to the no-hold body.
-        rec = guard_write("ghl", "create_appointment", payload)
-        if not rec.get("shadow"):
-            rec["skipped"] = "no_ghl_client"
-        return rec
-    try:
-        rec = ghl.create_appointment(settings.GHL_CALENDAR_ID, contact_id, start.isoformat(), end.isoformat(), title,
-                                     appointment_status="new", to_notify=False)
-    except TypeError:  # older shared.ghl without to_notify
-        logger.warning("shared.ghl.create_appointment has no to_notify; the hold would email the prospect")
-        return {"skipped": "ghl_cannot_suppress_notification", "payload": payload}
-    if rec is None:  # live without a Private Integration token: nothing was created
-        return {"skipped": "ghl_write_returned_nothing", "payload": payload}
-    return rec if isinstance(rec, dict) else {"result": rec}
-
-
-def confirm_calendar_invite(state: Any, slot: Union[str, datetime], ghl: Any, now: datetime) -> Dict[str, Any]:
-    """For the approval endpoint: Lorenzo tapped Approve on the D6 card before
-    the tick ran; create the hold right away (guarded)."""
-    return _create_hold(state, slot_rules.parse_iso(slot), ghl, now)
 
 
 # ---------------------------------------------------------- serialization
@@ -3553,9 +3385,8 @@ def summarize_touch(result: Dict[str, Any]) -> str:
             when = ", ".join(slots)
     template_id = result.get("template_id") or touch.get("template_id")
     if action in ("would_send", "sent"):
-        flag = " (needs your OK for the invite)" if touch.get("requires_approval") else ""
         tid = ", %s" % template_id if template_id else ""
-        return "D%s -> %s: %s%s [%s%s]" % (day, email, when or "no times (yes/no close)", flag, action, tid)
+        return "D%s -> %s: %s [%s%s]" % (day, email, when or "no times (E2)", action, tid)
     if action == "held_template":
         # the template id, the gate's reason and what fixes it, never the body
         reason = result.get("reason")
@@ -3578,8 +3409,6 @@ def summarize_touch(result: Dict[str, Any]) -> str:
         return "%s: cadence stopped, a reply of theirs is waiting on your approval" % email
     if action in ("stopped", "follow_up_later"):
         return "%s: cadence stopped (%s)" % (email, result.get("reason"))
-    if action == "awaiting_invite_ok":
-        return "D6 -> %s: waiting on your OK for the %s CT hold" % (email, when or result.get("slot"))
     if action == "veto_window_opened":
         return "D1 -> %s: veto window open, sends in 30 minutes" % email
     if action == "blocked_copy":

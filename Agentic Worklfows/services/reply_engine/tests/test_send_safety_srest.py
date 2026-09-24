@@ -410,16 +410,12 @@ def test_sal9_every_engine_cancel_passes_to_notify_false(tmp_env, monkeypatch):
     ghl = Recorder()
     A.retry_failed_cancels(store, ghl, None, ct(2026, 9, 21, 17, 5))
     silent(ghl)
-    # the cadence's D6 hold, live client and guarded shadow write
-    ghl = Recorder()
-    cadence._cancel_hold("hold-1", ghl)
-    silent(ghl)
+    # the guarded shadow write (the cadence's D6 calendar hold is gone with the E1..E10 ladder)
     monkeypatch.setenv("MODE", "shadow")
     monkeypatch.delenv("ALLOW_LIVE_WRITES", raising=False)
-    cadence._cancel_hold("hold-2", None)
     A._cancel_appointment({"appointment_id": "appt-shadow", "slot": THU_3PM}, None, None)
     shadow = [r for r in read_shadow_log() if r["action"] == "update_appointment_status"]
-    assert [r["payload"].get("toNotify") for r in shadow] == [False, False]
+    assert [r["payload"].get("toNotify") for r in shadow] == [False]
     # booking.book's reschedule of an existing call
     state = LeadState(lead_email=SOPIO, campaign_id=CAMPAIGN, first_name="Sopio", ghl_contact_id="contact-1",
                       cadence={"booking": {"slot": THU_3PM, "appointment_id": "old-appt", "awaiting_approval": False}})
