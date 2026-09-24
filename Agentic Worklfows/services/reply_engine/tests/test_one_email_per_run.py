@@ -69,9 +69,14 @@ def test_a_no_show_marked_the_next_morning_gets_one_email_per_tick(tmp_env, shad
     result = tick_mod.tick(start + timedelta(hours=21), store, ghl, [appt])
     assert [e["template"] for e in result["recovery_detail"]["would_do"]] == ["ns_reschedule_email"]
     assert [r["payload"]["subject"] for r in _emails()] == ["New time for our call"]
-    # N4 goes on a later tick, not in the same one
+    # N4 never follows on a later tick either: ten minutes after N3 it would
+    # call N3's times taken, so it closes (SUPERSEDE_MARGIN after an earlier
+    # email reached the lead; test_no_show_ladder.py has the whole ladder)
     result = tick_mod.tick(start + timedelta(hours=21, minutes=10), store, ghl, [appt])
-    assert [e["template"] for e in result["recovery_detail"]["would_do"]] == ["ns_d1_email"]
+    assert result["recovery_detail"]["would_do"] == []
+    assert [(e["template"], e["reason"]) for e in result["recovery_detail"]["skipped"]] == [
+        ("ns_d1_email", "superseded")]
+    assert [r["payload"]["subject"] for r in _emails()] == ["New time for our call"]
     assert requests == []
 
 

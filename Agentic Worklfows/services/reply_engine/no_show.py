@@ -62,8 +62,13 @@ only after an earlier slot email of the same ladder reached the lead (else
 without saying the earlier ones were taken, so after N9 the lead holds two
 pairs (N9's and the one before) until N6 reaches them or the times pass.
 
-A late email never goes out once the next email of its ladder is due within
-SUPERSEDE_MARGIN or already went out: it closes as ``superseded``.
+No two emails of a ladder reach the lead less than SUPERSEDE_MARGIN (8 h)
+apart. A late email never goes out once the next email of its ladder is due
+within the margin or already went out, and no email goes out less than the
+margin after an earlier one of its ladder reached the lead: both close as
+``superseded``, except the ladder's last email, which waits for the end of the
+margin (its hand-off must run). So a no-show marked by hand the next morning
+gets N3 at once, N4 closes, and N5 goes on its own day.
 
 Any reply from the lead since the call's start stops the rest (``replied``,
 read from the lead row's ``last_inbound_at`` via thread_reply.find_thread);
@@ -1497,8 +1502,9 @@ def run_recovery(
             if skip is not None:
                 # came due during an outage ("I'm on the call now" a day after
                 # the call), nothing true can be said (no niche line, no
-                # earlier offer for "those times got taken"), or the next
-                # email of the ladder is due (or went out) already
+                # earlier offer for "those times got taken"), the next email
+                # of the ladder is due (or went out) already, or the one
+                # before it reached the lead less than SUPERSEDE_MARGIN ago
                 _close_touch(store, key, raw, appt, skip)
                 entry["reason"] = skip
                 summary["skipped"].append(entry)
@@ -1507,6 +1513,19 @@ def run_recovery(
                     mv = _after_skipped_task(after, appt, ghl, now, skip)
                     if mv:
                         summary["stage_moves"].append(mv)
+                continue
+            wait = _spacing_wait(touch.key, rec, appt, now)
+            if wait is not None:
+                # the ladder's last email, less than SUPERSEDE_MARGIN after the
+                # one before it: never closed for that (its hand-off must run),
+                # re-armed at the end of the margin. MAX_LATENESS then counts
+                # from the new time.
+                raw["rearmed_from"] = raw.get("rearmed_from") or raw.get("when_iso")
+                raw["when_iso"] = wait.isoformat()
+                _persist_touch(store, key, touch.key, {"when_iso": raw["when_iso"],
+                                                       "rearmed_from": raw["rearmed_from"]})
+                entry.update(reason=SPACING_WAIT, until=raw["when_iso"])
+                summary["deferred"].append(entry)
                 continue
             # contact ids are resolved from the record, not from the frozen
             # Touch: an id that arrived on a later tick must revive the ladder.
@@ -1565,7 +1584,8 @@ def run_recovery(
             _persist_touch(store, key, touch.key, {k: raw.get(k) for k in
                                                    ("sent", "sent_at", "result", "skipped", "skip_reason", "attempts",
                                                     "subject", "body", "template_id", "template_hash",
-                                                    "template_hold", "thread_hold", "maybe_sent", "slots")})
+                                                    "template_hold", "thread_hold", "maybe_sent", "maybe_sent_at",
+                                                    "slots")})
             after = (touch.meta or {}).get("after")
             if after and out.get("status") in ("sent", "would_do"):
                 pending_after = (after, bool((touch.meta or {}).get("nurture")))
@@ -1659,18 +1679,41 @@ MAX_LATENESS = {
 }
 
 
-# A late ladder email never goes out once the NEXT email of the same ladder is
-# due, due within this margin, or already went out: it is closed as
-# ``superseded`` (show_rate closes a reminder overtaken by a later one the same
-# way) and the next email carries on. Since 2026-09-24 the day emails are one
-# business day apart while MAX_LATENESS keeps a day, so without this a held
-# N5 released at 08:50 went out ten minutes before N9, with other times. The
-# on-time path never meets the margin: sends only happen 07:00-19:00 CT (and
-# lead-local), so an email the evening before is at least 12 h ahead of the
-# next 10:00 lead-local email, while a late one released the same morning is
-# at most about 3 h ahead of it.
+# No two emails of one ladder reach the lead less than this apart
+# (_superseded_reason, _spacing_wait):
+#
+# * a late email never goes out once the NEXT email of the same ladder is due,
+#   due within this margin, or already went out: it is closed as
+#   ``superseded`` (show_rate closes a reminder overtaken by a later one the
+#   same way) and the next email carries on. Since 2026-09-24 the day emails
+#   are one business day apart while MAX_LATENESS keeps a day, so without this
+#   a held N5 released at 08:50 went out ten minutes before N9;
+# * no email goes out less than this after an EARLIER email of the same ladder
+#   reached the lead (sent or maybe sent): it is closed as ``superseded`` too.
+#   The case is a no-show flagged late (Lorenzo marks it by hand in GHL while
+#   the calendar is on Google Meet): N3 goes at the flag, and N4, due minutes
+#   later at 10:00 lead time, would call N3's times "taken". N4 closes and N5
+#   goes on its own day. The ladder's LAST email is never closed this way (its
+#   stage move and nurture hand-off must run): it waits for the end of the
+#   margin instead. N1 is not part of the ladder record: N3 at S+25 after N1
+#   at S+5 is the approved timing.
+#
+# The on-time ladder never meets the margin. Calls start 12:00-17:45 CT (the
+# offer window, settings.SLOT_WINDOW with 15-minute slots), so N3 at S+25 goes
+# by 18:10 CT. Every day email is armed at 10:00 lead time on a business day
+# after the call's own lead-local day, which is at least 9 h after S (10 h
+# without a clock change), so after 21:00 CT, and next_send_window_open only
+# moves it later, into 07:00-19:00 CT on a weekday: N4 (and the second miss's
+# N6) goes at 07:00 CT on the next business day at the earliest, at least
+# 12 h 50 min after N3. After N4 the day emails are a business day apart; where
+# the lead's send window barely overlaps Central (Asia, Australia) touch_time
+# can move two of them to the same afternoon, and then the earlier one closes
+# by the first rule, as a late email does.
 SUPERSEDE_MARGIN = timedelta(hours=8)
 SUPERSEDED = "superseded"
+# The summary reason (under "deferred", never a skip or a Job_Log status) when
+# the ladder's last email is re-armed at the end of the margin.
+SPACING_WAIT = "spacing_wait"
 
 
 def _too_late_reason(touch: Touch, now: datetime) -> Optional[str]:
@@ -1681,18 +1724,30 @@ def _too_late_reason(touch: Touch, now: datetime) -> Optional[str]:
 
 
 def _superseded_reason(touch_key: str, rec: Dict[str, Any], appt: Dict[str, Any], now: datetime) -> Optional[str]:
-    """``superseded`` when a LATER email of this ladder already reached the
-    lead, or the next later email that can still go is due by
-    ``now + SUPERSEDE_MARGIN``; else None. A later touch that will be closed
-    anyway (too late, or a _ladder_skip_reason such as N5's no_niche_point)
-    does not count as the next email. The last touch of a ladder is never
-    superseded, so its stage move and nurture hand-off are unaffected."""
+    """``superseded`` when this email must not go, now or later; else None:
+
+    - a LATER email of this ladder already reached the lead;
+    - an EARLIER email of this ladder reached the lead (sent or maybe sent)
+      less than SUPERSEDE_MARGIN ago (_last_reached_before);
+    - the next later email that can still go is due by
+      ``now + SUPERSEDE_MARGIN``. A later touch that will be closed anyway
+      (too late, or a _ladder_skip_reason such as N5's no_niche_point or a
+      "taken" email's no_prior_offer) does not count as the next email.
+
+    The last touch of a ladder is never superseded, so its stage move and
+    nurture hand-off always run; when an earlier email reached the lead less
+    than the margin before it, _spacing_wait re-arms it instead."""
     all_touches = rec.get("touches") or []
     keys = [t.get("key") for t in all_touches]
     if touch_key not in keys:
         return None
     later = all_touches[keys.index(touch_key) + 1:]
+    if not later:
+        return None
     if any(t.get("sent") or t.get("maybe_sent") for t in later):
+        return SUPERSEDED
+    reached = _last_reached_before(rec, touch_key)
+    if reached is not None and now - reached < SUPERSEDE_MARGIN:
         return SUPERSEDED
     for raw in later:
         if raw.get("skipped"):
@@ -1730,6 +1785,59 @@ def _earlier_offer_reached(rec: Dict[str, Any], touch_key: str) -> bool:
         if raw.get("template_key") in SLOT_TEMPLATES and (raw.get("sent") or raw.get("maybe_sent")):
             return True
     return False
+
+
+def _reached_at(raw: Dict[str, Any]) -> Optional[datetime]:
+    """When this touch reached the lead (``sent_at``), or may have
+    (``maybe_sent_at``); None when it did not. A record without the stamp
+    falls back to the touch's armed time. A touch a crashed run dispatched
+    (``already_dispatched``) carries the time the next run found it, later
+    than it went: the safe side for the spacing."""
+    if raw.get("sent"):
+        fields = ("sent_at", "when_iso")
+    elif raw.get("maybe_sent"):
+        fields = ("maybe_sent_at", "when_iso")
+    else:
+        return None
+    for field in fields:
+        value = raw.get(field)
+        if not value:
+            continue
+        try:
+            return slots.to_tz(slots.ensure_aware(slots.parse_iso(str(value)), TZ), TZ)
+        except (ValueError, TypeError):
+            continue
+    return None
+
+
+def _last_reached_before(rec: Dict[str, Any], touch_key: str) -> Optional[datetime]:
+    """The latest moment an EARLIER email of this ladder (before
+    ``touch_key``) reached the lead, or None."""
+    latest = None  # type: Optional[datetime]
+    for raw in rec.get("touches") or []:
+        if raw.get("key") == touch_key:
+            break
+        at = _reached_at(raw)
+        if at is not None and (latest is None or at > latest):
+            latest = at
+    return latest
+
+
+def _spacing_wait(touch_key: str, rec: Dict[str, Any], appt: Dict[str, Any], now: datetime) -> Optional[datetime]:
+    """For the LAST touch of a ladder only: when an earlier email of the
+    ladder reached the lead less than SUPERSEDE_MARGIN ago, the moment it may
+    go instead (the end of the margin, moved into the send window for CT and
+    the lead). None otherwise. Any other touch in that position is closed
+    (_superseded_reason); the last one carries the stage move and the nurture
+    hand-off, so it waits. Example: a second miss flagged by hand on the
+    morning N6 is due gets N3 at once and N6 eight hours later."""
+    touches = rec.get("touches") or []
+    if not touches or touches[-1].get("key") != touch_key:
+        return None
+    reached = _last_reached_before(rec, touch_key)
+    if reached is None or now - reached >= SUPERSEDE_MARGIN:
+        return None
+    return next_send_window_open(reached + SUPERSEDE_MARGIN, lead_tz=lead_tz_of(appt), weekdays_only=True)
 
 
 def _isos(info: Any) -> List[str]:
@@ -1866,6 +1974,7 @@ def _record_recovery_result(raw: Dict[str, Any], out: Dict[str, Any], entry: Dic
         return
     if status == MAYBE_SENT:
         raw["skipped"], raw["skip_reason"], raw["maybe_sent"], raw["result"] = True, MAYBE_SENT, True, out
+        raw["maybe_sent_at"] = now.isoformat()  # the ladder's spacing counts from it (_reached_at)
         entry["reason"], entry["error"] = MAYBE_SENT, out.get("error")
         summary["maybe_sent"].append(entry)
         summary["errors"].append(entry)
