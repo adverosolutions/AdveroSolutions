@@ -28,9 +28,9 @@ signed off; then all the edits below go in at once, through review.
 | T4, day 11, catch | Keep the purpose and day. | agreed |
 | T5, day 16, easy reply | Keep the purpose and day. | agreed |
 | T6, day 23, next step | Keep the purpose and day. | agreed |
-| T7, day 30, close-out | | shown |
-| checkin.md | | shown |
-| reply.md | | |
+| T7, day 30, close-out | Keep the purpose and day. | agreed |
+| checkin.md | Keep as is. | agreed |
+| reply.md | | shown |
 
 ## Sample drafts shown
 
