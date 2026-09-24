@@ -3,9 +3,7 @@
 **2026-09-23 (evening):** research done for both sequences; Lorenzo picked both cadences; reminder copy signed off (`reminders_final.md`, with one rework pending, see below); no-show copy walkthrough in progress (N1, N3, N4 done). No engine code changed yet. Nothing approved in the template registry or live.
 
 ## Resume here (next chat)
-1. Rework the reminder outs for the no-link rule and show Lorenzo each one: R2 "If the time doesn't work anymore, just reply and I'll send a couple of other times." R3 "If something came up, just reply and we'll find another time." (R4 already has no link.)
-2. Continue the no-show walkthrough with the reworked texts (below): N3 second-no-show variant (now two times, no link), N5, N6, N7, N8. One message per question, **the full rendered message inside the question** (Lorenzo's rule).
-3. Then the build (see "Build plan").
+All copy is signed off: **`copy_signed_off.md` is the source of truth** (supersedes `reminders_final.md` and `no_show_final.md`). Next is the build, see "Build plan" below. Nothing built yet.
 
 ## Lorenzo's rules from this walkthrough (apply everywhere)
 - **Email only.** No texts, no phone calls, no call tasks in either sequence. Every lead has an email; phone is hit or miss. SMS legs and call/voicemail tasks come out of the code (not "off until A2P").
@@ -22,25 +20,16 @@
 - No-show cadence: N1 at S+3 (not joined, needs Zoom); N3 at about S+25; N4 next business day; N5 day 3-4; N6 day 7; N7 day 14, then `nurture.enroll(lead_email, "no_show_no_rebook", now)`. Second no-show: N1, N3 second variant, N6 on day 3-4, then nurture. Third: N1, then N8, then nurture. Any reply stops the ladder. N2 (Lorenzo's call) dropped. Two times per email.
 
 ## Copy status
-Signed off: R2, R3, R4 (texts in `reminders_final.md`; their "grab a new slot here: {booking_url}" outs must still be reworked per the no-link rule, item 1 above).
-
-No-show (`no_show_final.md` has the editor's set; these overrides win):
-- N1 (approved): "Hey {first_name},\n\nI'm on the call now, no rush. Here's the link:\n{call_link}\n\nIf now doesn't work anymore, just reply and we'll find another time.\n\nLorenzo" (no-link: "I'm on the call now, no rush. The link is on your calendar invite.")
-- N3 (approved): "Hey {first_name},\n\nLooks like I missed you on our call today. I understand things come up, so let's get another call on the books at a time that works well for you.\n\nCould we do {slots}? Just reply with the one that works.\n\nLorenzo". Lorenzo: never "All good" after the miss ("It's not all good"); he wanted a bridge sentence between the miss and the times.
-- N3 second-no-show variant (approved): "Hey {first_name},\n\nToday didn't line up, and no problem if now is a bad time.\n\nIf you still want to talk, I can do {slots}. Just reply with the one that works.\n\nLorenzo"
-- N4 (approved): "Hey {first_name},\n\nThose two times got taken, but I can do {slots} if you still want to find 15 minutes. Just reply with the one that works.\n\nLorenzo"
-- N5 (approved, with the six {niche_point} lines in `no_show_final.md` unchanged): "Hey {first_name},\n\nOne thing I was going to walk you through on our call:\n\n{niche_point}\n\nThe last two times got taken, but if that's worth 15 minutes, I've got {slots} open. Just say which one works.\n\nLorenzo"
-- N6 (approved): "Hey {first_name},\n\nQuick one on the call: still want to chat, later, or not a fit?\n\nA one-word answer is plenty. If it's later, just tell me roughly when. If you still want to chat, the last two times got taken, but I can do {slots}.\n\nLorenzo"
-- N7 needs the no-link rework before showing; proposal: "I'll leave this with you for now. If the timing gets better later on, just reply here and I'll send over a couple of times." N8 has no link already (show as is).
-- Subjects (no-thread fallback only) capitalized.
+Every reminder (R2, R3, R4) and no-show message (N1, N3 and its second-miss variant, N4 to N8) was shown to Lorenzo in full and approved on 2026-09-23. Texts: `copy_signed_off.md`. Dropped: R1 pre-read, R5 personal call, N2 call/voicemail, every SMS.
 
 ## Build plan (after copy sign-off; worker-heavy + reviewer)
 Map: `build_map.md`. In order:
 1. `show_rate.py`: new SEQUENCE (R2, R3, R4 only; drop confirm_sms, preread, 24 h SMS, unconfirmed task, 1 h and 15 m SMS), the 6 h skip rule, R3 at 08:30 lead time, `MAX_LATENESS` for new keys, local time in `{time}`, new copy, send window at dispatch.
 2. In-thread sending: resolve the lead's `lead:` row (campaign id, appointment row, or email scan), send with `instantly.reply_to_email(..., to=)` behind `cadence.thread_recipient_ok`, GHL email fallback when no thread.
 3. `no_show.py`: new ladder and keys, N1 at S+3 off Zoom join data (needs a per-minute check in call hours or a webhook trigger), repeat rules, reply-stop for all bookings, `nurture.enroll` (on main, 41e50d9), slots with "taken" copy, no booking link anywhere.
-4. `shared:` commit: register new template keys in `template_approvals.py` tuples; hand section 4 the id list for parity and the Google Doc.
-5. Tests, runbook `runbooks/show_rate_and_no_show.md`, Job_Log rows, shadow replay.
+4. `booking.py`: drop the booking-link line (`draft.BOOKING_LINE`, section 1's constant) from the 8 counter-proposal replies (booking.counter.window_no_fit, outside_window_early, outside_window_late, weekend, too_soon, beyond_horizon, slot_taken, booking.slot_already_taken); then tell section 1 we no longer import it so it can delete the constant. Show Lorenzo the changed replies.
+5. `shared:` commit: register new template keys in `template_approvals.py` tuples; hand section 4 the id list for parity and the Google Doc.
+6. Tests, runbook `runbooks/show_rate_and_no_show.md`, Job_Log rows, shadow replay.
 
 ## Waiting on Lorenzo
 - Connect Zoom in GHL.
