@@ -2,6 +2,12 @@
 
 **2026-09-24 (cloud chat).** The reminder and no-show rebuild is on main: email only, every email a reply in the lead's thread, no booking link anywhere. Nothing auto-sends until Lorenzo approves the new template ids (list below). Everything runs in shadow.
 
+## Verified locally (2026-09-24, back on the Mac)
+- Full suite on main 6ea19f1 on Lorenzo's Mac: **12,250 passed, 0 failed**, 0 egress, 0 credential-file opens (the 75 guard tests that fail in the cloud container pass here).
+- `section/2-booked-calls` fast-forwarded to main; `wip/section-2-build` deleted (a local backup branch `wip-section-2-backup` stays in the Mac repo only, never pushed).
+- Section 4 pinged to add the `--no-show-watch` schedule entry and rebuild parity/Doc from the id list below.
+- **Section 2's build is done.** What is left is Lorenzo's: connect Zoom in GHL, approve the template ids below; and section 4's schedule entry. Parked items below are for later.
+
 ## Done in the cloud chat (2026-09-24)
 - Rebased `wip/section-2-build` onto main (only conflict: the catalogue id count, now 102). Integration items a to e were already finished by the stopped worker.
 - Two tests fixed: the already-booked reply test still expected the booking-link sentence; the deploy watch report did not classify `show_rate_maybe_sent`, `show_rate_needs_attention`, `no_show_maybe_sent`, `no_show_needs_attention` (now KNOWN_FAILURES, so the watch fails on them and Lorenzo checks them by hand). `shared:` change to `changesets/deploy/watch_report.py`.
@@ -65,7 +71,6 @@ Every reminder (R2, R3, R4) and no-show message (N1, N3 and its second-miss vari
 ## Waiting on Lorenzo
 - Connect Zoom in GHL (N1 and no-show detection need join data; on Meet, detection says `unknown` and nothing starts until he marks the no-show).
 - Approve the new and changed template ids above (they are on main).
-- Delete the `wip/section-2-build` branch.
 
 ## For other sections
 - Section 4 (written here because a cloud chat cannot message local sessions): (1) the id list above: re-run the parity reference (`changesets/deploy/template_parity.py --write`) and rebuild the Google Doc; (2) add the schedule entry `python3 -m jobs.appointments_tick --no-show-watch`, every minute on weekdays 12:00-18:59 CT (`* 17-23 * * 1-5` UTC on CDT), one container at a time, the 10-minute tick stays; (3) `changesets/deploy/watch_report.py` gained the four section 2 statuses in KNOWN_FAILURES (`shared:` commit).
