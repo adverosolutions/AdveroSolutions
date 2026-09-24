@@ -1,6 +1,6 @@
 # Offer Intel: mining Maker School wins for proven offers (plan, 2026-09-24)
 
-Status: **plan only, nothing built.** Decisions for Lorenzo are at the bottom.
+Status (2026-09-24): **phases 1 to 3 built** (collect, gate + extract, roll up + CSVs + digest) and rehearsed offline on made-up posts. The first real run happens on Lorenzo's Mac: `runbooks/offer_intel.md`, "First real run". Not built yet: the Google Sheet push (CSVs for now), the weekly schedule, the offer card. Decisions for Lorenzo are at the bottom.
 
 ## The idea in one paragraph
 
