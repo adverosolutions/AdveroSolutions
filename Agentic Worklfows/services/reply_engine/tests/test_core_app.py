@@ -1174,8 +1174,8 @@ def test_a_booked_lead_who_asked_nothing_gets_no_answer_paragraph(env):
                               reply_text=body, email_id="booked-q-1")
     res = app_mod.process_event(ReplyEvent.from_webhook(payload), deps=env["deps"], now=NOW_BUSINESS)
     text = res["draft"]["body_text"]
-    assert text == "Hey Sopio,\n\nWe are already set for Thu 3:00pm CT and the invite is on your calendar." \
-                   " If that no longer works, grab another time here: %s\n\nLorenzo" % settings.BOOKING_URL
+    # no booking link (Lorenzo, 2026-09-23: never a booking link)
+    assert text == "Hey Sopio,\n\nWe are already set for Thu 3:00pm CT and the invite is on your calendar.\n\nLorenzo"
     assert "All I need to start" not in text
     assert res["draft"]["problems"] == []
 
