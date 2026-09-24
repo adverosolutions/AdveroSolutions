@@ -12,7 +12,7 @@
       "key": "strategy",
       "label": "2 - CLAUDE STRATEGY (15 MIN)",
       "color": 1,
-      "note": "Claude already reads and writes your contacts, tags and opportunities through the API/MCP connector. Anything on a clock stays native in GHL (workflows, webhooks, custom actions, AI steps); anything that needs judgment across your data goes to Claude through the API."
+      "note": "Claude already reads and writes your contacts, tags and opportunities through the API/MCP connector. Anything on a clock stays native in GHL (workflows, webhooks, custom actions, AI steps); anything that needs judgment across your data goes to Claude through the API. To monitor, audit and maintain the system over time, Claude runs the band 3 check on a schedule you set, and a lead it finds outside every workflow gets the tag that starts the right one."
     },
     {
       "key": "testing",
@@ -62,7 +62,7 @@
     {
       "key": "decide",
       "kind": "data.transform",
-      "label": "5 - Claude Decides and Writes a Tag; the Tag Starts the GHL Workflow",
+      "label": "5 - Claude Reads Each Reply and Tags It; the Tag Starts Proposal Chase or Nurture in GHL",
       "section": "strategy",
       "notes": "Your connector already writes tags, so Claude hands off to GHL without running a workflow itself."
     },
@@ -88,9 +88,9 @@
     {
       "key": "filter",
       "kind": "data.transform",
-      "label": "8 - Filter ~2,400 Contacts for No Entry Tag; Claude Reviews Only Those",
+      "label": "8 - New Leads With No Entry Tag: Claude Reviews Only Those, Not All ~2,400",
       "section": "testing",
-      "notes": "Claude reads only the contacts that fail the filter, not all ~2,400 on every run."
+      "notes": "Contacts added before the entry tags went in have none, so the filter starts from leads added since."
     },
     {
       "key": "report",
