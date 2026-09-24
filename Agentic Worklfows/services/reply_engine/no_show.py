@@ -28,32 +28,37 @@ contact and schedules the recovery ladder. A non-host join arriving after the
 flag produces a 'late_show' event: recovery is cancelled and the appointment
 is set back to ``showed`` (guarded).
 
-Recovery (section 2 rebuild, 2026-09-23; copy in
-sections/2_booked_calls/copy_signed_off.md, word for word). Email only, every
-email a reply in the lead's cold-email thread (thread_reply.send_lead_email;
-the subject is only used for the GHL fallback), never a booking link.
-S = scheduled start, "10:00 lead" = 10:00 in the lead's zone (CT when unknown).
+Recovery (section 2 rebuild, 2026-09-23; go-live timing and copy change
+2026-09-24; copy in sections/2_booked_calls/copy_signed_off.md, word for
+word). Email only, every email a reply in the lead's cold-email thread
+(thread_reply.send_lead_email; the subject is only used for the GHL
+fallback), never a booking link. S = scheduled start, "10:00 lead" = 10:00 in
+the lead's zone (CT when unknown); business days skip Saturday and Sunday.
 
-  N1 ns_still_on_email     S+3, BEFORE the flag, only with Zoom evidence (the
+  N1 ns_still_on_email     S+5, BEFORE the flag, only with Zoom evidence (the
                            meeting started or the host joined) and no lead
-                           join; once per appointment + start; never after S+10
+                           join; once per appointment + start; never at or
+                           after S+10
   First miss (count 1):
-  N3 ns_reschedule_email   max(flag, S+25 min)                two fresh slots
-  N4 ns_d1_email           next business day, 10:00 lead      two fresh slots
-  N5 ns_d3_value_email     3 business days after, 10:00 lead  two fresh slots
+  N3 ns_reschedule_email   max(flag, S+25 min)                  two fresh slots
+  N4 ns_d1_email           1 business day after, 10:00 lead     two fresh slots
+  N5 ns_d2_value_email     2 business days after, 10:00 lead    two fresh slots
                            (skipped ``no_niche_point`` with no niche/offer on file)
-  N6 ns_d7_yes_no_email    7 days after, next weekday, 10:00  two fresh slots
-  N7 ns_d14_breakup_email  14 days after, next weekday, 10:00
+  N9 ns_d3_retry_email     3 business days after, 10:00 lead    two fresh slots
+  N6 ns_d5_yes_no_email    5 business days after, 10:00 lead    two fresh slots
+  N7 ns_d7_breakup_email   7 business days after, 10:00 lead
                            -> nurture.enroll(no_show_no_rebook) + stage Follow Up Later
-  Second miss (count 2): N1, N3 ``.repeat`` at S+25, N6 3 business days after
+  Second miss (count 2): N1, N3 ``.repeat`` at S+25 (two fresh slots),
+                           N6 3 business days after
                            -> nurture.enroll (+ the SOP-005 pattern note)
-  Third miss (count 3+): N1, N8 ns_third_miss_email at S+25
+  Third miss (count 3+): N1, N8 ns_third_miss_email at S+25 (no slots)
                            -> nurture.enroll + stage Lost
 
 A slot email claims two fresh times (never ones this lead was offered before)
 and, once it reaches the lead, gives the previous offer back, so "those times
 got taken" is true. N4 / N5 / N6 say so, and go out only after an earlier
-slot email of the same ladder reached the lead (else ``no_prior_offer``).
+slot email of the same ladder reached the lead (else ``no_prior_offer``);
+N9 offers fresh times without saying the earlier ones were taken.
 
 Any reply from the lead since the call's start stops the rest (``replied``,
 read from the lead row's ``last_inbound_at`` via thread_reply.find_thread);
@@ -125,21 +130,22 @@ MAX_TOUCH_ATTEMPTS = 12
 N1 = "ns_still_on_email"
 N3 = "ns_reschedule_email"
 N4 = "ns_d1_email"
-N5 = "ns_d3_value_email"
-N6 = "ns_d7_yes_no_email"
-N7 = "ns_d14_breakup_email"
+N5 = "ns_d2_value_email"
+N6 = "ns_d5_yes_no_email"
+N7 = "ns_d7_breakup_email"
 N8 = "ns_third_miss_email"
+N9 = "ns_d3_retry_email"  # added 2026-09-24; it sits between N5 and N6 in the ladder
 REPEAT_SUFFIX = ".repeat"  # the second miss's N3 (catalogue id no_show.ns_reschedule_email.repeat)
 
 # Timing rules, (kind, value):
 #   ("start", td)          S + td, and never before the flag (the flag is S+10 or later)
 #   ("business_days", n)   n business days after the call's day, 10:00 lead-local
 #   ("days", n)            n calendar days after the call's day, moved to the next
-#                          weekday, 10:00 lead-local
-STILL_ON_AFTER = timedelta(minutes=3)
+#                          weekday, 10:00 lead-local (no ladder uses it since 2026-09-24)
+STILL_ON_AFTER = timedelta(minutes=5)
 RESCHEDULE_AFTER = timedelta(minutes=25)
 LADDER_HOUR = 10
-AT_S3 = ("start", STILL_ON_AFTER)
+AT_S5 = ("start", STILL_ON_AFTER)
 AT_S25 = ("start", RESCHEDULE_AFTER)
 
 # Every lead-facing message the ladder can send, in order, as (template_key,
@@ -148,18 +154,19 @@ AT_S25 = ("start", RESCHEDULE_AFTER)
 # here, N8 included. N1 goes out before the flag (still_on_nudge); which of
 # the others a miss gets is LADDERS[count].
 FULL_SEQUENCE = (
-    (N1, "email", AT_S3),
+    (N1, "email", AT_S5),
     (N3, "email", AT_S25),
     (N4, "email", ("business_days", 1)),
-    (N5, "email", ("business_days", 3)),
-    (N6, "email", ("days", 7)),
-    (N7, "email", ("days", 14)),
+    (N5, "email", ("business_days", 2)),
+    (N9, "email", ("business_days", 3)),
+    (N6, "email", ("business_days", 5)),
+    (N7, "email", ("business_days", 7)),
     (N8, "email", AT_S25),
 )
 # The touches after the flag, per miss count (1, 2, 3+): (template_key, rule).
 LADDERS = {
-    1: ((N3, AT_S25), (N4, ("business_days", 1)), (N5, ("business_days", 3)), (N6, ("days", 7)),
-        (N7, ("days", 14))),
+    1: ((N3, AT_S25), (N4, ("business_days", 1)), (N5, ("business_days", 2)), (N9, ("business_days", 3)),
+        (N6, ("business_days", 5)), (N7, ("business_days", 7))),
     2: ((N3, AT_S25), (N6, ("business_days", 3))),
     3: ((N8, AT_S25),),
 }
@@ -168,9 +175,9 @@ LADDER_AFTER = {1: "stage:follow_up_later", 2: "note:second_no_show_pattern", 3:
 NURTURE_REASON = "no_show_no_rebook"
 
 # The emails that offer two times ({slots}); each claims two fresh ones.
-SLOT_TEMPLATES = (N3, N4, N5, N6)
+SLOT_TEMPLATES = (N3, N4, N5, N9, N6)
 # The emails that say the earlier times "got taken": only after an earlier slot
-# email of the same ladder reached the lead.
+# email of the same ladder reached the lead. N9 offers times without that line.
 TAKEN_TEMPLATES = (N4, N5, N6)
 
 # Placeholders render() leaves in place when it has no value. A text carrying
@@ -208,7 +215,7 @@ def is_bot(join: Dict[str, Any]) -> bool:
     A bare substring match over the name and the whole email address called
     "Fred Wilson" a Fireflies bot and "manuel@gongoraservices.com" a Gong bot,
     and a discarded lead join is how someone who attended ends up in the
-    14-day recovery ladder. So: whole tokens in the display name, a known
+    recovery ladder. So: whole tokens in the display name, a known
     multi-word product phrase, or a known notetaker email DOMAIN. Never a
     fragment of a first name, and never the local part of an address.
     """
@@ -408,17 +415,17 @@ def render(template_key: str, appointment: Dict[str, Any], start: datetime, slot
 
     if template_key == N1:
         if link:
-            on_now = "I'm on the call now, no rush. Here's the link:\n%s" % link
+            on_now = "I'm on the call now. Here's the link:\n%s" % link
         else:
-            on_now = "I'm on the call now, no rush. The link is on your calendar invite."
-        body = ("Hey %s,\n\n%s\n\n"
-                "If now doesn't work anymore, just reply and we'll find another time.\n\nLorenzo") % (first, on_now)
+            on_now = "I'm on the call now. The link is on your calendar invite."
+        body = "Hey %s,\n\n%s\n\nLorenzo" % (first, on_now)
         return {"subject": "I'm on", "body": body}
     if template_key == N3 and int(count or 1) >= 2:
         body = ("Hey %s,\n\n"
-                "Today didn't line up, and no problem if now is a bad time.\n\n"
-                "If you still want to talk, I can do %s. Just reply with the one that works.\n\nLorenzo") % (first, two)
-        return {"subject": "Whenever works for you", "body": body}
+                "Looks like I missed you again on today's call. If this isn't a priority right now, just let me "
+                "know. If you still want to talk, I can do %s. If you're not looking to grow %s right now, "
+                "that's fine too, just tell me.\n\nLorenzo") % (first, two, company)
+        return {"subject": "Missed you again", "body": body}
     if template_key == N3:
         body = ("Hey %s,\n\n"
                 "Looks like I missed you on our call today. I understand things come up, so let's get another "
@@ -438,6 +445,11 @@ def render(template_key: str, appointment: Dict[str, Any], start: datetime, slot
                 "The last two times got taken, but if that's worth 15 minutes, I've got %s open. "
                 "Just say which one works.\n\nLorenzo") % (first, point, two)
         return {"subject": "One thing for %s" % company, "body": body}
+    if template_key == N9:
+        body = ("Hey %s,\n\n"
+                "Trying once more to get our call back on the calendar. I can do %s. "
+                "Just reply with the one that works.\n\nLorenzo") % (first, two)
+        return {"subject": "Still want to talk?", "body": body}
     if template_key == N6:
         body = ("Hey %s,\n\n"
                 "Quick one on the call: still want to chat, later, or not a fit?\n\n"
@@ -452,9 +464,9 @@ def render(template_key: str, appointment: Dict[str, Any], start: datetime, slot
         return {"subject": "Leaving the door open", "body": body}
     if template_key == N8:
         body = ("Hey %s,\n\n"
-                "Seems like the timing isn't right at the moment. I'll stop sending times.\n\n"
-                "If things change for %s, just reply here.\n\nLorenzo") % (first, company)
-        return {"subject": "If things change", "body": body}
+                "Missed you again today. I don't think this is worth pursuing anymore, and it doesn't make sense "
+                "for either of us. Wish you the best of luck with %s.\n\nLorenzo") % (first, company)
+        return {"subject": "Closing this out", "body": body}
     raise KeyError("unknown template %s" % template_key)
 
 
@@ -479,7 +491,7 @@ def ladder_for_count(count: int) -> Tuple[Tuple[str, Any], ...]:
 def sequence_for_count(count: int) -> List[Tuple[str, str, Any]]:
     """(template_key, channel, rule) for the Nth miss: N1 first (it goes out
     before the flag), then the ladder."""
-    return [(N1, "email", AT_S3)] + [(k, "email", rule) for k, rule in ladder_for_count(count)]
+    return [(N1, "email", AT_S5)] + [(k, "email", rule) for k, rule in ladder_for_count(count)]
 
 
 def _local_ten(day: date, tz) -> datetime:
@@ -900,7 +912,7 @@ def _new_summary() -> Dict[str, List[Any]]:
 def still_on_nudge(now: datetime, appointment: Dict[str, Any], joins: List[Dict[str, Any]], store, ghl,
                    instantly=None, meeting_signals: Optional[Dict[str, Any]] = None,
                    summary: Optional[Dict[str, List[Any]]] = None) -> Optional[str]:
-    """N1 "I'm on": at S+3, when Zoom shows the call is live (meeting started
+    """N1 "I'm on": at S+5, when Zoom shows the call is live (meeting started
     or host joined) and the lead has not joined. Once per appointment + start
     (``ns_still_on:<id>:<start>`` claim), never at or after S+10 (MAX_LATENESS,
     the moment detection flags the miss).
@@ -912,7 +924,7 @@ def still_on_nudge(now: datetime, appointment: Dict[str, Any], joins: List[Dict[
     start = slots.to_tz(slots.parse_iso(appointment["start_iso"]), TZ)
     due = start + STILL_ON_AFTER
     if now < due or (now - due) >= MAX_LATENESS[N1]:
-        return None  # N1 is a pre-flag nudge: S+3 up to (not including) S+10, the flag's moment
+        return None  # N1 is a pre-flag nudge: S+5 up to (not including) S+10, the flag's moment
     if lead_joins(joins_in_window(appointment, joins), None, lead_emails_of(appointment)):
         return None
     if not zoom_evidence(appointment, joins, meeting_signals):
@@ -1146,7 +1158,7 @@ def process(
                                       instantly=instantly)
         return out
 
-    # N1 "I'm on" at S+3, before the verdict (it is only ever sent pre-flag)
+    # N1 "I'm on" at S+5, before the verdict (it is only ever sent pre-flag)
     run = _new_summary()
     status = still_on_nudge(now, appointment, joins, store, ghl, instantly=instantly,
                             meeting_signals=meeting_signals, summary=run)
@@ -1296,7 +1308,7 @@ def _cancel_recovery(store, appt_id: str, start_iso: str, reason: str) -> int:
 
     A reply arriving while a tick is inside its touch loop used to be undone by
     the tick's stale write-back: the cancellation vanished and the lead who had
-    just answered kept getting the 14-day ladder. mutate() does the whole
+    just answered kept getting the recovery ladder. mutate() does the whole
     read-decide-write under one lock, so the tick's own per-touch writes (also
     mutate) merge instead of clobbering.
     """
@@ -1623,13 +1635,14 @@ def _appointment_was_held(store, appt: Dict[str, Any]) -> bool:
 # How late a touch may be before it is dropped instead of sent. The tick can
 # pause (a deploy, a held lock, a retryable error keeping a touch pending), and
 # without this the backlog fires at once: "I'm on the call now" a day after
-# the call ended. N1 is bound to S+10 (armed at S+3); N3 / N8 speak about
+# the call ended. N1 is bound to S+10 (armed at S+5); N3 / N8 speak about
 # "today"; the day touches have the rest of their day and the next.
 MAX_LATENESS = {
-    N1: timedelta(minutes=7),
+    N1: NO_SHOW_GRACE - STILL_ON_AFTER,
     N3: timedelta(hours=6),
     N4: timedelta(days=1),
     N5: timedelta(days=1),
+    N9: timedelta(days=1),
     N6: timedelta(days=1),
     N7: timedelta(days=1),
     N8: timedelta(hours=6),
@@ -1653,7 +1666,7 @@ def _ladder_skip_reason(touch: Touch, rec: Dict[str, Any], appt: Dict[str, Any])
     - N4 / N5 / N6 say the earlier times "got taken": only after an earlier
       slot email of this ladder reached the lead, else ``no_prior_offer``.
     """
-    if touch.channel != "email" or touch.template_key not in (N3, N4, N5, N6, N7, N8):
+    if touch.channel != "email" or touch.template_key not in (N3, N4, N5, N9, N6, N7, N8):
         return "removed_touch"
     if touch.template_key == N5 and niche_point(appt) is None:
         return "no_niche_point"
@@ -1871,7 +1884,7 @@ LOST_REASON_NO_SHOW = "No show x3 (SOP-005)"
 def _current_stage_key(ghl, appt: Dict[str, Any], opp_id: str) -> Optional[str]:
     """The stage the opportunity is in right now, or None when we cannot tell.
 
-    A 14-day ladder that started before Lorenzo answered must not silently
+    A recovery ladder that started before Lorenzo answered must not silently
     rewrite a deal he has since moved to Proposal Sent or Won.
     """
     opp = None

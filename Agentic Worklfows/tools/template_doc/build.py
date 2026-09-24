@@ -731,9 +731,10 @@ KEY_LABELS = {
     "ns_reschedule_email": ("Missed you email", None),
     "ns_reschedule_email.repeat": ("Missed you email, second no-show", None),
     "ns_d1_email": ("Day 1 email after a no-show", None),
-    "ns_d3_value_email": ("Day 3 email after a no-show", None),
-    "ns_d7_yes_no_email": ("Day 7 email after a no-show", None),
-    "ns_d14_breakup_email": ("Day 14 email after a no-show", None),
+    "ns_d2_value_email": ("Day 2 email after a no-show", None),
+    "ns_d3_retry_email": ("Day 3 email after a no-show", None),
+    "ns_d5_yes_no_email": ("Day 5 email after a no-show", None),
+    "ns_d7_breakup_email": ("Day 7 email after a no-show", None),
     "ns_third_miss_email": ("Email after a third no-show", None),
 }
 KEY_WORDS = {"sms": "text", "ns": "", "preread": "pre-read", "confirm": "confirmation"}

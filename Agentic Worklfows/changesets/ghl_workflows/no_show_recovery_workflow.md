@@ -1,5 +1,7 @@
 # GHL workflow build spec: "No-show recovery: Discovery Call"
 
+> Superseded, do not build from this file. It predates the 2026-09-23 email-only rebuild and the 2026-09-24 go-live timing (N1 at S+5; days 1, 2, 3, 5 and 7 in business days). Template ids below are the old ones (`ns_d3_value_email`, `ns_d7_yes_no_email`, `ns_d14_breakup_email` are now `ns_d2_value_email`, `ns_d5_yes_no_email`, `ns_d7_breakup_email`, plus the new `ns_d3_retry_email`). The engine's ladder in `services/reply_engine/no_show.py` and `runbooks/show_rate_and_no_show.md` is authoritative.
+
 Status: NOT BUILT. GHL workflows cannot be created through the public API; the Fulfillment agent builds this in the GHL UI from the steps below. Detection is NOT done by GHL (it never marks no-shows itself): `services/reply_engine/no_show.py` flips the appointment to `noshow` through `PUT /calendars/events/appointments/{id}` (guarded; shadow-only until go-live), and that API change is the trigger here.
 
 Controlled-environment rule: build in **Draft**, test with an internal contact, publish only after the runbook checklist. SMS steps disabled until A2P 10DLC clears. Never run both the GHL workflow and the engine's `run_recovery` live at the same time (see "Who sends what").

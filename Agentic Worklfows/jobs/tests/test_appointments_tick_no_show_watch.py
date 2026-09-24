@@ -38,7 +38,7 @@ def test_watch_sends_n1_and_flags_but_never_runs_the_ladder(tmp_env, shadow_mode
     ahead = dict(APPT, id="appt-ahead", start_iso=(START + timedelta(hours=2)).isoformat())
     joins = {APPT["id"]: [HOST]}
 
-    out = tick_mod.watch(START + timedelta(minutes=3), store, ghl, [APPT, old, ahead], joins_override=joins)
+    out = tick_mod.watch(START + timedelta(minutes=5), store, ghl, [APPT, old, ahead], joins_override=joins)
     assert out["checked"] == 1 and out["no_show"][0]["events"] == ["still_on:would_do"]
     assert out["recovery"]["would_do"] == 1
 

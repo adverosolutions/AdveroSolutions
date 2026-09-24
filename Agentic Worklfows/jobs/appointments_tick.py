@@ -18,7 +18,7 @@ Every run:
   5. writes a Job_Log row and a digest notification.
 
 ``--no-show-watch`` is the light mode for every minute in call hours: only
-N1 ("I'm on" at S+3) and no-show detection, for calls that started in the
+N1 ("I'm on" at S+5) and no-show detection, for calls that started in the
 last 30 minutes (no show-rate run, no ladder sweep, no rebooking scan). It
 reads GHL only when the store knows of a call in that window, and it logs and
 notifies only when something happened.
@@ -452,7 +452,7 @@ def _instantly_kwarg(fn, instantly) -> Dict[str, Any]:
     return {"instantly": instantly} if "instantly" in params else {}
 
 
-# --no-show-watch: calls that started this long ago or less. N1 is due at S+3
+# --no-show-watch: calls that started this long ago or less. N1 is due at S+5
 # and expires at S+10; the flag is due at S+10. The margin covers a slow run.
 WATCH_WINDOW = timedelta(minutes=30)
 
@@ -482,7 +482,7 @@ def watch_candidates(store, now: datetime) -> List[str]:
 def watch(now: datetime, store, ghl, appointments: List[Dict[str, Any]],
           joins_override: Optional[Dict[str, List[Dict[str, Any]]]] = None, instantly=None) -> Dict[str, Any]:
     """The --no-show-watch core: for every call that started in the last 30
-    minutes, no_show.process with the ladder off (N1 at S+3 and detection;
+    minutes, no_show.process with the ladder off (N1 at S+5 and detection;
     the flag still marks GHL, writes the note and records the ladder, which
     the regular tick then sends). Nothing else runs."""
     from services.reply_engine import no_show, zoom_webhook

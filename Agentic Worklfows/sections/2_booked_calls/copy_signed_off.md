@@ -64,29 +64,27 @@ Lorenzo
 No link on file: `Talk in an hour. The call link is on the calendar invite from when we booked.`
 
 ## No-show recovery
-S = scheduled start. Any reply from the lead stops the ladder. Rebooking cancels it.
+S = scheduled start. Any reply from the lead stops the ladder. Rebooking cancels it. Day N = N business days after the missed call, 10:00 in the lead's time zone (weekends skipped). Timing and the N1, N9, second-miss and third-miss copy changed by Lorenzo on 2026-09-24.
 
 | Case | Messages |
 |---|---|
-| First missed call | N1 at S+3 (not joined; needs Zoom join data), N3 at about S+25, N4 next business day (mid-morning, lead time), N5 day 3 or 4, N6 day 7, N7 day 14, then `nurture.enroll(lead_email, "no_show_no_rebook", now)` |
-| Second missed call | N1, N3 second-miss variant, N6 on day 3 or 4, then nurture |
+| First missed call | N1 at S+5 (not joined; needs Zoom join data), N3 at about S+25, N4 day 1, N5 day 2, N9 day 3, N6 day 5, N7 day 7, then `nurture.enroll(lead_email, "no_show_no_rebook", now)` |
+| Second missed call | N1, N3 second-miss variant at about S+25, N6 on day 3, then nurture |
 | Third missed call | N1, N8 at about S+25, then nurture |
 
 Dropped: Lorenzo's call task and voicemail (N2), the day-1 SMS and its task, the "still on?" SMS.
 
-### N1, "I'm on" (S+3, only if the lead has not joined)
+### N1, "I'm on" (S+5, only if the lead has not joined)
 Subject: I'm on
 ```
 Hey {first_name},
 
-I'm on the call now, no rush. Here's the link:
+I'm on the call now. Here's the link:
 {call_link}
-
-If now doesn't work anymore, just reply and we'll find another time.
 
 Lorenzo
 ```
-No link on file: `I'm on the call now, no rush. The link is on your calendar invite.`
+No link on file: `I'm on the call now. The link is on your calendar invite.`
 
 ### N3, reschedule (about S+25)
 Subject: New time for our call
@@ -101,18 +99,16 @@ Lorenzo
 ```
 
 ### N3, second missed call (about S+25)
-Subject: Whenever works for you
+Subject: Missed you again
 ```
 Hey {first_name},
 
-Today didn't line up, and no problem if now is a bad time.
-
-If you still want to talk, I can do {slots}. Just reply with the one that works.
+Looks like I missed you again on today's call. If this isn't a priority right now, just let me know. If you still want to talk, I can do {slots}. If you're not looking to grow {company} right now, that's fine too, just tell me.
 
 Lorenzo
 ```
 
-### N4, next business day
+### N4, day 1
 Subject: Two open times
 ```
 Hey {first_name},
@@ -122,7 +118,7 @@ Those two times got taken, but I can do {slots} if you still want to find 15 min
 Lorenzo
 ```
 
-### N5, day 3 or 4
+### N5, day 2
 Subject: One thing for {company}
 ```
 Hey {first_name},
@@ -142,9 +138,19 @@ Lorenzo
 - Cleaning, outbound: I'd watch for new leases, office expansions, property-manager changes and new construction, then reach out under your name and put walkthroughs on your calendar.
 - Bookkeeping, outbound: I'd watch for new business formations, part-time bookkeeper job posts and second locations, then reach out to those businesses under your name.
 - Recruiting, outbound: I'd watch job boards for open roles in your specialties, then reach out to the hiring managers under your agency's name.
-- No campaign on file: no approved line. Hold N5 for that lead (do not invent a generic one) and skip to N6 on its day.
+- No campaign on file: no approved line. Hold N5 for that lead (do not invent a generic one) and go on to N9 on its day.
 
-### N6, day 7 (also day 3 or 4 after a second missed call)
+### N9, day 3
+Subject: Still want to talk?
+```
+Hey {first_name},
+
+Trying once more to get our call back on the calendar. I can do {slots}. Just reply with the one that works.
+
+Lorenzo
+```
+
+### N6, day 5 (also day 3 after a second missed call)
 Subject: Quick one
 ```
 Hey {first_name},
@@ -156,7 +162,7 @@ A one-word answer is plenty. If it's later, just tell me roughly when. If you st
 Lorenzo
 ```
 
-### N7, day 14 (no reply, no rebook). Then nurture.
+### N7, day 7 (no reply, no rebook). Then nurture.
 Subject: Leaving the door open
 ```
 Hey {first_name},
@@ -169,13 +175,11 @@ Lorenzo
 ```
 
 ### N8, after a third missed call (about S+25). Then nurture.
-Subject: If things change
+Subject: Closing this out
 ```
 Hey {first_name},
 
-Seems like the timing isn't right at the moment. I'll stop sending times.
-
-If things change for {company}, just reply here.
+Missed you again today. I don't think this is worth pursuing anymore, and it doesn't make sense for either of us. Wish you the best of luck with {company}.
 
 Lorenzo
 ```
