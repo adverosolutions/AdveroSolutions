@@ -1,6 +1,6 @@
 # The follow-up sequence (no reply yet)
 
-Read in order: the lead said "interested", Lorenzo replied by hand with two times, silence, then these ten in the same thread. E1 to E7 go out on consecutive business days, E8 two weeks after E7, E9 and E10 weekly. Every email offers {slots} and {booking_url}, opens "Hey {first_name}," and closes "Lorenzo". The scarcity idea builds across E1, E3 and E5 (gone, gone again, they keep filling) rather than repeating.
+Read in order: the lead said "interested", Lorenzo replied by hand with two times, silence, then these ten in the same thread. E1 to E7 go out on consecutive business days, E8 two weeks after E7, E9 and E10 weekly. Every email except E2 offers {slots}; none has a booking link. Every email opens "Hey {first_name}," and closes "Lorenzo". The scarcity idea builds across E1, E3 and E5 (gone, gone again, they keep filling) rather than repeating.
 
 ## Lorenzo's rules for this sequence (2026-09-23, apply to every email)
 1. No booking link anywhere. The lead picks one of the two times offered and Lorenzo sends the calendar invite. {booking_url} is gone from every email (set in the section 2 chat, "everywhere").
@@ -9,7 +9,7 @@ Read in order: the lead said "interested", Lorenzo replied by hand with two time
 4. No Claudeisms: no sentence or tacked-on clause that restates, sums up or sells the point just made. Test: delete it; if no fact, question or next step is lost, it goes.
 5. Normal capitalization.
 
-Walkthrough status: E1 to E7 agreed 2026-09-23. E8 onward still show the editor's drafts below; rules 1 and 2 are applied as each email is walked through.
+Walkthrough status: all ten emails agreed with Lorenzo in chat on 2026-09-23. The sections below are the final text; the old alternates are gone.
 
 ## E1 · Day 1 · Two fresh times, lightest nudge (AGREED 2026-09-23)
 Hey {first_name},
@@ -112,54 +112,48 @@ Lorenzo
 Agreed with Lorenzo 2026-09-23 (the editor's pick): "Either answer is totally fine." cut (Claudeism), booking link removed, "Those last two times went too" added (rule 2). "Last one from me this week" kept.
 Stop logic (his call, 2026-09-23): a "not now", "bad time" or "not a priority" reply to any follow-up stops the run at once and moves the lead to the 90-day nurture (`nurture.enroll(email, "not_now_reply", now)`).
 
-## E8 · Two weeks later · Relaxed restart, easy out
+## E8 · Two weeks after E7 · Relaxed restart, easy out (AGREED 2026-09-23)
 Hey {first_name},
 
 Been a couple of weeks. Was hoping now was a good time to get a call on the books.
 
-How about {slots}? Or grab any time here: {booking_url}
+The times I sent before are long gone. How about {slots}?
 
 Let me know if right now is a bad time, or if this just isn't a priority.
 
 Lorenzo
 
-Alternate: none
+Agreed with Lorenzo 2026-09-23: his wording from the plan, booking link removed, "The times I sent before are long gone" added (rule 2).
 
-## E9 · One week later · One observation, two times
+## E9 · One week after E8 · One observation, two times (AGREED 2026-09-23)
 Hey {first_name},
 
-Quick thought for you. An account that cancelled or never signed already knows your name, so it's usually an easier conversation than a brand-new lead.
+Quick thought for you. {observation}
 
-That's where I'd start with you. I'm free {slots}, or grab whatever's open here: {booking_url}
+That's where I'd start with you. The last times I sent are gone, but I'm free {slots}.
 
 Lorenzo
 
-Alternate: none
-Per-offer lines (the observation sentence swaps per campaign; each is true of any business in that niche and claims nothing about the lead; the email above shows Cleaning, reactivation):
-Cleaning, reactivation: An account that cancelled or never signed already knows your name, so it's usually an easier conversation than a brand-new lead.
-Bookkeeping, reactivation: Quarterly estimates, year-end and tax season each give you a natural reason to check back in with former clients and old inquiries.
-Recruiting, reactivation: Clients who hired through you before, or almost did, already know how you work, so they're an easier conversation than any cold account.
-Cleaning, outbound: A company moving into new space has to sort out cleaning around move-in, which is the easiest time to be the one they hear from.
-Bookkeeping, outbound: A company posting a part-time bookkeeper job has already said out loud it needs help with its books, which is the right moment to show up.
-Recruiting, outbound: An open specialty role on a job board is a hiring manager saying in public they need someone, which is the right moment to reach them.
+{observation} by campaign (each is true of any business in that niche and claims nothing about the lead; Claudeism clauses cut from the outbound three 2026-09-23):
+- Cleaning, reactivation: An account that cancelled or never signed already knows your name, so it's usually an easier conversation than a brand-new lead.
+- Bookkeeping, reactivation: Quarterly estimates, year-end and tax season each give you a natural reason to check back in with former clients and old inquiries.
+- Recruiting, reactivation: Clients who hired through you before, or almost did, already know how you work, so they're an easier conversation than any cold account.
+- Cleaning, outbound: A company moving into new space has to sort out cleaning around move-in.
+- Bookkeeping, outbound: A company posting a part-time bookkeeper job has already said out loud it needs help with its books.
+- Recruiting, outbound: An open specialty role on a job board is a hiring manager saying in public they need someone.
 
-## E10 · One week later · The pause, door open
+Agreed with Lorenzo 2026-09-23 (the editor's pick, booking link removed, rule 2 line added).
+
+## E10 · One week after E9 · The pause, door open (AGREED 2026-09-23)
 Hey {first_name},
 
 You wrote back that you were interested, so I didn't want to just go quiet on you.
 
-I'll give you some room and check back in a few months. If you'd rather talk sooner, either {slots} works, or grab any time here whenever you're ready: {booking_url}
+I'll give you some room and check back in a few months. If you'd rather talk sooner, those last two times are gone, but {slots} would work.
 
 Lorenzo
 
-Alternate (shorter, no reminder that they raised their hand):
-Hey {first_name},
-
-I'll stop filling your inbox for now and check back in a few months.
-
-If the timing changes before then, either {slots} works, or grab any time here whenever you're ready: {booking_url}
-
-Lorenzo
+Agreed with Lorenzo 2026-09-23 (the editor's pick, booking link removed, rule 2 line added). Then the lead goes to the 90-day nurture (`no_reply_after_sequence`). "A few months" assumes the nurture's first touch is about 90 days out; change it if nurture emails sooner.
 
 ## Research line (E2): instructions for the AI step (rewritten 2026-09-23 for the agreed E2)
 Inputs: the lead's company name, website, city, and which campaign they came from (cleaning, bookkeeping or recruiting; reactivation or outbound). Output: the line only, or the single word NONE. For the log only, never in the email, list the page URL each fact came from.
@@ -190,10 +184,9 @@ Fallback lines (used when the step returns NONE or any check fails; neither clai
 - Reactivation (cleaning, bookkeeping, recruiting): The quickest place to start is usually the accounts that already know you and went quiet.
 - Outbound (cleaning, bookkeeping, recruiting): The quickest place to start is usually the prospects who are in market right now.
 
-## Notes for Lorenzo
-- What changed across the set: E3 now leads with your "I really want to get this call on the books" and E5 keeps your "slots keep getting filled, busy time of year", so the scarcity builds (gone, gone again, they keep filling) instead of repeating E1's line three times. E6 is the value version rather than the priority check, because E7 ("is now the right moment") and E8 ("bad time or not a priority") already carry that beat. Every opener, slot line and booking line is worded differently. E2 drops "in particular" so the fallback version never claims research that didn't happen.
-- To fill in: the wholesaler result lives only in E4's alternate, so fill the bracket or delete that line before approving it. {company} is used only in E4; confirm it's never blank for these leads. The E6 sample messages are my draft of your first touch per niche; swap in your real copy if it differs.
-- E2 can never match an approved template word for word, because {research_line} is new for every lead. Either approve the E2 frame plus the research rules as one unit, or hold E2 for your OK each time. The NONE version (fixed fallback line) is a normal template and can be approved as usual.
-- Stop logic: a "not now", "bad time" or "not a priority" reply to any email has to end the run and move the lead to nurture, or E7's "either answer is fine", E8's "let me know if this isn't a priority" and E10's "check back in a few months" stop being true. E10's "a few months" assumes nurture waits about 90 days; change it if nurture emails sooner.
-- Optional wording: E7 opens "Last one from me this week", which tells them the daily run is over and makes the two-week gap feel deliberate. Cut those five words if you'd rather not name the rhythm.
-- Structural suggestion, not a change: if the daily week feels heavy once real replies come in, E5 is the one to drop, since E1 and E3 already carry the scarcity and E4 and E6 carry the value.
+## Notes for the engine rewrite (all settled with Lorenzo 2026-09-23)
+- Placeholders the engine must fill: {first_name} ("there" when unknown), {company} (E2, E4, E5; spoken form, no LLC/Inc.; never blank: if unknown, hold the touch), {slots} (every email except E2), {research_line} (E2), {offer_proof} (E4, by offer type), {offer_line} (E5, by campaign), {preview} (E6, by campaign), {observation} (E9, by campaign).
+- Rule 2 is made true by the engine: when a touch offers new times, the previous touch's held times are released first. E2 offers none, so E3's "those last two" are E1's.
+- Stop logic: any reply stops the run. A "not now / bad time / not a priority" reply goes to nurture (`not_now_reply`); interest goes to Lorenzo. After E10 with no reply, nurture (`no_reply_after_sequence`).
+- Approval: every email is a fixed template per campaign except E2, whose frame plus research rules Lorenzo approves once (see E2). No no-slots variants for E1 and E2 (he deleted them); what the others do when no slots are free is an engine decision to raise with him.
+- E10's "a few months" assumes the nurture's first touch is about 90 days out.

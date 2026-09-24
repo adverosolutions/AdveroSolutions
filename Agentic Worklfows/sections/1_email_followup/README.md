@@ -24,10 +24,8 @@ A lead replies "interested" to a cold email. Lorenzo answers by hand with two ca
 4. **Nurture.** Land `services/reply_engine/nurture.py` with `enroll(lead_email, reason, now)` early, as a small reviewed piece pushed to main (section 2 calls it for no-shows who never rebook). Reasons: `no_reply_after_sequence`, `not_now_reply`, `no_show_no_rebook`. Shadow-safe, tested. If it needs a field on `LeadState` (`models.py`), that is an allowed `shared:` commit. The nurture content itself comes later: propose the 90-day plan to Lorenzo (how often, what each touch offers, when it ends, whether it runs in the engine or as an Instantly subsequence), then write it with the sequence method and build it.
 
 ## Open questions for Lorenzo
-1. **Wholesaler result** for the E4 proof list: what number goes in, or should the line be dropped?
-2. **E2 approval:** the research line is new for every lead, so E2 can't be approved word for word. Either he approves the frame plus the research rules once and E2 sends on its own, or every E2 comes to him first.
-3. **Stop logic:** confirm that a "not now" reply ends the sequence and moves the lead to nurture (otherwise E7, E8 and E10 stop being true).
-4. **Optional:** the editor suggests dropping E5 first if a daily week feels heavy once real replies come in. "Last one from me this week" in E7 is optional too.
+Answered 2026-09-23 (details in `sequence_final.md` and `STATUS.md`): 1 wholesaler line dropped; 2 E2 frame plus research rules approved once, auto-send only when the line passes every check; 3 a "not now" reply stops the run and goes to nurture; 4 E5 kept (with an offer line), "Last one from me this week" kept.
+Still open:
 5. **First reply:** now that he sends it himself, does the engine still draft a suggested first reply for him to copy, or just alert him?
 
 ## What this section owns (paths under `Agentic Worklfows/`)
