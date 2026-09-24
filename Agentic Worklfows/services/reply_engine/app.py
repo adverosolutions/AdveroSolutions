@@ -813,11 +813,12 @@ def _reply_draft(event: ReplyEvent, classification, state: LeadState, deps: "Dep
                     if match.proposed is not None and match.status in OVERRIDABLE_STATUSES:
                         requested = {"slot": match.proposed.isoformat(), "status": match.status, "lead_tz": match.lead_tz}
                     info.update(kind="booking", bindings=booking.counter_bindings(match, state))
+                    # No booking link on a counter-proposal (Lorenzo, 2026-09-23).
                     return Draft(subject=reply_subject(event.subject), body_text=body,
-                                 offered_slots=[c.isoformat() for c in match.counter_slots[:2]], booking_link=booking_link,
+                                 offered_slots=[c.isoformat() for c in match.counter_slots[:2]], booking_link=None,
                                  model="template", label=classification.label,
                                  rationale="counter-proposal (%s: %s)" % (match.status, match.reason),
-                                 problems=validate_draft(body, booking_link=booking_link, campaign_key=campaign_key,
+                                 problems=validate_draft(body, booking_link=None, campaign_key=campaign_key,
                                                          allow_terms=lead_terms(event, state)),
                                  template_id=booking.counter_template_id(match)), requested, None
     # CT3: an approved template with a classification the gate accepts is
