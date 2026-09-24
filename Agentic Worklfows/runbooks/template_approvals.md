@@ -68,6 +68,48 @@ The real protection is the registry file itself. It is committed to git, and you
 
 `--list` prints every id with its kind and status. Every approve and revoke run writes a Job_Log row (job `approve_templates`) with the ids and hashes, never the text.
 
+## From the Google Doc ("done")
+
+Lorenzo's rule of 2026-09-23: when he types "done" in chat about the one Google Doc (`1jTg1ccYJT8CugDdCf3BQHqzgHUKC4oFG9rgolUILO4U`, built by `tools/template_doc/build.py`), everything in the doc counts as approved. That word replaces the terminal approve step for the doc, and it is the one case where a Claude session writes `config/approved_templates.json`: only with `tools/template_doc/record_doc_approvals.py`, only after his "done" in chat, and only with his exact words passed as `--done-quote`. "Go live" is a separate yes and is not part of this.
+
+When it is used: by the section 4 chat, right after Lorenzo says "done" about the doc.
+
+1. Export the doc as plain text (Drive `download_file_content`, `exportMimeType=text/plain`; see `tools/template_doc/README.txt`) and save it as `tools/template_doc/exports/<UTC time>.txt`.
+2. Dry run (writes nothing, prints the plan):
+
+   ```bash
+   cd "/Users/lorenzovillarreal/Desktop/AdveroSolutions/Agentic Worklfows"
+   python3 tools/template_doc/record_doc_approvals.py tools/template_doc/exports/<UTC time>.txt
+   ```
+
+3. Record the approvals, quoting him exactly:
+
+   ```bash
+   python3 tools/template_doc/record_doc_approvals.py tools/template_doc/exports/<UTC time>.txt --write --done-quote "<his exact words>"
+   ```
+
+4. Show him `git diff -- config/approved_templates.json` (the tool prints it at the end) and commit, quoting his words in the commit message.
+
+How an id qualifies. The tool builds the doc again from the current code into a temp folder (`tools/template_doc/fresh_manifest.py`: the same export as `--export`, then `build.py --export ... --out-dir ...`) and diffs the doc against that fresh build, not against the committed `manifest.json`. An id is approved only when all of these hold:
+
+- every block of it in the fresh build (the main text, the subject, every variant) is in the doc and unchanged; differences Google makes on its own (curly quotes, non-breaking spaces, blank lines, runs of spaces) do not count;
+- no new block tagged for it (for example `cadence.d1/something`) was added to the doc;
+- its hash in the fresh build equals its hash in the doc as uploaded (`tools/template_doc/manifest.json`, or `--doc-manifest`), so a code change the doc does not show as editable text (a fallback subject, the time formats) still refuses it;
+- its catalogue hash right now equals the hash the fresh build was made from (checked again just before writing).
+
+The hash recorded is the current catalogue hash, the same value `--approve-all-shown` would record.
+
+What gets refused, and why:
+
+- An edited block: Lorenzo wants words the code does not send yet. The owning section changes the code first (`tools/template_doc/route_doc.py` says which section and file), the doc is rebuilt, and the id is approved on the next "done".
+- A deleted block (a variant he removed): the code still sends it, so the same applies.
+- A code change since the doc was built, or during the run: rebuild and re-upload the doc, or approve in the terminal.
+- The whole doc, with nothing written: duplicate tags, copies of one sentence changed differently (the repeat rule), a doc with no tags, or a fresh build that fails.
+
+Refused ids keep whatever approval they had: the tool only adds or refreshes approvals, never revokes, and never touches the kill switch (`auto_send`). It writes through the registry's own `plan_approve` (with the fresh hashes as `expected`) and `apply_approve`, so the records look exactly like the terminal path's (`approved_by` is `Lorenzo (Google Doc "done")` unless `--by` says otherwise). One Job_Log row per `--write` run (job `approve_templates`, action `approve_from_doc`): the ids and hashes approved, the ids refused with their reasons, the sha256 of the doc export, the doc id and the quote. `--write` without `--done-quote` is refused. Instantly blocks are not approvals: the tool counts the unchanged and changed ones, and changed ones go through `changesets/instantly_copy/`.
+
+The terminal path above (`--export`, `--approve-all-shown`, `--approve`, `--revoke`, typed `APPROVE`) is unchanged and still the only way to revoke.
+
 ## Statuses
 
 - `approved`: the current text, every variant included, hashes to what you approved.
