@@ -9,6 +9,10 @@ On a public ntfy topic (neither `NTFY_TOKEN` nor `NTFY_ALLOW_SENSITIVE=1` is
 set), pushes carry no lead names: an approval card is titled by its
 classification only ("Reply to approve: positive question"), the chase leaves
 out the thread's subject, and the full card with its links is in the email.
+In the headings below, `{lead}` is the lead's email on a protected topic and
+reads "a lead" on a public one; the cadence pushes (D1 held, D1 Veto, slots
+unavailable, the D6 cards) then put the lead's email and company only in the
+email copy (`cadence._lead_push`, since 2026-09-23).
 Protecting the topic (set `NTFY_TOKEN`, or `NTFY_ALLOW_SENSITIVE=1` to accept
 the risk; `shared.notify.topic_is_protected` reads both) brings the names back.
 
@@ -970,9 +974,13 @@ sent, or the ladder is re-armed or resumed.
 
 Then open the newest Resume link (in the push on a protected topic, else in
 the email) and press Resume. While the ladder stays stopped, a fresh link is
-sent the same way every morning ("Cadence still stopped: template {id}", low
-priority), and for an approval stop as soon as the held ids pass the gate
-("Cadence ready to resume: template {id} is approved"). Neither comes once
+sent the same way once a day ("Cadence still stopped: template {id}", low
+priority), for at most 8 reminders and at most 14 days from the stop
+(`cadence.TEMPLATE_STOP_REMINDER_MAX_PUSHES` / `_MAX_DAYS`, counted in
+`template_hold.link_count`). After that the reminders end but the ladder
+stays stopped until someone presses Resume. For an approval stop, one more
+push comes as soon as the held ids pass the gate ("Cadence ready to resume:
+template {id} is approved"), cap or not. Neither comes once
 the lead opted out, was blocklisted, booked, or answered hostile, lost, wrong
 person or not now: a Resume would stop the ladder again at once. The page
 says whether the held ids pass the gate now. Nothing is sent from it: the
