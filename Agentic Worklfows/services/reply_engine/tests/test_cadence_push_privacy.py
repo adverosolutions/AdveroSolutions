@@ -109,10 +109,12 @@ def test_cadence_stopped_for_no_bookable_times(topic, linked, tmp_env, monkeypat
     _check(pings[0], topic, "no bookable times")
 
 
-def test_blocked_copy_push_keeps_the_body_off_a_public_topic(topic, tmp_env):
+def test_blocked_copy_push_keeps_the_body_off_a_public_topic(topic, tmp_env, monkeypatch):
     """The blocked body opens "Hey Tiffany" and may name the company, so on a
     public topic it rides the email leg with the lead line."""
-    llm.register_fake("research", lambda system, user, json_mode: "Our bots recovered $50,000 for a similar shop")
+    # P4: "llm" mode ends in E2's fallback line in tests, so the bad line rides in as that line
+    monkeypatch.setattr(cadence, "fallback_research_line",
+                        lambda company, offer: "Our bots recovered $50,000 for a similar shop")
     try:
         state = cadence.arm(_d1_state(), ct(2026, 9, 21, 21, 10))
         state.cadence["day"] = 1

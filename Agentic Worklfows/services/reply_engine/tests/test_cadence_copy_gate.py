@@ -189,10 +189,12 @@ def test_a_validator_that_raises_blocks_too(monkeypatch):
 
 
 # ------------------------------------------------------ on the send path
-def test_a_touch_quoting_the_to_confirm_retainer_is_never_sent(store, tmp_env):
+def test_a_touch_quoting_the_to_confirm_retainer_is_never_sent(store, tmp_env, monkeypatch):
     """End to end through tick_lead: the gate is on the send path, not just a
-    function somebody could forget to call."""
-    llm.register_fake("research", lambda system, user, json_mode: (
+    function somebody could forget to call. P4: E2 in "llm" mode ends in the
+    fallback line in tests (nothing is researched), so the bad line rides in
+    as that line."""
+    monkeypatch.setattr(cadence, "fallback_research_line", lambda company, offer: (
         "I saw the new builds going up on your side of town, and setup plus a $2,500 a month "
         "retainer covers that whole area"))
     try:
@@ -212,9 +214,9 @@ def test_a_touch_quoting_the_to_confirm_retainer_is_never_sent(store, tmp_env):
         llm.clear_fakes()
 
 
-def test_a_touch_quoting_another_verticals_guarantee_is_never_sent(store, tmp_env):
+def test_a_touch_quoting_another_verticals_guarantee_is_never_sent(store, tmp_env, monkeypatch):
     """The bookkeeping lead, told cleaning's number, with nobody reading."""
-    llm.register_fake("research", lambda system, user, json_mode: (
+    monkeypatch.setattr(cadence, "fallback_research_line", lambda company, offer: (
         "I noticed the two new locations, and $24,000 a year in new contracts inside 90 days is "
         "the usual shape for that"))
     try:

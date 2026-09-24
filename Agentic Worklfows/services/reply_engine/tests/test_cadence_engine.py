@@ -434,13 +434,14 @@ def test_cadence_send_records_the_recipient_in_the_shadow_payload(store, tmp_env
 
 
 # ------------------------------------------------------- copy gate / failures
-def test_touch_with_copy_problems_is_not_sent(store, tmp_env):
+def test_touch_with_copy_problems_is_not_sent(store, tmp_env, monkeypatch):
     """An E2 research line that breaks the copy rules must never reach a lead:
     approval.send_approved blocks on draft.problems and the unattended path
-    applies the same bar."""
+    applies the same bar. (P4: "llm" mode ends in the fallback line in tests,
+    so the bad line rides in as that line.)"""
     from shared import llm
 
-    llm.register_fake("research", lambda system, user, json_mode: (
+    monkeypatch.setattr(cadence, "fallback_research_line", lambda company, offer: (
         "I saw your team still books jobs by hand, so the automation I built for a similar shop "
         "should recover $50,000 in contracts"))
     try:
@@ -756,12 +757,13 @@ def test_a_leads_own_name_does_not_trip_the_copy_gate():
         touch.body_text.replace("Lorenzo", "The automation runs itself\n\nLorenzo"), allow=touch.allow_terms)
 
 
-def test_blocked_copy_is_reported_once_per_day(store, tmp_env):
+def test_blocked_copy_is_reported_once_per_day(store, tmp_env, monkeypatch):
     """The blocked day never advances, so it was retried on every hourly tick:
-    one high-priority push and one fresh paid research line each time."""
+    one high-priority push and one fresh paid research line each time.
+    (P4: the bad line rides in as E2's fallback line; a repeat tick must not
+    rebuild the touch at all.)"""
     from shared import llm
 
-    llm.register_fake("research", lambda system, user, json_mode: "Our bots recovered $50,000 for a similar shop")
     calls = {"research": 0}
     try:
         state = cadence.arm(make_state(), NOW)
@@ -771,7 +773,8 @@ def test_blocked_copy_is_reported_once_per_day(store, tmp_env):
             calls["research"] += 1
             return "Our bots recovered $50,000 for a similar shop"
 
-        llm.register_fake("research", counting)
+        monkeypatch.setattr(cadence, "fallback_research_line", counting)
+        built = []
         state.cadence["day"] = 1
         for hour in (10, 11, 12, 13):
             now = ct(2026, 9, 22, hour, 0)
@@ -779,18 +782,20 @@ def test_blocked_copy_is_reported_once_per_day(store, tmp_env):
             res = cadence.tick_lead(state, now, store=store, free_slots=cadence.default_slot_grid(now),
                                     notify_fn=lambda *a, **k: pings.append((a, k)), research_mode="llm")
             assert res["action"] == "blocked_copy", (hour, res["action"])
+            built.append(calls["research"])
         assert len(pings) == 1, pings
-        assert calls["research"] == 1, "the research line was regenerated on a repeat tick"
+        assert built[0] >= 1 and built == [built[0]] * 4, "the E2 touch was rebuilt on a repeat tick"
         assert state.cadence["day"] == 1 and state.cadence["touches"] == []
         assert [r for r in read_shadow_log() if r["action"] == "reply_to_email"] == []
     finally:
         llm.clear_fakes()
 
 
-def test_blocked_copy_three_days_running_stops_instead_of_stalling(store, tmp_env):
+def test_blocked_copy_three_days_running_stops_instead_of_stalling(store, tmp_env, monkeypatch):
     from shared import llm
 
-    llm.register_fake("research", lambda system, user, json_mode: "Our bots recovered $50,000 for a similar shop")
+    monkeypatch.setattr(cadence, "fallback_research_line",
+                        lambda company, offer: "Our bots recovered $50,000 for a similar shop")
     try:
         state = cadence.arm(make_state(), NOW)
         state.cadence["day"] = 1
