@@ -35,7 +35,7 @@ def event(email, ts_prefix, **over):
 
 # ------------------------------------------------------------ validation
 def test_validate_rejects_banned_content():
-    good = "Hey Sopio,\n\nNothing up front, $0 if nothing closes.\n\nWould Tue 2:00pm or Thu 3:30pm CT work? Or if it's easier, grab a time here: %s\n\nLorenzo" % BOOKING
+    good = "Hey Sopio,\n\nNothing up front, $0 if nothing closes.\n\nWould Tue 2:00pm or Thu 3:30pm CT work?\n\nLorenzo"
     assert D.validate_draft(good, booking_link=BOOKING) == []
     assert "em or en dash" in D.validate_draft(good.replace(",", " —"), booking_link=BOOKING)
     assert "exclamation mark" in D.validate_draft(good.replace("Hey Sopio,", "Hey Sopio!"), booking_link=BOOKING)
@@ -43,9 +43,32 @@ def test_validate_rejects_banned_content():
     assert "mentions automation" in D.validate_draft(good.replace("Nothing", "The automation runs. Nothing"), booking_link=BOOKING)
     probs = D.validate_draft(good.replace("$0", "$5,000"), booking_link=BOOKING)
     assert any("dollar figure $5000" in p for p in probs)
-    assert "missing booking link" in D.validate_draft(good.replace(BOOKING, "https://calendly.com/x"), booking_link=BOOKING)
     assert "must end with the signature line 'Lorenzo'" in D.validate_draft(good + "\nSent from my phone", booking_link=BOOKING)
     assert D.validate_draft("") == ["empty body"]
+
+
+def test_validate_flags_a_booking_link():
+    """No email carries a booking link (2026-09-23): the passed link, the
+    configured BOOKING_URL or the words "grab a time" are all a problem."""
+    base = "Hey Sopio,\n\nWould Tue 2:00pm or Thu 3:30pm CT work?%s\n\nLorenzo"
+    link = "https://cal.example/x"
+    assert D.validate_draft(base % "", booking_link=link, first_reply=True) == []
+    assert "contains a booking link" in D.validate_draft(base % (" " + link), booking_link=link, first_reply=True)
+    assert "contains a booking link" in D.validate_draft(base % " Or grab a time here.", first_reply=True)
+    if BOOKING:
+        assert "contains a booking link" in D.validate_draft(base % (" " + BOOKING), first_reply=True)
+
+
+def test_no_slots_first_reply_asks_for_times():
+    ev = event("sopiosvanishvili@taxfoaccounting.com", "2026-09-21T14:42")
+    cls = C.classify(ev)
+    para = D.slot_paragraph([], "https://cal.example/x")
+    assert para.endswith("Could you send me a couple of times that work for you next week?")
+    assert "cal.example" not in para
+    assert D.slot_paragraph([], None, for_person="Sam").endswith(
+        "Could you send me a couple of times that work for Sam next week?")
+    assert D.validate_draft(D.skeleton(ev, cls, [], "https://cal.example/x"), booking_link="https://cal.example/x",
+                            first_reply=True) == []
 
 
 def test_dollar_figures_from_offers_are_allowed():
@@ -75,7 +98,8 @@ def test_pricing_question_draft_is_sendable_in_fake_mode():
     assert "20 to 30 percent of first-year fees" in d.body_text
     assert "$0 if nothing closes" in d.body_text
     assert len(d.offered_slots) == 2
-    assert "Or if it's easier, grab a time here: %s" % BOOKING in d.body_text
+    assert BOOKING not in d.body_text and "grab a time" not in d.body_text.lower()
+    assert d.body_text.split("\n\n")[-2].endswith("work for a 15-minute call?")
     assert d.body_text.rstrip().endswith("\nLorenzo")
     assert d.model == "template"
     for iso in d.offered_slots:
@@ -120,7 +144,7 @@ def test_proposed_time_inside_rules_is_confirmed():
     d = D.build_draft(ev, cls, now=ev.received_at, busy_blocks=[])
     assert d.offered_slots == ["2026-09-24T15:00:00-05:00"]
     assert "Thu 3:00pm CT works on my end" in d.body_text
-    assert BOOKING in d.body_text and d.problems == []
+    assert BOOKING not in d.body_text and d.problems == []
 
 
 def test_proposed_time_before_noon_gets_two_alternatives():
@@ -297,7 +321,7 @@ def test_validate_rejects_automatically_automating_and_en_dashes():
     assert "em or en dash" in D.validate_draft("Tue 2:00pm – 2:15 CT.\n\nLorenzo")
     assert "em or en dash" in D.validate_draft("Tue 2:00pm — 2:15 CT.\n\nLorenzo")
     # the ordinary template copy is still clean
-    good = "Hey Sopio,\n\nNothing up front, $0 if nothing closes.\n\nWould Tue 2:00pm or Thu 3:30pm CT work? Or if it's easier, grab a time here: %s\n\nLorenzo" % BOOKING
+    good = "Hey Sopio,\n\nNothing up front, $0 if nothing closes.\n\nWould Tue 2:00pm or Thu 3:30pm CT work?\n\nLorenzo"
     assert D.validate_draft(good, booking_link=BOOKING) == []
 
 
@@ -515,7 +539,7 @@ def test_first_reply_bindings_are_the_rendered_values():
     d = D.build_draft(ev, cls, now=ev.received_at, busy_blocks=[])
     b = D.first_reply_bindings(ev, cls, d)
     assert b["referral_name"] == "Dana Reyes" and b["referral_first_name"] == "Dana"
-    assert b["booking_url"] == d.booking_link and b["booking_url"] in d.body_text
+    assert "booking_url" not in b and d.booking_link is None  # no link in any email
     assert b["slots"] in d.body_text and ("Hey %s," % b["first_name"]) in d.body_text
     assert None not in b.values()
     # no referral name written: no referral binding
