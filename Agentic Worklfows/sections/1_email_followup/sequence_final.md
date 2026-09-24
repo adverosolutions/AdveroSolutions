@@ -9,7 +9,7 @@ Read in order: the lead said "interested", Lorenzo replied by hand with two time
 4. No Claudeisms: no sentence or tacked-on clause that restates, sums up or sells the point just made. Test: delete it; if no fact, question or next step is lost, it goes.
 5. Normal capitalization.
 
-Walkthrough status: E1 to E6 agreed 2026-09-23. E7 onward still show the editor's drafts below; rules 1 and 2 are applied as each email is walked through.
+Walkthrough status: E1 to E7 agreed 2026-09-23. E8 onward still show the editor's drafts below; rules 1 and 2 are applied as each email is walked through.
 
 ## E1 · Day 1 · Two fresh times, lightest nudge (AGREED 2026-09-23)
 Hey {first_name},
@@ -100,23 +100,17 @@ Lorenzo
 
 Agreed with Lorenzo 2026-09-23: the preview version (not the priority check, which E7 and E8 carry). Booking link removed; "Those last two times are gone" added (rule 2). The sample messages are the editor's draft of his first touch per niche.
 
-## E7 · Day 7 · Close the week's loop
+## E7 · Day 7 · Close the week's loop (AGREED 2026-09-23)
 Hey {first_name},
 
-Last one from me this week. Should I keep trying to find a time, or is now just not the right moment? Either answer is totally fine.
+Last one from me this week. Should I keep trying to find a time, or is now just not the right moment?
 
-If it's still on your list, I can do {slots}. Or grab any time that works here: {booking_url}
+Those last two times went too. If it's still on your list, I can do {slots}.
 
 Lorenzo
 
-Alternate (asks for a better time instead of a yes or no):
-Hey {first_name},
-
-Is it just a timing thing? If the next few weeks are packed, tell me when works better and I'll reach back out then.
-
-If now works, how's {slots}? Or grab any time that works here: {booking_url}
-
-Lorenzo
+Agreed with Lorenzo 2026-09-23 (the editor's pick): "Either answer is totally fine." cut (Claudeism), booking link removed, "Those last two times went too" added (rule 2). "Last one from me this week" kept.
+Stop logic (his call, 2026-09-23): a "not now", "bad time" or "not a priority" reply to any follow-up stops the run at once and moves the lead to the 90-day nurture (`nurture.enroll(email, "not_now_reply", now)`).
 
 ## E8 · Two weeks later · Relaxed restart, easy out
 Hey {first_name},
