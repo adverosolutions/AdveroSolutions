@@ -18,7 +18,7 @@ from services.reply_engine import app as app_mod
 from services.reply_engine import approval as A
 from services.reply_engine import booking
 from services.reply_engine import cadence
-from services.reply_engine.models import ReplyEvent
+from services.reply_engine.models import LeadState, ReplyEvent
 # Fixtures and helpers only (no test_* names, so nothing is collected twice).
 from services.reply_engine.tests.test_ct3_pipeline import (ILMI, SOPIO, _event, _replies, env,  # noqa: F401
                                                            fixture_item)
@@ -85,6 +85,11 @@ def test_an_approved_slot_taken_counter_auto_sends_without_a_link(env):
     env["store"].set(A.OFFERED_KEY, [{"slot": "2026-09-22T14:00:00-05:00", "lead": "alice@x.com",
                                       "at": MON_1530.isoformat(), "approval": "a1"}])
     ev = _event(SOPIO, "2026-09-21T14:42", reply_text="Tuesday at 2pm works for me.", email_id="taken-1")
+    # A reply of ours already reached this lead: only then may a counter
+    # auto-send (approval.draft_only, section 4).
+    lead = LeadState.from_store(env["store"].get(ev.state_key), ev)
+    lead.history.append({"at": "2026-09-20T15:00:00-05:00", "event": "reply_sent", "approval": "earlier"})
+    env["store"].set(ev.state_key, lead.model_dump(mode="json"))
     res = app_mod.process_event(ev, deps=env["deps"], now=MON_1530, busy_blocks=[])
     card = A.load(res["approval_token"], env["store"])
     assert card.draft.template_id == "booking.counter.slot_taken"
