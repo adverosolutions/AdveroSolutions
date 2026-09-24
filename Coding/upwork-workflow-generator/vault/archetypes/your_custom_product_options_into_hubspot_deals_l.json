@@ -18,7 +18,7 @@
       "key": "tokens",
       "label": "3 - OPTIONS FOR YOUR EMAIL TOKENS AND ABANDONED CHECKOUT",
       "color": 0,
-      "note": "Your Automated HubSpot Workflows & Personalization and Email Template Setup: the deal carries the order's options and the contact its last-order tokens and product image, which your post-purchase, upsell and re-engagement sequences and drag-and-drop templates pull in. Abandoned checkout runs on Shopify's checkout webhook: the cart's options and recovery link land on the contact, so your abandoned cart sequence shows exactly what they picked, and a completed order clears the link. Step 6 sends the deal ID back to the order for the two-way sync."
+      "note": "Your Automated HubSpot Workflows & Personalization and Email Template Setup: the deal carries the order's options and the contact its last-order tokens and product image, which your post-purchase, upsell and re-engagement sequences and drag-and-drop templates pull in. Abandoned checkout runs as its own scenario on Shopify's checkout webhook, and only checkouts with an email that were never completed get through: the cart's options and recovery link land on the contact, so your abandoned cart sequence shows the options they picked, and a completed order clears the link. Step 6 sends the deal ID back to the order for the two-way sync."
     },
     {
       "key": "report",
@@ -282,7 +282,7 @@
       "kind": "net.http",
       "label": "10 - HubSpot: Save the Cart's Options and Recovery Link on the Contact",
       "section": "tokens",
-      "notes": "Your abandoned cart workflow in HubSpot reads these, and the next order clears the link.",
+      "notes": "A filter on the link lets through only checkouts with an email and no completed_at; the next order clears the link.",
       "params": {
         "method": "POST",
         "url": "https://api.hubapi.com/crm/v3/objects/contacts/batch/upsert",
@@ -296,7 +296,6 @@
               "id": "{{12.email}}",
               "properties": {
                 "email": "{{12.email}}",
-                "firstname": "{{12.customer.first_name}}",
                 "abandoned_cart_product": "{{12.line_items[1].title}} {{12.line_items[1].variant_title}}",
                 "abandoned_cart_engraving": "{{first(map(12.line_items[1].properties; value; name; Engraving Text))}}",
                 "abandoned_cart_font": "{{first(map(12.line_items[1].properties; value; name; Font))}}",
