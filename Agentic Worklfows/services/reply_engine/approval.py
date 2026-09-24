@@ -7,7 +7,8 @@ jobs/approve_templates.py and unchanged since, the template kill switch is
 off, and every send check passes (copy gate, opt-out marker, lead reply hold,
 07:00-19:00 CT send window, recipient check, slot rules); anything else goes
 to Lorenzo as an approval card (replies) or is held (cadence, show-rate,
-no-show). A first reply is never auto-sent (rule of 2026-09-23,
+no-show). A first reply, and any reply but a booking confirmation to a lead
+not answered yet, is never auto-sent (rule of 2026-09-23, draft_only,
 FIRST_REPLY_LOCK_REASON): it is always a card, and he sends it himself from
 the thread. This module is the card half.
 
@@ -1182,8 +1183,8 @@ def create_approval(
         release_slots(st, approval_id)
         logger.exception("could not record the context of a card for %s; no card raised", state.lead_email)
         raise
-    deferred, note = _auto_decision(auto, draft)
-    locked = first_reply_locked(draft.template_id)
+    locked = _template_draft_only(draft.template_id, state)
+    deferred, note = _auto_decision(auto, draft, state)
     if auto is not None:
         approval.auto_send = _auto_record(auto, state)
         if locked:
@@ -1299,7 +1300,9 @@ def auto_kind(template_id: Optional[str]) -> Optional[str]:
 # drafts the first reply (two held times, no booking link) and he sends it
 # himself from the thread; the engine sees his send as day 0. A first_reply.*
 # draft is always an approval card, whatever the approvals file, the kill
-# switch or the template gate say. Checked before the gate's verdict at every
+# switch or the template gate say, and so is any other reply to a lead we have
+# not answered yet, except a booking confirmation (draft_only, same reason
+# and text; Lorenzo, 2026-09-23). Checked before the gate's verdict at every
 # point a card can go out with no tap: create_approval (_auto_decision),
 # auto_send_approved, send_approved's re-check of a "template" card
 # (_template_verdict) and the old timer path (auto_send_due).
@@ -1316,15 +1319,54 @@ def first_reply_locked(template_id: Optional[str]) -> bool:
     return str(template_id or "").strip().lower().split(".", 1)[0] == "first_reply"
 
 
-def _auto_decision(auto: Any, draft: Draft):
+# The one kind of reply that still auto-sends to a lead we have not answered
+# yet: the confirmation of a call their own time booked (Lorenzo, 2026-09-23).
+UNANSWERED_ALLOWED_PREFIX = "booking.confirmation."
+
+
+def draft_only(template_id: Optional[str], state: Any) -> bool:
+    """Lorenzo's rule: never auto-sent, always a card he sends himself
+    (FIRST_REPLY_LOCK_REASON). True for a first reply's template, and for
+    any other reply except a booking confirmation while no reply of ours
+    has reached the lead yet (_is_first_reply on ``state``: a LeadState, a
+    stored lead row, or None when the row could not be read, which counts
+    as not answered yet). The one check every no-tap send path runs."""
+    if first_reply_locked(template_id):
+        return True
+    if str(template_id or "").strip().lower().startswith(UNANSWERED_ALLOWED_PREFIX):
+        return False
+    try:
+        if isinstance(state, dict):
+            state = LeadState.from_store(state)
+        return _is_first_reply(state if isinstance(state, LeadState) else None)
+    except Exception:  # noqa: BLE001 - an unreadable row is not answered yet
+        return True
+
+
+def _template_draft_only(template_id: Optional[str], state: Any) -> bool:
+    """draft_only for a template render. A draft with no template id is
+    never auto-sent anyway, and keeps the gate's own "Not auto-sent" line."""
+    return bool(str(template_id or "").strip()) and draft_only(template_id, state)
+
+
+def _stored_row(st, state_key: Optional[str]) -> Optional[Dict[str, Any]]:
+    """The lead row for draft_only, or None when it cannot be read."""
+    try:
+        row = st.get(state_key) if state_key else None
+        return row if isinstance(row, dict) else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _auto_decision(auto: Any, draft: Draft, state: Any = None):
     """(deferred, note) for create_approval: deferred only for an allowed
     verdict on this very draft (its template id), a template render with no
     problem on it (create_approval adds one when a time was taken meanwhile)
     and a template kind this module sends. ``note`` is the card's "Not
-    auto-sent" line when a verdict was given and it is not deferred. A first
-    reply (first_reply_locked) is never deferred, whatever the verdict, and
-    its card says so."""
-    if first_reply_locked(getattr(draft, "template_id", None)):
+    auto-sent" line when a verdict was given and it is not deferred. A draft
+    Lorenzo sends himself (draft_only on ``state``, the lead) is never
+    deferred, whatever the verdict, and its card says so."""
+    if _template_draft_only(getattr(draft, "template_id", None), state):
         note = _not_auto_sent(FIRST_REPLY_LOCK_REASON)
         refused = getattr(auto, "reason", None) if auto is not None and not getattr(auto, "allowed", False) else None
         if refused in LOCK_KEEPS_REASONS:
@@ -1762,9 +1804,10 @@ def auto_send_approved(approval: Approval, instantly, store=None, now: Optional[
         card = _approval_row(st, approval_id)
         if card is None:
             return {"ok": False, "status": None, "error": "no such card", "auto": False}
-        if first_reply_locked(card.draft.template_id):
-            # Before the card's state and the verdict: a first reply is never
-            # auto-sent. A card still waiting on its deferred push (raised
+        if _template_draft_only(card.draft.template_id, _stored_row(st, card.state_key)):
+            # Before the card's state and the verdict: a draft Lorenzo sends
+            # himself (a first reply, or any reply but a booking confirmation
+            # to a lead not answered yet) is never auto-sent. A card still waiting on its deferred push (raised
             # before this lock) is pushed now, once; any other is left as is.
             why = reason_text(FIRST_REPLY_LOCK_REASON)
             logger.info("not auto-sending %s: first replies are drafts Lorenzo sends himself", approval_id)
@@ -1820,10 +1863,10 @@ def _template_verdict(approval: Approval, state_raw: Optional[Dict[str, Any]]):
     auto-sent). Any error is a refusal."""
     gate = _gate()
     try:
-        if first_reply_locked(approval.draft.template_id):
+        if _template_draft_only(approval.draft.template_id, state_raw):
             # Before the gate, whatever it would say: never auto-sent.
             return gate.Verdict(False, FIRST_REPLY_LOCK_REASON, approval.draft.template_id, [], {},
-                                "first replies are never auto-sent")
+                                "a draft Lorenzo sends himself (draft_only)")
         from types import SimpleNamespace
 
         from services.reply_engine.draft import lead_terms
@@ -7485,13 +7528,7 @@ def auto_send_due(instantly, store=None, now: Optional[datetime] = None) -> List
         # Lorenzo's rule (FIRST_REPLY_LOCK_REASON): a first reply is never
         # auto-sent, by its template id or, for any other body, by the lead
         # row (no reply of ours sent yet, or no row at all).
-        try:
-            row = st.get(approval.state_key)
-            first = first_reply_locked(approval.draft.template_id) or _is_first_reply(
-                LeadState.from_store(row) if row else None)
-        except Exception:  # noqa: BLE001 - any doubt is no auto-send
-            first = True
-        if first:
+        if draft_only(approval.draft.template_id, _stored_row(st, approval.state_key)):
             job_log.log_run("reply_engine.approval", "auto_send_refused_first_reply",
                             {"lead": approval.lead_email, "approval": key.split(":", 1)[-1],
                              "reason": FIRST_REPLY_LOCK_REASON})

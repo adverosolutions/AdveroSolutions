@@ -846,9 +846,14 @@ Claude "done".
 First replies are never auto-sent (rule of 2026-09-23). The engine drafts the
 first reply (two held times, no booking link) and it always comes to you as a
 card, whatever the approvals, the kill switch or the gate say; you send it
-yourself from the thread. Its card says "Not auto-sent: first replies are
-drafts you send yourself from the thread." (reason `first_reply_draft_only`
-below).
+yourself from the thread. The same goes for any other reply to a lead no
+reply of ours has reached yet (for example a counter-proposal or "that slot
+just got taken" when their first answer names a time), with one exception: the
+booking confirmation, when the time they named fits and the call is booked,
+still auto-sends once its template is approved. If the lead's row cannot be
+read, the lead counts as not answered yet. These cards say "Not auto-sent:
+first replies are drafts you send yourself from the thread." (reason
+`first_reply_draft_only` below).
 
 ## "Auto-sent from approved templates: {n} sent, {q} queued, {h} held"
 
@@ -1016,7 +1021,7 @@ did not let it go on its own. The reason sentences (`approval.REASON_TEXT`):
 | `unknown_id` | its template is not in the catalogue for this kind of email. |
 | `unapproved` | its template is not approved yet; approve it in the emails doc, then tell Claude "done". |
 | `changed_since_approval` | its template changed since you approved it; review it and approve it again in the emails doc, then tell Claude "done". |
-| `first_reply_draft_only` | first replies are drafts you send yourself from the thread. |
+| `first_reply_draft_only` | first replies are drafts you send yourself from the thread. (A first reply, or any reply but a booking confirmation to a lead no reply of ours has reached yet.) |
 | `not_approvable` | its template cannot be approved for auto-send. |
 | `stale_render` | the template changed after this draft was written. |
 | `classification` | the reply was not read as a clear positive with enough confidence. |
@@ -1032,7 +1037,8 @@ did not let it go on its own. The reason sentences (`approval.REASON_TEXT`):
 
 The last four are a send that ended at `send_failed`: see the next section.
 
-A first reply's card always says `first_reply_draft_only`: that check runs
+A first reply's card, and the card of any reply but a booking confirmation
+to a lead not answered yet, always says `first_reply_draft_only`: that check runs
 before the gate, so approving the template, the kill switch and the gate's
 own reason make no difference to it, and the `unapproved` advice never
 appears on it. The one gate reason still shown after it is a pending GHL

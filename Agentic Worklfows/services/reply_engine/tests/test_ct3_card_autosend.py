@@ -137,11 +137,20 @@ def _counter_draft(ev, cls, state, now):
     return counter, B.counter_bindings(match, state)
 
 
-def _card(world, now=NOW, approve=True, email_id="e-1", cls=None, verdict=True):
+def _answered(state, now):
+    """The lead row as it stands once a reply of ours reached the lead: only
+    then may anything but a booking confirmation auto-send to them
+    (approval.draft_only)."""
+    if not any(e.get("event") == "reply_sent" for e in state.history if isinstance(e, dict)):
+        state.history.append({"at": (now - timedelta(days=2)).isoformat(), "event": "reply_sent",
+                              "approval": "earlier"})
+
+
+def _card(world, now=NOW, approve=True, email_id="e-1", cls=None, verdict=True, answered=True):
     """The pipeline's steps for one positive reply, piece B's half: a
     template draft (the counter-proposal, TID), stamped, its verdict, the
     card (create_approval(auto=)), and the lead row saved as the pipeline
-    saves it."""
+    saves it. ``answered``: a reply of ours already reached the lead."""
     st = world["store"]
     if approve:
         world["tpl"].approve_ids(TID)
@@ -150,6 +159,8 @@ def _card(world, now=NOW, approve=True, email_id="e-1", cls=None, verdict=True):
     raw = st.get("lead:%s:%s" % (CAMPAIGN, LEAD))
     state = LeadState.from_store(raw, ev)
     state.classification = cls
+    if answered:
+        _answered(state, now)
     d, bindings = _counter_draft(ev, cls, state, now)
     gate.stamp(d, TID)
     v = gate.draft_verdict(d, kind="booking", campaign_key=OFFER, allow_terms=D.lead_terms(ev, state),
@@ -423,7 +434,7 @@ def test_every_reason_code_has_a_plain_sentence_with_no_lead_data(world):
     assert "approve_templates" not in "".join(A.REASON_TEXT.values())
     assert _stored(world, card).auto_send["reason"] == "unapproved"
     cancel = gate.Verdict(False, "cancel_pending", TID, [TID], {})
-    note = A._auto_decision(cancel, card.draft)
+    note = A._auto_decision(cancel, card.draft, world["store"].get(card.state_key))   # an answered lead
     assert note == (False, "Not auto-sent: " + A.REASON_TEXT["cancel_pending"])
 
 
