@@ -9,6 +9,20 @@ slot rules); anything else goes to Lorenzo as an approval card (replies) or is h
 no-show). Until he approves templates (`runbooks/template_approvals.md`), every first reply to a positive
 lead is drafted and waits for him.
 
+First replies are never sent by the engine (Lorenzo, 2026-09-23). `approval.draft_only` (reason
+`first_reply_draft_only`) keeps every `first_reply.*` draft on a card, and keeps any other reply to a lead
+we have not answered yet on a card too (booking confirmations excepted), whatever the gate says. The
+draft carries two open times the engine holds for that lead and no booking link. Lorenzo copies it, edits
+it if he likes, and sends it himself from the Instantly thread. That send is day 0 of the follow-up
+ladder: the cadence tick finds his send in the thread and records it as a `reply_sent_manually` history
+event (`runbooks/cadence_and_booking.md`, "How the ladder starts"), which releases the lock and arms E1 for
+the next business day. The card is not closed by that yet (it needs an `approval.py` change, section 4):
+it stays `pending` and chased until it expires after 48 hours, and its Approve button still sends.
+**Never tap Approve on a card whose reply you already sent yourself**, or the lead gets it twice; leave it
+to expire. **Mark sent** (`approval.mark_sent_manually`) records the same event but today takes
+only a card whose engine send failed or got stuck; section 4's first-contact card (in progress) makes it
+work on a pending first-reply card and drops Approve there.
+
 A card the template gate allowed is created with its push deferred and sent at once through the same
 path an Approve tap takes (`approval.auto_send_approved`), in the same pipeline run, so it normally leaves
 `pending` long before the chase's first rung. If the send leaves the card `pending`, `blocked` or
