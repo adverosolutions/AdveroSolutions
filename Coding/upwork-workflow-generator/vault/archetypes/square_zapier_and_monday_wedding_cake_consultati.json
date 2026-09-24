@@ -1,0 +1,166 @@
+{
+  "title": "Square, Zapier and Monday: Wedding Cake Consultations and Deliveries",
+  "platform": "diagram",
+  "sections": [
+    {
+      "key": "basic",
+      "label": "1 - YOUR VERY BASIC WORKFLOW SYSTEM, EXPANDED",
+      "color": 0,
+      "note": "Step 1 is my read of your Square, Zapier and Monday flow today, to confirm on our call. Expanded, every payment lands on the couple's one item, matched by the email on their Square invoice."
+    },
+    {
+      "key": "consult",
+      "label": "2 - CONSULTATIONS IN MONDAY",
+      "color": 0,
+      "note": "Each couple from enquiry to tasting to design details on one board. The deposit landing in Square is what books them."
+    },
+    {
+      "key": "deliver",
+      "label": "3 - DELIVERIES IN MONDAY",
+      "color": 0,
+      "note": "Booked cakes move to Deliveries with the venue, the coordinator and your delivery and setup window. Monday checks the final balance against your due date."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "today",
+      "kind": "data.transform",
+      "label": "1 - Today: A Square Sale Becomes a Monday Item Through Zapier",
+      "section": "basic"
+    },
+    {
+      "key": "match",
+      "kind": "data.transform",
+      "label": "2 - Expanded: Zapier Finds the Couple's Item by Email, or Adds It",
+      "section": "basic"
+    },
+    {
+      "key": "consult_board",
+      "kind": "data.transform",
+      "label": "3 - Consultations Board: Couple, Wedding Date, Venue, Tasting Date",
+      "section": "consult"
+    },
+    {
+      "key": "design",
+      "kind": "data.transform",
+      "label": "4 - After the Tasting: Design Details, Tiers, Flavors, Servings",
+      "section": "consult"
+    },
+    {
+      "key": "deposit",
+      "kind": "flow.branch",
+      "label": "5 - Deposit Paid in Square?",
+      "section": "consult"
+    },
+    {
+      "key": "follow_up",
+      "kind": "data.transform",
+      "label": "5b - Not Yet: Monday Reminds You to Follow Up With the Couple",
+      "section": "consult"
+    },
+    {
+      "key": "deliveries_board",
+      "kind": "data.transform",
+      "label": "6 - Moves to Deliveries: Venue, Coordinator, Delivery and Setup Window",
+      "section": "deliver"
+    },
+    {
+      "key": "balance",
+      "kind": "flow.branch",
+      "label": "7 - Final Balance Paid by Your Due Date?",
+      "section": "deliver"
+    },
+    {
+      "key": "balance_flag",
+      "kind": "data.transform",
+      "label": "7b - Not Yet: Monday Flags It to You Before the Cake Leaves",
+      "section": "deliver"
+    },
+    {
+      "key": "week_list",
+      "kind": "data.aggregate",
+      "label": "8 - This Week's Deliveries: One List by Date and Setup Window",
+      "section": "deliver"
+    },
+    {
+      "key": "delivered",
+      "kind": "data.transform",
+      "label": "9 - Delivered and Set Up: Venue Photo on the Item, Couple Done",
+      "section": "deliver"
+    }
+  ],
+  "edges": [
+    {
+      "from": "today",
+      "to": "match"
+    },
+    {
+      "from": "match",
+      "to": "consult_board"
+    },
+    {
+      "from": "consult_board",
+      "to": "design"
+    },
+    {
+      "from": "design",
+      "to": "deposit"
+    },
+    {
+      "from": "deposit",
+      "to": "deliveries_board",
+      "branch": "yes"
+    },
+    {
+      "from": "deposit",
+      "to": "follow_up",
+      "branch": "no"
+    },
+    {
+      "from": "deliveries_board",
+      "to": "balance"
+    },
+    {
+      "from": "balance",
+      "to": "week_list",
+      "branch": "yes"
+    },
+    {
+      "from": "balance",
+      "to": "balance_flag",
+      "branch": "no"
+    },
+    {
+      "from": "balance_flag",
+      "to": "week_list"
+    },
+    {
+      "from": "week_list",
+      "to": "delivered"
+    }
+  ],
+  "input_sample": {
+    "source": "Square invoice payment",
+    "invoice_title": "Wedding cake deposit - Morales / Patel",
+    "customer_name": "Jenna Morales",
+    "customer_email": "jenna.m.weds@gmail.com",
+    "amount": 575.0,
+    "paid_at": "2026-10-03T14:12:00-04:00"
+  },
+  "output_sample": {
+    "board": "Deliveries",
+    "item": "Morales / Patel - May 22, 2027",
+    "wedding_date": "2027-05-22",
+    "venue": "Willow Creek Barn, Flemington NJ",
+    "coordinator": "Dana Ruiz, 908-555-0147",
+    "design_details": "3 tiers, vanilla bean / lemon curd / chocolate ganache, pressed florals, serves 120",
+    "delivery_and_setup_window": "1:30-2:30 PM",
+    "deposit": "Paid 2026-10-03",
+    "final_balance": "Paid 2027-05-01",
+    "status": "Delivered and set up",
+    "setup_photo": "morales-patel-venue.jpg"
+  },
+  "archetype": "square_zapier_and_monday_wedding_cake_consultati",
+  "learned": true,
+  "learned_at": "2026-09-24"
+}
