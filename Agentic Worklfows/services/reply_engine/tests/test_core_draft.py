@@ -59,6 +59,57 @@ def test_validate_flags_a_booking_link():
         assert "contains a booking link" in D.validate_draft(base % (" " + BOOKING), first_reply=True)
 
 
+
+INVENTED_LINKS = (
+    "Or book a time here: https://calendly.com/lorenzo-advero",
+    "Or use my calendar: https://api.leadconnectorhq.com/widget/booking/xyz",
+    "Or pick a slot here: [booking link]",
+)
+
+
+@pytest.mark.parametrize("line", INVENTED_LINKS + (
+    "Or here: calendly.com/lorenzo",
+    "More at www.adverosolutions.com",
+    "Details: [link]",
+    "Book: <booking_link>",
+    "Book: {booking_url}",
+    "Here is my calendar link.",
+))
+def test_first_reply_flags_any_invented_link(line):
+    """Any URL, link placeholder or booking wording is flagged in a first
+    reply, not only the configured BOOKING_URL."""
+    body = "Hey Sopio,\n\nWould Tue 2:00pm or Thu 3:30pm CT work?\n\n%s\n\nLorenzo" % line
+    assert "contains a booking link" in D.validate_draft(body, first_reply=True)
+
+
+def test_first_reply_link_check_skips_the_lead_company():
+    body = "Hey Sopio,\n\nHappy to walk through it for Acme.io.\n\nWould Tue 2:00pm or Thu 3:30pm CT work?\n\nLorenzo"
+    assert D.validate_draft(body, first_reply=True, allow_terms=["Acme.io"]) == []
+
+
+def test_every_catalogue_first_reply_passes_the_link_check():
+    """No first-reply template text (main body or any variant) trips the
+    widened check, so it cannot block a legitimate first reply."""
+    from services.reply_engine import template_approvals as TA
+
+    entries = [e for e in TA.catalogue() if e["kind"] in ("first_reply", "first_reply_piece")]
+    assert any(e["kind"] == "first_reply" for e in entries)
+    checked = 0
+    for e in entries:
+        for text in [e["text"]] + [v.get("text", "") for v in e.get("variants") or []]:
+            if text:
+                assert not D._has_booking_link(text), (e["id"], text)
+                checked += 1
+    assert checked > len(entries)
+
+
+def test_draft_prompt_carries_no_booking_link_instruction():
+    prompt = (D.PROMPTS_DIR / "draft_system.md").read_text(encoding="utf-8")
+    assert "booking link line" not in prompt
+    assert "other than the booking link" not in prompt
+    assert "No links of any kind" in prompt
+    assert "Nobody in the office has to remember to ask." in prompt  # the no-Claudeisms rule
+
 def test_no_slots_first_reply_asks_for_times():
     ev = event("sopiosvanishvili@taxfoaccounting.com", "2026-09-21T14:42")
     cls = C.classify(ev)
@@ -281,6 +332,26 @@ def test_llm_polish_rejected_falls_back_to_template():
     assert d.model == "template" and d.problems == []
     assert "LLM draft rejected" in d.rationale and "exclamation mark" in d.rationale
 
+
+
+def test_llm_polish_with_an_invented_link_falls_back_to_template():
+    ev = event("sopiosvanishvili@taxfoaccounting.com", "2026-09-21T14:42")
+    cls = C.classify(ev)
+    template = D.build_draft(ev, cls, now=ev.received_at, busy_blocks=[], use_llm=False)
+    assert template.problems == []
+    body = template.body_text.rstrip()
+    assert body.endswith("\nLorenzo")
+    linked = body[:-len("Lorenzo")] + "Or book a time here: https://calendly.com/x\n\nLorenzo"
+    llm.register_fake("draft", lambda s, u, j: linked)
+    try:
+        d = D.build_draft(ev, cls, now=ev.received_at, busy_blocks=[], use_llm=True)
+    finally:
+        llm.clear_fakes()
+        C.install_offline_fakes()
+    assert d.model == "template" and d.problems == []
+    assert d.body_text == template.body_text
+    assert "calendly" not in d.body_text
+    assert "LLM draft rejected" in d.rationale and "contains a booking link" in d.rationale
 
 def test_llm_polish_accepted_when_it_keeps_slots_and_rules():
     ev = event("sopiosvanishvili@taxfoaccounting.com", "2026-09-21T14:42")
