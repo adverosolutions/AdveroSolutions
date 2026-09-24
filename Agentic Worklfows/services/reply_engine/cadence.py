@@ -2411,10 +2411,10 @@ def _template_stop_private(state: Any, day: Any, url: Optional[str]) -> str:
     lead = "Lead: %s (%s), day %s." % (_field(state, "lead_email"), _field(state, "campaign_id"), day)
     if not url:
         return lead
-    return ("%s\n\nResume: %s\n\nThe link is valid for %d hours. A fresh one is sent every morning while the "
-            "ladder stays stopped, and as soon as the held ids are approved. Nothing is sent from the page: the "
-            "next tick runs the template gate again and sends the day only if it is auto-sendable by then and "
-            "every send check passes; otherwise it is held again." % (lead, url, DECISION_TTL_HOURS))
+    return ("%s\n\nResume: %s\n\nThe link is valid for %d hours. A fresh one is sent each morning for up to 2 "
+            "weeks while the ladder stays stopped, and as soon as the held ids are approved. Nothing is sent from "
+            "the page: the next tick runs the template gate again and sends the day only if it is auto-sendable by "
+            "then and every send check passes; otherwise it is held again." % (lead, url, DECISION_TTL_HOURS))
 
 
 def _resume_push(state: Any, day: Any, public: str, url: Optional[str],
@@ -2555,6 +2555,31 @@ def _count_of(value: Any) -> int:
         return 0
 
 
+def _reminder_cap_reached(cad: Dict[str, Any], ct: datetime) -> bool:
+    """The daily Resume reminder's cap: TEMPLATE_STOP_REMINDER_MAX_PUSHES
+    reminders sent (``template_hold.link_count``, 0 when absent or unreadable)
+    or TEMPLATE_STOP_REMINDER_MAX_DAYS since ``stopped_at`` (no limit by days
+    when that is missing). The one rule _template_stop_reminder and
+    template_reminders_ended both apply."""
+    hold = cad.get("template_hold") or {}
+    if _count_of(hold.get("link_count")) >= TEMPLATE_STOP_REMINDER_MAX_PUSHES:
+        return True
+    stopped_at = _parse(cad.get("stopped_at"))
+    return stopped_at is not None and ct - stopped_at >= timedelta(days=TEMPLATE_STOP_REMINDER_MAX_DAYS)
+
+
+def template_reminders_ended(state: Any, now: datetime) -> bool:
+    """True when the ladder is stopped as ``template_unapproved`` and its daily
+    Resume reminder has reached its cap (_reminder_cap_reached), so nothing
+    reminds Lorenzo of it any more. Pure: it reads the row only, never the
+    store; the caller leaves out a lead in the 90-day nurture or one the
+    ladder is over for."""
+    cad = getattr(state, "cadence", None) or {}
+    if cad.get("stopped_reason") != "template_unapproved":
+        return False
+    return _reminder_cap_reached(cad, slot_rules.to_tz(now))
+
+
 def _template_stop_reminder(state: Any, now: datetime, notify_fn: Any) -> Optional[Dict[str, Any]]:
     """A ladder stopped as ``template_unapproved`` stays resumable: the Resume
     link is signed for DECISION_TTL_HOURS, so it is re-signed and sent on the
@@ -2590,10 +2615,7 @@ def _template_stop_reminder(state: Any, now: datetime, notify_fn: Any) -> Option
         return None
     sent_count = _count_of(hold.get("link_count"))
     if not announce:
-        if sent_count >= TEMPLATE_STOP_REMINDER_MAX_PUSHES:
-            return None
-        stopped_at = _parse(cad.get("stopped_at"))
-        if stopped_at is not None and ct - stopped_at >= timedelta(days=TEMPLATE_STOP_REMINDER_MAX_DAYS):
+        if _reminder_cap_reached(cad, ct):
             return None
         sent_count += 1
     url = _resume_url(state, ct)
@@ -3507,7 +3529,7 @@ def _resume_digest(result: Dict[str, Any]) -> str:
     """The digest's word on a template_unapproved stop's Resume link: where it
     went, or why none went and what to set (never the link itself)."""
     if result.get("resume_link"):
-        return "Then open the Resume link %s (a fresh one comes each morning)" % _resume_leg(
+        return "Then open the Resume link %s (a fresh one comes each morning for up to 2 weeks)" % _resume_leg(
             result.get("resume_link_via"))
     if result.get("resume_link_missing") == "no_channel":
         return ("No Resume link was sent: no channel can carry one (set NTFY_TOKEN, or NOTIFY_EMAIL, "

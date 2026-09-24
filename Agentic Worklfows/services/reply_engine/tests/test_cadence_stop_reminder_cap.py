@@ -133,6 +133,11 @@ def test_the_hourly_job_persists_the_count(store, tmp_env, secret, email_leg, ap
     for n in range(1, 11):
         when = ct(2026, 9, 24, 7, 0) + timedelta(days=n)
         job.run(when, store, notify_fn=lambda *a, **k: pushes.append((a, k)), log_fn=lambda *a, **k: None)
+    # Days 9 and 10 are past the cap: the job's once-a-day digest line says the
+    # reminders ended (jobs/tests/test_cadence_tick_held_digest.py); no reminder.
+    ended = [p for p in pushes if "daily reminders ended" in p[0][1]]
+    assert len(ended) == 2
+    pushes = [p for p in pushes if p not in ended]
     assert len(pushes) == 1 + cadence.TEMPLATE_STOP_REMINDER_MAX_PUSHES
     assert _hold(store)["link_count"] == 8
     _assert_still_held(store)

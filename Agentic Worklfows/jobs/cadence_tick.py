@@ -17,6 +17,9 @@ never mutates the store, never calls a client, never notifies.
 CT3: a touch goes out only when its text is an approved template
 (services/reply_engine/template_gate.py); otherwise the lead's result is
 ``held_template`` and its digest line names the template id (never the body).
+A ladder stopped on an unapproved template whose daily Resume reminders have
+ended (cadence.template_reminders_ended) is counted in one line, at most once a
+CT day (REMINDERS_ENDED_KEY).
 """
 import argparse
 import copy
@@ -36,7 +39,7 @@ from shared import slots as slot_rules
 from shared.job_log import log_run
 from shared.notify import notify
 from shared.settings import TZ, get_mode, is_live
-from shared.store import JsonFileStore, Store, get_store
+from shared.store import ABSENT, JsonFileStore, Store, get_store
 
 from services.reply_engine import cadence
 from services.reply_engine.approval import save_stale_write
@@ -63,6 +66,9 @@ TOUCH_ACTIONS = ("would_send", "sent")
 # (a retried Modal schedule, a manual run alongside cron) skips it instead of
 # sending the same touch twice.
 LOCK_SECONDS = 900
+# The day (CT) the "reminders ended" line last went out: it is said once a CT
+# day, not every hourly tick. One key, overwritten; no lead data in it.
+REMINDERS_ENDED_KEY = "cadence_digest:reminders_ended"
 
 
 def _clients(dry_run: bool):
@@ -175,6 +181,34 @@ def _digest_line(result: Dict[str, Any]) -> str:
     return line
 
 
+def _reminders_ended_line(count: int) -> str:
+    """The daily word on held ladders whose Resume reminders have ended.
+    Counts only (the topic may be public): no lead, company or email."""
+    if count == 1:
+        return ("1 follow-up ladder is still held on an email you haven't approved yet; its daily reminders "
+                "ended. Approve it in the emails doc (a Resume link then comes at once), or answer the lead by "
+                "hand.")
+    return ("%d follow-up ladders are still held on emails you haven't approved yet; their daily reminders "
+            "ended. Approve them in the emails doc (a Resume link then comes at once), or answer the leads by "
+            "hand." % count)
+
+
+def _claim_reminders_ended(store: Store, ct: datetime) -> bool:
+    """True when this tick is the first of the CT day to say the line. The
+    marker is written with compare_and_set, so two overlapping ticks cannot
+    both say it; a store that cannot be read or written says nothing."""
+    today = ct.date().isoformat()
+    try:
+        held = store.get(REMINDERS_ENDED_KEY)
+        if isinstance(held, dict) and held.get("on") == today:
+            return False
+        return bool(store.compare_and_set(REMINDERS_ENDED_KEY, ABSENT if held is None else held,
+                                          {"on": today, "at": ct.isoformat()}))
+    except Exception as exc:  # noqa: BLE001 - a marker failure must not end the tick
+        logger.warning("could not record the reminders-ended line for %s: %s", today, exc)
+        return False
+
+
 def run(now: datetime, store: Store, instantly: Any = None, ghl: Any = None, dry_run: bool = False,
         free_slots: Optional[List[Any]] = None, notify_fn: Any = notify, log_fn: Any = log_run) -> Dict[str, Any]:
     """One tick over every lead:* state. Returns the summary that is logged."""
@@ -237,6 +271,13 @@ def run(now: datetime, store: Store, instantly: Any = None, ghl: Any = None, dry
                                    decided=res.get("action"), stopped_for=box["stopped_for"])
         finally:
             _release(store, key, dry_run)
+        # A held ladder whose daily Resume reminder has reached its cap shows up
+        # nowhere else. A lead the reminder is withheld from (resume_withheld:
+        # nurture, or one the ladder is over for) is not counted; dry runs do not
+        # take that branch of tick_lead, so they count nothing.
+        if (not dry_run and res.get("action") == "already_stopped" and res.get("reason") == "template_unapproved"
+                and not res.get("resume_withheld") and cadence.template_reminders_ended(state, ct)):
+            res["reminders_ended"] = True
         res["key"] = key
         results.append(res)
 
@@ -249,6 +290,9 @@ def run(now: datetime, store: Store, instantly: Any = None, ghl: Any = None, dry
     unsaved = [r for r in results if r.get("persist_error")]
     digest_lines = [_digest_line(r) for r in results
                     if (r.get("action") in ACTIONABLE and not r.get("quiet")) or r.get("persist_error")]
+    reminders_ended = len([r for r in results if r.get("reminders_ended")])
+    if reminders_ended and not dry_run and _claim_reminders_ended(store, ct):
+        digest_lines.append(_reminders_ended_line(reminders_ended))
     summary = {
         "now": ct.isoformat(),
         "mode": get_mode(),
@@ -258,6 +302,7 @@ def run(now: datetime, store: Store, instantly: Any = None, ghl: Any = None, dry
         "leads_armed": len(results),
         "counts": counts,
         "digest": digest_lines,
+        "reminders_ended": reminders_ended,
         "results": results,
     }
     problems = sum(counts.get(a, 0) for a in PROBLEM_ACTIONS) + len(unsaved)
