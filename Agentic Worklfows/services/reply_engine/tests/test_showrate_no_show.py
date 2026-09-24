@@ -121,8 +121,8 @@ def test_no_show_flag_marks_ghl_noshow_and_schedules_full_recovery(tmp_env, shad
     touches = store.get(rec_key)["touches"]
     assert [(t["template_key"], t["channel"], t["skipped"]) for t in touches] == [
         ("ns_reschedule_email", "email", False), ("ns_d1_email", "email", False),
-        ("ns_d3_value_email", "email", False), ("ns_d7_yes_no_email", "email", False),
-        ("ns_d14_breakup_email", "email", False)]
+        ("ns_d2_value_email", "email", False), ("ns_d3_retry_email", "email", False),
+        ("ns_d5_yes_no_email", "email", False), ("ns_d7_breakup_email", "email", False)]
     assert touches[-1]["meta"]["after"] == "stage:follow_up_later" and touches[-1]["meta"]["nurture"] is True
     assert res["run"]["would_do"] == []  # nothing due at the flag (N3 is at S+25)
     assert rec.requests == []
@@ -164,7 +164,7 @@ def test_rebooking_cancels_pending_recovery(tmp_env, shadow_mode):
     ghl, rec = make_ghl(token=None)
     ns.process(START + timedelta(minutes=10), SOPIO, [HOST], store, ghl, slots_fn=fixed_slots)
     n = ns.cancel_recovery_for_rebooking(store, SOPIO["id"])
-    assert n == 5  # the whole first-miss ladder
+    assert n == 6  # the whole first-miss ladder
     assert store.get(ns.state_key(SOPIO["id"]))["state"] == "done"
     assert ns.run_recovery(START + timedelta(days=3), store, ghl)["would_do"] == []
 
@@ -205,7 +205,7 @@ def test_inbound_reply_cancels_recovery(tmp_env, shadow_mode):
     store = JsonFileStore(tmp_env / "s.json")
     ghl, rec = make_ghl(token=None)
     ns.process(START + timedelta(minutes=10), SOPIO, [HOST], store, ghl, slots_fn=fixed_slots)
-    assert ns.cancel_recovery(store, SOPIO["id"], "replied") == 5
+    assert ns.cancel_recovery(store, SOPIO["id"], "replied") == 6
     assert store.get(ns.state_key(SOPIO["id"]))["done_reason"] == "replied"
     assert ns.run_recovery(START + timedelta(hours=2), store, ghl)["would_do"] == [] and rec.requests == []
 
@@ -304,7 +304,7 @@ def test_a_rescheduled_call_on_the_same_appointment_id_can_no_show_again(tmp_env
     ghl, rec = make_ghl(token=None)
     flagged = START + timedelta(minutes=10)
     ns.process(flagged, SOPIO, [HOST], store, ghl, slots_fn=fixed_slots)
-    assert ns.cancel_recovery(store, SOPIO["id"], "replied") == 5
+    assert ns.cancel_recovery(store, SOPIO["id"], "replied") == 6
     assert store.get(ns.state_key(SOPIO["id"]))["state"] == "done"
 
     later_start = datetime.fromisoformat("2026-10-01T15:00:00-05:00")
@@ -326,7 +326,7 @@ def test_a_rebooking_stops_the_recovery_before_the_breakup_email(tmp_env, shadow
     new_start = datetime.fromisoformat("2026-10-01T12:00:00-05:00")
     rebooked = dict(SOPIO, start_iso=new_start.isoformat(), end_iso=(new_start + timedelta(minutes=15)).isoformat())
     res = ns.process(flagged + timedelta(hours=2), rebooked, [], store, ghl, slots_fn=fixed_slots)
-    assert res["events"] == ["rebooked"] and res["rebooked_cancelled"] == 5
+    assert res["events"] == ["rebooked"] and res["rebooked_cancelled"] == 6
     out = ns.run_recovery(flagged + timedelta(days=14), store, ghl)
     assert out["would_do"] == [] and out["stage_moves"] == []
     assert not [r for r in job_log.read_shadow_log() if r["action"] == "update_opportunity_stage"]
@@ -367,7 +367,7 @@ def test_a_held_call_resets_the_no_show_counter(tmp_env, shadow_mode):
     third = dict(SOPIO, id="appt_missed_again", start_iso=third_start.isoformat(),
                  end_iso=(third_start + timedelta(minutes=15)).isoformat())
     res = ns.process(third_start + timedelta(minutes=10), third, [host_join_for(third)], store, ghl, slots_fn=fixed_slots)
-    assert res["no_show_count"] == 1 and res["recovery_touches"] == 5  # full ladder, not the 2-touch repeat one
+    assert res["no_show_count"] == 1 and res["recovery_touches"] == 6  # full ladder, not the 2-touch repeat one
     assert rec.requests == []
 
 
@@ -404,11 +404,11 @@ def test_sender_ghl_never_moves_the_pipeline_either(tmp_env, shadow_mode, monkey
     flagged = START + timedelta(minutes=10)
     ns.process(flagged, SOPIO, [HOST], store, ghl, slots_fn=fixed_slots)
     monkeypatch.setenv("SHOW_RATE_SENDER", "ghl")
-    out = ns.run_recovery(flagged + timedelta(days=14), store, ghl)
-    # one call 14 days after the flag: the early legs are dropped as too_late
+    out = ns.run_recovery(slots.parse_iso(armed_at(store, "ns_d7_breakup_email")), store, ghl)
+    # one call at the day-7 breakup: the early legs are dropped as too_late
     # (see MAX_LATENESS) and everything still due is skipped as sender_is_ghl
     assert {e["reason"] for e in out["skipped"]} == {"sender_is_ghl", "too_late"}
-    assert [e["template"] for e in out["skipped"] if e["reason"] == "sender_is_ghl"] == ["ns_d14_breakup_email"]
+    assert [e["template"] for e in out["skipped"] if e["reason"] == "sender_is_ghl"] == ["ns_d7_breakup_email"]
     assert not [m for m in out["stage_moves"] if m["action"] == "update_opportunity_stage"]
     # instead Lorenzo gets a task to decide
     assert [m["payload"]["stage"] for m in out["stage_moves"]] == ["follow_up_later"]
@@ -431,14 +431,15 @@ def test_a_crash_after_a_send_does_not_re_send_the_touch(tmp_env, shadow_mode):
 
     real_stage_move = ghl.update_opportunity_stage
     ghl.update_opportunity_stage = explode
+    breakup_at = slots.parse_iso(armed_at(store, "ns_d7_breakup_email"))
     with pytest.raises(RuntimeError):
-        ns.run_recovery(flagged + timedelta(days=14), store, ghl)
+        ns.run_recovery(breakup_at, store, ghl)
     assert boom["n"] == 1
     breakup = [t for t in store.get(ns.recovery_key(SOPIO["id"], START.isoformat()))["touches"]
-               if t["template_key"] == "ns_d14_breakup_email"][0]
+               if t["template_key"] == "ns_d7_breakup_email"][0]
     assert breakup["sent"] is True  # persisted before the stage move ran
     ghl.update_opportunity_stage = real_stage_move
-    out = ns.run_recovery(flagged + timedelta(days=15), store, ghl)
+    out = ns.run_recovery(breakup_at + timedelta(hours=1), store, ghl)
     assert out["would_do"] == []  # "Leaving the door open" is not sent twice
     sent = [r for r in job_log.read_shadow_log() if r.get("payload", {}).get("subject") == "Leaving the door open"]
     assert len(sent) == 1
@@ -612,7 +613,7 @@ def test_the_miss_is_claimed_before_any_ghl_write(tmp_env, shadow_mode):
     assert store.get("no_show_count:%s" % SOPIO["contact_id"]) == 1
     assert res["state"] == "no_show"
     touches = store.get(ns.recovery_key(SOPIO["id"], START.isoformat()))["touches"]
-    assert len(touches) == 5  # the FULL first-no-show ladder, not the 2-touch second one
+    assert len(touches) == 6  # the FULL first-no-show ladder, not the 2-touch second one
     assert not any("Today didn't line up" in (t["body"] or "") for t in touches)
 
 
@@ -688,7 +689,7 @@ def test_a_reply_during_a_tick_is_not_lost_by_the_ticks_write_back(tmp_env, shad
 
 
 def test_a_ladder_that_finishes_late_does_not_overwrite_a_deal_lorenzo_moved(tmp_env, shadow_mode):
-    """The 14-day breakup used to write the stage with no read, so a deal moved
+    """The breakup (day 14 then, day 7 now) used to write the stage with no read, so a deal moved
     to Proposal Sent or Won in the meantime was silently rewritten."""
     store = JsonFileStore(tmp_env / "s.json")
 
@@ -722,8 +723,8 @@ def test_a_ladder_that_finishes_late_does_not_overwrite_a_deal_lorenzo_moved(tmp
     ghl = GHLWithOpportunity(settings.GHL_STAGES["proposal_sent"])
     flagged = START + timedelta(minutes=10)
     ns.process(flagged, SOPIO, [HOST], store, ghl, slots_fn=fixed_slots)
-    d14 = slots.parse_iso(armed_at(store, "ns_d14_breakup_email"))
-    out = ns.run_recovery(d14, store, ghl, slots_fn=fixed_slots)
+    d7 = slots.parse_iso(armed_at(store, "ns_d7_breakup_email"))
+    out = ns.run_recovery(d7, store, ghl, slots_fn=fixed_slots)
     assert ghl.moves == []
     assert out["stage_moves"][0]["status"] == "skipped:stage_already_proposal_sent"
     assert store.get(ns.state_key(SOPIO["id"]))["done_reason"] == "stage_already_proposal_sent"

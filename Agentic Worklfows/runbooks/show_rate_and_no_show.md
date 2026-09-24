@@ -38,26 +38,29 @@ at once (a missed tick, a hold that kept R3 pending until R4 came due), only the
 still go is sent and the earlier ones close as `superseded`.
 
 ## No-show recovery (no_show.py)
-S = scheduled start. "10:00 lead" = 10:00 in the lead's zone (CT when unknown).
+S = scheduled start. "10:00 lead" = 10:00 in the lead's zone (CT when unknown). Business days skip
+Saturday and Sunday. Timing and copy as Lorenzo approved them on 2026-09-24.
 
 | Touch | When |
 | --- | --- |
-| N1 `ns_still_on_email` | S+3, before the flag. Only with Zoom join data (meeting started or host joined) and no lead join. Once per call, never after S+10 |
+| N1 `ns_still_on_email` | S+5, before the flag. Only with Zoom join data (meeting started or host joined) and no lead join. Once per call, never at or after S+10 |
 | N3 `ns_reschedule_email` | the later of the flag and S+25 min, two fresh slots |
-| N4 `ns_d1_email` | next business day, 10:00 lead |
-| N5 `ns_d3_value_email` | 3 business days after, 10:00 lead. Skipped (`no_niche_point`) with no niche/offer on file: never a generic line |
-| N6 `ns_d7_yes_no_email` | 7 days after, next weekday, 10:00 lead |
-| N7 `ns_d14_breakup_email` | 14 days after, next weekday, 10:00 lead, then nurture |
-| N8 `ns_third_miss_email` | third miss only, S+25 |
+| N4 `ns_d1_email` | 1 business day after, 10:00 lead, two fresh slots |
+| N5 `ns_d2_value_email` | 2 business days after, 10:00 lead, two fresh slots. Skipped (`no_niche_point`) with no niche/offer on file: never a generic line |
+| N9 `ns_d3_retry_email` | 3 business days after, 10:00 lead, two fresh slots |
+| N6 `ns_d5_yes_no_email` | 5 business days after, 10:00 lead, two fresh slots |
+| N7 `ns_d7_breakup_email` | 7 business days after, 10:00 lead, then nurture |
+| N8 `ns_third_miss_email` | third miss only, S+25, no slots |
 
 Repeat rules (SOP-005 counter per contact):
-- First miss: N1, N3, N4, N5, N6, N7, then `nurture.enroll(no_show_no_rebook)` and stage Follow Up Later.
-- Second miss: N1, N3 `.repeat` at S+25, N6 three business days after, then nurture (+ pattern note).
-- Third miss: N1, N8 at S+25, then nurture and stage Lost.
+- First miss: N1, N3, N4, N5, N9, N6, N7, then `nurture.enroll(no_show_no_rebook)` and stage Follow Up Later.
+- Second miss: N1, N3 `.repeat` ("Missed you again") at S+25, N6 three business days after, then nurture (+ pattern note).
+- Third miss: N1, N8 ("Closing this out") at S+25, then nurture and stage Lost.
 
 Slot emails claim two fresh times the lead was never offered, and give back the previous offer once
 they reach the lead, so "those times got taken" is true. N4/N5/N6 go out only after an earlier slot
-email in the same ladder reached the lead (else `no_prior_offer`).
+email in the same ladder reached the lead (else `no_prior_offer`); N9 does not say the earlier times
+were taken, so it has no such condition.
 
 Stops: any reply from the lead since the call's start stops the rest (`replied`). A rebooking
 cancels it (`rebooked`). A late join reverses the flag (`late_show`).
@@ -90,9 +93,11 @@ need his approval before anything goes out:
 - `show_rate.confirm_email.<niche>_<offer>`, `show_rate.reminder_24h_email`,
   `show_rate.reminder_morning_email`, `show_rate.reminder_1h_email`
 - `no_show.ns_still_on_email`, `no_show.ns_reschedule_email`, `no_show.ns_reschedule_email.repeat`,
-  `no_show.ns_d1_email`, `no_show.ns_d3_value_email.<niche>_<offer>` (cleaning, bookkeeping,
-  recruiting only), `no_show.ns_d7_yes_no_email`, `no_show.ns_d14_breakup_email`,
-  `no_show.ns_third_miss_email`
+  `no_show.ns_d1_email`, `no_show.ns_d2_value_email.<niche>_<offer>` (cleaning, bookkeeping,
+  recruiting only), `no_show.ns_d3_retry_email`, `no_show.ns_d5_yes_no_email`,
+  `no_show.ns_d7_breakup_email`, `no_show.ns_third_miss_email`
+  (renamed 2026-09-24 from `ns_d3_value_email`, `ns_d7_yes_no_email`, `ns_d14_breakup_email`; an
+  approval recorded under an old id does not carry over)
 
 Unapproved or changed text is held, never sent.
 

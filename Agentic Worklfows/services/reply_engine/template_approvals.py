@@ -739,8 +739,8 @@ def _group_by_combo(texts: Dict[Tuple[str, str], Any]) -> List[Tuple[str, Any, L
 
 
 SHOW_RATE_LEAD_FACING = ("confirm_email", "reminder_24h_email", "reminder_morning_email", "reminder_1h_email")
-NO_SHOW_LEAD_FACING = ("ns_still_on_email", "ns_reschedule_email", "ns_d1_email", "ns_d3_value_email",
-                       "ns_d7_yes_no_email", "ns_d14_breakup_email", "ns_third_miss_email")
+NO_SHOW_LEAD_FACING = ("ns_still_on_email", "ns_reschedule_email", "ns_d1_email", "ns_d2_value_email",
+                       "ns_d3_retry_email", "ns_d5_yes_no_email", "ns_d7_breakup_email", "ns_third_miss_email")
 
 
 def _with_subject(copy: Dict[str, Any]) -> str:
@@ -813,7 +813,7 @@ def _no_show_entries() -> List[Dict[str, Any]]:
             mapping[show_rate.fmt_time_only(start)] = "{time_ct}"
             texts = {}  # type: Dict[Tuple[str, str], Any]
             for niche, offer in NICHE_COMBOS:
-                if key == "ns_d3_value_email" and niche not in show_rate.NICHES:
+                if key == "ns_d2_value_email" and niche not in show_rate.NICHES:
                     continue  # no approved niche line without a campaign: N5 is skipped, never generic
                 def render(slots_text=S_SLOTS_TEXT, **kw):
                     return _swap(_with_subject(no_show.render(key, _appointment(niche, offer, **kw), start,

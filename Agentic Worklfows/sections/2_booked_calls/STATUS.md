@@ -2,6 +2,13 @@
 
 **2026-09-24 (cloud chat).** The reminder and no-show rebuild is on main: email only, every email a reply in the lead's thread, no booking link anywhere. Nothing auto-sends until Lorenzo approves the new template ids (list below). Everything runs in shadow.
 
+## 2026-09-24 go-live copy change (branch `golive/no-show-ladder`, shadow only)
+Lorenzo approved new no-show timing and copy on 2026-09-24 (texts in `copy_signed_off.md`):
+- N1 "I'm on" at S+5 (was S+3), still never at or after S+10; the "If now doesn't work anymore" line is gone.
+- First miss: N3 S+25, day 1 `ns_d1_email`, day 2 `ns_d2_value_email` (was day 3 `ns_d3_value_email`), day 3 `ns_d3_retry_email` (new, "Still want to talk?", two fresh slots), day 5 `ns_d5_yes_no_email` (was day 7 `ns_d7_yes_no_email`), day 7 `ns_d7_breakup_email` (was day 14 `ns_d14_breakup_email`); every day is business days, 10:00 lead time. Hand-offs unchanged.
+- Second miss: new `.repeat` copy ("Missed you again"). Third miss: new N8 copy ("Closing this out", no slots).
+- Catalogue: 103 approvable ids (+1). The renamed and changed ids need Lorenzo's approval again; the Doc and parity reference need a rebuild (section 4).
+
 ## Verified locally (2026-09-24, back on the Mac)
 - Full suite on main 6ea19f1 on Lorenzo's Mac: **12,250 passed, 0 failed**, 0 egress, 0 credential-file opens (the 75 guard tests that fail in the cloud container pass here).
 - `section/2-booked-calls` fast-forwarded to main; `wip/section-2-build` deleted (a local backup branch `wip-section-2-backup` stays in the Mac repo only, never pushed).
@@ -24,10 +31,10 @@
 ## New and changed template ids (for Lorenzo's approval and section 4's parity/Doc rebuild)
 Nothing here auto-sends until Lorenzo approves it in his own terminal (`runbooks/template_approvals.md`).
 - Reminders: `show_rate.confirm_email.<niche>_<offer>` (8: cleaning, bookkeeping, recruiting, generic x reactivation, outbound; copy unchanged), `show_rate.reminder_24h_email` (new copy), `show_rate.reminder_morning_email` (new), `show_rate.reminder_1h_email` (new).
-- No-show: `no_show.ns_still_on_email`, `no_show.ns_reschedule_email`, `no_show.ns_reschedule_email.repeat`, `no_show.ns_d1_email` (new), `no_show.ns_d3_value_email.<niche>_<offer>` (6: cleaning, bookkeeping, recruiting x reactivation, outbound; no generic), `no_show.ns_d7_yes_no_email`, `no_show.ns_d14_breakup_email`, `no_show.ns_third_miss_email` (new).
+- No-show: `no_show.ns_still_on_email`, `no_show.ns_reschedule_email`, `no_show.ns_reschedule_email.repeat`, `no_show.ns_d1_email` (new), `no_show.ns_d2_value_email.<niche>_<offer>` (6: cleaning, bookkeeping, recruiting x reactivation, outbound; no generic), `no_show.ns_d3_retry_email` (new 2026-09-24), `no_show.ns_d5_yes_no_email`, `no_show.ns_d7_breakup_email`, `no_show.ns_third_miss_email` (new). Renamed 2026-09-24 from `ns_d3_value_email`, `ns_d7_yes_no_email`, `ns_d14_breakup_email`.
 - Changed text: `booking.already_booked.awaiting_approval`, `.invite_withheld`, `.invite_on_calendar` (booking-link sentence removed, approved by Lorenzo 2026-09-23).
 - Removed: `show_rate.confirm_sms`, `show_rate.preread_email.*`, `show_rate.reminder_24h_sms`, `show_rate.unconfirmed_task`, `show_rate.reminder_1h_sms`, `show_rate.reminder_15m_sms`, `no_show.ns_still_on_sms`, `no_show.ns_call_task`, `no_show.ns_d1_other_channel*`, the generic `no_show.ns_d3_value_email.generic_*`.
-- Catalogue total: 102 approvable ids.
+- Catalogue total: 103 approvable ids (102 before the 2026-09-24 change).
 
 ## What was built
 - **A1 `services/reply_engine/thread_reply.py`**: sends a lead email as a reply in the lead's Instantly thread (`instantly.reply_to_email(..., to=)` behind `cadence.thread_recipient_ok`), GHL email only when the lead is known and has no thread anywhere. Checks the lead row's own `lead_email` against the appointment email on every route (holds `lead_row_mismatch`, never GHL). Record fields: transport, sent, skipped, reason, result, shadow, route, lead_key, request_issued, maybe_sent, retryable, needs_attention; tuples RETRYABLE_REASONS, NEEDS_ATTENTION_REASONS, MAYBE_SENT_REASONS, GHL_FALLBACK_REASONS. No contact-id lookup (Lorenzo's call): a booking with no email holds `no_lead_email` and is flagged.

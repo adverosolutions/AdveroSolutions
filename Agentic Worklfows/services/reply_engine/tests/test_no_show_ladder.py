@@ -1,5 +1,5 @@
-"""Section 2 no-show ladder (2026-09-23): N1 at S+3, the count 1 / 2 / 3
-ladders and their timing, fresh slots with the "taken" line, the nurture
+"""Section 2 no-show ladder (2026-09-23; go-live timing and copy 2026-09-24):
+N1 at S+5, the count 1 / 2 / 3 ladders and their timing, fresh slots with the "taken" line, the nurture
 hand-off, the reply stop, the signed-off copy, zero HTTP in shadow."""
 import re
 from datetime import datetime, timedelta
@@ -110,8 +110,8 @@ def test_every_rendered_message_is_the_signed_off_copy():
     copy, lines, no_link = signed_off()
     two = "Tue 1:00pm or Wed 2:00pm CT"
     vals = dict(first_name="Sopio", company="Taxfo Accounting", slots=two, call_link=APPT["zoom_link"])
-    cases = [("N1", ns.N1, 1), ("N3", ns.N3, 1), ("N3_repeat", ns.N3, 2), ("N4", ns.N4, 1), ("N6", ns.N6, 1),
-             ("N7", ns.N7, 1), ("N8", ns.N8, 3)]
+    cases = [("N1", ns.N1, 1), ("N3", ns.N3, 1), ("N3_repeat", ns.N3, 2), ("N4", ns.N4, 1), ("N9", ns.N9, 1),
+             ("N6", ns.N6, 1), ("N7", ns.N7, 1), ("N8", ns.N8, 3)]
     rendered = []
     for heading, key, count in cases:
         got = ns.render(key, APPT, START, two, count)
@@ -122,7 +122,7 @@ def test_every_rendered_message_is_the_signed_off_copy():
     got = ns.render(ns.N1, dict(APPT, zoom_link=None), START, "", 1)
     subject, body = copy["N1"]
     assert got["body"] == fill(body, **vals).replace(
-        "I'm on the call now, no rush. Here's the link:\n%s" % APPT["zoom_link"], no_link)
+        "I'm on the call now. Here's the link:\n%s" % APPT["zoom_link"], no_link)
     # N5, one approved line per campaign; none without one
     assert len(lines) == 6
     for (niche, offer), line in sorted(lines.items()):
@@ -141,28 +141,76 @@ def test_every_rendered_message_is_the_signed_off_copy():
         assert "http" not in text.replace(APPT["zoom_link"], "")
 
 
+
+def test_the_2026_09_24_copy_word_for_word():
+    """Lorenzo's go-live copy (2026-09-24), pinned here as well as in copy_signed_off.md."""
+    two = "Tue 1:00pm or Wed 2:00pm CT"
+    got = ns.render(ns.N1, APPT, START, "", 1)
+    assert got == {"subject": "I'm on",
+                   "body": "Hey Sopio,\n\nI'm on the call now. Here's the link:\n%s\n\nLorenzo" % APPT["zoom_link"]}
+    got = ns.render(ns.N1, dict(APPT, zoom_link=None), START, "", 1)
+    assert got == {"subject": "I'm on",
+                   "body": "Hey Sopio,\n\nI'm on the call now. The link is on your calendar invite.\n\nLorenzo"}
+    got = ns.render(ns.N9, APPT, START, two, 1)
+    assert got == {"subject": "Still want to talk?",
+                   "body": "Hey Sopio,\n\nTrying once more to get our call back on the calendar. I can do %s. "
+                           "Just reply with the one that works.\n\nLorenzo" % two}
+    got = ns.render(ns.N3, APPT, START, two, 2)
+    assert got == {"subject": "Missed you again",
+                   "body": "Hey Sopio,\n\nLooks like I missed you again on today's call. If this isn't a priority "
+                           "right now, just let me know. If you still want to talk, I can do %s. If you're not "
+                           "looking to grow Taxfo Accounting right now, that's fine too, just tell me.\n\n"
+                           "Lorenzo" % two}
+    got = ns.render(ns.N8, APPT, START, "", 3)
+    assert got == {"subject": "Closing this out",
+                   "body": "Hey Sopio,\n\nMissed you again today. I don't think this is worth pursuing anymore, "
+                           "and it doesn't make sense for either of us. Wish you the best of luck with Taxfo "
+                           "Accounting.\n\nLorenzo"}
+    # no times held: the slot emails never go out
+    assert ns.unfilled(ns.render(ns.N9, APPT, START, "", 1)) == "no_slots"
+    assert ns.unfilled(ns.render(ns.N3, APPT, START, "", 2)) == "no_slots"
+    assert ns.unfilled(ns.render(ns.N8, APPT, START, "", 3)) is None
+    # no dashes or exclamation marks anywhere in the new copy
+    for key, count in ((ns.N1, 1), (ns.N9, 1), (ns.N3, 2), (ns.N8, 3)):
+        text = str(ns.render(key, APPT, START, two, count))
+        assert "!" not in text and "\u2014" not in text and "\u2013" not in text
+
+
+def test_no_company_on_file_reads_your_business_as_the_day_2_subject_does():
+    bare = dict(APPT, company=None)
+    assert ns.render(ns.N5, bare, START, "x or y", 1)["subject"] == "One thing for your business"
+    assert "If you're not looking to grow your business right now" in ns.render(ns.N3, bare, START, "x or y", 2)["body"]
+    assert "Wish you the best of luck with your business." in ns.render(ns.N8, bare, START, "", 3)["body"]
+
+
 # ------------------------------------------------------------ N1
-def test_n1_goes_at_s3_only_with_zoom_evidence_once_and_never_at_the_flag(tmp_env, shadow_mode):
+def test_n1_goes_at_s5_only_with_zoom_evidence_once_and_never_at_the_flag(tmp_env, shadow_mode):
     store = JsonFileStore(tmp_env / "s.json")
     ghl, rec = make_ghl()
-    assert ns.process(START + timedelta(minutes=2), APPT, [host(APPT)], store, ghl)["events"] == []
-    res = ns.process(START + timedelta(minutes=3), APPT, [host(APPT)], store, ghl)
+    assert ns.STILL_ON_AFTER == timedelta(minutes=5)
+    # S+3 (the old time) and S+4: not yet
+    for minutes in (2, 3, 4):
+        assert ns.process(START + timedelta(minutes=minutes), APPT, [host(APPT)], store, ghl)["events"] == []
+    res = ns.process(START + timedelta(minutes=5), APPT, [host(APPT)], store, ghl)
     assert res["events"] == ["still_on:would_do"] and last_email()["subject"] == "I'm on"
     assert APPT["zoom_link"] in last_email()["message"]
-    assert ns.process(START + timedelta(minutes=5), APPT, [host(APPT)], store, ghl)["events"] == []  # once
+    assert ns.process(START + timedelta(minutes=7), APPT, [host(APPT)], store, ghl)["events"] == []  # once
     # no Zoom evidence (no join data, no meeting-started signal): nothing
     quiet = dict(APPT, id="appt-quiet")
-    assert ns.process(START + timedelta(minutes=3), quiet, [], store, ghl)["events"] == []
+    assert ns.process(START + timedelta(minutes=5), quiet, [], store, ghl)["events"] == []
     # the meeting-started signal alone is evidence
     started = dict(APPT, id="appt-started")
-    res = ns.process(START + timedelta(minutes=4), started, [], store, ghl,
+    res = ns.process(START + timedelta(minutes=6), started, [], store, ghl,
                      meeting_signals={"started": {"at": START.isoformat()}})
     assert res["events"] == ["still_on:would_do"]
     # the lead joined: no nudge
     joined = dict(APPT, id="appt-joined")
     lead = {"at_iso": (START + timedelta(minutes=1)).isoformat(), "name": "Sopio", "email": APPT["email"]}
-    assert "still_on" not in str(ns.process(START + timedelta(minutes=3), joined, [host(joined), lead], store,
+    assert "still_on" not in str(ns.process(START + timedelta(minutes=5), joined, [host(joined), lead], store,
                                             ghl)["events"])
+    # first seen at S+9: still inside the window
+    s9 = dict(APPT, id="appt-s9")
+    assert ns.process(START + timedelta(minutes=9), s9, [host(s9)], store, ghl)["events"] == ["still_on:would_do"]
     # first seen at the flag's moment (S+10): flagged, never "I'm on"
     late = dict(APPT, id="appt-late")
     assert ns.process(START + timedelta(minutes=10), late, [host(late)], store, ghl)["events"] == ["no_show"]
@@ -176,14 +224,15 @@ def test_first_miss_ladder_timing_fresh_slots_and_nurture(tmp_env, shadow_mode):
     picker = RotatingSlots()
     flagged = START + timedelta(minutes=10)
     res = ns.process(flagged, APPT, [host(APPT)], store, ghl, slots_fn=picker)
-    assert res["no_show_count"] == 1 and res["recovery_touches"] == 5
+    assert res["no_show_count"] == 1 and res["recovery_touches"] == 6
     timeline = [(t["template_key"], t["when_iso"]) for t in touches(store)]
     assert timeline == [
         ("ns_reschedule_email", "2026-09-24T15:25:00-05:00"),   # max(flag, S+25)
-        ("ns_d1_email", "2026-09-25T09:00:00-05:00"),           # next business day, 10:00 ET
-        ("ns_d3_value_email", "2026-09-29T09:00:00-05:00"),     # 3 business days (Thu -> Tue)
-        ("ns_d7_yes_no_email", "2026-10-01T09:00:00-05:00"),    # 7 days
-        ("ns_d14_breakup_email", "2026-10-08T09:00:00-05:00"),  # 14 days
+        ("ns_d1_email", "2026-09-25T09:00:00-05:00"),           # 1 business day (Fri), 10:00 ET
+        ("ns_d2_value_email", "2026-09-28T09:00:00-05:00"),     # 2 business days (Mon)
+        ("ns_d3_retry_email", "2026-09-29T09:00:00-05:00"),     # 3 business days (Tue)
+        ("ns_d5_yes_no_email", "2026-10-01T09:00:00-05:00"),    # 5 business days (Thu)
+        ("ns_d7_breakup_email", "2026-10-05T09:00:00-05:00"),   # 7 business days (Mon)
     ]
     assert store.get(ns.OFFERED_SLOTS_KEY) is None  # nothing held at the flag
 
@@ -203,12 +252,22 @@ def test_first_miss_ladder_timing_fresh_slots_and_nurture(tmp_env, shadow_mode):
     assert held == PAIRS[1]  # the first pair was given back once the lead was told it was taken
     assert not set(PAIRS[0]) & set(r["slot"] for r in store.get("offered_slots") or [])
 
-    assert [e["template"] for e in run("ns_d3_value_email")["would_do"]] == ["ns_d3_value_email"]
+    assert [e["template"] for e in run("ns_d2_value_email")["would_do"]] == ["ns_d2_value_email"]
     assert "tax season" in last_email()["message"] and last_email()["subject"] == "One thing for Taxfo Accounting"
-    assert [e["template"] for e in run("ns_d7_yes_no_email")["would_do"]] == ["ns_d7_yes_no_email"]
+    assert sorted(store.get(ns.OFFERED_SLOTS_KEY)) == PAIRS[2]
+    out = run("ns_d3_retry_email")
+    assert [e["template"] for e in out["would_do"]] == ["ns_d3_retry_email"]
+    assert last_email()["subject"] == "Still want to talk?"
+    assert ("Trying once more to get our call back on the calendar. I can do Wed 1:00pm or Thu 2:00pm CT. "
+            "Just reply with the one that works.") in last_email()["message"]
+    assert sorted(store.get(ns.OFFERED_SLOTS_KEY)) == PAIRS[3]  # fresh times, the day-2 pair given back
+    assert out["stage_moves"] == [] and out["nurture"] == []
+    assert [e["template"] for e in run("ns_d5_yes_no_email")["would_do"]] == ["ns_d5_yes_no_email"]
+    assert last_email()["subject"] == "Quick one"
 
-    out = run("ns_d14_breakup_email")
-    assert [e["template"] for e in out["would_do"]] == ["ns_d14_breakup_email"]
+    out = run("ns_d7_breakup_email")
+    assert [e["template"] for e in out["would_do"]] == ["ns_d7_breakup_email"]
+    assert last_email()["subject"] == "Leaving the door open"
     assert out["stage_moves"][0]["payload"]["stage"] == "follow_up_later"
     assert [n["status"] for n in out["nurture"]] == ["done"]
     enrolled = nurture.get(APPT["email"], store=store)
@@ -226,8 +285,10 @@ def test_a_friday_miss_moves_the_business_day_touches_past_the_weekend():
     appt = dict(APPT, start_iso=friday.isoformat(), lead_tz=None)
     when = {t.template_key: t.when_iso for t in ns.recovery_touches(appt, friday + timedelta(minutes=10), 1)}
     assert when["ns_d1_email"] == "2026-09-28T10:00:00-05:00"          # Monday, 10:00 CT
-    assert when["ns_d3_value_email"] == "2026-09-30T10:00:00-05:00"    # Wednesday
-    assert when["ns_d7_yes_no_email"] == "2026-10-02T10:00:00-05:00"   # the next Friday
+    assert when["ns_d2_value_email"] == "2026-09-29T10:00:00-05:00"    # Tuesday
+    assert when["ns_d3_retry_email"] == "2026-09-30T10:00:00-05:00"    # Wednesday
+    assert when["ns_d5_yes_no_email"] == "2026-10-02T10:00:00-05:00"   # the next Friday
+    assert when["ns_d7_breakup_email"] == "2026-10-06T10:00:00-05:00"  # the Tuesday after
     assert when["ns_reschedule_email"] == "2026-09-25T13:25:00-05:00"
     # flagged late (a hand-set status): N3 is never before the flag
     late = {t.template_key: t.when_iso for t in ns.recovery_touches(appt, friday + timedelta(minutes=40), 1)}
@@ -242,10 +303,12 @@ def test_n5_without_a_campaign_is_skipped_and_the_ladder_goes_on(tmp_env, shadow
     ns.process(START + timedelta(minutes=10), appt, [host(appt)], store, ghl, slots_fn=picker)
     for key in ("ns_reschedule_email", "ns_d1_email"):
         ns.run_recovery(slots.parse_iso(armed(store, key, appt)), store, ghl, slots_fn=picker)
-    out = ns.run_recovery(slots.parse_iso(armed(store, "ns_d3_value_email", appt)), store, ghl, slots_fn=picker)
+    out = ns.run_recovery(slots.parse_iso(armed(store, "ns_d2_value_email", appt)), store, ghl, slots_fn=picker)
     assert out["would_do"] == [] and [e["reason"] for e in out["skipped"]] == ["no_niche_point"]
-    out = ns.run_recovery(slots.parse_iso(armed(store, "ns_d7_yes_no_email", appt)), store, ghl, slots_fn=picker)
-    assert [e["template"] for e in out["would_do"]] == ["ns_d7_yes_no_email"]
+    out = ns.run_recovery(slots.parse_iso(armed(store, "ns_d3_retry_email", appt)), store, ghl, slots_fn=picker)
+    assert [e["template"] for e in out["would_do"]] == ["ns_d3_retry_email"]
+    out = ns.run_recovery(slots.parse_iso(armed(store, "ns_d5_yes_no_email", appt)), store, ghl, slots_fn=picker)
+    assert [e["template"] for e in out["would_do"]] == ["ns_d5_yes_no_email"]
     assert rec.requests == []
 
 
@@ -264,12 +327,17 @@ def test_second_and_third_misses(tmp_env, shadow_mode):
     # second miss (Tuesday): the .repeat reschedule at S+25, N6 three business days on (Friday)
     t2 = [(t["template_key"], t["when_iso"]) for t in touches(store, second)]
     assert t2 == [("ns_reschedule_email", "2026-09-29T14:25:00-05:00"),
-                  ("ns_d7_yes_no_email", "2026-10-02T09:00:00-05:00")]
+                  ("ns_d5_yes_no_email", "2026-10-02T09:00:00-05:00")]
     out = ns.run_recovery(slots.parse_iso(t2[0][1]), store, ghl, appointment_id="appt2", slots_fn=picker)
     assert [e["template"] for e in out["would_do"]] == ["ns_reschedule_email"]
-    assert last_email()["subject"] == "Whenever works for you"
+    assert last_email()["subject"] == "Missed you again"
+    assert ("Looks like I missed you again on today's call. If this isn't a priority right now, just let me know. "
+            "If you still want to talk, I can do ") in last_email()["message"]
+    assert "If you're not looking to grow Taxfo Accounting right now, that's fine too, just tell me." in (
+        last_email()["message"])
+    assert out["stage_moves"] == [] and out["nurture"] == []
     out = ns.run_recovery(slots.parse_iso(t2[1][1]), store, ghl, appointment_id="appt2", slots_fn=picker)
-    assert [e["template"] for e in out["would_do"]] == ["ns_d7_yes_no_email"]
+    assert [e["template"] for e in out["would_do"]] == ["ns_d5_yes_no_email"]
     assert [m["payload"].get("note") for m in out["stage_moves"]] == ["note:second_no_show_pattern"]
     assert [n["status"] for n in out["nurture"]] == ["done"]
 
@@ -278,7 +346,10 @@ def test_second_and_third_misses(tmp_env, shadow_mode):
     assert t3 == [("ns_third_miss_email", "2026-10-06T14:25:00-05:00")]
     out = ns.run_recovery(slots.parse_iso(t3[0][1]), store, ghl, appointment_id="appt3", slots_fn=picker)
     assert [e["template"] for e in out["would_do"]] == ["ns_third_miss_email"]
-    assert last_email()["subject"] == "If things change"
+    assert last_email()["subject"] == "Closing this out"
+    assert ("Missed you again today. I don't think this is worth pursuing anymore, and it doesn't make sense for "
+            "either of us. Wish you the best of luck with Taxfo Accounting.") in last_email()["message"]
+    assert "http" not in last_email()["message"] and " or " not in last_email()["message"]  # no slots
     assert out["stage_moves"][0]["payload"]["stage"] == "lost"
     assert out["nurture"][0]["status"] == "done" and out["nurture"][0]["created"] is False
     assert rec.requests == []
@@ -310,6 +381,6 @@ def test_a_reply_after_the_call_stops_the_ladder_and_emails_go_in_the_thread(tmp
     out = ns.run_recovery(slots.parse_iso(armed(store, "ns_d1_email", appt)), store, ghl, slots_fn=picker,
                           instantly=instantly)
     assert out["would_do"] == [] and [c["reason"] for c in out["cancelled"]] == ["replied"]
-    assert out["cancelled"][0]["touches"] == 4
+    assert out["cancelled"][0]["touches"] == 5
     assert store.get(ns.state_key(appt["id"]))["done_reason"] == "replied"
     assert rec.requests == [] and irec.requests == []
