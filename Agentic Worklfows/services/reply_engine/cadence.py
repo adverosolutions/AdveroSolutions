@@ -742,6 +742,8 @@ def arm(state: Any, now: datetime, store: Any = None, restart: bool = False) -> 
     cad.pop("d6_notified_at", None)
     cad.pop("last_blocked", None)
     cad.pop("last_skipped", None)
+    cad.pop("slot_misses", None)
+    cad.pop("slot_miss_on", None)
     cad.pop("veto_undeliverable_at", None)
     cad.pop("d1_held_no_base_url_at", None)
     cad.pop("recipient_hold", None)
@@ -1373,6 +1375,49 @@ def fresh_slots(state: Any, now: datetime, free_slots: List[Any], store: Any = N
     return two[:count]
 
 
+def release_earlier_offers(store: Any, lead_email: Any, keep: List[Any]) -> int:
+    """Give back this lead's earlier times: drop every row of ``lead_email``
+    from the shared registry (``OFFERED_REGISTRY_KEY``, the one approval.py's
+    claim_slots / the first-reply card also write) whose time is not in
+    ``keep``. Called when a touch that offers new times has gone out, whose
+    body tells the lead the earlier ones "got taken", so they are free for
+    other leads again. Rows of any other lead are never touched, and
+    ``state.offered_slots`` is not this function's: the lead is still never
+    re-offered those times. Atomic (``store.mutate``) where the store has it.
+    Returns how many rows were dropped. Never raises."""
+    if store is None or not lead_email:
+        return 0
+    lead = str(lead_email).strip().lower()
+    kept = set(_parse(s) for s in (keep or []) if s)
+    kept.discard(None)
+    box = {"dropped": 0}
+
+    def _goes(row: Any) -> bool:
+        if not (isinstance(row, dict) and str(row.get("lead") or "").strip().lower() == lead):
+            return False
+        # Compared as instants: the same time written with another offset is the new offer, kept.
+        return _parse(row.get("slot")) not in kept
+
+    def _drop(rows: Any) -> List[Any]:
+        rows = list(rows or [])
+        out = [r for r in rows if not _goes(r)]
+        box["dropped"] = len(rows) - len(out)
+        return out
+
+    try:
+        store.mutate(OFFERED_REGISTRY_KEY, _drop, default=[])
+    except AttributeError:  # a store without the atomic primitive
+        try:
+            store.set(OFFERED_REGISTRY_KEY, _drop(store.get(OFFERED_REGISTRY_KEY, []) or []))
+        except Exception as exc:  # noqa: BLE001 - a held time only expires later; never fail the tick
+            logger.warning("could not release the earlier times of %s: %s", lead, exc)
+            return 0
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("could not release the earlier times of %s: %s", lead, exc)
+        return 0
+    return box["dropped"]
+
+
 def reserve_slots(state: Any, two: List[Any], now: datetime, store: Any = None, day: Optional[int] = None) -> List[str]:
     """Hold these slots against every lead until they are in the past.
 
@@ -1965,6 +2010,8 @@ def _repair_from_marker(state: Any, day: int, marker: Dict[str, Any], now: datet
     cad["next_send_at"] = nxt.isoformat() if nxt else None
     state.cadence = cad
     try:
+        if marker.get("slots"):  # that body told the lead the earlier times went (tick_lead does the same)
+            release_earlier_offers(store, _field(state, "lead_email"), list(marker.get("slots") or []))
         reserve_slots(state, list(marker.get("slots") or []), sent_at, store, day=day)
     except Exception as exc:  # noqa: BLE001 - a registry hiccup must not lose the repair
         logger.warning("could not re-reserve the repaired slots for D%d: %s", day, exc)
@@ -1997,10 +2044,32 @@ def move_to_follow_up_later(state: Any, ghl: Any, now: datetime, reason: str = "
     return rec if isinstance(rec, dict) else {"result": rec}
 
 
-# How many consecutive days a slot-bearing touch may be skipped (no slots, or an
-# unverifiable slot source) before the ladder is stopped rather than left to
-# look like it is still running.
+def _enroll_nurture(state: Any, reason: str, now: datetime, store: Any) -> Optional[str]:
+    """nurture.enroll this lead (the engine's own store only: shadow-safe).
+    None on success, else the error line for the result's post_errors. Never
+    raises: a failed enrollment must not undo the GHL move or crash the tick."""
+    email = _field(state, "lead_email")
+    try:
+        from services.reply_engine import nurture as nurture_mod
+
+        nurture_mod.enroll(email, reason, now, store, campaign_id=_field(state, "campaign_id"))
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("nurture.enroll(%s) failed for %s: %s", reason, email, exc)
+        return "nurture: %s" % exc
+    return None
+
+
+# How many consecutive days a touch may be skipped for an unverifiable slot
+# source before the ladder is stopped rather than left to look like it is
+# still running.
 SKIP_STALL_DAYS = 2
+# No two free times (skipped_no_slots): the day is retried every business day.
+# The NO_SLOTS_ALERT_MISSES-th consecutive miss sends Lorenzo one alert and the
+# retries go on; the NO_SLOTS_STOP_MISSES-th stops the ladder as
+# slots_unavailable. Counted once per business day on the cadence dict
+# (``slot_misses`` / ``slot_miss_on``; absent = 0) and reset when a touch sends.
+NO_SLOTS_ALERT_MISSES = 2
+NO_SLOTS_STOP_MISSES = 5
 # How many days in a row the copy gate may refuse the same day before it is
 # parked. The gate itself never sends; the failure mode is a silent stall plus a
 # high-priority push on every hourly tick.
@@ -2052,13 +2121,73 @@ def _note_skip(state: Any, day: int, kind: str, now: datetime) -> Tuple[bool, in
     return False, days
 
 
+def _note_slot_miss(state: Any, now: datetime) -> Tuple[bool, int]:
+    """Count one skipped_no_slots day. Returns (already_counted_today, misses):
+    the count goes up once per CT date, however many ticks retry that day."""
+    today = slot_rules.to_tz(now).date().isoformat()
+    cad = dict(getattr(state, "cadence", None) or {})
+    misses = _count_of(cad.get("slot_misses"))
+    if cad.get("slot_miss_on") == today and misses:
+        return True, misses
+    misses += 1
+    cad["slot_misses"] = misses
+    cad["slot_miss_on"] = today
+    state.cadence = cad
+    return False, misses
+
+
 def _clear_skip(state: Any) -> None:
     cad = getattr(state, "cadence", None) or {}
-    if cad.get("last_skipped") or cad.get("last_blocked"):
+    if (cad.get("last_skipped") or cad.get("last_blocked") or "slot_misses" in cad
+            or "slot_miss_on" in cad):
         cad = dict(cad)
         cad.pop("last_skipped", None)
         cad.pop("last_blocked", None)
+        cad.pop("slot_misses", None)
+        cad.pop("slot_miss_on", None)
         state.cadence = cad
+
+
+def _no_slots_miss(state: Any, day: int, now: datetime, base: Dict[str, Any], notify_fn: Any, quiet: bool,
+                   found: int) -> Dict[str, Any]:
+    """A slot-bearing day found fewer than two free times: count the miss
+    (once per business day), alert Lorenzo once on the
+    NO_SLOTS_ALERT_MISSES-th in a row and keep retrying, stop the ladder as
+    slots_unavailable on the NO_SLOTS_STOP_MISSES-th. Counts only on a public
+    topic (_lead_push)."""
+    ct = slot_rules.to_tz(now)
+    skip = "skipped_no_slots"
+    counted, misses = _note_slot_miss(state, ct)
+    if misses >= NO_SLOTS_STOP_MISSES:
+        stop(state, "slots_unavailable", ct)
+        if not counted:
+            who, message, private = _lead_push(
+                state,
+                "D%d could not be sent on %d days running (%s). The ladder is stopped so it does not "
+                "look like it is still running." % (day, misses, skip))
+            notify_fn(
+                "Cadence stopped for %s: no bookable times" % who,
+                message,
+                priority="high",
+                tags=["warning"],
+                **private
+            )
+        return dict(base, action="stopped", reason="slots_unavailable", day=day, skipped=skip, days=misses)
+    out = dict(base, action=skip, day=day, slots_found=found, quiet=quiet, days=misses)
+    if misses == NO_SLOTS_ALERT_MISSES and not counted:
+        who, message, private = _lead_push(
+            state,
+            "D%d found no two free times on %d business days running. It retries every business day and the "
+            "ladder stops after %d days without times." % (day, misses, NO_SLOTS_STOP_MISSES))
+        notify_fn(
+            "Cadence: no bookable times for %s" % who,
+            message,
+            priority="high",
+            tags=["warning"],
+            **private
+        )
+        out["alerted"] = True
+    return out
 
 
 def _recipient_hold(state: Any, day: int, now: datetime, email: Any, notify_fn: Any) -> Dict[str, Any]:
@@ -2299,7 +2428,7 @@ def hold_cause(reason: Optional[str]) -> str:
       every ladder at once, clears by itself once that is fixed, and never
       counts toward the stall. A reason the gate does not list is ``system``
       too: it holds and never stops a ladder.
-    - ``approve``: approve the ids (jobs/approve_templates.py).
+    - ``approve``: approve the template in the emails doc.
     - ``lead_data``: approving changes nothing; a value of the lead's (first
       name, company, thread subject) does not fit the template, or the copy
       check refused it.
@@ -2330,7 +2459,7 @@ def hold_advice(reason: Optional[str]) -> str:
         return ("Nothing to approve: the template gate could not read its catalogue or approvals (%s). Fix that "
                 "(see /health) and the day goes out on the next tick." % (reason or "registry_error"))
     if cause == "approve":
-        return "Approve the ids with jobs/approve_templates.py."
+        return 'Its template is not approved yet; approve it in the emails doc, then tell Claude "done".'
     if reason == "missing_lead_data":
         return ("Approving changes nothing: this email needs the lead's company, niche or offer, and the lead's "
                 "record does not have it. Fix the lead's record, or answer the lead by hand.")
@@ -2833,6 +2962,29 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
         return dict(base, action="resumed_after_auto_reply", day=pending_day(state), next_send_at=nxt.isoformat())
 
     if cad.get("stopped_reason"):
+        # A "not now" answer that arrived while the ladder ran: the reply's own
+        # pipeline stopped the ladder as inbound_reply before the router set
+        # the not-now status, so the follow_up_later branch below never runs
+        # for it. The 90-day nurture is enrolled here instead, once: an active
+        # record is left alone (one read per tick, no write). An error rides
+        # on this tick's result as post_errors and never crashes the tick.
+        stopped_errors = []  # type: List[str]
+        if not dry_run and terminal_reason(state) == "follow_up_later":
+            try:
+                enrolled_now = in_nurture(state, store)
+            except Exception as exc:  # noqa: BLE001 - surface, retry next tick
+                logger.warning("could not read the nurture record of %s: %s", email, exc)
+                enrolled_now, stopped_errors = True, ["nurture: %s" % exc]
+            if not enrolled_now:
+                failed = _enroll_nurture(state, "not_now_reply", ct, store)
+                if failed:
+                    stopped_errors.append(failed)
+
+        def _stopped(out: Dict[str, Any]) -> Dict[str, Any]:
+            if stopped_errors:
+                out["post_errors"] = list(stopped_errors)
+            return out
+
         if cad.get("stopped_reason") == "inbound_reply" and cad.get("needs_fresh_draft") and not cad.get("stall_notified_at"):
             # Say it once: a human replied, the cadence is parked until Lorenzo
             # approves the fresh answer. Silence here loses positive leads.
@@ -2847,8 +2999,8 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
                 card_open = None
             if not dry_run:
                 state.cadence = dict(cad, stall_notified_at=ct.isoformat())
-            return dict(base, action="awaiting_fresh_draft", reason="inbound_reply", day=pending_day(state),
-                        card_open=card_open)
+            return _stopped(dict(base, action="awaiting_fresh_draft", reason="inbound_reply",
+                                 day=pending_day(state), card_open=card_open))
         if cad.get("stopped_reason") == "template_unapproved" and not dry_run:
             # Keeps a live, signed Resume link in Lorenzo's hands while the
             # ladder stays stopped (daily, and at once when the ids pass),
@@ -2858,7 +3010,8 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
             # "ready to resume" push.
             ended = terminal_reason(state)
             if ended:
-                return dict(base, action="already_stopped", reason=cad["stopped_reason"], resume_withheld=ended)
+                return _stopped(dict(base, action="already_stopped", reason=cad["stopped_reason"],
+                                     resume_withheld=ended))
             # A lead in the 90-day nurture is done with the ladder too. A
             # nurture record that cannot be read still reminds: the push only
             # reaches Lorenzo, and the send path holds on that error anyway.
@@ -2868,11 +3021,12 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
                 logger.warning("could not read the nurture record of %s: %s", email, exc)
                 nurtured = False
             if nurtured:
-                return dict(base, action="already_stopped", reason=cad["stopped_reason"], resume_withheld="nurture")
+                return _stopped(dict(base, action="already_stopped", reason=cad["stopped_reason"],
+                                     resume_withheld="nurture"))
             reminded = _template_stop_reminder(state, ct, notify_fn)
             if reminded is not None:
-                return dict(base, **reminded)
-        return dict(base, action="already_stopped", reason=cad["stopped_reason"])
+                return _stopped(dict(base, **reminded))
+        return _stopped(dict(base, action="already_stopped", reason=cad["stopped_reason"]))
 
     reason = stop_reason(state, ct)
     if reason:
@@ -2890,6 +3044,11 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
                     rec = {"error": "follow_up_later: %s" % exc}
                 if isinstance(rec, dict) and rec.get("error"):
                     post_errors.append(str(rec["error"]))
+                # A "not now" answer: the lead hears from us again in the
+                # 90-day nurture. After the GHL move, and never in its way.
+                failed = _enroll_nurture(state, "not_now_reply", ct, store)
+                if failed:
+                    post_errors.append(failed)
             out = dict(base, action="follow_up_later", reason=reason)
             if post_errors:
                 out["post_errors"] = post_errors
@@ -3066,11 +3225,16 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
             # Nine of the ten cadence emails carry slots, so a skip that never
             # advances, never stops and never stamps anything is a lead getting
             # zero follow-ups while the digest repeats the same line every hour.
-            # Say it once a day, and after SKIP_STALL_DAYS stop the ladder with a
-            # reason of its own so a stall cannot pass for a running cadence.
+            # Say it once a day. No free times: retried every business day,
+            # one alert after NO_SLOTS_ALERT_MISSES misses in a row, stopped
+            # after NO_SLOTS_STOP_MISSES (_no_slots_miss). An unverifiable slot
+            # source stops after SKIP_STALL_DAYS. Either stop has a reason of
+            # its own so a stall cannot pass for a running cadence.
             if dry_run:
                 return dict(base, action=skip, day=day, slots_found=len(two), dry_run=True)
             quiet, days = _note_skip(state, day, skip, ct)
+            if skip == "skipped_no_slots":
+                return _no_slots_miss(state, day, ct, base, notify_fn, quiet, len(two))
             if days >= SKIP_STALL_DAYS:
                 stop(state, "slots_unavailable", ct)
                 if not quiet:
@@ -3295,6 +3459,10 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
         # before the marker is confirmed: a crash in between used to leave two
         # emailed times with no row in the registry, free for the next lead and
         # free to be re-offered to this one on the very next day.
+        # The body just told the lead the earlier times "got taken": this
+        # lead's earlier registry rows go back in the pool first (only when new
+        # times went out; E2 offers none and releases nothing).
+        released = release_earlier_offers(store, email, two) if two else 0
         reserve_slots(state, two, ct, store, day=day)
         # Confirm the marker before touching the state: from here on the day is
         # spent, whatever fails next.
@@ -3305,6 +3473,7 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
                                                  "shadow": bool(result.get("shadow", True)),
                                                  "result_id": result.get("id")})
     else:
+        released = 0
         reserve_slots(state, two, ct, store, day=day)
 
     # Persist the touch before anything else can fail: a crash after this point
@@ -3323,8 +3492,14 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
         except Exception as exc:  # noqa: BLE001
             logger.warning("move_to_follow_up_later failed for %s: %s", email, exc)
             post_errors.append("follow_up_later: %s" % exc)
+        # ... and into the 90-day nurture, whatever the GHL move did.
+        failed = _enroll_nurture(state, "no_reply_after_sequence", ct, store)
+        if failed:
+            post_errors.append(failed)
     out = dict(base, action=("would_send" if kind == "would_do" else "sent"), day=day, touch=touch.to_dict(),
                records=records, record=rec)
+    if released:
+        out["released_slots"] = released
     if post_errors:
         out["post_errors"] = post_errors
     return out
