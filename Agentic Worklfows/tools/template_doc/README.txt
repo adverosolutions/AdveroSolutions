@@ -4,6 +4,7 @@ Drive folder: 1yww1rrk0blgKnD98CkIY95XPEsaDZQ9c (older doc versions there are re
 manifest.json = the text of every tagged block as uploaded (379 blocks; baseline for diffs).
 Read back: Drive download_file_content(fileId, exportMimeType=text/plain) -> base64 JSON saved to a file -> decode to a .txt
 Diff:      python3 diff_doc.py <export.txt> --manifest manifest.json
+Route:     python3 route_doc.py <export.txt> [--json out.json] [--md out.md]   (which section and file owns each changed/deleted/new block, plus flags)
 Self-test: python3 selftest.py   (paths are relative to this folder; works in any checkout or worktree)
 drive_export.txt = Drive's own export right after upload (diffs empty against manifest).
 The Drive connector cannot edit a doc's text in place (update_file changes title and folder only),
