@@ -9,6 +9,7 @@
 - **Prompts updated** (reviewed, APPROVE twice): normal capitalization; the no-Claudeisms rule; T3 hints at a similar past client (no name, no figures, a plain-words line on what was built is fine); no touch repeats a result the proposal already states (reply only when asked). All 9 agreed samples pass the copy gate.
 
 ## Next
+0. **Watch trigger (in progress, 2026-09-23):** Lorenzo wants drafts when a client replies or when he moves a GHL card, not a fixed 08:30 run. Built: `services/upwork_followup/watch.py`, `watch_task_prompt.md`, `--watch-plan` / `--ingest-light` in `jobs/upwork_followup.py`, `tests/test_watch.py`. First review REJECTED with 4 defects, now being fixed by worker-heavy: (1) a light pull lacking the new message still marks it seen; (2) a system event on Lorenzo's side hides a client message; (3) merged-but-not-run counts as handled; (4) a failing or slow full run repeats every 30 min. Unreviewed code is on GitHub branch `wip/section-3-watch` (snapshot before the fixes). If this chat ends: get the fixed version reviewed once more, commit to `section/3-upwork`, push to main, delete the wip branch, then ask Lorenzo before creating the scheduled task (cron `*/30 8-18 * * 1-5` plus `0 19 * * 1-5`; turn off any 08:30 task).
 1. Lorenzo's "say yes" items below.
 2. First real run with the new prompts: main folder, after `git pull` there, with Lorenzo's OK for the model spend (read only, drafts to a file). The one quiet chat's T1 was due 09-24.
 
