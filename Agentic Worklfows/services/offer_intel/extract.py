@@ -14,6 +14,7 @@ still paraphrases and still guesses:
 A field that fails is dropped to null and listed under ``dropped`` with the
 reason, so the hand check shows what the model tried to invent.
 """
+import json
 import logging
 import re
 from typing import Any, Dict, List, Optional, Tuple
@@ -50,8 +51,20 @@ Keys:
 - industry: the CLIENT's industry, as stated (for example "dental practices", "commercial roofing"). Not the author's industry.
 - buyer_role: who bought (owner, office manager, marketing director).
 - geo: the client's country, state or city.
-- pricing_model: one of setup_plus_retainer, retainer, rev_share, pay_per_meeting, pay_per_lead, performance, one_off_build, other.
-- setup_usd, monthly_usd, deal_usd: numbers in US dollars as stated (3000, not "$3k"). deal_usd is a one-off or total contract figure.
+- pricing_model: one of these, as stated for this client:
+  setup_plus_retainer = a one-time setup fee AND a fixed monthly fee, both stated.
+  retainer = a fixed monthly fee with no setup fee stated.
+  rev_share = a percentage of the client's revenue or profit.
+  pay_per_meeting = paid per booked or attended call or appointment.
+  pay_per_lead = paid per lead delivered to the client, never a flat price for a job.
+  performance = paid per closed deal, sale or other result that is not a meeting or a lead (commission).
+  one_off_build = one fixed price for one job or build, whatever its size (a $5 flat job is one_off_build).
+  other = hourly, salary, equity or anything else stated.
+  A fixed fee combined with pay per result (for example a monthly fee plus pay per closed call) takes the per-result model, never setup_plus_retainer or retainer; setup_plus_retainer needs a stated setup fee.
+- setup_usd, monthly_usd, deal_usd: numbers in US dollars as stated (3000, not "$3k").
+- setup_usd: one client's one-time setup fee.
+- monthly_usd: one client's recurring monthly fee. Null for the author's total monthly revenue or MRR across clients ("first $10k month", "hit $20k MRR") and for projected fees.
+- deal_usd: the price ONE client agreed to pay for this deal (signed or paid): a one-off build price or that client's total contract. Null for month or lifetime revenue totals ("First $10k month", "Contracted Revenue = $34,348"), projected or possible scope ("$10k+ scope"), lifetime value projections, prices quoted on a call or in a proposal the client has not accepted, and sums across several clients.
 - emails_sent, reply_rate_pct, positive_replies, calls_booked: numbers from the cold email result, if stated.
 - guarantee: the guarantee offered, as stated.
 - list_source: where the lead list came from (Apollo, Google Maps, LinkedIn Sales Navigator, job boards, Clay).
@@ -60,6 +73,12 @@ Keys:
 - time_to_result: how long it took, as stated.
 - experience: the author's stage, as stated (first client, months in the program).
 """
+
+# The sentence shared/llm.py appends in json_mode. extract() asks for JSON
+# itself and parses locally (parse_json), so the billed prompt is unchanged
+# but a model that copies Skool's markdown escapes ("\\(") is repaired
+# instead of failing the post.
+JSON_ONLY = "\n\nRespond with a single JSON object and nothing else. No prose, no code fences."
 
 
 # ----------------------------------------------------------------- matching
@@ -192,9 +211,58 @@ def verify(raw: Any, source: str, has_media: bool = False) -> Dict[str, Any]:
             "filled": sum(1 for f in ALL_FIELDS if fields[f])}
 
 
+# --------------------------------------------------------------- parse JSON
+_VALID_ESCAPE = re.compile(r'\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4})')
+
+
+def repair_escapes(text: str) -> str:
+    """Double every backslash that does not start a valid JSON escape, left to
+    right, so an existing valid pair (such as a double backslash) stays a pair."""
+    out = []
+    i = 0
+    while i < len(text):
+        if text[i] != "\\":
+            out.append(text[i])
+            i += 1
+            continue
+        match = _VALID_ESCAPE.match(text, i)
+        if match:
+            out.append(match.group(0))
+            i = match.end()
+        else:
+            out.append("\\\\")
+            i += 1
+    return "".join(out)
+
+
+def parse_json(raw: Any) -> Dict[str, Any]:
+    """The model's reply as a dict. Repairs invalid backslash escapes (Skool's
+    markdown "\\(" copied into a quote) and falls back to the outermost {...}.
+    Anything else raises llm.LLMError, which analyze.run counts as an error."""
+    if isinstance(raw, dict):
+        return raw
+    text = str(raw or "").strip()
+    text = re.sub(r"^```(?:json)?\s*", "", text)
+    text = re.sub(r"\s*```$", "", text)
+    candidates = [text, repair_escapes(text)]
+    span = re.search(r"\{.*\}", text, re.S)
+    if span:
+        candidates += [span.group(0), repair_escapes(span.group(0))]
+    for candidate in candidates:
+        try:
+            parsed = json.loads(candidate)
+        except ValueError:
+            continue
+        if isinstance(parsed, dict):
+            return parsed
+        raise llm.LLMError("model did not return a JSON object: %s" % text[:300])
+    raise llm.LLMError("model did not return valid JSON: %s" % text[:300])
+
+
 def extract(record: Dict[str, Any]) -> Dict[str, Any]:
     source = source_text(record)
-    raw = llm.complete("research", SYSTEM, source, max_tokens=MAX_TOKENS, json_mode=True)
+    raw = parse_json(llm.complete("research", SYSTEM + JSON_ONLY, source, max_tokens=MAX_TOKENS,
+                                  json_mode=False))
     result = verify(raw, source, has_media=bool(record.get("has_media")))
     result["model_role"] = "research"
     return result

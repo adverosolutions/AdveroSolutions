@@ -19,6 +19,9 @@ WIN_COLUMNS = ("post_id", "posted_at", "url", "author_id", "author_name", "title
                "tools", "copy_angle", "time_to_result", "experience", "buyer_role", "geo", "evidence_strength",
                "has_media", "fields_filled", "fields_dropped")
 
+# Price medians read only one-client wins: month totals and call quotes are not one client's price.
+CLOSED_WIN_TYPES = ("new_client", "first_client")
+
 
 def win_rows(raws: List[Dict[str, Any]], analyzed: List[Dict[str, Any]],
              data: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
@@ -97,6 +100,7 @@ def patterns(rows: List[Dict[str, Any]], as_of: datetime,
         now_30 = sum(1 for r in items if _within(r, as_of, 0, 30))
         prev_30 = sum(1 for r in items if _within(r, as_of, 30, 60))
         winners_90 = len(set(r["author_id"] for r in recent_90))
+        closed = [r for r in items if r.get("win_type") in CLOSED_WIN_TYPES]
         fit = [name for name, hit in (("mechanism", mechanism in our_mech), ("industry", industry in our_ind)) if hit]
         out.append({
             "industry": industry, "mechanism": mechanism,
@@ -105,9 +109,9 @@ def patterns(rows: List[Dict[str, Any]], as_of: datetime,
             "winners_90d": winners_90,
             "wins": len(items),
             "wins_30d": now_30, "wins_prev_30d": prev_30, "trend": _trend(now_30, prev_30),
-            "median_setup_usd": _median([r.get("setup_usd") for r in items]),
-            "median_monthly_usd": _median([r.get("monthly_usd") for r in items]),
-            "median_deal_usd": _median([r.get("deal_usd") for r in items]),
+            "median_setup_usd": _median([r.get("setup_usd") for r in closed]),
+            "median_monthly_usd": _median([r.get("monthly_usd") for r in closed]),
+            "median_deal_usd": _median([r.get("deal_usd") for r in closed]),
             "cold_email_share": round(sum(1 for r in items if r.get("channel") == "cold_email") / float(len(items)), 2),
             "with_numbers": sum(1 for r in items if r.get("evidence_strength") == "numbers"),
             "crowded": winners_90 >= crowd_min,

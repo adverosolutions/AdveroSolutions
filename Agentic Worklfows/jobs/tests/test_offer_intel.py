@@ -269,6 +269,45 @@ def test_a_post_with_no_numbers_but_a_screenshot_is_screenshot_only():
     assert extract.verify({}, "Best month yet.", has_media=False)["evidence_strength"] == "vague"
 
 
+
+# Skool's markdown escapes "\(" in the post; the model copies them into a quote.
+BAD_JSON = ('```json\n{"offer_one_line": {"value": "AI voice agent \\"Ava\\"", '
+            '"quote": "built an AI voice agent \\(inbound\\) for a med spa"},\n'
+            '"copy_angle": {"value": "line one\\nline two", "quote": "the client' + chr(0x2019) + 's go-to"},\n'
+            '"list_source": {"value": "C:\\\\leads", "quote": "x"}}\n```')
+
+
+def test_invalid_markdown_escapes_are_repaired_and_valid_escapes_decode():
+    parsed = extract.parse_json(BAD_JSON)
+    assert parsed["offer_one_line"]["quote"] == "built an AI voice agent \\(inbound\\) for a med spa"
+    assert parsed["offer_one_line"]["value"] == 'AI voice agent "Ava"'
+    assert parsed["copy_angle"]["value"] == "line one\nline two"
+    assert parsed["copy_angle"]["quote"] == "the client" + chr(0x2019) + "s go-to"
+    assert parsed["list_source"]["value"] == "C:\\leads"
+
+
+def test_extract_keeps_a_field_whose_quote_carries_a_markdown_escape(data_dir):
+    llm.register_fake("research", lambda s, u, j: BAD_JSON)
+    record = {"post_id": "p1", "title": "Win", "content": "Just built an AI voice agent \\(inbound\\) for a med spa."}
+    result = extract.extract(record)
+    assert extract.value(result, "offer_one_line") == 'AI voice agent "Ava"'
+    assert "offer_one_line" not in result["dropped"]
+
+
+def test_garbage_from_the_model_is_an_llm_error():
+    with pytest.raises(llm.LLMError):
+        extract.parse_json("Sorry, I can't help with that.")
+    with pytest.raises(llm.LLMError):
+        extract.parse_json("[1, 2]")
+
+
+def test_the_extract_prompt_pins_prices_to_one_client_and_defines_each_pricing_model():
+    for rule in ("ONE client", "Contracted Revenue = $34,348", "$10k+ scope", "$5 flat job is one_off_build",
+                 "setup_plus_retainer needs a stated setup fee", "takes the per-result model"):
+        assert rule in extract.SYSTEM
+    for model in extract.PRICING_MODELS:
+        assert "  %s = " % model in extract.SYSTEM
+
 # -------------------------------------------------------------------- gate
 def test_the_gate_escalates_below_point_eight(data_dir):
     llm.register_fake("classify", lambda s, u, j: {"is_win": True, "win_type": "new_client",
@@ -374,6 +413,13 @@ def test_the_fit_flag_marks_what_we_already_have_proof_for():
     fits = dict((p["industry"], p["fit"]) for p in rollup.patterns(rows, AS_OF))
     assert fits == {"roofing": "mechanism+industry", "dental": ""}
 
+
+
+def test_price_medians_read_only_one_client_wins():
+    total = dict(_row("a", "m1", "dental", "ai_voice", 2), win_type="revenue_milestone", deal_usd=34348)
+    signed = dict(_row("b", "m2", "dental", "ai_voice", 3), win_type="new_client", deal_usd=1500)
+    item = rollup.patterns([total, signed], AS_OF)[0]
+    assert (item["median_deal_usd"], item["wins"]) == (1500.0, 2)
 
 # ---------------------------------------------------------- paid-call gate
 def test_analyze_refuses_billed_calls_without_the_switch(data_dir, monkeypatch):

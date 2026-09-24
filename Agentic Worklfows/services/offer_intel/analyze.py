@@ -62,12 +62,13 @@ def estimate(records: List[Dict[str, Any]]) -> Dict[str, Any]:
     for record in records:
         text = gate_mod.source_text(record)
         gate_in = (len(gate_mod.SYSTEM) + len(text)) // 4
-        ext_in = (len(extract_mod.SYSTEM) + len(text)) // 4
+        ext_in = (len(extract_mod.SYSTEM + extract_mod.JSON_ONLY) + len(text)) // 4
         typical += llm.estimate_cost(gate_model, gate_in, gate_mod.TYPICAL_OUT_TOKENS)
         typical += WIN_SHARE_GUESS * llm.estimate_cost(ext_model, ext_in, extract_mod.TYPICAL_OUT_TOKENS)
         worst += llm.projected_cost_usd(gate_model, gate_mod.SYSTEM, text, gate_mod.MAX_TOKENS)
         worst += llm.projected_cost_usd(esc_model, gate_mod.SYSTEM, text, gate_mod.MAX_TOKENS)
-        worst += llm.projected_cost_usd(ext_model, extract_mod.SYSTEM, text, extract_mod.MAX_TOKENS)
+        worst += llm.projected_cost_usd(ext_model, extract_mod.SYSTEM + extract_mod.JSON_ONLY, text,
+                                       extract_mod.MAX_TOKENS)
     return {"posts": len(records), "typical_usd": round(typical, 4), "worst_usd": round(worst, 4),
             "models": {"gate": gate_model, "escalate": esc_model, "extract": ext_model},
             "win_share_guess": WIN_SHARE_GUESS}
