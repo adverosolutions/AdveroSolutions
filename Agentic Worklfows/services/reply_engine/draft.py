@@ -26,9 +26,6 @@ from services.reply_engine.models import Classification, Draft, LeadState, Reply
 logger = logging.getLogger("reply_engine.draft")
 
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
-# Unused by draft.py. Kept only because this branch predates 294dc2c, where
-# booking.py stopped importing it; delete it once the branch is on main.
-BOOKING_LINE = "Or if it's easier, grab a time here: %s"
 NO_SLOTS_ASK = "Could you send me a couple of times that work for %s next week?"
 FALLBACK_STEP_MINUTES = 30
 FALLBACK_DAYS = 9  # calendar days scanned; slots.candidate_slots trims to 5 business days
