@@ -35,7 +35,7 @@ def event(email, ts_prefix, **over):
 
 # ------------------------------------------------------------ validation
 def test_validate_rejects_banned_content():
-    good = "Hey Sopio,\n\nNothing up front, $0 if nothing closes.\n\nWould Tue 2:00pm or Thu 3:30pm CT work? Or if it's easier, grab a time here: %s\n\nLorenzo" % BOOKING
+    good = "Hey Sopio,\n\nNothing up front, $0 if nothing closes.\n\nWould Tue 2:00pm or Thu 3:30pm CT work?\n\nLorenzo"
     assert D.validate_draft(good, booking_link=BOOKING) == []
     assert "em or en dash" in D.validate_draft(good.replace(",", " —"), booking_link=BOOKING)
     assert "exclamation mark" in D.validate_draft(good.replace("Hey Sopio,", "Hey Sopio!"), booking_link=BOOKING)
@@ -43,9 +43,83 @@ def test_validate_rejects_banned_content():
     assert "mentions automation" in D.validate_draft(good.replace("Nothing", "The automation runs. Nothing"), booking_link=BOOKING)
     probs = D.validate_draft(good.replace("$0", "$5,000"), booking_link=BOOKING)
     assert any("dollar figure $5000" in p for p in probs)
-    assert "missing booking link" in D.validate_draft(good.replace(BOOKING, "https://calendly.com/x"), booking_link=BOOKING)
     assert "must end with the signature line 'Lorenzo'" in D.validate_draft(good + "\nSent from my phone", booking_link=BOOKING)
     assert D.validate_draft("") == ["empty body"]
+
+
+def test_validate_flags_a_booking_link():
+    """No email carries a booking link (2026-09-23): the passed link, the
+    configured BOOKING_URL or the words "grab a time" are all a problem."""
+    base = "Hey Sopio,\n\nWould Tue 2:00pm or Thu 3:30pm CT work?%s\n\nLorenzo"
+    link = "https://cal.example/x"
+    assert D.validate_draft(base % "", booking_link=link, first_reply=True) == []
+    assert "contains a booking link" in D.validate_draft(base % (" " + link), booking_link=link, first_reply=True)
+    assert "contains a booking link" in D.validate_draft(base % " Or grab a time here.", first_reply=True)
+    if BOOKING:
+        assert "contains a booking link" in D.validate_draft(base % (" " + BOOKING), first_reply=True)
+
+
+
+INVENTED_LINKS = (
+    "Or book a time here: https://calendly.com/lorenzo-advero",
+    "Or use my calendar: https://api.leadconnectorhq.com/widget/booking/xyz",
+    "Or pick a slot here: [booking link]",
+)
+
+
+@pytest.mark.parametrize("line", INVENTED_LINKS + (
+    "Or here: calendly.com/lorenzo",
+    "More at www.adverosolutions.com",
+    "Details: [link]",
+    "Book: <booking_link>",
+    "Book: {booking_url}",
+    "Here is my calendar link.",
+))
+def test_first_reply_flags_any_invented_link(line):
+    """Any URL, link placeholder or booking wording is flagged in a first
+    reply, not only the configured BOOKING_URL."""
+    body = "Hey Sopio,\n\nWould Tue 2:00pm or Thu 3:30pm CT work?\n\n%s\n\nLorenzo" % line
+    assert "contains a booking link" in D.validate_draft(body, first_reply=True)
+
+
+def test_first_reply_link_check_skips_the_lead_company():
+    body = "Hey Sopio,\n\nHappy to walk through it for Acme.io.\n\nWould Tue 2:00pm or Thu 3:30pm CT work?\n\nLorenzo"
+    assert D.validate_draft(body, first_reply=True, allow_terms=["Acme.io"]) == []
+
+
+def test_every_catalogue_first_reply_passes_the_link_check():
+    """No first-reply template text (main body or any variant) trips the
+    widened check, so it cannot block a legitimate first reply."""
+    from services.reply_engine import template_approvals as TA
+
+    entries = [e for e in TA.catalogue() if e["kind"] in ("first_reply", "first_reply_piece")]
+    assert any(e["kind"] == "first_reply" for e in entries)
+    checked = 0
+    for e in entries:
+        for text in [e["text"]] + [v.get("text", "") for v in e.get("variants") or []]:
+            if text:
+                assert not D._has_booking_link(text), (e["id"], text)
+                checked += 1
+    assert checked > len(entries)
+
+
+def test_draft_prompt_carries_no_booking_link_instruction():
+    prompt = (D.PROMPTS_DIR / "draft_system.md").read_text(encoding="utf-8")
+    assert "booking link line" not in prompt
+    assert "other than the booking link" not in prompt
+    assert "No links of any kind" in prompt
+    assert "Nobody in the office has to remember to ask." in prompt  # the no-Claudeisms rule
+
+def test_no_slots_first_reply_asks_for_times():
+    ev = event("sopiosvanishvili@taxfoaccounting.com", "2026-09-21T14:42")
+    cls = C.classify(ev)
+    para = D.slot_paragraph([], "https://cal.example/x")
+    assert para.endswith("Could you send me a couple of times that work for you next week?")
+    assert "cal.example" not in para
+    assert D.slot_paragraph([], None, for_person="Sam").endswith(
+        "Could you send me a couple of times that work for Sam next week?")
+    assert D.validate_draft(D.skeleton(ev, cls, [], "https://cal.example/x"), booking_link="https://cal.example/x",
+                            first_reply=True) == []
 
 
 def test_dollar_figures_from_offers_are_allowed():
@@ -75,7 +149,8 @@ def test_pricing_question_draft_is_sendable_in_fake_mode():
     assert "20 to 30 percent of first-year fees" in d.body_text
     assert "$0 if nothing closes" in d.body_text
     assert len(d.offered_slots) == 2
-    assert "Or if it's easier, grab a time here: %s" % BOOKING in d.body_text
+    assert BOOKING not in d.body_text and "grab a time" not in d.body_text.lower()
+    assert d.body_text.split("\n\n")[-2].endswith("work for a 15-minute call?")
     assert d.body_text.rstrip().endswith("\nLorenzo")
     assert d.model == "template"
     for iso in d.offered_slots:
@@ -120,7 +195,7 @@ def test_proposed_time_inside_rules_is_confirmed():
     d = D.build_draft(ev, cls, now=ev.received_at, busy_blocks=[])
     assert d.offered_slots == ["2026-09-24T15:00:00-05:00"]
     assert "Thu 3:00pm CT works on my end" in d.body_text
-    assert BOOKING in d.body_text and d.problems == []
+    assert BOOKING not in d.body_text and d.problems == []
 
 
 def test_proposed_time_before_noon_gets_two_alternatives():
@@ -258,6 +333,26 @@ def test_llm_polish_rejected_falls_back_to_template():
     assert "LLM draft rejected" in d.rationale and "exclamation mark" in d.rationale
 
 
+
+def test_llm_polish_with_an_invented_link_falls_back_to_template():
+    ev = event("sopiosvanishvili@taxfoaccounting.com", "2026-09-21T14:42")
+    cls = C.classify(ev)
+    template = D.build_draft(ev, cls, now=ev.received_at, busy_blocks=[], use_llm=False)
+    assert template.problems == []
+    body = template.body_text.rstrip()
+    assert body.endswith("\nLorenzo")
+    linked = body[:-len("Lorenzo")] + "Or book a time here: https://calendly.com/x\n\nLorenzo"
+    llm.register_fake("draft", lambda s, u, j: linked)
+    try:
+        d = D.build_draft(ev, cls, now=ev.received_at, busy_blocks=[], use_llm=True)
+    finally:
+        llm.clear_fakes()
+        C.install_offline_fakes()
+    assert d.model == "template" and d.problems == []
+    assert d.body_text == template.body_text
+    assert "calendly" not in d.body_text
+    assert "LLM draft rejected" in d.rationale and "contains a booking link" in d.rationale
+
 def test_llm_polish_accepted_when_it_keeps_slots_and_rules():
     ev = event("sopiosvanishvili@taxfoaccounting.com", "2026-09-21T14:42")
     cls = C.classify(ev)
@@ -297,7 +392,7 @@ def test_validate_rejects_automatically_automating_and_en_dashes():
     assert "em or en dash" in D.validate_draft("Tue 2:00pm – 2:15 CT.\n\nLorenzo")
     assert "em or en dash" in D.validate_draft("Tue 2:00pm — 2:15 CT.\n\nLorenzo")
     # the ordinary template copy is still clean
-    good = "Hey Sopio,\n\nNothing up front, $0 if nothing closes.\n\nWould Tue 2:00pm or Thu 3:30pm CT work? Or if it's easier, grab a time here: %s\n\nLorenzo" % BOOKING
+    good = "Hey Sopio,\n\nNothing up front, $0 if nothing closes.\n\nWould Tue 2:00pm or Thu 3:30pm CT work?\n\nLorenzo"
     assert D.validate_draft(good, booking_link=BOOKING) == []
 
 
@@ -515,7 +610,7 @@ def test_first_reply_bindings_are_the_rendered_values():
     d = D.build_draft(ev, cls, now=ev.received_at, busy_blocks=[])
     b = D.first_reply_bindings(ev, cls, d)
     assert b["referral_name"] == "Dana Reyes" and b["referral_first_name"] == "Dana"
-    assert b["booking_url"] == d.booking_link and b["booking_url"] in d.body_text
+    assert "booking_url" not in b and d.booking_link is None  # no link in any email
     assert b["slots"] in d.body_text and ("Hey %s," % b["first_name"]) in d.body_text
     assert None not in b.values()
     # no referral name written: no referral binding

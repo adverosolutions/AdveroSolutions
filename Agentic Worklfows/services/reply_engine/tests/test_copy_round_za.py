@@ -70,7 +70,8 @@ def test_only_cleaning_reactivation_quotes_the_list_size_term():
 
 @pytest.mark.parametrize("key", sorted(D.PRICING))
 def test_every_pricing_line_passes_the_offer_checks_for_its_own_offer(key):
-    body = "Hey %s,\n\n%s\n\n%s\n\nLorenzo" % (FIRST, D.PRICING[key], D.BOOKING_LINE % LINK)
+    body = "Hey %s,\n\n%s\n\nWould Tue 2:00pm or Wed 3:00pm work for a 15-minute call?\n\nLorenzo" % (
+        FIRST, D.PRICING[key])
     assert D.validate_draft(body, booking_link=LINK, campaign_key=key) == []
     # every figure the line quotes is in this offer's own offers.md row
     row = [r for r in D.offer_guarantee_rows() if r["key"] == key][0]
@@ -111,8 +112,8 @@ def test_offered_slots_ask_for_a_15_minute_call_with_the_hyphen():
 def test_confirmed_time_sentence_has_no_comma_splice():
     confirmed = CT.localize(datetime(2030, 1, 8, 15, 30))
     d = _build(_event(), _cls(proposed_time=confirmed.isoformat()))
-    assert ("Tue 3:30pm CT works on my end. I will send the invite over, and if anything shifts, you can grab a "
-            "different time here: %s" % LINK) in d.body_text
+    assert "Tue 3:30pm CT works on my end. I will send the invite over.\n\nLorenzo" in d.body_text
+    assert LINK not in d.body_text
     assert d.problems == []
     assert D.slot_paragraph([], None, confirmed=confirmed) == "Tue 3:30pm CT works on my end. I will send the invite over."
 
@@ -121,8 +122,8 @@ def test_referral_confirmed_time_waits_for_the_named_person_before_the_invite():
     confirmed = CT.localize(datetime(2030, 1, 8, 15, 30))
     cls = _cls("positive_referral", referral_name="Sam Rivera", proposed_time=confirmed.isoformat())
     d = _build(_event(), cls)
-    assert ("Tue 3:30pm CT works on my end. Once Sam is on the thread, I will send the invite over, and if "
-            "anything shifts, you can grab a different time here: %s" % LINK) in d.body_text
+    assert "Tue 3:30pm CT works on my end. Once Sam is on the thread, I will send the invite over." in d.body_text
+    assert LINK not in d.body_text
     assert "works on my end. I will send the invite over" not in d.body_text
     assert d.problems == []
     # no usable name: the no-name wording, grammatical

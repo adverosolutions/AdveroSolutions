@@ -1,6 +1,8 @@
 """First-reply drafts per config/offers.md.
 
-Order inside every draft: answer -> two afternoon slots -> booking link -> "Lorenzo".
+Order inside every draft: answer -> two afternoon slots -> "Lorenzo".
+No booking link in any email (Lorenzo, 2026-09-23): the lead picks one of
+the two offered times and Lorenzo sends the invite.
 Slots come from the GHL Discovery Call calendar (free-slots) or, when GHL
 returns None (no token), from a fallback generator that assumes the
 calendar's open hours (Mon-Fri 12:00-18:00 CT, 30-minute grid) minus any
@@ -24,7 +26,7 @@ from services.reply_engine.models import Classification, Draft, LeadState, Reply
 logger = logging.getLogger("reply_engine.draft")
 
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
-BOOKING_LINE = "Or if it's easier, grab a time here: %s"
+NO_SLOTS_ASK = "Could you send me a couple of times that work for %s next week?"
 FALLBACK_STEP_MINUTES = 30
 FALLBACK_DAYS = 9  # calendar days scanned; slots.candidate_slots trims to 5 business days
 BUFFER_MINUTES = 15  # calendar buffer (config/ids.json discovery_call.buffer_minutes)
@@ -355,36 +357,31 @@ def _as_clause(sentence: str) -> str:
     return sentence[0].lower() + sentence[1:]
 
 
-def slot_paragraph(two: List[datetime], booking_link: Optional[str], confirmed: Optional[datetime] = None,
+def slot_paragraph(two: List[datetime], booking_link: Optional[str] = None, confirmed: Optional[datetime] = None,
                    early_note: Optional[str] = None, for_person: Optional[str] = None) -> str:
     """``for_person`` is the referral case (offers.md rule 5): the two slots are
     offered for the named third party, not for the person who just said "not
     me". Asking the replier "would Tue 2:00pm work for a 15-minute call?" after
-    they declined to be the contact reads as if we did not listen."""
-    link_line = (BOOKING_LINE % booking_link) if booking_link else ""
+    they declined to be the contact reads as if we did not listen.
+
+    ``booking_link`` is ignored: no email carries a booking link (2026-09-23)."""
     if confirmed is not None:
         # Referral: the person replying is not the one taking the call, so the
         # invite waits until the named person is on the thread; sent now it
         # would land in the referrer's calendar.
         if for_person:
             who = "they are" if for_person == "them" else "%s is" % for_person
-            text = "%s CT works on my end. Once %s on the thread, I will send the invite over" % (
+            return "%s CT works on my end. Once %s on the thread, I will send the invite over." % (
                 slots.format_slot(confirmed), who)
-        else:
-            text = "%s CT works on my end. I will send the invite over" % slots.format_slot(confirmed)
-        if booking_link:
-            text += ", and if anything shifts, you can grab a different time here: %s" % booking_link
-        else:
-            text += "."
-        return text
+        return "%s CT works on my end. I will send the invite over." % slots.format_slot(confirmed)
     if for_person:
         if not two:
-            return ("Would %s have 15 minutes this week or next? %s" % (for_person, link_line)).strip()
-        return ("Would %s work for %s? %s" % (slots.format_slots(two), for_person, link_line)).strip()
+            return "Would %s have 15 minutes for a quick call? %s" % (for_person, NO_SLOTS_ASK % for_person)
+        return "Would %s work for %s?" % (slots.format_slots(two), for_person)
     if not two:
-        return "Do you have 15 minutes this week or next? %s" % link_line if link_line else "Do you have 15 minutes this week or next?"
+        return "Do you have 15 minutes for a quick call? %s" % (NO_SLOTS_ASK % "you")
     lead_in = early_note + " " if early_note else ""
-    return "%sWould %s work for a 15-minute call? %s" % (lead_in, slots.format_slots(two), link_line)
+    return "%sWould %s work for a 15-minute call?" % (lead_in, slots.format_slots(two))
 
 
 def referral_pronoun(classification: Classification) -> Optional[str]:
@@ -780,8 +777,13 @@ def wrong_offer_proof_problems(text: str, campaign_key: Optional[str], offers_md
 
 
 def validate_draft(body: str, offers_md: Optional[str] = None, booking_link: Optional[str] = None,
-                   campaign_key: Optional[str] = None, allow_terms: Optional[Iterable[str]] = None) -> List[str]:
+                   campaign_key: Optional[str] = None, allow_terms: Optional[Iterable[str]] = None,
+                   first_reply: bool = False) -> List[str]:
     """Return a list of problems (empty == sendable).
+
+    ``first_reply``: the body is a first reply, which must not carry a link of
+    any kind (the passed ``booking_link``, settings.BOOKING_URL, any URL, a link
+    placeholder or booking wording such as "grab a time"; see _has_booking_link).
 
     ``allow_terms`` are lead-supplied strings the draft interpolates (company,
     first name). They are blanked out before the banned-word scan only: a
@@ -812,11 +814,41 @@ def validate_draft(body: str, offers_md: Optional[str] = None, booking_link: Opt
     lines = [ln.strip() for ln in text.strip().splitlines() if ln.strip()]
     if not lines or lines[-1] != "Lorenzo":
         problems.append("must end with the signature line 'Lorenzo'")
-    if booking_link and booking_link not in text:
-        problems.append("missing booking link")
+    # ``scanned``: a lead whose company is "Acme.io" is not the draft adding a link.
+    if first_reply and _has_booking_link(scanned, booking_link):
+        problems.append("contains a booking link")
     if len(text) > 1500:
         problems.append("too long (%d chars)" % len(text))
     return problems
+
+
+# First replies carry no link of any kind (2026-09-23), so any URL counts:
+# a scheme or www., a bare domain followed by a path, or a bare domain on a
+# common TLD. No first-reply template contains one (test_core_draft checks
+# every catalogue text), so this cannot block a legitimate draft.
+_URL_RE = re.compile(
+    r"(?:https?://|\bwww\.)"
+    r"|\b[a-z0-9][a-z0-9-]*(?:\.[a-z0-9-]+)*\.[a-z]{2,24}/"
+    r"|\b[a-z0-9][a-z0-9-]*(?:\.[a-z0-9-]+)*\.(?:com|net|org|io|ai|co|app|ly|link|biz|info|xyz|me|us)\b",
+    re.IGNORECASE)
+# Link placeholders and booking wording: "[link]", "<booking_link>",
+# "{booking_url}", "calendar link", "book a time", "pick a slot" ...
+_LINK_PLACEHOLDER_RE = re.compile(r"[\[{<][^\]}>\n]{0,40}(?:link|url)[^\]}>\n]{0,40}[\]}>]", re.IGNORECASE)
+_LINK_PHRASES = ("grab a time", "booking link", "booking page", "calendar link", "scheduling link", "book a time",
+                 "pick a slot", "use my calendar", "calendly")
+
+
+def _has_booking_link(text: str, booking_link: Optional[str] = None) -> bool:
+    """No email carries a booking link (2026-09-23); this keeps one from
+    sneaking back in through the template or the LLM polish: the passed or
+    configured link, any URL, a link placeholder or booking-link wording."""
+    low = text.lower()
+    if any(p in low for p in _LINK_PHRASES):
+        return True
+    for url in (booking_link, getattr(settings, "BOOKING_URL", None)):
+        if url and url.strip() and url.strip().lower() in low:
+            return True
+    return bool(_URL_RE.search(text) or _LINK_PLACEHOLDER_RE.search(text))
 
 
 # ----------------------------------------------------------------- main
@@ -844,7 +876,8 @@ def build_draft(
     """already_offered: every slot to avoid for NEW picks (other leads' and this lead's earlier offers).
     others_offered: slots held by OTHER leads only; a time this lead proposes may match one we offered them."""
     now = slots.ensure_aware(now) if now is not None else event.received_at
-    booking_link = booking_link or settings.BOOKING_URL
+    # booking_link is still accepted (app.py passes it) but never written into
+    # the draft; validate_draft uses it only to reject a draft that contains it.
     offered = list(already_offered or [])
     if state is not None:
         offered.extend(state.offered_slots)
@@ -873,7 +906,8 @@ def build_draft(
         try:
             polished = llm.complete("draft", _draft_system(skel), user, max_tokens=500)
             polished = polished.strip() if isinstance(polished, str) else ""
-            probs = validate_draft(polished, booking_link=booking_link, campaign_key=_key(event), allow_terms=terms)
+            probs = validate_draft(polished, booking_link=booking_link, campaign_key=_key(event), allow_terms=terms,
+                                   first_reply=True)
             keeps_slots = (not two) or slots.format_slots(two) in polished
             if polished and not probs and keeps_slots:
                 body, model = polished, llm.model_for("draft")
@@ -885,7 +919,8 @@ def build_draft(
             logger.warning("draft LLM failed: %s", exc)
             rationale += "; LLM failed (%s)" % exc
 
-    problems = validate_draft(body, booking_link=booking_link, campaign_key=_key(event), allow_terms=terms)
+    problems = validate_draft(body, booking_link=booking_link, campaign_key=_key(event), allow_terms=terms,
+                              first_reply=True)
     offered_slots = [confirmed.isoformat()] if confirmed is not None else [d.isoformat() for d in two]
     # CT3: the template id only for the template render. A polished body is
     # other text, so it carries no id and is always a card. The hash is
@@ -895,7 +930,7 @@ def build_draft(
         subject=reply_subject(event.subject),
         body_text=body,
         offered_slots=offered_slots,
-        booking_link=booking_link,
+        booking_link=None,
         rationale=rationale,
         model=model,
         label=classification.label,
@@ -908,7 +943,8 @@ def first_reply_bindings(event: ReplyEvent, classification: Classification, d: D
                          state: Optional[LeadState] = None) -> Dict[str, str]:
     """{placeholder: value} for what build_draft rendered into ``d`` from this
     reply: the lead's first name and company, the referral name when one was
-    written, the offered slots, the refused time and the booking link. Only
+    written, the offered slots and the refused time (no booking link: a first
+    reply carries none, 2026-09-23). Only
     placeholders that got a value (not their fallback wording); the template
     gate pins each placeholder to its value (CT3 bindings).
 
@@ -925,8 +961,6 @@ def first_reply_bindings(event: ReplyEvent, classification: Classification, d: D
     if who:
         out["referral_name"] = who
         out["referral_first_name"] = _first_word(who)
-    if d.booking_link:
-        out["booking_url"] = d.booking_link
     try:
         offered = [slots.to_tz(slots.parse_iso(s), slots.TZ) for s in (d.offered_slots or [])]
         if offered:
