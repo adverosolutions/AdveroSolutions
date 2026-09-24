@@ -18,9 +18,10 @@ from services.reply_engine import approval as A
 from services.reply_engine import draft as D
 from services.reply_engine import template_gate as gate
 from services.reply_engine.models import LeadState
+from services.reply_engine.models import Draft
 from services.reply_engine.tests.test_ct3_card_autosend import (  # noqa: F401
-    CAMPAIGN, COMPANY, FIRST, FLUSH, LEAD, LINK, NIGHT, NOW, OFFER, TID, _card, _cls, _event, _fyi_entries,
-    _pushes, _rows, _stored, world)
+    CAMPAIGN, COMPANY, FIRST, FLUSH, LEAD, LINK, NIGHT, NOW, OFFER, TID, _booking_reply, _card, _cls, _event,
+    _fyi_entries, _pushes, _rows, _stored, booking_world, world)
 
 LOCK_LINE = "Not auto-sent: first replies are drafts you send yourself from the thread."
 # The four first replies the emails doc lists per offer, and a classification
@@ -257,3 +258,78 @@ def test_the_reason_sentences(world):
                                                        'approve it again in the emails doc, then tell Claude "done".')
     for text in A.REASON_TEXT.values():
         assert "approve_templates" not in text and "—" not in text and "!" not in text
+
+
+# ============================== any reply to a lead we have not answered yet
+# Lorenzo, 2026-09-23: a reply to a lead nothing of ours has reached yet is a
+# draft he sends himself, like a first reply; only a booking confirmation (the
+# lead's own time booked the call) still auto-sends.
+def test_a_first_contact_counter_proposal_is_a_card(world):
+    card, v = _card(world, answered=False)
+    assert (v.allowed, v.template_id) == (True, TID)
+    stored = _assert_is_an_ordinary_card(world, card)
+    assert (stored.auto_send["reason"], stored.auto_send["gate_reason"]) == ("first_reply_draft_only", "ok")
+    out = A.auto_send_approved(card, world["inst"], store=world["store"], now=NOW, verdict=v)
+    assert out["ok"] is False and out["reason"] == A.REASON_TEXT["first_reply_draft_only"]
+    assert world["inst"].sent == [] and len(_pushes()) == 1
+
+
+def test_a_first_contact_slot_already_taken_is_a_card(world):
+    tid = "booking.slot_already_taken"
+    ev = _event("t-1")
+    state = LeadState.from_store(None, ev)
+    d = Draft(subject="Re: Quick question", body_text="Hey %s,\n\nThat time just got taken.\n\nLorenzo" % FIRST,
+              model="template", label="positive_interested", template_id=tid)
+    allowed = gate.Verdict(True, "ok", tid, [tid], {tid: "approved"})
+    assert A._auto_decision(allowed, d, state) == (False, LOCK_LINE)
+    card = A.create_approval(state, d, ev, store=world["store"], now=NOW, campaign_key=OFFER, auto=allowed)
+    stored = _assert_is_an_ordinary_card(world, card)
+    assert stored.auto_send["reason"] == "first_reply_draft_only"
+    # once a reply of ours reached the lead, the lock no longer applies
+    state.history.append({"event": "reply_sent", "at": NOW.isoformat()})
+    assert A._auto_decision(allowed, d, state) == (True, None)
+
+
+def test_a_first_contact_booking_confirmation_still_auto_sends(booking_world):
+    w = booking_world
+    for tid in ("booking.confirmation.no_zoom_link", "booking.confirmation.zoom_link"):
+        w["tpl"].approve_ids(tid)
+    assert w["store"].get("lead:%s:%s" % (CAMPAIGN, LEAD)) is None      # nothing of ours reached the lead
+    res = _booking_reply(w)
+    assert res.get("booking") and (res.get("auto_send") or {}).get("allowed") is True, res.get("auto_send")
+    card = A.load(res["approval_token"], w["store"])
+    assert card.draft.template_id.startswith("booking.confirmation.")
+    assert card.status == "sent" and card.approved_by == "template" and len(w["inst"].sent) == 1
+
+
+@pytest.mark.parametrize("tid,locked", [
+    (TID, True), ("booking.slot_already_taken", True), ("booking.already_booked.invite_on_calendar", True),
+    ("booking.confirmation.zoom_link", False), ("booking.confirmation.no_zoom_link", False)])
+def test_an_unreadable_lead_row_locks_everything_but_a_confirmation(tid, locked):
+    assert A.draft_only(tid, None) is locked
+    assert A.draft_only(tid, {"not": "a lead row"}) is locked
+    answered = {"lead_email": LEAD, "campaign_id": CAMPAIGN, "history": [{"event": "reply_sent"}]}
+    assert A.draft_only(tid, answered) is False
+    assert A.draft_only("first_reply.x.default.full", answered) is True
+
+
+def test_an_unreadable_lead_row_at_send_time_locks_a_counter(world, monkeypatch):
+    card, v = _card(world)                                   # answered when raised: deferred
+    assert _stored(world, card).notify_result["deferred"] == A.DEFERRED_AUTO_SEND
+    st = world["store"]
+    real = st.get
+
+    def broken(key, *a, **kw):
+        if key == card.state_key:
+            raise OSError("lead row unreadable")
+        return real(key, *a, **kw)
+    monkeypatch.setattr(st, "get", broken)
+    out = A.auto_send_approved(card, world["inst"], store=st, now=NOW, verdict=v)
+    assert out["ok"] is False and out["reason"] == A.REASON_TEXT["first_reply_draft_only"]
+    assert world["inst"].sent == [] and len(_pushes()) == 1
+    # the send-time re-check without a row: a counter is locked, a confirmation goes to the gate
+    stored = _stored(world, card)
+    assert A._template_verdict(stored, None).reason == "first_reply_draft_only"
+    confirmation = stored.model_copy(deep=True)
+    confirmation.draft.template_id = "booking.confirmation.no_zoom_link"
+    assert A._template_verdict(confirmation, None).reason != "first_reply_draft_only"
