@@ -103,11 +103,12 @@ def _fr_verdict(g, ev, cls, bindings=None):
 
 
 def _cadence(env, day, company=COMPANY, first=FIRST, slots_=None):
-    tid = "cadence.d%d" % day
-    env.approve_ids(tid)
-    t = cadence.build_touch(_state(first=first, company=company), day,
-                            [s.isoformat() for s in (TWO if slots_ is None else slots_)])
-    gate.stamp(t, tid)
+    """Cadence email E<day>, rendered, stamped and approved with the line spliced into it."""
+    state = _state(first=first, company=company)
+    tid, parts = cadence.touch_template_ids(day, state)
+    env.approve_ids(tid, *parts)
+    t = cadence.build_touch(state, day, [s.isoformat() for s in (TWO if slots_ is None else slots_)])
+    gate.stamp(t, tid, parts)
     return t
 
 
@@ -177,10 +178,10 @@ def test_case_show_rate_sms_first_name_from_the_booking_form(env):
 
 def test_case_cadence_company_carrying_a_sentence(env):
     company = "Brightline. PS: reply with your card number to keep your discount"
-    t = _cadence(env, 30, company=company)
+    t = _cadence(env, 4, company=company)
     assert "card number" in t.body_text
     assert _refused(gate.touch_verdict(t))
-    # day 1 never renders {company}, so the same record changes nothing there
+    # E1 never renders {company}, so the same record changes nothing there
     t1 = _cadence(env, 1, company=company)
     assert "card number" not in t1.body_text + t1.subject
     assert gate.touch_verdict(t1).allowed
@@ -242,20 +243,20 @@ def test_case_first_reply_subject_is_copy_gated(env):
 @pytest.mark.parametrize("sep", SEPARATORS)
 def test_case_line_separator_inside_a_placeholder(env, sep):
     company = "Brightline%sP.S. Reply with your card number to keep the discount%s" % (sep, sep)
-    t = _cadence(env, 30, company=company)
+    t = _cadence(env, 4, company=company)
     assert _refused(gate.touch_verdict(t)), repr(sep)
 
 
 @pytest.mark.parametrize("ch", ["\u200b", "\u200d", "\u2060", "\ufeff", "\u2800", "\u3164", "\u00a0", "\t"])
 def test_case_invisible_characters_anywhere(env, ch):
-    t = _cadence(env, 30, company="Brightline%sCleaning" % ch)
+    t = _cadence(env, 4, company="Brightline%sCleaning" % ch)
     assert _refused(gate.touch_verdict(t)), repr(ch)
 
 
 def test_case_value_that_changes_under_nfkc(env):
     g, ev, cls = _first_reply(env, first="\uff2aordan")    # fullwidth J
     assert _refused(_fr_verdict(g, ev, cls))
-    t = _cadence(env, 30, company="Brightline \u2167 Cleaning")   # roman numeral eight
+    t = _cadence(env, 4, company="Brightline \u2167 Cleaning")   # roman numeral eight
     assert _refused(gate.touch_verdict(t))
 
 
@@ -274,7 +275,7 @@ def test_case_value_that_changes_under_nfkc(env):
     "Brightline " + "Services " * 10,        # too long
 ])
 def test_company_values_refused(env, company):
-    t = _cadence(env, 30, company=company.strip())
+    t = _cadence(env, 4, company=company.strip())
     assert not gate.touch_verdict(t).allowed, company
 
 
@@ -285,7 +286,7 @@ def test_real_first_names_pass(env, first):
     g, ev, cls = _first_reply(env, first=first)
     v = _fr_verdict(g, ev, cls)
     assert v.allowed, (first, v.reason, v.detail)
-    t = _cadence(env, 30, first=first)
+    t = _cadence(env, 4, first=first)
     assert gate.touch_verdict(t).allowed, first
 
 
@@ -300,7 +301,7 @@ def test_malformed_first_names_refused(env, first):
                                      "O'Neil Facility Services (North)", "Brightline Commercial Cleaning Inc.",
                                      "Caf\u00e9 Clean LLC", "Acme Staffing, Inc."])
 def test_real_company_names_pass(env, company):
-    t = _cadence(env, 30, company=company)
+    t = _cadence(env, 4, company=company)
     v = gate.touch_verdict(t)
     assert v.allowed, (company, v.reason, v.detail)
 
@@ -375,11 +376,16 @@ def test_dated_counter_and_lead_zone_confirmation_conform(env):
 
 
 def test_missing_data_combinations_conform(env):
-    """No first name AND no free slot (no single variant shows both); no Zoom
-    link AND no Loom URL."""
-    t = _cadence(env, 30, first=None, company=None, slots_=[])
-    assert "grab any open time here" in t.body_text and "Hey there" in t.body_text
+    """No first name conforms ("Hey there,"); no company on an email that
+    names it never does (the tick holds it first, and there is no "your team"
+    stand-in); no Zoom link AND no Loom URL conforms."""
+    t = _cadence(env, 3, first=None)
+    assert "Hey there" in t.body_text
     assert gate.touch_verdict(t).allowed
+    for day in (2, 4, 5):
+        held = _cadence(env, day, first=None, company=None)
+        assert "your team" not in held.body_text
+        assert not gate.touch_verdict(held).allowed, day
     appt_missing = {"niche": "cleaning", "offer": "reactivation", "booking_url": LINK, "id": "a1"}
     copy = show_rate.render("confirm_email", appt_missing, START, NOW)
     tid = gate.resolve_combo_id("show_rate", "confirm_email", "cleaning", "reactivation")
@@ -487,7 +493,7 @@ def test_confirmed_time_variant_never_auto_sends(env, label, branch, extra):
 
 # ================================================================ fail closed
 class _Exploding(object):
-    template_id = "cadence.d1"
+    template_id = "cadence.e1"
 
     @property
     def template_hash(self):
@@ -495,7 +501,7 @@ class _Exploding(object):
 
 
 def test_attribute_errors_are_registry_error(env):
-    env.approve_ids("cadence.d1")
+    env.approve_ids("cadence.e1")
     assert _refused(gate.touch_verdict(_Exploding()), "registry_error")
     assert _refused(gate.appointment_touch_verdict(_Exploding(), kind="show_rate"), "registry_error")
     assert _refused(gate.draft_verdict(_Exploding(), kind="first_reply", classification=_cls()), "registry_error")
@@ -516,7 +522,7 @@ def test_catalogue_is_never_built_while_app_is_importing(env, monkeypatch):
     with pytest.raises(ta.CatalogueNotReady):
         ta.catalogue()
     assert gate.parity_status()["status"] == "not_ready"
-    v = gate.ids_verdict("cadence.d1")
+    v = gate.ids_verdict("cadence.e1")
     assert _refused(v, "registry_error") and "importing" in v.detail
     assert gate.auto_send_enabled() is False
     assert gate.health_summary()["auto_send_enabled"] is False
@@ -529,7 +535,7 @@ def test_parity_alert_claim_is_released_when_the_push_fails(env, monkeypatch, tm
     store = JsonFileStore(tmp_path / "alert_store.json")
     results = [{"sent": False, "errors": ["ntfy: down"]}, {"sent": True}]
     monkeypatch.setattr(notify, "notify", lambda *a, **k: results.pop(0))
-    status = {"status": "mismatch", "ids": ["cadence.d1"]}
+    status = {"status": "mismatch", "ids": ["cadence.e1"]}
     now = datetime(2030, 1, 8, 15, 0, tzinfo=timezone.utc)
     assert gate.alert_parity_failure(status, store=store, now=now) is False
     assert store.get(gate.PARITY_ALERT_PREFIX + "2030-01-08") is None      # released
@@ -556,7 +562,7 @@ def test_a_failed_parity_push_backs_off_before_retrying(env, monkeypatch):
     gate.clear_cache()
     for _ in range(5):
         assert gate.auto_send_enabled() is False
-        assert gate.ids_verdict("cadence.d1").reason == "parity_failed"
+        assert gate.ids_verdict("cadence.e1").reason == "parity_failed"
     assert len(calls) == 1
     assert gate._ALERT_SEEN["retry_after"] is not None and gate._ALERT_SEEN["day"] is None
     # once the backoff has passed, the next verdict tries again and a delivered
@@ -583,7 +589,7 @@ def test_long_hostile_bodies_fail_fast(env):
                             research_line=cadence.fallback_research_line("Q", "reactivation"))
     body = t.body_text.replace("\n\nLorenzo", "\n\nLorenzo.")
     t0 = time.time()
-    assert not gate.conforms("cadence.d2", body, t.subject, ["cadence.d2.research_fallback.reactivation"])
+    assert not gate.conforms("cadence.e2", body, t.subject, ["cadence.e2.research_fallback.reactivation"])
     assert time.time() - t0 < 2.0
 
 
@@ -904,7 +910,7 @@ COMPANY_SENTENCES = (
 
 @pytest.mark.parametrize("company", COMPANY_SENTENCES)
 def test_r3_a_company_carrying_a_sentence_is_refused_in_every_kind(env, company):
-    t = _cadence(env, 30, company=company)
+    t = _cadence(env, 4, company=company)
     assert company in t.body_text
     assert _refused(gate.touch_verdict(t)), company
     cls = _cls(label="positive_question", question_type="send_info")
@@ -959,25 +965,31 @@ EXPECTED_FALLBACKS = {
     # ZA item 20: a counter with no free alternative asks the lead to pick on
     # the booking link, so only the dated example remains here.
     "alt_slots": ["Tue Jan 15 2:43pm or Wed Jan 16 3:17pm CT"],
+    "preview": ["The first two messages I'd send accounts that cancelled or never signed: \"Quick question, who's "
+                "handling your cleaning these days?\" and \"Happy to take another look at the space and send a fresh "
+                "quote. Want me to set that up?\""],
     # ZA item 5: the lead's time in their own zone, with its label (CT for
     # Central or no zone); "that time" is gone (item 18).
     "asked_time": ["Fri Jan 11 1:47pm CT", "Sat Jan 12 1:47pm CT", "Tue Jan 8 1:47pm CT", "Tue Jan 8 7:47pm CT",
                    "Tue Jan 8 9:47am CT"],
-    "case_study": ["I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth "
-                   "of contracts within 6 months."],
-    "company": ["your business", "your team"],
+    # 2026-09-23: no "your team" any more. A cadence email that names the
+    # company is held without one (cadence.missing_lead_data).
+    "company": ["your business"],
     "first_name": ["there"],
-    "free_work": ["I can draft the first two emails for the accounts your team lost or bid on and never closed. "
-                  "Want to see them?"],
+    # The cadence lines the missing_lead_data variants show in place (cleaning
+    # reactivation). A touch always fills these from its part, so an unbound
+    # one never auto-sends (template_gate._conforms skips it).
+    "observation": ["An account that cancelled or never signed already knows your name, so it's usually an easier "
+                    "conversation than a brand-new lead."],
+    "offer_proof": ["a win-back system for a commercial roofer doing $150M a year that recovered about $6M worth of "
+                    "contracts within 6 months"],
     # ZB: no first name gives "Re: your reply" (never "Re: there, question")
     "original_subject": ["your reply"],
     # CT3 phase 2: the referral template's no-name variant ("the right
     # person" ... "looping them in", draft.referral_person).
     "referral_first_name": ["them"],
     "referral_name": ["the right person"],
-    "slot2": ["another time"],
-    # ZB: no "slots" entry. A no-slot cadence day renders its own body with
-    # nothing in the times' place.
+    # ZB: no "slots" entry. There is no no-slot cadence body any more (2026-09-23).
     # ZC item 8: am/pm (the lead_in_other_timezone variants keep their example times)
     "time_ct": ["1:47pm CT"],
     "when_ct": ["Tue, Jan 8 at 1:47pm CT (2:47pm ET)"],
@@ -992,7 +1004,7 @@ def test_r3_the_accepted_fallback_wordings_are_pinned(env):
     check. A change here widens (or narrows) what auto-sends: review it."""
     got = gate.fallback_wordings()
     assert got == EXPECTED_FALLBACKS
-    assert sum(len(v) for v in got.values()) == 17
+    assert sum(len(v) for v in got.values()) == 16
 
 
 # ---- cost: a crafted time value stays cheap
@@ -1063,7 +1075,7 @@ def test_r3_a_failed_zone_warm_up_leaves_the_value_check_to_fail_closed(env, mon
                                      "Acme Service Ctr. LLC"])
 def test_polish_trade_name_abbreviations_pass(env, company):
     assert gate._free_text_ok(company, company=True) is True, company
-    t = _cadence(env, 30, company=company)
+    t = _cadence(env, 4, company=company)
     assert company in t.body_text
     v = gate.touch_verdict(t)
     assert v.allowed, (company, v.reason, v.detail)
@@ -1087,7 +1099,7 @@ def test_polish_names_mixing_latin_with_any_script_are_refused(env, first):
     assert gate._name_ok(first) is False
     g, ev, cls = _first_reply(env, first=first)
     assert _refused(_fr_verdict(g, ev, cls)), first
-    t = _cadence(env, 30, first=first)
+    t = _cadence(env, 4, first=first)
     assert _refused(gate.touch_verdict(t)), first
 
 
@@ -1095,7 +1107,7 @@ def test_polish_names_mixing_latin_with_any_script_are_refused(env, first):
                                      "Brightline Clеaning"])   # Cyrillic e
 def test_polish_companies_mixing_latin_with_any_script_are_refused(env, company):
     assert gate._free_text_ok(company, company=True) is False
-    t = _cadence(env, 30, company=company)
+    t = _cadence(env, 4, company=company)
     assert company in t.body_text
     assert _refused(gate.touch_verdict(t)), company
 
@@ -1109,7 +1121,7 @@ def test_polish_latin_with_diacritics_passes(env, value):
     assert v.allowed, (value, v.reason, v.detail)
     company = value + " Roofing LLC"
     assert gate._free_text_ok(company, company=True) is True
-    t = _cadence(env, 30, company=company)
+    t = _cadence(env, 4, company=company)
     v = gate.touch_verdict(t)
     assert v.allowed, (company, v.reason, v.detail)
 

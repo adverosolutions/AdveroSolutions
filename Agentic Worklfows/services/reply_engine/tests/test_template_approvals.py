@@ -74,7 +74,7 @@ def log():
 
 # ------------------------------------------------------------ catalogue
 def test_every_cadence_prompt_file_has_an_entry():
-    files = sorted(p.stem[len("cadence_"):] for p in cadence.PROMPTS_DIR.glob("cadence_d*.md"))
+    files = sorted(p.stem[len("cadence_"):] for p in cadence.PROMPTS_DIR.glob("cadence_e*.md"))
     assert files, "no cadence prompt files found"
     idx = _index()
     for name in files:
@@ -83,18 +83,26 @@ def test_every_cadence_prompt_file_has_an_entry():
         assert e["kind"] == "cadence" and e["approvable"] and e["extractable"]
         assert e["source"].endswith("prompts/cadence_%s.md" % name)
         assert e["text"] == cadence._load_template(name)
-    for must in ("d1", "d2", "d3", "d4", "d5", "d6", "d6_noinvite", "d7", "d14", "d30"):
-        assert "cadence.%s" % must in idx
+    for n in range(1, 11):
+        assert "cadence.e%d" % n in idx
+    # the old ladder's ids are gone
+    for gone in ("d1", "d2", "d3", "d4", "d5", "d6", "d6_noinvite", "d7", "d14", "d30"):
+        assert "cadence.%s" % gone not in idx
 
 
 def test_cadence_variables_are_marked():
     idx = _index()
     # the subject variant adds {original_subject} to every cadence id
-    assert idx["cadence.d1"]["variables"] == ["first_name", "slots", "booking_url", "original_subject"]
-    assert set(idx["cadence.d2"]["variables"]) == {"first_name", "research_line", "company", "slots", "booking_url",
-                                                   "original_subject"}
-    assert idx["cadence.d7"]["variables"] == ["first_name", "original_subject"]
-    assert set(idx["cadence.d6"]["variables"]) == {"first_name", "slot1", "slot2", "booking_url", "original_subject"}
+    assert idx["cadence.e1"]["variables"] == ["first_name", "slots", "original_subject"]
+    # E2 offers no times
+    assert set(idx["cadence.e2"]["variables"]) == {"first_name", "research_line", "company", "original_subject"}
+    assert set(idx["cadence.e4"]["variables"]) == {"first_name", "company", "offer_proof", "slots", "original_subject"}
+    assert set(idx["cadence.e5"]["variables"]) == {"first_name", "offer_line", "slots", "original_subject", "company"}
+    assert set(idx["cadence.e6"]["variables"]) == {"first_name", "preview", "slots", "original_subject"}
+    assert idx["cadence.e7"]["variables"] == ["first_name", "slots", "original_subject"]
+    assert set(idx["cadence.e9"]["variables"]) == {"first_name", "observation", "slots", "original_subject"}
+    for n in range(1, 11):
+        assert "booking_url" not in idx["cadence.e%d" % n]["variables"]
 
 
 def test_every_question_type_branch_has_an_entry_per_offer():
@@ -141,11 +149,9 @@ def test_first_reply_template_matches_a_real_render():
 
 
 def test_cadence_and_show_rate_templates_match_real_renders():
-    tpl = _index()["cadence.d3"]["text"]
-    real = cadence.render("d3", first_name="Oswin", slots="Tue 2:00pm or Wed 3:00pm CT",
-                          booking_url="https://book.example.test/y")
-    assert ta.fill(tpl, first_name="Oswin", slots="Tue 2:00pm or Wed 3:00pm CT",
-                   booking_url="https://book.example.test/y") == real
+    tpl = _index()["cadence.e3"]["text"]
+    real = cadence.render("e3", first_name="Oswin", slots="Tue 2:00pm or Wed 3:00pm CT")
+    assert ta.fill(tpl, first_name="Oswin", slots="Tue 2:00pm or Wed 3:00pm CT") == real
 
     start = slots.TZ.localize(datetime(2030, 2, 5, 15, 0))
     appt = {"first_name": "Tamsin", "company": "Kettleby Staffing", "niche": "recruiting", "offer": "outbound",
@@ -175,7 +181,7 @@ def test_no_sentinel_or_unexpected_unextractable_entry():
         assert "zqx" not in e["review_text"].lower(), e["id"]
         assert "leadconnectorhq" not in e["review_text"], e["id"]
         if not e["extractable"]:
-            assert e["id"] == "cadence.d2.research_line", e["id"]
+            assert e["id"] == "cadence.e2.research_line", e["id"]
             assert e["explanation"]
             assert not e["approvable"]
         else:
@@ -220,35 +226,35 @@ def test_edited_first_reply_text_shows_changed(monkeypatch, approvals_file):
 
 
 def test_edited_cadence_prompt_shows_changed(monkeypatch, tmp_path, approvals_file):
-    ta.approve(["cadence.d1"], approved_by="Wendeline Okafor")
-    assert ta.status("cadence.d1") == ta.STATUS_APPROVED
+    ta.approve(["cadence.e1"], approved_by="Wendeline Okafor")
+    assert ta.status("cadence.e1") == ta.STATUS_APPROVED
     copy_dir = tmp_path / "prompts"
     shutil.copytree(str(cadence.PROMPTS_DIR), str(copy_dir))
-    p = copy_dir / "cadence_d1.md"
-    p.write_text(p.read_text(encoding="utf-8").replace("two new times", "two fresh times"), encoding="utf-8")
+    p = copy_dir / "cadence_e1.md"
+    p.write_text(p.read_text(encoding="utf-8").replace("2 more", "two more"), encoding="utf-8")
     monkeypatch.setattr(cadence, "PROMPTS_DIR", copy_dir)
-    assert ta.status("cadence.d1") == ta.STATUS_CHANGED
-    assert ta.status("cadence.d3") == ta.STATUS_UNAPPROVED
+    assert ta.status("cadence.e1") == ta.STATUS_CHANGED
+    assert ta.status("cadence.e3") == ta.STATUS_UNAPPROVED
 
 
 def test_status_unknown_and_unapproved():
     assert ta.status("no.such.template") == ta.STATUS_UNKNOWN
     assert not ta.is_approved("no.such.template")
-    assert ta.status("cadence.d7") == ta.STATUS_UNAPPROVED
+    assert ta.status("cadence.e7") == ta.STATUS_UNAPPROVED
 
 
 def test_reference_pieces_and_unextractable_cannot_be_approved():
     with pytest.raises(ta.ApprovalError):
         ta.approve(["first_reply.cleaning_reactivation.greeting"], approved_by="Wendeline Okafor")
     with pytest.raises(ta.ApprovalError):
-        ta.approve(["cadence.d2.research_line"], approved_by="Wendeline Okafor")
+        ta.approve(["cadence.e2.research_line"], approved_by="Wendeline Okafor")
     with pytest.raises(ta.ApprovalError):
         ta.approve(["no.such.template"], approved_by="Wendeline Okafor")
 
 
 def test_corrupt_file_fails_closed(approvals_file):
     approvals_file.write_text("{not json", encoding="utf-8")
-    assert not ta.is_approved("cadence.d1")
+    assert not ta.is_approved("cadence.e1")
     assert ta.kill_switch_on()
     with pytest.raises(ValueError):
         ta.load_approvals()
@@ -257,46 +263,46 @@ def test_corrupt_file_fails_closed(approvals_file):
 # ------------------------------------------------------ approve / revoke
 def test_approve_and_revoke_round_trip(approvals_file):
     assert ta.load_approvals() == {"version": 1, "approvals": {}}
-    ta.approve(["cadence.d1", "booking.confirmation.zoom_link"], approved_by="Wendeline Okafor",
+    ta.approve(["cadence.e1", "booking.confirmation.zoom_link"], approved_by="Wendeline Okafor",
                now=datetime(2030, 1, 7, 15, 0))
     data = json.loads(approvals_file.read_text(encoding="utf-8"))
-    rec = data["approvals"]["cadence.d1"]
+    rec = data["approvals"]["cadence.e1"]
     assert set(rec) == {"sha256", "approved_at", "approved_by", "text_preview"}
     assert rec["approved_by"] == "Wendeline Okafor"
-    assert rec["sha256"] == _index()["cadence.d1"]["sha256"]
+    assert rec["sha256"] == _index()["cadence.e1"]["sha256"]
     assert rec["approved_at"].startswith("2030-01-07T15:00")
     assert rec["text_preview"].startswith("Hey {first_name},")
-    assert ta.is_approved("cadence.d1") and ta.is_approved("booking.confirmation.zoom_link")
-    ta.revoke(["cadence.d1"])
-    assert ta.status("cadence.d1") == ta.STATUS_UNAPPROVED
+    assert ta.is_approved("cadence.e1") and ta.is_approved("booking.confirmation.zoom_link")
+    ta.revoke(["cadence.e1"])
+    assert ta.status("cadence.e1") == ta.STATUS_UNAPPROVED
     assert ta.is_approved("booking.confirmation.zoom_link")
     with pytest.raises(ta.ApprovalError):
-        ta.revoke(["cadence.d1"])
+        ta.revoke(["cadence.e1"])
     leftovers = [p.name for p in approvals_file.parent.iterdir() if p.name.endswith(".tmp")]
     assert leftovers == []
 
 
 def test_cli_approve_and_revoke_round_trip(approvals_file, capsys, log):
-    rc = cli.main(["--approve", "cadence.d3", "--by", "Wendeline Okafor"], confirm=_confirm_ok, isatty=_tty_yes,
+    rc = cli.main(["--approve", "cadence.e3", "--by", "Wendeline Okafor"], confirm=_confirm_ok, isatty=_tty_yes,
                   log_fn=log)
     assert rc == 0
     out = capsys.readouterr().out
-    assert "approved: cadence.d3" in out and ta.WIRED_NOTE in out
+    assert "approved: cadence.e3" in out and ta.WIRED_NOTE in out
     assert ta.WIRED_NOTE == ("Approved templates send automatically (CT3). Revoke or set the kill switch to "
                              "stop them.")
     assert ta.NOT_YET_WIRED_NOTE == ta.WIRED_NOTE  # the CT1 name still imports
     assert cli.AUTO_SEND_WARNING in out  # the interactive approve path warns
     assert "once CT3 phase 2 is deployed" in cli.AUTO_SEND_WARNING  # it does not claim auto-send is live today
-    assert ta.status("cadence.d3") == ta.STATUS_APPROVED
-    rc = cli.main(["--revoke", "cadence.d3", "--yes"], confirm=_confirm_never, isatty=_tty_yes, log_fn=log)
+    assert ta.status("cadence.e3") == ta.STATUS_APPROVED
+    rc = cli.main(["--revoke", "cadence.e3", "--yes"], confirm=_confirm_never, isatty=_tty_yes, log_fn=log)
     assert rc == 0
-    assert "revoked: cadence.d3" in capsys.readouterr().out
-    assert ta.status("cadence.d3") == ta.STATUS_UNAPPROVED
-    h = _index()["cadence.d3"]["sha256"]
+    assert "revoked: cadence.e3" in capsys.readouterr().out
+    assert ta.status("cadence.e3") == ta.STATUS_UNAPPROVED
+    h = _index()["cadence.e3"]["sha256"]
     assert [(j, st) for j, st, _ in log.rows] == [("approve_templates", "ok"), ("approve_templates", "ok")]
-    assert log.rows[0][2]["approved"] == {"cadence.d3": h}
+    assert log.rows[0][2]["approved"] == {"cadence.e3": h}
     assert log.rows[0][2]["approved_by"] == "Wendeline Okafor"
-    assert log.rows[1][2]["revoked"] == {"cadence.d3": h}
+    assert log.rows[1][2]["revoked"] == {"cadence.e3": h}
     # ids and hashes only, never the template text
     flat = json.dumps([d for _, _, d in log.rows])
     assert "A couple more options" not in flat and "Hey " not in flat
@@ -305,9 +311,9 @@ def test_cli_approve_and_revoke_round_trip(approvals_file, capsys, log):
 def test_cli_list_show_export(approvals_file, tmp_path, capsys):
     assert cli.main(["--list"]) == 0
     out = capsys.readouterr().out
-    assert "cadence.d1" in out and "unapproved" in out
-    assert cli.main(["--show", "cadence.d7"]) == 0
-    assert "Should I close your file" in capsys.readouterr().out
+    assert "cadence.e1" in out and "unapproved" in out
+    assert cli.main(["--show", "cadence.e7"]) == 0
+    assert "Should I keep trying to find a time" in capsys.readouterr().out
     assert cli.main(["--show", "no.such.template"]) == 1
     out_md = tmp_path / "review.md"
     assert cli.main(["--export", str(out_md)]) == 0
@@ -316,7 +322,7 @@ def test_cli_list_show_export(approvals_file, tmp_path, capsys):
 
 # ------------------------------------------------------------- TTY gate
 def test_yes_is_refused_without_a_tty(approvals_file, capsys, log):
-    rc = cli.main(["--approve", "cadence.d1", "--yes"], confirm=_confirm_never, isatty=_tty_no, log_fn=log)
+    rc = cli.main(["--approve", "cadence.e1", "--yes"], confirm=_confirm_never, isatty=_tty_no, log_fn=log)
     assert rc == 1
     assert "--yes is only accepted from an interactive terminal" in capsys.readouterr().out
     assert not approvals_file.exists()
@@ -324,18 +330,18 @@ def test_yes_is_refused_without_a_tty(approvals_file, capsys, log):
 
 
 def test_no_tty_without_yes_is_refused(approvals_file, capsys, log):
-    rc = cli.main(["--approve", "cadence.d1"], confirm=_confirm_never, isatty=_tty_no, log_fn=log)
+    rc = cli.main(["--approve", "cadence.e1"], confirm=_confirm_never, isatty=_tty_no, log_fn=log)
     assert rc == 1
     assert not approvals_file.exists()
     assert cli.AUTO_SEND_WARNING not in capsys.readouterr().out  # the warning is for the TTY path only
-    ta.approve(["cadence.d1"], approved_by="Wendeline Okafor")
+    ta.approve(["cadence.e1"], approved_by="Wendeline Okafor")
     before = approvals_file.read_bytes()
-    assert cli.main(["--revoke", "cadence.d1", "--yes"], confirm=_confirm_never, isatty=_tty_no, log_fn=log) == 1
+    assert cli.main(["--revoke", "cadence.e1", "--yes"], confirm=_confirm_never, isatty=_tty_no, log_fn=log) == 1
     assert approvals_file.read_bytes() == before
 
 
 def test_wrong_confirm_word_writes_nothing(approvals_file, log):
-    rc = cli.main(["--approve", "cadence.d1"], confirm=lambda w, p: False, isatty=_tty_yes, log_fn=log)
+    rc = cli.main(["--approve", "cadence.e1"], confirm=lambda w, p: False, isatty=_tty_yes, log_fn=log)
     assert rc == 1
     assert not approvals_file.exists()
 
@@ -378,12 +384,12 @@ def test_approve_all_shown_refuses_when_a_template_changed(approvals_file, tmp_p
 
 def test_approve_all_shown_refuses_a_hand_edited_hash(approvals_file, tmp_path, capsys, log):
     md = ta.render_catalogue_markdown()
-    h = ta.catalogue_index()["cadence.d1"]["sha256"]
+    h = ta.catalogue_index()["cadence.e1"]["sha256"]
     md_path = tmp_path / "review.md"
     md_path.write_text(md.replace(h, "0" * 64), encoding="utf-8")
     assert cli.main(["--approve-all-shown", str(md_path), "--yes"], isatty=_tty_yes, log_fn=log) == 1
     out = capsys.readouterr().out
-    assert "cadence.d1: the text shown does not match its marker hash" in out
+    assert "cadence.e1: the text shown does not match its marker hash" in out
     assert not approvals_file.exists()
     assert [st for _, st, _ in log.rows] == ["refused"]
 
@@ -414,11 +420,11 @@ def test_kill_switch(approvals_file, monkeypatch):
 
 
 def test_auto_send_allowed_honours_kill_switch(approvals_file, monkeypatch):
-    ta.approve(["cadence.d1"], approved_by="Wendeline Okafor")
-    assert ta.auto_send_allowed("cadence.d1")
+    ta.approve(["cadence.e1"], approved_by="Wendeline Okafor")
+    assert ta.auto_send_allowed("cadence.e1")
     monkeypatch.setenv(ta.KILL_SWITCH_ENV, "off")
-    assert ta.is_approved("cadence.d1")
-    assert not ta.auto_send_allowed("cadence.d1")
+    assert ta.is_approved("cadence.e1")
+    assert not ta.auto_send_allowed("cadence.e1")
 
 
 # --------------------------------------------------------------- markdown
@@ -487,7 +493,7 @@ def _edited_copy(module, old, new, tmp_path, monkeypatch):
 # placeholder each formatter fills (67, 72 and 5 ids in the round 2 probes,
 # which flipped 0, 9 and 1 of them).
 FORMATTER_EDITS = [
-    ("slots", '"%s or %s %s"', '"%s and %s %s"', "cadence.d1", ta.TIME_PLACEHOLDERS),
+    ("slots", '"%s or %s %s"', '"%s and %s %s"', "cadence.e1", ta.TIME_PLACEHOLDERS),
     ("slots", 'return "CT"', 'return "Central"', "booking.already_booked.invite_on_calendar", ta.TIME_PLACEHOLDERS),
     ("show_rate", 'return "%s CT"', 'return "%s Central"', "show_rate.reminder_1h_sms", ta.TIME_PLACEHOLDERS),
     # ZA item 5: the lead's proposed time in their own zone (slots.format_asked_time)
@@ -526,13 +532,19 @@ FALLBACK_EDITS = [
     ("draft", '"your business"', '"your company"', "first_reply.cleaning_trigger.send_info.full", ()),
     ("draft", '"the right person"', '"the best contact"', "first_reply.bookkeeping_trigger.referral.full", ()),
     ("draft", 'or "them"', 'or "that person"', "first_reply.bookkeeping_trigger.referral.full", ()),
-    ("cadence", 'default="your team"', 'default="your crew"', "cadence.d2", ()),
-    ("cadence", 'default="there"', 'default="friend"', "cadence.d1", ()),
-    ("cadence", "grab any open time that works for you here", "grab any time that suits you here", "cadence.d1", ()),
-    ("cadence", "Circling back in case the timing is better now. Grab", "Circling back now. Grab", "cadence.d14", ()),
-    ("cadence", '"another time"', '"a different time"', "cadence.d6", ()),
-    ("cadence", '"Re: your reply"', '"Re: our chat"', "cadence.d1", ()),
-    ("cadence", '"Re: %s, question"', '"Re: %s, quick question"', "cadence.d1", ()),
+    ("cadence", 'default="there"', 'default="friend"', "cadence.e1", ()),
+    ("cadence", "usually the prospects who are in market right now", "usually the prospects in market right now",
+     "cadence.e2.research_fallback.outbound", ()),
+    ("cadence", "recovered about $6M worth of", "recovered roughly $6M worth of", "cadence.e4.offer_proof.reactivation",
+     ()),
+    ("cadence", "win back {company}'s past clients", "win back {company}'s former clients",
+     "cadence.e5.offer_line.reactivation_bookkeeping", ()),
+    ("cadence", "buildings that just changed property managers", "buildings that changed property managers",
+     "cadence.e6.preview.cleaning_outbound", ()),
+    ("cadence", "has to sort out cleaning around move-in", "has to sort out cleaning at move-in",
+     "cadence.e9.observation.cleaning_outbound", ()),
+    ("cadence", '"Re: your reply"', '"Re: our chat"', "cadence.e1", ()),
+    ("cadence", '"Re: %s, question"', '"Re: %s, quick question"', "cadence.e1", ()),
 ] + FORMATTER_EDITS
 
 
@@ -615,7 +627,7 @@ def test_catalogue_hashes_do_not_depend_on_the_environment(monkeypatch):
 # Defect 2: --approve-all-shown hashes the text it shows, not just the markers.
 def test_approve_all_shown_refuses_text_swapped_under_intact_markers(approvals_file, tmp_path, capsys, log):
     md = ta.render_catalogue_markdown()
-    real = _index()["cadence.d7"]["review_text"].rstrip("\n")
+    real = _index()["cadence.e7"]["review_text"].rstrip("\n")
     assert real in md
     edited = md.replace(real, "Hey {first_name},\n\nTotally different words the reviewer read.\n\nLorenzo")
     p = tmp_path / "review.md"
@@ -623,8 +635,8 @@ def test_approve_all_shown_refuses_text_swapped_under_intact_markers(approvals_f
     rc = cli.main(["--approve-all-shown", str(p), "--yes"], confirm=_confirm_never, isatty=_tty_yes, log_fn=log)
     assert rc == 1
     out = capsys.readouterr().out
-    assert "cadence.d7: the text shown does not match its marker hash" in out
-    assert ta.status("cadence.d7") == ta.STATUS_UNAPPROVED
+    assert "cadence.e7: the text shown does not match its marker hash" in out
+    assert ta.status("cadence.e7") == ta.STATUS_UNAPPROVED
     assert not approvals_file.exists()
     assert log.rows[-1][1] == "refused"
 
@@ -642,14 +654,14 @@ def test_approve_all_shown_refuses_a_markers_only_file(approvals_file, tmp_path,
 
 def test_approve_all_shown_refuses_the_whole_file_for_one_bad_block(approvals_file, tmp_path, capsys, log):
     md = ta.render_catalogue_markdown()
-    marker = [line for line in md.splitlines() if "id=cadence.d3 " in line][0]
+    marker = [line for line in md.splitlines() if "id=cadence.e3 " in line][0]
     # drop the text block after one marker only
     head, tail = md.split(marker, 1)
     tail = tail.split("```", 2)[2]  # removes "```text ... ```"
     p = tmp_path / "one_bad.md"
     p.write_text(head + marker + tail, encoding="utf-8")
     assert cli.main(["--approve-all-shown", str(p), "--yes"], isatty=_tty_yes, log_fn=log) == 1
-    assert "cadence.d3: marker has no text block" in capsys.readouterr().out
+    assert "cadence.e3: marker has no text block" in capsys.readouterr().out
     assert not approvals_file.exists()
 
 
@@ -666,7 +678,7 @@ def test_parse_exported_blocks_reads_text_after_each_marker():
 # Unreadable approvals file: the refusal is logged.
 def test_approve_against_an_unreadable_file_writes_a_job_log_row(approvals_file, capsys, log):
     approvals_file.write_text("{broken", encoding="utf-8")
-    rc = cli.main(["--approve", "cadence.d1", "--yes"], confirm=_confirm_never, isatty=_tty_yes, log_fn=log)
+    rc = cli.main(["--approve", "cadence.e1", "--yes"], confirm=_confirm_never, isatty=_tty_yes, log_fn=log)
     assert rc == 1
     assert "REFUSED" in capsys.readouterr().out
     assert log.rows and log.rows[-1][1] == "refused"
@@ -723,13 +735,13 @@ def test_catalogue_is_cached_and_an_edit_invalidates_it(monkeypatch, tmp_path):
     assert len(calls) == 2
     ta.catalogue()
     assert len(calls) == 2
-    p = copy_dir / "cadence_d7.md"
-    p.write_text(p.read_text(encoding="utf-8").replace("keep my notes", "keep my records"), encoding="utf-8")
+    p = copy_dir / "cadence_e7.md"
+    p.write_text(p.read_text(encoding="utf-8").replace("Last one from me this week", "Last one from me for this week"), encoding="utf-8")
     st = os.stat(str(p))
     os.utime(str(p), ns=(st.st_atime_ns, st.st_mtime_ns + 5 * 10 ** 9))
     again = dict((e["id"], e["sha256"]) for e in ta.catalogue())
     assert len(calls) == 3
-    assert again["cadence.d7"] != dict((e["id"], e["sha256"]) for e in first)["cadence.d7"]
+    assert again["cadence.e7"] != dict((e["id"], e["sha256"]) for e in first)["cadence.e7"]
     # callers get copies: mutating one does not change the cache
     got = ta.catalogue()
     got[0]["text"] = "mutated"
@@ -740,7 +752,14 @@ def test_catalogue_is_cached_and_an_edit_invalidates_it(monkeypatch, tmp_path):
 # Defect 1: how times and slots are written feeds the hash of every id that
 # carries a time or slot placeholder (the value_formats variant).
 NON_TIME_PLACEHOLDERS = ("first_name", "company", "booking_url", "zoom_link", "referral_name", "referral_first_name",
-                         "specialty", "research_line", "case_study", "free_work", "loom_url", "original_subject")
+                         "specialty", "research_line", "offer_proof", "offer_line", "preview", "observation",
+                         "loom_url", "original_subject")
+# {slot1} / {slot2} were the old cadence D6's placeholders. No template carries
+# them since the E1..E10 ladder (2026-09-23), but they stay in
+# ta.TIME_PLACEHOLDERS and in the value_formats block: dropping them would
+# change that block, and so the hash of every approved id with a time in it.
+# Section 4 decides when to retire them.
+RETIRED_TIME_PLACEHOLDERS = ("slot1", "slot2")
 
 
 def test_every_catalogue_placeholder_is_classified():
@@ -750,7 +769,11 @@ def test_every_catalogue_placeholder_is_classified():
     seen = set(v for e in ta.catalogue() for v in e["variables"])
     assert seen - set(ta.TIME_PLACEHOLDERS) - set(NON_TIME_PLACEHOLDERS) == set()
     block = ta.value_formats_text()
+    assert not seen & set(RETIRED_TIME_PLACEHOLDERS)
     for name in ta.TIME_PLACEHOLDERS:
+        if name in RETIRED_TIME_PLACEHOLDERS:
+            assert "{%s}" % name in block
+            continue
         assert name in seen, "%s is listed as a time placeholder but no template carries it" % name
         assert "{%s}" % name in block, "the value_formats block does not say how {%s} is written" % name
 
@@ -778,7 +801,7 @@ def test_every_id_with_a_time_or_slot_placeholder_carries_the_value_formats_bloc
         own = ta.compose_review_text(e["text"], [v for v in e["variants"] if v["name"] != "value_formats"])
         assert e["variables"] == ta._placeholders(own), e["id"]
     assert with_block > 80
-    assert "cadence.d7" in shown and header not in shown["cadence.d7"]
+    assert "cadence.e2" in shown and header not in shown["cadence.e2"]  # E2 offers no times
 
 
 def test_value_formats_block_is_the_engine_formatters_output():
@@ -844,11 +867,11 @@ def test_a_value_formats_failure_fails_closed(monkeypatch):
     monkeypatch.setattr(ta, "value_formats_text", broken)
     ta.clear_cache()
     idx = _index()
-    assert not idx["cadence.d1"]["extractable"] and not idx["cadence.d1"]["approvable"]
-    assert "formatter exploded" in idx["cadence.d1"]["explanation"]
-    assert not ta.is_approved("cadence.d1")
-    # a template with no time in it is unaffected
-    assert idx["cadence.d7"]["approvable"] and idx["cadence.d7"]["extractable"]
+    assert not idx["cadence.e1"]["extractable"] and not idx["cadence.e1"]["approvable"]
+    assert "formatter exploded" in idx["cadence.e1"]["explanation"]
+    assert not ta.is_approved("cadence.e1")
+    # a template with no time in it is unaffected (E2 offers no times)
+    assert idx["cadence.e2"]["approvable"] and idx["cadence.e2"]["extractable"]
 
 
 # Cache: keyed on file content, and a build that raced an edit is not cached.
@@ -874,19 +897,19 @@ def test_a_same_size_edit_with_its_mtime_put_back_invalidates_the_cache(monkeypa
     shutil.copytree(str(cad_mod.PROMPTS_DIR), str(copy_dir))
     monkeypatch.setattr(cad_mod, "PROMPTS_DIR", copy_dir)
     calls = _counting_build(monkeypatch)
-    first = _index()["cadence.d7"]
+    first = _index()["cadence.e7"]
     assert len(calls) == 1
-    p = copy_dir / "cadence_d7.md"
+    p = copy_dir / "cadence_e7.md"
     st = os.stat(str(p))
     text = p.read_text(encoding="utf-8")
-    edited = text.replace("close your file", "close your case")
+    edited = text.replace("not the right moment", "not the right minute")
     assert edited != text and len(edited.encode("utf-8")) == len(text.encode("utf-8"))
     p.write_text(edited, encoding="utf-8")
     os.utime(str(p), ns=(st.st_atime_ns, st.st_mtime_ns))
     assert (os.stat(str(p)).st_mtime_ns, os.stat(str(p)).st_size) == (st.st_mtime_ns, st.st_size)
-    again = _index()["cadence.d7"]
+    again = _index()["cadence.e7"]
     assert len(calls) == 2
-    assert "close your case" in again["text"] and again["sha256"] != first["sha256"]
+    assert "not the right minute" in again["text"] and again["sha256"] != first["sha256"]
 
 
 def test_a_source_edited_during_the_build_is_built_again_not_cached_stale(monkeypatch, tmp_path):
@@ -895,26 +918,26 @@ def test_a_source_edited_during_the_build_is_built_again_not_cached_stale(monkey
     copy_dir = tmp_path / "prompts"
     shutil.copytree(str(cad_mod.PROMPTS_DIR), str(copy_dir))
     monkeypatch.setattr(cad_mod, "PROMPTS_DIR", copy_dir)
-    p = copy_dir / "cadence_d7.md"
+    p = copy_dir / "cadence_e7.md"
 
     def edit_mid_build():
-        p.write_text(p.read_text(encoding="utf-8").replace("keep my notes", "keep my records"), encoding="utf-8")
+        p.write_text(p.read_text(encoding="utf-8").replace("Last one from me this week", "Last one from me for this week"), encoding="utf-8")
     calls = _counting_build(monkeypatch, during=edit_mid_build)
-    got = _index()["cadence.d7"]
+    got = _index()["cadence.e7"]
     assert len(calls) == 2, "the build that raced the edit was kept"
-    assert "keep my records" in got["text"]
-    assert "keep my records" in _index()["cadence.d7"]["text"]
+    assert "Last one from me for this week" in got["text"]
+    assert "Last one from me for this week" in _index()["cadence.e7"]["text"]
     assert len(calls) == 2  # the second, consistent build is the cached one
 
 
 def test_sources_that_never_hold_still_fail_closed(monkeypatch, tmp_path, approvals_file):
     from services.reply_engine import cadence as cad_mod
 
-    ta.approve(["cadence.d7"], approved_by="Wendeline Okafor")
+    ta.approve(["cadence.e7"], approved_by="Wendeline Okafor")
     copy_dir = tmp_path / "prompts"
     shutil.copytree(str(cad_mod.PROMPTS_DIR), str(copy_dir))
     monkeypatch.setattr(cad_mod, "PROMPTS_DIR", copy_dir)
-    p = copy_dir / "cadence_d7.md"
+    p = copy_dir / "cadence_e7.md"
     real_build = ta._build_catalogue
 
     def always_racing():
@@ -925,4 +948,4 @@ def test_sources_that_never_hold_still_fail_closed(monkeypatch, tmp_path, approv
     ta.clear_cache()
     with pytest.raises(RuntimeError):
         ta.catalogue()
-    assert not ta.is_approved("cadence.d7")
+    assert not ta.is_approved("cadence.e7")

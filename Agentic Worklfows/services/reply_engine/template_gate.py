@@ -11,9 +11,8 @@ This module only answers that question and keeps the FYI counters. It sends
 nothing itself except one urgent parity alert a day, through the ordinary
 notify path (which records it and sends nothing in shadow). Every existing
 send check still runs in the send paths; the gate is one more check in front.
-An allowed verdict is not permission to send on its own: the day-6 approval,
-the D1 veto window, opt-out, lead hold, send window and recipient checks stay
-in the send paths.
+An allowed verdict is not permission to send on its own: the D1 veto window,
+opt-out, lead hold, send window and recipient checks stay in the send paths.
 
 Gate order (the first failure wins; any exception is ``registry_error``):
 
@@ -158,16 +157,18 @@ MAIN_KIND = {"first_reply": "first_reply", "booking": "booking", "cadence": "cad
 PART_KIND = {"cadence": "cadence_fragment"}
 # Part id prefix -> the placeholder its text fills in the day template.
 PART_PLACEHOLDERS = (
-    ("cadence.d2.research_fallback.", "research_line"),
-    ("cadence.d2.research_line", "research_line"),
-    ("cadence.d4.case_study.", "case_study"),
-    ("cadence.d5.free_work.", "free_work"),
+    ("cadence.e2.research_fallback.", "research_line"),
+    ("cadence.e2.research_line", "research_line"),
+    ("cadence.e4.offer_proof.", "offer_proof"),
+    ("cadence.e5.offer_line.", "offer_line"),
+    ("cadence.e6.preview.", "preview"),
+    ("cadence.e9.observation.", "observation"),
 )
 PART_FILLED = tuple(sorted(set(ph for _, ph in PART_PLACEHOLDERS)))
 LADDER_PREFIXES = ("cadence.", "show_rate.", "no_show.")
 # Ladder ids that are unextractable on purpose (never approvable), so the
 # deploy preflight does not count them as a failed extraction.
-UNEXTRACTABLE_BY_DESIGN = ("cadence.d2.research_line",)
+UNEXTRACTABLE_BY_DESIGN = ("cadence.e2.research_line",)
 # Variants that never auto-send even when approved (see the module docstring).
 NEVER_AUTO_VARIANTS = ("confirmed_time",)
 SUBJECT_VARIANT = "subject"
@@ -188,7 +189,7 @@ MAX_SUBJECT_CHARS = 300
 # Resume on its stop (runbooks/template_approvals.md, "Cadence holds, stalls
 # and resume"). tests/test_gate_rules_version.py pins this module's source
 # per version, so a change to this file without a bump fails the suite.
-GATE_RULES_VERSION = 1
+GATE_RULES_VERSION = 2
 
 # Placeholder types.
 NAME_PLACEHOLDERS = ("first_name", "referral_name", "referral_first_name")

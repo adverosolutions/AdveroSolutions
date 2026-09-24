@@ -147,11 +147,11 @@ def test_ok_first_reply_cadence_and_show_rate(env):
     assert (v.allowed, v.reason, v.template_id) == (True, "ok", tid)
     assert v.statuses == {tid: ta.STATUS_APPROVED}
 
-    env.approve_ids("cadence.d4", "cadence.d4.case_study.reactivation")
-    t = _touch(4, stamp_id="cadence.d4", parts=["cadence.d4.case_study.reactivation"])
+    env.approve_ids("cadence.e4", "cadence.e4.offer_proof.reactivation")
+    t = _touch(4, stamp_id="cadence.e4", parts=["cadence.e4.offer_proof.reactivation"])
     v = gate.touch_verdict(t)
     assert (v.allowed, v.reason) == (True, "ok"), v.detail
-    assert v.ids == ["cadence.d4", "cadence.d4.case_study.reactivation"]
+    assert v.ids == ["cadence.e4", "cadence.e4.offer_proof.reactivation"]
 
     t = _sr_touch("confirm_email")
     env.approve_ids(t.template_id)
@@ -184,7 +184,7 @@ def test_no_template_and_not_template_render(env):
     # unstamped d1 touch is judged on that id; nothing approved it here, so
     # the reason is "unapproved", not "no_template".
     t = _touch(1)
-    assert t.template_id == "cadence.d1"
+    assert t.template_id == "cadence.e1"
     assert gate.touch_verdict(t).reason == "unapproved"
     # A real no_template case: a touch-shaped object with no template id at all.
     bare = types.SimpleNamespace(body_text=t.body_text, subject=t.subject, problems=[],
@@ -195,7 +195,7 @@ def test_no_template_and_not_template_render(env):
 
 
 def test_unknown_id(env):
-    assert gate.ids_verdict("cadence.d99").reason == "unknown_id"
+    assert gate.ids_verdict("cadence.e99").reason == "unknown_id"
     # an id from another kind is refused too: a first-reply id cannot pass as a booking
     d, tid, offer = _approved_first_reply(env)
     v = gate.draft_verdict(d, kind="booking", campaign_key=offer, allow_terms=[COMPANY, FIRST])
@@ -218,8 +218,8 @@ def test_unapproved_and_changed_since_approval(env):
 def test_not_approvable(env):
     assert gate.ids_verdict("first_reply.%s.greeting" % _offer()).reason == "not_approvable"
     # d2 with the per-lead LLM research line is always held
-    env.approve_ids("cadence.d2")
-    v = gate.ids_verdict("cadence.d2", ["cadence.d2.research_line"])
+    env.approve_ids("cadence.e2")
+    v = gate.ids_verdict("cadence.e2", ["cadence.e2.research_line"])
     assert v.reason == "not_approvable"
 
 
@@ -229,9 +229,9 @@ def test_stale_render(env):
     assert _fr_verdict(stale, offer).reason == "stale_render"
     unstamped = d.model_copy(update={"template_hash": None})
     assert _fr_verdict(unstamped, offer).reason == "stale_render"
-    env.approve_ids("cadence.d4", "cadence.d4.case_study.reactivation")
-    t = _touch(4, stamp_id="cadence.d4", parts=["cadence.d4.case_study.reactivation"])
-    t.template_parts["cadence.d4.case_study.reactivation"] = "3" * 64
+    env.approve_ids("cadence.e4", "cadence.e4.offer_proof.reactivation")
+    t = _touch(4, stamp_id="cadence.e4", parts=["cadence.e4.offer_proof.reactivation"])
+    t.template_parts["cadence.e4.offer_proof.reactivation"] = "3" * 64
     assert gate.touch_verdict(t).reason == "stale_render"
 
 
@@ -270,8 +270,8 @@ def test_copy_gate(env):
     body = d.body_text.replace("Lorenzo", "Our AI assistant\n\nLorenzo")
     assert _fr_verdict(d.model_copy(update={"body_text": body}), offer).reason == "copy_gate"
     # cadence re-asserts touch.problems
-    env.approve_ids("cadence.d1")
-    t = _touch(1, stamp_id="cadence.d1")
+    env.approve_ids("cadence.e1")
+    t = _touch(1, stamp_id="cadence.e1")
     t.body_text = t.body_text.replace("Lorenzo", "Our bot will follow up!\n\nLorenzo")
     assert gate.touch_verdict(t).reason == "copy_gate"
 
@@ -291,7 +291,7 @@ def test_registry_error(env, monkeypatch):
     monkeypatch.setattr(ta, "status", boom)
     v = _fr_verdict(d, offer)
     assert (v.allowed, v.reason, v.detail) == (False, "registry_error", "RuntimeError")
-    assert gate.ids_verdict("cadence.d1").reason == "registry_error"
+    assert gate.ids_verdict("cadence.e1").reason == "registry_error"
     assert gate.draft_verdict(d, kind="nonsense").reason == "registry_error"
 
 
@@ -375,12 +375,12 @@ def test_kill_switch_unreadable_file(env):
     assert gate.auto_send_enabled() is False
     # the helpers refuse to parse it too
     with pytest.raises(ValueError):
-        tf.approve_ids("cadence.d1", path=env.approvals_path)
+        tf.approve_ids("cadence.e1", path=env.approvals_path)
 
 
 def test_kill_switch_holds_ladders_too(env):
-    env.approve_ids("cadence.d1")
-    t = _touch(1, stamp_id="cadence.d1")
+    env.approve_ids("cadence.e1")
+    t = _touch(1, stamp_id="cadence.e1")
     assert gate.touch_verdict(t).allowed
     s = _sr_touch("confirm_email")
     env.approve_ids(s.template_id)
@@ -402,7 +402,7 @@ def test_parity_mismatch_lists_ids_and_alerts_once_per_day(env):
     assert ps["status"] == "mismatch" and ps["ids"] == [tid]
     for _ in range(3):
         assert gate.auto_send_enabled() is False
-        assert gate.ids_verdict("cadence.d1").reason == "parity_failed"
+        assert gate.ids_verdict("cadence.e1").reason == "parity_failed"
     assert len(env.alerts) == 1
     alert = env.alerts[0]
     assert alert["priority"] == "urgent"
@@ -424,7 +424,7 @@ def test_parity_reference_missing(env):
     gate.clear_cache()
     assert gate.parity_status()["status"] == "reference_missing"
     assert gate.auto_send_enabled() is False
-    assert gate.ids_verdict("cadence.d1").reason == "parity_failed"
+    assert gate.ids_verdict("cadence.e1").reason == "parity_failed"
     assert len(env.alerts) == 1 and "reference_missing" in env.alerts[0]["title"]
 
 
@@ -471,7 +471,7 @@ def test_catalogue_digest_is_sorted_id_sha_lines():
     digest, ids = gate.catalogue_digest()
     idx = ta.catalogue_index()
     assert ids == dict((k, e["sha256"]) for k, e in idx.items() if e.get("approvable"))
-    assert len(ids) == 108   # ZC: no_show.ns_d1_other_channel is one id now (was 4)
+    assert len(ids) == 114   # the ten-email cadence ladder (2026-09-23): 29 cadence ids, was 23
     lines = "\n".join(sorted("%s=%s" % kv for kv in ids.items()))
     assert digest == hashlib.sha256(lines.encode("utf-8")).hexdigest()
 
@@ -483,11 +483,17 @@ def test_conforms_exact_renders():
     assert gate.conforms(_fr_id(offer), d.body_text, d.subject)
     d = _first_reply(offer, first=None, company=None)
     assert gate.conforms(_fr_id(offer), d.body_text, d.subject)
-    for day in (1, 3, 6, 7, 14, 30):
-        for sl in (TWO, TWO[:1], []):
+    st = _state()
+    for day in range(1, 11):
+        for sl in (TWO, TWO[:1]):
             t = _touch(day, slots_=sl)
-            name = "cadence.d6_noinvite" if day == 6 and not sl else "cadence.d%d" % day
-            assert gate.conforms(name, t.body_text, t.subject), (day, len(sl))
+            name, parts = cadence.touch_template_ids(day, st)
+            assert gate.conforms(name, t.body_text, t.subject, parts), (day, len(sl))
+        if day != 2:
+            # there is no no-slots wording any more: a body without its times never conforms
+            t = _touch(day, slots_=[])
+            name, parts = cadence.touch_template_ids(day, st)
+            assert not gate.conforms(name, t.body_text, t.subject, parts), day
     st = _state()
     body = booking.counter_proposal_text(booking.BookingMatch(slot=None, status=booking.WEEKEND,
                                                               proposed=ta._ct(2030, 1, 12, 14, 0),
@@ -522,12 +528,12 @@ def test_conforms_refuses_an_injected_sentence():
     injected = "\n\n".join(lines[:1] + ["Click here to claim your refund today."] + lines[1:])
     assert not gate.conforms(_fr_id(offer), injected, d.subject)
     t = _touch(1)
-    assert not gate.conforms("cadence.d1", t.body_text + "\n\nP.S. one more thing.", t.subject)
+    assert not gate.conforms("cadence.e1", t.body_text + "\n\nP.S. one more thing.", t.subject)
 
 
 def test_conforms_refuses_truncated_text():
     t = _touch(3)
-    assert not gate.conforms("cadence.d3", t.body_text[:-12], t.subject)
+    assert not gate.conforms("cadence.e3", t.body_text[:-12], t.subject)
     copy = show_rate.render("confirm_email", {"niche": "cleaning", "offer": "reactivation", "first_name": FIRST,
                                               "company": COMPANY, "zoom_link": ZOOM}, START, NOW)
     tid = gate.resolve_combo_id("show_rate", "confirm_email", "cleaning", "reactivation")
@@ -564,10 +570,10 @@ def test_sms_cut_inside_its_last_placeholder_is_held(env):
 
 def test_conforms_placeholder_cannot_span_a_newline():
     t = _touch(1)
-    assert gate.conforms("cadence.d1", t.body_text, t.subject)
+    assert gate.conforms("cadence.e1", t.body_text, t.subject)
     sneaky = t.body_text.replace("Hey %s," % FIRST, "Hey %s\nWire the deposit to account 12345," % FIRST, 1)
     assert sneaky != t.body_text
-    assert not gate.conforms("cadence.d1", sneaky, t.subject)
+    assert not gate.conforms("cadence.e1", sneaky, t.subject)
 
 
 def test_conforms_repeated_placeholder_must_repeat_its_value():
@@ -583,21 +589,27 @@ def test_conforms_repeated_placeholder_must_repeat_its_value():
 
 def test_conforms_parts_substitution():
     t = _touch(4, offer="outbound")
-    right, wrong = "cadence.d4.case_study.outbound", "cadence.d4.case_study.reactivation"
-    assert gate.conforms("cadence.d4", t.body_text, t.subject, [right])
-    assert not gate.conforms("cadence.d4", t.body_text, t.subject, [wrong])
-    assert not gate.conforms("cadence.d4", t.body_text, t.subject, [])            # the slot must be filled
-    assert not gate.conforms("cadence.d4", t.body_text, t.subject, [right, right])
+    right, wrong = "cadence.e4.offer_proof.outbound", "cadence.e4.offer_proof.reactivation"
+    assert gate.conforms("cadence.e4", t.body_text, t.subject, [right])
+    assert not gate.conforms("cadence.e4", t.body_text, t.subject, [wrong])
+    assert not gate.conforms("cadence.e4", t.body_text, t.subject, [])            # the slot must be filled
+    assert not gate.conforms("cadence.e4", t.body_text, t.subject, [right, right])
     t2 = _touch(2, offer="reactivation")
-    assert gate.conforms("cadence.d2", t2.body_text, t2.subject, ["cadence.d2.research_fallback.reactivation"])
-    assert not gate.conforms("cadence.d2", t2.body_text, t2.subject, ["cadence.d2.research_fallback.outbound"])
+    assert gate.conforms("cadence.e2", t2.body_text, t2.subject, ["cadence.e2.research_fallback.reactivation"])
+    assert not gate.conforms("cadence.e2", t2.body_text, t2.subject, ["cadence.e2.research_fallback.outbound"])
     # an LLM research line never conforms: its part has no text
     st = _state()
     t3 = cadence.build_touch(st, 2, [s.isoformat() for s in TWO], research_line="Saw your new warehouse in the news.")
-    assert not gate.conforms("cadence.d2", t3.body_text, t3.subject, ["cadence.d2.research_line"])
-    t5 = _touch(5, niche="bookkeeping", offer="outbound")
-    assert gate.conforms("cadence.d5", t5.body_text, t5.subject, ["cadence.d5.free_work.bookkeeping_outbound"])
-    assert not gate.conforms("cadence.d5", t5.body_text, t5.subject, ["cadence.d5.free_work.cleaning_outbound"])
+    assert not gate.conforms("cadence.e2", t3.body_text, t3.subject, ["cadence.e2.research_line"])
+    t5 = _touch(5, niche="bookkeeping", offer="reactivation")
+    assert gate.conforms("cadence.e5", t5.body_text, t5.subject, ["cadence.e5.offer_line.reactivation_bookkeeping"])
+    assert not gate.conforms("cadence.e5", t5.body_text, t5.subject, ["cadence.e5.offer_line.reactivation"])
+    t6 = _touch(6, niche="bookkeeping", offer="outbound")
+    assert gate.conforms("cadence.e6", t6.body_text, t6.subject, ["cadence.e6.preview.bookkeeping_outbound"])
+    assert not gate.conforms("cadence.e6", t6.body_text, t6.subject, ["cadence.e6.preview.cleaning_outbound"])
+    t9 = _touch(9, niche="recruiting", offer="reactivation")
+    assert gate.conforms("cadence.e9", t9.body_text, t9.subject, ["cadence.e9.observation.recruiting_reactivation"])
+    assert not gate.conforms("cadence.e9", t9.body_text, t9.subject, ["cadence.e9.observation.recruiting_outbound"])
 
 
 def test_conforms_subject_check():
@@ -616,8 +628,8 @@ def test_conforms_subject_check():
 
 
 def test_conforms_unknown_or_bad_id_is_false():
-    assert gate.conforms("cadence.d99", "Hey") is False
-    assert gate.conforms("cadence.d2.research_line", "anything") is False
+    assert gate.conforms("cadence.e99", "Hey") is False
+    assert gate.conforms("cadence.e2.research_line", "anything") is False
 
 
 # ------------------------------------------------------------- records
@@ -634,13 +646,13 @@ def test_to_record_contains_no_text(env):
 
 def test_stamp_sets_ids_and_hashes(env):
     t = _touch(4)
-    gate.stamp(t, "cadence.d4", ["cadence.d4.case_study.reactivation"])
+    gate.stamp(t, "cadence.e4", ["cadence.e4.offer_proof.reactivation"])
     idx = ta.catalogue_index()
-    assert t.template_id == "cadence.d4" and t.template_hash == idx["cadence.d4"]["sha256"]
-    assert t.template_parts == {"cadence.d4.case_study.reactivation":
-                                idx["cadence.d4.case_study.reactivation"]["sha256"]}
-    assert gate.current_hash("cadence.d4") == idx["cadence.d4"]["sha256"]
-    assert gate.current_hash("cadence.d99") is None
+    assert t.template_id == "cadence.e4" and t.template_hash == idx["cadence.e4"]["sha256"]
+    assert t.template_parts == {"cadence.e4.offer_proof.reactivation":
+                                idx["cadence.e4.offer_proof.reactivation"]["sha256"]}
+    assert gate.current_hash("cadence.e4") == idx["cadence.e4"]["sha256"]
+    assert gate.current_hash("cadence.e99") is None
 
 
 def test_stamp_never_raises_on_an_object_without_the_fields(env):
@@ -663,14 +675,14 @@ def test_fyi_record_drain_restore(tmp_path):
                           status="sent", now=now)
     gate.record_auto_send(st, kind="booking", template_id="booking.counter.weekend", approval_id="tok2",
                           status="approved_queued", send_after=now + timedelta(hours=10), now=now)
-    gate.note_held(st, kind="cadence", template_id="cadence.d3", reason="unapproved", now=now)
-    gate.note_held(st, kind="cadence", template_id="cadence.d3", reason="unapproved", now=now)
+    gate.note_held(st, kind="cadence", template_id="cadence.e3", reason="unapproved", now=now)
+    gate.note_held(st, kind="cadence", template_id="cadence.e3", reason="unapproved", now=now)
     gate.note_held(st, kind="show_rate", template_id=None, reason="no_template", now=now)
     entries, held = gate.drain_fyi(st)
     assert [e["approval_id"] for e in entries] == ["tok1", "tok2"]
     assert entries[1]["send_after"] == (now + timedelta(hours=10)).isoformat()
     assert set(entries[0]) == {"kind", "template_id", "approval_id", "status", "send_after", "at"}
-    assert held == {"cadence.d3": 2, "show_rate:(no template)": 1}
+    assert held == {"cadence.e3": 2, "show_rate:(no template)": 1}
     assert gate.drain_fyi(st) == ([], {})
     gate.record_auto_send(st, kind="first_reply", template_id="t", approval_id="tok3", status="sent", now=now)
     gate.restore_fyi(st, entries, held)
@@ -703,12 +715,12 @@ def test_fyi_keys():
 def test_note_held_counts_per_template_id(tmp_path):
     st = _store(tmp_path)
     now = datetime(2030, 1, 8, 15, 0, tzinfo=timezone.utc)
-    for tid in ("cadence.d1", "cadence.d1", "no_show.ns_still_on_sms", "cadence.d1"):
+    for tid in ("cadence.e1", "cadence.e1", "no_show.ns_still_on_sms", "cadence.e1"):
         gate.note_held(st, kind="cadence", template_id=tid, reason="unapproved", now=now)
-    assert st.get(gate.HELD_KEY_PREFIX + "cadence.d1") == 3
+    assert st.get(gate.HELD_KEY_PREFIX + "cadence.e1") == 3
     _, held = gate.drain_fyi(st)
-    assert held == {"cadence.d1": 3, "no_show.ns_still_on_sms": 1}
-    assert st.get(gate.HELD_KEY_PREFIX + "cadence.d1") == 0
+    assert held == {"cadence.e1": 3, "no_show.ns_still_on_sms": 1}
+    assert st.get(gate.HELD_KEY_PREFIX + "cadence.e1") == 0
 
 
 # ------------------------------------------------------ resolve_combo_id
@@ -753,10 +765,10 @@ def test_applies_to_covers_every_combo_exactly_once():
 
 # ---------------------------------------------------------------- health
 def test_health_summary_has_no_text(env):
-    env.approve_ids("cadence.d1", "cadence.d3")
+    env.approve_ids("cadence.e1", "cadence.e3")
     h = gate.health_summary()
     assert h["parity"] == "ok" and h["kill_switch"] is False and h["auto_send_enabled"] is True
-    assert h["approved_count"] == 2 and h["approvable_count"] == 108
+    assert h["approved_count"] == 2 and h["approvable_count"] == 114
     assert h["ladder_unapproved_count"] == len(gate.ladder_ids()) - 2
     flat = json.dumps(h)
     assert "Hey" not in flat and "cadence." not in flat and "Lorenzo" not in flat
@@ -768,11 +780,11 @@ def test_health_summary_has_no_text(env):
 
 
 def test_ids_verdict_is_statuses_only(env):
-    env.approve_ids("cadence.d1")
-    assert gate.ids_verdict("cadence.d1").allowed
-    assert gate.ids_verdict("cadence.d3").reason == "unapproved"
-    env.approve_ids("cadence.d2", "cadence.d2.research_fallback.outbound")
-    assert gate.ids_verdict("cadence.d2", ["cadence.d2.research_fallback.outbound"]).allowed
+    env.approve_ids("cadence.e1")
+    assert gate.ids_verdict("cadence.e1").allowed
+    assert gate.ids_verdict("cadence.e3").reason == "unapproved"
+    env.approve_ids("cadence.e2", "cadence.e2.research_fallback.outbound")
+    assert gate.ids_verdict("cadence.e2", ["cadence.e2.research_fallback.outbound"]).allowed
 
 
 def test_fixture_ladder_mode(monkeypatch, tmp_path):
@@ -786,7 +798,7 @@ def test_fixture_ladder_mode(monkeypatch, tmp_path):
 
 def test_fixture_helpers_refuse_the_real_file():
     with pytest.raises(AssertionError):
-        tf.approve_ids("cadence.d1", path=REAL_APPROVALS)
+        tf.approve_ids("cadence.e1", path=REAL_APPROVALS)
     with pytest.raises(AssertionError):
         tf.write_reference(REAL_REFERENCE)
 
@@ -797,17 +809,17 @@ def test_parity_cli_write_check_and_mismatch(env, tmp_path, capsys):
     assert parity_cli.main(["--write", "--reference", str(ref)]) == 0
     rec = json.loads(ref.read_text())
     assert set(rec) == {"python", "pytz", "pydantic", "generated_at", "digest", "ids"}
-    assert rec["digest"] == gate.catalogue_digest()[0] and len(rec["ids"]) == 108
+    assert rec["digest"] == gate.catalogue_digest()[0] and len(rec["ids"]) == 114
     assert "Hey" not in ref.read_text()
     capsys.readouterr()
     assert parity_cli.main(["--check", "--reference", str(ref)]) == 0
-    assert capsys.readouterr().out.startswith("OK: 108 ids")
-    rec["ids"]["cadence.d1"] = "0" * 64
+    assert capsys.readouterr().out.startswith("OK: 114 ids")
+    rec["ids"]["cadence.e1"] = "0" * 64
     rec["digest"] = "0" * 64
     ref.write_text(json.dumps(rec))
     assert parity_cli.main(["--check", "--reference", str(ref)]) == 1
     out = capsys.readouterr().out
-    assert out.startswith("MISMATCH: 1 id(s) differ") and "  cadence.d1" in out
+    assert out.startswith("MISMATCH: 1 id(s) differ") and "  cadence.e1" in out
     ref.unlink()
     assert parity_cli.main(["--check", "--reference", str(ref)]) == 1
 
@@ -827,11 +839,11 @@ def test_parity_cli_report_unapproved(env, capsys):
     env.approve_ladders()
     env.approve_ids(_fr_id(_offer()))
     data = json.loads(env.approvals_path.read_text())
-    data["approvals"]["cadence.d1"]["sha256"] = "9" * 64   # changed since approval counts as unapproved
+    data["approvals"]["cadence.e1"]["sha256"] = "9" * 64   # changed since approval counts as unapproved
     env.approvals_path.write_text(json.dumps(data))
     assert parity_cli.main(["--report-unapproved", "--approvals-file", str(env.approvals_path)]) == 0
     out = capsys.readouterr().out.splitlines()
-    assert out[0] == "UNAPPROVED LADDER IDS: 1" and out[4].strip() == "cadence.d1"
+    assert out[0] == "UNAPPROVED LADDER IDS: 1" and out[4].strip() == "cadence.e1"
     for line in out:
         assert "Hey" not in line
 
@@ -853,7 +865,7 @@ def test_parity_cli_report_lists_unextractable_ladder_ids_and_the_kill_switch(en
     lines = out.splitlines()
     assert lines[:3] == ["UNAPPROVED LADDER IDS: 0", "UNEXTRACTABLE LADDER IDS: 1", "KILL SWITCH: on"]
     assert "  show_rate.confirm_email" in lines
-    assert "cadence.d2.research_line" not in out          # unextractable by design, not a failure
+    assert "cadence.e2.research_line" not in out          # unextractable by design, not a failure
     assert "every cadence, show-rate and no-show message is held" in out
     ta.clear_cache()
 
