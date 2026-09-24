@@ -20,6 +20,14 @@ CT3: a touch goes out only when its text is an approved template
 A ladder stopped on an unapproved template whose daily Resume reminders have
 ended (cadence.template_reminders_ended) is counted in one line, at most once a
 CT day (REMINDERS_ENDED_KEY).
+
+Day 0 (P3b): first replies are cards Lorenzo sends himself from the Instantly
+thread. For every unarmed lead with an unanswered card the tick reads the
+thread once (GET /emails, read-only, shadow too) and, when his reply is there,
+records it and arms the ladder from its send time
+(cadence.detect_manual_first_reply); the digest says "N ladders started after
+your reply" (counts only). The CLI's ``--dry-run`` builds no client, so there
+it reports the candidates as ``no_instantly_client``.
 """
 import argparse
 import copy
@@ -209,11 +217,90 @@ def _claim_reminders_ended(store: Store, ct: datetime) -> bool:
         return False
 
 
+def _newest_reply_first(item: Any) -> float:
+    """Sort key for the first-reply candidates: the lead's last inbound,
+    newest first (a reply Lorenzo is answering now outranks last week's)."""
+    try:
+        return -slot_rules.to_tz(slot_rules.parse_iso(item[1].last_inbound_at)).timestamp()
+    except Exception:  # noqa: BLE001 - an unreadable time goes last
+        return 0.0
+
+
+def _detect_first_replies(candidates: List[Any], ct: datetime, store: Store, instantly: Any,
+                          dry_run: bool) -> List[Dict[str, Any]]:
+    """Lorenzo's own first replies (cadence.detect_manual_first_reply), one
+    thread read per candidate, at most cadence.FIRST_REPLY_MAX_READS per tick
+    (GET /emails is 20 a minute per workspace): newest reply first, the rest
+    ``deferred`` to the next tick. After the first Instantly read failure the
+    rest are ``deferred`` too: a failing read can take minutes of retries,
+    and the tick has a Modal time limit with its Job_Log row and digest still
+    to write. Each lead under the same claim as the ladder's per-lead work;
+    detect_manual_first_reply writes the row through save_stale_write under
+    the row's lock. An error is a ``check_failed`` result, never the end of
+    the tick."""
+    out = []  # type: List[Dict[str, Any]]
+    reads = 0
+    read_failed = False
+    for key, state in sorted(candidates, key=_newest_reply_first):
+        email = getattr(state, "lead_email", None)
+        if read_failed:
+            out.append({"key": key, "lead_email": email, "action": "deferred", "reason": "after_read_failure"})
+            continue
+        if reads >= cadence.FIRST_REPLY_MAX_READS:
+            out.append({"key": key, "lead_email": email, "action": "deferred", "reason": "read_cap"})
+            continue
+        if not _claim(store, key, ct, dry_run):
+            out.append({"key": key, "lead_email": email, "action": "locked"})
+            continue
+        try:
+            res = cadence.detect_manual_first_reply(state, ct, instantly, store, dry_run=dry_run)
+        except Exception as exc:  # noqa: BLE001 - one lead must not end the tick; retried next tick
+            logger.exception("first-reply check failed for %s", key)
+            res = {"lead_email": email, "action": "check_failed", "error": str(exc)}
+        finally:
+            _release(store, key, dry_run)
+        if res.get("action") not in ("not_candidate", "no_instantly_client"):
+            reads += 1
+        if res.get("action") == "check_failed" and res.get("reason") == "instantly_read_failed":
+            read_failed = True
+        res["key"] = key
+        out.append(res)
+    return out
+
+
+FIRST_REPLY_STARTED = ("ladder_started", "ladder_would_start")
+
+
+def _first_reply_lines(counts: Dict[str, int]) -> List[str]:
+    """The digest's word on first replies found in the threads. Counts only
+    (the topic may be public): no lead, company or email."""
+    lines = []  # type: List[str]
+    started = sum(counts.get(a, 0) for a in FIRST_REPLY_STARTED)
+    if started:
+        lines.append("%d ladder%s started after your reply" % (started, "" if started == 1 else "s"))
+    recorded = counts.get("reply_recorded", 0)
+    if recorded:
+        lines.append("%d repl%s of yours seen in the thread, no ladder started (the lead wrote again, or another "
+                     "card of theirs is waiting)" % (recorded, "y" if recorded == 1 else "ies"))
+    failed = counts.get("check_failed", 0)
+    if failed:
+        lines.append("%d thread check%s for your replies failed (Instantly or the store), retried next tick"
+                     % (failed, "" if failed == 1 else "s"))
+    return lines
+
+
 def run(now: datetime, store: Store, instantly: Any = None, ghl: Any = None, dry_run: bool = False,
         free_slots: Optional[List[Any]] = None, notify_fn: Any = notify, log_fn: Any = log_run) -> Dict[str, Any]:
-    """One tick over every lead:* state. Returns the summary that is logged."""
+    """One tick over every lead:* state. Returns the summary that is logged.
+
+    Armed ladders are ticked (cadence.tick_lead). Unarmed leads whose first
+    reply Lorenzo may have sent himself from the thread
+    (cadence.is_first_reply_candidate) are checked after them
+    (_detect_first_replies); a find starts the ladder from that send."""
     ct = slot_rules.to_tz(now)
     results = []  # type: List[Dict[str, Any]]
+    candidates = []  # type: List[Any]
+    candidate_errors = []  # type: List[Dict[str, Any]]
     keys = store.keys("lead:")
     for key in keys:
         raw = store.get(key)
@@ -226,6 +313,13 @@ def run(now: datetime, store: Store, instantly: Any = None, ghl: Any = None, dry
             results.append({"key": key, "action": "error", "error": str(exc)})
             continue
         if not (getattr(state, "cadence", None) or {}).get("armed_at"):
+            try:
+                if cadence.is_first_reply_candidate(state, ct):
+                    candidates.append((key, state))
+            except Exception as exc:  # noqa: BLE001 - one bad row must not stop the tick
+                logger.warning("could not tell whether %s is a first-reply candidate: %s", key, exc)
+                candidate_errors.append({"key": key, "lead_email": getattr(state, "lead_email", None),
+                                         "action": "check_failed", "error": str(exc)})
             continue
         if not _claim(store, key, ct, dry_run):
             results.append({"key": key, "lead_email": getattr(state, "lead_email", None), "action": "locked"})
@@ -281,6 +375,11 @@ def run(now: datetime, store: Store, instantly: Any = None, ghl: Any = None, dry
         res["key"] = key
         results.append(res)
 
+    first_replies = candidate_errors + _detect_first_replies(candidates, ct, store, instantly, dry_run)
+    first_reply_counts = {}  # type: Dict[str, int]
+    for r in first_replies:
+        first_reply_counts[r.get("action", "?")] = first_reply_counts.get(r.get("action", "?"), 0) + 1
+
     counts = {}  # type: Dict[str, int]
     for r in results:
         counts[r.get("action", "?")] = counts.get(r.get("action", "?"), 0) + 1
@@ -293,6 +392,7 @@ def run(now: datetime, store: Store, instantly: Any = None, ghl: Any = None, dry
     reminders_ended = len([r for r in results if r.get("reminders_ended")])
     if reminders_ended and not dry_run and _claim_reminders_ended(store, ct):
         digest_lines.append(_reminders_ended_line(reminders_ended))
+    digest_lines.extend(_first_reply_lines(first_reply_counts))
     summary = {
         "now": ct.isoformat(),
         "mode": get_mode(),
@@ -303,9 +403,17 @@ def run(now: datetime, store: Store, instantly: Any = None, ghl: Any = None, dry
         "counts": counts,
         "digest": digest_lines,
         "reminders_ended": reminders_ended,
+        "first_reply_candidates": len(candidates),
+        "first_reply_counts": first_reply_counts,
+        "ladders_started": sum(first_reply_counts.get(a, 0) for a in FIRST_REPLY_STARTED),
         "results": results,
+        "first_reply_results": first_replies,
     }
-    problems = sum(counts.get(a, 0) for a in PROBLEM_ACTIONS) + len(unsaved)
+    # A failed thread check is a problem (the Job_Log row says "errors"): a
+    # reply of Lorenzo's it missed leaves that lead with no ladder until a
+    # later tick reads the thread.
+    problems = sum(counts.get(a, 0) for a in PROBLEM_ACTIONS) + len(unsaved) + \
+        first_reply_counts.get("check_failed", 0)
     summary["problems"] = problems
     summary["unsaved"] = len(unsaved)
     # What the digest title counts: the touches that went out, and the problems
@@ -317,7 +425,7 @@ def run(now: datetime, store: Store, instantly: Any = None, ghl: Any = None, dry
     summary["touches"] = touches
     summary["needs_you"] = needs_you
     status = "dry_run" if dry_run else ("errors" if problems else "ok")
-    log_fn(JOB, status, {k: v for k, v in summary.items() if k != "results"})
+    log_fn(JOB, status, {k: v for k, v in summary.items() if k not in ("results", "first_reply_results")})
     if digest_lines and not dry_run:
         title = "Cadence %s: %d touch%s" % (ct.strftime("%a %H:%M CT"), touches, "" if touches == 1 else "es")
         if needs_you:
@@ -349,6 +457,19 @@ def _print_table(summary: Dict[str, Any]) -> None:
                 touch.get("slots_source"),
             )
         print(line)
+    if summary.get("first_reply_results"):
+        print("first replies (unarmed leads, thread read): %d candidate(s)" % summary.get("first_reply_candidates", 0))
+        for r in summary["first_reply_results"]:
+            line = "  %-18s %-45s" % (r.get("action"), r.get("lead_email") or r.get("key"))
+            if r.get("sent_at"):
+                line += " sent=%s" % r["sent_at"]
+            if r.get("next_send_at"):
+                line += " E1=%s" % r["next_send_at"]
+            if r.get("reason"):
+                line += " reason=%s" % r["reason"]
+            if r.get("error"):
+                line += " error=%s" % r["error"]
+            print(line)
     if summary["digest"]:
         print("digest:")
         for d in summary["digest"]:
