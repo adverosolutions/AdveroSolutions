@@ -284,30 +284,49 @@ def test_a_counter_without_a_time_uses_the_neutral_line(status):
 # ------------------------------------------------ item 20: no alternatives
 @pytest.mark.parametrize("status", [booking.OUTSIDE_WINDOW, booking.WEEKEND, booking.TOO_SOON,
                                     booking.BEYOND_HORIZON, booking.SLOT_TAKEN, booking.WINDOW_NO_FIT])
-def test_a_counter_with_no_alternative_asks_for_the_booking_link(status):
+def test_a_counter_with_no_alternative_asks_for_the_leads_times(status):
+    """Lorenzo, 2026-09-23: with nothing to offer, ask for the lead's own
+    times; never a booking link."""
     m = booking.BookingMatch(slot=None, status=status, proposed=CT.localize(datetime(2030, 1, 10, 10, 0)),
                              counter_slots=[])
     body = booking.counter_proposal_text(m, _state())
     link = cadence.DEFAULT_BOOKING_URL
-    assert "Could you grab a time that suits you here instead? %s\n\nLorenzo" % link in body, body
-    assert body.count(link) == 1
+    assert "Could you send me a couple of times that work for you next week?\n\nLorenzo" in body, body
+    assert link not in body and "grab a time" not in body
     assert "any afternoon" not in body and "Or if it's easier" not in body
-    assert "alt_slots" not in booking.counter_bindings(m, _state())
+    bindings = booking.counter_bindings(m, _state())
+    assert "alt_slots" not in bindings and "booking_url" not in bindings
 
 
-def test_slot_already_taken_with_no_alternative_asks_for_the_booking_link():
+def test_slot_already_taken_with_no_alternative_asks_for_the_leads_times():
     res = booking._unbookable_result(_state(), START, booking.SLOT_ALREADY_TAKEN, NOW, free_slots=[])
-    link = cadence.DEFAULT_BOOKING_URL
-    assert res.draft.body_text == ("Hey Jordan,\n\nTue 3:00pm CT just got taken on my calendar. Could you grab a "
-                                   "time that suits you here instead? %s\n\nLorenzo" % link)
-    assert booking.SLOT_ALREADY_TAKEN in res.problems  # still a card, never auto-sent
+    assert res.draft.body_text == ("Hey Jordan,\n\nTue 3:00pm CT just got taken on my calendar. Could you send me "
+                                   "a couple of times that work for you next week?\n\nLorenzo")
+    assert res.draft.booking_link is None
+    assert res.problems == [booking.SLOT_ALREADY_TAKEN]  # still a card, never auto-sent; no "missing booking link"
 
 
 def test_slot_already_taken_with_alternatives_names_both_zones():
     free = [CT.localize(datetime(2030, 1, 8, 14, 0)).isoformat(), CT.localize(datetime(2030, 1, 9, 15, 0)).isoformat()]
     res = booking._unbookable_result(_state(), START, booking.SLOT_ALREADY_TAKEN, NOW, free_slots=free)
-    assert res.draft.body_text.startswith("Hey Jordan,\n\nTue 3:00pm CT just got taken on my calendar. Could you do "
-                                          "Tue 2:00pm or Wed 3:00pm CT instead?\n\nOr if it's easier, grab a time here: ")
+    assert res.draft.body_text == ("Hey Jordan,\n\nTue 3:00pm CT just got taken on my calendar. Could you do "
+                                   "Tue 2:00pm or Wed 3:00pm CT instead?\n\nLorenzo")
+
+
+def test_counter_with_alternatives_carries_no_booking_link():
+    """Lorenzo, 2026-09-23: never send a booking link when two times are
+    offered; the lead picks one and Lorenzo sends the invite."""
+    alts = [CT.localize(datetime(2030, 1, 8, 14, 0)), CT.localize(datetime(2030, 1, 9, 15, 0))]
+    link = cadence.DEFAULT_BOOKING_URL
+    for status, proposed in ((booking.WINDOW_NO_FIT, START), (booking.OUTSIDE_WINDOW, CT.localize(datetime(2030, 1, 8, 9, 0))),
+                             (booking.OUTSIDE_WINDOW, CT.localize(datetime(2030, 1, 8, 19, 0))),
+                             (booking.WEEKEND, CT.localize(datetime(2030, 1, 12, 13, 0))), (booking.TOO_SOON, START),
+                             (booking.BEYOND_HORIZON, CT.localize(datetime(2030, 1, 18, 13, 0))), (booking.SLOT_TAKEN, START)):
+        m = booking.BookingMatch(slot=None, status=status, proposed=proposed, counter_slots=alts)
+        body = booking.counter_proposal_text(m, _state())
+        assert link not in body and "grab a time" not in body, status
+        assert body.endswith("?\n\nLorenzo"), status
+        assert "booking_url" not in booking.counter_bindings(m, _state()), status
 
 
 # ------------------------------------------------ item 26
