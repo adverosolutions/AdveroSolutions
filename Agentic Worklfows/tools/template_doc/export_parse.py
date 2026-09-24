@@ -7,7 +7,8 @@ Reading only. Python 3.9.
 import re
 from typing import Any, Dict, List
 
-VARIANT_RE = re.compile(r"^=== variant: (\S+) \((.*)\) ===$")
+# the catalogue writes "(title)" only when the variant has one (compose_review_text)
+VARIANT_RE = re.compile(r"^=== variant: (\S+)(?: \((.*)\))? ===$")
 
 
 def strip_blank(ls):
@@ -24,7 +25,7 @@ def split_variants(text_lines):
     for ln in text_lines:
         m = VARIANT_RE.match(ln)
         if m:
-            variants.append({"name": m.group(1), "desc": m.group(2), "lines": []})
+            variants.append({"name": m.group(1), "desc": m.group(2) or "", "lines": []})
             continue
         (variants[-1]["lines"] if variants else main).append(ln)
     for v in variants:
@@ -32,8 +33,33 @@ def split_variants(text_lines):
     return strip_blank(main), variants
 
 
+class ExportError(ValueError):
+    """The export cannot be read without guessing."""
+
+
+def _check_fences(lines):
+    """A text block ends at a line that is exactly three backticks, so a
+    template line that is exactly that would cut the template short without
+    a word. The catalogue writes a closing fence, a blank line, then the next
+    heading ("### ", "## ") or the end: anything else after a closing fence
+    means a template line looked like one, and the export is refused."""
+    in_text = False
+    for i, ln in enumerate(lines):
+        if not in_text:
+            in_text = ln.startswith("```text")
+            continue
+        if ln != "```":
+            continue
+        in_text = False
+        nxt = next((l for l in lines[i + 1:] if l.strip()), None)
+        if nxt is not None and not nxt.startswith(("### ", "## ")):
+            raise ExportError("line %d: a template line is exactly ``` (the text block would end there): %r follows"
+                              % (i + 1, nxt[:60]))
+
+
 def parse_export(path: str) -> Dict[str, Any]:
     lines = open(path, encoding="utf-8").read().split("\n")
+    _check_fences(lines)
     sections = []  # type: List[Dict[str, Any]]
     entries = []  # type: List[Dict[str, Any]]
     cur = None

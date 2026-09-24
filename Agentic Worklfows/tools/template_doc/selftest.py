@@ -89,7 +89,7 @@ def googleify(text):
     lines = []
     for i, l in enumerate(t.split("\n")):
         lines.append(l + ("  " if i % 3 == 0 else ""))
-        if i % 7 == 0:
+        if not l.strip():  # Drive doubles an empty paragraph; it never adds a paragraph break
             lines.append("")
     return u"﻿" + "\r\n".join(lines)
 

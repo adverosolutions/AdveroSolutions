@@ -6,7 +6,7 @@ Code: `services/reply_engine/template_approvals.py` (the catalogue, hashes, stat
 
 ## What approving means
 
-Approving a template means every email of that type sends on its own, with no per-email Approve (CT3). The safety checks all stay on for every send: the 07:00 to 19:00 CT send window, the slot rules, the offers.md copy gate, the recipient check on the thread, the live-write guard and the kill switch below.
+Approving a template means every email of that type sends on its own, with no per-email Approve (CT3), with two exceptions that come first (Lorenzo, 2026-09-23, `approval.py` `draft_only`): a first reply is never sent on its own, it is a draft you send yourself from the thread, whatever is approved; and any other reply to a lead no reply of ours has reached yet is a draft too, except a booking confirmation (`booking.confirmation.*`). The safety checks all stay on for every send: the 07:00 to 19:00 CT send window, the slot rules, the offers.md copy gate, the recipient check on the thread, the live-write guard and the kill switch below.
 
 The decision is made by `services/reply_engine/template_gate.py`. An email goes out without a card only when all of these hold, checked in this order: the kill switch is off, the parity check passes, the email was rendered from a template (not polished or edited), every template id it uses is approved at its current text, the text it was rendered from is still the current text, (first replies and booking emails) the reply was classified as interested, a question or a referral, with confidence of at least 0.8, and not by the fallback classifier, the lead did not ask for a time the slot rules refuse, the copy gate passes on the body and on the subject line, and the body is exactly the template with only its placeholders filled. The first check that fails is the reason shown. A reply that fails becomes a normal approval card. A cadence, show-rate or no-show message that fails is held.
 
@@ -35,13 +35,13 @@ Each template is recorded with a sha256 of its exact text. The text you approve 
 
 A change to any of that wording, in code or in a prompt file, changes the hash. That includes the way times are written: a change to a time or slot formatter (the "or" between two times, "CT", the date format) sends every template with a time or slot in it back for approval.
 
-What is not covered: a first reply after the LLM polishes it and any body you edit by hand on a card always go through a card. A day 2 cadence touch with a per-lead LLM research line is always held; by default day 2 uses the fixed fallback line (`cadence.d2.research_fallback.<offer>`), which you can approve. `booking.slot_already_taken` is always a card. A first reply that accepts the time the lead asked for with no booking behind it (the `confirmed_time` variant: "... CT works on my end, I will send the invite over") is always a card too, even when its id is approved, because the gate cannot know an invite was actually booked. Booking confirmations (`booking.confirmation.*`: "Locked in ..., invite on the way") are different: once approved they send on their own, after the classification check. The day 2 research line (`cadence.d2.research_line`) cannot be rendered for review by design, so it is never approvable. The review document's last section lists the other exclusions.
+What is not covered: a first reply after the LLM polishes it and any body you edit by hand on a card always go through a card. An E2 follow-up (`cadence.e2`) with a per-lead LLM research line is always held; by default E2 uses the fixed fallback line (`cadence.e2.research_fallback.<offer>`), which you can approve. `booking.slot_already_taken` is always a card. A first reply that accepts the time the lead asked for with no booking behind it (the `confirmed_time` variant: "... CT works on my end, I will send the invite over") is always a card too, even when its id is approved, because the gate cannot know an invite was actually booked. Booking confirmations (`booking.confirmation.*`: "Locked in ..., invite on the way") are different: once approved they send on their own, after the classification check. The E2 research line (`cadence.e2.research_line`) cannot be rendered for review by design, so it is never approvable; the Google Doc shows it only as a read-only note on Follow-up email 2. The review document's last section lists the other exclusions.
 
 ## Approving, step by step
 
-Approvals come only from your own terminal. This is a permanent rule: a Claude session must never run `--approve`, `--approve-all-shown` or `--revoke`, and must never write `config/approved_templates.json` in any other way. The command refuses without an interactive terminal, but that check is not bulletproof (a pseudo-terminal wrapper gets past it).
+Approvals come from your own terminal, with one exception. This is a permanent rule: a Claude session must never run `--approve`, `--approve-all-shown` or `--revoke`, and must never write `config/approved_templates.json` in any other way, except this one (Lorenzo's rule of 2026-09-23): after Lorenzo types "done" in chat about the one Google Doc, the section 4 chat may run `tools/template_doc/record_doc_approvals.py --write` on that doc's export, with `--doc-id` of that doc and his exact words as `--done-quote`, as described in "From the Google Doc" below. That tool only adds or refreshes approvals for templates the doc showed unchanged; it never revokes and never touches the kill switch. Nothing else a Claude session does may write the registry. The terminal command refuses without an interactive terminal, but that check is not bulletproof (a pseudo-terminal wrapper gets past it).
 
-The real protection is the registry file itself. It is committed to git, and you review it with `git diff -- config/approved_templates.json` (run from the `Agentic Worklfows` folder) before every commit. `git diff` only shows changes to a file git already tracks, so the empty registry has to be committed first. Treat any approval record you did not make yourself as an incident. The live-write guard (`.claude/hooks/guard_live_writes.py`, rule d) also blocks the approve and revoke commands and writes to the registry, but it is only a tripwire. You still have to apply it from your own terminal (`changesets/claude_guard/README.md`); until then it does not run in sessions started from `Coding/` or any other folder. Even applied, it reads command text, so it cannot catch an arbitrary script, code decoded at run time, or a git command with no path (`git stash`, `git reset`).
+The real protection is the registry file itself. It is committed to git, and you review it with `git diff -- config/approved_templates.json` (run from the `Agentic Worklfows` folder) before every commit. `git diff` only shows changes to a file git already tracks, so the empty registry has to be committed first. Treat any approval record you did not make yourself as an incident. The live-write guard (`.claude/hooks/guard_live_writes.py`, rule d) also blocks the approve and revoke commands and commands that name `config/approved_templates.json`, but it is only a tripwire. It does not block `tools/template_doc/record_doc_approvals.py --write`: it denies only when the command text names the registry file or the approve and revoke modes, and the recorder writes the registry from inside Python. You still have to apply it from your own terminal (`changesets/claude_guard/README.md`); until then it does not run in sessions started from `Coding/` or any other folder. Even applied, it reads command text, so it cannot catch an arbitrary script, code decoded at run time, or a git command with no path (`git stash`, `git reset`).
 
 1. Export the review document:
 
@@ -64,9 +64,74 @@ The real protection is the registry file itself. It is committed to git, and you
    - any template changed in the code since the export.
 
    Nothing is written in that case. Re-export and review again.
-5. To approve a few ids instead of the whole file: `python3 jobs/approve_templates.py --approve cadence.d1 cadence.d3`. First read each one with `--show <id>`.
+5. To approve a few ids instead of the whole file: `python3 jobs/approve_templates.py --approve cadence.e1 cadence.e3`. First read each one with `--show <id>`.
 
 `--list` prints every id with its kind and status. Every approve and revoke run writes a Job_Log row (job `approve_templates`) with the ids and hashes, never the text.
+
+## From the Google Doc ("done")
+
+Lorenzo's rule of 2026-09-23: when he types "done" in chat about the one Google Doc, everything in the doc counts as approved. That word replaces the terminal approve step for the doc. It is the one case where a Claude session writes `config/approved_templates.json` (see "Approving, step by step"): only with `tools/template_doc/record_doc_approvals.py`, only after his "done" in chat, only for the doc he said it about, and only with his exact words passed as `--done-quote` (they must contain "done"). "Go live" is a separate yes and is not part of this.
+
+The principle: a template is approved only if Lorenzo could see every part of its hashed text in the doc he said "done" on, he changed and commented on none of it (anywhere in the doc, not only in the email bodies), and the code still renders exactly that.
+
+### Builds, uploads and the fingerprint
+
+`tools/template_doc/build.py` builds the doc from `jobs/approve_templates.py --export` output. Every build has a fingerprint (a hash of every block's tag, text and template hash, plus every line outside the block bodies). It is printed in the doc as the line `Doc build: <fingerprint> (tag: X-BUILD)` at the end of the top section, and it names the build folder `tools/template_doc/builds/<fingerprint>/` (html and manifest). `tools/template_doc/uploads.json` records which Google Doc holds which build. The top-level `manifest.json` and `advero_all_emails.html` are the build of the doc currently in Drive. Today that is the doc `1jTg1ccYJT8CugDdCf3BQHqzgHUKC4oFG9rgolUILO4U`, uploaded 2026-09-23T17:59Z, which predates fingerprints: it can be diffed and dry-run, but never approved from. To approve from a doc, upload a fingerprinted build first (`tools/template_doc/README.txt`, "Upload and promote").
+
+The build shows every part of every template's hashed text: the main text; the subject line and its fallback subjects (a note); the full time formats block (`formats.1`, one tagged block per distinct text) that every template with a time depends on; and every variant as the changes it makes to the main text. Each change is a grey note that quotes, word for word, the main-text lines it replaces or leaves out (`Instead of "A" and "B":`, `Leaves out "A".`) or the line it adds after or before, followed by the lines it puts in; the forms are in `tools/template_doc/doc_rules.py`. The dated and other-timezone variants that write out example times are shown in full instead (Lorenzo's choice, 2026-09-23), so every example hour, date and zone label is in the doc. A variant that is exactly two others together is one note, one the change notes cannot say exactly is shown in full too, and a missing-data variant is left out only when it is exactly the fallbacks the top section states. Before writing anything, the build reads every template back out of the doc's own text (`doc_areas.DocReader`) and stops, writing nothing, unless every part comes back exactly. So a code change to any part changes the doc, and the doc Lorenzo said "done" on determines every text it approves.
+
+The layout comes from the catalogue, not from lists in the tool: every approvable id in the catalogue's order, by section, each follow-up email (`cadence.e1` to `cadence.e10` today) with the lines spliced into it right below. So ids a section adds or drops need no change in the tool; the build stops unless the doc holds every approvable id exactly once. A catalogue entry that is not approvable is never a tagged block: `cadence.e2.research_line` (written by AI for each lead) is a read-only note on Follow-up email 2, and "done" never approves it. The doc says how approved emails go out, as the engine's locks do: first replies are drafts Lorenzo sends himself from the thread; other replies go out on their own only after a reply of his reached the lead, except the Locked in booking confirmation.
+
+### When and how
+
+The section 4 chat, right after Lorenzo says "done" about the doc. The chat runs in its worktree, so point the Job_Log at the main folder's log (the job log uses `JOB_LOG_PATH`) or the row stays in the worktree's `.tmp/`:
+
+1. Read the doc's open comments and suggestions: Drive `read_file_content` with `includeComments: true`, and open the doc itself to look for suggestions. Suggestions are in neither export (not in text/plain, and a real Drive text/html export showed none), so this step is the real control for them; the tool's HTML check for suggestion markup is best-effort only. If any comment or suggestion is open, stop and ask Lorenzo; do not run `--write`.
+2. Export the doc twice, as plain text and as HTML (Drive `download_file_content` with `exportMimeType=text/plain`, then with `exportMimeType=text/html`; see `tools/template_doc/README.txt`), and save them as `tools/template_doc/exports/<UTC time>.txt` and `.html`. The HTML keeps what the text drops: strikethrough, highlights and text colours (grey counts only where the build itself made text grey: tags, notes, labels, section markers). It does not show suggestions (step 1 covers those). The doc's top section asks Lorenzo to type changes straight in, without any of these.
+3. Dry run (writes nothing, prints the plan; exits 1 when `--write` would refuse the whole doc):
+
+   ```bash
+   cd "<worktree>/Agentic Worklfows"
+   export JOB_LOG_PATH="/Users/lorenzovillarreal/Desktop/AdveroSolutions/Agentic Worklfows/.tmp/job_log.csv"
+   python3 tools/template_doc/record_doc_approvals.py tools/template_doc/exports/<UTC time>.txt --html tools/template_doc/exports/<UTC time>.html
+   ```
+
+4. Record the approvals, with the doc's id and his exact words. `--checked-comments` says step 1 found no open comment or suggestion, and `--html` is the HTML export of step 2; without either, `--write` refuses and writes nothing:
+
+   ```bash
+   python3 tools/template_doc/record_doc_approvals.py tools/template_doc/exports/<UTC time>.txt --write --doc-id <doc id> --done-quote "<his exact words>" --checked-comments --html tools/template_doc/exports/<UTC time>.html
+   ```
+
+5. After a write the tool says what an approval does (first replies stay drafts Lorenzo sends himself; other replies auto-send only once a reply of ours reached the lead, booking confirmations excepted) and ends by printing the command `git diff -- config/approved_templates.json`. Run it, show Lorenzo the output, and commit, quoting his words in the commit message. `approved_by` on every new record carries his quote and the short build fingerprint, so the diff shows which "done" it came from.
+
+### How a template qualifies
+
+The export's `X-BUILD` line names its build; `builds/<fingerprint>/manifest.json` must exist and hash to that fingerprint, and the build's HTML next to it must be that manifest's doc. With `--write`, `uploads.json` must map `--doc-id` to that fingerprint, and no other doc to the same fingerprint. The export is compared with that build, and the build with a fresh build of the current code (made in a temp folder by `tools/template_doc/fresh_manifest.py`). A template is approved only when all of these hold:
+
+- every block of it (main text, subject, every variant) and its time formats block are in the doc unchanged; differences Google makes on its own (curly quotes, non-breaking spaces, a doubled blank line, runs of spaces) do not count, but a paragraph break added or removed does;
+- every block of it is where the build put it: a version or Subject line moved under another email refuses both emails;
+- its heading, variant labels and notes (fallback subjects, the change notes with the lines they quote) are unchanged and each note is still where it was in its block, and no line changed or was typed outside the emails in its section;
+- no new block tagged for it was added (a tag that starts with its id and `/` or `.`);
+- none of the words it shows was edited elsewhere in the doc: the doc says "changing it once is enough; it changes everywhere", so a line or sentence an edit removed from a block, or a quoted line, written-out spliced line or fallback subject an edit removed from a note, refuses every template that shows it, in a block or in a note. There are no exemptions: a greeting, the sign-off, a sentence that is only a placeholder and a sentence most emails share count too (editing "Hey {first_name}," once refuses almost every email). A deleted version or Subject line counts only for the words the email's main text no longer has. The templates `tools/template_doc/route_doc.py` lists under "also appears in" are refused as well;
+- its text, read back out of the doc's build and out of a fresh build of the current code (`fresh_manifest.readback_mismatches`), hashes to its template hash;
+- for a follow-up email with spliced lines (`cadence.e2`, `e4`, `e5`, `e6` and `e9` today; the pairs are read from the catalogue's ids), the email and all its lines are unrefused;
+- it is not one of the first replies the doc says "done" does not approve (`other` and `referral` question types, `tools/template_doc/doc_rules.py`);
+- it is approvable in the catalogue: an entry that is not (`cadence.e2.research_line`, the first-reply reference pieces) is never recorded;
+- its hash in the doc's build equals its hash now, and the doc's build shows it exactly as a build of the current code would; the catalogue hash is checked again just before writing.
+
+The hash recorded is the current catalogue hash, the same value `--approve-all-shown` would record.
+
+### What gets refused, and why
+
+- An edited or deleted block, heading, label or note (a change note's quoted lines included), or a note moved within its block: Lorenzo wants words the code does not send yet. The owning section changes the code first (`tools/template_doc/route_doc.py` says which section and file), a new doc is built and uploaded, and the template is approved on the next "done".
+- Other templates with the same block text or a sentence the edit changed or removed (the repeat rule), and follow-up emails with their spliced lines: refused together with the edited one. An edit to the read-only research-line note refuses Follow-up email 2 and its lines.
+- `other` and `referral` first replies: never approved from the doc.
+- Code changed since the doc was built, or during the run: build and upload a new doc.
+- The whole doc, with nothing written: a doc without a build fingerprint (`this doc predates build fingerprints; rebuild and re-upload`), a `--doc-id` that `uploads.json` does not map to the export's build, a build `uploads.json` maps to more than one doc, anything the HTML export shows (struck-through, highlighted or coloured text the build did not set, suggestion or comment markup, or an HTML file that is not the same doc as the text export), duplicate tags, copies of one sentence changed differently, a change in the top section or outside the engine sections (Instantly headings and notes, the closing section, the build line), a tag that matches no email, a doc with no tags, or a fresh build that fails.
+
+A refused template keeps whatever approval it had: the plan says it "keeps its earlier approval, which still matches the code" when it does. The tool only adds or refreshes approvals, never revokes, and never touches the kill switch (`auto_send`). It writes through the registry's own `plan_approve` (with the fresh hashes as `expected`) and `apply_approve`, so the records have the same format as the terminal path's. One Job_Log row per `--write` run (job `approve_templates`, action `approve_from_doc`): the doc id, the build fingerprint, the sha256 of the build's manifest and of the export, the HEAD commit, the approvals file path, the quote, `checked_comments`, the ids and hashes approved and the ids refused with their reasons. Instantly blocks are not approvals: the tool counts the unchanged and changed ones, and changed ones go through `changesets/instantly_copy/`.
+
+The terminal path above (`--export`, `--approve-all-shown`, `--approve`, `--revoke`, typed `APPROVE`) is unchanged and still the only way to revoke.
 
 ## Statuses
 
@@ -78,7 +143,7 @@ The real protection is the registry file itself. It is committed to git, and you
 ## Revoking
 
 ```bash
-python3 jobs/approve_templates.py --revoke cadence.d1
+python3 jobs/approve_templates.py --revoke cadence.e1
 ```
 
 From your own terminal, type `APPROVE`. That template goes back to per-email cards.
@@ -101,7 +166,7 @@ For an immediate stop, run `python3 -m modal app stop advero-reply-engine` from 
 
 Once the CT3 integration phase is deployed, a cadence, show-rate or no-show message whose template is not approved is held, not sent. Deploying before you approve them would hold every reminder and every cadence touch. So approve the ladder ids first:
 
-1. Export and read the review document (steps 1 to 3 above). The ladder ids are the `cadence.*`, `show_rate.*` and `no_show.*` sections, including the lines spliced into day 2, day 4 and day 5.
+1. Export and read the review document (steps 1 to 3 above). The ladder ids are the `cadence.*`, `show_rate.*` and `no_show.*` sections, including the lines spliced into E2, E4, E5, E6 and E9.
 2. Approve them from your own terminal with `--approve-all-shown` (or `--approve <ids>`).
 3. List what is still unapproved:
 

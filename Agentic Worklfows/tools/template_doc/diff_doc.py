@@ -2,8 +2,9 @@
 
 Lists the blocks that changed (tag, old, new), the tags that are missing
 (deleted from the doc) and any unknown tags. Comparison ignores what Google
-or a copy-paste changes on its own: blank lines, runs of spaces, spaces at the
-ends of lines, curly quotes and non-breaking spaces. Those are normalised for
+or a copy-paste changes on its own: extra blank lines (a run of them counts as
+one paragraph break; a break added or removed is a change), runs of spaces,
+spaces at the ends of lines, curly quotes and non-breaking spaces. Those are normalised for
 comparison only; the reported "new" text is exactly what the doc holds, and a
 changed block lists what Lorenzo typed that the send checks care about
 (curly quotes, non-breaking spaces, dashes, "!", placeholders added or lost).
@@ -35,7 +36,15 @@ def norm(text):
         t = t.replace(ch, u" ")
     t = t.replace(u"\t", u" ")
     lines = [re.sub(u" +", u" ", l).strip() for l in t.split(u"\n")]
-    return u"\n".join(l for l in lines if l)
+    # A run of blank lines is one paragraph break (Drive's export doubles
+    # them); a break added or removed is a change (the hash keeps them).
+    out = []
+    for l in lines:
+        if l or (out and out[-1]):
+            out.append(l)
+    while out and not out[-1]:
+        out.pop()
+    return u"\n".join(out)
 
 
 def placeholders(text):
