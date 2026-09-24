@@ -172,6 +172,10 @@ D2_RESEARCH_MODE = "fallback"
 # held days counted, the ladder is stopped as ``template_unapproved``
 # (resumable); never on a tick whose hold is gate-wide (_hold_for_template).
 TEMPLATE_HOLD_STALL_DAYS = 3
+# CT3: the daily Resume reminder of a ``template_unapproved`` stop ends after this many pushes, or this many days
+# after ``stopped_at``, whichever comes first (_template_stop_reminder); the ladder itself stays stopped.
+TEMPLATE_STOP_REMINDER_MAX_PUSHES = 8
+TEMPLATE_STOP_REMINDER_MAX_DAYS = 14
 # CT3: why a day is held, by what fixes it (hold_cause). A gate-wide hold (the
 # kill switch, a parity failure, a catalogue or approvals file the gate could
 # not read, the catalogue not built yet) holds every ladder at once and clears
@@ -2155,6 +2159,33 @@ def _defer_d1_window(state: Any, now: datetime, send_at: datetime, base: Dict[st
     return dict(base, action="not_due", day=1, reason="veto_window_deferred", next_send_at=send_at.isoformat())
 
 
+def _lead_push(state: Any, public: str) -> Tuple[str, str, Dict[str, Any]]:
+    """(who, message, notify kwargs) for a push to Lorenzo about one lead
+    whose lead-free text is ``public``, split the way _resume_push splits a
+    template_unapproved push (runbooks/reply_engine_alerts.md: a public topic
+    carries no lead names; shared.notify.redact hides only emails and URLs):
+
+    - a protected topic (shared.notify.topic_is_protected): ``who`` is the
+      lead's email for the title, and the message ends with "Lead: <email>
+      (<company>).";
+    - a public topic: ``who`` is "a lead" and ``public`` goes on ntfy alone;
+      the lead line goes on the email leg only (``email_message``).
+
+    A setting that cannot be read counts as a public topic."""
+    from shared import notify as notify_mod
+
+    email = _field(state, "lead_email")
+    lead = "Lead: %s (%s)." % (email, company_of(state))
+    try:
+        protected = notify_mod.topic_is_protected()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("could not read the ntfy config: %s", type(exc).__name__)
+        protected = False
+    if protected:
+        return str(email), "%s %s" % (public, lead), {}
+    return "a lead", public, {"email_message": "%s %s" % (public, lead)}
+
+
 def _hold_d1_without_base_url(state: Any, now: datetime, base: Dict[str, Any], notify_fn: Any) -> Optional[Dict[str, Any]]:
     """None when the D1 Veto link can work; else the hold result.
 
@@ -2179,13 +2210,17 @@ def _hold_d1_without_base_url(state: Any, now: datetime, base: Dict[str, Any], n
         state.cadence = dict(state.cadence or {}, d1_held_no_base_url_at=ct.isoformat())
         logger.error("holding D1 to %s: BASE_URL is unset or local-only, so the Veto link could not work", email)
         _log_job("d1_held_no_base_url", {"lead": email, "campaign_id": _field(state, "campaign_id")})
-        notify_fn(
-            "D1 follow-up to %s is HELD: no BASE_URL" % email,
+        who, message, private = _lead_push(
+            state,
             "The D1 follow-up auto-sends after a 30-minute Veto window, and the Veto link needs BASE_URL "
             "(it is unset or points at localhost). Nothing was sent and no window was opened. Set BASE_URL "
-            "in the Modal secret; the next tick opens the window. Lead: %s (%s)." % (email, company_of(state)),
+            "in the Modal secret; the next tick opens the window.")
+        notify_fn(
+            "D1 follow-up to %s is HELD: no BASE_URL" % who,
+            message,
             priority="high",
             tags=["warning"],
+            **private
         )
     return dict(base, action="veto_undeliverable", day=1, reason=reason, quiet=bool(since),
                 since=since or ct.isoformat(), held=True)
@@ -2532,7 +2567,12 @@ def _template_stop_reminder(state: Any, now: datetime, notify_fn: Any) -> Option
     or no leg can carry one (the stop push said what to set; the first tick
     after that sends the link). Otherwise the result, and ``template_hold``
     records the day the link went out and on which leg. The caller withholds
-    it for a lead the ladder is over for (terminal_reason)."""
+    it for a lead the ladder is over for (terminal_reason) or enrolled in the
+    90-day nurture. ``link_count`` (beside ``link_on``; 0 when absent) counts
+    the daily reminders: none goes out once TEMPLATE_STOP_REMINDER_MAX_PUSHES
+    have, or TEMPLATE_STOP_REMINDER_MAX_DAYS after ``stopped_at``. The
+    one-time "ready to resume" push is not counted and not capped. The ladder
+    stays stopped either way."""
     ct = slot_rules.to_tz(now)
     cad = getattr(state, "cadence", None) or {}
     hold = dict(cad.get("template_hold") or {})
@@ -2548,6 +2588,14 @@ def _template_stop_reminder(state: Any, now: datetime, notify_fn: Any) -> Option
     announce = ready and not hold.get("ready_announced")
     if not announce and hold.get("link_on") == today:
         return None
+    sent_count = _count_of(hold.get("link_count"))
+    if not announce:
+        if sent_count >= TEMPLATE_STOP_REMINDER_MAX_PUSHES:
+            return None
+        stopped_at = _parse(cad.get("stopped_at"))
+        if stopped_at is not None and ct - stopped_at >= timedelta(days=TEMPLATE_STOP_REMINDER_MAX_DAYS):
+            return None
+        sent_count += 1
     url = _resume_url(state, ct)
     via = resume_link_channel()
     if url is None or via is None:
@@ -2565,7 +2613,7 @@ def _template_stop_reminder(state: Any, now: datetime, notify_fn: Any) -> Option
         priority = "low"
     message, kwargs = _resume_push(state, day, public, url, via)
     notify_fn(title, message, priority=priority, tags=["warning"], **kwargs)
-    hold.update(link_on=today, link_at=ct.isoformat(), link_via=via,
+    hold.update(link_on=today, link_at=ct.isoformat(), link_via=via, link_count=sent_count,
                 ready_announced=bool(hold.get("ready_announced") or ready))
     # No Job_Log row of its own: the tick's row counts resume_link_sent.
     state.cadence = dict(cad, template_hold=hold)
@@ -2770,6 +2818,16 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
             ended = terminal_reason(state)
             if ended:
                 return dict(base, action="already_stopped", reason=cad["stopped_reason"], resume_withheld=ended)
+            # A lead in the 90-day nurture is done with the ladder too. A
+            # nurture record that cannot be read still reminds: the push only
+            # reaches Lorenzo, and the send path holds on that error anyway.
+            try:
+                nurtured = in_nurture(state, store)
+            except Exception as exc:  # noqa: BLE001 - an unreadable record keeps the reminder
+                logger.warning("could not read the nurture record of %s: %s", email, exc)
+                nurtured = False
+            if nurtured:
+                return dict(base, action="already_stopped", reason=cad["stopped_reason"], resume_withheld="nurture")
             reminded = _template_stop_reminder(state, ct, notify_fn)
             if reminded is not None:
                 return dict(base, **reminded)
@@ -2862,10 +2920,11 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
             return deferred
         veto_url = _decision_url("veto", state, ct)
         state.cadence = dict(state.cadence, veto_notified_at=ct.isoformat(), next_send_at=send_at.isoformat())
+        who, message, private = _lead_push(
+            state, "Tap Veto, then confirm on the page it opens, within 30 minutes to hold it.")
         sent = notify_fn(
-            "D1 follow-up to %s sends at %s CT" % (email, slot_rules.format_slot(send_at)),
-            "Tap Veto, then confirm on the page it opens, within 30 minutes to hold it. Lead: %s (%s)."
-            % (email, company_of(state)),
+            "D1 follow-up to %s sends at %s CT" % (who, slot_rules.format_slot(send_at)),
+            message,
             priority="high",
             actions=[("Veto", veto_url)],
             # Passed as click= as well: shared.notify strips action buttons from an
@@ -2873,6 +2932,7 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
             # fallback, so this is the leg that actually reaches Lorenzo.
             click=veto_url,
             tags=["calendar"],
+            **private
         )
         if actions_delivered(sent) is False:
             state.cadence = dict(state.cadence, veto_notified_at=None, veto_undeliverable_at=ct.isoformat())
@@ -2902,13 +2962,15 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
             return deferred
         veto_url = _decision_url("veto", state, ct)
         state.cadence = dict(state.cadence, veto_notified_at=ct.isoformat(), next_send_at=send_at.isoformat())
+        who, message, private = _lead_push(state, "Tap Veto, then confirm on the page it opens, to hold it.")
         sent = notify_fn(
-            "D1 follow-up to %s sends at %s CT" % (email, slot_rules.format_slot(send_at)),
-            "Tap Veto, then confirm on the page it opens, to hold it. Lead: %s (%s)." % (email, company_of(state)),
+            "D1 follow-up to %s sends at %s CT" % (who, slot_rules.format_slot(send_at)),
+            message,
             priority="high",
             actions=[("Veto", veto_url)],
             click=veto_url,
             tags=["calendar"],
+            **private
         )
         if actions_delivered(sent) is False:
             state.cadence = dict(state.cadence, veto_notified_at=None, veto_undeliverable_at=ct.isoformat())
@@ -2960,13 +3022,16 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
             if days >= SKIP_STALL_DAYS:
                 stop(state, "slots_unavailable", ct)
                 if not quiet:
-                    notify_fn(
-                        "Cadence stopped for %s: no bookable times" % email,
+                    who, message, private = _lead_push(
+                        state,
                         "D%d could not be sent on %d days running (%s). The ladder is stopped so it does not "
-                        "look like it is still running. Lead: %s (%s)."
-                        % (day, days, skip, email, company_of(state)),
+                        "look like it is still running." % (day, days, skip))
+                    notify_fn(
+                        "Cadence stopped for %s: no bookable times" % who,
+                        message,
                         priority="high",
                         tags=["warning"],
+                        **private
                     )
                 return dict(base, action="stopped", reason="slots_unavailable", day=day, skipped=skip, days=days)
             return dict(base, action=skip, day=day, slots_found=len(two), quiet=quiet, days=days)
@@ -3006,24 +3071,30 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
                     state.cadence = dict(state.cadence, d6_notified_at=ct.isoformat())
                     logger.error("D6 hold card for %s not sent: BASE_URL is unset or local-only", email)
                     _log_job("d6_card_no_base_url", {"lead": email, "campaign_id": _field(state, "campaign_id")})
-                    notify_fn(
-                        "D6 hold card for %s could not be sent: no BASE_URL" % email,
+                    who, message, private = _lead_push(
+                        state,
                         "The 'Send hold' / 'Email only' links need BASE_URL (unset or localhost). No hold will be "
-                        "booked; the no-hold follow-up goes out at %d:00 CT. Lead: %s (%s)."
-                        % (D6_FALLBACK_HOUR, email, company_of(state)),
+                        "booked; the no-hold follow-up goes out at %d:00 CT." % D6_FALLBACK_HOUR)
+                    notify_fn(
+                        "D6 hold card for %s could not be sent: no BASE_URL" % who,
+                        message,
                         priority="high",
                         tags=["warning"],
+                        **private
                     )
                     return dict(base, action="awaiting_invite_ok", day=6, slot=_iso(two[0]),
                                 card_undeliverable=True, reason="no_base_url")
                 if not dry_run:
                     approve_url = _decision_url("approve", state, ct)
                     state.cadence = dict(state.cadence, d6_notified_at=ct.isoformat())
-                    sent = notify_fn(
-                        "OK to put a calendar hold on %s?" % email,
-                        "Day 6 for %s (%s). The follow-up email goes out either way: 'Send hold' also books the %s CT "
+                    who, message, private = _lead_push(
+                        state,
+                        "Day 6. The follow-up email goes out either way: 'Send hold' also books the %s CT "
                         "hold on the Discovery Call calendar, 'Email only' sends the no-hold wording."
-                        % (email, company_of(state), slot_rules.format_slot(two[0])),
+                        % slot_rules.format_slot(two[0]))
+                    sent = notify_fn(
+                        "OK to put a calendar hold on %s?" % who,
+                        message,
                         priority="high",
                         actions=[("Send hold", approve_url),
                                  ("Email only", _decision_url("veto-invite", state, ct))],
@@ -3033,6 +3104,7 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
                         # undeliverable card costs the hold, never the touch.
                         click=approve_url,
                         tags=["calendar"],
+                        **private
                     )
                     if actions_delivered(sent) is False:
                         logger.warning("D6 hold card for %s carried no buttons; the no-hold body will be sent", email)
@@ -3120,15 +3192,24 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
         stalled = days >= BLOCKED_COPY_STALL_DAYS
         if stalled:
             stop(state, "blocked_copy", ct)
-        notify_fn(
-            "Cadence D%d to %s was blocked%s" % (day, email, " (%d days running)" % days if days > 1 else ""),
-            "Copy check failed (%s). The day was not sent%s.\n\n%s"
+        # The blocked body names the lead ("Hey Dana", the company), so on a
+        # public topic it goes on the email leg only, with the lead line.
+        who, message, private = _lead_push(
+            state,
+            "Copy check failed (%s). The day was not sent%s."
             % (", ".join(touch.problems),
                ", and after %d days the ladder is stopped so it does not stall in silence" % days if stalled
-               else " and will be retried tomorrow once the wording is fixed",
-               touch.body_text),
+               else " and will be retried tomorrow once the wording is fixed"))
+        if "email_message" in private:
+            private["email_message"] = "%s\n\n%s" % (private["email_message"], touch.body_text)
+        else:
+            message = "%s\n\n%s" % (message, touch.body_text)
+        notify_fn(
+            "Cadence D%d to %s was blocked%s" % (day, who, " (%d days running)" % days if days > 1 else ""),
+            message,
             priority="high",
             tags=["warning"],
+            **private
         )
         return dict(base, action=("blocked_copy_stalled" if stalled else "blocked_copy"), day=day,
                     problems=list(touch.problems), touch=touch.to_dict(), days=days, records=records)

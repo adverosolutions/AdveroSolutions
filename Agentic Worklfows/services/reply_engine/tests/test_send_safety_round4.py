@@ -477,7 +477,7 @@ def test_the_d1_deferral_is_persisted_by_the_job_and_the_window_opens_at_0930(tm
     assert out[0] == ("not_due", "veto_window_deferred", ct(2026, 9, 23, 10, 0).isoformat())
     assert [o[0] for o in out[1:]] == ["not_due", "not_due", "veto_window_opened", "sent"]
     veto_pings = [p for p in pings if p.startswith("D1 follow-up")]
-    assert veto_pings == ["D1 follow-up to tiffany@flowerhillfs.com sends at Wed 10:00am CT"]
+    assert veto_pings == ["D1 follow-up to a lead sends at Wed 10:00am CT"]  # public topic: no lead in the title
     assert len(inst.sent) == 1
 
 
@@ -519,4 +519,4 @@ def test_a_late_0931_ping_still_gives_the_full_30_minutes(tmp_env, monkeypatch):
     actions = [cadence.tick_lead(state, when, store=store, instantly=inst, free_slots=D1_FREE, notify_fn=nf)["action"]
                for when in (ct(2026, 9, 22, 9, 31, 10), ct(2026, 9, 22, 10, 0, 1), ct(2026, 9, 22, 11, 0, 1))]
     assert actions == ["veto_window_opened", "not_due", "sent"]
-    assert pings == ["D1 follow-up to tiffany@flowerhillfs.com sends at Tue 11:00am CT"]
+    assert pings == ["D1 follow-up to a lead sends at Tue 11:00am CT"]  # public topic: no lead in the title
