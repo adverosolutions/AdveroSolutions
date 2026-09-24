@@ -126,11 +126,11 @@ def _counter_draft(ev, cls, state, now):
     times = [slots.parse_iso(iso) for iso in d.offered_slots[:2]]
     match = B.BookingMatch(slot=None, status=B.WINDOW_NO_FIT, counter_slots=times)
     body = B.counter_proposal_text(match, state)
-    link = B.cadence.DEFAULT_BOOKING_URL          # the link the counter text writes
+    # no booking link on a counter-proposal (Lorenzo, 2026-09-23; app.py 2c8d34f)
     counter = Draft(subject=D.reply_subject(ev.subject), body_text=body,
-                    offered_slots=[t.isoformat() for t in times], booking_link=link, model="template",
+                    offered_slots=[t.isoformat() for t in times], booking_link=None, model="template",
                     label=cls.label, rationale="counter-proposal (window_no_fit)",
-                    problems=D.validate_draft(body, booking_link=link, campaign_key=OFFER,
+                    problems=D.validate_draft(body, booking_link=None, campaign_key=OFFER,
                                               allow_terms=D.lead_terms(ev, state)),
                     template_id=B.counter_template_id(match))
     assert counter.template_id == TID

@@ -95,6 +95,9 @@ HEALTHY_STATUSES = frozenset([
     # switch, a redeploy) and it went back to him as a pending card. Each is
     # the rule working; a push that did not go out writes push_failed.
     "template_auto_sent", "template_auto_not_sent", "template_auto_send_refused",
+    # approval: the timed auto-send skipped a first reply (Lorenzo's rule:
+    # first replies are drafts he sends himself); its card stays pending.
+    "auto_send_refused_first_reply",
     # cadence: a touch held because its template is not approved (counted in
     # the FYI), and a ladder resumed after such a stop.
     "template_held", "template_hold_resumed",
