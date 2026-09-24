@@ -13,7 +13,7 @@ Other allowed proof (P.S. bullets only, from Lorenzo's case studies): lender $5M
 
 ## The six offers
 
-**Pricing and guarantee figures are call only, never in an email** (Lorenzo, 2026-09-24: "We never talk numbers over email."). No email (draft, first reply or follow-up) states a pricing or guarantee figure: no price, fee, commission percentage or guarantee amount. Case-study proof lines from this file (the proof points above and the P.S. bullets) are allowed where a template already carries them. A price question gets the offer's short answer on how it works and "The rest is easier to cover on a quick call." The figures in the Guarantee / pricing column stay here as reference for the call.
+**Pricing and guarantee figures are call only, never in an email** (Lorenzo, 2026-09-24: "We never talk numbers over email."). No email the engine writes (first replies, follow-ups, booking, show-rate and no-show emails) states a pricing or guarantee figure: no price, fee, commission percentage or guarantee amount. Case-study proof lines from this file (the proof points above and the P.S. bullets) are allowed where a template already carries them. A price question gets the offer's short answer on how it works and "The rest is easier to cover on a quick call." The figures in the Guarantee / pricing column stay here as reference for the call. The live cold campaigns in Instantly are Lorenzo's own copy and keep their guarantee lines as written.
 
 | Key | Mechanism (what we build) | Guarantee / pricing (call only, never in an email) | Minimum to start |
 |---|---|---|---|
