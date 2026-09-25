@@ -6,7 +6,7 @@
       "key": "site",
       "label": "1 - YOUR STAGING SITE AND CODE SNIPPET",
       "color": 0,
-      "note": "Your parts 1 and 2: the chatbot goes on staging, and its snippet is set to post every lead to this one webhook."
+      "note": "Your parts 1 and 2: the chatbot goes on staging, and its snippet posts every lead to this one webhook. If it posts through your own backend instead, that backend's webhook points here."
     },
     {
       "key": "collect",
@@ -36,7 +36,7 @@
       "key": "errors",
       "label": "6 - IF A RUN BREAKS",
       "color": 0,
-      "note": "Any failed step emails you the lead and the step, so no test chat disappears without a trace."
+      "note": "Any failed step emails you the step, the error and a link to the run, so no test chat disappears without a trace."
     }
   ],
   "nodes": [
@@ -141,7 +141,7 @@
     {
       "key": "crm",
       "kind": "net.http",
-      "label": "6 - GoHighLevel: Create the Contact From the Chat",
+      "label": "6 - Next Phase: GoHighLevel Creates the Contact From the Chat",
       "section": "next",
       "notes": "Your next phase. Off during the test, on once the sheet shows clean captures.",
       "params": {
@@ -191,7 +191,7 @@
     {
       "key": "alert",
       "kind": "app.action",
-      "label": "9 - Email You the Failed Step and the Lead",
+      "label": "9 - Email You the Failed Step and a Link to the Run",
       "app": "gmail",
       "op": "send",
       "section": "errors",
