@@ -2853,7 +2853,11 @@ def detect_manual_first_reply(state: Any, now: datetime, instantly: Any, store: 
     (status ``sent_manually``, marked by "thread"); its ``reason`` is in the
     result as ``card_close`` (``close_failed`` when it raised). Blocked and
     stale_slots cards stay as they are (``not_pending``): answered_card_ids
-    keeps them from stopping the ladder.
+    keeps them from stopping the ladder. Then his reply is kept as an
+    example (reply_examples.capture_first_reply): its outcome is ``example``
+    on the result and the Job_Log row (``example_reason`` there when skipped
+    or failed), and ``example_read`` says what its GET /emails/{id} did
+    (None: none made, "ok", "failed"); it never changes the action.
 
     ``dry_run`` reads the thread and reports what it would do; it writes
     nothing (no lead row, no nurture record, no Job_Log row). Never raises
@@ -2984,14 +2988,25 @@ def detect_manual_first_reply(state: Any, now: datetime, instantly: Any, store: 
 
     his_row = next((r for r in rows if isinstance(r, dict)
                     and str(r.get("id") or "") == str(found.get("email_id") or "")), None)
-    out["example"] = reply_examples.capture_first_reply(store, state, now_card, found, his_row, context,
-                                                        now=ct, instantly=instantly).get("example")
+    captured = reply_examples.capture_first_reply(store, state, now_card, found, his_row, context,
+                                                  now=ct, instantly=instantly, thread_rows=rows)
+    out["example"] = captured.get("example")
+    # What the GET /emails/{id} for his text did (None: no read made). The
+    # tick counts a made read toward its cap and stops reading after a failed
+    # one; the reply recorded above stands either way.
+    out["example_read"] = captured.get("read")
+    example_reason = None
+    if captured.get("example") == "skipped":
+        example_reason = captured.get("reason")
+    elif captured.get("example") == "failed":
+        example_reason = captured.get("error")
     armed = bool(result.get("armed"))
     _log_job("first_reply_from_thread", {
         "lead": email, "approval": approval_id, "email_id": found.get("email_id"),
         "reply_at": context.get("reply_at"), "sent_at": sent_at.isoformat(), "cadence_armed": armed,
         "cadence_not_armed": None if armed else result.get("reason"), "next_send_at": result.get("next_send_at"),
-        "left_nurture": bool(left), "card_close": card_close})
+        "left_nurture": bool(left), "card_close": card_close, "example": captured.get("example"),
+        "example_reason": example_reason})
     if armed:
         return dict(out, action="ladder_started", day=0, next_send_at=result.get("next_send_at"),
                     left_nurture=bool(left))
@@ -4271,7 +4286,16 @@ def tick(now: Optional[datetime] = None, store: Any = None, dry_run: bool = Fals
     store = store if store is not None else get_store()
     instantly, ghl = job._clients(dry_run)
     try:
-        return job.run(ts, store, instantly, ghl, dry_run=dry_run)
+        summary = job.run(ts, store, instantly, ghl, dry_run=dry_run)
+        # Modal deletes a Dict entry after 7 days with no read or write: read
+        # every reply example each tick, as the tick reads every lead record,
+        # so they are never lost (reply_examples.keep_alive never raises).
+        from services.reply_engine import reply_examples
+
+        read = reply_examples.keep_alive(store)
+        if isinstance(summary, dict):
+            summary["reply_examples_read"] = read
+        return summary
     finally:
         for client in (instantly, ghl):
             try:

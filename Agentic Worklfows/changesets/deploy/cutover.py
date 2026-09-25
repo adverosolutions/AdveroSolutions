@@ -182,7 +182,8 @@ def live_activity(live_store, keys: Optional[List[str]] = None) -> List[str]:
     """What in the LIVE engine store shows the live engine ran, as short lines.
 
     Empty for a store holding only what a cutover writes (the seeded cursor
-    and cutover:record, plus lock keys) and for a store that does not exist.
+    and cutover:record, plus lock keys, plus reply_example:* copied from
+    shadow after it) and for a store that does not exist.
     A ``cutover:accepted`` with a value means a live tick accepted the cutover;
     any other key (lead records, cards, poller:seen, llm.spend_usd, claims)
     was written by the live engine. Read errors propagate: refuse, never guess."""
@@ -199,8 +200,13 @@ def live_activity(live_store, keys: Optional[List[str]] = None) -> List[str]:
         out.append("a live tick accepted the cutover (%s at %s)" % (
             (accepted or {}).get("job") if isinstance(accepted, dict) else "?",
             (accepted or {}).get("accepted_at") if isinstance(accepted, dict) else accepted))
+    from services.reply_engine import reply_examples
+
     exempt = (store_mod.CUTOVER_KEY, store_mod.CUTOVER_ACCEPTED_KEY, poller.CURSOR_KEY)
-    other = [k for k in keys if k not in exempt and not k.startswith(LOCK_PREFIX)]
+    # Reply examples copied from shadow after the cutover (seed_reply_examples
+    # --copy-shadow-to-live) are context for prompts, not live activity.
+    other = [k for k in keys if k not in exempt and not k.startswith(LOCK_PREFIX)
+             and not k.startswith(reply_examples.PREFIX)]
     if other:
         out.append("%d key(s) written by the live engine, e.g. %s" % (len(other), ", ".join(other[:5])))
     return out

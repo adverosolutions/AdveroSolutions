@@ -149,6 +149,15 @@ def parse_start_at(value: Any) -> Optional[datetime]:
     return parsed if parsed.tzinfo else TZ.localize(parsed)
 
 
+def require_start_not_future(start_at: Optional[datetime], now: datetime) -> None:
+    """Raise ValueError when the start date is later than ``now``: every
+    reply would then be "before the start date" once the date passes, and
+    until then every reply received would be retired unread."""
+    if start_at is not None and start_at > now:
+        raise ValueError("%s=%s is later than now (%s); refusing: every reply would be skipped"
+                         % (POLLER_START_AT_ENV, start_at.isoformat(), now.isoformat()))
+
+
 def poller_start_at() -> Optional[datetime]:
     """POLLER_START_AT from the process environment (read live, so tests can
     set it), else POLLER_START_AT_DEFAULT. None when it is "off"."""

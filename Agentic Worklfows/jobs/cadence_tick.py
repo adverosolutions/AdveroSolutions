@@ -234,10 +234,13 @@ def _detect_first_replies(candidates: List[Any], ct: datetime, store: Store, ins
     ``deferred`` to the next tick. After the first Instantly read failure the
     rest are ``deferred`` too: a failing read can take minutes of retries,
     and the tick has a Modal time limit with its Job_Log row and digest still
-    to write. Each lead under the same claim as the ladder's per-lead work;
-    detect_manual_first_reply writes the row through save_stale_write under
-    the row's lock. An error is a ``check_failed`` result, never the end of
-    the tick."""
+    to write. The GET /emails/{id} a find may make for Lorenzo's text
+    (``example_read``, reply_examples) is a read too: counted toward the cap
+    when made, and a failed one defers the rest the same way (that lead's
+    own result stays what it was). Each lead under the same claim as the
+    ladder's per-lead work; detect_manual_first_reply writes the row through
+    save_stale_write under the row's lock. An error is a ``check_failed``
+    result, never the end of the tick."""
     out = []  # type: List[Dict[str, Any]]
     reads = 0
     read_failed = False
@@ -261,7 +264,11 @@ def _detect_first_replies(candidates: List[Any], ct: datetime, store: Store, ins
             _release(store, key, dry_run)
         if res.get("action") not in ("not_candidate", "no_instantly_client"):
             reads += 1
+        if res.get("example_read") in ("ok", "failed"):
+            reads += 1
         if res.get("action") == "check_failed" and res.get("reason") == "instantly_read_failed":
+            read_failed = True
+        if res.get("example_read") == "failed":
             read_failed = True
         res["key"] = key
         out.append(res)
@@ -269,6 +276,7 @@ def _detect_first_replies(candidates: List[Any], ct: datetime, store: Store, ins
 
 
 FIRST_REPLY_STARTED = ("ladder_started", "ladder_would_start")
+FIRST_REPLY_EXAMPLE_OUTCOMES = ("recorded", "duplicate", "skipped", "failed")
 
 
 def _first_reply_lines(counts: Dict[str, int]) -> List[str]:
@@ -379,6 +387,12 @@ def run(now: datetime, store: Store, instantly: Any = None, ghl: Any = None, dry
     first_reply_counts = {}  # type: Dict[str, int]
     for r in first_replies:
         first_reply_counts[r.get("action", "?")] = first_reply_counts.get(r.get("action", "?"), 0) + 1
+    # His replies kept as examples (reply_examples), by outcome: only the
+    # results that reached the example step (a recorded first reply).
+    first_reply_examples = dict((k, 0) for k in FIRST_REPLY_EXAMPLE_OUTCOMES)  # type: Dict[str, int]
+    for r in first_replies:
+        if r.get("example"):
+            first_reply_examples[r["example"]] = first_reply_examples.get(r["example"], 0) + 1
 
     counts = {}  # type: Dict[str, int]
     for r in results:
@@ -405,6 +419,7 @@ def run(now: datetime, store: Store, instantly: Any = None, ghl: Any = None, dry
         "reminders_ended": reminders_ended,
         "first_reply_candidates": len(candidates),
         "first_reply_counts": first_reply_counts,
+        "first_reply_examples": first_reply_examples,
         "ladders_started": sum(first_reply_counts.get(a, 0) for a in FIRST_REPLY_STARTED),
         "results": results,
         "first_reply_results": first_replies,

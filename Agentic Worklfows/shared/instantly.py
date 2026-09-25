@@ -467,8 +467,11 @@ class Instantly(object):
         params.update(extra)
         return self._get("emails", params)
 
-    def get_email(self, id: str) -> Dict[str, Any]:
-        return self._get("emails/%s" % id)
+    def get_email(self, id: str, retry: Optional[bool] = None) -> Dict[str, Any]:
+        """GET /emails/{id}. ``retry=False`` makes it a single try (the hourly
+        cadence tick's example capture: a failing read must not eat the
+        tick's time budget in backoff); None keeps the read's retries."""
+        return self._request("GET", "emails/%s" % id, retry=retry)
 
     def list_leads(
         self,

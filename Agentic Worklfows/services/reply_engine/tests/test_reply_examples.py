@@ -14,6 +14,7 @@ apart from the recorded September manual list.
 import ast
 import json
 import os
+import re
 from datetime import timedelta
 from pathlib import Path
 
@@ -155,12 +156,32 @@ def test_an_example_needs_his_email_id_and_his_words():
         RX.build(email_id="e", sent_at=SENT_AT, reply_text="  ", lead_email=LEAD)
 
 
-def test_nothing_in_the_send_path_reads_the_examples():
-    """Context only: the approved templates stay the only text that
-    auto-sends. The capture (cadence) and the seed job are the only
-    importers; no module that drafts, gates or sends does."""
-    importers = []
-    for root in ("services", "jobs", "shared"):
+# Rule: examples may shape a draft (a future decide() prompt); auto-send
+# still needs an exact approved-template match. So no module of the send or
+# auto-send path may reference the examples, by module name or by key.
+DENY = ["services/reply_engine/template_gate.py", "services/reply_engine/template_approvals.py",
+        "services/reply_engine/approval.py", "services/reply_engine/thread_reply.py", "shared/instantly.py"]
+ALLOW = {
+    "services/reply_engine/cadence.py",      # capture (detect_manual_first_reply) and keep_alive (tick)
+    "jobs/seed_reply_examples.py",           # the seed and the cutover copy
+    "changesets/deploy/cutover.py",          # copied examples are not live activity
+    # reserved: the planned decide() module (Opus 5.5) that reads recent()
+    # into its prompt goes here when it is built; it drafts, it never sends.
+}
+
+
+def _references(path):
+    return re.search(r"reply_examples|reply_example:", path.read_text(encoding="utf-8")) is not None
+
+
+def test_no_send_or_auto_send_module_references_the_examples():
+    for rel in DENY:
+        assert not _references(BASE / rel), "%s must never read the reply examples" % rel
+
+
+def test_only_the_allowed_modules_import_the_examples():
+    importers = set()
+    for root in ("services", "jobs", "shared", "changesets"):
         for path in sorted((BASE / root).rglob("*.py")):
             if "tests" in path.parts or path.name == "reply_examples.py":
                 continue
@@ -171,9 +192,10 @@ def test_nothing_in_the_send_path_reads_the_examples():
                 elif isinstance(node, ast.Import):
                     names = [a.name for a in node.names]
                 if any(n.endswith("reply_examples") for n in names):
-                    importers.append(str(path.relative_to(BASE)))
+                    importers.add(str(path.relative_to(BASE)))
                     break
-    assert sorted(importers) == ["jobs/seed_reply_examples.py", "services/reply_engine/cadence.py"]
+    assert importers <= ALLOW, "not on the allow-list: %s" % sorted(importers - ALLOW)
+    assert not importers & set(DENY)
 
 
 # ================================================================== the seed job
@@ -266,10 +288,16 @@ def test_the_seed_skips_a_reply_the_engine_sent_and_takes_the_engines_label(tmp_
               {"lead_email": "someone@example.com", "thread_id": labelled["thread_id"],
                "history": [{"event": "inbound", "email_id": labelled["lead_message_id"],
                             "label": "neutral_question"}]})
-    out = seed.run(ManualList(MANUAL), store, NOW, START, write=True)
+    # the pairing itself skips the engine's row (a belt: with a live send on
+    # file the job refuses to run at all, see the refusal tests below)
+    found_now = seed.find_examples(MANUAL, START, seed.store_index(store))
     assert {"email_id": engine["email_id"], "reason": "engine_sent"} in [
-        {"email_id": s["email_id"], "reason": s["reason"]} for s in out["skipped"]]
-    assert store.get(RX.key_for(engine["email_id"])) is None
+        {"email_id": s["email_id"], "reason": s["reason"]} for s in found_now["skipped"]]
+    with pytest.raises(seed.SeedRefused):
+        seed.run(ManualList(MANUAL), store, NOW, START, write=True)
+    # without the engine's send on file, the example takes the engine's label
+    store.delete("lead:%s:%s" % (engine["campaign_id"], engine["lead_email"]))
+    seed.run(ManualList(MANUAL), store, NOW, START, write=True)
     kept = store.get(RX.key_for(labelled["email_id"]))
     assert kept["category"] == "neutral_question"
 
@@ -290,3 +318,80 @@ def test_the_seed_stops_paging_before_the_start_date(tmp_env):
 
     got = seed.fetch_manual_rows(Paged(), START)
     assert [r["id"] for r in got["rows"]] == ["p1"] and len(calls) == 2 and got["truncated"] is False
+
+
+def test_the_seed_refuses_a_start_date_later_than_now(tmp_env):
+    store = JsonFileStore(tmp_env / "seed.json")
+    inst = ManualList(MANUAL)
+    with pytest.raises(seed.SeedRefused, match="later than now"):
+        seed.run(inst, store, NOW, settings.parse_start_at("2031-01-01"), write=True)
+    assert inst.reads == [] and store.keys("") == []
+
+
+@pytest.mark.parametrize("key,value", [
+    ("cutover:record", {"cutover_at": "2026-10-01T10:00:00-05:00"}),
+    ("lead:c1:a@example.com", {"lead_email": "a@example.com",
+                               "history": [{"event": "reply_sent", "sent_at": "2026-10-01T10:00:00-05:00"}]}),
+    ("lead:c1:b@example.com", {"lead_email": "b@example.com",
+                               "cadence": {"touches": [{"kind": "done", "shadow": False, "sent_at": "2026-10-01"}]}}),
+])
+def test_the_seed_refuses_once_the_engine_has_sent_live(tmp_env, key, value, monkeypatch, capsys):
+    store = JsonFileStore(tmp_env / "seed.json")
+    store.set(key, value)
+    inst = ManualList(MANUAL)
+    for k in ("JOB_LOG_PATH", "SHADOW_LOG_PATH", "JOB_LOG_READ_PATH"):
+        monkeypatch.setenv(k, str(tmp_env / ("before_" + k.lower())))
+    assert seed.main(["--write", "--as-of", NOW.isoformat()], store=store, instantly=inst) == 2
+    assert "REFUSED" in capsys.readouterr().out and inst.reads == [] and store.keys(RX.PREFIX) == []
+
+
+def test_the_seed_refuses_the_live_dict_without_the_flag(tmp_env, monkeypatch, capsys):
+    monkeypatch.setenv("MODE", "live")
+    monkeypatch.setenv("ALLOW_LIVE_WRITES", "1")
+    for k in ("JOB_LOG_PATH", "SHADOW_LOG_PATH", "JOB_LOG_READ_PATH"):
+        monkeypatch.setenv(k, str(tmp_env / ("before_" + k.lower())))
+    inst = ManualList(MANUAL)
+    assert seed.main(["--modal", "--write"], instantly=inst) == 2     # refused before any Dict is opened
+    assert "--i-am-lorenzo-live" in capsys.readouterr().out and inst.reads == []
+
+
+def test_the_cutover_copy_moves_the_shadow_examples_into_live(tmp_env, monkeypatch):
+    from changesets.deploy import cutover
+
+    for k in ("JOB_LOG_PATH", "SHADOW_LOG_PATH", "JOB_LOG_READ_PATH"):
+        monkeypatch.setenv(k, str(tmp_env / ("before_" + k.lower())))
+    shadow = JsonFileStore(tmp_env / "shadow.json")
+    live = JsonFileStore(tmp_env / "live.json")
+    for i in range(2):
+        RX.record(shadow, RX.build(email_id="e-%d" % i, sent_at=SENT_AT, reply_text="r%d" % i, lead_email=LEAD,
+                                   now=TICK))
+    copy = ["--copy-shadow-to-live"]
+    # before the cutover wrote its record: refused (the cutover needs an empty live store)
+    assert seed.main(copy, store=shadow, live_store=live) == 2 and live.keys("") == []
+    live.set("cutover:record", {"cutover_at": TICK.isoformat()})
+    live.set("poller:cursor", {"last_email_id": "x", "last_timestamp": "y"})
+    assert seed.main(copy, store=shadow, live_store=live) == 0 and live.keys(RX.PREFIX) == []      # dry run
+    assert seed.main(copy + ["--write"], store=shadow, live_store=live) == 2                       # no flag
+    assert seed.main(copy + ["--write", "--i-am-lorenzo-live"], store=shadow, live_store=live) == 0
+    assert sorted(live.keys(RX.PREFIX)) == sorted(shadow.keys(RX.PREFIX))
+    # copied examples are not live activity, so --redo / --resume-live read the store as before
+    assert cutover.live_activity(live) == []
+
+
+def test_the_hourly_cadence_tick_reads_every_example(env):
+    """Modal deletes a Dict entry after 7 days with no read or write; the tick
+    reads every reply_example:* key, as it reads every lead record."""
+    store = env["store"]
+    for i in range(3):
+        RX.record(store, RX.build(email_id="e-%d" % i, sent_at=SENT_AT, reply_text="r", lead_email=LEAD, now=TICK))
+    reads = []
+    real_get = store.get
+
+    def spying_get(key, default=None):
+        reads.append(key)
+        return real_get(key, default)
+
+    store.get = spying_get
+    summary = cadence.tick(now=TICK, store=store, dry_run=True)
+    assert summary["reply_examples_read"] == 3
+    assert set(RX.key_for("e-%d" % i) for i in range(3)) <= set(reads)

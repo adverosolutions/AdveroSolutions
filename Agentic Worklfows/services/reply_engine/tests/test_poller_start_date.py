@@ -235,3 +235,108 @@ def test_a_failed_reply_far_older_than_the_start_date_is_retired_without_being_f
     summary = P.run_once(instantly, store, now=NOW, process=fake_process(), start_at=START)
     assert store.get(P.FAILED_KEY) == {} and summary["truncated"] is False
     assert store.get(P.CURSOR_KEY)["last_email_id"] == REPLIES[0]["id"]
+
+
+@pytest.fixture
+def log_rows(monkeypatch):
+    """Every job_log.log_run call, captured before the real one runs."""
+    from shared import job_log
+    rows = []
+    real = job_log.log_run
+    monkeypatch.setattr(job_log, "log_run", lambda job, status, details=None: rows.append((job, status, details))
+                        or real(job, status, details))
+    return rows
+
+
+def _poller_row(rows):
+    ends = [d for job, status, d in rows if job == "reply_engine.poller" and status in ("ok", "errors")]
+    assert len(ends) == 1
+    return ends[0]
+
+
+def test_the_job_log_row_names_the_skipped_and_retired_ids(tmp_env, log_rows):
+    """The Job_Log row (and --json) carries which replies the start date
+    skipped and which failed records it retired, next to their counts."""
+    old = OLDER[0]
+    instantly, server = make(REPLIES, page_size=10)
+    store = JsonFileStore(tmp_env / "s.json")
+    store.set(P.FAILED_KEY, {old["id"]: {"attempts": 1, "error": "timeout", "timestamp_created": old["timestamp_created"]},
+                             "ancient-1": {"attempts": 1, "error": "timeout",
+                                           "timestamp_created": "2026-09-01T12:00:00.000Z"}})
+    summary = P.run_once(instantly, store, now=NOW, process=fake_process(), start_at=START)
+    row = _poller_row(log_rows)
+    skipped = [r["email_id"] for r in summary["results"] if r.get("skipped") == P.BEFORE_START]
+    assert row["before_start_ids"] == summary["before_start_ids"] == skipped    # scan order
+    assert row["before_start"] == len(skipped) > 0
+    assert row["retired_failed_ids"] == sorted([old["id"], "ancient-1"]) and row["retired_failed"] == 2
+    assert "results" not in row
+
+
+def test_the_logged_id_lists_are_capped_while_the_counts_stay_exact(tmp_env, log_rows):
+    extra = P.LOG_ID_CAP + 5
+    minute = OLDER[0]["timestamp_created"][:17]   # "YYYY-MM-DDTHH:MM:", a minute before the start date
+    older = []
+    for i in range(extra):   # newest first, all before the start date, all on one page
+        row = dict(OLDER[0])
+        row["id"] = "old-%02d" % i
+        row["timestamp_created"] = minute + "%02d.000Z" % (59 - i)
+        older.append(row)
+    items = NEWER + older
+    instantly, server = make(items, page_size=len(items))
+    store = JsonFileStore(tmp_env / "s.json")
+    store.set(P.FAILED_KEY, dict(("gone-%02d" % i, {"attempts": 1, "error": "timeout",
+                                                    "timestamp_created": "2026-09-01T12:00:00.000Z"})
+                                 for i in range(extra)))
+    P.run_once(instantly, store, now=NOW, process=fake_process(), start_at=START)
+    row = _poller_row(log_rows)
+    assert row["before_start"] == extra and len(row["before_start_ids"]) == P.LOG_ID_CAP
+    assert row["before_start_ids"] == ["old-%02d" % i for i in range(P.LOG_ID_CAP)]
+    assert row["retired_failed"] == extra and len(row["retired_failed_ids"]) == P.LOG_ID_CAP
+    assert row["retired_failed_ids"] == ["gone-%02d" % i for i in range(P.LOG_ID_CAP)]
+
+
+class OnePage(object):
+    """GET /emails?email_type=received answering the rows as given, one page,
+    with a next page that must never be requested."""
+
+    def __init__(self, rows):
+        self.rows = rows
+        self.calls = []
+
+    def list_emails(self, **params):
+        self.calls.append(params)
+        assert len(self.calls) == 1, "a page after the start date was requested"
+        return {"items": list(self.rows), "next_starting_after": "more"}
+
+
+def test_each_row_is_judged_by_its_own_timestamp(tmp_env):
+    """Only a row provably older than the start date is skipped. A row after
+    it on the same page with no timestamp_created, an unreadable one or a
+    newer one (09-23 after 09-10) takes the normal path; paging still stops."""
+    base = dict(REPLIES[0])
+    newest = dict(base, id="new-1", timestamp_created="2026-09-21T15:00:00.000Z")
+    old = dict(base, id="old-0910", timestamp_created="2026-09-10T15:00:00.000Z")
+    later = dict(base, id="new-0923", timestamp_created="2026-09-23T15:00:00.000Z")
+    no_ts = dict(base, id="no-ts", timestamp_created=None, timestamp_email="2026-09-22T15:00:00.000Z")
+    bad_ts = dict(base, id="bad-ts", timestamp_created="not a time")
+    page = OnePage([newest, old, no_ts, bad_ts, later])
+    store = JsonFileStore(tmp_env / "s.json")
+    process = fake_process()
+    summary = P.run_once(page, store, now=NOW.replace(day=24), process=process, start_at=START)
+
+    assert len(page.calls) == 1 and summary["reached_start"] is True
+    skipped = [r["email_id"] for r in summary["results"] if r.get("skipped") == P.BEFORE_START]
+    assert skipped == ["old-0910"] and summary["before_start"] == 1
+    # processed: the newer rows, the one with only timestamp_email
+    assert sorted(e.email_id for e in process.seen) == ["new-0923", "new-1", "no-ts"]
+    # the unreadable one took the normal path too: attempted, failed, retried
+    # next run (poller:failed), never marked seen as before the start date
+    assert "bad-ts" in store.get(P.FAILED_KEY) and "bad-ts" not in store.get(P.SEEN_KEY)
+
+
+def test_a_start_date_later_than_now_stops_the_poll_before_any_read(tmp_env):
+    instantly, server = make(REPLIES, page_size=10)
+    with pytest.raises(ValueError, match="later than now"):
+        P.run_once(instantly, JsonFileStore(tmp_env / "s.json"), now=NOW, process=fake_process(),
+                   start_at="2026-09-22")          # NOW is 2026-09-21 21:10 CT
+    assert server.requests == []

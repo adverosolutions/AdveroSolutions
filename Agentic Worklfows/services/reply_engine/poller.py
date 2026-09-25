@@ -28,6 +28,7 @@ SEEN_KEY = "poller:seen"
 FAILED_KEY = "poller:failed"   # email ids whose process_event raised; retried next run
 SEEN_MAX = 5000
 PAGE_LIMIT = 100
+LOG_ID_CAP = 20   # most ids a Job_Log row lists per field; the matching count stays exact
 
 
 def campaign_ids() -> List[str]:
@@ -77,9 +78,11 @@ def fetch_new_replies(
     ``start_at`` (settings.poller_start_at): GET /emails?email_type=received
     answers newest first (checked against fixtures/instantly_replies_2026-09.json,
     44 rows in strictly descending timestamp_created), so the first row older
-    than it means every row after it is older too. That row and the rest of
-    its page go to ``before_start`` (never to ``items``: nothing classifies
-    them) and no further page is read. The scan then counts as complete, not
+    than it means the pages after it are older too, and no further page is
+    read. On the page already fetched each row is judged by its own
+    timestamp: only a row provably older than ``start_at`` goes to
+    ``before_start`` (never to ``items``: nothing classifies it); a row with
+    no timestamp, an unreadable one or a newer one goes to ``items``. The scan then counts as complete, not
     truncated, so the cursor moves to the newest row as usual. None: the scan
     is exactly what it was before the start date existed."""
     wanted = set(campaign_filter)
@@ -99,7 +102,7 @@ def fetch_new_replies(
     more_pages = False
     newest_seen = None  # type: Optional[Dict[str, Any]]
     before_start = []  # type: List[Dict[str, Any]]
-    past_start = False  # a row older than start_at was reached: everything after it is older
+    past_start = False  # a row older than start_at was reached: no further page is read
     while pages < max_pages and not stop:
         page = instantly.list_emails(email_type="received", limit=limit, starting_after=starting_after)
         items = page.get("items", []) if isinstance(page, dict) else list(page)
@@ -120,10 +123,12 @@ def fetch_new_replies(
             if last_ts and ts and ts < last_ts:
                 stop = True
                 break
-            if past_start or _before_start(ts, start_at):
-                # Older than the start date: recorded, never classified. The
-                # rest of this page is older still and is taken the same way
-                # (it is already fetched, so it costs nothing); no next page.
+            if _before_start(ts, start_at):
+                # Provably older than the start date (its own readable
+                # timestamp): recorded, never classified, and no next page is
+                # read. Every row is judged by its own time: a later row on
+                # this page with no timestamp, an unreadable one or a newer
+                # one is processed as usual.
                 past_start = True
                 stop = True
                 if eid in seen or eid in seen_this_run:
@@ -1044,15 +1049,17 @@ def run_once(
     from services.reply_engine.app import process_event
 
     started = clock()
-    # Resolved first: a bad POLLER_START_AT must stop the run before any read.
+    ts = slots.to_tz(slots.ensure_aware(now)) if now is not None else datetime.now(slots.TZ)
+    # Resolved first: a bad POLLER_START_AT, or one later than now, must stop
+    # the run before any read (a future date would retire every reply).
     start = settings.poller_start_at() if start_at is None else settings.parse_start_at(start_at)
+    settings.require_start_not_future(start, ts)
 
     if instantly is None or store is None:
         built_instantly, built_store = build_deps()
         instantly = instantly if instantly is not None else built_instantly
         store = store if store is not None else built_store
     process = process or process_event
-    ts = slots.to_tz(slots.ensure_aware(now)) if now is not None else datetime.now(slots.TZ)
     cursor = since_cursor if since_cursor is not None else (store.get(CURSOR_KEY) or {})
     seen = store.get(SEEN_KEY) or {}
     if not isinstance(seen, dict):
@@ -1260,6 +1267,9 @@ def run_once(
                "autosend_fyi": bool(fyi and fyi.get("sent")),
                "pending_approvals": waiting, "results": results, "mode": settings.get_mode(),
                "start_at": start.isoformat() if start is not None else None, "before_start": len(before_start),
+               # scan order (newest first) and sorted ids: the same run always logs the same ids
+               "before_start_ids": before_start[:LOG_ID_CAP],
+               "retired_failed": len(retired), "retired_failed_ids": sorted(retired)[:LOG_ID_CAP],
                "reached_start": bool(fetched.get("reached_start"))}
     job_log.log_run("reply_engine.poller", "ok" if not errors else "errors", {k: v for k, v in summary.items() if k != "results"})
     return summary

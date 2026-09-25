@@ -3,6 +3,7 @@
     python3 jobs/seed_reply_examples.py                      # dry run: prints what it would record
     python3 jobs/seed_reply_examples.py --write              # records them in the engine store
     python3 jobs/seed_reply_examples.py --write --modal      # ... in the deployed Modal Dict of this mode
+    python3 jobs/seed_reply_examples.py --copy-shadow-to-live [--write --i-am-lorenzo-live]   # cutover step
     python3 jobs/seed_reply_examples.py --start-at 2026-09-15 --pages 5 --json
 
 Reads GET /emails?email_type=manual (read-only; both directions of every
@@ -11,8 +12,11 @@ thread answered by hand, newest first) back to the poller's start date
 campaigns sent) and pairs each reply Lorenzo sent himself (ue_type 3, else the
 sender, else the recipients: cadence._sent_by_hand) with the lead's message it
 answered: the newest message of the lead's in the same thread since our last
-email in it, auto-replies excluded. A reply of ours with no lead message
-before it (a bump) is not an example.
+email in it, auto-replies excluded. Only a lead's row counts as the lead's
+message (ue_type 2, else a row that is not outbound: _from_lead); any other
+row of ours (a campaign step or scheduled send, ue_type 1 or 4) clears it, so
+our own email is never paired as the message he answered. A reply of ours with
+no lead message before it (a bump) is not an example.
 
 Never a reply the engine sent: a row whose id is an engine touch's Instantly
 id, or whose time is within ENGINE_MATCH_MINUTES of an engine send recorded
@@ -30,6 +34,14 @@ records each new example with reply_examples.record (set_if_absent on
 never duplicates one). Store writes are not live-system writes: the engine
 store is separate per mode (shared.store), which is the pattern every job
 follows, so guard_write is not involved. Nothing is sent, tagged or moved.
+
+Refusals (exit 2, a Job_Log row "refused", nothing read or written): a start
+date later than now; a store showing the engine has sent live (a cutover
+record, an engine reply_sent, a live cadence touch), because the engine's
+thread_reply, show-rate and no-show sends would then read as Lorenzo's; the
+live Dict (``--modal`` in live mode, ``--copy-shadow-to-live --write``, or
+MODE=live) without ``--i-am-lorenzo-live``. Every run of this job is
+Lorenzo's to start (runbooks/reply_examples.md).
 """
 import argparse
 import json
@@ -172,11 +184,29 @@ def _first_recipient(row: Dict[str, Any]) -> str:
     return ""
 
 
+def _from_lead(row: Dict[str, Any]) -> bool:
+    """True for a row the lead sent: ``ue_type`` 2 (pipeline_sweep's
+    UE_TYPE_INBOUND); a row without ``ue_type`` when is_outbound's sender,
+    then recipients, say it did not come from our inbox. Any other ue_type
+    (1 a campaign step, 3 his hand send, 4 a scheduled send, or an unreadable
+    value) is ours."""
+    from jobs.pipeline_sweep import UE_TYPE_INBOUND, is_outbound
+
+    ue_type = row.get("ue_type")
+    if ue_type not in (None, ""):
+        try:
+            return int(ue_type) == UE_TYPE_INBOUND
+        except (TypeError, ValueError):
+            return False
+    return not is_outbound(row)
+
+
 def find_examples(rows: List[Dict[str, Any]], start_at: Optional[datetime],
                   index: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
     """Pair each of Lorenzo's replies since ``start_at`` with the lead message
-    it answered. Returns {"examples": [...], "skipped": [{"email_id",
-    "reason", ...}]}; each example holds build()'s fields, with his row as
+    it answered: the lead's newest row (_from_lead, not an auto-reply)
+    since any other email of ours in the thread. Returns {"examples": [...],
+    "skipped": [{"email_id", "reason", ...}]}; each example holds build()'s fields, with his row as
     ``reply_row`` and the lead's row as ``lead_message`` (run() reads their
     texts). ``index`` is store_index(). Pure: no store, no network."""
     from jobs.pipeline_sweep import is_auto_reply
@@ -196,8 +226,11 @@ def find_examples(rows: List[Dict[str, Any]], start_at: Optional[datetime],
             eaccount = str(row.get("eaccount") or "").strip().lower()
             mine = _sent_by_hand(dict(row, eaccount=eaccount))
             if not mine:
-                if not is_auto_reply(row):
-                    pending = row
+                if _from_lead(dict(row, eaccount=eaccount)):
+                    if not is_auto_reply(row):
+                        pending = row
+                else:
+                    pending = None   # a campaign step or scheduled send of ours: never the lead's message
                 continue
             answered, pending = pending, None
             at = _time(row)
@@ -226,12 +259,54 @@ def find_examples(rows: List[Dict[str, Any]], start_at: Optional[datetime],
     return {"examples": examples, "skipped": skipped}
 
 
+class SeedRefused(Exception):
+    """The seed must not run as asked; nothing was read or written."""
+
+
+def live_send_evidence(store: Any) -> List[str]:
+    """Why ``store`` shows the engine has sent for real, as short lines
+    (empty: it has not). A cutover to live (``cutover:record`` or
+    ``cutover:accepted``), a lead row with an engine ``reply_sent`` (shadow
+    writes ``reply_would_send``) or a cadence touch of kind ``done`` that was
+    not a shadow record. Read errors propagate: refuse, never guess."""
+    from shared import store as store_mod
+
+    out = []  # type: List[str]
+    for key in (store_mod.CUTOVER_KEY, store_mod.CUTOVER_ACCEPTED_KEY):
+        if store.get(key) is not None:
+            out.append("%s is set" % key)
+    for key in store.keys("lead:"):
+        raw = store.get(key)
+        if not isinstance(raw, dict):
+            continue
+        if any(isinstance(e, dict) and e.get("event") == "reply_sent" for e in raw.get("history") or []):
+            out.append("an engine reply_sent on %s" % key)
+        elif any(isinstance(t, dict) and t.get("kind") == "done" and not t.get("shadow")
+                 for t in (raw.get("cadence") or {}).get("touches") or []):
+            out.append("a live cadence touch on %s" % key)
+    return out
+
+
 def run(instantly: Any, store: Any, now: datetime, start_at: Optional[datetime], write: bool = False,
         max_pages: int = MAX_PAGES, log_fn: Any = log_run) -> Dict[str, Any]:
     """Find the examples and, with ``write``, record the new ones. Returns the
-    summary (also the Job_Log row, texts left out)."""
+    summary (also the Job_Log row, texts left out).
+
+    Raises SeedRefused before any read when the start date is later than
+    ``now`` or ``store`` shows the engine has sent for real
+    (live_send_evidence): its sends through the thread_reply, show-rate and
+    no-show paths are not told apart from Lorenzo's own, so once the engine
+    sends live the seed would take them for his."""
     from services.reply_engine import reply_examples
 
+    try:
+        settings.require_start_not_future(start_at, now)
+    except ValueError as exc:
+        raise SeedRefused(str(exc))
+    evidence = live_send_evidence(store)
+    if evidence:
+        raise SeedRefused("the engine has sent live (%s); its replies cannot be told from Lorenzo's, so the "
+                          "seed is for before go-live only" % "; ".join(evidence[:3]))
     fetched = fetch_manual_rows(instantly, start_at, max_pages=max_pages)
     found = find_examples(fetched["rows"], start_at, store_index(store))
     out = []  # type: List[Dict[str, Any]]
@@ -299,7 +374,44 @@ def _print(summary: Dict[str, Any]) -> None:
     print("counts: %s" % (summary["counts"] or "{}"))
 
 
-def main(argv: Optional[List[str]] = None, store: Any = None, instantly: Any = None) -> int:
+LIVE_FLAG = "--i-am-lorenzo-live"
+
+
+def _refuse(why: str, log_fn: Any = log_run) -> int:
+    print("REFUSED: %s" % why)
+    log_fn("jobs.%s" % JOB, "refused", {"why": why})
+    return 2
+
+
+def _copy_shadow_to_live(write: bool, live_ok: bool, shadow_store: Any = None, live_store: Any = None) -> int:
+    """Runbook deployment.md step 5: after cutover.py --apply, copy every
+    reply example from the shadow Dict into the live one (set_if_absent).
+    Refuses the live Dict without --i-am-lorenzo-live on a write, and before
+    the live store has a cutover:record (the cutover needs it empty)."""
+    from services.reply_engine import reply_examples
+    from shared import store as store_mod
+
+    if write and not live_ok:
+        return _refuse("writing to the live Dict needs %s (Lorenzo only)" % LIVE_FLAG)
+    if shadow_store is None:
+        shadow_store = store_mod.open_modal_store("shadow", create_if_missing=False)
+    if live_store is None:
+        live_store = store_mod.open_modal_store("live", create_if_missing=False)
+    if not live_store.get(store_mod.CUTOVER_KEY):
+        return _refuse("the live store has no %s: run cutover.py --apply first (it needs an empty live store)"
+                       % store_mod.CUTOVER_KEY)
+    res = reply_examples.copy_all(shadow_store, live_store, write=write)
+    print("%s: %d example(s) %s, %d already in live" % (
+        "WRITE" if write else "DRY RUN (nothing written; --write %s copies)" % LIVE_FLAG, len(res["copied"]),
+        "copied" if write else "would be copied", len(res["present"])))
+    log_run("jobs.%s" % JOB, "copied" if write else "copy_dry_run",
+            {"copied": len(res["copied"]), "present": len(res["present"])})
+    return 0
+
+
+def main(argv: Optional[List[str]] = None, store: Any = None, instantly: Any = None,
+         live_store: Any = None) -> int:
+    """``store`` / ``instantly`` / ``live_store`` are test seams; the CLI builds them."""
     p = argparse.ArgumentParser(prog=JOB, description=__doc__.split("\n\n")[0])
     p.add_argument("--dry-run", action="store_true", help="the default: print what would be recorded, write nothing")
     p.add_argument("--write", action="store_true", help="record the new examples in the engine store")
@@ -310,7 +422,12 @@ def main(argv: Optional[List[str]] = None, store: Any = None, instantly: Any = N
     p.add_argument("--store", help="path to a JSON store (default: STORE_PATH or .tmp/store.json)")
     p.add_argument("--modal", action="store_true",
                    help="use the deployed Modal Dict of the current mode (shadow unless MODE=live and "
-                        "ALLOW_LIVE_WRITES=1) instead of the local store")
+                        "ALLOW_LIVE_WRITES=1) instead of the local store; the live Dict needs %s" % LIVE_FLAG)
+    p.add_argument("--copy-shadow-to-live", action="store_true",
+                   help="cutover step: copy the examples from the shadow Dict to the live Dict (after "
+                        "cutover.py --apply); dry run unless --write %s" % LIVE_FLAG)
+    p.add_argument(LIVE_FLAG, dest="live_ok", action="store_true",
+                   help="Lorenzo only: allow the live Dict (--modal in live mode, --copy-shadow-to-live --write)")
     p.add_argument("--as-of", help="ISO timestamp for recorded_at (default: now, CT)")
     p.add_argument("--json", action="store_true", help="print the summary as JSON")
     args = p.parse_args(argv)
@@ -320,15 +437,28 @@ def main(argv: Optional[List[str]] = None, store: Any = None, instantly: Any = N
         from shared.job_log import use_scratch_logs
 
         use_scratch_logs("%s_dryrun" % JOB)
-    start_at = settings.poller_start_at() if args.start_at is None else settings.parse_start_at(args.start_at)
+    if args.copy_shadow_to_live:
+        try:
+            return _copy_shadow_to_live(write, args.live_ok, shadow_store=store, live_store=live_store)
+        except Exception as exc:  # noqa: BLE001 - a read error is a refusal, never a guess
+            return _refuse("could not read the Dicts: %s: %s" % (type(exc).__name__, exc))
+    try:
+        start_at = settings.poller_start_at() if args.start_at is None else settings.parse_start_at(args.start_at)
+    except ValueError as exc:
+        return _refuse(str(exc))
     now = slot_rules.parse_iso(args.as_of) if args.as_of else datetime.now(settings.TZ)
     if store is None:
         from shared.store import JsonFileStore, effective_mode, get_store, open_modal_store
 
         if args.modal:
-            store = open_modal_store(effective_mode(), create_if_missing=False)
+            mode = effective_mode()
+            if mode == "live" and not args.live_ok:
+                return _refuse("the live Dict needs %s (Lorenzo only)" % LIVE_FLAG)
+            store = open_modal_store(mode, create_if_missing=False)
         else:
             store = JsonFileStore(args.store) if args.store else get_store()
+    if settings.is_live() and not args.live_ok:
+        return _refuse("MODE=live and ALLOW_LIVE_WRITES=1 are set; a live run needs %s (Lorenzo only)" % LIVE_FLAG)
     close = None
     if instantly is None:
         from shared.instantly import default_client
@@ -337,6 +467,8 @@ def main(argv: Optional[List[str]] = None, store: Any = None, instantly: Any = N
         close = getattr(instantly, "close", None)
     try:
         summary = run(instantly, store, now, start_at, write=write, max_pages=args.pages)
+    except SeedRefused as exc:
+        return _refuse(str(exc))
     finally:
         if callable(close):
             try:
