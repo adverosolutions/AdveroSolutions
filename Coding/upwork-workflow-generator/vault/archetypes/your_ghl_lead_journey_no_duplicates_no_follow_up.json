@@ -4,7 +4,7 @@
   "sections": [
     {
       "key": "entry",
-      "label": "1 - EVERY LEAD COMES IN ONE WAY",
+      "label": "1 - EVERY LEAD LANDS AS ONE CONTACT",
       "color": 0,
       "note": "Your parts 6 and 7: forms, surveys, tags, custom fields and missed-call text back. Whether they fill in a form or you miss their call, they land as one contact with a tag saying where they came from."
     },
@@ -121,12 +121,12 @@
     {
       "from": "gate",
       "to": "stop",
-      "branch": "true"
+      "branch": "Yes"
     },
     {
       "from": "gate",
       "to": "seq",
-      "branch": "false",
+      "branch": "No",
       "loop": true
     },
     {
