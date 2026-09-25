@@ -1,0 +1,167 @@
+{
+  "title": "Your Claude Cowork and Skills: Set Up Once, Then a New Skill a Week",
+  "platform": "diagram",
+  "sections": [
+    {
+      "key": "cowork",
+      "label": "1 - SET UP CLAUDE COWORK",
+      "color": 0,
+      "note": "Claude on your own computer, working in one folder you choose, with your email, calendar and files connected. One sitting, and you can use it the same day."
+    },
+    {
+      "key": "skills",
+      "label": "2 - YOUR FIRST SKILLS",
+      "color": 1,
+      "note": "A skill is a set of saved instructions Claude reuses, so you ask once and get the same quality every time. We start with the four jobs you do every week and test each one on your real listings and leads."
+    },
+    {
+      "key": "ongoing",
+      "label": "3 - ADD A SKILL A WEEK, ONGOING",
+      "color": 2,
+      "note": "You said ongoing, so the list keeps growing. Each week you tell me the task that ate your time and it becomes the next skill."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "account",
+      "kind": "data.transform",
+      "label": "1 - Set Up Your Claude Account on the Plan That Includes Cowork",
+      "section": "cowork"
+    },
+    {
+      "key": "install",
+      "kind": "data.transform",
+      "label": "2 - Install Claude on Your Computer and Open Cowork",
+      "section": "cowork"
+    },
+    {
+      "key": "folder",
+      "kind": "data.transform",
+      "label": "3 - Give Claude One Folder for Your Listings, Notes and Drafts",
+      "section": "cowork"
+    },
+    {
+      "key": "connect",
+      "kind": "data.transform",
+      "label": "4 - Connect Your Gmail, Google Calendar and Google Drive",
+      "section": "cowork"
+    },
+    {
+      "key": "about",
+      "kind": "data.transform",
+      "label": "5 - Tell Claude Once How You Write, Where You Sell and How You Sign Off",
+      "section": "cowork"
+    },
+    {
+      "key": "listing",
+      "kind": "data.transform",
+      "label": "6 - Skill 1: Write a Listing Description From Your Notes and Photos",
+      "section": "skills"
+    },
+    {
+      "key": "leads",
+      "kind": "data.transform",
+      "label": "7 - Skill 2: Draft a Reply to Each New Lead With Two Showing Times",
+      "section": "skills"
+    },
+    {
+      "key": "social",
+      "kind": "data.transform",
+      "label": "8 - Skill 3: Turn This Week's Listings Into Social Posts",
+      "section": "skills"
+    },
+    {
+      "key": "market",
+      "kind": "data.transform",
+      "label": "9 - Skill 4: Write Your Market Update Email for Past Clients",
+      "section": "skills"
+    },
+    {
+      "key": "test",
+      "kind": "data.transform",
+      "label": "10 - Test Each Skill on One of Your Real Listings or Leads",
+      "section": "skills"
+    },
+    {
+      "key": "drafts",
+      "kind": "data.transform",
+      "label": "11 - Nothing Sends on Its Own: Every Email and Post Waits for Your OK",
+      "section": "skills"
+    },
+    {
+      "key": "weekly",
+      "kind": "data.aggregate",
+      "label": "12 - Each Week, the Task That Ate Your Time Becomes a New Skill",
+      "section": "ongoing"
+    }
+  ],
+  "edges": [
+    {
+      "from": "account",
+      "to": "install"
+    },
+    {
+      "from": "install",
+      "to": "folder"
+    },
+    {
+      "from": "folder",
+      "to": "connect"
+    },
+    {
+      "from": "connect",
+      "to": "about"
+    },
+    {
+      "from": "about",
+      "to": "listing"
+    },
+    {
+      "from": "listing",
+      "to": "leads"
+    },
+    {
+      "from": "leads",
+      "to": "social"
+    },
+    {
+      "from": "social",
+      "to": "market"
+    },
+    {
+      "from": "market",
+      "to": "test"
+    },
+    {
+      "from": "test",
+      "to": "drafts"
+    },
+    {
+      "from": "drafts",
+      "to": "weekly"
+    }
+  ],
+  "input_sample": {
+    "listing": "3 bed, 2 bath semi-detached, 14 Maple Crescent",
+    "your_notes": "renovated kitchen 2024, finished basement, walk to GO station, fenced yard",
+    "photos": "Google Drive / Listings / 14 Maple Crescent",
+    "list_price": "PASTE-YOUR-LIST-PRICE"
+  },
+  "output_sample": {
+    "skills_ready": [
+      "Listing description",
+      "New lead reply",
+      "Weekly social posts",
+      "Market update email"
+    ],
+    "waiting_for_your_ok": [
+      "MLS description draft for 14 Maple Crescent",
+      "3 social captions",
+      "Gmail draft to Priya M.: two showing times Saturday"
+    ],
+    "next_skill": "the task that ate your time this week"
+  },
+  "archetype": "your_claude_cowork_and_skills_set_up_once_then_a",
+  "learned": true,
+  "learned_at": "2026-09-25"
+}
