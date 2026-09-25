@@ -1,0 +1,167 @@
+{
+  "title": "Claude Cowork and Your First Skills: Set Up Once, Then a New Skill a Week",
+  "platform": "diagram",
+  "sections": [
+    {
+      "key": "cowork",
+      "label": "1 - SET UP CLAUDE COWORK",
+      "color": 0,
+      "note": "Claude on your own computer, working in one folder you choose, with your email, calendar and files connected. You can start using it the same day."
+    },
+    {
+      "key": "skills",
+      "label": "2 - YOUR FIRST SKILLS",
+      "color": 1,
+      "note": "A skill is a set of saved instructions Claude reuses, so you explain a task once and get the same result every time. We start with four everyday jobs and test each one on a real example."
+    },
+    {
+      "key": "ongoing",
+      "label": "3 - ADD A SKILL A WEEK, ONGOING",
+      "color": 2,
+      "note": "You said ongoing, so the list keeps growing. Each week you tell me the task that took your time and it becomes the next skill."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "account",
+      "kind": "data.transform",
+      "label": "1 - Set Up Your Claude Account on a Plan That Includes Cowork",
+      "section": "cowork"
+    },
+    {
+      "key": "install",
+      "kind": "data.transform",
+      "label": "2 - Install Claude on Your Computer and Open Cowork",
+      "section": "cowork"
+    },
+    {
+      "key": "folder",
+      "kind": "data.transform",
+      "label": "3 - Give Claude One Folder for Your Notes, Files and Drafts",
+      "section": "cowork"
+    },
+    {
+      "key": "connect",
+      "kind": "data.transform",
+      "label": "4 - Connect the Tools You Already Use: Email, Calendar and Files",
+      "section": "cowork"
+    },
+    {
+      "key": "about",
+      "kind": "data.transform",
+      "label": "5 - Tell Claude Once How You Write and How You Sign Off",
+      "section": "cowork"
+    },
+    {
+      "key": "inquiries",
+      "kind": "data.transform",
+      "label": "6 - Skill 1: Draft a Reply to Each New Inquiry",
+      "section": "skills"
+    },
+    {
+      "key": "docs",
+      "kind": "data.transform",
+      "label": "7 - Skill 2: Turn Your Rough Notes Into a Polished Document",
+      "section": "skills"
+    },
+    {
+      "key": "inbox",
+      "kind": "data.transform",
+      "label": "8 - Skill 3: Write a Weekly Summary of Your Inbox",
+      "section": "skills"
+    },
+    {
+      "key": "posts",
+      "kind": "data.transform",
+      "label": "9 - Skill 4: Turn Your Notes Into a Social Post or Newsletter",
+      "section": "skills"
+    },
+    {
+      "key": "test",
+      "kind": "data.transform",
+      "label": "10 - Test Each Skill on a Real Example From Your Week",
+      "section": "skills"
+    },
+    {
+      "key": "drafts",
+      "kind": "data.transform",
+      "label": "11 - Nothing Sends on Its Own: Every Draft Waits for Your OK",
+      "section": "skills"
+    },
+    {
+      "key": "weekly",
+      "kind": "data.aggregate",
+      "label": "12 - Each Week, the Task That Took Your Time Becomes a New Skill",
+      "section": "ongoing"
+    }
+  ],
+  "edges": [
+    {
+      "from": "account",
+      "to": "install"
+    },
+    {
+      "from": "install",
+      "to": "folder"
+    },
+    {
+      "from": "folder",
+      "to": "connect"
+    },
+    {
+      "from": "connect",
+      "to": "about"
+    },
+    {
+      "from": "about",
+      "to": "inquiries"
+    },
+    {
+      "from": "inquiries",
+      "to": "docs"
+    },
+    {
+      "from": "docs",
+      "to": "inbox"
+    },
+    {
+      "from": "inbox",
+      "to": "posts"
+    },
+    {
+      "from": "posts",
+      "to": "test"
+    },
+    {
+      "from": "test",
+      "to": "drafts"
+    },
+    {
+      "from": "drafts",
+      "to": "weekly"
+    }
+  ],
+  "input_sample": {
+    "new_inquiry": "Hi, are you taking new work next month? What would it cost?",
+    "your_notes": "call recap: wants a start date, budget question, send options by Friday",
+    "folder": "Claude / Notes and Drafts",
+    "your_sign_off": "PASTE-HOW-YOU-SIGN-OFF"
+  },
+  "output_sample": {
+    "skills_ready": [
+      "New inquiry reply",
+      "Notes to polished document",
+      "Weekly inbox summary",
+      "Social or newsletter post"
+    ],
+    "waiting_for_your_ok": [
+      "Email draft: reply to the new inquiry",
+      "Clean one-page summary of the call notes",
+      "Newsletter post draft"
+    ],
+    "next_skill": "the task that took your time this week"
+  },
+  "archetype": "claude_cowork_and_your_first_skills_set_up_once",
+  "learned": true,
+  "learned_at": "2026-09-25"
+}
