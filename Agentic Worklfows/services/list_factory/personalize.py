@@ -144,9 +144,9 @@ def generate_line(lead: Dict[str, Any], model: Optional[str] = None, role: str =
     install_offline_fakes()
     model = model or llm.model_for("research")
     if not llm.is_fake():
-        # Same gate as Apify, Perplexity and MillionVerifier. One Sonnet line
-        # per lead is $6.93 of a 3,300-lead run and was previously outside
-        # every flag the runbook names.
+        # Same gate as Apify, Perplexity and MillionVerifier: a personalization
+        # line bills real tokens and was previously outside every flag the
+        # runbook names.
         from services.list_factory.sources import require_paid
 
         require_paid(

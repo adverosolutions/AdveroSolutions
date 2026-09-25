@@ -29,13 +29,13 @@ source -> presuppress -> icp -> owner -> patterns -> verify -> finder
 | --- | --- | --- | --- |
 | source | Apify `code_crafter/leads-finder` sharded by US state, Google Maps by metro, or a recorded fixture | $0.02/run start + $0.002/lead **returned** (Apify) | `sources.py` |
 | presuppress | The FREE half of suppression: "this domain is already in a campaign", knowable the moment a row arrives | free | `suppression.py` |
-| icp | Keyword hard-reject, keyword hard-accept, then Haiku in batches with a Sonnet escalation below 0.8 confidence | ~$0.0003/business, **gated** | `icp.py` |
+| icp | Keyword hard-reject, keyword hard-accept, then Claude Opus 5.5 in batches with an escalation (also Opus 5.5) below 0.8 confidence | ~$0.0011/business in text tokens, plus up to 1,024 thinking tokens (about $0.02) per batch call and per escalation, which the preflight does not price yet; **gated** | `icp.py` |
 | owner | Name from the source row when it has one, otherwise `execution/discover_owner.py` | $0.005/look-up, $0 when the row carries a name | `contacts.py` |
 | patterns | `first@`, `first.last@`, `flast@`, `firstlast@` only | free | `contacts.py` |
 | verify | MillionVerifier, first hit wins | $0.0006/check | `contacts.py` |
 | finder | Paid finder on a miss. **Stub: no LeadMagic or Prospeo account exists**, so it only prices what one would have cost | $0.0035/find if it existed | `contacts.py` |
 | suppression | The address-level half. Mandatory, fail-closed. See below | free | `suppression.py` |
-| personalize | One Sonnet line per lead, checked against the copy rules, plus the trigger variables | ~$0.002/lead, **gated** | `personalize.py` |
+| personalize | One Claude Opus 5.5 line per lead, checked against the copy rules, plus the trigger variables | ~$0.0042/lead in text tokens, plus up to 1,024 thinking tokens (about $0.02) per line, which the preflight does not price yet; **gated** | `personalize.py` |
 | stage | CSV + one `POST /leads` would_do record | free | `stage_out.py` |
 
 Each stage only touches the leads that have not been through it (`RunState.pending(stage)`), which is what makes a run resumable.

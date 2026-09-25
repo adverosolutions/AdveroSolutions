@@ -20,8 +20,8 @@ for context and never written.
 | Collect calls | `services/upwork_followup/collect_calls.md` (printed by `--print-collect`) |
 | Ingest | `services/upwork_followup/collect.py` |
 | Thread state machine | `services/upwork_followup/sequence.py` |
-| Reply classifier | `services/upwork_followup/classify.py` (Haiku, escalates under 0.8 confidence to Sonnet) |
-| Drafts | `services/upwork_followup/draft.py` and `prompts/` (Sonnet) |
+| Reply classifier | `services/upwork_followup/classify.py` (Claude Opus 5.5; under 0.8 confidence it asks again on the `escalate` role, also Opus 5.5) |
+| Drafts | `services/upwork_followup/draft.py` and `prompts/` (Claude Opus 5.5) |
 | Copy gate | `services/upwork_followup/copy_gate.py` |
 | GHL mirror | `services/upwork_followup/ghl_sync.py` (shadow through `guard_write`) |
 | Orchestration and cards | `services/upwork_followup/tick.py` |
@@ -211,7 +211,10 @@ then the oldest silence; the rest wait for the next run.
   written go back for the next run. Its batch and Job_Log row say LOCK LOST
   (status `lock_lost`).
 - **Spend cap per run.** `UPWORK_RUN_BUDGET_USD` (default 1.50) caps the
-  run's model spend, counted at each call's worst case. `UPWORK_RUN_MAX_CLASSIFY`
+  run's model spend, counted at each call's worst case: the prompt, the call's
+  reply cap and the 1,024 thinking tokens every Claude Opus 5.5 call may add,
+  the same number `shared.llm` reserves against its own ceiling (about $0.04 to
+  $0.046 per draft call and up to $0.03 per classification). `UPWORK_RUN_MAX_CLASSIFY`
   (default 40) caps classifier calls. Set them in `Agentic Worklfows/.env` to
   change every run. A value set in the shell wins over `.env`, so one run can
   have a lower cap:
@@ -435,7 +438,7 @@ changes nothing and lists the candidates.
 | `python3 -m jobs.upwork_followup --mark-full-start` | records that a full collect starts now (`.tmp/upwork_followup/full_start.json`), so the watch does not start a second one while it runs |
 | `python3 -m jobs.upwork_followup --ingest-light .tmp/upwork_followup/raw_light.json --rooms .tmp/upwork_followup/watch_rooms.json` | merges the light pull's messages into the existing snapshot, those rooms only; refuses a broken file (or one that merges no room), keeps the snapshot and exits 1 |
 | `python3 -m jobs.upwork_followup --dry-run` | the default (no flag does the same); runs the tick on a throwaway copy of the store with no model call (replies classify as neutral), writes the drafts file (with "Would draft" where a draft is due) and the Job_Log row; saves nothing, calls no GHL, sends no card |
-| `python3 -m jobs.upwork_followup --run` (alias `--now`) | runs the tick for real: classifies replies (Haiku), writes the drafts (Sonnet), saves the store, mirrors GHL when configured, sends the cards; it first prints that the run spends Anthropic tokens. One run at a time (a second one prints that another run is in progress and does nothing), within the per-run spend cap |
+| `python3 -m jobs.upwork_followup --run` (alias `--now`) | runs the tick for real: classifies replies and writes the drafts (both Claude Opus 5.5), saves the store, mirrors GHL when configured, sends the cards; it first prints that the run spends Anthropic tokens. One run at a time (a second one prints that another run is in progress and does nothing), within the per-run spend cap |
 | `python3 -m jobs.upwork_followup --status` | a table of every thread: client, job title, stage (set by), status, pending draft, next due, room id. "Next due" says "blocked on Upwork since <date>" for a blocked room (a blocked room that was never enrolled gets a row too, status "not enrolled"), "closed: the room was blocked on Upwork; --resume or --stage reopens it" once the room is open again, and "reply skipped on <date>; client waiting since <date>" for a client left waiting |
 | `python3 -m jobs.upwork_followup --stage TARGET <stage>` | moves a job to a stage as his move (`set_by lorenzo`), which the engine never overrides |
 | `python3 -m jobs.upwork_followup --stop TARGET` | stops a thread (`stopped`) and withdraws its pending draft |
@@ -467,9 +470,15 @@ and Job_Log, and the exit code stays 0.
    stays in the shadow log (nothing is pushed or emailed unless he sets
    `NOTIFY_SHADOW_SEND=1`), the GHL mirror stays off (no Upwork pipeline yet;
    even configured, shadow writes are would-do rows only), and nothing is ever
-   written to Upwork. It costs real Anthropic tokens: a draft call is about
-   $0.007, a typical morning with 10 rooms is $0.10 to $0.30, and the worst
-   case is about $1.10, under the $1.50 per-run cap. Watch the first run:
+   written to Upwork. It costs real Anthropic tokens. Counted at worst case
+   (what the per-run cap sees), a draft call is about $0.04 to $0.046 (about
+   2,400 prompt tokens, the reply cap and 1,024 tokens of thinking headroom at
+   $4 in / $20 out per million) and a classification up to $0.03, so a typical
+   morning with 10 rooms counts about $0.40 to $0.70. The bill is lower,
+   because a call rarely uses its whole cap and headroom. The worst case is the
+   $1.50 per-run cap itself: it stops new drafts at about 35 draft calls, and
+   40 classifications alone count about $1.20, so a morning with many replies
+   can leave drafts for the next run. Watch the first run:
    check the collect used only read-only calls, the ingest wrote a snapshot,
    and the Job_Log row has sensible counts.
 3. **Review the drafts.** Each morning of that week, read

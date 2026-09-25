@@ -61,12 +61,20 @@ MODEL_POLICY = {
 #   2. every call sends ``output_config={"effort": EFFORT_POLICY[role]}``,
 #      ``low`` for every role, which keeps thinking short (the skill's advice
 #      for a route that used to run with thinking disabled);
-#   3. thinking still counts toward ``max_tokens``, so the API request gets
-#      ``max_tokens + THINKING_HEADROOM_TOKENS`` while the caller's number stays
-#      the size of the reply it asked for. Without the headroom a 120-token
+#   3. thinking counts toward ``max_tokens``, so the API request gets
+#      ``reserved_output_tokens(max_tokens)`` = ``max_tokens +
+#      THINKING_HEADROOM_TOKENS``. Without the headroom a 120-token
 #      classification cap would be eaten by a short thinking block and the
-#      max_tokens guard in complete() would refuse the reply. The spend
-#      ceiling reserves against the padded number, so the cap stays honest.
+#      max_tokens guard in complete() would refuse the reply. The API's limit
+#      is that padded number across thinking AND text together, so the
+#      caller's ``max_tokens`` is NOT a hard cap on the reply any more: a call
+#      that thinks little can write up to THINKING_HEADROOM_TOKENS more text
+#      than the caller asked for. Text that auto-sends keeps its own length
+#      checks (reply_engine/draft.py validate_draft, 1,500 chars;
+#      reply_engine/proposal.py copy_problems, MAX_PROPOSAL_CHARS). The spend
+#      ceiling reserves against the padded number, and a caller that keeps
+#      its own per-run budget (upwork_followup/tick.py call_cost) prices the
+#      same padded number through reserved_cost_usd().
 # Raising a role's effort (``medium``/``high``/``xhigh``/``max``) means more
 # thinking tokens on every call for that role; raise THINKING_HEADROOM_TOKENS
 # with it. Any value outside VALID_EFFORTS raises LLMError before the call
@@ -100,9 +108,14 @@ MODEL_ALIASES = {}  # type: Dict[str, str]
 # months after Fable was retired and a day after Lorenzo's weekly Fable
 # allowance ran out and every Fable role moved to Opus 5 (CLAUDE.md, "Runtime
 # models"). Haiku 4.5, Sonnet 5 and Opus 5 left on 2026-09-25 when every role
-# moved to Opus 5.5; old ledger rows naming them are all ``faked=1``. An id
-# that is genuinely gone from the table now falls to DEFAULT_PRICE, which OVER-states the cost, so the spend ceiling below trips
-# early rather than late.
+# moved to Opus 5.5. Old ledger rows naming them, billed ones included (the
+# main folder's .tmp/llm_ledger.csv holds 278 billed Haiku rows and 253 billed
+# Sonnet rows), are unaffected: every reader (ledger_spend_usd, the cost
+# audits) sums the est_cost_usd stored on the row when it was written and
+# never re-prices a row by its model id. Only a NEW call is priced from this
+# table, and a model id missing from it falls to DEFAULT_PRICE, which
+# OVER-states the cost, so the spend ceiling below trips early rather than
+# late.
 PRICES_USD_PER_MTOK = {
     "claude-opus-5-5": (4.00, 20.00),
 }
@@ -545,8 +558,46 @@ def _try_reserve(cost: float, cap: float) -> Dict[str, Any]:
 def projected_cost_usd(model: str, system: str, user: str, max_tokens: int) -> float:
     """Worst case for one call: the prompts as measured, the output at
     max_tokens. The check has to run BEFORE the call, so it assumes the model
-    fills its budget."""
+    fills its budget. ``max_tokens`` here is the number SENT to the API; for a
+    caller's reply cap use reserved_cost_usd(), which adds the thinking
+    headroom the way complete() does."""
     return estimate_cost(model, _approx_tokens(system) + _approx_tokens(user), int(max_tokens))
+
+
+def output_tokens_with_thinking(text_tokens: int, calls: int = 1) -> int:
+    """``text_tokens`` of output plus the WORST-CASE thinking of ``calls``
+    calls (THINKING_HEADROOM_TOKENS each). Thinking cannot be turned off on
+    claude-opus-5-5 and bills as output, so a cost projection built from
+    measured text-token averages needs this allowance to be a worst case.
+    Nothing has measured the typical thinking length at effort ``low`` yet."""
+    return int(text_tokens) + max(0, int(calls)) * THINKING_HEADROOM_TOKENS
+
+
+def reserved_output_tokens(max_tokens: int) -> int:
+    """The output tokens complete() asks the API for when a caller passes
+    ``max_tokens``: the reply cap plus THINKING_HEADROOM_TOKENS. Thinking
+    counts toward the limit, so this is also the worst-case output one call
+    can bill, and the number any pre-call cost projection must price."""
+    return output_tokens_with_thinking(max_tokens, 1)
+
+
+def _request_system(system: str, json_mode: bool) -> str:
+    """The system prompt complete() actually sends (and prices)."""
+    if json_mode:
+        return (system or "") + "\n\nRespond with a single JSON object and nothing else. No prose, no code fences."
+    return system or ""
+
+
+def reserved_cost_usd(role: str, system: str, user: str, max_tokens: int = 800,
+                      json_mode: bool = False, model: Optional[str] = None) -> float:
+    """What complete(role, system, user, max_tokens, json_mode, model) reserves
+    against the spend ceiling on each attempt: the prompts as sent, the output
+    at reserved_output_tokens(max_tokens). Callers that keep their own
+    per-run budget (upwork_followup/tick.py call_cost) use this so their
+    count cannot drift from the ceiling's."""
+    model = model or model_for(role)
+    return projected_cost_usd(model, _request_system(system, json_mode), user or "",
+                              reserved_output_tokens(max_tokens))
 
 
 def _alert_claim(threshold: str) -> bool:
@@ -757,7 +808,7 @@ def complete(
     """One Claude turn for ``role``. Returns str, or dict when json_mode."""
     model = model or model_for(role)
     if json_mode:
-        system = (system or "") + "\n\nRespond with a single JSON object and nothing else. No prose, no code fences."
+        system = _request_system(system, json_mode)
 
     if is_fake():
         out = _fake_response(role, system, user, json_mode)
@@ -778,7 +829,7 @@ def complete(
     output_config = _effort_param(role)
     # Thinking cannot be disabled on claude-opus-5-5 and counts toward
     # max_tokens, so the request carries headroom on top of the reply cap.
-    api_max_tokens = int(max_tokens) + THINKING_HEADROOM_TOKENS
+    api_max_tokens = reserved_output_tokens(max_tokens)
     client = _client()
     attempt = 0
     while True:

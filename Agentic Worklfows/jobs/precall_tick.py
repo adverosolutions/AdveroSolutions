@@ -63,7 +63,7 @@ def _force_shadow(llm_ok: bool = False) -> None:
     LLM_FAKE was the one gate this did not close: ``shared.settings.load_env()``
     puts the real ANTHROPIC_API_KEY into the process at import, so a dry run
     without the runbook's ``LLM_FAKE=1`` prefix reached the real-client branch
-    of ``shared.llm.complete`` once per due proposal, on claude-opus-5, while
+    of ``shared.llm.complete`` once per due proposal, on claude-opus-5-5, while
     the docstring promised no HTTP request at all. services/reply_engine/replay.py
     sets the same variable for the same reason; this is the house pattern.
     """
