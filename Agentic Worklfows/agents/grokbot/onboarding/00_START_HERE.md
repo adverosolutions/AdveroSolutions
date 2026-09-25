@@ -36,7 +36,7 @@ Success means, every week (file 07 has the scorecard):
 1. Files 00 to 07 hold Lorenzo's decisions of 2026-09-25. They win over anything else.
 2. The skills (folder `skills/`) hold the detailed rules and the exact email texts.
 3. If a skill says something different from files 00 to 07, follow files 00 to 07. Known differences:
-   - `grok-operator` says ask Opus only for rare cases. File 02 wins: ask Opus for every judgement call.
+   - `grok-operator` also says ask Opus on every judgement call. Where it says "send the matching email from your knowledge base", that email is the `email_text` from `ask_opus.py`, nothing else.
    - Several skills mention "the engine", "decide()", engine timers, a "Resume link" or a "Veto button". That machinery is not running. You and your team do that work, and GHL holds the record.
    - Several skills say a job "polls" or runs on a fixed time. Use the routines in section 10 instead.
 4. Your Bot memory is not authoritative. When memory and this pack disagree, this pack wins. When the pack and a live system disagree about a fact (a stage, a time, a campaign setting), the live system wins. Tell Lorenzo about the difference.
@@ -68,9 +68,9 @@ Do these in order. "Lorenzo" means only he can do it. Tick each one off in a mes
 | 2 | Paste the block in section 5 into the Chief of Staff description | Lorenzo | Description saved |
 | 3 | Log in to Instantly, GoHighLevel, Gmail, Google Calendar, Zoom and Upwork on the shared cloud computer | Lorenzo | You can open each one |
 | 4 | Decide how you reach Instantly: its MCP connector or the web app. Pending, Lorenzo decides | Lorenzo | Written in your notes |
-| 5 | Make the folder `~/advero/` on the cloud computer. Put `ask_opus.py` and `skills/` in it. Make `~/advero/state/` | You | The dry run in file 04, section 2 prints a request |
+| 5 | Make the folder `~/advero/` on the cloud computer. Put `ask_opus.py` and `skills/` in it. Make the state folders: `mkdir -p ~/advero/state/cases ~/advero/state/decisions` | You | `~/advero/state/cases/` and `~/advero/state/decisions/` exist, and the dry run in file 04, section 2 prints a request |
 | 6 | Ask Lorenzo for the Anthropic API key through the secure secret request field, stored as `ANTHROPIC_API_KEY` | You ask, Lorenzo types it | The key is set; you never saw or wrote it anywhere |
-| 7 | With Lorenzo's OK, run one real test call (file 04, section 8). It costs about 5 cents | You | Output shows `"model": "claude-opus-5-5"` and a `cost_usd` |
+| 7 | With Lorenzo's OK, run one real test call (file 04, section 8). It costs about 5 cents | You | Output shows `"model": "claude-opus-5-5"` (the model named in Anthropic's answer, not the one the script asked for) and a `cost_usd` above 0 |
 | 8 | Export the copy doc as plain text to `~/advero/copy_doc.txt` (file 06, section 2) | You | File saved, first line reads "Every email the system sends" |
 | 9 | Turn on push notifications in the Grok mobile app. Send one test ping: "Test ping from Chief of Staff." | Lorenzo turns on, you send | Lorenzo confirms he got it |
 | 10 | Turn on "Ask first" for every email send, every Instantly blocklist entry, and every GHL appointment you create | Lorenzo approves the setting | Setting on |
@@ -133,7 +133,7 @@ Create these after the first live sends work. Times are Central (CT). Stagger th
 
 | Routine | Owner | When | What |
 |---|---|---|---|
-| New replies | Inbox and Follow-up | Event from Instantly `reply_received` if a routine webhook works (unconfirmed). Until then every 10 minutes, 07:00 to 19:00 CT, Monday to Saturday, plus 07:00 for the night | Check unread replies first. If none, stop. Else handle each one |
+| New replies | Inbox and Follow-up | Event from Instantly `reply_received` if a routine webhook works (unconfirmed). Until then every 10 minutes, 07:00 to 19:00 CT, Monday to Saturday, plus 07:00 for the night | Check unread replies first. Skip any reply already in `~/advero/state/handled.jsonl` (file 02, section 11). If none is left, stop. Else handle each one |
 | Follow-ups due | Inbox and Follow-up | 09:40 CT business days | List E1 to E10 touches due today, ask Opus, send at 10:00 CT |
 | Booked-call touches | Calls | Every 15 minutes, 07:00 to 19:00 CT, Monday to Friday | New bookings, confirmations, reminders R2 R3 R4, no-show steps |
 | Upwork rooms | Upwork drafting assistant | Every 30 minutes, 08:00 to 18:30 CT, weekdays | Rooms with new client messages or a due touch. Drafts go to Lorenzo |

@@ -18,6 +18,8 @@ from unittest import mock
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPT = os.path.join(HERE, "..", "onboarding", "ask_opus.py")
 FIXTURE_DOC = os.path.join(HERE, "fixtures", "copy_doc_sample.txt")
+REAL_DOC = os.path.join(HERE, "..", "..", "..", "tools", "template_doc", "exports",
+                        "2026-09-25T0045Z_build_170b09dd897430a9.txt")
 FAKE_KEY = "test-key-not-real-0000"
 
 _spec = importlib.util.spec_from_file_location("ask_opus", SCRIPT)
@@ -29,6 +31,22 @@ E1_TEXT = ("Hey {first_name},\n\n\nThe time slots I sent got filled. Here are 2 
 E2_TEXT = ("Hey {first_name},\n\n\n{research_line}\n\n\nFifteen minutes is enough for me to "
            "show you how this would run for {company}. Let me know when a good time is to "
            "get a call on the books.\n\n\nLorenzo")
+E4_TEXT = ("Hey {first_name},\n\n\nI really think there's a lot of room for growth at {company}. "
+           "I've built these systems across numerous industries. A few of my favorites:\n\n\n"
+           "- {offer_proof}\n"
+           "- an outbound system that raised a software consultancy's qualified lead volume 35%\n"
+           "- $5M in loan applications in 30 days on $1,500 of ad spend for a lender\n\n\n"
+           "The first one is the same kind of system I'd build for {company}. Those last two "
+           "times got booked. Would {slots} work to go over it?\n\n\nLorenzo")
+PROOF_REACTIVATION = ("a win-back system for a commercial roofer doing $150M a year that "
+                      "recovered about $6M worth of contracts within 6 months")
+PROOF_OUTBOUND = ("an outbound system for a commercial roofer doing $150M a year that brought "
+                  "in about $180,000 in new contracts in 90 days")
+GUARANTEE_LINE = ("I'm so confident that I guarantee at least $24,000 a year in new cleaning "
+                  "contracts signed within 90 days, or I give your money back and throw in a "
+                  "$200 gift card to your favorite steakhouse.")
+FIRST_REPLY_LINE = ("Glad to hear it. All I need to start is a list of 60 or more lost or "
+                    "dormant accounts or lost proposals.")
 APPROVED = {"doc_done": True, "doc_unchanged": True, "go_live": True}
 
 
@@ -228,9 +246,16 @@ class Decisions(unittest.TestCase):
                   {"name": "company", "value": "Brightline"},
                   {"name": "research_line", "value": "The quickest place to start is usually "
                    "the accounts that already know you and went quiet."}]
+        c = case(context={"approval": dict(APPROVED),
+                          "lead": {"campaign_key": "cleaning_reactivation"}})
+        _, result, _ = self._run(decision(template_id="cadence.e2", template_text=E2_TEXT,
+                                          fields=fields), c)
+        self.assertEqual(result["grok_next_step"], "send")
+        # the same line with no campaign_key: the offer cannot be checked, so it holds
         _, result, _ = self._run(decision(template_id="cadence.e2", template_text=E2_TEXT,
                                           fields=fields))
-        self.assertEqual(result["grok_next_step"], "send")
+        self.assertEqual(result["grok_next_step"], "hold_card")
+        self.assertFalse(result["checks"]["field_values_clean"])
 
     def test_variant_line_matches_its_base_template(self):
         text = ("Hey {first_name},\n\n\n{asked_time} lands on a weekend for me. Could you send me "
@@ -307,6 +332,76 @@ class Decisions(unittest.TestCase):
         self.assertEqual(result["grok_next_step"], "hold_card")
 
 
+class RealDocFieldLines(unittest.TestCase):
+    """Field values against the real export of build 170b09dd897430a9."""
+
+    def _run(self, template_id, template_text, fields, campaign_key):
+        c = case(copy_doc_file=REAL_DOC,
+                 context={"approval": dict(APPROVED),
+                          "lead": {"campaign_key": campaign_key}})
+        dec = decision(template_id=template_id, template_text=template_text, fields=fields)
+        with mock.patch.object(ask_opus.urllib.request, "urlopen",
+                               return_value=FakeResponse(api_payload(dec))):
+            return run_main(c)[1]
+
+    def _e4(self, proof, campaign_key):
+        fields = [{"name": "first_name", "value": "Dana"},
+                  {"name": "company", "value": "Brightline Cleaning"},
+                  {"name": "offer_proof", "value": proof},
+                  {"name": "slots", "value": "Tue 12:05pm or Thu 4:30pm CT"}]
+        return self._run("cadence.e4", E4_TEXT, fields, campaign_key)
+
+    def test_e4_with_the_proof_line_for_the_lead_offer_sends(self):
+        result = self._e4(PROOF_REACTIVATION, "cleaning_reactivation")
+        self.assertEqual(result["grok_next_step"], "send", result["hold_reasons"])
+        self.assertIn("- " + PROOF_REACTIVATION + "\n", result["email_text"])
+        result = self._e4(PROOF_OUTBOUND, "cleaning_trigger")
+        self.assertEqual(result["grok_next_step"], "send", result["hold_reasons"])
+
+    def test_e4_with_the_other_offer_proof_line_holds(self):
+        result = self._e4(PROOF_OUTBOUND, "cleaning_reactivation")
+        self.assertEqual(result["grok_next_step"], "hold_card")
+        self.assertFalse(result["checks"]["field_values_clean"])
+        result = self._e4(PROOF_REACTIVATION, "recruiting_outbound")
+        self.assertEqual(result["grok_next_step"], "hold_card")
+
+    def test_e4_with_no_campaign_key_holds(self):
+        result = self._e4(PROOF_REACTIVATION, None)
+        self.assertEqual(result["grok_next_step"], "hold_card")
+
+    def test_e4_with_the_guarantee_line_holds(self):
+        result = self._e4(GUARANTEE_LINE, "cleaning_trigger")
+        self.assertEqual(result["grok_next_step"], "hold_card")
+        self.assertFalse(result["checks"]["field_values_clean"])
+
+    def test_e2_with_a_first_reply_line_holds(self):
+        fields = [{"name": "first_name", "value": "Dana"},
+                  {"name": "company", "value": "Brightline Cleaning"},
+                  {"name": "research_line", "value": FIRST_REPLY_LINE}]
+        result = self._run("cadence.e2", E2_TEXT, fields, "cleaning_reactivation")
+        self.assertEqual(result["grok_next_step"], "hold_card")
+        self.assertIn("first_reply.cleaning_reactivation.default.full",
+                      " ".join(result["checks"]["problems"]))
+
+    def test_e2_with_an_instruction_line_holds(self):
+        line = ("2. Nothing goes live until you tell Claude \"go live\".")
+        fields = [{"name": "first_name", "value": "Dana"},
+                  {"name": "company", "value": "Brightline Cleaning"},
+                  {"name": "research_line", "value": line}]
+        result = self._run("cadence.e2", E2_TEXT, fields, "cleaning_reactivation")
+        self.assertEqual(result["grok_next_step"], "hold_card")
+
+    def test_offer_suffixes(self):
+        self.assertEqual(ask_opus.offer_suffixes({"lead": {"campaign_key": "cleaning_trigger"}}),
+                         ["outbound_cleaning", "cleaning_outbound", "cleaning_trigger", "outbound"])
+        self.assertEqual(ask_opus.offer_suffixes({"lead": {}}), [])
+        with open(REAL_DOC, encoding="utf-8-sig") as handle:
+            doc = handle.read()
+        bookkeeping = {"lead": {"campaign_key": "bookkeeping_reactivation"}}
+        allowed = ask_opus.allowed_fragment_lines(doc, "cadence.e5", bookkeeping)
+        self.assertEqual(allowed, {"win back {company}'s past clients"})
+
+
 class Spacing(unittest.TestCase):
     def test_export_double_blank_lines_become_one(self):
         text = ask_opus.render("Hey {a},  \n\n\n\nLine two.\n\n\nLorenzo\n",
@@ -337,14 +432,43 @@ class Failures(unittest.TestCase):
         self.assertEqual(result["grok_next_step"], "send")
         sleep.assert_called_once_with(7.0)
 
-    def test_5xx_every_time_gives_up_after_four_attempts(self):
+    def test_5xx_every_time_gives_up_after_two_attempts(self):
         with mock.patch.object(ask_opus.urllib.request, "urlopen",
-                               side_effect=http_error(529)) as urlopen, \
-                mock.patch.object(ask_opus.time, "sleep"):
+                               side_effect=http_error(529, retry_after=600)) as urlopen, \
+                mock.patch.object(ask_opus.time, "sleep") as sleep:
             code, result, _ = run_main(case())
         self.assertEqual(code, 3)
-        self.assertEqual(urlopen.call_count, 4)
+        self.assertEqual(urlopen.call_count, 2)
         self.assertEqual(result["grok_next_step"], "hold_card")
+        self.assertIsNone(result["model"])
+        waited = sum(call[0][0] for call in sleep.call_args_list)
+        worst = ask_opus.MAX_ATTEMPTS * ask_opus.TIMEOUT_SECONDS + waited
+        self.assertLessEqual(worst, 300)
+
+    def test_unreadable_skill_or_doc_file_is_a_hold_card(self):
+        tmp = tempfile.mkdtemp()
+        try:
+            bad = os.path.join(tmp, "bad.md")
+            with open(bad, "wb") as handle:
+                handle.write(b"\xff\xfe\xfa not utf-8 \x80")
+            for c in (case(skill_files=[bad]), case(skill_files=[os.path.join(tmp, "none.md")]),
+                      case(copy_doc_file=bad), case(copy_doc_file=os.path.join(tmp, "none.txt"))):
+                with mock.patch.object(ask_opus.urllib.request, "urlopen") as urlopen:
+                    code, result, _ = run_main(c)
+                self.assertEqual(code, 2)
+                self.assertEqual(result["grok_next_step"], "hold_card")
+                urlopen.assert_not_called()
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_model_comes_from_the_response(self):
+        payload = api_payload(decision())
+        payload["model"] = "claude-opus-5-5-from-response"
+        with mock.patch.object(ask_opus.urllib.request, "urlopen",
+                               return_value=FakeResponse(payload)):
+            _, result, _ = run_main(case())
+        self.assertEqual(result["model"], "claude-opus-5-5-from-response")
+        self.assertEqual(result["model_requested"], "claude-opus-5-5")
 
     def test_network_error_is_retried(self):
         calls = [urllib.error.URLError("reset"), FakeResponse(api_payload(decision()))]

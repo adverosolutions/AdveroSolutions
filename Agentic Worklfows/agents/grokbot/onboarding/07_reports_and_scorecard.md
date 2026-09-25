@@ -125,7 +125,7 @@ Cost: about 20 to 30 cents per audited email, so up to about $2 a day.
 
 ## 8. The pipeline check, 06:30 CT weekdays
 
-Compare each open GHL Sales opportunity's stage with its Instantly interest status (file 05, section 8). List the mismatches in the morning report under Failures. Fix nothing on your own: a mismatch goes through Opus (`case_type` `pipeline`) only when Lorenzo says so.
+Compare each open GHL Sales opportunity's stage with its Instantly interest status (file 05, section 8). For each mismatch, ask Opus (`case_type` `pipeline`, file 05, section 7). Never decide which side is right yourself. Reports and QA writes nothing: an `update_records` answer goes to the Inbox and Follow-up agent to apply, anything else goes to the Chief of Staff as a hold card. List each mismatch and Opus's answer in the morning report under Failures.
 
 ## 9. Weekly scorecard (one-month trial)
 

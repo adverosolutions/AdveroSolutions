@@ -15,6 +15,10 @@ Input on stdin, one JSON object:
                       ["skills/cold-email-replies.md"]
     copy_doc_file     (optional) plain-text export of the approved copy doc.
                       Needed for any email: without it nothing can be sent.
+                      A doc line goes into a field only from the chosen
+                      template's own line blocks for the lead's offer, read
+                      from context.lead.campaign_key ("cleaning_reactivation",
+                      "cleaning_trigger", ...).
     template_prefixes (optional) only show Opus the copy-doc blocks whose tag
                       starts with one of these, for example ["cadence.e"]
     effort            (optional) low | medium | high. Default medium.
@@ -26,6 +30,8 @@ Output on stdout, one JSON object. Grok reads "grok_next_step" first:
     update_records   no email; apply the stage, interest and field updates
     wait             nothing now; look again at decision.send_after
     nothing          no step needed
+"model" is the model named in Anthropic's answer (null when no call was
+answered); "model_requested" is the model this script asked for.
 
 Exit codes: 0 a decision was printed (a hold card is still exit 0),
 2 bad input or no API key, 3 the API call failed (a hold card JSON is printed).
@@ -50,9 +56,9 @@ MODEL = "claude-opus-5-5"
 DEFAULT_EFFORT = "medium"
 ALLOWED_EFFORT = ("low", "medium", "high")
 MAX_TOKENS = 16000          # room for adaptive thinking plus the JSON answer
-TIMEOUT_SECONDS = 300
-MAX_ATTEMPTS = 4            # first try plus three retries, only on 429 / 5xx / network
-MAX_RETRY_WAIT = 60
+TIMEOUT_SECONDS = 120
+MAX_ATTEMPTS = 2            # first try plus one retry, only on 429 / 5xx / network
+MAX_RETRY_WAIT = 30         # worst case per case: 120 + 30 + 120 s, under 5 minutes
 CONFIDENCE_FLOOR = 0.8
 
 # US dollars per million tokens for claude-opus-5-5 (input, output, cache read,
@@ -77,6 +83,10 @@ NEVER_SEND_PREFIXES = ("first_reply.", "instantly.", "U-PRICE", "X-",
 # Placeholders whose value may be a link (only the call link).
 LINK_FIELDS = ("zoom_link", "call_link", "link")
 FORBIDDEN_IN_VALUES = ("!", "\u2014", "\u2013", "--", "$", "%")
+# A field value of this many words or more that equals a copy-doc line outside
+# the allowed line blocks was copied from another email (a first reply, a
+# guarantee, an instruction line, the other offer's line) and is refused.
+MIN_WORDS_FOR_DOC_LINE_MATCH = 4
 
 _NULLABLE_STRING = {"anyOf": [{"type": "string"}, {"type": "null"}]}
 _NAME_VALUE_LIST = {
@@ -129,12 +139,12 @@ One JSON object in the required schema, nothing else.
   - no_action: nothing to do.
 - template_id: the tag from the copy doc, like cadence.e3 or booking.counter.weekend/no_alternatives. null when there is no template.
 - template_text: the body of that template copied character for character from the copy doc, with its placeholders such as {first_name} left in. Include the greeting line and the "Lorenzo" sign-off. Leave out the subject line, notes and tag text. When a variant replaces lines of the base email, write the whole resulting body. Put exactly one blank line between paragraphs (the plain-text export shows two; the email has one). null when there is no template.
-- fields: one entry for every placeholder in template_text, name without braces. Follow the copy doc's rules: first_name is "there" when unknown; slots look like "Tue 12:05pm or Thu 4:30pm CT". When a placeholder takes a line from the copy doc (research_line, offer_proof, offer_line, preview, observation, niche_point), the value is that line copied exactly.
+- fields: one entry for every placeholder in template_text, name without braces. Follow the copy doc's rules: first_name is "there" when unknown; slots look like "Tue 12:05pm or Thu 4:30pm CT". When a placeholder takes a line from the copy doc (research_line, offer_proof, offer_line, preview, observation, niche_point), the value is that line copied exactly, from the block for the lead's offer (context.lead.campaign_key; a _trigger campaign is an outbound offer).
 - send_after: ISO 8601 time with its offset, Central time, when the step must wait. Otherwise null.
 - ghl_stage: the Sales pipeline stage after this step, or no_change.
 - field_updates: GHL contact fields to write, using these names only: Sequence, Last Email Sent, Last Email Date, Next Email, Next Due Date. Sequence is one of none, reply_waiting, followup, booked, no_show, nurture, stopped. Last Email Sent and Next Email are template ids (or none). Dates in ISO 8601 with offset, Central time.
 - instantly_interest: the Instantly interest value to set, or null for no change.
-- other_actions: extra steps Grok must take.
+- other_actions: extra steps Grok must take. None of them touches an Instantly campaign: pause_sequence and stop_sequence mean our own follow-up ladder (the GHL Sequence field), never an Instantly campaign or subsequence.
 - category: the reply label when a reply is being handled (the 11 labels in cold-email-replies, or the 9 Upwork labels in upwork-followups). Otherwise null.
 - draft_text: only with draft_for_lorenzo. Otherwise null.
 - escalate_to_lorenzo: true when a rule sends this to Lorenzo, a fact you need is missing or contradicts another, or you would be guessing.
@@ -184,6 +194,13 @@ def _read_text(path):
         return handle.read()
 
 
+def read_copy_doc(path):
+    try:
+        return _read_text(path)
+    except (OSError, ValueError, TypeError) as exc:
+        raise InputError("cannot read copy doc %s: %s" % (path, exc))
+
+
 def normalize_line(text):
     """Compare lines the way a reader would: straight quotes, single spaces."""
     text = text.replace("\u2018", "'").replace("\u2019", "'")
@@ -220,6 +237,82 @@ def filter_copy_doc(doc_text, prefixes):
         if keep:
             kept.append(line)
     return "\n".join(kept) if matched else ""
+
+
+def doc_blocks(doc_text):
+    """[(tag, [normalised lines])] for every tagged block, in doc order.
+
+    A block runs from its tag line to the next tag line or "(section)" line.
+    Note lines are left out. Lines outside any tagged block get the tag None.
+    """
+    blocks = [(None, [])]
+    for line in doc_text.splitlines():
+        tag = _tag_of(line)
+        if tag is not None:
+            blocks.append((tag, []))
+            continue
+        if line.rstrip().endswith("(section)"):
+            blocks.append((None, []))
+            continue
+        if line.rstrip().endswith("(note)"):
+            continue
+        norm = normalize_line(line)
+        if norm:
+            blocks[-1][1].append(norm)
+    return blocks
+
+
+def offer_suffixes(context):
+    """Tag suffixes that fit the lead's offer, most specific first.
+
+    context.lead.campaign_key is like "cleaning_reactivation", "cleaning_trigger"
+    or "recruiting_outbound"; a _trigger campaign is an outbound offer. The copy
+    doc tags its line blocks by offer ("reactivation", "outbound"), by niche and
+    offer ("cleaning_outbound") or by offer and niche ("reactivation_bookkeeping").
+    Empty when the key is missing.
+    """
+    lead = context.get("lead") if isinstance(context, dict) else None
+    key = lead.get("campaign_key") if isinstance(lead, dict) else None
+    if not isinstance(key, str) or not key.strip():
+        return []
+    key = key.strip().lower()
+    niche, _, offer = key.partition("_")
+    kind = {"reactivation": "reactivation", "trigger": "outbound",
+            "outbound": "outbound"}.get(offer)
+    candidates = [kind + "_" + niche, niche + "_" + kind, key, kind] if kind else [key]
+    out = []
+    for item in candidates:
+        if item not in out:
+            out.append(item)
+    return out
+
+
+def allowed_fragment_lines(doc_text, template_id, context):
+    """Copy-doc lines that may fill a field of this template for this lead.
+
+    Only the template's own line blocks count: tags that start with
+    "<template id>." (for cadence.e4: cadence.e4.offer_proof.reactivation and
+    cadence.e4.offer_proof.outbound), never a never-send family. In each group
+    only the most specific block for the lead's offer counts. No campaign_key,
+    no lines.
+    """
+    base = template_id.split("/")[0] + "."
+    suffixes = offer_suffixes(context)
+    groups = {}
+    for tag, lines in doc_blocks(doc_text):
+        if tag is None or not tag.startswith(base) or tag.startswith(NEVER_SEND_PREFIXES):
+            continue
+        group, dot, suffix = tag[len(base):].rpartition(".")
+        if not dot or "/" in tag:
+            continue
+        groups.setdefault(group, {})[suffix] = lines
+    allowed = set()
+    for by_suffix in groups.values():
+        for suffix in suffixes:
+            if suffix in by_suffix:
+                allowed.update(by_suffix[suffix])
+                break
+    return allowed
 
 
 def template_region(doc_text, template_id):
@@ -307,7 +400,6 @@ def check_email(decision, doc_text, context):
         problems.append("no copy doc file, so the text could not be checked")
         return email_text, checks
 
-    doc_lines = set(normalize_line(line) for line in doc_text.splitlines())
     region = template_region(doc_text, template_id)
     checks["template_found"] = region is not None
     if region is None:
@@ -320,12 +412,20 @@ def check_email(decision, doc_text, context):
             problems.append("lines not in template %s: %s" % (
                 template_id, " | ".join(normalize_line(m) for m in missing[:3])))
 
+    allowed = allowed_fragment_lines(doc_text, template_id, context)
+    doc_line_tags = {}
+    for tag, lines in doc_blocks(doc_text):
+        for line in lines:
+            doc_line_tags.setdefault(line, tag)
     dirty = []
     for item in fields:
         value = normalize_line(item["value"])
-        if value in doc_lines:
-            continue  # an approved line from the copy doc (fragment)
+        if value in allowed:
+            continue  # this template's own line block for the lead's offer
         bad = [mark for mark in FORBIDDEN_IN_VALUES if mark in item["value"]]
+        if len(value.split()) >= MIN_WORDS_FOR_DOC_LINE_MATCH and value in doc_line_tags:
+            bad.append("copied from %s, not from this email's lines for the lead's offer"
+                       % (doc_line_tags[value] or "an untagged part of the doc"))
         if item["name"] not in LINK_FIELDS and ("http" in value.lower() or "www." in value.lower()):
             bad.append("link")
         if "\n" in item["value"].strip():
@@ -390,17 +490,17 @@ def build_request(case):
         raise InputError("effort must be one of %s" % ", ".join(ALLOWED_EFFORT))
 
     system_text = DECISION_RULES
-    for path in case.get("skill_files") or []:
+    skill_files = case.get("skill_files") or []
+    if not isinstance(skill_files, list):
+        raise InputError("skill_files must be a list")
+    for path in skill_files:
         try:
             system_text += "\n\n=== SKILL FILE: %s ===\n%s" % (path, _read_text(path))
-        except OSError as exc:
+        except (OSError, ValueError, TypeError) as exc:
             raise InputError("cannot read skill file %s: %s" % (path, exc))
     doc_path = case.get("copy_doc_file")
     if doc_path:
-        try:
-            doc_text = _read_text(doc_path)
-        except OSError as exc:
-            raise InputError("cannot read copy doc %s: %s" % (doc_path, exc))
+        doc_text = read_copy_doc(doc_path)
         prefixes = case.get("template_prefixes") or []
         if prefixes:
             doc_text = filter_copy_doc(doc_text, prefixes)
@@ -494,7 +594,8 @@ def read_decision(payload):
 def hold_output(message):
     return {"grok_next_step": "hold_card", "hold_reasons": [message],
             "decision": None, "email_text": None, "checks": None,
-            "usage": None, "cost_usd": 0.0, "model": MODEL, "request_id": None}
+            "usage": None, "cost_usd": 0.0, "model": None, "model_requested": MODEL,
+            "request_id": None}
 
 
 def decide(case, api_key):
@@ -503,7 +604,7 @@ def decide(case, api_key):
     decision = read_decision(payload)
     doc_text = None
     if case.get("copy_doc_file"):
-        doc_text = _read_text(case["copy_doc_file"])  # full doc, never the filtered view
+        doc_text = read_copy_doc(case["copy_doc_file"])  # full doc, never the filtered view
     email_text, checks = None, None
     if decision.get("template_text"):
         email_text, checks = check_email(decision, doc_text, case.get("context") or {})
@@ -511,7 +612,8 @@ def decide(case, api_key):
     usage = payload.get("usage") or {}
     return {"grok_next_step": step, "hold_reasons": reasons, "decision": decision,
             "email_text": email_text, "checks": checks, "usage": usage,
-            "cost_usd": cost_usd(usage), "model": MODEL, "request_id": request_id}
+            "cost_usd": cost_usd(usage), "model": payload.get("model"),
+            "model_requested": MODEL, "request_id": request_id}
 
 
 def main(argv=None, stdin=None, stdout=None):

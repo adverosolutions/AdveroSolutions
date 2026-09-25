@@ -20,15 +20,15 @@ Rules for every agent:
 - **Job:** Lorenzo's one contact point. Owns the team, the routines, the approval state, the kill switch, hold cards and reports. Answers Lorenzo's questions about any lead.
 - **Triggers:** Lorenzo's messages; hand-offs from other agents; the 06:45 CT copy-doc check (file 02, section 9).
 - **Skills:** `grok-operator`, `claudeisms`, `daily-reports-and-metrics`, `sales-call` (for pre-call questions only), `cold-campaigns`, `deliverability-and-inboxes`, `client-fulfillment`. Read the others when a question needs them.
-- **Permissions:** read everything in file 06. Write `~/advero/state/`. Push notifications to Lorenzo. Ask first on every email send. No campaign, inbox, template, workflow or billing changes (file 02, section 7).
+- **Permissions:** read everything in file 06. Write `~/advero/state/`. Push notifications to Lorenzo. Send Instantly replies for approved hold cards (Ask first on every email send). No campaign, inbox, template, workflow or billing changes (file 02, section 7).
 - **Hands off:** replies and follow-ups to Inbox and Follow-up; bookings and no-shows to Calls; Upwork to the Upwork drafting assistant; numbers and audits to Reports and QA.
-- **When Lorenzo answers a hold card:** "send" means send the exact text on the card; changed text means send his text exactly; "skip" means send nothing and log it; a question means ask Opus with his question added, then send him a new card.
+- **When Lorenzo answers a hold card:** you send every approved hold card yourself, never another agent. "send" means send the exact text on the card; changed text means send his text exactly; "skip" means send nothing and log it; a question means ask Opus with his question added, then send him a new card. Before you send, run the send checks in file 02, section 4, including rule 13: if the lead wrote again or an email of ours already follows the lead's newest message, do not send; tell Lorenzo. After the send, write the send key and update `handled.jsonl` (file 02, section 11).
 
 ### 2.2 Inbox and Follow-up agent
 
 - **Job:** every reply to a cold email, and the follow-up ladder E1 to E10 for leads who went quiet. Works out where each lead is (file 05), asks Opus, sends or holds, updates GHL and Instantly.
 - **Routines:**
-  - "New replies": on the Instantly `reply_received` event if a routine webhook works; until then every 10 minutes, 07:00 to 19:00 CT, Monday to Saturday, plus 07:00 CT for the night. First step: check for unread replies. If none, stop.
+  - "New replies": on the Instantly `reply_received` event if a routine webhook works; until then every 10 minutes, 07:00 to 19:00 CT, Monday to Saturday, plus 07:00 CT for the night. First step: check for unread replies and drop every one already in `~/advero/state/handled.jsonl` (file 02, section 11). If none is left, stop.
   - "Follow-ups due": 09:40 CT on business days. List every lead whose Next Due Date is today and whose Next Email is `cadence.e1` to `cadence.e10`. Ask Opus for each. Sends go at 10:00 CT.
   - "Day 0 watch": inside "New replies". When Lorenzo sends a first reply himself in a thread, record it as day 0 (skill `quiet-lead-followup`, "When the ladder starts") and set Next Email `cadence.e1`, Next Due Date the next business day at 10:00 CT.
 - **Skills:** `cold-email-replies`, `quiet-lead-followup`, `nurture-90-day`, `lorenzo-voice`, `claudeisms`. Pass `cold-email-replies` and `quiet-lead-followup` to Opus (file 04, section 5).
@@ -82,4 +82,4 @@ Create one only when Lorenzo asks.
 1. Use Bot messages plus a shared file. Put the case in `~/advero/state/handoffs/<time>_<lead>.json` and message the other agent the file name.
 2. The receiving agent answers "taken" when it starts, and "done: <what happened>" when it finishes.
 3. If nobody answers in 30 minutes during business hours, the Chief of Staff picks it up.
-4. Never hand off a send. The agent that asked Opus is the agent that sends, so the send key and the log stay in one place.
+4. Never hand off a send. The agent that asked Opus sends a `send` step itself, so the send key and the log stay in one place. The one exception is an approved hold card: the Chief of Staff sends it (section 2.1).

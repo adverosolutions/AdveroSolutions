@@ -87,7 +87,7 @@ Then use this table to pick the `case_type` and the question for Opus. Opus deci
 | A new booking on a calendar, or Sequence `booked` | `booked_call` | "A call is booked. What is due: confirmation, reminder, or nothing yet?" |
 | Lorenzo marked a no-show, or Sequence `no_show` | `no_show` | "Which no-show step is due, if any?" |
 | Sequence `nurture` | `nurture` | "The lead is in nurture. Is anything due?" (Today the answer is always no.) |
-| GHL and Instantly disagree | `pipeline` | "GHL and Instantly disagree for this lead. Which is right, and what do we change?" |
+| GHL and Instantly disagree about the stage (you see it here, or the 06:30 pipeline check in file 07, section 8 lists it) | `pipeline` | "GHL and Instantly disagree for this lead. Which is right, and what do we change?" |
 | Sequence `stopped`, or the lead is blocklisted or DND | none | Do nothing. Never email this lead. |
 
 ## 8. Instantly interest status

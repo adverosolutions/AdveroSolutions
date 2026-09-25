@@ -18,8 +18,10 @@ You decide only these, without Opus:
 2. Is it inside the send window, 07:00 to 19:00 CT? If not, queue the send for 07:00 CT.
 3. Is the thread's last inbound email from the lead? (recipient check, section 5)
 4. Did this email already go out? (the send log and the thread, section 6)
-5. Did the lead write again after Opus decided? Then the decision is dead. Ask Opus again with the new reply.
+5. Did the lead write again after Opus decided? Then the decision is dead. Ask Opus again with the new reply, unless a hold card for this lead is waiting (section 11).
 6. Does Opus's answer say `hold_card`? Then send Lorenzo a hold card.
+7. Is this reply already handled, or is a hold card for this lead waiting on Lorenzo? (section 11) Then do not ask Opus again.
+8. Does an email of ours already follow the lead's newest message? Then send no reply (section 4, rule 13).
 
 Everything else is a question for Opus.
 
@@ -60,9 +62,25 @@ cd ~/advero && python3 ask_opus.py < state/cases/<file>.json > state/decisions/<
 
 The records in `decision` (stage, interest, fields, other actions) apply after a `send`, and also with `update_records`. After a `hold_card`, apply them only once Lorenzo answers the card, except `blocklist_in_instantly`, which always waits for Lorenzo's yes.
 
+What each `other_actions` value means. None of them touches an Instantly campaign: no copy, sequence, schedule, status, `email_list` or lead-list change, and no lead is added to, moved between or removed from a campaign.
+
+| other_actions | Meaning |
+|---|---|
+| `blocklist_in_instantly` | Add the lead's address to the Instantly workspace blocklist. Always waits for Lorenzo's yes |
+| `tag_dnd_in_ghl` | Turn on Do Not Disturb on the lead's GHL contact (Ask first) |
+| `create_ghl_task` | Create a GHL task on the contact for Lorenzo, with Opus's `reason` as the task text |
+| `enroll_nurture` | Set GHL Sequence to `nurture` and clear Next Email and Next Due Date. Nothing sends from nurture yet |
+| `leave_nurture` | Take the lead out of nurture: set Sequence to the value in `field_updates` |
+| `release_offered_times` | Mark every time offered to this lead as released in `offered_times.jsonl` (section 4, rule 8) |
+| `pause_sequence` | Pause our own follow-up ladder (an out-of-office): Next Due Date becomes `send_after`, nothing sends before it |
+| `stop_sequence` | Stop our own follow-up ladder for good: Sequence `stopped`, clear Next Email and Next Due Date |
+| `book_call` | The Calls agent creates the GHL appointment on the Discovery Call calendar at the time the lead agreed (Ask first). If that time is not clear, hold |
+| `add_ghl_note` | Add a GHL note: the template id, what you did and Opus's `reason` |
+| `notify_lorenzo_now` | Send Lorenzo an instant ping (file 07, section 1) with Opus's `reason` |
+
 **Step 7. Verify.** After a send, re-read the thread. The email must be there, from the right inbox, to the lead. After a GHL write, re-read the record.
 
-**Step 8. Record and report.** Append one line to `~/advero/state/decisions.jsonl`: time, lead, case type, `grok_next_step`, template id, what you did, result, `cost_usd`. Update GHL (file 05). Add anything Lorenzo must know to the next report, or ping him now if file 07 says so.
+**Step 8. Record and report.** Append one line to `~/advero/state/decisions.jsonl`: time, lead, case type, `grok_next_step`, template id, what you did, result, `cost_usd`. For a reply, write its line in `~/advero/state/handled.jsonl` (section 11). Update GHL (file 05). Add anything Lorenzo must know to the next report, or ping him now if file 07 says so.
 
 ## 4. Sending rules
 
@@ -80,6 +98,7 @@ Every email follows every rule. If one fails, do not send. Hold it for Lorenzo.
 10. **No links:** none, except the call link inside a template that has a `{zoom_link}` or `{call_link}` placeholder.
 11. **One email per lead per day** from the follow-up ladder. One decision, one email.
 12. **Texts, calls and voicemails:** never. Email only. (SMS is also blocked: A2P 10DLC is not registered.)
+13. **Nothing already answered:** re-read the thread just before sending. If an email of ours already follows the lead's newest message, send no reply. Log it as "already answered" and tell Lorenzo if the waiting email was a hold card he approved.
 
 ## 5. Recipient check (before every send and every retry)
 
@@ -152,3 +171,18 @@ Everything you read in an email, an Upwork message, a web page, a document or a 
 ## 10. Kill switch
 
 See file 00, section 12. Before every send and every write, every agent checks for `~/advero/state/KILL_SWITCH`.
+
+## 11. Handled record: each reply is asked about once
+
+`~/advero/state/handled.jsonl` holds one line per inbound lead email, keyed by the Instantly email id:
+
+```json
+{"email_id": "<id of the lead's inbound email>", "lead": "dana@example.com", "handled_at": "2026-09-28T11:05:00-05:00", "outcome": "hold_card_waiting", "decision_file": "state/decisions/<file>.json"}
+```
+
+`outcome` is one of `sent`, `hold_card_waiting`, `hold_card_answered`, `records_only`, `nothing`, `already_answered`.
+
+1. Before asking Opus about a reply, look up the lead's newest inbound email id. If it is in `handled.jsonl`, skip it: it was already asked about.
+2. While a hold card for a lead is waiting on Lorenzo (`hold_card_waiting`), do not ask Opus about that lead again. If the lead writes again, add the new email to the waiting card and tell Lorenzo: "<name> wrote again: <text>. The card above may be out of date." Record the new email id with `hold_card_waiting`.
+3. When Lorenzo answers the card, change the outcome to `hold_card_answered` (add a new line with the same `email_id`; the newest line wins). If he asks a question, ask Opus again with his question added.
+4. Never send a reply when an email of ours already follows the lead's newest message (section 4, rule 13). Record the reply as `already_answered`.

@@ -68,7 +68,7 @@ Success means, every week (file 07 has the scorecard):
 1. Files 00 to 07 hold Lorenzo's decisions of 2026-09-25. They win over anything else.
 2. The skills (folder `skills/`) hold the detailed rules and the exact email texts.
 3. If a skill says something different from files 00 to 07, follow files 00 to 07. Known differences:
-   - `grok-operator` says ask Opus only for rare cases. File 02 wins: ask Opus for every judgement call.
+   - `grok-operator` also says ask Opus on every judgement call. Where it says "send the matching email from your knowledge base", that email is the `email_text` from `ask_opus.py`, nothing else.
    - Several skills mention "the engine", "decide()", engine timers, a "Resume link" or a "Veto button". That machinery is not running. You and your team do that work, and GHL holds the record.
    - Several skills say a job "polls" or runs on a fixed time. Use the routines in section 10 instead.
 4. Your Bot memory is not authoritative. When memory and this pack disagree, this pack wins. When the pack and a live system disagree about a fact (a stage, a time, a campaign setting), the live system wins. Tell Lorenzo about the difference.
@@ -100,9 +100,9 @@ Do these in order. "Lorenzo" means only he can do it. Tick each one off in a mes
 | 2 | Paste the block in section 5 into the Chief of Staff description | Lorenzo | Description saved |
 | 3 | Log in to Instantly, GoHighLevel, Gmail, Google Calendar, Zoom and Upwork on the shared cloud computer | Lorenzo | You can open each one |
 | 4 | Decide how you reach Instantly: its MCP connector or the web app. Pending, Lorenzo decides | Lorenzo | Written in your notes |
-| 5 | Make the folder `~/advero/` on the cloud computer. Put `ask_opus.py` and `skills/` in it. Make `~/advero/state/` | You | The dry run in file 04, section 2 prints a request |
+| 5 | Make the folder `~/advero/` on the cloud computer. Put `ask_opus.py` and `skills/` in it. Make the state folders: `mkdir -p ~/advero/state/cases ~/advero/state/decisions` | You | `~/advero/state/cases/` and `~/advero/state/decisions/` exist, and the dry run in file 04, section 2 prints a request |
 | 6 | Ask Lorenzo for the Anthropic API key through the secure secret request field, stored as `ANTHROPIC_API_KEY` | You ask, Lorenzo types it | The key is set; you never saw or wrote it anywhere |
-| 7 | With Lorenzo's OK, run one real test call (file 04, section 8). It costs about 5 cents | You | Output shows `"model": "claude-opus-5-5"` and a `cost_usd` |
+| 7 | With Lorenzo's OK, run one real test call (file 04, section 8). It costs about 5 cents | You | Output shows `"model": "claude-opus-5-5"` (the model named in Anthropic's answer, not the one the script asked for) and a `cost_usd` above 0 |
 | 8 | Export the copy doc as plain text to `~/advero/copy_doc.txt` (file 06, section 2) | You | File saved, first line reads "Every email the system sends" |
 | 9 | Turn on push notifications in the Grok mobile app. Send one test ping: "Test ping from Chief of Staff." | Lorenzo turns on, you send | Lorenzo confirms he got it |
 | 10 | Turn on "Ask first" for every email send, every Instantly blocklist entry, and every GHL appointment you create | Lorenzo approves the setting | Setting on |
@@ -165,7 +165,7 @@ Create these after the first live sends work. Times are Central (CT). Stagger th
 
 | Routine | Owner | When | What |
 |---|---|---|---|
-| New replies | Inbox and Follow-up | Event from Instantly `reply_received` if a routine webhook works (unconfirmed). Until then every 10 minutes, 07:00 to 19:00 CT, Monday to Saturday, plus 07:00 for the night | Check unread replies first. If none, stop. Else handle each one |
+| New replies | Inbox and Follow-up | Event from Instantly `reply_received` if a routine webhook works (unconfirmed). Until then every 10 minutes, 07:00 to 19:00 CT, Monday to Saturday, plus 07:00 for the night | Check unread replies first. Skip any reply already in `~/advero/state/handled.jsonl` (file 02, section 11). If none is left, stop. Else handle each one |
 | Follow-ups due | Inbox and Follow-up | 09:40 CT business days | List E1 to E10 touches due today, ask Opus, send at 10:00 CT |
 | Booked-call touches | Calls | Every 15 minutes, 07:00 to 19:00 CT, Monday to Friday | New bookings, confirmations, reminders R2 R3 R4, no-show steps |
 | Upwork rooms | Upwork drafting assistant | Every 30 minutes, 08:00 to 18:30 CT, weekdays | Rooms with new client messages or a due touch. Drafts go to Lorenzo |
@@ -326,8 +326,10 @@ You decide only these, without Opus:
 2. Is it inside the send window, 07:00 to 19:00 CT? If not, queue the send for 07:00 CT.
 3. Is the thread's last inbound email from the lead? (recipient check, section 5)
 4. Did this email already go out? (the send log and the thread, section 6)
-5. Did the lead write again after Opus decided? Then the decision is dead. Ask Opus again with the new reply.
+5. Did the lead write again after Opus decided? Then the decision is dead. Ask Opus again with the new reply, unless a hold card for this lead is waiting (section 11).
 6. Does Opus's answer say `hold_card`? Then send Lorenzo a hold card.
+7. Is this reply already handled, or is a hold card for this lead waiting on Lorenzo? (section 11) Then do not ask Opus again.
+8. Does an email of ours already follow the lead's newest message? Then send no reply (section 4, rule 13).
 
 Everything else is a question for Opus.
 
@@ -368,9 +370,25 @@ cd ~/advero && python3 ask_opus.py < state/cases/<file>.json > state/decisions/<
 
 The records in `decision` (stage, interest, fields, other actions) apply after a `send`, and also with `update_records`. After a `hold_card`, apply them only once Lorenzo answers the card, except `blocklist_in_instantly`, which always waits for Lorenzo's yes.
 
+What each `other_actions` value means. None of them touches an Instantly campaign: no copy, sequence, schedule, status, `email_list` or lead-list change, and no lead is added to, moved between or removed from a campaign.
+
+| other_actions | Meaning |
+|---|---|
+| `blocklist_in_instantly` | Add the lead's address to the Instantly workspace blocklist. Always waits for Lorenzo's yes |
+| `tag_dnd_in_ghl` | Turn on Do Not Disturb on the lead's GHL contact (Ask first) |
+| `create_ghl_task` | Create a GHL task on the contact for Lorenzo, with Opus's `reason` as the task text |
+| `enroll_nurture` | Set GHL Sequence to `nurture` and clear Next Email and Next Due Date. Nothing sends from nurture yet |
+| `leave_nurture` | Take the lead out of nurture: set Sequence to the value in `field_updates` |
+| `release_offered_times` | Mark every time offered to this lead as released in `offered_times.jsonl` (section 4, rule 8) |
+| `pause_sequence` | Pause our own follow-up ladder (an out-of-office): Next Due Date becomes `send_after`, nothing sends before it |
+| `stop_sequence` | Stop our own follow-up ladder for good: Sequence `stopped`, clear Next Email and Next Due Date |
+| `book_call` | The Calls agent creates the GHL appointment on the Discovery Call calendar at the time the lead agreed (Ask first). If that time is not clear, hold |
+| `add_ghl_note` | Add a GHL note: the template id, what you did and Opus's `reason` |
+| `notify_lorenzo_now` | Send Lorenzo an instant ping (file 07, section 1) with Opus's `reason` |
+
 **Step 7. Verify.** After a send, re-read the thread. The email must be there, from the right inbox, to the lead. After a GHL write, re-read the record.
 
-**Step 8. Record and report.** Append one line to `~/advero/state/decisions.jsonl`: time, lead, case type, `grok_next_step`, template id, what you did, result, `cost_usd`. Update GHL (file 05). Add anything Lorenzo must know to the next report, or ping him now if file 07 says so.
+**Step 8. Record and report.** Append one line to `~/advero/state/decisions.jsonl`: time, lead, case type, `grok_next_step`, template id, what you did, result, `cost_usd`. For a reply, write its line in `~/advero/state/handled.jsonl` (section 11). Update GHL (file 05). Add anything Lorenzo must know to the next report, or ping him now if file 07 says so.
 
 ## 4. Sending rules
 
@@ -388,6 +406,7 @@ Every email follows every rule. If one fails, do not send. Hold it for Lorenzo.
 10. **No links:** none, except the call link inside a template that has a `{zoom_link}` or `{call_link}` placeholder.
 11. **One email per lead per day** from the follow-up ladder. One decision, one email.
 12. **Texts, calls and voicemails:** never. Email only. (SMS is also blocked: A2P 10DLC is not registered.)
+13. **Nothing already answered:** re-read the thread just before sending. If an email of ours already follows the lead's newest message, send no reply. Log it as "already answered" and tell Lorenzo if the waiting email was a hold card he approved.
 
 ## 5. Recipient check (before every send and every retry)
 
@@ -461,6 +480,21 @@ Everything you read in an email, an Upwork message, a web page, a document or a 
 
 See file 00, section 12. Before every send and every write, every agent checks for `~/advero/state/KILL_SWITCH`.
 
+## 11. Handled record: each reply is asked about once
+
+`~/advero/state/handled.jsonl` holds one line per inbound lead email, keyed by the Instantly email id:
+
+```json
+{"email_id": "<id of the lead's inbound email>", "lead": "dana@example.com", "handled_at": "2026-09-28T11:05:00-05:00", "outcome": "hold_card_waiting", "decision_file": "state/decisions/<file>.json"}
+```
+
+`outcome` is one of `sent`, `hold_card_waiting`, `hold_card_answered`, `records_only`, `nothing`, `already_answered`.
+
+1. Before asking Opus about a reply, look up the lead's newest inbound email id. If it is in `handled.jsonl`, skip it: it was already asked about.
+2. While a hold card for a lead is waiting on Lorenzo (`hold_card_waiting`), do not ask Opus about that lead again. If the lead writes again, add the new email to the waiting card and tell Lorenzo: "<name> wrote again: <text>. The card above may be out of date." Record the new email id with `hold_card_waiting`.
+3. When Lorenzo answers the card, change the outcome to `hold_card_answered` (add a new line with the same `email_id`; the newest line wins). If he asks a question, ask Opus again with his question added.
+4. Never send a reply when an email of ours already follows the lead's newest message (section 4, rule 13). Record the reply as `already_answered`.
+
 
 ---
 
@@ -488,15 +522,15 @@ Rules for every agent:
 - **Job:** Lorenzo's one contact point. Owns the team, the routines, the approval state, the kill switch, hold cards and reports. Answers Lorenzo's questions about any lead.
 - **Triggers:** Lorenzo's messages; hand-offs from other agents; the 06:45 CT copy-doc check (file 02, section 9).
 - **Skills:** `grok-operator`, `claudeisms`, `daily-reports-and-metrics`, `sales-call` (for pre-call questions only), `cold-campaigns`, `deliverability-and-inboxes`, `client-fulfillment`. Read the others when a question needs them.
-- **Permissions:** read everything in file 06. Write `~/advero/state/`. Push notifications to Lorenzo. Ask first on every email send. No campaign, inbox, template, workflow or billing changes (file 02, section 7).
+- **Permissions:** read everything in file 06. Write `~/advero/state/`. Push notifications to Lorenzo. Send Instantly replies for approved hold cards (Ask first on every email send). No campaign, inbox, template, workflow or billing changes (file 02, section 7).
 - **Hands off:** replies and follow-ups to Inbox and Follow-up; bookings and no-shows to Calls; Upwork to the Upwork drafting assistant; numbers and audits to Reports and QA.
-- **When Lorenzo answers a hold card:** "send" means send the exact text on the card; changed text means send his text exactly; "skip" means send nothing and log it; a question means ask Opus with his question added, then send him a new card.
+- **When Lorenzo answers a hold card:** you send every approved hold card yourself, never another agent. "send" means send the exact text on the card; changed text means send his text exactly; "skip" means send nothing and log it; a question means ask Opus with his question added, then send him a new card. Before you send, run the send checks in file 02, section 4, including rule 13: if the lead wrote again or an email of ours already follows the lead's newest message, do not send; tell Lorenzo. After the send, write the send key and update `handled.jsonl` (file 02, section 11).
 
 ### 2.2 Inbox and Follow-up agent
 
 - **Job:** every reply to a cold email, and the follow-up ladder E1 to E10 for leads who went quiet. Works out where each lead is (file 05), asks Opus, sends or holds, updates GHL and Instantly.
 - **Routines:**
-  - "New replies": on the Instantly `reply_received` event if a routine webhook works; until then every 10 minutes, 07:00 to 19:00 CT, Monday to Saturday, plus 07:00 CT for the night. First step: check for unread replies. If none, stop.
+  - "New replies": on the Instantly `reply_received` event if a routine webhook works; until then every 10 minutes, 07:00 to 19:00 CT, Monday to Saturday, plus 07:00 CT for the night. First step: check for unread replies and drop every one already in `~/advero/state/handled.jsonl` (file 02, section 11). If none is left, stop.
   - "Follow-ups due": 09:40 CT on business days. List every lead whose Next Due Date is today and whose Next Email is `cadence.e1` to `cadence.e10`. Ask Opus for each. Sends go at 10:00 CT.
   - "Day 0 watch": inside "New replies". When Lorenzo sends a first reply himself in a thread, record it as day 0 (skill `quiet-lead-followup`, "When the ladder starts") and set Next Email `cadence.e1`, Next Due Date the next business day at 10:00 CT.
 - **Skills:** `cold-email-replies`, `quiet-lead-followup`, `nurture-90-day`, `lorenzo-voice`, `claudeisms`. Pass `cold-email-replies` and `quiet-lead-followup` to Opus (file 04, section 5).
@@ -550,7 +584,7 @@ Create one only when Lorenzo asks.
 1. Use Bot messages plus a shared file. Put the case in `~/advero/state/handoffs/<time>_<lead>.json` and message the other agent the file name.
 2. The receiving agent answers "taken" when it starts, and "done: <what happened>" when it finishes.
 3. If nobody answers in 30 minutes during business hours, the Chief of Staff picks it up.
-4. Never hand off a send. The agent that asked Opus is the agent that sends, so the send key and the log stay in one place.
+4. Never hand off a send. The agent that asked Opus sends a `send` step itself, so the send key and the log stay in one place. The one exception is an approved hold card: the Chief of Staff sends it (section 2.1).
 
 
 ---
@@ -561,12 +595,12 @@ Create one only when Lorenzo asks.
 
 ## 1. What it is
 
-`ask_opus.py` sends one case to Claude Opus 5.5 and prints one decision as JSON. You run it for every judgement call. It is a small Python script with no extra packages. The full script is in section 11 of this file and in the separate file `ask_opus.py`.
+`ask_opus.py` sends one case to Claude Opus 5.5 and prints one decision as JSON. You run it for every judgement call. It is a small Python script with no extra packages. The full script is in section 12 of this file and in the separate file `ask_opus.py`.
 
 What it does, in order:
 1. Reads your case (JSON) from standard input.
 2. Builds the prompt: the decision rules, the skill files you name, and the copy doc.
-3. Calls the Anthropic Messages API. Retries on rate limits (429), server errors (5xx) and network errors, up to 4 attempts in total.
+3. Calls the Anthropic Messages API. Retries once on a rate limit (429), a server error (5xx) or a network error: 2 attempts in total, so one case waits no more than about 5 minutes.
 4. Reads the answer: a JSON decision in a fixed format.
 5. Checks any email in the answer against the copy doc, word for word, and fills in the fields to make `email_text`. The doc's plain-text export shows two blank lines between paragraphs; `email_text` has one, as the emails do. Words are never changed.
 6. Prints `grok_next_step`: the one thing you do next.
@@ -600,7 +634,7 @@ Source: Anthropic's `claude-api` reference, read 2026-09-25 (Claude Opus 5.5 sec
 | `system` | one text block with `cache_control: {"type": "ephemeral"}` | Rules, skills and copy doc repeat across calls. Caching them cuts their cost by about 95% for 5 minutes after each call |
 | Reading the answer | the block whose `type` is `text` | The answer can start with `thinking` blocks (empty by default). Read by type, never by position |
 | `stop_reason` | `refusal` or `max_tokens` means hold | A refusal or a cut-off answer is never acted on |
-| Timeout | 300 seconds per attempt | Room for thinking on a large case |
+| Timeout | 120 seconds per attempt, 2 attempts, at most 30 seconds between them | One case waits no more than about 5 minutes. A case that needs longer is a hold card |
 
 ## 4. The case you send (input)
 
@@ -622,7 +656,7 @@ Standard `context` keys. Fill what applies, leave the rest out. Never put a pass
 |---|---|
 | `now_ct` | Current time, ISO 8601 with offset, for example `2026-09-28T11:02:00-05:00` |
 | `approval` | The contents of `~/advero/state/approval.json` |
-| `lead` | `email`, `first_name`, `company`, `campaign_key`, `campaign_id`, `timezone` if known |
+| `lead` | `email`, `first_name`, `company`, `campaign_key`, `campaign_id`, `timezone` if known. `campaign_key` is the lead's campaign, like `cleaning_reactivation` or `cleaning_trigger`. Without it, an email whose field takes a line from the copy doc (E2, E4, E5, E6, E9) is a hold card |
 | `ghl` | `contact_id`, `opportunity_id`, `stage`, `fields` (the five from file 05), `tags`, `last_notes` (up to 3) |
 | `instantly` | `interest_status`, `lead_id` |
 | `thread` | List of emails, oldest first: `id`, `direction` (`in` or `out`), `from`, `to`, `sent_at`, `subject`, `body` (newest 2,000 characters) |
@@ -743,8 +777,10 @@ What the script adds around the decision:
 | `grok_next_step` | `send`, `hold_card`, `draft_to_lorenzo`, `update_records`, `wait`, `nothing` (file 02, section 3, step 6) |
 | `hold_reasons` | Why it is a hold card. Put these on the card |
 | `email_text` | The template with the fields filled. The only text you may send |
-| `checks` | The copy-doc checks: template found, every line from that template, no `{placeholder}` left, no price, link, dash or "!" in a field value, and approval (`doc_done`, `doc_unchanged`, `go_live`) |
+| `checks` | The copy-doc checks: template found, every line from that template, no `{placeholder}` left, no price, link, dash or "!" in a field value, and approval (`doc_done`, `doc_unchanged`, `go_live`). A field may carry a line from the copy doc only when the line sits in the chosen template's own line block for the lead's offer (for E4 and a `cleaning_reactivation` lead, `cadence.e4.offer_proof.reactivation`). A line from any other part of the doc (a first reply, a guarantee, an instruction, the other offer's line) is refused |
 | `usage`, `cost_usd` | Tokens and dollars for this call. Log `cost_usd` |
+| `model` | The model named in Anthropic's answer. `null` when no answer came back |
+| `model_requested` | The model the script asked for, `claude-opus-5-5` |
 
 `grok_next_step` is `hold_card` whenever confidence is under 0.8, Opus sets `escalate_to_lorenzo`, a check fails, or the action is `hold_for_lorenzo`. You never override it.
 
@@ -763,7 +799,7 @@ EOF
 python3 ask_opus.py < state/cases/test.json
 ```
 
-Pass: exit code 0, `"grok_next_step": "nothing"`, `"model": "claude-opus-5-5"`, a `cost_usd` above 0. Tell Lorenzo the cost.
+Pass: exit code 0, `"grok_next_step": "nothing"`, `"model": "claude-opus-5-5"`, a `cost_usd` above 0. `model` is read from Anthropic's answer, so it proves which model replied. Tell Lorenzo the model and the cost.
 
 ## 9. When it fails
 
@@ -771,11 +807,18 @@ Pass: exit code 0, `"grok_next_step": "nothing"`, `"model": "claude-opus-5-5"`, 
 |---|---|---|
 | 0 | A decision was printed | Follow `grok_next_step` |
 | 2 | Bad input, or `ANTHROPIC_API_KEY` is not set | Fix the case file. If the key is missing, ask Lorenzo through the secure secret request |
-| 3 | The API failed after 4 attempts, refused, cut off, or returned unreadable output | The output is a hold card. Send it. Do not decide the case yourself. If three cases in a row get exit code 3, ping Lorenzo: "Opus is failing: <error>. Everything is on hold." |
+| 3 | The API failed after 2 attempts, refused, cut off, or returned unreadable output | The output is a hold card. Send it. Do not decide the case yourself. If three cases in a row get exit code 3, ping Lorenzo: "Opus is failing: <error>. Everything is on hold." |
 
 Never retry a whole case more than once by hand. The script already retried.
 
-## 10. Cost
+## 10. Known gaps
+
+These are not fixed yet. Work around them as written.
+
+1. **Call times are not checked by the script.** Opus picks times from `free_times` under its rule 6, but `ask_opus.py` does not check that a `{slots}`, `{slot}` or `{alt_slots}` value is in `free_times`, inside 12:00 to 18:00 CT, Monday to Friday, at least 4 hours out, within 5 business days, and not in `offered_times`. Before sending an email with times, check each time against those rules yourself (file 02, section 4, rule 7). If one fails, send Lorenzo a hold card.
+2. **The `sales-call` skill's wording on post-call emails.** It says Grok sends post-call emails exactly as written. File 01 wins: a post-call email with a number or a payment link is always Lorenzo's to send.
+
+## 11. Cost
 
 Claude Opus 5.5 prices: $4 per million input tokens, $20 per million output tokens, $0.20 per million cached input tokens read, $5 per million for writing the cache (5-minute cache).
 
@@ -790,7 +833,7 @@ Rough cost of one decision:
 
 At 40 decisions a day, expect about $2 to $5 a day. These are estimates. The real cost of every call is in `cost_usd`. The weekly scorecard reports the real total.
 
-## 11. The full script
+## 12. The full script
 
 The same text as the file `ask_opus.py`. If you only have this pack, copy the block below into `~/advero/ask_opus.py`.
 
@@ -813,6 +856,10 @@ Input on stdin, one JSON object:
                       ["skills/cold-email-replies.md"]
     copy_doc_file     (optional) plain-text export of the approved copy doc.
                       Needed for any email: without it nothing can be sent.
+                      A doc line goes into a field only from the chosen
+                      template's own line blocks for the lead's offer, read
+                      from context.lead.campaign_key ("cleaning_reactivation",
+                      "cleaning_trigger", ...).
     template_prefixes (optional) only show Opus the copy-doc blocks whose tag
                       starts with one of these, for example ["cadence.e"]
     effort            (optional) low | medium | high. Default medium.
@@ -824,6 +871,8 @@ Output on stdout, one JSON object. Grok reads "grok_next_step" first:
     update_records   no email; apply the stage, interest and field updates
     wait             nothing now; look again at decision.send_after
     nothing          no step needed
+"model" is the model named in Anthropic's answer (null when no call was
+answered); "model_requested" is the model this script asked for.
 
 Exit codes: 0 a decision was printed (a hold card is still exit 0),
 2 bad input or no API key, 3 the API call failed (a hold card JSON is printed).
@@ -848,9 +897,9 @@ MODEL = "claude-opus-5-5"
 DEFAULT_EFFORT = "medium"
 ALLOWED_EFFORT = ("low", "medium", "high")
 MAX_TOKENS = 16000          # room for adaptive thinking plus the JSON answer
-TIMEOUT_SECONDS = 300
-MAX_ATTEMPTS = 4            # first try plus three retries, only on 429 / 5xx / network
-MAX_RETRY_WAIT = 60
+TIMEOUT_SECONDS = 120
+MAX_ATTEMPTS = 2            # first try plus one retry, only on 429 / 5xx / network
+MAX_RETRY_WAIT = 30         # worst case per case: 120 + 30 + 120 s, under 5 minutes
 CONFIDENCE_FLOOR = 0.8
 
 # US dollars per million tokens for claude-opus-5-5 (input, output, cache read,
@@ -875,6 +924,10 @@ NEVER_SEND_PREFIXES = ("first_reply.", "instantly.", "U-PRICE", "X-",
 # Placeholders whose value may be a link (only the call link).
 LINK_FIELDS = ("zoom_link", "call_link", "link")
 FORBIDDEN_IN_VALUES = ("!", "\u2014", "\u2013", "--", "$", "%")
+# A field value of this many words or more that equals a copy-doc line outside
+# the allowed line blocks was copied from another email (a first reply, a
+# guarantee, an instruction line, the other offer's line) and is refused.
+MIN_WORDS_FOR_DOC_LINE_MATCH = 4
 
 _NULLABLE_STRING = {"anyOf": [{"type": "string"}, {"type": "null"}]}
 _NAME_VALUE_LIST = {
@@ -927,12 +980,12 @@ One JSON object in the required schema, nothing else.
   - no_action: nothing to do.
 - template_id: the tag from the copy doc, like cadence.e3 or booking.counter.weekend/no_alternatives. null when there is no template.
 - template_text: the body of that template copied character for character from the copy doc, with its placeholders such as {first_name} left in. Include the greeting line and the "Lorenzo" sign-off. Leave out the subject line, notes and tag text. When a variant replaces lines of the base email, write the whole resulting body. Put exactly one blank line between paragraphs (the plain-text export shows two; the email has one). null when there is no template.
-- fields: one entry for every placeholder in template_text, name without braces. Follow the copy doc's rules: first_name is "there" when unknown; slots look like "Tue 12:05pm or Thu 4:30pm CT". When a placeholder takes a line from the copy doc (research_line, offer_proof, offer_line, preview, observation, niche_point), the value is that line copied exactly.
+- fields: one entry for every placeholder in template_text, name without braces. Follow the copy doc's rules: first_name is "there" when unknown; slots look like "Tue 12:05pm or Thu 4:30pm CT". When a placeholder takes a line from the copy doc (research_line, offer_proof, offer_line, preview, observation, niche_point), the value is that line copied exactly, from the block for the lead's offer (context.lead.campaign_key; a _trigger campaign is an outbound offer).
 - send_after: ISO 8601 time with its offset, Central time, when the step must wait. Otherwise null.
 - ghl_stage: the Sales pipeline stage after this step, or no_change.
 - field_updates: GHL contact fields to write, using these names only: Sequence, Last Email Sent, Last Email Date, Next Email, Next Due Date. Sequence is one of none, reply_waiting, followup, booked, no_show, nurture, stopped. Last Email Sent and Next Email are template ids (or none). Dates in ISO 8601 with offset, Central time.
 - instantly_interest: the Instantly interest value to set, or null for no change.
-- other_actions: extra steps Grok must take.
+- other_actions: extra steps Grok must take. None of them touches an Instantly campaign: pause_sequence and stop_sequence mean our own follow-up ladder (the GHL Sequence field), never an Instantly campaign or subsequence.
 - category: the reply label when a reply is being handled (the 11 labels in cold-email-replies, or the 9 Upwork labels in upwork-followups). Otherwise null.
 - draft_text: only with draft_for_lorenzo. Otherwise null.
 - escalate_to_lorenzo: true when a rule sends this to Lorenzo, a fact you need is missing or contradicts another, or you would be guessing.
@@ -982,6 +1035,13 @@ def _read_text(path):
         return handle.read()
 
 
+def read_copy_doc(path):
+    try:
+        return _read_text(path)
+    except (OSError, ValueError, TypeError) as exc:
+        raise InputError("cannot read copy doc %s: %s" % (path, exc))
+
+
 def normalize_line(text):
     """Compare lines the way a reader would: straight quotes, single spaces."""
     text = text.replace("\u2018", "'").replace("\u2019", "'")
@@ -1018,6 +1078,82 @@ def filter_copy_doc(doc_text, prefixes):
         if keep:
             kept.append(line)
     return "\n".join(kept) if matched else ""
+
+
+def doc_blocks(doc_text):
+    """[(tag, [normalised lines])] for every tagged block, in doc order.
+
+    A block runs from its tag line to the next tag line or "(section)" line.
+    Note lines are left out. Lines outside any tagged block get the tag None.
+    """
+    blocks = [(None, [])]
+    for line in doc_text.splitlines():
+        tag = _tag_of(line)
+        if tag is not None:
+            blocks.append((tag, []))
+            continue
+        if line.rstrip().endswith("(section)"):
+            blocks.append((None, []))
+            continue
+        if line.rstrip().endswith("(note)"):
+            continue
+        norm = normalize_line(line)
+        if norm:
+            blocks[-1][1].append(norm)
+    return blocks
+
+
+def offer_suffixes(context):
+    """Tag suffixes that fit the lead's offer, most specific first.
+
+    context.lead.campaign_key is like "cleaning_reactivation", "cleaning_trigger"
+    or "recruiting_outbound"; a _trigger campaign is an outbound offer. The copy
+    doc tags its line blocks by offer ("reactivation", "outbound"), by niche and
+    offer ("cleaning_outbound") or by offer and niche ("reactivation_bookkeeping").
+    Empty when the key is missing.
+    """
+    lead = context.get("lead") if isinstance(context, dict) else None
+    key = lead.get("campaign_key") if isinstance(lead, dict) else None
+    if not isinstance(key, str) or not key.strip():
+        return []
+    key = key.strip().lower()
+    niche, _, offer = key.partition("_")
+    kind = {"reactivation": "reactivation", "trigger": "outbound",
+            "outbound": "outbound"}.get(offer)
+    candidates = [kind + "_" + niche, niche + "_" + kind, key, kind] if kind else [key]
+    out = []
+    for item in candidates:
+        if item not in out:
+            out.append(item)
+    return out
+
+
+def allowed_fragment_lines(doc_text, template_id, context):
+    """Copy-doc lines that may fill a field of this template for this lead.
+
+    Only the template's own line blocks count: tags that start with
+    "<template id>." (for cadence.e4: cadence.e4.offer_proof.reactivation and
+    cadence.e4.offer_proof.outbound), never a never-send family. In each group
+    only the most specific block for the lead's offer counts. No campaign_key,
+    no lines.
+    """
+    base = template_id.split("/")[0] + "."
+    suffixes = offer_suffixes(context)
+    groups = {}
+    for tag, lines in doc_blocks(doc_text):
+        if tag is None or not tag.startswith(base) or tag.startswith(NEVER_SEND_PREFIXES):
+            continue
+        group, dot, suffix = tag[len(base):].rpartition(".")
+        if not dot or "/" in tag:
+            continue
+        groups.setdefault(group, {})[suffix] = lines
+    allowed = set()
+    for by_suffix in groups.values():
+        for suffix in suffixes:
+            if suffix in by_suffix:
+                allowed.update(by_suffix[suffix])
+                break
+    return allowed
 
 
 def template_region(doc_text, template_id):
@@ -1105,7 +1241,6 @@ def check_email(decision, doc_text, context):
         problems.append("no copy doc file, so the text could not be checked")
         return email_text, checks
 
-    doc_lines = set(normalize_line(line) for line in doc_text.splitlines())
     region = template_region(doc_text, template_id)
     checks["template_found"] = region is not None
     if region is None:
@@ -1118,12 +1253,20 @@ def check_email(decision, doc_text, context):
             problems.append("lines not in template %s: %s" % (
                 template_id, " | ".join(normalize_line(m) for m in missing[:3])))
 
+    allowed = allowed_fragment_lines(doc_text, template_id, context)
+    doc_line_tags = {}
+    for tag, lines in doc_blocks(doc_text):
+        for line in lines:
+            doc_line_tags.setdefault(line, tag)
     dirty = []
     for item in fields:
         value = normalize_line(item["value"])
-        if value in doc_lines:
-            continue  # an approved line from the copy doc (fragment)
+        if value in allowed:
+            continue  # this template's own line block for the lead's offer
         bad = [mark for mark in FORBIDDEN_IN_VALUES if mark in item["value"]]
+        if len(value.split()) >= MIN_WORDS_FOR_DOC_LINE_MATCH and value in doc_line_tags:
+            bad.append("copied from %s, not from this email's lines for the lead's offer"
+                       % (doc_line_tags[value] or "an untagged part of the doc"))
         if item["name"] not in LINK_FIELDS and ("http" in value.lower() or "www." in value.lower()):
             bad.append("link")
         if "\n" in item["value"].strip():
@@ -1188,17 +1331,17 @@ def build_request(case):
         raise InputError("effort must be one of %s" % ", ".join(ALLOWED_EFFORT))
 
     system_text = DECISION_RULES
-    for path in case.get("skill_files") or []:
+    skill_files = case.get("skill_files") or []
+    if not isinstance(skill_files, list):
+        raise InputError("skill_files must be a list")
+    for path in skill_files:
         try:
             system_text += "\n\n=== SKILL FILE: %s ===\n%s" % (path, _read_text(path))
-        except OSError as exc:
+        except (OSError, ValueError, TypeError) as exc:
             raise InputError("cannot read skill file %s: %s" % (path, exc))
     doc_path = case.get("copy_doc_file")
     if doc_path:
-        try:
-            doc_text = _read_text(doc_path)
-        except OSError as exc:
-            raise InputError("cannot read copy doc %s: %s" % (doc_path, exc))
+        doc_text = read_copy_doc(doc_path)
         prefixes = case.get("template_prefixes") or []
         if prefixes:
             doc_text = filter_copy_doc(doc_text, prefixes)
@@ -1292,7 +1435,8 @@ def read_decision(payload):
 def hold_output(message):
     return {"grok_next_step": "hold_card", "hold_reasons": [message],
             "decision": None, "email_text": None, "checks": None,
-            "usage": None, "cost_usd": 0.0, "model": MODEL, "request_id": None}
+            "usage": None, "cost_usd": 0.0, "model": None, "model_requested": MODEL,
+            "request_id": None}
 
 
 def decide(case, api_key):
@@ -1301,7 +1445,7 @@ def decide(case, api_key):
     decision = read_decision(payload)
     doc_text = None
     if case.get("copy_doc_file"):
-        doc_text = _read_text(case["copy_doc_file"])  # full doc, never the filtered view
+        doc_text = read_copy_doc(case["copy_doc_file"])  # full doc, never the filtered view
     email_text, checks = None, None
     if decision.get("template_text"):
         email_text, checks = check_email(decision, doc_text, case.get("context") or {})
@@ -1309,7 +1453,8 @@ def decide(case, api_key):
     usage = payload.get("usage") or {}
     return {"grok_next_step": step, "hold_reasons": reasons, "decision": decision,
             "email_text": email_text, "checks": checks, "usage": usage,
-            "cost_usd": cost_usd(usage), "model": MODEL, "request_id": request_id}
+            "cost_usd": cost_usd(usage), "model": payload.get("model"),
+            "model_requested": MODEL, "request_id": request_id}
 
 
 def main(argv=None, stdin=None, stdout=None):
@@ -1444,7 +1589,7 @@ Then use this table to pick the `case_type` and the question for Opus. Opus deci
 | A new booking on a calendar, or Sequence `booked` | `booked_call` | "A call is booked. What is due: confirmation, reminder, or nothing yet?" |
 | Lorenzo marked a no-show, or Sequence `no_show` | `no_show` | "Which no-show step is due, if any?" |
 | Sequence `nurture` | `nurture` | "The lead is in nurture. Is anything due?" (Today the answer is always no.) |
-| GHL and Instantly disagree | `pipeline` | "GHL and Instantly disagree for this lead. Which is right, and what do we change?" |
+| GHL and Instantly disagree about the stage (you see it here, or the 06:30 pipeline check in file 07, section 8 lists it) | `pipeline` | "GHL and Instantly disagree for this lead. Which is right, and what do we change?" |
 | Sequence `stopped`, or the lead is blocklisted or DND | none | Do nothing. Never email this lead. |
 
 ## 8. Instantly interest status
@@ -1707,7 +1852,7 @@ Cost: about 20 to 30 cents per audited email, so up to about $2 a day.
 
 ## 8. The pipeline check, 06:30 CT weekdays
 
-Compare each open GHL Sales opportunity's stage with its Instantly interest status (file 05, section 8). List the mismatches in the morning report under Failures. Fix nothing on your own: a mismatch goes through Opus (`case_type` `pipeline`) only when Lorenzo says so.
+Compare each open GHL Sales opportunity's stage with its Instantly interest status (file 05, section 8). For each mismatch, ask Opus (`case_type` `pipeline`, file 05, section 7). Never decide which side is right yourself. Reports and QA writes nothing: an `update_records` answer goes to the Inbox and Follow-up agent to apply, anything else goes to the Chief of Staff as a hold card. List each mismatch and Opus's answer in the morning report under Failures.
 
 ## 9. Weekly scorecard (one-month trial)
 
@@ -1767,7 +1912,7 @@ Decided by Lorenzo, 2026-09-25: Grok is the engine. Claude Code only builds.
 5. Report to Lorenzo.
 
 ## Knowledge base
-- **Approved copy:** the Google Doc "Advero emails: edit here (every email, one doc)", id `1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4`. It is the only source of email text.
+- **Approved copy:** the Google Doc "Advero emails: edit here (build 170b09dd897430a9)", id `1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4`. It is the only source of email text.
 - **Skills:**
   - `cold-email-replies`: which reply gets which email
   - `quiet-lead-followup`: E1–E10 timing
