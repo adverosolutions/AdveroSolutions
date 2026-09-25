@@ -28,9 +28,9 @@
     },
     {
       "key": "next",
-      "label": "5 - NEXT PHASE: CRM CONTACT AND GOOGLE CALENDAR",
+      "label": "5 - NEXT PHASE: YOUR CRM (SHOWN IN HUBSPOT) AND GOOGLE CALENDAR",
       "color": 0,
-      "note": "The onboarding work you named: a verified lead becomes a CRM contact and a booked call. Switched on after the test passes."
+      "note": "The onboarding work you named: a verified lead becomes a CRM contact and a booked call. HubSpot stands in for your CRM here. Switched on after the test passes."
     },
     {
       "key": "errors",
@@ -140,23 +140,19 @@
     },
     {
       "key": "crm",
-      "kind": "net.http",
-      "label": "6 - Next Phase: GoHighLevel Creates the Contact From the Chat",
+      "kind": "app.action",
+      "label": "6 - Next Phase: HubSpot Creates the Contact From the Chat",
+      "app": "hubspot",
+      "op": "create_contact",
       "section": "next",
-      "notes": "Your next phase. Off during the test, on once the sheet shows clean captures.",
+      "notes": "Your next phase. HubSpot stands in for your CRM. Off during the test, on once the sheet shows clean captures.",
       "params": {
-        "service": "gohighlevel",
-        "method": "POST",
-        "url": "https://services.leadconnectorhq.com/contacts/upsert",
-        "body": {
-          "locationId": "{{ $('0 - Config: Your Settings').item.json.ghl_location_id }}",
-          "name": "{{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.name }}",
-          "email": "{{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.email }}",
-          "phone": "{{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.phone }}",
-          "source": "Website chatbot",
-          "tags": [
-            "chatbot-lead"
-          ]
+        "email": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.email }}",
+        "additionalFields": {
+          "firstName": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.name.split(' ')[0] }}",
+          "lastName": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.name.split(' ').slice(1).join(' ') }}",
+          "phoneNumber": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.phone }}",
+          "leadStatus": "NEW"
         }
       }
     },
@@ -246,31 +242,31 @@
     "body": {
       "source": "staging-chatbot",
       "session_id": "cb_7f3a91e2",
-      "page_url": "https://staging.weber-physio.de/contact",
-      "name": "Julia Weber",
-      "email": "julia.weber@weber-physio.de",
-      "phone": "+49 151 2847 3310",
-      "message": "Hi, we'd like the chatbot on our practice site. Can we talk Thursday afternoon?",
-      "preferred_time": "2026-10-01T14:00:00+02:00",
-      "captured_at": "2026-09-25T10:42:17+02:00"
+      "page_url": "https://staging.brightlinehomeservices.com/contact",
+      "name": "Sam Carter",
+      "email": "sam.carter@brightlinehomeservices.com",
+      "phone": "+1 555 014 2273",
+      "message": "Hi, I'd like a quote for next month. Can we talk Thursday afternoon?",
+      "preferred_time": "2026-10-01T14:00:00Z",
+      "captured_at": "2026-09-25T10:42:17Z"
     }
   },
   "output_sample": {
     "kind": "calendar#event",
     "status": "confirmed",
-    "summary": "Call with Julia Weber",
+    "summary": "Call with Sam Carter",
     "start": {
-      "dateTime": "2026-10-01T14:00:00+02:00"
+      "dateTime": "2026-10-01T14:00:00Z"
     },
     "end": {
-      "dateTime": "2026-10-01T14:30:00+02:00"
+      "dateTime": "2026-10-01T14:30:00Z"
     },
     "attendees": [
       {
-        "email": "julia.weber@weber-physio.de"
+        "email": "sam.carter@brightlinehomeservices.com"
       }
     ],
-    "description": "Hi, we'd like the chatbot on our practice site. Can we talk Thursday afternoon?\nPhone: +49 151 2847 3310"
+    "description": "Hi, I'd like a quote for next month. Can we talk Thursday afternoon?\nPhone: +1 555 014 2273"
   },
   "archetype": "your_chatbot_test_every_staging_lead_checked_log",
   "learned": true,
