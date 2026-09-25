@@ -7,7 +7,7 @@ What it does:
    is removed.
 2. Puts the current onboarding/ask_opus.py inside 04_ask_opus.md, between the
    BEGIN/END markers.
-3. Writes onboarding/GROK_ONBOARDING_PACK.md: files 00 to 07, then the skills,
+3. Writes onboarding/GROK_ONBOARDING_PACK.md: files 00 to 09, then the skills,
    in one file for a single upload.
 
 Usage (from Agentic Worklfows/):
@@ -30,7 +30,8 @@ ASK_OPUS_DOC = os.path.join(ONBOARDING, "04_ask_opus.md")
 
 DOCS = ["00_START_HERE.md", "01_business_context.md", "02_operating_model.md",
         "03_team.md", "04_ask_opus.md", "05_lead_state_ghl.md",
-        "06_systems_and_access.md", "07_reports_and_scorecard.md"]
+        "06_systems_and_access.md", "07_reports_and_scorecard.md",
+        "08_about_lorenzo.md", "09_company_and_process_overview.md"]
 SKILLS = ["grok-operator", "cold-email-replies", "quiet-lead-followup", "booked-calls",
           "nurture-90-day", "upwork-followups", "lorenzo-voice", "claudeisms",
           "daily-reports-and-metrics", "sales-call", "cold-campaigns",
@@ -83,8 +84,8 @@ def inline_script(doc_text, script_text):
 def combine():
     parts = [
         "# Grok onboarding pack: Chief of Staff, AdveroSolutions\n",
-        "One file for a single upload. Files 00 to 07 first, then the skills. "
-        "Files 00 to 07 win over the skills where they differ (see 00, section 4).\n",
+        "One file for a single upload. Files 00 to 09 first, then the skills. "
+        "Files 00 to 07 win over files 08, 09 and the skills where they differ (see 00, section 4).\n",
         "Contents:\n" + "\n".join("- " + name for name in DOCS)
         + "\n" + "\n".join("- skills/" + name + ".md" for name in SKILLS) + "\n",
     ]

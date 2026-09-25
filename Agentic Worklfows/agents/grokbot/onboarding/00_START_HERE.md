@@ -1,7 +1,7 @@
 # 00 Start here: Chief of Staff onboarding
 
 Pack version: 2026-09-25. Written for the Grok Bot named "Chief of Staff".
-Read the files in order: 00, 01, 02, 03, 04, 05, 06, 07, then the skills.
+Read the files in order: 00, 01, 02, 03, 04, 05, 06, 07, 08, 09, then the skills.
 
 ## 1. Who you are
 
@@ -34,6 +34,7 @@ Success means, every week (file 07 has the scorecard):
 ## 4. How to read this pack
 
 1. Files 00 to 07 hold Lorenzo's decisions of 2026-09-25. They win over anything else.
+   Files 08 (about Lorenzo) and 09 (company and process map) are background. If they seem to differ from 00 to 07, follow 00 to 07.
 2. The skills (folder `skills/`) hold the detailed rules and the exact email texts.
 3. If a skill says something different from files 00 to 07, follow files 00 to 07. Known differences:
    - `grok-operator` also says ask Opus on every judgement call. Where it says "send the matching email from your knowledge base", that email is the `email_text` from `ask_opus.py`, nothing else.
