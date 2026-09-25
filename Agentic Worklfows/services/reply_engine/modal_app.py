@@ -436,6 +436,9 @@ ENV_NOT_IN_SECRET = {
                            "collector reads job folders there); unset in a container",
     "ADVERO_TEST_SESSION": "test-only: set by conftest.py so shared.settings.load_env() reads no "
                            "dotenv file in a test or its child processes; never set in a container",
+    "POLLER_START_AT": "the container uses the code default (shared.settings.POLLER_START_AT_DEFAULT, the "
+                       "day the 2026 campaigns started sending); changing it is a reviewed code change. "
+                       "Laptop dry runs and tests may override it",
 }
 
 LOCAL_DIRS = {

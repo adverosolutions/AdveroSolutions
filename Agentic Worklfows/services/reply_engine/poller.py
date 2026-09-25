@@ -2,7 +2,7 @@
 and feeds process_event(). It exists because no Instantly webhook may be created
 before go-live approval (config/ids.json: webhooks none).
 
-    python3 -m services.reply_engine.poller --dry-run [--limit 200] [--pages 5] [--json]
+    python3 -m services.reply_engine.poller --dry-run [--limit 200] [--pages 5] [--json] [--start-at 2026-09-15]
 
 --dry-run uses the live key READ-ONLY, forces MODE=shadow, keeps its state in a
 throwaway store and prints what would be done. Nothing is sent, tagged or moved.
@@ -39,6 +39,29 @@ def own_inboxes() -> set:
     return set(inst.get("active_inboxes", []) or []) | {"lorenzo@adverosolutions.com", "lorenzovillarreal@adverosolutions.com"}
 
 
+BEFORE_START = "before_start_date"   # the skip reason of a reply older than the start date
+
+
+def _row_time(value: Any) -> Optional[datetime]:
+    """A GET /emails ``timestamp_created`` as an aware datetime, or None."""
+    if value in (None, ""):
+        return None
+    try:
+        return slots.parse_iso(str(value))
+    except (ValueError, TypeError):
+        return None
+
+
+def _before_start(ts: str, start_at: Optional[datetime]) -> bool:
+    """True when the row's time is known and earlier than ``start_at``. A row
+    with no readable time is never skipped for it (it is processed, or fails
+    and is retried, exactly as before the start date existed)."""
+    if start_at is None:
+        return False
+    at = _row_time(ts)
+    return at is not None and at < start_at
+
+
 def fetch_new_replies(
     instantly,
     since_cursor: Optional[Dict[str, Any]],
@@ -47,8 +70,18 @@ def fetch_new_replies(
     max_pages: int = 20,
     limit: int = PAGE_LIMIT,
     max_items: Optional[int] = None,
+    start_at: Optional[datetime] = None,
 ) -> Dict[str, Any]:
-    """Newest-first pages until the last-seen email id (or its timestamp) is reached."""
+    """Newest-first pages until the last-seen email id (or its timestamp) is reached.
+
+    ``start_at`` (settings.poller_start_at): GET /emails?email_type=received
+    answers newest first (checked against fixtures/instantly_replies_2026-09.json,
+    44 rows in strictly descending timestamp_created), so the first row older
+    than it means every row after it is older too. That row and the rest of
+    its page go to ``before_start`` (never to ``items``: nothing classifies
+    them) and no further page is read. The scan then counts as complete, not
+    truncated, so the cursor moves to the newest row as usual. None: the scan
+    is exactly what it was before the start date existed."""
     wanted = set(campaign_filter)
     last_id = (since_cursor or {}).get("last_email_id")
     last_ts = (since_cursor or {}).get("last_timestamp")
@@ -65,6 +98,8 @@ def fetch_new_replies(
     truncated = False   # the scan was cut short, so older replies are still unread
     more_pages = False
     newest_seen = None  # type: Optional[Dict[str, Any]]
+    before_start = []  # type: List[Dict[str, Any]]
+    past_start = False  # a row older than start_at was reached: everything after it is older
     while pages < max_pages and not stop:
         page = instantly.list_emails(email_type="received", limit=limit, starting_after=starting_after)
         items = page.get("items", []) if isinstance(page, dict) else list(page)
@@ -85,6 +120,19 @@ def fetch_new_replies(
             if last_ts and ts and ts < last_ts:
                 stop = True
                 break
+            if past_start or _before_start(ts, start_at):
+                # Older than the start date: recorded, never classified. The
+                # rest of this page is older still and is taken the same way
+                # (it is already fetched, so it costs nothing); no next page.
+                past_start = True
+                stop = True
+                if eid in seen or eid in seen_this_run:
+                    continue
+                seen_this_run.add(eid)
+                if wanted and item.get("campaign_id") not in wanted:
+                    continue
+                before_start.append(item)
+                continue
             if eid in seen or eid in seen_this_run:
                 continue
             seen_this_run.add(eid)
@@ -103,7 +151,8 @@ def fetch_new_replies(
         starting_after = cursor
     if not stop and more_pages and pages >= max_pages:
         truncated = True
-    return {"items": new_items, "fetched": fetched, "pages": pages, "truncated": truncated, "newest_seen": newest_seen}
+    return {"items": new_items, "fetched": fetched, "pages": pages, "truncated": truncated, "newest_seen": newest_seen,
+            "before_start": before_start, "reached_start": past_start}
 
 
 def _lookup_leads(instantly, items: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
@@ -963,8 +1012,17 @@ def run_once(
     persist_cursor: bool = True,
     time_budget_s: Optional[float] = None,
     clock: Callable[[], float] = time.monotonic,
+    start_at: Any = None,
 ) -> Dict[str, Any]:
     """One poll: fetch -> dedupe -> ReplyEvent(source='poller') -> process_event. Read-only against Instantly.
+
+    ``start_at``: replies received before it are never passed to
+    ``process`` (no classification, draft, card or model call). Each is
+    marked seen and listed in ``results`` with ``skipped`` "before_start_date",
+    and paging stops at the first of them (fetch_new_replies). None (the
+    default) reads settings.poller_start_at(): POLLER_START_AT, else
+    settings.POLLER_START_AT_DEFAULT; "off" there, or ``start_at="off"``
+    here, turns it off. An unreadable value raises before anything is read.
 
     ``instantly`` and ``store`` default to the production clients (build_deps),
     so ``run_once()`` with no arguments is the scheduled entrypoint Modal calls.
@@ -986,6 +1044,8 @@ def run_once(
     from services.reply_engine.app import process_event
 
     started = clock()
+    # Resolved first: a bad POLLER_START_AT must stop the run before any read.
+    start = settings.poller_start_at() if start_at is None else settings.parse_start_at(start_at)
 
     if instantly is None or store is None:
         built_instantly, built_store = build_deps()
@@ -998,7 +1058,8 @@ def run_once(
     if not isinstance(seen, dict):
         seen = {}
     wanted = list(campaign_filter) if campaign_filter is not None else campaign_ids()
-    fetched = fetch_new_replies(instantly, cursor, wanted, seen, max_pages=max_pages, max_items=max_items)
+    fetched = fetch_new_replies(instantly, cursor, wanted, seen, max_pages=max_pages, max_items=max_items,
+                                start_at=start)
     items = fetched["items"]
     mine = own_inboxes()
     items = [it for it in items if (it.get("from_address_email") or "").lower() not in mine]
@@ -1009,6 +1070,26 @@ def run_once(
     failed = store.get(FAILED_KEY) or {}
     if not isinstance(failed, dict):
         failed = {}
+    # Older than the start date: seen, so no later poll takes them up, and
+    # never processed. One that failed on an earlier run (before the start
+    # date moved past it) leaves poller:failed too, whether or not this scan
+    # reached its page: it will never be retried, so it must not hold the
+    # cursor for its MAX_FAILED_ATTEMPTS.
+    before_start = []  # type: List[str]
+    retired = set()  # type: set
+    for eid, rec in list(failed.items()):
+        if isinstance(rec, dict) and _before_start(str(rec.get("timestamp_created") or ""), start):
+            failed.pop(eid, None)
+            retired.add(eid)
+    for item in fetched.get("before_start") or []:
+        eid = str(item.get("id"))
+        seen[eid] = str(item.get("timestamp_created") or ts.isoformat())
+        if failed.pop(eid, None) is not None:
+            retired.add(eid)
+        before_start.append(eid)
+        results.append({"email_id": eid,
+                        "lead": (item.get("lead") or item.get("from_address_email") or "").lower() or None,
+                        "received_at": str(item.get("timestamp_created") or ""), "skipped": BEFORE_START})
     processed = skipped = errors = 0
     attempted = set()  # type: set
     in_flight = []  # type: List[str]
@@ -1106,7 +1187,7 @@ def run_once(
         # The merge keeps both workers' rows; the cursor still takes the newer
         # high-water mark.
         _merge_seen(store, seen)
-        _merge_failed(store, failed, attempted)
+        _merge_failed(store, failed, attempted | retired)
         store.set(CURSOR_KEY, new_cursor)
 
     # Approved-but-queued sends go out once the window is open (shadow:
@@ -1177,7 +1258,9 @@ def run_once(
                "escalated": escalated, "failed_pending": sorted(failed.keys()),
                "orphans_pushed": [o.get("approval") for o in orphans_pushed],
                "autosend_fyi": bool(fyi and fyi.get("sent")),
-               "pending_approvals": waiting, "results": results, "mode": settings.get_mode()}
+               "pending_approvals": waiting, "results": results, "mode": settings.get_mode(),
+               "start_at": start.isoformat() if start is not None else None, "before_start": len(before_start),
+               "reached_start": bool(fetched.get("reached_start"))}
     job_log.log_run("reply_engine.poller", "ok" if not errors else "errors", {k: v for k, v in summary.items() if k != "results"})
     return summary
 
@@ -1195,6 +1278,10 @@ def _print_table(summary: Dict[str, Any]) -> None:
         print("%-19s %-34s %-24s %-22s %-5s %s" % ((r.get("received_at") or "")[:19], (r.get("lead") or "")[:34], (r.get("campaign_key") or "")[:24],
                                                     (r.get("label") or "-")[:22], "yes" if r.get("draft") else "", ", ".join(r.get("actions", []))))
     print("cursor:", summary["cursor"], "(kept: the scan was truncated)" if summary.get("truncated") else "")
+    if summary.get("start_at"):
+        print("start date %s: %d older repl(ies) recorded as %s, never classified%s" % (
+            summary["start_at"], summary.get("before_start") or 0, BEFORE_START,
+            "; paging stopped there" if summary.get("reached_start") else ""))
     if summary.get("pending_approvals"):
         print("approvals still waiting on you: %d" % len(summary["pending_approvals"]))
         for w in summary["pending_approvals"]:
@@ -1214,6 +1301,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--lookup-leads", action="store_true", help="POST /leads/list (read) for names/companies")
     parser.add_argument("--json", action="store_true", help="print the summary as JSON")
     parser.add_argument("--notify", action="store_true", help="allow ntfy pushes (default off in dry-run)")
+    parser.add_argument("--start-at", default=None,
+                        help="skip replies received before this ISO date/datetime (a date is midnight CT; 'off' "
+                             "disables). Default: POLLER_START_AT, else %s" % settings.POLLER_START_AT_DEFAULT)
     args = parser.parse_args(argv)
 
     if args.dry_run or not settings.is_live():
@@ -1246,7 +1336,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     instantly = default_client()
     deps = app_mod.configure(store=store, ghl=GHL(), instantly=instantly)
     summary = run_once(instantly, store, now=deps.now(), max_pages=args.pages, lookup_leads=args.lookup_leads, max_items=args.limit,
-                       persist_cursor=not args.dry_run)
+                       persist_cursor=not args.dry_run, start_at=args.start_at)
     if args.json:
         print(json.dumps(summary, indent=1, default=str))
     else:

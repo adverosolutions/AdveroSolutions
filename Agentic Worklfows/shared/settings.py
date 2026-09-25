@@ -101,6 +101,59 @@ MIN_LEAD_HOURS = 4           # a slot must be >= 4 h in the future
 MAX_BUSINESS_DAYS = 5        # ... and within the next 5 business days
 CADENCE_HOUR = 10            # daily follow-up touches send at 10:00 CT
 
+# The reply poller's start date (Lorenzo, 2026-09-25: only the replies to the
+# current campaigns matter, not the whole inbox). A received email older than
+# this is never classified, drafted or carded and costs no model call: the
+# poller marks it seen with the reason "before_start_date" and stops paging
+# there (services/reply_engine/poller.py). jobs/seed_reply_examples.py reads
+# Lorenzo's own replies back to the same date.
+#
+# Value: an ISO date or datetime. A date alone ("2026-09-15") is midnight
+# America/Chicago; a datetime with no offset is read as America/Chicago; one
+# with an offset or a trailing Z is taken as written (so "...Z" is UTC).
+# Unset or empty: POLLER_START_AT_DEFAULT. "off" (or none/0/false/no) turns the
+# start date off: the poller then walks back as far as its cursor and page
+# budget reach, as it did before the setting existed.
+#
+# The default is the first day the six 2026 Instantly campaigns sent:
+# runbooks/deliverability.md ("Sending began 2026-09-15") and
+# runbooks/metrics.md (a read-only GET /accounts/analytics/daily over
+# 2026-09-01..14 for the twelve active inboxes returned zero rows; the
+# workspace has no per-inbox history before 2026-09-15). The earliest recorded
+# reply (fixtures/instantly_replies_2026-09.json) is 2026-09-15T16:17Z.
+POLLER_START_AT_ENV = "POLLER_START_AT"
+POLLER_START_AT_DEFAULT = "2026-09-15"
+POLLER_START_AT_OFF = ("off", "none", "0", "false", "no")
+
+
+def parse_start_at(value: Any) -> Optional[datetime]:
+    """A start-date value as an aware datetime, or None when it says "off".
+    Rules as for POLLER_START_AT above. Raises ValueError on anything else:
+    a typo must stop the poller, not silently classify the whole inbox."""
+    if isinstance(value, datetime):
+        return value if value.tzinfo else TZ.localize(value)
+    text = str(value if value is not None else "").strip()
+    if text.lower() in POLLER_START_AT_OFF:
+        return None
+    if not text:
+        text = POLLER_START_AT_DEFAULT
+    iso = text[:-1] + "+00:00" if text.endswith(("Z", "z")) else text
+    try:
+        if len(iso) == 10:
+            parsed = datetime.strptime(iso, "%Y-%m-%d")
+        else:
+            parsed = datetime.fromisoformat(iso)
+    except ValueError:
+        raise ValueError("%s=%r is not an ISO date or datetime (e.g. 2026-09-15 or 2026-09-15T00:00:00-05:00), "
+                         "and not 'off'" % (POLLER_START_AT_ENV, text))
+    return parsed if parsed.tzinfo else TZ.localize(parsed)
+
+
+def poller_start_at() -> Optional[datetime]:
+    """POLLER_START_AT from the process environment (read live, so tests can
+    set it), else POLLER_START_AT_DEFAULT. None when it is "off"."""
+    return parse_start_at(os.environ.get(POLLER_START_AT_ENV, ""))
+
 
 # Job_Log statuses for live writes. The deployed gate counts every status that
 # starts with "live_write"; during the shadow watch that count must be zero.
