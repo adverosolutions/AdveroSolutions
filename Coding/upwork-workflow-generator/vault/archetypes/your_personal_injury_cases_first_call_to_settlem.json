@@ -44,7 +44,7 @@
     {
       "key": "whocalls",
       "kind": "data.transform",
-      "label": "2 - Know Who Is Calling: New Client, Current Client, Medical Provider or Insurance Rep",
+      "label": "2 - Each Caller Routed to the Right Person, Consults Booked, Reminders by Text and Email",
       "section": "reception",
       "notes": "Urgent or sensitive calls go straight through to a live staff member."
     },
@@ -57,7 +57,7 @@
     {
       "key": "sign",
       "kind": "data.transform",
-      "label": "4 - Conflict Check and Attorney Review, Then the Agreement Goes Out to Sign",
+      "label": "4 - Conflict Check, Attorney Review, Agreement Sent to Sign, Unfinished Intakes Chased",
       "section": "intake"
     },
     {
@@ -107,7 +107,7 @@
     {
       "key": "casefile",
       "kind": "data.aggregate",
-      "label": "11 - Your Case Management System Updated Once: Stage, Tasks, Records, Documents",
+      "label": "11 - Your Case System Updated Once, Stalled Cases Flagged on the Dashboard",
       "section": "casemgmt",
       "notes": "No one types the same information into two systems."
     },
@@ -154,16 +154,17 @@
     {
       "from": "approve",
       "to": "export",
-      "branch": "true"
+      "branch": "Yes, approved"
     },
     {
       "from": "approve",
       "to": "edits",
-      "branch": "false"
+      "branch": "Not yet"
     },
     {
       "from": "edits",
       "to": "draft",
+      "branch": "Back to the draft",
       "loop": true
     },
     {
