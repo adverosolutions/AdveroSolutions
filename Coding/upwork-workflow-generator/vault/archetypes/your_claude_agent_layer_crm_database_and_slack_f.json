@@ -4,15 +4,15 @@
   "sections": [
     {
       "key": "agent",
-      "label": "1 - CLAUDE AGENT WORKFLOW",
+      "label": "1 - CLAUDE AGENT AND ITS CRM, DATABASE AND SLACK TOOLS",
       "color": 0,
-      "note": "Your parts 1 and 2. A customer message hits the webhook and a Claude agent decides which of its four tools to call."
+      "note": "Your parts 1 to 4 and 6. A customer message or a Claude Code task hits the webhook. The Claude agent finds the customer in HubSpot, reads their orders, updates HubSpot and hands off to Slack."
     },
     {
       "key": "systems",
-      "label": "2 - CRM, DATABASE AND SLACK, READ AND UPDATED",
+      "label": "2 - ANSWER SENT BACK ON THE WEBHOOK",
       "color": 1,
-      "note": "Your parts 3 to 6. HubSpot, your orders database and Slack hang under the agent as its tools; this step sends the answer back to whatever called the webhook."
+      "note": "Your part 5. Whatever called the webhook gets the reply draft and a list of what the agent did."
     },
     {
       "key": "monitor",
@@ -29,6 +29,18 @@
       "section": "agent",
       "params": {
         "path": "customer-messages",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "key": "hook_cc",
+      "kind": "trigger.webhook",
+      "label": "1b - Claude Code Calls the Same Agent by Webhook",
+      "section": "agent",
+      "notes": "Claude Code sends a task here and gets the same four tools and the same log.",
+      "params": {
+        "path": "claude-code",
         "httpMethod": "POST",
         "responseMode": "responseNode"
       }
@@ -178,7 +190,7 @@
     {
       "key": "parser",
       "kind": "ai.parser",
-      "label": "Parser - Topic, Actions and Reply Draft",
+      "label": "Claude's Answer Form - Topic, Actions and Reply Draft",
       "parent": "agent",
       "port": "ai_outputParser",
       "params": {
@@ -237,6 +249,10 @@
   "edges": [
     {
       "from": "hook",
+      "to": "agent"
+    },
+    {
+      "from": "hook_cc",
       "to": "agent"
     },
     {
