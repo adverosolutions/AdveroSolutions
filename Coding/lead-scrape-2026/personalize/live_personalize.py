@@ -18,7 +18,12 @@ import anthropic
 from sheet_io import open_tab, ROOT
 
 PROMPTS = ROOT / "personalize" / "prompts.json"
-MODEL = "claude-haiku-4-5-20251001"   # cheap, fast; swap to claude-sonnet-5 for higher quality
+MODEL = "claude-opus-5-5"   # every model call runs on Opus 5.5 (Lorenzo, 2026-09-25)
+# Opus 5.5 always thinks and rejects temperature/top_p/top_k with a 400. Effort
+# is the control ("low" for one short line); thinking counts toward max_tokens,
+# so the call gets headroom on top of the reply's 300.
+EFFORT = "low"
+THINKING_HEADROOM_TOKENS = 1024
 
 BANNED = ["—", "–", " - ", "I hope this finds you", "I came across", "reaching out", "touch base"]
 
@@ -37,9 +42,13 @@ def generate(client, prompt_cfg: dict, lead: dict) -> tuple:
            ["first_name", "company_name", "job_title", "city", "state", "company_size",
             "company_description", "company_technologies", "headline", "industry", "company_website"]}
     user = prompt_cfg["user"].format(**ctx)
-    r = client.messages.create(model=MODEL, max_tokens=300, temperature=0.7,
+    r = client.messages.create(model=MODEL, max_tokens=300 + THINKING_HEADROOM_TOKENS,
+                               output_config={"effort": EFFORT},
                                system=prompt_cfg["system"], messages=[{"role": "user", "content": user}])
-    text = r.content[0].text.strip()
+    if r.stop_reason in ("refusal", "max_tokens"):
+        return "", "", f"error: stop_reason {r.stop_reason}"
+    # A thinking block may come first; keep only the text.
+    text = "".join(b.text for b in r.content if getattr(b, "type", None) == "text").strip()
     try:
         out = json.loads(text[text.find("{"): text.rfind("}") + 1])
     except Exception:

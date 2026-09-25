@@ -1,20 +1,17 @@
 """
 Unified Personalization Engine
-Intelligently routes between Claude Haiku (cost-optimized) and GPT-4o (fallback).
+Routes between Claude and GPT-4o (fallback).
+
+The engine key "haiku" is historical and kept so callers, PERSONALIZATION_ENGINE
+values and stats keys don't break: since 2026-09-25 it runs Claude Opus 5.5
+(operational_fact_pain_generator_haiku.py), because every model call runs on
+Opus 5.5.
 
 This module provides a single interface for generating personalizations with:
-- Primary: Claude Haiku 3.5 (~$0.0002/personalization, 90% cost savings)
-- Fallback: OpenAI GPT-4o (~$0.002/personalization, higher quality fallback)
+- Primary ("haiku" key): Claude Opus 5.5, low effort (~$0.025/personalization,
+  rough estimate, not measured)
+- Fallback: OpenAI GPT-4o (~$0.002/personalization)
 - Ultimate fallback: Template-based (free, always works)
-
-Cost comparison per 1,000 personalizations:
-┌──────────────────┬─────────┬─────────────┐
-│ Engine           │ Cost    │ Savings     │
-├──────────────────┼─────────┼─────────────┤
-│ GPT-4o only      │ $2.00   │ baseline    │
-│ Haiku only       │ $0.20   │ 90%         │
-│ Haiku + fallback │ $0.22   │ 89%         │
-└──────────────────┴─────────┴─────────────┘
 
 Usage:
     from unified_personalization_engine import generate_personalization
@@ -49,7 +46,7 @@ try:
     )
     HAIKU_AVAILABLE = True
 except ImportError as e:
-    logger.warning(f"Claude Haiku generator not available: {e}")
+    logger.warning(f"Claude generator not available: {e}")
     HAIKU_AVAILABLE = False
 
 try:
@@ -63,7 +60,7 @@ except ImportError as e:
 
 # Cost per personalization (in dollars)
 COSTS = {
-    'haiku': 0.0002,  # Claude Haiku 3.5
+    'haiku': 0.025,   # Claude Opus 5.5 at low effort (key kept; rough estimate)
     'gpt4o': 0.002,   # GPT-4o
     'fallback': 0.0   # Template-based
 }
@@ -108,13 +105,13 @@ def generate_personalization(
     # Route based on engine preference
     if engine in ['haiku', 'both']:
         if not HAIKU_AVAILABLE:
-            logger.warning("Haiku requested but not available, falling back")
+            logger.warning("Claude requested but not available, falling back")
             if engine == 'haiku':
-                result['error'] = "Haiku generator not available"
+                result['error'] = "Claude generator not available"
                 return _try_fallback(result, company_name, vertical)
         else:
-            # Try Haiku first
-            logger.info(f"Generating with Claude Haiku for {company_name}")
+            # Try Claude first
+            logger.info(f"Generating with Claude Opus 5.5 for {company_name}")
             try:
                 personalization = generate_haiku(
                     research_data=research_data,
@@ -127,16 +124,16 @@ def generate_personalization(
                     result['engine_used'] = 'haiku'
                     result['cost_estimate'] = COSTS['haiku']
                     result['success'] = True
-                    logger.info(f"✓ Haiku success for {company_name} (${COSTS['haiku']:.4f})")
+                    logger.info(f"✓ Claude success for {company_name} (${COSTS['haiku']:.4f})")
                     return result
                 else:
-                    logger.warning(f"Haiku returned empty result for {company_name}")
+                    logger.warning(f"Claude returned empty result for {company_name}")
 
             except Exception as e:
-                logger.error(f"Haiku error for {company_name}: {str(e)}")
-                result['error'] = f"Haiku error: {str(e)}"
+                logger.error(f"Claude error for {company_name}: {str(e)}")
+                result['error'] = f"Claude error: {str(e)}"
 
-    # If Haiku failed or not requested, try GPT-4o
+    # If Claude failed or not requested, try GPT-4o
     if engine in ['gpt4o', 'both']:
         if not GPT4O_AVAILABLE:
             logger.warning("GPT-4o requested but not available")
@@ -217,7 +214,7 @@ def estimate_batch_cost(
     }
 
     if engine == 'haiku':
-        # All leads use Haiku
+        # All leads use Claude (Opus 5.5, "haiku" key)
         estimate['haiku_count'] = int(num_leads * success_rate)
         estimate['fallback_count'] = num_leads - estimate['haiku_count']
         estimate['gpt4o_count'] = 0
@@ -235,8 +232,8 @@ def estimate_batch_cost(
         )
 
     else:  # 'both'
-        # Haiku first, GPT-4o fallback
-        # Assume 95% Haiku success, 5% fall to GPT-4o, 0.25% to template
+        # Claude first, GPT-4o fallback
+        # Assume 95% Claude success, 5% fall to GPT-4o, 0.25% to template
         estimate['haiku_count'] = int(num_leads * 0.95)
         estimate['gpt4o_count'] = int(num_leads * 0.048)  # 95% of the 5% failures
         estimate['fallback_count'] = num_leads - estimate['haiku_count'] - estimate['gpt4o_count']

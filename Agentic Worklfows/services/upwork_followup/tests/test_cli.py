@@ -234,7 +234,7 @@ def test_run_prints_the_token_note_first(env, monkeypatch, capsys, flag):
     assert cli.main([flag, "--snapshot", env["snapshot"]] + AS_OF) == 0
     assert [c["mode"] for c in fake.calls] == ["run"]
     out = capsys.readouterr().out
-    assert out.startswith("Note: this run spends Anthropic tokens (Sonnet drafts, Haiku classification).")
+    assert out.startswith("Note: this run spends Anthropic tokens (Claude Opus 5.5 drafts and classification).")
 
 
 def test_run_exits_1_when_the_snapshot_is_missing(env, monkeypatch):

@@ -429,20 +429,35 @@ Rules:
 Write the post now:"""
 
 
+# Every model call runs on Claude Opus 5.5 (Lorenzo, 2026-09-25).
+DEFAULT_MODEL = "claude-opus-5-5"
+# Opus 5.5 always thinks (thinking can't be disabled; temperature/top_p/top_k
+# return a 400). Effort is the control, "low" for a short post. Thinking counts
+# toward max_tokens, so the call gets headroom on top of the post's own budget.
+POST_EFFORT = "low"
+THINKING_HEADROOM_TOKENS = 1024
+
+
 def generate_post(client: Anthropic, pillar: str, post_type: dict, topic: str,
-                  recent_posts: List[str], model: str = "claude-haiku-4-5-20251001") -> Optional[str]:
+                  recent_posts: List[str], model: str = DEFAULT_MODEL) -> Optional[str]:
     """Generate a single LinkedIn post using Claude."""
     try:
         response = client.messages.create(
             model=model,
-            max_tokens=1024,
+            max_tokens=1024 + THINKING_HEADROOM_TOKENS,
+            output_config={"effort": POST_EFFORT},
             system=build_system_prompt(),
             messages=[{
                 "role": "user",
                 "content": build_post_prompt(pillar, post_type, topic, recent_posts)
             }]
         )
-        return response.content[0].text.strip()
+        if response.stop_reason in ("refusal", "max_tokens"):
+            print(f"  [ERROR] No usable post (stop_reason={response.stop_reason})")
+            return None
+        # A thinking block may come first; keep only the text.
+        text = "".join(b.text for b in response.content if getattr(b, "type", None) == "text").strip()
+        return text or None
     except Exception as e:
         print(f"  [ERROR] Failed to generate post: {e}")
         return None
@@ -580,8 +595,8 @@ def main():
     parser.add_argument("--posts-per-day", type=int, default=7, help="Posts per day (default: 7, range 5-10)")
     parser.add_argument("--pillar", type=str, default=None, help="Focus on specific pillar")
     parser.add_argument("--sheet-id", type=str, default=None, help="Google Sheet ID (overrides .env)")
-    parser.add_argument("--model", type=str, default="claude-haiku-4-5-20251001",
-                        help="Model to use (default: claude-haiku-4-5-20251001)")
+    parser.add_argument("--model", type=str, default=DEFAULT_MODEL,
+                        help="Model to use (default: %s)" % DEFAULT_MODEL)
     parser.add_argument("--dry-run", action="store_true", help="Preview without writing to sheet")
     parser.add_argument("--tab", type=str, default="LinkedIn Queue", help="Sheet tab name")
     args = parser.parse_args()
@@ -709,10 +724,11 @@ def main():
         write_posts_to_sheet(worksheet, generated_posts)
 
     # Cost estimate
-    # Haiku: ~$0.25/1M input tokens, ~$1.25/1M output tokens
-    # Rough estimate: ~500 input tokens + ~400 output tokens per post
-    est_input_cost = (total_posts * 500 / 1_000_000) * 0.80
-    est_output_cost = (total_posts * 400 / 1_000_000) * 4.00
+    # Claude Opus 5.5: $4/1M input tokens, $20/1M output tokens
+    # Rough estimate: ~500 input tokens + ~400 output tokens per post, plus
+    # ~300 thinking tokens (billed as output) at low effort
+    est_input_cost = (total_posts * 500 / 1_000_000) * 4.00
+    est_output_cost = (total_posts * 700 / 1_000_000) * 20.00
     est_total = est_input_cost + est_output_cost
 
     print(f"\n{'=' * 60}")

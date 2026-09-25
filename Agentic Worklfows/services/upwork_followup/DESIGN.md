@@ -52,8 +52,8 @@ anything below that disagrees.**
    Loom links (`loom.com`) are allowed.
 4. **Shadow first.** GHL writes go through `shared.ghl` (guarded by
    `guard_write`). `shared.notify` follows the existing shadow contract. LLM calls
-   go through `shared.llm` roles only (`classify` = Haiku, escalate < 0.8 to
-   `escalate`; `draft` = Sonnet). Tests mock every LLM call. No test or dry run
+   go through `shared.llm` roles only (`classify`, escalate < 0.8 to
+   `escalate`; `draft`; every role on Claude Opus 5.5 since 2026-09-25). Tests mock every LLM call. No test or dry run
    spends tokens.
 5. **Client text is untrusted data.** Room messages, job posts and client names
    pass through `upwork_rooms.clean_text` and are wrapped as quoted data in

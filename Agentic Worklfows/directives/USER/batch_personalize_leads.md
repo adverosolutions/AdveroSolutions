@@ -2,15 +2,17 @@
 
 **Purpose:** Generate personalizations for enriched leads using cost-optimized AI
 **When to use:** After leads have been enriched with research data
-**Cost:** ~$0.20 per 1,000 leads (90% cheaper than GPT-4o alone)
+**Cost:** ~$25 per 1,000 leads on Claude Opus 5.5 (rough estimate, not measured)
+
+> **Model change, 2026-09-25:** every model call runs on Claude Opus 5.5 (`claude-opus-5-5`, low effort). The engine key `haiku` (`PERSONALIZATION_ENGINE=haiku`, `engine_used='haiku'`, `haiku_success`) and the file name `operational_fact_pain_generator_haiku.py` are kept so nothing breaks, but they now mean Claude Opus 5.5. The code pins the model and no longer reads `ANTHROPIC_MODEL`. Claude is now the more expensive engine: the Haiku-era cost tables and test logs further down are historical and no longer hold.
 
 ---
 
 ## What This Does
 
 Takes enriched leads from your CRM and generates personalized email opening lines using:
-1. **Primary engine:** Claude Haiku 3.5 (~$0.0002/lead, 90% cost savings)
-2. **Fallback engine:** GPT-4o (~$0.002/lead, higher quality backup)
+1. **Primary engine:** Claude Opus 5.5, engine key `haiku` (~$0.025/lead, rough estimate)
+2. **Fallback engine:** GPT-4o (~$0.002/lead)
 3. **Ultimate fallback:** Template-based (free, always works)
 
 The system intelligently routes to the most cost-effective option while maintaining quality.
@@ -22,7 +24,7 @@ The system intelligently routes to the most cost-effective option while maintain
 ✅ Leads must be enriched with research data (see [enrich_and_personalize_leads.md](./enrich_and_personalize_leads.md))
 ✅ `Data Summary` column populated with website/GBP/LinkedIn research
 ✅ API keys configured in `.env`:
-   - `ANTHROPIC_API_KEY` (required for Haiku)
+   - `ANTHROPIC_API_KEY` (required for the Claude engine, Opus 5.5)
    - `OPENAI_API_KEY` (optional, for GPT-4o fallback)
 
 ---
@@ -30,7 +32,7 @@ The system intelligently routes to the most cost-effective option while maintain
 ## Required Tools
 
 - `execution/unified_personalization_engine.py` - Intelligent routing between AI engines
-- `execution/operational_fact_pain_generator_haiku.py` - Claude Haiku generator
+- `execution/operational_fact_pain_generator_haiku.py` - Claude generator (Opus 5.5; file name is historical)
 - `execution/operational_fact_pain_generator.py` - GPT-4o fallback
 - `execution/google_sheets_client.py` - CRM operations
 
@@ -86,12 +88,13 @@ Set in `.env`:
 
 ```bash
 # Engine selection (choose one):
-PERSONALIZATION_ENGINE=both      # Haiku first, GPT-4o fallback (recommended)
-PERSONALIZATION_ENGINE=haiku     # Haiku only (cheapest, 95% success)
-PERSONALIZATION_ENGINE=gpt4o     # GPT-4o only (most expensive, baseline quality)
+PERSONALIZATION_ENGINE=both      # Claude (Opus 5.5) first, GPT-4o fallback
+PERSONALIZATION_ENGINE=haiku     # Claude only (key name kept; runs Opus 5.5)
+PERSONALIZATION_ENGINE=gpt4o     # GPT-4o only
 
 # Model versions:
-ANTHROPIC_MODEL=claude-3-5-haiku-20241022
+# Claude: claude-opus-5-5, pinned in operational_fact_pain_generator_haiku.py
+# (ANTHROPIC_MODEL is no longer read)
 OPENAI_MODEL=gpt-4o
 ```
 

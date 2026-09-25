@@ -152,7 +152,12 @@ MAX_REVIEWS = None
 # Needs ANTHROPIC_API_KEY (in a .env file) and `pip install anthropic`.
 # Set to False to skip it entirely (no API calls, no cost).
 AI_VERIFY = True
-AI_MODEL = "claude-haiku-4-5-20251001"
+# Every model call runs on Claude Opus 5.5 (Lorenzo, 2026-09-25). It always
+# thinks (thinking can't be disabled); effort "low" keeps that short on this
+# one-word classification, and max_tokens leaves room for the thinking.
+AI_MODEL = "claude-opus-5-5"
+AI_EFFORT = "low"
+AI_MAX_TOKENS = 10 + 1024     # the one-word label + thinking headroom
 AI_DELAY_SECONDS = 0.5
 CLASSIFIER_SYSTEM = (
     "You are a business classifier. Classify this company into one of four "
@@ -310,7 +315,8 @@ def classify_business(client, company_name):
     try:
         resp = client.messages.create(
             model=AI_MODEL,
-            max_tokens=10,
+            max_tokens=AI_MAX_TOKENS,
+            output_config={"effort": AI_EFFORT},
             system=CLASSIFIER_SYSTEM,
             messages=[{"role": "user",
                        "content": "Company name: {}".format(company_name)}],

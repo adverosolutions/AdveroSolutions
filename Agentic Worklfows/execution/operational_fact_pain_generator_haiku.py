@@ -1,15 +1,16 @@
 """
-Operational Fact + Pain Generator - Claude Haiku Version
-Creates combined personalization for cold emails using Claude Haiku 3.5.
-90% cost reduction compared to GPT-4o while maintaining quality.
+Operational Fact + Pain Generator - Claude version
+Creates combined personalization for cold emails using Claude Opus 5.5 (low
+effort). The "_haiku" filename is historical and kept because
+unified_personalization_engine.py imports it: the model moved from Haiku 3.5 to
+Opus 5.5 on 2026-09-25.
 
 This is a drop-in replacement for operational_fact_pain_generator.py that uses
-Anthropic's Claude Haiku instead of OpenAI GPT-4o for cost optimization.
+Anthropic's Claude instead of OpenAI GPT-4o.
 
-Cost comparison (per 1,000 personalizations):
-- GPT-4o: ~$2.00
-- Claude Haiku 3.5: ~$0.20
-- Savings: 90%
+Cost (per 1,000 personalizations, rough estimate, not measured):
+- Claude Opus 5.5 at low effort: ~$25 ($4/$20 per MTok, ~4.5k input tokens,
+  ~300 output tokens including thinking)
 
 Generates operational facts connected to pain points about scheduling/follow-up challenges.
 Replaces {{operationalFact+Pain}} variable in email templates.
@@ -29,6 +30,21 @@ logger = logging.getLogger(__name__)
 
 # Initialize Anthropic client
 client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+
+# Every model call runs on Claude Opus 5.5 (Lorenzo, 2026-09-25). Pinned here on
+# purpose instead of reading ANTHROPIC_MODEL: the local .env still sets that to
+# an old Haiku id, and Haiku would reject the effort parameter below.
+MODEL = "claude-opus-5-5"
+# Opus 5.5 always thinks: `thinking` can't be disabled and temperature/top_p/
+# top_k return a 400. Effort is the control; "low" keeps thinking short on this
+# one-line call. Thinking counts toward max_tokens, so leave room for it.
+EFFORT = "low"
+THINKING_HEADROOM_TOKENS = 1024
+
+
+def _text_of(response) -> str:
+    """Join the text blocks; a thinking block may come first."""
+    return "".join(b.text for b in response.content if getattr(b, "type", None) == "text")
 
 # System prompt for operational fact + pain generation
 # (Identical to GPT-4o version - this prompt works excellently with Claude)
@@ -227,7 +243,7 @@ def generate_operational_fact_pain(
 ) -> Optional[str]:
     """
     Generate an operational fact + pain personalization block from research data.
-    Uses Claude Haiku 3.5 for 90% cost savings vs GPT-4o.
+    Uses Claude Opus 5.5 at low effort.
 
     Args:
         research_data: Combined research data from website, GBP, and LinkedIn
@@ -251,18 +267,24 @@ Research data:
 {research_data}"""
 
     try:
-        # Generate operational fact + pain using Claude Haiku 3.5
+        # Generate operational fact + pain using Claude Opus 5.5
         response = client.messages.create(
-            model=os.getenv('ANTHROPIC_MODEL', 'claude-3-5-haiku-20241022'),
-            max_tokens=200,
-            temperature=0.7,
+            model=MODEL,
+            max_tokens=200 + THINKING_HEADROOM_TOKENS,
+            output_config={"effort": EFFORT},
             system=SYSTEM_PROMPT,
             messages=[
                 {"role": "user", "content": user_message}
             ]
         )
 
-        personalization = response.content[0].text.strip()
+        personalization = _text_of(response).strip()
+
+        # A refusal or a reply cut off at max_tokens (thinking included) is
+        # not a personalization.
+        if not personalization or response.stop_reason in ("refusal", "max_tokens"):
+            logger.warning(f"No usable personalization for {company_name} (stop_reason={response.stop_reason})")
+            return None
         logger.info(f"Generated personalization for {company_name}: {personalization}")
 
         # Clean and validate the personalization
@@ -394,7 +416,7 @@ if __name__ == "__main__":
     Multiple crews serving the greater Houston metro area.
     """
 
-    print("Testing Claude Haiku Personalization Generator")
+    print("Testing Claude Opus 5.5 Personalization Generator")
     print("=" * 60)
 
     result = generate_operational_fact_pain(

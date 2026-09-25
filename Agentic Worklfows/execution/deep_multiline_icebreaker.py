@@ -8,8 +8,8 @@ standalone script that fits this repo's directive/execution architecture.
 Pipeline per lead:
   1. Scrape the lead's homepage, extract internal links
   2. Pick up to N internal sub-pages (About/Services-style pages tend to win)
-  3. Scrape each sub-page's text, summarize it with Claude Haiku (cheap)
-  4. Feed the aggregated research into Claude Haiku for STRUCTURED SIGNAL
+  3. Scrape each sub-page's text, summarize it with Claude Opus 5.5 (low effort)
+  4. Feed the aggregated research into Claude Opus 5.5 for STRUCTURED SIGNAL
      EXTRACTION (primary treatment, tech brand, founding year, etc.) -- never
      freeform creative writing, just "is X clearly stated, yes/no/value"
   5. Pick the highest-priority ANGLE (from a fixed template library, see
@@ -66,10 +66,19 @@ logger = logging.getLogger(__name__)
 
 client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
-SUMMARY_MODEL = "claude-haiku-4-5-20251001"
+# Every model call runs on Claude Opus 5.5 (Lorenzo, 2026-09-25). The name
+# SUMMARY_MODEL is kept so nothing that reads it breaks.
+SUMMARY_MODEL = "claude-opus-5-5"
 # No creative-generation model needed anymore -- angle selection + template
-# fill is deterministic Python. Haiku is only ever asked to summarize/extract
+# fill is deterministic Python. The model is only ever asked to summarize/extract
 # facts, never to write the final sentence.
+
+# Opus 5.5 always thinks (thinking can't be disabled and it rejects
+# temperature/top_p/top_k with a 400). Effort is the only control: "low" keeps
+# the thinking short on these small extraction calls. Thinking counts toward
+# max_tokens, so each call adds this headroom on top of the reply's own size.
+SUMMARY_EFFORT = "low"
+THINKING_HEADROOM_TOKENS = 1024
 
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
@@ -251,8 +260,8 @@ def _extract_json(text: str) -> Optional[dict]:
 
 
 def _get_text_block(response) -> str:
-    # Sonnet 5 runs adaptive thinking by default -- content[0] may be a
-    # ThinkingBlock, not text. Pick the first block that actually is text.
+    # Opus 5.5 always thinks -- content[0] may be a ThinkingBlock, not text.
+    # Pick the first block that actually is text.
     for block in response.content:
         if getattr(block, "type", None) == "text":
             return block.text
@@ -336,8 +345,8 @@ def summarize_page(url: str, text: str) -> Optional[str]:
     try:
         response = client.messages.create(
             model=SUMMARY_MODEL,
-            max_tokens=300,
-            temperature=0.3,
+            max_tokens=300 + THINKING_HEADROOM_TOKENS,
+            output_config={"effort": SUMMARY_EFFORT},
             system=system,
             messages=[{"role": "user", "content": user}],
         )
@@ -439,8 +448,8 @@ def extract_signals(research: List[Dict[str, str]]) -> Dict:
     try:
         response = client.messages.create(
             model=SUMMARY_MODEL,
-            max_tokens=400,
-            temperature=0.1,
+            max_tokens=400 + THINKING_HEADROOM_TOKENS,
+            output_config={"effort": SUMMARY_EFFORT},
             system=system,
             messages=[{"role": "user", "content": f"Research:\n{research_text}"}],
         )
