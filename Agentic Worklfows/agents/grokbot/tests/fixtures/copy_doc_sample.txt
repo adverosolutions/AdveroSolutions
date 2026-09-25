@@ -1,0 +1,170 @@
+﻿Every email the system sends
+Every email the system sends, in the order a lead meets them.
+How to use it: Change any words you like. Keep the words in {curly brackets}: they are filled in for each lead. When you are done, tell Claude 'done'. Nothing goes live until you say so.
+When you say 'done', everything in this doc counts as approved, except the first replies: those are not approved yet. Emails still only go out after you tell Claude 'go live'.
+Approved does not mean every email goes out on its own. First replies never do: the system drafts them and you send them yourself from the email thread. The other replies to a lead go out on their own only after a reply of yours has reached that lead, except the Locked in booking confirmation. Every send check still applies.
+If a sentence appears in many emails (like the time-offer line in first replies), changing it once is enough; it changes everywhere. If you change two copies differently, Claude will ask.
+Leave the small grey tags at the end of each heading as they are: they tell Claude which email is which. Grey lines marked note or section are only there to help you read.
+Type your changes straight into the text: no suggesting mode, no strikethrough, no highlights or text colours. Claude reads only the words, so a doc with any of those is not approved; Claude asks you instead.
+Other versions of an email, like 'If there are no free times:', show what they change: a grey line quotes the lines of the email above that they replace or leave out, and the lines under it are the new ones. The versions with example dates and times are written out in full.
+Words in brackets: {first_name} their first name, {company} their company, {slots} two open times, {slot} one time, {zoom_link} the call link, {original_subject} the subject of their email. The cold emails use Instantly's double brackets, like {{firstName}}.
+If we don't have their first name, 'Hey {first_name},' becomes 'Hey there,'. If we don't have their company name, {company} becomes 'your business'. A follow-up email that names the company is held until we have it. In a referral reply with no name, {referral_name} becomes 'the right person' and {referral_first_name} becomes 'them'.
+How times are written
+Every time is Central (CT). The engine writes them like this:
+{slots}: Tue 12:05pm or Thu 4:30pm CT (just Tue 12:05pm CT when only one time is free)
+{slot}: Tue 12:05pm (the email adds CT after it)
+{slot1} and {slot2}: Tue 12:05pm CT
+{when_ct}: Tue, Jan 8 at 12:05pm CT, and in another timezone Tue, Jan 8 at 12:05pm CT (1:05pm ET)
+{time_ct}: 12:05pm CT
+{asked_time}: the time they asked for, in their own zone, like Mon 10:45am ET
+{lead_local_time}: their own time, like 1:05pm ET (only added when they are not on Central)
+{alt_slots}: like {slots}; when the times are in another week the dates are added, like Tue Jan 15 12:05pm or Thu Jan 17 4:30pm CT
+Zones are written CT, ET, MT, PT, and MST for Arizona.
+Exactly how the engine writes times, from its own code (part of every email with a time in it): (tag: formats.1)
+Example times: Mon Jan 7 9:45, Tue Jan 8 12:05 and Thu Jan 10 16:30, 2030, Central (America/Chicago). This block is the same on every template that has a time or slot in it.
+Two times, {slots} and {alt_slots}: Tue 12:05pm or Thu 4:30pm CT
+One time, {slots}, {alt_slots}, {slot1} and {slot2}: Tue 12:05pm CT
+A time without its zone, {slot}: Tue 12:05pm | Thu 4:30pm | Mon 9:45am
+A counter-proposal that crosses a week, {alt_slots}: Tue Jan 15 12:05pm or Thu Jan 17 4:30pm CT
+The time the lead proposed, in the zone they wrote it in, {asked_time}: America/Chicago = Mon 9:45am CT | America/New_York = Mon 10:45am ET | America/Denver = Mon 8:45am MT | America/Los_Angeles = Mon 7:45am PT
+The time the lead proposed, when the counter-proposal crosses a week, {asked_time}: America/Chicago = Mon Jan 7 9:45am CT | America/New_York = Mon Jan 7 10:45am ET | America/Denver = Mon Jan 7 8:45am MT | America/Los_Angeles = Mon Jan 7 7:45am PT
+The lead's own time after the call time, {lead_local_time}: America/Chicago = (nothing added) | America/New_York = (1:05pm ET your time) | America/Denver = (11:05am MT your time) | America/Los_Angeles = (10:05am PT your time) | America/Phoenix = (11:05am MST your time)
+The call time, {when_ct}: Tue, Jan 8 at 12:05pm CT
+The call time when the lead's timezone is known, {when_ct}: America/Chicago = Tue, Jan 8 at 12:05pm CT | America/New_York = Tue, Jan 8 at 12:05pm CT (1:05pm ET) | America/Denver = Tue, Jan 8 at 12:05pm CT (11:05am MT) | America/Los_Angeles = Tue, Jan 8 at 12:05pm CT (10:05am PT) | America/Phoenix = Tue, Jan 8 at 12:05pm CT (11:05am MST)
+The clock time only, {time_ct}: 12:05pm CT | 4:30pm CT
+Zone labels: America/Chicago = CT | America/New_York = ET | America/Denver = MT | America/Los_Angeles = PT | America/Phoenix = MST
+Doc build: 170b09dd897430a9 (tag: X-BUILD)
+Cold emails in Instantly (live copy, checked 2026-09-23) (section)
+Instantly sends these. Step 2 goes out 3 days after step 1, in the same email thread, and only if they haven't replied. {{personalization}} is the opening line written for each lead. (note)
+Cleaning, reactivation offer (section)
+Campaign: 2026 Cleaning - Client Reactivation. Sends between 7am and 7pm Eastern time. (note)
+Step 1: first email (tag: instantly.cleaning_reactivation.step1)
+Subject: {{firstName}}, question (tag: instantly.cleaning_reactivation.step1/subject)
+{{personalization}}
+
+
+Know this is out of left field, if I could help recover the money from accounts that cancelled or stopped renewing their contracts in exchange for a commission on the accounts I bring back, would you be open? I work mostly on performance and am building my network.
+
+
+About me: I build client reactivation systems. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months. Would cost you nothing upfront.
+
+
+Let me know.
+
+
+Thanks,
+Lorenzo
+Step 2: 3 days later, if they haven't replied (tag: instantly.cleaning_reactivation.step2)
+Subject: (tag: instantly.cleaning_reactivation.step2/subject)
+No subject of its own: it goes as a reply in the same thread. (note)
+Hey {{firstName}},
+
+
+Checking in, in case the first one got buried. Quick version:
+- I want to build a reactivation system for {{companyName}}. Goal is to bring back the accounts that cancelled or stopped renewing, without you chasing anyone.
+- I did this for a commercial roofer doing $150M/yr and recovered about $6M in contracts in 6 months.
+- Nothing up front. I only take a commission on the accounts I bring back.
+
+
+Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.
+
+
+Thanks for the time,
+Lorenzo
+The system drafts one of these when a lead answers a cold email and sounds interested or asks a question, picked by their offer and what they asked. It never goes out on its own: it comes to you as a draft and you send it yourself from the email thread. (note)
+Not approved yet. These stay drafts you write yourself until they are rebuilt from your own replies. (note)
+Cleaning, reactivation offer (section)
+First reply: cleaning (reactivation), they said yes (tag: first_reply.cleaning_reactivation.default.full)
+Not approved yet. This one stays a draft you write yourself until it is rebuilt from your own replies. (note)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_reactivation.default.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+
+Glad to hear it. All I need to start is a list of 60 or more lost or dormant accounts or lost proposals.
+
+
+Would {slots} work for a 15-minute call?
+
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_reactivation.default.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.cleaning_reactivation.default.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_reactivation.default.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+Follow-up emails (section)
+For a lead who went quiet after your first reply, in the order below. The first goes out the business day after your first reply; each one goes out at 10am Central on a business day, and they stop as soon as the lead books, replies or asks to stop. Before the first one goes out you get a heads-up with a Veto button. (note)
+Follow-up email 1 (tag: cadence.e1)
+Subject: Re: {original_subject} (tag: cadence.e1/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+The time slots I sent got filled. Here are 2 more, let me know if they work: {slots}.
+
+
+Lorenzo
+Follow-up email 2 (tag: cadence.e2)
+{research_line} is one of the lines right below this email, picked by the lead's offer. (note)
+Read only: {research_line} can also be a line written for each lead by AI (cadence.e2.research_line). It has no fixed words to show here, so saying 'done' does not approve it, and an email carrying one is held, never sent. (note)
+Subject: Re: {original_subject} (tag: cadence.e2/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+{research_line}
+
+
+Fifteen minutes is enough for me to show you how this would run for {company}. Let me know when a good time is to get a call on the books.
+
+
+Lorenzo
+Research fallback: reactivation offers (line used inside Follow-up email 2) (tag: cadence.e2.research_fallback.reactivation)
+The quickest place to start is usually the accounts that already know you and went quiet.
+Research fallback: outbound offers (line used inside Follow-up email 2) (tag: cadence.e2.research_fallback.outbound)
+The quickest place to start is usually the prospects who are in market right now.
+Follow-up email 3 (tag: cadence.e3)
+Subject: Re: {original_subject} (tag: cadence.e3/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+I really want to get this call on the books with you. Those last two times got taken too.
+
+
+Would {slots} work instead?
+
+
+Lorenzo
+Other times: weekend (tag: booking.counter.weekend)
+When the time they ask for is on a weekend. (note)
+Subject: Re: {original_subject} (tag: booking.counter.weekend/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+
+{asked_time} lands on a weekend for me. Could you do {alt_slots} instead?
+
+
+Lorenzo
+If there are no other free times: (tag: booking.counter.weekend/no_alternatives)
+Instead of "{asked_time} lands on a weekend for me. Could you do {alt_slots} instead?": (note)
+{asked_time} lands on a weekend for me. Could you send me a couple of times that work for you next week?
+If we couldn't read the time they asked for: (tag: booking.counter.weekend/no_proposed_time)
+Instead of "{asked_time} lands on a weekend for me. Could you do {alt_slots} instead?": (note)
+That time does not work on my side. Could you do {alt_slots} instead?
+If the other times fall in another week: (tag: booking.counter.weekend/dated)
+The times in this version are examples. (note)
+This version in full: (note)
+Hey {first_name},
+
+
+Sat Jan 12 1:47pm CT lands on a weekend for me. Could you do Tue Jan 15 2:43pm or Wed Jan 16 3:17pm CT instead?
+
+
+Lorenzo
