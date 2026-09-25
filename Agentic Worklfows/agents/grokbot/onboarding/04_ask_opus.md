@@ -184,7 +184,7 @@ What the script adds around the decision:
 | `grok_next_step` | `send`, `hold_card`, `draft_to_lorenzo`, `update_records`, `wait`, `nothing` (file 02, section 3, step 6) |
 | `hold_reasons` | Why it is a hold card. Put these on the card |
 | `email_text` | The template with the fields filled. The only text you may send |
-| `checks` | The copy-doc checks: template found, every line from that template, no `{placeholder}` left, no price, link, dash or "!" in a field value, and approval (`doc_done`, `doc_unchanged`, `go_live`). A field may carry a line from the copy doc only when the line sits in the chosen template's own line block for the lead's offer (for E4 and a `cleaning_reactivation` lead, `cadence.e4.offer_proof.reactivation`). A line from any other part of the doc (a first reply, a guarantee, an instruction, the other offer's line) is refused |
+| `checks` | The copy-doc checks: template found, every line from that template, no `{placeholder}` left, no price, link, dash or "!" in a field value, and approval (`doc_done`, `doc_unchanged`, `go_live`). A field may carry a line from the copy doc only when the line sits in the chosen template's own line block for the lead's offer (for E4 and a `cleaning_reactivation` lead, `cadence.e4.offer_proof.reactivation`). A line from any other part of the doc (a first reply, a guarantee, an instruction, the other offer's line), or a line Opus wrote itself, is refused. Other placeholders take only short values (a name, the company, a subject, a date, a time, slots) or an https call link; any other placeholder holds. `template_is_email`: the template is a main email block or one of its variants, never a line used inside another email, a subject, a first reply, a cold email or an instruction block |
 | `usage`, `cost_usd` | Tokens and dollars for this call. Log `cost_usd` |
 | `model` | The model named in Anthropic's answer. `null` when no answer came back |
 | `model_requested` | The model the script asked for, `claude-opus-5-5` |
@@ -328,8 +328,18 @@ GHL_FIELD_NAMES = ["Sequence", "Last Email Sent", "Last Email Date",
 # Template families Grok may never send on its own.
 NEVER_SEND_PREFIXES = ("first_reply.", "instantly.", "U-PRICE", "X-",
                        "formats.", "cadence.e2.research_line")
-# Placeholders whose value may be a link (only the call link).
+# Every placeholder falls in exactly one of three kinds. Any other name holds.
+# Placeholders whose value may be a link (only the call link): https, no spaces.
 LINK_FIELDS = ("zoom_link", "call_link", "link")
+# Placeholders that take a line from the copy doc: the value must be exactly a
+# line of the chosen template's own block for the lead's offer, or it holds.
+LINE_FIELDS = ("research_line", "offer_proof", "offer_line", "preview",
+               "observation", "niche_point")
+# Short structured values: names, company, subject, dates, times and slots.
+STRUCTURED_FIELDS = ("first_name", "company", "original_subject", "slots", "slot",
+                     "slot1", "slot2", "alt_slots", "asked_time", "when_ct", "time_ct",
+                     "lead_local_time", "referral_name", "referral_first_name")
+MAX_STRUCTURED_CHARS = 80
 FORBIDDEN_IN_VALUES = ("!", "\u2014", "\u2013", "--", "$", "%")
 # A field value of this many words or more that equals a copy-doc line outside
 # the allowed line blocks was copied from another email (a first reply, a
@@ -387,7 +397,8 @@ One JSON object in the required schema, nothing else.
   - no_action: nothing to do.
 - template_id: the tag from the copy doc, like cadence.e3 or booking.counter.weekend/no_alternatives. null when there is no template.
 - template_text: the body of that template copied character for character from the copy doc, with its placeholders such as {first_name} left in. Include the greeting line and the "Lorenzo" sign-off. Leave out the subject line, notes and tag text. When a variant replaces lines of the base email, write the whole resulting body. Put exactly one blank line between paragraphs (the plain-text export shows two; the email has one). null when there is no template.
-- fields: one entry for every placeholder in template_text, name without braces. Follow the copy doc's rules: first_name is "there" when unknown; slots look like "Tue 12:05pm or Thu 4:30pm CT". When a placeholder takes a line from the copy doc (research_line, offer_proof, offer_line, preview, observation, niche_point), the value is that line copied exactly, from the block for the lead's offer (context.lead.campaign_key; a _trigger campaign is an outbound offer).
+- fields: one entry for every placeholder in template_text, name without braces. Follow the copy doc's rules: first_name is "there" when unknown; slots look like "Tue 12:05pm or Thu 4:30pm CT". When a placeholder takes a line from the copy doc (research_line, offer_proof, offer_line, preview, observation, niche_point), the value is that line copied exactly, from the block for the lead's offer (context.lead.campaign_key; a _trigger campaign is an outbound offer). Never write such a line yourself: an email carrying one is held. Other placeholders take only short values (a name, the company, a subject, a date, a time or slots) or the call link.
+- template_id must be a main email block, or one of its variants (tag/variant). A line used inside another email (like cadence.e4.offer_proof.outbound) is never a template_id.
 - send_after: ISO 8601 time with its offset, Central time, when the step must wait. Otherwise null.
 - ghl_stage: the Sales pipeline stage after this step, or no_change.
 - field_updates: GHL contact fields to write, using these names only: Sequence, Last Email Sent, Last Email Date, Next Email, Next Due Date. Sequence is one of none, reply_waiting, followup, booked, no_show, nurture, stopped. Last Email Sent and Next Email are template ids (or none). Dates in ISO 8601 with offset, Central time.
@@ -563,6 +574,32 @@ def allowed_fragment_lines(doc_text, template_id, context):
     return allowed
 
 
+def email_template_ids(doc_text):
+    """Tags of the doc's main email blocks: no "/" variant part, not a line
+    used inside another email, not a never-send family (first_reply.*,
+    instantly.*, X-*, U-PRICE*, formats.*)."""
+    ids = set()
+    for line in doc_text.splitlines():
+        tag = _tag_of(line)
+        if (tag is None or "/" in tag or "(line used inside" in line
+                or tag.startswith(NEVER_SEND_PREFIXES)):
+            continue
+        ids.add(tag)
+    return ids
+
+
+def is_email_template(doc_text, template_id):
+    """True when template_id is a main email block, or a variant tag of one."""
+    base = template_id.split("/")[0]
+    if base not in email_template_ids(doc_text):
+        return False
+    if "/" in template_id:
+        if template_id.endswith("/subject"):
+            return False
+        return any(_tag_of(line) == template_id for line in doc_text.splitlines())
+    return True
+
+
 def template_region(doc_text, template_id):
     """Normalised lines of the template and its variants (tag/variant), or None."""
     lines = doc_text.splitlines()
@@ -600,9 +637,15 @@ def tidy_spacing(text):
 
 
 def render(template_text, fields):
+    """Fill placeholders, repeating until nothing changes, so a {company}
+    inside an inserted copy-doc line (E5's offer_line) is filled too."""
     text = template_text
-    for item in fields:
-        text = text.replace("{" + item["name"] + "}", item["value"])
+    for _ in range(len(fields) + 1):
+        before = text
+        for item in fields:
+            text = text.replace("{" + item["name"] + "}", item["value"])
+        if text == before:
+            break
     return tidy_spacing(text)
 
 
@@ -614,6 +657,7 @@ def check_email(decision, doc_text, context):
         "template_found": False,
         "lines_match_template": False,
         "no_leftover_placeholders": False,
+        "template_is_email": False,
         "field_values_clean": False,
         "approval_ok": False,
         "problems": problems,
@@ -648,6 +692,11 @@ def check_email(decision, doc_text, context):
         problems.append("no copy doc file, so the text could not be checked")
         return email_text, checks
 
+    checks["template_is_email"] = is_email_template(doc_text, template_id)
+    if not checks["template_is_email"]:
+        problems.append("%s is not an email template Grok may send (a line used inside "
+                        "another email, a subject, a first reply, a cold email or an "
+                        "instruction block)" % template_id)
     region = template_region(doc_text, template_id)
     checks["template_found"] = region is not None
     if region is None:
@@ -667,10 +716,25 @@ def check_email(decision, doc_text, context):
             doc_line_tags.setdefault(line, tag)
     dirty = []
     for item in fields:
+        name = item["name"]
         value = normalize_line(item["value"])
-        if value in allowed:
-            continue  # this template's own line block for the lead's offer
+        if name in LINE_FIELDS:
+            if value not in allowed:
+                source = ("copied from %s" % (doc_line_tags[value] or "an untagged part of the doc")
+                          if value in doc_line_tags else "a line Opus wrote is always held")
+                dirty.append("%s (not a line from %s's own block for the lead's offer; %s)"
+                             % (name, template_id, source))
+            continue
+        if name not in STRUCTURED_FIELDS and name not in LINK_FIELDS:
+            dirty.append("%s (not a placeholder Grok may fill)" % name)
+            continue
         bad = [mark for mark in FORBIDDEN_IN_VALUES if mark in item["value"]]
+        if "{" in item["value"] or "}" in item["value"]:
+            bad.append("curly bracket")
+        if name in STRUCTURED_FIELDS and len(value) > MAX_STRUCTURED_CHARS:
+            bad.append("longer than %d characters" % MAX_STRUCTURED_CHARS)
+        if name in LINK_FIELDS and not re.match(r"^https://\S+$", item["value"].strip()):
+            bad.append("not a single https link")
         if len(value.split()) >= MIN_WORDS_FOR_DOC_LINE_MATCH and value in doc_line_tags:
             bad.append("copied from %s, not from this email's lines for the lead's offer"
                        % (doc_line_tags[value] or "an untagged part of the doc"))
@@ -702,8 +766,9 @@ def next_step(decision, checks):
         return "hold_card", reasons
     if action == "send_template":
         failed = [name for name in ("copy_doc_checked", "template_found",
-                                    "lines_match_template", "no_leftover_placeholders",
-                                    "field_values_clean", "approval_ok")
+                                    "template_is_email", "lines_match_template",
+                                    "no_leftover_placeholders", "field_values_clean",
+                                    "approval_ok")
                   if not (checks or {}).get(name)]
         if failed:
             reasons.append("checks failed: " + ", ".join(failed))

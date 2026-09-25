@@ -391,6 +391,60 @@ class RealDocFieldLines(unittest.TestCase):
         result = self._run("cadence.e2", E2_TEXT, fields, "cleaning_reactivation")
         self.assertEqual(result["grok_next_step"], "hold_card")
 
+    def test_e2_with_a_research_line_opus_wrote_holds(self):
+        fields = [{"name": "first_name", "value": "Dana"},
+                  {"name": "company", "value": "Brightline Cleaning"},
+                  {"name": "research_line", "value": "Saw you just opened a second office "
+                   "in Plano, congrats on the growth."}]
+        result = self._run("cadence.e2", E2_TEXT, fields, "cleaning_reactivation")
+        self.assertEqual(result["grok_next_step"], "hold_card")
+        self.assertFalse(result["checks"]["field_values_clean"])
+        self.assertIn("a line Opus wrote is always held", " ".join(result["checks"]["problems"]))
+
+    def test_unknown_placeholder_or_long_value_holds(self):
+        base = [{"name": "first_name", "value": "Dana"},
+                {"name": "slots", "value": "Tue 12:05pm or Thu 4:30pm CT"}]
+        for extra in ({"name": "note", "value": "short"},
+                      {"name": "first_name", "value": "Dana " + "and the whole team " * 6},
+                      {"name": "first_name", "value": "Dana {offer_proof}"}):
+            result = self._run("cadence.e1", E1_TEXT, base + [extra], "cleaning_reactivation")
+            self.assertEqual(result["grok_next_step"], "hold_card", extra)
+            self.assertFalse(result["checks"]["field_values_clean"], extra)
+
+    def test_a_line_block_or_never_send_block_is_not_a_template(self):
+        cases = [("cadence.e4.offer_proof.outbound", PROOF_OUTBOUND),
+                 ("cadence.e2.research_fallback.reactivation",
+                  "The quickest place to start is usually the accounts that already know "
+                  "you and went quiet."),
+                 ("X-BUILD", "Doc build: 170b09dd897430a9"),
+                 ("cadence.e1/subject", "Subject: Re: {original_subject}")]
+        for template_id, text in cases:
+            result = self._run(template_id, text, [{"name": "original_subject",
+                                                    "value": "question"}],
+                               "cleaning_trigger")
+            self.assertEqual(result["grok_next_step"], "hold_card", template_id)
+            self.assertFalse(result["checks"]["template_is_email"], template_id)
+        doc = open(REAL_DOC, encoding="utf-8-sig").read()
+        ids = ask_opus.email_template_ids(doc)
+        self.assertIn("cadence.e4", ids)
+        self.assertIn("booking.counter.weekend", ids)
+        self.assertFalse(any(i.startswith(("first_reply.", "instantly.", "X-", "U-PRICE",
+                                           "formats.", "cadence.e4.")) for i in ids))
+        self.assertTrue(ask_opus.is_email_template(doc, "booking.counter.weekend/no_alternatives"))
+
+    def test_e5_offer_line_with_company_inside_is_filled_in_any_order(self):
+        e5 = ("Hey {first_name},\n\n\nHaven't heard back yet, no worries. It's a busy time of "
+              "year and the slots keep getting filled.\n\n\nI'd still like to show you how "
+              "we'd {offer_line}. Would {slots} work?\n\n\nLorenzo")
+        fields = [{"name": "offer_line", "value": "win back {company}'s past accounts"},
+                  {"name": "first_name", "value": "Dana"},
+                  {"name": "company", "value": "Brightline Cleaning"},
+                  {"name": "slots", "value": "Tue 12:05pm or Thu 4:30pm CT"}]
+        result = self._run("cadence.e5", e5, fields, "cleaning_reactivation")
+        self.assertEqual(result["grok_next_step"], "send", result["hold_reasons"])
+        self.assertIn("how we'd win back Brightline Cleaning's past accounts. Would Tue",
+                      result["email_text"])
+
     def test_offer_suffixes(self):
         self.assertEqual(ask_opus.offer_suffixes({"lead": {"campaign_key": "cleaning_trigger"}}),
                          ["outbound_cleaning", "cleaning_outbound", "cleaning_trigger", "outbound"])
