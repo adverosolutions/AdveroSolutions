@@ -2976,6 +2976,16 @@ def detect_manual_first_reply(state: Any, now: datetime, instantly: Any, store: 
         logger.error("could not close %s's card %s from the thread: %s", email, approval_id, type(exc).__name__)
         card_close = "close_failed"
     out["card_close"] = card_close
+    # His reply is kept as an example for a future decide() prompt
+    # (reply_examples; context only, it never changes what is sent). After
+    # the reply is recorded, so a failed record never leaves an example
+    # behind; capture_first_reply never raises.
+    from services.reply_engine import reply_examples
+
+    his_row = next((r for r in rows if isinstance(r, dict)
+                    and str(r.get("id") or "") == str(found.get("email_id") or "")), None)
+    out["example"] = reply_examples.capture_first_reply(store, state, now_card, found, his_row, context,
+                                                        now=ct, instantly=instantly).get("example")
     armed = bool(result.get("armed"))
     _log_job("first_reply_from_thread", {
         "lead": email, "approval": approval_id, "email_id": found.get("email_id"),
