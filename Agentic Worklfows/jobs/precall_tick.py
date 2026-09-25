@@ -91,7 +91,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     p.add_argument("--facts", help="lead facts CSV (default: the list factory export, or LEAD_FACTS_CSV)")
     p.add_argument("--no-read", action="store_true", help="skip the Instantly reads (offline)")
     p.add_argument("--llm", action="store_true",
-                   help="let a --dry-run make the billed claude-opus-5 polish call (off by default)")
+                   help="let a --dry-run make the billed claude-opus-5-5 polish call (off by default)")
     p.add_argument("--no-notify", action="store_true", help="skip the digest notification")
     p.add_argument("--scheduled", action="store_true",
                    help="the unattended 5-minute run: push only when this run produced a brief, a proposal "
@@ -305,7 +305,7 @@ def tick(
                 if not forced and not proposal_due(appt, now):
                     continue
                 # The claim is checked HERE, before gather_inputs (two Instantly
-                # GETs) and build_proposal (a billed claude-opus-5 turn), exactly
+                # GETs) and build_proposal (a billed claude-opus-5-5 turn), exactly
                 # as the brief pass checks already_briefed. Taking it inside
                 # deliver() meant the 5-minute tick paid for a proposal on every
                 # pass of the whole proposal window - 146 model calls for one

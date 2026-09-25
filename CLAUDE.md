@@ -95,7 +95,7 @@ Rules the engine enforces: an engine email (first reply, counter-proposal, booki
 
 Do not touch: the Upwork application flow and Demo Library loop; live campaign `email_list`; anything without a dry-run first.
 
-Runtime models: Haiku for classification (escalate < 0.8 confidence to Sonnet), Sonnet for drafts and research lines, Opus 5 weekly for retro/proposals and the 20-draft/50-classification audit. Build models: Opus 5 for sales/marketing design, Sonnet for fulfillment/ops scripts. (Fable was the original pick; Lorenzo's weekly Fable allowance ran out on 2026-09-21, so Opus 5 is the heavy model everywhere. shared/llm.py MODEL_POLICY is the single place to change it back.)
+Runtime models: as of 2026-09-25 (Lorenzo), every runtime role uses Opus 5.5 (`claude-opus-5-5`): classification, escalation (< 0.8 confidence still escalates), drafts, research lines, the weekly retro and proposals, and the 20-draft/50-classification audit. Nothing runtime is on Haiku or Sonnet. Thinking cannot be disabled on Opus 5.5, so shared/llm.py sends effort `low` per role with a thinking headroom on max_tokens. Build models: Opus 5 for sales/marketing design, Sonnet for fulfillment/ops scripts. (Fable was the original pick; Lorenzo's weekly Fable allowance ran out on 2026-09-21.) shared/llm.py MODEL_POLICY is the single place to change a runtime model.
 
 Definition of done for any brief: pytest green, dry-run/replay shadow log, runbook in `runbooks/`, Job_Log rows, evidence in the report.
 

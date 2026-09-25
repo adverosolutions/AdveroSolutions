@@ -233,7 +233,7 @@ size of the number, so 45 minutes never becomes 45 hours.
 ## The rubric for the three lessons
 
 This is the only expensive model call in the system: `role="retro"` maps to
-Opus 5 in `shared/llm.MODEL_POLICY`, once a week, two calls at the very most
+Opus 5.5 (`claude-opus-5-5`) in `shared/llm.MODEL_POLICY`, once a week, two calls at the very most
 (one proposal, one repair). The judge runs in code, not in the prompt, so a
 model that ignores the rubric gets rejected anyway.
 

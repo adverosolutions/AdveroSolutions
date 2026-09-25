@@ -2001,7 +2001,7 @@ class FakeAnthropic(object):
         self.roles = []
         self.messages = self
 
-    def create(self, model, max_tokens, system, messages, thinking=None):
+    def create(self, model, max_tokens, system, messages, thinking=None, output_config=None):
         role = "classify" if "Respond with a single JSON object" in system else "draft"
         self.roles.append(role)
         out = FakeLLM(drafts=FakeAnthropic.DRAFTS)(role, system, messages[0]["content"])
