@@ -915,7 +915,11 @@ def test_excluding_catch_alls_stages_only_confirmed_mailboxes(tmp_path, monkeypa
                     out.append({"email": e, "status": "catch_all", "is_role": False, "is_catch_all": True})
             return out
 
-    cfg = make_config(tmp_path, verifier=MostlyCatch(), include_catch_all=False)
+    # Only one address in three is confirmed and the catch-alls are still
+    # personalized, so at worst-case thinking (Opus 5.5, 2026-09-25) the
+    # projection is honestly over the $0.07 default. This test is about what
+    # gets staged, not the cap, so it runs with a loose one.
+    cfg = make_config(tmp_path, verifier=MostlyCatch(), include_catch_all=False, max_cost_per_contact=1.0)
     summary = pipeline_mod.run_pipeline(state_mod.RunState.create("nocatch", cfg.to_meta()), cfg)
     assert summary["status"] in ("ok", "short"), summary.get("error")
     stage = summary["stages"]["stage"]
@@ -1203,7 +1207,10 @@ def test_a_duplicate_business_in_the_source_is_staged_once(tmp_path, monkeypatch
              "last_name": "Kowalski", "keywords": "commercial cleaning, janitorial services",
              "company_description": "Nightly commercial cleaning for office buildings."},
         ], fh)
-    cfg = make_config(tmp_path, source=sources_mod.FixtureSource(twice))
+    # Two businesses: one ICP batch call's worst-case thinking (1,024 tokens)
+    # over at most one contact is far past the $0.07 default. This test is
+    # about de-duplication, not the cap, so it runs with a loose one.
+    cfg = make_config(tmp_path, source=sources_mod.FixtureSource(twice), max_cost_per_contact=1.0)
     summary = pipeline_mod.run_pipeline(state_mod.RunState.create("dedupe", cfg.to_meta()), cfg)
     with open(staged_csv(summary), "r", encoding="utf-8") as fh:
         rows = list(csv.DictReader(fh))
@@ -1290,17 +1297,24 @@ class _SpyApify(sources_mod.ApifySource):
 
 
 def test_the_cap_halts_before_the_source_at_real_rates(tmp_path, monkeypatch):
-    """MKT-1. At the documented Apify rates the preflight prices a 3,300-contact
-    run at about $55 and $0.0222 per confirmed contact, over the 2-cent cap. The
-    old run did not halt at source, presuppress, icp, owner, patterns, verify or
-    suppression; it halted after personalize with the whole $55.05 spent. It
-    must now stop before a cent goes to Apify."""
+    """MKT-1. At the documented Apify rates the preflight priced a 3,300-contact
+    run at about $55 and $0.0222 per confirmed contact, over the then 2-cent
+    cap. The old run did not halt at source, presuppress, icp, owner, patterns,
+    verify or suppression; it halted after personalize with the whole $55.05
+    spent. It must stop before a cent goes to Apify.
+
+    Since 2026-09-25 every model call is Opus 5.5 priced with worst-case
+    thinking: the same run is about $153 and $0.062 per confirmed contact,
+    inside the $0.07 default (Lorenzo). The halt is pinned with a $0.05 cap."""
     monkeypatch.setenv("ADVERO_TMP_DIR", str(tmp_path))
     monkeypatch.setenv("ALLOW_PAID_CALLS", "1")   # the paid gate is open: only the cap can stop it
+    default = pipeline_mod.preflight(make_config(tmp_path, source=sources_mod.ApifySource(), target=3300))
+    assert default["cap"] == ledger_mod.DEFAULT_MAX_COST_PER_CONTACT == 0.07
+    assert default["within_cap"] is True, default["cost_per_verified"]
+    assert 0.05 < default["cost_per_verified"] < 0.07
+
     source = _SpyApify()
-    cfg = make_config(tmp_path, source=source, target=3300,
-                      max_cost_per_contact=ledger_mod.DEFAULT_MAX_COST_PER_CONTACT)
-    assert cfg.max_cost_per_contact == 0.02
+    cfg = make_config(tmp_path, source=source, target=3300, max_cost_per_contact=0.05)
     pf = pipeline_mod.preflight(cfg)
     assert pf["within_cap"] is False, pf["cost_per_verified"]
     assert pf["usd"]["total"] > 40
@@ -1331,7 +1345,9 @@ def test_the_in_run_projection_uses_the_preflight_denominator(tmp_path, monkeypa
     and skipped suppression, so it read $0.0161 where the preflight said
     $0.0222. Priced from the run state it now lands on the preflight's figure."""
     monkeypatch.setenv("ADVERO_TMP_DIR", str(tmp_path))
-    cfg = make_config(tmp_path, source=sources_mod.ApifySource(), target=3300)
+    # $0.05: under this run's $0.062 projection, so the halt below still bites
+    # (the $0.07 default no longer halts it; see the test above).
+    cfg = make_config(tmp_path, source=sources_mod.ApifySource(), target=3300, max_cost_per_contact=0.05)
     pf = pipeline_mod.preflight(cfg)
     run = state_mod.RunState.create("denominator", cfg.to_meta())
     run.add_leads(_sourced_leads(pf["projected"]["sourced"]))
@@ -1344,6 +1360,64 @@ def test_the_in_run_projection_uses_the_preflight_denominator(tmp_path, monkeypa
     # ... and therefore it halts at the source boundary instead of carrying on.
     with pytest.raises(ledger_mod.BudgetExceeded):
         pipeline_mod._check_budget_at(run, cfg, led, pipeline_mod.STAGE_SOURCE)
+
+
+def test_the_fixture_preflight_and_in_run_projection_agree_with_thinking_priced(tmp_path, monkeypatch):
+    """Opus 5.5 thinking cannot be turned off, so both projections carry the
+    worst-case allowance from shared.llm.output_tokens_with_thinking: one per
+    personalization line, one per ICP batch and one per possible escalation,
+    and the preflight now prices the escalation calls too. The preflight and
+    the in-run projection price the ICP stage through the same function, so
+    at the source boundary they agree on the recorded fixture."""
+    from shared import llm
+    from services.list_factory import icp
+
+    monkeypatch.setenv("ADVERO_TMP_DIR", str(tmp_path))
+    cfg = make_config(tmp_path, max_escalations=icp.DEFAULT_MAX_ESCALATIONS)
+    pf = pipeline_mod.preflight(cfg)
+    head = llm.THINKING_HEADROOM_TOKENS
+
+    # The allowance is the shared constant, per call.
+    assert personalize.usd_per_lead() == llm.estimate_cost(
+        llm.model_for("research"), personalize.TOKENS_IN_PER_LEAD, personalize.TOKENS_OUT_PER_LEAD + head)
+    survivors = pf["projected"]["survivors"]
+    batches = -(-survivors // cfg.batch_size)
+    escalations = min(cfg.max_escalations, survivors)
+    icp_text_in = icp.TOKENS_IN_PER_BUSINESS * (survivors + escalations)
+    icp_text_out = icp.TOKENS_OUT_PER_BUSINESS * (survivors + escalations)
+    assert pf["usd"]["icp"] == pytest.approx(llm.estimate_cost(
+        llm.model_for("classify"), icp_text_in, icp_text_out + head * (batches + escalations)), abs=1e-4)
+    assert pf["usd"]["personalize"] == pytest.approx(
+        personalize.usd_per_lead() * pf["projected"]["verified"], abs=1e-4)
+
+    run = state_mod.RunState.create("fixture-agree", cfg.to_meta())
+    run.add_leads(_sourced_leads(pf["projected"]["sourced"]))
+    led = cfg.new_ledger(run.run_id)
+    proj = pipeline_mod.project_run(run, cfg, led)
+    assert proj["expected_new_confirmed"] == pytest.approx(pf["projected"]["confirmed"], rel=0.02)
+    assert led.projected_from(proj["future_usd"], proj["expected_new_confirmed"]) == pytest.approx(
+        pf["cost_per_verified"], rel=0.02)
+
+
+def test_the_fixture_run_completes_under_the_seven_cent_cap(tmp_path, monkeypatch):
+    """Lorenzo, 2026-09-25: the cap is $0.07 per confirmed contact while every
+    model call is priced at worst-case thinking. The recorded fixture run (the
+    fixture configuration every run test here uses: no escalations) is priced
+    inside it and runs to the end without a halt.
+
+    With the default 50 escalations the fixture's 58 businesses would be
+    priced for 50 extra calls of worst-case thinking (about $1.07) over about
+    9 confirmed contacts, which the in-run projection rightly halts on: the
+    escalation allowance is a fixed worst case that only a real-sized run
+    absorbs (about $1.08 of a 3,300-contact run's $153)."""
+    monkeypatch.setenv("ADVERO_TMP_DIR", str(tmp_path))
+    cfg = make_config(tmp_path)
+    assert cfg.max_cost_per_contact == 0.07 and cfg.max_escalations == 0
+    pf = pipeline_mod.preflight(cfg)
+    assert pf["within_cap"] is True and pf["cost_per_verified"] < 0.07, pf["cost_per_verified"]
+    summary = pipeline_mod.run_pipeline(make_run(tmp_path, cfg, "seven-cents"), cfg)
+    assert summary["status"] == "ok", summary.get("error")
+    assert summary["ledger"]["cost_per_verified"] < 0.07
 
 
 def test_a_halt_mid_run_stages_what_is_already_verified(tmp_path, monkeypatch):

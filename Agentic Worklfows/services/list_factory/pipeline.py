@@ -189,7 +189,7 @@ class Config(object):
         # fill_rate on top over-fetched by 1/0.36 = 2.78x: the preflight quoted
         # 12,693 Apify rows at $25.63 and the run asked for 35,254 at $70.75,
         # which took the same run from $0.0140 to $0.0277 per contact, over the
-        # 2-cent cap, on the very number Lorenzo opens the paid gate on.
+        # then 2-cent cap, on the very number Lorenzo opens the paid gate on.
         self.source_fill_rate = 1.0
         self.source_name_rate = source_name_rate(getattr(self.source, "name", ""))
 
@@ -597,17 +597,17 @@ STAGE_FUNCS = [
 ]
 
 def _personalize_usd_per_lead() -> float:
-    from shared import llm
-
-    return llm.estimate_cost(llm.model_for("research"),
-                             personalize.TOKENS_IN_PER_LEAD, personalize.TOKENS_OUT_PER_LEAD)
+    """One personalization line, worst-case thinking included (one call per lead)."""
+    return personalize.usd_per_lead()
 
 
-def _icp_usd_per_business() -> float:
-    from shared import llm
-
-    return llm.estimate_cost(llm.model_for("classify"),
-                             icp.TOKENS_IN_PER_BUSINESS, icp.TOKENS_OUT_PER_BUSINESS)
+def _icp_stage_usd(businesses: float, cfg: Config) -> float:
+    """The ICP stage for ``businesses`` still to score, at worst case: every
+    batch call, every escalation the run may make (``cfg.max_escalations``),
+    text tokens plus worst-case thinking per call (icp.stage_usd). Thinking is
+    per CALL, not per business, so the stage is priced as a whole rather than
+    as a per-business rate."""
+    return icp.stage_usd(businesses, cfg.batch_size, cfg.max_escalations)
 
 
 def _projection_rates(cfg: Config, led: ledger_mod.Ledger) -> Dict[str, float]:
@@ -659,7 +659,6 @@ def project_run(run: "state_mod.RunState", cfg: Config, led: ledger_mod.Ledger) 
     mv = ledger_mod.PRICES["millionverifier_per_check"]
     lookup = ledger_mod.PRICES["perplexity_per_owner_lookup"]
     pers = _personalize_usd_per_lead()
-    icp_usd = _icp_usd_per_business()
     presuppressed = run.stage_done(STAGE_PRESUPPRESS)
     survival_ahead = 1.0 if presuppressed else r["suppression_survival"]
 
@@ -678,8 +677,7 @@ def project_run(run: "state_mod.RunState", cfg: Config, led: ledger_mod.Ledger) 
             continue
         if not models.stage_at_least(lead, models.ICP):
             counts["to_icp"] += 1
-            per = (icp_usd
-                   + r["icp_pass"] * (1.0 - r["name_rate"]) * lookup
+            per = (r["icp_pass"] * (1.0 - r["name_rate"]) * lookup
                    + r["icp_pass"] * r["owner_rate"] * after_owner_usd)
             future += survival_ahead * per
             expected += survival_ahead * r["icp_pass"] * r["owner_rate"] * after_owner_yield
@@ -695,6 +693,9 @@ def project_run(run: "state_mod.RunState", cfg: Config, led: ledger_mod.Ledger) 
         elif not models.stage_at_least(lead, models.PERSONALIZED):
             counts["to_personalize"] += 1
             future += pers
+    # The ICP stage is priced once for every business still to score (its
+    # thinking and escalations are per call), exactly as the preflight does.
+    future += _icp_stage_usd(survival_ahead * counts["to_icp"], cfg)
     return {
         "future_usd": round(future, 6),
         "expected_new_confirmed": round(expected, 4),
@@ -989,11 +990,15 @@ def preflight(cfg: Config, expected: Optional[Dict[str, float]] = None) -> Dict[
 
     Token counts are per-lead averages measured on the fixture rehearsal: about
     140 input and 25 output tokens of an ICP batch call per business, and about
-    700 input / 70 output for one personalization line. Priced through
-    ``shared.llm.estimate_cost`` so a model price change lands here too.
+    700 input / 70 output for one personalization line. Those are TEXT tokens;
+    thinking cannot be turned off on claude-opus-5-5 and bills as output, so
+    every model call also carries the worst-case thinking allowance
+    (``shared.llm.output_tokens_with_thinking``, THINKING_HEADROOM_TOKENS per
+    call): one per personalization line, one per ICP batch and one per
+    possible ICP escalation (``cfg.max_escalations``, each also priced for its
+    text tokens). Priced through ``shared.llm.estimate_cost`` so a model price
+    change lands here too.
     """
-    from shared import llm
-
     plan = plan_counts(cfg.target, expected)
     sourced, survivors = plan["sourced"], plan["survivors"]
     icp_pass, checks, verified = plan["icp_pass"], plan["checks"], plan["verified"]
@@ -1012,12 +1017,11 @@ def preflight(cfg: Config, expected: Optional[Dict[str, float]] = None) -> Dict[
     owner_usd = lookups * ledger_mod.PRICES["perplexity_per_owner_lookup"]
     verify_usd = checks * ledger_mod.PRICES["millionverifier_per_check"]
     # ICP only scores what survived the free domain-suppression pass.
-    icp_usd = llm.estimate_cost(llm.model_for("classify"),
-                                icp.TOKENS_IN_PER_BUSINESS * survivors,
-                                icp.TOKENS_OUT_PER_BUSINESS * survivors)
-    personalize_usd = llm.estimate_cost(llm.model_for("research"),
-                                        personalize.TOKENS_IN_PER_LEAD * verified,
-                                        personalize.TOKENS_OUT_PER_LEAD * verified)
+    # Batches, escalations and their worst-case thinking, the same function
+    # project_run prices the stage with.
+    icp_usd = _icp_stage_usd(survivors, cfg)
+    # One call per line, so one thinking allowance per line.
+    personalize_usd = round(_personalize_usd_per_lead() * verified, 6)
 
     total = round(source_usd + owner_usd + verify_usd + icp_usd + personalize_usd, 4)
     confirmed = plan["confirmed"]

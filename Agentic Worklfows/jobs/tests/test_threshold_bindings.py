@@ -74,7 +74,8 @@ ALLOWED = {
     ("services/experiments/analytics.py", "ACTIVE_CAMPAIGN_STATUS"): "Instantly campaign status code",
     ("services/list_factory/contacts.py", "DEFAULT_MAX_VERIFY_ERROR_RATE"):
         "verifier error share that stops a run, not a statistical alpha",
-    ("services/list_factory/icp.py", "DEFAULT_MAX_ESCALATIONS"): "Sonnet escalations per run",
+    ("services/list_factory/icp.py", "DEFAULT_MAX_ESCALATIONS"): "ICP escalation calls per run",
+    ("services/list_factory/icp.py", "batch_usd.calls"): "model calls a batch takes (a count)",
     ("services/list_factory/icp.py", "TOKENS_OUT_PER_BUSINESS"): "LLM output tokens per business",
     ("services/list_factory/state.py", "DEFAULT_CHECKPOINT_EVERY"): "leads between state checkpoints",
     ("services/list_factory/suppression.py", "MAX_BLOCKLIST_PAGES"): "cursor page cap",

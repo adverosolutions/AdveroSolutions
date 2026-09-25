@@ -34,10 +34,21 @@ logger = logging.getLogger("list_factory.personalize")
 MAX_CHARS = 240
 MIN_CHARS = 30
 
-# Per-lead token averages measured on the fixture rehearsal, used only to price
-# the call the paid gate is about to refuse.
+# Per-lead token averages measured on the fixture rehearsal, used to price the
+# call the paid gate is about to refuse and the pipeline's projections. These
+# are TEXT tokens. Thinking cannot be turned off on claude-opus-5-5 and bills
+# as output, so every price built from them adds
+# shared.llm.output_tokens_with_thinking()'s worst-case allowance for the one
+# call a line takes. See usd_per_lead().
 TOKENS_IN_PER_LEAD = 700
 TOKENS_OUT_PER_LEAD = 70
+
+
+def usd_per_lead(model: Optional[str] = None) -> float:
+    """Projected cost of one personalization line: the measured text tokens
+    plus worst-case thinking for its one call."""
+    return llm.estimate_cost(model or llm.model_for("research"), TOKENS_IN_PER_LEAD,
+                             llm.output_tokens_with_thinking(TOKENS_OUT_PER_LEAD, calls=1))
 
 # Copy rules from CLAUDE.md and config/offers.md, in the order they are checked.
 BANNED_SUBSTRINGS = (
@@ -146,12 +157,12 @@ def generate_line(lead: Dict[str, Any], model: Optional[str] = None, role: str =
     if not llm.is_fake():
         # Same gate as Apify, Perplexity and MillionVerifier: a personalization
         # line bills real tokens and was previously outside every flag the
-        # runbook names.
+        # runbook names. Priced with worst-case thinking (usd_per_lead).
         from services.list_factory.sources import require_paid
 
         require_paid(
             "anthropic:%s" % model, 1,
-            llm.estimate_cost(model, TOKENS_IN_PER_LEAD, TOKENS_OUT_PER_LEAD),
+            usd_per_lead(model),
             "one personalization line bills real tokens. Set LLM_FAKE=1 for a rehearsal.",
         )
     out = llm.complete(role, SYSTEM, build_prompt(lead), max_tokens=220, model=model)

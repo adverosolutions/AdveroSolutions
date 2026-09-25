@@ -503,11 +503,12 @@ then fulfillment), 24 hours apart. The runner reads it from `.env` only, never f
   first with `--dry-run`. The jobs themselves only propose.
 - Ops: read deployment.md "Open" first. The laptop's engine keys are stale once the engine runs on
   Modal, so `daily_metrics` and `retro_packet` show old engine numbers.
-- The list factory needs two things: `LAPTOP_PAID_JOBS=list_factory` in `.env`, **and** the cost-cap
-  decision in `DECISIONS_FOR_LORENZO.md` R14 (was Q-M3). At today's Apify rate a run prices at $0.02267
-  per contact against the $0.02 cap (`shared/thresholds.py`, `LIST_FACTORY_MAX_COST_PER_CONTACT_USD`),
-  so every run halts before the source fetch and stages nothing. `LAPTOP_PAID_JOBS=list_factory` alone
-  therefore stages nothing either. That switch opens its paid calls, live mode or not; it does not gate
+- The list factory needs `LAPTOP_PAID_JOBS=list_factory` in `.env`. The cost cap
+  (`shared/thresholds.py`, `LIST_FACTORY_MAX_COST_PER_CONTACT_USD`) is $0.07 per confirmed contact since
+  2026-09-25 (Lorenzo, `DECISIONS_FOR_LORENZO.md` R14): every model call is Opus 5.5 priced at worst-case
+  thinking, and an Apify run prices at $0.06212 per contact, inside it. It is above Section 6's $0.04 alert
+  line, so a run that really spends near the worst case finishes `over_cap` (verdict `alert`). Lower the cap
+  after measuring the first real run. That switch opens its paid calls, live mode or not; it does not gate
   Anthropic spend anywhere else.
 
 **Rollback**: remove the tier from `LAPTOP_LIVE_TIERS` (and `list_factory` from `LAPTOP_PAID_JOBS`).

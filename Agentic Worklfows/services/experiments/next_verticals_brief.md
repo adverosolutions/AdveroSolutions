@@ -32,7 +32,8 @@ accounts I bring back, nothing up front" and no number.
 
 1,000 sends on a three-step sequence with `stop_on_reply` on is about **351 leads**: 1 + ~0.95 +
 ~0.90 is 2.85 sends per lead, and 1,000 / 2.85 = 351 (pull 360 and round up for bounces). At the M5
-ceiling of $0.02 per verified contact that is **about $7 of list cost** to reach a verdict, plus the
+green line of $0.02 per verified contact that is **about $7 of list cost** to reach a verdict (up to about
+$25 at the list factory's $0.07 cap, raised 2026-09-25 for worst-case Opus 5.5 thinking), plus the
 sending capacity. At 50 sends/day 1,000 sends is **20 sending days**, about 24 calendar days on a
 Mon-Sat schedule; at the post-2026-10-11 allocation (about 187/day per campaign) it is 6.
 

@@ -364,8 +364,15 @@ EXPERIMENT_ALPHA = 0.05
 # --------------------------------------------------------------------------
 
 # Section 6: cost per verified lead green at <= $0.02, alert at > $0.04. The
-# list factory's hard stop halts a run whose projection breaks the first.
-LIST_FACTORY_MAX_COST_PER_CONTACT_USD = 0.02
+# list factory's hard stop halts a run whose projection breaks the cap below.
+# The cap was $0.02 (Section 6's green line) until 2026-09-25. Lorenzo,
+# 2026-09-25: raised to $0.07 because every model role now runs on Claude
+# Opus 5.5 and the projection prices worst-case thinking (1,024 output tokens
+# per call, shared.llm.output_tokens_with_thinking), which alone is about
+# $0.02 per personalization line. Lower it again after measuring the first
+# real run's thinking spend. The $0.04 alert line is unchanged, so a finished
+# run between $0.04 and $0.07 still reports verdict "alert" (status over_cap).
+LIST_FACTORY_MAX_COST_PER_CONTACT_USD = 0.07
 LIST_FACTORY_ALERT_COST_PER_CONTACT_USD = 0.04
 # M5: 3,300 verified contacts a week, the fleet-wide plan at 1,100+ sends a
 # day. The default target of a single-niche run (jobs/list_factory.py,

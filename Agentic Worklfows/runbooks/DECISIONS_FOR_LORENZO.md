@@ -72,6 +72,11 @@ drop the step-3 P.S. (it matches your rule). **If you say nothing:** Sonnet per 
 
 ### R14. The list factory cannot run under its cap, counting confirmed contacts (was Q-M3)
 
+**Decided 2026-09-25 (Lorenzo): raise the cap to $0.07 per confirmed contact** while every model call runs
+on Claude Opus 5.5 and the projection prices worst-case thinking (1,024 tokens a call). Apify now prices at
+$0.06212 per confirmed contact (3,300 target), Google Maps at $0.06486, both inside it. Lower the cap after
+measuring the first real run. The $0.04 alert line is unchanged. The analysis below is the pre-Opus record.
+
 At today's Apify rate the Sunday pulls price at **$0.022674 per confirmed contact**. `pipeline.preflight()`
 run offline at a target of 600 per niche (two campaigns of 300) projects **600 staged / 450 confirmed for
 $10.20** on Apify. The cap is $0.02. The cap is now checked before the source fetch, so every real run stops

@@ -1,7 +1,8 @@
-"""Cost ledger, the 2-cent hard stop, and source attribution.
+"""Cost ledger, the per-contact hard stop, and source attribution.
 
 Blueprint Section 6 KPI: cost per verified lead green at <= $0.02, alert at
-> $0.04. This module is the thing that makes that number real: one row per run
+> $0.04. The run's hard stop is its own cap, $0.07 since 2026-09-25 (see
+shared/thresholds.py LIST_FACTORY_MAX_COST_PER_CONTACT_USD). This module is the thing that makes that number real: one row per run
 with per-stage counts and dollar cost, and a stop that fires at a stage
 boundary rather than after the money is gone.
 
@@ -41,7 +42,9 @@ PRICES = {
 }
 
 # Blueprint Section 6 KPI "cost per verified lead": green <= $0.02, alert
-# > $0.04. Bound to shared/thresholds.py, the one home of every Section 6 number.
+# > $0.04. The hard stop is the run cap, $0.07 since 2026-09-25 (Lorenzo: Opus
+# 5.5 everywhere, worst-case thinking priced; lower it after the first real
+# run). Bound to shared/thresholds.py, the one home of every Section 6 number.
 DEFAULT_MAX_COST_PER_CONTACT = TH.LIST_FACTORY_MAX_COST_PER_CONTACT_USD
 ALERT_COST_PER_CONTACT = TH.LIST_FACTORY_ALERT_COST_PER_CONTACT_USD
 
