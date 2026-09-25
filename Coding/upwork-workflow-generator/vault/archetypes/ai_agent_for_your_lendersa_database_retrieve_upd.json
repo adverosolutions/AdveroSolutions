@@ -56,7 +56,7 @@
     {
       "key": "memory",
       "kind": "ai.memory",
-      "label": "Memory - Keeps the Chat and the Staged Change Together",
+      "label": "Memory - Remembers the Chat and the Change Waiting for Your Yes",
       "parent": "agent",
       "port": "ai_memory"
     },
@@ -75,7 +75,7 @@
     {
       "key": "stage",
       "kind": "ai.tool",
-      "label": "Tool - Stage an Update, Add or Archive for Your Yes",
+      "label": "Tool - Hold an Update, Add or Archive Until You Say Yes",
       "app": "workflow",
       "parent": "agent",
       "port": "ai_tool",
@@ -86,7 +86,7 @@
     {
       "key": "parser",
       "kind": "ai.parser",
-      "label": "Parser - Reply, Action and Change ID",
+      "label": "Claude Writes the Reply and Says Answer, Confirm or Apply",
       "parent": "agent",
       "port": "ai_outputParser",
       "params": {
@@ -100,7 +100,7 @@
     {
       "key": "gate",
       "kind": "flow.branch",
-      "label": "3 - You Said Yes to the Staged Change?",
+      "label": "3 - Did You Say Yes to the Change?",
       "section": "manage",
       "notes": "The guard: Claude can suggest a change, only your yes applies it.",
       "params": {
@@ -147,7 +147,7 @@
     {
       "key": "log",
       "kind": "app.action",
-      "label": "5 - Postgres: Log Who Changed What and When",
+      "label": "5 - Postgres: Log What Changed, When and in Which Chat",
       "app": "postgres",
       "section": "integrate",
       "params": {
