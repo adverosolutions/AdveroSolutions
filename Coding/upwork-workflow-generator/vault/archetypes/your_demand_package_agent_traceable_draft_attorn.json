@@ -1,0 +1,356 @@
+{
+  "title": "Your Demand Package Agent: Traceable Draft, Attorney Approves",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "ready",
+      "label": "1 - CASE READY FOR DEMAND: PULL THE RECORDS",
+      "color": 0,
+      "note": "Your part 4 starts here: collect the case information automatically. The case's medical records and bills come from its Google Drive folder."
+    },
+    {
+      "key": "extract",
+      "label": "2 - YOUR PART 3: EXTRACT, TOTAL AND FLAG GAPS",
+      "color": 1,
+      "note": "Every visit, diagnosis, procedure, provider and charge, each traceable to its document and page. Expenses by provider, and missing records or gaps flagged before a draft exists."
+    },
+    {
+      "key": "draft",
+      "label": "3 - YOUR PART 4: DRAFT FROM YOUR TEMPLATE",
+      "color": 2,
+      "note": "The demand letter is drafted from your firm-approved template using only extracted facts, with an organized exhibit index. Nothing is invented."
+    },
+    {
+      "key": "approve",
+      "label": "4 - ATTORNEY REVIEWS, EDITS AND APPROVES",
+      "color": 3,
+      "note": "Nothing leaves without attorney approval. Edits go back into the draft; approved packages export to Word and PDF."
+    },
+    {
+      "key": "errors",
+      "label": "5 - IF ANY STEP FAILS",
+      "color": 4,
+      "note": "The case manager gets the case number and the failed step, never medical details in the email."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 - Case Marked Ready for Demand in Your Case System",
+      "section": "ready",
+      "params": {
+        "path": "pi-case-ready-for-demand"
+      }
+    },
+    {
+      "key": "pull",
+      "kind": "data.code",
+      "label": "2 - Google Drive: Pull Every Record and Bill, Page by Page",
+      "section": "ready",
+      "notes": "One document at a time, every page numbered, scanned pages flagged, never skipped.",
+      "params": {
+        "jsCode": "// 2 - Pull every record and bill in the case's Google Drive folder, page by page.\n// One item per document goes out, so Claude reads one document at a time and every\n// fact keeps its file name and page number.\n// Needs pdfjs-dist allowed on your self-hosted n8n (NODE_FUNCTION_ALLOW_EXTERNAL=pdfjs-dist).\nconst pdfjs = require('pdfjs-dist/legacy/build/pdf.js');\nconst caseFile = $('1 - Case Marked Ready for Demand in Your Case System').first().json.body;\nconst auth = 'googleDriveOAuth2Api';\n\nconst list = await this.helpers.httpRequestWithAuthentication.call(this, auth, {\n  method: 'GET',\n  url: 'https://www.googleapis.com/drive/v3/files',\n  qs: {\n    q: \"'\" + caseFile.drive_folder_id + \"' in parents and mimeType = 'application/pdf' and trashed = false\",\n    fields: 'files(id,name,createdTime)',\n    pageSize: 200,\n  },\n});\n\nconst out = [];\nfor (const f of list.files || []) {\n  const bytes = await this.helpers.httpRequestWithAuthentication.call(this, auth, {\n    method: 'GET',\n    url: 'https://www.googleapis.com/drive/v3/files/' + f.id + '?alt=media',\n    encoding: 'arraybuffer',\n    json: false,\n  });\n  const pdf = await pdfjs.getDocument({ data: new Uint8Array(bytes) }).promise;\n  const pages = [];\n  const unreadable = [];\n  for (let p = 1; p <= pdf.numPages; p++) {\n    const content = await (await pdf.getPage(p)).getTextContent();\n    const text = content.items.map(i => i.str).join(' ').replace(/\\s+/g, ' ').trim();\n    if (text.length < 20) unreadable.push(p); // scanned fax page: goes to OCR, never skipped silently\n    pages.push({ page: p, text });\n  }\n  out.push({ json: {\n    case_id: caseFile.case_id,\n    file_id: f.id,\n    file_name: f.name,\n    page_count: pdf.numPages,\n    unreadable_pages: unreadable,\n    pages_text: pages.map(pg => '[PAGE ' + pg.page + ']\\n' + pg.text).join('\\n\\n'),\n  }});\n}\nif (!out.length) throw new Error('No PDF records found in the Drive folder for case ' + caseFile.case_id);\nreturn out;"
+      }
+    },
+    {
+      "key": "extract",
+      "kind": "ai.agent",
+      "label": "3 - Claude Extracts Every Visit, Charge and Its Source Page",
+      "section": "extract",
+      "notes": "No page, no fact: every visit and charge carries its file and page number.",
+      "params": {
+        "system_message": "You extract medical treatment and billing facts for a personal injury law firm that is preparing a settlement demand. You receive ONE document from the client's case file (a medical record, a medical bill or ledger, an accident report or other supporting paper) as page-marked text: each page starts with [PAGE n]. Your only job is to record what the document says. You do not diagnose, interpret imaging, judge whether treatment was necessary, or value the claim. Rules: 1. Every entry must carry source_file and source_page, and a short verbatim quote (under 25 words) from that page that supports it. If you cannot point to a page, leave the fact out. 2. Copy diagnoses, procedures and CPT or ICD-10 codes exactly as written. Never add a code or a diagnosis that is not on the page. 3. Charges come only from bills, ledgers or itemized statements, as the billed amount in US dollars. If a record mentions a service but shows no charge, set charge_usd to null. Never estimate a charge. 4. Dates as YYYY-MM-DD. If a date is unreadable or missing, set date_of_service to null and say so in missing_or_incomplete. 5. Provider is the facility or practice name as printed on the document. 6. For an accident report, record only what it states (date, location, parties, citation issued, narrative facts) as entries with charge_usd null. Do not assign fault. 7. List in missing_or_incomplete anything the document itself shows is missing: a referenced report or image not attached, a bill with no itemization, pages out of sequence, a records certification missing, dates of service on a bill with no matching visit note. 8. Pages under [PAGE n] with no readable text: list them in unreadable_pages. Do not guess their contents. Return only the structured result.",
+        "prompt": "=Case: {{ $('1 - Case Marked Ready for Demand in Your Case System').first().json.body.case_id }} - {{ $('1 - Case Marked Ready for Demand in Your Case System').first().json.body.client_name }}\nIncident: {{ $('1 - Case Marked Ready for Demand in Your Case System').first().json.body.case_type }} on {{ $('1 - Case Marked Ready for Demand in Your Case System').first().json.body.incident_date }}\nProviders on file for this case: {{ ($('1 - Case Marked Ready for Demand in Your Case System').first().json.body.providers_on_file || []).join('; ') }}\n\nDocument: {{ $json.file_name }} (file id {{ $json.file_id }}, {{ $json.page_count }} pages)\nPages with no text layer: {{ $json.unreadable_pages.join(', ') || 'none' }}\n\n{{ $json.pages_text }}\n\nExtract every visit, diagnosis, procedure, provider and charge in this document, each tied to its page. Set document_type to medical_record, bill, accident_report or other, give the document a short title for the exhibit index, and set first_date to the earliest date of service in it."
+      }
+    },
+    {
+      "key": "extract_model",
+      "kind": "ai.model",
+      "label": "Claude - Reads the Records and Bills",
+      "app": "anthropic",
+      "parent": "extract",
+      "port": "ai_languageModel",
+      "params": {
+        "options": {
+          "temperature": 0
+        }
+      }
+    },
+    {
+      "key": "extract_result",
+      "kind": "ai.parser",
+      "label": "Extraction Result: Each Fact With Its File and Page",
+      "parent": "extract",
+      "port": "ai_outputParser",
+      "params": {
+        "schema": {
+          "file_id": "1rX-sunshine-spine-ledger",
+          "file_name": "Sunshine Spine and Rehab - itemized ledger.pdf",
+          "document_type": "bill",
+          "document_title": "Sunshine Spine and Rehab itemized ledger, 04/2026 to 08/2026",
+          "first_date": "2026-04-06",
+          "page_count": 6,
+          "entries": [
+            {
+              "date_of_service": "2026-04-06",
+              "provider": "Sunshine Spine and Rehab",
+              "description": "PT initial evaluation, moderate complexity",
+              "diagnoses": [
+                "S13.4XXA Sprain of ligaments of cervical spine"
+              ],
+              "procedures": [
+                "97162"
+              ],
+              "charge_usd": 385.0,
+              "source_file": "Sunshine Spine and Rehab - itemized ledger.pdf",
+              "source_page": 1,
+              "quote": "04/06/26 97162 PT EVAL MOD COMPLEX 385.00"
+            }
+          ],
+          "unreadable_pages": [],
+          "missing_or_incomplete": [
+            "Ledger bills a re-evaluation on 2026-06-19 (p. 4); no matching visit note is in the file"
+          ]
+        }
+      }
+    },
+    {
+      "key": "totals",
+      "kind": "data.code",
+      "label": "4 - Total Medical Expenses by Provider, Flag Gaps and Missing Records",
+      "section": "extract",
+      "notes": "Plain arithmetic on the extracted lines: no model does the math.",
+      "params": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// 4 - Total medical expenses by provider and flag what is missing before anyone drafts.\n// Pure arithmetic and checks on Claude's extracted entries: no model does the math.\nconst caseFile = $('1 - Case Marked Ready for Demand in Your Case System').first().json.body;\nconst cfg = $('0 - Config: Your Settings').first().json;\nconst gapDays = Number(cfg.treatment_gap_days);\nif (!gapDays) throw new Error('Set treatment_gap_days in 0 - Config: Your Settings');\n\nconst docs = $input.all().map(i => i.json.output);\nconst entries = docs.flatMap(d => (d.entries || []).map(e => ({ ...e, document_type: d.document_type })));\n\n// Expenses by provider, each line keeping its source file and page.\nconst byProvider = {};\nfor (const e of entries.filter(x => x.charge_usd != null)) {\n  const p = byProvider[e.provider] || (byProvider[e.provider] = { provider: e.provider, total_usd: 0, first_visit: e.date_of_service, last_visit: e.date_of_service, lines: [] });\n  p.total_usd = Math.round((p.total_usd + Number(e.charge_usd)) * 100) / 100;\n  if (e.date_of_service < p.first_visit) p.first_visit = e.date_of_service;\n  if (e.date_of_service > p.last_visit) p.last_visit = e.date_of_service;\n  p.lines.push({ date: e.date_of_service, description: e.description, charge_usd: e.charge_usd, source: e.source_file + ', p. ' + e.source_page });\n}\nconst providers = Object.values(byProvider);\nconst total = Math.round(providers.reduce((s, p) => s + p.total_usd, 0) * 100) / 100;\n\n// Chronology across all providers.\nconst chronology = entries.slice().sort((a, b) => String(a.date_of_service || '').localeCompare(String(b.date_of_service || '')));\n\n// What is missing.\nconst flags = [];\nconst recordProviders = new Set(entries.filter(e => e.document_type === 'medical_record').map(e => e.provider));\nconst billProviders = new Set(entries.filter(e => e.document_type === 'bill').map(e => e.provider));\nfor (const name of caseFile.providers_on_file || []) {\n  if (!recordProviders.has(name)) flags.push({ type: 'missing_records', provider: name, detail: 'Provider is on the case but no treatment records are in the folder.' });\n  if (!billProviders.has(name)) flags.push({ type: 'missing_bill', provider: name, detail: 'Provider is on the case but no bill or ledger is in the folder.' });\n}\nconst dates = [...new Set(chronology.map(e => e.date_of_service).filter(Boolean))];\nfor (let i = 1; i < dates.length; i++) {\n  const days = Math.round((new Date(dates[i]) - new Date(dates[i - 1])) / 86400000);\n  if (days > gapDays) flags.push({ type: 'treatment_gap', from: dates[i - 1], to: dates[i], days, detail: 'No treatment for ' + days + ' days. Attorney to review before the demand goes out.' });\n}\nfor (const d of docs) {\n  if ((d.unreadable_pages || []).length) flags.push({ type: 'unreadable_pages', file: d.file_name, pages: d.unreadable_pages, detail: 'Scanned pages with no readable text. Run OCR before finalizing.' });\n  for (const g of d.missing_or_incomplete || []) flags.push({ type: 'incomplete_document', file: d.file_name, detail: g });\n}\n\n// Exhibit index: one exhibit per source document, in treatment order.\nconst exhibits = docs\n  .slice()\n  .sort((a, b) => String(a.first_date || '').localeCompare(String(b.first_date || '')))\n  .map((d, i) => ({ exhibit: String.fromCharCode(65 + i), file_name: d.file_name, file_id: d.file_id, description: d.document_title, pages: d.page_count }));\n\nreturn [{ json: { case_id: caseFile.case_id, client_name: caseFile.client_name, incident_date: caseFile.incident_date, total_medical_expenses_usd: total, providers, chronology, flags, exhibits, case_manager_email: caseFile.case_manager_email, assigned_attorney_email: caseFile.assigned_attorney_email, drive_folder_id: caseFile.drive_folder_id } }];"
+      }
+    },
+    {
+      "key": "draft",
+      "kind": "ai.llm",
+      "label": "5 - Claude Drafts the Demand Letter From Extracted Facts Only",
+      "section": "draft",
+      "notes": "Every sentence cites an exhibit and page; liability and the demand amount stay with the attorney.",
+      "params": {
+        "system_message": "You draft settlement demand letters for a personal injury law firm, for an attorney to review, edit and sign. You are not the attorney. You write ONLY from the extracted facts, totals, flags and exhibit index you are given. Hard rules: 1. Never invent or embellish a medical finding, diagnosis, procedure, treatment date, provider, charge, prognosis, future care need or quote. If a fact is not in the input, it is not in the letter. 2. Every factual sentence about treatment or expenses ends with its source in brackets, as the exhibit letter and page: [Ex. B, p. 3]. A sentence you cannot cite does not go in. 3. Medical specials: list each provider with its total exactly as given, then the grand total exactly as given. Do not recalculate, round or add damages that are not in the input. 4. Liability, legal arguments, statutes, case law, comparative fault, pain and suffering, and the demand amount are the attorney's. Write [ATTORNEY TO COMPLETE: liability argument] and [ATTORNEY TO COMPLETE: demand amount] where they belong. You may restate the accident facts from the accident report with their citation, without assigning fault. 5. Impact on the client's daily life: include only statements that appear in the records (for example a therapist noting the client cannot lift her child) with their citation. If none appear, write [ATTORNEY TO COMPLETE: impact on daily life, from client interview]. 6. Every flag you receive (missing records, missing bills, treatment gaps, unreadable pages, incomplete documents) goes into open_items_for_attorney in plain words. Do not explain a gap away or speculate about why it happened. 7. Plain, professional English in the firm's voice, addressed to the insurer and claim number given. No adjectives the records do not support. 8. If the attorney sent edits, apply them exactly and change nothing else. Return only a JSON object with letter_body, treatment_chronology (one line per visit, date first, with citation), medical_specials (one line per provider: dates, total, citation, then the grand total) and open_items_for_attorney (a list).",
+        "prompt": "=Client: {{ $('4 - Total Medical Expenses by Provider, Flag Gaps and Missing Records').first().json.client_name }} | Case {{ $('4 - Total Medical Expenses by Provider, Flag Gaps and Missing Records').first().json.case_id }} | Incident date {{ $('4 - Total Medical Expenses by Provider, Flag Gaps and Missing Records').first().json.incident_date }}\nInsurer: {{ $('1 - Case Marked Ready for Demand in Your Case System').first().json.body.insurer }} | Claim number {{ $('1 - Case Marked Ready for Demand in Your Case System').first().json.body.claim_number }}\n\nExhibit index:\n{{ JSON.stringify($('4 - Total Medical Expenses by Provider, Flag Gaps and Missing Records').first().json.exhibits, null, 2) }}\n\nTreatment chronology, every entry with source file and page:\n{{ JSON.stringify($('4 - Total Medical Expenses by Provider, Flag Gaps and Missing Records').first().json.chronology, null, 2) }}\n\nMedical expenses by provider (use these totals exactly):\n{{ JSON.stringify($('4 - Total Medical Expenses by Provider, Flag Gaps and Missing Records').first().json.providers, null, 2) }}\nTotal documented medical expenses: ${{ $('4 - Total Medical Expenses by Provider, Flag Gaps and Missing Records').first().json.total_medical_expenses_usd }}\n\nFlags to list for the attorney:\n{{ JSON.stringify($('4 - Total Medical Expenses by Provider, Flag Gaps and Missing Records').first().json.flags, null, 2) }}\n\nAttorney edits to apply (blank on the first draft): {{ $('7 - Gmail: Attorney Approves or Sends Edits Back').isExecuted ? $('7 - Gmail: Attorney Approves or Sends Edits Back').last().json.data['Edits for the draft'] : '' }}\n\nWrite the demand draft for the firm's template, citing an exhibit and page for every fact."
+      }
+    },
+    {
+      "key": "draft_model",
+      "kind": "ai.model",
+      "label": "Claude - Writes the Demand Draft",
+      "app": "anthropic",
+      "parent": "draft",
+      "port": "ai_languageModel",
+      "params": {
+        "options": {
+          "temperature": 0.2
+        }
+      }
+    },
+    {
+      "key": "doc",
+      "kind": "data.code",
+      "label": "6 - Google Docs: Save the Draft With the Exhibit Index",
+      "section": "draft",
+      "params": {
+        "jsCode": "// 6 - Copy your firm's demand template into the case folder, then fill it.\n// The draft stays an editable Google Doc; every version is a new copy, so edits never overwrite history.\nconst cfg = $('0 - Config: Your Settings').first().json;\nconst facts = $('4 - Total Medical Expenses by Provider, Flag Gaps and Missing Records').first().json;\n// Claude returns the draft as JSON (letter_body, treatment_chronology, medical_specials, open_items_for_attorney).\nconst raw = $input.first().json;\nconst draft = raw.output || JSON.parse(String(raw.text).replace(/^```(json)?|```$/g, '').trim());\nconst asText = v => Array.isArray(v) ? v.map(x => typeof x === 'string' ? x : JSON.stringify(x)).join('\\n') : String(v || '');\nconst auth = 'googleDocsOAuth2Api';\nconst version = $('7 - Gmail: Attorney Approves or Sends Edits Back').isExecuted ? $('7 - Gmail: Attorney Approves or Sends Edits Back').all().length + 1 : 1;\n\nconst copy = await this.helpers.httpRequestWithAuthentication.call(this, 'googleDriveOAuth2Api', {\n  method: 'POST',\n  url: 'https://www.googleapis.com/drive/v3/files/' + cfg.demand_template_doc_id + '/copy',\n  body: { name: 'Demand - ' + facts.client_name + ' - ' + facts.case_id + ' - DRAFT v' + version, parents: [facts.drive_folder_id] },\n  json: true,\n});\n\nconst exhibitIndex = facts.exhibits.map(x => 'Exhibit ' + x.exhibit + ' - ' + x.description + ' (' + x.file_name + ', ' + x.pages + ' pages)').join('\\n');\nconst fill = {\n  '{{CLIENT_NAME}}': facts.client_name,\n  '{{CLAIM_NUMBER}}': $('1 - Case Marked Ready for Demand in Your Case System').first().json.body.claim_number,\n  '{{INSURER}}': $('1 - Case Marked Ready for Demand in Your Case System').first().json.body.insurer,\n  '{{DEMAND_BODY}}': draft.letter_body,\n  '{{TREATMENT_CHRONOLOGY}}': asText(draft.treatment_chronology),\n  '{{MEDICAL_SPECIALS_TABLE}}': asText(draft.medical_specials),\n  '{{EXHIBIT_INDEX}}': exhibitIndex,\n  '{{OPEN_ITEMS}}': asText(draft.open_items_for_attorney),\n};\nawait this.helpers.httpRequestWithAuthentication.call(this, auth, {\n  method: 'POST',\n  url: 'https://docs.googleapis.com/v1/documents/' + copy.id + ':batchUpdate',\n  body: { requests: Object.entries(fill).map(([tag, text]) => ({ replaceAllText: { containsText: { text: tag, matchCase: true }, replaceText: String(text || '') } })) },\n  json: true,\n});\n\nreturn [{ json: { case_id: facts.case_id, client_name: facts.client_name, version, doc_id: copy.id, doc_url: 'https://docs.google.com/document/d/' + copy.id + '/edit', total_medical_expenses_usd: facts.total_medical_expenses_usd, flags: facts.flags, exhibit_count: facts.exhibits.length, attorney_email: facts.assigned_attorney_email } }];"
+      }
+    },
+    {
+      "key": "gate",
+      "kind": "app.action",
+      "label": "7 - Gmail: Attorney Approves or Sends Edits Back",
+      "app": "gmail",
+      "op": "send",
+      "section": "approve",
+      "notes": "The attorney opens the Google Doc, then approves or types the edits in one form.",
+      "params": {
+        "operation": "sendAndWait",
+        "sendTo": "={{ $json.attorney_email }}",
+        "subject": "=Demand draft v{{ $json.version }} ready: {{ $json.client_name }} ({{ $json.case_id }})",
+        "message": "=Draft: {{ $json.doc_url }}\nDocumented medical expenses: ${{ $json.total_medical_expenses_usd }}\nExhibits: {{ $json.exhibit_count }}\nOpen items before this goes out: {{ $json.flags.length }}\n\nEvery fact cites an exhibit and page. Liability and the demand amount are marked ATTORNEY TO COMPLETE.",
+        "responseType": "customForm",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Decision",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Approve"
+                  },
+                  {
+                    "option": "Send back with edits"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Edits for the draft",
+              "fieldType": "textarea"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "approved",
+      "kind": "flow.branch",
+      "label": "8 - Approved by the Attorney?",
+      "section": "approve",
+      "params": {
+        "condition": {
+          "left": "={{ $json.data.Decision }}",
+          "op": "eq",
+          "right": "Approve"
+        }
+      }
+    },
+    {
+      "key": "export",
+      "kind": "data.code",
+      "label": "9 - Export the Demand Package as Word and PDF",
+      "section": "approve",
+      "params": {
+        "jsCode": "// 9 - Export the approved demand package as Word and PDF into the case folder.\n// The Google Doc stays as the editable master; the two files are what goes to the adjuster.\nconst doc = $('6 - Google Docs: Save the Draft With the Exhibit Index').last().json;\nconst folder = $('4 - Total Medical Expenses by Provider, Flag Gaps and Missing Records').first().json.drive_folder_id;\nconst formats = [\n  { ext: 'docx', mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' },\n  { ext: 'pdf', mime: 'application/pdf' },\n];\nconst saved = [];\nfor (const f of formats) {\n  const bytes = Buffer.from(await this.helpers.httpRequestWithAuthentication.call(this, 'googleDriveOAuth2Api', {\n    method: 'GET',\n    url: 'https://www.googleapis.com/drive/v3/files/' + doc.doc_id + '/export',\n    qs: { mimeType: f.mime },\n    encoding: 'arraybuffer',\n    json: false,\n  }));\n  const name = 'Demand - ' + doc.client_name + ' - ' + doc.case_id + ' - APPROVED.' + f.ext;\n  const boundary = 'demand' + Date.now();\n  const body = Buffer.concat([\n    Buffer.from('--' + boundary + '\\r\\nContent-Type: application/json; charset=UTF-8\\r\\n\\r\\n' + JSON.stringify({ name, parents: [folder] }) + '\\r\\n--' + boundary + '\\r\\nContent-Type: ' + f.mime + '\\r\\n\\r\\n'),\n    bytes,\n    Buffer.from('\\r\\n--' + boundary + '--'),\n  ]);\n  const file = await this.helpers.httpRequestWithAuthentication.call(this, 'googleDriveOAuth2Api', {\n    method: 'POST',\n    url: 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',\n    headers: { 'Content-Type': 'multipart/related; boundary=' + boundary },\n    body,\n    json: false,\n  });\n  saved.push(JSON.parse(file));\n}\nreturn [{ json: { case_id: doc.case_id, status: 'Demand approved', approved_version: doc.version, google_doc: doc.doc_url, word_file: saved[0].webViewLink, pdf_file: saved[1].webViewLink } }];"
+      }
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "10 - Any Step Fails",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "errors"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "11 - Gmail: Alert the Case Manager, No Medical Details",
+      "app": "gmail",
+      "op": "send",
+      "section": "errors",
+      "params": {
+        "sendTo": "={{ $('0 - Config: Your Settings').first().json.ops_alert_email }}",
+        "subject": "=Demand package agent stopped at {{ $json.execution.lastNodeExecuted }}",
+        "message": "=The demand package run stopped at step: {{ $json.execution.lastNodeExecuted }}\nError: {{ $json.execution.error.message }}\nOpen the run: {{ $json.execution.url }}\n\nNo draft was sent. Medical details are left out of this email on purpose."
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "pull"
+    },
+    {
+      "from": "pull",
+      "to": "extract"
+    },
+    {
+      "from": "extract",
+      "to": "totals"
+    },
+    {
+      "from": "totals",
+      "to": "draft"
+    },
+    {
+      "from": "draft",
+      "to": "doc"
+    },
+    {
+      "from": "doc",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "approved"
+    },
+    {
+      "from": "approved",
+      "to": "export",
+      "branch": "true"
+    },
+    {
+      "from": "approved",
+      "to": "draft",
+      "branch": "false",
+      "loop": true
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "body": {
+      "case_id": "PI-2026-0418",
+      "client_name": "Marisol Pierre",
+      "preferred_language": "Haitian Creole",
+      "case_type": "Automobile accident",
+      "incident_date": "2026-03-14",
+      "incident_location": "I-95 northbound near Broward Blvd, Fort Lauderdale, FL",
+      "status": "Ready for demand",
+      "insurer": "Seaboard Mutual Auto",
+      "claim_number": "SMA-7741-2209",
+      "drive_folder_id": "1pQ-case-PI-2026-0418",
+      "providers_on_file": [
+        "Coral Coast Emergency Physicians",
+        "Atlantic Imaging Center",
+        "Sunshine Spine and Rehab",
+        "Dr. Renee Castillo, Orthopedics"
+      ],
+      "assigned_attorney_email": "attorney@yourfirm.com",
+      "case_manager_email": "casemanager@yourfirm.com"
+    }
+  },
+  "output_sample": {
+    "case_id": "PI-2026-0418",
+    "client_name": "Marisol Pierre",
+    "status": "Demand approved",
+    "approved_version": 2,
+    "total_medical_expenses_usd": 14792.0,
+    "by_provider": [
+      {
+        "provider": "Coral Coast Emergency Physicians",
+        "dates": "2026-03-14",
+        "total_usd": 4812.0,
+        "exhibit": "A"
+      },
+      {
+        "provider": "Atlantic Imaging Center",
+        "dates": "2026-03-28",
+        "total_usd": 2350.0,
+        "exhibit": "B"
+      },
+      {
+        "provider": "Sunshine Spine and Rehab",
+        "dates": "2026-04-06 to 2026-08-21, 24 visits",
+        "total_usd": 6480.0,
+        "exhibit": "C"
+      },
+      {
+        "provider": "Dr. Renee Castillo, Orthopedics",
+        "dates": "2026-04-22",
+        "total_usd": 1150.0,
+        "exhibit": "D"
+      }
+    ],
+    "flags_reviewed_by_attorney": [
+      "Treatment gap 2026-05-02 to 2026-06-19 (48 days), physical therapy",
+      "Atlantic Imaging Center: bill on file, MRI report missing"
+    ],
+    "sample_draft_line": "On March 28, 2026, Ms. Pierre underwent an MRI of the cervical spine at Atlantic Imaging Center, billed at $2,350.00 [Ex. B, p. 1].",
+    "google_doc": "https://docs.google.com/document/d/1dM-demand-PI-2026-0418-v2/edit",
+    "word_file": "Demand - Marisol Pierre - PI-2026-0418 - APPROVED.docx",
+    "pdf_file": "Demand - Marisol Pierre - PI-2026-0418 - APPROVED.pdf"
+  },
+  "archetype": "your_demand_package_agent_traceable_draft_attorn",
+  "learned": true,
+  "learned_at": "2026-09-25"
+}
