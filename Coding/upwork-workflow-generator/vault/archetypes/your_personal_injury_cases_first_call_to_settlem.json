@@ -37,7 +37,7 @@
     {
       "key": "answer",
       "kind": "data.transform",
-      "label": "1 - Every Call Answered Day or Night in English, Spanish or Haitian Creole",
+      "label": "1 - AI Receptionist Agent Answers Every Call in English, Spanish or Haitian Creole",
       "section": "reception",
       "notes": "The caller picks a language or it is detected, and several calls are handled at once."
     },
@@ -51,7 +51,7 @@
     {
       "key": "interview",
       "kind": "data.transform",
-      "label": "3 - Intake in Their Language: Accident, Date, Place, Injuries, Treatment, Insurance",
+      "label": "3 - AI Intake Agent Collects Accident, Injuries, Treatment and Insurance in Their Language",
       "section": "intake"
     },
     {
@@ -63,7 +63,7 @@
     {
       "key": "request",
       "kind": "data.transform",
-      "label": "5 - Records and Bills Requested From Every Provider, Followed Up Until They Arrive",
+      "label": "5 - AI Records Agent Requests Records and Bills, Follows Up Until They Arrive",
       "section": "records"
     },
     {
@@ -82,7 +82,7 @@
     {
       "key": "draft",
       "kind": "data.transform",
-      "label": "8 - Brochure and Demand Letter Drafted From Your Templates, Each Line Tied to a Record",
+      "label": "8 - AI Drafting Agent Writes the Brochure and Demand Letter, Each Line Tied to a Record",
       "section": "demand",
       "notes": "Each line points to the record page it came from, so nothing is made up."
     },
@@ -114,7 +114,7 @@
     {
       "key": "updates",
       "kind": "data.transform",
-      "label": "12 - Client Updates in Their Language From Approved Wording, Legal Questions Go to Staff",
+      "label": "12 - AI Client Agent Sends Updates in Their Language, Legal Questions Go to Staff",
       "section": "casemgmt"
     }
   ],
