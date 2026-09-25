@@ -9,10 +9,10 @@ Step 5 runs the real tick (`--run`) from the first morning. During the shadow
 week `MODE` stays at its default, `shadow`: the model writes the drafts into
 the batch file so Lorenzo can review them, every card stays in the shadow log,
 the GHL mirror is off and nothing is ever written to Upwork. It spends
-Anthropic tokens: about $0.007 per draft call, typically $0.10 to $0.30 a
-morning for 10 rooms, about $1.10 at worst, capped at $1.50 per run
-(`UPWORK_RUN_BUDGET_USD`). A dry run is not enough for that review because it
-writes no draft text. After the shadow week the prompt does not change; card
+Anthropic tokens. Counted at worst case, a draft call is about $0.04 to $0.046
+and a classification up to $0.03, so a typical morning with 10 rooms counts
+about $0.40 to $0.70, and the run is capped at $1.50 (`UPWORK_RUN_BUDGET_USD`).
+A dry run is not enough for that review because it writes no draft text. After the shadow week the prompt does not change; card
 delivery is turned on outside it (`NOTIFY_SHADOW_SEND=1`, or live mode after
 his sign-off).
 
