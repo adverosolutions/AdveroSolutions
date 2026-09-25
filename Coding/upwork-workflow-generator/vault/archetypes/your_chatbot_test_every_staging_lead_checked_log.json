@@ -1,0 +1,278 @@
+{
+  "title": "Your Chatbot Test: Every Staging Lead Checked, Logged and Answered",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "site",
+      "label": "1 - YOUR STAGING SITE AND CODE SNIPPET",
+      "color": 0,
+      "note": "Your parts 1 and 2: the chatbot goes on staging, and its snippet is set to post every lead to this one webhook."
+    },
+    {
+      "key": "collect",
+      "label": "2 - TEST THE LEAD AND CONTACT COLLECTION",
+      "color": 0,
+      "note": "Your part 3: each lead is checked for name, email, phone and message, whatever the snippet calls those fields."
+    },
+    {
+      "key": "hook",
+      "label": "3 - THE WEBHOOK: LOG EVERY CAPTURE",
+      "color": 0,
+      "note": "Your part 4: every capture goes into the test sheet, good or bad, so you can see the test yourself."
+    },
+    {
+      "key": "verify",
+      "label": "4 - VERIFY IT PASSED CORRECTLY, FLAG WHAT DID NOT",
+      "color": 0,
+      "note": "Your parts 5 and 6: a complete lead gets a received reply, a broken one gets flagged with the exact field so troubleshooting starts there."
+    },
+    {
+      "key": "next",
+      "label": "5 - NEXT PHASE: CRM CONTACT AND GOOGLE CALENDAR",
+      "color": 0,
+      "note": "The onboarding work you named: a verified lead becomes a CRM contact and a booked call. Switched on after the test passes."
+    },
+    {
+      "key": "errors",
+      "label": "6 - IF A RUN BREAKS",
+      "color": 0,
+      "note": "Any failed step emails you the lead and the step, so no test chat disappears without a trace."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 - Chatbot Snippet on Staging Posts the Lead Here",
+      "section": "site",
+      "notes": "The one URL your code snippet needs. Nothing else on the site changes.",
+      "params": {
+        "path": "staging-chatbot-leads",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "key": "check",
+      "kind": "data.code",
+      "label": "2 - Check Name, Email, Phone and Message Arrived",
+      "section": "collect",
+      "notes": "If the snippet names a field differently, only this map changes.",
+      "params": {
+        "jsCode": "// 2 - Check Name, Email, Phone and Message Arrived\n// The chatbot snippet posts one JSON body per lead. Field names are mapped here once,\n// so if the snippet sends fullName or tel instead, only this map changes.\nconst MAP = { name: ['name', 'fullName', 'full_name'], email: ['email', 'emailAddress'], phone: ['phone', 'tel', 'phoneNumber'], message: ['message', 'msg', 'question'] };\nconst REQUIRED = ['name', 'email', 'phone', 'message'];\n\nreturn $input.all().map(({ json }) => {\n  const b = json.body || {};\n  const pick = (keys) => { for (const k of keys) { const v = b[k]; if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim(); } return ''; };\n  const lead = {};\n  for (const f of REQUIRED) lead[f] = pick(MAP[f]);\n  lead.email = lead.email.toLowerCase();\n\n  const missing = REQUIRED.filter((f) => !lead[f]);\n  const problems = [...missing];\n  if (lead.email && !/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(lead.email)) problems.push('email format');\n  if (lead.phone && lead.phone.replace(/[^0-9]/g, '').length < 7) problems.push('phone too short');\n\n  return { json: {\n    ...lead,\n    session_id: b.session_id || '',\n    page_url: b.page_url || json.headers?.referer || '',\n    preferred_time: b.preferred_time || '',\n    captured_at: b.captured_at || new Date().toISOString(),\n    received_at: new Date().toISOString(),\n    passed: problems.length === 0,\n    missing: problems.join(', '),\n    raw_keys: Object.keys(b).join(', '),\n  } };\n});"
+      }
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "label": "3 - Log Every Capture to the Test Sheet",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "hook",
+      "notes": "Your proof: one row per test chat, with Passed and Missing columns.",
+      "params": {
+        "sheet": "Chatbot Test Captures",
+        "columns": [
+          "received_at",
+          "session_id",
+          "page_url",
+          "name",
+          "email",
+          "phone",
+          "message",
+          "passed",
+          "missing",
+          "raw_keys"
+        ]
+      }
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "4 - All Four Fields There and Valid?",
+      "section": "verify",
+      "params": {
+        "condition": {
+          "left": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.passed }}",
+          "op": "true"
+        }
+      }
+    },
+    {
+      "key": "ok",
+      "kind": "net.respond",
+      "label": "5 - Tell the Chatbot: Lead Received",
+      "section": "verify",
+      "params": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"received\", \"session_id\": $('2 - Check Name, Email, Phone and Message Arrived').item.json.session_id } }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "key": "flag",
+      "kind": "app.action",
+      "label": "5b - Flag the Missing Field to Your Test Inbox",
+      "app": "gmail",
+      "op": "send",
+      "section": "verify",
+      "notes": "Troubleshooting starts at the field that broke, not a guess.",
+      "params": {
+        "sendTo": "={{ $('0 - Config: Your Settings').item.json.flag_inbox }}",
+        "subject": "=Chatbot test: lead missing {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.missing }}",
+        "message": "=Session {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.session_id }} on {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.page_url }} arrived without: {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.missing }}.\nKeys the snippet sent: {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.raw_keys }}\nName: {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.name }} | Email: {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.email }} | Phone: {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.phone }}"
+      }
+    },
+    {
+      "key": "bad",
+      "kind": "net.respond",
+      "label": "5c - Tell the Chatbot Which Field Was Missing",
+      "section": "verify",
+      "params": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"incomplete\", \"missing\": $('2 - Check Name, Email, Phone and Message Arrived').item.json.missing } }}",
+        "options": {
+          "responseCode": 422
+        }
+      }
+    },
+    {
+      "key": "crm",
+      "kind": "net.http",
+      "label": "6 - GoHighLevel: Create the Contact From the Chat",
+      "section": "next",
+      "notes": "Your next phase. Off during the test, on once the sheet shows clean captures.",
+      "params": {
+        "service": "gohighlevel",
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/contacts/upsert",
+        "body": {
+          "locationId": "{{ $('0 - Config: Your Settings').item.json.ghl_location_id }}",
+          "name": "{{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.name }}",
+          "email": "{{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.email }}",
+          "phone": "{{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.phone }}",
+          "source": "Website chatbot",
+          "tags": [
+            "chatbot-lead"
+          ]
+        }
+      }
+    },
+    {
+      "key": "cal",
+      "kind": "app.action",
+      "label": "7 - Google Calendar: Book the Call Time They Asked For",
+      "app": "googleCalendar",
+      "op": "create",
+      "section": "next",
+      "params": {
+        "calendar": "={{ $('0 - Config: Your Settings').item.json.booking_calendar }}",
+        "start": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.preferred_time }}",
+        "end": "={{ DateTime.fromISO($('2 - Check Name, Email, Phone and Message Arrived').item.json.preferred_time).plus({ minutes: Number($('0 - Config: Your Settings').item.json.call_length_minutes) }).toISO() }}",
+        "additionalFields": {
+          "summary": "=Call with {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.name }}",
+          "description": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.message }}\nPhone: {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.phone }}",
+          "attendees": [
+            "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.email }}"
+          ]
+        }
+      }
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "8 - Any Step Fails",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "errors"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "9 - Email You the Failed Step and the Lead",
+      "app": "gmail",
+      "op": "send",
+      "section": "errors",
+      "params": {
+        "sendTo": "PASTE-YOUR-TEST-INBOX",
+        "subject": "=Chatbot test run failed at {{ $json.execution.lastNodeExecuted }}",
+        "message": "=Step: {{ $json.execution.lastNodeExecuted }}\nError: {{ $json.execution.error.message }}\nRun: {{ $json.execution.url }}"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "check"
+    },
+    {
+      "from": "check",
+      "to": "log"
+    },
+    {
+      "from": "log",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "ok",
+      "branch": "true"
+    },
+    {
+      "from": "gate",
+      "to": "flag",
+      "branch": "false"
+    },
+    {
+      "from": "flag",
+      "to": "bad"
+    },
+    {
+      "from": "ok",
+      "to": "crm"
+    },
+    {
+      "from": "crm",
+      "to": "cal"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "body": {
+      "source": "staging-chatbot",
+      "session_id": "cb_7f3a91e2",
+      "page_url": "https://staging.weber-physio.de/contact",
+      "name": "Julia Weber",
+      "email": "julia.weber@weber-physio.de",
+      "phone": "+49 151 2847 3310",
+      "message": "Hi, we'd like the chatbot on our practice site. Can we talk Thursday afternoon?",
+      "preferred_time": "2026-10-01T14:00:00+02:00",
+      "captured_at": "2026-09-25T10:42:17+02:00"
+    }
+  },
+  "output_sample": {
+    "kind": "calendar#event",
+    "status": "confirmed",
+    "summary": "Call with Julia Weber",
+    "start": {
+      "dateTime": "2026-10-01T14:00:00+02:00"
+    },
+    "end": {
+      "dateTime": "2026-10-01T14:30:00+02:00"
+    },
+    "attendees": [
+      {
+        "email": "julia.weber@weber-physio.de"
+      }
+    ],
+    "description": "Hi, we'd like the chatbot on our practice site. Can we talk Thursday afternoon?\nPhone: +49 151 2847 3310"
+  },
+  "archetype": "your_chatbot_test_every_staging_lead_checked_log",
+  "learned": true,
+  "learned_at": "2026-09-25"
+}
