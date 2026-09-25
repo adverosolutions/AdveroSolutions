@@ -1977,7 +1977,7 @@ Background, so you know who you work for. Files 00 to 07 hold the rules. If this
 ## 2. Everything he does
 
 **AdveroSolutions cold email.**
-- Cold email in Instantly to three niches since 2026-09-01: commercial cleaning, bookkeeping and tax, recruiting.
+- Cold email in Instantly to three niches (chosen 2026-09-01, sending since 2026-09-15): commercial cleaning, bookkeeping and tax, recruiting.
 - Two offers per niche. Reactivation wins back a client's past customers and is paid on results. Outbound watches for triggers and finds new customers, setup plus a retainer with a guarantee. Details: file 01.
 - Med spas (patient reactivation, confirmed 2026-07-25) and the old contractor offers (HVAC, plumbing, electrical, roofing) are not running.
 - He writes all cold copy himself, in the one copy doc.
@@ -2061,7 +2061,7 @@ One page. It says who owns each step and where the step is covered. Files 00 to 
 ```
 Leads (Apify, MillionVerifier) -> Instantly cold email, 6 campaigns
   -> lead replies -------------------> not a fit, unsubscribe, hostile: stop
-  -> first reply by Lorenzo, 2 times -> quiet: E1 to E10 -> no answer: 90-day nurture
+  -> first reply by Lorenzo (offers two call times) -> quiet: E1 to E10 -> no answer: 90-day nurture
   -> call booked -> confirmation, reminders R2 R3 R4 -> missed: no-show ladder -> nurture
   -> 15-minute call, one-call close ---> lost or not now: Follow Up Later, nurture
   -> won -> onboarding -> delivery -> weekly scorecard -> day 7/21/25/30 -> referral, case study

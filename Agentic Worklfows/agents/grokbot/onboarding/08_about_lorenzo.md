@@ -12,7 +12,7 @@ Background, so you know who you work for. Files 00 to 07 hold the rules. If this
 ## 2. Everything he does
 
 **AdveroSolutions cold email.**
-- Cold email in Instantly to three niches since 2026-09-01: commercial cleaning, bookkeeping and tax, recruiting.
+- Cold email in Instantly to three niches (chosen 2026-09-01, sending since 2026-09-15): commercial cleaning, bookkeeping and tax, recruiting.
 - Two offers per niche. Reactivation wins back a client's past customers and is paid on results. Outbound watches for triggers and finds new customers, setup plus a retainer with a guarantee. Details: file 01.
 - Med spas (patient reactivation, confirmed 2026-07-25) and the old contractor offers (HVAC, plumbing, electrical, roofing) are not running.
 - He writes all cold copy himself, in the one copy doc.
