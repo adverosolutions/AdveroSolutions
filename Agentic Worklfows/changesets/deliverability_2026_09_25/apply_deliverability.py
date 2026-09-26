@@ -104,6 +104,11 @@ MAX_BAD_POLLS = 3          # consecutive 4xx answers on the job GET before givin
 JOB_DATA_FIELDS = "moved_leads,moved_lead_emails"
 CONFLICT_WAIT = 15.0       # a 409 means another move job is running
 CONFLICT_RETRIES = 8
+SETTLE_TRIES = 3           # read-backs before a batch counts as unverified (leads/list can lag)
+SETTLE_WAIT = 5.0
+OVER_MOVED = "over_moved_by_server"
+RESTORE_CMD = ("MODE=live ALLOW_LIVE_WRITES=1 python3 changesets/deliverability_2026_09_25/"
+               "apply_deliverability.py --restore-leads --apply")
 JOB_SUCCESS = ("success",)
 JOB_FINAL_BAD = ("failed", "cancelled")
 
@@ -485,7 +490,11 @@ def main(argv: Optional[List[str]] = None, client=None, now=None, backup_dir: Op
     p.add_argument("--yes", action="store_true", help="skip the typed confirmation")
     p.add_argument("--restore-leads", action="store_true",
                    help="move parked leads back to their campaigns (dry-run unless --apply)")
-    p.add_argument("--limit", type=int, help="with --restore-leads: restore only the first N rows still parked")
+    p.add_argument("--limit", type=int, help="with --restore-leads: restore only N rows still parked "
+                                             "(mid-sequence rows first)")
+    p.add_argument("--ack-over-move", action="store_true",
+                   help="with --apply: run although the manifest holds unrestored over-moved leads "
+                        "(only after checking it was a false alarm)")
     p.add_argument("--restore", metavar="ROLLBACK_POINT",
                    help="PATCH a campaign rollback point back (live only, needs --campaign)")
     p.add_argument("--campaign", help="campaign key from config/ids.json (with --restore)")
@@ -505,6 +514,9 @@ def main(argv: Optional[List[str]] = None, client=None, now=None, backup_dir: Op
         return EXIT_REFUSED
     if args.dry_run and args.apply:
         out("REFUSED: --dry-run cannot be combined with --apply.")
+        return EXIT_REFUSED
+    if args.ack_over_move and (not args.apply or args.restore_leads):
+        out("REFUSED: --ack-over-move only goes with --apply.")
         return EXIT_REFUSED
     if args.limit is not None and (not args.restore_leads or args.limit < 1):
         out("REFUSED: --limit takes a number >= 1 and only goes with --restore-leads.")
@@ -613,6 +625,30 @@ def _run(args, ctx) -> int:
     meta = {"change_set": SCRIPT, "list_name": PARKED_LIST_NAME, "list_id": list_id,
             "planned_at": planned_at, "counts": counts}
 
+    try:
+        _, old_rows = load_manifest(ctx["manifest_dir"])
+    except FileNotFoundError:
+        old_rows = []
+    except (OSError, ValueError) as exc:
+        if args.apply:
+            out("REFUSED: the existing manifest cannot be read (%s). Nothing was written. Check it, "
+                "move it aside only if it holds no parked leads, and re-run." % exc)
+            log_run(JOB, "refused", {"error": "manifest unreadable: %s" % str(exc)[:200]})
+            return EXIT_INVALID
+        out("WARNING: the existing manifest cannot be read (%s); --apply will refuse" % exc)
+        old_rows = []
+    over = [r for r in old_rows if r.get("skip_reason") == OVER_MOVED and not r.get("restored_at")]
+    if over:
+        out("")
+        out("OVER-MOVE on record: %d leads the server moved without being asked are still not restored. "
+            "Restore them first:" % len(over))
+        out("  " + RESTORE_CMD)
+        if args.apply and not args.ack_over_move:
+            out("REFUSED: --apply would repeat the over-move on the next campaign. Nothing was written. "
+                "Use --ack-over-move only after checking it was a false alarm.")
+            log_run(JOB, "refused", {"error": "unrestored over-move", "rows": len(over)})
+            return EXIT_INVALID
+
     if not args.apply:
         csv_path, json_path = write_manifest(ctx["manifest_dir"], rows, dict(meta, dry_run=True), dryrun=True,
                                              mirror_dir=ctx["mirror_dir"])
@@ -632,16 +668,6 @@ def _run(args, ctx) -> int:
             % settings.get_mode())
         log_run(JOB, "live_refused", {"mode": settings.get_mode()})
         return EXIT_REFUSED
-    # The manifest must be readable before anything live changes.
-    try:
-        load_manifest(ctx["manifest_dir"])
-    except FileNotFoundError:
-        pass
-    except (OSError, ValueError) as exc:
-        out("REFUSED: the existing manifest cannot be read (%s). Nothing was written. Check it, "
-            "move it aside only if it holds no parked leads, and re-run." % exc)
-        log_run(JOB, "refused", {"error": "manifest unreadable: %s" % str(exc)[:200]})
-        return EXIT_INVALID
     if not args.yes:
         answer = (ctx["confirm"] or input)("Apply A, B and C to the live workspace? type yes: ").strip().lower()
         if answer != "yes":
@@ -808,26 +834,47 @@ def _apply_leads(plan, rows, meta, ctx) -> int:
                          {"campaign_id": cid})
         # What to move is decided from live state, not from the manifest: a
         # lead still in its source campaign still has to move, and it is
-        # re-checked against the selection rules now, after the prompt.
-        todo = []
+        # re-checked against the selection rules now, after the prompt, and
+        # again from the latest read before every batch.
+        pending = []
         for lid, row in by_id.items():
             if row["campaign_id"] != cid or lid not in members:
                 continue
             why = exclusion_reason(members[lid], [cid])
-            row["moved_at"] = row["move_job_id"] = ""
+            if why is not None:
+                if row.get("skip_reason") != OVER_MOVED:
+                    row["skip_reason"] = why
+                    row["moved_at"] = row["move_job_id"] = ""
+                    row["verified_in_list"] = row["verified_not_in_campaign"] = False
+                continue
+            row["moved_at"] = row["move_job_id"] = row["restored_at"] = row["restore_job_id"] = ""
             row["verified_in_list"] = row["verified_not_in_campaign"] = False
-            row["skip_reason"] = why or ""
-            if why is None:
-                row["restored_at"] = row["restore_job_id"] = ""
-                todo.append(lid)
+            row["skip_reason"] = ""
+            pending.append(lid)
         save()
-        batches = []
-        if todo and not canary_done:
-            batches.append(todo[:1])
-            todo = todo[1:]
-        batches += [todo[i:i + MOVE_BATCH] for i in range(0, len(todo), MOVE_BATCH)]
-        for n, batch in enumerate(batches):
-            canary = not canary_done
+        # The canary comes from the middle of the eligible set, so a server
+        # that ignores ids and moves the first rows of the campaign fails it.
+        canary_id = pending.pop(len(pending) // 2) if (pending and not canary_done) else None
+        n = 0
+        while canary_id or pending:
+            canary = canary_id is not None
+            if canary:
+                batch, canary_id = [canary_id], None
+            else:
+                batch = []
+                while pending and len(batch) < MOVE_BATCH:
+                    lid = pending.pop(0)
+                    lead = members.get(lid)
+                    if lead is None:
+                        continue            # left the campaign; the final verification decides
+                    why = exclusion_reason(lead, [cid])
+                    if why is not None:
+                        by_id[lid]["skip_reason"] = why
+                        continue
+                    batch.append(lid)
+                if not batch:
+                    break
+            n += 1
             # A campaign resumed after the PATCHes would be sending while its
             # leads move: every batch, the canary included, needs it paused.
             try:
@@ -843,14 +890,21 @@ def _apply_leads(plan, rows, meta, ctx) -> int:
             before = members
             result = move_batch(client, batch, {"campaign": cid}, {"to_list_id": list_id},
                                 lambda cid=cid: set(campaign_members(client, cid)), sleep, out)
-            try:
-                members = campaign_members(client, cid)
-                inside = list_membership(client, list_id)
-            except InstantlyError as exc:
-                save()
-                return _stop(out, "the read-back of %s batch %d failed (%s); its leads are UNKNOWN and "
-                                  "were not stamped. Re-run after checking the list." % (CAMPAIGNS[cid], n + 1, exc),
-                             {"campaign_id": cid, "job_id": result.get("job_id")})
+            # Read back; a lagging leads/list index gets SETTLE_TRIES reads,
+            # SETTLE_WAIT apart, before the batch counts as unverified.
+            for attempt in range(SETTLE_TRIES):
+                try:
+                    members = campaign_members(client, cid)
+                    inside = list_membership(client, list_id)
+                except InstantlyError as exc:
+                    save()
+                    return _stop(out, "the read-back of %s batch %d failed (%s); its leads are UNKNOWN and "
+                                      "were not stamped. Re-run after checking the list." % (CAMPAIGNS[cid], n, exc),
+                                 {"campaign_id": cid, "job_id": result.get("job_id")})
+                if all(lid not in members and lid in inside for lid in batch) or not result["ok"]:
+                    break
+                if attempt < SETTLE_TRIES - 1:
+                    sleep(SETTLE_WAIT)
             gone = set(before) - set(members)
             extra = sorted(gone - set(batch))
             stamp = _iso(R.utcnow())
@@ -864,7 +918,7 @@ def _apply_leads(plan, rows, meta, ctx) -> int:
                 # Left the campaign without being asked: recorded so that
                 # --restore-leads brings it back.
                 row = manifest_row(before[lid], list_id, stamp)
-                row["skip_reason"] = "over_moved_by_server"
+                row["skip_reason"] = OVER_MOVED
                 row["move_job_id"] = job_ref
                 row["moved_at"] = stamp if lid in inside else ""
                 row["verified_in_list"] = lid in inside
@@ -880,11 +934,12 @@ def _apply_leads(plan, rows, meta, ctx) -> int:
                 problems.append(jp)
             if extra:
                 problems.append("OVER-MOVE: %d leads left the campaign that were not in this batch "
-                                "(recorded in the manifest as over_moved_by_server)" % len(extra))
+                                "(recorded in the manifest as %s). Restore them before anything else: %s. "
+                                "--apply refuses until they are restored" % (len(extra), OVER_MOVED, RESTORE_CMD))
             unverified = [lid for lid in batch if not by_id[lid]["moved_at"]]
             if unverified:
-                problems.append("%d leads of the batch are not verified out of the campaign and in the list"
-                                % len(unverified))
+                problems.append("%d leads of the batch are not verified out of the campaign and in the list "
+                                "after up to %d reads" % (len(unverified), SETTLE_TRIES))
             if canary:
                 canary_done = True
                 if len(before) - len(members) != 1:
@@ -930,8 +985,10 @@ def _verify_all(client, by_id, list_id, out) -> Tuple[bool, Dict[str, Dict[str, 
         if in_list and out_of_campaign:
             s["moved"] += 1
             row["moved_at"] = row.get("moved_at") or "verified_%s" % _iso(R.utcnow())
-        elif row.get("skip_reason") and row["skip_reason"] != "over_moved_by_server" and not in_list:
+        elif row.get("skip_reason") and row["skip_reason"] != OVER_MOVED and not in_list:
             s["skipped"] += 1
+        elif row.get("skip_reason") == OVER_MOVED and row.get("restored_at") and not out_of_campaign:
+            s["skipped"] += 1           # an over-moved lead that was put back and is not parkable
         elif not row.get("moved_at") and not in_list and out_of_campaign:
             row["skip_reason"] = row.get("skip_reason") or "not_in_source_campaign"
             s["skipped"] += 1
@@ -974,10 +1031,11 @@ def _restore_leads(args, ctx) -> int:
         return EXIT_API
     active = [cid for cid in targets if str(statuses.get(cid)) != str(PAUSED)]
     to_send = [r for r in pending if r["lead_id"] in inside and r["lead_id"] not in members[r["campaign_id"]]]
-    missing = [r for r in pending if (r.get("moved_at") or r.get("skip_reason") == "over_moved_by_server")
+    missing = [r for r in pending if (r.get("moved_at") or r.get("skip_reason") == OVER_MOVED)
                and r["lead_id"] not in inside and r["lead_id"] not in members[r["campaign_id"]]]
     if args.limit is not None:
-        to_send = to_send[:args.limit]
+        # "restore one first" is about the mid-sequence question, so those go first
+        to_send = sorted(to_send, key=lambda r: r.get("stage") != "mid_sequence")[:args.limit]
     groups = OrderedDict()  # type: Dict[str, List[Dict[str, Any]]]
     for row in to_send:
         groups.setdefault(row["campaign_id"], []).append(row)
@@ -1024,6 +1082,16 @@ def _restore_leads(args, ctx) -> int:
         ids = [r["lead_id"] for r in group]
         for n, start in enumerate(range(0, len(ids), MOVE_BATCH)):
             batch = ids[start:start + MOVE_BATCH]
+            try:
+                status = client.get_campaign(cid).get("status")
+            except InstantlyError as exc:
+                save()
+                return _stop(out, "could not re-read %s before restoring (%s); nothing more was moved"
+                             % (CAMPAIGNS[cid], exc), {"campaign_id": cid})
+            if str(status) != str(PAUSED):
+                save()
+                return _stop(out, "%s is status %r, no longer 2 (paused); no more leads were moved back"
+                             % (CAMPAIGNS[cid], status), {"campaign_id": cid})
             before_members, before_inside = set(members[cid]), set(inside)
             result = move_batch(client, batch, {"list_id": list_id}, {"to_campaign_id": cid},
                                 lambda: list_membership(client, list_id), sleep, out)
@@ -1040,6 +1108,9 @@ def _restore_leads(args, ctx) -> int:
                 if lid in now_in:
                     by_id[lid]["restored_at"] = stamp
                     by_id[lid]["restore_job_id"] = result.get("job_id") or result.get("job_status")
+                    out("    restored %s stage=%s%s" % (lid, by_id[lid].get("stage") or "?",
+                                                         (" skip_reason=%s" % by_id[lid]["skip_reason"])
+                                                         if by_id[lid].get("skip_reason") else ""))
             save()
             problems = []
             if not result["ok"]:

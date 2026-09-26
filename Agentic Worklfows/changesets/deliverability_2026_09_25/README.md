@@ -62,15 +62,21 @@ The script refuses and writes nothing if:
 The apply goes in this order: back up all campaigns, PATCH and re-read each one, quarantine the inboxes (an inbox already in the ledger keeps its entry), find or create the list, write the manifest, move the leads, then verify every manifest lead. It stops at the first campaign PATCH that fails verification.
 
 How the lead moves are checked:
-- The first move of the run is a 1-lead canary. The script then reads the campaign and the parked list and requires that exactly one lead left the campaign and that it is in the list. Anything else stops the run.
+- The first move of the run is a 1-lead canary, taken from the middle of the first campaign's eligible leads rather than the first one. The script then reads the campaign and the parked list and requires that exactly one lead left the campaign and that it is in the list. Anything else stops the run.
 - Before each batch, the canary included, the source campaign must still be paused (status 2). If it was resumed, the run stops, the manifest is saved and nothing more moves.
-- Before each batch the source campaign is read again. Only leads still in it that still pass the rules are sent; the rest get a `skip_reason`.
+- Each batch is built from the most recent read of the source campaign (the read-back of the batch before it). Only leads still in the campaign that still pass the rules are sent; the rest get a `skip_reason`.
 - Each move sends at most 100 ids and `limit` = the number of ids. The script waits for the job, reads its `moved_leads` and `moved_lead_emails`, and stops if either differs from the batch.
-- After each job the campaign and the list are read again before the next batch. A lead is stamped `moved_at` only when it is out of the campaign and in the list. A lead that left the campaign without being in the batch stops the run.
+- After each job the campaign and the list are read again before the next batch, up to 3 times 5 seconds apart if `leads/list` has not caught up yet. A lead is stamped `moved_at` only when it is out of the campaign and in the list. A lead that left the campaign without being in the batch stops the run (OVER-MOVE).
 - A read that fails leaves the batch unstamped and stops. Polling a job stops after 3 answers of 4xx in a row, or after 20 minutes.
 - A 409 from `leads/move` means another move job is running. The script re-reads the campaign, waits, and retries only the leads still in it.
 
-A re-run is safe. What to move is decided from live state, not from the manifest: a lead still in its source campaign is sent again, a lead already in the list is not. Campaigns that are already applied get no PATCH, and existing manifest rows are kept.
+After an OVER-MOVE stop, restore first. `--apply` refuses, before the prompt and before any write, while the manifest holds an `over_moved_by_server` row that is not restored, and prints the command:
+
+    MODE=live ALLOW_LIVE_WRITES=1 python3 changesets/deliverability_2026_09_25/apply_deliverability.py --restore-leads --apply
+
+Only if you have checked that the over-move was a false alarm, add `--ack-over-move` to `--apply` to run anyway.
+
+Otherwise a re-run is safe. What to move is decided from live state, not from the manifest: a lead still in its source campaign is sent again, a lead already in the list is not. Campaigns that are already applied get no PATCH, and existing manifest rows are kept.
 
 ## How to undo
 
@@ -87,9 +93,11 @@ This uses `changesets/rollback.py` restore: it reads live, prints the diff, refu
     MODE=live ALLOW_LIVE_WRITES=1 python3 changesets/deliverability_2026_09_25/apply_deliverability.py --restore-leads --apply --limit 1
     MODE=live ALLOW_LIVE_WRITES=1 python3 changesets/deliverability_2026_09_25/apply_deliverability.py --restore-leads --apply
 
-After each job the campaign and the list are read again. `restored_at` is stamped only for a lead that is back in its campaign. A lead that did not come back, or a lead outside the batch that arrived, stops the run with a non-zero exit. A row recorded as parked that is neither in the list nor in its campaign is listed and also makes the exit non-zero.
+Before each batch the target campaign must still be paused; otherwise the restore stops. After each job the campaign and the list are read again. `restored_at` is stamped only for a lead that is back in its campaign, and each restored row is printed with its lead id and stage. A lead that did not come back, or a lead outside the batch that arrived, stops the run with a non-zero exit. A row recorded as parked that is neither in the list nor in its campaign is listed and also makes the exit non-zero.
 
-Before you restore mid-sequence leads, restore one with `--limit 1` and check its step in the Instantly UI. It is not verified whether Instantly keeps a lead's progress when it moves back into a campaign. If it resets, those leads restart at step 1 and get email 1 again.
+Over-moved rows (`skip_reason` `over_moved_by_server`) are leads the server moved without being asked, so they can include completed, replied, unsubscribed or bounced leads. After restoring them, check their status in Instantly before resuming any campaign.
+
+Before you restore mid-sequence leads, restore one with `--limit 1` and check its step in the Instantly UI. `--limit` takes mid-sequence rows first, so `--limit 1` restores a mid-sequence lead. It is not verified whether Instantly keeps a lead's progress when it moves back into a campaign. If it resets, those leads restart at step 1 and get email 1 again.
 
 ## Manual step if the quarantine is not recorded
 

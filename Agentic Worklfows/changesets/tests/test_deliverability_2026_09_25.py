@@ -413,7 +413,8 @@ def test_restore_leads_groups_by_campaign_and_verifies(tmp_env, live_mode, tmp_p
     assert run(fake, ["--restore-leads"], tmp_path) == D.EXIT_OK      # dry-run moves nothing
     assert len(fake.moves) == n
     assert run(fake, ["--restore-leads", "--apply", "--yes", "--limit", "1"], tmp_path) == D.EXIT_OK
-    assert [b["ids"] for b, _ in fake.moves[n:]] == [[manifest_order(tmp_path)[0]]]
+    first_mid = [i for i in manifest_order(tmp_path) if i.startswith("mid")][0]
+    assert [b["ids"] for b, _ in fake.moves[n:]] == [[first_mid]]     # --limit prefers mid-sequence
     assert run(fake, ["--restore-leads", "--apply", "--yes"], tmp_path) == D.EXIT_OK
     back = [b for b, _ in fake.moves[n + 1:]]
     assert [b["to_campaign_id"] for b in back] == CIDS
@@ -441,3 +442,108 @@ def test_restore_refuses_an_active_campaign(tmp_env, live_mode, tmp_path):
     fake.campaigns[CIDS[3]]["status"] = 1
     assert run(fake, ["--restore-leads", "--apply", "--yes"], tmp_path) == D.EXIT_INVALID
     assert len(fake.moves) == n
+
+
+# ------------------------------------------------------------ round 2
+def test_a_rerun_after_an_over_move_is_refused_until_restored(tmp_env, live_mode, tmp_path):
+    fake = Fake(ignore_ids=True)
+    assert run(fake, ["--apply", "--yes"], tmp_path) == D.EXIT_API
+    n, writes = len(fake.moves), len(fake.writes)
+    out = []
+    assert run(fake, ["--apply", "--yes"], tmp_path, out=out) == D.EXIT_INVALID
+    assert len(fake.moves) == n and len(fake.writes) == writes
+    assert any(D.RESTORE_CMD in m for m in out) and any("REFUSED" in m for m in out)
+    assert run(fake, ["--ack-over-move"], tmp_path) == D.EXIT_REFUSED          # only with --apply
+    # the override is honoured (the fake still over-moves, so the canary stops it again)
+    assert run(fake, ["--apply", "--yes", "--ack-over-move"], tmp_path) == D.EXIT_API
+    assert len(fake.moves) == n + 1
+    fake.ignore_ids = False
+    assert run(fake, ["--restore-leads", "--apply", "--yes"], tmp_path) == D.EXIT_OK
+    assert run(fake, ["--apply", "--yes"], tmp_path) == D.EXIT_OK
+    assert fake.leads["g0"]["campaign"] == CIDS[0] and fake.leads["rep0"]["campaign"] == CIDS[0]
+    assert all(fake.leads[i]["campaign"] is None for i in PARKED)
+
+
+def test_the_canary_is_the_middle_eligible_lead(tmp_env, live_mode, tmp_path):
+    fake = Fake()
+    assert run(fake, ["--apply", "--yes"], tmp_path) == D.EXIT_OK
+    eligible0 = [i for i in manifest_order(tmp_path) if i in PARKED and fake.leads[i]["_list"]
+                 and manifest(tmp_path)[i]["campaign_id"] == CIDS[0]]
+    assert fake.moves[0][0]["ids"] == [eligible0[len(eligible0) // 2]]
+
+
+def test_selection_is_rechecked_before_every_batch(tmp_env, live_mode, tmp_path, monkeypatch):
+    monkeypatch.setattr(D, "MOVE_BATCH", 1)
+    fake = Fake()
+    orig = fake.__call__
+    calls = {"n": 0}
+
+    def handler(request):
+        if request.url.path.endswith("/leads/move"):
+            calls["n"] += 1
+            if calls["n"] == 2:
+                fake.leads["ms0b"]["email_reply_count"] = 1
+        return orig(request)
+    client = Instantly(api_key="k", transport=httpx.MockTransport(handler), sleep=lambda s: None)
+    rc = D.main(["--apply", "--yes"], client=client, backup_dir=str(tmp_path / "backups"),
+                manifest_dir=str(tmp_path / "manifests"), mirror_dir=str(tmp_path / "mirror"),
+                sleep=lambda s: None, out=lambda m: None)
+    assert rc == D.EXIT_OK
+    assert fake.leads["ms0b"]["campaign"] == CIDS[0] and manifest(tmp_path)["ms0b"]["skip_reason"] == "replied"
+
+
+class Lagging(Fake):
+    """leads/list answers from the state before the last move for a few calls."""
+
+    def __init__(self, lag=3, **kw):
+        Fake.__init__(self, **kw)
+        self.lag, self.stale, self.lag_left = lag, None, 0
+
+    def __call__(self, request):
+        path = request.url.path[len("/api/v2/"):]
+        if path == "leads/move":
+            snap = copy.deepcopy(self.leads)
+            resp = Fake.__call__(self, request)
+            self.stale, self.lag_left = snap, self.lag
+            return resp
+        if path == "leads/list" and self.lag_left > 0:
+            self.lag_left -= 1
+            live, self.leads = self.leads, self.stale
+            try:
+                return Fake.__call__(self, request)
+            finally:
+                self.leads = live
+        return Fake.__call__(self, request)
+
+
+def test_a_lagging_index_gets_settle_reads_before_a_batch_is_unverified(tmp_env, live_mode, tmp_path):
+    fake = Lagging()
+    sleeps = []
+    assert run(fake, ["--apply", "--yes"], tmp_path, sleeps=sleeps) == D.EXIT_OK
+    assert D.SETTLE_WAIT in sleeps
+    assert all(fake.leads[i]["campaign"] is None for i in PARKED)
+    stuck = Lagging(lag=10 ** 6)
+    assert run(stuck, ["--apply", "--yes"], tmp_path / "stuck") == D.EXIT_API
+    assert len(stuck.moves) == 1
+
+
+def test_restore_prints_stages_and_stops_when_a_campaign_is_resumed(tmp_env, live_mode, tmp_path):
+    fake = Fake()
+    assert run(fake, ["--apply", "--yes"], tmp_path) == D.EXIT_OK
+    n = len(fake.moves)
+    orig = fake.__call__
+
+    def handler(request):
+        resp = orig(request)
+        if request.url.path.endswith("/leads/move"):
+            fake.campaigns[CIDS[1]]["status"] = 1
+        return resp
+    client = Instantly(api_key="k", transport=httpx.MockTransport(handler), sleep=lambda s: None)
+    out = []
+    rc = D.main(["--restore-leads", "--apply", "--yes"], client=client, backup_dir=str(tmp_path / "backups"),
+                manifest_dir=str(tmp_path / "manifests"), mirror_dir=str(tmp_path / "mirror"),
+                sleep=lambda s: None, out=out.append)
+    assert rc == D.EXIT_API and len(fake.moves) == n + 1
+    assert any("stage=mid_sequence" in m for m in out) and any("no longer 2 (paused)" in m for m in out)
+    rows = manifest(tmp_path)
+    assert all(bool(r["restored_at"]) is (r["campaign_id"] == CIDS[0]) for r in rows.values())
