@@ -1,0 +1,308 @@
+{
+  "title": "Your GHL Leads: Captured, Followed Up and Assigned Automatically",
+  "platform": "gohighlevel",
+  "sections": [
+    {
+      "key": "capture",
+      "label": "1 - LEAD CAPTURE AND CONTACT MANAGEMENT",
+      "color": 0,
+      "note": "Your parts one and two. A form fill becomes a tagged contact with its source saved."
+    },
+    {
+      "key": "pipe",
+      "label": "2 - PIPELINE UPDATES",
+      "color": 0,
+      "note": "Every new lead opens as an opportunity in the first stage of your pipeline."
+    },
+    {
+      "key": "follow",
+      "label": "3 - AUTOMATED FOLLOW-UPS",
+      "color": 0,
+      "note": "The lead gets a text and an email within a minute, then the workflow waits one day."
+    },
+    {
+      "key": "active",
+      "label": "4 - ACTIONS BASED ON LEAD ACTIVITY",
+      "color": 0,
+      "note": "Your parts five to seven. A lead who replied or booked moves stage, and the owner gets a task and an alert."
+    },
+    {
+      "key": "nurture",
+      "label": "5 - LEAD NURTURING",
+      "color": 0,
+      "note": "A lead who went quiet gets a second text and an email, then the owner gets a call task."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "form",
+      "kind": "trigger.app",
+      "label": "1 - A lead fills out your website form",
+      "app": "ghl",
+      "op": "form_submitted",
+      "section": "capture"
+    },
+    {
+      "key": "tag_src",
+      "kind": "app.action",
+      "label": "2 - Tag the contact website-lead so you know where they came from",
+      "app": "ghl",
+      "op": "add_tag",
+      "section": "capture",
+      "params": {
+        "tag": "website-lead"
+      }
+    },
+    {
+      "key": "field_src",
+      "kind": "app.action",
+      "label": "3 - Save Website form in the contact's Lead Source field",
+      "app": "ghl",
+      "op": "update_contact_field",
+      "section": "capture",
+      "params": {
+        "field": "Lead Source",
+        "value": "Website form"
+      }
+    },
+    {
+      "key": "opp",
+      "kind": "app.action",
+      "label": "4 - Open the lead in your pipeline at the New Lead stage",
+      "app": "ghl",
+      "op": "create_opportunity",
+      "section": "pipe",
+      "notes": "Pipeline updates happen on their own from here, nobody drags cards by hand.",
+      "params": {
+        "pipeline": "Upwork Demo - Lead Pipeline",
+        "stage": "New Lead",
+        "stages": [
+          "New Lead",
+          "Engaged",
+          "Won",
+          "Lost"
+        ],
+        "name": "{{contact.first_name}} {{contact.last_name}} - Website form",
+        "status": "open"
+      }
+    },
+    {
+      "key": "sms1",
+      "kind": "app.action",
+      "label": "5 - Text the lead right away so they hear from you first",
+      "app": "ghl",
+      "op": "send_sms",
+      "section": "follow",
+      "notes": "Speed to lead: the text goes out within a minute of the form.",
+      "params": {
+        "message": "Hi {{contact.first_name}}, this is {{user.first_name}} with {{location.name}}. Thanks for reaching out, I got your request. What is the best time to give you a quick call today?"
+      }
+    },
+    {
+      "key": "email1",
+      "kind": "app.action",
+      "label": "6 - Email the lead the same details plus a link to book a call",
+      "app": "ghl",
+      "op": "send_email",
+      "section": "follow",
+      "params": {
+        "subject": "Got your request, {{contact.first_name}}",
+        "body": "Hi {{contact.first_name}},\n\nThanks for reaching out to {{location.name}}. I have your request and I will be the one helping you.\n\nIf it is easier, you can pick a time for a quick call here: {{custom_values.booking_link}}\n\nOr just reply to this email with any questions.\n\n{{user.first_name}}"
+      }
+    },
+    {
+      "key": "w1",
+      "kind": "flow.wait",
+      "label": "7 - Wait one day to give the lead time to answer",
+      "section": "follow",
+      "params": {
+        "amount": 1,
+        "unit": "days"
+      }
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "8 - Did they reply or book a call?",
+      "section": "active",
+      "notes": "One check on lead activity: a reply or a booking tags them lead-engaged.",
+      "params": {
+        "condition": "Contact has tag \"lead-engaged\"",
+        "tag": "lead-engaged",
+        "negate": false
+      }
+    },
+    {
+      "key": "opp_hot",
+      "kind": "app.action",
+      "label": "8a - Move the opportunity to the Engaged stage",
+      "app": "ghl",
+      "op": "update_opportunity",
+      "section": "active",
+      "params": {
+        "pipeline": "Upwork Demo - Lead Pipeline",
+        "stage": "Engaged",
+        "status": "open"
+      }
+    },
+    {
+      "key": "task_hot",
+      "kind": "app.action",
+      "label": "8b - Give the owner a task to follow up today",
+      "app": "ghl",
+      "op": "create_task",
+      "section": "active",
+      "notes": "Task assignments go to whoever owns the contact, so your team always knows whose lead it is.",
+      "params": {
+        "title": "Follow up with {{contact.first_name}} {{contact.last_name}} today",
+        "description": "{{contact.first_name}} replied or booked a call. Check the conversation, confirm next steps and update the stage. Phone {{contact.phone}}, email {{contact.email}}.",
+        "due_in_days": 1,
+        "assign_to": "the contact's assigned user"
+      }
+    },
+    {
+      "key": "notify_hot",
+      "kind": "app.action",
+      "label": "8c - Text the owner that a hot lead is waiting",
+      "app": "ghl",
+      "op": "internal_notification",
+      "section": "active",
+      "params": {
+        "type": "sms",
+        "to": "the contact's assigned user, and if none is assigned, all users",
+        "message": "Hot lead: {{contact.first_name}} {{contact.last_name}} replied or booked a call. Task is in GHL. {{contact.phone}}"
+      }
+    },
+    {
+      "key": "sms2",
+      "kind": "app.action",
+      "label": "8d - Send a second text to a lead who has not answered yet",
+      "app": "ghl",
+      "op": "send_sms",
+      "section": "nurture",
+      "params": {
+        "message": "Hi {{contact.first_name}}, {{user.first_name}} again from {{location.name}}. Just checking you saw my message about your request. Reply here or pick a time that works: {{custom_values.booking_link}}"
+      }
+    },
+    {
+      "key": "w2",
+      "kind": "flow.wait",
+      "label": "8e - Wait two more days before the next follow-up",
+      "section": "nurture",
+      "params": {
+        "amount": 2,
+        "unit": "days"
+      }
+    },
+    {
+      "key": "email2",
+      "kind": "app.action",
+      "label": "8f - Email a short check-in that keeps the door open",
+      "app": "ghl",
+      "op": "send_email",
+      "section": "nurture",
+      "params": {
+        "subject": "Still want help with your request?",
+        "body": "Hi {{contact.first_name}},\n\nI did not want your request to slip through the cracks. If you still want help, reply to this email or grab a time here: {{custom_values.booking_link}}\n\nIf now is not a good time, just let me know and I will check back later.\n\n{{user.first_name}}"
+      }
+    },
+    {
+      "key": "task_cold",
+      "kind": "app.action",
+      "label": "8g - Give the owner a task to call the lead who went quiet",
+      "app": "ghl",
+      "op": "create_task",
+      "section": "nurture",
+      "params": {
+        "title": "Call {{contact.first_name}} {{contact.last_name}}, no reply yet",
+        "description": "{{contact.first_name}} got two texts and two emails with no reply. Give them one call and note the outcome.",
+        "due_in_days": 1,
+        "assign_to": "the contact's assigned user"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "form",
+      "to": "tag_src"
+    },
+    {
+      "from": "tag_src",
+      "to": "field_src"
+    },
+    {
+      "from": "field_src",
+      "to": "opp"
+    },
+    {
+      "from": "opp",
+      "to": "sms1"
+    },
+    {
+      "from": "sms1",
+      "to": "email1"
+    },
+    {
+      "from": "email1",
+      "to": "w1"
+    },
+    {
+      "from": "w1",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "opp_hot",
+      "branch": "yes"
+    },
+    {
+      "from": "opp_hot",
+      "to": "task_hot"
+    },
+    {
+      "from": "task_hot",
+      "to": "notify_hot"
+    },
+    {
+      "from": "gate",
+      "to": "sms2",
+      "branch": "no"
+    },
+    {
+      "from": "sms2",
+      "to": "w2"
+    },
+    {
+      "from": "w2",
+      "to": "email2"
+    },
+    {
+      "from": "email2",
+      "to": "task_cold"
+    }
+  ],
+  "input_sample": {
+    "form": "Website Lead Form",
+    "contact": {
+      "first_name": "Jordan",
+      "last_name": "Reyes",
+      "phone": "+15125550187",
+      "email": "jordan.reyes@gmail.com"
+    },
+    "submitted_at": "2026-09-28T10:14:00-05:00"
+  },
+  "output_sample": {
+    "opportunity": "Jordan Reyes - Website form",
+    "stage": "Engaged",
+    "tags": [
+      "website-lead",
+      "lead-engaged"
+    ],
+    "lead_source": "Website form",
+    "task": "Follow up with Jordan Reyes today",
+    "owner_alert": "sent by SMS"
+  },
+  "archetype": "your_ghl_leads_captured_followed_up_and_assigned",
+  "learned": true,
+  "learned_at": "2026-09-26"
+}
