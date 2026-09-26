@@ -1,0 +1,145 @@
+{
+  "title": "Your First Hermes Bot: Questions Answered, Calls Booked, CRM Updated",
+  "platform": "diagram",
+  "sections": [
+    {
+      "key": "build",
+      "label": "1 - THE BOT TALKS TO STUDENTS AND PARENTS",
+      "color": 0,
+      "note": "The bot answers from your own information and learns what each family needs. Anything sensitive goes straight to a person."
+    },
+    {
+      "key": "connect",
+      "label": "2 - CONNECTED TO YOUR TOOLS",
+      "color": 1,
+      "note": "Every conversation ends in a booked next step, and the lead lands in your CRM so nobody retypes it."
+    },
+    {
+      "key": "test",
+      "label": "3 - TESTED BEFORE LAUNCH, KEPT RUNNING AFTER",
+      "color": 2,
+      "note": "You asked for someone who tests their own work, so every path gets tested first, and the bot is kept up to date as things change."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "ask",
+      "kind": "data.transform",
+      "label": "1 - A student or parent asks the bot a question on your website or social page",
+      "section": "build"
+    },
+    {
+      "key": "answer",
+      "kind": "data.transform",
+      "label": "2 - The bot answers from your own program details, dates and prices",
+      "section": "build"
+    },
+    {
+      "key": "qual",
+      "kind": "data.transform",
+      "label": "3 - It asks a few questions to learn the student's grade, goals and start date",
+      "section": "build"
+    },
+    {
+      "key": "human",
+      "kind": "flow.branch",
+      "label": "4 - Does the question need a real person, like a complaint or a special case?",
+      "section": "build"
+    },
+    {
+      "key": "handoff",
+      "kind": "data.transform",
+      "label": "4b - If it does, the bot hands the chat to your team and tells them why",
+      "section": "build"
+    },
+    {
+      "key": "book",
+      "kind": "data.transform",
+      "label": "5 - If not, the bot offers a call or the next enrollment step and books it",
+      "section": "connect"
+    },
+    {
+      "key": "crm",
+      "kind": "data.transform",
+      "label": "6 - The lead and the full chat are sent to your CRM by webhook",
+      "section": "connect"
+    },
+    {
+      "key": "notify",
+      "kind": "data.transform",
+      "label": "7 - Your team gets a notification with the details they need for the call",
+      "section": "connect"
+    },
+    {
+      "key": "test",
+      "kind": "data.transform",
+      "label": "8 - Before launch, I run test chats through every path and fix what breaks",
+      "section": "test"
+    },
+    {
+      "key": "keep",
+      "kind": "data.aggregate",
+      "label": "9 - After launch, I update the bot as your programs and dates change",
+      "section": "test"
+    }
+  ],
+  "edges": [
+    {
+      "from": "ask",
+      "to": "answer"
+    },
+    {
+      "from": "answer",
+      "to": "qual"
+    },
+    {
+      "from": "qual",
+      "to": "human"
+    },
+    {
+      "from": "human",
+      "to": "handoff",
+      "branch": "Yes"
+    },
+    {
+      "from": "human",
+      "to": "book",
+      "branch": "No"
+    },
+    {
+      "from": "handoff",
+      "to": "crm"
+    },
+    {
+      "from": "book",
+      "to": "crm"
+    },
+    {
+      "from": "crm",
+      "to": "notify"
+    },
+    {
+      "from": "notify",
+      "to": "test"
+    },
+    {
+      "from": "test",
+      "to": "keep"
+    }
+  ],
+  "input_sample": {
+    "channel": "website chat",
+    "message": "My son is in 10th grade and needs help before the SAT in the spring. What do you offer?"
+  },
+  "output_sample": {
+    "answered": true,
+    "grade": "10th",
+    "goal": "SAT prep",
+    "start": "January",
+    "next_step": "call booked Tuesday 4:00 pm",
+    "sent_to_crm": true
+  },
+  "archetype": "your_first_hermes_bot_questions_answered_calls_b",
+  "learned": true,
+  "learned_at": "2026-09-26"
+}
