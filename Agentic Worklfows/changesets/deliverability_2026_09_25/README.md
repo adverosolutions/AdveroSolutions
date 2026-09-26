@@ -63,6 +63,7 @@ The apply goes in this order: back up all campaigns, PATCH and re-read each one,
 
 How the lead moves are checked:
 - The first move of the run is a 1-lead canary. The script then reads the campaign and the parked list and requires that exactly one lead left the campaign and that it is in the list. Anything else stops the run.
+- Before each batch, the canary included, the source campaign must still be paused (status 2). If it was resumed, the run stops, the manifest is saved and nothing more moves.
 - Before each batch the source campaign is read again. Only leads still in it that still pass the rules are sent; the rest get a `skip_reason`.
 - Each move sends at most 100 ids and `limit` = the number of ids. The script waits for the job, reads its `moved_leads` and `moved_lead_emails`, and stops if either differs from the batch.
 - After each job the campaign and the list are read again before the next batch. A lead is stamped `moved_at` only when it is out of the campaign and in the list. A lead that left the campaign without being in the batch stops the run.

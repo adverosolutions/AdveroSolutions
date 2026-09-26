@@ -366,6 +366,45 @@ def test_a_failed_read_back_leaves_the_batch_unstamped(tmp_env, live_mode, tmp_p
     assert manifest(tmp_path)[canary]["verified_in_list"] is True
 
 
+def test_a_campaign_resumed_between_the_patches_and_the_moves_stops_the_moves(tmp_env, live_mode, tmp_path):
+    fake = Fake()
+    orig = fake.__call__
+
+    def handler(request):
+        if request.url.path.endswith("/lead-lists") and request.method == "POST":
+            fake.campaigns[CIDS[0]]["status"] = 1          # resumed after A and B landed
+        return orig(request)
+    client = Instantly(api_key="k", transport=httpx.MockTransport(handler), sleep=lambda s: None)
+    out = []
+    rc = D.main(["--apply", "--yes"], client=client, backup_dir=str(tmp_path / "backups"),
+                manifest_dir=str(tmp_path / "manifests"), mirror_dir=str(tmp_path / "mirror"),
+                sleep=lambda s: None, out=out.append)
+    assert rc == D.EXIT_API and fake.moves == []
+    assert any("no longer 2 (paused)" in m for m in out)
+    rows = manifest(tmp_path)
+    assert sorted(rows) == PARKED and not any(r["moved_at"] for r in rows.values())
+
+    # paused again, a re-run moves everything; a flip later (before campaign 3) stops there
+    fake.campaigns[CIDS[0]]["status"] = 2
+    calls = {"n": 0}
+
+    def flip_later(request):
+        if request.url.path.endswith("/leads/move"):
+            calls["n"] += 1
+            if calls["n"] == 3:
+                fake.campaigns[CIDS[2]]["status"] = 1
+        return orig(request)
+    client = Instantly(api_key="k", transport=httpx.MockTransport(flip_later), sleep=lambda s: None)
+    rc = D.main(["--apply", "--yes"], client=client, backup_dir=str(tmp_path / "backups"),
+                manifest_dir=str(tmp_path / "manifests"), mirror_dir=str(tmp_path / "mirror"),
+                sleep=lambda s: None, out=lambda m: None)
+    assert rc == D.EXIT_API
+    assert {b["campaign"] for b, _ in fake.moves} == {CIDS[0], CIDS[1]}
+    rows = manifest(tmp_path)
+    assert all(rows[i]["moved_at"] for i in rows if rows[i]["campaign_id"] in CIDS[:2])
+    assert not any(rows[i]["moved_at"] for i in rows if rows[i]["campaign_id"] == CIDS[2])
+
+
 # ------------------------------------------------------------------ restore
 def test_restore_leads_groups_by_campaign_and_verifies(tmp_env, live_mode, tmp_path):
     fake = Fake()

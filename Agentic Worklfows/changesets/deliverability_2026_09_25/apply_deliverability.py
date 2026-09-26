@@ -828,6 +828,18 @@ def _apply_leads(plan, rows, meta, ctx) -> int:
         batches += [todo[i:i + MOVE_BATCH] for i in range(0, len(todo), MOVE_BATCH)]
         for n, batch in enumerate(batches):
             canary = not canary_done
+            # A campaign resumed after the PATCHes would be sending while its
+            # leads move: every batch, the canary included, needs it paused.
+            try:
+                status = client.get_campaign(cid).get("status")
+            except InstantlyError as exc:
+                save()
+                return _stop(out, "could not re-read campaign %s before moving (%s); nothing more was sent"
+                             % (cid, exc), {"campaign_id": cid})
+            if str(status) != str(PAUSED):
+                save()
+                return _stop(out, "%s is status %r, no longer 2 (paused); no more leads were moved. Pause it "
+                                  "and re-run --apply." % (CAMPAIGNS[cid], status), {"campaign_id": cid})
             before = members
             result = move_batch(client, batch, {"campaign": cid}, {"to_list_id": list_id},
                                 lambda cid=cid: set(campaign_members(client, cid)), sleep, out)
