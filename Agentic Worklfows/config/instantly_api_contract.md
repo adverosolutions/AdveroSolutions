@@ -30,6 +30,7 @@ Three scopes were read off the reference on 2026-09-22 and are **verified**. Eve
 | `GET /lead-labels` | read | unverified |
 | `GET /webhooks` | read | unverified |
 | `GET /subsequences` | read | unverified |
+| `GET /lead-lists`, `GET /background-jobs/{id}` | read | unverified |
 | `POST /emails/reply` | write | **`emails:create`** (or `emails:all`, `all:create`, `all:all`) |
 | `POST /leads/update-interest-status` | write | unverified |
 | `POST /leads/subsequence/move` | write | unverified |
@@ -43,6 +44,7 @@ Three scopes were read off the reference on 2026-09-22 and are **verified**. Eve
 | `POST /subsequences` | write | unverified |
 | `POST /block-lists-entries` | write | unverified |
 | `POST /inbox-placement-tests` | write | unverified (spends credits) |
+| `POST /lead-lists`, `POST /leads/move` | write | unverified |
 
 A 403 on a read made with the read-only key raises `InstantlyScopeError` naming the scope from this table, or saying it is unverified.
 
@@ -285,3 +287,14 @@ in the range -30000..30000. Any code that counts positives with an unbounded
 as interested, booked, held AND closed at once. Count against the known code set,
 not a `>=` comparison. The blueprint plans those labels, so this is a live trap,
 not a hypothetical one.
+
+## Lead lists, leads/move and background jobs (read off developer.instantly.ai 2026-09-25)
+
+Used by `changesets/deliverability_2026_09_25/`. Schemas read from the reference; the live responses were not yet seen when this was written.
+
+- `POST /lead-lists` body `{name}` (required; `has_enrichment_task`, `owned_by` optional; `additionalProperties: false`). Returns the LeadList: `id`, `organization_id`, `name`, `timestamp_created`, `has_enrichment_task`, `owned_by`.
+- `GET /lead-lists?search=&limit=&starting_after=` returns `{items, next_starting_after}`. `search` is a substring match; compare `name` exactly.
+- `POST /leads/move`: source `campaign` or `list_id` (one is required when `ids` is given), `ids` (lead uuids; the change-set sends at most 100 per call), destination `to_campaign_id` or `to_list_id`, `copy_leads` (false = move). Returns a BackgroundJob, not the leads. A second move while one runs has been seen to answer 409 (not in the published schema): wait and retry, one job at a time. A rejected call can still have moved some leads: re-read before retrying.
+- `GET /background-jobs/{id}` returns `{id, workspace_id, user_id, type ("move-leads"), entity_id, entity_type, data, progress (0-100), status, created_at, updated_at}`; `status` is one of `pending`, `in-progress`, `success`, `failed`, `draining`, `paused`, `cancelled`. `data.moved_lead_emails` is capped at 10,000.
+- Lead objects carry `campaign` and `list_id` (both uuid or null): after a move to a list, `campaign` should be null and `list_id` the destination. `esp_code`: 0 in queue, 1 Google, 2 Microsoft, 3 Zoho, 8 AirMail, 9 Yahoo, 10 Yandex, 12 Web.de, 13 Libero.it, 999 other, 1000 not found. `status`: 1 active, 2 paused, 3 completed, -1 bounced, -2 unsubscribed, -3 skipped.
+- `POST /leads/list` also takes `list_id`, `in_list`, `in_campaign` and `ids`. The `campaign` filter has been seen ignored, so anything selected from it is re-filtered client-side on each lead's `campaign`.
