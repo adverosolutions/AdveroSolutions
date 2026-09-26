@@ -635,13 +635,15 @@ class Instantly(object):
         return self._get("lead-lists", {"search": search, "limit": limit,
                                         "starting_after": starting_after})
 
-    def get_background_job(self, job_id: str) -> Dict[str, Any]:
+    def get_background_job(self, job_id: str, data_fields: Optional[str] = None) -> Dict[str, Any]:
         """GET /background-jobs/{id}: ``{id, workspace_id, user_id, type,
         entity_id, entity_type, data, progress (0-100), status, created_at,
         updated_at}``; ``status`` is one of pending, in-progress, success,
         failed, draining, paused, cancelled (developer.instantly.ai, read
-        2026-09-25; not yet seen live)."""
-        return self._get("background-jobs/%s" % quote(str(job_id), safe=""))
+        2026-09-25; not yet seen live). ``data_fields`` is the reference's
+        comma-separated list of ``data`` keys to include, e.g.
+        ``"moved_leads,moved_lead_emails"`` for a move job."""
+        return self._get("background-jobs/%s" % quote(str(job_id), safe=""), {"data_fields": data_fields})
 
     # --------------------------------------------------------------- writes
     def _write(self, action: str, payload: Dict[str, Any], do: Callable[[], Any], details: Optional[Dict[str, Any]] = None) -> Any:
@@ -906,13 +908,16 @@ class Instantly(object):
 
     def move_leads(self, lead_ids: List[str], campaign: Optional[str] = None,
                    list_id: Optional[str] = None, to_campaign_id: Optional[str] = None,
-                   to_list_id: Optional[str] = None, copy_leads: bool = False) -> Any:
+                   to_list_id: Optional[str] = None, copy_leads: bool = False,
+                   limit: Optional[int] = None) -> Any:
         """POST /leads/move: up to 100 lead ids from ONE source (``campaign``
         or ``list_id``, which the API requires alongside ``ids``) to ONE
         destination (``to_campaign_id`` or ``to_list_id``).
 
         The answer is a BackgroundJob (``id``, ``status``, ``progress``); poll
-        get_background_job(id). A second move while one runs has been seen to
+        get_background_job(id). ``limit`` is the reference's "maximum leads to
+        move", sent as a server-side cap (normally len(lead_ids)); whether it
+        is honoured alongside ``ids`` is unverified. A second move while one runs has been seen to
         answer 409 (InstantlyError.status_code). Never retried here: a
         rejected call can still have moved some leads, so the caller re-reads
         before trying again. PATCHing a lead's ``campaign`` does NOT move it
@@ -935,6 +940,8 @@ class Instantly(object):
             body["to_campaign_id"] = to_campaign_id
         if to_list_id:
             body["to_list_id"] = to_list_id
+        if limit is not None:
+            body["limit"] = int(limit)
         return self._write("move_leads", body, lambda: self._post("leads/move", body))
 
     def move_to_subsequence(self, lead_id: str, subsequence_id: str) -> Any:

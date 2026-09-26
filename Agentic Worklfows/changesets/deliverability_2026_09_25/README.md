@@ -35,7 +35,8 @@ The earlier snapshot estimated 1,251 not started and 330 mid-sequence (1,581). T
 ## Where the parked leads are
 
 - Instantly lead list: `Parked - Microsoft recipients 2026-09-25`, id `<filled at apply time>` (the apply prints it and the manifest records it in `meta.list_id`).
-- Manifest: `changesets/deliverability_2026_09_25/manifests/parked_leads_2026-09-25.csv` and `.json`, one row per lead. The rows record the original campaign, stage, last step, the move job, and whether the lead was verified in the list and out of the campaign. The manifest is written before the first move and updated after every batch.
+- Manifest: `changesets/deliverability_2026_09_25/manifests/parked_leads_2026-09-25.csv` and `.json`, one row per lead. The rows record the original campaign, stage, last step, the move job, whether the lead was verified in the list and out of the campaign, and `skip_reason` for a planned lead that was not moved (for example `replied` if it replied after the dry-run). A lead the server moved without being asked gets a row with `skip_reason` `over_moved_by_server`, so a restore brings it back too. The manifest is written before the first move and updated after every batch.
+- Copy of the manifest outside the repo: every write is also copied to `/Users/lorenzovillarreal/Desktop/AdveroSolutions/.tmp/deliverability_2026_09_25/` (the main checkout's `.tmp`, also when the script runs from a worktree; `.tmp` is never committed).
 - The manifests hold names, emails and companies, so the whole `manifests/` folder is git-ignored (`Agentic Worklfows/.gitignore`). Check with `git check-ignore -v changesets/deliverability_2026_09_25/manifests/parked_leads_2026-09-25.json`.
 
 ## How to run
@@ -54,12 +55,21 @@ The script refuses and writes nothing if:
 - any campaign is not paused;
 - any `email_list` is neither the recorded 12 nor the target 9;
 - a lead pull stops before its last page;
+- an existing manifest cannot be read (it is left as it is);
 - a campaign changed while the prompt was open;
 - a campaign's before-image cannot be written to `changesets/backups/`.
 
-The apply goes in this order: back up all campaigns, PATCH and re-read each one, quarantine the inboxes, find or create the list, write the manifest, move the leads batch by batch, then verify every manifest lead. It stops at the first campaign PATCH that fails verification. A re-run is safe: campaigns that are already applied get no PATCH, leads already moved are no longer selected, and the existing manifest rows are kept.
+The apply goes in this order: back up all campaigns, PATCH and re-read each one, quarantine the inboxes (an inbox already in the ledger keeps its entry), find or create the list, write the manifest, move the leads, then verify every manifest lead. It stops at the first campaign PATCH that fails verification.
 
-A 409 from `leads/move` means another move job is running. The script re-reads the batch, waits, and retries only the leads still in the campaign. Any other error stops the moves and leaves the manifest showing what moved.
+How the lead moves are checked:
+- The first move of the run is a 1-lead canary. The script then reads the campaign and the parked list and requires that exactly one lead left the campaign and that it is in the list. Anything else stops the run.
+- Before each batch the source campaign is read again. Only leads still in it that still pass the rules are sent; the rest get a `skip_reason`.
+- Each move sends at most 100 ids and `limit` = the number of ids. The script waits for the job, reads its `moved_leads` and `moved_lead_emails`, and stops if either differs from the batch.
+- After each job the campaign and the list are read again before the next batch. A lead is stamped `moved_at` only when it is out of the campaign and in the list. A lead that left the campaign without being in the batch stops the run.
+- A read that fails leaves the batch unstamped and stops. Polling a job stops after 3 answers of 4xx in a row, or after 20 minutes.
+- A 409 from `leads/move` means another move job is running. The script re-reads the campaign, waits, and retries only the leads still in it.
+
+A re-run is safe. What to move is decided from live state, not from the manifest: a lead still in its source campaign is sent again, a lead already in the list is not. Campaigns that are already applied get no PATCH, and existing manifest rows are kept.
 
 ## How to undo
 
@@ -70,12 +80,15 @@ A 409 from `leads/move` means another move job is running. The script re-reads t
 
 This uses `changesets/rollback.py` restore: it reads live, prints the diff, refuses if the fields changed after the apply (unless `--override-later-changes`), asks for the campaign key, and PATCHes only `email_list` and `allow_risky_contacts`. To remove the quarantine afterwards, run `python3 jobs/inbox_inventory.py --clear-quarantine <email>` for each inbox.
 
-**Leads (C).** The following command reads the apply manifest, finds which manifest leads are still in the parked list, and moves them back to their original campaigns. It groups them by campaign and uses `{list_id, to_campaign_id}` with at most 100 ids per job. It is a dry-run unless `--apply` is given:
+**Leads (C).** The following command reads the apply manifest and finds the rows not yet restored that are in the parked list (read with `leads/list {list_id}`). It moves them back to their original campaigns, grouped by campaign, with `{list_id, to_campaign_id}` and at most 100 ids per job. It is a dry-run unless `--apply` is given, and it refuses unless every target campaign is paused:
 
     python3 changesets/deliverability_2026_09_25/apply_deliverability.py --restore-leads
+    MODE=live ALLOW_LIVE_WRITES=1 python3 changesets/deliverability_2026_09_25/apply_deliverability.py --restore-leads --apply --limit 1
     MODE=live ALLOW_LIVE_WRITES=1 python3 changesets/deliverability_2026_09_25/apply_deliverability.py --restore-leads --apply
 
-Before you restore mid-sequence leads, move one back and check its step in the Instantly UI. It is not verified whether Instantly keeps a lead's progress when it moves back into a campaign. If it resets, those leads restart at step 1 and get email 1 again.
+After each job the campaign and the list are read again. `restored_at` is stamped only for a lead that is back in its campaign. A lead that did not come back, or a lead outside the batch that arrived, stops the run with a non-zero exit. A row recorded as parked that is neither in the list nor in its campaign is listed and also makes the exit non-zero.
+
+Before you restore mid-sequence leads, restore one with `--limit 1` and check its step in the Instantly UI. It is not verified whether Instantly keeps a lead's progress when it moves back into a campaign. If it resets, those leads restart at step 1 and get email 1 again.
 
 ## Manual step if the quarantine is not recorded
 
@@ -93,4 +106,6 @@ The apply prints `QUARANTINE NOT RECORDED` when the ledger write fails. In that 
 ## Unverified until the first apply
 
 - The `GET /background-jobs/{id}` response and its `status` values come from the API reference and have not been seen live.
-- The membership check assumes a parked lead shows `list_id` = the parked list and `campaign` null. The field is in the reference, but the live campaign leads read on 2026-09-25 do not carry `list_id` at all. If verification reports `verified_in_list` false for leads that plainly moved, check one lead with `GET /leads/{id}` before re-running.
+- The `moved_leads` and `moved_lead_emails` fields of a finished move job (asked for with `data_fields`) are from the reference. If a job does not return them, the check falls back to reading the campaign and the list.
+- Whether `leads/move` honours `limit` together with `ids` is unverified. If the canary is rejected over `limit`, nothing moves and the run stops.
+- List membership is read with `leads/list {list_id}`, because live leads carry no `list_id` field. If that read returns leads that sit in a campaign, the filter is being ignored: the script stops and the membership has to be checked in the UI.

@@ -25,17 +25,30 @@ is a read) and writes the planned manifest to a DRYRUN-suffixed file. Every
 live write goes through shared.instantly, which calls settings.guard_write
 first. Refusals, before anything is written: a campaign that is not paused
 (status 2), an email_list that is neither the recorded 12 nor the target 9,
-a lead pull that did not finish, a before-image that could not be written.
+a lead pull that did not finish, an existing manifest that cannot be read, a
+before-image that could not be written.
+
+Lead moves are checked from live state, never from a job's word alone. The
+first move of a run is a 1-lead canary. Before each batch the source campaign
+is read again and only leads that still pass the selection rules are sent;
+after each job the campaign and the parked list are read again, the job's
+own moved count and emails are compared with the batch, and any lead that
+left the campaign without being in the batch stops the run (it is recorded
+in the manifest so --restore-leads can bring it back). Every manifest write
+is copied to <main checkout>/.tmp/deliverability_2026_09_25/.
 
 Exit codes: 0 ok, 1 refused by a check, 2 live write refused, 3 API error.
 """
 import argparse
 import csv
 import json
+import logging
 import os
+import shutil
 import sys
 from collections import OrderedDict
 from datetime import timezone
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -46,7 +59,10 @@ if ROOT not in sys.path:
 from shared import settings  # noqa: E402
 from shared.instantly import default_client, InstantlyError  # noqa: E402
 from shared.job_log import log_run  # noqa: E402
+from shared.paths import tmp_dir  # noqa: E402
 from changesets import rollback as R  # noqa: E402
+
+logger = logging.getLogger("changesets.deliverability_2026_09_25")
 
 EXIT_OK = 0
 EXIT_INVALID = 1
@@ -84,6 +100,8 @@ ESP_MICROSOFT = 2          # Instantly esp_code: 1 Google, 2 Microsoft, 999 othe
 MOVE_BATCH = 100
 POLL_INTERVAL = 3.0
 MAX_POLLS = 400            # 20 minutes per job at 3 s
+MAX_BAD_POLLS = 3          # consecutive 4xx answers on the job GET before giving up
+JOB_DATA_FIELDS = "moved_leads,moved_lead_emails"
 CONFLICT_WAIT = 15.0       # a 409 means another move job is running
 CONFLICT_RETRIES = 8
 JOB_SUCCESS = ("success",)
@@ -95,7 +113,7 @@ PLAN_COLUMNS = [
     "last_step_at", "email_reply_count", "personalization", "destination_list_id",
     "destination_list_name", "planned_at",
 ]
-APPLY_COLUMNS = ["move_job_id", "moved_at", "verified_in_list", "verified_not_in_campaign"]
+APPLY_COLUMNS = ["move_job_id", "moved_at", "verified_in_list", "verified_not_in_campaign", "skip_reason"]
 RESTORE_COLUMNS = ["restore_job_id", "restored_at"]
 COLUMNS = PLAN_COLUMNS + APPLY_COLUMNS + RESTORE_COLUMNS
 
@@ -261,14 +279,35 @@ def manifest_paths(directory: str, dryrun: bool) -> Tuple[str, str]:
     return os.path.join(directory, stem + ".csv"), os.path.join(directory, stem + ".json")
 
 
+def default_mirror_dir() -> str:
+    """Outside the repo: <main checkout>/.tmp/deliverability_2026_09_25 (the
+    main checkout, also when this runs from a worktree). A test session gets a
+    directory under its own tmp tree instead."""
+    if settings.running_under_pytest():
+        return str(tmp_dir() / "deliverability_manifest_mirror")
+    root = Path(settings.ROOT_DIR)
+    if root.parent.name == ".worktrees":
+        root = root.parent.parent
+    return str(root / ".tmp" / "deliverability_2026_09_25")
+
+
 def write_manifest(directory: str, rows: List[Dict[str, Any]], meta: Dict[str, Any],
-                   dryrun: bool = False) -> Tuple[str, str]:
+                   dryrun: bool = False, mirror_dir: Optional[str] = None) -> Tuple[str, str]:
+    """Write the CSV and JSON atomically, then copy both to ``mirror_dir``.
+    A failed copy is logged; it never stops a run halfway."""
     os.makedirs(directory, exist_ok=True)
     csv_path, json_path = manifest_paths(directory, dryrun)
     for path, writer in ((json_path, _write_json), (csv_path, _write_csv)):
         tmp = path + ".tmp"
         writer(tmp, rows, meta)
         os.replace(tmp, path)
+    if mirror_dir:
+        try:
+            os.makedirs(mirror_dir, exist_ok=True)
+            for path in (csv_path, json_path):
+                shutil.copy2(path, os.path.join(mirror_dir, os.path.basename(path)))
+        except OSError as exc:
+            logger.warning("manifest mirror copy to %s failed: %s", mirror_dir, exc)
     return csv_path, json_path
 
 
@@ -287,101 +326,145 @@ def _write_csv(path, rows, meta) -> None:
 
 
 def load_manifest(directory: str) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
+    """Raises FileNotFoundError when there is no apply manifest and
+    ValueError when there is one that cannot be trusted. Only the first
+    means "start a new one"."""
     _, json_path = manifest_paths(directory, False)
     with open(json_path, "r", encoding="utf-8") as fh:
-        data = json.load(fh)
-    return data.get("meta") or {}, list(data.get("rows") or [])
+        text = fh.read()
+    try:
+        data = json.loads(text)
+    except ValueError as exc:
+        raise ValueError("%s is not valid JSON (%s)" % (json_path, exc))
+    if not isinstance(data, dict) or not isinstance(data.get("rows"), list):
+        raise ValueError("%s has no rows list" % json_path)
+    rows = data["rows"]
+    for n, row in enumerate(rows):
+        if not isinstance(row, dict) or not row.get("lead_id") or not row.get("campaign_id"):
+            raise ValueError("%s row %d has no lead_id or campaign_id" % (json_path, n))
+    meta = data.get("meta") if isinstance(data.get("meta"), dict) else {}
+    return meta, rows
+
+
+# ---------------------------------------------------------------- live reads
+def campaign_members(client, cid: str) -> Dict[str, Dict[str, Any]]:
+    """{id: lead} for every lead whose ``campaign`` is ``cid`` now. Raises on
+    a pull that did not finish: a partial read is never a verdict."""
+    walk = client.iterate("leads/list", body={"campaign": cid, "limit": 100}, max_pages=2000)
+    rows = list(walk)
+    if walk.truncated or not walk.complete:
+        raise InstantlyError("leads/list for campaign %s stopped before its last page" % cid)
+    return dict((r["id"], r) for r in rows if r.get("id") and r.get("campaign") == cid)
+
+
+def list_membership(client, list_id: str) -> set:
+    """Ids the server returns for leads/list {list_id}. Live leads carry no
+    ``list_id`` field, so membership is what the filtered read returns. A
+    lead in a list has no campaign; if the read returns leads that sit in a
+    campaign, the filter is being ignored and membership cannot be known."""
+    walk = client.iterate("leads/list", body={"list_id": list_id, "limit": 100}, max_pages=2000)
+    rows = list(walk)
+    if walk.truncated or not walk.complete:
+        raise InstantlyError("leads/list for list %s stopped before its last page" % list_id)
+    stray = sum(1 for r in rows if r.get("campaign"))
+    if stray:
+        raise InstantlyError("leads/list {list_id: %s} returned %d leads that sit in a campaign: the "
+                             "list filter looks ignored, so list membership cannot be read" % (list_id, stray))
+    return set(r["id"] for r in rows if r.get("id"))
 
 
 # ---------------------------------------------------------------- move engine
-def reread(client, ids: List[str]) -> Dict[str, Optional[Dict[str, Any]]]:
-    """GET /leads/{id} for each id; a lead that cannot be read maps to None."""
-    found = {}  # type: Dict[str, Optional[Dict[str, Any]]]
-    for lid in ids:
-        try:
-            found[lid] = client.get_lead(lid)
-        except InstantlyError:
-            found[lid] = None
-    return found
-
-
 def wait_for_job(client, job_id: str, sleep: Callable[[float], None]) -> Dict[str, Any]:
+    """Poll until success, failed or cancelled. Gives up after MAX_POLLS
+    (status "timeout") or after MAX_BAD_POLLS consecutive 4xx answers
+    (status "unreadable")."""
     job = {}  # type: Dict[str, Any]
+    bad = 0
     for _ in range(MAX_POLLS):
         try:
-            job = client.get_background_job(job_id) or {}
+            job = client.get_background_job(job_id, data_fields=JOB_DATA_FIELDS) or {}
+            bad = 0
         except InstantlyError as exc:
-            job = {"status": "unreadable", "error": str(exc)[:200]}
+            job = {"id": job_id, "status": "unreadable", "error": str(exc)[:200]}
+            code = getattr(exc, "status_code", None)
+            if code is not None and 400 <= code < 500:
+                bad += 1
+                if bad >= MAX_BAD_POLLS:
+                    return job
+            sleep(POLL_INTERVAL)
+            continue
         status = str(job.get("status") or "")
         if status in JOB_SUCCESS or status in JOB_FINAL_BAD:
             return job
         sleep(POLL_INTERVAL)
-    job = dict(job, status="timeout")
-    return job
+    return dict(job, status="timeout")
+
+
+def job_data_problem(job: Optional[Dict[str, Any]], sent: List[str],
+                     emails: Dict[str, str]) -> Optional[str]:
+    """Compare the job's own count and email list with what was sent."""
+    data = (job or {}).get("data")
+    if not isinstance(data, dict):
+        return None
+    moved = data.get("moved_leads")
+    if isinstance(moved, (int, float)) and int(moved) != len(sent):
+        return "the job reports %d moved leads; the call sent %d" % (int(moved), len(sent))
+    got = data.get("moved_lead_emails")
+    want = set((emails.get(i) or "").strip().lower() for i in sent)
+    if isinstance(got, list) and "" not in want:
+        got_set = set(str(e).strip().lower() for e in got)
+        if got_set != want:
+            return ("the job's moved emails differ from the batch: %d not in the batch, %d of the "
+                    "batch missing" % (len(got_set - want), len(want - got_set)))
+    return None
 
 
 def move_batch(client, ids: List[str], source: Dict[str, str], dest: Dict[str, str],
-               still_to_move: Callable[[Optional[Dict[str, Any]]], bool],
-               sleep: Callable[[float], None], out) -> Dict[str, Any]:
-    """Move ``ids`` (<= 100) in one background job, one job at a time.
+               in_source: Callable[[], set], sleep: Callable[[float], None], out) -> Dict[str, Any]:
+    """Send one move job for ``ids`` (<= 100) and wait for it.
 
-    After ANY error the batch is re-read and only the leads still to move are
-    tried again, so nothing is moved twice. 409 (another move job running)
-    and 429 wait and retry; any other error stops the batch."""
+    After ANY error ``in_source()`` is read again and only the leads still in
+    the source are sent again, so nothing is moved twice. 409 (another move
+    job running) and 429 wait and retry; any other error stops. A read that
+    fails after an error returns ``unknown``. The caller verifies the result
+    from live state either way; ``ok`` here only says the job ended well."""
     remaining = list(ids)
     attempts = 0
     while True:
         try:
-            resp = client.move_leads(remaining, **dict(source, **dest))
+            resp = client.move_leads(remaining, limit=len(remaining), **dict(source, **dest))
         except InstantlyError as exc:
             code = getattr(exc, "status_code", None)
-            live = reread(client, remaining)
-            remaining = [i for i in remaining if still_to_move(live.get(i))]
+            try:
+                still = in_source()
+            except InstantlyError as exc2:
+                return {"ok": False, "job_status": "unknown", "sent": remaining, "job": None, "job_id": None,
+                        "error": "move raised (%s) and the re-read failed too (%s)" % (str(exc)[:150], str(exc2)[:150])}
+            remaining = [i for i in remaining if i in still]
             if not remaining:
-                out("    move raised (%s) but a re-read shows every lead moved" % str(exc)[:120])
-                return {"ok": True, "job_id": None, "job_status": "moved_despite_error",
-                        "error": str(exc)[:300]}
+                out("    move raised (%s) but a re-read shows no lead of the batch left in the source"
+                    % str(exc)[:120])
+                return {"ok": True, "job_status": "moved_despite_error", "sent": [], "job": None,
+                        "job_id": None, "error": None}
             if code in (409, 429) and attempts < CONFLICT_RETRIES:
                 attempts += 1
-                out("    HTTP %s on leads/move; %d leads still to move; waiting %.0fs (retry %d/%d)"
+                out("    HTTP %s on leads/move; %d leads still in the source; waiting %.0fs (retry %d/%d)"
                     % (code, len(remaining), CONFLICT_WAIT * attempts, attempts, CONFLICT_RETRIES))
                 sleep(CONFLICT_WAIT * attempts)
                 continue
-            return {"ok": False, "job_id": None, "job_status": "error", "error": str(exc)[:300],
-                    "remaining": remaining}
+            return {"ok": False, "job_status": "error", "sent": remaining, "job": None, "job_id": None,
+                    "error": str(exc)[:300]}
         if isinstance(resp, dict) and resp.get("shadow"):
-            return {"ok": False, "job_id": None, "job_status": "shadow",
+            return {"ok": False, "job_status": "shadow", "sent": remaining, "job": None, "job_id": None,
                     "error": "guard_write returned a shadow record; nothing was sent"}
-        job_id = (resp or {}).get("id") if isinstance(resp, dict) else None
+        job_id = resp.get("id") if isinstance(resp, dict) else None
         if not job_id:
-            live = reread(client, remaining)
-            left = [i for i in remaining if still_to_move(live.get(i))]
-            return {"ok": not left, "job_id": None, "job_status": "no_job_id",
-                    "error": None if not left else "no job id in the answer and %d leads did not move"
-                    % len(left), "remaining": left}
+            return {"ok": False, "job_status": "no_job_id", "sent": remaining, "job": None, "job_id": None,
+                    "error": "the move answer carries no job id: %r" % (resp,)}
         job = wait_for_job(client, job_id, sleep)
         status = str(job.get("status"))
-        if status in JOB_SUCCESS:
-            return {"ok": True, "job_id": job_id, "job_status": status, "error": None}
-        live = reread(client, remaining)
-        left = [i for i in remaining if still_to_move(live.get(i))]
-        return {"ok": not left, "job_id": job_id, "job_status": status,
-                "error": None if not left else "job %s ended %s with %d leads not moved"
-                % (job_id, status, len(left)), "remaining": left}
-
-
-def list_members(client, list_id: str, ids: List[str]) -> Dict[str, Optional[Dict[str, Any]]]:
-    """Current state of each id: one pull of the parked list (re-filtered on
-    ``list_id``), then GET /leads/{id} for anything that pull did not return."""
-    state = {}  # type: Dict[str, Optional[Dict[str, Any]]]
-    wanted = set(ids)
-    walk = client.iterate("leads/list", body={"list_id": list_id, "limit": 100}, max_pages=2000)
-    for lead in walk:
-        if lead.get("id") in wanted and lead.get("list_id") == list_id:
-            state[lead["id"]] = lead
-    missing = [i for i in ids if i not in state]
-    state.update(reread(client, missing))
-    return state
+        return {"ok": status in JOB_SUCCESS, "job_status": status, "sent": remaining, "job": job,
+                "job_id": job_id, "error": None if status in JOB_SUCCESS else "job %s ended %s" % (job_id, status)}
 
 
 # ----------------------------------------------------------------------- main
@@ -395,13 +478,14 @@ def _iso(now) -> str:
 
 def main(argv: Optional[List[str]] = None, client=None, now=None, backup_dir: Optional[str] = None,
          manifest_dir: Optional[str] = None, confirm=None, sleep: Optional[Callable[[float], None]] = None,
-         store=None, out: Callable[[str], None] = _say) -> int:
+         store=None, out: Callable[[str], None] = _say, mirror_dir: Optional[str] = None) -> int:
     p = argparse.ArgumentParser(prog="apply_deliverability", description=__doc__.split("\n\n")[0])
     p.add_argument("--dry-run", action="store_true", help="explicit dry-run (the default)")
     p.add_argument("--apply", action="store_true", help="perform the writes (needs the live flags)")
     p.add_argument("--yes", action="store_true", help="skip the typed confirmation")
     p.add_argument("--restore-leads", action="store_true",
                    help="move parked leads back to their campaigns (dry-run unless --apply)")
+    p.add_argument("--limit", type=int, help="with --restore-leads: restore only the first N rows still parked")
     p.add_argument("--restore", metavar="ROLLBACK_POINT",
                    help="PATCH a campaign rollback point back (live only, needs --campaign)")
     p.add_argument("--campaign", help="campaign key from config/ids.json (with --restore)")
@@ -411,14 +495,22 @@ def main(argv: Optional[List[str]] = None, client=None, now=None, backup_dir: Op
     now = now or R.utcnow()
     backup_dir = backup_dir or BACKUP_DIR
     manifest_dir = manifest_dir or MANIFEST_DIR
+    mirror_dir = mirror_dir or default_mirror_dir()
     import time as _time
     sleep = sleep or _time.sleep
 
+    if args.restore and (args.dry_run or args.apply or args.restore_leads):
+        out("REFUSED: --restore runs alone (with --campaign); it cannot be combined with --dry-run, "
+            "--apply or --restore-leads.")
+        return EXIT_REFUSED
     if args.dry_run and args.apply:
-        print("REFUSED: --dry-run cannot be combined with --apply.", file=sys.stderr)
+        out("REFUSED: --dry-run cannot be combined with --apply.")
+        return EXIT_REFUSED
+    if args.limit is not None and (not args.restore_leads or args.limit < 1):
+        out("REFUSED: --limit takes a number >= 1 and only goes with --restore-leads.")
         return EXIT_REFUSED
     if R.override_with_yes(args):
-        print(R.OVERRIDE_WITH_YES, file=sys.stderr)
+        out(R.OVERRIDE_WITH_YES)
         return EXIT_REFUSED
     if args.restore:
         return _restore_campaign(args, client, now, backup_dir, confirm)
@@ -428,15 +520,17 @@ def main(argv: Optional[List[str]] = None, client=None, now=None, backup_dir: Op
         except InstantlyError as exc:
             print("Instantly client: %s" % exc, file=sys.stderr)
             return EXIT_API
+    ctx = {"client": client, "now": now, "backup_dir": backup_dir, "manifest_dir": manifest_dir,
+           "mirror_dir": mirror_dir, "confirm": confirm, "sleep": sleep, "store": store, "out": out}
     if args.restore_leads:
         if args.apply:
-            return _restore_leads(args, client, now, manifest_dir, confirm, sleep, out)
+            return _restore_leads(args, ctx)
         with R.scratch_logs(JOB + "_restore_dryrun"):
-            return _restore_leads(args, client, now, manifest_dir, confirm, sleep, out)
+            return _restore_leads(args, ctx)
     if args.apply:
-        return _run(args, client, now, backup_dir, manifest_dir, confirm, sleep, store, out)
+        return _run(args, ctx)
     with R.scratch_logs(JOB + "_dryrun"):
-        return _run(args, client, now, backup_dir, manifest_dir, confirm, sleep, store, out)
+        return _run(args, ctx)
 
 
 def _read_plan(client, out) -> Dict[str, Any]:
@@ -449,6 +543,13 @@ def _read_plan(client, out) -> Dict[str, Any]:
     picked, excluded = select_leads(leads)
     return {"campaigns": campaigns, "plans": plans, "list": parked, "picked": picked,
             "excluded": excluded, "pulled": len(set(l.get("id") for l in leads))}
+
+
+def _counts(picked) -> Dict[str, Dict[str, int]]:
+    counts = OrderedDict((cid, {"not_started": 0, "mid_sequence": 0}) for cid in CAMPAIGNS)
+    for lead in picked:
+        counts[lead["campaign"]][stage_of(lead)] += 1
+    return counts
 
 
 def _print_plan(plan: Dict[str, Any], out) -> None:
@@ -475,24 +576,24 @@ def _print_plan(plan: Dict[str, Any], out) -> None:
                                         else "does not exist yet (created on --apply)"))
     out("  leads read: %d unique; excluded from the six campaigns: %s"
         % (plan["pulled"], ", ".join("%s %d" % (k, v) for k, v in sorted(plan["excluded"].items())) or "none"))
-    counts = OrderedDict((cid, {"not_started": 0, "mid_sequence": 0}) for cid in CAMPAIGNS)
-    for lead in plan["picked"]:
-        counts[lead["campaign"]][stage_of(lead)] += 1
     out("  %-46s %12s %13s %6s" % ("campaign", "not_started", "mid_sequence", "total"))
     tot = [0, 0]
-    for cid, c in counts.items():
+    for cid, c in _counts(plan["picked"]).items():
         tot[0] += c["not_started"]
         tot[1] += c["mid_sequence"]
         out("  %-46s %12d %13d %6d" % (CAMPAIGNS[cid][:46], c["not_started"], c["mid_sequence"],
                                         c["not_started"] + c["mid_sequence"]))
     out("  %-46s %12d %13d %6d" % ("TOTAL", tot[0], tot[1], tot[0] + tot[1]))
+    out("  on --apply: the first move is a 1-lead canary; every batch is re-read before it is sent "
+        "and verified before the next one")
 
 
-def _run(args, client, now, backup_dir, manifest_dir, confirm, sleep, store, out) -> int:
+def _run(args, ctx) -> int:
+    client, out = ctx["client"], ctx["out"]
     try:
         plan = _read_plan(client, out)
     except InstantlyError as exc:
-        print("Instantly read failed: %s" % exc, file=sys.stderr)
+        out("Instantly read failed: %s" % exc)
         log_run(JOB, "error", {"error": str(exc)[:300]})
         return EXIT_API
     _print_plan(plan, out)
@@ -506,18 +607,19 @@ def _run(args, client, now, backup_dir, manifest_dir, confirm, sleep, store, out
         log_run(JOB, "refused", {"problems": ["%s: %s" % x for x in problems]})
         return EXIT_INVALID
 
-    planned_at = _iso(now)
+    planned_at = _iso(ctx["now"])
     list_id = (plan["list"] or {}).get("id")
     rows = [manifest_row(l, list_id, planned_at) for l in plan["picked"]]
     meta = {"change_set": SCRIPT, "list_name": PARKED_LIST_NAME, "list_id": list_id,
             "planned_at": planned_at, "counts": counts}
 
     if not args.apply:
-        csv_path, json_path = write_manifest(manifest_dir, rows, dict(meta, dry_run=True), dryrun=True)
+        csv_path, json_path = write_manifest(ctx["manifest_dir"], rows, dict(meta, dry_run=True), dryrun=True,
+                                             mirror_dir=ctx["mirror_dir"])
         out("")
         out("planned manifest (dry-run, lead PII, git-ignored): %s" % csv_path)
-        out("                                                   %s" % json_path)
-        out("apply manifest will be: %s" % manifest_paths(manifest_dir, False)[0])
+        out("  copy outside the repo: %s" % os.path.join(ctx["mirror_dir"], os.path.basename(csv_path)))
+        out("apply manifest will be: %s" % manifest_paths(ctx["manifest_dir"], False)[0])
         out("")
         out("dry-run only: no write was sent. Apply with MODE=live ALLOW_LIVE_WRITES=1 and --apply.")
         log_run(JOB, "dry_run_ok", {"counts": counts, "manifest": json_path,
@@ -526,28 +628,31 @@ def _run(args, client, now, backup_dir, manifest_dir, confirm, sleep, store, out
         return EXIT_OK
 
     if not settings.is_live():
-        print("--apply refused: MODE=%s and the live-writes flag is not set. Nothing was sent."
-              % settings.get_mode(), file=sys.stderr)
+        out("--apply refused: MODE=%s and the live-writes flag is not set. Nothing was sent."
+            % settings.get_mode())
         log_run(JOB, "live_refused", {"mode": settings.get_mode()})
         return EXIT_REFUSED
+    # The manifest must be readable before anything live changes.
+    try:
+        load_manifest(ctx["manifest_dir"])
+    except FileNotFoundError:
+        pass
+    except (OSError, ValueError) as exc:
+        out("REFUSED: the existing manifest cannot be read (%s). Nothing was written. Check it, "
+            "move it aside only if it holds no parked leads, and re-run." % exc)
+        log_run(JOB, "refused", {"error": "manifest unreadable: %s" % str(exc)[:200]})
+        return EXIT_INVALID
     if not args.yes:
-        answer = (confirm or input)("Apply A, B and C to the live workspace? type yes: ").strip().lower()
+        answer = (ctx["confirm"] or input)("Apply A, B and C to the live workspace? type yes: ").strip().lower()
         if answer != "yes":
             out("aborted")
             return EXIT_REFUSED
 
-    code = _apply_campaigns(client, plan, now, backup_dir, out)
+    code = _apply_campaigns(client, plan, ctx["now"], ctx["backup_dir"], out)
     if code != EXIT_OK:
         return code
-    _quarantine(now, store, out)
-    return _apply_leads(client, plan, rows, meta, now, manifest_dir, sleep, out)
-
-
-def _counts(picked) -> Dict[str, Dict[str, int]]:
-    counts = OrderedDict((cid, {"not_started": 0, "mid_sequence": 0}) for cid in CAMPAIGNS)
-    for lead in picked:
-        counts[lead["campaign"]][stage_of(lead)] += 1
-    return counts
+    _quarantine(ctx["now"], ctx["store"], out)
+    return _apply_leads(plan, rows, meta, ctx)
 
 
 def _apply_campaigns(client, plan, now, backup_dir, out) -> int:
@@ -558,14 +663,12 @@ def _apply_campaigns(client, plan, now, backup_dir, out) -> int:
         try:
             fresh[cid] = client.get_campaign(cid)
         except InstantlyError as exc:
-            print("could not re-read %s after the confirmation: %s; nothing was sent" % (cid, exc),
-                  file=sys.stderr)
+            out("could not re-read %s after the confirmation: %s; nothing was sent" % (cid, exc))
             return EXIT_API
         before = plan["campaigns"][cid]
         for key in ("email_list", "allow_risky_contacts", "status"):
             if not R.field_equal(key, before.get(key), fresh[cid].get(key)):
-                print("REFUSED: %s of %s changed while the confirmation was open; nothing was sent"
-                      % (key, cid), file=sys.stderr)
+                out("REFUSED: %s of %s changed while the confirmation was open; nothing was sent" % (key, cid))
                 log_run(JOB, "refused", {"error": "%s moved during confirmation" % key, "campaign_id": cid})
                 return EXIT_REFUSED
 
@@ -580,8 +683,7 @@ def _apply_campaigns(client, plan, now, backup_dir, out) -> int:
                               R.campaign_key_for(cid), extra={"placement_test": PLACEMENT_TEST_ID},
                               after=cp["patch"]))
         except (OSError, ValueError) as exc:
-            print("REFUSED: the before-image of %s could not be written (%s); nothing was sent."
-                  % (cid, exc), file=sys.stderr)
+            out("REFUSED: the before-image of %s could not be written (%s); nothing was sent." % (cid, exc))
             for path in preapply.values():
                 R.relabel(path, R.KIND_NOT_APPLIED, outcome="not_sent", note="a later backup failed")
             log_run(JOB, "refused", {"error": "backup failed: %s" % exc, "campaign_id": cid})
@@ -593,7 +695,6 @@ def _apply_campaigns(client, plan, now, backup_dir, out) -> int:
         before = dict((k, fresh[cid].get(k)) for k in cp["patch"])
         settled = R.patch_and_settle(client, cid, cp["patch"], preapply[cid], before)
         out("[%s] %s" % (cid, R.describe_outcome(settled)))
-        bad = []
         try:
             bad = _verify_campaign(client.get_campaign(cid))
         except InstantlyError as exc:
@@ -617,195 +718,341 @@ def _apply_campaigns(client, plan, now, backup_dir, out) -> int:
 
 def _quarantine(now, store, out) -> None:
     """Record the three inboxes in capacity.quarantine (the local store of
-    whichever checkout runs this). Never pauses them, never touches warm-up."""
+    whichever checkout runs this). An inbox already in the ledger keeps its
+    entry and its ``since``. Never pauses them, never touches warm-up."""
     try:
         from jobs import inbox_inventory as INV
+        ledger = INV.load_quarantine(store)
+        added = []
         for email in REMOVE:
+            if email in ledger:
+                continue
             INV.quarantine_inbox(email, reason=QUARANTINE_REASON, flags=["seed_test_gmail_spam"],
                                  now=now, store=store)
+            added.append(email)
         ledger = INV.load_quarantine(store)
         missing = [e for e in REMOVE if e not in ledger]
     except Exception as exc:  # noqa: BLE001 - the quarantine must never undo a verified PATCH
-        missing = list(REMOVE)
+        added, missing = [], list(REMOVE)
         out("quarantine ledger error: %s" % exc)
     if missing:
         out("QUARANTINE NOT RECORDED for %s: run the manual step in README.md" % ", ".join(missing))
         log_run(JOB, "quarantine_failed", {"inboxes": missing})
     else:
-        out("quarantined in capacity.quarantine: %s" % ", ".join(REMOVE))
-        log_run(JOB, "quarantined", {"inboxes": REMOVE})
+        out("capacity.quarantine: added %s; already there %s"
+            % (", ".join(added) or "none", ", ".join(e for e in REMOVE if e not in added) or "none"))
+        log_run(JOB, "quarantined", {"added": added})
 
 
-def _apply_leads(client, plan, rows, meta, now, manifest_dir, sleep, out) -> int:
+def _stop(out, msg: str, details: Dict[str, Any]) -> int:
+    out("STOPPED: %s" % msg)
+    log_run(JOB, "leads_stopped", dict(details, error=msg[:300]))
+    return EXIT_API
+
+
+def _apply_leads(plan, rows, meta, ctx) -> int:
+    client, out, sleep = ctx["client"], ctx["out"], ctx["sleep"]
+    manifest_dir, mirror_dir = ctx["manifest_dir"], ctx["mirror_dir"]
     list_obj = plan["list"]
     if not list_obj:
         try:
             list_obj = find_list(client, PARKED_LIST_NAME) or client.create_lead_list(PARKED_LIST_NAME)
         except InstantlyError as exc:
-            out("could not create the lead list: %s; no lead was moved" % exc)
-            log_run(JOB, "error", {"error": "create_lead_list: %s" % str(exc)[:300]})
-            return EXIT_API
-    list_id = (list_obj or {}).get("id") if isinstance(list_obj, dict) and not list_obj.get("shadow") else None
+            return _stop(out, "could not create the lead list: %s; no lead was moved" % exc, {})
+    list_id = list_obj.get("id") if isinstance(list_obj, dict) and not list_obj.get("shadow") else None
     if not list_id:
-        out("the lead list has no id (%r); no lead was moved" % (list_obj,))
-        return EXIT_API
+        return _stop(out, "the lead list has no id (%r); no lead was moved" % (list_obj,), {})
     out("destination list %r id %s" % (PARKED_LIST_NAME, list_id))
 
-    # Merge with a manifest left by an earlier apply: its rows are kept as
-    # they are (they record moves that happened), new ones are appended.
+    # Merge with a manifest left by an earlier apply: its rows are kept (they
+    # record moves that happened), new ones are appended. Only a missing file
+    # starts a new manifest; an unreadable one stops the run unwritten.
     by_id = OrderedDict()  # type: Dict[str, Dict[str, Any]]
     try:
         old_meta, old_rows = load_manifest(manifest_dir)
-        for row in old_rows:
-            by_id[row["lead_id"]] = row
-    except (OSError, ValueError):
-        old_meta = {}
+    except FileNotFoundError:
+        old_meta, old_rows = {}, []
+    except (OSError, ValueError) as exc:
+        out("REFUSED: the existing manifest cannot be read (%s); it was not overwritten and no lead "
+            "was moved" % exc)
+        log_run(JOB, "refused", {"error": "manifest unreadable: %s" % str(exc)[:200]})
+        return EXIT_INVALID
+    for row in old_rows:
+        by_id[row["lead_id"]] = dict((c, row.get(c, "")) for c in COLUMNS)
     for row in rows:
         row["destination_list_id"] = list_id
         by_id.setdefault(row["lead_id"], row)
-    all_rows = list(by_id.values())
-    meta = dict(meta, list_id=list_id, applied_at=_iso(now),
+    meta = dict(meta, list_id=list_id, applied_at=_iso(ctx["now"]),
                 first_planned_at=old_meta.get("first_planned_at") or old_meta.get("planned_at") or meta["planned_at"])
+
+    def save() -> Tuple[str, str]:
+        return write_manifest(manifest_dir, list(by_id.values()), meta, mirror_dir=mirror_dir)
+
     try:
-        csv_path, json_path = write_manifest(manifest_dir, all_rows, meta)
+        csv_path, json_path = save()
     except OSError as exc:
         out("REFUSED: the manifest could not be written (%s); no lead was moved" % exc)
         log_run(JOB, "refused", {"error": "manifest write failed: %s" % exc})
         return EXIT_REFUSED
-    out("manifest written before any move: %s" % csv_path)
-    log_run(JOB, "manifest_written", {"manifest": json_path, "rows": len(all_rows), "list_id": list_id})
+    out("manifest written before any move: %s (copy in %s)" % (csv_path, mirror_dir))
+    log_run(JOB, "manifest_written", {"manifest": json_path, "rows": len(by_id), "list_id": list_id})
 
-    to_move = [by_id[r["lead_id"]] for r in rows if not by_id[r["lead_id"]].get("moved_at")]
-    failed = False
+    emails = dict((lid, r.get("email") or "") for lid, r in by_id.items())
+    canary_done = False
     for cid in CAMPAIGNS:
-        ids = [r["lead_id"] for r in to_move if r["campaign_id"] == cid]
-        for start in range(0, len(ids), MOVE_BATCH):
-            batch = ids[start:start + MOVE_BATCH]
-
-            def still(lead, cid=cid):
-                return bool(lead) and lead.get("campaign") == cid and lead.get("list_id") != list_id
-
-            result = move_batch(client, batch, {"campaign": cid}, {"to_list_id": list_id}, still, sleep, out)
-            left = set(result.get("remaining") or ([] if result["ok"] else batch))
+        try:
+            members = campaign_members(client, cid)
+        except InstantlyError as exc:
+            save()
+            return _stop(out, "could not read campaign %s before moving (%s); nothing more was sent" % (cid, exc),
+                         {"campaign_id": cid})
+        # What to move is decided from live state, not from the manifest: a
+        # lead still in its source campaign still has to move, and it is
+        # re-checked against the selection rules now, after the prompt.
+        todo = []
+        for lid, row in by_id.items():
+            if row["campaign_id"] != cid or lid not in members:
+                continue
+            why = exclusion_reason(members[lid], [cid])
+            row["moved_at"] = row["move_job_id"] = ""
+            row["verified_in_list"] = row["verified_not_in_campaign"] = False
+            row["skip_reason"] = why or ""
+            if why is None:
+                row["restored_at"] = row["restore_job_id"] = ""
+                todo.append(lid)
+        save()
+        batches = []
+        if todo and not canary_done:
+            batches.append(todo[:1])
+            todo = todo[1:]
+        batches += [todo[i:i + MOVE_BATCH] for i in range(0, len(todo), MOVE_BATCH)]
+        for n, batch in enumerate(batches):
+            canary = not canary_done
+            before = members
+            result = move_batch(client, batch, {"campaign": cid}, {"to_list_id": list_id},
+                                lambda cid=cid: set(campaign_members(client, cid)), sleep, out)
+            try:
+                members = campaign_members(client, cid)
+                inside = list_membership(client, list_id)
+            except InstantlyError as exc:
+                save()
+                return _stop(out, "the read-back of %s batch %d failed (%s); its leads are UNKNOWN and "
+                                  "were not stamped. Re-run after checking the list." % (CAMPAIGNS[cid], n + 1, exc),
+                             {"campaign_id": cid, "job_id": result.get("job_id")})
+            gone = set(before) - set(members)
+            extra = sorted(gone - set(batch))
             stamp = _iso(R.utcnow())
+            job_ref = result.get("job_id") or result.get("job_status")
             for lid in batch:
-                if lid not in left:
-                    by_id[lid]["move_job_id"] = result.get("job_id") or result.get("job_status")
-                    by_id[lid]["moved_at"] = stamp
-            write_manifest(manifest_dir, list(by_id.values()), meta)
-            out("  %s batch %d: %d leads, job %s %s%s" % (
-                CAMPAIGNS[cid][:30], start // MOVE_BATCH + 1, len(batch), result.get("job_id"),
-                result.get("job_status"), (" ERROR %s" % result["error"]) if result.get("error") else ""))
+                if lid in gone and lid in inside:
+                    row = by_id[lid]
+                    row["moved_at"], row["move_job_id"] = stamp, job_ref
+                    row["verified_in_list"] = row["verified_not_in_campaign"] = True
+            for lid in extra:
+                # Left the campaign without being asked: recorded so that
+                # --restore-leads brings it back.
+                row = manifest_row(before[lid], list_id, stamp)
+                row["skip_reason"] = "over_moved_by_server"
+                row["move_job_id"] = job_ref
+                row["moved_at"] = stamp if lid in inside else ""
+                row["verified_in_list"] = lid in inside
+                row["verified_not_in_campaign"] = True
+                by_id[lid] = row
+                emails[lid] = row.get("email") or ""
+            save()
+            problems = []
             if not result["ok"]:
-                failed = True
-                break
-        if failed:
-            break
+                problems.append(result.get("error") or result.get("job_status"))
+            jp = job_data_problem(result.get("job"), result.get("sent") or [], emails)
+            if jp:
+                problems.append(jp)
+            if extra:
+                problems.append("OVER-MOVE: %d leads left the campaign that were not in this batch "
+                                "(recorded in the manifest as over_moved_by_server)" % len(extra))
+            unverified = [lid for lid in batch if not by_id[lid]["moved_at"]]
+            if unverified:
+                problems.append("%d leads of the batch are not verified out of the campaign and in the list"
+                                % len(unverified))
+            if canary:
+                canary_done = True
+                if len(before) - len(members) != 1:
+                    problems.append("CANARY: the campaign went from %d to %d leads; exactly one should have left"
+                                    % (len(before), len(members)))
+            out("  %s %s: %d leads, job %s %s" % (CAMPAIGNS[cid][:30], "canary" if canary else "batch %d" % n,
+                                                  len(batch), result.get("job_id"), result.get("job_status")))
+            if problems:
+                return _stop(out, "; ".join(p for p in problems if p),
+                             {"campaign_id": cid, "job_id": result.get("job_id"), "manifest": json_path})
+            if canary:
+                out("  canary verified: 1 lead out of the campaign and in the list, campaign count down by 1")
 
     out("")
     out("verifying every manifest lead ...")
-    ids = [r["lead_id"] for r in by_id.values()]
-    try:
-        state = list_members(client, list_id, ids)
-    except InstantlyError as exc:
-        out("verification read failed: %s" % exc)
-        state = {}
-    summary = OrderedDict((cid, {"planned": 0, "moved": 0, "verified": 0, "failed": 0}) for cid in CAMPAIGNS)
-    for row in by_id.values():
-        lead = state.get(row["lead_id"])
-        in_list = bool(lead) and lead.get("list_id") == list_id
-        out_of_campaign = bool(lead) and lead.get("campaign") != row["campaign_id"]
-        row["verified_in_list"] = in_list
-        row["verified_not_in_campaign"] = out_of_campaign
-        s = summary.setdefault(row["campaign_id"], {"planned": 0, "moved": 0, "verified": 0, "failed": 0})
-        s["planned"] += 1
-        s["moved"] += 1 if row.get("moved_at") else 0
-        if in_list and out_of_campaign:
-            s["verified"] += 1
-        else:
-            s["failed"] += 1
-    write_manifest(manifest_dir, list(by_id.values()), meta)
+    ok, summary = _verify_all(client, by_id, list_id, out)
+    save()
     _print_summary(summary, out)
-    ok = not failed and all(s["failed"] == 0 for s in summary.values())
     log_run(JOB, "leads_parked" if ok else "leads_partial",
             {"list_id": list_id, "manifest": json_path, "summary": summary})
     return EXIT_OK if ok else EXIT_API
 
 
-def _print_summary(summary, out, cols=("planned", "moved", "verified", "failed")) -> None:
+def _verify_all(client, by_id, list_id, out) -> Tuple[bool, Dict[str, Dict[str, int]]]:
+    blank = lambda: {"planned": 0, "moved": 0, "skipped": 0, "failed": 0}  # noqa: E731
+    summary = OrderedDict((cid, blank()) for cid in CAMPAIGNS)
+    try:
+        inside = list_membership(client, list_id)
+        members = dict((cid, set(campaign_members(client, cid))) for cid in CAMPAIGNS)
+    except InstantlyError as exc:
+        out("verification read failed: %s; no row counts as verified" % exc)
+        for row in by_id.values():
+            summary.setdefault(row["campaign_id"], blank())["failed"] += 1
+        return False, summary
+    for lid, row in by_id.items():
+        cid = row["campaign_id"]
+        s = summary.setdefault(cid, blank())
+        s["planned"] += 1
+        in_list = lid in inside
+        out_of_campaign = lid not in members.get(cid, set())
+        row["verified_in_list"] = in_list
+        row["verified_not_in_campaign"] = out_of_campaign
+        if in_list and out_of_campaign:
+            s["moved"] += 1
+            row["moved_at"] = row.get("moved_at") or "verified_%s" % _iso(R.utcnow())
+        elif row.get("skip_reason") and row["skip_reason"] != "over_moved_by_server" and not in_list:
+            s["skipped"] += 1
+        elif not row.get("moved_at") and not in_list and out_of_campaign:
+            row["skip_reason"] = row.get("skip_reason") or "not_in_source_campaign"
+            s["skipped"] += 1
+        else:
+            s["failed"] += 1
+    return all(s["failed"] == 0 for s in summary.values()), summary
+
+
+def _print_summary(summary, out, cols=("planned", "moved", "skipped", "failed")) -> None:
     out("  %-46s" % "campaign" + "".join("%10s" % c for c in cols))
     for cid, s in summary.items():
-        out("  %-46s" % CAMPAIGNS.get(cid, cid)[:46] + "".join("%10d" % s[c] for c in cols))
+        out("  %-46s" % CAMPAIGNS.get(cid, cid)[:46] + "".join("%10d" % s.get(c, 0) for c in cols))
 
 
-def _restore_leads(args, client, now, manifest_dir, confirm, sleep, out) -> int:
+def _restore_leads(args, ctx) -> int:
+    client, out, sleep = ctx["client"], ctx["out"], ctx["sleep"]
+    manifest_dir = ctx["manifest_dir"]
     try:
         meta, rows = load_manifest(manifest_dir)
+    except FileNotFoundError:
+        out("REFUSED: there is no apply manifest at %s" % manifest_paths(manifest_dir, False)[1])
+        return EXIT_INVALID
     except (OSError, ValueError) as exc:
-        out("REFUSED: no apply manifest to restore from (%s)" % exc)
+        out("REFUSED: the manifest cannot be read (%s); nothing was moved" % exc)
         return EXIT_INVALID
     list_id = meta.get("list_id") or next((r.get("destination_list_id") for r in rows
                                           if r.get("destination_list_id")), None)
     if not list_id:
         out("REFUSED: the manifest names no parked list id")
         return EXIT_INVALID
+
+    pending = [r for r in rows if not r.get("restored_at") and r["campaign_id"] in CAMPAIGNS]
+    targets = sorted(set(r["campaign_id"] for r in pending), key=list(CAMPAIGNS).index)
     try:
-        state = list_members(client, list_id, [r["lead_id"] for r in rows])
+        members = dict((cid, campaign_members(client, cid)) for cid in targets)
+        inside = list_membership(client, list_id)
+        statuses = dict((cid, client.get_campaign(cid).get("status")) for cid in targets)
     except InstantlyError as exc:
-        out("Instantly read failed: %s" % exc)
+        out("Instantly read failed: %s; nothing was moved" % exc)
         return EXIT_API
+    active = [cid for cid in targets if str(statuses.get(cid)) != str(PAUSED)]
+    to_send = [r for r in pending if r["lead_id"] in inside and r["lead_id"] not in members[r["campaign_id"]]]
+    missing = [r for r in pending if (r.get("moved_at") or r.get("skip_reason") == "over_moved_by_server")
+               and r["lead_id"] not in inside and r["lead_id"] not in members[r["campaign_id"]]]
+    if args.limit is not None:
+        to_send = to_send[:args.limit]
     groups = OrderedDict()  # type: Dict[str, List[Dict[str, Any]]]
-    for row in rows:
-        lead = state.get(row["lead_id"])
-        if lead and lead.get("list_id") == list_id and lead.get("campaign") != row["campaign_id"]:
-            groups.setdefault(row["campaign_id"], []).append(row)
+    for row in to_send:
+        groups.setdefault(row["campaign_id"], []).append(row)
+
     out("RESTORE LEADS from list %s back to their campaigns (manifest %s)"
         % (list_id, manifest_paths(manifest_dir, False)[0]))
-    out("  %d manifest rows; %d still in the parked list" % (len(rows), sum(len(g) for g in groups.values())))
+    out("  %d manifest rows not yet restored; %d of them are in the parked list; sending %d%s"
+        % (len(pending), sum(1 for r in pending if r["lead_id"] in inside), len(to_send),
+           " (--limit %d)" % args.limit if args.limit is not None else ""))
     for cid, group in groups.items():
         mid = sum(1 for r in group if r.get("stage") == "mid_sequence")
         out("  -> %s (%s): %d leads, %d of them mid-sequence" % (CAMPAIGNS.get(cid, cid), cid, len(group), mid))
-    out("  mid-sequence leads may restart at step 1 when moved back (unverified): check one first.")
+    for row in missing:
+        out("  NOT FOUND: %s was recorded as parked but is neither in the list nor in %s"
+            % (row["lead_id"], CAMPAIGNS.get(row["campaign_id"], row["campaign_id"])))
+    out("  mid-sequence leads may restart at step 1 when moved back (unverified): restore one with "
+        "--limit 1 and check it first.")
+    if active:
+        out("REFUSED: %s not paused (status 2); leads are only moved back into paused campaigns."
+            % ", ".join("%s is status %s" % (CAMPAIGNS[c], statuses[c]) for c in active))
+        return EXIT_INVALID
     if not args.apply:
         out("dry-run only: nothing was moved.")
-        log_run(JOB, "restore_leads_dry_run", {"groups": dict((c, len(g)) for c, g in groups.items())})
-        return EXIT_OK
+        log_run(JOB, "restore_leads_dry_run", {"groups": dict((c, len(g)) for c, g in groups.items()),
+                                               "not_found": len(missing)})
+        return EXIT_API if missing else EXIT_OK
     if not settings.is_live():
-        print("--restore-leads --apply refused: MODE=%s and the live-writes flag is not set."
-              % settings.get_mode(), file=sys.stderr)
+        out("--restore-leads --apply refused: MODE=%s and the live-writes flag is not set." % settings.get_mode())
         return EXIT_REFUSED
     if not args.yes:
-        answer = (confirm or input)("Move these leads back to their campaigns? type yes: ").strip().lower()
+        answer = (ctx["confirm"] or input)("Move these leads back to their campaigns? type yes: ").strip().lower()
         if answer != "yes":
             out("aborted")
             return EXIT_REFUSED
+
     by_id = dict((r["lead_id"], r) for r in rows)
-    ok = True
+    emails = dict((r["lead_id"], r.get("email") or "") for r in rows)
+    meta = dict(meta, restore_started_at=_iso(ctx["now"]))
+
+    def save() -> None:
+        write_manifest(manifest_dir, rows, meta, mirror_dir=ctx["mirror_dir"])
+
     for cid, group in groups.items():
         ids = [r["lead_id"] for r in group]
-        for start in range(0, len(ids), MOVE_BATCH):
+        for n, start in enumerate(range(0, len(ids), MOVE_BATCH)):
             batch = ids[start:start + MOVE_BATCH]
-
-            def still(lead, cid=cid):
-                return bool(lead) and lead.get("campaign") != cid
-
-            result = move_batch(client, batch, {"list_id": list_id}, {"to_campaign_id": cid}, still, sleep, out)
-            left = set(result.get("remaining") or ([] if result["ok"] else batch))
+            before_members, before_inside = set(members[cid]), set(inside)
+            result = move_batch(client, batch, {"list_id": list_id}, {"to_campaign_id": cid},
+                                lambda: list_membership(client, list_id), sleep, out)
+            try:
+                members[cid] = campaign_members(client, cid)
+                inside = list_membership(client, list_id)
+            except InstantlyError as exc:
+                save()
+                return _stop(out, "the read-back after restoring to %s failed (%s); those leads were not "
+                                  "stamped" % (CAMPAIGNS[cid], exc), {"campaign_id": cid})
+            now_in = set(members[cid])
             stamp = _iso(R.utcnow())
             for lid in batch:
-                if lid not in left:
-                    by_id[lid]["restore_job_id"] = result.get("job_id") or result.get("job_status")
+                if lid in now_in:
                     by_id[lid]["restored_at"] = stamp
-            write_manifest(manifest_dir, rows, dict(meta, restored_at=_iso(now)))
-            out("  %s batch %d: %d leads, job %s %s" % (CAMPAIGNS.get(cid, cid)[:30], start // MOVE_BATCH + 1,
-                                                       len(batch), result.get("job_id"), result.get("job_status")))
+                    by_id[lid]["restore_job_id"] = result.get("job_id") or result.get("job_status")
+            save()
+            problems = []
             if not result["ok"]:
-                ok = False
-                break
-        if not ok:
-            break
+                problems.append(result.get("error") or result.get("job_status"))
+            jp = job_data_problem(result.get("job"), result.get("sent") or [], emails)
+            if jp:
+                problems.append(jp)
+            arrived_extra = sorted((now_in - before_members) - set(batch))
+            left_extra = sorted((before_inside - inside) - set(batch))
+            if arrived_extra or left_extra:
+                problems.append("OVER-MOVE: %d leads not in this batch arrived in the campaign and %d left "
+                                "the list" % (len(arrived_extra), len(left_extra)))
+            not_back = [lid for lid in batch if lid not in now_in]
+            if not_back:
+                problems.append("%d leads of the batch are not back in %s: %s"
+                                % (len(not_back), CAMPAIGNS[cid], ", ".join(not_back[:10])))
+            out("  %s batch %d: %d leads, job %s %s" % (CAMPAIGNS[cid][:30], n + 1, len(batch),
+                                                       result.get("job_id"), result.get("job_status")))
+            if problems:
+                return _stop(out, "; ".join(p for p in problems if p), {"campaign_id": cid})
+    ok = not missing
     log_run(JOB, "leads_restored" if ok else "restore_leads_partial",
-            {"groups": dict((c, len(g)) for c, g in groups.items())})
+            {"groups": dict((c, len(g)) for c, g in groups.items()), "not_found": len(missing)})
+    if missing:
+        out("%d rows recorded as parked were not found in the list or their campaign (listed above)" % len(missing))
     return EXIT_OK if ok else EXIT_API
 
 

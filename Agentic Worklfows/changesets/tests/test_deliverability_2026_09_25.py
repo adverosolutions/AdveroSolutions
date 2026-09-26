@@ -3,12 +3,16 @@ Microsoft-hosted leads parked in a list and back.
 
 One httpx.MockTransport keeps campaigns, leads, lead lists and move jobs the
 way the API does, so the tests see the exact calls a live run would send.
+Like the live API (read 2026-09-25), no lead the fake returns carries a
+``list_id`` field: list membership is only visible through leads/list
+{list_id}, which the fake answers from its own private record.
 """
 import copy
 import json
 import os
 
 import httpx
+import pytest
 
 from shared.instantly import Instantly
 from changesets.deliverability_2026_09_25 import apply_deliverability as D
@@ -29,14 +33,27 @@ def lead(lid, cid, status=1, esp=2, replies=0, step=False, **extra):
 def workspace_leads():
     out = []
     for n, cid in enumerate(CIDS):
-        out += [lead("ms%d" % n, cid), lead("mid%d" % n, cid, step=True),
+        out += [lead("ms%d" % n, cid), lead("mid%d" % n, cid, step=True), lead("ms%db" % n, cid),
                 lead("g%d" % n, cid, esp=1), lead("rep%d" % n, cid, replies=1)]
     return out
 
 
+PARKED = sorted(["ms%d" % n for n in range(6)] + ["mid%d" % n for n in range(6)] + ["ms%db" % n for n in range(6)])
+
+
+def public(row):
+    return dict((k, v) for k, v in row.items() if not k.startswith("_"))
+
+
 class Fake(object):
-    def __init__(self, campaigns=None, leads=None, conflicts=0, strict_reads=False):
-        self.campaigns = campaigns or dict(
+    """``ignore_ids``: a move takes every lead of the source (the over-move
+    the canary is there for). ``job_final``: what every job ends as.
+    ``move_on_fail``: whether a failed/cancelled job still moved its leads.
+    ``skip_restore``: a restore job reports success and moves nothing."""
+
+    def __init__(self, leads=None, conflicts=0, strict_reads=False, ignore_ids=False,
+                 job_final="success", move_on_fail=False, job_404=False, skip_restore=False):
+        self.campaigns = dict(
             (cid, {"id": cid, "name": name, "status": 2, "allow_risky_contacts": True,
                    "email_list": list(D.RECORDED_EMAIL_LIST), "daily_limit": 50})
             for cid, name in D.CAMPAIGNS.items())
@@ -45,8 +62,14 @@ class Fake(object):
         self.jobs = {}
         self.conflicts = conflicts
         self.strict_reads = strict_reads
+        self.ignore_ids = ignore_ids
+        self.job_final = job_final
+        self.move_on_fail = move_on_fail
+        self.job_404 = job_404
+        self.skip_restore = skip_restore
+        self.fail_lead_reads = False
         self.requests = []
-        self.moves = []            # (body, manifest_existed)
+        self.moves = []            # (body, manifest ids at the time of the call)
         self.manifest_probe = None
 
     def __call__(self, request):
@@ -61,20 +84,22 @@ class Fake(object):
                 self.campaigns[cid].update(body)
             return httpx.Response(200, json=self.campaigns[cid])
         if path == "leads/list":
+            if self.fail_lead_reads:
+                return httpx.Response(500, text="boom")
             rows = list(self.leads.values())
             if body.get("campaign"):
                 rows = [r for r in rows if r.get("campaign") == body["campaign"]]
             if body.get("list_id"):
-                rows = [r for r in rows if r.get("list_id") == body["list_id"]]
+                rows = [r for r in rows if r.get("_list") == body["list_id"]]
             start = int(body.get("starting_after") or 0)
-            page = rows[start:start + 2]            # tiny pages exercise the cursor
-            nxt = str(start + 2) if start + 2 < len(rows) else None
-            return httpx.Response(200, json={"items": page, "next_starting_after": nxt})
+            page = rows[start:start + 4]            # small pages exercise the cursor
+            nxt = str(start + 4) if start + 4 < len(rows) else None
+            return httpx.Response(200, json={"items": [public(r) for r in page], "next_starting_after": nxt})
         if path.startswith("leads/") and m == "GET":
             lid = path.split("/", 1)[1]
             if lid not in self.leads:
                 return httpx.Response(404, text="not found")
-            return httpx.Response(200, json=self.leads[lid])
+            return httpx.Response(200, json=public(self.leads[lid]))
         if path == "lead-lists":
             if m == "GET":
                 q = request.url.params.get("search") or ""
@@ -83,31 +108,42 @@ class Fake(object):
             self.lists.append(new)
             return httpx.Response(200, json=new)
         if path == "leads/move":
-            if self.manifest_probe:
-                self.moves.append((body, self.manifest_probe()))
-            else:
-                self.moves.append((body, None))
+            self.moves.append((body, self.manifest_probe() if self.manifest_probe else None))
             if self.conflicts:
                 self.conflicts -= 1
                 return httpx.Response(409, text="another move job is running")
-            for lid in body["ids"]:
-                row = self.leads[lid]
-                if body.get("campaign") and row.get("campaign") != body["campaign"]:
-                    continue
-                if body.get("list_id") and row.get("list_id") != body["list_id"]:
-                    continue
-                if body.get("to_list_id"):
-                    row["campaign"], row["list_id"] = None, body["to_list_id"]
-                else:
-                    row["campaign"], row["list_id"] = body["to_campaign_id"], None
+            moved = []
+            to_list = body.get("to_list_id")
+            restoring = bool(body.get("to_campaign_id"))
+            final = self.job_final
+            act = final == "success" or (final in ("failed", "cancelled") and self.move_on_fail) \
+                or final == "in-progress"
+            if restoring and self.skip_restore:
+                act = False
+            if act:
+                for row in self.leads.values():
+                    in_src = (row.get("campaign") == body["campaign"]) if body.get("campaign") \
+                        else (row.get("_list") == body.get("list_id"))
+                    if not in_src or (row["id"] not in body["ids"] and not self.ignore_ids):
+                        continue
+                    if to_list:
+                        row["campaign"], row["_list"] = None, to_list
+                    else:
+                        row["campaign"], row["_list"] = body["to_campaign_id"], None
+                    moved.append(row)
             jid = "job-%d" % (len(self.jobs) + 1)
-            self.jobs[jid] = 0
+            self.jobs[jid] = {"polls": 0, "moved": moved}
             return httpx.Response(200, json={"id": jid, "status": "pending", "progress": 0})
         if path.startswith("background-jobs/"):
-            jid = path.split("/", 1)[1]
-            self.jobs[jid] += 1
-            return httpx.Response(200, json={"id": jid, "status": "in-progress" if self.jobs[jid] == 1
-                                             else "success", "progress": 100})
+            if self.job_404:
+                return httpx.Response(404, text="no such job")
+            job = self.jobs[path.split("/", 1)[1]]
+            job["polls"] += 1
+            status = "in-progress" if job["polls"] == 1 or self.job_final == "in-progress" else self.job_final
+            return httpx.Response(200, json={
+                "id": path.split("/", 1)[1], "status": status, "progress": 100,
+                "data": {"moved_leads": len(job["moved"]),
+                         "moved_lead_emails": [r["email"] for r in job["moved"]]}})
         return httpx.Response(404, text="unexpected %s %s" % (m, path))
 
     @property
@@ -118,12 +154,19 @@ class Fake(object):
         return Instantly(api_key="test-key", transport=httpx.MockTransport(self), sleep=lambda s: None)
 
 
-def run(fake, argv, tmp_path, sleeps=None):
+def run(fake, argv, tmp_path, sleeps=None, confirm=None, out=None):
     return D.main(argv, client=fake.client(), backup_dir=str(tmp_path / "backups"),
-                  manifest_dir=str(tmp_path / "manifests"),
-                  sleep=(sleeps.append if sleeps is not None else (lambda s: None)), out=lambda m: None)
+                  manifest_dir=str(tmp_path / "manifests"), mirror_dir=str(tmp_path / "mirror"),
+                  confirm=confirm, sleep=(sleeps.append if sleeps is not None else (lambda s: None)),
+                  out=(out.append if out is not None else (lambda m: None)))
 
 
+def manifest(tmp_path):
+    path = D.manifest_paths(str(tmp_path / "manifests"), dryrun=False)[1]
+    return dict((r["lead_id"], r) for r in json.load(open(path))["rows"])
+
+
+# --------------------------------------------------------------- selection
 def test_lead_selection_filter():
     c0, c1 = CIDS[0], CIDS[1]
     leads = [
@@ -140,6 +183,7 @@ def test_lead_selection_filter():
     assert D.stage_of(picked[2]) == "mid_sequence" and D.stage_of(picked[1]) == "not_started"
 
 
+# ----------------------------------------------------------------- dry-run
 def test_dry_run_sends_no_write_and_writes_only_the_dryrun_manifest(tmp_env, live_mode, tmp_path):
     fake = Fake(strict_reads=True)
     assert run(fake, [], tmp_path) == D.EXIT_OK
@@ -147,13 +191,14 @@ def test_dry_run_sends_no_write_and_writes_only_the_dryrun_manifest(tmp_env, liv
     assert not os.path.exists(tmp_path / "backups")
     csv_path, json_path = D.manifest_paths(str(tmp_path / "manifests"), dryrun=True)
     assert "DRYRUN" in csv_path and os.path.exists(csv_path)
+    assert os.path.exists(tmp_path / "mirror" / os.path.basename(csv_path))
     assert not os.path.exists(D.manifest_paths(str(tmp_path / "manifests"), dryrun=False)[1])
     rows = json.load(open(json_path))["rows"]
-    assert sorted(r["lead_id"] for r in rows) == sorted(["ms%d" % n for n in range(6)] + ["mid%d" % n for n in range(6)])
+    assert sorted(r["lead_id"] for r in rows) == PARKED
     assert {r["campaign_id"] for r in rows} == set(CIDS)
-    assert {r["stage"] for r in rows if r["lead_id"].startswith("mid")} == {"mid_sequence"}
 
 
+# ---------------------------------------------------------------- refusals
 def test_email_list_drift_is_refused_before_any_write(tmp_env, live_mode, tmp_path):
     fake = Fake()
     fake.campaigns[CIDS[2]]["email_list"] = D.RECORDED_EMAIL_LIST[:-1]
@@ -168,62 +213,192 @@ def test_a_campaign_that_is_not_paused_is_refused(tmp_env, live_mode, tmp_path):
     assert fake.writes == []
 
 
-def test_apply_writes_the_manifest_before_the_first_move_and_verifies(tmp_env, live_mode, tmp_path):
+def test_a_corrupt_manifest_refuses_before_any_write_and_is_not_overwritten(tmp_env, live_mode, tmp_path):
+    fake = Fake()
+    (tmp_path / "manifests").mkdir()
+    path = D.manifest_paths(str(tmp_path / "manifests"), False)[1]
+    broken = '{"meta": {}, "rows": [{"lead_id": "old-parked", "campaign_id": "x"}'
+    open(path, "w").write(broken)
+    assert run(fake, ["--apply", "--yes"], tmp_path) == D.EXIT_INVALID
+    assert fake.writes == [] and open(path).read() == broken
+
+
+def test_restore_cannot_be_combined_with_dry_run_apply_or_restore_leads(tmp_env, live_mode, tmp_path):
+    fake = Fake()
+    for extra in (["--dry-run"], ["--apply"], ["--restore-leads"]):
+        argv = ["--restore", "x.json", "--campaign", "cleaning_trigger", "--yes"] + extra
+        assert run(fake, argv, tmp_path) == D.EXIT_REFUSED
+    assert run(fake, ["--limit", "1"], tmp_path) == D.EXIT_REFUSED
+    assert fake.requests == []
+
+
+# ------------------------------------------------------------- happy path
+def test_apply_canary_first_manifest_before_moves_exact_bodies_and_rerun(tmp_env, live_mode, tmp_path):
     from jobs import inbox_inventory as INV
     fake = Fake()
     json_path = D.manifest_paths(str(tmp_path / "manifests"), dryrun=False)[1]
-
-    def probe():
-        if not os.path.exists(json_path):
-            return None
-        return [r["lead_id"] for r in json.load(open(json_path))["rows"]]
-    fake.manifest_probe = probe
+    fake.manifest_probe = lambda: ([r["lead_id"] for r in json.load(open(json_path))["rows"]]
+                                   if os.path.exists(json_path) else None)
     assert run(fake, ["--apply", "--yes"], tmp_path) == D.EXIT_OK
 
-    # the manifest held every planned lead before the first move call
-    first_body, manifest_then = fake.moves[0]
-    assert manifest_then is not None and len(manifest_then) == 12
-    # one move per campaign, from that campaign, to the parked list
-    assert [b["campaign"] for b, _ in fake.moves] == CIDS
-    assert all(b["to_list_id"] == "list-1" and b["copy_leads"] is False for b, _ in fake.moves)
-    for cid, camp in fake.campaigns.items():
-        assert sorted(camp["email_list"]) == D.TARGET_EMAIL_LIST and camp["allow_risky_contacts"] is False
-    assert len(os.listdir(tmp_path / "backups")) == 6
-    assert set(D.REMOVE) <= set(INV.load_quarantine())
-    rows = json.load(open(json_path))["rows"]
-    assert all(r["verified_in_list"] is True and r["verified_not_in_campaign"] is True and r["moved_at"]
-               for r in rows)
-    assert fake.leads["g0"]["campaign"] == CIDS[0] and fake.leads["rep0"]["campaign"] == CIDS[0]
+    patches = [json.loads(r.content) for r in fake.requests if r.method == "PATCH"]
+    assert len(patches) == 6
+    assert all(set(b) == {"email_list", "allow_risky_contacts"} and b["allow_risky_contacts"] is False
+               and sorted(b["email_list"]) == D.TARGET_EMAIL_LIST for b in patches)
 
-    # a re-run changes nothing: campaigns already applied, no lead left to park
+    bodies = [b for b, _ in fake.moves]
+    assert sorted(fake.moves[0][1]) == PARKED                 # manifest complete before the first move
+    assert len(bodies[0]["ids"]) == 1                          # the canary
+    assert all(set(b) == {"ids", "copy_leads", "campaign", "to_list_id", "limit"} for b in bodies)
+    assert all(b["limit"] == len(b["ids"]) and b["copy_leads"] is False and b["to_list_id"] == "list-1"
+               for b in bodies)
+    assert sorted(i for b in bodies for i in b["ids"]) == PARKED
+    rows = manifest(tmp_path)
+    assert all(r["moved_at"] and r["verified_in_list"] is True and r["verified_not_in_campaign"] is True
+               for r in rows.values())
+    assert fake.leads["g0"]["campaign"] == CIDS[0] and fake.leads["rep0"]["campaign"] == CIDS[0]
+    assert os.path.exists(tmp_path / "mirror" / os.path.basename(json_path))
+    assert set(D.REMOVE) <= set(INV.load_quarantine())
+
     before = len(fake.writes)
     assert run(fake, ["--apply", "--yes"], tmp_path) == D.EXIT_OK
-    assert [r.method for r in fake.writes[before:]] == []
-    assert len(json.load(open(json_path))["rows"]) == 12
+    assert fake.writes[before:] == []
+    assert len(manifest(tmp_path)) == len(PARKED)
 
 
+def test_quarantine_keeps_an_existing_entry(tmp_env, live_mode, tmp_path):
+    from jobs import inbox_inventory as INV
+    INV.quarantine_inbox(D.REMOVE[0], reason="earlier reason")
+    since = INV.load_quarantine()[D.REMOVE[0]]["since"]
+    assert run(Fake(), ["--apply", "--yes"], tmp_path) == D.EXIT_OK
+    ledger = INV.load_quarantine()
+    assert ledger[D.REMOVE[0]]["since"] == since and ledger[D.REMOVE[0]]["reason"] == "earlier reason"
+    assert ledger[D.REMOVE[1]]["reason"] == D.QUARANTINE_REASON
+
+
+def test_a_lead_that_changed_during_the_prompt_is_not_moved(tmp_env, live_mode, tmp_path):
+    fake = Fake()
+
+    def confirm(prompt):
+        fake.leads["mid0"]["email_reply_count"] = 1
+        fake.leads["ms1"]["status"] = -2
+        return "yes"
+    assert run(fake, ["--apply"], tmp_path, confirm=confirm) == D.EXIT_OK
+    assert fake.leads["mid0"]["campaign"] == CIDS[0] and fake.leads["ms1"]["campaign"] == CIDS[1]
+    rows = manifest(tmp_path)
+    assert rows["mid0"]["skip_reason"] == "replied" and rows["ms1"]["skip_reason"] == "not_active"
+    assert not rows["mid0"]["moved_at"] and "mid0" not in [i for b, _ in fake.moves for i in b["ids"]]
+
+
+# ----------------------------------------------------------------- failures
 def test_a_409_on_move_is_re_read_waited_and_retried_without_double_moving(tmp_env, live_mode, tmp_path):
     fake = Fake(conflicts=1)
     sleeps = []
     assert run(fake, ["--apply", "--yes"], tmp_path, sleeps=sleeps) == D.EXIT_OK
     assert D.CONFLICT_WAIT in sleeps
     bodies = [b for b, _ in fake.moves]
-    assert bodies[0]["ids"] == bodies[1]["ids"]          # the refused batch is sent again once
+    assert bodies[0]["ids"] == bodies[1]["ids"]
     moved = [i for b in bodies[1:] for i in b["ids"]]
-    assert len(moved) == len(set(moved)) == 12
+    assert sorted(moved) == PARKED
 
 
-def test_restore_leads_groups_by_original_campaign(tmp_env, live_mode, tmp_path):
+def test_an_over_move_on_the_canary_stops_and_restore_brings_everything_back(tmp_env, live_mode, tmp_path):
+    fake = Fake(ignore_ids=True)
+    out = []
+    assert run(fake, ["--apply", "--yes"], tmp_path, out=out) == D.EXIT_API
+    assert len(fake.moves) == 1 and len(fake.moves[0][0]["ids"]) == 1
+    assert any("OVER-MOVE" in m and "CANARY" in m for m in out)
+    rows = manifest(tmp_path)
+    over = sorted(l for l, r in rows.items() if r["skip_reason"] == "over_moved_by_server")
+    canary = fake.moves[0][0]["ids"][0]
+    assert over == sorted(set(["ms0", "mid0", "ms0b", "g0", "rep0"]) - {canary})   # Google and replied too
+    assert all(fake.leads[i]["campaign"] is None for i in over)
+    fake.ignore_ids = False
+    assert run(fake, ["--restore-leads", "--apply", "--yes"], tmp_path) == D.EXIT_OK
+    assert all(fake.leads[i]["campaign"] == CIDS[0] for i in over + [canary])
+
+
+@pytest.mark.parametrize("final,move_on_fail", [("failed", False), ("failed", True), ("cancelled", False),
+                                                ("in-progress", False)])
+def test_a_job_that_does_not_succeed_stops_the_run(tmp_env, live_mode, tmp_path, monkeypatch, final, move_on_fail):
+    monkeypatch.setattr(D, "MAX_POLLS", 3)
+    fake = Fake(job_final=final, move_on_fail=move_on_fail)
+    assert run(fake, ["--apply", "--yes"], tmp_path) == D.EXIT_API
+    assert len(fake.moves) == 1
+    canary = fake.moves[0][0]["ids"][0]
+    landed = fake.leads[canary]["campaign"] is None
+    # stamped only when the read-back shows it out of the campaign and in the list
+    assert bool(manifest(tmp_path)[canary]["moved_at"]) is landed
+    # a re-run decides from live state: a lead that did land is not sent again
+    fake.job_final = "success"
+    assert run(fake, ["--apply", "--yes"], tmp_path) == D.EXIT_OK
+    later = [i for b, _ in fake.moves[1:] for i in b["ids"]]
+    assert (canary in later) is (not landed)
+    assert manifest(tmp_path)[canary]["moved_at"]
+
+
+def test_job_polling_gives_up_after_three_4xx(tmp_env, live_mode, tmp_path):
+    fake = Fake(job_404=True)
+    assert run(fake, ["--apply", "--yes"], tmp_path) == D.EXIT_API
+    assert len([r for r in fake.requests if "background-jobs" in r.url.path]) == D.MAX_BAD_POLLS
+    assert len(fake.moves) == 1
+
+
+def test_a_failed_read_back_leaves_the_batch_unstamped(tmp_env, live_mode, tmp_path):
+    fake = Fake()
+    orig = fake.__call__
+
+    def handler(request):
+        resp = orig(request)
+        if request.url.path.endswith("leads/move"):
+            fake.fail_lead_reads = True
+        return resp
+    client = Instantly(api_key="k", transport=httpx.MockTransport(handler), sleep=lambda s: None)
+    rc = D.main(["--apply", "--yes"], client=client, backup_dir=str(tmp_path / "backups"),
+                manifest_dir=str(tmp_path / "manifests"), mirror_dir=str(tmp_path / "mirror"),
+                sleep=lambda s: None, out=lambda m: None)
+    assert rc == D.EXIT_API and len(fake.moves) == 1
+    canary = fake.moves[0][0]["ids"][0]
+    assert fake.leads[canary]["campaign"] is None and not manifest(tmp_path)[canary]["moved_at"]
+    fake.fail_lead_reads = False
+    assert run(fake, ["--apply", "--yes"], tmp_path) == D.EXIT_OK
+    assert canary not in [i for b, _ in fake.moves[1:] for i in b["ids"]]
+    assert manifest(tmp_path)[canary]["verified_in_list"] is True
+
+
+# ------------------------------------------------------------------ restore
+def test_restore_leads_groups_by_campaign_and_verifies(tmp_env, live_mode, tmp_path):
     fake = Fake()
     assert run(fake, ["--apply", "--yes"], tmp_path) == D.EXIT_OK
     n = len(fake.moves)
     assert run(fake, ["--restore-leads"], tmp_path) == D.EXIT_OK      # dry-run moves nothing
     assert len(fake.moves) == n
+    assert run(fake, ["--restore-leads", "--apply", "--yes", "--limit", "1"], tmp_path) == D.EXIT_OK
+    assert [b["ids"] for b, _ in fake.moves[n:]] == [[manifest_order(tmp_path)[0]]]
     assert run(fake, ["--restore-leads", "--apply", "--yes"], tmp_path) == D.EXIT_OK
-    back = [b for b, _ in fake.moves[n:]]
+    back = [b for b, _ in fake.moves[n + 1:]]
     assert [b["to_campaign_id"] for b in back] == CIDS
-    assert all(b["list_id"] == "list-1" and "campaign" not in b for b in back)
-    for b in back:
-        assert sorted(b["ids"]) == sorted(i for i in b["ids"] if fake.leads[i]["campaign"] == b["to_campaign_id"])
-        assert len(b["ids"]) == 2
-    assert all(fake.leads["ms%d" % k]["campaign"] == CIDS[k] for k in range(6))
+    assert all(set(b) == {"ids", "copy_leads", "list_id", "to_campaign_id", "limit"} for b in back)
+    assert all(fake.leads[i]["campaign"] is not None for i in PARKED)
+    assert all(r["restored_at"] for r in manifest(tmp_path).values())
+
+
+def manifest_order(tmp_path):
+    path = D.manifest_paths(str(tmp_path / "manifests"), dryrun=False)[1]
+    return [r["lead_id"] for r in json.load(open(path))["rows"]]
+
+
+def test_restore_that_moves_nothing_is_not_reported_restored(tmp_env, live_mode, tmp_path):
+    fake = Fake(skip_restore=True)
+    assert run(fake, ["--apply", "--yes"], tmp_path) == D.EXIT_OK
+    assert run(fake, ["--restore-leads", "--apply", "--yes"], tmp_path) == D.EXIT_API
+    assert not any(r["restored_at"] for r in manifest(tmp_path).values())
+
+
+def test_restore_refuses_an_active_campaign(tmp_env, live_mode, tmp_path):
+    fake = Fake()
+    assert run(fake, ["--apply", "--yes"], tmp_path) == D.EXIT_OK
+    n = len(fake.moves)
+    fake.campaigns[CIDS[3]]["status"] = 1
+    assert run(fake, ["--restore-leads", "--apply", "--yes"], tmp_path) == D.EXIT_INVALID
+    assert len(fake.moves) == n
