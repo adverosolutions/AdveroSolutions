@@ -1,0 +1,163 @@
+{
+  "title": "How My Own Email Bots Run: Leads In, Replies Handled, Calls Booked",
+  "platform": "diagram",
+  "sections": [
+    {
+      "key": "leads",
+      "label": "1 - FINDING AND RESEARCHING LEADS",
+      "color": 0,
+      "note": "Every lead is verified before anything is sent, and every email opens with something true about that business."
+    },
+    {
+      "key": "send",
+      "label": "2 - SENDING SAFELY",
+      "color": 1,
+      "note": "Cold email never touches my main domain, and a bot watches inbox health every day."
+    },
+    {
+      "key": "replies",
+      "label": "3 - HANDLING EVERY REPLY",
+      "color": 2,
+      "note": "A bot sorts each reply. Anything I haven't approved waits for me instead of going out on its own."
+    },
+    {
+      "key": "booked",
+      "label": "4 - BOOKING AND FOLLOWING UP",
+      "color": 3,
+      "note": "Interested leads get call times right away, and quiet ones get followed up on a schedule."
+    },
+    {
+      "key": "report",
+      "label": "5 - REPORTING",
+      "color": 4,
+      "note": "I get the numbers twice a day without opening a single dashboard."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "find",
+      "kind": "data.transform",
+      "label": "1 - A bot pulls new businesses for each niche and verifies every email address",
+      "section": "leads"
+    },
+    {
+      "key": "write",
+      "kind": "data.transform",
+      "label": "2 - Claude researches each business and writes a personal first line for them",
+      "section": "leads"
+    },
+    {
+      "key": "send",
+      "kind": "data.transform",
+      "label": "3 - Instantly sends the campaigns from about 45 warmed inboxes on 15 domains",
+      "section": "send"
+    },
+    {
+      "key": "health",
+      "kind": "data.transform",
+      "label": "4 - A bot checks every inbox's health each day and flags anything that's slipping",
+      "section": "send"
+    },
+    {
+      "key": "reply",
+      "kind": "data.transform",
+      "label": "5 - When someone replies, a bot reads it and sorts it into one of 11 types",
+      "section": "replies"
+    },
+    {
+      "key": "approved",
+      "kind": "flow.branch",
+      "label": "6 - Is the right answer one of the replies I've already approved?",
+      "section": "replies"
+    },
+    {
+      "key": "card",
+      "kind": "data.transform",
+      "label": "6b - If not, the bot drafts a reply and sends it to me to approve first",
+      "section": "replies"
+    },
+    {
+      "key": "book",
+      "kind": "data.transform",
+      "label": "7 - If it is, it goes out and offers two open call times from my calendar",
+      "section": "booked"
+    },
+    {
+      "key": "follow",
+      "kind": "data.transform",
+      "label": "8 - If the lead goes quiet, a follow-up bot keeps checking in on a set schedule",
+      "section": "booked"
+    },
+    {
+      "key": "crm",
+      "kind": "data.transform",
+      "label": "9 - Booked calls land in my GHL pipeline and get reminders before the call",
+      "section": "booked"
+    },
+    {
+      "key": "report",
+      "kind": "data.aggregate",
+      "label": "10 - Every morning and evening, a reporting bot sends me the numbers",
+      "section": "report"
+    }
+  ],
+  "edges": [
+    {
+      "from": "find",
+      "to": "write"
+    },
+    {
+      "from": "write",
+      "to": "send"
+    },
+    {
+      "from": "send",
+      "to": "health"
+    },
+    {
+      "from": "health",
+      "to": "reply"
+    },
+    {
+      "from": "reply",
+      "to": "approved"
+    },
+    {
+      "from": "approved",
+      "to": "book",
+      "branch": "Yes"
+    },
+    {
+      "from": "approved",
+      "to": "card",
+      "branch": "No"
+    },
+    {
+      "from": "card",
+      "to": "book"
+    },
+    {
+      "from": "book",
+      "to": "follow"
+    },
+    {
+      "from": "follow",
+      "to": "crm"
+    },
+    {
+      "from": "crm",
+      "to": "report"
+    }
+  ],
+  "input_sample": {
+    "reply": "Sounds interesting, what does this cost?"
+  },
+  "output_sample": {
+    "category": "interested",
+    "sent": "approved reply with two call times",
+    "booked": true
+  },
+  "archetype": "how_my_own_email_bots_run_leads_in_replies_handl",
+  "learned": true,
+  "learned_at": "2026-09-26"
+}
