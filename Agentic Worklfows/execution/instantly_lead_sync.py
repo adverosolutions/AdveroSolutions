@@ -68,24 +68,44 @@ COL_EMAIL = 5          # E: Email
 COL_LAST_UPDATED = 16  # P: Last Updated
 COL_NOTES = 17         # Q: Notes
 
-# ── Instantly status code → CRM stage mapping ─────────────────────────────
-# Instantly lead `status` field:
-#   1 = active (in campaign, emails sending or queued)
-#  -1 = bounced/failed delivery
-#   3 = replied
+# ── Instantly lead fields → CRM stage mapping ─────────────────────────────
+# Enums per the Instantly API v2 docs
+# (https://developer.instantly.ai/api-reference/lead/list-leads.md, get-lead.md)
+# and config/instantly_api_contract.md.
 #
-# Instantly `esp_code` field:
-#   999 = not sent yet (queued)
-#   1   = sending/scheduled
-#   2   = successfully delivered
-#   3   = bounced
-#   1000 = warmup email
+# Lead `status`:
+#   1 = Active, 2 = Paused, 3 = Completed (sequence finished; NOT "replied"),
+#  -1 = Bounced, -2 = Unsubscribed, -3 = Skipped
 #
-# Instantly `lt_interest_status`:
-#  -2 = wrong person / do not contact
-#  -1 = not interested
-#   0 = neutral
-#   1 = interested
+# Lead `lt_interest_status`:
+#   0 = Out of Office, 1 = Interested, 2 = Meeting Booked, 3 = Meeting Completed,
+#   4 = Won, -1 = Not Interested, -2 = Wrong Person, -3 = Lost, -4 = No Show
+#   (None = never set; workspaces can also define custom values)
+#
+# Lead `esp_code` is the RECIPIENT'S EMAIL PROVIDER, not a delivery status:
+#   0 = In Queue, 1 = Google, 2 = Microsoft, 3 = Zoho, 8 = AirMail, 9 = Yahoo,
+#   10 = Yandex, 12 = Web.de, 13 = Libero.it, 999 = Other, 1000 = Not Found
+#   (docs above and move-leads-to-a-campaign-or-list.md; an MX check on
+#   2026-09-25 agreed for 24 of 25 sampled leads per group). It must never be
+#   used as a delivery or bounce signal. Until 2026-09-25 this script read
+#   3 as "bounced" and 2 as "delivered", which closed every Zoho-hosted lead
+#   as "Closed - Lost" and marked Microsoft-hosted leads "Contacted" before
+#   any email went out. determine_crm_stage() does not read it at all.
+#
+# Contact evidence: any of `timestamp_last_contact`,
+# `last_step_timestamp_executed` or `status_summary.lastStep.timestamp_executed`.
+
+INTEREST_TO_STAGE = {
+    1: "Replied - Positive",   # Interested
+    2: "Meeting Scheduled",    # Meeting Booked
+    3: "Meeting Scheduled",    # Meeting Completed
+    4: "Closed - Won",         # Won
+    -1: "Closed - Lost",       # Not Interested
+    -2: "Closed - Lost",       # Wrong Person
+    -3: "Closed - Lost",       # Lost
+    -4: "No-Show",             # No Show
+}
+# 0 (Out of Office), None and custom values are deliberately absent.
 
 # Campaign name → Sheet tab mapping
 CAMPAIGN_TO_SHEET = {
@@ -102,53 +122,61 @@ def get_stage_index(stage: str) -> int:
         return -1
 
 
+def _non_empty_str(value) -> bool:
+    return isinstance(value, str) and value.strip() != ""
+
+
+def was_contacted(lead: Dict) -> bool:
+    """True when the lead carries evidence that an email step actually went out:
+    a non-empty ``timestamp_last_contact``, ``last_step_timestamp_executed`` or
+    ``status_summary["lastStep"]["timestamp_executed"]``. Missing keys, None and
+    non-dict ``status_summary`` / ``lastStep`` values count as no evidence."""
+    if _non_empty_str(lead.get("timestamp_last_contact")):
+        return True
+    if _non_empty_str(lead.get("last_step_timestamp_executed")):
+        return True
+    summary = lead.get("status_summary")
+    if isinstance(summary, dict):
+        last_step = summary.get("lastStep")
+        if isinstance(last_step, dict) and _non_empty_str(last_step.get("timestamp_executed")):
+            return True
+    return False
+
+
 def determine_crm_stage(lead: Dict) -> Optional[str]:
     """
-    Map Instantly lead data to the appropriate CRM stage.
+    Map one Instantly lead (API v2 shape) to a CRM stage, or None for "no change".
 
-    Priority order:
-    1. If replied + interested (lt_interest_status=1) → "Replied - Positive"
-    2. If replied + neutral/unknown (lt_interest_status=0 or none) → "Replied - Neutral"
-    3. If replied + not interested (lt_interest_status=-1) → "Closed - Lost"
-    4. If wrong person (lt_interest_status=-2) → "Closed - Lost"
-    5. If bounced (status=-1 or esp_code=3) → "Closed - Lost"
-    6. If email delivered (esp_code=2, status=1) → "Contacted"
-    7. If queued/sending/warmup (esp_code=999,1,1000) → no change (not yet received)
+    First match wins:
+    1. status -2 (Unsubscribed)                      -> "Closed - Lost"
+    2. lt_interest_status in INTEREST_TO_STAGE       -> that stage
+       (0 Out of Office, None and custom values fall through)
+    3. email_reply_count > 0 and interest is not 0   -> "Replied - Neutral"
+    4. status -1 (Bounced)                           -> "Closed - Lost"
+    5. status 1/2/3 (Active/Paused/Completed) and was_contacted(lead) -> "Contacted"
+    6. otherwise                                     -> None
+
+    esp_code (the recipient's email provider) is never read.
     """
-    status = lead.get("status", 0)
-    esp_code = lead.get("esp_code", 0)
-    reply_count = lead.get("email_reply_count", 0)
+    status = lead.get("status")
+    replies = lead.get("email_reply_count") or 0
     interest = lead.get("lt_interest_status")
 
-    # Replied — check sentiment via lt_interest_status
-    if status == 3 or reply_count > 0:
-        if interest == 1:
-            return "Replied - Positive"
-        elif interest == -1:
-            return "Closed - Lost"  # Replied saying not interested
-        elif interest == -2:
-            return "Closed - Lost"  # Wrong person
-        else:
-            return "Replied - Neutral"  # Replied but no clear sentiment (0 or None)
-
-    # Interest set without a reply (manually tagged in Instantly)
-    if interest == 1:
-        return "Replied - Positive"
-    if interest == -1:
-        return "Closed - Lost"
-    if interest == -2:
+    if status == -2:
         return "Closed - Lost"
 
-    # Bounced
-    if status == -1 or esp_code == 3:
+    if interest in INTEREST_TO_STAGE:
+        return INTEREST_TO_STAGE[interest]
+
+    if replies > 0 and interest != 0:
+        return "Replied - Neutral"
+
+    if status == -1:
         return "Closed - Lost"
 
-    # Successfully delivered email — only then mark as Contacted
-    if esp_code == 2 and status == 1:
+    if status in (1, 2, 3) and was_contacted(lead):
         return "Contacted"
 
-    # All other states (queued, sending, warmup) — don't change stage
-    # esp_code 999 = queued, 1 = sending/scheduled, 1000 = warmup
     return None
 
 

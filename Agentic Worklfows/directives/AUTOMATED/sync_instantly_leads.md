@@ -34,22 +34,24 @@ For each Instantly lead:
 
 1. **Find in CRM** by email
    - If not in CRM → skip (lead was added outside our system)
-2. **Map Instantly status to CRM stage** using this mapping:
+2. **Map the Instantly lead to a CRM stage** with `determine_crm_stage()` in `execution/instantly_lead_sync.py`. It reads the lead's `status`, `lt_interest_status` (interest), `email_reply_count` and its contact timestamps, and takes the first rule that matches:
 
-| Instantly Status | CRM Stage | Notes |
+| # | When | CRM Stage |
 |---|---|---|
-| active | Contacted | In active campaign |
-| paused | Contacted | Paused but was contacted |
-| completed | Closed Lost | Sequence exhausted, no reply |
-| bounced | Closed Lost | Bad email |
-| unsubscribed | Closed Lost | Opted out |
-| replied | Engaged | Any reply |
-| interested | Engaged | Positive signal |
-| not_interested | Closed Lost | Explicitly declined |
-| wrong_person | Closed Lost | Wrong contact |
-| meeting_booked | Booked | Scheduled via Instantly |
-| meeting_completed | Discovery Done | Meeting happened |
-| out_of_office | Contacted | Auto-reply |
+| 1 | Lead unsubscribed (`status` -2) | Closed - Lost |
+| 2 | Interest is Interested (1) | Replied - Positive |
+| 2 | Interest is Meeting Booked (2) or Meeting Completed (3) | Meeting Scheduled |
+| 2 | Interest is Won (4) | Closed - Won |
+| 2 | Interest is Not Interested (-1), Wrong Person (-2) or Lost (-3) | Closed - Lost |
+| 2 | Interest is No Show (-4) | No-Show |
+| 3 | The lead replied and interest is anything other than Out of Office (0), including unset or a custom value | Replied - Neutral |
+| 4 | Lead bounced (`status` -1) | Closed - Lost |
+| 5 | Lead is Active, Paused or Completed (`status` 1, 2, 3) and an email step actually went out (`timestamp_last_contact`, `last_step_timestamp_executed` or `status_summary.lastStep.timestamp_executed` is set) | Contacted |
+| 6 | Anything else (no email sent yet, or Skipped `status` -3) | no change |
+
+   An Out of Office auto-reply (interest 0) is not a reply: that lead lands on rule 4 or 5. `status` 3 means Completed (the sequence finished), not replied.
+
+   `esp_code` is **not used**. It is the recipient's email provider (0 In Queue, 1 Google, 2 Microsoft, 3 Zoho, 8 AirMail, 9 Yahoo, 10 Yandex, 12 Web.de, 13 Libero.it, 999 Other, 1000 Not Found), not a delivery status, so it says nothing about whether an email was sent, delivered or bounced.
 
 3. **Check update rules:**
    - NEVER downgrade stages (Booked → Contacted = blocked)
@@ -122,4 +124,8 @@ python execution/instantly_lead_sync.py --campaign "HVAC Austin Q1"
 
 _(Updated as the system runs and self-anneals)_
 
-- None yet — first deployment
+- **2026-09-25: `esp_code` is the recipient's email provider, not a delivery status.** Per the Instantly API v2 docs (https://developer.instantly.ai/api-reference/lead/list-leads.md, get-lead.md, move-leads-to-a-campaign-or-list.md): 0 In Queue, 1 Google, 2 Microsoft, 3 Zoho, 8 AirMail, 9 Yahoo, 10 Yandex, 12 Web.de, 13 Libero.it, 999 Other, 1000 Not Found. An MX check that day agreed for 24 of 25 sampled leads per group. The old code read 3 as "bounced" and 2 as "delivered", so Zoho-hosted leads were closed as "Closed - Lost" (a terminal stage the sync never leaves), Microsoft-hosted active leads were marked "Contacted" before any email went out, and Google-hosted and other leads were never marked "Contacted". The mapping no longer reads `esp_code`; contact is judged from the contact timestamps.
+- **2026-09-25: lead `status` 3 is Completed, not replied.** The documented values are 1 Active, 2 Paused, 3 Completed, -1 Bounced, -2 Unsubscribed, -3 Skipped. The old code sent every Completed lead to "Replied - Neutral" even with 0 replies.
+- **2026-09-25: `lt_interest_status` 0 is Out of Office, not neutral.** The documented values are 0 Out of Office, 1 Interested, 2 Meeting Booked, 3 Meeting Completed, 4 Won, -1 Not Interested, -2 Wrong Person, -3 Lost, -4 No Show (also in `config/instantly_api_contract.md`). An auto-reply no longer counts as a reply.
+- **2026-09-25: `POST /leads/list` takes `campaign`, not `campaign_id`.** `list_leads()` sent `campaign_id`, which is not a documented field, so the per-campaign pulls may have returned leads from the whole workspace. It now sends `campaign` (the Python parameter is still `campaign_id`).
+- **2026-09-25: the campaigns list is now paginated.** `get_campaigns()` made one GET and kept only the first page; it now asks for `limit=100` pages and follows `next_starting_after` until the cursor is absent or a page is empty.

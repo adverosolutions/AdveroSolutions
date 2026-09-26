@@ -61,9 +61,32 @@ class InstantlyAPI:
             raise
 
     def get_campaigns(self) -> List[Dict]:
-        """Get all campaigns"""
-        result = self._make_request("GET", "campaigns")
-        campaigns = result.get('items', result)  # v2 returns {items: [...]}
+        """Get all campaigns (GET /api/v2/campaigns), following the
+        ``next_starting_after`` cursor until it is absent or a page is empty."""
+        campaigns = []
+        starting_after = None
+
+        while True:
+            params = {"limit": 100}
+            if starting_after:
+                params["starting_after"] = starting_after
+
+            result = self._make_request("GET", "campaigns", params)
+            if isinstance(result, list):
+                items = result
+                next_cursor = None
+            else:
+                items = result.get("items") or []
+                next_cursor = result.get("next_starting_after")
+
+            if not items:
+                break
+            campaigns.extend(items)
+
+            if not next_cursor:
+                break
+            starting_after = next_cursor
+
         logger.info(f"Retrieved {len(campaigns)} campaigns")
         return campaigns
 
@@ -197,7 +220,9 @@ class InstantlyAPI:
         while True:
             data = {"limit": limit}
             if campaign_id:
-                data["campaign_id"] = campaign_id
+                # The v2 body field is `campaign`; `campaign_id` is not a documented
+                # leads/list field (developer.instantly.ai/api-reference/lead/list-leads.md).
+                data["campaign"] = campaign_id
             if starting_after:
                 data["starting_after"] = starting_after
 
