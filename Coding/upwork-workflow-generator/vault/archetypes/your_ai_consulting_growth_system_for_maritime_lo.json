@@ -1,0 +1,186 @@
+{
+  "title": "Your AI Consulting Growth System for Maritime Logistics Buyers",
+  "platform": "diagram",
+  "sections": [
+    {
+      "key": "strategy",
+      "label": "1 - GROWTH STRATEGY",
+      "color": 0,
+      "note": "A clear growth strategy means one pain, one offer and one buyer in maritime logistics. Everything after this runs on those three choices."
+    },
+    {
+      "key": "marketing",
+      "label": "2 - MARKETING",
+      "color": 0,
+      "note": "Marketing is outbound straight to maritime logistics companies. Each email talks about that company's own lanes and services, not AI in general."
+    },
+    {
+      "key": "sales",
+      "label": "3 - SALES PROCESS",
+      "color": 0,
+      "note": "The sales process goes from reply to call to proposal without waiting days. The call puts a cost on their manual work, so the pilot price makes sense to them."
+    },
+    {
+      "key": "operations",
+      "label": "4 - DAY-TO-DAY OPERATIONS",
+      "color": 0,
+      "note": "Day-to-day operations run on a weekly rhythm. Every Monday you know what was sent, who replied, what sold and what is being delivered."
+    },
+    {
+      "key": "bizdev",
+      "label": "5 - ONGOING BUSINESS DEVELOPMENT",
+      "color": 0,
+      "note": "Ongoing business development turns each pilot into proof and into a retainer. Every month the numbers decide which new opportunity comes next."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "pain",
+      "kind": "data.transform",
+      "label": "1 - We start with one pain maritime logistics teams feel daily, like slow freight quotes.",
+      "section": "strategy"
+    },
+    {
+      "key": "offer",
+      "kind": "data.transform",
+      "label": "2 - The first offer is a paid pilot that automates quoting or bill of lading data entry.",
+      "section": "strategy"
+    },
+    {
+      "key": "buyers",
+      "kind": "data.transform",
+      "label": "3 - The buyers are ops heads at freight forwarders, customs brokers and ship agents.",
+      "section": "strategy"
+    },
+    {
+      "key": "lists",
+      "kind": "data.transform",
+      "label": "4 - Lead lists come from forwarder directories and LinkedIn, sorted by trade lanes.",
+      "section": "marketing"
+    },
+    {
+      "key": "research",
+      "kind": "data.transform",
+      "label": "5 - Claude reads each company's website and writes an email about their own lanes.",
+      "section": "marketing"
+    },
+    {
+      "key": "send",
+      "kind": "data.transform",
+      "label": "6 - Cold emails go out every weekday in Instantly from pre-warmed inboxes.",
+      "section": "marketing"
+    },
+    {
+      "key": "book",
+      "kind": "data.transform",
+      "label": "7 - Interested replies get two call times within the hour, and quiet ones get follow-ups.",
+      "section": "sales"
+    },
+    {
+      "key": "call",
+      "kind": "data.transform",
+      "label": "8 - On the call we map their quoting or paperwork process and put a cost on it.",
+      "section": "sales"
+    },
+    {
+      "key": "proposal",
+      "kind": "data.transform",
+      "label": "9 - The proposal goes out the same day with the pilot scope, the price and a start date.",
+      "section": "sales"
+    },
+    {
+      "key": "monday",
+      "kind": "data.aggregate",
+      "label": "10 - Every Monday we review emails sent, replies, calls booked, pilots sold and delivery.",
+      "section": "operations"
+    },
+    {
+      "key": "onboard",
+      "kind": "data.transform",
+      "label": "11 - Each new client follows one onboarding checklist, so every pilot starts the same way.",
+      "section": "operations"
+    },
+    {
+      "key": "casestudy",
+      "kind": "data.transform",
+      "label": "12 - Every finished pilot becomes a maritime case study with its before and after.",
+      "section": "bizdev"
+    },
+    {
+      "key": "next",
+      "kind": "data.aggregate",
+      "label": "13 - Each month we turn pilots into retainers and pick the next segment to go after.",
+      "section": "bizdev"
+    }
+  ],
+  "edges": [
+    {
+      "from": "pain",
+      "to": "offer"
+    },
+    {
+      "from": "offer",
+      "to": "buyers"
+    },
+    {
+      "from": "buyers",
+      "to": "lists"
+    },
+    {
+      "from": "lists",
+      "to": "research"
+    },
+    {
+      "from": "research",
+      "to": "send"
+    },
+    {
+      "from": "send",
+      "to": "book"
+    },
+    {
+      "from": "book",
+      "to": "call"
+    },
+    {
+      "from": "call",
+      "to": "proposal"
+    },
+    {
+      "from": "proposal",
+      "to": "monday"
+    },
+    {
+      "from": "monday",
+      "to": "onboard"
+    },
+    {
+      "from": "onboard",
+      "to": "casestudy"
+    },
+    {
+      "from": "casestudy",
+      "to": "next"
+    }
+  ],
+  "input_sample": {
+    "prospect_company": "Harbor Line Forwarding (illustrative)",
+    "segment": "freight forwarder",
+    "contact_role": "Head of Operations",
+    "trade_lanes": "Asia to US East Coast, ocean FCL",
+    "pain_seen": "rate quotes built by hand from carrier emails and spreadsheets",
+    "offer_matched": "paid pilot: AI quoting assistant",
+    "status": "researched, first email ready"
+  },
+  "output_sample": {
+    "prospect_company": "Harbor Line Forwarding (illustrative)",
+    "stage": "pilot proposal sent the same day as the call",
+    "pilot_scope": "AI drafts rate quotes from carrier emails, a person approves each one",
+    "next_step": "start date agreed",
+    "monday_review_row": "emails sent, replies, calls booked, pilots sold, delivery status",
+    "after_pilot": "case study written with the before and after, retainer offered"
+  },
+  "archetype": "your_ai_consulting_growth_system_for_maritime_lo",
+  "learned": true,
+  "learned_at": "2026-09-28"
+}
