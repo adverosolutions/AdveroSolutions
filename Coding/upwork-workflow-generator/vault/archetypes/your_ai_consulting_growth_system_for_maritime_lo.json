@@ -6,7 +6,7 @@
       "key": "strategy",
       "label": "1 - GROWTH STRATEGY",
       "color": 0,
-      "note": "A clear growth strategy means one pain, one offer and one buyer in maritime logistics. Everything after this runs on those three choices."
+      "note": "A clear growth strategy means one pain, one offer and one buyer in maritime logistics."
     },
     {
       "key": "marketing",
@@ -53,63 +53,69 @@
       "section": "strategy"
     },
     {
+      "key": "target",
+      "kind": "data.transform",
+      "label": "4 - Your monthly client target decides how many forwarders we email each week.",
+      "section": "strategy"
+    },
+    {
       "key": "lists",
       "kind": "data.transform",
-      "label": "4 - Lead lists come from forwarder directories and LinkedIn, sorted by trade lanes.",
+      "label": "5 - Lead lists come from forwarder directories and LinkedIn, sorted by trade lanes.",
       "section": "marketing"
     },
     {
       "key": "research",
       "kind": "data.transform",
-      "label": "5 - Claude reads each company's website and writes an email about their own lanes.",
+      "label": "6 - Claude reads each company's website and writes an email about their own lanes.",
       "section": "marketing"
     },
     {
       "key": "send",
       "kind": "data.transform",
-      "label": "6 - Cold emails go out every weekday in Instantly from pre-warmed inboxes.",
+      "label": "7 - Cold emails go out every weekday in Instantly from pre-warmed inboxes.",
       "section": "marketing"
     },
     {
       "key": "book",
       "kind": "data.transform",
-      "label": "7 - Interested replies get two call times within the hour, and quiet ones get follow-ups.",
+      "label": "8 - Interested replies get two call times within the hour, and quiet ones get follow-ups.",
       "section": "sales"
     },
     {
       "key": "call",
       "kind": "data.transform",
-      "label": "8 - On the call we map their quoting or paperwork process and put a cost on it.",
+      "label": "9 - On the call we map their quoting or paperwork process and put a cost on it.",
       "section": "sales"
     },
     {
       "key": "proposal",
       "kind": "data.transform",
-      "label": "9 - The proposal goes out the same day with the pilot scope, the price and a start date.",
+      "label": "10 - The proposal goes out the same day with the pilot scope, the price and a start date.",
       "section": "sales"
     },
     {
       "key": "monday",
       "kind": "data.aggregate",
-      "label": "10 - Every Monday we review emails sent, replies, calls booked, pilots sold and delivery.",
+      "label": "11 - Every Monday we review emails sent, replies, calls booked, pilots sold and delivery.",
       "section": "operations"
     },
     {
       "key": "onboard",
       "kind": "data.transform",
-      "label": "11 - Each new client follows one onboarding checklist, so every pilot starts the same way.",
+      "label": "12 - Each client gets one onboarding checklist and a weekly update until the pilot ships.",
       "section": "operations"
     },
     {
       "key": "casestudy",
       "kind": "data.transform",
-      "label": "12 - Every finished pilot becomes a maritime case study with its before and after.",
+      "label": "13 - Every finished pilot becomes a maritime case study with its before and after.",
       "section": "bizdev"
     },
     {
       "key": "next",
       "kind": "data.aggregate",
-      "label": "13 - Each month we turn pilots into retainers and pick the next segment to go after.",
+      "label": "14 - Each month we turn pilots into retainers and pick the next segment to go after.",
       "section": "bizdev"
     }
   ],
@@ -124,6 +130,10 @@
     },
     {
       "from": "buyers",
+      "to": "target"
+    },
+    {
+      "from": "target",
       "to": "lists"
     },
     {
