@@ -284,17 +284,36 @@ They are written in the client's time zone with its label ("Wednesday at
 "If none of those work, send me a couple of times that work for you." The
 zone (`client_zone.py`) comes from the client's location: `collect.parse_jd`
 keeps the location sentences of Lorenzo's jd.txt summary line ("Client in
-Virginia, US (America/New_York).") as `job.client_location`. A US state or
-big city, a Canadian province, an Australian state, a big world city or a
-one-zone country wins; else a stated zone ("timezone Bogota",
-"Europe/Berlin"); else CT. A room with no job folder, or a folder whose
+Virginia, US (America/New_York).") as `job.client_location`. The place
+stated first, right after "Client in", decides: the comma-separated pieces
+after it up to the first one that is not a place, so "Client in Ohio, US, a
+staffing agency that hires from the Philippines" is Ohio. Within them a US
+state, DC (Washington DC, Washington, DC, Washington D.C., D.C.) or a
+two-letter state code beats any city ("Paris, TX" is CT, "Dublin, Ohio" is
+ET), a US marker (US, USA, United States) keeps US places only, then a
+province or other region, then the first big city or one-zone country in
+the country named. An IANA zone in brackets beside the place ("Client in
+Indiana, US (America/Chicago)") wins when it is in the same country;
+otherwise the place wins, and a place always beats an account time zone
+("Client in Nevada (US), timezone Chicago" is PT). With no place: a
+`client_timezone` on the room, then a stated zone ("timezone Bogota",
+"Europe/Berlin"), then CT. A room with no job folder, or a folder whose
 summary names no location, gets CT. The rooms and proposals pull carries no
-client location today; a `client_timezone` or `client_location` field on
-the room is read first if it ever does. Labels are ET, CT, MT, PT (and AT)
-in North America, an unambiguous abbreviation elsewhere (BST, CEST, IST for
-India, AEST), else "<city> time" ("Bogota time", "Manila time"); DST comes
-from zoneinfo. Hours are picked so the client gets a weekday between 7am
-and midnight their time where the window allows it. No calendar is read and
+client location today; a `client_location` on the room is read with the
+job's, a `client_timezone` only when no place is found. Labels are ET, CT,
+MT, PT (and AT) in North America, "Arizona time" and "Saskatchewan time" for
+the two zones that keep no DST, an unambiguous abbreviation elsewhere (BST,
+CEST, IST for India, AEST), else "<city> time" ("Bogota time", "Manila
+time"); DST comes from zoneinfo. Hours are picked on the client's weekdays
+only: a time on the client's Saturday or Sunday is never offered (5pm CT
+Friday is Saturday morning in Manila). A start between 7am and 9pm client
+time is preferred; 10pm and 11pm come next, then night hours, only when
+nothing earlier fits (Manila, Sydney). The window always holds at least
+four client weekdays (five business days after today, less at most one
+Friday that is already the client's Saturday), so three times always come
+back; if a future rule change ever left fewer, the draft offers the one or
+two that remain ("Tuesday at 6am or Wednesday at 6am Manila time") and the
+none-fit line. No calendar is read and
 Upwork keeps no offered-slot store, so Lorenzo checks the three times
 against his calendar before he sends.
 

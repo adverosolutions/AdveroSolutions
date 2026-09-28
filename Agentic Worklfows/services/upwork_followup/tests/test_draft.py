@@ -8,7 +8,7 @@ import pytest
 
 from shared import slots
 
-from services.upwork_followup import draft
+from services.upwork_followup import client_zone, draft
 from services.upwork_followup.draft import (PROMPTS_DIR, call_time_options, draft_checkin, draft_reply,
                                             draft_touch, parse_output)
 
@@ -347,6 +347,47 @@ def test_call_time_labels_follow_dst():
     room["job"]["client_location"] = "Client in the UK"
     now = datetime(2026, 10, 30, 14, 0, tzinfo=timezone.utc)
     assert call_time_options(now, room).split("\n")[0] == "Friday at 6pm, Monday at 7pm or Tuesday at 6pm GMT"
+
+
+def test_late_client_hours_lose_to_a_next_day_evening():
+    """Mon 2026-09-28 13:00 CT: only 5pm CT is left today, 11pm in London.
+    Hours after 9pm client time come only when nothing else fits."""
+    room = make_room()
+    room["job"]["client_location"] = "Client in the United Kingdom"
+    now = datetime(2026, 9, 28, 18, 0, tzinfo=timezone.utc)
+    assert call_time_options(now, room).split("\n")[0] == "Tuesday at 6pm, Wednesday at 7pm or Thursday at 6pm BST"
+
+
+def test_no_time_lands_on_the_clients_weekend():
+    """Wed 2026-09-23: Friday noon to 6pm CT is Saturday morning in Manila,
+    so Tuesday takes its place."""
+    room = make_room()
+    room["job"]["client_location"] = "Client in the Philippines"
+    assert call_time_options(NOW, room).split("\n")[0] == "Thursday at 6am, Friday at 5am or Tuesday at 6am Manila time"
+
+
+@pytest.mark.parametrize("key", ["Asia/Manila", "Australia/Sydney", "Pacific/Auckland", "Pacific/Kiritimati",
+                                 "Asia/Tokyo", "Europe/London", "Pacific/Honolulu", "America/Chicago"])
+def test_call_slots_never_on_a_client_weekend_all_year(key):
+    """Every 5 hours through 2026, across both DST changes: three times, none
+    on the client's Saturday or Sunday, all inside the CT window."""
+    zone = client_zone.ZoneInfo(key)
+    start = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    for h in range(0, 365 * 24, 5):
+        now = start + timedelta(hours=h)
+        picked = draft.call_slots(now, zone)
+        assert len(picked) == 3
+        for p in picked:
+            assert p.astimezone(zone).weekday() < 5
+            ct = p.astimezone(slots.TZ)
+            assert ct.weekday() < 5 and 12 <= ct.hour < 18 and p - now >= timedelta(hours=4)
+
+
+def test_arizona_times_carry_arizona_time_in_summer():
+    room = make_room()
+    room["job"]["client_location"] = "Client in Arizona, US"
+    assert call_time_options(NOW, room).split("\n")[0] == (
+        "Wednesday at noon, Thursday at 1pm or Friday at 11am Arizona time")
 
 
 def test_client_zone_reaches_the_prompt():

@@ -379,10 +379,14 @@ label, then one line for when none fit, for example:
     If none of those work, send me a couple of times that work for you.
 
 The zone comes from the client's location in the job folder's `jd.txt`
-summary line ("Client in Virginia, US ..."): a US state or city gives ET,
-CT, MT or PT, another country gives its own zone ("CEST", "Bogota time").
-When the folder names no location, or no folder matched, the times are in
-CT. To fix a wrong zone, correct the "Client in ..." sentence in that
+summary line ("Client in Virginia, US ..."): the place right after "Client
+in" decides, a US state, DC or state code beats a city of the same name
+("Paris, TX" is CT), a US state or city gives ET, CT, MT or PT (Arizona and
+Saskatchewan say "Arizona time" and "Saskatchewan time"), another country
+gives its own zone ("CEST", "Bogota time"). When the folder names no
+location, or no folder matched, the times are in CT. No time lands on the
+client's Saturday or Sunday, and times after 9pm client time are used only
+when nothing earlier fits. To fix a wrong zone, correct the "Client in ..." sentence in that
 `jd.txt`; the next pull picks it up. The model proposes a short
 Upwork call only when the conversation supports it: the client is engaged, has
 asked about scope, fit or timeline, or the thread has momentum. Otherwise it

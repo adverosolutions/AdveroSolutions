@@ -110,9 +110,11 @@ _WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
 CALL_TIME_COUNT = 3
 CALL_HOURS = tuple(range(slots.SLOT_WINDOW[0], slots.SLOT_WINDOW[1]))   # 12..17 CT, on the hour
 NONE_FIT_LINE = "If none of those work, send me a couple of times that work for you."
-# The client's own hours a time is first looked for in (7am to midnight local), and
-# three different client-side days, so no two times share a weekday name.
-CLIENT_HOURS = (7, 24)
+# The client's own start hours, in the order they are tried: 7am to 9pm local
+# first, then 10pm and 11pm, then any hour, only when nothing earlier fits.
+# Never the client's Saturday or Sunday, and three different client-side
+# days, so no two times share a weekday name.
+CLIENT_HOUR_TIERS = ((7, 22), (7, 24), (0, 24))
 # Which CT hour each of the three days tries first. A client far east of
 # Central (Europe, Africa, India) gets the earliest hours, one far west
 # (Hawaii, Asia-Pacific across the date line) the latest, everyone else noon,
@@ -144,13 +146,16 @@ def _side_of_central(zone: Any, at: datetime) -> str:
 
 
 def call_slots(now: datetime, zone: Any = None) -> List[datetime]:
-    """Three call times (aware, Central) on three different business days,
-    the earliest days the rules allow, on three different days for the
-    client too. Times on a client weekday between 7am and midnight client time
-    are preferred; only when the client's day never overlaps the window
-    (Manila) does a night or weekend time fill in. Every time passes
+    """Up to three call times (aware, Central) on different business days,
+    the earliest days the rules allow, on different days for the client
+    too. A time on the client's Saturday or Sunday is never offered (5pm CT
+    Friday is Saturday morning in Manila). Times between 7am and 9pm client
+    time are preferred; 10pm and 11pm come next, then night hours, only when
+    the client's day never overlaps the window (Manila). Every time passes
     shared.slots.candidate_slots: 12:00-18:00 CT Mon-Fri, >= 4 hours after
-    ``now``, within 5 business days."""
+    ``now``, within 5 business days. Fewer than three come back only when
+    the window holds fewer than three client weekdays (no zone does today;
+    see DESIGN.md "Call times")."""
     now_ct = _aware(now).astimezone(slots.TZ)
     last = slots.business_days_ahead(now_ct, slots.MAX_BUSINESS_DAYS).date()
     raw = []  # type: List[datetime]
@@ -166,7 +171,7 @@ def call_slots(now: datetime, zone: Any = None) -> List[datetime]:
     local_zone = zone if zone is not None else slots.TZ
     order = _HOUR_ORDER[_side_of_central(local_zone, now_ct)]
 
-    def pick(civil_only: bool, picked: List[datetime]) -> None:
+    def pick(hours: Tuple[int, int], picked: List[datetime]) -> None:
         used_days = {p.date() for p in picked}
         used_local = {p.astimezone(local_zone).date() for p in picked}
         for d in sorted(by_day):
@@ -179,9 +184,9 @@ def call_slots(now: datetime, zone: Any = None) -> List[datetime]:
                 if dt is None:
                     continue
                 local = dt.astimezone(local_zone)
-                if local.date() in used_local:
+                if local.date() in used_local or local.weekday() >= 5:
                     continue
-                if civil_only and (local.weekday() >= 5 or not CLIENT_HOURS[0] <= local.hour < CLIENT_HOURS[1]):
+                if not hours[0] <= local.hour < hours[1]:
                     continue
                 picked.append(dt)
                 used_days.add(d)
@@ -189,8 +194,8 @@ def call_slots(now: datetime, zone: Any = None) -> List[datetime]:
                 break
 
     picked = []  # type: List[datetime]
-    pick(True, picked)       # client-side weekday, 7am to midnight, first
-    pick(False, picked)      # then anything the rules allow, when the client's day never overlaps
+    for hours in CLIENT_HOUR_TIERS:
+        pick(hours, picked)
     return sorted(picked)
 
 

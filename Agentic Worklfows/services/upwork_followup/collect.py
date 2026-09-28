@@ -839,10 +839,12 @@ _META_LINE_RE = re.compile(r"^\s*(fixed price|hourly|posted|budget|bid range|pro
 # Virginia, US (America/New_York).", "Client timezone Europe/Berlin, country
 # not shown."), from the word "client" to the end of the sentence, so no
 # budget figure before it is kept. Read only from the metadata lines, never
-# from the post.
+# from the post. A period after a lone capital ("Washington D.C.", "the
+# U.S.") belongs to the abbreviation: the sentence goes on, or ends after
+# it when a new sentence or the line end follows.
 _LOCATION_SENTENCE_RE = re.compile(
-    r"\b(?:client\s+(?:is\s+)?(?:in|based\s+in|located\s+in|from)\b|(?:client|account)\s+time\s?zone\b)"
-    r"[^;]*?(?=\.\s|\.$|;|$)", re.IGNORECASE)
+    r"(?i:\b(?:client\s+(?:is\s+)?(?:in|based\s+in|located\s+in|from)\b|(?:client|account)\s+time\s?zone\b))"
+    r"[^;]*?(?:(?=(?<!\b[A-Z])\.(?:\s|$))|(?<=\b[A-Z]\.)(?=\s+[A-Z]|\s*$)|(?=;|$))")
 
 
 def client_location(lines: List[str]) -> Optional[str]:

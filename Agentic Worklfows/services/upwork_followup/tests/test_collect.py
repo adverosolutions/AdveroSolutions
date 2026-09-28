@@ -1441,6 +1441,18 @@ def test_parse_jd_keeps_the_client_location_from_the_metadata_only():
         "client_location"] == "Client timezone Europe/Berlin, country not shown"
 
 
+def test_parse_jd_keeps_abbreviation_periods_in_the_location():
+    """ "D.C." and "U.S." are not the end of the sentence."""
+    def loc(line):
+        return collect.parse_jd("url: x\nT\n%s\n\nPost.\n" % line)["client_location"]
+    assert loc("Fixed $100. Client in Washington D.C. Client record: 3 contracts.") == "Client in Washington D.C."
+    assert loc("Fixed $100. Client in Washington D.C.") == "Client in Washington D.C."
+    assert loc("Hourly. Client in Washington, D.C., US (America/New_York). Record 2.") == (
+        "Client in Washington, D.C., US (America/New_York)")
+    assert loc("Fixed. Client in the U.S. (America/New_York). Record 2.") == "Client in the U.S. (America/New_York)"
+    assert loc("Fixed. Client in Dublin, OH. Record 2.") == "Client in Dublin, OH"
+
+
 def test_parse_jd_url_layout_without_a_blank_separator():
     """Some jd.txt files have a url line but no blank line before the post
     (only a trailing newline). The post must not be swallowed as metadata."""
