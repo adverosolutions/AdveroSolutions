@@ -35,6 +35,14 @@ Resolve the offer from the booking's campaign, then the lead's Instantly campaig
 - Reactivation attribution: a reactivated contact who signs within 6 months of the first sequence touch counts. Performance deals invoice monthly against the client scorecard.
 - Never quote the bid follow-up, cold-email infrastructure or content-system prices: they are not in the offer sheet.
 
+## Upwork jobs (separate from the six offers)
+offers.md does not cover Upwork. For a call that came from an Upwork proposal, Opus's pre-call brief uses these rules instead of the offer table:
+- Price from value. Turn the hours the build saves into dollars first (hours saved a year times the client's hourly cost), then suggest 10 to 20% of that yearly dollar value or of the yearly revenue the build adds.
+- Land a small first milestone, then upsell the larger build.
+- Split larger work into 3 to 4 milestones, each paid "once [deliverables] are delivered and you've signed off".
+- Lorenzo sets the final price himself on the call. Prices never go in a proposal or an Upwork chat.
+- While his Upwork profile has no reviews, a smaller first project that earns a review is worth taking.
+
 ## Proof to cite (verbatim, one per offer type, never mixed)
 - Reactivation: "I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months."
 - Trigger/outbound: "I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days."

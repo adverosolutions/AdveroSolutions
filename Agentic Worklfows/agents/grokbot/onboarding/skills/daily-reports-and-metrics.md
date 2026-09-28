@@ -1,6 +1,6 @@
 ---
 name: daily-reports-and-metrics
-description: What Lorenzo wants reported and how. Field-by-field specs for the morning report (07:30 CT), evening report (18:30 CT), the Daily Metrics tracker row and DAILY UPDATE block, the 13-row KPI dashboard with thresholds, the Friday retro packet, campaign verdicts and experiments, and the pipeline sweep, with where every number comes from. Use for "morning report", "evening report", "daily update", "log today's metrics", "KPI", "how are the campaigns doing", "Friday retro", "verdicts", or when building anything that reports numbers.
+description: What Lorenzo wants reported and how. Field-by-field specs for the morning report (07:30 CT), evening report (18:30 CT), the Daily Metrics tracker row and DAILY UPDATE block, the 15-row KPI dashboard with thresholds, the Friday retro packet, campaign verdicts and experiments, and the pipeline sweep, with where every number comes from. Use for "morning report", "evening report", "daily update", "log today's metrics", "KPI", "how are the campaigns doing", "Friday retro", "verdicts", or when building anything that reports numbers.
 ---
 
 # Daily reports and metrics
@@ -30,7 +30,7 @@ Opus, and Lorenzo posts them himself.
    `@`, a company or a client's words goes by email, not on the public ntfy
    topic (unless the topic is protected with a token).
 10. **Lower is better** for bounce rate, time to first reply, Upwork response
-    time and cost per verified lead. Write thresholds with the direction
+    time, job age at apply and cost per verified lead. Write thresholds with the direction
     (`<= 1.0%`, `> 2.0%`).
 11. Messages to Lorenzo follow the `claudeisms` rule.
 
@@ -80,6 +80,7 @@ appends. Write range is columns B to Y (23 metrics plus Notes). Column Z
 | Column | Kind | Where it comes from |
 |---|---|---|
 | Upwork Proposals, Connects Spent, Upwork View Rate, Upwork Reply Rate, Upwork Hires | flow / rate | the Upwork daily handoff (`date` required; a file for another day or with no date is ignored) |
+| Upwork Calls Booked, Upwork Close Rate, Upwork Return on Connects, Median Job Age at Apply | flow / rate | `Coding/upwork-pipeline/proposals.csv` (columns `viewed, replied, interviewed, hired, connects, boosted, age_hours_at_apply`). Calls booked = proposals whose `interviewed` is set. Close rate = hired / calls booked. Return on connects = Upwork earnings from Upwork financials / connects $. Median job age at apply = median of `age_hours_at_apply`. No Daily Log column yet |
 | Cold Emails Sent | flow | Instantly `GET /accounts/analytics/daily`, summed over active inboxes |
 | Email View Rate | rate | **never written**: open tracking is off on every campaign |
 | Email Reply Rate | rate | `unique_replies / sent` for the day |
@@ -126,7 +127,7 @@ exclamation mark, or any mention of AI, automation or a model name is blocked.
 It is staged as the Maker School post and never posted automatically: it is
 public writing under his name, and Lorenzo posts it.
 
-## KPI dashboard (13 rows)
+## KPI dashboard (15 rows)
 
 | Metric | Green | Alert | Window | Source |
 |---|---|---|---|---|
@@ -140,7 +141,9 @@ public writing under his name, and Lorenzo posts it.
 | Show rate | >= 90% | < 80% | 7 days | appointment status |
 | No-show rebooked | >= 40% | < 25% | 7 days | engine no-show records |
 | Proposal to close | >= 30% | < 20% | 7 days | not implemented: reads `no data` |
+| Upwork view rate | >= 25% | not set | 7 days | Upwork handoff (`proposals.csv` `viewed` gives the per-proposal breakdown); not yet computed by the daily metrics job: reads `no data` |
 | Upwork reply rate | >= 15% | < 8% | 7 days | Upwork handoff |
+| Median job age at apply | <= 2 h | > 12 h | 7 days | `proposals.csv` (`age_hours_at_apply`); not yet computed by the daily metrics job: reads `no data` |
 | Upwork response time | <= 1 h | > 4 h | now | rooms handoff (degrades to `no data` if older than 6 h); names the room |
 | Cost per verified lead | <= $0.02 | > $0.04 | last run | list factory ledger |
 

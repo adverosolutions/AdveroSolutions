@@ -124,6 +124,10 @@ a stranger at a bar, it goes.
 - Email and standard Upwork proposals: a 15-minute call. In email, always
   two specific times, never a booking link. The lead picks one and Lorenzo
   sends the invite.
+- Upwork chats: three specific times, stated in the client's time zone with
+  its label ("Thursday at 1pm ET"; label with ET, CT, MT or PT, or the
+  client's local zone name for non-US clients), plus one line offering to
+  work around their schedule. Full rule in `upwork-followups`.
 - Paid consultation posts on Upwork (2026-09-24): the cover letter offers
   "30 minutes or the full hour, whichever you prefer" and never names the
   price.
@@ -181,10 +185,12 @@ What he settled on, in order of date:
    another look is near the end. That's where a job gets closed in Housecall
    Pro and the review request goes out on its own." (Upwork T2, after the
    kicker was cut.) Answers her question, points at one thing, stops.
-9. "Hey there 👋 I build [their kind of system] like this all the time, so I
-   went ahead and built this one custom for you, [N]-min Loom:" (Upwork
-   preview hook, locked 2026-09-03.) Credibility beat ("all the time"), then
-   custom-for-you beat, nothing about other companies.
+9. "Hey [greeting] 👋 I went ahead and built your [2-3 tool names from the
+   post] [their kind of system], [N]-min Loom:" (Upwork Template A preview
+   hook, locked 2026-09-28.) Built-for-you beat in their own tools, nothing
+   about other companies. The previous hook, locked 2026-09-03, was "Hey
+   there 👋 I build [their kind of system] like this all the time, so I went
+   ahead and built this one custom for you, [N]-min Loom:".
 10. "The quickest place to start is usually the accounts that already know
     you and went quiet." (E2 reactivation fallback line.) Claims nothing
     about the lead, still gives a reason for the call.

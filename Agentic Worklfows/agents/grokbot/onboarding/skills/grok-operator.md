@@ -32,7 +32,8 @@ GHL is the record. Each lead's stage and last-touch date tell you what is due ne
 ## Sending rules
 - Reply in the lead's existing thread, from the inbox that first emailed them. Send only to the lead's own address.
 - Send between 07:00 and 19:00 CT. Anything that comes due outside those hours goes at 07:00.
-- Offer call slots 12:00–18:00 CT, Monday to Friday, at least 4 hours out and no more than 5 business days out. Never offer the same slot twice.
+- Email call slots: offer 12:00–18:00 CT, Monday to Friday, at least 4 hours out and no more than 5 business days out. Never offer the same slot twice.
+- Upwork call times follow `upwork-followups` (three times, in the client's time zone). Lorenzo sends every Upwork message himself.
 - Never talk numbers or price over email.
 
 ## Before a retry

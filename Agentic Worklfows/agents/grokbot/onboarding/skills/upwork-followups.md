@@ -127,6 +127,12 @@ line tells you what to add. It isn't a script.
 | T6 | 23 | one low-effort next step: a short Upwork call or a small first milestone, never priced |
 | T7 | 30 | a graceful close that leaves the door open, with no guilt and no last-chance language |
 
+- **Build update** (an option for any of T2 to T5): "added X to your build
+  since you run Z", with a screenshot or a short Loom. X and Z come only from
+  their post or the room. The draft may propose X, but it is flagged
+  NEEDS_YOU, because Lorenzo has to add X to the build before it can be
+  sent. Never claim a change that wasn't made.
+
 - **Check-in** (the Follow up later date has arrived): tie back to what they
   said when they paused, add one new thing, then ask one easy question about
   whether the timing works now. Never make them feel guilty about the pause.
@@ -182,9 +188,16 @@ the same unit. If the room says "12 locations and about 40 techs", never write
 - Length: about 600 characters for a touch or check-in (hard limit 900) and
   about 1,200 for a reply (hard limit 1,500).
 - Calls: offer a short Upwork call only when the client is engaged, has asked
-  about scope, fit or timeline, or the thread has momentum. Offer the next
-  two weekdays, noon and 3pm CT, in words ("Thursday at noon or Friday at 3pm
-  CT"). Lorenzo checks them against his calendar before sending.
+  about scope, fit or timeline, or the thread has momentum. Offer three times,
+  in words. The first can be today when it is at least 4 hours out. All
+  three sit inside Lorenzo's window: noon to 6pm CT, Monday to Friday, no
+  more than 5 business days out. State them in the client's time zone with
+  its label ("Thursday at 1pm ET"; label with ET, CT, MT or PT, or the
+  client's local zone name for non-US clients). Take the time zone from the client's
+  location in the room or the proposal data; when it's unknown, use CT. Add
+  one line offering to work around their schedule if none of the three fit
+  ("If none of those work, send me a couple of times that work for you.").
+  Lorenzo checks the times against his calendar before sending.
 
 ### Agreed samples (made-up client, walkthrough 2026-09-23)
 
@@ -218,7 +231,8 @@ Rejected versions:
   history, and the private assessment (time, likelihood, standard pricing).
   None of it ever goes in the draft.
 - **Suggests a call**, when the draft proposes one.
-- **NEEDS_YOU** (replies only): each fact he has to fill in or decide.
+- **NEEDS_YOU** (replies and build-update touches): each fact he has to
+  fill in or decide, or the change he has to make to the build first.
 
 **Needs edit** means the draft still broke a copy rule after one retry. Those
 rules cover dashes, exclamation marks, length, off-platform contact, outside

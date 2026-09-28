@@ -1890,7 +1890,7 @@ Health: all 12 inboxes active, warm-up 100.
 1. **Sent today,** by type: follow-up, booking, reminder, no-show, first reply (sent by Lorenzo or on his yes). Cold sends vs plan from Instantly daily analytics.
 2. **Replies:** the total, then a count for each of the 11 labels by name: `positive_interested`, `positive_question`, `positive_referral`, `neutral_question`, `negative_notnow`, `negative_notfit`, `negative_hostile`, `unsubscribe`, `ooo`, `wrong_person`, `auto_reply_unmonitored` (a label with 0 shows 0).
 3. **Calls:** booked, held, no-showed today.
-4. **Upwork:** drafts waiting on him, with hours waiting.
+4. **Upwork:** drafts waiting on him, with hours waiting. The Upwork numbers in skill `daily-reports-and-metrics` are proposals, connects spent, view rate, reply rate, hires, calls booked, close rate (hires / calls booked), return on connects (Upwork earnings / connects spent) and median job age at apply. Two KPI rows, Upwork view rate and median job age at apply, read `no data` until the daily metrics job computes them. Report `no data` as it is, never 0.
 5. **Stuck:** anything held, failed or unconfirmed.
 6. **Audit:** today's sample result (section 7).
 7. **Opus today:** number of calls and total `cost_usd`.
@@ -2169,7 +2169,8 @@ GHL is the record. Each lead's stage and last-touch date tell you what is due ne
 ## Sending rules
 - Reply in the lead's existing thread, from the inbox that first emailed them. Send only to the lead's own address.
 - Send between 07:00 and 19:00 CT. Anything that comes due outside those hours goes at 07:00.
-- Offer call slots 12:00–18:00 CT, Monday to Friday, at least 4 hours out and no more than 5 business days out. Never offer the same slot twice.
+- Email call slots: offer 12:00–18:00 CT, Monday to Friday, at least 4 hours out and no more than 5 business days out. Never offer the same slot twice.
+- Upwork call times follow `upwork-followups` (three times, in the client's time zone). Lorenzo sends every Upwork message himself.
 - Never talk numbers or price over email.
 
 ## Before a retry
@@ -3010,6 +3011,12 @@ line tells you what to add. It isn't a script.
 | T6 | 23 | one low-effort next step: a short Upwork call or a small first milestone, never priced |
 | T7 | 30 | a graceful close that leaves the door open, with no guilt and no last-chance language |
 
+- **Build update** (an option for any of T2 to T5): "added X to your build
+  since you run Z", with a screenshot or a short Loom. X and Z come only from
+  their post or the room. The draft may propose X, but it is flagged
+  NEEDS_YOU, because Lorenzo has to add X to the build before it can be
+  sent. Never claim a change that wasn't made.
+
 - **Check-in** (the Follow up later date has arrived): tie back to what they
   said when they paused, add one new thing, then ask one easy question about
   whether the timing works now. Never make them feel guilty about the pause.
@@ -3065,9 +3072,16 @@ the same unit. If the room says "12 locations and about 40 techs", never write
 - Length: about 600 characters for a touch or check-in (hard limit 900) and
   about 1,200 for a reply (hard limit 1,500).
 - Calls: offer a short Upwork call only when the client is engaged, has asked
-  about scope, fit or timeline, or the thread has momentum. Offer the next
-  two weekdays, noon and 3pm CT, in words ("Thursday at noon or Friday at 3pm
-  CT"). Lorenzo checks them against his calendar before sending.
+  about scope, fit or timeline, or the thread has momentum. Offer three times,
+  in words. The first can be today when it is at least 4 hours out. All
+  three sit inside Lorenzo's window: noon to 6pm CT, Monday to Friday, no
+  more than 5 business days out. State them in the client's time zone with
+  its label ("Thursday at 1pm ET"; label with ET, CT, MT or PT, or the
+  client's local zone name for non-US clients). Take the time zone from the client's
+  location in the room or the proposal data; when it's unknown, use CT. Add
+  one line offering to work around their schedule if none of the three fit
+  ("If none of those work, send me a couple of times that work for you.").
+  Lorenzo checks the times against his calendar before sending.
 
 ### Agreed samples (made-up client, walkthrough 2026-09-23)
 
@@ -3101,7 +3115,8 @@ Rejected versions:
   history, and the private assessment (time, likelihood, standard pricing).
   None of it ever goes in the draft.
 - **Suggests a call**, when the draft proposes one.
-- **NEEDS_YOU** (replies only): each fact he has to fill in or decide.
+- **NEEDS_YOU** (replies and build-update touches): each fact he has to
+  fill in or decide, or the change he has to make to the build first.
 
 **Needs edit** means the draft still broke a copy rule after one retry. Those
 rules cover dashes, exclamation marks, length, off-platform contact, outside
@@ -3268,6 +3283,10 @@ a stranger at a bar, it goes.
 - Email and standard Upwork proposals: a 15-minute call. In email, always
   two specific times, never a booking link. The lead picks one and Lorenzo
   sends the invite.
+- Upwork chats: three specific times, stated in the client's time zone with
+  its label ("Thursday at 1pm ET"; label with ET, CT, MT or PT, or the
+  client's local zone name for non-US clients), plus one line offering to
+  work around their schedule. Full rule in `upwork-followups`.
 - Paid consultation posts on Upwork (2026-09-24): the cover letter offers
   "30 minutes or the full hour, whichever you prefer" and never names the
   price.
@@ -3325,10 +3344,12 @@ What he settled on, in order of date:
    another look is near the end. That's where a job gets closed in Housecall
    Pro and the review request goes out on its own." (Upwork T2, after the
    kicker was cut.) Answers her question, points at one thing, stops.
-9. "Hey there 👋 I build [their kind of system] like this all the time, so I
-   went ahead and built this one custom for you, [N]-min Loom:" (Upwork
-   preview hook, locked 2026-09-03.) Credibility beat ("all the time"), then
-   custom-for-you beat, nothing about other companies.
+9. "Hey [greeting] 👋 I went ahead and built your [2-3 tool names from the
+   post] [their kind of system], [N]-min Loom:" (Upwork Template A preview
+   hook, locked 2026-09-28.) Built-for-you beat in their own tools, nothing
+   about other companies. The previous hook, locked 2026-09-03, was "Hey
+   there 👋 I build [their kind of system] like this all the time, so I went
+   ahead and built this one custom for you, [N]-min Loom:".
 10. "The quickest place to start is usually the accounts that already know
     you and went quiet." (E2 reactivation fallback line.) Claims nothing
     about the lead, still gives a reason for the call.
@@ -3468,7 +3489,7 @@ it is new information the reader needs, not a restatement.
 
 ---
 name: daily-reports-and-metrics
-description: What Lorenzo wants reported and how. Field-by-field specs for the morning report (07:30 CT), evening report (18:30 CT), the Daily Metrics tracker row and DAILY UPDATE block, the 13-row KPI dashboard with thresholds, the Friday retro packet, campaign verdicts and experiments, and the pipeline sweep, with where every number comes from. Use for "morning report", "evening report", "daily update", "log today's metrics", "KPI", "how are the campaigns doing", "Friday retro", "verdicts", or when building anything that reports numbers.
+description: What Lorenzo wants reported and how. Field-by-field specs for the morning report (07:30 CT), evening report (18:30 CT), the Daily Metrics tracker row and DAILY UPDATE block, the 15-row KPI dashboard with thresholds, the Friday retro packet, campaign verdicts and experiments, and the pipeline sweep, with where every number comes from. Use for "morning report", "evening report", "daily update", "log today's metrics", "KPI", "how are the campaigns doing", "Friday retro", "verdicts", or when building anything that reports numbers.
 ---
 
 # Daily reports and metrics
@@ -3498,7 +3519,7 @@ Opus, and Lorenzo posts them himself.
    `@`, a company or a client's words goes by email, not on the public ntfy
    topic (unless the topic is protected with a token).
 10. **Lower is better** for bounce rate, time to first reply, Upwork response
-    time and cost per verified lead. Write thresholds with the direction
+    time, job age at apply and cost per verified lead. Write thresholds with the direction
     (`<= 1.0%`, `> 2.0%`).
 11. Messages to Lorenzo follow the `claudeisms` rule.
 
@@ -3548,6 +3569,7 @@ appends. Write range is columns B to Y (23 metrics plus Notes). Column Z
 | Column | Kind | Where it comes from |
 |---|---|---|
 | Upwork Proposals, Connects Spent, Upwork View Rate, Upwork Reply Rate, Upwork Hires | flow / rate | the Upwork daily handoff (`date` required; a file for another day or with no date is ignored) |
+| Upwork Calls Booked, Upwork Close Rate, Upwork Return on Connects, Median Job Age at Apply | flow / rate | `Coding/upwork-pipeline/proposals.csv` (columns `viewed, replied, interviewed, hired, connects, boosted, age_hours_at_apply`). Calls booked = proposals whose `interviewed` is set. Close rate = hired / calls booked. Return on connects = Upwork earnings from Upwork financials / connects $. Median job age at apply = median of `age_hours_at_apply`. No Daily Log column yet |
 | Cold Emails Sent | flow | Instantly `GET /accounts/analytics/daily`, summed over active inboxes |
 | Email View Rate | rate | **never written**: open tracking is off on every campaign |
 | Email Reply Rate | rate | `unique_replies / sent` for the day |
@@ -3594,7 +3616,7 @@ exclamation mark, or any mention of AI, automation or a model name is blocked.
 It is staged as the Maker School post and never posted automatically: it is
 public writing under his name, and Lorenzo posts it.
 
-## KPI dashboard (13 rows)
+## KPI dashboard (15 rows)
 
 | Metric | Green | Alert | Window | Source |
 |---|---|---|---|---|
@@ -3608,7 +3630,9 @@ public writing under his name, and Lorenzo posts it.
 | Show rate | >= 90% | < 80% | 7 days | appointment status |
 | No-show rebooked | >= 40% | < 25% | 7 days | engine no-show records |
 | Proposal to close | >= 30% | < 20% | 7 days | not implemented: reads `no data` |
+| Upwork view rate | >= 25% | not set | 7 days | Upwork handoff (`proposals.csv` `viewed` gives the per-proposal breakdown); not yet computed by the daily metrics job: reads `no data` |
 | Upwork reply rate | >= 15% | < 8% | 7 days | Upwork handoff |
+| Median job age at apply | <= 2 h | > 12 h | 7 days | `proposals.csv` (`age_hours_at_apply`); not yet computed by the daily metrics job: reads `no data` |
 | Upwork response time | <= 1 h | > 4 h | now | rooms handoff (degrades to `no data` if older than 6 h); names the room |
 | Cost per verified lead | <= $0.02 | > $0.04 | last run | list factory ledger |
 
@@ -3701,6 +3725,14 @@ Resolve the offer from the booking's campaign, then the lead's Instantly campaig
 - Trigger/outbound pricing is a setup fee plus a monthly retainer. The retainer range is TO CONFIRM: never say a number. Say "setup plus a monthly retainer, sized to your service area, and the guarantee covers it."
 - Reactivation attribution: a reactivated contact who signs within 6 months of the first sequence touch counts. Performance deals invoice monthly against the client scorecard.
 - Never quote the bid follow-up, cold-email infrastructure or content-system prices: they are not in the offer sheet.
+
+## Upwork jobs (separate from the six offers)
+offers.md does not cover Upwork. For a call that came from an Upwork proposal, Opus's pre-call brief uses these rules instead of the offer table:
+- Price from value. Turn the hours the build saves into dollars first (hours saved a year times the client's hourly cost), then suggest 10 to 20% of that yearly dollar value or of the yearly revenue the build adds.
+- Land a small first milestone, then upsell the larger build.
+- Split larger work into 3 to 4 milestones, each paid "once [deliverables] are delivered and you've signed off".
+- Lorenzo sets the final price himself on the call. Prices never go in a proposal or an Upwork chat.
+- While his Upwork profile has no reviews, a smaller first project that earns a review is worth taking.
 
 ## Proof to cite (verbatim, one per offer type, never mixed)
 - Reactivation: "I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months."

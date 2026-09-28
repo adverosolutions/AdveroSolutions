@@ -57,6 +57,21 @@ class Pack(unittest.TestCase):
             self.assertNotIn("Sources (for maintainers)", text, name)
             self.assertTrue(text.startswith("---\nname: " + name + "\n"), name)
 
+    def test_skill_copies_match_their_sources(self):
+        skills_dir = os.path.expanduser("~/.claude/skills")
+        checked = 0
+        for name in build_pack.SKILLS:
+            source = os.path.join(skills_dir, name, "SKILL.md")
+            if not os.path.isfile(source):
+                continue
+            with self.subTest(skill=name):
+                self.assertEqual(read(os.path.join(ONBOARDING, "skills", name + ".md")),
+                                 build_pack.strip_sources(build_pack.read(source)),
+                                 "%s drifted from its skill; run build_pack.py" % name)
+            checked += 1
+        if not checked:
+            self.skipTest("no skill sources on this machine")
+
     def test_strip_sources_keeps_later_sections(self):
         text = "# A\n\n## Keep\nx\n\n## Sources (for maintainers)\n- `a/b.py`\n\n## After\ny\n"
         self.assertEqual(build_pack.strip_sources(text), "# A\n\n## Keep\nx\n\n## After\ny\n")
