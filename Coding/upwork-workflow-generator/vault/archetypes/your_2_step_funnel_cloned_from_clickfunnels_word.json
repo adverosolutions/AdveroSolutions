@@ -18,13 +18,13 @@
       "key": "form",
       "label": "3 - FORM CREATION",
       "color": 2,
-      "note": "Your opt-in form is rebuilt inside Go High Level with the same fields and embedded on the new funnel page. Every lead it captures lands in your GHL contacts."
+      "note": "Your opt-in form is rebuilt inside Go High Level with the same fields and embedded on the new funnel page. Every lead it captures lands in your GHL contacts. If your old funnel sent an email after each opt-in, I'll flag it so it doesn't quietly stop."
     },
     {
       "key": "mobile",
       "label": "4 - MOBILE OPTIMIZATION",
       "color": 3,
-      "note": "Both pages get checked on desktop, tablet and phone against the original. The cloned funnel is fully responsive and looks perfect on all mobile devices."
+      "note": "Both pages get checked on desktop, tablet and phone against the original."
     },
     {
       "key": "qa",
@@ -97,19 +97,13 @@
     {
       "key": "links",
       "kind": "data.transform",
-      "label": "11 - I click every button and link to make sure each goes to the correct next step",
-      "section": "qa"
-    },
-    {
-      "key": "test",
-      "kind": "data.transform",
-      "label": "12 - I send a test opt-in through and confirm it reaches the thank you page",
+      "label": "11 - I click every button and link, then send a test opt-in to the thank you page",
       "section": "qa"
     },
     {
       "key": "live",
       "kind": "data.aggregate",
-      "label": "13 - Your funnel is live in your GHL account, matching the original and capturing leads",
+      "label": "12 - Your funnel goes live on your domain in GHL, and a test lead lands in your contacts",
       "section": "qa"
     }
   ],
@@ -156,10 +150,6 @@
     },
     {
       "from": "links",
-      "to": "test"
-    },
-    {
-      "from": "test",
       "to": "live"
     }
   ],
