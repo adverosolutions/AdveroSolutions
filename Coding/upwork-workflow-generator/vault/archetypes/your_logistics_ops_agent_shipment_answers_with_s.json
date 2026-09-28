@@ -6,7 +6,7 @@
       "key": "identify",
       "label": "1 - IDENTIFY THE PROCESS: QUESTIONS YOUR TEAM ASKS",
       "color": 0,
-      "note": "Part 1 of your post is finding what to automate. Discovery often lands on a process like this one, the same shipment and procedure questions asked again and again."
+      "note": "Discovery starts by ranking the work your team does by hand today: shipment status questions, customer ETA updates, CMR and POD paperwork, quoting and invoicing. This canvas builds the first of those so you can see where discovery leads."
     },
     {
       "key": "tools",
@@ -18,7 +18,7 @@
       "key": "agent",
       "label": "3 - THE AGENT ANSWERS WITH SOURCES OR HANDS OFF",
       "color": 2,
-      "note": "The agent uses three tools: it searches your SOPs, looks up the shipment and drafts the customer update. Every answer names where it came from."
+      "note": "The agent replies only when a tool gave it a source. Anything it cannot source, or anything that needs a decision like a claim or a credit, goes to a person."
     },
     {
       "key": "integrate",
@@ -276,6 +276,37 @@
       }
     },
     {
+      "key": "cfg2",
+      "kind": "data.transform",
+      "label": "0b - Config: Your Settings",
+      "section": "rag",
+      "params": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg2-openai",
+              "name": "openai_api_key",
+              "type": "string",
+              "value": "PASTE-YOUR-OPENAI-API-KEY"
+            },
+            {
+              "id": "cfg2-host",
+              "name": "pinecone_index_host",
+              "type": "string",
+              "value": "PASTE-YOUR-PINECONE-INDEX-HOST"
+            },
+            {
+              "id": "cfg2-key",
+              "name": "pinecone_api_key",
+              "type": "string",
+              "value": "PASTE-YOUR-PINECONE-API-KEY"
+            }
+          ]
+        },
+        "includeOtherFields": true
+      }
+    },
+    {
       "key": "vectors",
       "kind": "net.http",
       "label": "5b - OpenAI: Turn the SOP Section Into Search Vectors",
@@ -284,9 +315,9 @@
         "method": "POST",
         "url": "https://api.openai.com/v1/embeddings",
         "headers": {
-          "Authorization": "Bearer {{ $('0 - Config: Your Settings').item.json.openai_api_key }}"
+          "Authorization": "Bearer {{ $('0b - Config: Your Settings').item.json.openai_api_key }}"
         },
-        "body": "{{ JSON.stringify({ model: 'text-embedding-3-small', input: $json['Section text'] }) }}"
+        "body": "{{ JSON.stringify({ model: 'text-embedding-3-small', input: $('5 - Add an SOP Section Through the Upload Form').item.json['Section text'] }) }}"
       }
     },
     {
@@ -296,9 +327,9 @@
       "section": "rag",
       "params": {
         "method": "POST",
-        "url": "={{ $('0 - Config: Your Settings').item.json.pinecone_index_host }}/vectors/upsert",
+        "url": "={{ $('0b - Config: Your Settings').item.json.pinecone_index_host }}/vectors/upsert",
         "headers": {
-          "Api-Key": "{{ $('0 - Config: Your Settings').item.json.pinecone_api_key }}"
+          "Api-Key": "{{ $('0b - Config: Your Settings').item.json.pinecone_api_key }}"
         },
         "body": "{{ JSON.stringify({ namespace: 'sops', vectors: [{ id: ($('5 - Add an SOP Section Through the Upload Form').item.json['Document title'] + '-' + $('5 - Add an SOP Section Through the Upload Form').item.json['Section or version']).toLowerCase().replace(/[^a-z0-9]+/g, '-'), values: $json.data[0].embedding, metadata: { text: $('5 - Add an SOP Section Through the Upload Form').item.json['Section text'], title: $('5 - Add an SOP Section Through the Upload Form').item.json['Document title'], section: $('5 - Add an SOP Section Through the Upload Form').item.json['Section or version'] } }] }) }}"
       }
@@ -329,6 +360,10 @@
     },
     {
       "from": "form",
+      "to": "cfg2"
+    },
+    {
+      "from": "cfg2",
       "to": "vectors"
     },
     {
