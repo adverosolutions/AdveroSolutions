@@ -60,38 +60,38 @@
     },
     {
       "key": "inboxes",
-      "kind": "data.transform",
-      "label": "5 - We start with 5 domains and 15 warmed inboxes sending about 25 a day each",
-      "section": "deliver"
-    },
-    {
-      "key": "capacity",
       "kind": "data.aggregate",
-      "label": "6 - By our estimate that is about 8,250 emails a month to begin with",
+      "label": "5 - By our estimate, 5 domains and 15 warmed inboxes send about 8,250 emails a month to start",
       "section": "deliver"
     },
     {
       "key": "opener",
       "kind": "data.transform",
-      "label": "7 - Each first email opens with one real detail about that owner's cleaning company",
+      "label": "6 - Each first email opens with one real detail about that owner's cleaning company",
       "section": "copy"
     },
     {
       "key": "pitch",
       "kind": "data.transform",
-      "label": "8 - The offer is more commercial contracts for them, and the ask is a short call",
+      "label": "7 - The offer is more commercial contracts for them, and the ask is a short call",
       "section": "copy"
     },
     {
       "key": "follow",
       "kind": "data.transform",
-      "label": "9 - Three short follow-ups go out over two weeks to owners who haven't replied",
+      "label": "8 - Three short follow-ups go out over two weeks to owners who haven't replied",
       "section": "copy"
     },
     {
       "key": "unibox",
       "kind": "data.transform",
-      "label": "10 - Every reply is answered the same day, and a not now goes back into follow-up",
+      "label": "9 - Every reply is answered the same day, and a not now goes back into follow-up",
+      "section": "manage"
+    },
+    {
+      "key": "test",
+      "kind": "data.transform",
+      "label": "10 - Every week we test two first emails and keep the one that books more calls",
       "section": "manage"
     },
     {
@@ -103,7 +103,7 @@
     {
       "key": "qualify",
       "kind": "flow.branch",
-      "label": "12 - Is this an owner who could really become a client of your agency?",
+      "label": "12 - Is this the owner of a cleaning company that fits your agency's ideal client?",
       "section": "book"
     },
     {
@@ -132,10 +132,6 @@
     },
     {
       "from": "inboxes",
-      "to": "capacity"
-    },
-    {
-      "from": "capacity",
       "to": "opener"
     },
     {
@@ -152,6 +148,10 @@
     },
     {
       "from": "unibox",
+      "to": "test"
+    },
+    {
+      "from": "test",
       "to": "size"
     },
     {
