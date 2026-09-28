@@ -6,19 +6,19 @@
       "key": "capture",
       "label": "1 - CAPTURING THE LEAD",
       "color": 0,
-      "note": "A form or survey submission starts everything. The lead is tagged with its source, the source is saved on the contact and the team is told."
+      "note": "This covers your forms, surveys, calendars and lead capture, and your tags, custom fields, triggers and actions. A form or survey starts everything, the lead gets a source tag and field, and the team is told."
     },
     {
       "key": "opp",
       "label": "2 - MANAGING THE OPPORTUNITY",
       "color": 0,
-      "note": "Every lead is connected to the appropriate pipeline as an opportunity at New Lead, so the stage always shows where it stands."
+      "note": "This covers your pipelines and opportunity stages and connecting leads to the right pipeline. Every lead opens at New Lead so the stage always shows where it stands."
     },
     {
       "key": "follow",
       "label": "3 - AUTOMATING THE FOLLOW-UP",
       "color": 0,
-      "note": "Email and SMS alternate over about a week, each with the booking link. No booking or reply by the end moves it to No Response and gives the team a call task."
+      "note": "This covers your workflows, automated follow-ups and email and SMS automation."
     },
     {
       "key": "reply",
@@ -41,7 +41,7 @@
       "app": "ghl",
       "op": "form_submitted",
       "section": "capture",
-      "notes": "Swap the filter for a survey and the rest of the workflow stays the same.",
+      "notes": "The form sits on your funnel's landing page. Swap the filter for a survey and the rest of the workflow stays the same.",
       "params": {
         "form": "Lead Capture Form"
       }
@@ -192,9 +192,19 @@
       }
     },
     {
+      "key": "w4",
+      "kind": "flow.wait",
+      "label": "14 - Wait 2 Days for a Reply to the Last Text",
+      "section": "follow",
+      "params": {
+        "amount": 2,
+        "unit": "days"
+      }
+    },
+    {
       "key": "no_resp",
       "kind": "app.action",
-      "label": "14 - Move the Opportunity to No Response",
+      "label": "15 - Move the Opportunity to No Response",
       "app": "ghl",
       "op": "update_opportunity",
       "section": "follow",
@@ -208,7 +218,7 @@
     {
       "key": "task",
       "kind": "app.action",
-      "label": "15 - Give the Team a Task to Call Them Once",
+      "label": "16 - Give the Team a Task to Call Them Once",
       "app": "ghl",
       "op": "create_task",
       "section": "follow",
@@ -221,7 +231,7 @@
     {
       "key": "goal",
       "kind": "app.action",
-      "label": "16 - Goal: They Replied or Booked",
+      "label": "17 - Goal: They Replied or Booked",
       "app": "ghl",
       "op": "goal",
       "section": "reply",
@@ -248,7 +258,7 @@
     {
       "key": "r_gate",
       "kind": "flow.branch",
-      "label": "2 - Is This a Lead in the Follow-Up",
+      "label": "2 - Is This a Lead in the Follow-Up?",
       "section": "reply",
       "params": {
         "condition": "Contact has tag \"lead-form\"",
@@ -306,7 +316,7 @@
     {
       "key": "b_gate",
       "kind": "flow.branch",
-      "label": "2 - Is This a Lead in the Follow-Up",
+      "label": "2 - Is This a Lead in the Follow-Up?",
       "section": "booked",
       "params": {
         "condition": "Contact has tag \"lead-form\"",
@@ -345,6 +355,7 @@
       "app": "ghl",
       "op": "internal_notification",
       "section": "booked",
+      "notes": "Before launch a test contact runs through the reply, booking and no-reply paths.",
       "params": {
         "type": "email",
         "to": "the contact's assigned user, and if none is assigned, all users",
@@ -404,6 +415,10 @@
     },
     {
       "from": "sms3",
+      "to": "w4"
+    },
+    {
+      "from": "w4",
       "to": "no_resp"
     },
     {
