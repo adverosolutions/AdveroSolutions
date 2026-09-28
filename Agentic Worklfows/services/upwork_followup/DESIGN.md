@@ -146,7 +146,8 @@ client and is out of scope). `collect_calls.md` holds the confirmed call shapes.
      "ask_before_quoting": ["question", ...],   # from assessment.md, private
      "private_notes": "assessment.md Time/Likelihood/Standard pricing lines, private",
      "loom_url": "from proposals.csv or null",
-     "applied_at": "from proposals.csv or null"
+     "applied_at": "from proposals.csv or null",
+     "client_location": "jd.txt summary sentences naming the client's location or time zone, or null"
   }
 }
 ```
@@ -268,10 +269,34 @@ Every touch must add something new, never "just checking in":
 5. **T5 (day 16), easy reply:** a yes/no or pick-one question about scope or
    timing.
 6. **T6 (day 23), next step:** a concrete low-effort next step: a 10-minute
-   Upwork call with two time options (the next two weekdays at 12:00 and 15:00
-   CT, written in words), or a small first milestone.
+   Upwork call on the three offered times (see "Call times" below), or a
+   small first milestone.
 7. **T7 (day 30), close-out:** a graceful close that leaves the door open ("if
    you went another way, no worries").
+
+**Call times** (every draft's CALL_TIMES block, `draft.call_time_options`,
+rule of 2026-09-28): three times on three different business days, the
+first may be today when it is at least 4 hours out, all 12:00-18:00 CT
+Monday to Friday, on the hour, no more than 5 business days out
+(`shared.slots.candidate_slots` enforces the window, lead time and horizon).
+They are written in the client's time zone with its label ("Wednesday at
+3pm, Thursday at 4pm or Friday at 2pm ET"), weekday included, then one line:
+"If none of those work, send me a couple of times that work for you." The
+zone (`client_zone.py`) comes from the client's location: `collect.parse_jd`
+keeps the location sentences of Lorenzo's jd.txt summary line ("Client in
+Virginia, US (America/New_York).") as `job.client_location`. A US state or
+big city, a Canadian province, an Australian state, a big world city or a
+one-zone country wins; else a stated zone ("timezone Bogota",
+"Europe/Berlin"); else CT. A room with no job folder, or a folder whose
+summary names no location, gets CT. The rooms and proposals pull carries no
+client location today; a `client_timezone` or `client_location` field on
+the room is read first if it ever does. Labels are ET, CT, MT, PT (and AT)
+in North America, an unambiguous abbreviation elsewhere (BST, CEST, IST for
+India, AEST), else "<city> time" ("Bogota time", "Manila time"); DST comes
+from zoneinfo. Hours are picked so the client gets a weekday between 7am
+and midnight their time where the window allows it. No calendar is read and
+Upwork keeps no offered-slot store, so Lorenzo checks the three times
+against his calendar before he sends.
 
 **Reply drafts** (client wrote last): answer what they asked using only facts
 from the room, the job post, the proposal and `config/upwork_offers.md`. Anything

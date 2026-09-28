@@ -2,9 +2,11 @@
 fake; nothing here reaches shared.llm or spends a token. Invented clients only."""
 import re
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
+
+from shared import slots
 
 from services.upwork_followup import draft
 from services.upwork_followup.draft import (PROMPTS_DIR, call_time_options, draft_checkin, draft_reply,
@@ -260,6 +262,9 @@ def test_mentions_call_backstop():
     assert draft.mentions_call("want to hop on a quick call?")
     assert draft.mentions_call("a 10-minute call would settle it")
     assert draft.mentions_call("a call Thursday at noon or Friday at 3pm CT?", "Thursday at noon or Friday at 3pm CT")
+    times = "Wednesday at 2pm, Thursday at 3pm or Friday at 1pm CT\n" + draft.NONE_FIT_LINE
+    assert draft.mentions_call("a call Wednesday at 2pm, Thursday at 3pm or Friday at 1pm CT?", times)
+    assert not draft.mentions_call("a call Thursday works", times)
     assert not draft.mentions_call("I'd tag each request by tile line.")
 
 
@@ -277,25 +282,79 @@ def test_time_options_are_in_every_prompt(fn, args, prompt):
     assert out["prompt"] == prompt
     user = fake.calls[0]["user"]
     assert "=== BEGIN CALL_TIMES (optional; use only if a call fits the conversation) ===" in user
-    assert "Thursday at noon or Friday at 3pm CT" in user
+    assert "Wednesday at 2pm, Thursday at 3pm or Friday at 1pm CT\n" + draft.NONE_FIT_LINE in user
     assert "CALL_TIMES" in fake.calls[0]["system"]
     assert "proposes_call" in out
 
 
 @pytest.mark.parametrize("now,expected", [
-    (datetime(2026, 9, 23, 15, 0, tzinfo=timezone.utc), "Thursday at noon or Friday at 3pm CT"),   # Wed
-    (datetime(2026, 9, 24, 15, 0, tzinfo=timezone.utc), "Friday at noon or Monday at 3pm CT"),     # Thu
-    (datetime(2026, 9, 25, 15, 0, tzinfo=timezone.utc), "Monday at noon or Tuesday at 3pm CT"),    # Fri
-    (datetime(2026, 9, 26, 15, 0, tzinfo=timezone.utc), "Monday at noon or Tuesday at 3pm CT"),    # Sat
-    (datetime(2026, 9, 27, 15, 0, tzinfo=timezone.utc), "Monday at noon or Tuesday at 3pm CT"),    # Sun
+    # Wed 10:00 CT: today is allowed from 14:00 (4 hours out)
+    (datetime(2026, 9, 23, 15, 0, tzinfo=timezone.utc), "Wednesday at 2pm, Thursday at 3pm or Friday at 1pm CT"),
+    # Wed 07:00 CT: noon is 5 hours out
+    (datetime(2026, 9, 23, 12, 0, tzinfo=timezone.utc), "Wednesday at noon, Thursday at 3pm or Friday at 1pm CT"),
+    # Wed 13:00 CT: 17:00 is exactly 4 hours out, the last slot of the window
+    (datetime(2026, 9, 23, 18, 0, tzinfo=timezone.utc), "Wednesday at 5pm, Thursday at 3pm or Friday at 1pm CT"),
+    # Wed 13:01 CT: nothing left today
+    (datetime(2026, 9, 23, 18, 1, tzinfo=timezone.utc), "Thursday at noon, Friday at 3pm or Monday at 1pm CT"),
+    # Fri 14:00 CT, Sat, Sun: the weekend is skipped
+    (datetime(2026, 9, 25, 19, 0, tzinfo=timezone.utc), "Monday at noon, Tuesday at 3pm or Wednesday at 1pm CT"),
+    (datetime(2026, 9, 26, 15, 0, tzinfo=timezone.utc), "Monday at noon, Tuesday at 3pm or Wednesday at 1pm CT"),
+    (datetime(2026, 9, 27, 15, 0, tzinfo=timezone.utc), "Monday at noon, Tuesday at 3pm or Wednesday at 1pm CT"),
     # 03:00 UTC Saturday is still Friday 22:00 in Central time
-    (datetime(2026, 9, 26, 3, 0, tzinfo=timezone.utc), "Monday at noon or Tuesday at 3pm CT"),
-    # 04:30 UTC Thursday is Wednesday 23:30 CT
-    (datetime(2026, 9, 24, 4, 30, tzinfo=timezone.utc), "Thursday at noon or Friday at 3pm CT"),
-    (datetime(2026, 9, 23, 15, 0), "Thursday at noon or Friday at 3pm CT"),                        # naive = UTC
+    (datetime(2026, 9, 26, 3, 0, tzinfo=timezone.utc), "Monday at noon, Tuesday at 3pm or Wednesday at 1pm CT"),
+    (datetime(2026, 9, 23, 15, 0), "Wednesday at 2pm, Thursday at 3pm or Friday at 1pm CT"),        # naive = UTC
 ])
-def test_call_time_options_across_weekends(now, expected):
-    assert call_time_options(now) == expected
+def test_call_time_options_three_times_in_central_by_default(now, expected):
+    assert call_time_options(now) == expected + "\n" + draft.NONE_FIT_LINE
+    assert call_time_options(now, make_room()) == call_time_options(now)          # no location: CT
+
+
+def test_call_slots_always_obey_the_window():
+    """Every hour for two weeks, across the 2026-11-01 DST change: three times
+    on three business days, 12:00-18:00 CT, >= 4 hours out, <= 5 business days."""
+    start = datetime(2026, 10, 26, 0, 0, tzinfo=timezone.utc)
+    for h in range(14 * 24):
+        now = start + timedelta(hours=h)
+        picked = draft.call_slots(now)
+        assert len(picked) == 3
+        last = slots.business_days_ahead(now.astimezone(slots.TZ), 5).date()
+        local = [p.astimezone(slots.TZ) for p in picked]
+        assert len({p.date() for p in local}) == 3
+        for p in local:
+            assert p.weekday() < 5 and 12 <= p.hour < 18 and p.minute == 0
+            assert p - now >= timedelta(hours=4) and p.date() <= last
+
+
+@pytest.mark.parametrize("location,expected", [
+    ("Client in Virginia, US (America/New_York).", "Wednesday at 3pm, Thursday at 4pm or Friday at 2pm ET"),
+    # the location wins over an account time zone
+    ("Client in Nevada (US), timezone Chicago", "Wednesday at noon, Thursday at 1pm or Friday at 11am PT"),
+    ("Client timezone Europe/Berlin, country not shown", "Wednesday at 9pm, Thursday at 8pm or Friday at 7pm CEST"),
+    ("Client in Colombia, timezone Bogota", "Wednesday at 2pm, Thursday at 3pm or Friday at 1pm Bogota time"),
+    # unknown within the US: Central
+    ("client in United States", "Wednesday at 2pm, Thursday at 3pm or Friday at 1pm CT"),
+])
+def test_call_times_are_in_the_clients_zone(location, expected):
+    room = make_room()
+    room["job"]["client_location"] = location
+    assert call_time_options(NOW, room).split("\n")[0] == expected
+
+
+def test_call_time_labels_follow_dst():
+    """Fri 2026-10-30: the UK is on GMT since 10-25, Central leaves CDT on
+    11-01, so 1pm CT is 6pm in London on Friday and 7pm on Monday."""
+    room = make_room()
+    room["job"]["client_location"] = "Client in the UK"
+    now = datetime(2026, 10, 30, 14, 0, tzinfo=timezone.utc)
+    assert call_time_options(now, room).split("\n")[0] == "Friday at 6pm, Monday at 7pm or Tuesday at 6pm GMT"
+
+
+def test_client_zone_reaches_the_prompt():
+    room = make_room()
+    room["job"]["client_location"] = "Client in Virginia, US (America/New_York)."
+    fake = FakeLLM(GOOD)
+    draft_touch(room, THREAD, 1, NOW, llm=fake)
+    assert "Wednesday at 3pm, Thursday at 4pm or Friday at 2pm ET\n" + draft.NONE_FIT_LINE in fake.calls[0]["user"]
 
 
 # ---------------------------------------------------------------- null job

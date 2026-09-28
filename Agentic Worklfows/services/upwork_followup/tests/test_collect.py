@@ -610,7 +610,7 @@ def test_snapshot_has_the_design_shape(snap):
     assert all(r["blocked"] is False and r["blocked_at"] is None for r in snap["rooms"])
     assert snap["blocked_rooms"] == []
     assert set(room["job"]) == {"post", "proposal", "beats", "ask_before_quoting", "private_notes",
-                                "loom_url", "applied_at"}
+                                "loom_url", "applied_at", "client_location"}
     json.dumps(snap)                                          # JSON-serialisable
 
 
@@ -1423,6 +1423,22 @@ def test_parse_jd_url_layout():
     assert parsed["client_first_name"] == "Jane"
     assert parsed["post"] == ("We run Acme Roofing and lose leads after the first estimate. "
                               "We want every lead followed up within a day.")
+
+
+def test_parse_jd_keeps_the_client_location_from_the_metadata_only():
+    """Call times are stated in the client's zone (draft.call_time_options);
+    the location comes from Lorenzo's summary line, never from the post."""
+    jd = ("url: https://www.upwork.com/jobs/~021234567891\nInvented Dispatch Bot\n"
+          "Fixed $100, intermediate. Client in Nevada (US), timezone Chicago. Client record: 3 contracts.\n\n"
+          "Our client in Texas needs calls routed.\n")
+    parsed = collect.parse_jd(jd)
+    assert parsed["client_location"] == "Client in Nevada (US), timezone Chicago"
+    assert "Texas" in parsed["post"]
+    assert collect.parse_jd(JD_ROOF)["client_location"] is None
+    assert collect.parse_jd("url: x\nT\nFixed price $750, entry level, client in United States.\n\nPost.\n")[
+        "client_location"] == "client in United States"
+    assert collect.parse_jd("url: x\nT\nHourly $20. Client timezone Europe/Berlin, country not shown.\n\nPost.\n")[
+        "client_location"] == "Client timezone Europe/Berlin, country not shown"
 
 
 def test_parse_jd_url_layout_without_a_blank_separator():

@@ -369,16 +369,28 @@ Other timing rules:
 ## Calls by context
 
 No touch forces a call on a fixed day. Every draft (replies, check-ins and
-touches alike) gets two optional call times: the next two weekdays after
-today, the first at noon and the second at 3pm CT, written in words (for
-example "Thursday at noon or Friday at 3pm CT"). The model proposes a short
+touches alike) gets three optional call times (rule of 2026-09-28): three
+different business days, the first can be today when it is at least 4 hours
+out, all between noon and 6pm CT Monday to Friday and no more than 5
+business days out. They are written in the client's time zone with its
+label, then one line for when none fit, for example:
+
+    Wednesday at 3pm, Thursday at 4pm or Friday at 2pm ET
+    If none of those work, send me a couple of times that work for you.
+
+The zone comes from the client's location in the job folder's `jd.txt`
+summary line ("Client in Virginia, US ..."): a US state or city gives ET,
+CT, MT or PT, another country gives its own zone ("CEST", "Bogota time").
+When the folder names no location, or no folder matched, the times are in
+CT. To fix a wrong zone, correct the "Client in ..." sentence in that
+`jd.txt`; the next pull picks it up. The model proposes a short
 Upwork call only when the conversation supports it: the client is engaged, has
 asked about scope, fit or timeline, or the thread has momentum. Otherwise it
 leaves calls out. T6 picks between a call and a small first milestone,
 whichever fits the thread.
 
 The times are not read from a calendar. If a draft proposes a call, check the
-two times against his calendar before sending. Each draft records
+three times against his calendar before sending. Each draft records
 `proposes_call` (the model's own flag, backed up by a text check), and the
 card and the batch show it as "Suggests a call".
 

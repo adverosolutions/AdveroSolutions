@@ -835,6 +835,26 @@ def _pick_offer_state(matches: List[Dict[str, Any]]) -> Optional[str]:
 # ------------------------------------------------------------- job folders
 _KEY_LINE_RE = re.compile(r"^\s*(url|client first name|client_first_name)\s*:\s*(.*)$", re.IGNORECASE)
 _META_LINE_RE = re.compile(r"^\s*(fixed price|hourly|posted|budget|bid range|prop\s*:)", re.IGNORECASE)
+# A sentence of Lorenzo's summary that says where the client is ("Client in
+# Virginia, US (America/New_York).", "Client timezone Europe/Berlin, country
+# not shown."), from the word "client" to the end of the sentence, so no
+# budget figure before it is kept. Read only from the metadata lines, never
+# from the post.
+_LOCATION_SENTENCE_RE = re.compile(
+    r"\b(?:client\s+(?:is\s+)?(?:in|based\s+in|located\s+in|from)\b|(?:client|account)\s+time\s?zone\b)"
+    r"[^;]*?(?=\.\s|\.$|;|$)", re.IGNORECASE)
+
+
+def client_location(lines: List[str]) -> Optional[str]:
+    """The location sentences of the jd.txt metadata lines, joined, or None.
+    services/upwork_followup/client_zone.py turns them into a time zone."""
+    found = []  # type: List[str]
+    for line in lines:
+        for m in _LOCATION_SENTENCE_RE.finditer(line or ""):
+            text = clean_text(m.group(0)).strip(" ,")
+            if text and text not in found:
+                found.append(text)
+    return "; ".join(found)[:300] or None
 _LIST_ITEM_RE = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+(.*\S)\s*$")
 _HEADING_RE = re.compile(r"^\s*#{1,6}\s*(.*?)\s*#*\s*$")
 _PRIVATE_HEADING_RE = re.compile(r"^(time|likelihood|standard pricing)\b", re.IGNORECASE)
@@ -862,7 +882,7 @@ def _clean_first_name(value: Any) -> Optional[str]:
 
 
 def parse_jd(text: str) -> Dict[str, Any]:
-    """jd.txt -> {"job_id", "title", "client_first_name", "post"}.
+    """jd.txt -> {"job_id", "title", "client_first_name", "post", "client_location"}.
 
     Two layouts exist. With a ``url:`` first line and a blank line before the
     post, the metadata block is the first paragraph: key lines (``url:``,
@@ -887,6 +907,7 @@ def parse_jd(text: str) -> Dict[str, Any]:
         meta.setdefault(key, m.group(2).strip())
         return True
 
+    meta_lines = []  # type: List[str]
     url_first = bool(lines) and re.match(r"^\s*url\s*:", lines[0], re.IGNORECASE)
     blank = next((i for i, line in enumerate(lines) if not line.strip()), None)
     if blank is not None and not any(line.strip() for line in lines[blank:]):
@@ -900,6 +921,8 @@ def parse_jd(text: str) -> Dict[str, Any]:
                 continue
             if not title:
                 title = line.strip()
+            else:
+                meta_lines.append(line)
         body = leftover + rest
     else:
         # No url line, or a url line with no blank separator: key lines, the
@@ -913,6 +936,7 @@ def parse_jd(text: str) -> Dict[str, Any]:
             title = lines[i].strip()
             i += 1
         while i < len(lines) and (_META_LINE_RE.match(lines[i]) or take_key(lines[i])):
+            meta_lines.append(lines[i])
             i += 1
         body = lines[i:]
     body = [line for line in body if not _KEY_LINE_RE.match(line)]
@@ -921,6 +945,7 @@ def parse_jd(text: str) -> Dict[str, Any]:
         "title": clean_text(title),
         "client_first_name": _clean_first_name(meta.get("client first name")),
         "post": clean_text("\n".join(body))[:POST_MAX_CHARS],
+        "client_location": client_location(meta_lines),
     }
 
 
@@ -1115,6 +1140,7 @@ def build_job(folder: Dict[str, Any], rows: List[Dict[str, str]], job_id: Option
         "private_notes": notes,
         "loom_url": loom,
         "applied_at": applied,
+        "client_location": folder.get("client_location"),
     }
 
 

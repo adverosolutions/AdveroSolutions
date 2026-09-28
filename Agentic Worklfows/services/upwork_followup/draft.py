@@ -74,7 +74,7 @@ from shared import llm as shared_llm
 from shared import slots
 from shared.paths import CONFIG_DIR
 
-from services.upwork_followup import copy_gate
+from services.upwork_followup import client_zone, copy_gate
 
 logger = logging.getLogger("upwork_followup.draft")
 
@@ -99,25 +99,134 @@ LlmFn = Callable[..., Any]
 
 
 # ------------------------------------------------------------ time options
+# Lorenzo's rule (upwork-followups skill, "Calls", 2026-09-28): three times,
+# the first may be today when it is at least 4 hours out, all inside noon to
+# 6pm CT Monday to Friday and no more than 5 business days out, stated in the
+# client's time zone with its label, plus one line for when none fit. The
+# window, lead time and horizon are shared.slots' own rules (candidate_slots
+# enforces them). No calendar is read and no offered-slot store exists for
+# Upwork: Lorenzo checks the times against his calendar before he sends.
 _WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+CALL_TIME_COUNT = 3
+CALL_HOURS = tuple(range(slots.SLOT_WINDOW[0], slots.SLOT_WINDOW[1]))   # 12..17 CT, on the hour
+NONE_FIT_LINE = "If none of those work, send me a couple of times that work for you."
+# The client's own hours a time is first looked for in (7am to midnight local), and
+# three different client-side days, so no two times share a weekday name.
+CLIENT_HOURS = (7, 24)
+# Which CT hour each of the three days tries first. A client far east of
+# Central (Europe, Africa, India) gets the earliest hours, one far west
+# (Hawaii, Asia-Pacific across the date line) the latest, everyone else noon,
+# 3pm and 1pm as before.
+_HOUR_ORDER = {
+    "middle": ((12, 13, 14, 15, 16, 17), (15, 14, 16, 13, 17, 12), (13, 14, 12, 15, 16, 17)),
+    "east": ((12, 13, 14, 15, 16, 17), (13, 12, 14, 15, 16, 17), (12, 13, 14, 15, 16, 17)),
+    "west": ((17, 16, 15, 14, 13, 12), (16, 17, 15, 14, 13, 12), (17, 16, 15, 14, 13, 12)),
+}
 
 
 def _aware(now: datetime) -> datetime:
     return now if now.tzinfo is not None else now.replace(tzinfo=timezone.utc)
 
 
-def call_time_options(now: datetime) -> str:
-    """The next two weekdays strictly after ``now``'s Central date, first at
-    noon, second at 3pm, in words: 'Thursday at noon or Friday at 3pm CT'.
-    Deterministic; no calendar is read."""
-    local = _aware(now).astimezone(slots.TZ).date()
-    days = []
-    day = local
-    while len(days) < 2:
+def _side_of_central(zone: Any, at: datetime) -> str:
+    """'east' when the client is more than 2 hours ahead of Central, 'west'
+    when more than 2 hours behind (the difference wrapped into -12..+12, so
+    Sydney reads as west), else 'middle'."""
+    offset = at.astimezone(zone).utcoffset() or timedelta(0)
+    central = at.astimezone(slots.TZ).utcoffset() or timedelta(0)
+    diff = (offset - central).total_seconds() / 3600.0
+    diff = (diff + 12) % 24 - 12
+    if diff > 2:
+        return "east"
+    if diff < -2:
+        return "west"
+    return "middle"
+
+
+def call_slots(now: datetime, zone: Any = None) -> List[datetime]:
+    """Three call times (aware, Central) on three different business days,
+    the earliest days the rules allow, on three different days for the
+    client too. Times on a client weekday between 7am and midnight client time
+    are preferred; only when the client's day never overlaps the window
+    (Manila) does a night or weekend time fill in. Every time passes
+    shared.slots.candidate_slots: 12:00-18:00 CT Mon-Fri, >= 4 hours after
+    ``now``, within 5 business days."""
+    now_ct = _aware(now).astimezone(slots.TZ)
+    last = slots.business_days_ahead(now_ct, slots.MAX_BUSINESS_DAYS).date()
+    raw = []  # type: List[datetime]
+    day = now_ct.date()
+    while day <= last:
+        for hour in CALL_HOURS:
+            raw.append(slots.TZ.localize(datetime(day.year, day.month, day.day, hour, 0)))
         day = day + timedelta(days=1)
-        if day.weekday() < 5:
-            days.append(day)
-    return "%s at noon or %s at 3pm CT" % (_WEEKDAYS[days[0].weekday()], _WEEKDAYS[days[1].weekday()])
+    cands = slots.candidate_slots(raw, now_ct)
+    by_day = {}  # type: Dict[Any, Dict[int, datetime]]
+    for dt in cands:
+        by_day.setdefault(dt.date(), {})[dt.hour] = dt
+    local_zone = zone if zone is not None else slots.TZ
+    order = _HOUR_ORDER[_side_of_central(local_zone, now_ct)]
+
+    def pick(civil_only: bool, picked: List[datetime]) -> None:
+        used_days = {p.date() for p in picked}
+        used_local = {p.astimezone(local_zone).date() for p in picked}
+        for d in sorted(by_day):
+            if len(picked) == CALL_TIME_COUNT:
+                return
+            if d in used_days:
+                continue
+            for hour in order[min(len(picked), CALL_TIME_COUNT - 1)]:
+                dt = by_day[d].get(hour)
+                if dt is None:
+                    continue
+                local = dt.astimezone(local_zone)
+                if local.date() in used_local:
+                    continue
+                if civil_only and (local.weekday() >= 5 or not CLIENT_HOURS[0] <= local.hour < CLIENT_HOURS[1]):
+                    continue
+                picked.append(dt)
+                used_days.add(d)
+                used_local.add(local.date())
+                break
+
+    picked = []  # type: List[datetime]
+    pick(True, picked)       # client-side weekday, 7am to midnight, first
+    pick(False, picked)      # then anything the rules allow, when the client's day never overlaps
+    return sorted(picked)
+
+
+def _clock(dt: datetime) -> str:
+    if dt.hour == 12 and dt.minute == 0:
+        return "noon"
+    hour = dt.hour % 12 or 12
+    ampm = "am" if dt.hour < 12 else "pm"
+    return "%d%s" % (hour, ampm) if dt.minute == 0 else "%d:%02d%s" % (hour, dt.minute, ampm)
+
+
+def _join(items: List[str]) -> str:
+    if len(items) <= 1:
+        return "".join(items)
+    return "%s or %s" % (", ".join(items[:-1]), items[-1])
+
+
+def format_call_times(times: List[datetime], zone: Any) -> str:
+    """'Thursday at 1pm, Friday at 4pm or Monday at 2pm ET'. The weekday is
+    the client's own (5pm CT Friday is Saturday morning in Sydney). One
+    trailing label when every time shares it, else a label on each."""
+    local = [t.astimezone(zone) for t in times]
+    labels = [client_zone.label(t, zone) for t in local]
+    parts = ["%s at %s" % (_WEEKDAYS[t.weekday()], _clock(t)) for t in local]
+    if len(set(labels)) == 1:
+        return "%s %s" % (_join(parts), labels[0]) if parts else ""
+    return _join(["%s %s" % (p, lab) for p, lab in zip(parts, labels)])
+
+
+def call_time_options(now: datetime, room: Optional[Dict[str, Any]] = None) -> str:
+    """The CALL_TIMES block: three times in the client's zone (Central when
+    the room gives no location), then the none-fit line. Deterministic; no
+    calendar is read."""
+    zone, _source = client_zone.resolve(room)
+    times = format_call_times(call_slots(now, zone), zone)
+    return "%s\n%s" % (times, NONE_FIT_LINE)
 
 
 # ------------------------------------------------------------ data blocks
@@ -313,7 +422,8 @@ def build_user_message(room: Dict[str, Any], thread: Optional[Dict[str, Any]], n
     if reply:
         parts.append(_block("LATEST_CLIENT_MESSAGES", _messages_block(latest_client_messages(room))))
     parts.append(_block("TOUCH_HISTORY", "\n".join(touch_history_lines(thread, hide))))
-    parts.append(_block("CALL_TIMES (optional; use only if a call fits the conversation)", call_time_options(now)))
+    parts.append(_block("CALL_TIMES (optional; use only if a call fits the conversation)",
+                        call_time_options(now, room)))
     parts.append(_block("UPWORK_OFFERS (the only source of figures and proof)", offers_text or ""))
     return "\n\n".join(parts)
 
@@ -366,10 +476,11 @@ def parse_output(raw: Any) -> Tuple[str, List[str], Optional[bool]]:
 
 def mentions_call(text: str, times: str = "") -> bool:
     """A deterministic backstop for proposes_call: the text asks for a short
-    call, or it names a call and both offered days."""
+    call, or it names a call and every offered day."""
     if _CALL_TEXT_RE.search(text or ""):
         return True
-    days = re.findall(r"\b(Monday|Tuesday|Wednesday|Thursday|Friday)\b", times or "")
+    days = re.findall(r"\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b",
+                      (times or "").split("\n", 1)[0])
     return bool(re.search(r"\bcall\b", text or "", re.I) and days
                 and all(re.search(r"\b%s\b" % d, text or "", re.I) for d in days))
 
@@ -413,7 +524,7 @@ def _run(room: Dict[str, Any], thread: Optional[Dict[str, Any]], now: datetime, 
     system = _prompt(prompt_name)
     user = build_user_message(room, thread, now, offers, heading, reply=reply)
     private = ["\n".join(private_note_lines(room))]
-    times = call_time_options(now)
+    times = call_time_options(now, room)
     max_tokens = REPLY_MAX_TOKENS if reply else TOUCH_MAX_TOKENS
 
     result = {"text": "", "problems": [], "needs_you": [], "for_you": _for_you(room), "proposes_call": False,
