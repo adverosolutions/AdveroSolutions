@@ -1,0 +1,188 @@
+{
+  "title": "Your 10-30 Qualified Calls a Month With Commercial Cleaning Owners",
+  "platform": "diagram",
+  "sections": [
+    {
+      "key": "lists",
+      "label": "1 - BUILDING TARGETED PROSPECT LISTS",
+      "color": 0,
+      "note": "The list is only owners of commercial cleaning companies, found one company at a time. Every email is checked before it is ever sent."
+    },
+    {
+      "key": "deliver",
+      "label": "2 - EMAIL DELIVERABILITY, DOMAINS AND INBOX SETUP",
+      "color": 1,
+      "note": "Sending runs on separate domains so your main domain is never at risk. The starting size is our estimate for your first 10 calls, and month one replaces it with real numbers."
+    },
+    {
+      "key": "copy",
+      "label": "3 - COLD EMAIL COPYWRITING",
+      "color": 2,
+      "note": "Each email reads like it was written to one owner about their own company. The follow-ups stay short and never repeat the first email."
+    },
+    {
+      "key": "manage",
+      "label": "4 - CAMPAIGN MANAGEMENT AND OPTIMIZATION",
+      "color": 3,
+      "note": "Replies are answered the same day and every email is tested weekly on whether it books calls. After month one we size the sending to reach 30 calls."
+    },
+    {
+      "key": "book",
+      "label": "5 - BOOKING QUALIFIED SALES CALLS",
+      "color": 4,
+      "note": "Only owners who could become your clients get onto your calendar. Every booked call is counted against your 10 to 30 a month."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "pull",
+      "kind": "data.transform",
+      "label": "1 - We target owners of commercial cleaning companies that clean offices and sites",
+      "section": "lists"
+    },
+    {
+      "key": "find",
+      "kind": "data.transform",
+      "label": "2 - We find each company on Google Maps and pull the owner's name and email",
+      "section": "lists"
+    },
+    {
+      "key": "verify",
+      "kind": "data.transform",
+      "label": "3 - Every owner email is verified and anyone already contacted is taken off",
+      "section": "lists"
+    },
+    {
+      "key": "domains",
+      "kind": "data.transform",
+      "label": "4 - Campaigns send from lookalike domains, so your main domain stays safe",
+      "section": "deliver"
+    },
+    {
+      "key": "inboxes",
+      "kind": "data.transform",
+      "label": "5 - We start with 5 domains and 15 warmed inboxes sending about 25 a day each",
+      "section": "deliver"
+    },
+    {
+      "key": "capacity",
+      "kind": "data.aggregate",
+      "label": "6 - By our estimate that is about 8,250 emails a month to begin with",
+      "section": "deliver"
+    },
+    {
+      "key": "opener",
+      "kind": "data.transform",
+      "label": "7 - Each first email opens with one real detail about that owner's cleaning company",
+      "section": "copy"
+    },
+    {
+      "key": "pitch",
+      "kind": "data.transform",
+      "label": "8 - The offer is more commercial contracts for them, and the ask is a short call",
+      "section": "copy"
+    },
+    {
+      "key": "follow",
+      "kind": "data.transform",
+      "label": "9 - Three short follow-ups go out over two weeks to owners who haven't replied",
+      "section": "copy"
+    },
+    {
+      "key": "unibox",
+      "kind": "data.transform",
+      "label": "10 - Every reply is answered the same day, and a not now goes back into follow-up",
+      "section": "manage"
+    },
+    {
+      "key": "size",
+      "kind": "data.aggregate",
+      "label": "11 - Month one shows the sends per booked call, then we add domains to reach 30",
+      "section": "manage"
+    },
+    {
+      "key": "qualify",
+      "kind": "flow.branch",
+      "label": "12 - Is this an owner who could really become a client of your agency?",
+      "section": "book"
+    },
+    {
+      "key": "calendar",
+      "kind": "data.transform",
+      "label": "13 - The owner books onto your calendar, and each call counts toward your 10 to 30",
+      "section": "book"
+    }
+  ],
+  "edges": [
+    {
+      "from": "pull",
+      "to": "find"
+    },
+    {
+      "from": "find",
+      "to": "verify"
+    },
+    {
+      "from": "verify",
+      "to": "domains"
+    },
+    {
+      "from": "domains",
+      "to": "inboxes"
+    },
+    {
+      "from": "inboxes",
+      "to": "capacity"
+    },
+    {
+      "from": "capacity",
+      "to": "opener"
+    },
+    {
+      "from": "opener",
+      "to": "pitch"
+    },
+    {
+      "from": "pitch",
+      "to": "follow"
+    },
+    {
+      "from": "follow",
+      "to": "unibox"
+    },
+    {
+      "from": "unibox",
+      "to": "size"
+    },
+    {
+      "from": "size",
+      "to": "qualify"
+    },
+    {
+      "from": "qualify",
+      "to": "calendar",
+      "branch": "yes"
+    }
+  ],
+  "input_sample": {
+    "company": "Brightline Commercial Cleaning",
+    "owner": "Dave Morgan",
+    "role": "Owner",
+    "email": "dave@brightlinecleaning.co.uk",
+    "email_status": "verified",
+    "services": "office and school contract cleaning",
+    "detail_for_opener": "takes on office contracts across the city centre",
+    "found_on": "Google Maps"
+  },
+  "output_sample": {
+    "owner": "Dave Morgan",
+    "company": "Brightline Commercial Cleaning",
+    "qualified": "yes, owner of a commercial cleaning company looking for more contracts",
+    "call_booked": "15 minute sales call on your calendar",
+    "notes_for_you": "office and school contract cleaning, replied to email 1",
+    "month_to_date": "booked calls counted against your goal of 10 to 30"
+  },
+  "archetype": "your_10_30_qualified_calls_a_month_with_commerci",
+  "learned": true,
+  "learned_at": "2026-09-28"
+}
