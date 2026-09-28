@@ -1012,7 +1012,7 @@ RULES YOU NEVER BREAK
 3. send_template only when context.approval.doc_done, context.approval.doc_unchanged and context.approval.go_live are all true, and the template is not marked "Not approved yet" in the copy doc. Otherwise hold_for_lorenzo.
 4. No price, fee, commission percentage, dollar amount or guarantee figure in any email or draft. Proof lines only where the copy doc already carries them.
 5. No links in an email, except the call link in a template that has a {zoom_link} or {call_link} placeholder.
-6. Emails go out 07:00 to 19:00 CT only. Follow-up touches go at 10:00 CT on business days. Offered times: 12:00 to 18:00 CT, Monday to Friday, at least 4 hours from now, within 5 business days, only from context.free_times, never a time in context.offered_times (offered to this lead or any other lead). With fewer than two usable times, follow the skill's no-free-times rule.
+6. Emails go out 07:00 to 19:00 CT only. Follow-up touches go at 10:00 CT on business days. Email call times: 12:00 to 18:00 CT, Monday to Friday, at least 4 hours from now, within 5 business days, only from context.free_times, never a time in context.offered_times (offered to this lead or any other lead). With fewer than two usable times, follow the skill's no-free-times rule. Upwork call times follow upwork-followups: three times stated in the client's time zone, all inside 12:00 to 18:00 CT, Monday to Friday, at least 4 hours from now, no more than 5 business days out, plus one line offering to work around their schedule. Use context.free_times when it is there; an Upwork case does not need it. Lorenzo checks the times against his calendar before he sends.
 7. Any no from the lead (unsubscribe, hostile, not a fit, wrong person, not now) stops every email to that lead. Never argue.
 8. A newer reply from the lead replaces any pending email. Answer the newest reply.
 9. Before any email, the thread's last inbound email must be from the lead. If the context shows otherwise, or you cannot tell, escalate.
@@ -1859,7 +1859,7 @@ Suggests a call: no
 NEEDS_YOU: none
 ```
 
-For a reply to a client message, NEEDS_YOU lists each fact Lorenzo has to fill in or decide (a price question, a start date, an open scope detail). A draft marked "Needs edit" says which copy rule it broke. Details: skill `upwork-followups`, "What Lorenzo gets for each draft".
+For a reply to a client message, NEEDS_YOU lists each fact Lorenzo has to fill in or decide (a price question, a start date, an open scope detail). A build-update touch is also flagged NEEDS_YOU, with the change Lorenzo has to make to the build before it goes out. A draft marked "Needs edit" says which copy rule it broke. Details: skill `upwork-followups`, "What Lorenzo gets for each draft".
 
 ## 4. Morning report, 07:30 CT weekdays
 
@@ -1890,7 +1890,7 @@ Health: all 12 inboxes active, warm-up 100.
 1. **Sent today,** by type: follow-up, booking, reminder, no-show, first reply (sent by Lorenzo or on his yes). Cold sends vs plan from Instantly daily analytics.
 2. **Replies:** the total, then a count for each of the 11 labels by name: `positive_interested`, `positive_question`, `positive_referral`, `neutral_question`, `negative_notnow`, `negative_notfit`, `negative_hostile`, `unsubscribe`, `ooo`, `wrong_person`, `auto_reply_unmonitored` (a label with 0 shows 0).
 3. **Calls:** booked, held, no-showed today.
-4. **Upwork:** drafts waiting on him, with hours waiting. The Upwork numbers in skill `daily-reports-and-metrics` are proposals, connects spent, view rate, reply rate, hires, calls booked, close rate (hires / calls booked), return on connects (Upwork earnings / connects spent) and median job age at apply. Two KPI rows, Upwork view rate and median job age at apply, read `no data` until the daily metrics job computes them. Report `no data` as it is, never 0.
+4. **Upwork:** drafts waiting on him, with hours waiting. The Upwork numbers in skill `daily-reports-and-metrics` are proposals, connects spent, view rate, reply rate, hires, calls booked, close rate (hires / calls booked), return on connects (Upwork earnings / dollars spent on connects) and median job age at apply. Two KPI rows, Upwork view rate and median job age at apply, read `no data` until the daily metrics job computes them. Report `no data` as it is, never 0.
 5. **Stuck:** anything held, failed or unconfirmed.
 6. **Audit:** today's sample result (section 7).
 7. **Opus today:** number of calls and total `cost_usd`.
