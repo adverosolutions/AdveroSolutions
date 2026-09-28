@@ -1,0 +1,536 @@
+{
+  "title": "Intake to First Draft, Follow-Ups and Email Your Paralegal Can Run",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "intake",
+      "label": "1 - NEW CLIENT INTAKE",
+      "color": 0,
+      "note": "Website form, phone and referral leads all go into Lawmatics once. Clio, your Google Sheet, the welcome email and the engagement letter follow without anyone retyping or remembering."
+    },
+    {
+      "key": "draft",
+      "label": "2 - DOCUMENT DRAFTING",
+      "color": 1,
+      "note": "Claude reads the intake questionnaire and fills the blanks in your own will, trust and POA templates. Your paralegal is editing, not typing, and anything unclear is flagged for her."
+    },
+    {
+      "key": "follow",
+      "label": "3 - FOLLOW-UPS ON QUIET CLIENTS",
+      "color": 2,
+      "note": "Every weekday morning, clients quiet on signing appointments, missing documents or unpaid retainers get a reminder. Your paralegal is copied, so you hear before the client calls annoyed."
+    },
+    {
+      "key": "email",
+      "label": "4 - EMAIL ROUTED TO YOUR PARALEGAL",
+      "color": 3,
+      "note": "Claude reads new mail in your inbox and writes a short summary. What your paralegal can handle goes to her; legal advice and anything sensitive stays with you."
+    },
+    {
+      "key": "errors",
+      "label": "5 - IF ANY STEP FAILS",
+      "color": 4,
+      "note": "Your paralegal gets the failed step and a link to fix it, never client details in the alert."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 - Lawmatics: New Intake From Website, Phone or Referral",
+      "section": "intake",
+      "notes": "Your intake coordinator enters phone and referral leads on the same Lawmatics form.",
+      "params": {
+        "path": "lawmatics-new-intake"
+      }
+    },
+    {
+      "key": "lm",
+      "kind": "net.http",
+      "label": "2 - Lawmatics: Pull the Full Intake Questionnaire",
+      "section": "intake",
+      "params": {
+        "method": "GET",
+        "url": "https://api.lawmatics.com/v1/prospects/{{ $('1 - Lawmatics: New Intake From Website, Phone or Referral').item.json.body.prospect_id }}",
+        "headers": {
+          "Authorization": "Bearer {{ $('0 - Config: Your Settings').first().json.lawmatics_api_token }}"
+        }
+      }
+    },
+    {
+      "key": "contact",
+      "kind": "net.http",
+      "label": "3 - Clio: Create the Client Contact",
+      "section": "intake",
+      "params": {
+        "method": "POST",
+        "url": "https://app.clio.com/api/v4/contacts.json",
+        "headers": {
+          "Authorization": "Bearer {{ $('0 - Config: Your Settings').first().json.clio_access_token }}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "data": {
+            "type": "Person",
+            "first_name": "{{ $('1 - Lawmatics: New Intake From Website, Phone or Referral').item.json.body.first_name }}",
+            "last_name": "{{ $('1 - Lawmatics: New Intake From Website, Phone or Referral').item.json.body.last_name }}",
+            "email_addresses": [
+              {
+                "name": "Home",
+                "address": "{{ $('1 - Lawmatics: New Intake From Website, Phone or Referral').item.json.body.email }}",
+                "default_email": true
+              }
+            ],
+            "phone_numbers": [
+              {
+                "name": "Mobile",
+                "number": "{{ $('1 - Lawmatics: New Intake From Website, Phone or Referral').item.json.body.phone }}",
+                "default_number": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "key": "matter",
+      "kind": "net.http",
+      "label": "4 - Clio: Open the Estate Planning Matter",
+      "section": "intake",
+      "notes": "One contact, one matter, entered once. No retyping into Clio.",
+      "params": {
+        "method": "POST",
+        "url": "https://app.clio.com/api/v4/matters.json",
+        "headers": {
+          "Authorization": "Bearer {{ $('0 - Config: Your Settings').first().json.clio_access_token }}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "data": {
+            "client": {
+              "id": "{{ $json.data.id }}"
+            },
+            "description": "{{ $('1 - Lawmatics: New Intake From Website, Phone or Referral').item.json.body.matter_type }} - {{ $('1 - Lawmatics: New Intake From Website, Phone or Referral').item.json.body.last_name }}",
+            "status": "Pending",
+            "practice_area": {
+              "id": "{{ $('0 - Config: Your Settings').first().json.clio_practice_area_id }}"
+            },
+            "responsible_attorney": {
+              "id": "{{ $('0 - Config: Your Settings').first().json.clio_attorney_user_id }}"
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "sheet",
+      "kind": "app.action",
+      "label": "5 - Google Sheet: Add the Client to Your Intake Sheet",
+      "app": "googleSheets",
+      "op": "append",
+      "section": "intake",
+      "params": {
+        "document": "PASTE-YOUR-INTAKE-SHEET-ID",
+        "sheet": "Intake",
+        "columns": {
+          "Date": "={{ $now.setZone('America/New_York').toFormat('yyyy-MM-dd') }}",
+          "Client": "={{ $('1 - Lawmatics: New Intake From Website, Phone or Referral').item.json.body.first_name }} {{ $('1 - Lawmatics: New Intake From Website, Phone or Referral').item.json.body.last_name }}",
+          "Source": "={{ $('1 - Lawmatics: New Intake From Website, Phone or Referral').item.json.body.source }}",
+          "Matter Type": "={{ $('1 - Lawmatics: New Intake From Website, Phone or Referral').item.json.body.matter_type }}",
+          "Clio Matter": "={{ $json.data.display_number }}",
+          "Email": "={{ $('1 - Lawmatics: New Intake From Website, Phone or Referral').item.json.body.email }}",
+          "Phone": "={{ $('1 - Lawmatics: New Intake From Website, Phone or Referral').item.json.body.phone }}"
+        }
+      }
+    },
+    {
+      "key": "engage",
+      "kind": "data.code",
+      "label": "6 - Google Docs: Fill In Their Engagement Letter",
+      "section": "intake",
+      "params": {
+        "jsCode": "// 6 - Copy your engagement letter template (a Google Doc with {{TAGS}}),\n// fill in this client, and export it as a PDF for the welcome email.\nconst cfg = $('0 - Config: Your Settings').first().json;\nconst lead = $('1 - Lawmatics: New Intake From Website, Phone or Referral').first().json.body;\nconst matter = $('4 - Clio: Open the Estate Planning Matter').first().json.data;\nconst drive = 'googleDriveOAuth2Api';\nconst docs = 'googleDocsOAuth2Api';\nconst clientName = lead.first_name + ' ' + lead.last_name;\nconst today = new Date().toLocaleDateString('en-US', { timeZone: 'America/New_York', year: 'numeric', month: 'long', day: 'numeric' });\n\nconst copy = await this.helpers.httpRequestWithAuthentication.call(this, drive, {\n  method: 'POST',\n  url: 'https://www.googleapis.com/drive/v3/files/' + cfg.engagement_letter_template_id + '/copy',\n  body: { name: lead.last_name + ' - Engagement Letter - ' + matter.display_number, parents: [cfg.client_folder_id] },\n  json: true,\n});\n\nconst fills = { CLIENT_FULL_NAME: clientName, MATTER_NUMBER: matter.display_number, MATTER_TYPE: lead.matter_type, DATE: today };\nawait this.helpers.httpRequestWithAuthentication.call(this, docs, {\n  method: 'POST',\n  url: 'https://docs.googleapis.com/v1/documents/' + copy.id + ':batchUpdate',\n  body: { requests: Object.entries(fills).map(([tag, value]) => ({\n    replaceAllText: { containsText: { text: '{{' + tag + '}}', matchCase: true }, replaceText: String(value || '') },\n  })) },\n  json: true,\n});\n\nconst pdf = await this.helpers.httpRequestWithAuthentication.call(this, drive, {\n  method: 'GET',\n  url: 'https://www.googleapis.com/drive/v3/files/' + copy.id + '/export',\n  qs: { mimeType: 'application/pdf' },\n  encoding: 'arraybuffer',\n  json: false,\n});\nconst binary = await this.helpers.prepareBinaryData(Buffer.from(pdf), copy.name + '.pdf', 'application/pdf');\nreturn [{ json: { engagement_letter_doc: 'https://docs.google.com/document/d/' + copy.id }, binary: { engagement_letter: binary } }];"
+      }
+    },
+    {
+      "key": "welcome",
+      "kind": "app.action",
+      "label": "7 - Gmail: Send the Welcome Email and Engagement Letter",
+      "app": "gmail",
+      "op": "send",
+      "section": "intake",
+      "notes": "Goes out the minute intake is done, not whenever someone remembers.",
+      "params": {
+        "sendTo": "={{ $('1 - Lawmatics: New Intake From Website, Phone or Referral').item.json.body.email }}",
+        "subject": "=Welcome to {{ $('0 - Config: Your Settings').first().json.firm_name }}, and your engagement letter",
+        "emailType": "text",
+        "message": "=Hi {{ $('1 - Lawmatics: New Intake From Website, Phone or Referral').item.json.body.first_name }},\n\nThank you for choosing {{ $('0 - Config: Your Settings').first().json.firm_name }} for your estate plan. Your engagement letter is attached. Please review, sign and return it, and let us know if you have any questions.\n\nOnce we have it back, our paralegal will be in touch about next steps.\n\nWarm regards,\n{{ $('0 - Config: Your Settings').first().json.firm_name }}",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "engagement_letter"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "key": "drafter",
+      "kind": "ai.llm",
+      "label": "8 - Claude Fills Your Will, Trust and POA Templates",
+      "section": "draft",
+      "notes": "Claude only fills blanks; your template language is never rewritten.",
+      "params": {
+        "system_message": "You prepare first-draft fill-ins for a Florida estate planning and probate law firm. The firm drafts wills, revocable trusts, durable powers of attorney and health care surrogate designations from its own templates. You never write or change legal language. Your only job is to return the values for each template blank from the client's intake questionnaire, so the paralegal is editing, not typing. Use Florida terms: personal representative (never executor), successor trustee, agent under the durable power of attorney, health care surrogate. Template blanks: CLIENT_FULL_NAME, SPOUSE_FULL_NAME, COUNTY, CHILDREN, PERSONAL_REPRESENTATIVE, ALTERNATE_PERSONAL_REPRESENTATIVE, SUCCESSOR_TRUSTEE, POA_AGENT, ALTERNATE_POA_AGENT, HEALTH_CARE_SURROGATE, BENEFICIARIES_AND_SHARES, SPECIFIC_GIFTS, GUARDIAN_FOR_MINORS. Rules: 1. Copy names exactly as the client wrote them. Never guess a name, relationship or share. 2. If an answer is missing, contradictory or unclear, set that blank to [CONFIRM WITH CLIENT: short reason] and add a plain question to open_questions. 3. Beneficiary shares must total 100 percent; if they do not, flag it. 4. A minor or a beneficiary with special needs named as a beneficiary is always an open question for the attorney. 5. documents_needed lists only what the client asked for, from: will, revocable_trust, durable_poa, health_care_surrogate. A married couple gets one set per spouse only if the questionnaire says so; otherwise ask. 6. Do not repeat Social Security numbers or account numbers anywhere in your answer.",
+        "prompt": "=Client: {{ $('1 - Lawmatics: New Intake From Website, Phone or Referral').item.json.body.first_name }} {{ $('1 - Lawmatics: New Intake From Website, Phone or Referral').item.json.body.last_name }}\nClio matter: {{ $('4 - Clio: Open the Estate Planning Matter').item.json.data.display_number }}\nMatter type: {{ $('1 - Lawmatics: New Intake From Website, Phone or Referral').item.json.body.matter_type }}\n\nIntake questionnaire answers from Lawmatics:\n{{ JSON.stringify($('2 - Lawmatics: Pull the Full Intake Questionnaire').item.json) }}\n\nReturn documents_needed, fields (one value per template blank) and open_questions for the paralegal."
+      }
+    },
+    {
+      "key": "dmodel",
+      "kind": "ai.model",
+      "label": "Claude - Reads the Questionnaire",
+      "app": "anthropic",
+      "parent": "drafter",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "dparser",
+      "kind": "ai.parser",
+      "label": "Returns Fill-Ins and Open Questions",
+      "parent": "drafter",
+      "port": "ai_outputParser",
+      "params": {
+        "schema": {
+          "documents_needed": [
+            "revocable_trust",
+            "will",
+            "durable_poa",
+            "health_care_surrogate"
+          ],
+          "fields": {
+            "CLIENT_FULL_NAME": "Margaret Ann Delgado",
+            "SPOUSE_FULL_NAME": "Robert James Delgado",
+            "COUNTY": "Sarasota",
+            "CHILDREN": "Elena Delgado and Marcus Delgado",
+            "PERSONAL_REPRESENTATIVE": "Robert James Delgado",
+            "ALTERNATE_PERSONAL_REPRESENTATIVE": "Elena Delgado",
+            "SUCCESSOR_TRUSTEE": "Elena Delgado, then Marcus Delgado",
+            "POA_AGENT": "Robert James Delgado",
+            "ALTERNATE_POA_AGENT": "Elena Delgado",
+            "HEALTH_CARE_SURROGATE": "Robert James Delgado",
+            "BENEFICIARIES_AND_SHARES": "Elena Delgado 50 percent, Marcus Delgado 50 percent",
+            "SPECIFIC_GIFTS": "[CONFIRM WITH CLIENT: mentions a boat but no recipient]",
+            "GUARDIAN_FOR_MINORS": "Not applicable"
+          },
+          "open_questions": [
+            "Who should receive the boat mentioned in question 14?",
+            "One set of documents for each spouse, or Margaret only?"
+          ]
+        }
+      }
+    },
+    {
+      "key": "fill",
+      "kind": "data.code",
+      "label": "9 - Google Docs: Save the First Drafts in the Client Folder",
+      "section": "draft",
+      "params": {
+        "jsCode": "// 9 - One copy of each template the client needs, saved in the client's Drive\n// folder, every {{TAG}} replaced with Claude's fill-in. Your template wording\n// is never rewritten: only the blanks change.\nconst cfg = $('0 - Config: Your Settings').first().json;\nconst lead = $('1 - Lawmatics: New Intake From Website, Phone or Referral').first().json.body;\nconst matter = $('4 - Clio: Open the Estate Planning Matter').first().json.data;\nconst result = $json.output;\nconst templates = {\n  will: cfg.will_template_id,\n  revocable_trust: cfg.trust_template_id,\n  durable_poa: cfg.poa_template_id,\n  health_care_surrogate: cfg.surrogate_template_id,\n};\nconst names = { will: 'Will', revocable_trust: 'Revocable Trust', durable_poa: 'Durable POA', health_care_surrogate: 'Health Care Surrogate' };\n\nconst drafts = [];\nfor (const doc of result.documents_needed || []) {\n  if (!templates[doc]) continue;\n  const copy = await this.helpers.httpRequestWithAuthentication.call(this, 'googleDriveOAuth2Api', {\n    method: 'POST',\n    url: 'https://www.googleapis.com/drive/v3/files/' + templates[doc] + '/copy',\n    body: { name: lead.last_name + ' - ' + names[doc] + ' - FIRST DRAFT - ' + matter.display_number, parents: [cfg.client_folder_id] },\n    json: true,\n  });\n  await this.helpers.httpRequestWithAuthentication.call(this, 'googleDocsOAuth2Api', {\n    method: 'POST',\n    url: 'https://docs.googleapis.com/v1/documents/' + copy.id + ':batchUpdate',\n    body: { requests: Object.entries(result.fields || {}).map(([tag, value]) => ({\n      replaceAllText: { containsText: { text: '{{' + tag + '}}', matchCase: true }, replaceText: String(value || '[CONFIRM WITH CLIENT]') },\n    })) },\n    json: true,\n  });\n  drafts.push({ document: names[doc], url: 'https://docs.google.com/document/d/' + copy.id });\n}\nreturn [{ json: { client: lead.first_name + ' ' + lead.last_name, matter: matter.display_number, drafts, open_questions: result.open_questions || [] } }];"
+      }
+    },
+    {
+      "key": "task",
+      "kind": "net.http",
+      "label": "10 - Clio: Task Your Paralegal to Review the Drafts",
+      "section": "draft",
+      "notes": "The paralegal gets the draft links and open questions on the matter in Clio.",
+      "params": {
+        "method": "POST",
+        "url": "https://app.clio.com/api/v4/tasks.json",
+        "headers": {
+          "Authorization": "Bearer {{ $('0 - Config: Your Settings').first().json.clio_access_token }}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "data": {
+            "name": "Review first drafts: {{ $json.client }}",
+            "description": "Drafts: {{ $json.drafts.map(d => d.document + ' ' + d.url).join(' | ') }}. Open questions: {{ $json.open_questions.join(' / ') || 'none' }}",
+            "priority": "High",
+            "assignee": {
+              "id": "{{ $('0 - Config: Your Settings').first().json.clio_paralegal_user_id }}",
+              "type": "User"
+            },
+            "matter": {
+              "id": "{{ $('4 - Clio: Open the Estate Planning Matter').item.json.data.id }}"
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "sched",
+      "kind": "trigger.schedule",
+      "label": "11 - Every Weekday Morning",
+      "section": "follow",
+      "params": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * 1-5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "open",
+      "kind": "net.http",
+      "label": "12 - Clio: Pull Every Open Matter and Its Stage",
+      "section": "follow",
+      "params": {
+        "method": "GET",
+        "url": "https://app.clio.com/api/v4/matters.json?status=open&limit=200&fields=id,display_number,updated_at,client{name,primary_email_address},matter_stage{name}",
+        "headers": {
+          "Authorization": "Bearer PASTE-YOUR-CLIO-ACCESS-TOKEN"
+        }
+      }
+    },
+    {
+      "key": "quiet",
+      "kind": "data.code",
+      "label": "13 - Pick Clients Quiet on Signing, Documents or Retainer",
+      "section": "follow",
+      "notes": "Signing appointments, missing documents, unpaid retainers: the three you named.",
+      "params": {
+        "jsCode": "// 13 - Clients quiet mid-matter: waiting on a signing appointment, missing\n// documents or an unpaid retainer, with nothing new on the matter for your\n// set number of days. Reminders go out on that day, twice that and three\n// times that, then the paralegal is told to call instead.\nconst QUIET_DAYS = Number('PASTE-YOUR-QUIET-DAYS');       // days of silence before the first reminder\nconst BOOKING_LINK = 'PASTE-YOUR-SIGNING-BOOKING-LINK';   // your Google Calendar appointment page\nconst FIRM = 'PASTE-YOUR-FIRM-NAME';\n// Left side: your Clio matter stage names, exactly as they appear in Clio.\nconst STAGES = {\n  'Signing Appointment': 'signing',\n  'Waiting on Documents': 'documents',\n  'Retainer Unpaid': 'retainer',\n};\nconst ask = {\n  signing: 'your documents are ready to sign. Please pick a signing time that works for you here: ' + BOOKING_LINK,\n  documents: 'we are still waiting on a few documents from you before we can finish your plan. Reply to this email with any questions about what we need.',\n  retainer: 'your retainer is still open on our side, so work on your plan is paused. Reply here or call the office and we will help you with payment.',\n};\nconst out = [];\nfor (const m of $json.data || []) {\n  const reason = STAGES[(m.matter_stage || {}).name];\n  const email = ((m.client || {}).primary_email_address) || '';\n  if (!reason || !email) continue;\n  const days = Math.floor((Date.now() - new Date(m.updated_at).getTime()) / 86400000);\n  if (days < QUIET_DAYS || days % QUIET_DAYS !== 0) continue;\n  const round = days / QUIET_DAYS;\n  const first = (m.client.name || '').split(' ')[0];\n  out.push({ json: {\n    matter: m.display_number,\n    client_name: m.client.name,\n    client_email: email,\n    reason,\n    days_quiet: days,\n    reminder_number: round,\n    subject: round > 3 ? 'Checking in on your estate plan' : 'A quick next step on your estate plan',\n    message: 'Hi ' + first + ',\\n\\nA quick note from ' + FIRM + ': ' + ask[reason] + '\\n\\nThank you,\\n' + FIRM,\n    paralegal_note: round > 3 ? 'Third reminder already sent. Please call the client.' : 'Reminder ' + round + ' sent automatically.',\n  }});\n}\nreturn out;"
+      }
+    },
+    {
+      "key": "remind",
+      "kind": "app.action",
+      "label": "14 - Gmail: Remind the Client, Copy Your Paralegal",
+      "app": "gmail",
+      "op": "send",
+      "section": "follow",
+      "params": {
+        "sendTo": "={{ $json.client_email }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.message }}",
+        "options": {
+          "ccList": "PASTE-YOUR-PARALEGAL-EMAIL"
+        }
+      }
+    },
+    {
+      "key": "mail",
+      "kind": "trigger.email",
+      "label": "15 - New Email in Your Inbox",
+      "section": "email",
+      "params": {
+        "simple": false,
+        "filters": {
+          "labelIds": [
+            "INBOX"
+          ]
+        }
+      }
+    },
+    {
+      "key": "sort",
+      "kind": "ai.llm",
+      "label": "16 - Claude Reads It and Writes a Short Summary",
+      "section": "email",
+      "notes": "Anything that needs an attorney's judgment stays with you.",
+      "params": {
+        "system_message": "You sort incoming email for the managing attorney of a four-person Florida estate planning and probate firm: the attorney, an associate, a paralegal and a part-time intake coordinator. Decide who should handle each email and write a short summary. Route to paralegal: scheduling or rescheduling signing appointments, clients sending or asking about documents, status questions on a matter, notary and witness logistics, requests for copies, retainer payment questions, and routine requests from banks, title companies, financial advisors or the clerk of court that need paperwork, not advice. Route to attorney: any request for legal advice, changes to beneficiaries, personal representatives, trustees or agents, questions about capacity or pressure from a family member, disputes between heirs, anything from opposing counsel or a judge, court deadlines, fee disputes, complaints, and anything from the Florida Bar. Route to ignore: newsletters, marketing, automated notifications. When unsure, route to attorney. The summary is at most three plain sentences: who wrote, what they need, by when. Never copy Social Security numbers, account numbers or dates of birth into the summary; write 'see original email' instead. action_for_paralegal is one sentence she can act on, or empty when the route is not paralegal.",
+        "prompt": "=From: {{ $json.from.text }}\nSubject: {{ $json.subject }}\nReceived: {{ $json.date }}\n\n{{ $json.text }}\n\nReturn route (paralegal, attorney or ignore), client_name if a client wrote, summary and action_for_paralegal."
+      }
+    },
+    {
+      "key": "smodel",
+      "kind": "ai.model",
+      "label": "Claude - Sorts Your Mail",
+      "app": "anthropic",
+      "parent": "sort",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "sparser",
+      "kind": "ai.parser",
+      "label": "Returns Route and Summary",
+      "parent": "sort",
+      "port": "ai_outputParser",
+      "params": {
+        "schema": {
+          "route": "paralegal",
+          "client_name": "Margaret Delgado",
+          "summary": "Margaret Delgado asks to move her signing appointment. She can come in any weekday afternoon next week.",
+          "action_for_paralegal": "Offer her two afternoon signing times next week and update the Clio calendar."
+        }
+      }
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "17 - Can Your Paralegal Handle It?",
+      "section": "email",
+      "params": {
+        "condition": {
+          "left": "={{ $json.output.route }}",
+          "op": "eq",
+          "right": "paralegal"
+        }
+      }
+    },
+    {
+      "key": "route",
+      "kind": "app.action",
+      "label": "18 - Gmail: Route It to Your Paralegal With the Summary",
+      "app": "gmail",
+      "op": "send",
+      "section": "email",
+      "notes": "She gets a short summary and the next action, so it leaves your inbox.",
+      "params": {
+        "sendTo": "PASTE-YOUR-PARALEGAL-EMAIL",
+        "subject": "=For you: {{ $json.output.client_name || 'inbox' }} - {{ $('15 - New Email in Your Inbox').item.json.subject }}",
+        "emailType": "text",
+        "message": "=Summary: {{ $json.output.summary }}\nNext step: {{ $json.output.action_for_paralegal }}\n\nOriginal from {{ $('15 - New Email in Your Inbox').item.json.from.text }}:\n\n{{ $('15 - New Email in Your Inbox').item.json.text }}"
+      }
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "label": "19 - Any Step Fails",
+      "app": "n8n",
+      "op": "error_trigger",
+      "section": "errors"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "label": "20 - Gmail: Alert Your Paralegal, Not You",
+      "app": "gmail",
+      "op": "send",
+      "section": "errors",
+      "params": {
+        "sendTo": "PASTE-YOUR-PARALEGAL-EMAIL",
+        "subject": "=Automation stopped at {{ $json.execution.lastNodeExecuted }}",
+        "emailType": "text",
+        "message": "=The step '{{ $json.execution.lastNodeExecuted }}' failed: {{ $json.execution.error.message }}\n\nOpen the run here to retry it: {{ $json.execution.url }}"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "lm"
+    },
+    {
+      "from": "lm",
+      "to": "contact"
+    },
+    {
+      "from": "contact",
+      "to": "matter"
+    },
+    {
+      "from": "matter",
+      "to": "sheet"
+    },
+    {
+      "from": "sheet",
+      "to": "engage"
+    },
+    {
+      "from": "engage",
+      "to": "welcome"
+    },
+    {
+      "from": "welcome",
+      "to": "drafter"
+    },
+    {
+      "from": "drafter",
+      "to": "fill"
+    },
+    {
+      "from": "fill",
+      "to": "task"
+    },
+    {
+      "from": "sched",
+      "to": "open"
+    },
+    {
+      "from": "open",
+      "to": "quiet"
+    },
+    {
+      "from": "quiet",
+      "to": "remind"
+    },
+    {
+      "from": "mail",
+      "to": "sort"
+    },
+    {
+      "from": "sort",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "route",
+      "branch": "true"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "body": {
+      "prospect_id": "8841207",
+      "first_name": "Margaret",
+      "last_name": "Delgado",
+      "email": "margaret.delgado@gmail.com",
+      "phone": "(941) 555-0187",
+      "source": "Referral",
+      "referred_by": "Their CPA",
+      "matter_type": "Estate Plan - Married Couple"
+    }
+  },
+  "output_sample": {
+    "client": "Margaret Delgado",
+    "matter": "00214-Delgado",
+    "drafts": [
+      {
+        "document": "Revocable Trust",
+        "url": "https://docs.google.com/document/d/1Qx...trust"
+      },
+      {
+        "document": "Will",
+        "url": "https://docs.google.com/document/d/1Qx...will"
+      },
+      {
+        "document": "Durable POA",
+        "url": "https://docs.google.com/document/d/1Qx...poa"
+      },
+      {
+        "document": "Health Care Surrogate",
+        "url": "https://docs.google.com/document/d/1Qx...hcs"
+      }
+    ],
+    "open_questions": [
+      "Who should receive the boat mentioned in question 14?",
+      "One set of documents for each spouse, or Margaret only?"
+    ],
+    "clio_task": "Review first drafts: Margaret Delgado, assigned to your paralegal"
+  },
+  "archetype": "intake_to_first_draft_follow_ups_and_email_your",
+  "learned": true,
+  "learned_at": "2026-09-28"
+}
