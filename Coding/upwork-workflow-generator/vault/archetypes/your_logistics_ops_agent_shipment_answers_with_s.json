@@ -1,0 +1,349 @@
+{
+  "title": "Your Logistics Ops Agent: Shipment Answers With Sources, Built on RAG",
+  "platform": "n8n",
+  "sections": [
+    {
+      "key": "identify",
+      "label": "1 - IDENTIFY THE PROCESS: QUESTIONS YOUR TEAM ASKS",
+      "color": 0,
+      "note": "Part 1 of your post is finding what to automate. Discovery often lands on a process like this one, the same shipment and procedure questions asked again and again."
+    },
+    {
+      "key": "tools",
+      "label": "2 - PRACTICAL TOOLS: N8N, CLAUDE AND A VECTOR STORE",
+      "color": 1,
+      "note": "Practical means tools your team can run and change. n8n runs the flow, Claude does the reasoning, and a vector store holds your documents."
+    },
+    {
+      "key": "agent",
+      "label": "3 - THE AGENT ANSWERS WITH SOURCES OR HANDS OFF",
+      "color": 2,
+      "note": "The agent uses three tools: it searches your SOPs, looks up the shipment and drafts the customer update. Every answer names where it came from."
+    },
+    {
+      "key": "integrate",
+      "label": "4 - INTEGRATED WITH YOUR EXISTING SYSTEMS",
+      "color": 3,
+      "note": "The agent reads and writes your existing shipment system through its API. When it cannot answer, it opens a task there for your ops team."
+    },
+    {
+      "key": "rag",
+      "label": "5 - RAG: YOUR SOPS BECOME THE AGENT'S KNOWLEDGE",
+      "color": 4,
+      "note": "This is the RAG part of your post. Each SOP added here is turned into search vectors so the agent can find the right section and quote it."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "chat",
+      "kind": "trigger.chat",
+      "label": "1 - Your Team Asks About a Shipment or an SOP",
+      "section": "identify",
+      "notes": "Dispatch, customer service and warehouse ask in one internal chat."
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "2 - Operations Agent Finds the Answer and Its Source",
+      "section": "tools",
+      "notes": "Answers only from your SOPs and your shipment system, never from memory.",
+      "params": {
+        "system_message": "You are the internal operations assistant for a logistics company. Dispatchers, customer service and warehouse staff ask you about shipments and about company procedures.\n\nTools:\n- search_sops: the company's SOPs, procedures, rate rules and customer requirements. Use it for any question about how something is done (damaged goods, refused deliveries, CMR notes, claims, cut-off times, customs documents, temperature-controlled loads).\n- get_shipment: live status of one shipment from the company's shipment system, by shipment reference. Use it whenever a reference is given or the question is about where a load is, its ETA, its last scan or its POD.\n- save_customer_update_draft: saves a draft customer update on the shipment record. Use it only when the user asks for a customer update or message. Keep drafts short, factual, in the customer's language if the user says which, and never promise a time the shipment system does not show. You never send anything to a customer; a person reviews and sends.\n\nRules:\n1. Answer only from tool results. Never guess a status, ETA, rule, price or deadline.\n2. Every answer lists its sources: the SOP title and section, and the shipment reference with the time of the last event.\n3. If the reference is missing or not found, ask for it once, or say it was not found in the shipment system.\n4. If the SOPs do not cover the question, or the answer needs a decision (a claim, a credit, an exception for a customer), set needs_person to true and give the reason in one sentence.\n5. Keep answers to three or four sentences. Plain language, no filler.",
+        "prompt": "=Question from the team: {{ $json.chatInput }}\n\nUse the tools, then return: answer (3-4 sentences), sources (list of SOP title and section, or shipment reference and last event time), shipment_reference (or empty), needs_person (true or false), reason (one sentence, only when needs_person is true), customer_update_draft_saved (true or false)."
+      }
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "label": "Claude - Reasons Over Your SOPs and Shipments",
+      "app": "anthropic",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "sops",
+      "kind": "ai.vectorstore",
+      "label": "RAG Tool - Search Your SOPs and Procedures",
+      "app": "pinecone",
+      "parent": "agent",
+      "port": "ai_tool",
+      "notes": "Finds the exact SOP section and hands it to Claude to quote.",
+      "params": {
+        "mode": "retrieve-as-tool",
+        "toolName": "search_sops",
+        "toolDescription": "Search the company's SOPs, procedures and customer requirements. Input: the question in plain words (for example: consignee refuses damaged pallet). Returns the most relevant sections with their document title and section.",
+        "pineconeIndex": {
+          "__rl": true,
+          "mode": "id",
+          "value": "PASTE-YOUR-PINECONE-INDEX"
+        },
+        "topK": 5,
+        "options": {
+          "pineconeNamespace": "sops"
+        }
+      }
+    },
+    {
+      "key": "embed",
+      "kind": "ai.embed",
+      "label": "OpenAI Embeddings - Match the Question to Your SOPs",
+      "app": "openai",
+      "parent": "sops",
+      "port": "ai_embedding"
+    },
+    {
+      "key": "lookup",
+      "kind": "ai.tool",
+      "label": "Tool - Look Up the Shipment in Your System",
+      "app": "http",
+      "parent": "agent",
+      "port": "ai_tool",
+      "notes": "Live status, ETA and last scan straight from your existing system.",
+      "params": {
+        "toolDescription": "get_shipment: get the live status of one shipment from the company's shipment system. Input: shipment_reference exactly as the user wrote it (for example PL-WAW-88213). Returns status, last event with time and location, ETA window, consignee and POD if delivered.",
+        "method": "GET",
+        "url": "={{ $('0 - Config: Your Settings').item.json.shipment_api_url }}/shipments/{shipment_reference}",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            {
+              "name": "Authorization",
+              "valueProvider": "fieldValue",
+              "value": "=Bearer {{ $('0 - Config: Your Settings').item.json.shipment_api_key }}"
+            }
+          ]
+        },
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "shipment_reference",
+              "description": "The shipment reference from the question",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "draft",
+      "kind": "ai.tool",
+      "label": "Tool - Save a Draft Customer Update on the Shipment",
+      "app": "http",
+      "parent": "agent",
+      "port": "ai_tool",
+      "params": {
+        "toolDescription": "save_customer_update_draft: save a draft customer update as a note on the shipment record for a person to review and send. Input: shipment_reference and update_text (the draft, 2-4 sentences, facts from get_shipment only). Returns the note id.",
+        "method": "POST",
+        "url": "={{ $('0 - Config: Your Settings').item.json.shipment_api_url }}/shipments/{shipment_reference}/notes",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            {
+              "name": "Authorization",
+              "valueProvider": "fieldValue",
+              "value": "=Bearer {{ $('0 - Config: Your Settings').item.json.shipment_api_key }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"type\": \"customer_update_draft\", \"status\": \"draft\", \"text\": \"{update_text}\"}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "shipment_reference",
+              "description": "The shipment reference",
+              "type": "string"
+            },
+            {
+              "name": "update_text",
+              "description": "The draft customer update, 2-4 sentences, no line breaks",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Parser - Answer, Sources and Needs a Person",
+      "parent": "agent",
+      "port": "ai_outputParser",
+      "params": {
+        "schema": {
+          "answer": "PL-WAW-88213 is out for delivery, last scan at the Poznan cross-dock at 07:42, ETA today 14:00-16:00. If the consignee refuses a damaged pallet, photograph it, note the damage on the CMR before the driver leaves and open a claim within 7 days.",
+          "sources": [
+            "Shipment system: PL-WAW-88213, last event 07:42",
+            "Damage and Claims SOP v4, section 3.2"
+          ],
+          "shipment_reference": "PL-WAW-88213",
+          "needs_person": false,
+          "reason": "",
+          "customer_update_draft_saved": false
+        }
+      }
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "3 - Answered From a Source, No Person Needed?",
+      "section": "agent",
+      "params": {
+        "condition": {
+          "left": "={{ $json.output.needs_person }}",
+          "op": "false"
+        }
+      }
+    },
+    {
+      "key": "reply",
+      "kind": "data.transform",
+      "label": "3a - Reply in Chat With the Answer and Its Sources",
+      "section": "agent",
+      "params": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "reply-answer",
+              "name": "output",
+              "type": "string",
+              "value": "={{ $json.output.answer }}\n\nSources: {{ $json.output.sources.join('; ') }}{{ $json.output.customer_update_draft_saved ? '\\nA draft customer update is saved on the shipment for you to review and send.' : '' }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "task",
+      "kind": "net.http",
+      "label": "4 - Your Shipment System: Open a Task for the Ops Team",
+      "section": "integrate",
+      "notes": "No guessing: questions it cannot source go to a person, with the reason.",
+      "params": {
+        "method": "POST",
+        "url": "={{ $('0 - Config: Your Settings').item.json.shipment_api_url }}/tasks",
+        "headers": {
+          "Authorization": "Bearer {{ $('0 - Config: Your Settings').item.json.shipment_api_key }}"
+        },
+        "body": "{{ JSON.stringify({ queue: $('0 - Config: Your Settings').item.json.ops_team, shipment_reference: $json.output.shipment_reference, title: 'Ops agent could not answer: ' + $('1 - Your Team Asks About a Shipment or an SOP').item.json.chatInput.slice(0, 80), question: $('1 - Your Team Asks About a Shipment or an SOP').item.json.chatInput, reason: $json.output.reason, chat_session: $('1 - Your Team Asks About a Shipment or an SOP').item.json.sessionId }) }}"
+      }
+    },
+    {
+      "key": "handed",
+      "kind": "data.transform",
+      "label": "4b - Tell the Team Who Has It and the Task Number",
+      "section": "integrate",
+      "params": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "reply-handoff",
+              "name": "output",
+              "type": "string",
+              "value": "=I could not confirm this from the SOPs or the shipment system, so I opened task {{ $json.id }} for {{ $('0 - Config: Your Settings').item.json.ops_team }}. Reason: {{ $('2 - Operations Agent Finds the Answer and Its Source').item.json.output.reason }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "form",
+      "kind": "trigger.form",
+      "label": "5 - Add an SOP Section Through the Upload Form",
+      "section": "rag",
+      "notes": "Whoever owns a procedure adds it here; the agent can use it minutes later.",
+      "params": {
+        "formTitle": "Add an SOP to the Ops Agent",
+        "formDescription": "Paste one section of an SOP or procedure at a time.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Document title",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Section or version",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Section text",
+              "fieldType": "textarea",
+              "requiredField": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "vectors",
+      "kind": "net.http",
+      "label": "5b - OpenAI: Turn the SOP Section Into Search Vectors",
+      "section": "rag",
+      "params": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "headers": {
+          "Authorization": "Bearer {{ $('0 - Config: Your Settings').item.json.openai_api_key }}"
+        },
+        "body": "{{ JSON.stringify({ model: 'text-embedding-3-small', input: $json['Section text'] }) }}"
+      }
+    },
+    {
+      "key": "upsert",
+      "kind": "net.http",
+      "label": "5c - Pinecone: Save It Where the Agent Searches",
+      "section": "rag",
+      "params": {
+        "method": "POST",
+        "url": "={{ $('0 - Config: Your Settings').item.json.pinecone_index_host }}/vectors/upsert",
+        "headers": {
+          "Api-Key": "{{ $('0 - Config: Your Settings').item.json.pinecone_api_key }}"
+        },
+        "body": "{{ JSON.stringify({ namespace: 'sops', vectors: [{ id: ($('5 - Add an SOP Section Through the Upload Form').item.json['Document title'] + '-' + $('5 - Add an SOP Section Through the Upload Form').item.json['Section or version']).toLowerCase().replace(/[^a-z0-9]+/g, '-'), values: $json.data[0].embedding, metadata: { text: $('5 - Add an SOP Section Through the Upload Form').item.json['Section text'], title: $('5 - Add an SOP Section Through the Upload Form').item.json['Document title'], section: $('5 - Add an SOP Section Through the Upload Form').item.json['Section or version'] } }] }) }}"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "chat",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "reply",
+      "branch": "true"
+    },
+    {
+      "from": "gate",
+      "to": "task",
+      "branch": "false"
+    },
+    {
+      "from": "task",
+      "to": "handed"
+    },
+    {
+      "from": "form",
+      "to": "vectors"
+    },
+    {
+      "from": "vectors",
+      "to": "upsert"
+    }
+  ],
+  "input_sample": {
+    "sessionId": "ops-chat-4471",
+    "chatInput": "Where is shipment PL-WAW-88213 and what do we do if the consignee refuses a damaged pallet on delivery?"
+  },
+  "output_sample": {
+    "output": "PL-WAW-88213 is out for delivery, last scan at the Poznan cross-dock at 07:42, ETA today 14:00-16:00. If the consignee refuses a damaged pallet, photograph it, note the damage on the CMR before the driver leaves and open a claim within 7 days.\n\nSources: Shipment system: PL-WAW-88213, last event 07:42; Damage and Claims SOP v4, section 3.2"
+  },
+  "archetype": "your_logistics_ops_agent_shipment_answers_with_s",
+  "learned": true,
+  "learned_at": "2026-09-28"
+}
