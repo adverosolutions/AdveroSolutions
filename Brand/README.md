@@ -61,4 +61,4 @@ The source artboards for everything are in `source/` (`.dc.html`, self-contained
 - Small blue text (eyebrows, links) uses `--blue-deep` (#1f5fd6), because `--blue` fails contrast at small sizes.
 - Headlines: weight 600, letter-spacing -.035em. The second half can use `--text-gradient`.
 - Logo: clear space is half the front plane's height. Don't stretch, recolour, rotate or add effects, don't use glass on dark, and don't place it on busy backgrounds (see `guidelines/`).
-- Copy used across the kit: eyebrow "AI automation for service businesses", headline "Leads in. Calls booked.", and the proof numbers $750M+ annual bid volume routed, $5M loan applications in 30 days, +35% qualified leads.
+- Copy used across the kit: eyebrow "AI agents for service businesses", headline "Leads in. Calls booked.", and the proof numbers $750M+ annual bid volume routed, $5M loan applications in 30 days, +35% qualified leads.
