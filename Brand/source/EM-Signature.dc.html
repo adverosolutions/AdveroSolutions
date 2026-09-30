@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Email signature</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:"Figtree",system-ui,sans-serif;color:#16202e;-webkit-font-smoothing:antialiased}
+.sky{background:radial-gradient(1200px 600px at 78% -10%,rgba(255,255,255,.95),rgba(255,255,255,0) 60%),radial-gradient(900px 520px at 8% 30%,rgba(206,226,250,.75),rgba(206,226,250,0) 70%),linear-gradient(180deg,#c9dcf2 0%,#dce8f5 28%,#ecf1f7 58%,#f3f4f6 82%,#e9edf2 100%)}
+.panel{position:absolute;box-sizing:border-box;border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(248,251,255,.80));border:1px solid rgba(255,255,255,.95);box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.55),0 40px 70px -30px rgba(38,72,128,.30),0 16px 30px -18px rgba(38,72,128,.22)}
+.panel::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;background:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,0) 28%,rgba(255,255,255,0) 72%,rgba(200,218,242,.35) 100%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.panel::after{content:"";position:absolute;left:10%;right:10%;bottom:-46px;height:34px;border-radius:50%;background:radial-gradient(closest-side,rgba(52,86,140,.22),rgba(52,86,140,0));filter:blur(6px);pointer-events:none}
+.dark{background:linear-gradient(180deg,#1d2939,#16202e);border:1px solid rgba(255,255,255,.10);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 40px 70px -30px rgba(22,32,46,.55),0 16px 30px -18px rgba(22,32,46,.45)}
+.dark::before{background:linear-gradient(135deg,rgba(255,255,255,.35) 0%,rgba(255,255,255,0) 28%,rgba(255,255,255,0) 72%,rgba(160,190,235,.18) 100%)}
+.dark::after{background:radial-gradient(closest-side,rgba(22,32,46,.34),rgba(22,32,46,0))}
+.lbl{position:absolute;left:32px;top:30px;font-size:13px;font-weight:600;letter-spacing:.02em;color:#4d596b;line-height:1}
+.dark .lbl{color:rgba(255,255,255,.74)}
+.cap{font-size:12px;font-weight:500;color:#4d596b;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}
+.in{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+
+</style>
+</helmet>
+<div class="sky" style="width: 800px; height: 320px; position: relative; overflow: hidden;"><div class="panel" style="left: 24px; top: 20px; width: 752px; height: 280px; border-radius: 22px; padding: 30px 40px;"><div style="display: flex; flex-direction: column; gap: 12px;"><div style="height: 9px; width: 560px; border-radius: 5px; background: #e6ebf2;"></div><div style="height: 9px; width: 612px; border-radius: 5px; background: #e6ebf2;"></div><div style="height: 9px; width: 430px; border-radius: 5px; background: #e6ebf2;"></div></div><div style="margin-top: 26px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #4d596b; line-height: 1;">--</div><div style="margin-top: 14px;"><table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;">
+<tr>
+<td valign="top" style="padding:0 8px 0 0;vertical-align:top;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="64" height="64" fill="none" style="display: block;"><path d="M80 8H96C100.42 8 104 11.58 104 16V32C104 36.42 100.42 40 96 40H92.97C89.74 35.18 84.24 32 78 32H72V16C72 11.58 75.58 8 80 8Z" fill="#b3cffa"/><path d="M58 40H78C83.52 40 88 44.48 88 50V70C88 74.99 84.35 79.12 79.57 79.88C77.67 70.81 69.63 64 60 64H48V50C48 44.48 52.48 40 58 40Z" fill="#6aa5ff"/><path d="M36 72H60C66.63 72 72 77.37 72 84V108C72 114.63 66.63 120 60 120H36C29.37 120 24 114.63 24 108V84C24 77.37 29.37 72 36 72Z" fill="#2f74f5"/></svg></td>
+<td valign="top" style="padding:0 0 0 18px;border-left:1px solid #dbe3ee;vertical-align:top;">
+<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;">
+<tr><td style="padding:0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:20px;font-weight:600;color:#16202e;white-space:nowrap;">Lorenzo Villarreal</td></tr>
+<tr><td style="padding:2px 0 9px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;font-weight:400;color:#4d596b;white-space:nowrap;">Founder, Advero Solutions</td></tr>
+<tr><td style="padding:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:19px;white-space:nowrap;"><a href="tel:[PHONE]" style="color:#1f5fd6;text-decoration:none;">[Phone]</a></td></tr>
+<tr><td style="padding:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:19px;white-space:nowrap;"><a href="[WEBSITE URL]" style="color:#1f5fd6;text-decoration:none;">[Website]</a></td></tr>
+<tr><td style="padding:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:19px;white-space:nowrap;"><a href="[BOOKING URL]" style="color:#1f5fd6;text-decoration:none;">[Book a call link]</a></td></tr>
+</table>
+</td>
+</tr>
+</table>
+</div></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":800,"height":320}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
