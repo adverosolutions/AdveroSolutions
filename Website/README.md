@@ -1,6 +1,6 @@
 # Advero Solutions website
 
-Static site for adverosolutions.com: the home page, three industry pages (cleaning, bookkeeping, recruiting), about, a booking page with the GoHighLevel calendar, and a 404 page. Plain HTML, CSS and JS, no framework.
+Static site for adverosolutions.com: the home page (with the six agent cards), about, a booking page with the GoHighLevel calendar, and a 404 page. Plain HTML, CSS and JS, no framework.
 
 ## Preview
 

@@ -1,9 +1,9 @@
 /* Advero Solutions shared behaviour. No libraries.
    - Logo fallback: any img[data-logo] that fails to load becomes a text wordmark.
    - Reveal on scroll: .fade and .rise get .is-in when they enter the viewport (delays via --d in CSS).
-   - Header: .is-scrolled after the page moves; phone menu toggle (Escape or a tap outside closes it);
-     Industries dropdown.
-   - Loops: a [data-loop] element plays its [data-at] steps on repeat while visible.
+   - Header: .is-scrolled after the page moves; phone menu toggle (Escape or a tap outside closes it).
+   - Loops: a [data-loop] element plays its [data-at] steps on repeat while visible and pauses off screen;
+     [data-loop-start="ms"] sets the delay before its first frame.
    - prefers-reduced-motion: everything shows at once, loops rest on their final frame. */
 (function () {
   'use strict';
@@ -53,6 +53,20 @@
     }, { threshold: 0, rootMargin: '0px 0px -10% 0px' });
     Array.prototype.forEach.call(revealEls, function (el) { revealer.observe(el); });
   }
+  /* A link from another page to an id inside a not-yet-revealed .rise/.fade (the agent cards) would land on the
+     transformed box and end up off by the reveal offset: reveal that one at once and scroll to it again. */
+  (function () {
+    var id = location.hash ? location.hash.slice(1) : '';
+    var target = null;
+    try { target = id && doc.getElementById(decodeURIComponent(id)); } catch (err) { target = null; }
+    var wrap = target && target.closest('.rise, .fade');
+    if (!wrap || wrap.classList.contains('is-in')) return;
+    wrap.style.transition = 'none';
+    wrap.classList.add('is-in');
+    void wrap.offsetWidth;
+    wrap.style.transition = '';
+    target.scrollIntoView({ block: 'start', behavior: 'instant' });
+  })();
 
   /* ---------- Header state ---------- */
   var header = doc.querySelector('.site-header');
@@ -82,41 +96,6 @@
       window.addEventListener('resize', function () { if (window.innerWidth > 960) setMenu(false); });
     }
 
-    /* Industries dropdown (desktop) */
-    each('.nav__drop', function (drop) {
-      var btn = drop.querySelector('.nav__drop-btn');
-      if (!btn) return;
-      var timer = null;
-      var hoverOpened = false; /* true while the menu is open because the pointer is on it */
-      var setDrop = function (open) {
-        clearTimeout(timer);
-        if (!open) hoverOpened = false;
-        drop.classList.toggle('is-open', open);
-        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      };
-      btn.addEventListener('click', function (e) {
-        /* a pointer click on a menu that hover opened keeps it open (the pointer is on it);
-           keyboard activation (detail 0) always toggles */
-        if (e.detail !== 0 && hoverOpened && drop.classList.contains('is-open')) { hoverOpened = false; return; }
-        setDrop(!drop.classList.contains('is-open'));
-      });
-      var fine = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-      if (fine) {
-        drop.addEventListener('mouseenter', function () {
-          if (window.innerWidth > 960 && !drop.classList.contains('is-open')) { setDrop(true); hoverOpened = true; }
-          else clearTimeout(timer);
-        });
-        drop.addEventListener('mouseleave', function () {
-          if (window.innerWidth > 960) timer = setTimeout(function () { setDrop(false); }, 180);
-        });
-      }
-      drop.addEventListener('focusout', function (e) { if (!drop.contains(e.relatedTarget)) setDrop(false); });
-      doc.addEventListener('click', function (e) { if (!drop.contains(e.target)) setDrop(false); });
-      doc.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && drop.classList.contains('is-open')) { setDrop(false); btn.focus(); }
-      });
-    });
-
     doc.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && header.classList.contains('menu-open')) { setMenu(false); if (toggle) toggle.focus(); }
     });
@@ -129,6 +108,8 @@
     var durations = (stage.getAttribute('data-loop') || '900,1300,1500,1500,1600,1500,3400')
       .split(',').map(function (n) { return parseInt(n, 10) || 1000; });
     var last = durations.length - 1;
+    var startDelay = parseInt(stage.getAttribute('data-loop-start'), 10);
+    if (!(startDelay >= 0)) startDelay = 900;
     var step = -1;
 
     function render(n) {
@@ -162,7 +143,7 @@
       render(step);
       timer = setTimeout(tick, durations[step]);
     }
-    function resume() { if (!timer && visible && !doc.hidden) timer = setTimeout(tick, step < 0 ? 900 : 400); }
+    function resume() { if (!timer && visible && !doc.hidden) timer = setTimeout(tick, step < 0 ? startDelay : 400); }
     render(0);
     new IntersectionObserver(function (entries) {
       visible = entries[0].isIntersecting;
