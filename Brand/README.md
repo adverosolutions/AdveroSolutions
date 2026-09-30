@@ -9,7 +9,7 @@ The brand for Advero Solutions, in the Spatial look used on the Upwork pages. Th
 
 | Platform | Slot | File |
 |---|---|---|
-| LinkedIn (you) | Profile photo | `social/avatars/headshot-lorenzo-1080x1080.png` (your headshot on the brand sky; `headshot-background-1080x1080.png` is the empty background for future photos) |
+| LinkedIn (you) | Profile photo | `social/avatars/headshot-lorenzo-1080x1080.png` (your headshot on the brand light blue #6aa5ff; `headshot-background-1080x1080.png` is the empty background for future photos) |
 | LinkedIn (you) | Background banner | `social/linkedin/linkedin-banner-1584x396.png` (the 3168x792 is a sharper 2x copy) |
 | LinkedIn company page | Logo | `social/avatars/linkedin-company-logo-400x400.png` |
 | LinkedIn company page | Cover | `social/linkedin/linkedin-company-cover-1512x256.png` (or the 2x copy) |
