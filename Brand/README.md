@@ -9,11 +9,11 @@ The brand for Advero Solutions, in the Spatial look used on the Upwork pages. Th
 
 | Platform | Slot | File |
 |---|---|---|
-| LinkedIn (you) | Profile photo | Your face. Use `social/avatars/headshot-background-1080x1080.png` behind a cut-out of your photo. |
+| LinkedIn (you) | Profile photo | `social/avatars/headshot-lorenzo-1080x1080.png` (your headshot on the brand sky; `headshot-background-1080x1080.png` is the empty background for future photos) |
 | LinkedIn (you) | Background banner | `social/linkedin/linkedin-banner-1584x396.png` (the 3168x792 is a sharper 2x copy) |
 | LinkedIn company page | Logo | `social/avatars/linkedin-company-logo-400x400.png` |
 | LinkedIn company page | Cover | `social/linkedin/linkedin-company-cover-1512x256.png` (or the 2x copy) |
-| X | Profile photo | Your face on the headshot background, or `social/avatars/x-avatar-400x400.png` for a brand account |
+| X | Profile photo | `social/avatars/headshot-lorenzo-400x400.png`, or `social/avatars/x-avatar-400x400.png` for a brand account |
 | X | Header | `social/x/x-header-1500x500.png` (or the 2x copy) |
 | YouTube | Profile picture | `social/avatars/youtube-profile-800x800.png` |
 | YouTube | Channel banner | `social/youtube/youtube-banner-2560x1440.png` |
@@ -23,8 +23,8 @@ The brand for Advero Solutions, in the Spatial look used on the Upwork pages. Th
 | Skool | Group icon | `social/avatars/skool-group-icon-128x128.png` (the 512 is a sharper copy) |
 | Skool | Group cover | `social/skool/skool-cover-1084x576.png` (or the 2x copy) |
 | Skool | Course cover template | `templates/skool-course-cover-1460x752.png` |
-| Skool (you) | Member photo | Your face on the headshot background |
-| Upwork (you) | Freelancer photo | Your face only. Upwork rejects logos, text and watermarks in it. |
+| Skool (you) | Member photo | `social/avatars/headshot-lorenzo-400x400.png` |
+| Upwork (you) | Freelancer photo | `social/avatars/headshot-lorenzo-1080x1080.png` (no logo or text, which Upwork requires) |
 | Upwork agency | Logo | `social/avatars/upwork-agency-logo-800x800.png` |
 | Upwork agency | Banner | `social/upwork/upwork-agency-banner-3200x320.png` |
 | Upwork | Portfolio / Project Catalog cover | `templates/upwork-portfolio-cover-1000x750.png`, or the `-blank` version to drop a screenshot on. Keep text minimal and no other platforms' logos. |
