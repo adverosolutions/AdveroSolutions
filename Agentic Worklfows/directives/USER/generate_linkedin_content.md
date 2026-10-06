@@ -1,5 +1,7 @@
 # Generate LinkedIn Content
 
+> **RETIRED (2026-10-06).** LinkedIn posts are written with the `linkedin-content` skill, by Opus, from real material only. Do not run `execution/linkedin_content_generator.py` or use `execution/linkedin_post_profile.json`: they allow fabricated stories and numbers. The rest of this file is kept as history.
+
 **Purpose:** Generate 5-10 LinkedIn posts per day across 5 content pillars, output to Google Sheets content calendar
 **When to use:** Weekly (or as needed) to fill the content queue
 **Cost:** ~$0.02 per post on Claude Opus 5.5 at low effort (rough estimate; every model call runs on Opus 5.5 since 2026-09-25)
