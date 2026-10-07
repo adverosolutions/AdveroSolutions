@@ -847,6 +847,31 @@ _LOCATION_SENTENCE_RE = re.compile(
     r"[^;]*?(?:(?=(?<!\b[A-Z])\.(?:\s|$))|(?<=\b[A-Z]\.)(?=\s+[A-Z]|\s*$)|(?=;|$))")
 
 
+# The posted fixed budget in Lorenzo's summary line: "Fixed price $750, entry
+# level", "Fixed $2,000, intermediate", "Budget: $1.5k". Hourly posts have no
+# fixed budget. A line that calls the figure a placeholder gives none.
+_BUDGET_RE = re.compile(r"^\s*(?:fixed(?:\s+price)?|budget)\s*:?\s*(?:of\s+)?\$\s?(\d[\d,]*(?:\.\d+)?)\s?(k)?\b",
+                        re.IGNORECASE)
+
+
+def client_budget(lines: List[str]) -> Optional[int]:
+    """The fixed budget the jd.txt metadata lines state, in whole dollars, or
+    None (hourly, not stated, or called a placeholder). Used only to build the
+    price band of a framework reply (draft.price_band, DESIGN "Reply drafts")."""
+    for line in lines or []:
+        m = _BUDGET_RE.match(line or "")
+        if not m:
+            continue
+        if re.search(r"placeholder", line, re.IGNORECASE):
+            return None
+        try:
+            value = float(m.group(1).replace(",", "")) * (1000 if m.group(2) else 1)
+        except ValueError:
+            return None
+        return int(value) if value > 0 else None
+    return None
+
+
 def client_location(lines: List[str]) -> Optional[str]:
     """The location sentences of the jd.txt metadata lines, joined, or None.
     services/upwork_followup/client_zone.py turns them into a time zone."""
@@ -884,7 +909,7 @@ def _clean_first_name(value: Any) -> Optional[str]:
 
 
 def parse_jd(text: str) -> Dict[str, Any]:
-    """jd.txt -> {"job_id", "title", "client_first_name", "post", "client_location"}.
+    """jd.txt -> {"job_id", "title", "client_first_name", "post", "client_location", "budget"}.
 
     Two layouts exist. With a ``url:`` first line and a blank line before the
     post, the metadata block is the first paragraph: key lines (``url:``,
@@ -948,6 +973,7 @@ def parse_jd(text: str) -> Dict[str, Any]:
         "client_first_name": _clean_first_name(meta.get("client first name")),
         "post": clean_text("\n".join(body))[:POST_MAX_CHARS],
         "client_location": client_location(meta_lines),
+        "budget": client_budget(meta_lines),
     }
 
 
@@ -1143,6 +1169,7 @@ def build_job(folder: Dict[str, Any], rows: List[Dict[str, str]], job_id: Option
         "loom_url": loom,
         "applied_at": applied,
         "client_location": folder.get("client_location"),
+        "budget": folder.get("budget"),
     }
 
 

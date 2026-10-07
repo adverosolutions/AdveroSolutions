@@ -54,7 +54,12 @@ Codes (stable; tick.py and the cards key on them):
                           month works"; round 12) and a relative price ("half
                           the price"). A "k" figure before a count noun is a
                           volume, not money ("approx 25k emails", "a 25k list";
-                          round 11)
+                          round 11). One exception (Lorenzo, 2026-10-06): a
+                          framework reply is checked with ``band=(low,
+                          high)``, and exactly that range, both ends together
+                          in a range form ("between $750 and $1,000", "$750 to
+                          $1,000"), passes this check, private_fact and the
+                          price-agreement check; see ``band_spans``
     agrees_to_client_price
                           a number the client stated as a price or budget
                           (money, a price word near it, a price position, or
@@ -1571,11 +1576,14 @@ def client_price_proposal(room: Optional[Dict[str, Any]]) -> Optional[str]:
     return None
 
 
-def figureless_price_agreement(body: str, room: Optional[Dict[str, Any]]) -> Optional[str]:
+def figureless_price_agreement(body: str, room: Optional[Dict[str, Any]],
+                               allow_deferral: bool = True) -> Optional[str]:
     """The opening sentence of ``body`` when it agrees, without naming the
     figure, to a price the client's latest message proposes (see above), or
-    None. A draft that defers the price anywhere passes."""
-    if not body or _DEFER_PRICE_RE.search(body):
+    None. A draft that defers the price anywhere passes, unless
+    ``allow_deferral`` is False (a framework reply always defers the exact
+    figure to the call, so there a deferral frees nothing)."""
+    if not body or (allow_deferral and _DEFER_PRICE_RE.search(body)):
         return None
     opening = ""
     for s, e in _sentences(body[:2000]):
@@ -1630,12 +1638,14 @@ _PRICE_SUBJECT_AGREE_RE = re.compile(
     + _PRICE_SUBJECT + r"(?:\s+|(?='s\b))" + _PRICE_SUBJECT_PREDICATE, re.I)
 
 
-def price_subject_agreement(body: str, room: Optional[Dict[str, Any]]) -> Optional[str]:
+def price_subject_agreement(body: str, room: Optional[Dict[str, Any]],
+                            allow_deferral: bool = True) -> Optional[str]:
     """The first sentence of ``body`` with a clause that has the price as its
     subject in an agreeing form ("the price is fine", "your budget works for
     me"), when the client's latest message proposes a price (see above), or
-    None. A draft that defers the price anywhere passes; questions pass."""
-    if not body or _DEFER_PRICE_RE.search(body):
+    None. A draft that defers the price anywhere passes (unless
+    ``allow_deferral`` is False); questions pass."""
+    if not body or (allow_deferral and _DEFER_PRICE_RE.search(body)):
         return None
     hit = None
     for s, e in _sentences(body[:5000]):
@@ -5364,14 +5374,62 @@ def shared_terms(text: str, room: Optional[Dict[str, Any]]) -> Set[str]:
     return distinctive_terms(text, names) & distinctive_terms(client_source_text(room), names)
 
 
+# ------------------------------------------------------------ the framework band
+# Lorenzo, 2026-10-06: a framework reply (draft.is_framework_reply) states
+# the price as a range computed from the assessment (draft.price_band). The
+# gate is handed that band and lets exactly its two figures through, together,
+# in a range form: "between $1,500 and $2,000", "$1,500 to $2,000",
+# "$1,500-$2,000" (the second "$" optional, commas optional). Everything else
+# keeps its rule: a single price, one end alone, an off-band figure and
+# agreeing to the client's number are still refused.
+BAND_MASK = "the band"
+_BAND_RE = re.compile(
+    r"(\bbetween\s+)?\$\s?(\d[\d,]*(?:\.\d+)?)(\s?k)?\s*(-|to|and)\s*\$?\s?(\d[\d,]*(?:\.\d+)?)(\s?k)?(?![\d,]*\d)",
+    re.I)
+
+
+def band_spans(body: str, band: Optional[Sequence[Any]]) -> List[Tuple[int, int]]:
+    """(start, end) of every place ``body`` states exactly ``band`` (low,
+    high) in a range form. "and" counts only after "between"."""
+    if not band or len(band) != 2 or not body:
+        return []
+    want = (_canon(str(band[0])), _canon(str(band[1])))
+    out = []  # type: List[Tuple[int, int]]
+    for m in _BAND_RE.finditer(body):
+        if m.group(4).lower() == "and" and not m.group(1):
+            continue
+        low = _canon(m.group(2), (m.group(3) or "").strip())
+        high = _canon(m.group(5), (m.group(6) or "").strip())
+        if (low, high) == want:
+            out.append((m.start(), m.end()))
+    return out
+
+
+def mask_band(body: str, band: Optional[Sequence[Any]]) -> str:
+    """``body`` with every stated band replaced by BAND_MASK, for the figure,
+    price-agreement and private-fact checks only."""
+    spans = band_spans(body, band)
+    if not spans:
+        return body
+    out, last = [], 0
+    for s, e in spans:
+        out.append(body[last:s])
+        out.append(BAND_MASK)
+        last = e
+    out.append(body[last:])
+    return "".join(out)
+
+
 # ------------------------------------------------------------ the gate
 def _strip_quotes(text: str) -> str:
     return _QUOTED_RE.sub(" ", text)
 
 
 def check_detailed(text: Any, kind: str, room: Optional[Dict[str, Any]], offers_text: str,
-                   private_texts: Sequence[str] = ()) -> List[Tuple[str, str]]:
-    """[(code, reason), ...] in CODES order, one entry per code."""
+                   private_texts: Sequence[str] = (), band: Optional[Sequence[Any]] = None) -> List[Tuple[str, str]]:
+    """[(code, reason), ...] in CODES order, one entry per code. ``band`` is
+    the (low, high) price range of a framework reply (draft.price_band), or
+    None for every other draft: see "the framework band" above."""
     room = room or {}
     body = normalise(decode_escapes(text))
     found = {}  # type: Dict[str, str]
@@ -5415,17 +5473,20 @@ def check_detailed(text: Any, kind: str, room: Optional[Dict[str, Any]], offers_
         if any(_blocked_host(_host(u)) and not _host(u).endswith("upwork.com") for u in bad_links):
             flag("off_platform_contact", "links to a booking or chat host: %s" % bad_links[0])
 
-    # Figures
-    stray = figure_problems(body, offers_text)
+    # Figures. A framework reply's band is masked first, so its two figures
+    # pass only together and in a range form (Lorenzo, 2026-10-06).
+    priced = mask_band(body, band) if band else body
+    stray = figure_problems(priced, offers_text)
     if stray:
         flag("figure_not_in_offers", "figures not allowed: %s" % ", ".join(stray[:5]))
 
     # Agreeing to the client's price (round 13): Lorenzo's call, notes or not.
-    agreed = client_price_agreements(body, room)
+    agreed = client_price_agreements(priced, room)
     if not agreed:
-        figureless = figureless_price_agreement(body, room)  # round 14: "Sure, that works."
+        defer = not band  # a framework reply always defers the exact figure, so that frees nothing
+        figureless = figureless_price_agreement(priced, room, allow_deferral=defer)  # round 14: "Sure, that works."
         if not figureless:
-            figureless = price_subject_agreement(body, room)  # round 16: "..., and the price is fine."
+            figureless = price_subject_agreement(priced, room, allow_deferral=defer)  # round 16
         if figureless:
             agreed = ['"%s" with no figure' % figureless[:60]]
     if agreed:
@@ -5439,14 +5500,14 @@ def check_detailed(text: Any, kind: str, room: Optional[Dict[str, Any]], offers_
     if private.strip():
         leaks = []  # type: List[str]
         figs = private_figures(private_texts, public_texts(room))
-        money = money_spans(body)
+        money = money_spans(priced)
         leaks += ["$" + f for f in {v for _, _, v in money} & figs["money"]]
-        leaks += [f + "%" for f in set(percent_figures(body)) & figs["percent"]]
-        leaks += [f + " hours" for f in _hours(body) & figs["hours"]]
-        leaks += [f + " (review)" for f in _reviews(body) & figs["reviews"]]
-        leaks += [v + " (private pricing)" for _, _, v in _private_pricing_uses(body, figs["priced"], figs["stated"],
-                                                                                money)]
-        leaks += [f + " (private rate)" for f in rate_values(body) & figs["rated"]]
+        leaks += [f + "%" for f in set(percent_figures(priced)) & figs["percent"]]
+        leaks += [f + " hours" for f in _hours(priced) & figs["hours"]]
+        leaks += [f + " (review)" for f in _reviews(priced) & figs["reviews"]]
+        leaks += [v + " (private pricing)" for _, _, v in _private_pricing_uses(priced, figs["priced"],
+                                                                                figs["stated"], money)]
+        leaks += [f + " (private rate)" for f in rate_values(priced) & figs["rated"]]
         if _ODDS_RE.search(body) and _LIKELIHOOD_RE.search(private):
             leaks.append("likelihood")
         for m in _REVIEW_WORDS_RE.finditer(body):
@@ -5488,7 +5549,7 @@ def check_detailed(text: Any, kind: str, room: Optional[Dict[str, Any]], offers_
 
 
 def check(text: Any, kind: str, room: Optional[Dict[str, Any]], offers_text: str,
-          private_texts: Sequence[str] = ()) -> List[str]:
+          private_texts: Sequence[str] = (), band: Optional[Sequence[Any]] = None) -> List[str]:
     """Problem codes for ``text`` (empty list == ready to copy).
 
     ``kind`` is "touch", "checkin" or "reply" (only the length limit differs).
@@ -5498,7 +5559,7 @@ def check(text: Any, kind: str, room: Optional[Dict[str, Any]], offers_text: str
     ``offers_text`` is config/upwork_offers.md. ``private_texts`` are the
     assessment notes and client intel.
     """
-    return [code for code, _ in check_detailed(text, kind, room, offers_text, private_texts)]
+    return [code for code, _ in check_detailed(text, kind, room, offers_text, private_texts, band=band)]
 
 
 def describe(codes: Iterable[str]) -> List[str]:

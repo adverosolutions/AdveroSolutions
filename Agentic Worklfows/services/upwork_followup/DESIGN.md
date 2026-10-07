@@ -16,8 +16,8 @@ anything below that disagrees.**
 - **Bespoke, never automated.** Upwork stays hand-sent. Every draft goes to
   Lorenzo and nothing is ever sent for him. Drafts must read as written for that
   one client, never as a sequence template.
-- **Drafts through the day.** The first run of each weekday (08:00 CT) is a full
-  run; the watch then drafts within about 30 minutes of a client message or a
+- **Drafts through the day.** The first run of each day (08:00 CT, weekends
+  included since 2026-10-06) is a full run; the watch then drafts within about 30 minutes of a client message or a
   GHL card move (see "How it runs"). The batch holds a draft for every job in a
   drafting stage (see Stages) that needs one: a reply when the client wrote last,
   or the next follow-up when it is due. Every other job in a drafting stage
@@ -64,11 +64,15 @@ anything below that disagrees.**
    "Ask before quoting" questions may inspire a touch's question, but no draft
    may quote pricing, likelihood or review facts from them. Their figures do not
    reach the model either: the prompt shows "(figure withheld)" in their place.
+   **One exception (Lorenzo, 2026-10-06):** the framework reply (see "Reply
+   drafts") states a price range that the code computes from the assessment's
+   standard price and the client's budget. Only that range reaches the model
+   (PRICE_RANGE), and only that range passes the gate.
    The job post and the room messages are the client's own text and are
    shown as written, but the client stating a number never frees Lorenzo's
    price, rate or hours figure: a draft may use such a number only as a count
    with its noun ("25k emails"; see "Touch plan").
-   Pricing and proof in
+   Apart from that range, pricing and proof in
    a draft come only from `config/upwork_offers.md` (a separate file, so the cold-email gates that read `config/offers.md`, including the percentage gate under review, are unchanged).
 7. **Committed fixtures use invented names only.** Real room data lives in
    `.tmp/` (gitignored) and never in tests, docs or the repo.
@@ -81,8 +85,11 @@ anything below that disagrees.**
    `python3 -m jobs.upwork_followup --ingest <raw.json>`, which writes
    `.tmp/upwork_followup/snapshot.json`. Planned schedule: the watch
    (`watch.py`, prompt `watch_task_prompt.md`), a Claude desktop scheduled task
-   Lorenzo creates (persistent config is his action) that runs every 30 minutes
-   on weekdays, 08:00 to 19:00 CT. Each run makes one `list_rooms` call and asks
+   Lorenzo creates (persistent config is his action) that runs every 30 minutes,
+   08:00 to 19:00 CT, every day of the week since 2026-10-06 (weekends at the
+   same hours, so a Saturday client message gets its draft that day).
+   `watch.WATCH_DAYS` is the one constant that holds the days: `plan` answers
+   `none` on any other day and `watch.watch_cron()` gives the task's cron. Each run makes one `list_rooms` call and asks
    `--watch-plan`: `none` stops; `run` only runs the tick (the last ingest
    has no finished `--run` yet); `light` reads `list_messages` for the few
    tracked rooms with new client activity or a room event (or a card Lorenzo
@@ -147,7 +154,8 @@ client and is out of scope). `collect_calls.md` holds the confirmed call shapes.
      "private_notes": "assessment.md Time/Likelihood/Standard pricing lines, private",
      "loom_url": "from proposals.csv or null",
      "applied_at": "from proposals.csv or null",
-     "client_location": "jd.txt summary sentences naming the client's location or time zone, or null"
+     "client_location": "jd.txt summary sentences naming the client's location or time zone, or null",
+     "budget": "the fixed budget in jd.txt's summary line, whole dollars, or null (hourly, not stated, or called a placeholder)"
   }
 }
 ```
@@ -322,6 +330,54 @@ from the room, the job post, the proposal and `config/upwork_offers.md`. Anythin
 unknown (price, date, scope detail) is left for Lorenzo on the card as
 "Needs you: ...", never guessed.
 
+**Framework reply** (Lorenzo's setter framework, locked 2026-10-05; band rule
+2026-10-06). A reply whose client messages after Lorenzo's last one ask
+something (a "?", or a sentence opening with a question word:
+`draft.is_framework_reply`) uses `prompts/reply_framework.md` instead of
+`reply.md`. Touches T1-T7, check-ins and replies with no question keep their
+prompts. The message, in order: thank them for getting back; answer each
+question in their order with thin detail (price as the range below, timeline
+as "I aim to finish ..." plus faster if Lorenzo clears his schedule, tools and
+IP: they own the accounts and the IP and he joins as a team member); then ask
+for a brief Upwork call, say the range is not complete, name one or two
+unknowns, stack the value (scope by the end of the call, a walk through the
+setup, a free consult on this or related work) and offer the CALL_OFFER times.
+About 1,200 characters, hard limit 1,500. Real messages of Lorenzo's (names and
+figures removed) sit in the prompt as voice examples.
+
+The code computes three facts and the model only copies them:
+- **PRICE_RANGE** (`draft.price_band(standard_price(notes), client_budget(room))`).
+  The standard price is the first fixed project figure in the assessment's
+  Standard pricing lines, the LOW end of a range ("$1,000 to $2,500 fixed"
+  gives 1,000); figures followed by a rate or per-item unit, figures under
+  $50, figures whose clause names a rate, recurring software, bids, the post's
+  budget or a retainer are skipped, and the scan stops at the recurring
+  software item. The budget is a price the client's latest message proposes
+  (`copy_gate.client_price_proposal`), else `job.budget`. Band: when a budget
+  is known and below the standard price, low = the budget rounded down to a
+  clean number; otherwise low = about 80% of the standard price, rounded down.
+  High = the standard price, or the budget when that is higher, rounded to
+  the nearest clean number. Clean = $50 steps under $1,000, $100 above. Low
+  and high always differ. A budget under 25% of the standard price is a
+  placeholder: the 80% rule applies and NEEDS_YOU says so. No standard price:
+  no range, PRICE_RANGE says none, and when the client asked about price a
+  deterministic NEEDS_YOU item carries it to Lorenzo.
+- **TIMELINE** (`draft.timeline_phrase`) from the assessment's Time lines: the
+  first weeks figure ("1 to 2 calendar weeks" gives "about 2 weeks"), else the
+  first days figure, else the largest hours figure at 4 focused hours a day
+  ("within 2 days"; over 5 days becomes weeks). None: left out, and NEEDS_YOU
+  when the client asked.
+- **CALL_OFFER** (`draft.framework_call_offer`): "now, in the next couple of
+  hours, or tomorrow at 1pm ET (noon CT)". The one slot is the first business
+  day after today with a time inside 12:00-18:00 CT on the hour that is not the
+  client's Saturday or Sunday (7am-9pm client time preferred, as for the three
+  times). It is written in the client's zone with its label and in CT too when
+  the client is not on Central; a day other than the client's tomorrow is
+  named ("Monday at 1pm ET (noon CT)"). The other drafts keep CALL_TIMES.
+
+The card's "For you" block adds "Price range in this draft: $X to $Y
+(standard $S, budget $B)".
+
 **Figures** (every drafting prompt): money, percentages and proof come only
 from `config/upwork_offers.md`, and a budget or price from any other block is
 said in words. Any other number is used only exactly as the room, the job
@@ -483,6 +539,15 @@ below.
   clause by clause on channel plus direction; see the `copy_gate.py` docstring,
   "Off-platform concepts".
 - It contains any `$` figure or percentage not in `config/upwork_offers.md`.
+  Exception (2026-10-06): a framework reply is checked with its computed band
+  (`check_detailed(..., band=(low, high))`). Exactly that range, both ends
+  together, in a range form ("between $750 and $1,000", "$750 to $1,000",
+  "$750-$1,000", second "$" optional, "and" only after "between"), is masked
+  before the figure, price-agreement and private-fact checks. A single price,
+  one end alone, any other figure and agreeing to the client's number are
+  still refused, and in a framework reply a deferral ("I'll confirm the exact
+  price on the call") no longer frees a figureless agreement, because that
+  draft always defers the exact figure.
   A "k" figure before a count noun ("approx 25k emails", "a 25k list", "a
   list of about 25k") is a volume, like "300 leads", not money; "a 25k
   budget", "for 25k", "25k a month" and "would be 25k" are money. A bare
@@ -647,12 +712,12 @@ services/upwork_followup/
   classify.py          U3  client-reply classifier (shared.llm classify/escalate)
   draft.py             U3  touch and reply drafting (shared.llm draft)
   copy_gate.py         U3  the rules above
-  prompts/             U3  touch_t1..t7.md, reply.md, classify.md
+  prompts/             U3  touch_t1..t7.md, reply.md, reply_framework.md, checkin.md, classify.md
   tick.py              U4  orchestration, cards, drafts file, Job_Log
   ghl_sync.py          U4  GHL mirror (shadow)
   tests/               each piece adds its own test file
 jobs/upwork_followup.py   U4  CLI
-config/upwork_offers.md   U3  new file: proof lines from Coding/upwork-pipeline/templates/ps-case-studies.md, verbatim; never any pricing, by design (Lorenzo sets each job's price himself; a price question goes to NEEDS_YOU)
+config/upwork_offers.md   U3  new file: proof lines from Coding/upwork-pipeline/templates/ps-case-studies.md, verbatim; never any pricing, by design (Lorenzo sets each job's price himself; the only price a draft states is the framework reply's band from the job's assessment, and with no band a price question goes to NEEDS_YOU)
 shared/ghl.py             U4  optional email on upsert_contact (additive)
 runbooks/upwork_followup.md  U5
 ```

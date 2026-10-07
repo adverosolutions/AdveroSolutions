@@ -1,8 +1,10 @@
 # Scheduled task prompt: Upwork follow-up watch
 
 Lorenzo pastes everything between the two lines below into a Claude desktop
-scheduled task that runs every 30 minutes, 08:00 to 19:00 CT, Monday to
-Friday (cron `*/30 8-18 * * 1-5` plus one run at `0 19 * * 1-5`). The session
+scheduled task that runs every 30 minutes, 08:00 to 19:00 CT, every day of
+the week, weekends included (cron `*/30 8-18 * * *` plus one run at
+`0 19 * * *`; `watch.WATCH_DAYS` holds the days, `watch.watch_cron()` prints
+these lines). The session
 needs the Upwork MCP connected and the working folder set to
 `/Users/lorenzovillarreal/Desktop/AdveroSolutions/Agentic Worklfows`.
 

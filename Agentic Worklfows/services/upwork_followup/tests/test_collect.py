@@ -610,7 +610,7 @@ def test_snapshot_has_the_design_shape(snap):
     assert all(r["blocked"] is False and r["blocked_at"] is None for r in snap["rooms"])
     assert snap["blocked_rooms"] == []
     assert set(room["job"]) == {"post", "proposal", "beats", "ask_before_quoting", "private_notes",
-                                "loom_url", "applied_at", "client_location"}
+                                "loom_url", "applied_at", "client_location", "budget"}
     json.dumps(snap)                                          # JSON-serialisable
 
 
