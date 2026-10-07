@@ -764,7 +764,25 @@ def resolve_offer(appointment: Dict[str, Any], lead: Optional[Dict[str, Any]] = 
         niche, offer = campaign["niche"], campaign["offer"]
         key = offer_key(niche, offer)
     return {"niche": niche, "offer": offer, "key": key, "campaign": campaign,
-            "campaign_id": campaign_id, "campaign_matched": matched}
+            "campaign_id": campaign_id, "campaign_matched": matched,
+            "offer_block_missing": offer_block_missing(offer)}
+
+
+# The campaign offers config/offers.md has a call pricing and proposal block
+# for. An AI agents campaign (offer "ai_agents", 2026-10-06) has none yet: its
+# brief and proposal fall back to the GENERIC_KEY block and must say so.
+PROPOSAL_OFFERS = ("reactivation", "outbound", "trigger")
+
+
+def offer_block_missing(offer: Optional[str]) -> Optional[str]:
+    """Why the brief and the proposal for this offer cannot be trusted, or
+    None when offers.md has a pricing and proposal block for it."""
+    name = (offer or "reactivation").strip().lower()
+    if name in PROPOSAL_OFFERS:
+        return None
+    return ("the campaign's offer (%s) has no pricing or proposal block in config/offers.md; the offer block is "
+            "the %s default, which is the wrong offer. Check it before you quote anything"
+            % (name, draft_mod.GENERIC_KEY))
 
 
 def build_brief(
@@ -787,7 +805,9 @@ def build_brief(
     niche, offer, key = resolved["niche"], resolved["offer"], resolved["key"]
     campaign, campaign_id = resolved["campaign"], resolved["campaign_id"]
     problems = []  # type: List[str]
-    if niche == "generic":
+    if resolved["offer_block_missing"]:
+        problems.append(resolved["offer_block_missing"])
+    elif niche == "generic":
         problems.append("niche could not be determined from the booking or the campaign; the offer block below is "
                         "the %s default, check it before you quote anything" % draft_mod.GENERIC_KEY)
     if thread_error == NOT_READ:

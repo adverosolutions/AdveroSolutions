@@ -226,3 +226,41 @@ def test_e1_goes_out_at_ten_with_no_veto_window(tmp_path, live_mode, tmp_env, mo
     assert res["action"] == "sent" and len(posts) == 1
     assert not any("Veto" in str(p) for p in pings)
     assert not (state.cadence or {}).get("veto_notified_at")
+
+
+def test_an_ai_agents_call_never_gets_a_clean_brief_or_proposal_for_another_offer():
+    from services.reply_engine import precall, proposal, show_rate
+
+    appt = {"id": "appt-ai", "contact_id": "c-1", "start_iso": "2026-09-23T11:30:00-05:00",
+            "email": "dana@greenway.example", "first_name": "Dana", "company": "Greenway Pest Control",
+            "campaign_id": PEST_CONTROL_AI}
+    resolved = precall.resolve_offer(appt)
+    assert resolved["campaign_matched"] and resolved["offer"] == "ai_agents" and resolved["offer_block_missing"]
+    brief = precall.build_brief(appt, ct(2026, 9, 23, 10, 30), instantly=None, read_thread=False)
+    assert resolved["offer_block_missing"] in brief.problems
+    built = proposal.build_proposal(appt, ct(2026, 9, 23, 12, 0), inputs=proposal.CallInputs(), use_llm=False)
+    assert resolved["offer_block_missing"] in built.problems
+    # even when the brief's key is handed over
+    built = proposal.build_proposal(dict(appt, campaign_id=None), ct(2026, 9, 23, 12, 0),
+                                    inputs=proposal.CallInputs(), use_llm=False, campaign_key="ai_agents")
+    assert any("has no pricing or proposal block" in p for p in built.problems)
+    assert show_rate.offer_of(appt) == "ai_agents"
+
+
+def test_show_rate_and_no_show_emails_for_an_ai_agents_lead_hold():
+    from services.reply_engine import show_rate
+
+    appt = {"id": "appt-ai", "start_iso": "2030-01-08T13:47:00-06:00", "first_name": "Dana",
+            "company": "Greenway Pest Control", "campaign_id": PEST_CONTROL_AI}
+    for key in ta.SHOW_RATE_LEAD_FACING:
+        assert show_rate.resolve_template_id(key, appt) is None, key
+    for key in ta.NO_SHOW_LEAD_FACING:
+        assert show_rate.resolve_template_id(key, appt, kind="no_show") is None, key
+    # an older offer's booking still resolves
+    old = dict(appt, campaign_id=settings.CAMPAIGNS["cleaning_reactivation"]["id"])
+    assert show_rate.resolve_template_id("confirm_email", old)
+
+
+def test_the_pricing_confirmed_time_version_says_the_call(index):
+    v = [x for x in index["first_reply.ai_agents.pricing.full"]["variants"] if x["name"] == "confirmed_time"][0]
+    assert "I will send the invite over. I'll have the exact number for you by the end of the call." in v["text"]

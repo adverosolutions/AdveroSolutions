@@ -119,6 +119,9 @@ AI_AGENTS_TAILS = {
     "pricing": "I'll have the exact number for you by the end of it.",
     "booking_link": "If neither fits, here's my calendar: %s" % AI_AGENTS_BOOKING_URL,
 }
+# The pricing reply's line after "I will send the invite over." (a held
+# version): "the call", since "it" would read as the invite.
+AI_AGENTS_PRICING_CONFIRMED_TAIL = "I'll have the exact number for you by the end of the call."
 # The booking_link reply when there are no two times to offer.
 AI_AGENTS_NO_SLOTS_LINK = "Here's my calendar: %s" % AI_AGENTS_BOOKING_URL
 AI_AGENTS_REFERRAL = "Thanks for pointing me to %s. Would you mind looping %s in on this thread?"
@@ -485,7 +488,7 @@ def _ai_agents_skeleton(event: ReplyEvent, classification: Classification, two: 
     elif confirmed is not None:
         ask = "%s CT works on my end. I will send the invite over." % slots.format_slot(confirmed)
         if branch == "pricing":
-            ask += " " + AI_AGENTS_TAILS["pricing"]
+            ask += " " + AI_AGENTS_PRICING_CONFIRMED_TAIL
     elif not two:
         ask = "Do you have 15 minutes for a quick call? %s" % (
             AI_AGENTS_NO_SLOTS_LINK if branch == "booking_link" else NO_SLOTS_ASK % "you")

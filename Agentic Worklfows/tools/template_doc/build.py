@@ -1032,11 +1032,7 @@ for _host in [t for t in section_ids("cadence") if not doc_rules.splice_host(t, 
 
 # ---- 4. Booking
 doc.section(1, "Booking emails")
-doc.note("These answer a lead who writes back about a time for the call. They go out on their own only after a "
-         "reply of yours has reached the lead; before that they come to you as a draft too. The one exception is "
-         "the Locked in booking confirmation, which can go out on its own right away. When the time they ask for "
-         "breaks your rules (too early, too late, a weekend, too soon or too far out), the reply offering other "
-         "times comes to you as a card first, so you can book it anyway or send it.")
+doc.note(doc_rules.BOOKING_NOTE)
 for _tid in section_ids("booking"):
     _heading, _note = labelled(_tid)
     _n = [_note] if _note else []

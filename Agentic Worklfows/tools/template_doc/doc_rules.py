@@ -11,8 +11,11 @@ from collections import OrderedDict
 # doc says so on each one. Since 2026-10-06 (Lorenzo approved the AI agents
 # reply copy) that is every first_reply.* id EXCEPT the AI agents replies to a
 # yes, "tell me more", "send me info", a booking link ask and a price question
-# (APPROVED_FIRST_REPLIES), which "done" approves and which go out on their own
-# once he also says "go live" (Grok sends them; the legacy engine's own send
+# (APPROVED_FIRST_REPLIES), which "done" approves. Only their MAIN text goes out
+# on its own once he also says "go live"; every version under them (no free
+# times, a time that works, a time that doesn't, a yes that names a time) comes
+# to him as a draft, and every booking.counter.* reply is held (Grok sends; the
+# legacy engine's own send
 # path stays locked, approval.py FIRST_REPLY_LOCK_REASON). The older six
 # offers' first replies stay held until they are rewritten (2026-09-24: rebuilt
 # from his own replies). The AI agents referral and "other" replies are not
@@ -22,20 +25,29 @@ APPROVED_FIRST_REPLY_OFFER = "ai_agents"
 APPROVED_FIRST_REPLY_BRANCHES = ("default", "mechanism", "send_info", "booking_link", "pricing")
 APPROVED_FIRST_REPLIES = tuple("first_reply.%s.%s.full" % (APPROVED_FIRST_REPLY_OFFER, b)
                                for b in APPROVED_FIRST_REPLY_BRANCHES)
-HELD_INTRO = ("For the AI agents offer, the replies to a yes, 'tell me more', 'send me info', a booking link ask "
-              "and a price question go out on their own once you say 'done' and then 'go live'. A referral reply "
-              "and any other question stay drafts that come to you as cards. The first replies for the older six "
-              "offers are not approved yet: they stay drafts you write yourself until they are rewritten.")
-HELD_NOTE = "Not approved yet. This one stays a draft you write yourself until it is rebuilt from your own replies."
+HELD_INTRO = ("For the AI agents offer, once you say 'done' and then 'go live', the main text of the replies to a "
+              "yes, 'tell me more', 'send me info', a booking link ask and a price question goes out on its own. "
+              "Every version under them (no free times, a time they asked for that works, a time that doesn't, a "
+              "yes that names a time) comes to you as a draft. A referral reply and any other question also come "
+              "to you as drafts. The first replies for the older six offers are not approved yet: they stay drafts "
+              "you write yourself until they are rewritten.")
+HELD_NOTE = "Not approved yet. This one stays a draft you write yourself until it is rewritten."
 # The top section's two sentences on approval and sending.
 DONE_SENTENCE = ("When you say 'done', everything in this doc counts as approved, except the first replies marked "
                  "'Not approved yet'. Emails still only go out after you tell Claude 'go live'.")
-SENDING_SENTENCE = ("Approved does not mean every email goes out on its own. The AI agents first replies to a yes, "
-                    "'tell me more', 'send me info', a booking link ask and a price question do, once you say "
-                    "'done' and 'go live'. A referral reply, any other question and the older offers' first replies "
-                    "come to you as drafts. The other replies to a lead go out on their own only after a reply of "
-                    "yours has reached that lead, except the Locked in booking confirmation. Every send check still "
-                    "applies.")
+SENDING_SENTENCE = ("Approved does not mean every email goes out on its own. Only the main text of the five AI "
+                    "agents first replies (a yes, 'tell me more', 'send me info', a booking link ask and a price "
+                    "question) does, once you say 'done' and 'go live'. Their other versions, a referral reply, any "
+                    "other question and the older offers' first replies come to you as drafts, and every reply "
+                    "offering other times is held for you. The other replies to a lead go out on their own only "
+                    "after a reply of yours has reached that lead, except the Locked in booking confirmation. Every "
+                    "send check still applies.")
+# The booking section's note.
+BOOKING_NOTE = ("These answer a lead who writes back about a time for the call. Every reply offering other times "
+                "(the 'Other times' emails) is held and comes to you first, so you can book their time anyway or "
+                "send it. The Locked in booking confirmation can go out on its own right away. The others go out on "
+                "their own only after a reply of yours has reached the lead; before that they come to you as a "
+                "draft too.")
 
 
 def is_held(template_id):

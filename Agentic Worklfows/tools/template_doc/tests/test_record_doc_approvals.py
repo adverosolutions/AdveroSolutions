@@ -553,7 +553,11 @@ def test_the_doc_says_how_approved_emails_are_sent(doc, plain):
     send."""
     low = plain.lower()
     assert "send automatically" not in low and "sends automatically" not in low
-    assert doc_rules.SENDING_SENTENCE in plain and doc_rules.HELD_INTRO in plain
+    assert doc_rules.SENDING_SENTENCE in plain and doc_rules.HELD_INTRO in plain and doc_rules.BOOKING_NOTE in plain
+    # only the main text of the five AI agents replies goes out on its own; their versions are drafts
+    assert "Only the main text of the five AI agents first replies" in plain
+    assert "Every version under them" in plain and "comes to you as a draft" in plain
+    assert "every reply offering other times is held" in plain
     assert "veto" not in low
     assert "only after a reply of yours has reached" in plain and "Locked in booking confirmation" in plain
 
