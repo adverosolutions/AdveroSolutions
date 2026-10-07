@@ -1,6 +1,6 @@
 ---
 name: cold-email-replies
-description: How AdveroSolutions handles an inbound reply to a cold email. The 11 reply categories and what each means, the action per category (template family, hold for Lorenzo, stop or blocklist, Instantly interest status, GHL stage), first-contact rules, booking and slot rules, send rules, "we never talk numbers over email", and the rule that only exact approved-template text auto-sends. Use on "a lead replied", "classify this reply", "what do we send back", "book this time", "interest status", or any Instantly reply_received event.
+description: How AdveroSolutions handles an inbound reply to a cold email. The 11 reply categories and what each means, the action per category (template family, hold for Lorenzo, stop or blocklist, Instantly interest status, GHL stage), first-contact rules, which first replies auto-send, booking and slot rules, send rules, the price range that only the approved pricing reply carries, and the rule that only exact approved-template text auto-sends. Use on "a lead replied", "classify this reply", "what do we send back", "book this time", "interest status", or any Instantly reply_received event.
 ---
 
 # Cold-email replies
@@ -15,10 +15,10 @@ Who does what (decided 2026-09-25; full manual in the `grok-operator` skill):
 
 ## Hard rules for every reply
 
-1. **We never talk numbers over email** (Lorenzo, 2026-09-24). No price, fee, commission percentage, dollar amount or guarantee figure in any reply. A price question gets the offer's short "how it works" answer and "The rest is easier to cover on a quick call." Figures are for the call only (see the `sales-call` skill).
-2. **No links of any kind**: no booking link, calendar link, URL or link placeholder (Lorenzo, 2026-09-23, every email). The lead picks one of two times and Lorenzo sends the calendar invite. The one exception is the Zoom link inside a booking confirmation.
+1. **Price questions get a price range** (Lorenzo, 2026-10-06; replaces "we never talk numbers over email"). The range is fixed text inside each offer's approved `first_reply.<offer>.pricing.full` template (AI agents: $400 to $5,300), sent exactly as the copy doc has it. Only that template carries a figure. Every other email carries no price, fee, commission percentage, dollar amount or guarantee figure, and nobody writes a figure into a reply. Exact quotes are for the call (see the `sales-call` skill).
+2. **No links**, with two exceptions (Lorenzo, 2026-09-23 and 2026-10-06): the Zoom link inside the "Locked in" booking confirmation, and the Discovery Call booking calendar link (`https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu`) written into `first_reply.<offer>.booking_link.full`, the reply to a lead who asks for a booking or Calendly link. That reply also offers two times. Every other email has no booking link, calendar link, URL or link placeholder: the lead picks one of two times and Lorenzo sends the calendar invite.
 3. **No attachments or decks.**
-4. **Voice**: peer to peer, short sentences, no hype. No exclamation marks, no em or en dashes. Never mention AI, automation, bots, or that software wrote the email. No Claudeisms (see the `claudeisms` and `lorenzo-voice` skills).
+4. **Voice**: peer to peer, short sentences, no hype. No exclamation marks, no em or en dashes. "AI" is fine (the offer is AI agents; Lorenzo, 2026-09-30), but never tell or imply to a lead that a bot or AI wrote the email. No Claudeisms (see the `claudeisms` and `lorenzo-voice` skills).
 5. **Greeting** "Hey {first_name}," ("Hey there," when unknown). **Sign-off** "Lorenzo" on its own line, nothing after it. Under 120 words.
 6. **Same thread, same inbox**: reply from the inbox that sent the cold email, in the lead's thread. Subject "Re: {original_subject}".
 7. **Pricing and proof only from the offer sheet.** Never invent client names, numbers or guarantees.
@@ -64,15 +64,15 @@ Everything else goes to the model. Confidence below 0.8 gets a second, careful r
 | `neutral_question` | Draft, always held for Lorenzo | unchanged | New Reply | |
 | `negative_notnow` | No reply, never argue | -1 | Follow Up Later | Dated follow-up task (30 days, or the date they gave). Follow-ups stop; if the ladder was running, the lead goes to the 90-day nurture (`nurture-90-day`) |
 | `negative_notfit` | No reply | -1 | Lost (reason in note) | |
-| `negative_hostile` | No reply, ever | -1 | Lost | Blocklist in Instantly and tag dnd, same day |
-| `unsubscribe` | No reply, ever | -1 | Lost | Blocklist and dnd, same day |
+| `negative_hostile` | No reply, ever | -1 | Lost | Blocklist in Instantly and tag dnd, same day, without asking Lorenzo (confidence 0.8 or more, no buying signal) |
+| `unsubscribe` | No reply, ever | -1 | Lost | Blocklist and dnd, same day, without asking Lorenzo (confidence 0.8 or more, no buying signal) |
 | `wrong_person` | No reply, and never email a named contact from this thread | -2 | Lost + note | A named new contact goes to the list factory |
 | `ooo` | No reply | 0 | none | Follow-ups pause and resume the business day after the stated return date (next business day if none) |
 | `auto_reply_unmonitored` | No reply | none | none | Recorded for the deliverability monitor |
 
 Interest values (Instantly): 0 out of office, 1 interested, 2 meeting booked, 3 meeting completed, 4 won, -1 not interested, -2 wrong person, -3 lost, -4 no show. The update is accepted with HTTP 202; treat 202 as success.
 
-**Blocklist safety.** When a model says hostile or unsubscribe but the lead's words carry a buying signal and no removal request, do not blocklist: the lead goes to `needs_review` and Lorenzo reads it first.
+**Blocklist safety.** Blocklist and DND go through on their own (Lorenzo, 2026-10-06) only for `unsubscribe` or `negative_hostile` at confidence 0.8 or more with no buying signal. When the lead's words carry any buying signal (a price question, a time, interest), do not blocklist: it is a hold card and Lorenzo reads it first. Below 0.8, also a hold card.
 
 **Any no holds everything.** When a no arrives (removed, hostile, wrong person, not a fit, not now), every open draft for that lead is held at once and its offered times go back to the pool. Nothing goes to that lead afterwards, by hand or otherwise.
 
@@ -84,18 +84,28 @@ Interest values (Instantly): 0 out of office, 1 interested, 2 meeting booked, 3 
 
 First contact = no reply of ours has reached this lead yet.
 
-**Current rule (Lorenzo, 2026-09-24):** no first reply is approved. First replies stay drafts until they are rebuilt from Lorenzo's own sent replies and he approves them. Until then a first reply never auto-sends: it goes to Lorenzo as a hold card (format in `grok-operator`) with what the lead wrote above the draft. Lorenzo either sends it himself from the Instantly thread (the 2026-09-23 rule) or approves the card and Grok sends exactly that text (the 2026-09-25 operating model). Any other reply to a lead not yet answered is also held, except the "Locked in" booking confirmation. Lorenzo's first reply, however it goes out, is day 0 of the follow-up ladder (`quiet-lead-followup`).
+**Current rule (Lorenzo, 2026-10-06):** the common first replies auto-send from approved templates. Five branches may go out without a hold card, as the base template only (never a variant):
 
-**Target (Lorenzo, 2026-09-25):** fully autonomous replies trained on how he actually replies. That needs the first-reply templates rebuilt from his sent replies and approved in the emails doc. Until then the rule above stands.
+| Lead wrote | Label | Template |
+|---|---|---|
+| A plain yes, no time named | `positive_interested` | `first_reply.<offer>.default.full` |
+| A price question | `positive_question` (pricing) | `first_reply.<offer>.pricing.full` |
+| How it works, "tell me more" | `positive_question` (mechanism) | `first_reply.<offer>.mechanism.full` |
+| Send info, a deck, more details | `positive_question` (send_info) | `first_reply.<offer>.send_info.full` (answers without a link and offers two times) |
+| Yes plus "do you have a Calendly/booking link?", and that is the only ask | `positive_interested` or `positive_question` (booking_link) | `first_reply.<offer>.booking_link.full` (two times plus the booking calendar link) |
 
-Template id: `first_reply.<offer>.<branch>.full`. Offers: `cleaning_reactivation`, `bookkeeping_reactivation`, `recruiting_reactivation`, `cleaning_trigger`, `bookkeeping_trigger`, `recruiting_outbound`. If the campaign does not map to one of the six offers, there is no template id and the draft is always held.
+Each one sends only when Lorenzo has said "done" and "go live", the copy doc is unchanged since, the template is not marked "Not approved yet", confidence is 0.8 or more, the template is for the lead's own offer, and every send check in step 6 passes. `ask_opus.py` enforces all of this in code.
 
-Branch, checked in this order: `referral` (label is positive_referral), `pricing`, `send_info`, `mechanism` (from `question_type`), `other` (question_type other, or any neutral_question), `default` (a plain yes).
+Still a hold card for Lorenzo: the `referral` and `other` branches; every variant (no free times, "{slot} CT works on my end", a refused time); `neutral_question`; a counter to a time that breaks the slot rules; `booking.slot_already_taken`; a reply that is a no plus a buying signal; talk of a competitor, a contract or anything legal; a reply not in English; anything under 0.8. A held first reply goes to Lorenzo as a hold card (format in `grok-operator`) with what the lead wrote above the draft. Any other reply to a lead not yet answered is also held, except the "Locked in" booking confirmation. The first reply, however it goes out, is day 0 of the follow-up ladder (`quiet-lead-followup`).
 
-Shape: greeting, one answer paragraph, one time paragraph, "Lorenzo". The answer paragraph per branch (cleaning reactivation shown; the other offers swap in their own mechanism and minimum):
+Template id: `first_reply.<offer>.<branch>.full`. Offers: `ai_agents` (one key for all eight AI agents campaigns), `cleaning_reactivation`, `bookkeeping_reactivation`, `recruiting_reactivation`, `cleaning_trigger`, `bookkeeping_trigger`, `recruiting_outbound`. The offer is the lead's campaign key. If the campaign does not map to one of the offers, there is no template id and the draft is always held.
+
+Branch, checked in this order: `referral` (label is positive_referral), `pricing`, `booking_link` (the only ask is a booking or Calendly link), `send_info` (info, a deck, more details), `mechanism` (from `question_type`), `other` (question_type other, or any neutral_question), `default` (a plain yes).
+
+Shape: greeting, one answer paragraph, one time paragraph, "Lorenzo". The answer paragraph per branch (cleaning reactivation, from the 2026-09-25 doc build; new first-reply copy, including `booking_link` and the AI agents offer, is being written and the copy doc is the only source of the words):
 
 - `default`: "Glad to hear it. All I need to start is a list of 60 or more lost or dormant accounts or lost proposals."
-- `pricing` and `other`: "Good question. The short version is that I build email and text sequences to every account that cancelled, stopped renewing, or never closed, and the ones ready to come back land on your calendar. The rest is easier to cover on a quick call."
+- `pricing` and `other`: "Good question. The short version is that I build email and text sequences to every account that cancelled, stopped renewing, or never closed, and the ones ready to come back land on your calendar. The rest is easier to cover on a quick call." The rebuilt `pricing` reply carries the offer's price range as fixed text.
 - `send_info`: "{mechanism} Instead of sending a deck, I would rather walk you through it in 15 minutes and show you what it would look like for {company}."
 - `mechanism`: "{mechanism} {minimum}"
 - `referral`: "Appreciate you pointing me to {referral_name}. Would you mind looping {referral_first_name} in on this thread so I can send the details over?" With no usable name: "the right person" and "them". A role ("the manager") is not a name.
@@ -117,7 +127,7 @@ Mechanism and minimum per offer (from the offer sheet):
 | bookkeeping_trigger | I watch for triggers like new business formations, part-time bookkeeper job posts and second locations, run the outreach under your name, and land the discovery calls on your calendar. | the client profile you want more of |
 | recruiting_outbound | I watch job boards for your specialty roles as they open, reach the hiring managers under your agency's name, and land the intro calls on your calendar. | your specialty and geography |
 
-A model may improve the wording of the answer paragraph only. A polished or hand-edited draft is never auto-sent, and a polish that adds a figure is thrown away.
+Approved text is never polished, shortened or reworded by a model. Only the placeholders are filled.
 
 ## Step 5: booking rules
 
@@ -133,12 +143,14 @@ When the lead names a time:
 - **It fits the rules and is free**: book it (GHL appointment created on hold, opportunity to Call Booked, Instantly interest 2), then the confirmation `booking.confirmation.zoom_link` or `booking.confirmation.no_zoom_link`. Real text: "Locked in {slot} CT, invite on the way. Here is the Zoom link:" / "Locked in {slot} CT. The calendar invite with the video link follows in a separate email. I will keep it to 15 minutes." The only reply that may auto-send to a lead not yet answered. What follows the booking is in the `booked-calls` skill.
 - **It breaks a rule**: counter-proposal `booking.counter.<case>`, where case is `window_no_fit`, `outside_window_early`, `outside_window_late`, `weekend`, `too_soon`, `beyond_horizon` or `slot_taken`. Example: "{asked_time} is a touch early on my side. Could you do {alt_slots} instead?" A counter to a time only the slot rules refuse always goes to Lorenzo first, so he can book it anyway ("Book as asked") or send the counter. "Next Tuesday" past the 5-day horizon is never auto-booked.
 - **The time got taken before booking**: `booking.slot_already_taken`, "{slot} CT just got taken on my calendar. Could you do {alt_slots} instead?" Always held.
+- **Booked through the calendar link**: leads can book themselves on the Discovery Call calendar (`GDugwLmZNdsD13RBDnRu`; Zoom is connected, bookings confirm on their own). Before any reply, check GHL for a future appointment on the contact. If there is one: send no reply, stop the follow-up ladder, release the lead's held times, set GHL Call Booked and Instantly interest 2, and hand off to `booked-calls`. No "Locked in" email: the calendar's own invite already went out.
 - **Already booked and writing again**: `booking.already_booked.awaiting_approval` / `.invite_withheld` / `.invite_on_calendar` ("You are locked in for {slot} CT, invite on the way." / "We are already set for {slot} CT." / "...and the invite is on your calendar.").
 - A time read in another zone is written back in their zone (ET, CT, MT, PT).
+- **"Yes to your time" in another zone or at another time is a new time.** When the lead "accepts" an offered time but names a different time zone or a different time (offered 4pm CT, lead wrote "Thursday 4pm Eastern works"), it is never an acceptance. Convert it to CT and check it against the slot rules like any time the lead names.
 
 ## Step 6: may it auto-send?
 
-Checked first, before anything else: a first reply never auto-sends, and no other reply auto-sends to a lead no reply of ours has reached yet, except the "Locked in" booking confirmation. If the lead's record cannot be read, treat the lead as not answered.
+Checked first, before anything else: a first reply auto-sends only from the five branches in step 4, and no other reply auto-sends to a lead no reply of ours has reached yet, except the "Locked in" booking confirmation. If the lead's record cannot be read, treat the lead as not answered.
 
 Then it auto-sends only when all of these hold, checked in this order; the first failure is the reason on the hold card:
 1. The template kill switch is off, and the deployed templates match the approved catalogue.
@@ -148,11 +160,11 @@ Then it auto-sends only when all of these hold, checked in this order; the first
 5. The lead did not ask for a time the slot rules refuse.
 6. The copy check passes on body and subject (no banned word, figure or link).
 7. The body is exactly the template with only its placeholders filled, each with a valid value.
-8. Send checks: inside 07:00 to 19:00 CT, the lead has not written again or said no, the thread's last inbound email is from the lead, the offered times are still offerable.
+8. Send checks, in code in `ask_opus.py`: inside 07:00 to 19:00 CT (outside it the send waits for 07:00, it is not a hold card); every offered time is free, 12:00 to 18:00 CT, Monday to Friday, at least 4 hours out, within 5 business days, not offered to another lead, and the two times fall on different days; the thread's newest inbound email is from the lead's address, or from the lead's own company domain when that domain is not free mail (a booked lead wrote from info@company while the record was ilmi@company); no email of ours already follows it; the send key `<lead email>|<template id>|<date CT>` is not in the sent log and the reply is not already handled; the kill switch is off; the lead has no future appointment on the Discovery Call calendar. A missing fact fails its check.
 
 A neutral_question is never auto-sent. Anything that fails is a hold card for Lorenzo.
 
-Status on 2026-09-24: nothing is approved yet. The go-live emails doc (build 170b09dd897430a9, Google Doc `1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4`) plans 67 approvals and holds all 36 first replies. Lorenzo approves by saying "done" about that doc; "go live" is a separate yes.
+Status on 2026-10-06: nothing is approved yet. The go-live emails doc (build 170b09dd897430a9, Google Doc `1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4`) still marks all 36 first replies "Not approved yet"; new first-reply copy is being written. Lorenzo approves by saying "done" about the doc; "go live" is a separate yes.
 
 ## Step 7: send
 
@@ -174,7 +186,7 @@ Reply SLA from the blueprint: under 5 minutes to the first reply in business hou
 
 ## Gaps
 
-- The first-reply templates rebuilt from Lorenzo's own sent replies do not exist yet.
+- The new first-reply templates (including `booking_link` and `first_reply.ai_agents.*`) are being written and are not in the copy doc yet.
 - The Instantly `reply_received` webhook to Grok, the `decide` tool on Opus 5.5 and the idempotent send tool are not built; the current engine reads replies with a GET poller every 5 minutes and classifies with Haiku (Sonnet on escalation).
 - Whether Instantly's REST reply endpoint honours the `to` field is unverified; the thread re-read stays until a live rehearsal settles it.
 - GHL booking status behaviour (`new` blocks the slot, `new` to `confirmed` sends the invite) is not verified against live GHL.

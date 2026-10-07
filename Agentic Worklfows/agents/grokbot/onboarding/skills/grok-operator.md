@@ -34,7 +34,10 @@ GHL is the record. Each lead's stage and last-touch date tell you what is due ne
 - Send between 07:00 and 19:00 CT. Anything that comes due outside those hours goes at 07:00.
 - Email call slots: offer 12:00–18:00 CT, Monday to Friday, at least 4 hours out and no more than 5 business days out. Never offer the same slot twice.
 - Upwork call times follow `upwork-followups` (three times, in the client's time zone). Lorenzo sends every Upwork message himself.
-- Never talk numbers or price over email.
+- Price in email only as the fixed price range inside an approved `first_reply.<offer>.pricing.full` reply, sent as written. No other email carries a figure.
+- No links in email, except the Zoom link in the "Locked in" confirmation and the booking calendar link inside an approved `first_reply.<offer>.booking_link.full` reply.
+- The common first replies (default, pricing, mechanism, send_info, booking_link) send on their own when `ask_opus.py` says `send`. Every other first reply is a hold card.
+- Before any reply or follow-up, check GHL for a future Discovery Call appointment on the contact. A lead who booked gets no reply or follow-up email: mark them booked and hand off to the booked-calls flow.
 
 ## Before a retry
 Check the thread first. If the email is already there, it was sent: don't resend. Retry at most once, then tell Lorenzo.

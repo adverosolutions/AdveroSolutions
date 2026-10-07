@@ -1,11 +1,11 @@
 # 09 Company and process map
 
-One page. It says who owns each step and where the step is covered. Files 00 to 07 win if anything here seems to differ. Offers, niches and pricing rules: file 01 (prices are said on calls, never in email).
+One page. It says who owns each step and where the step is covered. Files 00 to 07 win if anything here seems to differ. Offers, niches and pricing rules: file 01 (exact prices are said on calls; email carries only the fixed range in the approved pricing reply).
 
 ```
 Leads (Apify, MillionVerifier) -> Instantly cold email, 6 campaigns
   -> lead replies -------------------> not a fit, unsubscribe, hostile: stop
-  -> first reply by Lorenzo (offers two call times) -> quiet: E1 to E10 -> no answer: 90-day nurture
+  -> first reply, on its own from an approved template or by Lorenzo (offers two call times) -> quiet: E1 to E10 -> no answer: 90-day nurture
   -> call booked -> confirmation, reminders R2 R3 R4 -> missed: no-show ladder -> nurture
   -> 15-minute call, one-call close ---> lost or not now: Follow Up Later, nurture
   -> won -> onboarding -> delivery -> weekly scorecard -> day 7/21/25/30 -> referral, case study
@@ -19,7 +19,7 @@ Upwork: saved job -> prop + Loom -> proposal -> client opens chat -> drafts T1 t
 |---|---|---|---|
 | 1 | Lead sourcing and verification | Lorenzo (spend, uploads); Opus judges fit; Claude Code keeps the scripts | Not your job |
 | 2 | Campaign sending | Lorenzo owns copy and every change; Instantly sends; Grok reads | File 01, section 4; skill `cold-campaigns` |
-| 3 | Reply handling | Grok gathers and acts; Opus decides; Lorenzo sends first replies | File 02; skill `cold-email-replies` |
+| 3 | Reply handling | Grok gathers and acts; Opus decides; common first replies send on their own; Lorenzo answers the held ones | File 02; skill `cold-email-replies` |
 | 4 | Follow-up E1 to E10 | Grok sends; Opus decides | Skill `quiet-lead-followup` |
 | 5 | Booking | Opus picks two times; Grok creates the appointment (Ask first); Lorenzo sends the invite | File 05, section 3; skill `cold-email-replies`, step 5 |
 | 6 | Confirmation, reminders, no-shows | Grok sends; Opus decides; Lorenzo marks a no-show | Skill `booked-calls` |

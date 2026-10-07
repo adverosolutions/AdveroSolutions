@@ -106,7 +106,7 @@ All in `~/advero/state/`. Bots share files. One JSON object per line in `.jsonl`
 
 | File | Holds |
 |---|---|
-| `approval.json` | Lorenzo's "done", "go live" and Ask first settings (file 02, section 9) |
+| `approval.json` | Lorenzo's "done" and "go live" (file 02, section 9) |
 | `KILL_SWITCH` | Exists only while everything is stopped |
 | `sent_log.jsonl` | One line per email sent: key, lead, template id, inbox, time, email id |
 | `offered_times.jsonl` | One line per time offered: time, lead, offered at, released (true/false) |

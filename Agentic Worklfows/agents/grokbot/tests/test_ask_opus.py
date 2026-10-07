@@ -48,6 +48,25 @@ GUARANTEE_LINE = ("I'm so confident that I guarantee at least $24,000 a year in 
 FIRST_REPLY_LINE = ("Glad to hear it. All I need to start is a list of 60 or more lost or "
                     "dormant accounts or lost proposals.")
 APPROVED = {"doc_done": True, "doc_unchanged": True, "go_live": True}
+# Monday 2026-09-28 10:00 CT. "Tue 12:05pm or Thu 4:30pm CT" = Sep 29 and Oct 1.
+NOW = "2026-09-28T10:00:00-05:00"
+FREE = ["2026-09-29T12:05:00-05:00", "2026-10-01T16:30:00-05:00",
+        "2026-09-29T14:00:00-05:00", "2026-09-29T17:50:00-05:00",
+        "2026-09-28T13:00:00-05:00", "2026-10-06T14:00:00-05:00"]
+
+
+def full_context(**overrides):
+    """Every field the send checks read, set so that every check passes."""
+    base = {"approval": dict(APPROVED), "now_ct": NOW, "kill_switch": False,
+            "lead_email": "dana@brightline.com", "newest_inbound_from": "Dana <dana@brightline.com>",
+            "our_reply_after_newest_inbound": False, "reply_id": "in-2",
+            "handled_ids": ["in-1"], "sent_log_keys": [], "free_times": list(FREE),
+            "has_future_appointment": False,
+            "offered_times": [{"time": "2026-09-30T15:00:00-05:00",
+                               "lead_email": "sam@other.com"}],
+            "lead": {"campaign_key": "cleaning_reactivation"}}
+    base.update(overrides)
+    return base
 
 
 def decision(**overrides):
@@ -104,7 +123,7 @@ def case(**overrides):
     base = {
         "case_type": "followup_due",
         "question": "Is a follow-up due for this lead, and which one?",
-        "context": {"approval": dict(APPROVED), "now_ct": "2026-09-28T10:00:00-05:00"},
+        "context": full_context(),
         "copy_doc_file": FIXTURE_DOC,
     }
     base.update(overrides)
@@ -246,14 +265,13 @@ class Decisions(unittest.TestCase):
                   {"name": "company", "value": "Brightline"},
                   {"name": "research_line", "value": "The quickest place to start is usually "
                    "the accounts that already know you and went quiet."}]
-        c = case(context={"approval": dict(APPROVED),
-                          "lead": {"campaign_key": "cleaning_reactivation"}})
-        _, result, _ = self._run(decision(template_id="cadence.e2", template_text=E2_TEXT,
-                                          fields=fields), c)
-        self.assertEqual(result["grok_next_step"], "send")
-        # the same line with no campaign_key: the offer cannot be checked, so it holds
         _, result, _ = self._run(decision(template_id="cadence.e2", template_text=E2_TEXT,
                                           fields=fields))
+        self.assertEqual(result["grok_next_step"], "send")
+        # the same line with no campaign_key: the offer cannot be checked, so it holds
+        c = case(context=full_context(lead={}))
+        _, result, _ = self._run(decision(template_id="cadence.e2", template_text=E2_TEXT,
+                                          fields=fields), c)
         self.assertEqual(result["grok_next_step"], "hold_card")
         self.assertFalse(result["checks"]["field_values_clean"])
 
@@ -267,7 +285,7 @@ class Decisions(unittest.TestCase):
         self.assertTrue(result["checks"]["lines_match_template"])
         self.assertEqual(result["grok_next_step"], "send")
 
-    def test_first_reply_never_sends(self):
+    def test_first_reply_marked_not_approved_holds(self):
         text = ("Hey {first_name},\n\n\nGlad to hear it. All I need to start is a list of 60 or "
                 "more lost or dormant accounts or lost proposals.\n\n\nLorenzo")
         _, result, _ = self._run(decision(
@@ -282,8 +300,8 @@ class Decisions(unittest.TestCase):
         self.assertEqual(result["grok_next_step"], "hold_card")
 
     def test_doc_not_done_holds(self):
-        c = case(context={"approval": {"doc_done": False, "doc_unchanged": True,
-                                       "go_live": True}})
+        c = case(context=full_context(approval={"doc_done": False, "doc_unchanged": True,
+                                                "go_live": True}))
         _, result, _ = self._run(decision(), c)
         self.assertEqual(result["grok_next_step"], "hold_card")
 
@@ -291,7 +309,7 @@ class Decisions(unittest.TestCase):
         for approval in ({"doc_done": True, "doc_unchanged": False, "go_live": True},
                          {"doc_done": True, "doc_unchanged": True, "go_live": False},
                          {}):
-            _, result, _ = self._run(decision(), case(context={"approval": approval}))
+            _, result, _ = self._run(decision(), case(context=full_context(approval=approval)))
             self.assertEqual(result["grok_next_step"], "hold_card")
             self.assertFalse(result["checks"]["approval_ok"])
 
@@ -316,7 +334,7 @@ class Decisions(unittest.TestCase):
 
     def test_records_only_and_wait(self):
         rec = decision(action="records_only", template_id=None, template_text=None, fields=[],
-                       ghl_stage="lost", instantly_interest=-1,
+                       category="unsubscribe", ghl_stage="lost", instantly_interest=-1,
                        other_actions=["blocklist_in_instantly", "tag_dnd_in_ghl"])
         _, result, _ = self._run(rec)
         self.assertEqual(result["grok_next_step"], "update_records")
@@ -332,13 +350,224 @@ class Decisions(unittest.TestCase):
         self.assertEqual(result["grok_next_step"], "hold_card")
 
 
+FIRST_REPLY_ID = "first_reply.cleaning_reactivation.default.full"
+FIRST_REPLY_TEXT = ("Hey {first_name},\n\n\nGlad to hear it. All I need to start is a list of 60 or "
+                    "more lost or dormant accounts or lost proposals.\n\n\nWould {slots} work for "
+                    "a 15-minute call?\n\n\nLorenzo")
+REFERRAL_TEXT = ("Hey {first_name},\n\n\nAppreciate you pointing me to the right person.\n\n\n"
+                 "Lorenzo")
+BOOKING_URL = "https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu"
+BOOKING_LINK_TEXT = ("Hey {first_name},\n\n\nWould {slots} work for a 15-minute call? Or grab "
+                     "a time here:\n" + BOOKING_URL + "\n\n\nLorenzo")
+AI_PRICING_TEXT = ("Hey {first_name},\n\n\nMost builds land between $400 and $5,300.\n\n\n"
+                   "Would {slots} work for a 15-minute call?\n\n\nLorenzo")
+
+
+def approved_first_reply_doc(path):
+    """The fixture doc with the default first reply approved (its "Not approved
+    yet" note removed), plus an approved referral and booking_link reply."""
+    with open(FIXTURE_DOC, encoding="utf-8-sig") as handle:
+        text = handle.read()
+    text = text.replace("(tag: %s)\nNot approved yet. This one stays a draft you write yourself "
+                        "until it is rebuilt from your own replies. (note)\n" % FIRST_REPLY_ID,
+                        "(tag: %s)\n" % FIRST_REPLY_ID)
+    extra = ("First reply: cleaning (reactivation), they pointed you to someone else "
+             "(tag: first_reply.cleaning_reactivation.referral.full)\n" + REFERRAL_TEXT + "\n"
+             "First reply: cleaning (reactivation), they asked for a booking link "
+             "(tag: first_reply.cleaning_reactivation.booking_link.full)\n" + BOOKING_LINK_TEXT + "\n"
+             "First reply: AI agents, they asked about price "
+             "(tag: first_reply.ai_agents.pricing.full)\n" + AI_PRICING_TEXT + "\n")
+    text = text.replace("Follow-up emails (section)\n", extra + "Follow-up emails (section)\n")
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write(text)
+
+
+class FirstReplyAutoSend(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.mkdtemp()
+        cls.doc = os.path.join(cls.tmp, "copy_doc_approved.txt")
+        approved_first_reply_doc(cls.doc)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tmp)
+
+    def _run(self, dec=None, **context):
+        dec = dec or decision(template_id=FIRST_REPLY_ID, template_text=FIRST_REPLY_TEXT,
+                              category="positive_interested")
+        c = case(case_type="reply", copy_doc_file=self.doc, context=full_context(**context))
+        with mock.patch.object(ask_opus.urllib.request, "urlopen",
+                               return_value=FakeResponse(api_payload(dec))):
+            return run_main(c)[1]
+
+    def _slots(self, value, **context):
+        dec = decision(template_id=FIRST_REPLY_ID, template_text=FIRST_REPLY_TEXT,
+                       category="positive_interested",
+                       fields=[{"name": "first_name", "value": "Dana"},
+                               {"name": "slots", "value": value}])
+        return self._run(dec, **context)
+
+    def test_default_auto_sends_when_approved(self):
+        result = self._run()
+        self.assertEqual(result["grok_next_step"], "send", result["hold_reasons"])
+        self.assertEqual(result["checks"]["send_key"],
+                         "dana@brightline.com|%s|2026-09-28" % FIRST_REPLY_ID)
+
+    def test_marked_not_approved_in_the_doc_holds(self):
+        c = case(case_type="reply", context=full_context())
+        dec = decision(template_id=FIRST_REPLY_ID, template_text=FIRST_REPLY_TEXT,
+                       category="positive_interested")
+        with mock.patch.object(ask_opus.urllib.request, "urlopen",
+                               return_value=FakeResponse(api_payload(dec))):
+            result = run_main(c)[1]
+        self.assertEqual(result["grok_next_step"], "hold_card")
+        self.assertFalse(result["checks"]["template_approved_in_doc"])
+
+    def test_booking_link_auto_sends_with_the_calendar_link(self):
+        dec = decision(template_id="first_reply.cleaning_reactivation.booking_link.full",
+                       template_text=BOOKING_LINK_TEXT, category="positive_question")
+        result = self._run(dec)
+        self.assertEqual(result["grok_next_step"], "send", result["hold_reasons"])
+        self.assertIn(BOOKING_URL, result["email_text"])
+
+    def test_calendar_link_in_any_other_email_holds(self):
+        text = FIRST_REPLY_TEXT.replace("Lorenzo", BOOKING_URL + "\n\n\nLorenzo")
+        result = self._run(decision(template_id=FIRST_REPLY_ID, template_text=text,
+                                    category="positive_interested"))
+        self.assertEqual(result["grok_next_step"], "hold_card")
+        self.assertFalse(result["checks"]["links_ok"])
+
+    def test_ai_agents_pricing_sends_for_an_ai_agents_lead_only(self):
+        dec = decision(template_id="first_reply.ai_agents.pricing.full",
+                       template_text=AI_PRICING_TEXT, category="positive_question")
+        result = self._run(dec, lead={"campaign_key": "ai_agents"})
+        self.assertEqual(result["grok_next_step"], "send", result["hold_reasons"])
+        self.assertIn("$400 and $5,300", result["email_text"])
+        result = self._run(dec)            # a cleaning_reactivation lead
+        self.assertEqual(result["grok_next_step"], "hold_card")
+
+    def test_referral_holds(self):
+        dec = decision(template_id="first_reply.cleaning_reactivation.referral.full",
+                       template_text=REFERRAL_TEXT, category="positive_referral",
+                       fields=[{"name": "first_name", "value": "Dana"}])
+        result = self._run(dec)
+        self.assertEqual(result["grok_next_step"], "hold_card")
+        self.assertFalse(result["checks"]["approval_ok"])
+
+    def test_wrong_label_or_variant_holds(self):
+        result = self._run(decision(template_id=FIRST_REPLY_ID, template_text=FIRST_REPLY_TEXT,
+                                    category="neutral_question"))
+        self.assertEqual(result["grok_next_step"], "hold_card")
+        result = self._run(decision(template_id=FIRST_REPLY_ID + "/no_slots",
+                                    template_text=FIRST_REPLY_TEXT,
+                                    category="positive_interested"))
+        self.assertEqual(result["grok_next_step"], "hold_card")
+
+    def test_bad_call_times_hold(self):
+        free = FREE + ["2026-09-29T11:00:00-05:00"]
+        for value, extra in (
+                ("Tue 11:00am or Thu 4:30pm CT", {"free_times": free}),        # before 12:00
+                ("Tue 5:50pm or Thu 4:30pm CT", {}),                             # ends after 18:00
+                ("Mon 1:00pm or Thu 4:30pm CT", {}),                             # under 4 hours
+                ("Tue 12:05pm or Thu 4:30pm CT", {"offered_times": [             # double offer
+                    {"time": "2026-10-01T16:30:00-05:00", "lead_email": "sam@other.com"}]}),
+                ("Tue 12:05pm or Tue 2:00pm CT", {}),                            # same day
+                ("Tue 12:05pm CT", {}),                                          # one time
+                ("Wed 3:00pm or Thu 4:30pm CT", {}),                             # not free
+                ("Tue 12:05 or Thu 4:30pm CT", {})):                             # wrong format
+            result = self._slots(value, **extra)
+            self.assertEqual(result["grok_next_step"], "hold_card", value)
+            self.assertFalse(result["checks"]["slots_ok"], value)
+
+    def test_times_offered_to_this_lead_may_be_offered_again(self):
+        result = self._slots("Tue 12:05pm or Thu 4:30pm CT", offered_times=[
+            {"time": "2026-10-01T16:30:00-05:00", "lead_email": "dana@brightline.com"}])
+        self.assertEqual(result["grok_next_step"], "send", result["hold_reasons"])
+
+    def test_same_company_domain_sender_passes(self):
+        result = self._run(newest_inbound_from="info@brightline.com")
+        self.assertEqual(result["grok_next_step"], "send", result["hold_reasons"])
+
+    def test_other_sender_on_free_mail_holds(self):
+        result = self._run(lead_email="dana@gmail.com", newest_inbound_from="pat@gmail.com")
+        self.assertEqual(result["grok_next_step"], "hold_card")
+        self.assertFalse(result["checks"]["sender_ok"])
+        result = self._run(newest_inbound_from="dana@otherco.com")
+        self.assertEqual(result["grok_next_step"], "hold_card")
+
+    def test_outside_send_window_waits_for_seven(self):
+        result = self._run(now_ct="2026-09-28T20:15:00-05:00")
+        self.assertEqual(result["grok_next_step"], "wait")
+        self.assertEqual(result["send_after"], "2026-09-29T07:00:00-05:00")
+
+    def test_already_sent_or_handled_holds(self):
+        key = "dana@brightline.com|%s|2026-09-28" % FIRST_REPLY_ID
+        for extra in ({"sent_log_keys": [key]}, {"handled_ids": ["in-2"]}):
+            result = self._run(**extra)
+            self.assertEqual(result["grok_next_step"], "hold_card", extra)
+            self.assertFalse(result["checks"]["not_duplicate"], extra)
+
+    def test_already_answered_holds(self):
+        result = self._run(our_reply_after_newest_inbound=True)
+        self.assertEqual(result["grok_next_step"], "hold_card")
+
+    def test_kill_switch_holds(self):
+        result = self._run(kill_switch=True)
+        self.assertEqual(result["grok_next_step"], "hold_card")
+        self.assertFalse(result["checks"]["kill_switch_off"])
+
+    def test_missing_context_field_holds(self):
+        for name in ("now_ct", "kill_switch", "lead_email", "newest_inbound_from",
+                     "our_reply_after_newest_inbound", "reply_id", "handled_ids",
+                     "sent_log_keys", "free_times", "offered_times", "has_future_appointment"):
+            context = full_context()
+            del context[name]
+            c = case(case_type="reply", copy_doc_file=self.doc, context=context)
+            dec = decision(template_id=FIRST_REPLY_ID, template_text=FIRST_REPLY_TEXT,
+                           category="positive_interested")
+            with mock.patch.object(ask_opus.urllib.request, "urlopen",
+                                   return_value=FakeResponse(api_payload(dec))):
+                result = run_main(c)[1]
+            self.assertEqual(result["grok_next_step"], "hold_card", name)
+
+    def test_lead_with_a_future_appointment_gets_no_reply_or_ladder_email(self):
+        result = self._run(has_future_appointment=True)
+        self.assertEqual(result["grok_next_step"], "hold_card")
+        self.assertFalse(result["checks"]["no_future_appointment"])
+        c = case(context=full_context(has_future_appointment=True))   # E1 from the ladder
+        with mock.patch.object(ask_opus.urllib.request, "urlopen",
+                               return_value=FakeResponse(api_payload(decision()))):
+            self.assertEqual(run_main(c)[1]["grok_next_step"], "hold_card")
+
+    def test_go_live_false_holds(self):
+        result = self._run(approval={"doc_done": True, "doc_unchanged": True, "go_live": False})
+        self.assertEqual(result["grok_next_step"], "hold_card")
+        self.assertFalse(result["checks"]["approval_ok"])
+
+    def test_blocklist_without_an_opt_out_label_holds(self):
+        rec = decision(action="records_only", template_id=None, template_text=None, fields=[],
+                       category="positive_interested", other_actions=["blocklist_in_instantly"])
+        self.assertEqual(self._run(rec)["grok_next_step"], "hold_card")
+
+
+class CentralTime(unittest.TestCase):
+    def test_dst_change_and_window_reopen(self):
+        before = ask_opus.parse_time("2026-11-01T06:59:00Z")   # 01:59 CDT
+        after = ask_opus.parse_time("2026-11-01T08:00:00Z")    # 02:00 CST
+        self.assertEqual(before.utcoffset().total_seconds(), -5 * 3600)
+        self.assertEqual(after.utcoffset().total_seconds(), -6 * 3600)
+        late = ask_opus.parse_time("2026-10-31T22:00:00-05:00")
+        self.assertEqual(ask_opus.next_send_window_open(late).isoformat(),
+                         "2026-11-01T07:00:00-06:00")
+
+
 class RealDocFieldLines(unittest.TestCase):
     """Field values against the real export of build 170b09dd897430a9."""
 
     def _run(self, template_id, template_text, fields, campaign_key):
         c = case(copy_doc_file=REAL_DOC,
-                 context={"approval": dict(APPROVED),
-                          "lead": {"campaign_key": campaign_key}})
+                 context=full_context(lead={"campaign_key": campaign_key}))
         dec = decision(template_id=template_id, template_text=template_text, fields=fields)
         with mock.patch.object(ask_opus.urllib.request, "urlopen",
                                return_value=FakeResponse(api_payload(dec))):
@@ -428,8 +657,9 @@ class RealDocFieldLines(unittest.TestCase):
         ids = ask_opus.email_template_ids(doc)
         self.assertIn("cadence.e4", ids)
         self.assertIn("booking.counter.weekend", ids)
-        self.assertFalse(any(i.startswith(("first_reply.", "instantly.", "X-", "U-PRICE",
+        self.assertFalse(any(i.startswith(("instantly.", "X-", "U-PRICE",
                                            "formats.", "cadence.e4.")) for i in ids))
+        self.assertIn("first_reply.cleaning_reactivation.default.full", ids)
         self.assertTrue(ask_opus.is_email_template(doc, "booking.counter.weekend/no_alternatives"))
 
     def test_e5_offer_line_with_company_inside_is_filled_in_any_order(self):

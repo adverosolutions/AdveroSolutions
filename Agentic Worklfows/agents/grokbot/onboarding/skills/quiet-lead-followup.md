@@ -1,20 +1,20 @@
 ---
 name: quiet-lead-followup
-description: The follow-up ladder E1 to E10 for a lead who replied interested, got Lorenzo's first reply with two times, then went quiet. Covers when it starts (day 0 is Lorenzo's own reply), the timing of every email, the exact agreed text and its per-offer lines, no links, releasing earlier times, what happens with no free times, holds and stops, the hand-off to nurture, and the E2 research line status. Use for "follow up with a quiet lead", "which follow-up is due", "E1".."E10", "the lead went quiet", "cadence", "touch due".
+description: The follow-up ladder E1 to E10 for a lead who replied interested, got our first reply with two times, then went quiet. Covers when it starts (day 0 is the first reply), the timing of every email, the exact agreed text and its per-offer lines, no links, releasing earlier times, what happens with no free times, holds and stops, the hand-off to nurture, and the E2 research line status. Use for "follow up with a quiet lead", "which follow-up is due", "E1".."E10", "the lead went quiet", "cadence", "touch due".
 ---
 
 # Quiet-lead follow-up (E1 to E10)
 
-A lead said "interested", Lorenzo answered with two call times, and the lead went silent. Ten emails follow in the same thread until they book, reply, or the ladder ends. All ten were agreed with Lorenzo on 2026-09-23.
+A lead said "interested", our first reply offered two call times, and the lead went silent. Ten emails follow in the same thread until they book, reply, or the ladder ends. All ten were agreed with Lorenzo on 2026-09-23.
 
 Who does what (2026-09-25; see `grok-operator`): the engine timer wakes Grok only when a touch is due. Claude Opus 5.5 decides whether it goes (checks below) and returns the template id and filled text. Grok sends exactly that text in the thread and verifies it. Grok never writes or picks the words. A touch whose text is not an approved template is held, never rewritten.
 
 ## When the ladder starts
 
-- **Day 0 is Lorenzo's own first reply** to the lead (Lorenzo, 2026-09-23). The engine never sends a first reply on its own (see `cold-email-replies`).
-- Day 0 is recorded in one of three ways: an approved send from a hold card, Lorenzo tapping Mark sent after sending it himself, or the engine finding his hand-sent reply in the Instantly thread (a manual email from the same inbox, in the same thread, after the reply the draft answered, within 14 days of that reply).
-- When day 0 is found, the two times in his reply are recorded as offered to this lead, the lead leaves nurture if enrolled (`re_engaged`), and E1 is set for the next business day at 10:00 CT (a Friday reply means a Monday E1).
-- A lead who wrote again after Lorenzo's reply, or has another open draft, is not armed.
+- **Day 0 is the first reply** to the lead (Lorenzo, 2026-09-23; since 2026-10-06 the common first replies auto-send from approved templates, the rest go to Lorenzo, see `cold-email-replies`).
+- Day 0 is recorded in one of four ways: a first reply that auto-sent, an approved send from a hold card, Lorenzo tapping Mark sent after sending it himself, or the engine finding his hand-sent reply in the Instantly thread (a manual email from the same inbox, in the same thread, after the reply the draft answered, within 14 days of that reply).
+- When day 0 is found, the two times in that reply are recorded as offered to this lead, the lead leaves nurture if enrolled (`re_engaged`), and E1 is set for the next business day at 10:00 CT (a Friday reply means a Monday E1).
+- A lead who wrote again after the first reply, or has another open draft, is not armed.
 
 ## Schedule
 
@@ -33,14 +33,14 @@ Who does what (2026-09-25; see `grok-operator`): the engine timer wakes Grok onl
 
 Every touch goes at 10:00 CT on a business day, never on weekends, never before 10:00, only inside the 07:00 to 19:00 CT send window, one touch per lead per day. Subject "Re: {original_subject}" in the same thread from the same inbox (no subject: "Re: {first_name}, question", then "Re: your reply").
 
-E1 veto window (current engine): before E1 goes out, Lorenzo gets a heads-up at 09:30 CT with a Veto button, 30 minutes before the 10:00 send; a veto stops the whole ladder for that lead. Whether the Grok setup keeps this heads-up is not decided yet.
+E1 goes out at 10:00 CT like every other touch, with no heads-up or veto first (Lorenzo, 2026-10-06).
 
 ## Rules for every email (Lorenzo, 2026-09-23)
 
 1. No booking link anywhere. The lead picks one of the two times and Lorenzo sends the invite.
 2. Any email that offers new times says the earlier times got taken, in different words each time. The engine makes that true: when a touch offers new times, this lead's earlier held times are released first.
 3. Email only. No texts, no calls.
-4. No Claudeisms (`claudeisms` skill). Normal capitalization. No exclamation marks, no em or en dashes, no AI or automation, no prices or guarantee figures.
+4. No Claudeisms (`claudeisms` skill). Normal capitalization. No exclamation marks, no em or en dashes, no prices or guarantee figures. "AI" is fine (Lorenzo, 2026-09-30), but never tell or imply to a lead that a bot or AI wrote the email.
 5. Opens "Hey {first_name}," ("Hey there," when unknown), closes "Lorenzo".
 
 ## The text (exact, as agreed)
@@ -137,7 +137,7 @@ E1 veto window (current engine): before E1 goes out, Lorenzo gets a heads-up at 
 
 - **Any reply from the lead stops the ladder.** The reply goes through `cold-email-replies`; an answer to it re-arms the ladder.
 - **"Not now", "bad time", "not a priority"** (any follow-up): stop, GHL Follow Up Later, and enrol in the 90-day nurture with reason `not_now_reply` (`nurture-90-day`).
-- **Booked**: stop. Everything after is in the `booked-calls` skill.
+- **Booked**: stop. Before every touch, check GHL for a future appointment on the Discovery Call calendar: leads can book themselves through the calendar link. If there is one, send nothing, release the lead's held times, set GHL Call Booked and Instantly interest 2. Everything after is in the `booked-calls` skill.
 - **Unsubscribe, hostile, not a fit, wrong person, or any opt-out on record**: stop for good. Nothing more is sent.
 - **Out-of-office reply**: a pause, not a stop. The ladder resumes the business day after the return date (next business day if none given).
 - **After E10 with no reply**: GHL Follow Up Later, and nurture with reason `no_reply_after_sequence`.

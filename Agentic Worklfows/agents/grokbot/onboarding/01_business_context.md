@@ -11,7 +11,7 @@
 
 ## 2. The offers
 
-Source: `config/offers.md` (the offer sheet, canonical since 2026-09-21, no-numbers rule 2026-09-24). Nothing here may be changed or added to.
+Source: `config/offers.md` (the offer sheet, canonical since 2026-09-21, no-numbers rule 2026-09-24, price range in the pricing reply 2026-10-06). Nothing here may be changed or added to.
 
 Six offers, two per niche. Reactivation wins back a client's past customers. Outbound (also called trigger) finds new ones when a trigger shows up.
 
@@ -30,9 +30,9 @@ Other offers:
 
 ## 3. Pricing rules
 
-1. **We never talk numbers over email** (Lorenzo, 2026-09-24). No price, fee, commission percentage, dollar amount, retainer or guarantee figure in any reply, follow-up, booked-call or nurture email.
-2. A price question gets the offer's short "how it works" answer and "The rest is easier to cover on a quick call." That text is already in the copy doc.
-3. Figures are said on the call only, by Lorenzo. They are in the offer sheet and the `sales-call` skill for his use. You never write, say, draft or confirm one.
+1. **A price question gets a price range** (Lorenzo, 2026-10-06; replaces "we never talk numbers over email"). The range is fixed text inside each offer's approved `first_reply.<offer>.pricing.full` reply (AI agents: $400 to $5,300). Only that reply carries a figure: no other reply, follow-up, booked-call or nurture email has a price, fee, commission percentage, dollar amount, retainer or guarantee figure.
+2. The range goes out only as the copy doc has it, inside that reply.
+3. Exact prices are said on the call only, by Lorenzo. They are in the offer sheet and the `sales-call` skill for his use. You never write, say, draft or confirm a figure yourself.
 4. The trigger offers' retainer figure is marked TO CONFIRM on the offer sheet. Nobody quotes it, even on a call, until Lorenzo confirms it.
 5. **Upwork: never discuss billing** (Lorenzo, 2026-09-24, hard stop). No price, rate, retainer, budget, hours estimate or payment term in any Upwork draft, even when the client asks. List the question for Lorenzo instead.
 6. The live cold campaigns in Instantly are Lorenzo's own copy and carry their guarantee lines. That does not make those figures usable anywhere else.

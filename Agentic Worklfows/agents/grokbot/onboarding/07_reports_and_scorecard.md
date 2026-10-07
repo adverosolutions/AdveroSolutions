@@ -26,7 +26,7 @@ A hold card asks Lorenzo to decide one email. It always carries the full email e
 
 ```
 HOLD: Dana, Brightline Cleaning (cleaning_reactivation)
-Why: first reply, Lorenzo sends or approves
+Why: first_reply pricing is marked "Not approved yet" in the copy doc
 They wrote: "Sounds interesting. What does it cost?"
 Opus: positive_question, confidence 0.92. Price question from an interested lead.
 Ready to send from lorenzo@theadvero.com, in their thread (first_reply.cleaning_reactivation.pricing.full):
@@ -92,7 +92,7 @@ Health: all 12 inboxes active, warm-up 100.
 
 ## 5. Evening report, 18:30 CT weekdays
 
-1. **Sent today,** by type: follow-up, booking, reminder, no-show, first reply (sent by Lorenzo or on his yes). Cold sends vs plan from Instantly daily analytics.
+1. **Sent today,** by type: follow-up, booking, reminder, no-show, first reply (sent on its own, by Lorenzo, or on his yes). Cold sends vs plan from Instantly daily analytics.
 2. **Replies:** the total, then a count for each of the 11 labels by name: `positive_interested`, `positive_question`, `positive_referral`, `neutral_question`, `negative_notnow`, `negative_notfit`, `negative_hostile`, `unsubscribe`, `ooo`, `wrong_person`, `auto_reply_unmonitored` (a label with 0 shows 0).
 3. **Calls:** booked, held, no-showed today.
 4. **Upwork:** drafts waiting on him, with hours waiting. The Upwork numbers in skill `daily-reports-and-metrics` are proposals, connects spent, view rate, reply rate, hires, calls booked, close rate (hires / calls booked), return on connects (Upwork earnings / dollars spent on connects) and median job age at apply. Two KPI rows, Upwork view rate and median job age at apply, read `no data` until the daily metrics job computes them. Report `no data` as it is, never 0.
@@ -158,7 +158,7 @@ Opus: 212 calls, $12.40.
 What went wrong and what changed:
 1. The not-now reply came in while E3 was queued. The send check now re-reads the thread right before sending.
 Questions for you:
-1. Turn off Ask first for follow-ups E1 to E10?
+1. Approve the new first replies in the copy doc?
 ```
 
 Revert decision: Lorenzo's alone, at the end of week 4. Suggested red flags to raise with him the moment they happen, not at the weekly review: any wrong-recipient send; more than one double send in a week; a correct-email rate under the target two weeks running; a missed lead two weeks running.
