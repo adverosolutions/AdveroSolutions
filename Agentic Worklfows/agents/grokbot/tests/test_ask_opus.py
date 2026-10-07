@@ -733,6 +733,21 @@ class FirstReplyAutoSend(unittest.TestCase):
 
 
 class Hardening(unittest.TestCase):
+    def test_every_counter_case_and_variant_holds(self):
+        with open(REAL_DOC, encoding="utf-8-sig") as handle:
+            doc = handle.read()
+        counters = sorted({ask_opus._tag_of(line) for line in doc.splitlines()
+                           if (ask_opus._tag_of(line) or "").startswith("booking.counter.")
+                           and not ask_opus._tag_of(line).endswith("/subject")})
+        self.assertIn("booking.counter.window_no_fit", counters)
+        self.assertIn("booking.counter.slot_taken/no_alternatives", counters)
+        for template_id in counters:
+            text = "\n\n".join(ask_opus.template_body(doc, template_id))
+            dec = decision(template_id=template_id, template_text=text, fields=[])
+            _, checks = ask_opus.check_email(dec, doc, full_context(), "reply")
+            self.assertFalse(checks["approval_ok"], template_id)
+            self.assertEqual(ask_opus.next_step(dec, checks, {})[0], "hold_card", template_id)
+
     def test_rule_8_keeps_the_booked_lead_on_the_booked_flow(self):
         rules = ask_opus.DECISION_RULES
         rule8 = [line for line in rules.splitlines() if line.startswith("8. ")][0]

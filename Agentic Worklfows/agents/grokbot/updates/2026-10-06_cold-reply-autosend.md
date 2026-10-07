@@ -12,7 +12,7 @@ This is an update to what you already have, not a new onboarding. Apply part 2 t
   - how it works or "tell me more": `first_reply.<offer>.mechanism.full`
   - send info, a deck or more details: `first_reply.<offer>.send_info.full` (no link, two times)
   - yes plus "do you have a Calendly or booking link?", when that is the only ask: `first_reply.<offer>.booking_link.full` (two times plus the Discovery Call booking link)
-- **Still a hold card:** the referral and other first replies, every variant (no free times, "{slot} CT works on my end", a refused time), a neutral question, every counter to a time the slot rules refuse (`booking.counter.outside_window_early`, `outside_window_late`, `weekend`, `too_soon`, `beyond_horizon` and their variants), `booking.slot_already_taken`, any version with example dates or times (every `/dated` version), a no with a buying signal, talk of a competitor, a contract or anything legal, a reply not in English, anything under 0.8. The "Locked in" confirmation stays as it is.
+- **Still a hold card:** the referral and other first replies, every variant (no free times, "{slot} CT works on my end", a refused time), a neutral question, every counter-proposal (`booking.counter.*`, all seven cases and every variant), `booking.slot_already_taken`, any version with example dates or times (every `/dated` version), a no with a buying signal, talk of a competitor, a contract or anything legal, a reply not in English, anything under 0.8. The "Locked in" confirmation stays as it is.
 - **Each auto-send needs** Lorenzo's "done" and "go live", the copy doc unchanged, the template not marked "Not approved yet", confidence 0.8 or more, the template for the lead's own offer (`first_reply.<campaign_key>...`), the text exactly that template, complete and in order, and every send check. The 2026-09-25 doc build still marks every first reply "Not approved yet", so they stay hold cards until the new first-reply copy is approved.
 - **AI agents campaigns.** The eight AI agents campaigns all use the offer key `ai_agents`. Their ids are in file 01, section 4. A campaign that is not in that table has no key, so every email for that lead is a hold card.
 - **The send checks are now in `ask_opus.py`**, from the facts you gather: send window, call times (in `free_times`, 12:00 to 18:00 CT, Monday to Friday, at least 4 hours out, within 5 business days, not offered to another lead, two times on different days), sender, already answered, already sent, kill switch, no future appointment, and first contact (every email except an auto-send first reply and the booking confirmation needs `our_reply_reached_lead` true). A follow-up E1 to E10 also needs `our_reply_after_newest_inbound` true: a lead who wrote again gets an answer, not the next touch. A missing fact means a hold card. Outside 07:00 to 19:00 CT the answer is `wait` with `send_after` set to the next 07:00 CT: run the case again once then (file 02, step 6).
@@ -41,7 +41,7 @@ shasum -a 256 ~/advero/ask_opus.py
 
 It must print the sha256 line below. If it does not, the paste is wrong: put the `.bak` back and tell Lorenzo.
 
-sha256 b97f0553f94921f5f011b0ef66bc54f1d322049c77f502728969999b40f0a3c6
+sha256 89a612c21207d62b700632337aa9beb9a452bfdaad14e0c296c4570bddecf668
 
 Then replace the code block under section 12 of your `04_ask_opus.md` (and the same block in `GROK_ONBOARDING_PACK.md`, between `<!-- BEGIN ask_opus.py -->` and `<!-- END ask_opus.py -->`) with the same script in a python code block.
 
@@ -830,7 +830,7 @@ p) Replace:
 with:
 
 ````
-| `checks` | The copy-doc checks: template found, the text is exactly the chosen template, complete and in order (a base id is the base email only; a variant id is the base with only that variant's change; `lines_match_template`), no `{placeholder}` left, no price, link, dash or "!" in a field value, and approval (`doc_done`, `doc_unchanged`, `go_live`). A field may carry a line from the copy doc only when the line sits in the chosen template's own line block for the lead's offer (for E4 and a `cleaning_reactivation` lead, `cadence.e4.offer_proof.reactivation`). A line from any other part of the doc (a first reply, a guarantee, an instruction, the other offer's line), or a line Opus wrote itself, is refused. Other placeholders take only short values (a name, the company, a subject, a date, a time, slots) or an https call link; any other placeholder holds. `template_is_email`: the template is a main email block or one of its variants, never a line used inside another email, a subject, a cold email or an instruction block. `approval_ok` is also false for a first reply outside the auto-send list (default, pricing, mechanism, send_info, booking_link; base template only; the label must match; the offer must be the lead's `campaign_key`) and for `booking.slot_already_taken` and the counters to a time the slot rules refuse (`booking.counter.outside_window_early`, `outside_window_late`, `weekend`, `too_soon`, `beyond_horizon`, and their variants). `no_literal_times`: the template carries no example day, date or time (every `/dated` version holds). `field_values_clean` also needs `{first_name}`, `{company}` and the link fields to be the lead's own values (section 4). `first_contact_ok`: `our_reply_reached_lead` is true, unless the email is an auto-send first reply or the booking confirmation. `template_approved_in_doc`: no "Not approved yet" note on the template. `links_ok`: no link except a `{zoom_link}`/`{call_link}` value and the booking calendar link inside a `booking_link` first reply. The send checks: `send_window` (07:00 to 19:00 CT; outside it the step is `wait`), `slots_ok` (each time in `{slots}`, `{alt_slots}` and `{slot}` is in `free_times`, 12:00 to 18:00 CT, Monday to Friday, at least 4 hours after the send, within 5 business days, not offered to another lead, two times on different days), `sender_ok` (the newest inbound email is from `lead_email`, or the same company domain when that domain is not free mail), `not_already_answered` (replies), `no_newer_lead_reply` (E1 to E10: `our_reply_after_newest_inbound` is true), `not_duplicate` (`send_key` not in `sent_log_keys`, `reply_id` not in `handled_ids`), `kill_switch_off`, `no_future_appointment` (`has_future_appointment` is false; a booked lead gets no reply or follow-up email). A missing context field fails its check. `checks_not_applied` lists the checks that do not apply to this email. `send_key` is the key you write to the sent log after the send; its date is the day of the send (`send_after` when that is later) |
+| `checks` | The copy-doc checks: template found, the text is exactly the chosen template, complete and in order (a base id is the base email only; a variant id is the base with only that variant's change; `lines_match_template`), no `{placeholder}` left, no price, link, dash or "!" in a field value, and approval (`doc_done`, `doc_unchanged`, `go_live`). A field may carry a line from the copy doc only when the line sits in the chosen template's own line block for the lead's offer (for E4 and a `cleaning_reactivation` lead, `cadence.e4.offer_proof.reactivation`). A line from any other part of the doc (a first reply, a guarantee, an instruction, the other offer's line), or a line Opus wrote itself, is refused. Other placeholders take only short values (a name, the company, a subject, a date, a time, slots) or an https call link; any other placeholder holds. `template_is_email`: the template is a main email block or one of its variants, never a line used inside another email, a subject, a cold email or an instruction block. `approval_ok` is also false for a first reply outside the auto-send list (default, pricing, mechanism, send_info, booking_link; base template only; the label must match; the offer must be the lead's `campaign_key`) and for `booking.slot_already_taken` and every counter-proposal (`booking.counter.*`, every case and every variant). `no_literal_times`: the template carries no example day, date or time (every `/dated` version holds). `field_values_clean` also needs `{first_name}`, `{company}` and the link fields to be the lead's own values (section 4). `first_contact_ok`: `our_reply_reached_lead` is true, unless the email is an auto-send first reply or the booking confirmation. `template_approved_in_doc`: no "Not approved yet" note on the template. `links_ok`: no link except a `{zoom_link}`/`{call_link}` value and the booking calendar link inside a `booking_link` first reply. The send checks: `send_window` (07:00 to 19:00 CT; outside it the step is `wait`), `slots_ok` (each time in `{slots}`, `{alt_slots}` and `{slot}` is in `free_times`, 12:00 to 18:00 CT, Monday to Friday, at least 4 hours after the send, within 5 business days, not offered to another lead, two times on different days), `sender_ok` (the newest inbound email is from `lead_email`, or the same company domain when that domain is not free mail), `not_already_answered` (replies), `no_newer_lead_reply` (E1 to E10: `our_reply_after_newest_inbound` is true), `not_duplicate` (`send_key` not in `sent_log_keys`, `reply_id` not in `handled_ids`), `kill_switch_off`, `no_future_appointment` (`has_future_appointment` is false; a booked lead gets no reply or follow-up email). A missing context field fails its check. `checks_not_applied` lists the checks that do not apply to this email. `send_key` is the key you write to the sent log after the send; its date is the day of the send (`send_after` when that is later) |
 ````
 
 q) Replace:
@@ -1203,7 +1203,7 @@ m) Replace:
 with:
 
 ````
-- **It breaks a rule**: counter-proposal `booking.counter.<case>`, where case is `window_no_fit`, `outside_window_early`, `outside_window_late`, `weekend`, `too_soon`, `beyond_horizon` or `slot_taken`. Example: "{asked_time} is a touch early on my side. Could you do {alt_slots} instead?" A counter to a time only the slot rules refuse (`outside_window_early`, `outside_window_late`, `weekend`, `too_soon`, `beyond_horizon`, base and every variant) always goes to Lorenzo first, and `ask_opus.py` enforces it, so he can book it anyway ("Book as asked") or send the counter. "Next Tuesday" past the 5-day horizon is never auto-booked.
+- **It breaks a rule**: counter-proposal `booking.counter.<case>`, where case is `window_no_fit`, `outside_window_early`, `outside_window_late`, `weekend`, `too_soon`, `beyond_horizon` or `slot_taken`. Example: "{asked_time} is a touch early on my side. Could you do {alt_slots} instead?" Every counter (all seven cases, base and every variant) always goes to Lorenzo first, and `ask_opus.py` enforces it, so he can book it anyway ("Book as asked") or send the counter. "Next Tuesday" past the 5-day horizon is never auto-booked.
 ````
 
 n) Replace:
@@ -1499,7 +1499,7 @@ with:
 
 ## 3. The new `ask_opus.py`
 
-sha256 b97f0553f94921f5f011b0ef66bc54f1d322049c77f502728969999b40f0a3c6
+sha256 89a612c21207d62b700632337aa9beb9a452bfdaad14e0c296c4570bddecf668
 
 ````python
 #!/usr/bin/env python3
@@ -1596,14 +1596,9 @@ GHL_FIELD_NAMES = ["Sequence", "Last Email Sent", "Last Email Date",
 NEVER_SEND_PREFIXES = ("instantly.", "U-PRICE", "X-",
                        "formats.", "cadence.e2.research_line")
 # Templates that always go to Lorenzo first, even when approved: a time the
-# lead asked for was taken, or a counter to a time the slot rules refuse
-# (base and every variant).
-ALWAYS_HOLD_PREFIXES = ("booking.slot_already_taken",
-                        "booking.counter.outside_window_early",
-                        "booking.counter.outside_window_late",
-                        "booking.counter.weekend",
-                        "booking.counter.too_soon",
-                        "booking.counter.beyond_horizon")
+# lead asked for was taken, and every counter-proposal (booking.counter.*,
+# base and every variant).
+ALWAYS_HOLD_PREFIXES = ("booking.slot_already_taken", "booking.counter.")
 # A template whose own text carries a literal day, date or clock time (every
 # /dated variant, the example versions) is an example, never sent.
 _LITERAL_TIME_RE = re.compile(r"\b\d{1,2}(?::\d{2})?\s?(?:am|pm)\b|\b\d{1,2}:\d{2}\b", re.I)
@@ -1737,7 +1732,7 @@ WHAT YOU RETURN
 One JSON object in the required schema, nothing else.
 - action:
   - send_template: an approved email from the copy doc goes to the lead (now, or at send_after).
-  - hold_for_lorenzo: an email from the copy doc fits, but a rule says Lorenzo sees it first: a first reply outside the auto-send list in rule 2, a counter to a time only the slot rules refuse (booking.counter.outside_window_early, outside_window_late, weekend, too_soon, beyond_horizon and their variants), booking.slot_already_taken, the "{slot} CT works on my end" confirmed-time form, any version whose text carries example dates or times (every /dated version), and any template that is not approved.
+  - hold_for_lorenzo: an email from the copy doc fits, but a rule says Lorenzo sees it first: a first reply outside the auto-send list in rule 2, every counter-proposal (booking.counter.*, every case and every variant), booking.slot_already_taken, the "{slot} CT works on my end" confirmed-time form, any version whose text carries example dates or times (every /dated version), and any template that is not approved.
   - draft_for_lorenzo: text that is not in the copy doc goes in draft_text for Lorenzo to read and send himself. Every Upwork message is this.
   - records_only: no email; only records change (stage, interest status, fields, blocklist, tasks, nurture).
   - wait: nothing is due yet; send_after says when to look again.

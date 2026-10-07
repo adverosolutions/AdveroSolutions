@@ -92,14 +92,9 @@ GHL_FIELD_NAMES = ["Sequence", "Last Email Sent", "Last Email Date",
 NEVER_SEND_PREFIXES = ("instantly.", "U-PRICE", "X-",
                        "formats.", "cadence.e2.research_line")
 # Templates that always go to Lorenzo first, even when approved: a time the
-# lead asked for was taken, or a counter to a time the slot rules refuse
-# (base and every variant).
-ALWAYS_HOLD_PREFIXES = ("booking.slot_already_taken",
-                        "booking.counter.outside_window_early",
-                        "booking.counter.outside_window_late",
-                        "booking.counter.weekend",
-                        "booking.counter.too_soon",
-                        "booking.counter.beyond_horizon")
+# lead asked for was taken, and every counter-proposal (booking.counter.*,
+# base and every variant).
+ALWAYS_HOLD_PREFIXES = ("booking.slot_already_taken", "booking.counter.")
 # A template whose own text carries a literal day, date or clock time (every
 # /dated variant, the example versions) is an example, never sent.
 _LITERAL_TIME_RE = re.compile(r"\b\d{1,2}(?::\d{2})?\s?(?:am|pm)\b|\b\d{1,2}:\d{2}\b", re.I)
@@ -233,7 +228,7 @@ WHAT YOU RETURN
 One JSON object in the required schema, nothing else.
 - action:
   - send_template: an approved email from the copy doc goes to the lead (now, or at send_after).
-  - hold_for_lorenzo: an email from the copy doc fits, but a rule says Lorenzo sees it first: a first reply outside the auto-send list in rule 2, a counter to a time only the slot rules refuse (booking.counter.outside_window_early, outside_window_late, weekend, too_soon, beyond_horizon and their variants), booking.slot_already_taken, the "{slot} CT works on my end" confirmed-time form, any version whose text carries example dates or times (every /dated version), and any template that is not approved.
+  - hold_for_lorenzo: an email from the copy doc fits, but a rule says Lorenzo sees it first: a first reply outside the auto-send list in rule 2, every counter-proposal (booking.counter.*, every case and every variant), booking.slot_already_taken, the "{slot} CT works on my end" confirmed-time form, any version whose text carries example dates or times (every /dated version), and any template that is not approved.
   - draft_for_lorenzo: text that is not in the copy doc goes in draft_text for Lorenzo to read and send himself. Every Upwork message is this.
   - records_only: no email; only records change (stage, interest status, fields, blocklist, tasks, nurture).
   - wait: nothing is due yet; send_after says when to look again.
