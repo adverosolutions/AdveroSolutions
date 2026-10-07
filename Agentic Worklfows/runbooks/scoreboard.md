@@ -19,7 +19,11 @@ Code lives in `Coding/scoreboard/`. `SPEC.md` is the full contract: every call, 
 | GHL | `get-pipelines`, `search-opportunity` with tasks and notes (location `ebyNANPagaK7ycf1pfge`) | Sales board, days in stage, stale flags, tasks, show rate from the Call Booked pipeline, won revenue |
 | Google Calendar | `list_events` on `lorenzovillarreal@adverosolutions.com`, range and next 14 days | Calls held and upcoming. Event descriptions are never read, because they hold Zoom passcodes |
 
-The page writes only to its own `db` store:
+Live URL: https://claude.ai/artifact/7i5vMdwy4aHPf9xrKG6nDr (private to Lorenzo).
+
+The page writes only to its own `db` store, which is readable only by the owner and editors (rule: root `read: admin`, `write: owner`):
+
+- `linkedinRows/<id>`: the LinkedIn tracker rows. They are written only when Lorenzo acts in the tracker, never on load.
 
 - `settings/costs`: monthly spend per channel, entered in the Costs drawer.
 - `upworkRooms/<proposalId>`: a cache of which proposals got a client room. A found room is kept for good. A missing room is re-checked after 12 hours while the proposal is under 30 days old.
@@ -59,6 +63,8 @@ cd /Users/lorenzovillarreal/orca/workspaces/AdveroSolutions/madtom   # or any ch
 node --test Coding/scoreboard/tests/*.test.js
 ```
 
+`tests/ui.test.js` renders the page in jsdom. It loads jsdom from `JSDOM_PATH`, or from `~/.hermes/hermes-agent/node_modules` on Lorenzo's laptop. If neither is available it skips with a reason; if `JSDOM_PATH` is set but cannot load, it fails.
+
 Publish from a Claude Code session with the Artifact tool:
 
 - `file_path`: `Coding/scoreboard/scoreboard.html`
@@ -69,14 +75,14 @@ Publish from a Claude Code session with the Artifact tool:
 
 A connector name or tool name that changes upstream shows up as a red chip in the top bar. The chip's text gives the fix (reconnect, add, or turn the connector on in the page's Permissions menu). Fix names in `CONFIG` in `scoreboard-data.js` and republish.
 
-## Adding LinkedIn (channel 3)
+## LinkedIn tracker (channel 3)
 
-The LinkedIn column is a placeholder until outreach starts. Once a data source exists (an outreach tool with a claude.ai connector, or GHL opportunities tagged `linkedin`):
+LinkedIn has no API, and Lorenzo does every LinkedIn action by hand. The `linkedin-outreach` skill says the tracker lives in this dashboard, so the page keeps the rows itself, in db collection `linkedinRows` (one doc per person, id = the `/in/<handle>` slug). Fields, stages, reply types and follow-up timing come from that skill ("Follow-up timing", "Tracker fields and stages", "Weekly numbers"). If the skill changes, update `AdveroData.linkedin` (`FIELDS`, `STAGES`, `REPLY_TYPES`, `EVENTS`, `applyEvent`) and its tests together.
 
-1. Add a fetcher in `scoreboard-data.js` that fills the `linkedin` channel funnel. The steps are requests, accepted, replies, positive and booked.
-2. Add the connector to the manifest and republish.
-
-GHL cards tagged `linkedin` are already attributed to LinkedIn.
+- **Daily use:** in Detail → LinkedIn tracker, pick an event in a row's "Log…" menu (DM sent A/B, FU1-FU3, Reply…, Answer sent, Meeting booked…). The page sets the stage, the dates and the next touch due per the skill. The row then shows in Follow-ups when the touch is due.
+- **Bulk:** use "Paste rows" with a TSV or CSV that has a header row. The skill's field names and Sales Navigator style headers are accepted. Re-pasting someone already in the tracker updates their row and never resets their stage or dates. If a row changes after you paste (in another tab, or by a Refresh), the import leaves it as it is and says so. Row actions are locked while an import runs.
+- **Claude** reads or writes the rows with the ArtifactData tool on this artifact's URL (collection `linkedinRows`). The rows are shared, durable data: pin writes with `if_version`. Every row Claude writes must carry `updatedAt` as a number in ms, because the page pages through rows by that field and a row without it can be skipped past the first 1,000.
+- GHL cards tagged `linkedin` are also attributed to LinkedIn.
 
 ## Known limits
 

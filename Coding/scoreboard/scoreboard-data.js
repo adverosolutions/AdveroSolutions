@@ -1251,9 +1251,10 @@
     return plural(Math.floor(elapsedMs / DAY_MS), "day", "days");
   }
 
-  function deriveFollowups(I, U, G, C, nowMs, R) {
+  function deriveFollowups(I, U, G, C, nowMs, R, L) {
     const reply_now = [], due = [], upcoming = [];
     if (U) { reply_now.push(...U.replyNow); due.push(...U.due); }
+    if (L) { reply_now.push(...L.replyNow); due.push(...L.due); upcoming.push(...L.upcoming); }
     if (I) {
       for (const l of I.unanswered) {
         reply_now.push({ id: `email_reply:${l.id}`, group: "reply_now", kind: "email_reply", title: l.title, detail: l.campaign,
@@ -1312,6 +1313,781 @@
     due.sort((a, b) => { const x = byDueAsc(a, b); return Number.isNaN(x) ? 0 : x; });
     upcoming.sort((a, b) => { const x = byDueAsc(a, b); return Number.isNaN(x) ? 0 : x; });
     return { reply_now, due, upcoming };
+  }
+
+  // ------------------------------------------------------------------ LinkedIn tracker (piece 2)
+  // Field names, stages, events and timing follow ~/.claude/skills/linkedin-outreach/SKILL.md ("Follow-up timing",
+  // "Tracker fields and stages", "Weekly numbers"). Rows live in the page's own db, collection `linkedinRows`.
+
+  const LI_COLLECTION = "linkedinRows";
+  const LI_SERVER = "LinkedIn";
+  const LI_PAGE = 1000;          // the store's largest page (db.d.ts: limit 1-1000)
+  const LI_MAX_PAGES = 20;       // safety cap on paging; past it the read counts as truncated
+  const LI_WRITE_TIMEOUT_MS = 5000;
+  const LI_PENDING_WARN = 550;
+  const LI_READ_FIX = "Your LinkedIn rows could not be read. Press Refresh.";
+  const LI_NO_DB = "Editing needs the claude.ai viewer";
+  const LI_TOO_MANY = "Too many LinkedIn rows to edit safely here. Tell Claude.";
+  const LI_DENIED = "Saving isn't allowed for this view.";
+  // db.d.ts: a write below the viewer's level rejects invalid_argument; the other two are kept as access codes too.
+  const LI_ACCESS_CODES = new Set(["invalid_argument", "permission_denied", "not_writer"]);
+
+  const LI_STAGES = ["Connect sent", "Accepted", "DM sent", "Follow-up 1", "Follow-up 2", "Follow-up 3", "No reply",
+    "Voice note sent", "Reply", "Positive reply", "Meeting booked", "Closed won", "Closed lost", "Withdrawn"];
+  // The skill's reply types (it wins over the spec summary's list).
+  const LI_REPLY_TYPES = ["positive", "price", "more_info", "what_is_this", "not_now", "not_interested", "referral", "other"];
+  // The skill's tracker fields, in its order (21: the spec summary's 19 plus reply_date and reply_answered_date).
+  const LI_FIELDS = ["name", "first_name", "profile_url", "company", "role", "what_they_do", "industry", "country",
+    "connect_sent_date", "accepted_date", "dm_date", "loom_variant", "last_touch_date", "next_touch_due", "stage",
+    "reply_type", "reply_date", "reply_answered_date", "meeting_booked", "outcome", "slots_offered"];
+  const LI_DATE_FIELDS = ["connect_sent_date", "accepted_date", "dm_date", "last_touch_date", "next_touch_due", "reply_date", "reply_answered_date"];
+  const LI_EVENTS = [
+    { type: "connect_sent", label: "Connect sent", needs: null },
+    { type: "accepted", label: "Accepted", needs: null },
+    { type: "dm_sent", label: "DM sent", needs: "variant" },
+    { type: "fu1_sent", label: "FU1 sent", needs: null },
+    { type: "fu2_sent", label: "FU2 sent", needs: null },
+    { type: "fu3_sent", label: "FU3 sent", needs: null },
+    { type: "no_reply", label: "Mark no reply", needs: null },
+    { type: "voice_note_sent", label: "Voice note sent", needs: null },
+    { type: "reply", label: "Reply…", needs: "replyType" },
+    // The skill's "Answer sent" rows: Lorenzo answered the lead's latest reply. Optional `date` = the date a not_now lead gave.
+    { type: "answer_sent", label: "Answer sent", needs: null },
+    { type: "meeting_booked", label: "Meeting booked…", needs: "datetime" },
+    { type: "closed_won", label: "Closed won", needs: null },
+    { type: "closed_lost", label: "Closed lost", needs: null },
+    { type: "withdrawn", label: "Withdrawn", needs: null }
+  ];
+  // The channel funnel. conv false: that step is not a subset of the step above it in the same cohort (Accepted and
+  // Looms sent count people dated in range whatever month their request went out; calls are dated by the meeting),
+  // so the UI shows no "% of previous step" for it. Replies, Positive and Closed won are subsets of the step above.
+  const LI_FUNNEL = [["requests", "Requests sent", true], ["accepted", "Accepted", false], ["looms", "Looms sent", false],
+    ["replies", "Replies", true], ["positive", "Positive", true], ["booked", "Calls booked", false], ["won", "Closed won", true]];
+  const LI_ACTIVE = new Set(["Connect sent", "Accepted", "DM sent", "Follow-up 1", "Follow-up 2", "Follow-up 3"]);
+  const LI_REPLIED = new Set(["Reply", "Positive reply"]);
+  RULES.li_accept = { dir: "up", green: 0.3, alert: 0.15, target: "≥ 30%" };
+
+  function isYmd(s) {
+    if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+    return addDays(s, 0) === s;
+  }
+
+  /** 0 = Sunday ... 6 = Saturday, for a YYYY-MM-DD calendar day. */
+  function weekdayOf(day) {
+    const [y, m, d] = day.split("-").map(Number);
+    return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  }
+
+  function addBusinessDays(day, n) {
+    let d = day;
+    for (let left = n; left > 0;) {
+      d = addDays(d, 1);
+      const w = weekdayOf(d);
+      if (w !== 0 && w !== 6) left--;
+    }
+    return d;
+  }
+
+  /** Monday of the Monday-to-Sunday week that holds `day`. */
+  function mondayOf(day) {
+    return addDays(day, -((weekdayOf(day) + 6) % 7));
+  }
+
+  /** The Central calendar day of `meeting_booked` (an ISO datetime, a datetime-local value or a plain date), or "". */
+  function meetingDay(v) {
+    const s = str(v).trim();
+    if (!s) return "";
+    if (isYmd(s)) return s;
+    if (/(Z|[+-]\d{2}:?\d{2})$/i.test(s)) {
+      const t = toMs(s);
+      return t == null ? "" : ymd(t);
+    }
+    if (/^\d{4}-\d{2}-\d{2}[T ]/.test(s) && isYmd(s.slice(0, 10))) return s.slice(0, 10);
+    const t = toMs(s);
+    return t == null ? "" : ymd(t);
+  }
+
+  function randomId() {
+    let s = "";
+    try {
+      const c = typeof globalThis !== "undefined" ? globalThis.crypto : null;
+      if (c && typeof c.getRandomValues === "function") {
+        const b = new Uint8Array(9);
+        c.getRandomValues(b);
+        for (const x of b) s += (x % 36).toString(36);
+      }
+    } catch (_) { s = ""; }
+    while (s.length < 12) s += Math.floor(Math.random() * 36).toString(36);
+    return "r_" + s.slice(0, 12);
+  }
+
+  function slugify(s) {
+    let t = str(s);
+    try { t = decodeURIComponent(t); } catch (_) { /* keep raw */ }
+    return t.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/-{2,}/g, "-").replace(/^-+|-+$/g, "").slice(0, 150);
+  }
+
+  /** The /in/<handle> part as an id: lowercase ASCII letters, digits, _ and - stay; other ASCII runs become "-";
+   *  every non-ASCII character keeps its percent-encoded UTF-8 bytes with "~" for "%" (db path segments can't hold
+   *  "%"), so two handles that differ only in non-ASCII characters never share an id. */
+  function handleSlug(h) {
+    let t = str(h);
+    try { t = decodeURIComponent(t); } catch (_) { /* keep raw */ }
+    let out = "";
+    for (const ch of t.toLowerCase()) {
+      if (ch.charCodeAt(0) > 127) {
+        let enc;
+        try { enc = encodeURIComponent(ch); } catch (_) { enc = "%" + ch.codePointAt(0).toString(16); }
+        out += enc.toLowerCase().replace(/%/g, "~");
+      } else out += /[a-z0-9_-]/.test(ch) ? ch : "-";
+    }
+    return out.replace(/-{2,}/g, "-").replace(/^-+|-+$/g, "").slice(0, 150);
+  }
+
+  /** Stable doc id: an existing `id`, else the slug of the profile URL's /in/<handle> (lowercase, no query string or
+   *  trailing slash), else a slug of any other URL ("u_..."), else a random id ("r_..."). */
+  function liRowId(row) {
+    const r = isObj(row) ? row : {};
+    if (typeof r.id === "string" && r.id.trim()) return r.id.trim();
+    const url = str(r.profile_url).trim().split(/[?#]/)[0].replace(/\/+$/, "");
+    if (url) {
+      const m = /\/in\/([^/]+)/i.exec(url);
+      if (m) {
+        const slug = handleSlug(m[1]);
+        if (slug) return slug;
+      }
+      const rest = slugify(url.replace(/^[a-z]+:\/\//i, "").replace(/^www\./i, ""));
+      if (rest) return "u_" + rest;
+    }
+    return randomId();
+  }
+
+  /** A stored or edited row with every field present as a string, plus updatedAt (ms|null) and id. Lenient: never throws. */
+  function liNormRow(row, id) {
+    const r = isObj(row) ? row : {};
+    const out = {};
+    for (const f of LI_FIELDS) out[f] = str(r[f]).trim();
+    const v = out.loom_variant.toUpperCase();
+    out.loom_variant = v === "A" || v === "B" ? v : "";
+    out.updatedAt = typeof r.updatedAt === "number" && Number.isFinite(r.updatedAt) ? r.updatedAt : null;
+    out.id = id != null && str(id) ? str(id) : liRowId(r);
+    return out;
+  }
+
+  /** What goes into the db doc: the skill's fields and updatedAt, nothing else. */
+  function liBody(row, nowMs) {
+    const n = liNormRow(row, "x");
+    const body = {};
+    for (const f of LI_FIELDS) body[f] = n[f];
+    body.updatedAt = nowMs;
+    return body;
+  }
+
+  const liSameFields = (a, b) => LI_FIELDS.every(f => str(a[f]).trim() === str(b[f]).trim());
+
+  /**
+   * Apply one event from the skill's table. Pure: returns a new row, never touches the input.
+   * event = { type, variant?, replyType?, datetime?, date?, now? }; `now` (ms) stamps updatedAt (default Date.now()).
+   */
+  function liApplyEvent(row, event, todayYmd) {
+    const ev = isObj(event) ? event : {};
+    if (!isYmd(todayYmd)) throw new TypeError(`todayYmd must be YYYY-MM-DD, got "${str(todayYmd)}"`);
+    const t = todayYmd;
+    const r = liNormRow(row, isObj(row) && row.id ? row.id : undefined);
+    switch (ev.type) {
+      case "connect_sent":
+        r.stage = "Connect sent"; r.connect_sent_date = t; r.next_touch_due = addDays(t, 21); break;
+      case "withdrawn":
+        r.stage = "Withdrawn"; r.next_touch_due = ""; break;
+      case "accepted":
+        // The skill: "next block, or blank until Looms start". The page can't know the block, so blank.
+        r.stage = "Accepted"; r.accepted_date = t; r.next_touch_due = ""; break;
+      case "dm_sent": {
+        const v = str(ev.variant).trim().toUpperCase();
+        if (v !== "A" && v !== "B") throw new Error("DM sent needs the Loom variant, A or B.");
+        r.stage = "DM sent"; r.dm_date = t; r.last_touch_date = t; r.loom_variant = v; r.next_touch_due = addDays(t, 2); break;
+      }
+      case "fu1_sent":
+        r.stage = "Follow-up 1"; r.last_touch_date = t; r.next_touch_due = addDays(t, 4); break;
+      case "fu2_sent":
+        r.stage = "Follow-up 2"; r.last_touch_date = t; r.next_touch_due = addDays(t, 7); break;
+      case "fu3_sent":
+        r.stage = "Follow-up 3"; r.last_touch_date = t; r.next_touch_due = addDays(t, 7); break;
+      case "no_reply":
+        // The voice note date counts 60 days from FU3 (last_touch_date), not from the No reply check.
+        r.stage = "No reply"; r.next_touch_due = addDays(isYmd(r.last_touch_date) ? r.last_touch_date : t, 60); break;
+      case "voice_note_sent":
+        r.stage = "Voice note sent"; r.last_touch_date = t; r.next_touch_due = ""; break;
+      case "reply": {
+        const type = str(ev.replyType).trim().toLowerCase();
+        if (!LI_REPLY_TYPES.includes(type)) throw new Error(`Reply needs a reply type (${LI_REPLY_TYPES.join(", ")}).`);
+        r.stage = type === "positive" ? "Positive reply" : "Reply";
+        r.reply_type = type; r.reply_date = t;
+        r.reply_answered_date = ""; // a new reply is unanswered until Lorenzo answers it
+        r.next_touch_due = ""; break;
+      }
+      case "answer_sent": {
+        if (!r.reply_type) throw new Error("Answer sent needs a reply to answer: log the reply first.");
+        r.reply_answered_date = t; r.last_touch_date = t;
+        if (r.reply_type === "positive") {
+          r.stage = "Positive reply"; r.next_touch_due = addBusinessDays(t, 2); // quiet check
+        } else {
+          r.stage = "Reply";
+          r.next_touch_due = r.reply_type === "not_now" && isYmd(str(ev.date).trim()) ? str(ev.date).trim() : "";
+        }
+        break;
+      }
+      case "meeting_booked": {
+        const dt = str(ev.datetime).trim();
+        if (!dt) throw new Error("Meeting booked needs the call date and time.");
+        r.stage = "Meeting booked"; r.meeting_booked = dt; r.next_touch_due = ""; break;
+      }
+      case "closed_won":
+        r.stage = "Closed won"; r.outcome = "Closed won"; r.next_touch_due = ""; break;
+      case "closed_lost":
+        r.stage = "Closed lost"; r.outcome = "Closed lost"; r.next_touch_due = ""; break;
+      default:
+        throw new Error(`Unknown LinkedIn event "${str(ev.type)}".`);
+    }
+    // not_interested: next_touch_due stays blank and is never set again (until a new reply changes the type).
+    if (r.reply_type === "not_interested") r.next_touch_due = "";
+    r.updatedAt = typeof ev.now === "number" && Number.isFinite(ev.now) ? ev.now : Date.now();
+    return r;
+  }
+
+  /** Merge by doc id: non-empty incoming fields overwrite, empty ones never blank existing data. Fields parsePaste
+   *  filled in by default (listed in `incoming._defaulted`) never overwrite a row that already has a stage. */
+  function liMerge(existing, incoming) {
+    const ex = isObj(existing) ? existing : null;
+    const inc = isObj(incoming) ? incoming : {};
+    const out = liNormRow(ex || {}, ex && ex.id ? ex.id : (inc.id ? inc.id : undefined));
+    const defaulted = new Set(arr(inc._defaulted));
+    const keepDefaults = !!ex && str(ex.stage).trim() !== "";
+    for (const f of LI_FIELDS) {
+      const v = str(inc[f]).trim();
+      if (!v) continue;
+      if (defaulted.has(f) && keepDefaults) continue;
+      out[f] = f === "loom_variant" ? (v.toUpperCase() === "A" || v.toUpperCase() === "B" ? v.toUpperCase() : out[f]) : v;
+    }
+    const times = [ex && ex.updatedAt, inc.updatedAt].filter(x => typeof x === "number" && Number.isFinite(x));
+    out.updatedAt = times.length ? Math.max(...times) : null;
+    return out;
+  }
+
+  // ---- paste parsing
+
+  /** Split delimited text into records, honoring double-quoted fields (delimiters, newlines and "" inside quotes). */
+  function splitDelimited(text, delim) {
+    const records = [];
+    let cells = [], cell = "", inQ = false, fieldStart = true, line = 1, recLine = 1;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQ) {
+        if (c === '"') {
+          if (text[i + 1] === '"') { cell += '"'; i++; } else inQ = false;
+        } else {
+          if (c === "\n") line++;
+          cell += c;
+        }
+        continue;
+      }
+      if (c === '"' && fieldStart) { inQ = true; fieldStart = false; continue; }
+      if (c === delim) { cells.push(cell); cell = ""; fieldStart = true; continue; }
+      if (c === "\n") {
+        cells.push(cell); records.push({ line: recLine, cells });
+        cells = []; cell = ""; fieldStart = true; line++; recLine = line;
+        continue;
+      }
+      cell += c; fieldStart = false;
+    }
+    if (cell !== "" || cells.length) { cells.push(cell); records.push({ line: recLine, cells }); }
+    return records;
+  }
+
+  const normHeader = h => str(h).replace(/^﻿/, "").toLowerCase().replace(/[_\-.]+/g, " ").replace(/\s+/g, " ").trim();
+  const LI_HEADER = (() => {
+    const m = {};
+    for (const f of LI_FIELDS) m[normHeader(f)] = f;
+    Object.assign(m, {
+      "full name": "name", "last name": "_last", "linkedin url": "profile_url", "profile url": "profile_url", "url": "profile_url",
+      "company name": "company", "title": "role", "job title": "role", "location": "country"
+    });
+    return m;
+  })();
+
+  const squash = s => str(s).toLowerCase().replace(/[\s\-_]+/g, "");
+  const LI_STAGE_BY_KEY = new Map(LI_STAGES.map(s => [squash(s), s]));
+
+  /** A pasted date to YYYY-MM-DD: YYYY-MM-DD, YYYY/MM/DD, M/D/YYYY, or an ISO datetime (its Central day). null if invalid. */
+  function pasteDate(v) {
+    const s = str(v).trim();
+    let m;
+    const mk = (y, mo, d) => { const out = `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`; return isYmd(out) ? out : null; };
+    if ((m = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/.exec(s))) return mk(m[1], +m[2], +m[3]);
+    if ((m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s))) return mk(m[3], +m[1], +m[2]);
+    if (/^\d{4}-\d{2}-\d{2}T/.test(s)) { const d = meetingDay(s); return d || null; }
+    return null;
+  }
+
+  /**
+   * Parse rows pasted from a sheet: TSV or CSV with a header row. Returns { rows, errors: [{ line, message }] }.
+   * Each row carries `id` (rowId) and `_defaulted` (the fields filled in here, not pasted). Pure apart from the
+   * random id of a row with no URL.
+   */
+  function liParsePaste(text, todayYmd) {
+    const rows = [], errors = [];
+    if (!isYmd(todayYmd)) throw new TypeError(`todayYmd must be YYYY-MM-DD, got "${str(todayYmd)}"`);
+    const src = str(text).replace(/\r\n?/g, "\n");
+    const firstLine = src.split("\n").find(l => l.trim() !== "") || "";
+    const delim = firstLine.includes("\t") ? "\t" : ",";
+    const records = splitDelimited(src, delim).filter(r => r.cells.some(c => c.trim() !== ""));
+    if (!records.length) return { rows, errors };
+
+    const head = records[0];
+    const cols = head.cells.map(h => LI_HEADER[normHeader(h)] || null);
+    if (!cols.some(c => c === "name" || c === "first_name" || c === "_last" || c === "profile_url")) {
+      errors.push({ line: head.line, message: "The first line must be a header row with a name or profile URL column." });
+      return { rows, errors };
+    }
+
+    const byId = new Map();
+    for (const rec of records.slice(1)) {
+      const raw = {};
+      cols.forEach((f, i) => {
+        if (!f) return;
+        const v = str(rec.cells[i]).trim();
+        if (v && !raw[f]) raw[f] = v;
+      });
+      const row = {};
+      for (const f of LI_FIELDS) row[f] = raw[f] || "";
+      if (!row.name && (raw.first_name || raw._last)) row.name = [raw.first_name, raw._last].filter(Boolean).join(" ");
+
+      let url = row.profile_url;
+      if (url && /^(www\.)?linkedin\.com\//i.test(url)) url = "https://" + url;
+      if (/^http:\/\/(www\.)?linkedin\.com\//i.test(url)) url = "https://" + url.slice(7);
+      row.profile_url = url;
+
+      const fail = message => errors.push({ line: rec.line, message });
+      if (!row.name && !row.profile_url) { fail("No name or profile URL."); continue; }
+
+      let bad = false;
+      for (const f of LI_DATE_FIELDS) {
+        if (!row[f]) continue;
+        const d = pasteDate(row[f]);
+        if (!d) { fail(`"${row[f]}" in ${f} is not a date (use YYYY-MM-DD).`); bad = true; break; }
+        row[f] = d;
+      }
+      if (bad) continue;
+      if (row.stage) {
+        const s = LI_STAGE_BY_KEY.get(squash(row.stage));
+        if (!s) { fail(`Unknown stage "${row.stage}".`); continue; }
+        row.stage = s;
+      }
+      if (row.reply_type) {
+        const t = str(row.reply_type).toLowerCase().replace(/[\s-]+/g, "_");
+        if (!LI_REPLY_TYPES.includes(t)) { fail(`Unknown reply type "${row.reply_type}".`); continue; }
+        row.reply_type = t;
+      }
+      if (row.loom_variant) {
+        const v = row.loom_variant.replace(/^variant\s*/i, "").toUpperCase();
+        if (v !== "A" && v !== "B") { fail(`Loom variant must be A or B, not "${row.loom_variant}".`); continue; }
+        row.loom_variant = v;
+      }
+      if (row.outcome) {
+        const o = row.outcome.toLowerCase().replace(/^closed\s*/, "");
+        if (o !== "won" && o !== "lost") { fail(`Outcome must be Closed won or Closed lost, not "${row.outcome}".`); continue; }
+        row.outcome = o === "won" ? "Closed won" : "Closed lost";
+      }
+
+      row.id = liRowId(row);
+      const prior = byId.get(row.id);
+      if (prior) {
+        // The same person twice in one paste: merged here first, before any defaults, so the later line's real
+        // values fill and override the earlier line's and a default never stands in for a pasted value.
+        for (const f of LI_FIELDS) if (row[f]) prior[f] = row[f];
+      } else {
+        rows.push(row);
+        byId.set(row.id, row);
+      }
+    }
+    // Defaults, once per person: no stage means Connect sent, sent today when blank, withdraw check by the
+    // Connect sent rule. `_defaulted` lists them, so a merge never lets them overwrite a saved row's data.
+    for (const row of rows) {
+      const defaulted = [];
+      if (!row.stage) { row.stage = "Connect sent"; defaulted.push("stage"); }
+      if (row.stage === "Connect sent") {
+        if (!row.connect_sent_date) { row.connect_sent_date = todayYmd; defaulted.push("connect_sent_date"); }
+        if (!row.next_touch_due) { row.next_touch_due = addDays(row.connect_sent_date, 21); defaulted.push("next_touch_due"); }
+      }
+      row._defaulted = defaulted;
+    }
+    return { rows, errors };
+  }
+
+  // ---- writes (only on an explicit viewer action; never on load)
+
+  function liReject(code, message) {
+    return Object.assign(new Error(message), { code });
+  }
+
+  /** Run a db call, rejecting after `ms` with code "timeout" (the message names `totalMs`, default `ms`). */
+  function writeWithTimeout(fn, ms, totalMs) {
+    return new Promise((resolve, reject) => {
+      let done = false;
+      const timer = setTimeout(() => {
+        if (!done) { done = true; reject(liReject("timeout", `The save took longer than ${Math.round((totalMs || ms) / 1000)} s.`)); }
+      }, ms);
+      Promise.resolve().then(fn).then(
+        v => { if (!done) { done = true; clearTimeout(timer); resolve(v); } },
+        e => { if (!done) { done = true; clearTimeout(timer); reject(e); } });
+    });
+  }
+
+  const liTimeout = opts => (isObj(opts) && typeof opts.timeoutMs === "number" && opts.timeoutMs >= 0 ? opts.timeoutMs : LI_WRITE_TIMEOUT_MS);
+  const liNow = opts => (isObj(opts) && typeof opts.now === "number" ? opts.now : Date.now());
+
+  // The rows this page read (or wrote since): a `set` may replace only these. Any other id is read first.
+  function liLoadedRows(opts) {
+    if (isObj(opts) && Array.isArray(opts.existing)) return opts.existing;
+    return _last && isObj(_last.raw.linkedin) && isObj(_last.raw.linkedin.data) ? arr(_last.raw.linkedin.data.rows) : [];
+  }
+
+  // After a write rejects with an access code while the platform said nothing about this viewer's write level
+  // (user.can("data.write") resolved null), the tracker is read-only for the rest of the visit (db.d.ts).
+  function liNoteFailure(e) {
+    const code = str(e && e.code);
+    const d = _last && isObj(_last.raw.linkedin) && isObj(_last.raw.linkedin.data) ? _last.raw.linkedin.data : null;
+    if (LI_ACCESS_CODES.has(code) && d && d.canWrite === null) _liDenied = true;
+  }
+
+  /**
+   * Write one row to linkedinRows/<rowId>. Resolves with the saved row (id, updatedAt); rejects on failure or after
+   * 5 s. A doc this page never read is never replaced: its id is read first, and when it exists the row is merged
+   * into it (or, with opts.ifExists "refuse", the save rejects with code "exists").
+   */
+  async function liSave(db, row, opts) {
+    if (!db) throw liReject("unavailable", LI_NO_DB + ".");
+    const id = liRowId(row);
+    const total = liTimeout(opts);
+    const deadline = Date.now() + total;
+    const loadedIds = isObj(opts) && opts._loadedIds instanceof Set ? opts._loadedIds
+      : new Set(liLoadedRows(opts).filter(isObj).map(r => liRowId(r)));
+    const loaded = loadedIds.has(id);
+    let body;
+    try {
+      const ref = db.collection(LI_COLLECTION).doc(id);
+      let toWrite = row;
+      if (!loaded) {
+        const snap = await writeWithTimeout(() => ref.get(), total);
+        const stored = snap && snap.exists !== false && typeof snap.data === "function" ? snap.data() : null;
+        if (isObj(stored)) {
+          if (isObj(opts) && opts.ifExists === "refuse") throw liReject("exists", "Another row already has this profile URL.");
+          toWrite = Object.assign(liMerge(liNormRow(stored, id), row), { id });
+        }
+      }
+      body = liBody(toWrite, liNow(opts));
+      const left = deadline - Date.now();
+      if (left <= 0) throw liReject("timeout", `The save took longer than ${Math.round(total / 1000)} s.`);
+      await writeWithTimeout(() => ref.set(body), left, total);
+    } catch (e) {
+      liNoteFailure(e);
+      throw e;
+    }
+    return Object.assign({}, body, { id });
+  }
+
+  const liStamp = r => (isObj(r) && typeof r.updatedAt === "number" && Number.isFinite(r.updatedAt) ? r.updatedAt : null);
+  // r carries a newer updatedAt than the basis row b (a basis row without one is older than any stamp)
+  const liNewer = (r, b) => { const t = liStamp(r); if (t === null) return false; const bt = liStamp(b); return bt === null || t > bt; };
+
+  // The rows the page holds right now (the last load, plus every rebuild({linkedinRows}) since), or null before a read.
+  let _liCurKey = null, _liCurMap = null;
+  function liCurrentRows() {
+    const d = _last && isObj(_last.raw.linkedin) && isObj(_last.raw.linkedin.data) ? _last.raw.linkedin.data : null;
+    if (!d || !Array.isArray(d.rows)) return null;
+    if (_liCurKey !== d.rows) { _liCurKey = d.rows; _liCurMap = new Map(d.rows.filter(isObj).map(r => [liRowId(r), r])); }
+    return _liCurMap;
+  }
+
+  /**
+   * True when row `id` changed after the basis the import was prepared from: the page now holds a newer version of
+   * it (or holds it although the basis did not, or no longer holds a basis row), or the stored doc is newer than the
+   * basis row or is gone. A row the basis did not have is not read here: liSave reads it and merges into it.
+   */
+  async function liChangedSince(db, id, base, opts) {
+    const cur = liCurrentRows();
+    const was = base.get(id);
+    if (cur) {
+      const now = cur.get(id);
+      if (was && !now) return true;
+      if (now && (!was || liNewer(now, was))) return true;
+    }
+    if (!was) return false;
+    const snap = await writeWithTimeout(() => db.collection(LI_COLLECTION).doc(id).get(), liTimeout(opts));
+    const stored = snap && snap.exists !== false && typeof snap.data === "function" ? snap.data() : null;
+    return !isObj(stored) || liNewer(stored, was);
+  }
+
+  /**
+   * Write rows one at a time, only those that differ from the last loaded rows (or `opts.existing`, the rows the
+   * import was prepared from), and stop at the first failure. A row changed since that basis (liChangedSince) is
+   * never overwritten: it is skipped and listed in `conflicts`. Never rejects. Resolves
+   * { written, failed, skipped, conflicts: [id], saved: [row], error: null|{ id, code, message } }: `skipped` counts
+   * the unchanged rows and the conflicts; `failed` counts the changed rows not written (the one that failed and
+   * every one after it).
+   */
+  async function liSaveMany(db, rows, opts) {
+    const list = arr(rows).filter(isObj);
+    const baseRows = liLoadedRows(opts);
+    const base = new Map(baseRows.filter(isObj).map(r => [liRowId(r), r]));
+    const changed = [];
+    let skipped = 0;
+    for (const r of list) {
+      const id = liRowId(r);
+      const have = base.get(id);
+      if (have && liSameFields(have, r)) { skipped++; continue; }
+      changed.push(Object.assign({}, r, { id }));
+    }
+    const out = { written: 0, failed: 0, skipped, conflicts: [], saved: [], error: null };
+    const one = Object.assign({}, isObj(opts) ? opts : {}, { _loadedIds: new Set(base.keys()) });
+    for (let i = 0; i < changed.length; i++) {
+      try {
+        if (await liChangedSince(db, changed[i].id, base, opts)) {
+          out.skipped++;
+          out.conflicts.push(changed[i].id);
+          continue;
+        }
+        out.saved.push(await liSave(db, changed[i], one));
+        out.written++;
+      } catch (e) {
+        out.failed = changed.length - i;
+        out.error = { id: changed[i].id, code: str(e && e.code) || "error", message: str(e && e.message != null ? e.message : e) };
+        break;
+      }
+    }
+    return out;
+  }
+
+  /** Delete linkedinRows/<id>. Rejects on failure or after 5 s. */
+  async function liRemove(db, id, opts) {
+    if (!db) throw liReject("unavailable", LI_NO_DB + ".");
+    const docId = str(id).trim();
+    if (!docId) throw liReject("invalid_argument", "No row id to delete.");
+    try {
+      await writeWithTimeout(() => db.collection(LI_COLLECTION).doc(docId).delete(), liTimeout(opts));
+    } catch (e) {
+      liNoteFailure(e);
+      throw e;
+    }
+  }
+
+  // ---- read (once per load, in parallel with the connectors)
+
+  function liUnavailable() {
+    return { state: "unavailable", data: null, error: null, storedAt: null, warnings: [LI_NO_DB], refreshing: false };
+  }
+
+  function liReadError(code, message) {
+    return { state: "error", data: null, error: { code, server: LI_SERVER, message: clipExact(str(message), 300), fix: LI_READ_FIX },
+      storedAt: null, warnings: [], refreshing: false };
+  }
+
+  /** user.can("data.write"): true, false, or null when the platform says nothing (no user, null, or a throw). */
+  async function liWriteLevel(user) {
+    try {
+      const v = user && typeof user.can === "function" ? await user.can("data.write") : null;
+      return v === true ? true : v === false ? false : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /**
+   * Read every doc in linkedinRows, a page of 1000 at a time: ordered by updatedAt, each later page starting at the
+   * last page's final updatedAt (>=), deduped by id. Each page races the db timeout. Stops at a short page; at 20
+   * pages, at a full page that adds nothing new, or at a full page ending in a doc without a numeric updatedAt the
+   * read is `truncated` (more docs may exist). A store without orderBy gets one page. Rejects on a failed page.
+   */
+  async function liReadAll(db, timeoutMs) {
+    const col = db.collection(LI_COLLECTION);
+    const byId = new Map();
+    const take = docs => {
+      let added = 0;
+      for (const doc of docs) {
+        if (!doc || doc.exists === false) continue;
+        const id = str(doc.id);
+        if (!id || byId.has(id)) continue;
+        const body = typeof doc.data === "function" ? doc.data() : null;
+        if (isObj(body)) { byId.set(id, liNormRow(body, id)); added++; }
+      }
+      return added;
+    };
+    const page = async q => {
+      const r = await withTimeout(Promise.resolve().then(() => q.get()).then(snap => ({ snap }), err => ({ err })), timeoutMs, TIMED_OUT);
+      if (r === TIMED_OUT) throw liReject("timeout", `The LinkedIn rows read took longer than ${Math.round(timeoutMs / 1000)} s.`);
+      if ("err" in r) throw r.err;
+      return arr(r.snap && r.snap.docs);
+    };
+    if (typeof col.orderBy !== "function") {
+      const docs = await page(col.limit(LI_PAGE));
+      take(docs);
+      return { rows: [...byId.values()], truncated: docs.length >= LI_PAGE };
+    }
+    let cursor = null;
+    for (let n = 0; n < LI_MAX_PAGES; n++) {
+      let q = col.orderBy("updatedAt");
+      if (cursor !== null) q = q.where("updatedAt", ">=", cursor);
+      const docs = await page(q.limit(LI_PAGE));
+      const added = take(docs);
+      if (docs.length < LI_PAGE) return { rows: [...byId.values()], truncated: false };
+      const lastDoc = docs[docs.length - 1];
+      const lastBody = lastDoc && typeof lastDoc.data === "function" ? lastDoc.data() : null;
+      const next = isObj(lastBody) ? lastBody.updatedAt : undefined;
+      if (added === 0 || typeof next !== "number" || !Number.isFinite(next)) break;
+      cursor = next;
+    }
+    return { rows: [...byId.values()], truncated: true };
+  }
+
+  /** Read the whole collection (paged) and the viewer's write level, each raced against the db timeout. Never rejects. */
+  function readLinkedin(db, user, timeoutMs) {
+    if (!db) return Promise.resolve(liUnavailable());
+    const read = Promise.resolve().then(() => liReadAll(db, timeoutMs)).then(res => ({ res }), err => ({ err }));
+    const can = withTimeout(liWriteLevel(user), timeoutMs, false);
+    return Promise.all([read, can]).then(([r, level]) => {
+      if (r.err) {
+        const code = r.err && typeof r.err.code === "string" ? r.err.code : "unavailable";
+        if (UNAVAILABLE_CODES.has(code)) return liUnavailable();
+        return liReadError(code, r.err && r.err.message != null ? r.err.message : r.err);
+      }
+      const { rows, truncated } = r.res;
+      const warnings = truncated ? [`Only the first ${fmtInt(rows.length)} LinkedIn rows loaded.`] : [];
+      const data = { rows, editable: level !== false && !truncated, canWrite: level, truncated, lockReason: truncated ? LI_TOO_MANY : null };
+      return { state: "ok", data, error: null, storedAt: Date.now(), warnings, refreshing: false };
+    });
+  }
+
+  // ---- derive
+
+  const liTitle = r => [r.name || r.first_name || r.profile_url || "LinkedIn lead", r.company].filter(Boolean).join(" · ");
+  const liAnswered = r => r.reply_answered_date !== "" && (r.reply_date === "" || r.reply_answered_date >= r.reply_date);
+  const liAccepted = r => r.accepted_date !== "" || (r.stage !== "" && r.stage !== "Connect sent" && r.stage !== "Withdrawn");
+  const liIsClosed = (r, outcome) => r.outcome === outcome || r.stage === outcome;
+
+  function liDueDetail(r) {
+    switch (r.stage) {
+      case "Connect sent": return "Pending 21 days. Withdraw the request.";
+      case "Accepted": return "Loom DM due";
+      case "DM sent": return "FU1 due";
+      case "Follow-up 1": return "FU2 due";
+      case "Follow-up 2": return "FU3 due";
+      case "Follow-up 3": return "No reply 7 days after FU3. Mark No reply.";
+      case "No reply": return "Voice note window open";
+      case "Positive reply": return "No answer 2 business days after the two times. Decide the next step.";
+      case "Reply": return "The date they gave to check back. Decide the next step.";
+      default: return "Touch due";
+    }
+  }
+
+  function liSortRows(rows) {
+    return rows.slice().sort((a, b) => {
+      const x = a.next_touch_due, y = b.next_touch_due;
+      if (x !== y) { if (!x) return 1; if (!y) return -1; return x < y ? -1 : 1; }
+      return liTitle(a).localeCompare(liTitle(b)) || a.id.localeCompare(b.id);
+    });
+  }
+
+  function deriveLinkedin(d, R, nowMs) {
+    const rows = liSortRows(arr(d && d.rows).filter(isObj).map(r => liNormRow(r, r.id)));
+    const today = R.end;
+    const aged = addDays(today, -14); // the acceptance rule counts only requests sent 14 or more days ago
+
+    const cohort = (inWin) => {
+      const looms = rows.filter(r => inWin(r.dm_date));
+      const byV = v => looms.filter(r => r.loom_variant === v);
+      const replied = list => list.filter(r => r.reply_type !== "").length;
+      const positive = list => list.filter(r => r.reply_type === "positive").length;
+      const booked = rows.filter(r => inWin(meetingDay(r.meeting_booked)));
+      const sentAged = rows.filter(r => inWin(r.connect_sent_date) && r.connect_sent_date <= aged);
+      return {
+        requests: rows.filter(r => inWin(r.connect_sent_date)).length,
+        accepted: rows.filter(r => inWin(r.accepted_date)).length,
+        looms: looms.length, replies: replied(looms), positive: positive(looms),
+        booked: booked.length, won: booked.filter(r => liIsClosed(r, "Closed won")).length,
+        loomsA: byV("A").length, loomsB: byV("B").length,
+        repliesA: replied(byV("A")), repliesB: replied(byV("B")),
+        positiveA: positive(byV("A")), positiveB: positive(byV("B")),
+        agedSent: sentAged.length, agedAccepted: sentAged.filter(liAccepted).length
+      };
+    };
+    const win = (a, b) => day => !!day && day >= a && day <= b;
+    const c = cohort(win(R.start, R.end));
+    const p = cohort(win(R.prevStart, R.prevEnd));
+
+    const funnel = LI_FUNNEL.map(([key, label, conv]) => ({ key, label, value: c[key], prev: p[key], conv }));
+    const rates = [
+      makeRate("acceptance", "Acceptance", c.agedAccepted, c.agedSent, p.agedAccepted, p.agedSent, RULES.li_accept),
+      makeRate("reply_rate_a", "Reply rate, variant A", c.repliesA, c.loomsA, p.repliesA, p.loomsA, null),
+      makeRate("reply_rate_b", "Reply rate, variant B", c.repliesB, c.loomsB, p.repliesB, p.loomsB, null),
+      makeRate("positive_rate", "Positive rate", c.positive, c.looms, p.positive, p.looms, null)
+    ];
+
+    const pending = rows.filter(r => r.stage === "Connect sent").length;
+    const nearLimit = pending >= LI_PENDING_WARN;
+    const extras = [
+      { label: "Pending requests", value: nearLimit ? `${fmtInt(pending)} (near the 600 limit)` : fmtInt(pending) },
+      { label: "Looms sent, variant A", value: fmtInt(c.loomsA) },
+      { label: "Looms sent, variant B", value: fmtInt(c.loomsB) }
+    ];
+
+    // weekly numbers: this week, Monday to Sunday in Central
+    const weekStart = mondayOf(today), weekEnd = addDays(weekStart, 6);
+    const inWeek = win(weekStart, weekEnd);
+    const w = cohort(inWeek);
+    const allAged = rows.filter(r => r.connect_sent_date !== "" && r.connect_sent_date <= aged);
+    const closedIn = outcome => rows.filter(r => liIsClosed(r, outcome) &&
+      inWeek(r.updatedAt != null ? ymd(r.updatedAt) : meetingDay(r.meeting_booked))).length;
+    const info = (key, label, n, dd) => makeRate(key, label, n, dd, null, null, null);
+    const weekly = {
+      weekStart, weekEnd,
+      requestsSent: w.requests,
+      pending, nearLimit,
+      acceptance: makeRate("acceptance", "Acceptance", allAged.filter(liAccepted).length, allAged.length, null, null, RULES.li_accept),
+      looms: { A: w.loomsA, B: w.loomsB },
+      replyRate: { A: info("reply_rate_a", "Reply rate, variant A", w.repliesA, w.loomsA), B: info("reply_rate_b", "Reply rate, variant B", w.repliesB, w.loomsB) },
+      positiveRate: { A: info("positive_rate_a", "Positive rate, variant A", w.positiveA, w.loomsA), B: info("positive_rate_b", "Positive rate, variant B", w.positiveB, w.loomsB) },
+      callsBooked: w.booked,
+      closedWon: closedIn("Closed won"),
+      closedLost: closedIn("Closed lost")
+    };
+
+    // follow-ups
+    const replyNow = [], due = [], upcoming = [], noReplyDue = [];
+    const weekAhead = addDays(today, 7);
+    for (const r of rows) {
+      const url = safeUrl(r.profile_url);
+      const title = liTitle(r);
+      if (LI_REPLIED.has(r.stage) && !liAnswered(r)) {
+        const t = r.reply_type ? r.reply_type.replace(/_/g, " ") : "";
+        const since = isYmd(r.reply_date) ? startOfDayMs(r.reply_date) : r.updatedAt;
+        replyNow.push({ id: `linkedin_reply:${r.id}`, group: "reply_now", kind: "linkedin_reply", title,
+          detail: t ? `Replied (${t}). Answer on LinkedIn.` : "Replied. Answer on LinkedIn.", source: "linkedin",
+          ageMs: since == null ? null : Math.max(0, nowMs - since), dueAt: null, overdue: false, url });
+        continue;
+      }
+      const day = r.next_touch_due;
+      if (!isYmd(day)) continue;
+      const base = { title, detail: liDueDetail(r), source: "linkedin", ageMs: null, dueAt: startOfDayMs(day), url };
+      if (day <= today) {
+        due.push(Object.assign({ id: `linkedin_touch:${r.id}`, group: "due", kind: "linkedin_touch", overdue: day < today }, base));
+        if (r.stage === "Follow-up 3") noReplyDue.push(r.id);
+      } else if (day <= weekAhead) {
+        upcoming.push(Object.assign({ id: `linkedin_touch:${r.id}`, group: "upcoming", kind: "linkedin_touch", overdue: false }, base));
+      }
+    }
+
+    return { rows, editable: d && d.editable === true, lockReason: d && typeof d.lockReason === "string" && d.lockReason ? d.lockReason : null,
+      pending, nearLimit, weekly, noReplyDue, funnel, rates, extras, callsBooked: c.booked, replyNow, due, upcoming };
   }
 
   // ------------------------------------------------------------------ model
@@ -1373,10 +2149,11 @@
     const U = derive("upwork", d => deriveUpwork(d, R, nowMs));
     const G = derive("ghl", d => deriveGhl(d, R, nowMs));
     const C = derive("calendar", d => deriveCalendar(d, R, nowMs, G, I));
-    const followups = deriveFollowups(I, U, G, C, nowMs, R);
+    const L = derive("linkedin", d => deriveLinkedin(d, R, nowMs));
+    const followups = deriveFollowups(I, U, G, C, nowMs, R, L);
 
     const sources = {};
-    for (const k of SOURCE_KEYS) {
+    for (const k of SOURCE_KEYS.concat(["linkedin"])) {
       const s = src(k);
       let state = ["loading", "ok", "error", "unavailable"].includes(s.state) ? s.state : "loading";
       let error = state === "error" && isObj(s.error)
@@ -1444,17 +2221,31 @@
       extras: U ? U.extras : []
     };
 
-    // channel 3: LinkedIn (not connected yet)
+    // channel 3: LinkedIn, computed from the tracker rows in the page's db
     const liUsd = monthlySpend(costs.linkedin, R.days);
-    const liCalls = C ? C.bySource.linkedin : null;
+    const liHasRows = !!L && L.rows.length > 0;
+    let liStatus, liText;
+    if (liHasRows) {
+      liStatus = "live";
+      liText = `${plural(L.rows.length, "person", "people")} in the tracker · ${fmtInt(L.pending)} pending`;
+    } else if (sources.linkedin.state === "loading") {
+      liStatus = "loading"; liText = "Loading LinkedIn rows…";
+    } else if (sources.linkedin.state === "error") {
+      liStatus = "error"; liText = sources.linkedin.error ? sources.linkedin.error.fix : LI_READ_FIX;
+    } else if (sources.linkedin.state === "unavailable") {
+      liStatus = "not_connected"; liText = "LinkedIn rows load when this page is open in claude.ai.";
+    } else {
+      liStatus = "not_connected"; liText = "No LinkedIn rows yet. Add or paste them in the LinkedIn tracker below.";
+    }
+    const liCalls = liHasRows ? L.callsBooked : (L ? 0 : null);
     const linkedin = {
-      key: "linkedin", name: "LinkedIn", status: "not_connected",
-      statusText: "Picked as channel 3 on Oct 6. These rows fill in once outreach starts and its data source is connected.",
-      funnel: [["requests", "Connection requests"], ["accepted", "Accepted"], ["replies", "Replies"], ["positive", "Positive replies"], ["booked", "Calls booked"]]
-        .map(([key, label]) => ({ key, label, value: null, prev: null })),
-      rates: [], series: null,
+      key: "linkedin", name: "LinkedIn", status: liStatus, statusText: liText,
+      funnel: liHasRows ? L.funnel : LI_FUNNEL.map(([key, label, conv]) => ({ key, label, value: null, prev: null, conv })),
+      rates: liHasRows ? L.rates : [emptyRate("acceptance", "Acceptance", RULES.li_accept), emptyRate("reply_rate_a", "Reply rate, variant A", null),
+        emptyRate("reply_rate_b", "Reply rate, variant B", null), emptyRate("positive_rate", "Positive rate", null)],
+      series: null,
       spend: { usd: liUsd, note: liUsd == null ? "No monthly cost entered. Add it under Costs." : `${fmtUsd(costs.linkedin, true)}/mo scaled to ${R.days} days` },
-      callsBooked: liCalls, costPerCall: costPerCall(liUsd, liCalls), extras: []
+      callsBooked: liCalls, costPerCall: costPerCall(liUsd, liCalls), extras: liHasRows ? L.extras : []
     };
 
     // pipeline
@@ -1472,7 +2263,11 @@
     if (U && upworkBilled == null && !sources.upwork.warnings.some(w => /billing summary/.test(w))) {
       sources.upwork.warnings.push("Upwork billing summary didn't load, so Revenue in range leaves Upwork billed out.");
     }
-    const alerts = buildAlerts(I, U, G, followups);
+    const alerts = buildAlerts(I, U, G, followups, L);
+    const liModel = L ? { rows: L.rows, editable: L.editable === true && sources.linkedin.state === "ok" && !_liDenied, pending: L.pending,
+      noReplyDue: L.noReplyDue, weekly: L.weekly, lockReason: _liDenied ? LI_DENIED : L.lockReason }
+      : Object.assign({ rows: [], editable: false, pending: 0, noReplyDue: [] },
+        { weekly: deriveLinkedin({ rows: [] }, R, nowMs).weekly, lockReason: null });
 
     return {
       generatedAt: nowMs,
@@ -1492,7 +2287,8 @@
       pipeline,
       calls,
       followups,
-      costs: { upwork: costs.upwork, cold_email: costs.cold_email, linkedin: costs.linkedin, editable: costsIn.editable === true }
+      costs: { upwork: costs.upwork, cold_email: costs.cold_email, linkedin: costs.linkedin, editable: costsIn.editable === true },
+      linkedin: liModel
     };
   }
 
@@ -1506,7 +2302,7 @@
     return `${name} isn't connected to this page.`;
   }
 
-  function buildAlerts(I, U, G, followups) {
+  function buildAlerts(I, U, G, followups, L) {
     const alerts = [];
     if (I && !I.sending) {
       alerts.push({ id: "cold_not_sending", severity: "critical", source: "cold_email",
@@ -1530,6 +2326,10 @@
         alerts.push({ id: "upwork_reply_rate", severity: "warning", source: "upwork",
           text: `Upwork client reply rate is ${fmtPct(reply.value)} (target ${reply.target}).` });
       }
+    }
+    if (L && L.nearLimit) {
+      alerts.push({ id: "linkedin_pending", severity: "warning", source: "linkedin",
+        text: `${fmtInt(L.pending)} LinkedIn requests are pending, near the 600 limit. Withdraw the ones older than 3 weeks.` });
     }
     if (G) {
       const stale = G.openCards.filter(c => c.staleLevel === "critical").length;
@@ -1570,6 +2370,9 @@
   // A later load in the same range seeds from it, so a source never drops back to "loading", and rebuild()
   // re-derives the model from it without calling any connector.
   let _last = null;
+  // Set when a LinkedIn write was refused for access after user.can("data.write") said nothing (null): from then on
+  // the tracker is read-only for this visit.
+  let _liDenied = false;
 
   const defaultCosts = () => Object.assign(normCosts(null), { editable: false });
   const sameCosts = (a, b) => isObj(a) && isObj(b) && a.upwork === b.upwork && a.cold_email === b.cold_email &&
@@ -1599,7 +2402,13 @@
       else if (p && p.state !== "loading") raw[k] = Object.assign({}, p, { refreshing: true });
       else raw[k] = emptySource("loading");
     }
-    const st = { rangeDays: ctx.rangeDays, ctx, raw, costsPatched: false };
+    // LinkedIn rows come from the page's db, not a connector, and don't depend on the range: any earlier settled
+    // result is kept (refreshing) while this load re-reads them.
+    const prevLi = prev && isObj(prev.raw.linkedin) ? prev.raw.linkedin : null;
+    if (!ctx.db) raw.linkedin = liUnavailable();
+    else if (prevLi && prevLi.state !== "loading" && prevLi.state !== "unavailable") raw.linkedin = Object.assign({}, prevLi, { refreshing: true });
+    else raw.linkedin = emptySource("loading");
+    const st = { rangeDays: ctx.rangeDays, ctx, raw, costsPatched: false, liPatched: false };
     _last = st;
 
     let last = null;
@@ -1634,6 +2443,17 @@
       if (changed) emit();
     });
 
+    // LinkedIn rows: one read of the collection, started now and raced against the db timeout. It never delays a
+    // connector source; its result is one more progressive update.
+    const liApplied = ctx.db ? readLinkedin(ctx.db, ctx.user, timeoutMs).then(res => {
+      // A rebuild({linkedinRows}) during this load is newer than this read: keep its rows, take the rest.
+      if (st.liPatched && res.state === "ok" && isObj(raw.linkedin) && isObj(raw.linkedin.data)) {
+        res = Object.assign({}, res, { data: Object.assign({}, res.data, { rows: raw.linkedin.data.rows }) });
+      }
+      raw.linkedin = res;
+      emit();
+    }).catch(e => { if (typeof console !== "undefined") console.error("[AdveroData] LinkedIn rows read failed", e); }) : Promise.resolve();
+
     emit();
     if (!hasMcp) return last;
 
@@ -1653,6 +2473,8 @@
 
     await Promise.all(SOURCE_KEYS.map(k => runSource(k).then(res => { raw[k] = res; emit(); })));
     await withTimeout(costsApplied, timeoutMs, null);
+    // The rows read pages itself, each page raced against the db timeout, so it always settles.
+    await withTimeout(liApplied, timeoutMs * (LI_MAX_PAGES + 1), null);
     return last;
   }
 
@@ -1663,8 +2485,24 @@
    */
   function rebuild(patch) {
     patch = isObj(patch) ? patch : {};
+    const liRows = Array.isArray(patch.linkedinRows) ? patch.linkedinRows.filter(isObj).map(r => liNormRow(r, r.id)) : null;
     if (!_last) {
-      return buildModel({ costs: Object.assign(defaultCosts(), normCosts(patch.costs)) }, { rangeDays: 30, now: patch.now != null ? patch.now : Date.now() });
+      const raw0 = { costs: Object.assign(defaultCosts(), normCosts(patch.costs)) };
+      if (liRows) raw0.linkedin = { state: "ok", data: { rows: liRows, editable: false, canWrite: false, truncated: false, lockReason: null },
+        error: null, storedAt: null, warnings: [], refreshing: false };
+      return buildModel(raw0, { rangeDays: 30, now: patch.now != null ? patch.now : Date.now() });
+    }
+    if (liRows) {
+      // The rows the UI just saved (or the full list after a delete) replace the cached ones.
+      const cur = isObj(_last.raw.linkedin) ? _last.raw.linkedin : emptySource("loading");
+      _last.raw.linkedin = Object.assign({}, cur, {
+        state: "ok", error: null,
+        data: Object.assign({ editable: false, canWrite: false, truncated: false, lockReason: null }, isObj(cur.data) ? cur.data : {},
+          { rows: liRows, editable: isObj(cur.data) && cur.data.editable === true }),
+        warnings: cur.state === "error" ? [] : arr(cur.warnings),
+        storedAt: typeof cur.storedAt === "number" ? cur.storedAt : Date.now()
+      });
+      _last.liPatched = true;
     }
     if (isObj(patch.costs)) {
       const cur = isObj(_last.raw.costs) ? _last.raw.costs : defaultCosts();
@@ -1683,11 +2521,19 @@
     fetchInstantly, fetchUpwork, fetchGhl, fetchCalendar, checkRooms, roomCacheVerdict, extractRoomId, normProposal,
     deriveInstantly, deriveUpwork, deriveGhl, deriveCalendar, deriveFollowups, attributeSource, staleLevelFor,
     isSalesCall, pickEvent, zoomJoinUrl, attributeCall, FREEMAIL, buildAlerts, normCosts, withTimeout, stalePeriod,
-    COLUMN_CAP,
-    resetMemory: () => { _memRooms.clear(); _roomShapeLogged = false; _last = null; },
+    COLUMN_CAP, isYmd, weekdayOf, addBusinessDays, mondayOf, meetingDay, splitDelimited, pasteDate, readLinkedin,
+    deriveLinkedin, liNormRow, LI_WRITE_TIMEOUT_MS, LI_PENDING_WARN, LI_PAGE, LI_MAX_PAGES, LI_TOO_MANY, LI_DENIED,
+    resetMemory: () => { _memRooms.clear(); _roomShapeLogged = false; _last = null; _liDenied = false; _liCurKey = null; _liCurMap = null; },
     memRooms: _memRooms
   };
 
-  const AdveroData = { CONFIG, load, rebuild, buildModel, loadCosts, saveCosts, _internals };
+  const linkedin = {
+    STAGES: LI_STAGES.slice(), REPLY_TYPES: LI_REPLY_TYPES.slice(), FIELDS: LI_FIELDS.slice(),
+    EVENTS: LI_EVENTS.map(e => Object.assign({}, e)),
+    rowId: liRowId, applyEvent: liApplyEvent, parsePaste: liParsePaste, merge: liMerge,
+    save: liSave, saveMany: liSaveMany, remove: liRemove
+  };
+
+  const AdveroData = { CONFIG, load, rebuild, buildModel, loadCosts, saveCosts, linkedin, _internals };
   if (typeof module !== "undefined" && module.exports) module.exports = AdveroData; else root.AdveroData = AdveroData;
 })(typeof globalThis !== "undefined" ? globalThis : this);

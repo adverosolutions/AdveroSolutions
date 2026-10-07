@@ -296,6 +296,7 @@ Each item is `{ id, group: "reply_now"|"due"|"upcoming", kind, title, detail, so
 ```js
 /** @typedef {{state:"loading"|"ok"|"error"|"unavailable", storedAt:number|null, error:null|{code:string,server:string,message:string,fix:string}, warnings:string[]}} SourceStatus */
 /** @typedef {{key:string,label:string,value:number|null,prev:number|null}} FunnelStep */
+// FunnelStep.conv?: boolean (default true). false = the UI shows no "% of <previous step>" line or meter for that step (LinkedIn Accepted, Looms sent, Calls booked); any shown % is capped at 100%.
 /** @typedef {{key:string,label:string,value:number|null,prev:number|null,format:"pct"|"num"|"usd",target:string|null,state:"green"|"watch"|"alert"|"no_data"|"info"}} Rate */
 const Model = {
   generatedAt: 0,                                 // ms
@@ -633,3 +634,40 @@ LinkedIn has no API. Lorenzo does every action on LinkedIn by hand, and the `lin
 - `model.linkedin.editable` false → hide the write controls and say why ("Editing needs the claude.ai viewer").
 - After any save, re-run `buildModel` from the updated rows without refetching the other connectors, so the update shows at once.
 - Same security rules: every row field renders as text, and `profile_url` must start with `https://` before it goes into an href.
+
+## Piece 2: exact interface (both workers build to this)
+
+Data layer exports, added to `AdveroData`:
+
+```js
+AdveroData.linkedin = {
+  STAGES,         // the 14 stage strings in skill order
+  REPLY_TYPES,    // positive, question, price, not_now, not_interested, wrong_person, other
+  FIELDS,         // the 19 field names in skill order
+  EVENTS,         // [{type, label, needs: null|"variant"|"replyType"|"datetime"}] in menu order:
+                  // connect_sent "Connect sent", accepted "Accepted", dm_sent "DM sent" (variant), fu1_sent "FU1 sent",
+                  // fu2_sent "FU2 sent", fu3_sent "FU3 sent", no_reply "Mark no reply", voice_note_sent "Voice note sent",
+                  // reply "Reply…" (replyType), meeting_booked "Meeting booked…" (datetime), closed_won "Closed won",
+                  // closed_lost "Closed lost", withdrawn "Withdrawn"
+  rowId(row) -> string,
+  applyEvent(row, { type, variant?, replyType?, datetime? }, todayYmd) -> newRow,   // pure
+  parsePaste(text, todayYmd) -> { rows, errors: [{ line, message }] },             // pure
+  merge(existing, incoming) -> row,                                                // pure
+  save(db, row) -> Promise<row>,            // set linkedinRows/<rowId>; rejects on failure (UI shows it)
+  saveMany(db, rows) -> Promise<{ written, failed }>,   // one write per changed doc, sequential, stops on first failure
+  remove(db, id) -> Promise<void>
+};
+AdveroData.rebuild({ costs?, linkedinRows? }) -> Model   // linkedinRows replaces the cached rows; no connector calls
+```
+
+- `load()` reads `linkedinRows` from the db (a single `get` of the collection, raced against the 3 s db timeout) in parallel with the connectors. Its result is `model.sources.linkedin`:
+  - `ok`: rows read
+  - `unavailable`: db null, with `error: null` and a warning "Editing needs the claude.ai viewer"
+  - `error`: read failed or timed out, with fix "Your LinkedIn rows could not be read. Press Refresh."
+- `model.linkedin = { rows, editable, pending, noReplyDue: [id], weekly }`.
+  - `rows`: sorted by `next_touch_due` ascending, blanks last.
+  - `editable`: db present and `user.can("data.write") !== false`.
+  - `weekly = { weekStart, weekEnd, requestsSent, pending, nearLimit, acceptance: Rate, looms: { A, B }, replyRate: { A: Rate, B: Rate }, positiveRate: { A: Rate, B: Rate }, callsBooked, closedWon, closedLost }`.
+- `today.waitingOnYou` also counts LinkedIn `reply_now` items.
+- The "Waiting on you" tile's sources gain `linkedin`.
+- The top bar shows a fifth source chip, "LinkedIn", whose freshness reads "Saved rows".

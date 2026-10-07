@@ -1,5 +1,6 @@
 /* SYNTHETIC sample model for a local UI preview of scoreboard.html (open it with #sample).
-   Every person, company, id and link here is invented; links point at example.com.
+   Every person, company, id and link here is invented; links point at example.com, and the LinkedIn rows
+   use https://www.linkedin.com/in/test-... handles only.
    Never published, never holds real data.
    Defines window.__SAMPLE_MODEL__ and window.__SAMPLE_VARIANTS__ (Refresh cycles the variants in sample mode). */
 (function () {
@@ -195,6 +196,114 @@
     costs: { upwork: 20, cold_email: 410, linkedin: 0, editable: true }
   };
 
+  /* LinkedIn (channel 3): rows the page keeps in its own db. Invented people; profile URLs are test handles only. */
+  function addDays(k, n) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(k);
+    var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]) + n * DAY);
+    return d.toISOString().slice(0, 10);
+  }
+  var T = ymd(now);
+  var dowT = new Date(T + "T12:00:00Z").getUTCDay();          // 0 = Sunday
+  var weekStart = addDays(T, -((dowT + 6) % 7));               // Monday
+  var weekEnd = addDays(weekStart, 6);
+  function liUrl(handle) { return "https://www.linkedin.com/in/test-" + handle; }
+  function liRow(o) {
+    return Object.assign({
+      name: "", first_name: "", profile_url: "", company: "", role: "", what_they_do: "", industry: "", country: "",
+      connect_sent_date: "", accepted_date: "", dm_date: "", loom_variant: "", last_touch_date: "", next_touch_due: "",
+      stage: "", reply_type: "", reply_date: "", reply_answered_date: "", meeting_booked: "", outcome: "", slots_offered: "", updatedAt: now - DAY
+    }, o, { id: o.id || (/\/in\/([^/]+)/.exec(o.profile_url || "") || [])[1] || "" });
+  }
+  var liRows = [
+    liRow({ name: "Avery Testwell", first_name: "Avery", profile_url: liUrl("avery-testwell"), company: "Testwell Cleaning Example", role: "Owner",
+      what_they_do: "commercial office cleaning", industry: "Facilities Services", country: "United States, Texas",
+      connect_sent_date: addDays(T, -12), accepted_date: addDays(T, -9), dm_date: addDays(T, -4), loom_variant: "A",
+      last_touch_date: addDays(T, -4), next_touch_due: addDays(T, -2), stage: "DM sent" }),
+    liRow({ name: "Quinn Fakename", first_name: "Quinn", profile_url: liUrl("quinn-fakename"), company: "Fakename Staffing Example", role: "Founder",
+      industry: "Staffing and Recruiting", country: "United States, Ohio",
+      connect_sent_date: addDays(T, -22), next_touch_due: addDays(T, -1), stage: "Connect sent" }),
+    liRow({ name: "Sam Notreal", first_name: "Sam", profile_url: liUrl("sam-notreal"), company: "Notreal Books Example", role: "Managing Partner",
+      industry: "Accounting", country: "United States, Florida",
+      connect_sent_date: addDays(T, -40), accepted_date: addDays(T, -36), dm_date: addDays(T, -28), loom_variant: "B",
+      last_touch_date: addDays(T, -8), next_touch_due: addDays(T, -1), stage: "Follow-up 3" }),
+    liRow({ name: "Jordan Samplely", first_name: "Jordan", profile_url: liUrl("jordan-samplely"), company: "Samplely Janitorial Example", role: "Operations Director",
+      industry: "Facilities Services", country: "United States, Illinois",
+      connect_sent_date: addDays(T, -16), accepted_date: addDays(T, -13), dm_date: addDays(T, -6), loom_variant: "B",
+      last_touch_date: addDays(T, -4), next_touch_due: T, stage: "Follow-up 1" }),
+    liRow({ name: "Taylor Mockridge", first_name: "Taylor", profile_url: liUrl("taylor-mockridge"), company: "Mockridge Recruiting Example", role: "CEO",
+      industry: "Staffing and Recruiting", country: "United States, Georgia",
+      connect_sent_date: addDays(T, -2), next_touch_due: addDays(T, 19), stage: "Connect sent" }),
+    liRow({ name: "Drew Dummyson", first_name: "Drew", profile_url: liUrl("drew-dummyson"), company: "Dummyson Tax Example", role: "Owner",
+      industry: "Accounting", country: "United States, Arizona",
+      connect_sent_date: addDays(T, -5), accepted_date: addDays(T, -1), stage: "Accepted" }),
+    liRow({ name: "Riley Example", first_name: "Riley", profile_url: liUrl("riley-example"), company: "Example Facility Care", role: "Owner",
+      industry: "Facilities Services", country: "United States, Colorado",
+      connect_sent_date: addDays(T, -14), accepted_date: addDays(T, -11), dm_date: addDays(T, -5), loom_variant: "A",
+      last_touch_date: addDays(T, -5), stage: "Positive reply", reply_type: "positive", reply_date: addDays(T, -1) }),
+    liRow({ name: "Casey Placeholder", first_name: "Casey", profile_url: liUrl("casey-placeholder"), company: "Placeholder Bookkeeping Co", role: "Founder",
+      industry: "Accounting", country: "Canada, Ontario",
+      connect_sent_date: addDays(T, -15), accepted_date: addDays(T, -12), dm_date: addDays(T, -7), loom_variant: "B",
+      last_touch_date: addDays(T, -3), stage: "Reply", reply_type: "more_info", reply_date: addDays(T, -2) }),
+    liRow({ name: "Morgan Testcase", first_name: "Morgan", profile_url: liUrl("morgan-testcase"), company: "Testcase Talent Example", role: "Managing Director",
+      industry: "Staffing and Recruiting", country: "United States, Texas",
+      connect_sent_date: addDays(T, -20), accepted_date: addDays(T, -18), dm_date: addDays(T, -10), loom_variant: "A",
+      last_touch_date: addDays(T, -6), stage: "Meeting booked", reply_type: "positive", reply_date: addDays(T, -7), reply_answered_date: addDays(T, -6),
+      meeting_booked: iso(now + 2 * DAY), slots_offered: "Thu 1:00 PM CT, Fri 3:30 PM CT" })
+  ];
+  liRows.sort(function (a, b) {
+    var x = a.next_touch_due, y = b.next_touch_due;
+    if (!x || !y) return (x ? 0 : 1) - (y ? 0 : 1);
+    return x < y ? -1 : x > y ? 1 : 0;
+  });
+  var info = function (key, label, value) { return { key: key, label: label, value: value, prev: null, format: "pct", target: null, state: value == null ? "no_data" : "info" }; };
+  model.sources.linkedin = ok(0);
+  model.linkedin = {
+    rows: liRows,
+    editable: true,
+    pending: 2,
+    noReplyDue: ["test-sam-notreal"],
+    weekly: {
+      weekStart: weekStart, weekEnd: weekEnd, requestsSent: 14, pending: 2, nearLimit: false,
+      acceptance: { key: "acceptance", label: "Acceptance", value: 0.27, prev: null, format: "pct", target: "≥ 30%", state: "watch" },
+      looms: { A: 4, B: 3 },
+      replyRate: { A: info("reply_a", "Reply rate A", 0.25), B: info("reply_b", "Reply rate B", 1 / 3) },
+      positiveRate: { A: info("positive_a", "Positive rate A", 0.25), B: info("positive_b", "Positive rate B", 0) },
+      callsBooked: 1, closedWon: 0, closedLost: 0
+    }
+  };
+  model.channels[2] = {
+    key: "linkedin", name: "LinkedIn", status: "live", statusText: "9 people in the tracker",
+    funnel: [
+      { key: "requests", label: "Requests sent", value: 42, prev: 18 },
+      { key: "accepted", label: "Accepted", value: 13, prev: 5, conv: false },
+      { key: "looms", label: "Looms sent", value: 9, prev: 4, conv: false },
+      { key: "replies", label: "Replies", value: 3, prev: 1 },
+      { key: "positive", label: "Positive", value: 2, prev: 0 },
+      { key: "booked", label: "Calls booked", value: 1, prev: 0, conv: false },
+      { key: "won", label: "Closed won", value: 0, prev: 0 }
+    ],
+    rates: [
+      { key: "acceptance", label: "Acceptance", value: 0.27, prev: 0.22, format: "pct", target: "≥ 30% (alert under 15%)", state: "watch" },
+      info("reply_a", "Reply rate, variant A", 2 / 5),
+      info("reply_b", "Reply rate, variant B", 1 / 4),
+      info("positive", "Positive rate", 2 / 9)
+    ],
+    series: null,
+    spend: { usd: 99, note: "From your monthly LinkedIn cost of $99." },
+    callsBooked: 1, costPerCall: 99,
+    extras: [{ label: "Pending requests", value: "2" }, { label: "Looms sent, variant A", value: "5" }, { label: "Looms sent, variant B", value: "4" }]
+  };
+  model.costs.linkedin = 99;
+  model.followups.reply_now.push(
+    { id: "li-r-riley", group: "reply_now", kind: "linkedin_reply", title: "Riley Example · Example Facility Care", detail: "Replied (positive). Answer on LinkedIn.", source: "linkedin", ageMs: null, dueAt: null, overdue: false, url: liUrl("riley-example") },
+    { id: "li-r-casey", group: "reply_now", kind: "linkedin_reply", title: "Casey Placeholder · Placeholder Bookkeeping Co", detail: "Replied (more_info). Answer on LinkedIn.", source: "linkedin", ageMs: null, dueAt: null, overdue: false, url: liUrl("casey-placeholder") });
+  model.followups.due.push(
+    { id: "li-t-avery", group: "due", kind: "linkedin_touch", title: "Avery Testwell · Testwell Cleaning Example", detail: "FU1 due", source: "linkedin", ageMs: null, dueAt: addDays(T, -2), overdue: true, url: liUrl("avery-testwell") },
+    { id: "li-t-quinn", group: "due", kind: "linkedin_touch", title: "Quinn Fakename · Fakename Staffing Example", detail: "Pending 21 days. Withdraw the request.", source: "linkedin", ageMs: null, dueAt: addDays(T, -1), overdue: true, url: liUrl("quinn-fakename") },
+    { id: "li-t-sam", group: "due", kind: "linkedin_touch", title: "Sam Notreal · Notreal Books Example", detail: "No reply 7 days after FU3. Mark No reply.", source: "linkedin", ageMs: null, dueAt: addDays(T, -1), overdue: true, url: liUrl("sam-notreal") },
+    { id: "li-t-jordan", group: "due", kind: "linkedin_touch", title: "Jordan Samplely · Samplely Janitorial Example", detail: "FU2 due", source: "linkedin", ageMs: null, dueAt: T, overdue: false, url: liUrl("jordan-samplely") });
+  model.today.waitingOnYou = model.followups.reply_now.length;
+
   /* Variant 2: GHL needs reconnect, Upwork still loading, Calendar live with upcoming calls. */
   var v2 = clone(model);
   v2.sources.ghl = { state: "error", refreshing: false, storedAt: null, warnings: [],
@@ -233,14 +342,19 @@
   /* Variant 3: no connectors (the page-level banner). */
   var off = { state: "unavailable", refreshing: false, storedAt: null, error: null, warnings: [] };
   var v3 = clone(model);
-  v3.sources = { instantly: off, upwork: off, ghl: off, calendar: off };
+  v3.sources = { instantly: off, upwork: off, ghl: off, calendar: off,
+    linkedin: { state: "unavailable", refreshing: false, storedAt: null, error: null, warnings: ["Editing needs the claude.ai viewer"] } };
+  v3.linkedin = { rows: [], editable: false, pending: 0, noReplyDue: [], weekly: null };
   v3.today = { waitingOnYou: 0, callsNext7d: { count: 0, next: null }, openPipeline: { count: 0, value: 0 }, revenue: { value: 0, upworkBilled: 0, ghlWon: 0 }, coldEmailSending: null, alerts: [] };
   v3.channels = [
     { key: "cold_email", name: "Cold email", status: "not_connected", statusText: "", funnel: model.channels[0].funnel.map(function (f) { return { key: f.key, label: f.label, value: null, prev: null }; }),
       rates: [], series: null, spend: { usd: null, note: "" }, callsBooked: null, costPerCall: null, extras: [] },
     { key: "upwork", name: "Upwork", status: "not_connected", statusText: "", funnel: model.channels[1].funnel.map(function (f) { return { key: f.key, label: f.label, value: null, prev: null }; }),
       rates: [], series: null, spend: { usd: null, note: "" }, callsBooked: null, costPerCall: null, extras: [] },
-    clone(model.channels[2])
+    { key: "linkedin", name: "LinkedIn", status: "not_connected",
+      statusText: "No LinkedIn rows yet. Add or paste them in the LinkedIn tracker below.",
+      funnel: model.channels[2].funnel.map(function (f) { return { key: f.key, label: f.label, value: null, prev: null }; }),
+      rates: [], series: null, spend: { usd: null, note: "" }, callsBooked: null, costPerCall: null, extras: [] }
   ];
   v3.campaigns = []; v3.proposals = []; v3.pipeline = null;
   v3.calls = { upcoming: [], pastInRange: [], bySource: { cold_email: 0, upwork: 0, linkedin: 0, other: 0, unattributed: 0 } };
@@ -255,11 +369,24 @@
   v4.calls = clone(v2.calls);
   v4.today.callsNext7d = { count: 2, next: callNext };
 
+  /* Variant 5: the LinkedIn rows could not be read from the db. */
+  var v5 = clone(model);
+  v5.sources.linkedin = { state: "error", refreshing: false, storedAt: null, warnings: [],
+    error: { code: "db_error", server: "db", message: "read failed", fix: "Your LinkedIn rows could not be read. Press Refresh." } };
+  v5.linkedin = { rows: [], editable: false, pending: 0, noReplyDue: [], weekly: null };
+  v5.channels[2] = { key: "linkedin", name: "LinkedIn", status: "error", statusText: "",
+    funnel: model.channels[2].funnel.map(function (f) { return { key: f.key, label: f.label, value: null, prev: null }; }),
+    rates: [], series: null, spend: { usd: 99, note: "" }, callsBooked: null, costPerCall: null, extras: [] };
+  v5.followups.reply_now = v5.followups.reply_now.filter(function (x) { return x.source !== "linkedin"; });
+  v5.followups.due = v5.followups.due.filter(function (x) { return x.source !== "linkedin"; });
+  v5.today.waitingOnYou = v5.followups.reply_now.length;
+
   window.__SAMPLE_MODEL__ = model;
   window.__SAMPLE_VARIANTS__ = [
     { name: "Calendar needs reconnect", model: model },
     { name: "GHL needs reconnect, Upwork loading", model: v2 },
     { name: "No connectors", model: v3 },
-    { name: "Refreshing Instantly and GHL", model: v4 }
+    { name: "Refreshing Instantly and GHL", model: v4 },
+    { name: "LinkedIn rows not read", model: v5 }
   ];
 })();

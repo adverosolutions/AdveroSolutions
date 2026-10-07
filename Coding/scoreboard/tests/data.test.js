@@ -130,6 +130,11 @@ function fakeDb(initial, opts) {
       if (opts.failSet) throw { code: "invalid_argument", message: "write rejected" };
       if (!docs.has(p)) throw { code: "invalid_argument", message: "update needs an existing document" };
       docs.set(p, Object.assign(clone(docs.get(p)), clone(body)));
+    },
+    async delete() {
+      writes.push({ path: p, op: "delete" });
+      if (opts.failSet) throw { code: "invalid_argument", message: "write rejected" };
+      docs.delete(p);
     }
   });
   const query = (coll, q) => ({
@@ -721,16 +726,18 @@ test("load: one failing source leaves the other three ok, with progressive onUpd
   const updates = [];
   const db = fakeDb({ "settings/costs": { upwork: 30, cold_email: 300, linkedin: 0 } });
   const final = await D.load({ rangeDays: 30, refresh: true, now: new Date(NOW), mcp, db, user: { can: async () => true }, sleep: noSleep }, m => updates.push(m));
-  // first emit right away (all loading, default costs), then the costs read, then one per settled source
-  assert.equal(updates.length, 6);
+  // first emit right away (all loading, default costs), then the costs read and the LinkedIn rows read (piece 2),
+  // then one per settled connector source
+  assert.equal(updates.length, 7);
   const settled = updates.map(u => Object.values(u.sources).filter(s => s.state !== "loading").length);
-  assert.deepEqual(settled, [0, 0, 1, 2, 3, 4]);
+  assert.deepEqual(settled, [0, 0, 1, 2, 3, 4, 5]);
   assert.deepEqual(updates[0].costs, { upwork: 0, cold_email: 0, linkedin: 0, editable: false });
   assert.deepEqual(updates[1].costs, { upwork: 30, cold_email: 300, linkedin: 0, editable: true });
+  assert.equal(updates[2].sources.linkedin.state, "ok");
   assert.ok(updates.every(u => Object.values(u.sources).every(s => s.refreshing === false)), "a first load has nothing to refresh");
-  assert.strictEqual(final, updates[5]);
+  assert.strictEqual(final, updates[6]);
   assert.deepEqual(Object.fromEntries(Object.entries(final.sources).map(([k, s]) => [k, s.state])),
-    { instantly: "ok", upwork: "ok", ghl: "error", calendar: "ok" });
+    { instantly: "ok", upwork: "ok", ghl: "error", calendar: "ok", linkedin: "ok" });
   assert.deepEqual(final.sources.ghl.error, { code: "needs_reauth", server: "GHL", message: "token expired", fix: "Reconnect GHL in claude.ai Settings → Connectors." });
   assert.equal(final.channels[0].status, "live");
   assert.equal(final.channels[1].status, "live");
@@ -742,7 +749,7 @@ test("load: one failing source leaves the other three ok, with progressive onUpd
   assert.deepEqual(final.costs, { upwork: 30, cold_email: 300, linkedin: 0, editable: true });
   assert.ok(mcp.calls.every(c => c.options.cache.refresh === true));
   // contract shape
-  assert.deepEqual(Object.keys(final), ["generatedAt", "range", "sources", "today", "channels", "campaigns", "proposals", "pipeline", "calls", "followups", "costs"]);
+  assert.deepEqual(Object.keys(final), ["generatedAt", "range", "sources", "today", "channels", "campaigns", "proposals", "pipeline", "calls", "followups", "costs", "linkedin"]);
   assert.deepEqual(final.channels.map(c => c.key), ["cold_email", "upwork", "linkedin"]);
   assert.equal(final.generatedAt, NOW);
   assert.deepEqual(final.range, { days: 30, start: "2026-09-07", end: "2026-10-06", prevStart: "2026-08-08", prevEnd: "2026-09-06", label: "Last 30 days" });
@@ -776,7 +783,7 @@ test("load: no mcp resolves at once with every source unavailable", async () => 
   const updates = [];
   const m = await D.load({ rangeDays: 7, refresh: false, now: new Date(NOW), mcp: null, db: null, user: null }, u => updates.push(u));
   assert.equal(updates.length, 1);
-  assert.deepEqual(Object.values(m.sources).map(s => s.state), ["unavailable", "unavailable", "unavailable", "unavailable"]);
+  assert.deepEqual(Object.values(m.sources).map(s => s.state), ["unavailable", "unavailable", "unavailable", "unavailable", "unavailable"]);
   assert.equal(m.today.coldEmailSending, null);
   assert.deepEqual(m.channels.map(c => c.status), ["not_connected", "not_connected", "not_connected"]);
   assert.equal(m.channels[0].funnel.length, 6);
@@ -806,9 +813,10 @@ test("cost per call per channel", async () => {
   assert.equal(up.spend.usd, 36.9); assert.equal(up.callsBooked, 2, "calendar upwork calls (0) + upwork cards in Call Booked or later (2)");
   assert.equal(up.costPerCall, 18.45);
   assert.match(up.spend.note, /46 Connects/);
-  assert.equal(li.spend.usd, null); assert.equal(li.callsBooked, 0); assert.equal(li.costPerCall, null);
-  assert.equal(li.statusText, "Picked as channel 3 on Oct 6. These rows fill in once outreach starts and its data source is connected.");
-  assert.deepEqual(li.funnel.map(f => f.key), ["requests", "accepted", "replies", "positive", "booked"]);
+  // piece 2: the LinkedIn channel comes from the tracker rows; with no rows read yet it is loading, calls unknown
+  assert.equal(li.spend.usd, null); assert.equal(li.callsBooked, null); assert.equal(li.costPerCall, null);
+  assert.equal(li.status, "loading");
+  assert.deepEqual(li.funnel.map(f => f.key), ["requests", "accepted", "looms", "replies", "positive", "booked", "won"]);
   // 7-day range scales monthly cost by 7/30
   const m7 = D.buildModel(Object.assign({}, raw, { costs: { cold_email: 300, linkedin: 90 } }), { rangeDays: 7, now: new Date(NOW) });
   assert.equal(m7.channels[0].spend.usd, 70);
@@ -845,8 +853,8 @@ test("alerts", async () => {
 
 test("buildModel is pure and renders a full skeleton from empty input", () => {
   const m = D.buildModel({}, CTX);
-  assert.deepEqual(Object.values(m.sources).map(s => s.state), ["loading", "loading", "loading", "loading"]);
-  assert.deepEqual(m.channels.map(c => c.status), ["loading", "loading", "not_connected"]);
+  assert.deepEqual(Object.values(m.sources).map(s => s.state), ["loading", "loading", "loading", "loading", "loading"]);
+  assert.deepEqual(m.channels.map(c => c.status), ["loading", "loading", "loading"]);
   assert.deepEqual(m.followups, { reply_now: [], due: [], upcoming: [] });
   assert.deepEqual(m.calls.bySource, { cold_email: 0, upwork: 0, linkedin: 0, other: 0, unattributed: 0 });
   assert.equal(m.channels[1].callsBooked, null);
@@ -1068,7 +1076,11 @@ test("a: a stalled db never blocks the sources; costs race a timeout and arrive 
     user: { can: () => new Promise(() => {}) }, sleep: noSleep, dbTimeoutMs: 30 }, m => updates.push(m));
   assert.deepEqual(statesOf(final), ["ok", "ok", "ok", "ok"]);
   assert.deepEqual(final.costs, { upwork: 0, cold_email: 0, linkedin: 0, editable: false });
-  assert.deepEqual(updates.map(u => statesOf(u).filter(s => s !== "loading").length), [0, 1, 2, 3, 4]);
+  // the stalled LinkedIn read times out as one more update, wherever it lands among the connector updates
+  const counts = updates.map(u => statesOf(u).filter(s => s !== "loading").length);
+  assert.deepEqual(counts.filter((c, i) => i === 0 || c !== counts[i - 1]), [0, 1, 2, 3, 4]);
+  assert.equal(updates.length, 6);
+  assert.deepEqual([final.sources.linkedin.state, final.sources.linkedin.error.code], ["error", "timeout"]);
   assert.equal(final.channels[1].funnel[1].value, 4, "room checks ran without the cache");
 
   // slow costs: load resolves on defaults, then one more update carries the real costs
@@ -1190,4 +1202,718 @@ test("j: a stale null re-checked to null again writes only the new checkedAt", a
   assert.equal(res.replied.get("n1"), false);
   assert.deepEqual(db.writes, [{ path: "upworkRooms/n1", body: { checkedAt: NOW }, op: "update" }]);
   assert.deepEqual(db.docs.get("upworkRooms/n1"), { roomId: null, checkedAt: NOW });
+});
+
+// ------------------------------------------------------------------ piece 2: LinkedIn tracker
+
+const LI = D.linkedin;
+const liFx = () => fx("linkedin").rows;
+const liDb = (rows, opts) => {
+  const init = { "settings/costs": { upwork: 0, cold_email: 0, linkedin: 0 } };
+  for (const [id, body] of Object.entries(rows || {})) init[`linkedinRows/${id}`] = body;
+  return fakeDb(init, opts);
+};
+const liRaw = (rows, editable) => ({ state: "ok", data: { rows: Object.entries(rows).map(([id, r]) => Object.assign({ id }, r)), editable: editable !== false },
+  error: null, storedAt: NOW, warnings: [], refreshing: false });
+const liModel = (rows, now, days) => D.buildModel({ linkedin: liRaw(rows) }, { rangeDays: days || 30, now: new Date(now || NOW) });
+const blankRow = () => Object.fromEntries(LI.FIELDS.map(f => [f, ""]));
+
+test("LinkedIn interface constants follow the skill", () => {
+  assert.equal(LI.STAGES.length, 14);
+  assert.deepEqual([LI.STAGES[0], LI.STAGES[6], LI.STAGES[13]], ["Connect sent", "No reply", "Withdrawn"]);
+  assert.deepEqual(LI.REPLY_TYPES, ["positive", "price", "more_info", "what_is_this", "not_now", "not_interested", "referral", "other"]);
+  assert.equal(LI.FIELDS.length, 21);
+  assert.ok(LI.FIELDS.includes("reply_date") && LI.FIELDS.includes("reply_answered_date"));
+  assert.deepEqual(LI.EVENTS.map(e => [e.type, e.needs]), [
+    ["connect_sent", null], ["accepted", null], ["dm_sent", "variant"], ["fu1_sent", null], ["fu2_sent", null], ["fu3_sent", null],
+    ["no_reply", null], ["voice_note_sent", null], ["reply", "replyType"], ["answer_sent", null], ["meeting_booked", "datetime"],
+    ["closed_won", null], ["closed_lost", null], ["withdrawn", null]]);
+  assert.equal(LI.EVENTS.find(e => e.type === "no_reply").label, "Mark no reply");
+});
+
+test("applyEvent: every row of the event table, calendar math, updatedAt, purity", () => {
+  const T = "2026-10-06";
+  const at = 1234;
+  const start = Object.assign(blankRow(), { id: "test-a", name: "Test A", profile_url: "https://www.linkedin.com/in/test-a" });
+  const frozen = JSON.stringify(start);
+  const ap = (row, ev, t) => LI.applyEvent(row, Object.assign({ now: at }, ev), t || T);
+  const pick = (r, ...f) => Object.fromEntries(["stage", "next_touch_due"].concat(f).map(k => [k, r[k]]));
+
+  let r = ap(start, { type: "connect_sent" });
+  assert.deepEqual(pick(r, "connect_sent_date"), { stage: "Connect sent", next_touch_due: "2026-10-27", connect_sent_date: T });
+  assert.equal(r.updatedAt, at); assert.equal(r.id, "test-a");
+  assert.equal(JSON.stringify(start), frozen, "the input row is never changed");
+  assert.deepEqual(pick(ap(r, { type: "withdrawn" })), { stage: "Withdrawn", next_touch_due: "" });
+  r = ap(r, { type: "accepted" });
+  assert.deepEqual(pick(r, "accepted_date"), { stage: "Accepted", next_touch_due: "", accepted_date: T });
+  r = ap(r, { type: "dm_sent", variant: "b" });
+  assert.deepEqual(pick(r, "dm_date", "last_touch_date", "loom_variant"),
+    { stage: "DM sent", next_touch_due: "2026-10-08", dm_date: T, last_touch_date: T, loom_variant: "B" });
+  r = ap(r, { type: "fu1_sent" }, "2026-10-29");
+  assert.deepEqual(pick(r, "last_touch_date"), { stage: "Follow-up 1", next_touch_due: "2026-11-02", last_touch_date: "2026-10-29" }, "across a month end and the DST change");
+  r = ap(r, { type: "fu2_sent" }, "2026-12-28");
+  assert.deepEqual(pick(r, "last_touch_date"), { stage: "Follow-up 2", next_touch_due: "2027-01-04", last_touch_date: "2026-12-28" }, "across a year end");
+  r = ap(r, { type: "fu3_sent" }, "2027-01-05");
+  assert.deepEqual(pick(r, "last_touch_date"), { stage: "Follow-up 3", next_touch_due: "2027-01-12", last_touch_date: "2027-01-05" });
+  r = ap(r, { type: "no_reply" }, "2027-01-13");
+  assert.deepEqual(pick(r, "last_touch_date"), { stage: "No reply", next_touch_due: "2027-03-06", last_touch_date: "2027-01-05" }, "60 days from FU3, not from the check");
+  r = ap(r, { type: "voice_note_sent" }, "2027-03-06");
+  assert.deepEqual(pick(r, "last_touch_date"), { stage: "Voice note sent", next_touch_due: "", last_touch_date: "2027-03-06" });
+
+  // replies, answers and the not_interested rule
+  const dm = ap(ap(start, { type: "dm_sent", variant: "A" }), { type: "fu1_sent" });
+  let p = ap(dm, { type: "reply", replyType: "positive" });
+  assert.deepEqual(pick(p, "reply_type", "reply_date"), { stage: "Positive reply", next_touch_due: "", reply_type: "positive", reply_date: T });
+  p = ap(p, { type: "answer_sent" }, "2026-10-09"); // a Friday: + 2 business days is Tuesday
+  assert.deepEqual(pick(p, "reply_answered_date", "last_touch_date"),
+    { stage: "Positive reply", next_touch_due: "2026-10-13", reply_answered_date: "2026-10-09", last_touch_date: "2026-10-09" });
+  const again = ap(p, { type: "reply", replyType: "price" }, "2026-10-09");
+  assert.deepEqual(pick(again, "reply_type", "reply_answered_date"), { stage: "Reply", next_touch_due: "", reply_type: "price", reply_answered_date: "" },
+    "a new reply is unanswered again, even on the day of the last answer");
+  const nn = ap(dm, { type: "reply", replyType: "not_now" });
+  assert.equal(ap(nn, { type: "answer_sent" }).next_touch_due, "", "not_now: blank until they give a date");
+  assert.deepEqual(pick(ap(nn, { type: "answer_sent", date: "2027-01-15" })), { stage: "Reply", next_touch_due: "2027-01-15" });
+  const ni = ap(ap(dm, { type: "reply", replyType: "not_interested" }), { type: "answer_sent" });
+  assert.deepEqual(pick(ni), { stage: "Reply", next_touch_due: "" });
+  assert.equal(ap(ni, { type: "fu2_sent" }).next_touch_due, "", "not_interested: next_touch_due is never set again");
+  assert.deepEqual(pick(ap(ap(dm, { type: "reply", replyType: "more_info" }), { type: "answer_sent" })), { stage: "Reply", next_touch_due: "" });
+
+  const mb = ap(p, { type: "meeting_booked", datetime: "2026-10-14T18:00:00Z" });
+  assert.deepEqual(pick(mb, "meeting_booked"), { stage: "Meeting booked", next_touch_due: "", meeting_booked: "2026-10-14T18:00:00Z" });
+  assert.deepEqual(pick(ap(mb, { type: "closed_won" }), "outcome"), { stage: "Closed won", next_touch_due: "", outcome: "Closed won" });
+  assert.deepEqual(pick(ap(mb, { type: "closed_lost" }), "outcome"), { stage: "Closed lost", next_touch_due: "", outcome: "Closed lost" });
+
+  assert.throws(() => ap(start, { type: "dm_sent" }), /variant/);
+  assert.throws(() => ap(start, { type: "reply", replyType: "question" }), /reply type/);
+  assert.throws(() => ap(start, { type: "meeting_booked" }), /date and time/);
+  assert.throws(() => ap(start, { type: "nope" }), /Unknown/);
+  assert.throws(() => LI.applyEvent(start, { type: "accepted" }, "10/06/2026"), TypeError);
+  const t0 = Date.now();
+  assert.ok(LI.applyEvent(start, { type: "accepted" }, T).updatedAt >= t0, "updatedAt defaults to now");
+});
+
+test("rowId: slug of /in/<handle>, lowercase, no query or trailing slash; random r_ id without a URL", () => {
+  assert.equal(LI.rowId({ profile_url: "https://www.linkedin.com/in/Test-Dana-Ruiz-12AB/?utm_source=share#x" }), "test-dana-ruiz-12ab");
+  assert.equal(LI.rowId({ profile_url: "https://linkedin.com/in/test-dana-ruiz-12ab" }), "test-dana-ruiz-12ab");
+  assert.equal(LI.rowId({ profile_url: "https://www.linkedin.com/in/test-dana-ruiz-12ab/" }), "test-dana-ruiz-12ab");
+  assert.equal(LI.rowId({ id: "r_keepme", profile_url: "https://www.linkedin.com/in/test-x" }), "r_keepme", "an existing id is stable");
+  const a = LI.rowId({ name: "Test No Url" }), b = LI.rowId({ name: "Test No Url" });
+  assert.match(a, /^r_[a-z0-9]{12}$/); assert.notEqual(a, b);
+});
+
+test("parsePaste: TSV with aliases, defaults, unknown columns ignored", () => {
+  const tsv = [
+    "Full Name\tLinkedIn URL\tCompany Name\tJob Title\tLocation\tFavorite color\tStage",
+    "Test Ana Bell\thttps://www.linkedin.com/in/Test-Ana-Bell/?x=1\tTest Bell Cleaning\tOwner | Founder\tDallas, TX\tblue\t",
+    "Test Bo Chen\twww.linkedin.com/in/test-bo-chen\tTest Chen Tax\tPartner\tUnited States\tred\tfollow-up 2",
+    "",
+    "\t\tTest Nameless Co\tOwner\t\t\t"
+  ].join("\r\n");
+  const { rows, errors } = LI.parsePaste(tsv, "2026-10-06");
+  assert.equal(rows.length, 2);
+  assert.deepEqual(errors, [{ line: 5, message: "No name or profile URL." }]);
+  const [ana, bo] = rows;
+  assert.deepEqual([ana.id, ana.name, ana.company, ana.role, ana.country], ["test-ana-bell", "Test Ana Bell", "Test Bell Cleaning", "Owner | Founder", "Dallas, TX"]);
+  assert.deepEqual([ana.stage, ana.connect_sent_date, ana.next_touch_due], ["Connect sent", "2026-10-06", "2026-10-27"]);
+  assert.deepEqual(ana._defaulted, ["stage", "connect_sent_date", "next_touch_due"]);
+  assert.ok(!("Favorite color" in ana) && !("favorite_color" in ana));
+  assert.deepEqual([bo.profile_url, bo.stage, bo.connect_sent_date, bo.next_touch_due], ["https://www.linkedin.com/in/test-bo-chen", "Follow-up 2", "", ""]);
+  assert.deepEqual(bo._defaulted, []);
+  for (const r of rows) for (const f of LI.FIELDS) assert.equal(typeof r[f], "string", f);
+});
+
+test("parsePaste: quoted CSV (commas, newlines, doubled quotes), First + Last Name, skill field names, errors", () => {
+  const csv = [
+    'First Name,Last Name,Profile URL,company,what_they_do,Connect Sent Date,stage,reply_type,loom_variant,meeting_booked',
+    'Test,Cy Dunn,https://www.linkedin.com/in/test-cy-dunn,"Test Dunn, Hale & Co","office cleaning, ""green"" products",10/1/2026,Positive Reply,Positive,variant a,2026-10-08T14:00',
+    'Test,Di Eng,https://www.linkedin.com/in/test-di-eng,"Test Eng',
+    'Bookkeeping",,2026-09-30,Connect sent,,,',
+    'Test,Ed Fry,https://www.linkedin.com/in/test-ed-fry,Test Fry Co,,2026-13-40,,,,',
+    'Test,Flo Gu,https://www.linkedin.com/in/test-flo-gu,Test Gu Co,,,Sleeping,,,',
+    'Test,Gil Ho,https://www.linkedin.com/in/test-gil-ho,Test Ho Co,,,Reply,question,,',
+    'Test,Hu Ito,https://www.linkedin.com/in/test-hu-ito,Test Ito Co,,,,,C,'
+  ].join("\n");
+  const { rows, errors } = LI.parsePaste(csv, "2026-10-06");
+  assert.equal(rows.length, 2);
+  const [cy, di] = rows;
+  assert.deepEqual([cy.name, cy.first_name, cy.company, cy.what_they_do], ["Test Cy Dunn", "Test", "Test Dunn, Hale & Co", 'office cleaning, "green" products']);
+  assert.deepEqual([cy.connect_sent_date, cy.stage, cy.reply_type, cy.loom_variant, cy.meeting_booked, cy.next_touch_due],
+    ["2026-10-01", "Positive reply", "positive", "A", "2026-10-08T14:00", ""]);
+  assert.deepEqual([di.company, di.connect_sent_date, di.next_touch_due, di._defaulted], ["Test Eng\nBookkeeping", "2026-09-30", "2026-10-21", ["next_touch_due"]]);
+  assert.deepEqual(errors, [
+    { line: 5, message: '"2026-13-40" in connect_sent_date is not a date (use YYYY-MM-DD).' },
+    { line: 6, message: 'Unknown stage "Sleeping".' },
+    { line: 7, message: 'Unknown reply type "question".' },
+    { line: 8, message: 'Loom variant must be A or B, not "C".' }
+  ], "line numbers count the physical lines, including the newline inside quotes");
+
+  assert.deepEqual(LI.parsePaste("Favorite color,Shoe size\nblue,9", "2026-10-06"),
+    { rows: [], errors: [{ line: 1, message: "The first line must be a header row with a name or profile URL column." }] });
+  assert.deepEqual(LI.parsePaste("  \n", "2026-10-06"), { rows: [], errors: [] });
+  const dup = LI.parsePaste("name,url,company\nTest Jo,https://www.linkedin.com/in/test-jo,\nTest Jo,https://www.linkedin.com/in/test-jo/,Test Jo Co", "2026-10-06");
+  assert.equal(dup.rows.length, 1, "the same person twice in one paste is one row");
+  assert.equal(dup.rows[0].company, "Test Jo Co");
+});
+
+test("merge: non-empty incoming overwrites; empty never blanks; pasted defaults never regress an existing row", () => {
+  const existing = Object.assign(blankRow(), { id: "test-a", name: "Test A", company: "Test A Co", role: "Owner", stage: "DM sent",
+    connect_sent_date: "2026-09-01", dm_date: "2026-10-01", loom_variant: "A", next_touch_due: "2026-10-03", updatedAt: 5 });
+  const m = LI.merge(existing, { name: "", company: "Test A Company", role: "  ", industry: "Staffing", loom_variant: "" });
+  assert.deepEqual([m.id, m.name, m.company, m.role, m.industry, m.loom_variant, m.stage, m.next_touch_due],
+    ["test-a", "Test A", "Test A Company", "Owner", "Staffing", "A", "DM sent", "2026-10-03"]);
+  assert.equal(m.updatedAt, 5);
+  const pasted = LI.parsePaste("name,url,country\nTest A,https://www.linkedin.com/in/test-a,United States", "2026-10-06").rows[0];
+  const m2 = LI.merge(existing, pasted);
+  assert.deepEqual([m2.stage, m2.connect_sent_date, m2.next_touch_due, m2.country], ["DM sent", "2026-09-01", "2026-10-03", "United States"]);
+  assert.ok(!("_defaulted" in m2));
+  const fresh = LI.merge(null, pasted);
+  assert.deepEqual([fresh.id, fresh.stage, fresh.connect_sent_date, fresh.next_touch_due], ["test-a", "Connect sent", "2026-10-06", "2026-10-27"]);
+  assert.equal(existing.company, "Test A Co", "merge never changes its inputs");
+});
+
+test("LinkedIn channel: funnel cohort math, rates, extras, calls, spend", () => {
+  const m = D.buildModel({ linkedin: liRaw(liFx()), costs: { linkedin: 90 } }, CTX);
+  const li = m.channels[2];
+  assert.equal(li.status, "live");
+  assert.equal(li.statusText, "13 people in the tracker · 2 pending");
+  assert.deepEqual(li.funnel.map(f => [f.key, f.label, f.value, f.prev]), [
+    ["requests", "Requests sent", 4, 3], ["accepted", "Accepted", 3, 1], ["looms", "Looms sent", 8, 0],
+    ["replies", "Replies", 5, 0], ["positive", "Positive", 3, 0], ["booked", "Calls booked", 2, 0], ["won", "Closed won", 1, 0]]);
+  const rate = k => li.rates.find(r => r.key === k);
+  assert.deepEqual(li.rates.map(r => r.key), ["acceptance", "reply_rate_a", "reply_rate_b", "positive_rate"]);
+  assert.deepEqual([rate("acceptance").value, rate("acceptance").state, rate("acceptance").target], [2 / 3, "green", "≥ 30%"]);
+  assert.deepEqual([rate("reply_rate_a").value, rate("reply_rate_a").state], [3 / 5, "info"]);
+  assert.deepEqual([rate("reply_rate_b").value, rate("reply_rate_b").state], [2 / 3, "info"]);
+  assert.deepEqual([rate("positive_rate").value, rate("positive_rate").state], [3 / 8, "info"]);
+  assert.deepEqual(li.extras, [{ label: "Pending requests", value: "2" }, { label: "Looms sent, variant A", value: "5" }, { label: "Looms sent, variant B", value: "3" }]);
+  assert.equal(li.callsBooked, 2);
+  assert.deepEqual([li.spend.usd, li.costPerCall], [90, 45]);
+  assert.equal(li.series, null);
+
+  // a meeting at 21:00 CDT on the range's first day counts (UTC already the 8th); one at 21:00 CDT the evening
+  // before (UTC already the 7th) does not
+  const two = { "test-x": Object.assign(blankRow(), { name: "Test X", stage: "Meeting booked", meeting_booked: "2026-09-08T02:00:00Z" }),
+    "test-y": Object.assign(blankRow(), { name: "Test Y", stage: "Meeting booked", meeting_booked: "2026-09-07T02:00:00Z" }) };
+  assert.equal(liModel(two).channels[2].callsBooked, 1);
+
+  // ok with no rows: the ghost look, with the empty-tracker copy
+  const none = liModel({});
+  assert.deepEqual([none.channels[2].status, none.channels[2].statusText], ["not_connected", "No LinkedIn rows yet. Add or paste them in the LinkedIn tracker below."]);
+  assert.ok(none.channels[2].funnel.every(f => f.value === null));
+  assert.equal(none.channels[2].callsBooked, 0);
+});
+
+test("acceptance counts only requests sent 14 or more days ago", () => {
+  const mk = (id, sent, accepted, stage) => [id, Object.assign(blankRow(), { name: id, stage: stage || (accepted ? "Accepted" : "Connect sent"),
+    connect_sent_date: sent, accepted_date: accepted || "" })];
+  const rows = Object.fromEntries([
+    mk("a", "2026-09-22", "2026-09-25"),           // 14 days old: counts, accepted
+    mk("b", "2026-09-22", ""),                      // 14 days old: counts, pending
+    mk("c", "2026-09-23", "2026-09-24"),            // 13 days old: left out
+    mk("d", "2026-09-10", "", "DM sent"),           // later stage without accepted_date: accepted
+    mk("e", "2026-09-10", "", "Withdrawn"),         // withdrawn: not accepted
+    mk("f", "2026-09-10", "")
+  ]);
+  const acc = liModel(rows).channels[2].rates[0];
+  assert.deepEqual([acc.value, acc.state], [2 / 5, "green"]);
+  const low = Object.fromEntries([mk("a", "2026-09-10", "2026-09-12"), ...[1, 2, 3, 4, 5, 6, 7].map(i => mk("p" + i, "2026-09-10", ""))]);
+  assert.deepEqual(liModel(low).channels[2].rates[0].state, "alert", "1 of 8 = 12.5% is under 15%");
+  const mid = Object.fromEntries([mk("a", "2026-09-10", "2026-09-12"), ...[1, 2, 3, 4].map(i => mk("p" + i, "2026-09-10", ""))]);
+  const outside = Object.fromEntries([mk("a", "2026-09-01", "2026-09-02")]);
+  assert.deepEqual(liModel(outside).channels[2].rates[0].state, "no_data", "requests sent before the range don't count");
+  assert.deepEqual(liModel(mid).channels[2].rates[0].state, "watch", "1 of 5 = 20%");
+  const young = Object.fromEntries([mk("a", "2026-10-01", "2026-10-02")]);
+  assert.deepEqual(liModel(young).channels[2].rates[0].state, "no_data");
+});
+
+test("pending ≥ 550 adds 'near the 600 limit' and a warning alert", () => {
+  const many = n => Object.fromEntries(Array.from({ length: n }, (_, i) => [`test-p${i}`,
+    Object.assign(blankRow(), { name: `Test P${i}`, stage: "Connect sent", connect_sent_date: "2026-10-01", next_touch_due: "2026-10-22" })]));
+  const m549 = liModel(many(549));
+  assert.equal(m549.linkedin.pending, 549);
+  assert.equal(m549.channels[2].extras[0].value, "549");
+  assert.ok(!m549.today.alerts.some(a => a.id === "linkedin_pending"));
+  assert.equal(m549.linkedin.weekly.nearLimit, false);
+  const m550 = liModel(many(550));
+  assert.equal(m550.channels[2].extras[0].value, "550 (near the 600 limit)");
+  assert.deepEqual(m550.today.alerts.filter(a => a.id === "linkedin_pending"),
+    [{ id: "linkedin_pending", severity: "warning", source: "linkedin", text: "550 LinkedIn requests are pending, near the 600 limit. Withdraw the ones older than 3 weeks." }]);
+  assert.equal(m550.linkedin.weekly.nearLimit, true);
+});
+
+test("LinkedIn follow-ups: unanswered replies, due/overdue/upcoming touches, noReplyDue, waitingOnYou", () => {
+  const m = D.buildModel({ linkedin: liRaw(liFx()) }, CTX);
+  const li = m.followups;
+  assert.deepEqual(li.reply_now.map(i => [i.id, i.kind, i.title, i.detail, i.url, i.source]), [
+    ["linkedin_reply:test-hal-ivy", "linkedin_reply", "Test Hal Ivy · Test Ivy Cleaning Co", "Replied (positive). Answer on LinkedIn.",
+      "https://www.linkedin.com/in/test-hal-ivy", "linkedin"]]);
+  assert.equal(li.reply_now[0].ageMs, NOW - X.startOfDayMs("2026-10-03"));
+  assert.equal(m.today.waitingOnYou, 1);
+  assert.deepEqual(li.due.map(i => [i.id, i.detail, i.overdue]), [
+    ["linkedin_touch:test-ben-cole", "Pending 21 days. Withdraw the request.", true],
+    ["linkedin_touch:test-eve-fox", "FU2 due", true],
+    ["linkedin_touch:test-finn-gray", "No reply 7 days after FU3. Mark No reply.", true],
+    ["linkedin_touch:test-dan-ellis", "FU1 due", false]]);
+  assert.ok(li.due.every(i => i.kind === "linkedin_touch" && i.group === "due" && i.dueAt === X.startOfDayMs(i.id === "linkedin_touch:test-dan-ellis" ? "2026-10-06" : liFx()[i.id.split(":")[1]].next_touch_due)));
+  assert.deepEqual(li.upcoming.map(i => [i.id, i.detail, i.overdue]), [["linkedin_touch:test-ida-jones", "The date they gave to check back. Decide the next step.", false]]);
+  assert.deepEqual(m.linkedin.noReplyDue, ["test-finn-gray"]);
+  assert.equal(li.due.find(i => i.id === "linkedin_touch:test-ben-cole").url, "https://www.linkedin.com/in/test-ben-cole");
+
+  // the remaining due details, and answered vs unanswered replies
+  const one = (stage, extra) => liModel({ "test-z": Object.assign(blankRow(), { name: "Test Z", stage, next_touch_due: "2026-10-06" }, extra || {}) }).followups;
+  assert.equal(one("Follow-up 1").due[0].detail, "FU2 due");
+  assert.equal(one("Follow-up 2").due[0].detail, "FU3 due");
+  assert.equal(one("No reply").due[0].detail, "Voice note window open");
+  assert.equal(one("Positive reply", { reply_type: "positive", reply_date: "2026-10-01", reply_answered_date: "2026-10-01" }).due[0].detail,
+    "No answer 2 business days after the two times. Decide the next step.");
+  const unanswered = one("Reply", { reply_type: "not_now", reply_date: "2026-10-05", reply_answered_date: "2026-10-01" });
+  assert.deepEqual([unanswered.reply_now.length, unanswered.due.length], [1, 0], "a reply newer than the last answer waits on you, once");
+  assert.equal(unanswered.reply_now[0].detail, "Replied (not now). Answer on LinkedIn.");
+  const upcomingEdge = liModel({ "test-z": Object.assign(blankRow(), { name: "Test Z", stage: "DM sent", next_touch_due: "2026-10-13" }),
+    "test-w": Object.assign(blankRow(), { name: "Test W", stage: "DM sent", next_touch_due: "2026-10-14" }) }).followups;
+  assert.deepEqual(upcomingEdge.upcoming.map(i => i.id), ["linkedin_touch:test-z"], "upcoming is the next 7 days");
+  assert.equal(one("DM sent", { profile_url: "javascript:alert(1)" }).due[0].url, null, "only https URLs leave the data layer");
+});
+
+test("weekly numbers: Monday to Sunday in Central, across a Monday boundary", () => {
+  const r = (id, o) => [id, Object.assign(blankRow(), { name: id }, o)];
+  const rows = Object.fromEntries([
+    r("sun-req", { stage: "Connect sent", connect_sent_date: "2026-10-04" }),
+    r("mon-req", { stage: "Connect sent", connect_sent_date: "2026-10-05" }),
+    r("sun-loom-a", { stage: "DM sent", connect_sent_date: "2026-09-01", accepted_date: "2026-09-02", dm_date: "2026-10-04", loom_variant: "A", reply_type: "positive", reply_date: "2026-10-04" }),
+    r("mon-loom-a", { stage: "Reply", connect_sent_date: "2026-09-01", accepted_date: "2026-09-02", dm_date: "2026-10-05", loom_variant: "A", reply_type: "price", reply_date: "2026-10-05" }),
+    r("mon-loom-a2", { stage: "DM sent", connect_sent_date: "2026-09-01", accepted_date: "2026-09-02", dm_date: "2026-10-05", loom_variant: "A" }),
+    r("mon-loom-b", { stage: "Positive reply", connect_sent_date: "2026-09-01", accepted_date: "2026-09-02", dm_date: "2026-10-06", loom_variant: "B", reply_type: "positive", reply_date: "2026-10-06" }),
+    // Sunday 23:30 CDT is Monday 04:30 UTC: still last week in Central
+    r("sun-call", { stage: "Meeting booked", meeting_booked: "2026-10-05T04:30:00Z" }),
+    r("mon-call", { stage: "Meeting booked", meeting_booked: "2026-10-05T05:30:00Z" }),
+    r("won", { stage: "Closed won", outcome: "Closed won", updatedAt: Date.parse("2026-10-05T05:30:00Z") }),
+    r("lost-sun", { stage: "Closed lost", outcome: "Closed lost", updatedAt: Date.parse("2026-10-05T04:30:00Z") })
+  ]);
+  const sundayNight = Date.parse("2026-10-05T04:45:00Z"); // Sun Oct 4, 23:45 CDT
+  const mondayEarly = Date.parse("2026-10-05T05:15:00Z"); // Mon Oct 5, 00:15 CDT
+  const wS = liModel(rows, sundayNight).linkedin.weekly;
+  const wM = liModel(rows, mondayEarly).linkedin.weekly;
+  assert.deepEqual([wS.weekStart, wS.weekEnd], ["2026-09-28", "2026-10-04"]);
+  assert.deepEqual([wM.weekStart, wM.weekEnd], ["2026-10-05", "2026-10-11"]);
+  assert.deepEqual([wS.requestsSent, wS.looms, wS.callsBooked, wS.closedWon, wS.closedLost], [1, { A: 1, B: 0 }, 1, 0, 1]);
+  assert.deepEqual([wM.requestsSent, wM.looms, wM.callsBooked, wM.closedWon, wM.closedLost], [1, { A: 2, B: 1 }, 1, 1, 0]);
+  assert.deepEqual([wS.replyRate.A.value, wS.positiveRate.A.value, wS.replyRate.B.state], [1, 1, "no_data"]);
+  assert.deepEqual([wM.replyRate.A.value, wM.positiveRate.A.value, wM.replyRate.B.value, wM.positiveRate.B.value, wM.replyRate.A.state], [0.5, 0, 1, 1, "info"]);
+  assert.equal(wM.pending, 2);
+  // acceptance (14-day rule) over every request old enough: 4 accepted of the 4 sent on Sep 1
+  assert.deepEqual([wM.acceptance.value, wM.acceptance.state], [1, "green"]);
+  const fxW = D.buildModel({ linkedin: liRaw(liFx()) }, CTX).linkedin.weekly;
+  assert.deepEqual([fxW.weekStart, fxW.requestsSent, fxW.looms, fxW.callsBooked, fxW.closedWon, fxW.closedLost, fxW.pending], ["2026-10-05", 1, { A: 0, B: 0 }, 0, 1, 0, 2]);
+  assert.deepEqual([fxW.acceptance.value, fxW.acceptance.state], [10 / 12, "green"]);
+});
+
+test("model.linkedin and sources.linkedin: rows sorted by next touch, editable, unavailable and error states", async () => {
+  const m = D.buildModel({ linkedin: liRaw(liFx()) }, CTX);
+  assert.deepEqual(Object.keys(m.linkedin), ["rows", "editable", "pending", "noReplyDue", "weekly", "lockReason"]);
+  assert.equal(m.linkedin.lockReason, null);
+  const due = m.linkedin.rows.map(r => r.next_touch_due);
+  const filled = due.filter(Boolean);
+  assert.deepEqual(filled, filled.slice().sort());
+  assert.ok(due.indexOf("") > due.lastIndexOf(filled[filled.length - 1]), "blanks last");
+  assert.equal(m.linkedin.rows.length, 13);
+  assert.equal(m.linkedin.rows.find(r => r.name === "Test Lou Moss").id, "r_testlou00001");
+  assert.equal(m.linkedin.editable, true);
+  assert.deepEqual(m.sources.linkedin, { state: "ok", storedAt: NOW, error: null, warnings: [], refreshing: false });
+
+  // load: db null → unavailable with the viewer warning; read failure → error with the fix copy
+  const m0 = await D.load({ rangeDays: 30, now: new Date(NOW), mcp: fakeMcp(fixtureRouter()), db: null, user: null, sleep: noSleep });
+  assert.deepEqual(m0.sources.linkedin, { state: "unavailable", storedAt: null, error: null, warnings: ["Editing needs the claude.ai viewer"], refreshing: false });
+  assert.deepEqual([m0.linkedin.rows, m0.linkedin.editable, m0.channels[2].status], [[], false, "not_connected"]);
+  X.resetMemory();
+  const bad = liDb({});
+  const coll = bad.collection;
+  bad.collection = name => (name === "linkedinRows" ? { limit: () => ({ get: async () => { throw { code: "resource_exhausted", message: "slow down" }; } }) } : coll(name));
+  const m1 = await D.load({ rangeDays: 30, now: new Date(NOW), mcp: fakeMcp(fixtureRouter()), db: bad, user: { can: async () => true }, sleep: noSleep });
+  assert.deepEqual(m1.sources.linkedin.error, { code: "resource_exhausted", server: "LinkedIn", message: "slow down", fix: "Your LinkedIn rows could not be read. Press Refresh." });
+  assert.deepEqual([m1.channels[2].status, m1.channels[2].statusText, m1.linkedin.editable], ["error", "Your LinkedIn rows could not be read. Press Refresh.", false]);
+  assert.deepEqual(statesOf(m1), ["ok", "ok", "ok", "ok"]);
+
+  // a viewer who can't write reads the rows but can't edit
+  X.resetMemory();
+  const m2 = await D.load({ rangeDays: 30, now: new Date(NOW), mcp: fakeMcp(fixtureRouter()), db: liDb(liFx()), user: { can: async () => false }, sleep: noSleep });
+  assert.deepEqual([m2.sources.linkedin.state, m2.linkedin.rows.length, m2.linkedin.editable], ["ok", 13, false]);
+});
+
+test("load: a stalled linkedinRows read never delays the connectors; it times out on its own; load never writes rows", async () => {
+  const db = liDb(liFx());
+  const coll = db.collection;
+  db.collection = name => (name === "linkedinRows" ? { limit: () => ({ get: () => new Promise(() => {}) }) } : coll(name));
+  const updates = [];
+  const t0 = Date.now();
+  const final = await D.load({ rangeDays: 30, now: new Date(NOW), mcp: fakeMcp(fixtureRouter()), db, user: { can: async () => true },
+    sleep: noSleep, dbTimeoutMs: 150 }, m => updates.push({ at: Date.now() - t0, m }));
+  const allOk = updates.find(u => statesOf(u.m).every(s => s === "ok"));
+  assert.ok(allOk, "every connector settled");
+  assert.equal(allOk.m.sources.linkedin.state, "loading", "the connectors settled while the LinkedIn read was still pending");
+  assert.ok(allOk.at < 150);
+  assert.deepEqual([final.sources.linkedin.state, final.sources.linkedin.error.code, final.sources.linkedin.error.fix],
+    ["error", "timeout", "Your LinkedIn rows could not be read. Press Refresh."]);
+  assert.deepEqual(statesOf(final), ["ok", "ok", "ok", "ok"]);
+  assert.ok(Date.now() - t0 < 1000);
+
+  // a working read: rows arrive, and load writes nothing to linkedinRows
+  X.resetMemory();
+  const db2 = liDb(liFx());
+  const fin2 = await D.load({ rangeDays: 30, now: new Date(NOW), mcp: fakeMcp(fixtureRouter()), db: db2, user: { can: async () => true }, sleep: noSleep });
+  assert.equal(fin2.linkedin.rows.length, 13);
+  assert.equal(fin2.followups.reply_now.filter(i => i.kind === "linkedin_reply").length, 1);
+  assert.equal(fin2.channels[2].status, "live");
+  assert.ok(!db2.writes.some(w => w.path.startsWith("linkedinRows/")), "load never writes rows");
+  assert.ok(db2.queries.some(q => q.coll === "linkedinRows" && q.lim === 1000), "one read of the collection");
+
+  // a refresh keeps the rows (refreshing) until the new read lands, whatever the range
+  const u3 = [];
+  await D.load({ rangeDays: 7, now: new Date(NOW), mcp: fakeMcp(fixtureRouter()), db: db2, user: { can: async () => true }, sleep: noSleep }, m => u3.push(m));
+  assert.deepEqual([u3[0].sources.linkedin.state, u3[0].sources.linkedin.refreshing, u3[0].linkedin.rows.length], ["ok", true, 13]);
+  assert.equal(u3[u3.length - 1].sources.linkedin.refreshing, false);
+});
+
+test("rebuild({ linkedinRows }) replaces the cached rows synchronously, with no connector calls or writes", async () => {
+  const mcp = fakeMcp(fixtureRouter());
+  const db = liDb(liFx());
+  const final = await D.load({ rangeDays: 30, now: new Date(NOW), mcp, db, user: { can: async () => true }, sleep: noSleep });
+  assert.equal(final.linkedin.rows.length, 13);
+  const n = mcp.calls.length, w = db.writes.length;
+  const rows = final.linkedin.rows.filter(r => r.id !== "test-hal-ivy");
+  const hal = LI.applyEvent(final.linkedin.rows.find(r => r.id === "test-hal-ivy"), { type: "answer_sent", now: NOW }, "2026-10-06");
+  const m = D.rebuild({ linkedinRows: rows.concat([hal]) });
+  assert.ok(!(m instanceof Promise));
+  assert.equal(mcp.calls.length, n); assert.equal(db.writes.length, w);
+  assert.equal(m.linkedin.rows.length, 13);
+  assert.equal(m.followups.reply_now.filter(i => i.kind === "linkedin_reply").length, 0);
+  assert.equal(m.today.waitingOnYou, final.today.waitingOnYou - 1);
+  assert.ok(m.followups.upcoming.some(i => i.id === "linkedin_touch:test-hal-ivy"), "the positive quiet check is 2 business days out");
+  assert.deepEqual(m.pipeline, final.pipeline, "connector data is untouched");
+  assert.equal(m.linkedin.editable, true);
+  assert.equal(D.rebuild().linkedin.rows.length, 13, "the rows stick");
+  assert.equal(D.rebuild({ linkedinRows: [] }).channels[2].status, "not_connected");
+
+  X.resetMemory();
+  const before = D.rebuild({ linkedinRows: [Object.assign(blankRow(), { id: "test-q", name: "Test Q", stage: "Connect sent", connect_sent_date: "2026-10-01" })], now: NOW });
+  assert.deepEqual([before.sources.linkedin.state, before.linkedin.rows.length, before.channels[2].status], ["ok", 1, "live"]);
+  assert.deepEqual(statesOf(before), ["loading", "loading", "loading", "loading"]);
+});
+
+test("writes: save sets linkedinRows/<rowId>; saveMany is sequential, skips unchanged rows and stops at the first failure; timeouts reject", async () => {
+  const db = liDb({});
+  const row = Object.assign(blankRow(), { name: "Test S", profile_url: "https://www.linkedin.com/in/Test-S/", stage: "Connect sent", _defaulted: ["stage"] });
+  const saved = await LI.save(db, row, { now: 77 });
+  assert.equal(saved.id, "test-s");
+  assert.deepEqual(db.writes, [{ path: "linkedinRows/test-s", op: "set", body: Object.assign({}, Object.fromEntries(LI.FIELDS.map(f => [f, row[f]])), { updatedAt: 77 }) }]);
+  assert.ok(!("_defaulted" in db.writes[0].body) && !("id" in db.writes[0].body), "only the skill's fields and updatedAt are stored");
+  await assert.rejects(LI.save(null, row), /claude\.ai viewer/);
+  await assert.rejects(LI.save(liDb({}, { failSet: true }), row), e => e.code === "invalid_argument");
+  const hung = { collection: () => ({ doc: () => ({ get: () => new Promise(() => {}), set: () => new Promise(() => {}), delete: () => new Promise(() => {}) }) }) };
+  await assert.rejects(LI.save(hung, row, { timeoutMs: 20 }), e => e.code === "timeout");
+  const hungSet = { collection: () => ({ doc: () => ({ get: async () => ({ exists: false }), set: () => new Promise(() => {}) }) }) };
+  await assert.rejects(LI.save(hungSet, row, { timeoutMs: 20 }), e => e.code === "timeout");
+  await assert.rejects(LI.remove(hung, "test-s", { timeoutMs: 20 }), e => e.code === "timeout");
+  assert.equal(LI.EVENTS.length, 14);
+  assert.equal(X.LI_WRITE_TIMEOUT_MS, 5000);
+
+  await LI.remove(db, "test-s");
+  assert.deepEqual(db.writes[1], { path: "linkedinRows/test-s", op: "delete" });
+  assert.ok(!db.docs.has("linkedinRows/test-s"));
+
+  // saveMany: 1 unchanged (skipped), then 3 changed; the second changed write fails and nothing after it is tried
+  const existing = [Object.assign(blankRow(), { id: "test-u", name: "Test U", stage: "Accepted" })];
+  const rows = [
+    Object.assign(blankRow(), { id: "test-u", name: "Test U", stage: "Accepted" }),
+    Object.assign(blankRow(), { name: "Test V", profile_url: "https://www.linkedin.com/in/test-v" }),
+    Object.assign(blankRow(), { name: "Test W", profile_url: "https://www.linkedin.com/in/test-w" }),
+    Object.assign(blankRow(), { name: "Test X", profile_url: "https://www.linkedin.com/in/test-x" })
+  ];
+  const db2 = liDb({});
+  const docOf = db2.collection;
+  let inflight = 0, maxInflight = 0;
+  const attempts = [];
+  db2.collection = name => {
+    const c = docOf(name);
+    const d = c.doc;
+    c.doc = id => {
+      const ref = d(id);
+      const set = ref.set;
+      ref.set = async body => {
+        attempts.push(id);
+        inflight++; maxInflight = Math.max(maxInflight, inflight);
+        await new Promise(r => setTimeout(r, 5));
+        inflight--;
+        if (id === "test-w") throw { code: "quota_exceeded", message: "collection is full" };
+        return set(body);
+      };
+      return ref;
+    };
+    return c;
+  };
+  const res = await LI.saveMany(db2, rows, { existing, now: 9 });
+  assert.deepEqual([res.written, res.failed, res.skipped], [1, 2, 1]);
+  assert.deepEqual(res.error, { id: "test-w", code: "quota_exceeded", message: "collection is full" });
+  assert.deepEqual(res.saved.map(r => r.id), ["test-v"]);
+  assert.deepEqual(attempts, ["test-v", "test-w"], "test-x is never tried");
+  assert.deepEqual(db2.writes.map(x => x.path), ["linkedinRows/test-v"]);
+  assert.equal(maxInflight, 1, "one write at a time");
+
+  // with no explicit baseline, the last loaded rows are the baseline
+  X.resetMemory();
+  const db3 = liDb(liFx());
+  const fin = await D.load({ rangeDays: 30, now: new Date(NOW), mcp: fakeMcp(fixtureRouter()), db: db3, user: { can: async () => true }, sleep: noSleep });
+  const edited = fin.linkedin.rows.map(r => (r.id === "test-ava-stone" ? Object.assign({}, r, { industry: "Staffing" }) : r));
+  const r3 = await LI.saveMany(db3, edited);
+  assert.deepEqual([r3.written, r3.failed, r3.skipped], [1, 0, 12]);
+  assert.deepEqual(db3.writes.filter(x => x.path.startsWith("linkedinRows/")).map(x => x.path), ["linkedinRows/test-ava-stone"]);
+});
+
+// ------------------------------------------------------------------ piece 2 fix round
+
+test("LinkedIn read pages past 1000 rows by updatedAt and dedupes the rows two pages share", async () => {
+  const rows = {};
+  // ten docs share each updatedAt, so each page boundary falls inside a run of equal stamps
+  for (let i = 0; i < 2500; i++) {
+    rows[`test-p${String(i).padStart(4, "0")}`] = Object.assign(blankRow(), { name: `Test P${i}`, stage: "Connect sent",
+      connect_sent_date: "2026-10-01", next_touch_due: "2026-10-22", updatedAt: 1000 + Math.floor(i / 10) });
+  }
+  const db = liDb(rows);
+  const res = await X.readLinkedin(db, { can: async () => true }, 3000);
+  assert.equal(res.state, "ok");
+  assert.equal(res.data.rows.length, 2500);
+  assert.equal(new Set(res.data.rows.map(r => r.id)).size, 2500);
+  assert.deepEqual([res.data.truncated, res.data.editable, res.data.lockReason, res.warnings], [false, true, null, []]);
+  const qs = db.queries.filter(q => q.coll === "linkedinRows");
+  assert.deepEqual(qs.map(q => [q.order, q.lim, q.filters]), [
+    [["updatedAt", "asc"], 1000, []],
+    [["updatedAt", "asc"], 1000, [["updatedAt", ">=", 1099]]],
+    [["updatedAt", "asc"], 1000, [["updatedAt", ">=", 1198]]]]);
+
+  // through load: every row is in the model and the tracker stays editable
+  const fin = await D.load({ rangeDays: 30, now: new Date(NOW), mcp: fakeMcp(fixtureRouter()), db: liDb(rows), user: { can: async () => true }, sleep: noSleep });
+  assert.deepEqual([fin.linkedin.rows.length, fin.linkedin.pending, fin.linkedin.editable, fin.linkedin.lockReason], [2500, 2500, true, null]);
+});
+
+test("a LinkedIn read that can't see every row is truncated: read-only, with the reason", async () => {
+  const many = (n, stamp) => Object.fromEntries(Array.from({ length: n }, (_, i) => [`test-t${String(i).padStart(5, "0")}`,
+    Object.assign(blankRow(), { name: `Test T${i}`, stage: "Connect sent" }, stamp ? { updatedAt: stamp(i) } : {})]));
+  const can = { can: async () => true };
+  const truncated = res => [res.data.truncated, res.data.editable, res.data.lockReason];
+  const TOO_MANY = "Too many LinkedIn rows to edit safely here. Tell Claude.";
+  assert.equal(X.LI_TOO_MANY, TOO_MANY);
+
+  // the 20-page safety cap
+  const capDb = liDb(many(20001, i => i));
+  const cap = await X.readLinkedin(capDb, can, 3000);
+  assert.deepEqual(truncated(cap), [true, false, TOO_MANY]);
+  assert.equal(capDb.queries.filter(q => q.coll === "linkedinRows").length, 20);
+  assert.equal(cap.data.rows.length, 1000 + 19 * 999);
+  assert.deepEqual(cap.warnings, ["Only the first 19,981 LinkedIn rows loaded."]);
+  // a full page that adds nothing new (over 1000 docs share one updatedAt)
+  assert.deepEqual(truncated(await X.readLinkedin(liDb(many(1200, () => 7)), can, 3000)), [true, false, TOO_MANY]);
+  // a full page ending in docs without updatedAt (they sort last and can't be paged past)
+  assert.deepEqual(truncated(await X.readLinkedin(liDb(many(1001)), can, 3000)), [true, false, TOO_MANY]);
+  // exactly 1000 docs: the second page is empty, nothing is missing
+  const exact = await X.readLinkedin(liDb(many(1000, i => i)), can, 3000);
+  assert.deepEqual([exact.data.rows.length, ...truncated(exact)], [1000, false, true, null]);
+
+  // a store without orderBy: one page; a full one counts as truncated. Through load the model is read-only.
+  const db = liDb(many(1000));
+  const coll = db.collection;
+  db.collection = name => (name === "linkedinRows" ? { limit: n => ({ get: () => coll(name).limit(n).get() }), doc: id => coll(name).doc(id) } : coll(name));
+  const fin = await D.load({ rangeDays: 30, now: new Date(NOW), mcp: fakeMcp(fixtureRouter()), db, user: can, sleep: noSleep });
+  assert.deepEqual([fin.linkedin.rows.length, fin.linkedin.editable, fin.linkedin.lockReason], [1000, false, TOO_MANY]);
+  assert.deepEqual(fin.sources.linkedin.warnings, ["Only the first 1,000 LinkedIn rows loaded."]);
+  assert.equal(D.rebuild({ linkedinRows: fin.linkedin.rows }).linkedin.lockReason, TOO_MANY, "a rebuild keeps the lock");
+});
+
+test("a save never replaces a doc the page didn't read: it reads it first and merges into it", async () => {
+  const stored = Object.assign(blankRow(), { name: "Test Zed", profile_url: "https://www.linkedin.com/in/test-zed", stage: "DM sent",
+    connect_sent_date: "2026-08-01", accepted_date: "2026-08-05", dm_date: "2026-10-01", loom_variant: "A", last_touch_date: "2026-10-01",
+    next_touch_due: "2026-10-03", updatedAt: 5 });
+  const counted = db => {
+    db.gets = [];
+    const coll = db.collection;
+    db.collection = name => {
+      const c = coll(name);
+      const doc = c.doc;
+      c.doc = id => { const ref = doc(id); const get = ref.get; ref.get = () => { db.gets.push(id); return get(); }; return ref; };
+      return c;
+    };
+    return db;
+  };
+  const keep = r => [r.stage, r.accepted_date, r.connect_sent_date, r.dm_date, r.loom_variant, r.last_touch_date, r.next_touch_due];
+
+  // a pasted person whose doc exists but wasn't loaded (not in `existing`)
+  const db = counted(liDb({ "test-zed": stored }));
+  const pasted = LI.parsePaste("Full Name\tLinkedIn URL\tstage\taccepted_date\nTest Zed\thttps://www.linkedin.com/in/test-zed\tAccepted\t2026-10-04", "2026-10-06").rows[0];
+  const res = await LI.saveMany(db, [pasted], { existing: [], now: 50 });
+  assert.deepEqual([res.written, res.failed, res.error], [1, 0, null]);
+  assert.deepEqual(db.gets, ["test-zed"]);
+  const z = db.docs.get("linkedinRows/test-zed");
+  assert.deepEqual(keep(z), ["Accepted", "2026-10-04", "2026-08-01", "2026-10-01", "A", "2026-10-01", "2026-10-03"]);
+  assert.equal(z.updatedAt, 50);
+  assert.deepEqual(keep(res.saved[0]), keep(z), "the model gets the merged row");
+
+  // a pasted row with defaults only (no stage) never regresses the unread doc
+  const db2 = liDb({ "test-zed": stored });
+  const plain = LI.parsePaste("Full Name\tLinkedIn URL\tCompany Name\nTest Zed\thttps://www.linkedin.com/in/test-zed\tTest Zed Co", "2026-10-06").rows[0];
+  await LI.save(db2, plain, { existing: [] });
+  const z2 = db2.docs.get("linkedinRows/test-zed");
+  assert.deepEqual([z2.company, ...keep(z2)], ["Test Zed Co", "DM sent", "2026-08-05", "2026-08-01", "2026-10-01", "A", "2026-10-01", "2026-10-03"]);
+
+  // a row the page read is written as is, with no read first
+  const db3 = counted(liDb({ "test-zed": stored }));
+  const loaded = Object.assign({ id: "test-zed" }, stored);
+  await LI.save(db3, Object.assign({}, loaded, { accepted_date: "" }), { existing: [loaded] });
+  assert.deepEqual([db3.gets, db3.docs.get("linkedinRows/test-zed").accepted_date], [[], ""]);
+
+  // with no explicit baseline, the last load's rows are the baseline
+  X.resetMemory();
+  const db4 = counted(liDb(liFx()));
+  const fin = await D.load({ rangeDays: 30, now: new Date(NOW), mcp: fakeMcp(fixtureRouter()), db: db4, user: { can: async () => true }, sleep: noSleep });
+  db4.gets.length = 0;
+  await LI.save(db4, Object.assign({}, fin.linkedin.rows[0], { industry: "Staffing" }));
+  assert.deepEqual(db4.gets, []);
+  await LI.save(db4, Object.assign(blankRow(), { name: "Test New", profile_url: "https://www.linkedin.com/in/test-new" }));
+  assert.deepEqual(db4.gets, ["test-new"], "an id that wasn't read is read first");
+
+  // ifExists "refuse": a moved row never lands on another saved doc
+  const db5 = liDb({ "test-zed": stored });
+  await assert.rejects(LI.save(db5, Object.assign(blankRow(), { id: "test-zed", name: "Test Other" }), { existing: [], ifExists: "refuse" }),
+    e => e.code === "exists" && e.message === "Another row already has this profile URL.");
+  assert.equal(db5.docs.get("linkedinRows/test-zed").name, "Test Zed");
+  assert.ok(!db5.writes.length);
+});
+
+test("the same person twice in one paste merges before defaults, so a saved row's dates are never overwritten", () => {
+  const existing = Object.assign(blankRow(), { id: "test-dee", name: "Test Dee", profile_url: "https://www.linkedin.com/in/test-dee", stage: "DM sent",
+    connect_sent_date: "2026-09-01", dm_date: "2026-10-01", next_touch_due: "2026-10-03", updatedAt: 5 });
+  const pick = r => [r.stage, r.connect_sent_date, r.next_touch_due];
+
+  // line 1 has no stage (would default to Connect sent today), line 2 says DM sent
+  const a = LI.parsePaste("Full Name\tURL\tstage\nTest Dee\thttps://www.linkedin.com/in/test-dee\t\nTest Dee\thttps://www.linkedin.com/in/test-dee/\tDM sent\n", "2026-10-06");
+  assert.equal(a.rows.length, 1);
+  assert.deepEqual([...pick(a.rows[0]), a.rows[0]._defaulted], ["DM sent", "", "", []]);
+  assert.deepEqual(pick(LI.merge(existing, a.rows[0])), ["DM sent", "2026-09-01", "2026-10-03"]);
+
+  // the reverse order: the later line's blank stage doesn't undo the earlier real one
+  const b = LI.parsePaste("Full Name\tURL\tstage\nTest Dee\thttps://www.linkedin.com/in/test-dee\tDM sent\nTest Dee\thttps://www.linkedin.com/in/test-dee\t\n", "2026-10-06");
+  assert.deepEqual([...pick(b.rows[0]), b.rows[0]._defaulted], ["DM sent", "", "", []]);
+
+  // both lines blank on stage, one with a real date: only the stage and next touch stay defaulted
+  const c = LI.parsePaste("Full Name\tURL\tconnect_sent_date\nTest Dee\thttps://www.linkedin.com/in/test-dee\t\nTest Dee\thttps://www.linkedin.com/in/test-dee\t2026-09-15\n", "2026-10-06");
+  assert.deepEqual([...pick(c.rows[0]), c.rows[0]._defaulted], ["Connect sent", "2026-09-15", "2026-10-06", ["stage", "next_touch_due"]]);
+  assert.deepEqual(pick(LI.merge(existing, c.rows[0])), ["DM sent", "2026-09-15", "2026-10-03"]);
+
+  // a new person pasted twice with no stage gets the defaults once
+  const d = LI.parsePaste("Full Name\tURL\tCompany Name\nTest Neu\thttps://www.linkedin.com/in/test-neu\t\nTest Neu\thttps://www.linkedin.com/in/test-neu\tTest Neu Co\n", "2026-10-06");
+  assert.deepEqual([d.rows.length, d.rows[0].company, ...pick(d.rows[0]), d.rows[0]._defaulted],
+    [1, "Test Neu Co", "Connect sent", "2026-10-06", "2026-10-27", ["stage", "connect_sent_date", "next_touch_due"]]);
+});
+
+test("rowId: a handle with non-ASCII characters keeps a percent-encoded slug, so two such people never share an id", () => {
+  const id = u => LI.rowId({ profile_url: u });
+  assert.equal(id("https://www.linkedin.com/in/%F0%9F%98%80/"), "~f0~9f~98~80");
+  assert.notEqual(id("https://www.linkedin.com/in/%F0%9F%98%80"), id("https://www.linkedin.com/in/%F0%9F%98%81"));
+  assert.equal(id("https://www.linkedin.com/in/李王"), id("https://www.linkedin.com/in/%E6%9D%8E%E7%8E%8B"), "raw and encoded are the same person");
+  assert.notEqual(id("https://www.linkedin.com/in/李王"), id("https://www.linkedin.com/in/王李"));
+  assert.notEqual(id("https://www.linkedin.com/in/test-jos%C3%A9"), id("https://www.linkedin.com/in/test-jos%C3%A8"));
+  assert.equal(id("https://www.linkedin.com/in/test-jos%C3%A9"), "test-jos~c3~a9");
+  assert.equal(id("https://www.linkedin.com/in/Test-JOS%C3%89"), "test-jos~c3~a9", "lowercased before encoding");
+  assert.equal(id("https://linkedin.com/in/test%20dana"), "test-dana", "ASCII handles are unchanged");
+  for (const u of ["https://www.linkedin.com/in/%F0%9F%98%80/", "https://www.linkedin.com/in/李王", "https://www.linkedin.com/in/test-jos%C3%A9"]) {
+    assert.match(id(u), /^[A-Za-z0-9_\-.~:@+]{1,200}$/, "a valid db path segment");
+  }
+});
+
+test("answer_sent needs a reply type on the row", () => {
+  const row = Object.assign(blankRow(), { id: "test-a", name: "Test A", stage: "DM sent" });
+  assert.throws(() => LI.applyEvent(row, { type: "answer_sent" }, "2026-10-06"), /reply/);
+  assert.equal(LI.applyEvent(Object.assign({}, row, { reply_type: "price", stage: "Reply" }), { type: "answer_sent" }, "2026-10-06").reply_answered_date, "2026-10-06");
+});
+
+test("LinkedIn funnel: Accepted, Looms sent and Calls booked carry conv false", () => {
+  const conv = m => m.channels[2].funnel.map(f => [f.key, f.conv]);
+  const want = [["requests", true], ["accepted", false], ["looms", false], ["replies", true], ["positive", true], ["booked", false], ["won", true]];
+  assert.deepEqual(conv(D.buildModel({ linkedin: liRaw(liFx()) }, CTX)), want);
+  assert.deepEqual(conv(liModel({})), want, "the empty funnel too");
+  assert.ok(D.buildModel({}, CTX).channels.slice(0, 2).every(ch => ch.funnel.every(f => !("conv" in f))), "other channels are unchanged");
+});
+
+test("a write refused for access after can() said nothing makes the tracker read-only for the visit", async () => {
+  const DENIED = "Saving isn't allowed for this view.";
+  assert.equal(X.LI_DENIED, DENIED);
+  const row = Object.assign(blankRow(), { name: "Test S", profile_url: "https://www.linkedin.com/in/test-s" });
+  const run = async (can, code) => {
+    X.resetMemory();
+    const db = liDb(liFx());
+    const coll = db.collection;
+    db.collection = name => {
+      const c = coll(name);
+      if (name !== "linkedinRows") return c;
+      const doc = c.doc;
+      c.doc = id => Object.assign(doc(id), { set: async () => { throw { code, message: "no" }; }, delete: async () => { throw { code, message: "no" }; } });
+      return c;
+    };
+    const fin = await D.load({ rangeDays: 30, now: new Date(NOW), mcp: fakeMcp(fixtureRouter()), db, user: { can: async () => can }, sleep: noSleep });
+    const before = fin.linkedin.editable;
+    await assert.rejects(LI.save(db, row), e => e.code === code);
+    const m = D.rebuild({});
+    return [before, m.linkedin.editable, m.linkedin.lockReason];
+  };
+  assert.deepEqual(await run(null, "invalid_argument"), [true, false, DENIED]);
+  assert.deepEqual(await run(undefined, "permission_denied"), [true, false, DENIED]);
+  assert.deepEqual(await run(null, "not_writer"), [true, false, DENIED]);
+  assert.deepEqual(await run(true, "invalid_argument"), [true, true, null], "can() said yes: a failure stays a failed save");
+  assert.deepEqual(await run(null, "unavailable"), [true, true, null], "not an access code");
+  assert.deepEqual(await run(null, "quota_exceeded"), [true, true, null]);
+
+  // it sticks for later loads in the same visit; a delete refused the same way locks it too
+  await run(null, "invalid_argument");
+  const again = await D.load({ rangeDays: 30, now: new Date(NOW), mcp: fakeMcp(fixtureRouter()), db: liDb(liFx()), user: { can: async () => null }, sleep: noSleep });
+  assert.deepEqual([again.linkedin.editable, again.linkedin.lockReason], [false, DENIED]);
+  X.resetMemory();
+  const db = liDb(liFx());
+  const coll = db.collection;
+  db.collection = name => { const c = coll(name); const doc = c.doc; c.doc = id => Object.assign(doc(id), { delete: async () => { throw { code: "invalid_argument" }; } }); return c; };
+  await D.load({ rangeDays: 30, now: new Date(NOW), mcp: fakeMcp(fixtureRouter()), db, user: null, sleep: noSleep });
+  await assert.rejects(LI.remove(db, "test-ava-stone"));
+  assert.equal(D.rebuild({}).linkedin.lockReason, DENIED);
+});
+
+// ------------------------------------------------------------------ piece 2 fix round 2
+
+test("saveMany never overwrites a row changed after the import's basis: newer stored or loaded, or deleted", async () => {
+  const row = (id, extra) => Object.assign(blankRow(), { name: "Test " + id, profile_url: "https://www.linkedin.com/in/" + id, stage: "Accepted" }, extra);
+  const basis = [Object.assign(row("test-a"), { id: "test-a", updatedAt: 5 }), Object.assign(row("test-b"), { id: "test-b", updatedAt: 5 }),
+    Object.assign(row("test-c"), { id: "test-c", updatedAt: 5 })];
+  const pasted = basis.map(r => Object.assign({}, r, { company: "Test Pasted Co" }));
+
+  // stored: test-a was saved again since (updatedAt 9), test-b was deleted, test-c is as the basis saw it
+  X.resetMemory();
+  const db = liDb({ "test-a": Object.assign(row("test-a"), { stage: "DM sent", updatedAt: 9 }), "test-c": Object.assign(row("test-c"), { updatedAt: 5 }) });
+  const res = await LI.saveMany(db, pasted, { existing: basis, now: 20 });
+  assert.deepEqual([res.written, res.failed, res.skipped, res.conflicts, res.error], [1, 0, 2, ["test-a", "test-b"], null]);
+  assert.deepEqual(res.saved.map(r => r.id), ["test-c"]);
+  assert.deepEqual([db.docs.get("linkedinRows/test-a").stage, db.docs.get("linkedinRows/test-a").company], ["DM sent", ""]);
+  assert.ok(!db.docs.has("linkedinRows/test-b"), "a deleted row is not brought back");
+  assert.equal(db.docs.get("linkedinRows/test-c").company, "Test Pasted Co");
+
+  // loaded: after the basis was taken the page saved test-a (a newer updatedAt) and deleted test-b
+  X.resetMemory();
+  const seeded = Object.fromEntries(basis.map(r => [r.id, Object.assign({}, r)]));
+  const db2 = liDb(seeded);
+  const fin = await D.load({ rangeDays: 30, now: new Date(NOW), mcp: fakeMcp(fixtureRouter()), db: db2, user: { can: async () => true }, sleep: noSleep });
+  const prepared = fin.linkedin.rows;
+  D.rebuild({ linkedinRows: prepared.filter(r => r.id !== "test-b").map(r => (r.id === "test-a" ? Object.assign({}, r, { stage: "DM sent", updatedAt: 6 }) : r)) });
+  const res2 = await LI.saveMany(db2, pasted, { existing: prepared, now: 20 });
+  assert.deepEqual([res2.written, res2.skipped, res2.conflicts], [1, 2, ["test-a", "test-b"]]);
+  assert.deepEqual(db2.writes.filter(x => x.path.startsWith("linkedinRows/")).map(x => x.path), ["linkedinRows/test-c"]);
+
+  // a row the basis didn't have, which the page now holds, is left alone too; one nobody holds is written
+  D.rebuild({ linkedinRows: prepared.concat([Object.assign(row("test-d"), { id: "test-d", updatedAt: 7 })]) });
+  const res3 = await LI.saveMany(db2, [row("test-d", { company: "Test D Co" }), row("test-e")], { existing: prepared, now: 21 });
+  assert.deepEqual([res3.written, res3.conflicts, res3.saved.map(r => r.id)], [1, ["test-d"], ["test-e"]]);
 });

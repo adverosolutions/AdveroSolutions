@@ -76,7 +76,7 @@ body{margin:0;min-height:100vh;font-family:var(--font);font-size:15px;line-heigh
 h1,h2,h3,h4,p,ul,ol,dl,dd,figure{margin:0}
 ul,ol{padding:0;list-style:none}
 a{color:inherit}
-button,input{font:inherit;color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
 svg{display:block}
 :focus-visible{outline:2px solid var(--blue-deep);outline-offset:3px}
 .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
@@ -420,6 +420,75 @@ td a:hover{text-decoration:underline}
 #costs-status{font-size:13.5px;font-weight:600;color:var(--mint-text)}
 #costs-status.is-error{color:var(--rose-text)}
 
+/* LinkedIn tracker (Detail tab 3) */
+.btn--sm{min-height:32px;padding:0 12px;font-size:13px}
+.btn--danger{color:var(--surface);background:var(--rose);border-color:color-mix(in srgb,var(--rose) 60%,var(--ink));box-shadow:var(--shadow-pill)}
+.textbtn--danger{color:var(--rose-text)}
+.textbtn[disabled]{cursor:not-allowed;opacity:.5}
+.ctl{width:100%;min-width:0;min-height:40px;padding:0 12px;border-radius:var(--r-sm);border:1px solid var(--ui-line);background:var(--surface);color:var(--ink);font-size:14.5px;font-weight:500;font-variant-numeric:tabular-nums}
+.ctl:focus{outline:2px solid var(--blue-deep);outline-offset:1px}
+.ctl[disabled]{opacity:.6;cursor:not-allowed}
+.ctl--sm{width:auto;min-height:32px;padding:0 10px;font-size:13px;font-weight:600;border-radius:var(--radius-pill);background:var(--glass-strong)}
+textarea.ctl{display:block;min-height:150px;padding:10px 12px;resize:vertical;font-size:13px;line-height:1.45;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.li-week{margin-top:14px;padding:16px;border-radius:var(--r-md);background:linear-gradient(180deg,var(--surface),var(--ui-soft));border:1px solid var(--ui-line)}
+.li-week__head{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px}
+.li-week__title{font-size:15px;font-weight:700}
+.li-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:12px}
+.li-stat{min-width:0;padding:10px 12px;border-radius:var(--r-sm);background:var(--surface);border:1px solid var(--ui-line)}
+.li-stat dt{font-size:12px;font-weight:600;color:var(--ink-2)}
+.li-stat dd{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:3px;font-size:20px;font-weight:700;letter-spacing:-.02em;line-height:1.15;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.li-stat dd .state,.li-stat dd .tag{letter-spacing:0}
+.li-stat__foot{display:block;margin-top:3px;font-size:12px;font-weight:500;color:var(--ink-2)}
+table.li-abt{min-width:0;margin-top:10px;background:var(--surface);border:1px solid var(--ui-line);border-radius:var(--r-sm);border-collapse:separate;border-spacing:0;overflow:hidden}
+.li-abt th,.li-abt td{padding:8px 10px}
+.li-abt thead th{font-size:11.5px}
+.li-abt tbody th{font-weight:600;text-align:left;overflow-wrap:anywhere}
+.li-abt td{font-weight:700}
+.li-week__note{margin-top:8px;font-size:12.5px;color:var(--ink-2)}
+.li-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:16px}
+.li-toolbar .spacer{flex:1 1 auto}
+.seg__n{margin-left:5px;font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.seg button[aria-pressed="true"] .seg__n{color:var(--ink-2)}
+.li-seg{flex-wrap:wrap;border-radius:18px}
+.li-notice{margin-top:10px;font-size:13.5px;font-weight:600;color:var(--mint-text)}
+.li-notice.is-err{color:var(--rose-text)}
+.li-notice:empty{margin:0}
+.li-card{margin-top:14px;padding:16px;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--blue-tint-2);box-shadow:var(--shadow-pill);min-width:0}
+.li-card__head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.li-card__title{font-size:16px;font-weight:700;overflow-wrap:anywhere;min-width:0}
+.li-card__help{margin-top:4px;font-size:13px;color:var(--ink-2)}
+.li-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-top:14px}
+.lf{display:grid;align-content:start;gap:5px;min-width:0;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.lf.is-bad .ctl{border-color:var(--rose);background:color-mix(in srgb,var(--rose) 5%,var(--surface))}
+.li-foot{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:14px}
+.li-ok{font-size:13.5px;font-weight:600;color:var(--mint-text)}
+.li-err{font-size:13.5px;font-weight:600;color:var(--rose-text)}
+.li-busy{font-size:13.5px;font-weight:600;color:var(--ink-2)}
+.li-paste__ta{margin-top:12px}
+.li-sum{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+table.li-table{min-width:940px}
+table.li-prev{min-width:560px}
+.li-table td{vertical-align:middle}
+.li-table tr.is-fresh td{background:color-mix(in srgb,var(--mint) 6%,var(--surface))}
+.li-name{font-weight:700;min-width:150px}
+.li-due{white-space:nowrap}
+.li-due b{display:block;font-weight:700}
+.li-due span{display:block;font-size:12px;color:var(--ink-2)}
+.li-due.is-overdue b,.li-due.is-overdue span{color:var(--rose-text)}
+.li-act{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;min-width:250px}
+.li-pick{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.li-pick__q,.li-ask{font-size:13px;font-weight:600;color:var(--ink)}
+.li-msg{font-size:12.5px;font-weight:600}
+.li-msg:empty{display:none}
+.li-msg.is-ok{color:var(--mint-text)}
+.li-msg.is-err{color:var(--rose-text)}
+.li-msg.is-busy{color:var(--ink-2)}
+@media (max-width:520px){
+  .li-form{grid-template-columns:minmax(0,1fr)}
+  .li-toolbar .spacer{display:none}
+  .li-abt th,.li-abt td{padding:8px 6px}
+}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none !important;transition:none !important}
   .sky-haze i{animation:none}
@@ -522,14 +591,17 @@ td a:hover{text-decoration:underline}
   const CONFIG = (DATA && DATA.CONFIG) || {};
   const RANGE_KEY = "advero-scoreboard-range";
   const TAB_KEY = "advero-scoreboard-tab";
-  const SOURCES = [["instantly", "Instantly"], ["upwork", "Upwork"], ["ghl", "GHL"], ["calendar", "Calendar"]];
-  const SOURCE_NAME = { instantly: "Instantly", upwork: "Upwork", ghl: "GHL", calendar: "Calendar" };
+  // the four live connectors, then the LinkedIn rows the page keeps in its own db
+  const SOURCES = [["instantly", "Instantly"], ["upwork", "Upwork"], ["ghl", "GHL"], ["calendar", "Calendar"], ["linkedin", "LinkedIn"]];
+  const CONNECTORS = SOURCES.slice(0, 4);
+  const SOURCE_NAME = { instantly: "Instantly", upwork: "Upwork", ghl: "GHL", calendar: "Calendar", linkedin: "LinkedIn" };
+  const TABS = [["campaigns", "Campaigns"], ["proposals", "Upwork proposals"], ["linkedin", "LinkedIn tracker"]];
   const $ = (sel) => document.querySelector(sel);
 
   const state = {
     model: null,
     rangeDays: readStore(RANGE_KEY, ["7", "30", "90"], "30") | 0,
-    tab: readStore(TAB_KEY, ["campaigns", "proposals"], "campaigns"),
+    tab: readStore(TAB_KEY, TABS.map(function (t) { return t[0]; }), "campaigns"),
     loading: false,
     barObs: null,
     caps: { mcp: null, db: null, user: null },
@@ -541,7 +613,8 @@ td a:hover{text-decoration:underline}
     openChip: null,
     notice: "",
     noData: false,
-    seq: 0
+    seq: 0,
+    liSig: null          // what the LinkedIn tab was last drawn from (see liSig)
   };
 
   function readStore(key, allowed, fallback) {
@@ -657,6 +730,10 @@ td a:hover{text-decoration:underline}
     if (!isFinite(t)) return String(k || "");
     return dtf(withDay ? { weekday: "short", month: "short", day: "numeric" } : { month: "short", day: "numeric" }, "UTC").format(new Date(t));
   }
+  // YYYY-MM-DD (a Central date) -> a timestamp at midday Central on that date; null when it is not a date
+  function ymdTs(k) { const t = keyToUtc(k); return isFinite(t) ? t + 18 * 36e5 : null; }
+  // profile links: only https URLs ever become an href
+  function httpsHref(v) { const str = String(v == null ? "" : v).trim(); return /^https:\/\//i.test(str) ? safeHref(str) : null; }
   function fmtDate(v) { const d = toDate(v); return d ? dtf({ month: "short", day: "numeric" }).format(d) : "—"; }
   function fmtWeekday(v) { const d = toDate(v); return d ? dtf({ weekday: "short" }).format(d) : ""; }
   function fmtTime(v) { const d = toDate(v); return d ? dtf({ hour: "numeric", minute: "2-digit" }).format(d) : ""; }
@@ -724,7 +801,12 @@ td a:hover{text-decoration:underline}
     return src ? h("span", { class: "tag" }, String(src)) : null;
   }
 
-  function src(m, key) { return (m && m.sources && m.sources[key]) || { state: "loading", storedAt: null, error: null, warnings: [] }; }
+  function src(m, key) {
+    if (m && m.sources && m.sources[key]) return m.sources[key];
+    // a model from a data script without the LinkedIn source: not available, rather than loading forever
+    if (key === "linkedin" && m && m.sources) return { state: "unavailable", storedAt: null, error: null, warnings: [] };
+    return { state: "loading", storedAt: null, error: null, warnings: [] };
+  }
   function srcState(m, key) { return m ? src(m, key).state : "loading"; }
   // ok, possibly mid-refresh: data is there and current enough to show
   function isOk(m, key) { return srcState(m, key) === "ok"; }
@@ -775,7 +857,9 @@ td a:hover{text-decoration:underline}
     approval_required: "Blocked", tool_error: "Error", rate_limited: "Busy", server_unavailable: "Not answering",
     upstream_error: "Not answering"
   };
-  function chipInfo(st) {
+  function chipInfo(st, key) {
+    if (key === "linkedin" && st.state === "ok" && st.refreshing !== true) return { cls: st.warnings && st.warnings.length ? "is-warn" : "is-ok", text: "Saved rows" };
+    if (key === "linkedin" && st.state === "error" && st.refreshing !== true) return { cls: "is-error", text: "Not read" };
     if (st.state === "ok" && st.refreshing === true) return { cls: "is-refreshing", text: "Refreshing" };
     if (st.state === "ok") return { cls: st.warnings && st.warnings.length ? "is-warn" : "is-ok", text: "Live" };
     if (st.state === "error" && st.refreshing === true) return { cls: "is-refreshing", text: "Retrying" };
@@ -789,12 +873,12 @@ td a:hover{text-decoration:underline}
     SOURCES.forEach(function (pair) {
       const key = pair[0];
       const st = src(m, key);
-      const info = chipInfo(st);
+      const info = chipInfo(st, key);
       const chip = h("button", {
         type: "button", class: "chip " + info.cls, "aria-expanded": state.openChip === key ? "true" : "false", "aria-controls": "chip-detail",
         onclick: function () { state.openChip = state.openChip === key ? null : key; renderChips(state.model); syncBarHeight(); }
       }, h("span", { class: "chip__dot", "aria-hidden": "true" }), h("b", null, pair[1]), h("span", null, info.text),
-        st.state === "ok" && has(st.storedAt) ? rel("span", "live", Number(st.storedAt), "", "ago") : null);
+        key !== "linkedin" && st.state === "ok" && has(st.storedAt) ? rel("span", "live", Number(st.storedAt), "", "ago") : null);
       box.appendChild(chip);
     });
     const det = $("#chip-detail");
@@ -804,7 +888,12 @@ td a:hover{text-decoration:underline}
     det.hidden = false;
     det.className = "chip-detail" + (st.state === "error" && st.refreshing !== true ? " is-error" : "");
     fill(det);
-    if (st.state === "error" && st.refreshing === true) det.append(name + ": retrying now. Last try: " + ((st.error && st.error.fix) || "it didn't answer."));
+    if (state.openChip === "linkedin" && st.state === "ok" && st.refreshing !== true) {
+      det.append(name + ": " + plural(liRows(m).length, "row") + " saved in this page. You add and update them in the LinkedIn tracker under Detail.");
+      (st.warnings || []).forEach(function (w) { det.append(h("div", null, "Note: " + w)); });
+    }
+    else if (state.openChip === "linkedin" && st.state === "unavailable") det.append(name + ": " + String((st.warnings && st.warnings[0]) || "Editing needs the claude.ai viewer").replace(/\.\s*$/, "") + ".");
+    else if (st.state === "error" && st.refreshing === true) det.append(name + ": retrying now. Last try: " + ((st.error && st.error.fix) || "it didn't answer."));
     else if (st.state === "error") det.append(name + ": " + ((st.error && st.error.fix) || "Press Refresh in a minute."));
     else if (st.state === "unavailable") det.append(name + ": opens with live data when this page runs in claude.ai.");
     else if (st.state === "loading") det.append(name + ": reading now.");
@@ -848,7 +937,7 @@ td a:hover{text-decoration:underline}
 
   /* ---------- banner ---------- */
   function renderBanner(m) {
-    const all = m && SOURCES.every(function (p) { return src(m, p[0]).state === "unavailable"; });
+    const all = m && CONNECTORS.every(function (p) { return src(m, p[0]).state === "unavailable"; });
     const banner = $("#banner");
     banner.hidden = !(all || state.notice);
     $("#banner-title").textContent = all ? "Live data loads when this page is open in claude.ai." : "Some data did not load.";
@@ -874,7 +963,8 @@ td a:hover{text-decoration:underline}
     const alerts = ((t && t.alerts) || []).slice().sort(function (a, b) {
       return (a.severity === "critical" ? 0 : 1) - (b.severity === "critical" ? 0 : 1);
     });
-    const ALERT_SRC = ["instantly", "upwork", "ghl"];
+    // LinkedIn raises the pending-requests alert; it counts here unless it cannot load at all (no db)
+    const ALERT_SRC = ["instantly", "upwork", "ghl"].concat(srcState(m, "linkedin") === "unavailable" ? [] : ["linkedin"]);
     const allLoading = ALERT_SRC.every(function (k) { return srcState(m, k) === "loading"; });
     const allIn = ALERT_SRC.every(function (k) { return isOk(m, k) && !isRefreshing(m, k); });
     const notIn = ALERT_SRC.filter(function (k) { return !(isOk(m, k) && !isRefreshing(m, k)); }).map(function (k) {
@@ -936,7 +1026,9 @@ td a:hover{text-decoration:underline}
     return sh.el;
   }
   function tileWaiting(m, t) {
-    const sh = tileShell(m, ["upwork", "instantly", "ghl"], "Waiting on you", "#followups");
+    // LinkedIn replies count too; without a db there are no rows, so nothing is missing from the sum
+    const keys = ["upwork", "instantly", "ghl"].concat(srcState(m, "linkedin") === "unavailable" ? [] : ["linkedin"]);
+    const sh = tileShell(m, keys, "Waiting on you", "#followups");
     return finishTile(sh, fmtNum(t && t.waitingOnYou), null, "See follow-ups");
   }
   function tileCalls(m, t) {
@@ -964,7 +1056,7 @@ td a:hover{text-decoration:underline}
   }
 
   /* ---------- Channels ---------- */
-  const CHANNEL_SOURCE = { cold_email: "instantly", upwork: "upwork" };
+  const CHANNEL_SOURCE = { cold_email: "instantly", upwork: "upwork", linkedin: "linkedin" };
   const CHANNEL_STATUS = {
     live: ["is-good", "Live"], paused: ["is-watch", "Paused"], not_connected: ["is-none", "Not connected"],
     loading: ["is-info", "Loading"], error: ["is-alert", "Error"]
@@ -1030,11 +1122,11 @@ td a:hover{text-decoration:underline}
         const d = deltaEl(st.value, st.prev, days);
         if (d) li.append(d);
       }
-      if (prevStep && !ghost && has(st.value) && has(prevStep.value) && Number(prevStep.value) > 0) {
-        const conv = Number(st.value) / Number(prevStep.value);
-        const pct = Math.max(0, Math.min(100, conv * 100));
+      // conv false: this step is not a share of the one above it, so no "% of" line or meter
+      if (prevStep && st.conv !== false && !ghost && has(st.value) && has(prevStep.value) && Number(prevStep.value) > 0) {
+        const conv = Math.max(0, Math.min(1, Number(st.value) / Number(prevStep.value)));
         li.append(h("div", { class: "step__conv" },
-          h("span", { class: "meter", "aria-hidden": "true" }, h("i", { style: { width: pct.toFixed(1) + "%" } })),
+          h("span", { class: "meter", "aria-hidden": "true" }, h("i", { style: { width: (conv * 100).toFixed(1) + "%" } })),
           h("span", null, fmtPct(conv) + " of " + (prevStep.label || prevStep.key))));
       }
       return li;
@@ -1322,7 +1414,8 @@ td a:hover{text-decoration:underline}
   /* ---------- Follow-ups ---------- */
   const KIND = {
     upwork_reply: ["Upwork", "tag--mint"], upwork_nudge: ["Upwork", "tag--mint"], email_reply: ["Email", "tag--blue"],
-    unibox: ["Email", "tag--blue"], new_lead: ["Deal", ""], stale_deal: ["Deal", ""], ghl_task: ["GHL task", ""], call_prep: ["Call", "tag--indigo"]
+    unibox: ["Email", "tag--blue"], new_lead: ["Deal", ""], stale_deal: ["Deal", ""], ghl_task: ["GHL task", ""], call_prep: ["Call", "tag--indigo"],
+    linkedin_reply: ["LinkedIn", "tag--indigo"], linkedin_touch: ["LinkedIn", "tag--indigo"]
   };
   const GROUPS = [
     ["reply_now", "Reply now", "Nothing waiting on you."],
@@ -1333,7 +1426,7 @@ td a:hover{text-decoration:underline}
     const sec = $("#followups");
     const head = sectionHead("followups-title", "Follow-ups", null);
     if (!m) { fill(sec, head, loadingNote("follow-ups"), skel("list")); return; }
-    const keys = ["instantly", "upwork", "ghl", "calendar"];
+    const keys = ["instantly", "upwork", "ghl", "calendar", "linkedin"];
     const loading = keys.filter(function (k) { return srcState(m, k) === "loading"; });
     if (loading.length === keys.length) { fill(sec, head, loadingNote("follow-ups"), skel("list")); return; }
     const notes = keys.filter(function (k) { return srcState(m, k) === "error"; }).map(function (k) {
@@ -1357,15 +1450,25 @@ td a:hover{text-decoration:underline}
     const kd = KIND[it.kind] || [String(it.kind || "Item"), ""];
     let when = null;
     if (group === "reply_now" && has(it.ageMs)) when = rel("span", "waiting", gen - Number(it.ageMs), "", "when");
-    else if (it.dueAt != null && toDate(it.dueAt)) {
-      const ts = toDate(it.dueAt).getTime();
+    else if (it.dueAt != null && dueTs(it.dueAt) != null) {
+      const ts = dueTs(it.dueAt);
       const overdue = !!it.overdue || dayDiff(new Date(), new Date(ts)) < 0;
       when = rel("span", it.kind === "call_prep" ? "starts" : "due", ts, overdue ? "1" : "", "when" + (overdue ? " is-overdue" : ""));
     } else if (it.overdue) when = h("span", { class: "when is-overdue" }, "overdue");
+    // LinkedIn items link to the person's profile, and only over https
+    const isLi = String(it.kind || "").indexOf("linkedin_") === 0;
+    const link = isLi ? (httpsHref(it.url) ? ext(httpsHref(it.url), "Open profile", "link") : null)
+      : (it.url ? ext(it.url, "Open", "link") : null);
     return h("li", { class: "item" },
       h("span", { class: "tag " + kd[1] }, kd[0]),
       h("div", { class: "item__body" }, h("div", { class: "item__title" }, it.title || ""), it.detail ? h("div", { class: "item__detail" }, it.detail) : null),
-      h("div", { class: "item__side" }, when, it.url ? ext(it.url, "Open", "link") : null));
+      h("div", { class: "item__side" }, when, link));
+  }
+  // A bare YYYY-MM-DD (LinkedIn next_touch_due) is a Central calendar date: midday Central keeps it on that day.
+  function dueTs(v) {
+    if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) return ymdTs(v);
+    const d = toDate(v);
+    return d ? d.getTime() : null;
   }
 
   /* ---------- Calls ---------- */
@@ -1417,10 +1520,37 @@ td a:hover{text-decoration:underline}
 
   /* ---------- Detail ---------- */
   const CAMPAIGN_STATE = { 1: "is-good", 2: "is-watch", 0: "is-none", 3: "is-none", 4: "is-info" };
+  // what the LinkedIn tab draws from: its rows and lock state, its source status and today's date
+  function liSig(m) {
+    if (!m) return "";
+    try { return JSON.stringify([m.linkedin || null, (m.sources && m.sources.linkedin) || null, todayYmd(), !!state.caps.db, state.sample]); }
+    catch (e) { return String(Date.now()) + Math.random(); }
+  }
+  // the focused control in the detail section, found again after a redraw by its id or its data-li-row/role
+  function saveDetailFocus(sec) {
+    const ae = document.activeElement;
+    if (!ae || ae === document.body || !sec.contains(ae)) return null;
+    const keep = { id: ae.id || "", row: ae.dataset ? ae.dataset.liRow : undefined, role: ae.dataset ? ae.dataset.liRole : undefined, start: null, end: null, dir: null };
+    try { if (typeof ae.selectionStart === "number") { keep.start = ae.selectionStart; keep.end = ae.selectionEnd; keep.dir = ae.selectionDirection; } } catch (e) { /* no selection on this input type */ }
+    return keep.id || (keep.row !== undefined && keep.role !== undefined) ? keep : null;
+  }
+  function restoreDetailFocus(sec, keep) {
+    if (!keep) return;
+    const ae = document.activeElement;
+    if (ae && ae !== document.body && sec.contains(ae)) return;
+    let el = keep.id ? document.getElementById(keep.id) : null;
+    if (!el) sec.querySelectorAll("[data-li-role]").forEach(function (x) { if (!el && x.dataset.liRow === keep.row && x.dataset.liRole === keep.role) el = x; });
+    if (!el || typeof el.focus !== "function" || el.disabled) return;
+    el.focus();
+    if (keep.start !== null && typeof el.setSelectionRange === "function") {
+      try { el.setSelectionRange(keep.start, keep.end, keep.dir || "none"); } catch (e) { /* not a text input */ }
+    }
+  }
   function renderDetail(m) {
     const sec = $("#detail");
+    const keep = saveDetailFocus(sec);
     const head = sectionHead("detail-title", "Detail", null);
-    const tabs = [["campaigns", "Campaigns"], ["proposals", "Upwork proposals"]];
+    const tabs = TABS;
     const tablist = h("div", { class: "tabs", role: "tablist", "aria-label": "Detail tables" }, tabs.map(function (t) {
       const sel = state.tab === t[0];
       return h("button", {
@@ -1431,10 +1561,12 @@ td a:hover{text-decoration:underline}
     const panels = tabs.map(function (t) {
       const sel = state.tab === t[0];
       const p = h("div", { role: "tabpanel", id: "tabpanel-" + t[0], "aria-labelledby": "tab-" + t[0], hidden: !sel, tabindex: "0" });
-      if (sel) p.append(t[0] === "campaigns" ? campaignsTable(m) : proposalsTable(m));
+      if (sel) p.append(t[0] === "campaigns" ? campaignsTable(m) : t[0] === "proposals" ? proposalsTable(m) : trackerPanel(m));
       return p;
     });
     fill(sec, head, tablist, panels);
+    state.liSig = state.tab === "linkedin" ? liSig(m) : null;
+    if (!applyLiFocus()) restoreDetailFocus(sec, keep);
   }
   function selectTab(name, focus) {
     state.tab = name;
@@ -1443,14 +1575,18 @@ td a:hover{text-decoration:underline}
     if (focus) { const b = document.getElementById("tab-" + name); if (b) b.focus(); }
   }
   function tabKeys(e) {
-    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-      e.preventDefault();
-      selectTab(state.tab === "campaigns" ? "proposals" : "campaigns", true);
-    }
+    const keys = TABS.map(function (t) { return t[0]; });
+    const i = Math.max(0, keys.indexOf(state.tab));
+    let next = null;
+    if (e.key === "ArrowRight") next = keys[(i + 1) % keys.length];
+    else if (e.key === "ArrowLeft") next = keys[(i - 1 + keys.length) % keys.length];
+    else if (e.key === "Home") next = keys[0];
+    else if (e.key === "End") next = keys[keys.length - 1];
+    if (next) { e.preventDefault(); selectTab(next, true); }
   }
-  function tableShell(refreshing, heads, rows, label) {
+  function tableShell(refreshing, heads, rows, label, tableClass) {
     return h("div", { class: "table-wrap" + dim(refreshing), role: "region", "aria-label": label + ", scrolls sideways", tabindex: "0" },
-      h("table", null,
+      h("table", { class: tableClass || null },
         h("thead", null, h("tr", null, heads.map(function (x) { return h("th", { scope: "col", class: x[1] ? "num" : null }, x[0]); }))),
         h("tbody", null, rows)));
   }
@@ -1490,6 +1626,771 @@ td a:hover{text-decoration:underline}
       }), "Upwork proposals");
   }
 
+  /* ---------- LinkedIn tracker (Detail tab 3) ---------- */
+  // Rows live in the page's own db. Every write goes through AdveroData.linkedin and happens only on a click here.
+  // After a save the model is rebuilt from the updated rows (no connector calls), so everything updates at once.
+  const LI_FILTER_KEY = "advero-scoreboard-li-filter";
+  const LI_GROUPS = [
+    { key: "active", label: "Active", stages: ["Connect sent", "Accepted", "DM sent", "Follow-up 1", "Follow-up 2", "Follow-up 3"] },
+    { key: "replied", label: "Replied", stages: ["Reply", "Positive reply"] },
+    { key: "booked", label: "Booked & closed", stages: ["Meeting booked", "Closed won", "Closed lost"] },
+    { key: "all", label: "All", stages: null }
+  ];
+  // stage pill colour: blue while the ladder runs, amber for a reply to answer, mint for good news, grey for finished
+  const LI_STAGE_CLASS = {
+    "Reply": "is-watch", "Positive reply": "is-good", "Meeting booked": "is-good", "Closed won": "is-good",
+    "Closed lost": "is-none", "No reply": "is-none", "Voice note sent": "is-none", "Withdrawn": "is-none"
+  };
+  const LI_VARIANT = { A: "Reactivation", B: "Reply and booking" };
+  const LI_LABEL = {
+    name: "Name", first_name: "First name", profile_url: "Profile URL", company: "Company", role: "Role",
+    what_they_do: "What they do", industry: "Industry", country: "Country", connect_sent_date: "Connect sent",
+    accepted_date: "Accepted", dm_date: "Loom DM sent", loom_variant: "Loom variant", last_touch_date: "Last touch",
+    next_touch_due: "Next touch due", stage: "Stage", reply_type: "Reply type", reply_date: "Reply date",
+    reply_answered_date: "Reply answered", meeting_booked: "Meeting (Central time)", outcome: "Outcome", slots_offered: "Slots offered"
+  };
+  const li = {
+    filter: readStore(LI_FILTER_KEY, LI_GROUPS.map(function (g) { return g.key; }), "active"),
+    sticky: new Set(),   // rows touched since the filter last changed stay in view, even when they leave the group
+    msg: {},             // rowId -> { kind: "busy"|"ok"|"err", text }
+    pick: {},            // rowId -> event type waiting for its variant, reply type or time
+    when: {},            // rowId -> datetime draft for "Meeting booked…"
+    logSel: {},          // rowId -> event picked in the Log… menu, applied only by Apply or Enter
+    replySel: {},        // rowId -> reply type picked, saved only by Save or Enter
+    confirmDel: null,    // rowId waiting for the in-page delete confirm
+    form: null,          // { mode: "add"|"edit", orig, values, kinds, error, bad, busy }
+    paste: null,         // { text, preview, result, busy }
+    importing: false,    // a paste import is writing: every row write control waits for it
+    rowWrites: 0,        // single-row saves and deletes in flight: Import waits for them
+    notice: null,        // { kind, text } under the toolbar
+    focus: null          // { row, role } or { id } to focus after the next draw
+  };
+  let pasteTimer = null;
+
+  function LI() {
+    const L = DATA && DATA.linkedin;
+    return L && typeof L.applyEvent === "function" && typeof L.rowId === "function" ? L : null;
+  }
+  function liId(row) { try { return String(LI().rowId(row)); } catch (e) { return ""; } }
+  function liRows(m) { return m && m.linkedin && Array.isArray(m.linkedin.rows) ? m.linkedin.rows : []; }
+  function liFields() { const L = LI(); return L && Array.isArray(L.FIELDS) ? L.FIELDS : []; }
+  function liEvents() { const L = LI(); return L && Array.isArray(L.EVENTS) ? L.EVENTS : []; }
+  // next touch due ascending, blanks last
+  function liSort(rows) {
+    return rows.slice().sort(function (a, b) {
+      const x = String(a.next_touch_due || ""), y = String(b.next_touch_due || "");
+      if (!x || !y) return (x ? 0 : 1) - (y ? 0 : 1);
+      return x < y ? -1 : x > y ? 1 : 0;
+    });
+  }
+  function liInGroup(row, g) { return !g.stages || g.stages.indexOf(String(row.stage || "")) >= 0; }
+  function liEditable(m) {
+    if (!LI() || !m || !m.linkedin || m.linkedin.editable !== true) return false;
+    if (srcState(m, "linkedin") !== "ok") return false;
+    return state.sample || !!state.caps.db;
+  }
+  function liLockText(m) {
+    const st = src(m, "linkedin");
+    if (st.state === "error") return (st.error && st.error.fix) || "Your LinkedIn rows could not be read. Press Refresh.";
+    if (m && m.linkedin && m.linkedin.lockReason) return String(m.linkedin.lockReason);
+    if (!LI()) return "The tracker needs the newer scoreboard data script. Reload the page.";
+    return "Editing needs the claude.ai viewer.";
+  }
+  function todayYmd() { return dayKey(new Date()); }
+  function humanize(v) { const str = String(v == null ? "" : v).replace(/_/g, " ").trim(); return str ? str.charAt(0).toUpperCase() + str.slice(1) : ""; }
+  function liName(row) { return String((row && (row.name || row.first_name || row.profile_url)) || "this person"); }
+  function evLabel(ev) { const l = String(ev.label || ev.type); return ev.needs && !/…$/.test(l) ? l + "…" : l; }
+
+  // meeting_booked: an ISO datetime, edited as Central wall time
+  function centralParts(d) {
+    const o = {};
+    dtf({ __locale: "en-CA", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+      .formatToParts(d).forEach(function (p) { o[p.type] = p.value; });
+    return o;
+  }
+  function isoToInput(v) {
+    const d = toDate(v);
+    if (!d) return "";
+    const p = centralParts(d);
+    return p.year + "-" + p.month + "-" + p.day + "T" + (p.hour === "24" ? "00" : p.hour) + ":" + p.minute;
+  }
+  function inputToIso(v) {
+    const mm = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(String(v || ""));
+    if (!mm) return "";
+    const want = Date.UTC(+mm[1], +mm[2] - 1, +mm[3], +mm[4], +mm[5]);
+    let t = want;
+    for (let i = 0; i < 3; i++) {
+      const p = centralParts(new Date(t));
+      const seen = Date.UTC(+p.year, +p.month - 1, +p.day, (+p.hour) % 24, +p.minute);
+      if (seen === want) break;
+      t += want - seen;
+    }
+    return new Date(t).toISOString();
+  }
+
+  /* drawing and focus */
+  function drawTracker() { guard("detail", function () { renderDetail(state.model); }); }
+  function focusLater(row, role) { li.focus = { row: row, role: role }; }
+  function applyLiFocus() {
+    const f = li.focus;
+    if (!f) return false;
+    li.focus = null;
+    let el = null;
+    if (f.id) el = document.getElementById(f.id);
+    else document.querySelectorAll("[data-li-role]").forEach(function (x) { if (!el && x.dataset.liRow === f.row && x.dataset.liRole === f.role) el = x; });
+    if (el && typeof el.focus === "function") { el.focus(); return true; }
+    return false;
+  }
+  function setMsg(id, kind, text) {
+    const msg = { kind: kind, text: text };
+    li.msg[id] = msg;
+    if (kind === "ok") {
+      setTimeout(function () {
+        if (li.msg[id] !== msg) return;
+        delete li.msg[id];
+        document.querySelectorAll("[data-li-msg]").forEach(function (el) { if (el.dataset.liMsg === id) { el.textContent = ""; el.className = "li-msg"; } });
+      }, 6000);
+    }
+  }
+  function liNotice(kind, text) {
+    const n = { kind: kind, text: text };
+    li.notice = n;
+    setTimeout(function () {
+      if (li.notice !== n) return;
+      li.notice = null;
+      const el = document.getElementById("li-notice");
+      if (el) el.textContent = "";
+    }, 8000);
+  }
+
+  /* writes: save and remove reject on failure and after 5 s (code "timeout"); saveMany never rejects.
+     In the #sample preview nothing is written anywhere: the rows change on this page only. */
+  function dbSave(row, opts) {
+    return state.sample ? Promise.resolve(Object.assign({}, row, { id: liId(row), updatedAt: Date.now() }))
+      : Promise.resolve().then(function () { return LI().save(state.caps.db, row, opts); });
+  }
+  // after a failed write: when the data layer has made the tracker read-only (saving refused for this view), show it
+  function liRelock() {
+    if (state.sample || !DATA || typeof DATA.rebuild !== "function" || !state.model || !state.model.linkedin || state.model.linkedin.editable !== true) return false;
+    let m2 = null;
+    try { m2 = DATA.rebuild({}); } catch (e) { console.error("Scoreboard: rebuild failed", e); return false; }
+    if (!m2 || !m2.linkedin || m2.linkedin.editable !== false) return false;
+    li.form = null; li.paste = null; li.confirmDel = null;
+    li.pick = {}; li.when = {}; li.logSel = {}; li.replySel = {};
+    li.focus = { id: "tab-linkedin" };
+    render(m2);
+    return true;
+  }
+  function dbRemove(id) { return state.sample ? Promise.resolve() : Promise.resolve().then(function () { return LI().remove(state.caps.db, id); }); }
+  function dbSaveMany(rows, existing) {
+    if (state.sample) {
+      const have = new Map(existing.map(function (r) { return [liId(r), r]; }));
+      const saved = rows.filter(function (r) { const o = have.get(liId(r)); return !o || !liSame(o, r); })
+        .map(function (r) { return Object.assign({}, r, { id: liId(r), updatedAt: Date.now() }); });
+      return Promise.resolve({ written: saved.length, failed: 0, skipped: rows.length - saved.length, saved: saved, error: null });
+    }
+    return Promise.resolve().then(function () { return LI().saveMany(state.caps.db, rows, { existing: existing }); });
+  }
+  // rows -> model: rebuild from the data already read (no connector calls); a data script without rebuild reloads
+  function commitRows(rows) {
+    if (state.sample) {
+      render(Object.assign({}, state.model, { linkedin: Object.assign({}, state.model.linkedin, { rows: liSort(rows) }) }));
+      return;
+    }
+    let rebuilt = null;
+    if (typeof DATA.rebuild === "function") {
+      try { rebuilt = DATA.rebuild({ linkedinRows: rows }); }
+      catch (err) { console.error("Scoreboard: rebuild failed, reloading instead", err); rebuilt = null; }
+    }
+    if (rebuilt) render(rebuilt);
+    else startLoad(false);
+  }
+  // Saves one row. oldRow is the row before the change (null for a new person). Resolves true when saved, else the error.
+  // A new id for an existing row (its profile URL changed) never lands on another saved doc: that save is refused.
+  // Counts a single-row write while it runs; when the last one settles, the paste preview redraws so Import is offered again.
+  async function rowWrite(fn) {
+    li.rowWrites++;
+    try { return await fn(); }
+    finally {
+      li.rowWrites = Math.max(0, li.rowWrites - 1);
+      if (!li.rowWrites && li.paste) guard("detail", function () { drawPreview(); });
+    }
+  }
+  function saveRow(oldRow, next, onSaved) { return rowWrite(function () { return saveRowNow(oldRow, next, onSaved); }); }
+  async function saveRowNow(oldRow, next, onSaved) {
+    const oldId = oldRow ? liId(oldRow) : "";
+    let newId = liId(next);
+    const key = oldId || newId;
+    setMsg(key, "busy", "Saving…");
+    drawTracker();
+    let saved;
+    // a new person, or a row moving to a new id, never lands on a saved doc this page didn't read
+    try { saved = await dbSave(next, !oldId || newId !== oldId ? { ifExists: "refuse" } : undefined); }
+    catch (err) {
+      const dupe = !!err && err.code === "exists";
+      if (!dupe) console.error("Scoreboard: saving a LinkedIn row failed", err);
+      setMsg(key, "err", dupe ? existsText(oldRow) : "Couldn't save. Try again.");
+      if (liRelock()) return err || new Error("not saved");
+      focusLater(key, li.pick[key] ? "pick" : "log");
+      drawTracker();
+      return err || new Error("not saved");
+    }
+    const row = saved && typeof saved === "object" ? saved : next;
+    const savedId = liId(row);
+    if (savedId && savedId !== newId) { delete li.msg[newId]; newId = savedId; }
+    let keepOld = false;
+    if (oldId && newId && oldId !== newId) {
+      // the profile URL changed, so the row has a new id: remove the copy under the old one
+      try { await dbRemove(oldId); }
+      catch (err) { console.error("Scoreboard: removing the old LinkedIn row failed", err); keepOld = true; }
+    }
+    const rows = liRows(state.model).filter(function (r) { const i = liId(r); return i !== newId && (keepOld || i !== oldId); }).concat([row]);
+    if (oldId && oldId !== newId) delete li.msg[oldId];
+    delete li.pick[key]; delete li.when[key]; delete li.logSel[key]; delete li.replySel[key];
+    setMsg(newId, "ok", keepOld ? "Saved. The copy under the old URL is still there." : "Saved");
+    li.sticky.add(newId);
+    focusLater(newId, "log");
+    if (onSaved) onSaved(newId);
+    commitRows(rows);
+    return true;
+  }
+  function existsText(oldRow) {
+    return oldRow ? "Another row already has this profile URL." : "This person is already in the tracker. Press Refresh to see them.";
+  }
+  function logEvent(row, evt) {
+    const id = liId(row);
+    let next;
+    try { next = LI().applyEvent(row, evt, todayYmd()); }
+    catch (err) {
+      console.error("Scoreboard: could not apply that LinkedIn event", err);
+      setMsg(id, "err", "Couldn't log that. Try again.");
+      drawTracker();
+      return;
+    }
+    saveRow(row, next, null);
+  }
+  function deleteRow(row) { return rowWrite(function () { return deleteRowNow(row); }); }
+  async function deleteRowNow(row) {
+    const id = liId(row);
+    setMsg(id, "busy", "Deleting…");
+    drawTracker();
+    try { await dbRemove(id); }
+    catch (err) {
+      console.error("Scoreboard: deleting a LinkedIn row failed", err);
+      li.confirmDel = null;
+      setMsg(id, "err", "Couldn't delete. Try again.");
+      if (liRelock()) return;
+      focusLater(id, "delete");
+      drawTracker();
+      return;
+    }
+    li.confirmDel = null;
+    delete li.msg[id]; delete li.pick[id]; delete li.when[id]; delete li.logSel[id]; delete li.replySel[id];
+    li.sticky.delete(id);
+    if (li.form && li.form.orig && liId(li.form.orig) === id) li.form = null;
+    liNotice("ok", "Deleted " + liName(row) + ".");
+    li.focus = { id: "li-filter-" + li.filter };
+    commitRows(liRows(state.model).filter(function (r) { return liId(r) !== id; }));
+  }
+
+  /* Add person / Edit form */
+  function normUrl(u) { return String(u == null ? "" : u).trim().toLowerCase().replace(/[?#].*$/, "").replace(/\/+$/, ""); }
+  function liFieldKind(f) {
+    if (f === "stage" || f === "reply_type" || f === "loom_variant" || f === "outcome") return "select";
+    if (f === "meeting_booked") return "datetime";
+    if (/_date$/.test(f) || f === "next_touch_due") return "date";
+    if (f === "profile_url") return "url";
+    return "text";
+  }
+  function liOptions(f) {
+    const L = LI();
+    if (f === "stage") return Array.isArray(L.STAGES) ? L.STAGES.slice() : [];
+    if (f === "reply_type") return [""].concat(Array.isArray(L.REPLY_TYPES) ? L.REPLY_TYPES : []);
+    if (f === "loom_variant") return ["", "A", "B"];
+    if (f === "outcome") return ["", "Closed won", "Closed lost"];
+    return [];
+  }
+  function optionLabel(f, v) {
+    if (v === "") return f === "reply_type" ? "No reply yet" : f === "loom_variant" ? "No Loom yet" : f === "outcome" ? "Open" : "—";
+    if (f === "reply_type") return humanize(v);
+    if (f === "loom_variant") return v + " · " + (LI_VARIANT[v] || "");
+    return v;
+  }
+  function openForm(mode, row) {
+    const L = LI();
+    const fields = liFields();
+    let base = {};
+    if (mode === "add") {
+      fields.forEach(function (f) { base[f] = ""; });
+      // a new person starts as a sent request dated today, the same as logging "Connect sent"
+      try { base = Object.assign(base, L.applyEvent(base, { type: "connect_sent" }, todayYmd())); }
+      catch (e) { base.stage = "Connect sent"; }
+    } else base = row || {};
+    const values = {}, kinds = {};
+    fields.forEach(function (f) {
+      const raw = base[f] == null ? "" : String(base[f]);
+      let kind = liFieldKind(f), val = raw;
+      // a value the date or datetime input cannot show stays a text field, so editing never blanks it
+      if (kind === "date" && raw && !/^\d{4}-\d{2}-\d{2}$/.test(raw)) kind = "text";
+      if (kind === "datetime" && raw) { val = isoToInput(raw); if (!val) { kind = "text"; val = raw; } }
+      values[f] = val; kinds[f] = kind;
+    });
+    li.form = { mode: mode, orig: mode === "edit" ? row : null, values: values, kinds: kinds, error: "", bad: "", busy: false };
+    li.paste = null;
+    li.confirmDel = null;
+    li.focus = { id: "lf-" + (fields[0] || "name") };
+    drawTracker();
+  }
+  function closeForm() {
+    const f = li.form;
+    li.form = null;
+    if (f && f.orig) focusLater(liId(f.orig), "edit"); else li.focus = { id: "li-add" };
+    drawTracker();
+  }
+  function formInput(e) {
+    const t = e.target;
+    if (li.form && t && t.name && Object.prototype.hasOwnProperty.call(li.form.values, t.name)) li.form.values[t.name] = t.value;
+  }
+  function formError(text, field) {
+    const f = li.form;
+    f.error = text; f.bad = field || ""; f.busy = false;
+    li.focus = { id: "lf-" + (field || "name") };
+    drawTracker();
+  }
+  async function submitForm(e) {
+    e.preventDefault();
+    const f = li.form;
+    if (!f || f.busy || li.importing) return;
+    const el = e.target;
+    if (el && el.elements) Object.keys(f.values).forEach(function (n) { const c = el.elements[n]; if (c) f.values[n] = c.value; });
+    const v = {};
+    Object.keys(f.values).forEach(function (k) { v[k] = String(f.values[k] == null ? "" : f.values[k]).trim(); });
+    if (f.kinds.meeting_booked === "datetime" && v.meeting_booked) {
+      const iso = inputToIso(v.meeting_booked);
+      if (!iso) return formError("Pick the call date and time again.", "meeting_booked");
+      v.meeting_booked = iso;
+    }
+    if (!v.name && !v.profile_url) return formError("Add a name or a profile URL.", "name");
+    if (v.profile_url && !/^https:\/\//i.test(v.profile_url)) return formError("The profile URL has to start with https://", "profile_url");
+    if ("first_name" in v && !v.first_name && v.name) v.first_name = v.name.split(/\s+/)[0];
+    const next = Object.assign({}, f.orig || {}, v, { updatedAt: Date.now() });
+    const oldId = f.orig ? liId(f.orig) : "";
+    // The doc id follows the profile URL: with a URL it is the URL's slug (an edited or newly added URL moves the
+    // row to that id, and saveRow removes the old doc). Without one, a row keeps its id; a new row gets one, once.
+    delete next.id;
+    const urlId = v.profile_url ? liId({ profile_url: v.profile_url }) : "";
+    next.id = urlId && !/^r_/.test(urlId) ? urlId : oldId || liId(next);
+    if (v.profile_url) {
+      const url = normUrl(v.profile_url);
+      const dupe = liRows(state.model).some(function (r) {
+        if (oldId && liId(r) === oldId) return false;
+        return liId(r) === next.id || normUrl(r.profile_url) === url;
+      });
+      if (dupe) return formError(f.orig ? "Another row already has this profile URL." : "This person is already in the tracker. Use Edit on their row.", "profile_url");
+    }
+    f.busy = true; f.error = ""; f.bad = "";
+    const ok = await saveRow(f.orig, next, function () { if (li.form === f) li.form = null; });
+    if (ok !== true && li.form === f) {
+      f.busy = false;
+      f.error = ok && ok.code === "exists" ? existsText(f.orig) : "Couldn't save. Try again.";
+      if (ok && ok.code === "exists") f.bad = "profile_url";
+      li.focus = { id: "lf-submit" };
+      drawTracker();
+    }
+  }
+  function liFormCard() {
+    const f = li.form;
+    const title = f.mode === "add" ? "Add a person" : "Edit " + liName(f.orig);
+    const grid = h("div", { class: "li-form" }, liFields().map(function (name) {
+      const kind = f.kinds[name] || "text";
+      const id = "lf-" + name;
+      const val = f.values[name] == null ? "" : String(f.values[name]);
+      const bad = f.bad === name;
+      let ctl;
+      if (kind === "select") {
+        let opts = liOptions(name);
+        if (opts.indexOf(val) < 0) opts = [val].concat(opts);
+        ctl = h("select", { class: "ctl", id: id, name: name, "aria-invalid": bad ? "true" : null, "aria-describedby": bad ? "lf-status" : null },
+          opts.map(function (o) { return h("option", { value: o, selected: o === val }, optionLabel(name, o)); }));
+      } else {
+        const type = kind === "date" ? "date" : kind === "datetime" ? "datetime-local" : kind === "url" ? "url" : "text";
+        ctl = h("input", { class: "ctl", id: id, name: name, type: type, value: val, autocomplete: "off",
+          spellcheck: kind === "url" ? "false" : null, placeholder: kind === "url" ? "https://www.linkedin.com/in/…" : null,
+          "aria-invalid": bad ? "true" : null, "aria-describedby": bad ? "lf-status" : null });
+      }
+      return h("label", { class: "lf" + (bad ? " is-bad" : "") }, LI_LABEL[name] || humanize(name), ctl);
+    }));
+    const status = f.error ? h("span", { class: "li-err", id: "lf-status", role: "status" }, f.error)
+      : h("span", { class: f.busy ? "li-busy" : "", id: "lf-status", role: "status" }, f.busy ? "Saving…" : "");
+    return h("form", { class: "li-card", novalidate: true, "aria-labelledby": "li-form-title", onsubmit: submitForm, oninput: formInput, onchange: formInput },
+      h("div", { class: "li-card__head" },
+        h("h3", { class: "li-card__title", id: "li-form-title" }, title),
+        h("button", { type: "button", class: "icon-btn", "aria-label": "Close the form", onclick: closeForm }, "×")),
+      h("p", { class: "li-card__help" }, "Dates are Central. A name or a profile URL is enough to save."),
+      grid,
+      h("div", { class: "li-foot" },
+        h("button", { type: "submit", class: "btn btn--primary", id: "lf-submit", disabled: f.busy }, f.mode === "add" ? "Add person" : "Save changes"),
+        h("button", { type: "button", class: "btn btn--glass", onclick: closeForm }, "Cancel"),
+        status));
+  }
+
+  /* Paste rows */
+  function openPaste() {
+    li.paste = li.paste || { text: "", preview: null, result: null, busy: false };
+    li.form = null;
+    li.confirmDel = null;
+    li.focus = { id: "li-paste-text" };
+    drawTracker();
+  }
+  function closePaste() { li.paste = null; li.focus = { id: "li-paste-btn" }; drawTracker(); }
+  function liSame(a, b) {
+    return liFields().every(function (f) { return String(a[f] == null ? "" : a[f]) === String(b[f] == null ? "" : b[f]); });
+  }
+  // parsePaste + merge against the rows already saved: what each pasted row would do
+  function buildPreview(text) {
+    const L = LI();
+    let res;
+    try { res = L.parsePaste(text, todayYmd()) || {}; }
+    catch (err) {
+      console.error("Scoreboard: could not read the pasted rows", err);
+      return { items: [], errors: [{ line: null, message: "This paste could not be read." }], toSave: [], basis: [], counts: { add: 0, update: 0, same: 0, error: 1 } };
+    }
+    const basis = liRows(state.model);
+    const byId = new Map();
+    basis.forEach(function (r) { byId.set(liId(r), r); });
+    const merged = new Map();
+    (Array.isArray(res.rows) ? res.rows : []).forEach(function (r) {
+      const id = liId(r);
+      const base = merged.has(id) ? merged.get(id) : byId.get(id);
+      merged.set(id, base ? L.merge(base, r) : r);
+    });
+    const items = [];
+    merged.forEach(function (row, id) {
+      const orig = byId.get(id);
+      items.push({ id: id, row: row, status: !orig ? "add" : liSame(orig, row) ? "same" : "update" });
+    });
+    const errors = Array.isArray(res.errors) ? res.errors : [];
+    const count = function (s) { return items.filter(function (x) { return x.status === s; }).length; };
+    return {
+      items: items, errors: errors, basis: basis,
+      toSave: items.filter(function (x) { return x.status !== "same"; }).map(function (x) { return x.row; }),
+      counts: { add: count("add"), update: count("update"), same: count("same"), error: errors.length }
+    };
+  }
+  const PREVIEW_TAG = { add: ["New", "tag--mint"], update: ["Will update", "tag--blue"], same: ["No change", ""] };
+  function drawPreview(box) {
+    box = box || document.getElementById("li-paste-preview");
+    const p = li.paste;
+    if (!box || !p) return;
+    p.preview = p.text.trim() ? buildPreview(p.text) : null;
+    const pv = p.preview;
+    const result = p.result
+      ? h("span", { class: p.result.kind === "ok" ? "li-ok" : p.result.kind === "err" ? "li-err" : "li-busy", role: "status" }, p.result.text)
+      : h("span", { role: "status" });
+    if (!pv) { fill(box, h("div", { class: "li-foot" }, result)); return; }
+    const n = pv.toSave.length;
+    const c = pv.counts;
+    const MAX = 300;
+    const rows = pv.items.slice(0, MAX).map(function (x) {
+      const t = PREVIEW_TAG[x.status];
+      return h("tr", null,
+        h("td", null, h("span", { class: "tag " + t[1] }, t[0])),
+        h("td", { class: "li-name" }, String(x.row.name || x.row.profile_url || "")),
+        h("td", null, x.row.company ? String(x.row.company) : "—"),
+        h("td", null, x.row.stage ? String(x.row.stage) : "—"),
+        h("td", { style: { "white-space": "nowrap" } }, x.row.next_touch_due ? fmtYmd(x.row.next_touch_due) : "—"));
+    }).concat(pv.errors.slice(0, MAX).map(function (er) {
+      return h("tr", null,
+        h("td", null, h("span", { class: "tag tag--rose" }, "Error")),
+        h("td", { colspan: "4" }, (has(er.line) ? "Line " + er.line + ": " : "") + String(er.message || "This row could not be read.")));
+    }));
+    const more = pv.items.length + pv.errors.length - rows.length;
+    fill(box,
+      h("div", { class: "li-sum" },
+        h("span", { class: "tag tag--mint" }, plural(c.add, "new row")),
+        h("span", { class: "tag tag--blue" }, c.update + " will update"),
+        c.same ? h("span", { class: "tag" }, c.same + " no change") : null,
+        c.error ? h("span", { class: "tag tag--rose" }, plural(c.error, "error")) : null),
+      rows.length ? tableShell(false, [["Result"], ["Name"], ["Company"], ["Stage"], ["Next touch"]], rows, "Paste preview", "li-prev") : null,
+      more > 0 ? h("p", { class: "small", style: { "margin-top": "6px" } }, "And " + fmtNum(more) + " more.") : null,
+      h("div", { class: "li-foot" },
+        h("button", { type: "button", class: "btn btn--primary", id: "li-import", disabled: !n || p.busy || li.importing || li.rowWrites > 0,
+          "aria-describedby": li.rowWrites > 0 && !p.busy ? "li-import-wait" : null, onclick: importPaste }, "Import " + plural(n, "row")),
+        li.rowWrites > 0 && !p.busy ? h("span", { class: "li-busy", id: "li-import-wait" }, "Saving a row… Import when it finishes") : null,
+        result));
+  }
+  async function importPaste() {
+    const p = li.paste;
+    // never alongside a single-row save or delete: the import waits until it settles
+    if (!p || p.busy || li.importing || li.rowWrites > 0 || !p.preview || !p.preview.toSave.length) return;
+    // every merged row goes in; saveMany skips the ones unchanged against the rows the preview was merged
+    // against, and any row changed since then
+    const rows = p.preview.items.map(function (x) { return x.row; });
+    const basis = p.preview.basis || liRows(state.model);
+    const n = p.preview.toSave.length;
+    p.busy = true;
+    li.importing = true;
+    li.confirmDel = null;
+    p.result = { kind: "busy", text: "Importing " + plural(n, "row") + "…" };
+    drawTracker();
+    let res = null;
+    try { res = await dbSaveMany(rows, basis); }
+    catch (err) { console.error("Scoreboard: importing LinkedIn rows failed", err); res = null; }
+    p.busy = false;
+    li.importing = false;
+    const saved = res && Array.isArray(res.saved) ? res.saved.filter(function (r) { return r && typeof r === "object"; }) : [];
+    const written = res && has(res.written) ? Number(res.written) : saved.length;
+    const conflicts = res && Array.isArray(res.conflicts) ? res.conflicts.length : 0;
+    const skipped = Math.max(0, (res && has(res.skipped) ? Number(res.skipped) : 0) - conflicts);
+    const kept = conflicts ? " " + plural(conflicts, "row") + " changed after you pasted and " + (conflicts === 1 ? "was" : "were") + " left as is." : "";
+    const failed = !res || !!res.error || num(res.failed) > 0;
+    if (!failed) {
+      p.text = "";
+      p.preview = null;
+      p.result = { kind: "ok", text: "Imported " + fmtNum(written) + (skipped ? ", skipped " + fmtNum(skipped) + " unchanged" : "") + (kept ? "." + kept : "") };
+      li.focus = { id: "li-paste-text" };
+    } else {
+      const why = res && res.error && res.error.message ? " (" + String(res.error.message).replace(/\.\s*$/, "") + ")" : "";
+      p.result = { kind: "err", text: (written > 0 ? "Imported " + fmtNum(written) + ", then a row did not save" : "Couldn't import") + why + ". Try again." + kept };
+      li.focus = { id: "li-import" };
+    }
+    if (failed && !saved.length && liRelock()) return;
+    // the rows as they are now (a save that finished during the import stays), with only the rows written replaced
+    if (saved.length) {
+      const ids = new Set(saved.map(liId));
+      commitRows(liRows(state.model).filter(function (r) { return !ids.has(liId(r)); }).concat(saved));
+    } else drawTracker();
+  }
+  function pasteCard() {
+    const p = li.paste;
+    const ta = h("textarea", { class: "ctl li-paste__ta", id: "li-paste-text", rows: "7", spellcheck: "false", "aria-label": "Rows to paste, with a header line",
+      placeholder: "Full Name\tLinkedIn URL\tCompany Name\tTitle\tLocation", disabled: p.busy });
+    ta.value = p.text;
+    ta.addEventListener("input", function () {
+      p.text = ta.value;
+      p.result = null;
+      clearTimeout(pasteTimer);
+      pasteTimer = setTimeout(function () { drawPreview(); }, 200);
+    });
+    const box = h("div", { id: "li-paste-preview" });
+    drawPreview(box);
+    return h("section", { class: "li-card", "aria-labelledby": "li-paste-title" },
+      h("div", { class: "li-card__head" },
+        h("h3", { class: "li-card__title", id: "li-paste-title" }, "Paste rows"),
+        h("button", { type: "button", class: "icon-btn", "aria-label": "Close paste rows", onclick: closePaste }, "×")),
+      h("p", { class: "li-card__help" }, "Copy rows with their header line from a sheet or a CSV export. Headers like Full Name, LinkedIn URL, Company Name, Title and Location work. Rows without a stage start at Connect sent, dated today. A profile already here is updated, and blank cells never clear what is saved."),
+      ta, box);
+  }
+
+  /* Weekly numbers */
+  function weeklyCard(w) {
+    if (!w) return null;
+    const range = w.weekStart && w.weekEnd ? fmtYmd(w.weekStart, true) + " to " + fmtYmd(w.weekEnd, true) : "";
+    const looms = w.looms || {}, rr = w.replyRate || {}, pr = w.positiveRate || {};
+    const acc = w.acceptance || null;
+    const stat = function (label, value, extra, foot) {
+      return h("div", { class: "li-stat" }, h("dt", null, label),
+        h("dd", null, value, extra, foot ? h("span", { class: "li-stat__foot" }, foot) : null));
+    };
+    return h("div", { class: "li-week" + dim(isRefreshing(state.model, "linkedin")) },
+      h("div", { class: "li-week__head" }, h("h3", { class: "li-week__title" }, "Weekly numbers"), range ? h("span", { class: "small" }, "This week · " + range) : null),
+      h("dl", { class: "li-stats" },
+        stat("Requests sent", fmtNum(w.requestsSent)),
+        stat("Pending", fmtNum(w.pending), w.nearLimit ? h("span", { class: "tag tag--rose" }, "Near the 600 limit") : null, w.nearLimit ? null : "Keep it under about 600"),
+        stat("Acceptance", acc ? fmtRate(acc) : "—", acc ? ratePill(acc) : null, "Requests 14+ days old" + (acc && acc.target ? " · target " + acc.target : "")),
+        stat("Calls booked", fmtNum(w.callsBooked)),
+        stat("Closed", "Won " + fmtNum(w.closedWon) + " · Lost " + fmtNum(w.closedLost))),
+      h("table", { class: "li-abt" },
+        h("caption", { class: "visually-hidden" }, "Looms by variant this week"),
+        h("thead", null, h("tr", null, h("th", { scope: "col" }, "Variant"), h("th", { scope: "col", class: "num" }, "Looms"),
+          h("th", { scope: "col", class: "num" }, "Reply rate"), h("th", { scope: "col", class: "num" }, "Positive"))),
+        h("tbody", null, ["A", "B"].map(function (v) {
+          return h("tr", null, h("th", { scope: "row" }, v + " · " + LI_VARIANT[v]), h("td", { class: "num" }, fmtNum(looms[v])),
+            h("td", { class: "num" }, fmtRate(rr[v])), h("td", { class: "num" }, fmtRate(pr[v])));
+        }))),
+      h("p", { class: "li-week__note" }, "Judge a variant after about 100 Looms, on positive replies and calls booked more than reply rate."));
+  }
+
+  /* Table */
+  function liBtn(cls, text, id, role, disabled, onclick, aria) {
+    return h("button", { type: "button", class: cls, disabled: disabled, "aria-label": aria || null, data: { liRow: id, liRole: role }, onclick: onclick }, text);
+  }
+  function pickControl(r, id, type, busy) {
+    const ev = liEvents().filter(function (x) { return x.type === type; })[0] || { type: type, label: type, needs: null };
+    const cancel = liBtn("btn btn--glass btn--sm", "Cancel", id, "cancel", busy, function () {
+      delete li.pick[id]; delete li.when[id]; delete li.replySel[id];
+      if (li.msg[id] && li.msg[id].kind === "err") delete li.msg[id];
+      focusLater(id, "log"); drawTracker();
+    });
+    const wrap = h("div", { class: "li-pick", role: "group", "aria-label": evLabel(ev).replace(/…$/, "") + " for " + liName(r) });
+    if (ev.needs === "variant") {
+      appendKids(wrap, [h("span", { class: "li-pick__q" }, "Loom variant"),
+        ["A", "B"].map(function (v, i) {
+          return liBtn("btn btn--primary btn--sm", v, id, i === 0 ? "pick" : "pick-b", busy, function () { logEvent(r, { type: ev.type, variant: v }); }, "Variant " + v + ", " + LI_VARIANT[v]);
+        }), cancel]);
+    } else if (ev.needs === "replyType") {
+      const L = LI();
+      // picking a type only stores it (arrowing through a closed select fires change on Windows); Save or Enter logs it
+      const chosen = li.replySel[id] || "";
+      const sel = h("select", { class: "ctl ctl--sm", "aria-label": "Reply type", disabled: busy, data: { liRow: id, liRole: "pick" } },
+        h("option", { value: "" }, "Reply type…"),
+        (Array.isArray(L.REPLY_TYPES) ? L.REPLY_TYPES : []).map(function (t) { return h("option", { value: t, selected: t === chosen }, humanize(t)); }));
+      const submit = function () {
+        const t = sel.value;
+        if (!t) { setMsg(id, "err", "Pick the reply type first."); focusLater(id, "pick"); drawTracker(); return; }
+        logEvent(r, { type: ev.type, replyType: t });
+      };
+      sel.addEventListener("change", function () { li.replySel[id] = sel.value; });
+      sel.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); submit(); } });
+      wrap.append(sel, liBtn("btn btn--primary btn--sm", "Save", id, "save", busy, submit), cancel);
+    } else if (ev.needs === "datetime") {
+      const inp = h("input", { type: "datetime-local", class: "ctl ctl--sm", "aria-label": "Call date and time, Central", disabled: busy, value: li.when[id] || "", data: { liRow: id, liRole: "pick" } });
+      inp.addEventListener("input", function () { li.when[id] = inp.value; });
+      const save = liBtn("btn btn--primary btn--sm", "Save", id, "save", busy, function () {
+        li.when[id] = inp.value;
+        const iso = inputToIso(inp.value);
+        if (!iso) { setMsg(id, "err", "Pick the call date and time first."); focusLater(id, "pick"); drawTracker(); return; }
+        logEvent(r, { type: ev.type, datetime: iso });
+      });
+      wrap.append(inp, h("span", { class: "small" }, "CT"), save, cancel);
+    } else if (ev.type === "answer_sent") {
+      // not_now: the date they gave becomes the next touch; blank leaves it open until they give one
+      const inp = h("input", { type: "date", class: "ctl ctl--sm", "aria-label": "Check back on (optional)", disabled: busy, value: li.when[id] || "", data: { liRow: id, liRole: "pick" } });
+      inp.addEventListener("input", function () { li.when[id] = inp.value; });
+      const save = liBtn("btn btn--primary btn--sm", "Save", id, "save", busy, function () {
+        li.when[id] = inp.value;
+        const d = String(inp.value || "").trim();
+        logEvent(r, d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? { type: ev.type, date: d } : { type: ev.type });
+      });
+      wrap.append(h("span", { class: "li-pick__q" }, "Check back on"), inp, save, cancel);
+    } else {
+      wrap.append(liBtn("btn btn--primary btn--sm", evLabel(ev), id, "pick", busy, function () { logEvent(r, { type: ev.type }); }), cancel);
+    }
+    return wrap;
+  }
+  function applyLog(r, id, type) {
+    const ev = liEvents().filter(function (x) { return x.type === type; })[0];
+    if (!ev) { setMsg(id, "err", "Pick an event first."); focusLater(id, "log"); drawTracker(); return; }
+    delete li.logSel[id];
+    // "Answer sent" to a not_now reply can carry the date they gave to check back (optional)
+    const askDate = ev.type === "answer_sent" && String(r.reply_type || "") === "not_now";
+    if (!ev.needs && !askDate) { logEvent(r, { type: ev.type }); return; }
+    li.pick[id] = ev.type;
+    li.confirmDel = null;
+    if (li.msg[id] && li.msg[id].kind !== "busy") delete li.msg[id];
+    focusLater(id, "pick");
+    drawTracker();
+  }
+  function rowActions(r, id) {
+    const msg = li.msg[id];
+    const busy = (!!msg && msg.kind === "busy") || li.importing;
+    const nm = liName(r);
+    const box = h("div", { class: "li-act" });
+    if (li.confirmDel === id) {
+      box.append(h("span", { class: "li-ask" }, "Delete " + nm + "?"),
+        liBtn("btn btn--danger btn--sm", "Delete", id, "confirm", busy, function () { deleteRow(r); }, "Yes, delete " + nm),
+        liBtn("btn btn--glass btn--sm", "Keep", id, "keep", busy, function () { li.confirmDel = null; focusLater(id, "delete"); drawTracker(); }));
+    } else if (li.pick[id]) {
+      box.append(pickControl(r, id, li.pick[id], busy));
+    } else {
+      // Log…: picking an event only stores it (arrowing through a closed select fires change on Windows);
+      // Apply or Enter applies it. "Answer sent" is offered only once the row has a reply to answer.
+      const chosen = li.logSel[id] || "";
+      const events = liEvents().filter(function (ev) { return ev.type !== "answer_sent" || String(r.reply_type || "") !== ""; });
+      const sel = h("select", { class: "ctl ctl--sm", "aria-label": "Log an event for " + nm, disabled: busy, data: { liRow: id, liRole: "log" } },
+        h("option", { value: "" }, "Log…"),
+        events.map(function (ev) { return h("option", { value: ev.type, selected: ev.type === chosen }, evLabel(ev)); }));
+      sel.addEventListener("change", function () { li.logSel[id] = sel.value; });
+      sel.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); applyLog(r, id, sel.value); } });
+      const apply = liBtn("btn btn--glass btn--sm", "Apply", id, "apply", busy, function () { applyLog(r, id, sel.value); }, "Apply the picked event for " + nm);
+      box.append(sel, apply);
+      box.append(
+        liBtn("textbtn", "Edit", id, "edit", busy, function () { openForm("edit", r); }, "Edit " + nm),
+        liBtn("textbtn textbtn--danger", "Delete", id, "delete", busy, function () {
+          li.confirmDel = id; delete li.pick[id];
+          focusLater(id, "confirm"); drawTracker();
+        }, "Delete " + nm));
+    }
+    box.append(h("span", { class: "li-msg" + (msg ? " is-" + msg.kind : ""), role: "status", data: { liMsg: id } }, msg ? msg.text : ""));
+    return box;
+  }
+  function trackerRow(r, today, editable) {
+    const id = liId(r);
+    const href = httpsHref(r.profile_url);
+    const name = String(r.name || r.first_name || "") || (href ? "Profile" : "Unnamed");
+    const due = String(r.next_touch_due || "");
+    const dueT = ymdTs(due);
+    const overdue = !!due && dueT != null && due < today;
+    const dueCell = dueT != null
+      ? h("td", { class: "li-due" + (overdue ? " is-overdue" : "") }, h("b", null, fmtYmd(due)), rel("span", "due", dueT, overdue ? "1" : ""))
+      : h("td", null, due || "—");
+    const fresh = li.msg[id] && li.msg[id].kind === "ok";
+    return h("tr", { class: fresh ? "is-fresh" : null },
+      h("td", { class: "li-name" }, href ? h("a", { href: href, target: "_blank", rel: "noopener" }, name) : name,
+        r.role ? h("span", { class: "td-sub" }, String(r.role)) : null),
+      h("td", null, r.company ? String(r.company) : "—"),
+      h("td", null, r.stage ? statePill(LI_STAGE_CLASS[r.stage] || "is-info", String(r.stage)) : "—"),
+      dueCell,
+      h("td", null, r.loom_variant ? h("span", { class: "tag tag--blue", title: LI_VARIANT[r.loom_variant] || null }, String(r.loom_variant)) : "—"),
+      h("td", { style: { "white-space": "nowrap" } }, r.last_touch_date ? fmtYmd(r.last_touch_date) : "—"),
+      h("td", null, r.reply_type ? humanize(r.reply_type) : "—"),
+      editable ? h("td", null, rowActions(r, id)) : null);
+  }
+  function setLiFilter(key) {
+    li.filter = key;
+    li.sticky.clear();
+    writeStore(LI_FILTER_KEY, key);
+    li.focus = { id: "li-filter-" + key };
+    drawTracker();
+  }
+  function trackerPanel(m) {
+    const st = srcState(m, "linkedin");
+    if (!m || st === "loading") return h("div", null, loadingNote("LinkedIn tracker"), skel("list"));
+    const editable = liEditable(m);
+    const all = liSort(liRows(m));
+    const parts = [];
+    if (st === "error") parts.push(fixNote(m, "linkedin", "LinkedIn rows are not loading."));
+    else if (!editable) parts.push(h("p", { class: "fix fix--calm", role: "note" }, liLockText(m)));
+    parts.push(weeklyCard(m.linkedin && m.linkedin.weekly));
+
+    const counts = {};
+    LI_GROUPS.forEach(function (g) { counts[g.key] = all.filter(function (r) { return liInGroup(r, g); }).length; });
+    const seg = h("div", { class: "seg li-seg", role: "group", "aria-label": "Show stage group" }, LI_GROUPS.map(function (g) {
+      return h("button", { type: "button", id: "li-filter-" + g.key, "aria-pressed": li.filter === g.key ? "true" : "false", onclick: function () { setLiFilter(g.key); } },
+        g.label, h("span", { class: "seg__n" }, String(counts[g.key])));
+    }));
+    parts.push(h("div", { class: "li-toolbar" },
+      editable ? [
+        h("button", { type: "button", class: "btn btn--primary btn--sm", id: "li-add", "aria-expanded": li.form && li.form.mode === "add" ? "true" : "false",
+          disabled: li.importing, onclick: function () { openForm("add", null); } }, "Add person"),
+        h("button", { type: "button", class: "btn btn--glass btn--sm", id: "li-paste-btn", "aria-expanded": li.paste ? "true" : "false",
+          onclick: function () { if (li.paste) closePaste(); else openPaste(); } }, "Paste rows"),
+        li.importing ? h("span", { class: "li-busy", id: "li-importing", role: "status" }, "Importing… Rows can be changed again when it finishes.") : null
+      ] : null,
+      h("span", { class: "spacer" }), seg));
+    parts.push(h("p", { class: "li-notice" + (li.notice && li.notice.kind === "err" ? " is-err" : ""), id: "li-notice", role: "status" }, li.notice ? li.notice.text : ""));
+    if (editable && li.form) parts.push(liFormCard());
+    if (editable && li.paste) parts.push(pasteCard());
+
+    const g = LI_GROUPS.filter(function (x) { return x.key === li.filter; })[0] || LI_GROUPS[LI_GROUPS.length - 1];
+    const shown = all.filter(function (r) { return liInGroup(r, g) || li.sticky.has(liId(r)); });
+    if (!all.length && st === "error") {
+      // the fix note above says it; rows were not read, so "no rows" would be wrong
+    } else if (!all.length) {
+      parts.push(h("p", { class: "empty-line", style: { "margin-top": "14px" } },
+        editable ? "No one in the tracker yet. Add a person, or paste rows from your Sales Navigator export." : "No LinkedIn rows yet."));
+    } else if (!shown.length) {
+      parts.push(h("p", { class: "empty-line", style: { "margin-top": "14px" } }, "No one in " + g.label + " right now. ",
+        h("button", { type: "button", class: "textbtn", onclick: function () { setLiFilter("all"); } }, "Show all")));
+    } else {
+      const heads = [["Name"], ["Company"], ["Stage"], ["Next touch"], ["Variant"], ["Last touch"], ["Reply type"]];
+      if (editable) heads.push(["Update"]);
+      const today = todayYmd();
+      parts.push(tableShell(isRefreshing(m, "linkedin"), heads, shown.map(function (r) { return trackerRow(r, today, editable); }), "LinkedIn tracker", "li-table"));
+    }
+    return h("div", null, parts);
+  }
+
   /* ---------- Footer ---------- */
   function renderFooter(m) {
     const foot = $("#footer");
@@ -1497,7 +2398,13 @@ td a:hover{text-decoration:underline}
       h("ul", null, SOURCES.map(function (p) {
         const st = src(m, p[0]);
         let line;
-        if (st.state === "ok") line = h("span", null, has(st.storedAt) ? ["live, data from ", rel("span", "ago", Number(st.storedAt))] : "live", st.refreshing === true ? ", refreshing now" : null);
+        if (p[0] === "linkedin") {
+          line = st.state === "ok" ? plural(liRows(m).length, "row") + " saved in this page" + (st.refreshing === true ? ", reading again now" : "")
+            : st.state === "error" ? ((st.error && st.error.fix) || "not read")
+            : st.state === "unavailable" ? String((st.warnings && st.warnings[0]) || "Editing needs the claude.ai viewer").replace(/\.\s*$/, "")
+            : "loading";
+        }
+        else if (st.state === "ok") line =h("span", null, has(st.storedAt) ? ["live, data from ", rel("span", "ago", Number(st.storedAt))] : "live", st.refreshing === true ? ", refreshing now" : null);
         else if (st.state === "error" && st.refreshing === true) line = "retrying now";
         else if (st.state === "error") line = (st.error && st.error.fix) || "not loading";
         else if (st.state === "unavailable") line = "not available on this page";
@@ -1505,13 +2412,13 @@ td a:hover{text-decoration:underline}
         return h("li", null, h("b", null, p[1] + ": "), line);
       })),
       h("p", { class: "foot__base" }, m && has(m.generatedAt) ? rel("span", "updated", Number(m.generatedAt)) : null, m && has(m.generatedAt) ? ". " : null,
-        "Read-only. Data comes live from your connectors."));
+        "Connector data is read-only. LinkedIn rows are saved in this page."));
   }
 
   /* ---------- render ---------- */
   function render(m) {
     state.model = m;
-    state.noData = !!(m && SOURCES.every(function (p) { return src(m, p[0]).state === "unavailable"; }));
+    state.noData = !!(m && CONNECTORS.every(function (p) { return src(m, p[0]).state === "unavailable"; }));
     guard("chips", function () { renderChips(m); });
     guard("banner", function () { renderBanner(m); });
     guard("today", function () { renderToday(m); });
@@ -1519,7 +2426,10 @@ td a:hover{text-decoration:underline}
     guard("pipeline", function () { renderPipeline(m); });
     guard("followups", function () { renderFollowups(m); });
     guard("calls", function () { renderCalls(m); });
-    guard("detail", function () { renderDetail(m); });
+    // A connector-only update leaves the open LinkedIn tracker alone, so typing, focus and open inputs survive it.
+    if (state.tab !== "linkedin" || liSig(m) !== state.liSig || !document.getElementById("tabpanel-linkedin")) {
+      guard("detail", function () { renderDetail(m); });
+    }
     guard("footer", function () { renderFooter(m); });
     syncCostsForm();
     syncBarHeight();
@@ -1537,13 +2447,14 @@ td a:hover{text-decoration:underline}
     return {
       generatedAt: now.getTime(),
       range: { days: days, start: dayKey(start), end: dayKey(now), prevStart: "", prevEnd: "", label: "Last " + days + " days" },
-      sources: { instantly: off, upwork: off, ghl: off, calendar: off },
+      sources: { instantly: off, upwork: off, ghl: off, calendar: off, linkedin: off },
       today: { waitingOnYou: 0, callsNext7d: { count: 0, next: null }, openPipeline: { count: 0, value: 0 }, revenue: { value: 0, upworkBilled: 0, ghlWon: 0 }, coldEmailSending: null, alerts: [] },
       channels: [
         ghost("cold_email", "Cold email", ["Emails sent", "New leads reached", "Human replies", "Positive replies", "Calls booked", "Closed"]),
         ghost("upwork", "Upwork", ["Proposals sent", "Client replied", "Offers", "Hired"]),
-        ghost("linkedin", "LinkedIn", ["Requests", "Accepted", "Replies", "Positive", "Booked"])
+        ghost("linkedin", "LinkedIn", ["Requests sent", "Accepted", "Looms sent", "Replies", "Positive", "Calls booked", "Closed won"])
       ],
+      linkedin: { rows: [], editable: false, pending: 0, noReplyDue: [], weekly: null },
       campaigns: [], proposals: [],
       pipeline: null,
       calls: { upcoming: [], pastInRange: [], bySource: {} },
