@@ -67,8 +67,9 @@ anything below that disagrees.**
    **One exception (Lorenzo, 2026-10-06):** the framework reply (see "Reply
    drafts") states a price range the code computes: $500 to $3,500 by default,
    the low end near the post's fixed budget, the top raised only by a fixed
-   range the assessment states unambiguously. Only that range reaches the
-   model (PRICE_RANGE), and only that range passes the gate.
+   range the assessment states unambiguously for this deliverable. Only that
+   range reaches the model (PRICE_RANGE), and only that range passes the
+   gate.
    The job post and the room messages are the client's own text and are
    shown as written, but the client stating a number never frees Lorenzo's
    price, rate or hours figure: a draft may use such a number only as a count
@@ -332,17 +333,24 @@ unknown (price, date, scope detail) is left for Lorenzo on the card as
 "Needs you: ...", never guessed.
 
 **Framework reply** (Lorenzo's setter framework, locked 2026-10-05; band rule
-2026-10-06, revised the same day). A reply uses `prompts/reply_framework.md`
-instead of `reply.md` when the client asks something
-(`draft.is_framework_reply`): the classifier's latest label is `question`,
-or one of their unanswered messages has a "?" outside a URL, a direct ask
-("send me a quote", "let me know your price and timeline", "how much", "how
-long"), or a clause shaped like a question after an optional greeting or
-lead-in: a question word with an auxiliary or "much / long" after it ("Hey
-Lorenzo, what's your timeline"), or an inverted auxiliary ("Looks great, can
-you do it by Friday"). "What I need is ...", "When I watched ...", "How
-exciting." and "Have the build ready ..." are statements. Touches T1-T7,
-check-ins and replies with no question keep their prompts. The message, in
+2026-10-06, revised the same day; routing by the classifier's label,
+2026-10-06). A reply uses `prompts/reply_framework.md` instead of `reply.md`
+when the reply classifier labelled one of the client's unanswered messages
+`question` (`draft.is_framework_reply`). The label comes from the thread
+history sequence.py writes when it classifies a burst (`client_reply` or
+`client_message_while_<status>`, with `message_id` and `label`). A label
+recorded for a message Lorenzo already answered does not count, and no label
+(no thread yet) means `reply.md`. No regex reads the client's text for this.
+`prompts/classify.md` returns `question` for a direct ask with no question
+mark ("send me a quote", "how long would it take", "can you do it by
+Friday") and for a message that shows interest and asks something, and
+`positive` or `neutral` for a statement ("We need an estimate follow-up that
+texts the homeowner", "We have a budget approved", "This shows how much time
+our office wastes", "What's needed is the intake by Friday", "How about we
+start Monday"). sequence.py classifies only the newest non-machine message
+of a burst, so that message's label decides for the burst. Touches T1-T7,
+check-ins and replies without the `question` label keep their prompts. The
+message, in
 order: thank them for getting back; answer each question in their order with
 thin detail (price as the range below, timeline as "I aim to finish ..." plus
 faster if Lorenzo clears his schedule, tools and IP: they own the accounts and
@@ -360,25 +368,41 @@ The code computes three facts and the model only copies them:
   jd.txt only) rounded down to a clean number ($50 steps under $1,000, $100
   above), never below $500; no usable budget gives $500. Top: $3,500, raised
   only when the assessment's Standard pricing states one fixed range for this
-  deliverable in so many words (`draft.assessed_fixed_top`: a "defensible /
-  standard fixed range" or "fixed price" label before it, or "fixed" right
-  after it) in a sentence that names no client history or spend, no post or
-  bids, no agency, market or freelancer tier, no conditional, later or
-  follow-on work, no retainer and no rate; its high end becomes the top when
-  higher than $3,500. Two different qualifying ranges are ambiguous and leave
-  the top at $3,500. When the low end reaches the top there is no range:
-  PRICE_RANGE says none and NEEDS_YOU says why. Figures in the client's
-  messages (revenue, ad spend, a price they propose) never move the band;
-  each one goes on NEEDS_YOU as "Client mentioned $X; check the range."
+  deliverable in so many words (`draft.assessed_fixed_top`): a "defensible /
+  standard fixed range" or "fixed price" label before it, or "$X to $Y fixed"
+  in a sentence that ties it to this deliverable ("for this scope / build /
+  job / deliverable / project"). Either way the sentence, parentheses
+  included, names no client history or spend, no post or bids, no agency,
+  market or other people's price (a previous developer, other bidders, the
+  going rate, bigger shops), no conditional, later or extra work (Version 2,
+  Stage 2, Milestone 3, an expansion, an add-on, a rollout), no worst case,
+  rush or upper end, no retainer, no rate and no per-unit word. Its high end,
+  rounded down to a clean number and never above the stated figure, becomes
+  the top when higher than $3,500. Two different qualifying ranges are
+  ambiguous and leave the top at $3,500. On the 83 real assessments
+  (2026-10-06) only "$3,500 to $8,000 fixed for this scope" raises the top.
+  When the range would be one clean step or narrower ($3,400 to $3,500), or
+  the low end reaches the top, there is no range: PRICE_RANGE says none and
+  NEEDS_YOU says why. Figures in the client's messages (revenue, ad spend, a
+  price they propose, with or without a currency sign: "Would 1,200 work",
+  "Our budget is 1500") never move the band; each one goes on NEEDS_YOU as
+  the client wrote it, currency included ("Client mentioned EUR 1,000; check
+  the range.").
 - **TIMELINE** (`draft.timeline_phrase`) from the assessment's Time lines.
-  Sentences about follow-on work (later phases, the full list, ongoing hours
-  a week, maintenance, warm-up, meetings or results) are skipped; a sentence
-  about the first deliverable ("first workflow", "phase 1", "initial") wins.
-  The first weeks figure counts ("1 to 1.5 weeks" gives "about 2 weeks"),
-  unless its item lists several different week figures (parts); then the
-  first days figure; then hours only when all of them sit in one sentence
-  (the largest at 4 focused hours a day, "within 2 days"). Anything else is
-  ambiguous: None, and NEEDS_YOU when the client asked.
+  Sentences about follow-on work (later phases or stages, Version 2, the
+  second workflow, a rollout to the other sites or an expansion, add-ons,
+  the full list, ongoing hours a week, maintenance, warm-up, meetings or
+  results) are skipped; a parenthesis continues the label before it ("Stage
+  2 (reporting): 6 weeks" is later work). Sentences about the first
+  deliverable ("Phase 1", "Stage 1", "pilot", "this workflow", "first
+  workflow / deliverable", "initial") are read first, whatever the line
+  order; when they give no weeks or days figure, every kept sentence is read.
+  The weeks figures read must agree ("1 to 1.5 weeks" gives "about 2
+  weeks"; an item that lists several different week figures lists parts and
+  is not read), else the days figures must; then hours count only when all
+  of them sit in one sentence (the largest at 4 focused hours a day, "within
+  2 days"). Two different answers, or anything else, are ambiguous: None,
+  and NEEDS_YOU when the client asked.
 - **CALL_OFFER** (`draft.framework_call_offer`): "now, in the next couple of
   hours, or tomorrow at 1pm ET (noon CT)". The one slot is the first business
   day after today with a time inside 12:00-18:00 CT on the hour that is not the
@@ -552,17 +576,47 @@ below.
   clause by clause on channel plus direction; see the `copy_gate.py` docstring,
   "Off-platform concepts".
 - It contains any `$` figure or percentage not in `config/upwork_offers.md`.
-  Exception (2026-10-06): a framework reply is checked with its computed band
-  (`check_detailed(..., band=(low, high))`). Exactly that range, both ends
-  together, in a range form ("between $750 and $1,000", "$750 to $1,000",
-  "$750-$1,000", second "$" optional, "and" only after "between", and no rate
-  or per-unit word after it: "$750 to $1,000 a month", "an hour", "per
-  workflow", "/mo", "monthly" are refused), is masked
-  before the figure, price-agreement and private-fact checks. A single price,
-  one end alone, any other figure and agreeing to the client's number are
-  still refused, and in a framework reply a deferral ("I'll confirm the exact
-  price on the call") no longer frees a figureless agreement, because that
-  draft always defers the exact figure.
+  Exception (2026-10-06): a framework reply is checked with the framework
+  flag and, when it has a range, its computed band
+  (`check_detailed(..., band=(low, high), framework=True)`; a band implies
+  the flag). Exactly that range, both ends together, in a range form
+  ("between $750 and $1,000", "$750 to $1,000", "$750-$1,000", second "$"
+  optional, "and" only after "between"), stated once in a sentence with no
+  rate or per-unit word anywhere in it, before or after the range, is masked
+  before the figure, price-agreement and private-fact checks. The words: per,
+  each, every, apiece, "a pop", "a" or "an" plus hour, day, week, month,
+  quarter, year, workflow, seat, user, location and the like, monthly,
+  quarterly, weekly, hourly, daily, yearly, annually, retainer,
+  subscription, "/", billed, "x N", times, "on a ... basis" ("$750 to
+  $1,000 for each workflow", "(per workflow)", "USD a month", "in monthly
+  fees", "a monthly retainer of $750 to $1,000", "per workflow it is $750 to
+  $1,000"). With one of them, or with the range twice in one sentence, the
+  range is not masked and is refused, and the retry message says to state
+  the range once, in a sentence of its own, as the price of this one build.
+  A single price, one end alone, any other figure and agreeing to the
+  client's number are still refused. Framework mode also refuses any other
+  price point beside the range: a bare number of 100 or more that is not a
+  time, a percentage, a multiplier, a phone number, a year or a count
+  ("probably closer to 1,200"), a spelled amount ("two thousand", "two
+  grand") and a place in the range ("the midpoint", "near the top end", "the
+  lower half").
+  Agreement in a framework reply (`copy_gate.framework_price_agreement`,
+  used instead of the opening-sentence and price-subject checks in the next
+  item): when any unanswered client message proposes a price, every sentence
+  of the draft is read, and no deferral ("I'll confirm the exact price on a
+  brief Upwork call") cancels it, with or without a range. Refused: a
+  yes-only sentence ("Sure.", "Yes.");
+  "do / build / deliver it for / at / within your budget", "work within your
+  budget", "at that price", "you've got a deal"; and a clause that starts
+  with an agreement ("that / this / it / your budget works / is fine / is
+  doable / sounds good", "deal", "fair enough", "happy / fine / comfortable
+  with that", "I accept", "I can do / work with / live with / make that
+  work", "happy to work within ..."), unless what follows names a time, a
+  tool or an explanation ("That works by tagging each request", "I can do
+  that in HubSpot", "It's doable in about 2 weeks"). That exemption never
+  applies when the clause names their figure ("I can work with your budget
+  on the showroom intake"). A real question never starts with an agreement,
+  so "Sure, that works, does Thursday suit you?" is refused.
   A "k" figure before a count noun ("approx 25k emails", "a 25k list", "a
   list of about 25k") is a volume, like "300 leads", not money; "a 25k
   budget", "for 25k", "25k a month" and "would be 25k" are money. A bare
@@ -621,8 +675,9 @@ below.
   problem", "sounds good / fine / about right" or "should / would / will
   cover it" ("That works for Thursday at 2pm, and the price is fine.",
   "Thursday works for a quick call. Your budget works for me too."). A
-  deferral anywhere still wins; questions ("Does that budget work for
-  you?"), negations ("the price is not fine") and other predicates ("the
+  deferral anywhere still wins (outside a framework reply); questions
+  ("Does that budget work for you?"), negations ("the price is not
+  fine") and other predicates ("the
   price depends on the scope", "I'll send the price after the call") pass.
   A draft answering a count or scope ("Yes, I can do 20
   domains") or not responding to the price passes. The client

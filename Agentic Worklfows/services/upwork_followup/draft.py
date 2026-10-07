@@ -59,20 +59,25 @@ How client text reaches the model (DESIGN "Hard boundaries" 5 and 6)
 
 Framework reply (Lorenzo, 2026-10-05 and 2026-10-06; DESIGN "Reply drafts")
 --------------------------------------------------------------------------
-When the client wrote last and asks something (``is_framework_reply``: the
-classifier's ``question`` label, or a real question shape in their unanswered
-messages), the reply uses ``prompts/reply_framework.md``: thanks, each answer
-in their order, then a brief Upwork call. The code, never the model, computes
-three facts: PRICE_RANGE (``price_band``: Lorenzo's 2026-10-06 rule, $500 to
+When the client wrote last and the reply classifier labelled one of their
+unanswered messages ``question`` (``is_framework_reply``, read from the
+thread history sequence.py writes; no regex reads their text for this), the
+reply uses ``prompts/reply_framework.md``: thanks, each answer in their
+order, then a brief Upwork call. The code, never the model, computes three
+facts: PRICE_RANGE (``price_band``: Lorenzo's 2026-10-06 rule, $500 to
 $3,500 by default, the low end near the posted jd.txt budget and never under
-$500, the top raised only by an unambiguous fixed range in the assessment,
-``assessed_fixed_top``), TIMELINE (``timeline_phrase`` from the assessment's
-Time lines, first deliverable only) and CALL_OFFER (``framework_call_offer``:
-"now, in the next couple of hours, or tomorrow at <one slot>"). Figures in
-the client's messages never move the band; ``framework_needs`` lists them for
-Lorenzo. Only this reply type may state dollars, and only the band: the copy
-gate is handed the band (``copy_gate.check_detailed(band=...)``) and refuses
-anything else.
+$500, the top raised only by an unambiguous fixed range for this
+deliverable in the assessment, ``assessed_fixed_top``, never rounded above
+it; one clean step or narrower is no range), TIMELINE (``timeline_phrase``
+from the assessment's Time lines, first deliverable only, ambiguous gives
+none) and CALL_OFFER (``framework_call_offer``: "now, in the next couple of
+hours, or tomorrow at <one slot>"). Figures in the client's messages never
+move the band; ``framework_needs`` lists them for Lorenzo as written. Only
+this reply type may state dollars, and only the band: the copy gate is
+handed the band and the framework flag
+(``copy_gate.check_detailed(band=..., framework=True)``) and refuses
+anything else, any agreement to the client's figure in any sentence, and the
+band in a sentence with a rate or per-unit word.
 
 The model is called through the ``shared.llm`` ``draft`` role (Claude Opus
 5.5, the model ``shared.llm.MODEL_POLICY`` names for that role), once,
@@ -264,59 +269,47 @@ NOW_OFFER = "now, in the next couple of hours"
 BAND_FLOOR = 500
 BAND_TOP = 3500
 
-# ---- routing: does the client ask something?
-_URL_RE = re.compile(r"(?:https?://|www\.)\S+|<[^>\s]*://[^>]*>", re.I)
-# A short lead-in before the question: "Hi,", "Hey Lorenzo,", "Thanks for the
-# video,", "Looks great,". Each clause after a comma is tried as well.
-_CLAUSE_RE = re.compile(r"[.!?\n;]+|,\s*")
-_LEAD_WORDS_RE = re.compile(r"^(?:(?:and|but|so|also|ok|okay|well|then|now)\s+)+", re.I)
-_WH_SHAPE_RE = re.compile(
-    r"^(?:what|how|when|where|which|who|why)(?:'s|'re|'d|'ll|\s+(?:is|are|was|were|am|do|does|did|can|could|"
-    r"would|will|should|shall|might|may|much|long|many|soon|often|fast|quickly|about|else|kind|type|sort|"
-    r"exactly|happens)\b)", re.I)
-_AUX_SHAPE_RE = re.compile(
-    r"^(?:can|could|would|will|do|does|did|is|are|should|have|has|was|were|may|might)(?:n't)?\s+"
-    r"(?:you|i|we|it|this|that|there|your|my|our|he|she|they|anyone|someone)\b", re.I)
-_PRICE_WORD = r"(?:quote|price|pricing|estimate|cost|costs|rate|rates|fee|budget|timeline|timeframe|eta|turnaround)"
-_DIRECT_ASK_RE = re.compile(
-    r"\b(?:send|give|share|tell|quote)\s+(?:me|us)\b[^.!?\n]{0,25}\b" + _PRICE_WORD + r"\b|"
-    r"\blet\s+(?:me|us)\s+know\b[^.!?\n]{0,25}\b" + _PRICE_WORD + r"\b|"
-    r"\b(?:need|want|like|get|have)\s+(?:a|an|your)\s+(?:quick\s+|rough\s+)?" + _PRICE_WORD + r"\b|"
-    r"\bhow\s+(?:much|long)\b", re.I)
+# ---- routing: the classifier's label (Lorenzo, 2026-10-06)
+# The framework reply is chosen from the label the reply classifier
+# (classify.py, prompts/classify.md) gave the client's unanswered messages,
+# never from a regex over their text. sequence.py writes that label to the
+# thread history when it classifies a burst: {"event": "client_reply",
+# "message_id", "label"}, or "client_message_while_<status>" when Lorenzo had
+# stopped the thread. The classifier returns "question" for a direct ask
+# with no question mark too ("send me a quote", "how long would it take",
+# "can you do it by Friday"), and never for a statement ("We need an
+# estimate follow-up that texts the homeowner", "We have a budget approved").
 QUESTION_LABEL = "question"
+FRAMEWORK_LABELS = (QUESTION_LABEL,)
 
 
-def _asks(text: str) -> bool:
-    body = _URL_RE.sub(" ", copy_gate.decode_escapes(text or ""))
-    if "?" in body or _DIRECT_ASK_RE.search(body):
-        return True
-    for clause in _CLAUSE_RE.split(body):
-        clause = _LEAD_WORDS_RE.sub("", clause.strip())
-        if _WH_SHAPE_RE.match(clause) or _AUX_SHAPE_RE.match(clause):
-            return True
-    return False
+def _message_id(msg: Dict[str, Any]) -> str:
+    """A room message's id as sequence.py keys it (sequence._msg_id)."""
+    return str(msg.get("id") or "%s|%s" % (msg.get("at"), msg.get("side")))
 
 
-def _latest_label(thread: Optional[Dict[str, Any]]) -> Optional[str]:
+def unanswered_labels(room: Optional[Dict[str, Any]], thread: Optional[Dict[str, Any]]) -> List[str]:
+    """The classifier labels sequence.py recorded for the client's unanswered
+    messages (``latest_client_messages``), newest entry first. A label
+    recorded for a message Lorenzo already answered is not one of them."""
+    ids = {_message_id(m) for m in latest_client_messages(room or {}) if isinstance(m, dict)}
+    out = []  # type: List[str]
+    if not ids:
+        return out
     for entry in reversed((thread or {}).get("history") or []):
-        if isinstance(entry, dict) and entry.get("event") == "client_reply":
-            return entry.get("label")
-    return None
+        if not isinstance(entry, dict) or entry.get("message_id") not in ids or not entry.get("label"):
+            continue
+        event = str(entry.get("event") or "")
+        if event == "client_reply" or event.startswith("client_message_while_"):
+            out.append(str(entry.get("label")))
+    return out
 
 
 def is_framework_reply(room: Optional[Dict[str, Any]], thread: Optional[Dict[str, Any]] = None) -> bool:
-    """The client wrote last and asks something: the classifier's latest
-    label is ``question``, or one of their unanswered messages has a "?"
-    outside a URL, a direct ask ("send me a quote", "let me know your price
-    and timeline", "how much", "how long"), or a clause shaped like a
-    question: a question word with an auxiliary or "much / long" after it
-    ("what's your timeline", "how would ..."), or an inverted auxiliary
-    ("can you do it by Friday"), after an optional greeting or lead-in
-    ("Hey Lorenzo, ..."). "What I need is ...", "When I watched ...", "How
-    exciting." and "Have the build ready ..." are statements."""
-    if _latest_label(thread) == QUESTION_LABEL and latest_client_messages(room or {}):
-        return True
-    return any(_asks(msg.get("text") or "") for msg in latest_client_messages(room or {}))
+    """The client wrote last and the classifier labelled one of their
+    unanswered messages ``question`` (``unanswered_labels``). No label (no
+    thread, or none recorded for these messages) means the plain reply."""
+    return any(label in FRAMEWORK_LABELS for label in unanswered_labels(room, thread))
 
 
 # ---- the band
@@ -329,9 +322,16 @@ def _round_down(value: float) -> int:
     return int(value // step) * step
 
 
-def _round_up(value: float) -> int:
-    step = _clean_step(value)
-    return int(-(-value // step)) * step
+def band_top(assessed_top: Optional[float] = None) -> int:
+    """The band's top: $3,500, or the assessment's stated high end when that
+    is higher, rounded DOWN to a clean number so the top never goes above
+    the figure the assessment states ($3,550 gives $3,500, $4,250 gives
+    $4,200)."""
+    try:
+        top_in = float(assessed_top) if assessed_top is not None else 0.0
+    except (TypeError, ValueError):
+        top_in = 0.0
+    return max(BAND_TOP, _round_down(top_in)) if top_in > BAND_TOP else BAND_TOP
 
 
 def price_band(budget: Optional[float] = None, assessed_top: Optional[float] = None) -> Optional[Tuple[int, int]]:
@@ -340,22 +340,19 @@ def price_band(budget: Optional[float] = None, assessed_top: Optional[float] = N
     Lorenzo's rule (2026-10-06): the range defaults to $500 to $3,500. The
     low end is the client's posted budget rounded down to a clean number
     ($50 steps under $1,000, $100 above), never below $500; with no usable
-    budget it is $500. The top is $3,500, raised only to ``assessed_top``
-    (the high end of a fixed range the assessment states unambiguously for
-    this deliverable, see ``assessed_fixed_top``) when that is higher. When
-    the low end reaches the top there is no range: the price goes on
+    budget it is $500. The top is ``band_top(assessed_top)``: $3,500, raised
+    only to the high end of a fixed range the assessment states
+    unambiguously for this deliverable (``assessed_fixed_top``), never above
+    that figure. A range no wider than one clean step ($3,400 to $3,500) is
+    no range, and neither is a low end at or above the top: the price goes on
     NEEDS_YOU."""
     try:
         bud = float(budget) if budget is not None else 0.0
     except (TypeError, ValueError):
         bud = 0.0
-    try:
-        top_in = float(assessed_top) if assessed_top is not None else 0.0
-    except (TypeError, ValueError):
-        top_in = 0.0
-    top = max(BAND_TOP, _round_up(top_in)) if top_in > BAND_TOP else BAND_TOP
+    top = band_top(assessed_top)
     low = max(BAND_FLOOR, _round_down(bud)) if bud > 0 else BAND_FLOOR
-    if low >= top:
+    if top - low <= _clean_step(low):
         return None
     return low, top
 
@@ -402,20 +399,39 @@ _MONEY_RANGE_RE = re.compile(
     r"\$\s?(\d[\d,]*(?:\.\d+)?)\s?(k)?\s*(?:-|to)\s*\$?\s?(\d[\d,]*(?:\.\d+)?)\s?(k)?(\+)?", re.I)
 # A fixed range for this deliverable, said in so many words: a "defensible /
 # standard fixed range" (or "fixed price / fixed range") label before it, or
-# "fixed" right after it ("$4,000 to $6,000 fixed").
+# "fixed" right after it ("$4,000 to $6,000 fixed") in a sentence that ties
+# it to this deliverable ("for this scope / build / job / deliverable /
+# project"; Lorenzo, 2026-10-06).
 _FIXED_LABEL_RE = re.compile(r"\b(?:defensible|standard|our|his|lorenzo's)?\s*fixed\s+(?:range|price|quote)\b"
                              r"[^$]{0,25}$", re.I)
 _FIXED_AFTER_RE = re.compile(r"^\s*(?:fixed|flat)\b(?!\s+(?:fee\s+)?(?:a|per)\s)", re.I)
+_THIS_DELIVERABLE_RE = re.compile(
+    r"\bfor\s+this\s+(?:(?:exact|specific|particular|same|one|single)\s+)?(?:scope|build|job|deliverable|project)\b",
+    re.I)
 # Not this deliverable's own fixed price: client history and spend, the post
-# or bids, agency or market tiers, conditional or later work, rates.
+# or bids, agency, market or other people's tiers (a previous developer,
+# other bidders, the going rate, bigger shops), conditional, later or extra
+# work (Version 2, Stage 2, Milestone 3, an expansion, an add-on, a
+# rollout), a worst case, rush or upper end, the whole program, rates.
 _NOT_OURS_RE = re.compile(
-    r"\b(?:history|spent|spend|spends|paid|contracts?|post|post's|posted|bids?|avg|average|agency|agencies|"
-    r"freelancers?|charges?|competent|typical|typically|usually|afterwards|after|then|alone|options?|"
+    r"\b(?:history|spent|spend|spends|paid|contracts?|post|post's|posted|bids?|bidders?|avg|average|agency|agencies|"
+    r"freelancers?|charges?|charged|competent|typical|typically|usually|afterwards|after|then|alone|options?|"
     r"market|competitors?|if|converts?|later|next|phase|phases|upsell|follow-on|retainer|maintenance|"
-    r"monthly|hourly|annually|hour|hours|hr|month|mo|year|yr|week|recurring|software|mvp|platform|full)\b|"
+    r"monthly|hourly|annually|hour|hours|hr|month|mo|year|yr|week|recurring|software|mvp|platform|full|"
+    r"previous|prior|former|last|developers?|devs?|vendors?|hire|similar|comparable|other|others|elsewhere|"
+    r"going|bigger|larger|shops?|studios?|firms?|version|v[2-9]|stage|stages|milestones?|expansion|expand|"
+    r"add-?ons?|adding|rollout|roll-out|worst|rush|upper|premium|packages?|tiers?|ballpark|everything|whole|"
+    r"entire|program|programme|both|would|won't|wouldn't|could|might|maybe|perhaps)\b|"
     r"/\s?(?:h|hr|hour|mo|month|yr|year)\b", re.I)
 _RATE_TAIL_RE = re.compile(r"^\s*(?:/|per\b|each\b|an?\s+(?:hour|month|year|week|day)\b|monthly\b|hourly\b|"
                            r"yearly\b|annually\b|weekly\b|daily\b)", re.I)
+# A pricing sentence keeps its parentheses: "Stage 2 (reporting): $4,000 to
+# $6,000 fixed for this scope" is one sentence, so the label before the
+# parenthesis still rules the range out, and so does "(per location)" after
+# it. A per-unit word near the range makes it a per-unit price, not this
+# deliverable's.
+_PRICE_SENTENCE_RE = re.compile(r"(?<=[.;])\s+|,\s+(?=(?:or|and|but|then)\b)")
+_PER_UNIT_RE = re.compile(r"\b(?:per|each|every|apiece)\b|\ba\s+pop\b", re.I)
 
 
 def _money_value(raw: str, k: Optional[str]) -> Optional[float]:
@@ -428,24 +444,29 @@ def _money_value(raw: str, k: Optional[str]) -> Optional[float]:
 def assessed_fixed_top(private_notes: Any) -> Tuple[Optional[int], Optional[str]]:
     """(high end, the assessment line it came from) of the one fixed range
     the assessment's Standard pricing states for this deliverable, or
-    (None, None). Only an explicit fixed range counts ("Defensible fixed
-    range: $1,200-$2,000", "$4,000 to $6,000 fixed"), in a sentence that
-    names no client history or spend, no post or bids, no agency or market
-    tier, no conditional or later phase, no retainer and no rate. Labelled
-    ranges win over "N to M fixed" ones. Two different qualifying high ends
-    are ambiguous and give (None, None)."""
+    (None, None). Only an explicit fixed range counts: a labelled one
+    ("Defensible fixed range: $1,200-$2,000"), or "$X to $Y fixed" in a
+    sentence that ties it to this deliverable ("$3,500 to $8,000 fixed for
+    this scope"); either way in a sentence that names no client history or
+    spend, no post or bids, no agency, market or other people's tier (a
+    previous developer, other bidders, the going rate, bigger shops), no
+    conditional, later or extra work (Version 2, Stage 2, Milestone 3, an
+    expansion, an add-on), no worst case, rush or upper end, no retainer, no
+    rate and no per-unit word ("per location", "each"), parentheses
+    included. Labelled ranges win over plain ones. Two different qualifying
+    high ends are ambiguous and give (None, None)."""
     notes = "\n".join(private_notes) if isinstance(private_notes, (list, tuple)) else str(private_notes or "")
     labelled, plain = [], []  # type: List[Tuple[int, str]], List[Tuple[int, str]]
     for item in _items(_note_section(notes, "standard pricing")):
-        for sentence in _SENTENCE_RE.split(item):
+        for sentence in _PRICE_SENTENCE_RE.split(item):
             for m in _MONEY_RANGE_RE.finditer(sentence):
                 before, after = sentence[:m.start()], sentence[m.end():]
                 if m.group(5) or _RATE_TAIL_RE.match(after):
                     continue
                 label = bool(_FIXED_LABEL_RE.search(before))
-                if not label and not _FIXED_AFTER_RE.match(after):
+                if not label and not (_FIXED_AFTER_RE.match(after) and _THIS_DELIVERABLE_RE.search(sentence)):
                     continue
-                if _NOT_OURS_RE.search(before) or _NOT_OURS_RE.search(after[:60]):
+                if any(rx.search(text) for rx in (_NOT_OURS_RE, _PER_UNIT_RE) for text in (before, after[:60])):
                     continue
                 high = _money_value(m.group(3), m.group(4) or m.group(2))
                 if high is None or high <= 0:
@@ -465,16 +486,29 @@ _DAYS_RE = re.compile(r"(\d+(?:\.\d+)?)(?:\s*(?:-|to)\s*(\d+(?:\.\d+)?))?\s*(?:c
                       r"days?\b", re.I)
 _HOURS_EST_RE = re.compile(r"(\d+(?:\.\d+)?)(?:\s*(?:-|to)\s*(\d+(?:\.\d+)?))?\s*(?:hours?|hrs?|h)\b"
                            r"(?!\s*(?:a|per|/)\s*(?:week|wk|month|day))", re.I)
-# Follow-on work, not the first deliverable.
+# Follow-on work, not the first deliverable: later phases or stages (Phase 2,
+# Stage 2, Version 2, Milestone 3, months 2 and 3, the second workflow), a
+# rollout to the other sites or an expansion to all of them, add-ons, and
+# ongoing work.
 _FOLLOW_ON_RE = re.compile(
     r"\b(?:after\s+that|afterwards|further|next\s+phase|phase\s*[2-9]|phase\s+(?:two|three)|later|ongoing|"
-    r"full\s+(?:list|platform|office|system|time|scope)|each\s+(?:further|extra|additional)|every\s+(?:further|"
-    r"extra)|upsell|retainer|maintenance|if\s+it\s+converts|follow-on|long[- ]term|per\s+week|a\s+week\s+for|"
-    r"hours\s+a\s+week|warm-?up|support\s+window|mvp|kickoff|meetings?|booked|results?|replies)\b", re.I)
+    r"stage\s*[2-9]|stage\s+(?:two|three|four)|version\s*[2-9]|version\s+(?:two|three)|v[2-9]|"
+    r"milestones?\s*[2-9]|months?\s+(?:[2-9]|two|three)|second\s+(?:[\w-]+\s+)?(?:workflows?|phase|stage|builds?|"
+    r"deliverables?|milestone|version|piece|clinics?|locations?|sites?|offices?|agents?|integrations?|"
+    r"automations?|flows?|systems?|campaigns?|sequences?)|roll[- ]?outs?|rolling\s+out|expansion|expanding|"
+    r"other\s+(?:\d+\s+)?(?:offices|locations|clinics|sites|stores|branches|teams|regions|markets|brands)|"
+    r"all\s+(?:\d+\s+)?(?:offices|locations|clinics|sites|stores|branches|regions|markets|brands)|add-?ons?|"
+    r"if\s+they\s+add|full\s+(?:list|platform|office|system|time|scope)|each\s+(?:further|extra|additional)|"
+    r"every\s+(?:further|extra)|upsell|retainer|maintenance|if\s+it\s+converts|follow-on|long[- ]term|per\s+week|"
+    r"a\s+week\s+for|hours\s+a\s+week|warm-?up|support\s+window|mvp|kickoff|meetings?|booked|results?|replies)\b",
+    re.I)
+# The first deliverable: Phase 1, Stage 1, Milestone 1, the pilot, this
+# workflow, the first workflow / build / deliverable, the initial build.
 _FIRST_RE = re.compile(
     r"\bfirst\s+(?:[\w-]+\s+)?(?:workflows?|builds?|deliverables?|phase|milestone|version|piece|clinic|agents?|"
     r"flows?|automations?|integrations?|engagement|sequences?|campaigns?|systems?)\b|"
-    r"\binitial\b|\bphase\s*(?:1|one)\b|\bmilestone\s*1\b|\bthis\s+(?:build|job|scope)\b", re.I)
+    r"\binitial\b|\bphase\s*(?:1|one)\b|\bstage\s*(?:1|one)\b|\bmilestone\s*1\b|\bpilot\b|"
+    r"\bthis\s+(?:build|job|scope|workflow)\b", re.I)
 FOCUS_HOURS_PER_DAY = 4
 
 
@@ -496,13 +530,22 @@ def _days_phrase(days: float) -> str:
     return _weeks_phrase(n / 5.0) if n > 5 else "within %d days" % max(n, 2)
 
 
+def _one_phrase(phrases: List[str]) -> Optional[str]:
+    """The phrase when every entry agrees, else None (ambiguous)."""
+    return phrases[0] if phrases and len(set(phrases)) == 1 else None
+
+
 def timeline_phrase(private_notes: Any) -> Optional[str]:
     """The timeline to tell the client, from the assessment's Time lines, or
-    None. Sentences about follow-on work (later phases, the full list,
-    ongoing hours a week, maintenance) are skipped. A sentence about the
-    first deliverable ("first workflow", "phase 1", "initial") wins over the
-    others; within the chosen sentences the first weeks figure counts ("1 to
-    1.5 calendar weeks" gives "about 2 weeks"), else the first days figure.
+    None. Sentences about follow-on work (later phases or stages, a rollout
+    or expansion, the second workflow, the full list, ongoing hours a week,
+    maintenance) are skipped. When a sentence names the first deliverable
+    ("Phase 1", "Stage 1", "pilot", "this workflow", "first workflow",
+    "initial"), those sentences are read first; every kept sentence is read
+    when they give no weeks or days figure. Line order never matters: the
+    weeks figures of the read sentences must agree ("1 to 1.5 calendar
+    weeks" gives "about 2 weeks"), else the days figures must; two different
+    answers are ambiguous and give None.
     An item that lists several different week figures lists parts, so its
     weeks are not read.
     Hours count only when every remaining hours figure is in one sentence
@@ -511,25 +554,50 @@ def timeline_phrase(private_notes: Any) -> Optional[str]:
     so None (NEEDS_YOU). No hours figure ever reaches the draft."""
     notes = "\n".join(private_notes) if isinstance(private_notes, (list, tuple)) else str(private_notes or "")
     kept = []  # type: List[str]
+    first = []  # type: List[str]
     parts = set()  # type: Set[str]   # sentences of an item that lists several different week figures
     for item in _items(_note_section(notes, "time")):
-        mine = [s for s in _SENTENCE_RE.split(item) if s.strip() and not _FOLLOW_ON_RE.search(s)]
+        mine = []  # type: List[str]
+        head_later = head_first = False
+        for s in _SENTENCE_RE.split(item):
+            if not s.strip():
+                continue
+            # A sentence that opens with "(" continues the label before it:
+            # "Stage 2 (reporting): 6 weeks." is later work as a whole, and
+            # "Phase 1 (read, sort, drafts): 2 to 3 weeks." the first deliverable.
+            # Its own words count too ("(..., warm-up 2 weeks)" is skipped alone).
+            paren = s.lstrip().startswith("(")
+            later = bool(_FOLLOW_ON_RE.search(s))
+            is_first = bool(_FIRST_RE.search(s))
+            if paren:
+                later, is_first = later or head_later, is_first or head_first
+            else:
+                head_later, head_first = later, is_first
+            if later:
+                continue
+            mine.append(s)
+            if is_first:
+                first.append(s)
         weeks_here = {_range_upper(m) for s in mine for m in _WEEKS_RE.finditer(s)} - {None}
         if len(weeks_here) > 1:
             parts.update(mine)
         kept.extend(mine)
     if not kept:
         return None
-    first = [s for s in kept if _FIRST_RE.search(s)]
     for group in ([first] if first else []) + [kept]:
+        weeks = []  # type: List[str]
+        days = []  # type: List[str]
         for s in group:
             m = _WEEKS_RE.search(s)
             if m and _range_upper(m) and s not in parts:
-                return _weeks_phrase(_range_upper(m))
-        for s in group:
+                weeks.append(_weeks_phrase(_range_upper(m)))
             m = _DAYS_RE.search(s)
             if m and _range_upper(m):
-                return _days_phrase(_range_upper(m))
+                days.append(_days_phrase(_range_upper(m)))
+        if weeks:
+            return _one_phrase(weeks)
+        if days:
+            return _one_phrase(days)
     with_hours = [s for s in kept if _HOURS_EST_RE.search(s)]
     if len(with_hours) != 1:
         return None
@@ -554,26 +622,32 @@ def client_budget(room: Optional[Dict[str, Any]]) -> Optional[float]:
 
 
 def client_figures(room: Optional[Dict[str, Any]]) -> List[str]:
-    """Money figures in the client's unanswered messages, formatted, in order."""
-    out = []  # type: List[str]
+    """Every figure in the client's unanswered messages that the copy gate
+    reads as money or as a price (``copy_gate.client_price_spans``: "$1,200",
+    "EUR 1,000", "2k", "five grand", and a bare number in a price position,
+    "Would 1,200 work", "Our budget is 1500"), as the client wrote it, so the
+    currency stays theirs ("EUR 1,000", never "$1,000"). In order, once per
+    value."""
+    out, seen = [], set()  # type: List[str], Set[str]
     for msg in latest_client_messages(room or {}):
-        for value in copy_gate.dollar_figures(copy_gate.decode_escapes(msg.get("text") or "")):
-            try:
-                text = format_money(float(value)) if float(value) >= 1 else "$" + value
-            except ValueError:
+        text = copy_gate.normalise(copy_gate.decode_escapes(msg.get("text") or ""))
+        for start, end, value in copy_gate.client_price_spans(text):
+            if value in seen:
                 continue
-            if text not in out:
-                out.append(text)
+            seen.add(value)
+            out.append(re.sub(r"\s+", " ", text[start:end]).strip())
     return out
 
 
 def framework_facts(room: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     """{"band", "timeline", "budget", "top", "top_line"} for a framework
-    reply, computed from the job post and the private notes only."""
+    reply, computed from the job post and the private notes only. ``top`` is
+    the band's top when the assessment raised it (``band_top``), else None."""
     notes = "\n".join(private_note_lines(room or {}))
     budget = client_budget(room)
     top, line = assessed_fixed_top(notes)
-    if top is not None and top <= BAND_TOP:
+    top = band_top(top)
+    if top <= BAND_TOP:
         top, line = None, None
     return {"band": price_band(budget, top), "timeline": timeline_phrase(notes), "budget": budget,
             "top": top, "top_line": line}
@@ -590,12 +664,13 @@ _TIME_ASK_RE = re.compile(
 
 def framework_needs(room: Optional[Dict[str, Any]], facts: Dict[str, Any]) -> List[str]:
     """NEEDS_YOU items the code adds itself: no range (the posted budget
-    reaches the top), the timeline when they asked and none exists, and every
-    money figure the client mentioned, which never moves the band."""
+    reaches the top, or leaves less than one clean step under it), the
+    timeline when they asked and none exists, and every figure the client
+    mentioned as money or a price, which never moves the band."""
     asked = " ".join(copy_gate.decode_escapes(m.get("text") or "") for m in latest_client_messages(room or {}))
     out = []  # type: List[str]
     if facts.get("band") is None:
-        out.append("Price: their posted budget (%s) is at or above the top of the range (%s), so the draft gives "
+        out.append("Price: their posted budget (%s) is at or near the top of the range (%s), so the draft gives "
                    "no range. Set the price." % (format_money(facts.get("budget") or 0),
                                                  format_money(facts.get("top") or BAND_TOP)))
     if facts.get("timeline") is None and _TIME_ASK_RE.search(asked):
@@ -998,7 +1073,8 @@ def _run(room: Dict[str, Any], thread: Optional[Dict[str, Any]], now: datetime, 
                 result["problems"] = [LLM_ERROR]
             break
         text, needs, flag = parse_output(raw)
-        details = copy_gate.check_detailed(text, kind, room, offers, private, band=band)
+        details = copy_gate.check_detailed(text, kind, room, offers, private, band=band,
+                                           framework=framework is not None)
         result.update({
             "text": copy_gate.normalise(text),
             "problems": [code for code, _ in details],
@@ -1031,10 +1107,11 @@ def draft_checkin(room: Dict[str, Any], thread: Optional[Dict[str, Any]], now: d
 
 def draft_reply(room: Dict[str, Any], thread: Optional[Dict[str, Any]], now: datetime,
                 llm: Optional[LlmFn] = None) -> Dict[str, Any]:
-    """Draft Lorenzo's reply to the client's latest message(s). A client who
-    asked questions gets the setter framework (``prompts/reply_framework.md``)
-    with its computed price range, timeline and call offer; any other reply
-    uses ``prompts/reply.md``."""
+    """Draft Lorenzo's reply to the client's latest message(s). When the
+    classifier labelled one of them ``question`` (``is_framework_reply``,
+    read from ``thread``'s history), the reply uses the setter framework
+    (``prompts/reply_framework.md``) with its computed price range, timeline
+    and call offer; any other reply uses ``prompts/reply.md``."""
     if is_framework_reply(room, thread):
         heading = ("Draft Lorenzo's reply to the client's questions in this Upwork room, in the setter "
                    "framework: thanks, each answer in their order, then a brief Upwork call.")
