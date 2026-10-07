@@ -10,20 +10,20 @@ This is an update to what you already have, not a new onboarding. Apply part 2 t
   - the five AI agents first replies, only for a lead whose offer is `ai_agents`: a plain yes with no time named, `first_reply.ai_agents.default.full`; a price question, `first_reply.ai_agents.pricing.full`; how it works or "tell me more", `first_reply.ai_agents.mechanism.full`; send info, a deck or more details, `first_reply.ai_agents.send_info.full` (no link, two times); yes plus "do you have a Calendly or booking link?" when that is the only ask, `first_reply.ai_agents.booking_link.full` (two times plus the Discovery Call booking link). The six older offers' first replies never go on their own, even once approved in the doc
   - the follow-up ladder `cadence.e1` to `cadence.e10`, with the lines from their own blocks for the lead's offer
   - the "Locked in" confirmation, `booking.confirmation.zoom_link` or `booking.confirmation.no_zoom_link`, only on the re-run right after your own booking (next point)
-- **Everything else is a hold card:** every first reply for the six older offers, show-rate and no-show emails (the reminders R2 R3 R4 are paused since 2026-10-05), `booking.already_booked.*`, every `booking.counter.*`, `booking.slot_already_taken`, nurture, every version (no free times, a confirmed time, a refused time, another time zone, every `/dated` one), the referral and other first replies, a neutral question, a no with a buying signal, talk of a competitor or a contract, a reply not in English, a confidence under 0.8 or one that is not a number, and every email and every booking for a lead whose `campaign_key` is missing or not one of the seven offers in file 01.
+- **Everything else is a hold card:** every first reply for the six older offers, show-rate and no-show emails (the reminders R2 R3 R4 are paused since 2026-10-05), `booking.already_booked.*`, every `booking.counter.*`, `booking.slot_already_taken`, nurture, every version (no free times, a confirmed time, a refused time, another time zone, every `/dated` one), the referral and other first replies, a neutral question, a no with a buying signal, talk of a competitor or a contract, a reply not in English, a confidence under 0.8, over 1 or not a number, and every email and every booking for a lead whose `campaign_key` is missing or not one of the seven offers in file 01.
 - **Book first, then confirm, only for your own booking** (file 02, section 3, step 6 and section 4, rule 15). When a lead's `positive_interested` or `positive_question` reply names a time that fits every slot rule, `ask_opus.py` prints `grok_next_step` `book_call` with `book_at`, and no `email_text`. In this order: reserve the time for the lead in `offered_times.jsonl` with the reply's id (`"reserved": true, "reply_id": "<reply_id>"`), book exactly `book_at` on the Discovery Call calendar with no Ask first (this one booking only), re-read the calendar, record the reply as `waiting_for_booking`, then run the case again as `booked_call` with `appointment`, `has_future_appointment` true, `offered_times` with your reservation, `sent_log_keys` and the newest `reply_id`. Only that run prints the "Locked in" confirmation as `send`, and only when the appointment is in the future and starts exactly at the confirmation's time and at your reserved time, the newest `reply_id` is still the reservation's (the lead has not written since), the reply is still `positive_interested` or `positive_question`, and no `booking.confirmation.*` key for this lead is in the send log, on any day. A failed or wrong booking is a hold card, and the time stays reserved for that lead. Every other booked call is a hold card and never gets a "Locked in" email: a lead who booked through the calendar link, a booked lead who writes (a question, a reschedule, a cancellation), a lead who already got a confirmation. Do not open a second `booked_call` case for a booking you made yourself. Every other booking action (a reschedule, a cancellation, a time that breaks a rule, any other label) is a hold card.
 - **A booked lead's question always reaches Lorenzo:** a hold card, never `booking.already_booked.*` or any other email.
-- **Each auto-send needs** Lorenzo's "done" on doc build `e95a04557f8a8faa` and his "go live", the copy doc unchanged since, the template not marked "Not approved yet", confidence 0.8 or more (a real number), a lead whose `campaign_key` is one of the seven offers, the template for the lead's own offer (`first_reply.ai_agents...` for the first replies), the text exactly that template with its paragraph breaks, and every send check.
+- **Each auto-send needs** Lorenzo's "done" on doc build `e95a04557f8a8faa` and his "go live", the copy doc unchanged since, the template not marked "Not approved yet", confidence from 0.8 to 1 (a real number), a lead whose `campaign_key` is one of the seven offers, the template for the lead's own offer (`first_reply.ai_agents...` for the first replies), the text exactly that template with its paragraph breaks, and every send check.
 - **Doc build.** `approval.json` names the build Lorenzo's "done" is for: `e95a04557f8a8faa`, built 2026-10-06 and waiting for upload. Its Google Doc link is not set yet: Claude Code fills it in, in a dated update, when it uploads the build (file 06, section 2). Until then the doc in Drive is the older build `170b09dd897430a9`, and every email from its export is a hold card, because the copy doc's "Doc build:" line must equal `approval.doc_build`.
 - **Legal words.** When the lead's newest email mentions a lawyer or attorney, suing or a lawsuit, a court, a complaint, a regulator or an attorney general, the FTC, FCC, TCPA, CAN-SPAM or BBB, or a cease and desist, in any form, no email goes and no blocklist is added: hold card. The same when the newest inbound email has no readable body. Hidden characters such as zero-width spaces never hide a word. This covers the auto-send first replies and E1 to E10 too, so `thread`, with the newest inbound email's body, is needed for every email and every blocklist.
 - **Every placeholder needs a check.** `{first_name}` and `{company}` must be the lead's own values; `{slots}`, `{alt_slots}` and `{slot}` real times under the slot rules; `{zoom_link}`, `{call_link}` and `{link}` exactly the appointment's link; the line placeholders exactly a line of the template's own block for the lead's offer. Any other placeholder (`{when_ct}`, `{time_ct}`, `{asked_time}`, `{slot1}`, `{referral_name}` and the like) holds, and so does a line break, tab or hidden character in a value.
 - **The lead's offer.** A template id that names another offer (for example `show_rate.confirm_email.cleaning_reactivation` for an `ai_agents` lead) holds.
 - **New call times never repeat.** `{slots}` and `{alt_slots}` are never a time already offered to this lead, released or not, nor one offered to or reserved for another lead. `offered_times` now carries every time ever offered to this lead (released lines stay in the file) and every reservation. The "Locked in" time may be one we offered this lead, never another lead's.
-- **Follow-up stops.** E1 to E10 hold for a lead with any appointment, past or future, a "no" label, a negative Instantly interest status, Do Not Disturb on in GHL (or a `dnd` tag), or Sequence `stopped` or `booked`. Give `ghl` (with `dnd`, `tags`, `fields`), `instantly.interest_status` and `appointment` (the newest one, past or future) for every follow-up case.
+- **Follow-up stops.** E1 to E10 hold for a lead with any appointment, past or future, a "no" label, a negative Instantly interest status, Do Not Disturb on in GHL (or a `dnd` tag), or Sequence `stopped` or `booked`, and whenever one of these facts is missing or cannot be read. Give `ghl` (with `stage`, `dnd` as `true` or `false`, `tags`, and `fields` with Sequence), `instantly.interest_status` (the number Instantly shows) and `appointment` (the newest one, past or future, or `null` when the lead never had one) for every follow-up case.
 - **Check again before a delayed send.** Right before a send that waited (a `send_after`, a 07:00 re-run), also re-read `approval.json` (`doc_done`, `doc_unchanged`, `go_live`, `doc_build`) and the kill switch. If anything changed, send nothing and run the case again.
 - **AI agents campaigns.** The eight AI agents campaigns all use the offer key `ai_agents`. Their ids are in file 01, section 4. A campaign that is not in that table has no key, so every email for that lead is a hold card and no call is booked.
 - **The send checks are in `ask_opus.py`**, from the facts you gather: the allow list, the doc build, the lead's offer (one of the seven), legal words, send window, call times (in `free_times`, 12:00 to 18:00 CT, Monday to Friday, at least 4 hours out, within 5 business days, never offered before, two times on different days), the booking (only your own, on the re-run right after it), sender, already answered, already sent, kill switch, no future appointment, the follow-up stops, and first contact (every email except an auto-send first reply and the "Locked in" confirmation needs `our_reply_reached_lead` true). A follow-up E1 to E10 also needs `our_reply_after_newest_inbound` true: a lead who wrote again gets an answer, not the next touch. A missing fact means a hold card. Outside 07:00 to 19:00 CT the answer is `wait` with `send_after` set to the next 07:00 CT: run the case again once then (file 02, step 6).
-- **New facts to gather** for any case that may end in an email (file 02, step 3): `kill_switch`, `lead_email`, `sent_log_keys`, `newest_inbound_from`, `our_reply_after_newest_inbound`, `our_reply_reached_lead`, `reply_id`, `handled_ids`, `has_future_appointment`, `thread` with bodies (the top 2,000 characters of each: the lead's new text is at the top), plus `lead.first_name`, `lead.company` and, once the lead has or had a booking, `appointment` (`start`, `call_link`; the newest one, past or future). `offered_times` entries are `{"time": "<ISO 8601>", "lead_email": "<lead>"}`, with `"reserved": true` and `"reply_id"` on a reservation. For E1 to E10 also `ghl.dnd`, `ghl.tags`, `ghl.fields` and `instantly.interest_status`.
+- **New facts to gather** for any case that may end in an email (file 02, step 3): `kill_switch`, `lead_email`, `sent_log_keys`, `newest_inbound_from`, `our_reply_after_newest_inbound`, `our_reply_reached_lead`, `reply_id`, `handled_ids`, `has_future_appointment`, `thread` with bodies (the top 2,000 characters of each: the lead's new text is at the top), plus `lead.first_name`, `lead.company` and `appointment` (`start`, `call_link`; the newest one, past or future, or `null` when the lead never had one). `offered_times` entries are `{"time": "<ISO 8601>", "lead_email": "<lead>"}`, with `"reserved": true` and `"reply_id"` on a reservation. For E1 to E10 also `ghl.stage`, `ghl.dnd`, `ghl.tags`, `ghl.fields` and `instantly.interest_status`.
 - **Sender check:** `newest_inbound_from` and `lead_email` are one bare address each (no display name, no list). The newest inbound email may come from the lead's address or from the lead's own company domain, unless that domain is free mail or an internet provider (gmail, yahoo, outlook, icloud, hey.com, duck.com, the mail.com family, mailbox.org, posteo, seznam, wp.pl, comcast, att, verizon and the like). A booked lead wrote from info@company while the record was ilmi@company.
 - **Self-booked leads:** leads can book themselves through the calendar link. Zoom is connected on the Discovery Call calendar and bookings confirm on their own (verified 2026-10-06). Before any reply or follow-up, check GHL for a future appointment on the Discovery Call calendar. If there is one: no reply or follow-up email, release held times, GHL Call Booked, Sequence `booked` (not `stopped`), Instantly interest 2, and hand off to the Calls agent. Their widget confirmation is a hold card, they never get the "Locked in" email, and the reminders are paused.
 - **A different zone or time is a new time.** Offered 4pm CT, lead wrote "Thursday 4pm Eastern works": that is a new time the lead named, checked against the slot rules, never an acceptance.
@@ -49,7 +49,7 @@ shasum -a 256 ~/advero/ask_opus.py
 
 It must print the sha256 line below. If it does not, the paste is wrong: put the `.bak` back and tell Lorenzo.
 
-sha256 aaac01c0855200580c0772a62b9439fd20eeff5d82bf36b7bc04dfca37d5ffc2
+sha256 dffc7babcae7763df83bd997ef6133dd7c166401240230430bbcad2e0426aabe
 
 Then replace the code block under section 12 of your `04_ask_opus.md` (and the same block in `GROK_ONBOARDING_PACK.md`, between `<!-- BEGIN ask_opus.py -->` and `<!-- END ask_opus.py -->`) with the same script in a python code block.
 
@@ -426,14 +426,14 @@ For any case that may end in an email, also gather these. `ask_opus.py` holds th
 - `kill_switch`: `true` if `~/advero/state/KILL_SWITCH` exists, else `false`;
 - `lead_email`: the lead's own address from the Instantly lead, as one bare address (`dana@brightline.com`, never `Dana <dana@brightline.com>`);
 - `lead.first_name` and `lead.company`: from the Instantly lead or GHL. `{first_name}` must be that name or "there"; `{company}` must be that company (legal suffixes like LLC may be left off) or "your business" (never in a follow-up);
-- `appointment`, once the lead has or had a booking (the newest one, past or future): `start`, `call_link` (and `zoom_link` if different). Any `{call_link}` or `{zoom_link}` must be exactly that link. A "Locked in" confirmation goes only when `start` is in the future, its `{slot}` names exactly `start`, and `start` is the time you reserved for this reply at your own `book_call` step (section 4, rule 15). A follow-up E1 to E10 never goes to a lead with any appointment. Leave `appointment` out when the lead never had a booking;
+- `appointment`, once the lead has or had a booking (the newest one, past or future): `start`, `call_link` (and `zoom_link` if different). Any `{call_link}` or `{zoom_link}` must be exactly that link. A "Locked in" confirmation goes only when `start` is in the future, its `{slot}` names exactly `start`, and `start` is the time you reserved for this reply at your own `book_call` step (section 4, rule 15). A follow-up E1 to E10 never goes to a lead with any appointment. When the lead never had a booking, give `"appointment": null`: for E1 to E10 a missing `appointment` is a hold card;
 - `sent_log_keys`: every key in `~/advero/state/sent_log.jsonl` for this lead (`[]` when none);
 - `newest_inbound_from`: the sender (`from_address_email`) of the newest inbound email in the thread, one bare address (replies, booking emails, E1 to E10);
 - `our_reply_after_newest_inbound`: `true` if an email from our inbox already follows the lead's newest inbound email, else `false`. A reply or booking email needs `false`; a follow-up E1 to E10 needs `true` (a lead who wrote again gets an answer, not the next touch);
 - `reply_id`: the Instantly id of the lead's newest inbound email (replies and booking emails);
 - `handled_ids`: the email ids in `~/advero/state/handled.jsonl` whose newest outcome is not `waiting_for_send_window` or `waiting_for_booking` (replies and booking emails);
 - `has_future_appointment`: `true` if the GHL contact has an appointment after now on the Discovery Call calendar (`GDugwLmZNdsD13RBDnRu`), else `false` (replies, booking emails, E1 to E10);
-- for E1 to E10, `ghl.dnd`, `ghl.tags`, `ghl.fields` (with Sequence) and `instantly.interest_status`: a follow-up holds when Do Not Disturb is on (or a tag is `dnd`), Sequence is `stopped` or `booked`, or the interest status is negative;
+- for E1 to E10, `ghl.stage`, `ghl.dnd` (`true` or `false`), `ghl.tags`, `ghl.fields` (with Sequence) and `instantly.interest_status` (the number Instantly shows): a follow-up holds when Do Not Disturb is on (or a tag is `dnd`), Sequence is `stopped` or `booked`, or the interest status is negative, and also when the stage, `dnd`, Sequence, the interest status or `appointment` is missing or cannot be read;
 - `free_times` and `offered_times` (above) for any email that offers or confirms a time.
 ````
 
@@ -813,8 +813,8 @@ with:
 | `handled_ids` | The email ids in `~/advero/state/handled.jsonl` whose newest outcome is not `waiting_for_send_window` or `waiting_for_booking`. Needed for replies and booking emails |
 | `has_future_appointment` | `true` if the GHL contact has an appointment after now on the Discovery Call calendar (`GDugwLmZNdsD13RBDnRu`), else `false`. Needed for replies, booking emails and E1 to E10 |
 | `lead` | `email`, `first_name`, `company`, `campaign_key`, `campaign_id`, `timezone` if known. `campaign_key` is the lead's offer key from file 01, section 4, like `cleaning_reactivation`, `cleaning_trigger` or `ai_agents`. Without it, or with a key that is not one of the seven in file 01, every email for this lead is a hold card and no call is booked (`known_offer`). The first replies go on their own only for `ai_agents`. `{first_name}` must equal `first_name` (or "there"); `{company}` must equal `company`, with or without a legal suffix (or "your business", never in a follow-up) |
-| `ghl` | `contact_id`, `opportunity_id`, `stage`, `fields` (the five from file 05), `tags`, `dnd` (true when Do Not Disturb is on), `last_notes` (up to 3). E1 to E10 hold when `dnd` is true, a tag is `dnd`, or Sequence is `stopped` or `booked` |
-| `instantly` | `interest_status`, `lead_id`. E1 to E10 hold when `interest_status` is negative |
+| `ghl` | `contact_id`, `opportunity_id`, `stage`, `fields` (the five from file 05), `tags`, `dnd` (true when Do Not Disturb is on), `last_notes` (up to 3). E1 to E10 hold when `dnd` is true, a tag is `dnd`, or Sequence is `stopped` or `booked`, and when `stage`, `dnd` (`true` or `false`) or Sequence (one of the seven values in file 05) is missing or cannot be read, or `tags` is not a list of tag names |
+| `instantly` | `interest_status`, `lead_id`. E1 to E10 hold when `interest_status` is negative, missing, or not one of Instantly's values (0, 1, 2, 3, 4, -1, -2, -3, -4) |
 | `thread` | List of emails, oldest first: `id`, `direction` (`in` or `out`), `from`, `to`, `sent_at`, `subject`, `body` (the top 2,000 characters: the lead's new text, with the quoted older emails below it cut). Needed for every email and every blocklist: the newest `in` email must have its `body`, which the script scans for legal words |
 | `our_reply_reached_lead` | `true` if an email from our inbox was sent after the lead's first reply. The two cold-campaign steps do not count. Every email except an auto-send first reply and the booking confirmation needs `true` |
 | `free_times` | Free Discovery Call times, next 5 business days, 12:00 to 18:00 CT, ISO 8601. Needed for any email with `{slots}` or `{alt_slots}`, and for a "Locked in" confirmation before its booking exists |
@@ -830,7 +830,7 @@ c) Replace:
 with:
 
 ````
-| `appointment` | `start`, `status`, `call_link`, `zoom_link` if different, `booked_at`, `no_show_marked`, once the lead has or had a booking (the newest one, past or future). Leave it out when there never was one. A `{call_link}` or `{zoom_link}` value must be exactly this link. A "Locked in" confirmation goes only with it: `start` in the future, within 7 days, `{slot}` naming exactly `start` (also in a held `booking.already_booked.*` email), and an `offered_times` entry for this lead with `"reserved": true` at exactly `start` whose `reply_id` is this case's `reply_id` (your own `book_call` booking, and the lead has not written since). E1 to E10 hold for a lead with any appointment |
+| `appointment` | `start`, `status`, `call_link`, `zoom_link` if different, `booked_at`, `no_show_marked`, once the lead has or had a booking (the newest one, past or future); `null` when there never was one. A `{call_link}` or `{zoom_link}` value must be exactly this link. A "Locked in" confirmation goes only with it: `start` in the future, within 7 days, `{slot}` naming exactly `start` (also in a held `booking.already_booked.*` email), and an `offered_times` entry for this lead with `"reserved": true` at exactly `start` whose `reply_id` is this case's `reply_id` (your own `book_call` booking, and the lead has not written since). E1 to E10 hold for a lead with any appointment, and when `appointment` is missing or is neither an appointment nor `null` |
 ````
 
 d) Replace:
@@ -986,7 +986,7 @@ with:
 | `send_after` | With `wait`: when to run the case again. Outside the send window it is the next 07:00 CT |
 | `book_at` | With `book_call`: the exact time to book for this lead (ISO 8601, CT), a time the lead named that fits every slot rule. Otherwise null |
 | `email_text` | The template with the fields filled. The only text you may send. Null with `book_call`: nothing is sent on that run |
-| `checks` | The copy-doc checks. `template_found`, and `lines_match_template`: the text is exactly the chosen template, complete and in order, with the template's paragraph breaks (a base id is the base email only; a variant id is the base with only that variant's change). `no_leftover_placeholders`: no `{placeholder}` left. `template_is_email`: the template is a main email block or one of its variants, never a line used inside another email, a subject, a cold email or an instruction block. `field_values_clean`: every placeholder has a check against the facts, and passes it: `{first_name}` and `{company}` are the lead's own values (section 4); `{slots}`, `{alt_slots}` and `{slot}` pass `slots_ok`; `{zoom_link}`, `{call_link}` and `{link}` are exactly the appointment's link; a line placeholder (`research_line`, `offer_proof`, `offer_line`, `preview`, `observation`, `niche_point`) is exactly a line from the chosen template's own block for the lead's offer (for E4 and a `cleaning_reactivation` lead, `cadence.e4.offer_proof.reactivation`). A placeholder with no check (`{when_ct}`, `{time_ct}`, `{asked_time}`, `{lead_local_time}`, `{slot1}`, `{slot2}`, `{referral_name}` or any other), a field with any other name, a line from any other part of the doc or a line Opus wrote, a price, link, dash or "!" in a value, a line break, tab or hidden character in a value, and a filled email whose line or paragraph breaks differ from the template all hold. `approval_ok`: `doc_done`, `doc_unchanged` and `go_live` are all true, and `allow_listed` and `doc_build_ok` pass. `allow_listed`: the template is on Lorenzo's allow list (file 02, section 4, rule 14): a base template, never a version; one of the five AI agents first replies for an `ai_agents` lead and the label it answers (never a first reply for the six older offers), `cadence.e1` to `cadence.e10`, or the "Locked in" confirmation for a `positive_interested` or `positive_question` reply. `doc_build_ok`: the copy doc has one "Doc build:" line and its build is `approval.doc_build`. `offer_matches`: no part of the template id names an offer other than the lead's `campaign_key` (`show_rate.confirm_email.cleaning_reactivation` for an `ai_agents` lead holds). `known_offer`: the lead's `campaign_key` is one of the seven offers in file 01; without it every email holds and no call is booked. `no_legal_words`: the lead's newest email in `thread` can be read and has no legal word (file 02, section 4, rule 16). `no_literal_times`: the template carries no example day, date or time (every `/dated` version holds). `first_contact_ok`: `our_reply_reached_lead` is true, unless the email is an auto-send first reply or the "Locked in" confirmation. `template_approved_in_doc`: no "Not approved yet" note on the template. `links_ok`: no link except a `{zoom_link}`/`{call_link}` value and the booking calendar link inside a `booking_link` first reply. The send checks: `send_window` (07:00 to 19:00 CT; outside it the step is `wait`), `slots_ok` (each time in `{slots}` and `{alt_slots}` is in `free_times`, 12:00 to 18:00 CT, Monday to Friday, at least 4 hours after the send, within 5 business days, not offered to another lead, never a time already offered to this lead, two times on different days; a "Locked in" confirmation's `{slot}` names exactly the start of the lead's future appointment, within 7 days; with no appointment yet, its `{slot}` must be a free time that fits the same rules and is not another lead's, and the step is `book_call` with that time as `book_at`), `sender_ok` (the newest inbound email is from `lead_email`, or the same company domain when that domain is not free mail), `not_already_answered` (replies), `no_newer_lead_reply` (E1 to E10: `our_reply_after_newest_inbound` is true), `not_duplicate` (`send_key` not in `sent_log_keys`, `reply_id` not in `handled_ids`), `kill_switch_off`, `no_future_appointment` (`has_future_appointment` is false: a booked lead gets no reply or follow-up email; for the "Locked in" confirmation after its booking it must be true instead), `own_booking_ok` (a "Locked in" confirmation: no `booking.confirmation.*` key for this lead in `sent_log_keys`, on any day; on the run after the booking, an `offered_times` entry for this lead with `"reserved": true` at exactly `appointment.start` and the case's `reply_id`, which must be the id of the newest inbound email in `thread`; in a `booked_call` case every other email fails it), `ladder_ok` (E1 to E10: no appointment at all, past or future, no "no" label, no negative `instantly.interest_status`, no Do Not Disturb, Sequence not `stopped` or `booked`). A missing context field fails its check. `checks_not_applied` lists the checks that do not apply to this email. `book_at` is the time to book first. `send_key` is the key you write to the sent log after the send; its date is the day of the send (`send_after` when that is later) |
+| `checks` | The copy-doc checks. `template_found`, and `lines_match_template`: the text is exactly the chosen template, complete and in order, with the template's paragraph breaks (a base id is the base email only; a variant id is the base with only that variant's change). `no_leftover_placeholders`: no `{placeholder}` left. `template_is_email`: the template is a main email block or one of its variants, never a line used inside another email, a subject, a cold email or an instruction block. `field_values_clean`: every placeholder has a check against the facts, and passes it: `{first_name}` and `{company}` are the lead's own values (section 4); `{slots}`, `{alt_slots}` and `{slot}` pass `slots_ok`; `{zoom_link}`, `{call_link}` and `{link}` are exactly the appointment's link; a line placeholder (`research_line`, `offer_proof`, `offer_line`, `preview`, `observation`, `niche_point`) is exactly a line from the chosen template's own block for the lead's offer (for E4 and a `cleaning_reactivation` lead, `cadence.e4.offer_proof.reactivation`). A placeholder with no check (`{when_ct}`, `{time_ct}`, `{asked_time}`, `{lead_local_time}`, `{slot1}`, `{slot2}`, `{referral_name}` or any other), a field with any other name, a line from any other part of the doc or a line Opus wrote, a price, link, dash or "!" in a value, a line break, tab or hidden character in a value, and a filled email whose line or paragraph breaks differ from the template all hold. `approval_ok`: `doc_done`, `doc_unchanged` and `go_live` are all true, and `allow_listed` and `doc_build_ok` pass. `allow_listed`: the template is on Lorenzo's allow list (file 02, section 4, rule 14): a base template, never a version; one of the five AI agents first replies for an `ai_agents` lead and the label it answers (never a first reply for the six older offers), `cadence.e1` to `cadence.e10`, or the "Locked in" confirmation for a `positive_interested` or `positive_question` reply. `doc_build_ok`: the copy doc has one "Doc build:" line and its build is `approval.doc_build`. `offer_matches`: no part of the template id names an offer other than the lead's `campaign_key` (`show_rate.confirm_email.cleaning_reactivation` for an `ai_agents` lead holds). `known_offer`: the lead's `campaign_key` is one of the seven offers in file 01; without it every email holds and no call is booked. `no_legal_words`: the lead's newest email in `thread` can be read and has no legal word (file 02, section 4, rule 16). `no_literal_times`: the template carries no example day, date or time (every `/dated` version holds). `first_contact_ok`: `our_reply_reached_lead` is true, unless the email is an auto-send first reply or the "Locked in" confirmation. `template_approved_in_doc`: no "Not approved yet" note on the template. `links_ok`: no link except a `{zoom_link}`/`{call_link}` value and the booking calendar link inside a `booking_link` first reply. The send checks: `send_window` (07:00 to 19:00 CT; outside it the step is `wait`), `slots_ok` (each time in `{slots}` and `{alt_slots}` is in `free_times`, 12:00 to 18:00 CT, Monday to Friday, at least 4 hours after the send, within 5 business days, not offered to another lead, never a time already offered to this lead, two times on different days; a "Locked in" confirmation's `{slot}` names exactly the start of the lead's future appointment, within 7 days; with no appointment yet, its `{slot}` must be a free time that fits the same rules and is not another lead's, and the step is `book_call` with that time as `book_at`), `sender_ok` (the newest inbound email is from `lead_email`, or the same company domain when that domain is not free mail), `not_already_answered` (replies), `no_newer_lead_reply` (E1 to E10: `our_reply_after_newest_inbound` is true), `not_duplicate` (`send_key` not in `sent_log_keys`, `reply_id` not in `handled_ids`), `kill_switch_off`, `no_future_appointment` (`has_future_appointment` is false: a booked lead gets no reply or follow-up email; for the "Locked in" confirmation after its booking it must be true instead), `own_booking_ok` (a "Locked in" confirmation: no `booking.confirmation.*` key for this lead in `sent_log_keys`, on any day; on the run after the booking, an `offered_times` entry for this lead with `"reserved": true` at exactly `appointment.start` and the case's `reply_id`, which must be the id of the newest inbound email in `thread`; in a `booked_call` case every other email fails it), `ladder_ok` (E1 to E10: no appointment at all, past or future, no "no" label, no negative `instantly.interest_status`, no Do Not Disturb, Sequence not `stopped` or `booked`; `appointment` (`null` when none), `ghl.stage`, `ghl.dnd`, Sequence and `instantly.interest_status` given and readable, else it fails). A missing context field fails its check. `checks_not_applied` lists the checks that do not apply to this email. `book_at` is the time to book first. `send_key` is the key you write to the sent log after the send; its date is the day of the send (`send_after` when that is later) |
 ````
 
 o) Replace:
@@ -998,7 +998,7 @@ o) Replace:
 with:
 
 ````
-`grok_next_step` is `hold_card` whenever confidence is under 0.8 or not a number, Opus sets `escalate_to_lorenzo`, a check fails, the action is `hold_for_lorenzo`, `book_call` comes in `other_actions` anywhere but a "Locked in" confirmation whose time is not booked yet, or `blocklist_in_instantly` or `tag_dnd_in_ghl` comes with any action other than `records_only`, a label other than `unsubscribe` or `negative_hostile`, a lead email with a legal word (file 02, section 4, rule 16), or a lead email the script cannot read. Any error inside the script is also a hold card (exit code 3). It is `book_call` when the only thing a "Locked in" confirmation lacks is its booking: book `book_at`, check it, run the case again (file 02, section 3, step 6). It is `wait` when every check passes but the send falls outside 07:00 to 19:00 CT. You never override it.
+`grok_next_step` is `hold_card` whenever confidence is under 0.8, over 1 or not a number, Opus sets `escalate_to_lorenzo`, a check fails, the action is `hold_for_lorenzo`, `book_call` comes in `other_actions` anywhere but a "Locked in" confirmation whose time is not booked yet, or `blocklist_in_instantly` or `tag_dnd_in_ghl` comes with any action other than `records_only`, a label other than `unsubscribe` or `negative_hostile`, a lead email with a legal word (file 02, section 4, rule 16), or a lead email the script cannot read. Any error inside the script is also a hold card (exit code 3). It is `book_call` when the only thing a "Locked in" confirmation lacks is its booking: book `book_at`, check it, run the case again (file 02, section 3, step 6). It is `wait` when every check passes but the send falls outside 07:00 to 19:00 CT. You never override it.
 ````
 
 p) Replace:
@@ -1903,7 +1903,7 @@ Open conflict: both emails carry a booking link. Lorenzo's rule (2026-09-23, "Ev
 
 ## 3. The new `ask_opus.py`
 
-sha256 aaac01c0855200580c0772a62b9439fd20eeff5d82bf36b7bc04dfca37d5ffc2
+sha256 dffc7babcae7763df83bd997ef6133dd7c166401240230430bbcad2e0426aabe
 
 ````python
 #!/usr/bin/env python3
@@ -1925,15 +1925,19 @@ Input on stdin, one JSON object:
                       newest_inbound_from, our_reply_after_newest_inbound,
                       reply_id, handled_ids; newest_inbound_from also for
                       cadence.*; has_future_appointment for replies and
-                      cadence.*; free_times and offered_times for any email
-                      with {slots} or {alt_slots}, and for a booking
-                      confirmation before its booking exists; appointment
-                      for a booking confirmation once Grok booked the call,
-                      with offered_times holding Grok's own reservation for
-                      it. lead.campaign_key must be one of the seven offers
-                      for any email to go or any call to be booked.
-                      A missing field makes that check fail: the email is a
-                      hold card.
+                      cadence.*; for cadence.* also appointment (null when
+                      the lead never had one), ghl.stage, ghl.dnd, the
+                      Sequence field in ghl.fields and
+                      instantly.interest_status; free_times and
+                      offered_times for any email with {slots} or
+                      {alt_slots}, and for a booking confirmation before
+                      its booking exists; appointment for a booking
+                      confirmation once Grok booked the call, with
+                      offered_times holding Grok's own reservation for it.
+                      lead.campaign_key must be one of the seven offers for
+                      any email to go or any call to be booked.
+                      A missing or unreadable field makes that check fail:
+                      the email is a hold card.
     case_type         (optional) reply | followup_due | booked_call | no_show |
                       nurture | upwork | pipeline | audit | other
     skill_files       (optional) list of skill files to include, for example
@@ -2046,10 +2050,14 @@ KNOWN_OFFERS = ("ai_agents", "cleaning_reactivation", "cleaning_trigger",
                 "recruiting_reactivation", "recruiting_outbound")
 # A follow-up E1 to E10 never goes to a lead with any appointment (past or
 # future), a "no" reply label or a negative Instantly interest status, Do Not
-# Disturb on in GHL, or GHL Sequence stopped or booked.
+# Disturb on in GHL, or GHL Sequence stopped or booked, and never when one of
+# those facts is missing or cannot be read (fail closed).
 NEGATIVE_LABELS = ("negative_notnow", "negative_notfit", "negative_hostile", "unsubscribe",
                    "wrong_person")
 LADDER_STOP_SEQUENCES = ("stopped", "booked")
+# The GHL Sequence values (file 05). Any other value cannot be read.
+SEQUENCE_VALUES = ("none", "reply_waiting", "followup", "booked", "no_show", "nurture",
+                   "stopped")
 
 # A template whose own text carries a literal day, date or clock time (every
 # /dated variant, the example versions) is an example, never sent.
@@ -3023,56 +3031,105 @@ def sender_is_lead(newest_from, lead_email):
     return sender_domain == lead_domain
 
 
-def _ghl_field(ghl, name):
-    """A GHL field value from ghl.fields (a dict, or a list of {name, value}),
-    in lower case, or None."""
+def _ghl_field_values(ghl, name):
+    """Every value given for one GHL field in ghl.fields (an object, or a list
+    of {name, value} objects), or None when ghl.fields cannot be read."""
     fields = ghl.get("fields")
-    pairs = []
     if isinstance(fields, dict):
         pairs = list(fields.items())
-    elif isinstance(fields, list):
-        pairs = [(item.get("name"), item.get("value")) for item in fields
-                 if isinstance(item, dict)]
-    value = None
-    for key, item in pairs:
-        if isinstance(key, str) and key.strip().lower() == name.lower():
-            value = item
-    return value.strip().lower() if isinstance(value, str) else None
+    elif isinstance(fields, list) and all(isinstance(item, dict) for item in fields):
+        pairs = [(item.get("name"), item.get("value")) for item in fields]
+    else:
+        return None
+    return [value for key, value in pairs
+            if isinstance(key, str) and key.strip().lower() == name.lower()]
+
+
+def _true_or_false(value):
+    """A yes/no fact as True or False (a boolean, or the text "true" or
+    "false"), or None when it is missing or cannot be read."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str) and value.strip().lower() in ("true", "false"):
+        return value.strip().lower() == "true"
+    return None
+
+
+def _interest_status(value):
+    """The Instantly interest status as a number, or None when it is missing or
+    is not one of Instantly's values (a number or its text, never a boolean)."""
+    if isinstance(value, bool) or not isinstance(value, (int, float, str)):
+        return None
+    try:
+        number = float(value)
+    except (ValueError, OverflowError):
+        return None
+    return number if number in INTEREST_VALUES else None
 
 
 def ladder_stop_problems(decision, context):
     """Why a follow-up E1 to E10 must not go to this lead: an appointment, past
     or future (context.appointment); a "no" reply label; a negative Instantly
     interest status; Do Not Disturb in GHL (ghl.dnd, or a "dnd" tag); or GHL
-    Sequence stopped or booked. A fact that is not given does not count."""
+    Sequence stopped or booked. Fail closed: a fact that is missing or cannot
+    be read holds the email too. context.appointment must be given (null when
+    the lead never had one), and so must ghl.stage, ghl.dnd (true or false),
+    the Sequence field in ghl.fields (one of SEQUENCE_VALUES) and
+    instantly.interest_status (one of INTEREST_VALUES); ghl.tags, when given,
+    must be a list of tag names."""
     problems = []
-    appointment = context.get("appointment")
-    if isinstance(appointment, dict) and appointment:
-        problems.append("the lead has an appointment (past or future): no follow-up email")
+    if "appointment" not in context:
+        problems.append("context.appointment is missing (the newest appointment, past or "
+                        "future, or null when the lead never had one): no follow-up email")
+    else:
+        appointment = context.get("appointment")
+        if isinstance(appointment, dict) and appointment:
+            problems.append("the lead has an appointment (past or future): no follow-up email")
+        elif appointment is not None:
+            problems.append("context.appointment cannot be read (an appointment, or null when "
+                            "the lead never had one): no follow-up email")
     category = decision.get("category")
     if isinstance(category, str) and (category in NEGATIVE_LABELS
                                       or category.startswith("negative_")):
         problems.append("the reply label %s is a no: no follow-up email" % category)
     instantly = context.get("instantly")
-    interest = instantly.get("interest_status") if isinstance(instantly, dict) else None
-    try:
-        negative = (interest is not None and not isinstance(interest, bool)
-                    and float(interest) < 0)
-    except (TypeError, ValueError):
-        negative = False
-    if negative:
+    interest = (_interest_status(instantly.get("interest_status"))
+                if isinstance(instantly, dict) else None)
+    if interest is None:
+        problems.append("context.instantly.interest_status is missing or cannot be read: "
+                        "no follow-up email")
+    elif interest < 0:
         problems.append("the Instantly interest status %s is negative: no follow-up email"
-                        % interest)
+                        % instantly.get("interest_status"))
     ghl = context.get("ghl")
-    ghl = ghl if isinstance(ghl, dict) else {}
-    tags = ghl.get("tags") if isinstance(ghl.get("tags"), list) else []
-    dnd = ghl.get("dnd")
-    if (dnd is True or (isinstance(dnd, str) and dnd.strip().lower() == "true")
-            or any(isinstance(tag, str) and tag.strip().lower() == "dnd" for tag in tags)):
+    if not isinstance(ghl, dict):
+        problems.append("context.ghl is missing or cannot be read: no follow-up email")
+        return problems
+    stage = ghl.get("stage")
+    if not isinstance(stage, str) or not stage.strip():
+        problems.append("context.ghl.stage is missing or cannot be read: no follow-up email")
+    dnd = _true_or_false(ghl.get("dnd"))
+    if dnd is None:
+        problems.append("context.ghl.dnd is missing or cannot be read (true or false): "
+                        "no follow-up email")
+    tags = ghl.get("tags")
+    tags = [] if tags is None else tags
+    if not isinstance(tags, list) or not all(isinstance(tag, str) for tag in tags):
+        problems.append("context.ghl.tags cannot be read (a list of tag names): "
+                        "no follow-up email")
+        tags = []
+    if dnd or any(tag.strip().lower() == "dnd" for tag in tags):
         problems.append("Do Not Disturb is on for this lead in GHL: no follow-up email")
-    sequence = _ghl_field(ghl, "Sequence")
-    if sequence in LADDER_STOP_SEQUENCES:
-        problems.append("GHL Sequence is %s: no follow-up email" % sequence)
+    values = _ghl_field_values(ghl, "Sequence") or []
+    sequences = set(value.strip().lower() if isinstance(value, str) else None
+                    for value in values)
+    if len(sequences) != 1 or not sequences <= set(SEQUENCE_VALUES):
+        problems.append("the GHL Sequence field (context.ghl.fields) is missing or cannot be "
+                        "read: no follow-up email")
+    else:
+        sequence = sequences.pop()
+        if sequence in LADDER_STOP_SEQUENCES:
+            problems.append("GHL Sequence is %s: no follow-up email" % sequence)
     return problems
 
 
@@ -3537,11 +3594,12 @@ def next_step(decision, checks, context=None):
     action = decision.get("action")
     other_actions = decision.get("other_actions") or []
     confidence = decision.get("confidence")
-    # a real number only: never a boolean, a string, NaN or infinity
+    # a real number from 0 to 1 only: never a boolean, a string, NaN, infinity,
+    # more than 1 or less than 0
     real = (isinstance(confidence, (int, float)) and not isinstance(confidence, bool)
-            and confidence == confidence and confidence not in (float("inf"), float("-inf")))
+            and 0 <= confidence <= 1)
     if not real or confidence < CONFIDENCE_FLOOR:
-        reasons.append("confidence %r is not a number of at least %s"
+        reasons.append("confidence %r is not a number from %s to 1"
                        % (confidence, CONFIDENCE_FLOOR))
     if decision.get("escalate_to_lorenzo"):
         reasons.append("Opus asked for Lorenzo")

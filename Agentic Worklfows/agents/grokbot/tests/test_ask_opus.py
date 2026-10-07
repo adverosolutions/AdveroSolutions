@@ -64,9 +64,19 @@ FREE = ["2026-09-29T12:05:00-05:00", "2026-10-01T16:30:00-05:00",
         "2026-09-28T13:00:00-05:00", "2026-10-06T14:00:00-05:00"]
 
 
+def ghl_facts(**changes):
+    """The lead's GHL record as Grok reads it: a stage, Do Not Disturb off, no
+    dnd tag, Sequence followup."""
+    base = {"contact_id": "c-1", "stage": "New Reply/Lead", "dnd": False,
+            "tags": ["cold-email"], "fields": {"Sequence": "followup"}}
+    base.update(changes)
+    return base
+
+
 def full_context(**overrides):
     """Every field the send checks read, set so that every check passes."""
     base = {"approval": dict(APPROVED), "now_ct": NOW, "kill_switch": False,
+            "ghl": ghl_facts(), "instantly": {"interest_status": 1}, "appointment": None,
             "lead_email": "dana@brightline.com", "newest_inbound_from": "dana@brightline.com",
             "our_reply_after_newest_inbound": False, "our_reply_reached_lead": True,
             "reply_id": "in-2",
@@ -1849,13 +1859,13 @@ class LadderStops(unittest.TestCase):
                                                     "status": "noshow"}),
             "a future appointment": dict(appointment=dict(APPOINTMENT),
                                          has_future_appointment=True),
-            "DND on": dict(ghl={"dnd": True, "tags": [], "fields": {}}),
-            "DND on, as text": dict(ghl={"dnd": "True"}),
-            "a dnd tag": dict(ghl={"tags": ["cold-email", " DND "], "fields": {}}),
-            "Sequence stopped": dict(ghl={"fields": {"Sequence": "stopped"}}),
-            "Sequence booked": dict(ghl={"fields": {"sequence": "Booked"}}),
-            "Sequence stopped, as a list": dict(ghl={"fields": [{"name": "Sequence",
-                                                                 "value": "stopped"}]}),
+            "DND on": dict(ghl=ghl_facts(dnd=True, tags=[])),
+            "DND on, as text": dict(ghl=ghl_facts(dnd="True")),
+            "a dnd tag": dict(ghl=ghl_facts(tags=["cold-email", " DND "])),
+            "Sequence stopped": dict(ghl=ghl_facts(fields={"Sequence": "stopped"})),
+            "Sequence booked": dict(ghl=ghl_facts(fields={"sequence": "Booked"})),
+            "Sequence stopped, as a list": dict(ghl=ghl_facts(fields=[{"name": "Sequence",
+                                                                       "value": "stopped"}])),
             "interest -1": dict(instantly={"interest_status": -1}),
             "interest -4 as text": dict(instantly={"interest_status": "-4"}),
         }
@@ -1864,6 +1874,10 @@ class LadderStops(unittest.TestCase):
                 step, checks = self._step(template_id, **context)
                 self.assertEqual(step, "hold_card", (label, template_id))
                 self.assertFalse(checks["ladder_ok"], (label, template_id))
+                # the stop holds it, not a missing or unreadable fact
+                self.assertFalse([p for p in checks["problems"]
+                                  if " is missing" in p or "cannot be read" in p],
+                                 (label, template_id))
         for category in ("unsubscribe", "negative_notnow", "negative_notfit", "negative_hostile",
                          "wrong_person", "negative_not_interested"):
             step, checks = self._step(category=category)
@@ -1871,18 +1885,90 @@ class LadderStops(unittest.TestCase):
             self.assertFalse(checks["ladder_ok"], category)
 
     def test_facts_that_say_nothing_against_it_still_send(self):
-        for context in (dict(ghl={"dnd": False, "tags": ["cold-email"],
-                                  "fields": {"Sequence": "followup"}}),
+        for context in (dict(ghl=ghl_facts(dnd="false", tags=["cold-email"],
+                                           fields={"Sequence": "followup"})),
+                        dict(ghl=ghl_facts(tags=None)),
+                        dict(ghl={"stage": "New Reply/Lead", "dnd": False,
+                                  "fields": [{"name": "Sequence", "value": "Followup"},
+                                             {"name": "Next Email", "value": "cadence.e3"}]}),
                         dict(instantly={"interest_status": 1}),
                         dict(instantly={"interest_status": 0}),
-                        dict(instantly={"interest_status": None}),
-                        dict(appointment={}), dict(appointment=None)):
+                        dict(instantly={"interest_status": "1"}),
+                        dict(appointment=None)):
             step, checks = self._step(**context)
             self.assertEqual(step, "send", (context, checks["problems"]))
             self.assertTrue(checks["ladder_ok"])
+        # the follow-up facts are only needed for E1 to E10
+        bare = ai_context()
+        for key in ("ghl", "instantly", "appointment"):
+            del bare[key]
         step, _, checks, _ = run_checks(self.doc, "first_reply.ai_agents.default.full",
-                                        "positive_interested", ai_context())
+                                        "positive_interested", bare)
+        self.assertEqual(step, "send", checks["problems"])
         self.assertIn("ladder_ok", checks["checks_not_applied"])
+
+    def test_missing_or_unreadable_follow_up_facts_hold(self):
+        """Fail closed: E1 to E10 hold when a follow-up fact (the appointment,
+        the GHL stage, Do Not Disturb, tags, Sequence, the Instantly interest
+        status) is missing or cannot be read."""
+        for template_id in ("cadence.e1", "cadence.e10"):
+            self.assertEqual(self._step(template_id)[0], "send", template_id)
+
+        def missing(key, inner=None):
+            context = ai_ladder_context()
+            if inner is None:
+                del context[key]
+            else:
+                del context[key][inner]
+            return context
+
+        cases = {
+            "no appointment": missing("appointment"),
+            "appointment {}": ai_ladder_context(appointment={}),
+            "appointment as text": ai_ladder_context(appointment="none"),
+            "appointment as a list": ai_ladder_context(appointment=[dict(APPOINTMENT)]),
+            "no ghl": missing("ghl"),
+            "ghl as text": ai_ladder_context(ghl="stage New Reply/Lead"),
+            "no stage": missing("ghl", "stage"),
+            "stage null": ai_ladder_context(ghl=ghl_facts(stage=None)),
+            "stage blank": ai_ladder_context(ghl=ghl_facts(stage="  ")),
+            "no dnd": missing("ghl", "dnd"),
+            "dnd null": ai_ladder_context(ghl=ghl_facts(dnd=None)),
+            "dnd 0": ai_ladder_context(ghl=ghl_facts(dnd=0)),
+            "dnd as other text": ai_ladder_context(ghl=ghl_facts(dnd="no")),
+            "tags as text": ai_ladder_context(ghl=ghl_facts(tags="cold-email, dnd")),
+            "a tag that is not text": ai_ladder_context(ghl=ghl_facts(tags=[{"name": "dnd"}])),
+            "no fields": missing("ghl", "fields"),
+            "fields as text": ai_ladder_context(ghl=ghl_facts(fields="Sequence: followup")),
+            "no Sequence": ai_ladder_context(ghl=ghl_facts(fields={"Next Email": "cadence.e3"})),
+            "Sequence null": ai_ladder_context(ghl=ghl_facts(fields={"Sequence": None})),
+            "Sequence not a value": ai_ladder_context(ghl=ghl_facts(fields={"Sequence": "paused"})),
+            "two Sequences that disagree": ai_ladder_context(ghl=ghl_facts(fields=[
+                {"name": "Sequence", "value": "followup"},
+                {"name": "sequence", "value": "stopped"}])),
+            "a field entry that is not an object": ai_ladder_context(ghl=ghl_facts(fields=[
+                {"name": "Sequence", "value": "followup"}, ["Sequence", "stopped"]])),
+            "no instantly": missing("instantly"),
+            "instantly as text": ai_ladder_context(instantly="1"),
+            "no interest status": ai_ladder_context(instantly={"lead_id": "l-1"}),
+            "interest null": ai_ladder_context(instantly={"interest_status": None}),
+            "interest true": ai_ladder_context(instantly={"interest_status": True}),
+            "interest as words": ai_ladder_context(instantly={"interest_status": "interested"}),
+            "interest not a value": ai_ladder_context(instantly={"interest_status": 7}),
+            "interest nan": ai_ladder_context(instantly={"interest_status": float("nan")}),
+            "interest too big for a number": ai_ladder_context(
+                instantly={"interest_status": 10 ** 400}),
+        }
+        for label, context in cases.items():
+            for template_id in ("cadence.e1", "cadence.e10"):
+                step, _, checks, _ = run_checks(self.doc, template_id, None, context,
+                                                case_type="followup_due")
+                self.assertEqual(step, "hold_card", (label, template_id))
+                failed = [name for name in ask_opus.SEND_CHECKS if not checks.get(name)]
+                self.assertEqual(failed, ["ladder_ok"], (label, template_id))
+                self.assertTrue([p for p in checks["problems"]
+                                 if " is missing" in p or "cannot be read" in p],
+                                (label, template_id))
 
 
 class PlaceholdersNeedChecks(unittest.TestCase):
@@ -2084,6 +2170,24 @@ class ConfidenceIsANumber(unittest.TestCase):
         records = decision(action="records_only", template_id=None, template_text=None,
                            fields=[], confidence=True)
         self.assertEqual(ask_opus.next_step(records, None, context)[0], "hold_card")
+
+    def test_confidence_above_1_or_below_0_fails(self):
+        doc = read_new_doc()
+        template_id = "first_reply.ai_agents.default.full"
+        text = doc_text_of(doc, template_id)
+        context = ai_context()
+        dec = decision(template_id=template_id, template_text=text, category="positive_interested",
+                       fields=valid_fields(doc, template_id, text, context))
+        _, checks = ask_opus.check_email(dec, doc, context, "reply")
+        self.assertEqual(ask_opus.next_step(dict(dec, confidence=1.0), checks, context)[0],
+                         "send")
+        for value in (1.0000001, 1.5, 2, 95, 10 ** 400, -0.0001, -0.1, -1):
+            step, reasons = ask_opus.next_step(dict(dec, confidence=value), checks, context)
+            self.assertEqual(step, "hold_card", value)
+            self.assertIn("confidence", " ".join(reasons), value)
+            records = decision(action="records_only", template_id=None, template_text=None,
+                               fields=[], confidence=value)
+            self.assertEqual(ask_opus.next_step(records, None, context)[0], "hold_card", value)
 
 
 class OfferSegments(unittest.TestCase):

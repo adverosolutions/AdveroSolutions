@@ -17,15 +17,19 @@ Input on stdin, one JSON object:
                       newest_inbound_from, our_reply_after_newest_inbound,
                       reply_id, handled_ids; newest_inbound_from also for
                       cadence.*; has_future_appointment for replies and
-                      cadence.*; free_times and offered_times for any email
-                      with {slots} or {alt_slots}, and for a booking
-                      confirmation before its booking exists; appointment
-                      for a booking confirmation once Grok booked the call,
-                      with offered_times holding Grok's own reservation for
-                      it. lead.campaign_key must be one of the seven offers
-                      for any email to go or any call to be booked.
-                      A missing field makes that check fail: the email is a
-                      hold card.
+                      cadence.*; for cadence.* also appointment (null when
+                      the lead never had one), ghl.stage, ghl.dnd, the
+                      Sequence field in ghl.fields and
+                      instantly.interest_status; free_times and
+                      offered_times for any email with {slots} or
+                      {alt_slots}, and for a booking confirmation before
+                      its booking exists; appointment for a booking
+                      confirmation once Grok booked the call, with
+                      offered_times holding Grok's own reservation for it.
+                      lead.campaign_key must be one of the seven offers for
+                      any email to go or any call to be booked.
+                      A missing or unreadable field makes that check fail:
+                      the email is a hold card.
     case_type         (optional) reply | followup_due | booked_call | no_show |
                       nurture | upwork | pipeline | audit | other
     skill_files       (optional) list of skill files to include, for example
@@ -138,10 +142,14 @@ KNOWN_OFFERS = ("ai_agents", "cleaning_reactivation", "cleaning_trigger",
                 "recruiting_reactivation", "recruiting_outbound")
 # A follow-up E1 to E10 never goes to a lead with any appointment (past or
 # future), a "no" reply label or a negative Instantly interest status, Do Not
-# Disturb on in GHL, or GHL Sequence stopped or booked.
+# Disturb on in GHL, or GHL Sequence stopped or booked, and never when one of
+# those facts is missing or cannot be read (fail closed).
 NEGATIVE_LABELS = ("negative_notnow", "negative_notfit", "negative_hostile", "unsubscribe",
                    "wrong_person")
 LADDER_STOP_SEQUENCES = ("stopped", "booked")
+# The GHL Sequence values (file 05). Any other value cannot be read.
+SEQUENCE_VALUES = ("none", "reply_waiting", "followup", "booked", "no_show", "nurture",
+                   "stopped")
 
 # A template whose own text carries a literal day, date or clock time (every
 # /dated variant, the example versions) is an example, never sent.
@@ -1115,56 +1123,105 @@ def sender_is_lead(newest_from, lead_email):
     return sender_domain == lead_domain
 
 
-def _ghl_field(ghl, name):
-    """A GHL field value from ghl.fields (a dict, or a list of {name, value}),
-    in lower case, or None."""
+def _ghl_field_values(ghl, name):
+    """Every value given for one GHL field in ghl.fields (an object, or a list
+    of {name, value} objects), or None when ghl.fields cannot be read."""
     fields = ghl.get("fields")
-    pairs = []
     if isinstance(fields, dict):
         pairs = list(fields.items())
-    elif isinstance(fields, list):
-        pairs = [(item.get("name"), item.get("value")) for item in fields
-                 if isinstance(item, dict)]
-    value = None
-    for key, item in pairs:
-        if isinstance(key, str) and key.strip().lower() == name.lower():
-            value = item
-    return value.strip().lower() if isinstance(value, str) else None
+    elif isinstance(fields, list) and all(isinstance(item, dict) for item in fields):
+        pairs = [(item.get("name"), item.get("value")) for item in fields]
+    else:
+        return None
+    return [value for key, value in pairs
+            if isinstance(key, str) and key.strip().lower() == name.lower()]
+
+
+def _true_or_false(value):
+    """A yes/no fact as True or False (a boolean, or the text "true" or
+    "false"), or None when it is missing or cannot be read."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str) and value.strip().lower() in ("true", "false"):
+        return value.strip().lower() == "true"
+    return None
+
+
+def _interest_status(value):
+    """The Instantly interest status as a number, or None when it is missing or
+    is not one of Instantly's values (a number or its text, never a boolean)."""
+    if isinstance(value, bool) or not isinstance(value, (int, float, str)):
+        return None
+    try:
+        number = float(value)
+    except (ValueError, OverflowError):
+        return None
+    return number if number in INTEREST_VALUES else None
 
 
 def ladder_stop_problems(decision, context):
     """Why a follow-up E1 to E10 must not go to this lead: an appointment, past
     or future (context.appointment); a "no" reply label; a negative Instantly
     interest status; Do Not Disturb in GHL (ghl.dnd, or a "dnd" tag); or GHL
-    Sequence stopped or booked. A fact that is not given does not count."""
+    Sequence stopped or booked. Fail closed: a fact that is missing or cannot
+    be read holds the email too. context.appointment must be given (null when
+    the lead never had one), and so must ghl.stage, ghl.dnd (true or false),
+    the Sequence field in ghl.fields (one of SEQUENCE_VALUES) and
+    instantly.interest_status (one of INTEREST_VALUES); ghl.tags, when given,
+    must be a list of tag names."""
     problems = []
-    appointment = context.get("appointment")
-    if isinstance(appointment, dict) and appointment:
-        problems.append("the lead has an appointment (past or future): no follow-up email")
+    if "appointment" not in context:
+        problems.append("context.appointment is missing (the newest appointment, past or "
+                        "future, or null when the lead never had one): no follow-up email")
+    else:
+        appointment = context.get("appointment")
+        if isinstance(appointment, dict) and appointment:
+            problems.append("the lead has an appointment (past or future): no follow-up email")
+        elif appointment is not None:
+            problems.append("context.appointment cannot be read (an appointment, or null when "
+                            "the lead never had one): no follow-up email")
     category = decision.get("category")
     if isinstance(category, str) and (category in NEGATIVE_LABELS
                                       or category.startswith("negative_")):
         problems.append("the reply label %s is a no: no follow-up email" % category)
     instantly = context.get("instantly")
-    interest = instantly.get("interest_status") if isinstance(instantly, dict) else None
-    try:
-        negative = (interest is not None and not isinstance(interest, bool)
-                    and float(interest) < 0)
-    except (TypeError, ValueError):
-        negative = False
-    if negative:
+    interest = (_interest_status(instantly.get("interest_status"))
+                if isinstance(instantly, dict) else None)
+    if interest is None:
+        problems.append("context.instantly.interest_status is missing or cannot be read: "
+                        "no follow-up email")
+    elif interest < 0:
         problems.append("the Instantly interest status %s is negative: no follow-up email"
-                        % interest)
+                        % instantly.get("interest_status"))
     ghl = context.get("ghl")
-    ghl = ghl if isinstance(ghl, dict) else {}
-    tags = ghl.get("tags") if isinstance(ghl.get("tags"), list) else []
-    dnd = ghl.get("dnd")
-    if (dnd is True or (isinstance(dnd, str) and dnd.strip().lower() == "true")
-            or any(isinstance(tag, str) and tag.strip().lower() == "dnd" for tag in tags)):
+    if not isinstance(ghl, dict):
+        problems.append("context.ghl is missing or cannot be read: no follow-up email")
+        return problems
+    stage = ghl.get("stage")
+    if not isinstance(stage, str) or not stage.strip():
+        problems.append("context.ghl.stage is missing or cannot be read: no follow-up email")
+    dnd = _true_or_false(ghl.get("dnd"))
+    if dnd is None:
+        problems.append("context.ghl.dnd is missing or cannot be read (true or false): "
+                        "no follow-up email")
+    tags = ghl.get("tags")
+    tags = [] if tags is None else tags
+    if not isinstance(tags, list) or not all(isinstance(tag, str) for tag in tags):
+        problems.append("context.ghl.tags cannot be read (a list of tag names): "
+                        "no follow-up email")
+        tags = []
+    if dnd or any(tag.strip().lower() == "dnd" for tag in tags):
         problems.append("Do Not Disturb is on for this lead in GHL: no follow-up email")
-    sequence = _ghl_field(ghl, "Sequence")
-    if sequence in LADDER_STOP_SEQUENCES:
-        problems.append("GHL Sequence is %s: no follow-up email" % sequence)
+    values = _ghl_field_values(ghl, "Sequence") or []
+    sequences = set(value.strip().lower() if isinstance(value, str) else None
+                    for value in values)
+    if len(sequences) != 1 or not sequences <= set(SEQUENCE_VALUES):
+        problems.append("the GHL Sequence field (context.ghl.fields) is missing or cannot be "
+                        "read: no follow-up email")
+    else:
+        sequence = sequences.pop()
+        if sequence in LADDER_STOP_SEQUENCES:
+            problems.append("GHL Sequence is %s: no follow-up email" % sequence)
     return problems
 
 
@@ -1629,11 +1686,12 @@ def next_step(decision, checks, context=None):
     action = decision.get("action")
     other_actions = decision.get("other_actions") or []
     confidence = decision.get("confidence")
-    # a real number only: never a boolean, a string, NaN or infinity
+    # a real number from 0 to 1 only: never a boolean, a string, NaN, infinity,
+    # more than 1 or less than 0
     real = (isinstance(confidence, (int, float)) and not isinstance(confidence, bool)
-            and confidence == confidence and confidence not in (float("inf"), float("-inf")))
+            and 0 <= confidence <= 1)
     if not real or confidence < CONFIDENCE_FLOOR:
-        reasons.append("confidence %r is not a number of at least %s"
+        reasons.append("confidence %r is not a number from %s to 1"
                        % (confidence, CONFIDENCE_FLOOR))
     if decision.get("escalate_to_lorenzo"):
         reasons.append("Opus asked for Lorenzo")
