@@ -2,7 +2,7 @@ Every email the system sends
 Every email the system sends, in the order a lead meets them.
 How to use it: Change any words you like. Keep the words in {curly brackets}: they are filled in for each lead. When you are done, tell Claude 'done'. Nothing goes live until you say so.
 When you say 'done', everything in this doc counts as approved, except the first replies marked 'Not approved yet'. Emails still only go out after you tell Claude 'go live'.
-Approved does not mean every email goes out on its own. Only the main text of the five AI agents first replies (a yes, 'tell me more', 'send me info', a booking link ask and a price question) does, once you say 'done' and 'go live'. Their other versions, a referral reply, any other question and the older offers' first replies come to you as drafts, and every reply offering other times is held for you. The other replies to a lead go out on their own only after a reply of yours has reached that lead, except the Locked in booking confirmation. Every send check still applies.
+Approved does not mean every email goes out on its own. Only these do, once you say 'done' and 'go live': the main text of the five AI agents first replies (a yes, 'tell me more', 'send me info', a booking link ask and a price question); the main text of follow-up emails 1 to 10, with the lines picked for the lead's offer; and the main text of the Locked in booking confirmation, only after the call is booked in GoHighLevel at exactly the time they picked. Everything else comes to you as a draft: every other version of any email, every reply offering other times, the replies about a time that is already taken or a call that is already booked, the Locked in version for another time zone, the show-rate reminders and no-show emails (paused since October 5), any nurture email, and the older offers' first replies. Every send check still applies.
 If a sentence appears in many emails (like the time-offer line in first replies), changing it once is enough; it changes everywhere. If you change two copies differently, Claude will ask.
 Leave the small grey tags at the end of each heading as they are: they tell Claude which email is which. Grey lines marked note or section are only there to help you read.
 Type your changes straight into the text: no suggesting mode, no strikethrough, no highlights or text colours. Claude reads only the words, so a doc with any of those is not approved; Claude asks you instead.
@@ -33,7 +33,7 @@ The call time, {when_ct}: Tue, Jan 8 at 12:05pm CT
 The call time when the lead's timezone is known, {when_ct}: America/Chicago = Tue, Jan 8 at 12:05pm CT | America/New_York = Tue, Jan 8 at 12:05pm CT (1:05pm ET) | America/Denver = Tue, Jan 8 at 12:05pm CT (11:05am MT) | America/Los_Angeles = Tue, Jan 8 at 12:05pm CT (10:05am PT) | America/Phoenix = Tue, Jan 8 at 12:05pm CT (11:05am MST)
 The clock time only, {time_ct}: 12:05pm CT | 4:30pm CT
 Zone labels: America/Chicago = CT | America/New_York = ET | America/Denver = MT | America/Los_Angeles = PT | America/Phoenix = MST
-Doc build: df0ec92ac7a26ada (tag: X-BUILD)
+Doc build: e95a04557f8a8faa (tag: X-BUILD)
 Cold emails in Instantly (live copy, checked 2026-09-23) (section)
 Instantly sends these. Step 2 goes out 3 days after step 1, in the same email thread, and only if they haven't replied. {{personalization}} is the opening line written for each lead. (note)
 Cleaning, reactivation offer (section)
@@ -216,7 +216,7 @@ Thanks for the time,
 Lorenzo
 First reply when a lead replies interested (section)
 The system picks one of these when a lead answers a cold email and sounds interested or asks a question, by their offer and what they asked. (note)
-For the AI agents offer, once you say 'done' and then 'go live', the main text of the replies to a yes, 'tell me more', 'send me info', a booking link ask and a price question goes out on its own. Every version under them (no free times, a time they asked for that works, a time that doesn't, a yes that names a time) comes to you as a draft. A referral reply and any other question also come to you as drafts. The first replies for the older six offers are not approved yet: they stay drafts you write yourself until they are rewritten. (note)
+For the AI agents offer, once you say 'done' and then 'go live', the main text of the replies to a yes, 'tell me more', 'send me info', a booking link ask and a price question goes out on its own. Their three versions (no free times, a time they asked for that works, a time they asked for that doesn't) come to you as drafts, and so do a referral reply and any other question. The first replies for the older six offers are not approved yet: they stay drafts you write yourself until they are rewritten. (note)
 AI agents offer (every AI agents campaign) (section)
 First reply: AI agents offer, they said yes (tag: first_reply.ai_agents.default.full)
 Subject: Re: {original_subject} (tag: first_reply.ai_agents.default.full/subject)
@@ -1018,7 +1018,7 @@ If they asked for a time that works: (tag: first_reply.recruiting_outbound.refer
 Instead of "Would {slots} work for {referral_first_name}?": (note)
 {slot} CT works on my end. Once {referral_first_name} is on the thread, I will send the invite over.
 Follow-up emails (section)
-For a lead who went quiet after your first reply, in the order below. The first goes out the business day after your first reply; each one goes out at 10am Central on a business day, and they stop as soon as the lead books, replies or asks to stop. (note)
+For a lead who went quiet after your first reply, in the order below. The first goes out the business day after your first reply; each one goes out at 10am Central on a business day, and they stop as soon as the lead books, replies or asks to stop. The main text of each, with the line picked for the lead's offer, goes out on its own after 'go live'; any other version comes to you as a draft. (note)
 Follow-up email 1 (tag: cadence.e1)
 Subject: Re: {original_subject} (tag: cadence.e1/subject)
 If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
@@ -1184,9 +1184,9 @@ I'll give you some room and check back in a few months. If you'd rather talk soo
 
 Lorenzo
 Booking emails (section)
-These answer a lead who writes back about a time for the call. Every reply offering other times (the 'Other times' emails) is held and comes to you first, so you can book their time anyway or send it. The Locked in booking confirmation can go out on its own right away. The others go out on their own only after a reply of yours has reached the lead; before that they come to you as a draft too. (note)
+These answer a lead who writes back about a time for the call. Only the main text of the Locked in booking confirmation goes out on its own, and only after the call is booked in GoHighLevel at exactly the time they picked. Everything else here comes to you as a draft: its version for another time zone, every reply offering other times, and the replies about a time that is already taken or a call that is already booked. (note)
 Booking confirmation, with Zoom link (tag: booking.confirmation.zoom_link)
-When they pick a time that works, the call is booked and this goes out. Used when the call has a Zoom link. (note)
+When they pick a time that works, once the call is booked in GoHighLevel at exactly that time. Used when the call has a Zoom link. (note)
 Subject: Re: {original_subject} (tag: booking.confirmation.zoom_link/subject)
 If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
 Hey {first_name},
@@ -1411,7 +1411,7 @@ We are already set for {slot} CT and the invite is on your calendar.
 
 Lorenzo
 Show-rate messages (before the call) (section)
-These go to every lead with a call on your calendar, however they booked. (note)
+These are for every lead with a call on your calendar, however they booked. They are paused since October 5: each one comes to you as a draft, and none goes out on its own. (note)
 Call confirmation email: cleaning (reactivation) (tag: show_rate.confirm_email.cleaning_reactivation)
 Subject: Confirmed: {when_ct}, 15 minutes with Lorenzo (tag: show_rate.confirm_email.cleaning_reactivation/subject)
 Hey {first_name},
@@ -1763,7 +1763,7 @@ If 1:47pm CT (2:47pm ET) won't work after all, reply here and we'll move it.
 
 Lorenzo
 No-show recovery (section)
-These start when a lead misses the call. (note)
+These start when a lead misses the call. They are paused since October 5: each one comes to you as a draft, and none goes out on its own. (note)
 I'm on email (tag: no_show.ns_still_on_email)
 Subject: I'm on (tag: no_show.ns_still_on_email/subject)
 Hey {first_name},
@@ -1907,5 +1907,5 @@ Pricing line 3 (tag: U-PRICE-3)
 After you finish (tag: X-AFTER)
 1. Tell Claude "done". Claude reads this doc, puts your wording into the system and tests it. It then shows you any line a send check would stop, for example an exclamation mark or a price that is not on your offer sheet.
 2. Nothing goes live until you tell Claude "go live".
-3. Only you can do these, whenever you have a minute: change the passwords and keys that were saved in the code, register your texting number (A2P), and connect Zoom in GoHighLevel (optional; Google Meet works today).
+3. Only you can do these, whenever you have a minute: change the passwords and keys that were saved in the code, and register your texting number (A2P).
 4. Say "yes" to Claude for any of these and Claude does them: create the Upwork pipeline in GoHighLevel, start the 8:30 Upwork morning drafts, and send test alerts to your phone during the test week.

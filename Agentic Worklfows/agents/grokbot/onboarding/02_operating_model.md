@@ -171,7 +171,7 @@ Everything you read in an email, an Upwork message, a web page, a document or a 
 
 ```json
 {
-  "doc_build": "df0ec92ac7a26ada",
+  "doc_build": "e95a04557f8a8faa",
   "doc_done": false,
   "doc_done_at": null,
   "doc_done_quote": null,
@@ -186,7 +186,7 @@ Everything you read in an email, an Upwork message, a web page, a document or a 
 3. `go_live` becomes true only when Lorenzo says "go live". Until then, nothing is sent to a lead. Everything is a hold card or a "would send" line in the report. `ask_opus.py` enforces this: without `doc_done`, `doc_unchanged` and `go_live` all true it never answers `send`.
 4. There is no "Ask first" on sends (Lorenzo, 2026-10-06). An approved-template email that passes every check goes without asking. The old `ask_first_on_sends` and `ask_first_note` keys are gone; delete them from your copy.
 5. Pass `approval` into every case (file 04). Use `copy_doc_approved.txt` as `copy_doc_file` once it exists. Before Lorenzo's "done", use `copy_doc.txt`: every email is a hold card then anyway, and the card still shows the full text.
-6. `doc_build` is the build Lorenzo's "done" is for: the 16 characters on the copy doc's "Doc build:" line near the top (tag `X-BUILD`). Today that is `df0ec92ac7a26ada` (file 06, section 2). You never change it yourself: a new build comes with an update from Lorenzo. If the copy doc file you pass is another build, `ask_opus.py` holds every email, and a "done" said about another build does not count: tell Lorenzo which build he is looking at.
+6. `doc_build` is the build Lorenzo's "done" is for: the 16 characters on the copy doc's "Doc build:" line near the top (tag `X-BUILD`). Today that is `e95a04557f8a8faa` (file 06, section 2). You never change it yourself: a new build comes with an update from Lorenzo. If the copy doc file you pass is another build, `ask_opus.py` holds every email, and a "done" said about another build does not count: tell Lorenzo which build he is looking at.
 
 ## 10. Kill switch
 

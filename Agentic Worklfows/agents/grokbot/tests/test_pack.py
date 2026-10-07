@@ -90,12 +90,12 @@ class Pack(unittest.TestCase):
 
     def test_pack_names_the_copy_doc_and_model(self):
         pack = read(os.path.join(ONBOARDING, "GROK_ONBOARDING_PACK.md"))
-        self.assertIn("df0ec92ac7a26ada", pack)
+        self.assertIn("e95a04557f8a8faa", pack)
         self.assertIn("claude-opus-5-5", pack)
         # the doc build Lorenzo says "done" on, in the approval example and the copy doc section
-        self.assertIn('"doc_build": "df0ec92ac7a26ada"',
+        self.assertIn('"doc_build": "e95a04557f8a8faa"',
                       read(os.path.join(ONBOARDING, "02_operating_model.md")))
-        self.assertIn("Current build `df0ec92ac7a26ada`",
+        self.assertIn("Current build `e95a04557f8a8faa`",
                       read(os.path.join(ONBOARDING, "06_systems_and_access.md")))
 
     def test_file_02_names_the_allow_list_in_code(self):

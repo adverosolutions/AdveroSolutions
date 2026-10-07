@@ -94,7 +94,7 @@ First contact = no reply of ours has reached this lead yet.
 | Send info, a deck, more details | `positive_question` (send_info) | `first_reply.<offer>.send_info.full` (answers without a link and offers two times) |
 | Yes plus "do you have a Calendly/booking link?", and that is the only ask | `positive_interested` or `positive_question` (booking_link) | `first_reply.<offer>.booking_link.full` (two times plus the booking calendar link) |
 
-Each one sends only when Lorenzo has said "done" and "go live" on the doc build in `approval.doc_build` (today `df0ec92ac7a26ada`), the copy doc is unchanged since, the template is not marked "Not approved yet", confidence is 0.8 or more, the template is for the lead's own offer, the lead's newest email has no legal word, and every send check in step 6 passes. `ask_opus.py` enforces all of this in code.
+Each one sends only when Lorenzo has said "done" and "go live" on the doc build in `approval.doc_build` (today `e95a04557f8a8faa`), the copy doc is unchanged since, the template is not marked "Not approved yet", confidence is 0.8 or more, the template is for the lead's own offer, the lead's newest email has no legal word, and every send check in step 6 passes. `ask_opus.py` enforces all of this in code.
 
 Still a hold card for Lorenzo: the `referral` and `other` branches; every variant (no free times, "{slot} CT works on my end", a refused time); `neutral_question`; a counter to a time that breaks the slot rules; `booking.slot_already_taken`; a reply that is a no plus a buying signal; talk of a competitor, a contract or anything legal; a reply not in English; anything under 0.8. A held first reply goes to Lorenzo as a hold card (format in `grok-operator`) with what the lead wrote above the draft. Any other reply to a lead not yet answered is also held, except the "Locked in" booking confirmation. The first reply, however it goes out, is day 0 of the follow-up ladder (`quiet-lead-followup`).
 
@@ -102,7 +102,7 @@ Template id: `first_reply.<offer>.<branch>.full`. Offers: `ai_agents` (one key f
 
 Branch, checked in this order: `referral` (label is positive_referral), `pricing`, `booking_link` (the only ask is a booking or Calendly link), `send_info` (info, a deck, more details), `mechanism` (from `question_type`), `other` (question_type other, or any neutral_question), `default` (a plain yes).
 
-Shape: greeting, one answer paragraph, one time paragraph, "Lorenzo". The answer paragraph per branch (cleaning reactivation, from the 2026-09-25 doc build; the AI agents first replies, including `booking_link`, are in doc build `df0ec92ac7a26ada`; the copy doc is the only source of the words):
+Shape: greeting, one answer paragraph, one time paragraph, "Lorenzo". The answer paragraph per branch (cleaning reactivation, from the 2026-09-25 doc build; the AI agents first replies, including `booking_link`, are in doc build `e95a04557f8a8faa`; the copy doc is the only source of the words):
 
 - `default`: "Glad to hear it. All I need to start is a list of 60 or more lost or dormant accounts or lost proposals."
 - `pricing` and `other`: "Good question. The short version is that I build email and text sequences to every account that cancelled, stopped renewing, or never closed, and the ones ready to come back land on your calendar. The rest is easier to cover on a quick call." The rebuilt `pricing` reply carries the offer's price range as fixed text.
@@ -164,7 +164,7 @@ Then it auto-sends only when all of these hold, checked in this order; the first
 
 A neutral_question is never auto-sent. Anything that fails is a hold card for Lorenzo.
 
-Status on 2026-10-06: nothing is approved yet. The current doc build is `df0ec92ac7a26ada` (built 2026-10-06, waiting for upload; its Google Doc link is filled in at upload). It carries the AI agents first replies; the 36 first replies of the six older offers stay marked "Not approved yet". Until the upload, the doc in Drive is the older build 170b09dd897430a9 (Google Doc `1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4`), and every email from it is a hold card. Lorenzo approves by saying "done" about the new doc; "go live" is a separate yes.
+Status on 2026-10-06: nothing is approved yet. The current doc build is `e95a04557f8a8faa` (built 2026-10-06, waiting for upload; its Google Doc link is filled in at upload). It carries the AI agents first replies; the 36 first replies of the six older offers stay marked "Not approved yet". Until the upload, the doc in Drive is the older build 170b09dd897430a9 (Google Doc `1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4`), and every email from it is a hold card. Lorenzo approves by saying "done" about the new doc; "go live" is a separate yes.
 
 ## Step 7: send
 
@@ -186,7 +186,7 @@ Reply SLA from the blueprint: under 5 minutes to the first reply in business hou
 
 ## Gaps
 
-- The AI agents first replies (`first_reply.ai_agents.*`, including `booking_link`) are in doc build `df0ec92ac7a26ada`, which is not uploaded yet; the six older offers' first replies are not rewritten yet.
+- The AI agents first replies (`first_reply.ai_agents.*`, including `booking_link`) are in doc build `e95a04557f8a8faa`, which is not uploaded yet; the six older offers' first replies are not rewritten yet.
 - The Instantly `reply_received` webhook to Grok, the `decide` tool on Opus 5.5 and the idempotent send tool are not built; the current engine reads replies with a GET poller every 5 minutes and classifies with Haiku (Sonnet on escalation).
 - Whether Instantly's REST reply endpoint honours the `to` field is unverified; the thread re-read stays until a live rehearsal settles it.
 - GHL booking status behaviour (`new` blocks the slot, `new` to `confirmed` sends the invite) is not verified against live GHL.

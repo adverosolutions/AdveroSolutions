@@ -119,7 +119,7 @@ uploaded 2026-09-25, 365 tagged blocks: the engine templates plus the six campai
 steps (all 24 `instantly.*` blocks, body and subject for each step). Lorenzo edits there,
 never in the Instantly editor. When a new build is uploaded, the previous doc is renamed
 "OLD, do not edit" and is never edited again; check the newest entry in the doc upload list
-before pointing anyone at a doc. Build `df0ec92ac7a26ada` (2026-10-06, 395 tagged blocks, adds
+before pointing anyone at a doc. Build `e95a04557f8a8faa` (2026-10-06, 395 tagged blocks, adds
 the AI agents first replies) is built and waits for upload; once uploaded it is the doc
 Lorenzo says "done" on, and its Google Doc id goes into the upload list.
 

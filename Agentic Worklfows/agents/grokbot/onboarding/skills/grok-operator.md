@@ -15,7 +15,7 @@ Decided by Lorenzo, 2026-09-25: Grok is the engine. Claude Code only builds.
 5. Report to Lorenzo.
 
 ## Knowledge base
-- **Approved copy:** the Google Doc "Advero emails: edit here" carrying build `df0ec92ac7a26ada` (built 2026-10-06; its Google Doc id is filled in when Claude Code uploads it). Until then the doc in Drive is build 170b09dd897430a9, id `1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4`, and every email from it is a hold card. It is the only source of email text.
+- **Approved copy:** the Google Doc "Advero emails: edit here" carrying build `e95a04557f8a8faa` (built 2026-10-06; its Google Doc id is filled in when Claude Code uploads it). Until then the doc in Drive is build 170b09dd897430a9, id `1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4`, and every email from it is a hold card. It is the only source of email text.
 - **Skills:**
   - `cold-email-replies`: which reply gets which email
   - `quiet-lead-followup`: E1–E10 timing

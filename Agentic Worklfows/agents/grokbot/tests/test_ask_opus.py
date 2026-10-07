@@ -22,11 +22,11 @@ SCRIPT = os.path.join(HERE, "..", "onboarding", "ask_opus.py")
 FIXTURE_DOC = os.path.join(HERE, "fixtures", "copy_doc_sample.txt")
 REAL_DOC = os.path.join(HERE, "..", "..", "..", "tools", "template_doc", "exports",
                         "2026-09-25T0045Z_build_170b09dd897430a9.txt")
-# Plain-text export of build df0ec92ac7a26ada (the doc Lorenzo will say "done"
-# on), rendered from builds/df0ec92ac7a26ada/advero_all_emails.html with
+# Plain-text export of build e95a04557f8a8faa (the doc Lorenzo will say "done"
+# on), rendered from builds/e95a04557f8a8faa/advero_all_emails.html with
 # tools/template_doc/doc_areas.html_to_text, the Drive rendering.
-NEW_DOC = os.path.join(HERE, "fixtures", "copy_doc_df0ec92ac7a26ada.txt")
-NEW_BUILD = "df0ec92ac7a26ada"
+NEW_DOC = os.path.join(HERE, "fixtures", "copy_doc_e95a04557f8a8faa.txt")
+NEW_BUILD = "e95a04557f8a8faa"
 TEMPLATE_DOC_DIR = os.path.join(HERE, "..", "..", "..", "tools", "template_doc")
 FAKE_KEY = "test-key-not-real-0000"
 
@@ -1104,7 +1104,7 @@ class Failures(unittest.TestCase):
 
 # ---------------------------------------------------------------- fix round 2
 # Lorenzo's decisions of 2026-10-06 (D1 allow list, D2 book first) and the
-# reviewer-max blockers B1 to B5, on the real build df0ec92ac7a26ada.
+# reviewer-max blockers B1 to B5, on the real build e95a04557f8a8faa.
 
 def read_new_doc():
     with open(NEW_DOC, encoding="utf-8") as handle:
@@ -1112,7 +1112,7 @@ def read_new_doc():
 
 
 def ai_context(**overrides):
-    """An ai_agents lead that just replied, on build df0ec92ac7a26ada, with every
+    """An ai_agents lead that just replied, on build e95a04557f8a8faa, with every
     send check passing for a first reply."""
     base = full_context(approval=dict(APPROVED, doc_build=NEW_BUILD),
                         our_reply_reached_lead=False, offered_times=[],
@@ -1226,7 +1226,7 @@ class AllowList(unittest.TestCase):
 
 
 class NewDocBuild(unittest.TestCase):
-    """End to end on the plain-text export of build df0ec92ac7a26ada."""
+    """End to end on the plain-text export of build e95a04557f8a8faa."""
 
     @classmethod
     def setUpClass(cls):
@@ -1273,6 +1273,20 @@ class NewDocBuild(unittest.TestCase):
                              tag)
             compared += 1
         self.assertEqual((len(ids), compared), (89, 252))
+
+    def test_the_doc_says_only_the_allow_list_goes_on_its_own(self):
+        top = [line for line in self.doc.splitlines()
+               if line.startswith("Approved does not mean every email goes out on its own.")]
+        self.assertEqual(len(top), 1)
+        for words in ("the main text of the five AI agents first replies",
+                      "the main text of follow-up emails 1 to 10",
+                      "the main text of the Locked in booking confirmation, only after the call is "
+                      "booked in GoHighLevel at exactly the time they picked",
+                      "Everything else comes to you as a draft"):
+            self.assertIn(words, top[0])
+        # the wording of the older build, broader than the allow list, is gone
+        self.assertNotIn("after a reply of yours has reached", self.doc)
+        self.assertNotIn("can go out on its own right away", self.doc)
 
     def test_the_five_ai_agents_first_replies_send(self):
         for branch in ("default", "pricing", "mechanism", "send_info", "booking_link"):

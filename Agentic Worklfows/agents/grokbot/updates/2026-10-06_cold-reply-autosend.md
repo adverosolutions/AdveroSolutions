@@ -13,8 +13,8 @@ This is an update to what you already have, not a new onboarding. Apply part 2 t
 - **Everything else is a hold card:** show-rate and no-show emails (the reminders R2 R3 R4 are paused since 2026-10-05), `booking.already_booked.*`, every `booking.counter.*`, `booking.slot_already_taken`, nurture, every version (no free times, a confirmed time, a refused time, another time zone, every `/dated` one), the referral and other first replies, a neutral question, a no with a buying signal, talk of a competitor or a contract, a reply not in English, anything under 0.8.
 - **Book first, then confirm** (file 02, section 3, step 6 and section 4, rule 15). When a lead names a time that fits every slot rule, `ask_opus.py` prints `grok_next_step` `book_call` with `book_at`, and no `email_text`. In this order: reserve the time for the lead in `offered_times.jsonl` (`"reserved": true`), book exactly `book_at` on the Discovery Call calendar with no Ask first (this one booking only), re-read the calendar, record the reply as `waiting_for_booking`, then run the case again as `booked_call` with `appointment` and `has_future_appointment` true. Only that run prints the "Locked in" confirmation as `send`, and only when the appointment is in the future and starts exactly at the confirmation's time. A failed or wrong booking is a hold card, and the time stays reserved for that lead. Every other booking action (a reschedule, a cancellation, a time that breaks a rule) is a hold card.
 - **A booked lead's question always reaches Lorenzo:** a hold card, never `booking.already_booked.*` or any other email.
-- **Each auto-send needs** Lorenzo's "done" on doc build `df0ec92ac7a26ada` and his "go live", the copy doc unchanged since, the template not marked "Not approved yet", confidence 0.8 or more, the template for the lead's own offer (`first_reply.<campaign_key>...`), the text exactly that template with its paragraph breaks, and every send check.
-- **Doc build.** `approval.json` names the build Lorenzo's "done" is for: `df0ec92ac7a26ada`, built 2026-10-06 and waiting for upload. Its Google Doc link is not set yet: Claude Code fills it in, in a dated update, when it uploads the build (file 06, section 2). Until then the doc in Drive is the older build `170b09dd897430a9`, and every email from its export is a hold card, because the copy doc's "Doc build:" line must equal `approval.doc_build`.
+- **Each auto-send needs** Lorenzo's "done" on doc build `e95a04557f8a8faa` and his "go live", the copy doc unchanged since, the template not marked "Not approved yet", confidence 0.8 or more, the template for the lead's own offer (`first_reply.<campaign_key>...`), the text exactly that template with its paragraph breaks, and every send check.
+- **Doc build.** `approval.json` names the build Lorenzo's "done" is for: `e95a04557f8a8faa`, built 2026-10-06 and waiting for upload. Its Google Doc link is not set yet: Claude Code fills it in, in a dated update, when it uploads the build (file 06, section 2). Until then the doc in Drive is the older build `170b09dd897430a9`, and every email from its export is a hold card, because the copy doc's "Doc build:" line must equal `approval.doc_build`.
 - **Legal words.** When the lead's newest email mentions a lawyer or attorney, suing or a lawsuit, a court, a complaint, a regulator or an attorney general, the FTC, FCC, TCPA, CAN-SPAM or BBB, or a cease and desist, in any form, no email goes and no blocklist is added: hold card. The same when the newest inbound email has no readable body. This covers the auto-send first replies and E1 to E10 too, so `thread`, with the newest inbound email's body, is needed for every email and every blocklist.
 - **Every placeholder needs a check.** `{first_name}` and `{company}` must be the lead's own values; `{slots}`, `{alt_slots}` and `{slot}` real times under the slot rules; `{zoom_link}`, `{call_link}` and `{link}` exactly the appointment's link; the line placeholders exactly a line of the template's own block for the lead's offer. Any other placeholder (`{when_ct}`, `{time_ct}`, `{asked_time}`, `{slot1}`, `{referral_name}` and the like) holds, and so does a line break, tab or hidden character in a value.
 - **The lead's offer.** A template id that names another offer (for example `show_rate.confirm_email.cleaning_reactivation` for an `ai_agents` lead) holds.
@@ -54,7 +54,7 @@ Then replace the code block under section 12 of your `04_ask_opus.md` (and the s
 
 ### `~/advero/state/approval.json`
 
-Delete the two keys `ask_first_on_sends` and `ask_first_note`. Set `"doc_build"` to `"df0ec92ac7a26ada"`. If `"doc_done"` is true, set it to false and `"doc_done_at"` and `"doc_done_quote"` to null: that "done" was for build `170b09dd897430a9`. Change nothing else.
+Delete the two keys `ask_first_on_sends` and `ask_first_note`. Set `"doc_build"` to `"e95a04557f8a8faa"`. If `"doc_done"` is true, set it to false and `"doc_done_at"` and `"doc_done_quote"` to null: that "done" was for build `170b09dd897430a9`. Change nothing else.
 
 ### Docs and skills
 
@@ -627,7 +627,7 @@ w) Replace:
 with:
 
 ````
-  "doc_build": "df0ec92ac7a26ada",
+  "doc_build": "e95a04557f8a8faa",
 ````
 
 x) Replace:
@@ -657,7 +657,7 @@ with:
 3. `go_live` becomes true only when Lorenzo says "go live". Until then, nothing is sent to a lead. Everything is a hold card or a "would send" line in the report. `ask_opus.py` enforces this: without `doc_done`, `doc_unchanged` and `go_live` all true it never answers `send`.
 4. There is no "Ask first" on sends (Lorenzo, 2026-10-06). An approved-template email that passes every check goes without asking. The old `ask_first_on_sends` and `ask_first_note` keys are gone; delete them from your copy.
 5. Pass `approval` into every case (file 04). Use `copy_doc_approved.txt` as `copy_doc_file` once it exists. Before Lorenzo's "done", use `copy_doc.txt`: every email is a hold card then anyway, and the card still shows the full text.
-6. `doc_build` is the build Lorenzo's "done" is for: the 16 characters on the copy doc's "Doc build:" line near the top (tag `X-BUILD`). Today that is `df0ec92ac7a26ada` (file 06, section 2). You never change it yourself: a new build comes with an update from Lorenzo. If the copy doc file you pass is another build, `ask_opus.py` holds every email, and a "done" said about another build does not count: tell Lorenzo which build he is looking at.
+6. `doc_build` is the build Lorenzo's "done" is for: the 16 characters on the copy doc's "Doc build:" line near the top (tag `X-BUILD`). Today that is `e95a04557f8a8faa` (file 06, section 2). You never change it yourself: a new build comes with an update from Lorenzo. If the copy doc file you pass is another build, `ask_opus.py` holds every email, and a "done" said about another build does not count: tell Lorenzo which build he is looking at.
 ````
 
 z) Replace:
@@ -859,7 +859,7 @@ g) Replace:
 with:
 
 ````
-    "approval": {"doc_build": "df0ec92ac7a26ada", "doc_done": true, "doc_unchanged": true, "go_live": true},
+    "approval": {"doc_build": "e95a04557f8a8faa", "doc_done": true, "doc_unchanged": true, "go_live": true},
     "kill_switch": false,
     "lead_email": "dana@example.com",
     "newest_inbound_from": "dana@example.com",
@@ -949,7 +949,7 @@ What you do: send Lorenzo a hold card with `email_text` in full (file 07). Apply
 with:
 
 ````
-What you do: send Lorenzo a hold card with `email_text` in full (file 07). Apply the stage and interest only after he answers. In doc build `df0ec92ac7a26ada` the six older offers' first replies are marked "Not approved yet", so this holds. For an `ai_agents` lead the same case with `first_reply.ai_agents.pricing.full` (and its `{company}` filled) prints `"grok_next_step": "send"` once Lorenzo said "done" and "go live", and you send `email_text` as printed.
+What you do: send Lorenzo a hold card with `email_text` in full (file 07). Apply the stage and interest only after he answers. In doc build `e95a04557f8a8faa` the six older offers' first replies are marked "Not approved yet", so this holds. For an `ai_agents` lead the same case with `first_reply.ai_agents.pricing.full` (and its `{company}` filled) prints `"grok_next_step": "send"` once Lorenzo said "done" and "go live", and you send `email_text` as printed.
 ````
 
 n) Replace:
@@ -1081,9 +1081,9 @@ b) Replace:
 with:
 
 ````
-- **Name:** starts with "Advero emails: edit here". Current build `df0ec92ac7a26ada`, built 2026-10-06 (the build id is printed near the top of the doc: "Doc build: df0ec92ac7a26ada (tag: X-BUILD)"). This is the doc Lorenzo says "done" on, and the build in `approval.json` (file 02, section 9).
-- **Link:** not set yet. Build `df0ec92ac7a26ada` is waiting for upload; Claude Code fills in its Google Doc link here, in a dated update, when it uploads it. Until then the doc in Drive is the older build `170b09dd897430a9` (https://docs.google.com/document/d/1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4/edit). Its export carries the old build line, so every email from it is a hold card.
-- **It is the only source of email text.** Build `df0ec92ac7a26ada` has 395 tagged blocks: every reply, follow-up, booking, reminder and no-show email, the AI agents first replies, plus the six cold campaigns' live copy.
+- **Name:** starts with "Advero emails: edit here". Current build `e95a04557f8a8faa`, built 2026-10-06 (the build id is printed near the top of the doc: "Doc build: e95a04557f8a8faa (tag: X-BUILD)"). This is the doc Lorenzo says "done" on, and the build in `approval.json` (file 02, section 9).
+- **Link:** not set yet. Build `e95a04557f8a8faa` is waiting for upload; Claude Code fills in its Google Doc link here, in a dated update, when it uploads it. Until then the doc in Drive is the older build `170b09dd897430a9` (https://docs.google.com/document/d/1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4/edit). Its export carries the old build line, so every email from it is a hold card.
+- **It is the only source of email text.** Build `e95a04557f8a8faa` has 395 tagged blocks: every reply, follow-up, booking, reminder and no-show email, the AI agents first replies, plus the six cold campaigns' live copy.
 ````
 
 c) Replace:
@@ -1096,8 +1096,8 @@ c) Replace:
 with:
 
 ````
-- **What is approved:** the doc itself says that when Lorenzo says "done", every email in it counts as approved except the first replies marked "Not approved yet" (in build `df0ec92ac7a26ada`, the six older offers' first replies). Approved does not mean it goes on its own: only Lorenzo's allow list does (file 02, section 4, rule 14), and `ask_opus.py` enforces it in code. Where the doc's own notes say more emails go on their own, the allow list wins. Emails go out only after he also says "go live". The doc says "tell Claude"; he now tells the Chief of Staff. Pending, Lorenzo: confirm he gives "done" and "go live" to the Chief of Staff.
-- **Status on 2026-10-06:** nothing approved yet. Until Lorenzo says "done" on build `df0ec92ac7a26ada` and "go live", every email is a hold card.
+- **What is approved:** the doc itself says that when Lorenzo says "done", every email in it counts as approved except the first replies marked "Not approved yet" (in build `e95a04557f8a8faa`, the six older offers' first replies). Approved does not mean it goes on its own: only Lorenzo's allow list does (file 02, section 4, rule 14), and `ask_opus.py` enforces it in code. The doc's own notes in this build say the same; if a note ever says more, the allow list wins. Emails go out only after he also says "go live". The doc says "tell Claude"; he now tells the Chief of Staff. Pending, Lorenzo: confirm he gives "done" and "go live" to the Chief of Staff.
+- **Status on 2026-10-06:** nothing approved yet. Until Lorenzo says "done" on build `e95a04557f8a8faa` and "go live", every email is a hold card.
 ````
 
 d) Replace:
@@ -1159,7 +1159,7 @@ with:
 
 ````
 | Writing the Daily Metrics row | Lorenzo |
-| Uploading build `df0ec92ac7a26ada` and its Google Doc link (section 2) | Claude Code, in a dated update |
+| Uploading build `e95a04557f8a8faa` and its Google Doc link (section 2) | Claude Code, in a dated update |
 ````
 
 ### `~/advero/07_reports_and_scorecard.md`
@@ -1383,7 +1383,7 @@ Template id: `first_reply.<offer>.<branch>.full`. Offers: `cleaning_reactivation
 with:
 
 ````
-Each one sends only when Lorenzo has said "done" and "go live" on the doc build in `approval.doc_build` (today `df0ec92ac7a26ada`), the copy doc is unchanged since, the template is not marked "Not approved yet", confidence is 0.8 or more, the template is for the lead's own offer, the lead's newest email has no legal word, and every send check in step 6 passes. `ask_opus.py` enforces all of this in code.
+Each one sends only when Lorenzo has said "done" and "go live" on the doc build in `approval.doc_build` (today `e95a04557f8a8faa`), the copy doc is unchanged since, the template is not marked "Not approved yet", confidence is 0.8 or more, the template is for the lead's own offer, the lead's newest email has no legal word, and every send check in step 6 passes. `ask_opus.py` enforces all of this in code.
 ````
 
 i) Replace:
@@ -1411,7 +1411,7 @@ Template id: `first_reply.<offer>.<branch>.full`. Offers: `ai_agents` (one key f
 
 Branch, checked in this order: `referral` (label is positive_referral), `pricing`, `booking_link` (the only ask is a booking or Calendly link), `send_info` (info, a deck, more details), `mechanism` (from `question_type`), `other` (question_type other, or any neutral_question), `default` (a plain yes).
 
-Shape: greeting, one answer paragraph, one time paragraph, "Lorenzo". The answer paragraph per branch (cleaning reactivation, from the 2026-09-25 doc build; the AI agents first replies, including `booking_link`, are in doc build `df0ec92ac7a26ada`; the copy doc is the only source of the words):
+Shape: greeting, one answer paragraph, one time paragraph, "Lorenzo". The answer paragraph per branch (cleaning reactivation, from the 2026-09-25 doc build; the AI agents first replies, including `booking_link`, are in doc build `e95a04557f8a8faa`; the copy doc is the only source of the words):
 ````
 
 k) Replace:
@@ -1523,7 +1523,7 @@ Status on 2026-09-24: nothing is approved yet. The go-live emails doc (build 170
 with:
 
 ````
-Status on 2026-10-06: nothing is approved yet. The current doc build is `df0ec92ac7a26ada` (built 2026-10-06, waiting for upload; its Google Doc link is filled in at upload). It carries the AI agents first replies; the 36 first replies of the six older offers stay marked "Not approved yet". Until the upload, the doc in Drive is the older build 170b09dd897430a9 (Google Doc `1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4`), and every email from it is a hold card. Lorenzo approves by saying "done" about the new doc; "go live" is a separate yes.
+Status on 2026-10-06: nothing is approved yet. The current doc build is `e95a04557f8a8faa` (built 2026-10-06, waiting for upload; its Google Doc link is filled in at upload). It carries the AI agents first replies; the 36 first replies of the six older offers stay marked "Not approved yet". Until the upload, the doc in Drive is the older build 170b09dd897430a9 (Google Doc `1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4`), and every email from it is a hold card. Lorenzo approves by saying "done" about the new doc; "go live" is a separate yes.
 ````
 
 t) Replace:
@@ -1535,7 +1535,7 @@ t) Replace:
 with:
 
 ````
-- The AI agents first replies (`first_reply.ai_agents.*`, including `booking_link`) are in doc build `df0ec92ac7a26ada`, which is not uploaded yet; the six older offers' first replies are not rewritten yet.
+- The AI agents first replies (`first_reply.ai_agents.*`, including `booking_link`) are in doc build `e95a04557f8a8faa`, which is not uploaded yet; the six older offers' first replies are not rewritten yet.
 ````
 
 ### `~/advero/skills/quiet-lead-followup.md`
@@ -1693,7 +1693,7 @@ a) Replace:
 with:
 
 ````
-- **Approved copy:** the Google Doc "Advero emails: edit here" carrying build `df0ec92ac7a26ada` (built 2026-10-06; its Google Doc id is filled in when Claude Code uploads it). Until then the doc in Drive is build 170b09dd897430a9, id `1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4`, and every email from it is a hold card. It is the only source of email text.
+- **Approved copy:** the Google Doc "Advero emails: edit here" carrying build `e95a04557f8a8faa` (built 2026-10-06; its Google Doc id is filled in when Claude Code uploads it). Until then the doc in Drive is build 170b09dd897430a9, id `1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4`, and every email from it is a hold card. It is the only source of email text.
 ````
 
 b) Replace:
@@ -1821,7 +1821,7 @@ before pointing anyone at a doc.
 with:
 
 ````
-before pointing anyone at a doc. Build `df0ec92ac7a26ada` (2026-10-06, 395 tagged blocks, adds
+before pointing anyone at a doc. Build `e95a04557f8a8faa` (2026-10-06, 395 tagged blocks, adds
 the AI agents first replies) is built and waits for upload; once uploaded it is the doc
 Lorenzo says "done" on, and its Google Doc id goes into the upload list.
 ````

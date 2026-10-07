@@ -113,7 +113,7 @@ Case (made-up lead):
   "template_prefixes": ["first_reply.cleaning_reactivation", "booking."],
   "context": {
     "now_ct": "2026-09-28T11:02:00-05:00",
-    "approval": {"doc_build": "df0ec92ac7a26ada", "doc_done": true, "doc_unchanged": true, "go_live": true},
+    "approval": {"doc_build": "e95a04557f8a8faa", "doc_done": true, "doc_unchanged": true, "go_live": true},
     "kill_switch": false,
     "lead_email": "dana@example.com",
     "newest_inbound_from": "dana@example.com",
@@ -180,7 +180,7 @@ Output (shortened):
 }
 ```
 
-What you do: send Lorenzo a hold card with `email_text` in full (file 07). Apply the stage and interest only after he answers. In doc build `df0ec92ac7a26ada` the six older offers' first replies are marked "Not approved yet", so this holds. For an `ai_agents` lead the same case with `first_reply.ai_agents.pricing.full` (and its `{company}` filled) prints `"grok_next_step": "send"` once Lorenzo said "done" and "go live", and you send `email_text` as printed.
+What you do: send Lorenzo a hold card with `email_text` in full (file 07). Apply the stage and interest only after he answers. In doc build `e95a04557f8a8faa` the six older offers' first replies are marked "Not approved yet", so this holds. For an `ai_agents` lead the same case with `first_reply.ai_agents.pricing.full` (and its `{company}` filled) prints `"grok_next_step": "send"` once Lorenzo said "done" and "go live", and you send `email_text` as printed.
 
 ## 7. The decision Opus returns
 
