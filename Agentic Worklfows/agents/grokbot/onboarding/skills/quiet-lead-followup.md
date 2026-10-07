@@ -139,7 +139,7 @@ E1 goes out at 10:00 CT like every other touch, with no heads-up or veto first (
 - **"Not now", "bad time", "not a priority"** (any follow-up): stop, GHL Follow Up Later, and enrol in the 90-day nurture with reason `not_now_reply` (`nurture-90-day`).
 - **Booked**: stop. Before every touch, check GHL for a future appointment on the Discovery Call calendar: leads can book themselves through the calendar link. If there is one, send nothing, release the lead's held times, set GHL Call Booked, Sequence `booked` (not stopped) and Instantly interest 2. Everything after, including the booking confirmation, is in the `booked-calls` skill.
 - **Unsubscribe, hostile, not a fit, wrong person, or any opt-out on record**: stop for good. Nothing more is sent.
-- **Any appointment, past or future, Do Not Disturb, Sequence `stopped` or `booked`, or a negative Instantly interest status**: no touch goes; `ask_opus.py` holds E1 to E10 for such a lead (2026-10-06).
+- **Any appointment, past or future, Do Not Disturb (overall, for email, or a `dnd` tag), a GHL Sequence other than `followup`, or an Instantly interest status other than 1 (interested) or 0 (out of office)**: no touch goes; `ask_opus.py` holds E1 to E10 for such a lead, and also when one of these facts is missing (2026-10-06).
 - **Out-of-office reply**: a pause, not a stop. The ladder resumes the business day after the return date (next business day if none given).
 - **After E10 with no reply**: GHL Follow Up Later, and nurture with reason `no_reply_after_sequence`.
 - **Lead already in nurture**: the ladder stops with reason `nurture` before anything sends, and cannot be resumed while enrolled.

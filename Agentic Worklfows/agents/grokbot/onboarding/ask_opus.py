@@ -18,9 +18,9 @@ Input on stdin, one JSON object:
                       reply_id, handled_ids; newest_inbound_from also for
                       cadence.*; has_future_appointment for replies and
                       cadence.*; for cadence.* also appointment (null when
-                      the lead never had one), ghl.stage, ghl.dnd, the
-                      Sequence field in ghl.fields and
-                      instantly.interest_status; free_times and
+                      the lead never had one), ghl.stage, ghl.dnd,
+                      ghl.dnd_settings, the Sequence field in ghl.fields
+                      and instantly.interest_status; free_times and
                       offered_times for any email with {slots} or
                       {alt_slots}, and for a booking confirmation before
                       its booking exists; appointment for a booking
@@ -140,16 +140,25 @@ CONFIRMATION_LABELS = ("positive_interested", "positive_question")
 KNOWN_OFFERS = ("ai_agents", "cleaning_reactivation", "cleaning_trigger",
                 "bookkeeping_reactivation", "bookkeeping_trigger",
                 "recruiting_reactivation", "recruiting_outbound")
-# A follow-up E1 to E10 never goes to a lead with any appointment (past or
-# future), a "no" reply label or a negative Instantly interest status, Do Not
-# Disturb on in GHL, or GHL Sequence stopped or booked, and never when one of
-# those facts is missing or cannot be read (fail closed).
+# A follow-up E1 to E10 goes only while GHL Sequence is followup and the
+# Instantly interest status is 1 or 0, and never to a lead with any appointment
+# (past or future), a "no" reply label, or Do Not Disturb on in GHL (overall,
+# for email, or a dnd tag); never when one of those facts is missing or cannot
+# be read (fail closed).
 NEGATIVE_LABELS = ("negative_notnow", "negative_notfit", "negative_hostile", "unsubscribe",
                    "wrong_person")
-LADDER_STOP_SEQUENCES = ("stopped", "booked")
-# The GHL Sequence values (file 05). Any other value cannot be read.
+# The GHL Sequence values (file 05). Any other value cannot be read. Only
+# followup means the lead is in the quiet-lead ladder.
 SEQUENCE_VALUES = ("none", "reply_waiting", "followup", "booked", "no_show", "nurture",
                    "stopped")
+LADDER_SEQUENCE = "followup"
+# Instantly interest statuses a quiet interested lead can have: 1 interested,
+# or 0 after an out-of-office reply (the ladder resumes after the return date).
+# 2, 3 and 4 (meeting booked, completed, won) and every negative hold.
+LADDER_INTEREST_VALUES = (0, 1)
+# A GHL dndSettings channel status. active and permanent mean Do Not Disturb.
+DND_STATUSES = ("active", "inactive", "permanent")
+DND_ON_STATUSES = ("active", "permanent")
 
 # A template whose own text carries a literal day, date or clock time (every
 # /dated variant, the example versions) is an example, never sent.
@@ -1147,6 +1156,23 @@ def _true_or_false(value):
     return None
 
 
+def _email_dnd(settings):
+    """Do Not Disturb for email from GHL's dndSettings object: True when its
+    email channel ("Email" or "email") has status active or permanent, False
+    when that status is inactive or the object has no email channel, None when
+    the settings are missing or cannot be read."""
+    if not isinstance(settings, dict):
+        return None
+    statuses = []
+    for key, channel in settings.items():
+        if isinstance(key, str) and key.strip().lower() == "email":
+            status = channel.get("status") if isinstance(channel, dict) else None
+            if not isinstance(status, str) or status.strip().lower() not in DND_STATUSES:
+                return None
+            statuses.append(status.strip().lower())
+    return any(status in DND_ON_STATUSES for status in statuses)
+
+
 def _interest_status(value):
     """The Instantly interest status as a number, or None when it is missing or
     is not one of Instantly's values (a number or its text, never a boolean)."""
@@ -1160,13 +1186,15 @@ def _interest_status(value):
 
 
 def ladder_stop_problems(decision, context):
-    """Why a follow-up E1 to E10 must not go to this lead: an appointment, past
-    or future (context.appointment); a "no" reply label; a negative Instantly
-    interest status; Do Not Disturb in GHL (ghl.dnd, or a "dnd" tag); or GHL
-    Sequence stopped or booked. Fail closed: a fact that is missing or cannot
-    be read holds the email too. context.appointment must be given (null when
-    the lead never had one), and so must ghl.stage, ghl.dnd (true or false),
-    the Sequence field in ghl.fields (one of SEQUENCE_VALUES) and
+    """Why a follow-up E1 to E10 must not go to this lead. It goes only while
+    GHL Sequence is followup and the Instantly interest status is 1 or 0, and
+    never with an appointment, past or future (context.appointment); a "no"
+    reply label; or Do Not Disturb in GHL (ghl.dnd, the email channel of
+    ghl.dnd_settings, or a "dnd" tag). Fail closed: a fact that is missing or
+    cannot be read holds the email too. context.appointment must be given
+    (null when the lead never had one), and so must ghl.stage, ghl.dnd (true
+    or false), ghl.dnd_settings (GHL's dndSettings, {} when it has none), the
+    Sequence field in ghl.fields (one of SEQUENCE_VALUES) and
     instantly.interest_status (one of INTEREST_VALUES); ghl.tags, when given,
     must be a list of tag names."""
     problems = []
@@ -1190,9 +1218,9 @@ def ladder_stop_problems(decision, context):
     if interest is None:
         problems.append("context.instantly.interest_status is missing or cannot be read: "
                         "no follow-up email")
-    elif interest < 0:
-        problems.append("the Instantly interest status %s is negative: no follow-up email"
-                        % instantly.get("interest_status"))
+    elif interest not in LADDER_INTEREST_VALUES:
+        problems.append("the Instantly interest status %s is not 1 (interested) or 0 (out of "
+                        "office): no follow-up email" % instantly.get("interest_status"))
     ghl = context.get("ghl")
     if not isinstance(ghl, dict):
         problems.append("context.ghl is missing or cannot be read: no follow-up email")
@@ -1204,24 +1232,28 @@ def ladder_stop_problems(decision, context):
     if dnd is None:
         problems.append("context.ghl.dnd is missing or cannot be read (true or false): "
                         "no follow-up email")
+    email_dnd = _email_dnd(ghl.get("dnd_settings"))
+    if email_dnd is None:
+        problems.append("context.ghl.dnd_settings is missing or cannot be read (GHL's "
+                        "dndSettings, {} when it has none): no follow-up email")
     tags = ghl.get("tags")
     tags = [] if tags is None else tags
     if not isinstance(tags, list) or not all(isinstance(tag, str) for tag in tags):
         problems.append("context.ghl.tags cannot be read (a list of tag names): "
                         "no follow-up email")
         tags = []
-    if dnd or any(tag.strip().lower() == "dnd" for tag in tags):
-        problems.append("Do Not Disturb is on for this lead in GHL: no follow-up email")
+    if dnd or email_dnd or any(tag.strip().lower() == "dnd" for tag in tags):
+        problems.append("Do Not Disturb is on for this lead in GHL (overall, for email, or a "
+                        "dnd tag): no follow-up email")
     values = _ghl_field_values(ghl, "Sequence") or []
     sequences = set(value.strip().lower() if isinstance(value, str) else None
                     for value in values)
     if len(sequences) != 1 or not sequences <= set(SEQUENCE_VALUES):
         problems.append("the GHL Sequence field (context.ghl.fields) is missing or cannot be "
                         "read: no follow-up email")
-    else:
-        sequence = sequences.pop()
-        if sequence in LADDER_STOP_SEQUENCES:
-            problems.append("GHL Sequence is %s: no follow-up email" % sequence)
+    elif sequences != {LADDER_SEQUENCE}:
+        problems.append("GHL Sequence is %s, not %s (the follow-up ladder): no follow-up email"
+                        % (sequences.pop(), LADDER_SEQUENCE))
     return problems
 
 

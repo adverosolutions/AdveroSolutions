@@ -36,7 +36,7 @@ Every piece of work runs through the same eight steps.
 **Step 2. Check the kill switch.** If `~/advero/state/KILL_SWITCH` exists, stop and report.
 
 **Step 3. Gather the facts.** Read only what the case needs:
-- the lead's GHL contact and opportunity: stage, the five fields (file 05), tags, whether Do Not Disturb is on, the last 3 notes;
+- the lead's GHL contact and opportunity: stage, the five fields (file 05), tags, whether Do Not Disturb is on (`dnd`) and the per-channel `dndSettings`, the last 3 notes;
 - the Instantly lead: interest status, campaign id;
 - the thread: every email with its id, direction (in or out), sender, recipient, time and body. Keep the top 2,000 characters of each body: the lead's new text is at the top, and what gets cut is the quoted older emails below it. The lead's newest inbound email must carry its body: `ask_opus.py` scans it for legal words, and without it every email and every blocklist is a hold card;
 - whether any reply of ours has reached this lead (`our_reply_reached_lead`): an email from our inbox sent after the lead's first reply. The two cold-campaign steps do not count. Needed for every email except an auto-send first reply and the booking confirmation: without it the email is a hold card;
@@ -55,7 +55,7 @@ For any case that may end in an email, also gather these. `ask_opus.py` holds th
 - `reply_id`: the Instantly id of the lead's newest inbound email (replies and booking emails);
 - `handled_ids`: the email ids in `~/advero/state/handled.jsonl` whose newest outcome is not `waiting_for_send_window` or `waiting_for_booking` (replies and booking emails);
 - `has_future_appointment`: `true` if the GHL contact has an appointment after now on the Discovery Call calendar (`GDugwLmZNdsD13RBDnRu`), else `false` (replies, booking emails, E1 to E10);
-- for E1 to E10, `ghl.stage`, `ghl.dnd` (`true` or `false`), `ghl.tags`, `ghl.fields` (with Sequence) and `instantly.interest_status` (the number Instantly shows): a follow-up holds when Do Not Disturb is on (or a tag is `dnd`), Sequence is `stopped` or `booked`, or the interest status is negative, and also when the stage, `dnd`, Sequence, the interest status or `appointment` is missing or cannot be read;
+- for E1 to E10, `ghl.stage`, `ghl.dnd` (`true` or `false`), `ghl.dnd_settings` (the contact's `dndSettings` as GHL returns it, `{}` when it has none), `ghl.tags`, `ghl.fields` (with Sequence) and `instantly.interest_status` (the number Instantly shows): a follow-up goes only while Sequence is `followup` and the interest status is 1 (interested) or 0 (out of office). It holds when Do Not Disturb is on, overall (`dnd`), for email (the `Email` channel in `dndSettings` has status `active` or `permanent`) or as a `dnd` tag, and also when the stage, `dnd`, `dnd_settings`, Sequence, the interest status or `appointment` is missing or cannot be read;
 - `free_times` and `offered_times` (above) for any email that offers or confirms a time.
 
 **Step 4. Package the case.** Write `~/advero/state/cases/<time>_<lead>.json` in the format in file 04. Pick the skills and template prefixes from the table in file 04, section 5.

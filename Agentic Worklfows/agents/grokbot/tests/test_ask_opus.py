@@ -65,9 +65,10 @@ FREE = ["2026-09-29T12:05:00-05:00", "2026-10-01T16:30:00-05:00",
 
 
 def ghl_facts(**changes):
-    """The lead's GHL record as Grok reads it: a stage, Do Not Disturb off, no
-    dnd tag, Sequence followup."""
+    """The lead's GHL record as Grok reads it: a stage, Do Not Disturb off
+    (overall and for email), no dnd tag, Sequence followup."""
     base = {"contact_id": "c-1", "stage": "New Reply/Lead", "dnd": False,
+            "dnd_settings": {"Email": {"status": "inactive"}},
             "tags": ["cold-email"], "fields": {"Sequence": "followup"}}
     base.update(changes)
     return base
@@ -1888,7 +1889,7 @@ class LadderStops(unittest.TestCase):
         for context in (dict(ghl=ghl_facts(dnd="false", tags=["cold-email"],
                                            fields={"Sequence": "followup"})),
                         dict(ghl=ghl_facts(tags=None)),
-                        dict(ghl={"stage": "New Reply/Lead", "dnd": False,
+                        dict(ghl={"stage": "New Reply/Lead", "dnd": False, "dnd_settings": {},
                                   "fields": [{"name": "Sequence", "value": "Followup"},
                                              {"name": "Next Email", "value": "cadence.e3"}]}),
                         dict(instantly={"interest_status": 1}),
@@ -1969,6 +1970,70 @@ class LadderStops(unittest.TestCase):
                 self.assertTrue([p for p in checks["problems"]
                                  if " is missing" in p or "cannot be read" in p],
                                 (label, template_id))
+
+    def _assert_sends(self, label, context):
+        for template_id in ("cadence.e1", "cadence.e10"):
+            step, _, checks, _ = run_checks(self.doc, template_id, None, context,
+                                            case_type="followup_due")
+            self.assertEqual(step, "send", (label, template_id, checks["problems"]))
+            self.assertTrue(checks["ladder_ok"], (label, template_id))
+
+    def _assert_only_the_ladder_holds(self, label, context):
+        for template_id in ("cadence.e1", "cadence.e10"):
+            step, _, checks, _ = run_checks(self.doc, template_id, None, context,
+                                            case_type="followup_due")
+            self.assertEqual(step, "hold_card", (label, template_id))
+            failed = [name for name in ask_opus.SEND_CHECKS if not checks.get(name)]
+            self.assertEqual(failed, ["ladder_ok"], (label, template_id))
+        return checks["problems"]
+
+    def test_sequence_other_than_followup_holds(self):
+        """Only Sequence followup, the quiet-lead ladder, lets E1 to E10 go."""
+        for value in ("followup", "Followup", " FOLLOWUP "):
+            self._assert_sends(value, ai_ladder_context(
+                ghl=ghl_facts(fields={"Sequence": value})))
+        for value in ("none", "reply_waiting", "booked", "no_show", "nurture", "stopped"):
+            problems = self._assert_only_the_ladder_holds(value, ai_ladder_context(
+                ghl=ghl_facts(fields={"Sequence": value})))
+            self.assertTrue([p for p in problems if "not followup" in p], value)
+
+    def test_interest_status_other_than_1_or_0_holds(self):
+        """E1 to E10 go only for interest 1 (interested) or 0 (out of office):
+        2, 3, 4 (meeting booked, completed, won) and every negative hold."""
+        for value in (1, 0, "1", "0", 1.0):
+            self._assert_sends(repr(value), ai_ladder_context(
+                instantly={"interest_status": value}))
+        for value in (2, 3, 4, "2", "4", -1, -2, -3, -4, "-1"):
+            problems = self._assert_only_the_ladder_holds(repr(value), ai_ladder_context(
+                instantly={"interest_status": value}))
+            self.assertTrue([p for p in problems if "is not 1 (interested) or 0" in p], value)
+
+    def test_email_channel_dnd_holds(self):
+        """Do Not Disturb for email in GHL's dndSettings holds E1 to E10 with the
+        overall flag off; missing or unreadable dnd_settings hold them too."""
+        for settings in ({}, {"Email": {"status": "inactive"}},
+                         {"email": {"status": "Inactive", "message": ""}},
+                         {"SMS": {"status": "active"}, "Email": {"status": "inactive"}},
+                         {"Call": {"status": "permanent"}}):
+            self._assert_sends(repr(settings), ai_ladder_context(
+                ghl=ghl_facts(dnd=False, dnd_settings=settings)))
+        for settings in ({"Email": {"status": "active"}}, {"email": {"status": "permanent"}},
+                         {" EMAIL ": {"status": " Active ", "message": "Do not contact me"}},
+                         {"SMS": {"status": "inactive"}, "Email": {"status": "active"}}):
+            problems = self._assert_only_the_ladder_holds(repr(settings), ai_ladder_context(
+                ghl=ghl_facts(dnd=False, dnd_settings=settings)))
+            self.assertTrue([p for p in problems if "Do Not Disturb is on" in p], settings)
+        for settings in (None, "inactive", [], ["Email"], {"Email": "active"}, {"Email": {}},
+                         {"Email": {"status": None}}, {"Email": {"status": "on"}},
+                         {"Email": {"status": "inactive"}, "email": {"status": "maybe"}}):
+            problems = self._assert_only_the_ladder_holds(repr(settings), ai_ladder_context(
+                ghl=ghl_facts(dnd=False, dnd_settings=settings)))
+            self.assertTrue([p for p in problems
+                             if "dnd_settings is missing or cannot be read" in p], settings)
+        context = ai_ladder_context()
+        del context["ghl"]["dnd_settings"]
+        problems = self._assert_only_the_ladder_holds("no dnd_settings", context)
+        self.assertTrue([p for p in problems if "dnd_settings is missing" in p])
 
 
 class PlaceholdersNeedChecks(unittest.TestCase):
