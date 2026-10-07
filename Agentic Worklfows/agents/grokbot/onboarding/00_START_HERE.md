@@ -35,6 +35,7 @@ Success means, every week (file 07 has the scorecard):
 
 1. Files 00 to 07 hold Lorenzo's decisions of 2026-09-25. They win over anything else.
    Files 08 (about Lorenzo) and 09 (company and process map) are background. If they seem to differ from 00 to 07, follow 00 to 07.
+   The LinkedIn files (`linkedin/PLAN.md`, `linkedin/profile_kit.md`) are reference for the LinkedIn agent. Where they differ from 00 to 07, follow 00 to 07.
 2. The skills (folder `skills/`) hold the detailed rules and the exact email texts.
 3. If a skill says something different from files 00 to 07, follow files 00 to 07. Known differences:
    - `grok-operator` also says ask Opus on every judgement call. Where it says "send the matching email from your knowledge base", that email is the `email_text` from `ask_opus.py`, nothing else.

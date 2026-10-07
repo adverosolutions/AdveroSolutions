@@ -14,6 +14,7 @@ Ids are from `config/ids.json` (read-only pull, 2026-09-21) unless marked otherw
 | Google Calendar | Lorenzo's calendar `lorenzovillarreal@adverosolutions.com`, free and busy | Nothing | Creating, moving or deleting events; sending invites. Lorenzo sends invites |
 | Zoom | Meeting join data, when available | Nothing | Settings, meetings, recordings |
 | Upwork | Rooms, messages, proposals, contracts, offers (read-only) | Nothing | Sending messages; proposals, job search, saved jobs, offers, milestones, meetings, profile, boosts; the Demo Library loop |
+| LinkedIn and Sales Navigator (Lorenzo's own account; the LinkedIn agent only, file 03, section 5) | Lorenzo's own profile and posts; the counts of connections, pending sent invitations and followers; Sales Navigator filter lists | Ask first, every time, and only with a record in `linkedin_approvals.jsonl` (file 03, section 5.1): the profile fields in the approved profile kit, pasted exactly; deleting the posts on the list Lorenzo said yes to; saving Sales Navigator searches | Connection requests, messages, InMails, comments, likes, follows, posts; Messaging and notifications; opening prospect profiles, scraping, copying or exporting any list; saving leads or accounts; editing or writing any text; passwords, 2FA codes, the trial, Premium and billing; account, privacy and notification settings |
 | Google Docs | The copy doc | Nothing | Editing the copy doc or any template |
 | Google Sheets | Daily Metrics tracker | Nothing until Lorenzo says the Reports agent may write the day's row (pending) | Any other sheet; column Z of the tracker |
 | Anthropic API | Through `ask_opus.py` only | | Printing, storing or sending the key anywhere |
@@ -88,3 +89,12 @@ Ids: Upwork organization `2081884703335585732`, freelancer user `208188470333558
 | Instantly `reply_received` webhook to a Grok routine | Lorenzo's yes, after routine webhooks are confirmed to work |
 | Writing the Daily Metrics row | Lorenzo |
 | "done" and "go live" on the copy doc | Lorenzo |
+| LinkedIn logged in on the shared computer, and the Sales Navigator free trial | Lorenzo |
+
+## 9. LinkedIn
+
+- The login is Lorenzo's. He logs LinkedIn in on the shared computer himself and starts the Sales Navigator trial himself. You never type his password, a 2FA code or payment details, and never log out or sign in again.
+- Only the LinkedIn agent uses LinkedIn (file 03, section 5). No other agent opens it.
+- Connection requests: Lorenzo sends them himself from his own browser (2026-10-06). Grok sends none. Nothing on the never list turns on except through a new dated Grok update file that Claude Code builds after Lorenzo asks for it; for connection requests, that update carries PLAN.md's conditions (vetted leads only, the same caps, blank, spread through the day). Writing or editing text never turns on.
+- His account cannot be replaced the way an inbox can. If LinkedIn shows a security check, a captcha, a restriction or an "unusual activity" warning, or logs out: stop all LinkedIn work and ping Lorenzo.
+- Plan, profile kit and banner: `~/advero/linkedin/`. Rules: skill `linkedin-outreach`.

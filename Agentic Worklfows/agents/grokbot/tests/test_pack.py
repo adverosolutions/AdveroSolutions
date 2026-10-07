@@ -40,6 +40,8 @@ class Pack(unittest.TestCase):
             self.assertTrue(os.path.isfile(os.path.join(ONBOARDING, name)), name)
         for name in build_pack.SKILLS:
             self.assertTrue(os.path.isfile(os.path.join(ONBOARDING, "skills", name + ".md")), name)
+        for name in build_pack.LINKEDIN_FILES:
+            self.assertTrue(os.path.isfile(os.path.join(ONBOARDING, "linkedin", name)), name)
 
     def test_script_inline_in_04_matches_the_file(self):
         doc = read(os.path.join(ONBOARDING, "04_ask_opus.md"))
@@ -71,6 +73,13 @@ class Pack(unittest.TestCase):
             checked += 1
         if not checked:
             self.skipTest("no skill sources on this machine")
+
+    def test_linkedin_copies_match_their_sources(self):
+        for name in build_pack.LINKEDIN_FILES:
+            with self.subTest(file=name):
+                self.assertEqual(read(os.path.join(ONBOARDING, "linkedin", name)),
+                                 read(os.path.join(build_pack.LINKEDIN_SRC, name)),
+                                 "linkedin/%s drifted from its source; run build_pack.py" % name)
 
     def test_strip_sources_keeps_later_sections(self):
         text = "# A\n\n## Keep\nx\n\n## Sources (for maintainers)\n- `a/b.py`\n\n## After\ny\n"

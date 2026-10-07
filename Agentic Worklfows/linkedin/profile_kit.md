@@ -4,37 +4,23 @@ Written 2026-10-06. Positioning: broad (AI agents for service businesses), match
 
 ## 1. Headline (limit 220)
 
-Recommended:
+Chosen by Lorenzo 2026-10-06:
 
 ```
-Helping service businesses turn new leads and old customer lists into booked calls with AI agents | Founder, Advero Solutions
+Helping businesses get leads in, calls booked and more revenue with AI agents | Founder, Advero Solutions
 ```
-125 characters.
-
-Option 2:
-
-```
-Helping service businesses answer every lead and book more calls with AI agents that work under your name | Founder, Advero Solutions
-```
-133 characters.
-
-Option 3 (closest to the banner and website wording, shortest):
-
-```
-Helping service businesses get leads in and calls booked with AI agents | Founder, Advero Solutions
-```
-99 characters.
+105 characters.
 
 Lorenzo's Lawncare comes out of the headline. Nothing else from the old headline carries over.
 
 ## 2. About (limit 2,600)
 
-2265 characters. The hook is the first two sentences (202 characters), which is roughly what shows before "see more".
+2242 characters. The hook is the first two sentences (202 characters), which is roughly what shows before "see more".
 
 ```
 If you close new business on a call, a walkthrough or a quote, a lot of the work you lose never gets to the call. It's the lead nobody answered fast enough, or the past customer nobody followed up with.
 
-I'm Lorenzo, founder of Advero Solutions in Dallas-Fort Worth. We build and run AI agents for service businesses that answer new leads, follow up, book calls on your calendar and take parts of the back office off your plate. Everything goes out under your name.
+I'm Lorenzo, founder of Advero Solutions in Dallas-Fort Worth. We build and run AI agents that answer new leads, follow up, book calls on your calendar and take parts of the back office off your plate. Everything goes out under your name.
 
 The agents:
 - Reply and booking: reads every reply, answers the question, offers two times and books the call.
@@ -70,10 +56,10 @@ Edit the existing "AdveroAdvertising" entry rather than adding a new one, so the
 - Employment type: Self-employed
 - Location: Dallas-Fort Worth (or North Richland Hills, Texas, as it is today)
 - Start date: keep the date already on the entry
-- Description (484 characters):
+- Description (461 characters):
 
 ```
-Advero Solutions builds and runs AI agents for service businesses: reply and booking, lead research, follow-up and win-back, receptionist (text and chat), ops and custom agents. They answer leads, follow up and book calls on your calendar under your name.
+Advero Solutions builds and runs AI agents: reply and booking, lead research, follow-up and win-back, receptionist (text and chat), ops and custom agents. They answer leads, follow up and book calls on your calendar under your name.
 Past builds include about $6M in contracts recovered within 6 months for a commercial roofer doing $150M a year, and $750M+ in annual bid volume running through a routing and follow-up system for a commercial roofing contractor.
 ```
 
@@ -81,10 +67,10 @@ Lorenzo's Lawncare: keeping or removing the experience entry is your call.
 
 ## 4. Services
 
-Description (410 characters, LinkedIn's limit is 500):
+Description (402 characters, LinkedIn's limit is 500):
 
 ```
-I build and run AI agents for service businesses that close on a call, a walkthrough or a quote. They answer new leads, follow up with the ones that went quiet, work your list of past customers and book calls on your calendar, all under your name. Start with Reactivation ($0 up front, a share of what comes back) or Outbound (a written guarantee for your market). Book a 15-minute call at adverosolutions.com.
+I build and run AI agents for businesses that close on a call, a walkthrough or a quote. They answer new leads, follow up with the ones that went quiet, work your list of past customers and book calls on your calendar, all under your name. Start with Reactivation ($0 up front, a share of what comes back) or Outbound (a written guarantee for your market). Book a 15-minute call at adverosolutions.com.
 ```
 
 Service categories: LinkedIn makes you pick from its own list, and I can't confirm the exact names from here. Pick the closest of these (all to check against the list when you open the picker), up to 10:
@@ -105,10 +91,10 @@ Also on the Services page: Location "Dallas-Fort Worth" and "Available to work r
 Pin now: a link to adverosolutions.com. LinkedIn pulls the title and image from the site; overwrite them with these.
 
 - URL: `https://adverosolutions.com`
-- Title (51 characters):
+- Title (28 characters):
 
 ```
-Advero Solutions | AI agents for service businesses
+Advero Solutions | AI agents
 ```
 
 - Description (81 characters):
@@ -136,15 +122,15 @@ When you save the headline or the Experience entry, LinkedIn may offer to share 
 1. Turn off "Open to work". On your profile, click the Open to work box (the "Recruiters only" one), then Edit, then "Delete from profile".
 2. Banner: click the camera icon on the grey cover, upload `/Users/lorenzovillarreal/Desktop/AdveroSolutions/Brand/social/linkedin/linkedin-banner-3168x792.png` (the sharp version; the 1584x396 one in the same folder is the fallback if the upload complains). Don't crop or reposition it; the empty left third sits under your photo.
 3. Profile photo (optional): it stays your face. `/Users/lorenzovillarreal/Desktop/AdveroSolutions/Brand/social/avatars/headshot-lorenzo-1080x1080.png` is your headshot on the brand blue, if you want that version.
-4. Headline: pencil icon on the intro card, paste the recommended headline. While you're there, check Location (North Richland Hills, Texas is fine).
+4. Headline: pencil icon on the intro card, paste the headline from section 1. While you're there, check Location (North Richland Hills, Texas is fine).
 5. About: Add profile section, Core, Add about (if an About already exists, use the pencil on the About card). Paste the About block. In the same dialog's Skills field, add the five top skills from section 6 in order, picking each from the autocomplete. Save.
 6. Experience: pencil icon on the AdveroAdvertising entry, change title, company and description as in section 3. Save.
 7. Services: Add profile section, Core, Add services. Pick the categories, paste the description, set location and remote.
 8. Featured: Add profile section, Recommended, Add featured, Add a link. Paste the URL, then overwrite the title and description.
-9. Custom URL: Edit public profile and URL (right side of your profile page), then edit the URL. Try these in order and take the first one free:
-    - `linkedin.com/in/lorenzovillarreal`
-    - `linkedin.com/in/lorenzo-villarreal`
-    - `linkedin.com/in/lorenzovillarreal-advero`
-    - `linkedin.com/in/lorenzo-advero`
+9. Custom URL: Edit public profile and URL (right side of your profile page), then edit the URL. The field takes only the part after `linkedin.com/in/`. Try these in order and take the first one free:
+    - `lorenzovillarreal`
+    - `lorenzo-villarreal`
+    - `lorenzovillarreal-advero`
+    - `lorenzo-advero`
 10. Delete the 10 old posts: Me, View profile, Activity, Posts. On each post, the three dots, then Delete. That's the 6 contractor posts from about 5 months ago and the 4 hashtag posts from about 2 years ago.
 11. Last check: open your profile in a private window (or "View as" from Edit public profile) and read it as a prospect would.
