@@ -3,7 +3,7 @@ follow-ups; he sends every one himself. Nothing here writes to Upwork.
 
 Laptop only. It is not a Modal schedule: the Upwork MCP exists only inside a
 Claude session, so the runs are Claude desktop scheduled tasks. The watch
-(every 30 minutes on weekdays, 08:00-19:00 CT, prompt in
+(every 30 minutes, 08:00-19:00 CT, every day including weekends, prompt in
 services/upwork_followup/watch_task_prompt.md) makes one list_rooms call and
 asks --watch-plan what to do: nothing, a light pull of a few rooms
 (--ingest-light), or the full collect (scheduled_task_prompt.md: the

@@ -65,9 +65,10 @@ anything below that disagrees.**
    may quote pricing, likelihood or review facts from them. Their figures do not
    reach the model either: the prompt shows "(figure withheld)" in their place.
    **One exception (Lorenzo, 2026-10-06):** the framework reply (see "Reply
-   drafts") states a price range that the code computes from the assessment's
-   standard price and the client's budget. Only that range reaches the model
-   (PRICE_RANGE), and only that range passes the gate.
+   drafts") states a price range the code computes: $500 to $3,500 by default,
+   the low end near the post's fixed budget, the top raised only by a fixed
+   range the assessment states unambiguously. Only that range reaches the
+   model (PRICE_RANGE), and only that range passes the gate.
    The job post and the room messages are the client's own text and are
    shown as written, but the client stating a number never frees Lorenzo's
    price, rate or hours figure: a draft may use such a number only as a count
@@ -331,42 +332,53 @@ unknown (price, date, scope detail) is left for Lorenzo on the card as
 "Needs you: ...", never guessed.
 
 **Framework reply** (Lorenzo's setter framework, locked 2026-10-05; band rule
-2026-10-06). A reply whose client messages after Lorenzo's last one ask
-something (a "?", or a sentence opening with a question word:
-`draft.is_framework_reply`) uses `prompts/reply_framework.md` instead of
-`reply.md`. Touches T1-T7, check-ins and replies with no question keep their
-prompts. The message, in order: thank them for getting back; answer each
-question in their order with thin detail (price as the range below, timeline
-as "I aim to finish ..." plus faster if Lorenzo clears his schedule, tools and
-IP: they own the accounts and the IP and he joins as a team member); then ask
-for a brief Upwork call, say the range is not complete, name one or two
-unknowns, stack the value (scope by the end of the call, a walk through the
-setup, a free consult on this or related work) and offer the CALL_OFFER times.
-About 1,200 characters, hard limit 1,500. Real messages of Lorenzo's (names and
-figures removed) sit in the prompt as voice examples.
+2026-10-06, revised the same day). A reply uses `prompts/reply_framework.md`
+instead of `reply.md` when the client asks something
+(`draft.is_framework_reply`): the classifier's latest label is `question`,
+or one of their unanswered messages has a "?" outside a URL, a direct ask
+("send me a quote", "let me know your price and timeline", "how much", "how
+long"), or a clause shaped like a question after an optional greeting or
+lead-in: a question word with an auxiliary or "much / long" after it ("Hey
+Lorenzo, what's your timeline"), or an inverted auxiliary ("Looks great, can
+you do it by Friday"). "What I need is ...", "When I watched ...", "How
+exciting." and "Have the build ready ..." are statements. Touches T1-T7,
+check-ins and replies with no question keep their prompts. The message, in
+order: thank them for getting back; answer each question in their order with
+thin detail (price as the range below, timeline as "I aim to finish ..." plus
+faster if Lorenzo clears his schedule, tools and IP: they own the accounts and
+the IP and he joins as a team member); then ask for a brief Upwork call, say
+the range is not complete, name one or two unknowns, stack the value (scope by
+the end of the call, a walk through the setup, a free consult on this or
+related work) and offer the CALL_OFFER times. About 1,200 characters, hard
+limit 1,500. Five real messages of Lorenzo's (no names, figures, "we" or
+selling clauses) sit in the prompt as voice examples.
 
 The code computes three facts and the model only copies them:
-- **PRICE_RANGE** (`draft.price_band(standard_price(notes), client_budget(room))`).
-  The standard price is the first fixed project figure in the assessment's
-  Standard pricing lines, the LOW end of a range ("$1,000 to $2,500 fixed"
-  gives 1,000); figures followed by a rate or per-item unit, figures under
-  $50, figures whose clause names a rate, recurring software, bids, the post's
-  budget or a retainer are skipped, and the scan stops at the recurring
-  software item. The budget is a price the client's latest message proposes
-  (`copy_gate.client_price_proposal`), else `job.budget`. Band: when a budget
-  is known and below the standard price, low = the budget rounded down to a
-  clean number; otherwise low = about 80% of the standard price, rounded down.
-  High = the standard price, or the budget when that is higher, rounded to
-  the nearest clean number. Clean = $50 steps under $1,000, $100 above. Low
-  and high always differ. A budget under 25% of the standard price is a
-  placeholder: the 80% rule applies and NEEDS_YOU says so. No standard price:
-  no range, PRICE_RANGE says none, and when the client asked about price a
-  deterministic NEEDS_YOU item carries it to Lorenzo.
-- **TIMELINE** (`draft.timeline_phrase`) from the assessment's Time lines: the
-  first weeks figure ("1 to 2 calendar weeks" gives "about 2 weeks"), else the
-  first days figure, else the largest hours figure at 4 focused hours a day
-  ("within 2 days"; over 5 days becomes weeks). None: left out, and NEEDS_YOU
-  when the client asked.
+- **PRICE_RANGE** (`draft.price_band(client_budget(room), assessed_top)`),
+  Lorenzo 2026-10-06: "You can go above, never below 500." The range defaults
+  to **$500 to $3,500**. Low end: the post's fixed budget (`job.budget`, from
+  jd.txt only) rounded down to a clean number ($50 steps under $1,000, $100
+  above), never below $500; no usable budget gives $500. Top: $3,500, raised
+  only when the assessment's Standard pricing states one fixed range for this
+  deliverable in so many words (`draft.assessed_fixed_top`: a "defensible /
+  standard fixed range" or "fixed price" label before it, or "fixed" right
+  after it) in a sentence that names no client history or spend, no post or
+  bids, no agency, market or freelancer tier, no conditional, later or
+  follow-on work, no retainer and no rate; its high end becomes the top when
+  higher than $3,500. Two different qualifying ranges are ambiguous and leave
+  the top at $3,500. When the low end reaches the top there is no range:
+  PRICE_RANGE says none and NEEDS_YOU says why. Figures in the client's
+  messages (revenue, ad spend, a price they propose) never move the band;
+  each one goes on NEEDS_YOU as "Client mentioned $X; check the range."
+- **TIMELINE** (`draft.timeline_phrase`) from the assessment's Time lines.
+  Sentences about follow-on work (later phases, the full list, ongoing hours
+  a week, maintenance, warm-up, meetings or results) are skipped; a sentence
+  about the first deliverable ("first workflow", "phase 1", "initial") wins.
+  The first weeks figure counts ("1 to 1.5 weeks" gives "about 2 weeks"),
+  unless its item lists several different week figures (parts); then the
+  first days figure; then hours only when all of them sit in one sentence
+  (the largest at 4 focused hours a day, "within 2 days"). Anything else is
+  ambiguous: None, and NEEDS_YOU when the client asked.
 - **CALL_OFFER** (`draft.framework_call_offer`): "now, in the next couple of
   hours, or tomorrow at 1pm ET (noon CT)". The one slot is the first business
   day after today with a time inside 12:00-18:00 CT on the hour that is not the
@@ -375,8 +387,9 @@ The code computes three facts and the model only copies them:
   the client is not on Central; a day other than the client's tomorrow is
   named ("Monday at 1pm ET (noon CT)"). The other drafts keep CALL_TIMES.
 
-The card's "For you" block adds "Price range in this draft: $X to $Y
-(standard $S, budget $B)".
+The card's "For you" block names the source: "Price range in this draft: $750
+to $3,500 (low: posted budget $750; top: default top $3,500)", or the
+assessment line the top came from, or "No price range in this draft (...)".
 
 **Figures** (every drafting prompt): money, percentages and proof come only
 from `config/upwork_offers.md`, and a budget or price from any other block is
@@ -542,7 +555,9 @@ below.
   Exception (2026-10-06): a framework reply is checked with its computed band
   (`check_detailed(..., band=(low, high))`). Exactly that range, both ends
   together, in a range form ("between $750 and $1,000", "$750 to $1,000",
-  "$750-$1,000", second "$" optional, "and" only after "between"), is masked
+  "$750-$1,000", second "$" optional, "and" only after "between", and no rate
+  or per-unit word after it: "$750 to $1,000 a month", "an hour", "per
+  workflow", "/mo", "monthly" are refused), is masked
   before the figure, price-agreement and private-fact checks. A single price,
   one end alone, any other figure and agreeing to the client's number are
   still refused, and in a framework reply a deferral ("I'll confirm the exact
@@ -717,7 +732,7 @@ services/upwork_followup/
   ghl_sync.py          U4  GHL mirror (shadow)
   tests/               each piece adds its own test file
 jobs/upwork_followup.py   U4  CLI
-config/upwork_offers.md   U3  new file: proof lines from Coding/upwork-pipeline/templates/ps-case-studies.md, verbatim; never any pricing, by design (Lorenzo sets each job's price himself; the only price a draft states is the framework reply's band from the job's assessment, and with no band a price question goes to NEEDS_YOU)
+config/upwork_offers.md   U3  new file: proof lines from Coding/upwork-pipeline/templates/ps-case-studies.md, verbatim; never any pricing, by design (Lorenzo sets each job's price himself; the only price a draft states is the framework reply's band, $500 to $3,500 by default)
 shared/ghl.py             U4  optional email on upsert_contact (additive)
 runbooks/upwork_followup.md  U5
 ```

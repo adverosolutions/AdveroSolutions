@@ -5388,9 +5388,20 @@ _BAND_RE = re.compile(
     re.I)
 
 
+# A band followed by a rate or a per-unit word is a rate, not the project's
+# price ("$750 to $1,000 a month", "... an hour", "... per workflow"): it is
+# not masked, so the figure check refuses it.
+_BAND_RATE_TAIL_RE = re.compile(
+    r"^\s*(?:/\s?\w|(?:per|each|every)\b|(?:a|an)\s+(?:month|mo|hour|hr|week|wk|year|yr|day|workflow|seat|user|"
+    r"location|lead|client|clinic|site|call|message|unit|piece|account|inbox|domain|sequence|campaign|page)s?\b|"
+    r"(?:monthly|hourly|annually|yearly|weekly|daily)\b)", re.I)
+
+
 def band_spans(body: str, band: Optional[Sequence[Any]]) -> List[Tuple[int, int]]:
     """(start, end) of every place ``body`` states exactly ``band`` (low,
-    high) in a range form. "and" counts only after "between"."""
+    high) in a range form. "and" counts only after "between". A band
+    followed by a rate or per-unit word ("a month", "an hour", "per
+    workflow", "/mo", "monthly") does not count."""
     if not band or len(band) != 2 or not body:
         return []
     want = (_canon(str(band[0])), _canon(str(band[1])))
@@ -5400,7 +5411,7 @@ def band_spans(body: str, band: Optional[Sequence[Any]]) -> List[Tuple[int, int]
             continue
         low = _canon(m.group(2), (m.group(3) or "").strip())
         high = _canon(m.group(5), (m.group(6) or "").strip())
-        if (low, high) == want:
+        if (low, high) == want and not _BAND_RATE_TAIL_RE.match(body[m.end():m.end() + 40]):
             out.append((m.start(), m.end()))
     return out
 

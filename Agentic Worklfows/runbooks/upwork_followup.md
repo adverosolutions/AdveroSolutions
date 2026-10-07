@@ -2,7 +2,7 @@
 
 **What it does:** when a client opens a chat on one of Lorenzo's Upwork
 proposals, the engine drafts his replies and his follow-ups for that chat. Every
-weekday morning he gets one batch of drafts, reads them, edits what he wants,
+morning (weekends included) he gets one batch of drafts, reads them, edits what he wants,
 and sends each one himself in Upwork.
 
 **What it never does:** it never writes to Upwork. No module in
@@ -26,8 +26,9 @@ for context and never written.
 | GHL mirror | `services/upwork_followup/ghl_sync.py` (shadow through `guard_write`) |
 | Orchestration and cards | `services/upwork_followup/tick.py` |
 | CLI | `jobs/upwork_followup.py` (laptop only, not a Modal schedule) |
-| Proof and pricing source | `config/upwork_offers.md` |
-| Schedule | the watch: every 30 minutes on weekdays, 08:00 to 19:00 CT, as a Claude desktop scheduled task Lorenzo creates (prompt `services/upwork_followup/watch_task_prompt.md`); the first run of each CT day is a full run |
+| Proof source | `config/upwork_offers.md` |
+| Price source | the framework reply's computed range only: $500 to $3,500 by default (DESIGN.md "Framework reply") |
+| Schedule | the watch: every 30 minutes, 08:00 to 19:00 CT, every day including weekends (`watch.WATCH_DAYS`), as a Claude desktop scheduled task Lorenzo creates (prompt `services/upwork_followup/watch_task_prompt.md`); the first run of each CT day is a full run |
 | Reads | `.tmp/upwork_followup/snapshot.json`, the store, the job folders under `Coding/upwork-pipeline/jobs/` |
 | Writes | the store (`upwork:<room_id>` threads, `upwork_meta`, and the tick's own `upwork_followup:tick` record (summary card, blocked rooms already listed) and `upwork_followup:lock` run lease), `.tmp/upwork_followup/drafts_<date>.md`, one Job_Log row, cards on `--run` (alias `--now`), GHL would-do rows in shadow once the Upwork pipeline is configured |
 
@@ -172,11 +173,13 @@ Each draft is laid out the same way:
 - **For you, not the client.** The job title, the date he applied, the touch
   history on this thread, and the private lines from the job's `assessment.md`
   (time, likelihood, standard pricing). None of this is ever in the draft text,
-  and the copy gate refuses a draft that leaks it.
+  and the copy gate refuses a draft that leaks it. A framework reply adds the
+  line naming where its price range came from.
 - **Suggests a call** when the draft proposes a short Upwork call.
 - **Needs you** (replies only). Anything the reply could not answer from the
   room, the job post, the proposal or `config/upwork_offers.md`, such as a
-  price, a start date or a scope detail. The draft leaves a gap for these
+  start date or a scope detail, plus any money figure the client mentioned
+  ("Client mentioned $X; check the range"). The draft leaves a gap for these
   rather than guessing. Fill them in before sending.
 
 **Needs edit** means the draft broke at least one copy gate rule (listed
@@ -435,10 +438,15 @@ is in brackets):
 The AI and automation word ban from the cold-email gate does not apply here,
 because Upwork clients post automation jobs.
 
-Pricing: there are no Upwork pricing lines, and there never will be. This is
-by design (Lorenzo, 2026-09-23): he sets each job's price himself, so no draft
-states a price, and a client's price question goes to NEEDS_YOU for him to
-answer. Proof lines come only from `config/upwork_offers.md`.
+Pricing (Lorenzo, 2026-10-05 and 2026-10-06): when a client who showed
+interest asks questions, the reply follows his setter framework
+(`prompts/reply_framework.md`) and gives one price range, never a single
+number. The range defaults to $500 to $3,500: the low end near the post's
+fixed budget and never below $500, the top raised only by a fixed range the
+job's assessment states unambiguously. Figures in the client's messages never
+move it. When the budget reaches the top there is no range and the price goes
+to NEEDS_YOU. No other draft states a price, and `config/upwork_offers.md`
+still holds proof lines only.
 
 ## CLI reference
 
@@ -474,7 +482,8 @@ and Job_Log, and the exit code stays 0.
 ## Going live checklist
 
 1. **Create the scheduled task.** In the Claude desktop app, create a scheduled
-   task that runs every 30 minutes on weekdays, 08:00 to 19:00 CT, and paste
+   task that runs every 30 minutes, 08:00 to 19:00 CT, every day including
+   weekends (cron `*/30 8-18 * * *` and `0 19 * * *`), and paste
    the prompt from `services/upwork_followup/watch_task_prompt.md` exactly (its
    first run each day is the full run). If the older 08:30 task from
    `scheduled_task_prompt.md` exists, turn it off. Persistent config is his
@@ -525,9 +534,9 @@ and Job_Log, and the exit code stays 0.
    GHL move always wins. DECISIONS Q-O6 (dated stage changes from GHL) stays
    open and is not settled by this rehearsal. Until it passes, the GHL mirror
    stays in shadow.
-5. **No pricing step.** Drafts never state a price, by design and for good:
-   Lorenzo sets each job's price himself, and a price question goes to
-   NEEDS_YOU. `config/upwork_offers.md` holds proof lines only.
+5. **Pricing.** Only the framework reply states a price, as the computed
+   range ($500 to $3,500 by default); Lorenzo checks it on the card before he
+   sends. `config/upwork_offers.md` holds proof lines only.
 
 Live GHL writes still need `MODE=live` plus `ALLOW_LIVE_WRITES=1`, set by him
 after sign-off. No Upwork write exists to switch on.
