@@ -60,7 +60,7 @@ Current niches: commercial cleaning, bookkeeping and tax, recruiting, plus the e
 | ai_agents | 2026 Pest control - AI Agents | 21f5568a-d82e-4280-8437-04b0f8d6df37 |
 
 - The six offer campaigns: two steps each (day 0 and day 3), text only, stop on reply, 50 a day per campaign, 12 sending inboxes at 25 a day each.
-- A lead's offer is the offer of its campaign. Use the table to map a campaign id to its key. A campaign that is not in the table has no key: every email for that lead is a hold card. The key picks the email variant (for example `first_reply.cleaning_reactivation...` or `cadence.e6.preview.cleaning_reactivation`).
+- A lead's offer is the offer of its campaign. Use the table to map a campaign id to its key. A campaign that is not in the table has no key: every email for that lead is a hold card and no call is booked for it: `ask_opus.py` checks that the key is one of the seven in this table. The key picks the email variant (for example `first_reply.cleaning_reactivation...` or `cadence.e6.preview.cleaning_reactivation`).
 - In template ids, "outbound" is used for all three trigger offers (for example `cadence.e4.offer_proof.outbound`).
 - Details: skill `cold-campaigns`. You read campaigns. You never change them.
 

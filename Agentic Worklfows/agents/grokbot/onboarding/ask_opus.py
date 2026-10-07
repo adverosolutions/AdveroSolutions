@@ -20,7 +20,10 @@ Input on stdin, one JSON object:
                       cadence.*; free_times and offered_times for any email
                       with {slots} or {alt_slots}, and for a booking
                       confirmation before its booking exists; appointment
-                      for a booking confirmation once Grok booked the call.
+                      for a booking confirmation once Grok booked the call,
+                      with offered_times holding Grok's own reservation for
+                      it. lead.campaign_key must be one of the seven offers
+                      for any email to go or any call to be booked.
                       A missing field makes that check fail: the email is a
                       hold card.
     case_type         (optional) reply | followup_due | booked_call | no_show |
@@ -107,8 +110,10 @@ NEVER_SEND_PREFIXES = ("instantly.", "U-PRICE", "X-",
 # (Lorenzo, 2026-10-06.) Only these templates can ever be answered "send", and
 # only as the base template: an id with a "/" (a version) is never on the
 # list. Every other template is a hold card, whatever the copy doc says.
-# (a) First replies first_reply.<lead's offer>.<branch>.full, with the reply
-#     labels each one answers:
+# (a) First replies first_reply.ai_agents.<branch>.full, only for a lead whose
+#     offer is ai_agents (the six older offers' first replies are always
+#     Lorenzo's), with the reply labels each one answers:
+AUTO_SEND_FIRST_REPLY_OFFERS = ("ai_agents",)
 AUTO_SEND_FIRST_REPLIES = {
     "default": ("positive_interested",),
     "pricing": ("positive_question",),
@@ -120,9 +125,23 @@ AUTO_SEND_FIRST_REPLIES = {
 AUTO_SEND_LADDER = ("cadence.e1", "cadence.e2", "cadence.e3", "cadence.e4", "cadence.e5",
                     "cadence.e6", "cadence.e7", "cadence.e8", "cadence.e9", "cadence.e10")
 # (c) The "Locked in" booking confirmation, only once Grok has booked the time
-#     the lead named and context.appointment shows it (book first, then confirm):
+#     the lead named and context.appointment shows it (book first, then confirm),
+#     on the run right after Grok's own book_call for this lead and this reply,
+#     and on both runs only for these reply labels:
 AUTO_SEND_CONFIRMATIONS = ("booking.confirmation.zoom_link",
                            "booking.confirmation.no_zoom_link")
+CONFIRMATION_LABELS = ("positive_interested", "positive_question")
+# The seven offers (file 01, section 4). A lead whose campaign_key is missing
+# or anything else gets no email on its own and no booking.
+KNOWN_OFFERS = ("ai_agents", "cleaning_reactivation", "cleaning_trigger",
+                "bookkeeping_reactivation", "bookkeeping_trigger",
+                "recruiting_reactivation", "recruiting_outbound")
+# A follow-up E1 to E10 never goes to a lead with any appointment (past or
+# future), a "no" reply label or a negative Instantly interest status, Do Not
+# Disturb on in GHL, or GHL Sequence stopped or booked.
+NEGATIVE_LABELS = ("negative_notnow", "negative_notfit", "negative_hostile", "unsubscribe",
+                   "wrong_person")
+LADDER_STOP_SEQUENCES = ("stopped", "booked")
 
 # A template whose own text carries a literal day, date or clock time (every
 # /dated variant, the example versions) is an example, never sent.
@@ -154,6 +173,14 @@ LEGAL_RE = re.compile(
     r"|complain(?:t|ts|s|ed|ing)?|regulators?|regulatory"
     r"|ftc|fcc|tcpa|can[ -]?spam|bbb|better business bureau"
     r"|cease (?:and|&) desist|report(?:s|ed|ing)? (?:you|this|your))\b", re.I)
+# Invisible characters (soft hyphen, zero-width spaces and joiners, direction
+# marks and embeddings, word joiners, the byte order mark). The legal scan reads
+# the lead's email with them taken out and with them as spaces, so a
+# zero-width space inside or between words hides no legal word.
+_INVISIBLE_CODES = ([0x00AD, 0x034F, 0x061C, 0x180E, 0xFEFF] + list(range(0x200B, 0x2010))
+                    + list(range(0x202A, 0x202F)) + list(range(0x2060, 0x2070)))
+_DROP_INVISIBLE = dict.fromkeys(_INVISIBLE_CODES)
+_SPACE_INVISIBLE = dict.fromkeys(_INVISIBLE_CODES, " ")
 # Template families that answer the lead's newest email: the sender, "already
 # answered" and handled-reply checks apply to these (and to any reply case).
 REPLY_FAMILIES = ("first_reply.", "booking.")
@@ -299,7 +326,7 @@ One JSON object in the required schema, nothing else.
 
 RULES YOU NEVER BREAK
 1. Customer-facing text comes only from the copy doc, word for word. Never write, polish, shorten or merge email text. If no template fits, the action is hold_for_lorenzo, or draft_for_lorenzo with a draft he will read. Never send_template.
-2. Only three kinds of email ever go on their own (Lorenzo's allow list, 2026-10-06), each only as the base template, never a version (an id with a "/"), and only when rule 3 holds and your confidence is 0.8 or more: (a) these first replies, for the lead's own offer (context.lead.campaign_key): first_reply.<offer>.default.full for positive_interested with no time named; first_reply.<offer>.pricing.full for positive_question about price; first_reply.<offer>.mechanism.full for positive_question about how it works or "tell me more"; first_reply.<offer>.send_info.full for positive_question asking for info, a deck or more details; first_reply.<offer>.booking_link.full for positive_interested or positive_question whose only ask is a booking or Calendly link; (b) the follow-up ladder cadence.e1 to cadence.e10, with the lines from their own blocks for the lead's offer; (c) the "Locked in" booking confirmation, booking.confirmation.zoom_link or booking.confirmation.no_zoom_link, only as rule 14 says. Everything else is hold_for_lorenzo: show-rate and no-show emails (the booked-call reminders are paused), booking.already_booked.*, every booking.counter.*, booking.slot_already_taken, nurture, every version, the referral and other first replies, any neutral_question, a no that also carries a buying signal, talk of a competitor, a contract or anything legal, and a reply not in English. No other email goes to a lead that no reply of ours has reached yet, except the first replies in (a) and the booking confirmation.
+2. Only three kinds of email ever go on their own (Lorenzo's allow list, 2026-10-06), each only as the base template, never a version (an id with a "/"), only for a lead whose context.lead.campaign_key is one of the seven offers (ai_agents, cleaning_reactivation, cleaning_trigger, bookkeeping_reactivation, bookkeeping_trigger, recruiting_reactivation, recruiting_outbound), and only when rule 3 holds and your confidence is 0.8 or more: (a) the five AI agents first replies, only for a lead whose campaign_key is ai_agents: first_reply.ai_agents.default.full for positive_interested with no time named; first_reply.ai_agents.pricing.full for positive_question about price; first_reply.ai_agents.mechanism.full for positive_question about how it works or "tell me more"; first_reply.ai_agents.send_info.full for positive_question asking for info, a deck or more details; first_reply.ai_agents.booking_link.full for positive_interested or positive_question whose only ask is a booking or Calendly link; (b) the follow-up ladder cadence.e1 to cadence.e10, with the lines from their own blocks for the lead's offer; (c) the "Locked in" booking confirmation, booking.confirmation.zoom_link or booking.confirmation.no_zoom_link, only as rule 14 says. Everything else is hold_for_lorenzo: every first reply for the six older offers, show-rate and no-show emails (the booked-call reminders are paused), booking.already_booked.*, every booking.counter.*, booking.slot_already_taken, nurture, every version, the referral and other first replies, any neutral_question, a no that also carries a buying signal, talk of a competitor, a contract or anything legal, a reply not in English, and every email and every booking for a lead whose campaign_key is missing or not one of the seven. No other email goes to a lead that no reply of ours has reached yet, except the first replies in (a) and the booking confirmation.
 3. send_template only when context.approval.doc_done, context.approval.doc_unchanged and context.approval.go_live are all true, context.approval.doc_build is the build printed on the copy doc's "Doc build:" line, and the template is not marked "Not approved yet" in the copy doc. Otherwise hold_for_lorenzo.
 4. No price, fee, commission percentage, dollar amount or guarantee figure in any email or draft. The one exception is the price range written into an offer's approved first_reply.<offer>.pricing.full template, sent exactly as the copy doc has it. Proof lines only where the copy doc already carries them.
 5. No links in an email, except the call link in a template that has a {zoom_link} or {call_link} placeholder, and the booking calendar link written into first_reply.<offer>.booking_link.full, sent exactly as the copy doc has it.
@@ -311,7 +338,7 @@ RULES YOU NEVER BREAK
 11. Upwork: draft_for_lorenzo only. Never a price, rate, retainer, budget, hours estimate or payment term. Never an email address, phone number, off-platform channel or booking link.
 12. Say the thing and stop. No sentence or clause that restates, sums up or sells the point before it. This applies to draft_text and reason.
 13. When unsure, escalate. A held email costs Lorenzo a minute; a wrong email can lose the lead.
-14. Book first, then confirm. When the lead names a time that fits every rule in rule 6 and has no booking (no context.appointment, context.has_future_appointment false): send_template with booking.confirmation.no_zoom_link, fields first_name and slot (that time, like "Tue 12:05pm"), other_actions book_call, and nothing else in other_actions. Nothing is sent on this run: ask_opus.py tells Grok to book that exact time, Grok checks the booking and runs the case again as case_type booked_call with context.appointment. On that run, return booking.confirmation.zoom_link with {slot} naming context.appointment.start and {zoom_link} the appointment's call link (booking.confirmation.no_zoom_link when it has none), ghl_stage call_booked, instantly_interest 2, field_updates Sequence booked, other_actions release_offered_times, and never book_call again. Every other booking action (a time that breaks a rule, a reschedule, a cancellation, a lead who already has a booking) is hold_for_lorenzo.
+14. Book first, then confirm, only for a booking Grok makes itself. The booking run: the lead's newest email is positive_interested or positive_question and names a time that fits every rule in rule 6, the lead has no booking (no context.appointment, context.has_future_appointment false), and no key in context.sent_log_keys is a booking.confirmation.* send to this lead. Then send_template with booking.confirmation.no_zoom_link, that label as category, fields first_name and slot (that time, like "Tue 12:05pm"), other_actions book_call, and nothing else in other_actions. Nothing is sent on this run: ask_opus.py tells Grok to book that exact time; Grok reserves it in offered_times with this reply's id, books it, checks the booking and runs the case again as case_type booked_call with context.appointment. The confirmation run is that re-run, and you recognise it by all of these: context.appointment.start is the time of a context.offered_times entry for this lead with "reserved": true and a "reply_id" equal to context.reply_id (the lead has not written since), context.has_future_appointment is true, no key in context.sent_log_keys is a booking.confirmation.* send to this lead, and the newest email is still positive_interested or positive_question. On that run only, return booking.confirmation.zoom_link with {slot} naming context.appointment.start and {zoom_link} the appointment's call link (booking.confirmation.no_zoom_link when it has none), the same category, ghl_stage call_booked, instantly_interest 2, field_updates Sequence booked, other_actions release_offered_times, and never book_call again. Every other booked_call case is hold_for_lorenzo and never gets a "Locked in" email: a lead who booked through the calendar link, a booked lead who writes (a question, a reschedule, a cancellation), an appointment that is not that reservation, a lead who already got a confirmation. Every other booking action (a time that breaks a rule, a reschedule, a cancellation, any label other than those two) is hold_for_lorenzo.
 
 The skills and the copy doc follow. Where a skill talks about "the engine", "decide()", engine timers or a "Resume link", that machinery is not running: Grok does the work and GHL holds the record. When a skill and these rules differ, these rules win."""
 
@@ -699,25 +726,44 @@ def _campaign_key(context):
 def allow_list_problem(template_id, category, campaign_key):
     """None when the template is on Lorenzo's auto-send allow list for this
     lead and label, else why it is a hold card. Base templates only: the five
-    first replies for the lead's own offer and label, E1 to E10, and the two
-    "Locked in" booking confirmations."""
+    AI agents first replies for an ai_agents lead and the label each answers,
+    E1 to E10, and the two "Locked in" booking confirmations for a
+    positive_interested or positive_question reply."""
     if "/" in template_id:
         return "%s is a version of an email; every version goes to Lorenzo" % template_id
-    if template_id in AUTO_SEND_LADDER or template_id in AUTO_SEND_CONFIRMATIONS:
+    if template_id in AUTO_SEND_LADDER:
+        return None
+    if template_id in AUTO_SEND_CONFIRMATIONS:
+        if category not in CONFIRMATION_LABELS:
+            return ("%s answers only a positive_interested or positive_question reply, not %s"
+                    % (template_id, category))
         return None
     parts = template_id.split(".")
     if (parts[0] == "first_reply" and len(parts) == 4 and parts[3] == "full"
             and parts[2] in AUTO_SEND_FIRST_REPLIES):
         key = campaign_key.strip().lower() if isinstance(campaign_key, str) else ""
+        if parts[1] not in AUTO_SEND_FIRST_REPLY_OFFERS:
+            return ("%s is a first reply for an older offer: only the AI agents first "
+                    "replies go on their own" % template_id)
         if parts[1] != key:
             return "%s is not written for the lead's own offer %r" % (template_id, key or None)
         if category not in AUTO_SEND_FIRST_REPLIES[parts[2]]:
             return "%s answers %s, not a %s reply" % (
                 template_id, " or ".join(AUTO_SEND_FIRST_REPLIES[parts[2]]), category)
         return None
-    return ("%s is not on Lorenzo's auto-send list (the default, pricing, mechanism, "
-            "send_info and booking_link first replies, E1 to E10, and the Locked in "
-            "confirmation after its booking)" % template_id)
+    return ("%s is not on Lorenzo's auto-send list (the AI agents default, pricing, "
+            "mechanism, send_info and booking_link first replies, E1 to E10, and the Locked "
+            "in confirmation after Grok's own booking)" % template_id)
+
+
+def offer_key_problem(campaign_key):
+    """None when the lead's campaign_key is one of the seven offers, else why
+    every email and every booking for this lead is a hold card."""
+    key = campaign_key.strip().lower() if isinstance(campaign_key, str) else ""
+    if key in KNOWN_OFFERS:
+        return None
+    return ("the lead's campaign_key %r is not one of the seven offers (file 01): no email "
+            "goes on its own and no call is booked" % (key or None))
 
 
 def offer_segment_problem(template_id, campaign_key):
@@ -747,14 +793,15 @@ def doc_build_of(doc_text):
 def legal_words(text):
     """The legal words in a text (lawyers, attorney general, suing, court,
     complaint, regulator, FTC, TCPA, CAN-SPAM, BBB, cease and desist ...),
-    matched in their usual forms, whatever the case or line breaks."""
+    matched in their usual forms, whatever the case, line breaks or invisible
+    characters."""
     text = text.replace("\u2019", "'").replace("\u2018", "'")
-    text = " ".join(text.split())
     seen = []
-    for match in LEGAL_RE.finditer(text):
-        word = match.group(0).lower()
-        if word not in seen:
-            seen.append(word)
+    for variant in (text.translate(_DROP_INVISIBLE), text.translate(_SPACE_INVISIBLE)):
+        for match in LEGAL_RE.finditer(" ".join(variant.split())):
+            word = match.group(0).lower()
+            if word not in seen:
+                seen.append(word)
     return seen
 
 
@@ -900,6 +947,43 @@ def _offered_times(context, lead_email):
     return mine, others
 
 
+def confirmation_sent_before(keys, lead_email):
+    """True when sent_log_keys holds a booking.confirmation.* send to this
+    lead, on any day."""
+    for key in keys if isinstance(keys, list) else []:
+        parts = key.split("|") if isinstance(key, str) else []
+        if (len(parts) >= 2 and parts[0].strip().lower() == lead_email
+                and parts[1].strip().lower().startswith("booking.confirmation.")):
+            return True
+    return False
+
+
+def own_reservation(context, lead_email, start):
+    """True when context.offered_times holds the reservation Grok wrote at its
+    own book_call step for this lead and this reply: "reserved": true, at
+    exactly the appointment's start, with "reply_id" the case's reply_id, which
+    is also the id of the newest inbound email in context.thread (the reply
+    that named the time is still the lead's newest)."""
+    offered = context.get("offered_times")
+    reply_id = context.get("reply_id")
+    if (not isinstance(offered, list) or start is None or not lead_email
+            or not isinstance(reply_id, str) or not reply_id.strip()):
+        return False
+    newest = newest_inbound(context)
+    newest_id = newest.get("id") if newest else None
+    if not isinstance(newest_id, str) or newest_id.strip() != reply_id.strip():
+        return False
+    for item in offered:
+        if not isinstance(item, dict) or item.get("reserved") is not True:
+            continue
+        owner, named_in = item.get("lead_email"), item.get("reply_id")
+        if (isinstance(owner, str) and owner.strip().lower() == lead_email
+                and isinstance(named_in, str) and named_in.strip() == reply_id.strip()
+                and parse_time(item.get("time")) == start):
+            return True
+    return False
+
+
 def _slot_rule_problems(name, moment, send_at, last_day):
     """The slot rules for one free time: Monday to Friday, 12:00 to 18:00 CT,
     at least 4 hours after the send, within 5 business days."""
@@ -1031,18 +1115,72 @@ def sender_is_lead(newest_from, lead_email):
     return sender_domain == lead_domain
 
 
+def _ghl_field(ghl, name):
+    """A GHL field value from ghl.fields (a dict, or a list of {name, value}),
+    in lower case, or None."""
+    fields = ghl.get("fields")
+    pairs = []
+    if isinstance(fields, dict):
+        pairs = list(fields.items())
+    elif isinstance(fields, list):
+        pairs = [(item.get("name"), item.get("value")) for item in fields
+                 if isinstance(item, dict)]
+    value = None
+    for key, item in pairs:
+        if isinstance(key, str) and key.strip().lower() == name.lower():
+            value = item
+    return value.strip().lower() if isinstance(value, str) else None
+
+
+def ladder_stop_problems(decision, context):
+    """Why a follow-up E1 to E10 must not go to this lead: an appointment, past
+    or future (context.appointment); a "no" reply label; a negative Instantly
+    interest status; Do Not Disturb in GHL (ghl.dnd, or a "dnd" tag); or GHL
+    Sequence stopped or booked. A fact that is not given does not count."""
+    problems = []
+    appointment = context.get("appointment")
+    if isinstance(appointment, dict) and appointment:
+        problems.append("the lead has an appointment (past or future): no follow-up email")
+    category = decision.get("category")
+    if isinstance(category, str) and (category in NEGATIVE_LABELS
+                                      or category.startswith("negative_")):
+        problems.append("the reply label %s is a no: no follow-up email" % category)
+    instantly = context.get("instantly")
+    interest = instantly.get("interest_status") if isinstance(instantly, dict) else None
+    try:
+        negative = (interest is not None and not isinstance(interest, bool)
+                    and float(interest) < 0)
+    except (TypeError, ValueError):
+        negative = False
+    if negative:
+        problems.append("the Instantly interest status %s is negative: no follow-up email"
+                        % interest)
+    ghl = context.get("ghl")
+    ghl = ghl if isinstance(ghl, dict) else {}
+    tags = ghl.get("tags") if isinstance(ghl.get("tags"), list) else []
+    dnd = ghl.get("dnd")
+    if (dnd is True or (isinstance(dnd, str) and dnd.strip().lower() == "true")
+            or any(isinstance(tag, str) and tag.strip().lower() == "dnd" for tag in tags)):
+        problems.append("Do Not Disturb is on for this lead in GHL: no follow-up email")
+    sequence = _ghl_field(ghl, "Sequence")
+    if sequence in LADDER_STOP_SEQUENCES:
+        problems.append("GHL Sequence is %s: no follow-up email" % sequence)
+    return problems
+
+
 def check_send(decision, context, case_type):
     """The send checks: window, call times, sender, already answered, dedupe,
-    kill switch, appointment, first contact. Every missing field fails its
-    check. Returns a dict; book_at is set when a booking confirmation's time
-    must be booked before the confirmation can go."""
+    kill switch, appointment, first contact, Grok's own booking, ladder stops.
+    Every missing field fails its check. Returns a dict; book_at is set when a
+    booking confirmation's time must be booked before the confirmation can go."""
     template_id = decision.get("template_id") or ""
     fields = decision.get("fields") or []
     result = {"send_window": False, "send_after": None, "slots_ok": False,
               "sender_ok": False, "not_already_answered": False,
               "not_duplicate": False, "kill_switch_off": False,
               "no_future_appointment": False, "first_contact_ok": False,
-              "no_newer_lead_reply": False, "send_key": None, "book_at": None,
+              "no_newer_lead_reply": False, "own_booking_ok": False, "ladder_ok": False,
+              "send_key": None, "book_at": None,
               "checks_not_applied": [], "problems": []}
     problems = result["problems"]
     is_reply = case_type == "reply" or template_id.startswith(REPLY_FAMILIES)
@@ -1106,10 +1244,9 @@ def check_send(decision, context, case_type):
         result["no_newer_lead_reply"] = True
         result["checks_not_applied"].append("no_newer_lead_reply")
 
-    exempt = (template_id in AUTO_SEND_CONFIRMATIONS
-              or (template_id.startswith("first_reply.")
-                  and allow_list_problem(template_id, decision.get("category"),
-                                         _campaign_key(context)) is None))
+    exempt = ((template_id in AUTO_SEND_CONFIRMATIONS or template_id.startswith("first_reply."))
+              and allow_list_problem(template_id, decision.get("category"),
+                                     _campaign_key(context)) is None)
     if exempt:
         result["first_contact_ok"] = True
         result["checks_not_applied"].append("first_contact_ok")
@@ -1165,6 +1302,50 @@ def check_send(decision, context, case_type):
         result["no_future_appointment"] = True
         result["checks_not_applied"].append("no_future_appointment")
 
+    # The Locked in confirmation goes only for Grok's own booking (rule 14):
+    # never to a lead who already got one, and on the run after the booking
+    # only with the reservation Grok wrote at its book_call step for this
+    # reply, at exactly the appointment's start. In a booked_call case nothing
+    # else can be sent.
+    appointment_given = isinstance(appointment, dict) and bool(appointment)
+    if confirmation:
+        own = []
+        if not isinstance(keys, list) or not lead_email:
+            own.append("sent_log_keys or lead_email is missing, so an earlier Locked in "
+                       "confirmation cannot be ruled out")
+        elif confirmation_sent_before(keys, lead_email):
+            own.append("a Locked in confirmation already went to this lead (sent_log_keys): "
+                       "a later booking, reschedule or question is Lorenzo's")
+        if appointment_given and not own_reservation(
+                context, lead_email, parse_time(appointment.get("start"))):
+            own.append("the appointment is not Grok's own booking for this reply: no "
+                       "offered_times entry for this lead with \"reserved\": true at exactly "
+                       "its start and reply_id %r, or that is not the id of the newest inbound "
+                       "email in thread (a calendar-link booking, a booked lead writing "
+                       "again, a reschedule or a cancellation is Lorenzo's)"
+                       % context.get("reply_id"))
+        result["own_booking_ok"] = not own
+        problems.extend(own)
+        if own or allow_list_problem(template_id, decision.get("category"),
+                                     _campaign_key(context)) \
+                or offer_key_problem(_campaign_key(context)):
+            # no booking for a lead, a label or an offer the confirmation is not for
+            result["book_at"] = None
+    elif case_type == "booked_call":
+        problems.append("in a booked_call case only the Locked in confirmation right after "
+                        "Grok's own booking can go; every other email is Lorenzo's")
+    else:
+        result["own_booking_ok"] = True
+        result["checks_not_applied"].append("own_booking_ok")
+
+    if template_id.startswith("cadence."):
+        stops = ladder_stop_problems(decision, context)
+        result["ladder_ok"] = not stops
+        problems.extend(stops)
+    else:
+        result["ladder_ok"] = True
+        result["checks_not_applied"].append("ladder_ok")
+
     result["kill_switch_off"] = context.get("kill_switch") is False
     if not result["kill_switch_off"]:
         problems.append("kill switch is on, or kill_switch is missing")
@@ -1173,11 +1354,11 @@ def check_send(decision, context, case_type):
 
 SEND_CHECKS = ("copy_doc_checked", "template_found", "template_is_email",
                "lines_match_template", "no_leftover_placeholders", "field_values_clean",
-               "approval_ok", "allow_listed", "doc_build_ok", "offer_matches",
+               "approval_ok", "allow_listed", "doc_build_ok", "offer_matches", "known_offer",
                "no_legal_words", "template_approved_in_doc", "links_ok", "no_literal_times",
                "first_contact_ok", "slots_ok", "sender_ok", "not_already_answered",
                "no_newer_lead_reply", "not_duplicate", "kill_switch_off",
-               "no_future_appointment")
+               "no_future_appointment", "own_booking_ok", "ladder_ok")
 
 
 def clean_company(name):
@@ -1232,6 +1413,7 @@ def check_email(decision, doc_text, context, case_type=None):
         "allow_listed": False,
         "doc_build_ok": False,
         "offer_matches": False,
+        "known_offer": False,
         "no_legal_words": False,
         "template_approved_in_doc": False,
         "links_ok": False,
@@ -1278,6 +1460,10 @@ def check_email(decision, doc_text, context, case_type=None):
     checks["offer_matches"] = offer_problem is None
     if offer_problem:
         problems.append(offer_problem)
+    key_problem = offer_key_problem(campaign_key)
+    checks["known_offer"] = key_problem is None
+    if key_problem:
+        problems.append(key_problem)
 
     lead_text = newest_inbound_text(context)
     if lead_text is None:
@@ -1414,20 +1600,27 @@ def check_email(decision, doc_text, context, case_type=None):
     return email_text, checks
 
 
-def newest_inbound_text(context):
-    """The body of the lead's newest inbound email (direction "in") in
-    context.thread, or None when there is no thread, no inbound email or no
-    readable body."""
+def newest_inbound(context):
+    """The lead's newest inbound email (direction "in", in any case) in
+    context.thread, or None when there is no thread or no inbound email."""
     thread = context.get("thread") if isinstance(context, dict) else None
     if not isinstance(thread, list):
         return None
     for item in reversed(thread):
-        if isinstance(item, dict) and item.get("direction") == "in":
-            body = item.get("body")
-            if not isinstance(body, str) or not body.strip():
-                return None
-            return body
+        if (isinstance(item, dict)
+                and str(item.get("direction") or "").strip().lower() == "in"):
+            return item
     return None
+
+
+def newest_inbound_text(context):
+    """The body of the lead's newest inbound email in context.thread, or None
+    when there is no thread, no inbound email or no readable body."""
+    item = newest_inbound(context)
+    body = item.get("body") if item else None
+    if not isinstance(body, str) or not body.strip():
+        return None
+    return body
 
 
 def next_step(decision, checks, context=None):
@@ -1436,8 +1629,12 @@ def next_step(decision, checks, context=None):
     action = decision.get("action")
     other_actions = decision.get("other_actions") or []
     confidence = decision.get("confidence")
-    if not isinstance(confidence, (int, float)) or confidence < CONFIDENCE_FLOOR:
-        reasons.append("confidence %s is below %s" % (confidence, CONFIDENCE_FLOOR))
+    # a real number only: never a boolean, a string, NaN or infinity
+    real = (isinstance(confidence, (int, float)) and not isinstance(confidence, bool)
+            and confidence == confidence and confidence not in (float("inf"), float("-inf")))
+    if not real or confidence < CONFIDENCE_FLOOR:
+        reasons.append("confidence %r is not a number of at least %s"
+                       % (confidence, CONFIDENCE_FLOOR))
     if decision.get("escalate_to_lorenzo"):
         reasons.append("Opus asked for Lorenzo")
     blocking = [name for name in ("blocklist_in_instantly", "tag_dnd_in_ghl")
@@ -1467,6 +1664,9 @@ def next_step(decision, checks, context=None):
         reasons.append("book_call goes only with the Locked in confirmation for a time the "
                        "lead named that fits every slot rule, before its booking exists; "
                        "any other booking action is Lorenzo's")
+        failed = [name for name in SEND_CHECKS if name in checks and not checks[name]]
+        if failed:
+            reasons.append("checks failed: " + ", ".join(failed))
         return "hold_card", reasons
     if action == "draft_for_lorenzo":
         return "draft_to_lorenzo", reasons
@@ -1489,10 +1689,11 @@ def next_step(decision, checks, context=None):
             return "wait", ["outside the 07:00 to 19:00 CT send window; run the case "
                             "again at %s" % checks["send_after"]]
         if booking:
-            return "book_call", ["book %s on the Discovery Call calendar for this lead, check "
-                                 "the booking, then run the case again as case_type "
-                                 "booked_call with context.appointment; send nothing now"
-                                 % checks["book_at"]]
+            return "book_call", ["reserve %s for this lead in offered_times with reply_id %r, "
+                                 "book it on the Discovery Call calendar, check the booking, "
+                                 "then run the case again as case_type booked_call with "
+                                 "context.appointment; send nothing now"
+                                 % (checks["book_at"], (context or {}).get("reply_id"))]
         return "send", reasons
     if reasons:
         return "hold_card", reasons

@@ -19,10 +19,10 @@ Upwork: saved job -> prop + Loom -> proposal -> client opens chat -> drafts T1 t
 |---|---|---|---|
 | 1 | Lead sourcing and verification | Lorenzo (spend, uploads); Opus judges fit; Claude Code keeps the scripts | Not your job |
 | 2 | Campaign sending | Lorenzo owns copy and every change; Instantly sends; Grok reads | File 01, section 4; skill `cold-campaigns` |
-| 3 | Reply handling | Grok gathers and acts; Opus decides; common first replies send on their own; Lorenzo answers the held ones | File 02; skill `cold-email-replies` |
+| 3 | Reply handling | Grok gathers and acts; Opus decides; the AI agents first replies send on their own; Lorenzo answers the held ones | File 02; skill `cold-email-replies` |
 | 4 | Follow-up E1 to E10 | Grok sends; Opus decides | Skill `quiet-lead-followup` |
 | 5 | Booking | Opus picks two times; a time the lead names that fits every slot rule is booked by Grok first, without Ask first; every other booking action is Lorenzo's; Lorenzo sends the invite | File 02, section 4, rule 15; file 05, section 3; skill `cold-email-replies`, step 5 |
-| 6 | Confirmation, reminders, no-shows | Grok sends the Locked in confirmation once the booking exists; Opus decides; every show-rate and no-show email is held for Lorenzo; reminders paused since 2026-10-05; Lorenzo marks a no-show | Skill `booked-calls` |
+| 6 | Confirmation, reminders, no-shows | Grok sends the Locked in confirmation once its own booking exists; Opus decides; every show-rate and no-show email is held for Lorenzo; reminders paused since 2026-10-05; Lorenzo marks a no-show | Skill `booked-calls` |
 | 7 | The call | Lorenzo; Opus builds the brief; Grok delivers it | Skill `sales-call` |
 | 8 | Won: onboarding and delivery | Lorenzo (nothing automated this month) | Skill `client-fulfillment` |
 | 9 | Weekly client scorecard | Lorenzo sends it | Skill `client-fulfillment` |

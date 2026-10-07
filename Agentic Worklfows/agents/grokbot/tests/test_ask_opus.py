@@ -377,7 +377,15 @@ class Decisions(unittest.TestCase):
 
 E1_DATED_TEXT = ("Hey {first_name},\n\n\nThe time slots I sent got filled. Here are 2 more, let me "
                  "know if they work: Tue Jan 15 2:43pm or Wed Jan 16 3:17pm CT.\n\n\nLorenzo")
-FIRST_REPLY_ID = "first_reply.cleaning_reactivation.default.full"
+# Only the AI agents first replies go on their own (round 3): the fixture's
+# default first reply is turned into the AI agents one for these tests.
+SAMPLE_FIRST_REPLY_ID = "first_reply.cleaning_reactivation.default.full"
+FIRST_REPLY_ID = "first_reply.ai_agents.default.full"
+AI_LEAD = {"campaign_key": "ai_agents", "first_name": "Dana", "company": "Brightline Cleaning LLC"}
+CLEANING_LEAD = {"campaign_key": "cleaning_reactivation", "first_name": "Dana",
+                 "company": "Brightline Cleaning LLC"}
+NOT_APPROVED_NOTE = ("Not approved yet. This one stays a draft you write yourself until it is "
+                     "rebuilt from your own replies. (note)\n")
 FIRST_REPLY_TEXT = ("Hey {first_name},\n\n\nGlad to hear it. All I need to start is a list of 60 or "
                     "more lost or dormant accounts or lost proposals.\n\n\nWould {slots} work for "
                     "a 15-minute call?\n\n\nLorenzo")
@@ -390,18 +398,21 @@ AI_PRICING_TEXT = ("Hey {first_name},\n\n\nMost builds land between $400 and $5,
                    "Would {slots} work for a 15-minute call?\n\n\nLorenzo")
 
 
-def approved_first_reply_doc(path):
-    """The fixture doc with the default first reply approved (its "Not approved
-    yet" note removed), plus an approved referral and booking_link reply."""
+def approved_first_reply_doc(path, keep_note=False):
+    """The fixture doc with its default first reply turned into the AI agents
+    one and approved (its "Not approved yet" note removed, unless keep_note),
+    plus an approved AI agents referral, booking_link and pricing reply."""
     with open(FIXTURE_DOC, encoding="utf-8-sig") as handle:
         text = handle.read()
-    text = text.replace("(tag: %s)\nNot approved yet. This one stays a draft you write yourself "
-                        "until it is rebuilt from your own replies. (note)\n" % FIRST_REPLY_ID,
-                        "(tag: %s)\n" % FIRST_REPLY_ID)
-    extra = ("First reply: cleaning (reactivation), they pointed you to someone else "
-             "(tag: first_reply.cleaning_reactivation.referral.full)\n" + REFERRAL_TEXT + "\n"
-             "First reply: cleaning (reactivation), they asked for a booking link "
-             "(tag: first_reply.cleaning_reactivation.booking_link.full)\n" + BOOKING_LINK_TEXT + "\n"
+    text = text.replace(SAMPLE_FIRST_REPLY_ID, FIRST_REPLY_ID).replace(
+        "First reply: cleaning (reactivation), they said yes", "First reply: AI agents, they said yes")
+    if not keep_note:
+        text = text.replace("(tag: %s)\n%s" % (FIRST_REPLY_ID, NOT_APPROVED_NOTE),
+                            "(tag: %s)\n" % FIRST_REPLY_ID)
+    extra = ("First reply: AI agents, they pointed you to someone else "
+             "(tag: first_reply.ai_agents.referral.full)\n" + REFERRAL_TEXT + "\n"
+             "First reply: AI agents, they asked for a booking link "
+             "(tag: first_reply.ai_agents.booking_link.full)\n" + BOOKING_LINK_TEXT + "\n"
              "First reply: AI agents, they asked about price "
              "(tag: first_reply.ai_agents.pricing.full)\n" + AI_PRICING_TEXT + "\n")
     text = text.replace("Follow-up emails (section)\n", extra + "Follow-up emails (section)\n")
@@ -420,6 +431,8 @@ class FirstReplyAutoSend(unittest.TestCase):
         cls.tmp = tempfile.mkdtemp()
         cls.doc = os.path.join(cls.tmp, "copy_doc_approved.txt")
         approved_first_reply_doc(cls.doc)
+        cls.not_approved_doc = os.path.join(cls.tmp, "copy_doc_not_approved.txt")
+        approved_first_reply_doc(cls.not_approved_doc, keep_note=True)
 
     @classmethod
     def tearDownClass(cls):
@@ -428,6 +441,7 @@ class FirstReplyAutoSend(unittest.TestCase):
     def _run(self, dec=None, **context):
         dec = dec or decision(template_id=FIRST_REPLY_ID, template_text=FIRST_REPLY_TEXT,
                               category="positive_interested")
+        context.setdefault("lead", dict(AI_LEAD))
         c = case(case_type="reply", copy_doc_file=self.doc, context=full_context(**context))
         with mock.patch.object(ask_opus.urllib.request, "urlopen",
                                return_value=FakeResponse(api_payload(dec))):
@@ -447,7 +461,8 @@ class FirstReplyAutoSend(unittest.TestCase):
                          "dana@brightline.com|%s|2026-09-28" % FIRST_REPLY_ID)
 
     def test_marked_not_approved_in_the_doc_holds(self):
-        c = case(case_type="reply", context=full_context())
+        c = case(case_type="reply", copy_doc_file=self.not_approved_doc,
+                 context=full_context(lead=dict(AI_LEAD)))
         dec = decision(template_id=FIRST_REPLY_ID, template_text=FIRST_REPLY_TEXT,
                        category="positive_interested")
         with mock.patch.object(ask_opus.urllib.request, "urlopen",
@@ -457,7 +472,7 @@ class FirstReplyAutoSend(unittest.TestCase):
         self.assertFalse(result["checks"]["template_approved_in_doc"])
 
     def test_booking_link_auto_sends_with_the_calendar_link(self):
-        dec = decision(template_id="first_reply.cleaning_reactivation.booking_link.full",
+        dec = decision(template_id="first_reply.ai_agents.booking_link.full",
                        template_text=BOOKING_LINK_TEXT, category="positive_question")
         result = self._run(dec)
         self.assertEqual(result["grok_next_step"], "send", result["hold_reasons"])
@@ -477,11 +492,11 @@ class FirstReplyAutoSend(unittest.TestCase):
                                       "company": "Brightline Cleaning"})
         self.assertEqual(result["grok_next_step"], "send", result["hold_reasons"])
         self.assertIn("$400 and $5,300", result["email_text"])
-        result = self._run(dec)            # a cleaning_reactivation lead
+        result = self._run(dec, lead=dict(CLEANING_LEAD))
         self.assertEqual(result["grok_next_step"], "hold_card")
 
     def test_referral_holds(self):
-        dec = decision(template_id="first_reply.cleaning_reactivation.referral.full",
+        dec = decision(template_id="first_reply.ai_agents.referral.full",
                        template_text=REFERRAL_TEXT, category="positive_referral",
                        fields=[{"name": "first_name", "value": "Dana"}])
         result = self._run(dec)
@@ -562,7 +577,7 @@ class FirstReplyAutoSend(unittest.TestCase):
         for name in ("now_ct", "kill_switch", "lead_email", "newest_inbound_from",
                      "our_reply_after_newest_inbound", "reply_id", "handled_ids",
                      "sent_log_keys", "free_times", "offered_times", "has_future_appointment"):
-            context = full_context()
+            context = full_context(lead=dict(AI_LEAD))
             del context[name]
             c = case(case_type="reply", copy_doc_file=self.doc, context=context)
             dec = decision(template_id=FIRST_REPLY_ID, template_text=FIRST_REPLY_TEXT,
@@ -1182,6 +1197,25 @@ FIRST_REPLY_LABELS = {"default": "positive_interested", "pricing": "positive_que
                       "other": "positive_question"}
 APPOINTMENT = {"start": "2026-09-29T12:05:00-05:00", "call_link": "https://zoom.us/j/123",
                "status": "confirmed"}
+# What Grok writes to offered_times.jsonl at its book_call step for reply in-2.
+RESERVATION = {"time": "2026-09-29T12:05:00-05:00", "lead_email": "dana@brightline.com",
+               "reserved": True, "reply_id": "in-2"}
+SLOT_FIELDS = [{"name": "first_name", "value": "Dana"}, {"name": "slot", "value": "Tue 12:05pm"}]
+ZOOM_FIELD = [{"name": "zoom_link", "value": "https://zoom.us/j/123"}]
+
+
+def own_booking_context(**overrides):
+    """The re-run right after Grok's own book_call for reply in-2 ("Tue 12:05pm
+    works for me."): the booking exists and offered_times holds the reservation
+    Grok wrote for this lead and this reply."""
+    base = {"has_future_appointment": True, "appointment": dict(APPOINTMENT),
+            "offered_times": [dict(RESERVATION)],
+            "thread": [{"id": "out-1", "direction": "out", "from": "lorenzo@theadvero.com",
+                        "body": "(cold email)"},
+                       {"id": "in-2", "direction": "in", "from": "dana@brightline.com",
+                        "body": "Tue 12:05pm works for me."}]}
+    base.update(overrides)
+    return ai_context(**base)
 
 
 class AllowList(unittest.TestCase):
@@ -1203,7 +1237,7 @@ class AllowList(unittest.TestCase):
               ("first_reply.ai_agents.booking_link.full", "positive_question"),
               ("cadence.e1", None), ("cadence.e10", None),
               ("booking.confirmation.zoom_link", "positive_interested"),
-              ("booking.confirmation.no_zoom_link", None)]
+              ("booking.confirmation.no_zoom_link", "positive_question")]
         for template_id, category in ok:
             self.assertIsNone(ask_opus.allow_list_problem(template_id, category, "ai_agents"),
                               template_id)
@@ -1223,6 +1257,33 @@ class AllowList(unittest.TestCase):
         for template_id, category in held:
             self.assertTrue(ask_opus.allow_list_problem(template_id, category, "ai_agents"),
                             template_id)
+        # the Locked in confirmation answers only a positive_interested or
+        # positive_question reply, on the book_call run and the run after it
+        for template_id in ask_opus.AUTO_SEND_CONFIRMATIONS:
+            for category in (None, "unsubscribe", "negative_notfit", "negative_notnow",
+                             "negative_hostile", "negative_not_interested", "wrong_person",
+                             "ooo", "neutral_question", "positive_referral", "anything"):
+                self.assertTrue(ask_opus.allow_list_problem(template_id, category, "ai_agents"),
+                                (template_id, category))
+        # the six older offers' first replies never go on their own, for their own lead
+        for offer in ask_opus.KNOWN_OFFERS:
+            for branch, labels in ask_opus.AUTO_SEND_FIRST_REPLIES.items():
+                problem = ask_opus.allow_list_problem(
+                    "first_reply.%s.%s.full" % (offer, branch), labels[0], offer)
+                if offer == "ai_agents":
+                    self.assertIsNone(problem, (offer, branch))
+                else:
+                    self.assertIn("older offer", problem, (offer, branch))
+
+    def test_the_seven_offers(self):
+        self.assertEqual(ask_opus.KNOWN_OFFERS, (
+            "ai_agents", "cleaning_reactivation", "cleaning_trigger", "bookkeeping_reactivation",
+            "bookkeeping_trigger", "recruiting_reactivation", "recruiting_outbound"))
+        self.assertEqual(ask_opus.AUTO_SEND_FIRST_REPLY_OFFERS, ("ai_agents",))
+        for key in ask_opus.KNOWN_OFFERS + (" AI_Agents ",):
+            self.assertIsNone(ask_opus.offer_key_problem(key), key)
+        for key in (None, "", "   ", "hvac_legacy", "unknown_offer", "cleaning", "ai-agents", 7):
+            self.assertTrue(ask_opus.offer_key_problem(key), key)
 
 
 class NewDocBuild(unittest.TestCase):
@@ -1311,16 +1372,30 @@ class NewDocBuild(unittest.TestCase):
             self.assertFalse(checks["allow_listed"], tag)
 
     def test_older_offer_first_replies_hold(self):
-        bases = [tag for tag in doc_tags(self.doc, "first_reply.") if "/" not in tag
+        # held by the allow list in code, not by the doc's grey note: with every
+        # "Not approved yet" note taken out of the doc, all 36 still hold
+        notes = [line for line in self.doc.splitlines()
+                 if line.startswith("Not approved yet") and line.endswith("(note)")]
+        self.assertGreaterEqual(len(notes), 36)
+        doc = "\n".join(line for line in self.doc.split("\n") if line not in notes)
+        bases = [tag for tag in doc_tags(doc, "first_reply.") if "/" not in tag
                  and not tag.startswith("first_reply.ai_agents.")]
         self.assertEqual(len(bases), 36)
+        self.assertEqual({tag.split(".")[1] for tag in bases},
+                         set(ask_opus.KNOWN_OFFERS) - {"ai_agents"})
         for tag in bases:
             offer, branch = tag.split(".")[1:3]
             context = ai_context(lead={"campaign_key": offer, "first_name": "Dana",
-                                       "company": "Brightline Cleaning LLC"})
-            step, _, checks, _ = run_checks(self.doc, tag, FIRST_REPLY_LABELS[branch], context)
+                                       "company": "Brightline Cleaning LLC"},
+                                 our_reply_reached_lead=True)
+            step, _, checks, _ = run_checks(doc, tag, FIRST_REPLY_LABELS[branch], context)
             self.assertEqual(step, "hold_card", tag)
-            self.assertFalse(checks["template_approved_in_doc"], tag)
+            self.assertTrue(checks["template_approved_in_doc"], tag)
+            self.assertTrue(checks["template_found"], tag)
+            self.assertTrue(checks["known_offer"], tag)
+            self.assertFalse(checks["allow_listed"], tag)
+            if branch in ask_opus.AUTO_SEND_FIRST_REPLIES:     # the other and referral
+                self.assertIn("older offer", " ".join(checks["problems"]), tag)   # never are
 
     def test_every_counter_and_taken_time_holds(self):
         tags = doc_tags(self.doc, "booking.counter.") + doc_tags(self.doc,
@@ -1429,7 +1504,7 @@ class BookFirstThenConfirm(unittest.TestCase):
         self.assertIsNone(checks["book_at"])
 
     def test_confirmation_sends_only_with_the_matching_future_appointment(self):
-        booked = ai_context(has_future_appointment=True, appointment=dict(APPOINTMENT))
+        booked = own_booking_context()
         link = [{"name": "zoom_link", "value": "https://zoom.us/j/123"}]
         step, reasons, checks, email = self.confirm(
             booked, template_id="booking.confirmation.zoom_link", other_actions=(),
@@ -1440,14 +1515,12 @@ class BookFirstThenConfirm(unittest.TestCase):
         step = self.confirm(booked, other_actions=(), case_type="booked_call")[0]
         self.assertEqual(step, "send")
         holds = {
-            "a different time": ai_context(has_future_appointment=True, appointment=dict(
+            "a different time": own_booking_context(appointment=dict(
                 APPOINTMENT, start="2026-09-29T13:05:00-05:00")),
-            "a past call": ai_context(has_future_appointment=True, appointment=dict(
+            "a past call": own_booking_context(appointment=dict(
                 APPOINTMENT, start="2026-09-28T09:00:00-05:00")),
-            "unreadable start": ai_context(has_future_appointment=True,
-                                           appointment={"start": "Tuesday noon"}),
-            "facts disagree": ai_context(has_future_appointment=False,
-                                         appointment=dict(APPOINTMENT)),
+            "unreadable start": own_booking_context(appointment={"start": "Tuesday noon"}),
+            "facts disagree": own_booking_context(has_future_appointment=False),
         }
         for label, context in holds.items():
             step = self.confirm(context, other_actions=(), case_type="booked_call")[0]
@@ -1522,6 +1595,294 @@ class BookFirstThenConfirm(unittest.TestCase):
         self.assertEqual(result["grok_next_step"], "book_call", result["hold_reasons"])
         self.assertEqual(result["book_at"], "2026-09-29T12:05:00-05:00")
         self.assertIsNone(result["email_text"])
+        self.assertIn("reply_id 'in-2'", result["hold_reasons"][0])
+        # a negative label is never booked: no book_at anywhere in the output
+        dec["category"] = "negative_notfit"
+        with mock.patch.object(ask_opus.urllib.request, "urlopen",
+                               return_value=FakeResponse(api_payload(dec))):
+            code, result, _ = run_main(c)
+        self.assertEqual(result["grok_next_step"], "hold_card")
+        self.assertIsNone(result["book_at"])
+        self.assertIsNone(result["checks"]["book_at"])
+
+    # ---- round 3: the Locked in confirmation only for Grok's own booking
+
+    def run2(self, context, template_id="booking.confirmation.no_zoom_link",
+             category="positive_interested", case_type="booked_call"):
+        extra = ZOOM_FIELD if template_id == "booking.confirmation.zoom_link" else []
+        return run_checks(self.doc, template_id, category, context, case_type=case_type,
+                          fields=SLOT_FIELDS + extra)
+
+    def test_the_run_right_after_groks_own_booking_sends(self):
+        for template_id in ask_opus.AUTO_SEND_CONFIRMATIONS:
+            for category in ask_opus.CONFIRMATION_LABELS:
+                step, reasons, checks, email = self.run2(own_booking_context(),
+                                                         template_id, category)
+                self.assertEqual(step, "send", (template_id, category, reasons,
+                                                checks["problems"]))
+                self.assertTrue(checks["own_booking_ok"])
+                self.assertIn("Locked in Tue 12:05pm CT", email)
+        # the lead's address and the reservation may differ in case
+        context = own_booking_context(offered_times=[dict(RESERVATION,
+                                                          lead_email="Dana@Brightline.com")])
+        self.assertEqual(self.run2(context)[0], "send")
+
+    def test_a_self_booked_lead_never_gets_locked_in(self):
+        # X1: the lead booked through the calendar link (no reservation, never a
+        # book_call), then wrote with a question
+        thread = [{"id": "out-1", "direction": "out", "body": "(our first reply with the link)"},
+                  {"id": "in-5", "direction": "in", "from": "dana@brightline.com",
+                   "body": "I grabbed Tuesday 12:05 on your calendar. Can you send me "
+                           "something to look over before we talk?"}]
+        for offered in ([], [dict(RESERVATION)]):         # none, or one for an older reply
+            for case_type in ("reply", "booked_call"):
+                context = own_booking_context(thread=thread, reply_id="in-5",
+                                              our_reply_reached_lead=True,
+                                              offered_times=offered)
+                for template_id in ask_opus.AUTO_SEND_CONFIRMATIONS:
+                    step, _, checks, _ = self.run2(context, template_id, case_type=case_type)
+                    self.assertEqual(step, "hold_card", (offered, case_type, template_id))
+                    self.assertFalse(checks["own_booking_ok"], (offered, case_type))
+
+    def test_a_reschedule_after_an_earlier_confirmation_holds(self):
+        # X2: booked through Grok and confirmed on Sunday; Tuesday the lead asks
+        # to move it
+        thread = [{"id": "out-3", "direction": "out", "body": "Locked in Tue 12:05pm CT..."},
+                  {"id": "in-6", "direction": "in", "from": "dana@brightline.com",
+                   "body": "Something came up, can we move it to Thursday?"}]
+        earlier = "dana@brightline.com|booking.confirmation.no_zoom_link|2026-09-27"
+        for case_type in ("reply", "booked_call"):
+            context = own_booking_context(thread=thread, reply_id="in-6", handled_ids=["in-2"],
+                                          our_reply_reached_lead=True,
+                                          sent_log_keys=[earlier])
+            for template_id in ask_opus.AUTO_SEND_CONFIRMATIONS:
+                step, _, checks, _ = self.run2(context, template_id, case_type=case_type)
+                self.assertEqual(step, "hold_card", (case_type, template_id))
+                self.assertFalse(checks["own_booking_ok"], (case_type, template_id))
+        # the earlier confirmation alone holds, whatever its day, variant or case
+        for key in (earlier, "Dana@Brightline.com|booking.confirmation.zoom_link|2026-09-01",
+                    "dana@brightline.com|booking.confirmation.zoom_link/lead_in_other_timezone|"
+                    "2026-09-27"):
+            step, _, checks, _ = self.run2(own_booking_context(sent_log_keys=[key]))
+            self.assertEqual(step, "hold_card", key)
+            self.assertFalse(checks["own_booking_ok"], key)
+            self.assertIn("already went to this lead", " ".join(checks["problems"]), key)
+        # another lead's confirmation, or this lead's other emails, do not count
+        others = ["sam@other.com|booking.confirmation.no_zoom_link|2026-09-27",
+                  "dana@brightline.com|first_reply.ai_agents.default.full|2026-09-27"]
+        self.assertEqual(self.run2(own_booking_context(sent_log_keys=others))[0], "send")
+
+    def test_a_cancellation_holds(self):
+        # X3: the lead cancels in words while the appointment still shows in GHL
+        thread = [{"id": "in-7", "direction": "in", "from": "dana@brightline.com",
+                   "body": "Please cancel Tuesday, we went another way."}]
+        context = own_booking_context(thread=thread, reply_id="in-7",
+                                      our_reply_reached_lead=True)
+        for category in ("positive_interested", "negative_notfit", None):
+            step, _, checks, _ = self.run2(context, category=category)
+            self.assertEqual(step, "hold_card", category)
+            self.assertFalse(checks["own_booking_ok"], category)
+
+    def test_the_reservation_must_be_groks_own_for_this_reply_and_time(self):
+        bad = {
+            "no reply_id": dict(RESERVATION, reply_id=None),
+            "another reply": dict(RESERVATION, reply_id="in-1"),
+            "another time": dict(RESERVATION, time="2026-09-29T13:05:00-05:00"),
+            "another lead": dict(RESERVATION, lead_email="sam@other.com"),
+            "not reserved": dict(RESERVATION, reserved=False),
+            "reserved as text": dict(RESERVATION, reserved="true"),
+            "offered, not reserved": {"time": "2026-09-29T12:05:00-05:00",
+                                      "lead_email": "dana@brightline.com"},
+        }
+        for label, entry in bad.items():
+            step, _, checks, _ = self.run2(own_booking_context(offered_times=[entry]))
+            self.assertEqual(step, "hold_card", label)
+            self.assertFalse(checks["own_booking_ok"], label)
+        for context in (own_booking_context(offered_times=[]),
+                        own_booking_context(reply_id=None),
+                        own_booking_context(reply_id="in-9")):
+            self.assertEqual(self.run2(context)[0], "hold_card")
+        # a stale reply_id: the thread's newest inbound email is a newer one,
+        # or carries no id
+        newer = own_booking_context()["thread"] + [
+            {"id": "in-9", "direction": "in", "from": "dana@brightline.com",
+             "body": "Actually, can we do Thursday instead?"}]
+        no_id = [dict(item) for item in own_booking_context()["thread"]]
+        del no_id[-1]["id"]
+        for thread in (newer, no_id):
+            step, _, checks, _ = self.run2(own_booking_context(thread=thread))
+            self.assertEqual(step, "hold_card", thread[-1])
+            self.assertFalse(checks["own_booking_ok"], thread[-1])
+
+    def test_both_runs_need_a_positive_label(self):
+        for category in (None, "unsubscribe", "negative_notfit", "negative_notnow",
+                         "negative_hostile", "negative_not_interested", "wrong_person", "ooo",
+                         "neutral_question", "positive_referral", "anything"):
+            step, reasons, checks, _ = run_checks(
+                self.doc, "booking.confirmation.no_zoom_link", category, ai_context(),
+                fields=SLOT_FIELDS, other_actions=["book_call"])
+            self.assertEqual(step, "hold_card", category)
+            self.assertIsNone(checks["book_at"], category)
+            self.assertFalse(checks["allow_listed"], category)
+            self.assertIn("allow_listed", " ".join(reasons), category)
+            step, _, checks, _ = self.run2(own_booking_context(), category=category)
+            self.assertEqual(step, "hold_card", category)
+            self.assertFalse(checks["allow_listed"], category)
+        step = run_checks(self.doc, "booking.confirmation.no_zoom_link", "positive_question",
+                          ai_context(), fields=SLOT_FIELDS, other_actions=["book_call"])[0]
+        self.assertEqual(step, "book_call")
+
+    def test_an_earlier_confirmation_means_no_new_booking(self):
+        earlier = "dana@brightline.com|booking.confirmation.zoom_link|2026-09-21"
+        step, _, checks, _ = self.confirm(ai_context(sent_log_keys=[earlier]))
+        self.assertEqual(step, "hold_card")
+        self.assertIsNone(checks["book_at"])
+        self.assertFalse(checks["own_booking_ok"])
+
+    def test_a_booked_call_case_sends_nothing_else(self):
+        for template_id, context in (
+                ("first_reply.ai_agents.default.full", ai_context()),
+                ("cadence.e1", ai_ladder_context())):
+            step, _, checks, _ = run_checks(self.doc, template_id, "positive_interested",
+                                            context, case_type="booked_call")
+            self.assertEqual(step, "hold_card", template_id)
+            self.assertFalse(checks["own_booking_ok"], template_id)
+        # outside a booked_call case the check does not apply
+        step, _, checks, _ = run_checks(self.doc, "first_reply.ai_agents.default.full",
+                                        "positive_interested", ai_context())
+        self.assertEqual(step, "send")
+        self.assertIn("own_booking_ok", checks["checks_not_applied"])
+
+    def test_rule_14_tells_opus_how_to_recognise_the_run(self):
+        rules = ask_opus.DECISION_RULES.splitlines()
+        rule14 = [line for line in rules if line.startswith("14. ")][0]
+        for words in ('"reserved": true', '"reply_id" equal to context.reply_id',
+                      "no key in context.sent_log_keys is a booking.confirmation.* send",
+                      "positive_interested or positive_question", "calendar link",
+                      "a reschedule, a cancellation", "Every other booked_call case is "
+                      "hold_for_lorenzo"):
+            self.assertIn(words, rule14)
+        rule2 = [line for line in rules if line.startswith("2. ")][0]
+        self.assertIn("the five AI agents first replies, only for a lead whose campaign_key is "
+                      "ai_agents", rule2)
+        self.assertIn("every first reply for the six older offers", rule2)
+        for key in ask_opus.KNOWN_OFFERS:
+            self.assertIn(key, rule2)
+
+
+class KnownOffer(unittest.TestCase):
+    """Round 3: no email and no booking unless campaign_key is one of the seven offers."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.doc = read_new_doc()
+
+    def test_a_missing_or_unknown_key_holds_every_email_and_every_booking(self):
+        for lead in ({"first_name": "Dana", "company": "Brightline Cleaning LLC"},
+                     dict(AI_LEAD, campaign_key=""), dict(AI_LEAD, campaign_key=None),
+                     dict(AI_LEAD, campaign_key="hvac_legacy"),
+                     dict(AI_LEAD, campaign_key="unknown_offer")):
+            label = lead.get("campaign_key", "<missing>")
+            for n in range(1, 11):
+                step, _, checks, _ = run_checks(self.doc, "cadence.e%d" % n, None,
+                                                ai_ladder_context(lead=lead),
+                                                case_type="followup_due")
+                self.assertEqual(step, "hold_card", (label, n))
+                self.assertFalse(checks["known_offer"], (label, n))
+            step, _, checks, _ = run_checks(self.doc, "booking.confirmation.no_zoom_link",
+                                            "positive_interested", ai_context(lead=lead),
+                                            fields=SLOT_FIELDS, other_actions=["book_call"])
+            self.assertEqual(step, "hold_card", label)
+            self.assertIsNone(checks["book_at"], label)
+            self.assertFalse(checks["known_offer"], label)
+            for template_id in ask_opus.AUTO_SEND_CONFIRMATIONS:
+                extra = ZOOM_FIELD if template_id.endswith(".zoom_link") else []
+                step, _, checks, _ = run_checks(self.doc, template_id, "positive_interested",
+                                                own_booking_context(lead=lead),
+                                                case_type="booked_call",
+                                                fields=SLOT_FIELDS + extra)
+                self.assertEqual(step, "hold_card", (label, template_id))
+                self.assertFalse(checks["known_offer"], (label, template_id))
+            for branch in ask_opus.AUTO_SEND_FIRST_REPLIES:
+                template_id = "first_reply.ai_agents.%s.full" % branch
+                step, _, checks, _ = run_checks(self.doc, template_id, FIRST_REPLY_LABELS[branch],
+                                                ai_context(lead=lead))
+                self.assertEqual(step, "hold_card", (label, template_id))
+                self.assertFalse(checks["known_offer"], (label, template_id))
+
+    def test_each_of_the_seven_offers_passes(self):
+        for key in ask_opus.KNOWN_OFFERS:
+            lead = dict(AI_LEAD, campaign_key=key)
+            for template_id in ("cadence.e1", "cadence.e3"):
+                step, reasons, checks, _ = run_checks(self.doc, template_id, None,
+                                                      ai_ladder_context(lead=lead),
+                                                      case_type="followup_due")
+                self.assertEqual(step, "send", (key, template_id, reasons, checks["problems"]))
+                self.assertTrue(checks["known_offer"], key)
+            step = run_checks(self.doc, "booking.confirmation.no_zoom_link", "positive_interested",
+                              ai_context(lead=lead), fields=SLOT_FIELDS,
+                              other_actions=["book_call"])[0]
+            self.assertEqual(step, "book_call", key)
+            step = run_checks(self.doc, "booking.confirmation.no_zoom_link", "positive_interested",
+                              own_booking_context(lead=lead), case_type="booked_call",
+                              fields=SLOT_FIELDS)[0]
+            self.assertEqual(step, "send", key)
+
+
+class LadderStops(unittest.TestCase):
+    """Round 3: E1 to E10 hold for a lead with any appointment, a no, Do Not
+    Disturb, or GHL Sequence stopped or booked."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.doc = read_new_doc()
+
+    def _step(self, template_id="cadence.e3", category=None, **context):
+        step, _, checks, _ = run_checks(self.doc, template_id, category,
+                                        ai_ladder_context(**context), case_type="followup_due")
+        return step, checks
+
+    def test_each_stop_signal_holds_the_ladder(self):
+        self.assertEqual(self._step()[0], "send")
+        stops = {
+            "a past appointment": dict(appointment={"start": "2026-09-21T13:00:00-05:00",
+                                                    "status": "noshow"}),
+            "a future appointment": dict(appointment=dict(APPOINTMENT),
+                                         has_future_appointment=True),
+            "DND on": dict(ghl={"dnd": True, "tags": [], "fields": {}}),
+            "DND on, as text": dict(ghl={"dnd": "True"}),
+            "a dnd tag": dict(ghl={"tags": ["cold-email", " DND "], "fields": {}}),
+            "Sequence stopped": dict(ghl={"fields": {"Sequence": "stopped"}}),
+            "Sequence booked": dict(ghl={"fields": {"sequence": "Booked"}}),
+            "Sequence stopped, as a list": dict(ghl={"fields": [{"name": "Sequence",
+                                                                 "value": "stopped"}]}),
+            "interest -1": dict(instantly={"interest_status": -1}),
+            "interest -4 as text": dict(instantly={"interest_status": "-4"}),
+        }
+        for label, context in stops.items():
+            for template_id in ("cadence.e1", "cadence.e3", "cadence.e10"):
+                step, checks = self._step(template_id, **context)
+                self.assertEqual(step, "hold_card", (label, template_id))
+                self.assertFalse(checks["ladder_ok"], (label, template_id))
+        for category in ("unsubscribe", "negative_notnow", "negative_notfit", "negative_hostile",
+                         "wrong_person", "negative_not_interested"):
+            step, checks = self._step(category=category)
+            self.assertEqual(step, "hold_card", category)
+            self.assertFalse(checks["ladder_ok"], category)
+
+    def test_facts_that_say_nothing_against_it_still_send(self):
+        for context in (dict(ghl={"dnd": False, "tags": ["cold-email"],
+                                  "fields": {"Sequence": "followup"}}),
+                        dict(instantly={"interest_status": 1}),
+                        dict(instantly={"interest_status": 0}),
+                        dict(instantly={"interest_status": None}),
+                        dict(appointment={}), dict(appointment=None)):
+            step, checks = self._step(**context)
+            self.assertEqual(step, "send", (context, checks["problems"]))
+            self.assertTrue(checks["ladder_ok"])
+        step, _, checks, _ = run_checks(self.doc, "first_reply.ai_agents.default.full",
+                                        "positive_interested", ai_context())
+        self.assertIn("ladder_ok", checks["checks_not_applied"])
 
 
 class PlaceholdersNeedChecks(unittest.TestCase):
@@ -1665,6 +2026,64 @@ class LegalWords(unittest.TestCase):
                                             "positive_interested", context)
             self.assertEqual(step, "hold_card")
             self.assertFalse(checks["no_legal_words"])
+
+    def test_invisible_characters_hide_no_legal_word(self):
+        zwsp, shy, joiner, bom, zwnj = chr(0x200B), chr(0xAD), chr(0x2060), chr(0xFEFF), chr(0x200C)
+        for text in ("my law" + zwsp + "yer", "my" + zwsp + "lawyer", "an at" + shy + "torney",
+                     "see you in c" + joiner + "ourt", bom + "I will sue", "the F" + zwnj + "TC",
+                     "cease" + zwsp + " and desist", "su" + chr(0x200D) + "ing you"):
+            self.assertTrue(ask_opus.legal_words(text), repr(text))
+        self.assertEqual(ask_opus.legal_words("Thanks" + zwsp + " for the cour" + shy + "tesy."), [])
+        doc = read_new_doc()
+        thread = [{"id": "in-2", "direction": "in", "from": "dana@brightline.com",
+                   "body": "Sure, but my at" + zwsp + "torneys review every contract."}]
+        step, _, checks, _ = run_checks(doc, "first_reply.ai_agents.default.full",
+                                        "positive_interested", ai_context(thread=thread))
+        self.assertEqual(step, "hold_card")
+        self.assertFalse(checks["no_legal_words"])
+        thread[0]["body"] = "Remove me. My law" + zwsp + "yer has your emails."
+        self.assertEqual(self._blocklist({"thread": thread}), "hold_card")
+
+    def test_the_newest_email_is_found_whatever_the_case_of_direction(self):
+        thread = [{"id": "in-1", "direction": "in", "body": "Sounds good."},
+                  {"id": "in-2", "direction": "IN", "body": "Remove me or my lawyer will hear "
+                                                             "about this."}]
+        self.assertEqual(ask_opus.newest_inbound_text({"thread": thread}), thread[1]["body"])
+        self.assertEqual(self._blocklist({"thread": thread}), "hold_card")
+        for direction in ("In", " in ", "IN"):
+            clean = [{"id": "in-2", "direction": direction, "body": "Remove me. Thanks."}]
+            self.assertEqual(self._blocklist({"thread": clean}), "update_records", direction)
+        doc = read_new_doc()
+        thread = [{"id": "in-1", "direction": "in", "from": "dana@brightline.com",
+                   "body": "Sounds interesting."},
+                  {"id": "in-2", "direction": "In", "from": "dana@brightline.com",
+                   "body": "Sure, but my attorneys review every contract."}]
+        step, _, checks, _ = run_checks(doc, "first_reply.ai_agents.default.full",
+                                        "positive_interested", ai_context(thread=thread))
+        self.assertEqual(step, "hold_card")
+        self.assertFalse(checks["no_legal_words"])
+
+
+class ConfidenceIsANumber(unittest.TestCase):
+    def test_confidence_must_be_a_real_number_of_at_least_0_8(self):
+        doc = read_new_doc()
+        template_id = "first_reply.ai_agents.default.full"
+        text = doc_text_of(doc, template_id)
+        context = ai_context()
+        dec = decision(template_id=template_id, template_text=text, category="positive_interested",
+                       fields=valid_fields(doc, template_id, text, context))
+        _, checks = ask_opus.check_email(dec, doc, context, "reply")
+        for value in (0.95, 0.8, 1):
+            self.assertEqual(ask_opus.next_step(dict(dec, confidence=value), checks, context)[0],
+                             "send", value)
+        for value in (True, False, float("nan"), float("inf"), float("-inf"), "0.95", None,
+                      [0.9], 0.79):
+            step, reasons = ask_opus.next_step(dict(dec, confidence=value), checks, context)
+            self.assertEqual(step, "hold_card", repr(value))
+            self.assertIn("confidence", " ".join(reasons), repr(value))
+        records = decision(action="records_only", template_id=None, template_text=None,
+                           fields=[], confidence=True)
+        self.assertEqual(ask_opus.next_step(records, None, context)[0], "hold_card")
 
 
 class OfferSegments(unittest.TestCase):

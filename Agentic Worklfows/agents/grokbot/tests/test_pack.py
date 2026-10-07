@@ -114,6 +114,21 @@ class Pack(unittest.TestCase):
         for template_id in ask_opus.AUTO_SEND_CONFIRMATIONS:
             self.assertIn("`" + template_id + "`", rule[0], template_id)
 
+    def test_file_01_offer_keys_are_the_scripts_seven(self):
+        spec = importlib.util.spec_from_file_location(
+            "ask_opus_for_keys", os.path.join(ONBOARDING, "ask_opus.py"))
+        ask_opus = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(ask_opus)
+        doc = read(os.path.join(ONBOARDING, "01_business_context.md"))
+        keys = set(re.findall(r"^\| ([a-z_]+) \| 2026 ", doc, re.M))
+        self.assertEqual(keys, set(ask_opus.KNOWN_OFFERS))
+        self.assertIn("no call is booked for it", doc)
+        lead_row = [line for line in read(os.path.join(ONBOARDING, "04_ask_opus.md")).splitlines()
+                    if line.startswith("| `lead` |")]
+        self.assertEqual(len(lead_row), 1)
+        self.assertIn("not one of the seven in file 01, every email for this lead is a hold card "
+                      "and no call is booked", lead_row[0])
+
     def test_ai_agents_campaigns_map_to_their_key(self):
         ids = ["e8867dbb-4f94-40ee-81c0-c11d7a256e2d", "d81f1d53-23d6-48a6-aea3-80c21192e17e",
                "9b82c9ce-b772-440a-b4a0-b984fe6a7a3f", "8a50b4e8-48e7-4db2-aa8f-b2e75187a8be",

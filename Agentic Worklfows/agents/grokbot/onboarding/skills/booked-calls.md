@@ -31,7 +31,7 @@ Goal: once a lead books, get them to show. If they miss, get them rebooked. If t
 - `{slots}`: two reserved times, soonest first, never offered to anyone else, refreshed if they pass: "Fri 12:30pm or Mon 3:00pm CT".
 
 ## Confirmation
-- **Engine booking** (from a reply): book first, then confirm (Lorenzo, 2026-10-06). The time the lead named is booked in GHL (`ask_opus.py` answers `book_call`), the booking is checked, and only then does the "Locked in" reply go, naming exactly the booked start; a failed booking is a hold card (`cold-email-replies`, step 5). The "Locked in" reply is the confirmation. Lorenzo, 2026-09-23: fine as is, leave it. Text:
+- **Engine booking** (from a reply): book first, then confirm (Lorenzo, 2026-10-06). The time the lead named in a `positive_interested` or `positive_question` reply is booked in GHL (`ask_opus.py` answers `book_call`), the booking is checked, and only then does the "Locked in" reply go, naming exactly the booked start, on the re-run right after that booking: the lead has not written since and got no confirmation before. A failed booking is a hold card (`cold-email-replies`, step 5). Any other booking (a calendar-link booking, a booked lead who writes, a reschedule, a cancellation) never gets the "Locked in" reply: hold card. The "Locked in" reply is the confirmation. Lorenzo, 2026-09-23: fine as is, leave it. Text:
   - with a Zoom link: "Locked in {when}, invite on the way. Here is the Zoom link:\n{link}\n\nI will keep it to 15 minutes."
   - without: "Locked in {when}. The calendar invite with the video link follows in a separate email. I will keep it to 15 minutes."
   When this goes, the separate `confirm_email` is skipped for that call.
@@ -214,7 +214,7 @@ Lorenzo
 ```
 
 ## Status (as of 2026-09-24/25, updated 2026-10-06)
-- 2026-10-06 (Lorenzo): the only booked-call email that goes on its own is the "Locked in" confirmation, once its booking exists. Every show-rate email (the widget confirmation, R2, R3, R4) and every no-show email is a hold card for Lorenzo. The reminders R2, R3 and R4 are paused since 2026-10-05.
+- 2026-10-06 (Lorenzo): the only booked-call email that goes on its own is the "Locked in" confirmation, on the re-run right after Grok's own booking. Every show-rate email (the widget confirmation, R2, R3, R4) and every no-show email is a hold card for Lorenzo. The reminders R2, R3 and R4 are paused since 2026-10-05.
 - Built and tested in shadow; nothing live. Every email above is held until Lorenzo approves its template id (renamed ids do not carry old approvals).
 - Waiting on Lorenzo: Zoom join data for N1 and automatic detection (Zoom is connected in GHL, but there is no Zoom API app); approve the ids; decide N3's "today" wording when a no-show is marked on a later day.
 - The trigger wiring for the Grok model (appointment and Zoom webhooks to Grok, per-touch timers) is not built yet.

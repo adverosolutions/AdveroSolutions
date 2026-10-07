@@ -84,7 +84,7 @@ Then use this table to pick the `case_type` and the question for Opus. Opus deci
 | The lead wrote last, and no email of ours came after it | `reply` | "The lead replied. Classify and decide what we do." |
 | Sequence `followup` and Next Due Date is today or past | `followup_due` | "Is the next follow-up due for this lead, and which one?" |
 | Lorenzo's own first reply is in the thread and Sequence is `none` or `reply_waiting` | `followup_due` | "Lorenzo sent a first reply by hand. Record day 0 and set the next follow-up." |
-| A new booking on a calendar, or Sequence `booked` | `booked_call` | "A call is booked. What is due: confirmation, reminder, or nothing yet?" |
+| A new booking on a calendar, or Sequence `booked` | `booked_call` | "A call is booked. What is due: confirmation, reminder, or nothing yet?" Only the re-run right after your own `book_call` (file 02, section 3, step 6) can end in the "Locked in" confirmation: the appointment starts at the time you reserved for this lead, the reservation's `reply_id` is still the newest reply's, and no confirmation went to this lead before. Every other booked call (a calendar-link booking, a booked lead who writes, a reschedule, a cancellation) is a hold card. Do not open a second case for a booking you made yourself. |
 | Lorenzo marked a no-show, or Sequence `no_show` | `no_show` | "Which no-show step is due, if any?" |
 | Sequence `nurture` | `nurture` | "The lead is in nurture. Is anything due?" (Today the answer is always no.) |
 | GHL and Instantly disagree about the stage (you see it here, or the 06:30 pipeline check in file 07, section 8 lists it) | `pipeline` | "GHL and Instantly disagree for this lead. Which is right, and what do we change?" |

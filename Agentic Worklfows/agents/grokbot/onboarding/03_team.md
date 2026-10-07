@@ -42,7 +42,7 @@ Rules for every agent:
 
 - **Job:** everything between a booking and the call, and after a missed call. Booking from a reply, the "Locked in" confirmation, reminders R2 R3 R4, the no-show ladder N1 to N9, and the hand-off to nurture.
 - **Routines:**
-  - "Booked-call touches": every 15 minutes, 07:00 to 19:00 CT, Monday to Friday. Check new bookings on the Discovery Call calendar, due reminders, and due no-show steps. The reminders R2 R3 R4 are paused (since 2026-10-05). If nothing is due, stop.
+  - "Booked-call touches": every 15 minutes, 07:00 to 19:00 CT, Monday to Friday. Check new bookings on the Discovery Call calendar, due reminders, and due no-show steps. A booking you made at a `book_call` step is handled by its own re-run; any other new booking is a hold card, never a "Locked in" email. The reminders R2 R3 R4 are paused (since 2026-10-05). If nothing is due, stop.
   - "Pre-call brief" (from 60 minutes before each call): send the Chief of Staff a brief built by Opus under skill `sales-call` ("Before the call"). The brief goes to Lorenzo only.
   - On a GHL appointment event, if routine webhooks work (unconfirmed).
 - **Skills:** `booked-calls`, `cold-email-replies` (booking rules, step 5), `nurture-90-day`, `sales-call`, `claudeisms`.
