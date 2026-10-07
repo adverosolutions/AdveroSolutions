@@ -22,8 +22,8 @@ Goal: once a lead books, get them to show. If they miss, get them rebooked. If t
 - The recipient is always the lead, and the thread is re-read to confirm the lead wrote it before a reply goes.
 - Send window 07:00-19:00 CT. Calls sit 12:00-18:00 CT, Mon-Fri.
 - No Claudeisms (see `claudeisms`), normal capitalization, no em or en dashes, no exclamation marks, no emojis, signed "Lorenzo".
-- Pricing and guarantee figures never appear in any email (Lorenzo, 2026-09-24: "We never talk numbers over email.").
-- Calls run on Google Meet today. The widget confirmation, R2/R3/R4 and N1-N9 say "call link", never "Zoom". The engine's "Locked in" confirmation names Zoom only in its `zoom_link` variant, which is used only when a Zoom link is on file.
+- Booked-call emails carry no pricing or guarantee figure (Lorenzo, 2026-09-24). The only email with a figure is the approved pricing first reply, which carries the offer's price range (2026-10-06, `cold-email-replies`).
+- Zoom is connected on the GHL Discovery Call calendar (verified read-only 2026-10-06: Zoom conferencing, auto-confirm, Google invitation emails), so a booking there gets a Zoom link. The widget confirmation, R2/R3/R4 and N1-N9 still say "call link", never "Zoom". The engine's "Locked in" confirmation names Zoom only in its `zoom_link` variant, which is used only when a Zoom link is on file.
 
 ## Placeholders
 - `{first_name}`, `{company}`, `{call_link}` (Meet or Zoom link; each email has a no-link variant).

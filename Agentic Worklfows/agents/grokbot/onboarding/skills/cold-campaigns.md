@@ -94,11 +94,12 @@ How the reactivation campaigns word the no-risk offer (verbatim, 2026-09-21 snap
 
 ### Figures: cold copy versus everything else
 
-The cold campaigns are Lorenzo's own copy and keep their guarantee lines. Every other email
-the system sends (first replies, follow-ups, booking, show-rate, no-show) never states a
-price, fee, commission percentage or guarantee amount (Lorenzo, 2026-09-24: "We never talk
-numbers over email."). A price question gets the mechanism in one line and "The rest is
-easier to cover on a quick call." Proof lines come only from the offer sheet.
+The cold campaigns are Lorenzo's own copy and keep their guarantee lines. A price question
+gets the price range written into the offer's approved pricing first reply
+(`first_reply.<offer>.pricing.full`, Lorenzo 2026-10-06; AI agents: $400 to $5,300). Every
+other email the system sends (other first replies, follow-ups, booking, show-rate, no-show)
+never states a price, fee, commission percentage or guarantee amount. Proof lines come only
+from the offer sheet.
 
 ## Sending capacity
 
@@ -192,8 +193,8 @@ lines are kept, marked superseded, under Legacy.
   change-set that Lorenzo applies.
 - Edit copy in the Instantly editor, or overwrite his live edits. His copy is the source of
   truth for wording; the system is the source of truth for mechanics.
-- Add a booking link to any email (2026-09-23 rule: the lead picks a time, Lorenzo sends the invite).
-- Mention AI, automation or tools; use em dashes or exclamation marks (offer sheet rule 8).
+- Add a booking link to any email (2026-09-23 rule: the lead picks a time, Lorenzo sends the invite). The one exception is the approved `first_reply.<offer>.booking_link.full` reply to a lead who asks for a booking or Calendly link (2026-10-06).
+- Tell or imply that a bot or AI wrote an email; use em dashes or exclamation marks (offer sheet rule 8). The word "AI" itself is fine (the AI agents offer, 2026-09-30).
 - Add a Claudeism (see `claudeisms`).
 
 ## Legacy contractor SOPs (January 2025, not running)

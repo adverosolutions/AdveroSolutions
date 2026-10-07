@@ -94,6 +94,38 @@ class Pack(unittest.TestCase):
         self.assertIn("170b09dd897430a9", pack)
         self.assertIn("claude-opus-5-5", pack)
 
+    def test_ai_agents_campaigns_map_to_their_key(self):
+        ids = ["e8867dbb-4f94-40ee-81c0-c11d7a256e2d", "d81f1d53-23d6-48a6-aea3-80c21192e17e",
+               "9b82c9ce-b772-440a-b4a0-b984fe6a7a3f", "8a50b4e8-48e7-4db2-aa8f-b2e75187a8be",
+               "891bf2b5-9351-4cde-a5c4-13dd1d8ffce8", "59b20790-12bb-446d-bcd6-e3b6f9a61953",
+               "4eedb228-53c7-42ff-baf5-5b40c8646bd8", "21f5568a-d82e-4280-8437-04b0f8d6df37"]
+        doc = read(os.path.join(ONBOARDING, "01_business_context.md"))
+        for campaign_id in ids:
+            row = [line for line in doc.splitlines() if campaign_id in line]
+            self.assertEqual(len(row), 1, campaign_id)
+            self.assertTrue(row[0].startswith("| ai_agents |"), campaign_id)
+        self.assertIn("has no key", doc)
+
+    def test_no_stale_rule_contradicts_files_00_to_07(self):
+        stale = {
+            "01_business_context.md": ["No booking link in any email", "Zoom is not connected"],
+            "03_team.md": ["Zoom is not connected"],
+            "05_lead_state_ghl.md": ["Zoom not connected"],
+            "06_systems_and_access.md": ["Zoom is not connected"],
+            "09_company_and_process_overview.md": ["Zoom is not connected"],
+            "skills/cold-campaigns.md": ["We never talk\nnumbers over email", "Mention AI"],
+            "skills/booked-calls.md": ["never appear in any email"],
+            "skills/client-fulfillment.md": ["tooling, AI or automation"],
+            "skills/cold-email-replies.md": ["We never talk numbers over email**",
+                                              "A model may improve the wording"],
+            "skills/quiet-lead-followup.md": ["Veto button", "no AI or automation"],
+            "skills/lorenzo-voice.md": ['"AI", "automation", "automated", "bot"'],
+        }
+        for name, phrases in stale.items():
+            text = read(os.path.join(ONBOARDING, name))
+            for phrase in phrases:
+                self.assertNotIn(phrase, text, "%s still says %r" % (name, phrase))
+
 
 if __name__ == "__main__":
     unittest.main()

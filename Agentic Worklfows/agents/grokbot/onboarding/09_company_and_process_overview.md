@@ -48,7 +48,7 @@ Routines: file 00, section 10. Reports, KPIs and targets: file 07 and skill `dai
 | GoHighLevel | The record of every lead (Sales pipeline), the Discovery Call calendar, the Deal Won workflow |
 | Google Docs, Sheets, Drive | The copy doc; the Daily Metrics sheet, lead sheet, Offer Intel and LinkedIn queue; client folders |
 | Gmail, Google Calendar | Lorenzo's inbox and calendar |
-| Google Meet, Zoom | Call links. Meet is the default; Zoom is not connected to GHL |
+| Google Meet, Zoom | Call links. Zoom is connected on the GHL Discovery Call calendar (2026-10-06); Meet only on older hand-booked calls |
 | Upwork, Loom | Freelance jobs, proposals, client chats; the proposal videos |
 | n8n, Make | Upwork props and client builds |
 | Apify, MillionVerifier | Finding leads and verifying their emails |

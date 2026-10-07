@@ -13,7 +13,7 @@ State as of 2026-09-22 to 2026-09-24: **nothing here is live.** The onboarding w
 - Lorenzo sends scorecards and every numbers-bearing email himself.
 
 ## Rules for every client-facing word
-- No em dashes, no exclamation marks, no mention of tooling, AI or automation, signed "Lorenzo". No Claudeisms (see `claudeisms`).
+- No em dashes, no exclamation marks, signed "Lorenzo". "AI" is fine (Lorenzo lifted the ban 2026-09-30); never tell or imply that a bot or AI wrote the message. No Claudeisms (see `claudeisms`).
 - Numbers only from the client's scorecard. Prices only from the offer sheet. None of the three product prices (bid follow-up, cold-email infrastructure, content and lead system) is in the offer sheet yet, so none of them goes in writing.
 - No Loom script names a price.
 - Credentials: never a password field, never a password by email. A password-manager invite (1Password, Bitwarden or LastPass) to a vault that holds only this project, or a screen share where the client types it.

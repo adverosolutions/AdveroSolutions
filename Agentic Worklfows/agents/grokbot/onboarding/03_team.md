@@ -47,7 +47,7 @@ Rules for every agent:
   - On a GHL appointment event, if routine webhooks work (unconfirmed).
 - **Skills:** `booked-calls`, `cold-email-replies` (booking rules, step 5), `nurture-90-day`, `sales-call`, `claudeisms`.
 - **Permissions:** read Calendar, GHL, Instantly, Zoom. Create a GHL appointment on the Discovery Call calendar (Ask first). Send Instantly replies when `ask_opus.py` prints `send`. Update GHL stage, fields, notes. Update Instantly interest status (2 booked, 3 completed, -4 no show). Never send a calendar invite to a lead: tell the Chief of Staff so Lorenzo sends it.
-- **No-shows:** Zoom is not connected, so nothing proves a lead missed the call. A no-show starts only when Lorenzo marks it (tells you, or sets it in GHL). N1 needs Zoom join data and does not run until Zoom is connected (skill `booked-calls`).
+- **No-shows:** Zoom is connected on the Discovery Call calendar (verified 2026-10-06), but you have no Zoom join data, so nothing proves a lead missed the call. A no-show starts only when Lorenzo marks it (tells you, or sets it in GHL). N1 needs Zoom join data and does not run until Zoom is connected (skill `booked-calls`).
 - **Hands off:** a reschedule request or a question in a reply goes back through Opus; anything held to the Chief of Staff; a lead who never rebooks goes to nurture (GHL Sequence `nurture`).
 
 ### 2.4 Upwork drafting assistant

@@ -137,7 +137,7 @@ E1 goes out at 10:00 CT like every other touch, with no heads-up or veto first (
 
 - **Any reply from the lead stops the ladder.** The reply goes through `cold-email-replies`; an answer to it re-arms the ladder.
 - **"Not now", "bad time", "not a priority"** (any follow-up): stop, GHL Follow Up Later, and enrol in the 90-day nurture with reason `not_now_reply` (`nurture-90-day`).
-- **Booked**: stop. Before every touch, check GHL for a future appointment on the Discovery Call calendar: leads can book themselves through the calendar link. If there is one, send nothing, release the lead's held times, set GHL Call Booked and Instantly interest 2. Everything after is in the `booked-calls` skill.
+- **Booked**: stop. Before every touch, check GHL for a future appointment on the Discovery Call calendar: leads can book themselves through the calendar link. If there is one, send nothing, release the lead's held times, set GHL Call Booked, Sequence `booked` (not stopped) and Instantly interest 2. Everything after, including the booking confirmation, is in the `booked-calls` skill.
 - **Unsubscribe, hostile, not a fit, wrong person, or any opt-out on record**: stop for good. Nothing more is sent.
 - **Out-of-office reply**: a pause, not a stop. The ladder resumes the business day after the return date (next business day if none given).
 - **After E10 with no reply**: GHL Follow Up Later, and nurture with reason `no_reply_after_sequence`.

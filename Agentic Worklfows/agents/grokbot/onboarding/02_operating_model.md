@@ -13,7 +13,7 @@ Why Opus decides: it saves Grok tokens and keeps the judgement consistent. You s
 
 ## 2. What you decide yourself (mechanical checks only)
 
-You decide only these, without Opus. `ask_opus.py` also checks 1 to 4 and 8 from the facts you gather (step 3), but those facts are a snapshot: check again right before you send.
+You decide only these, without Opus. `ask_opus.py` also checks 1 to 4, 8 and 9 from the facts you gather (step 3), but those facts are a snapshot: check 1 to 5, 8 and 9 again right before you send, and again before a delayed send (a `send_after` or a 07:00 re-run).
 1. Is the kill switch on (`~/advero/state/KILL_SWITCH` exists)? Then stop.
 2. Is it inside the send window, 07:00 to 19:00 CT? If not, queue the send for 07:00 CT (the script answers `wait` with `send_after`).
 3. Is the thread's last inbound email from the lead? (recipient check, section 5)
@@ -22,7 +22,7 @@ You decide only these, without Opus. `ask_opus.py` also checks 1 to 4 and 8 from
 6. Does Opus's answer say `hold_card`? Then send Lorenzo a hold card.
 7. Is this reply already handled, or is a hold card for this lead waiting on Lorenzo? (section 11) Then do not ask Opus again.
 8. Does an email of ours already follow the lead's newest message? Then send no reply (section 4, rule 13).
-9. Does the lead have a future appointment on the GHL Discovery Call calendar (`GDugwLmZNdsD13RBDnRu`)? Leads can book themselves through the calendar link, and those bookings confirm on their own. Then send nothing from the reply or follow-up flow: stop the ladder, release the lead's held times, set GHL to Call Booked and Instantly interest to 2 (meeting booked), and hand the lead to the Calls agent (skill `booked-calls`). No "Locked in" email: the calendar's own invite already went out. Opus answers this case with `update_records`.
+9. Does the lead have a future appointment on the GHL Discovery Call calendar (`GDugwLmZNdsD13RBDnRu`)? Leads can book themselves through the calendar link, and those bookings confirm on their own. Then send nothing from the reply or follow-up flow: release the lead's held times, set GHL to Call Booked, Sequence `booked` (not `stopped`, so the booked-call emails still run) and Instantly interest to 2 (meeting booked), and hand the lead to the Calls agent. The booked-calls flow (skill `booked-calls`) sends the booking confirmation and the reminders. Opus answers this case with `update_records`. If the booked lead's email asks for anything (a new time, a cancellation, a question), it is a hold card or a `booked_call` case, never a silent update.
 
 Everything else is a question for Opus.
 
@@ -38,17 +38,19 @@ Every piece of work runs through the same eight steps.
 - the lead's GHL contact and opportunity: stage, the five fields (file 05), tags, the last 3 notes;
 - the Instantly lead: interest status, campaign id;
 - the thread: every email with its id, direction (in or out), sender, recipient, time and body. Cut each body to the newest 2,000 characters;
-- whether any reply of ours has reached this lead (`our_reply_reached_lead`): an email from our inbox sent after the lead's first reply. The two cold-campaign steps do not count;
+- whether any reply of ours has reached this lead (`our_reply_reached_lead`): an email from our inbox sent after the lead's first reply. The two cold-campaign steps do not count. Needed for every email except an auto-send first reply and the booking confirmation: without it the email is a hold card;
 - for anything that offers times: free times from the Discovery Call calendar for the next 5 business days, 12:00 to 18:00 CT (`free_times`), and every time already offered to any lead and not released from `~/advero/state/offered_times.jsonl` (`offered_times`, each as `{"time": "<ISO 8601>", "lead_email": "<lead>"}`);
 - the approval state from `~/advero/state/approval.json`;
 - the current time in CT (`now_ct`).
 
 For any case that may end in an email, also gather these. `ask_opus.py` holds the email when one it needs is missing:
 - `kill_switch`: `true` if `~/advero/state/KILL_SWITCH` exists, else `false`;
-- `lead_email`: the lead's own address from the Instantly lead;
+- `lead_email`: the lead's own address from the Instantly lead, as one bare address (`dana@brightline.com`, never `Dana <dana@brightline.com>`);
+- `lead.first_name` and `lead.company`: from the Instantly lead or GHL. `{first_name}` must be that name or "there"; `{company}` must be that company (legal suffixes like LLC may be left off) or "your business" (never in a follow-up);
+- `appointment.call_link` (and `appointment.zoom_link` if different): any `{call_link}` or `{zoom_link}` must be exactly that link;
 - `sent_log_keys`: every key in `~/advero/state/sent_log.jsonl` for this lead (`[]` when none);
-- `newest_inbound_from`: the sender of the newest inbound email in the thread (replies, booking emails, E1 to E10);
-- `our_reply_after_newest_inbound`: `true` if an email from our inbox already follows the lead's newest inbound email, else `false` (replies and booking emails);
+- `newest_inbound_from`: the sender (`from_address_email`) of the newest inbound email in the thread, one bare address (replies, booking emails, E1 to E10);
+- `our_reply_after_newest_inbound`: `true` if an email from our inbox already follows the lead's newest inbound email, else `false`. A reply or booking email needs `false`; a follow-up E1 to E10 needs `true` (a lead who wrote again gets an answer, not the next touch);
 - `reply_id`: the Instantly id of the lead's newest inbound email (replies and booking emails);
 - `handled_ids`: the email ids in `~/advero/state/handled.jsonl` whose newest outcome is not `waiting_for_send_window` (replies and booking emails);
 - `has_future_appointment`: `true` if the GHL contact has an appointment after now on the Discovery Call calendar (`GDugwLmZNdsD13RBDnRu`), else `false` (replies, booking emails, E1 to E10);
@@ -69,7 +71,7 @@ cd ~/advero && python3 ask_opus.py < state/cases/<file>.json > state/decisions/<
 | `hold_card` | Send Lorenzo a hold card (file 07). Send nothing to the lead. |
 | `draft_to_lorenzo` | Send Lorenzo `decision.draft_text` with the context (file 07). He sends it himself. |
 | `update_records` | Apply `ghl_stage`, `instantly_interest`, `field_updates` and `other_actions`. No email. |
-| `wait` | Note `send_after` in the lead's Next Due Date. For a reply waiting for the send window, record it in `handled.jsonl` as `waiting_for_send_window`. At `send_after`, gather fresh facts and run the case again. |
+| `wait` | Note `send_after` in the lead's Next Due Date. For a reply waiting for the send window, record it in `handled.jsonl` as `waiting_for_send_window`. At `send_after`, run it again once: first read `handled.jsonl` and the send log; if the reply's newest outcome is no longer `waiting_for_send_window`, or its send key is in the log, do nothing. Otherwise gather fresh facts and run the case. The send key carries the send day, so a second re-run can never send twice. |
 | `nothing` | Log it. Done. |
 
 The records in `decision` (stage, interest, fields, other actions) apply after a `send`, and also with `update_records`. After a `hold_card`, apply them only once Lorenzo answers the card.
@@ -78,7 +80,7 @@ What each `other_actions` value means. None of them touches an Instantly campaig
 
 | other_actions | Meaning |
 |---|---|
-| `blocklist_in_instantly` | Add the lead's address to the Instantly workspace blocklist, the same day, without asking Lorenzo (2026-10-06). The script allows it only for an `unsubscribe` or `negative_hostile` reply at confidence 0.8 or more; with a buying signal Opus escalates and you send a hold card instead |
+| `blocklist_in_instantly` | Add the lead's address to the Instantly workspace blocklist, the same day, without asking Lorenzo (2026-10-06). The script allows it only with `update_records` for an `unsubscribe` or `negative_hostile` reply at confidence 0.8 or more. A buying signal or a legal threat (a lawyer, a lawsuit, a regulator, a complaint) makes it a hold card for Lorenzo instead |
 | `tag_dnd_in_ghl` | Turn on Do Not Disturb on the lead's GHL contact, the same day, under the same rule as the blocklist |
 | `create_ghl_task` | Create a GHL task on the contact for Lorenzo, with Opus's `reason` as the task text |
 | `enroll_nurture` | Set GHL Sequence to `nurture` and clear Next Email and Next Due Date. Nothing sends from nurture yet |
@@ -127,7 +129,7 @@ A send "fails" when the tool errors, times out, or you cannot tell whether it we
 2. If it is not there, run the recipient check again, then retry once with the same text, same inbox, same thread.
 3. After that one retry, stop. Ping Lorenzo: "Send failed twice: <lead>, <template id>. Last error: <error>. Not retrying."
 4. Never change the text, the inbox or the thread to get a send through.
-5. Every send has a key: `<lead email>|<template id>|<date CT>`. Write the key to `~/advero/state/sent_log.jsonl` the moment the send succeeds. Before every send, check the log. If the key is there, the email went: do not send.
+5. Every send has a key: `<lead email>|<template id>|<date CT of the send>`. Use `checks.send_key` from `ask_opus.py`. Write the key to `~/advero/state/sent_log.jsonl` the moment the send succeeds. Before every send, check the log. If the key is there, the email went: do not send.
 
 ## 7. The never list
 

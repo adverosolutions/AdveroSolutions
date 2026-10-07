@@ -56,7 +56,7 @@ Ids are from `config/ids.json` (read-only pull, 2026-09-21) unless marked otherw
 
 - Lorenzo's calendar: `lorenzovillarreal@adverosolutions.com`, time zone America/Chicago.
 - Read it together with the GHL Discovery Call calendar before offering any time. A time is free only if both are free.
-- Zoom is not connected to GHL and has no API app (2026-09-21). Some calls use hand-made Zoom links on Lorenzo's calendar. Without join data, a no-show starts only when Lorenzo marks it. Pending, Lorenzo: connect Zoom in GHL.
+- Zoom is connected on the GHL Discovery Call calendar (verified read-only 2026-10-06): bookings there get a Zoom link. There is no Zoom API app, so you have no join data. Some older calls use hand-made Zoom links on Lorenzo's calendar. Without join data, a no-show starts only when Lorenzo marks it.
 
 ## 6. Upwork
 
@@ -83,7 +83,6 @@ Ids: Upwork organization `2081884703335585732`, freelancer user `208188470333558
 | How Grok reaches Instantly: MCP connector or web app | Lorenzo |
 | The five GHL contact fields | Lorenzo, or Chief of Staff with his yes |
 | The GHL Upwork pipeline and its ids | Lorenzo |
-| Zoom connected in GHL | Lorenzo |
 | Whether a GHL appointment sends the lead an invite by itself | Chief of Staff tests on a booking of Lorenzo's own, with his yes |
 | Instantly `reply_received` webhook to a Grok routine | Lorenzo's yes, after routine webhooks are confirmed to work |
 | Writing the Daily Metrics row | Lorenzo |
