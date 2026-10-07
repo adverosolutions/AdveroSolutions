@@ -23,6 +23,9 @@ RECORDED = {
     2: "923652d6849a40c43868ba014eaab13d7c6e5cc8b1471317f47a33416e6d96bf",
     # 2026-09-24: first replies are checked with the draft's first_reply (no link of any kind) rule.
     3: "77cf1f24acc7a3d1de7931e0dc36dfa052d1c4e26c0e97236eb16f0c50f372cf",
+    # 2026-10-06: the AI agents booking_link and pricing first replies may carry their URL / price band
+    # (draft.template_gate_flags).
+    4: "b0a899418c0aa4c8cf3f06f61271cde2967c29d80508ebc1c8807dcc59541732",
 }
 
 _VERSION_LINE = re.compile(r"^GATE_RULES_VERSION = \d+\s*$")

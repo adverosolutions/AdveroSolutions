@@ -51,8 +51,8 @@ def test_copy_problems_uses_the_same_rules_as_a_cold_reply():
     assert proposal.copy_problems(good, "cleaning_reactivation") == []
     assert "em or en dash" in proposal.copy_problems("A — b\n\nLorenzo", "cleaning_reactivation")
     assert "exclamation mark" in proposal.copy_problems("Great news!\n\nLorenzo", "cleaning_reactivation")
-    assert any("automation" in p for p in proposal.copy_problems("Fully automated.\n\nLorenzo",
-                                                                 "cleaning_reactivation"))
+    assert any("bot" in p for p in proposal.copy_problems("Our bot runs it.\n\nLorenzo",
+                                                          "cleaning_reactivation"))
     assert any("signature" in p for p in proposal.copy_problems("No sign off", "cleaning_reactivation"))
 
 
@@ -441,10 +441,10 @@ def test_our_own_copy_is_still_validated_even_with_quotes_present():
     """Blanking the quotes must not blank the rest of the document."""
     inputs = thread_inputs("We lose about ten accounts a year.")
     built = proposal.build_proposal(lead(), NOW, inputs=inputs, use_llm=False)
-    built.text = built.text.replace("## What I will build", "## What I will build\n\nThis is fully automated.")
+    built.text = built.text.replace("## What I will build", "## What I will build\n\nOur bot runs it.")
     problems = proposal.copy_problems(built.text, built.campaign_key,
                                       quoted=built.meta["quoted_spans"])
-    assert any("automation" in p for p in problems)
+    assert any("bot" in p for p in problems)
 
 
 # ---------------------------------------------------------- the campaign

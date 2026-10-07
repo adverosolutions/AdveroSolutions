@@ -7,21 +7,42 @@ Python 3.9, standard library only.
 import re
 from collections import OrderedDict
 
-# No first reply is approved from the doc (Lorenzo, 2026-09-24: first replies
-# will be rebuilt from his own sent replies, so he approves none of today's
-# text). Every first_reply.* id, main text and every variant, is held: saying
-# "done" never approves it, and the doc says so on each one. Every first reply
-# is also a draft Lorenzo sends himself (approval.py, FIRST_REPLY_LOCK_REASON).
-# (Before 2026-09-24 only the "other" and "referral" first replies were held.)
+# First replies held from the doc: saying "done" never approves them, and the
+# doc says so on each one. Since 2026-10-06 (Lorenzo approved the AI agents
+# reply copy) that is every first_reply.* id EXCEPT the AI agents replies to a
+# yes, "tell me more", "send me info", a booking link ask and a price question
+# (APPROVED_FIRST_REPLIES), which "done" approves and which go out on their own
+# once he also says "go live" (Grok sends them; the legacy engine's own send
+# path stays locked, approval.py FIRST_REPLY_LOCK_REASON). The older six
+# offers' first replies stay held until they are rewritten (2026-09-24: rebuilt
+# from his own replies). The AI agents referral and "other" replies are not
+# approvable at all, so they are not in the doc; they stay cards.
 HELD_SECTION = "first_reply"
-HELD_INTRO = ("Not approved yet. These stay drafts you write yourself until they are rebuilt from your own "
-              "replies.")
+APPROVED_FIRST_REPLY_OFFER = "ai_agents"
+APPROVED_FIRST_REPLY_BRANCHES = ("default", "mechanism", "send_info", "booking_link", "pricing")
+APPROVED_FIRST_REPLIES = tuple("first_reply.%s.%s.full" % (APPROVED_FIRST_REPLY_OFFER, b)
+                               for b in APPROVED_FIRST_REPLY_BRANCHES)
+HELD_INTRO = ("For the AI agents offer, the replies to a yes, 'tell me more', 'send me info', a booking link ask "
+              "and a price question go out on their own once you say 'done' and then 'go live'. A referral reply "
+              "and any other question stay drafts that come to you as cards. The first replies for the older six "
+              "offers are not approved yet: they stay drafts you write yourself until they are rewritten.")
 HELD_NOTE = "Not approved yet. This one stays a draft you write yourself until it is rebuilt from your own replies."
+# The top section's two sentences on approval and sending.
+DONE_SENTENCE = ("When you say 'done', everything in this doc counts as approved, except the first replies marked "
+                 "'Not approved yet'. Emails still only go out after you tell Claude 'go live'.")
+SENDING_SENTENCE = ("Approved does not mean every email goes out on its own. The AI agents first replies to a yes, "
+                    "'tell me more', 'send me info', a booking link ask and a price question do, once you say "
+                    "'done' and 'go live'. A referral reply, any other question and the older offers' first replies "
+                    "come to you as drafts. The other replies to a lead go out on their own only after a reply of "
+                    "yours has reached that lead, except the Locked in booking confirmation. Every send check still "
+                    "applies.")
 
 
 def is_held(template_id):
-    """True for every first_reply.* id: saying "done" never approves one."""
-    return (template_id or "").startswith(HELD_SECTION + ".")
+    """True for every first_reply.* id except APPROVED_FIRST_REPLIES: saying
+    "done" never approves one."""
+    tid = template_id or ""
+    return tid.startswith(HELD_SECTION + ".") and tid not in APPROVED_FIRST_REPLIES
 
 
 # Spliced lines: a cadence email "cadence.<name>" carries a placeholder that

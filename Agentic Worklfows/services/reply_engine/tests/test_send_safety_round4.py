@@ -46,6 +46,9 @@ from test_send_safety_round2 import (  # noqa: F401 - shared fakes, worlds and t
 )
 from test_send_safety_round3 import _armed_touches, _ghl_statuses, _move_appointment, _sopio_confirm_card
 
+# These tests cover the E1 Veto window, switched off on 2026-10-06 (cadence.E1_VETO).
+pytestmark = pytest.mark.usefixtures("e1_veto_on")
+
 NOW = ct(2026, 9, 21, 16, 0)
 FRI_1PM = "2026-09-25T13:00:00-05:00"
 

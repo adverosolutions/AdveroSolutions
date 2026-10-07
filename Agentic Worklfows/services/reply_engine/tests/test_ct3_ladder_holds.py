@@ -39,6 +39,9 @@ from services.reply_engine.cadence import LeadState
 from services.reply_engine.tests.test_ct3_ladders import (  # noqa: F401 - fixtures
     COMPANY, FREE, LEAD, at_day, ct, make_state, public_base_url, store)
 
+# These tests cover the E1 Veto window, switched off on 2026-10-06 (cadence.E1_VETO).
+pytestmark = pytest.mark.usefixtures("e1_veto_on")
+
 RESUME_RE = re.compile(r"Resume: (https://\S+)")
 
 

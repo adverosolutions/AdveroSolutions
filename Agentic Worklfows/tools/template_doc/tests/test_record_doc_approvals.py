@@ -314,10 +314,12 @@ def test_the_doc_approves_every_id_but_the_held_first_replies(doc, fresh, plain,
     # the one count check: the doc holds exactly the catalogue's approvable ids
     assert set(b["template_id"] for b in _template_blocks(doc)) == set(approvable) == set(fresh["hashes"])
     assert sorted(data["approvals"]) == sorted(set(approvable) - set(HELD))
-    # Lorenzo said "done" and still no first reply, main text or variant, is approved
+    # Lorenzo said "done": the approved AI agents first replies are approved (2026-10-06), and no
+    # other first reply, main text or variant, is
     first_replies = sorted(t for t in approvable if t.startswith("first_reply."))
-    assert first_replies and HELD == first_replies
-    assert not [t for t in data["approvals"] if t.startswith("first_reply")]
+    assert first_replies and HELD == sorted(set(first_replies) - set(doc_rules.APPROVED_FIRST_REPLIES))
+    assert sorted(t for t in data["approvals"] if t.startswith("first_reply")) == sorted(
+        doc_rules.APPROVED_FIRST_REPLIES)
     assert set(data) == {"version", "approvals"}
     by = 'Lorenzo (Google Doc): "done", build %s' % doc["fingerprint"][:12]
     for tid in data["approvals"]:
@@ -544,12 +546,15 @@ def test_a_line_that_is_not_approvable_is_read_only_and_never_recorded(doc, fres
 
 
 def test_the_doc_says_how_approved_emails_are_sent(doc, plain):
-    """First replies are drafts Lorenzo sends himself; other replies go out on
-    their own only once a reply of his reached the lead, the Locked in
-    confirmation excepted. No line says approved emails simply send."""
+    """The approved AI agents first replies go out on their own after "done"
+    and "go live", the other first replies are drafts (2026-10-06); other
+    replies go out on their own only once a reply of his reached the lead,
+    the Locked in confirmation excepted. No line says approved emails simply
+    send."""
     low = plain.lower()
     assert "send automatically" not in low and "sends automatically" not in low
-    assert "you send them yourself from the email thread" in plain
+    assert doc_rules.SENDING_SENTENCE in plain and doc_rules.HELD_INTRO in plain
+    assert "veto" not in low
     assert "only after a reply of yours has reached" in plain and "Locked in booking confirmation" in plain
 
 

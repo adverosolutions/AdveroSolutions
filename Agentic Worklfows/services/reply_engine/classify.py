@@ -19,7 +19,7 @@ from typing import Any, Dict, Optional
 
 from shared import llm, slots
 
-from services.reply_engine.models import LABELS, Classification, Extracted, ReplyEvent
+from services.reply_engine.models import LABELS, QUESTION_TYPES, Classification, Extracted, ReplyEvent
 
 logger = logging.getLogger("reply_engine.classify")
 
@@ -333,6 +333,11 @@ PHONE_RE = re.compile(r"(?<!\d)(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}
 PRICING_RE = re.compile(r"percentage|percent|\d\s?%|\bcost|\bprice|pricing|how much|\bfees?\b|up ?front|charge|\brates?\b|commission|budget|expensive", re.I)
 SEND_INFO_RE = re.compile(r"send (me |us |over |it )?(some |more |the |your )?(info|information|details|deck|brochure|proposal|material|literature|a (link|one[- ]pager))|more info(rmation)?\b|(do you have|got) (a |any )?(deck|website|case stud)", re.I)
 MECHANISM_RE = re.compile(r"how (does|would|do|will) (it|this|that|you)|how it works|tell me more|what (exactly )?(is|are|do|does|would) (this|it|that|you)|walk me through|more about|what do you (mean|do)|explain", re.I)
+# "do you have a Calendly?", "send me your booking link", "a link to book a
+# time": the lead wants to pick a time themselves (question type booking_link).
+BOOKING_LINK_RE = re.compile(
+    r"\bcalendly\b|\b(?:booking|scheduling|calendar|meeting) (?:link|page)\b|\blink to (?:book|schedule|grab|pick)\b"
+    r"|\b(?:send|share) (?:me |us |over )?(?:your|a) calendar\b", re.I)
 REFERRAL_RE = re.compile(
     r"(?:talk to|reach out to|contact|speak (?:with|to)|e-?mail|get in touch with|forward(?:ed)? (?:this )?to|handles? this is|person (?:to|you want) (?:talk to|contact) is)\s+"
     r"(?:my |our )?(?:colleague |partner |manager |director |owner )?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)",
@@ -344,6 +349,8 @@ _WORD_NUM = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five":
 def question_type_for(core: str) -> str:
     if PRICING_RE.search(core):
         return "pricing"
+    if BOOKING_LINK_RE.search(core):
+        return "booking_link"
     if SEND_INFO_RE.search(core):
         return "send_info"
     if MECHANISM_RE.search(core):
@@ -385,6 +392,8 @@ def extract(event: ReplyEvent, core: str, label: str) -> Extracted:
         ex.question_type = question_type_for(core)
     elif label in ("positive_interested", "positive_referral") and PRICING_RE.search(core):
         ex.question_type = "pricing"
+    elif label == "positive_interested" and BOOKING_LINK_RE.search(core):
+        ex.question_type = "booking_link"
     if label.startswith("positive") or label == "neutral_question":
         pm = PHONE_RE.search(core)
         if pm:
@@ -444,7 +453,7 @@ def _coerce(raw: Any, method: str, model: str) -> Optional[Classification]:
     conf = max(0.0, min(1.0, conf))
     ex = Extracted()
     qt = raw.get("question_type")
-    if isinstance(qt, str) and qt in ("pricing", "mechanism", "send_info", "other"):
+    if isinstance(qt, str) and qt in QUESTION_TYPES:
         ex.question_type = qt
     return Classification(label=label, confidence=conf, reason=str(raw.get("reason", ""))[:300], method=method, model=model, extracted=ex)
 

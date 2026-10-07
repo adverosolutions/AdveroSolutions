@@ -267,7 +267,7 @@ def test_copy_gate(env):
     v = _fr_verdict(flagged, offer)
     assert (v.reason, v.detail) == ("copy_gate", "mentions AI")
     # the validator is re-run on the final body: a banned word injected after build
-    body = d.body_text.replace("Lorenzo", "Our AI assistant\n\nLorenzo")
+    body = d.body_text.replace("Lorenzo", "Our bot assistant\n\nLorenzo")
     assert _fr_verdict(d.model_copy(update={"body_text": body}), offer).reason == "copy_gate"
     # cadence re-asserts touch.problems
     env.approve_ids("cadence.e1")
@@ -477,7 +477,8 @@ def test_catalogue_digest_is_sorted_id_sha_lines():
     # (N5 is skipped without a niche).
     # The ten-email cadence ladder (2026-09-23): 29 cadence ids, was 23.
     # Go-live no-show ladder (2026-09-24): + no_show.ns_d3_retry_email (one id).
-    assert len(ids) == 103
+    # AI agents offer (2026-10-06): + 5 first replies and 5 follow-up lines.
+    assert len(ids) == 113
     lines = "\n".join(sorted("%s=%s" % kv for kv in ids.items()))
     assert digest == hashlib.sha256(lines.encode("utf-8")).hexdigest()
 
@@ -755,7 +756,7 @@ def test_health_summary_has_no_text(env):
     env.approve_ids("cadence.e1", "cadence.e3")
     h = gate.health_summary()
     assert h["parity"] == "ok" and h["kill_switch"] is False and h["auto_send_enabled"] is True
-    assert h["approved_count"] == 2 and h["approvable_count"] == 103
+    assert h["approved_count"] == 2 and h["approvable_count"] == 113
     assert h["ladder_unapproved_count"] == len(gate.ladder_ids()) - 2
     flat = json.dumps(h)
     assert "Hey" not in flat and "cadence." not in flat and "Lorenzo" not in flat
@@ -796,11 +797,11 @@ def test_parity_cli_write_check_and_mismatch(env, tmp_path, capsys):
     assert parity_cli.main(["--write", "--reference", str(ref)]) == 0
     rec = json.loads(ref.read_text())
     assert set(rec) == {"python", "pytz", "pydantic", "generated_at", "digest", "ids"}
-    assert rec["digest"] == gate.catalogue_digest()[0] and len(rec["ids"]) == 103
+    assert rec["digest"] == gate.catalogue_digest()[0] and len(rec["ids"]) == 113
     assert "Hey" not in ref.read_text()
     capsys.readouterr()
     assert parity_cli.main(["--check", "--reference", str(ref)]) == 0
-    assert capsys.readouterr().out.startswith("OK: 103 ids")
+    assert capsys.readouterr().out.startswith("OK: 113 ids")
     rec["ids"]["cadence.e1"] = "0" * 64
     rec["digest"] = "0" * 64
     ref.write_text(json.dumps(rec))

@@ -46,6 +46,9 @@ from test_send_safety_round2 import (  # noqa: F401 - shared fakes, worlds and t
 )
 from test_send_safety_round3 import _sopio_confirm_card
 
+# These tests cover the E1 Veto window, switched off on 2026-10-06 (cadence.E1_VETO).
+pytestmark = pytest.mark.usefixtures("e1_veto_on")
+
 TIFF = "tiffany@flowerhillfs.com"
 D1_SLOTS = D1_FREE + ["2026-09-24T13:00:00-05:00", "2026-09-25T14:00:00-05:00"]
 LADDER_SLOTS = D1_SLOTS + ["2026-09-28T13:00:00-05:00", "2026-09-29T14:00:00-05:00", "2026-09-30T13:00:00-05:00"]

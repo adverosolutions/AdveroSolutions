@@ -39,8 +39,9 @@ def test_validate_rejects_banned_content():
     assert D.validate_draft(good, booking_link=BOOKING) == []
     assert "em or en dash" in D.validate_draft(good.replace(",", " —"), booking_link=BOOKING)
     assert "exclamation mark" in D.validate_draft(good.replace("Hey Sopio,", "Hey Sopio!"), booking_link=BOOKING)
-    assert "mentions AI" in D.validate_draft(good.replace("Nothing", "Our AI does it. Nothing"), booking_link=BOOKING)
-    assert "mentions automation" in D.validate_draft(good.replace("Nothing", "The automation runs. Nothing"), booking_link=BOOKING)
+    # "AI" and "automation" are allowed since the AI agents offer (2026-10-06); a bot is not
+    assert D.validate_draft(good.replace("Nothing", "Our AI does it. Nothing"), booking_link=BOOKING) == []
+    assert "mentions a bot" in D.validate_draft(good.replace("Nothing", "Our bot does it. Nothing"), booking_link=BOOKING)
     probs = D.validate_draft(good.replace("$0", "$5,000"), booking_link=BOOKING)
     assert any("dollar figure $5000" in p for p in probs)
     assert "must end with the signature line 'Lorenzo'" in D.validate_draft(good + "\nSent from my phone", booking_link=BOOKING)
@@ -98,7 +99,9 @@ def test_every_catalogue_first_reply_passes_the_link_check():
     for e in entries:
         for text in [e["text"]] + [v.get("text", "") for v in e.get("variants") or []]:
             if text:
-                assert not D._has_booking_link(text), (e["id"], text)
+                # the AI agents booking_link reply carries its one allowed URL, and only that one
+                allowed = D.template_gate_flags(e["id"]).get("allowed_url")
+                assert not D._has_booking_link(D._blank_out(text, [allowed]) if allowed else text), (e["id"], text)
                 checked += 1
     assert checked > len(entries)
 
@@ -199,7 +202,9 @@ def test_every_catalogue_price_first_reply_states_no_number():
     every variant): the answer line carries no digit, "$" or "percent"."""
     from services.reply_engine import template_approvals as TA
 
-    entries = [e for e in TA.catalogue() if e["id"].startswith("first_reply.") and e["id"].endswith(".pricing.full")]
+    # the AI agents pricing reply is the one that carries a range (Lorenzo, 2026-10-06; test_ai_agents_copy)
+    entries = [e for e in TA.catalogue() if e["id"].startswith("first_reply.") and e["id"].endswith(".pricing.full")
+               and e["id"] != "first_reply.ai_agents.pricing.full"]
     assert len(entries) == len(D.MECHANISM)
     for e in entries:
         key = e["id"].split(".")[1]
@@ -437,14 +442,13 @@ def test_validate_rejects_automatically_automating_and_en_dashes():
     """_BANNED ended the automation pattern in \\b, which fails on the letter
     after 'automat(ic)', and only U+2014 counted as a dash, while
     cadence.copy_problems already rejected U+2013."""
-    for body in ("We set this up so it runs automatically in the background.",
-                 "I am automating the whole follow up for you.",
+    for body in ("Our chatbot handles the follow up for you.",
                  "Our machine learning model picks the times.",
                  "Booked for Tue 2:00pm – 2:15 CT."):
         problems = D.validate_draft(body + "\n\nLorenzo")
         assert problems, body
-    assert "mentions automation" in D.validate_draft("It runs automatically.\n\nLorenzo")
-    assert "mentions automation" in D.validate_draft("I am automating it.\n\nLorenzo")
+    # "automation" is allowed since the AI agents offer (2026-10-06)
+    assert D.validate_draft("It runs automatically.\n\nLorenzo") == []
     assert "mentions machine learning" in D.validate_draft("Our machine learning model picks the times.\n\nLorenzo")
     assert "em or en dash" in D.validate_draft("Tue 2:00pm – 2:15 CT.\n\nLorenzo")
     assert "em or en dash" in D.validate_draft("Tue 2:00pm — 2:15 CT.\n\nLorenzo")
@@ -527,19 +531,20 @@ def test_a_company_name_containing_a_banned_word_does_not_block_the_draft():
     commercial-cleaning name - produced a permanently unsendable draft. approve
     then returned {'ok': False, 'status': 'blocked'} with no 'error' key, and the
     page rendered "unknown"."""
+    # ("automation" is allowed since 2026-10-06; a bot is still banned, so the case is a "Bot" name)
     body = ("Hey Pat,\n\nInstead of sending a deck, I would rather walk you through it in 15 minutes and show you "
-            "what it would look like for Automated Building Services.\n\nLorenzo")
-    assert "mentions automation" in D.validate_draft(body)
-    assert D.validate_draft(body, allow_terms=["Automated Building Services"]) == []
+            "what it would look like for Clean Bot Building Services.\n\nLorenzo")
+    assert "mentions a bot" in D.validate_draft(body)
+    assert D.validate_draft(body, allow_terms=["Clean Bot Building Services"]) == []
     # the guard itself is untouched: our own copy still cannot say it
-    ours = body.replace("walk you through it", "automate it for you")
-    assert "mentions automation" in D.validate_draft(ours, allow_terms=["Automated Building Services"])
+    ours = body.replace("walk you through it", "have a bot do it for you")
+    assert "mentions a bot" in D.validate_draft(ours, allow_terms=["Clean Bot Building Services"])
     # and the draft for such a lead is sendable end to end
     ev = event("rob@cjsglobal.com", "2026-09-15T22:58", subject="Re: Pat, question")
-    ev.company = "Automated Building Services"
+    ev.company = "Clean Bot Building Services"
     cls = Classification(label="positive_question", extracted=Extracted(question_type="send_info"))
     d = D.build_draft(ev, cls, now=ev.received_at, busy_blocks=[])
-    assert "Automated Building Services" in d.body_text
+    assert "Clean Bot Building Services" in d.body_text
     assert d.problems == [], d.problems
 
 

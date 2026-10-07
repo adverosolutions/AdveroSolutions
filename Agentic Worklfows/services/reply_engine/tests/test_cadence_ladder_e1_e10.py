@@ -505,14 +505,17 @@ NEW_CADENCE_IDS = sorted(
        "cadence.e5.offer_line.reactivation", "cadence.e5.offer_line.reactivation_bookkeeping",
        "cadence.e5.offer_line.outbound"]
     + ["cadence.e6.preview.%s_%s" % c for c in CAMPAIGNS]
-    + ["cadence.e9.observation.%s_%s" % c for c in CAMPAIGNS])
+    + ["cadence.e9.observation.%s_%s" % c for c in CAMPAIGNS]
+    # the AI agents offer (2026-10-06): one line per email for every AI agents campaign
+    + ["cadence.e2.research_fallback.ai_agents", "cadence.e4.offer_proof.ai_agents",
+       "cadence.e5.offer_line.ai_agents", "cadence.e6.preview.ai_agents", "cadence.e9.observation.ai_agents"])
 
 
 def test_the_catalogue_has_exactly_the_new_cadence_ids():
     index = ta.catalogue_index()
     got = sorted(tid for tid in index if tid.startswith("cadence."))
     assert got == NEW_CADENCE_IDS
-    assert len(got) == 30
+    assert len(got) == 35
     for tid in got:
         e = index[tid]
         if tid == "cadence.e2.research_line":

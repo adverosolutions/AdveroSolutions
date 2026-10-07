@@ -33,7 +33,9 @@ DRAFT_LABELS = POSITIVE_LABELS + ("neutral_question",)
 # Labels the rule layer must decide without an LLM call.
 RULE_ONLY_LABELS = ("unsubscribe", "negative_hostile", "ooo", "auto_reply_unmonitored")
 BLOCKLIST_LABELS = ("negative_hostile", "unsubscribe")
-QUESTION_TYPES = ("pricing", "mechanism", "send_info", "other")
+# booking_link: a yes plus an ask for a Calendly or booking link (the AI agents
+# offer answers it with its booking_link reply, 2026-10-06).
+QUESTION_TYPES = ("pricing", "mechanism", "send_info", "other", "booking_link")
 
 # Instantly interest values (config/ids.json interest_status_codes)
 INTEREST_FOR_LABEL = {
@@ -421,7 +423,7 @@ class Extracted(BaseModel):
     phone: Optional[str] = None
     return_date: Optional[str] = None            # YYYY-MM-DD
     referral_name: Optional[str] = None
-    question_type: Optional[str] = None          # pricing | mechanism | send_info | other
+    question_type: Optional[str] = None          # pricing | mechanism | send_info | other | booking_link
     remove_request: bool = False
     follow_up_date: Optional[str] = None         # YYYY-MM-DD (negative_notnow)
 

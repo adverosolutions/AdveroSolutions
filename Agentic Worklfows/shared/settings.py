@@ -251,3 +251,14 @@ GHL_CALENDAR_ID = _CAL.get("id")
 BOOKING_URL = _CAL.get("booking_url")
 CAMPAIGNS = IDS.get("instantly", {}).get("campaigns", {})
 CAMPAIGN_BY_ID = {v.get("id"): dict(v, key=k) for k, v in CAMPAIGNS.items()}
+# Campaigns that share one reply-engine offer key (today ai_agents: the eight
+# "2026 ... - AI Agents" campaigns). Only campaign id -> offer for the reply
+# engine (CAMPAIGN_BY_ID); never added to CAMPAIGNS, which the poller filter and
+# the change-sets iterate, so nothing that walks CAMPAIGNS ever sees these ids.
+REPLY_OFFER_CAMPAIGNS = IDS.get("instantly", {}).get("reply_offer_campaigns", {})
+for _offer_key, _spec in REPLY_OFFER_CAMPAIGNS.items():
+    if _offer_key.startswith("_") or not isinstance(_spec, dict):
+        continue
+    for _cid, _camp in (_spec.get("campaigns") or {}).items():
+        if _cid and _cid not in CAMPAIGN_BY_ID:
+            CAMPAIGN_BY_ID[_cid] = dict(_camp or {}, id=_cid, key=_offer_key, offer=_spec.get("offer") or _offer_key)

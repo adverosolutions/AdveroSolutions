@@ -54,6 +54,9 @@ from test_send_safety_round5 import (  # noqa: F401 - the tiff fixture and the T
     LADDER_SLOTS, TIFF, _first_card, _reply, _ticks, tiff,
 )
 
+# These tests cover the E1 Veto window, switched off on 2026-10-06 (cadence.E1_VETO).
+pytestmark = pytest.mark.usefixtures("e1_veto_on")
+
 OOO_TEXT = "I am out of the office until September 23 with limited access to email."
 OOO_SUBJECT = "Automatic reply: Tiffany, question"
 

@@ -2,7 +2,10 @@
 
 Order inside every draft: answer -> two afternoon slots -> "Lorenzo".
 No booking link in any email (Lorenzo, 2026-09-23): the lead picks one of
-the two offered times and Lorenzo sends the invite.
+the two offered times and Lorenzo sends the invite. The one exception is the
+AI agents booking_link reply (Lorenzo, 2026-10-06), which adds his calendar
+after the two times. AI agents first replies are his approved text of
+2026-10-06 (_ai_agents_skeleton), not the answer -> slots structure.
 Slots come from the GHL Discovery Call calendar (free-slots) or, when GHL
 returns None (no token), from a fallback generator that assumes the
 calendar's open hours (Mon-Fri 12:00-18:00 CT, 30-minute grid) minus any
@@ -82,6 +85,45 @@ MINIMUM = {
 }
 GENERIC_KEY = "cleaning_reactivation"
 
+# ------------------------------------------------------- AI agents offer
+# One offer key for the eight "2026 ... - AI Agents" campaigns (config/ids.json
+# instantly.reply_offer_campaigns). Its first replies are Lorenzo's approved
+# text of 2026-10-06, word for word, so they do not use the six offers'
+# answer paragraph + "15-minute call" paragraph above: _ai_agents_skeleton
+# builds them. The six offers' dicts (PRICING, MECHANISM, MINIMUM,
+# CALL_PRICING) stay six keys; FIRST_REPLY_OFFERS is every key a first reply
+# can be written for.
+AI_AGENTS_KEY = "ai_agents"
+# The only link a first reply may carry, and only in the booking_link reply
+# (validate_draft allowed_url).
+AI_AGENTS_BOOKING_URL = "https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu"
+AI_AGENTS_TIME_ASK = "Would %s work for a 15 minute call?"
+AI_AGENTS_DEFAULT_LEAD = "Glad to hear it."
+_AI_AGENTS_MECHANISM = ("Glad you asked. Quick overview: I look at how %s runs day to day, find the tasks AI agents "
+                        "can take over, and put that in a plan with what each one is worth in time and money. If "
+                        "you like it, I build them. If not, the plan is yours to keep.")
+# Answer paragraphs, %s = the company. "other" is held (a card Lorenzo edits)
+# and starts from the mechanism answer.
+AI_AGENTS_ANSWERS = {
+    "mechanism": _AI_AGENTS_MECHANISM,
+    "other": _AI_AGENTS_MECHANISM,
+    "send_info": ("Most of what I'd send depends on how %s runs, so it's quicker to cover on a call. Short "
+                  "version: I find the tasks AI agents can take over and show you what each one is worth in time "
+                  "and money. The plan is free and yours to keep."),
+    # The one email that carries a price figure (offers.md, PRICING REPLY ONLY).
+    "pricing": ("The plan itself is free and yours to keep. Builds after that usually land between $400 and "
+                "$5,300, depending on how many agents make sense for %s."),
+}
+# Said after the time ask, in the same paragraph.
+AI_AGENTS_TAILS = {
+    "pricing": "I'll have the exact number for you by the end of it.",
+    "booking_link": "If neither fits, here's my calendar: %s" % AI_AGENTS_BOOKING_URL,
+}
+# The booking_link reply when there are no two times to offer.
+AI_AGENTS_NO_SLOTS_LINK = "Here's my calendar: %s" % AI_AGENTS_BOOKING_URL
+AI_AGENTS_REFERRAL = "Thanks for pointing me to %s. Would you mind looping %s in on this thread?"
+FIRST_REPLY_OFFERS = tuple(MECHANISM) + (AI_AGENTS_KEY,)
+
 
 def campaign_key_for(event: ReplyEvent) -> str:
     """The offers.md key this reply belongs to (public name for _key)."""
@@ -97,7 +139,7 @@ MAPPED_OFFERS = ("reactivation", "outbound")
 
 
 def _key(event: ReplyEvent) -> str:
-    if event.campaign_key in PRICING:
+    if event.campaign_key in PRICING or event.campaign_key == AI_AGENTS_KEY:
         return event.campaign_key
     guess = _guess_key(event.niche or "cleaning", event.offer or "reactivation")
     return guess if guess in PRICING else GENERIC_KEY
@@ -303,18 +345,27 @@ def referral_person(classification: Classification) -> Optional[str]:
 
 # The answer branches, in the order first_reply_branch checks them. The same
 # names are template_approvals.FIRST_REPLY_BRANCHES (catalogue order).
-FIRST_REPLY_BRANCH_ORDER = ("referral", "pricing", "send_info", "mechanism", "other", "default")
+FIRST_REPLY_BRANCH_ORDER = ("referral", "pricing", "send_info", "mechanism", "booking_link", "other", "default")
+# booking_link (the lead asked for a Calendly or booking link) is an AI agents
+# branch only; for the six offers it reads as if no question type were given.
+BOOKING_LINK_OFFERS = (AI_AGENTS_KEY,)
 
 
-def first_reply_branch(classification: Classification) -> str:
+def first_reply_branch(classification: Classification, offer: Optional[str] = None) -> str:
     """Which answer the first reply gives: referral, pricing, send_info,
-    mechanism, other (also every neutral_question that is none of the
-    three) or default. The one branch order answer_paragraph renders from."""
+    mechanism, booking_link (``offer`` in BOOKING_LINK_OFFERS only), other
+    (also every neutral_question that is none of those) or default. The one
+    branch order answer_paragraph renders from."""
     qt = classification.extracted.question_type
     if classification.label == "positive_referral":
         return "referral"
     if qt in ("pricing", "send_info", "mechanism"):
         return qt
+    if qt == "booking_link":
+        if offer in BOOKING_LINK_OFFERS:
+            return "booking_link"
+        # what it was before booking_link existed: a question is "other", a yes is "default"
+        qt = None if classification.label == "positive_interested" else "other"
     if qt == "other" or classification.label == "neutral_question":
         return "other"
     return "default"
@@ -334,7 +385,7 @@ def first_reply_offer_key(event: ReplyEvent, campaign_key: Optional[str] = None)
             return None
         key = _guess_key(event.niche, event.offer)
     # the text build_draft renders is _key's; any disagreement is no id
-    return key if key in PRICING and key == _key(event) else None
+    return key if key in FIRST_REPLY_OFFERS and key == _key(event) else None
 
 
 def first_reply_template_id(event: ReplyEvent, classification: Classification,
@@ -346,12 +397,25 @@ def first_reply_template_id(event: ReplyEvent, classification: Classification,
     offer = first_reply_offer_key(event, campaign_key)
     if offer is None:
         return None
-    return "first_reply.%s.%s.full" % (offer, first_reply_branch(classification))
+    return "first_reply.%s.%s.full" % (offer, first_reply_branch(classification, offer))
+
+
+def _ai_agents_answer(event: ReplyEvent, classification: Classification, branch: str) -> Optional[str]:
+    """The AI agents answer paragraph for ``branch``, or None for the
+    branches whose time ask is the whole reply (default, booking_link)."""
+    if branch == "referral":
+        who = referral_person(classification)
+        return AI_AGENTS_REFERRAL % (who or "the right person", _first_word(who) or "them")
+    if branch in AI_AGENTS_ANSWERS:
+        return AI_AGENTS_ANSWERS[branch] % (event.company or "your business")
+    return None
 
 
 def answer_paragraph(event: ReplyEvent, classification: Classification) -> str:
     key = _key(event)
-    branch = first_reply_branch(classification)
+    branch = first_reply_branch(classification, key)
+    if key == AI_AGENTS_KEY:
+        return _ai_agents_answer(event, classification, branch) or AI_AGENTS_DEFAULT_LEAD
     if branch == "referral":
         who = referral_person(classification)
         # Second mention is the first name only: "looping Dustin Landeis in"
@@ -405,8 +469,40 @@ def referral_pronoun(classification: Classification) -> Optional[str]:
     return _first_word(referral_person(classification)) or "them"
 
 
+def _ai_agents_skeleton(event: ReplyEvent, classification: Classification, two: List[datetime],
+                        confirmed: Optional[datetime] = None, early_note: Optional[str] = None) -> str:
+    """An AI agents first reply: Lorenzo's approved text (2026-10-06). The
+    time ask is "Would {slots} work for a 15 minute call?"; default puts
+    "Glad to hear it." in front of it, pricing and booking_link add their
+    line after it, and the answer branches put their paragraph above it. A
+    referral keeps the six offers' time paragraph for the named person. The
+    no-slots, confirmed-time and refused-time wordings reuse the engine's
+    own sentences."""
+    branch = first_reply_branch(classification, AI_AGENTS_KEY)
+    answer = _ai_agents_answer(event, classification, branch)
+    if branch == "referral":
+        ask = slot_paragraph(two, None, confirmed, early_note, for_person=referral_pronoun(classification))
+    elif confirmed is not None:
+        ask = "%s CT works on my end. I will send the invite over." % slots.format_slot(confirmed)
+        if branch == "pricing":
+            ask += " " + AI_AGENTS_TAILS["pricing"]
+    elif not two:
+        ask = "Do you have 15 minutes for a quick call? %s" % (
+            AI_AGENTS_NO_SLOTS_LINK if branch == "booking_link" else NO_SLOTS_ASK % "you")
+    else:
+        ask = (early_note + " " if early_note else "") + AI_AGENTS_TIME_ASK % slots.format_slots(two)
+        if branch in AI_AGENTS_TAILS:
+            ask += " " + AI_AGENTS_TAILS[branch]
+    if branch == "default":
+        ask = "%s %s" % (AI_AGENTS_DEFAULT_LEAD, ask)
+    parts = [greeting(event), ""] + ([answer, ""] if answer else []) + [ask, "", "Lorenzo"]
+    return "\n".join(parts)
+
+
 def skeleton(event: ReplyEvent, classification: Classification, two: List[datetime], booking_link: Optional[str],
              confirmed: Optional[datetime] = None, early_note: Optional[str] = None) -> str:
+    if _key(event) == AI_AGENTS_KEY:
+        return _ai_agents_skeleton(event, classification, two, confirmed=confirmed, early_note=early_note)
     parts = [greeting(event), "", answer_paragraph(event, classification), "",
              slot_paragraph(two, booking_link, confirmed, early_note, for_person=referral_pronoun(classification)), "", "Lorenzo"]
     return "\n".join(parts)
@@ -452,18 +548,14 @@ _PERCENT_IDIOM_RE = re.compile(
 # A figure offers.md marks "TO CONFIRM" must never be quoted in writing.
 _TO_CONFIRM_RE = re.compile(r"TO CONFIRM", re.I)
 _SENTENCE_CUT_RE = re.compile(r"(?s)^.*(?:[.;!?]\s|\n)")
-# offers.md rule 8: never mention AI, automation tools or that a system wrote
-# the email; no exclamation marks, no em dashes. The automation pattern used to
-# end in \b, which fails on the letter after "automat(ic)" - "automatically" and
-# "automating" both shipped clean - and only U+2014 counted as a dash, while
-# cadence.copy_problems already rejected U+2013 too. The two validators now
-# share the same vocabulary.
+# offers.md rule 8: never tell or imply that a bot wrote the email; no
+# exclamation marks, no em dashes. "AI" and "automation" are allowed since the
+# AI agents offer (Lorenzo, 2026-10-06): the offer is AI agents. Only U+2014
+# used to count as a dash, while cadence.copy_problems already rejected U+2013
+# too. The two validators share the same vocabulary.
 _BANNED = [
     (re.compile("[\u2014\u2013\u2015]"), "em or en dash"),
     (re.compile(r"!"), "exclamation mark"),
-    (re.compile(r"\bA\.?I\.?\b"), "mentions AI"),
-    (re.compile(r"\bartificial intelligence\b", re.I), "mentions AI"),
-    (re.compile(r"automat\w*", re.I), "mentions automation"),
     (re.compile(r"\bmachine learning\b", re.I), "mentions machine learning"),
     (re.compile(r"\balgorithms?\b", re.I), "mentions an algorithm"),
     (re.compile(r"\b(bot|bots|chatbot|large language model|LLM|GPT|Claude)\b", re.I), "mentions a bot"),
@@ -598,6 +690,24 @@ def unconfirmed_dollar_figures(offers_md: Optional[str] = None) -> List[str]:
     for m in _TO_CONFIRM_RE.finditer(text or ""):
         before = (text or "")[: m.start()]
         clause = _SENTENCE_CUT_RE.sub("", before)
+        out.update(_norm_dollars(clause))
+    return sorted(out)
+
+
+# A figure offers.md marks "PRICING REPLY ONLY" may appear in the approved
+# pricing reply (first_reply.ai_agents.pricing.full) and in no other email.
+_PRICING_REPLY_ONLY_RE = re.compile(r"PRICING REPLY ONLY", re.I)
+PRICING_REPLY_ONLY_PROBLEM = "dollar figure $%s is only for the approved pricing reply"
+
+
+def pricing_reply_only_dollar_figures(offers_md: Optional[str] = None) -> List[str]:
+    """Figures offers.md marks 'PRICING REPLY ONLY' (today the AI agents
+    $400 to $5,300 band). Read like unconfirmed_dollar_figures: only the
+    clause the marker sits in."""
+    text = offers_md if offers_md is not None else settings.OFFERS_MD
+    out = set()  # type: set
+    for m in _PRICING_REPLY_ONLY_RE.finditer(text or ""):
+        clause = _SENTENCE_CUT_RE.sub("", (text or "")[: m.start()])
         out.update(_norm_dollars(clause))
     return sorted(out)
 
@@ -791,12 +901,20 @@ def wrong_offer_proof_problems(text: str, campaign_key: Optional[str], offers_md
 
 def validate_draft(body: str, offers_md: Optional[str] = None, booking_link: Optional[str] = None,
                    campaign_key: Optional[str] = None, allow_terms: Optional[Iterable[str]] = None,
-                   first_reply: bool = False) -> List[str]:
+                   first_reply: bool = False, allowed_url: Optional[str] = None,
+                   pricing_reply: bool = False) -> List[str]:
     """Return a list of problems (empty == sendable).
 
     ``first_reply``: the body is a first reply, which must not carry a link of
     any kind (the passed ``booking_link``, settings.BOOKING_URL, any URL, a link
     placeholder or booking wording such as "grab a time"; see _has_booking_link).
+    ``allowed_url`` is the one exception: the booking_link reply
+    (first_reply.<offer>.booking_link.full) passes AI_AGENTS_BOOKING_URL, and
+    exactly that URL is not read as a link; any other link still is.
+
+    ``pricing_reply``: the body is the approved pricing reply
+    (first_reply.ai_agents.pricing.full), the only email that may carry a
+    figure offers.md marks PRICING REPLY ONLY.
 
     ``allow_terms`` are lead-supplied strings the draft interpolates (company,
     first name). They are blanked out before the banned-word scan only: a
@@ -813,11 +931,14 @@ def validate_draft(body: str, offers_md: Optional[str] = None, booking_link: Opt
             problems.append(why)
     allowed = set(allowed_dollar_figures(offers_md))
     unconfirmed = set(unconfirmed_dollar_figures(offers_md))
+    reply_only = set() if pricing_reply else set(pricing_reply_only_dollar_figures(offers_md))
     for fig in _norm_dollars(text):
         if fig not in allowed:
             problems.append("dollar figure $%s not in offers.md" % fig)
         elif fig in unconfirmed:
             problems.append("dollar figure $%s is marked TO CONFIRM in offers.md; do not quote it in writing" % fig)
+        elif fig in reply_only:
+            problems.append(PRICING_REPLY_ONLY_PROBLEM % fig)
     # Defect 8: the flat percentage twin of the dollar check above. The problem
     # text ends "% not in offers.md"; cadence._SHARED_PROBLEM_CODES keys on that.
     for fig in unlisted_percent_figures(text, offers_md, allow_terms):
@@ -828,7 +949,8 @@ def validate_draft(body: str, offers_md: Optional[str] = None, booking_link: Opt
     if not lines or lines[-1] != "Lorenzo":
         problems.append("must end with the signature line 'Lorenzo'")
     # ``scanned``: a lead whose company is "Acme.io" is not the draft adding a link.
-    if first_reply and _has_booking_link(scanned, booking_link):
+    if first_reply and _has_booking_link(_blank_out(scanned, [allowed_url]) if allowed_url else scanned,
+                                         booking_link):
         problems.append("contains a booking link")
     if len(text) > 1500:
         problems.append("too long (%d chars)" % len(text))
@@ -837,8 +959,9 @@ def validate_draft(body: str, offers_md: Optional[str] = None, booking_link: Opt
 
 # First replies carry no link of any kind (2026-09-23), so any URL counts:
 # a scheme or www., a bare domain followed by a path, or a bare domain on a
-# common TLD. No first-reply template contains one (test_core_draft checks
-# every catalogue text), so this cannot block a legitimate draft.
+# common TLD. No first-reply template contains one except the booking_link
+# reply's AI_AGENTS_BOOKING_URL, which validate_draft's allowed_url blanks out
+# for that template only, so this cannot block a legitimate draft.
 _URL_RE = re.compile(
     r"(?:https?://|\bwww\.)"
     r"|\b[a-z0-9][a-z0-9-]*(?:\.[a-z0-9-]+)*\.[a-z]{2,24}/"
@@ -871,6 +994,27 @@ def _draft_system(skel: str) -> str:
     except OSError:
         template = "Return only the email body.\n\n{{OFFERS_MD}}\n\n{{SKELETON}}"
     return template.replace("{{OFFERS_MD}}", settings.OFFERS_MD or "").replace("{{SKELETON}}", skel)
+
+
+def template_gate_flags(template_id: Optional[str]) -> Dict[str, Any]:
+    """validate_draft's exceptions for a first reply's template id: the
+    booking URL in first_reply.ai_agents.booking_link.full, the PRICING
+    REPLY ONLY band in first_reply.ai_agents.pricing.full. Every other id
+    gets neither (template_gate passes the same flags)."""
+    parts = str(template_id or "").split(".")
+    if len(parts) != 4 or parts[0] != "first_reply" or parts[3] != "full" or parts[1] not in BOOKING_LINK_OFFERS:
+        return {}
+    if parts[2] == "booking_link":
+        return {"allowed_url": AI_AGENTS_BOOKING_URL}
+    if parts[2] == "pricing" and parts[1] == AI_AGENTS_KEY:
+        return {"pricing_reply": True}
+    return {}
+
+
+def first_reply_gate_flags(event: ReplyEvent, classification: Classification) -> Dict[str, Any]:
+    """template_gate_flags for the first reply build_draft renders."""
+    key = _key(event)
+    return template_gate_flags("first_reply.%s.%s.full" % (key, first_reply_branch(classification, key)))
 
 
 def build_draft(
@@ -912,6 +1056,7 @@ def build_draft(
     rationale = "template per offers.md (%s, %s, slots from %s)" % (classification.label, _key(event), source)
 
     terms = lead_terms(event, state)
+    gate_flags = first_reply_gate_flags(event, classification)
     call_llm = (not llm.is_fake()) if use_llm is None else use_llm
     if call_llm:
         user = "Lead: %s at %s\nLabel: %s\nTheir words:\n<<<\n%s\n>>>" % (
@@ -920,7 +1065,7 @@ def build_draft(
             polished = llm.complete("draft", _draft_system(skel), user, max_tokens=500)
             polished = polished.strip() if isinstance(polished, str) else ""
             probs = validate_draft(polished, booking_link=booking_link, campaign_key=_key(event), allow_terms=terms,
-                                   first_reply=True)
+                                   first_reply=True, **gate_flags)
             keeps_slots = (not two) or slots.format_slots(two) in polished
             # No numbers over email (2026-09-24): a polish may not add a price,
             # percentage or guarantee figure the template does not carry.
@@ -940,7 +1085,7 @@ def build_draft(
             rationale += "; LLM failed (%s)" % exc
 
     problems = validate_draft(body, booking_link=booking_link, campaign_key=_key(event), allow_terms=terms,
-                              first_reply=True)
+                              first_reply=True, **gate_flags)
     offered_slots = [confirmed.isoformat()] if confirmed is not None else [d.isoformat() for d in two]
     # CT3: the template id only for the template render. A polished body is
     # other text, so it carries no id and is always a card. The hash is

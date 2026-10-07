@@ -107,8 +107,10 @@ def test_cadence_variables_are_marked():
 
 def test_every_question_type_branch_has_an_entry_per_offer():
     idx = _index()
-    branches = list(models.QUESTION_TYPES) + ["referral", "default"]
+    # booking_link is an AI agents branch only (2026-10-06; test_ai_agents_copy covers that offer)
+    branches = [q for q in models.QUESTION_TYPES if q != "booking_link"] + ["referral", "default"]
     assert set(branches) == set(ta.FIRST_REPLY_BRANCHES)
+    assert set(ta.AI_AGENTS_BRANCHES) == set(models.QUESTION_TYPES) | {"referral", "default"}
     assert len(draft.PRICING) == 6
     for offer in draft.PRICING:
         assert idx["first_reply.%s.greeting" % offer]["kind"] == "first_reply_piece"
@@ -179,7 +181,8 @@ def test_catalogue_covers_booking_show_rate_and_no_show():
 def test_no_sentinel_or_unexpected_unextractable_entry():
     for e in ta.catalogue():
         assert "zqx" not in e["review_text"].lower(), e["id"]
-        assert "leadconnectorhq" not in e["review_text"], e["id"]
+        if e["id"] != "first_reply.ai_agents.booking_link.full":  # its one allowed link (2026-10-06)
+            assert "leadconnectorhq" not in e["review_text"], e["id"]
         if not e["extractable"]:
             assert e["id"] == "cadence.e2.research_line", e["id"]
             assert e["explanation"]
