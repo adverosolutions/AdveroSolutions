@@ -67,7 +67,7 @@ Lorenzo
 ```
 Nudge (2 days, once), subject "Two things still open, {company}": says the form is still open, repeats both links, and that access and the lists are the only parts that block the start.
 
-Open conflict: both emails carry a booking link, and Lorenzo's 2026-09-23 rule says never a booking link, "Everywhere". Until he says the kickoff is an exception, neither is approved to send; hold them for him.
+Open conflict: both emails carry a booking link. Lorenzo's rule (2026-09-23, "Everywhere") allows a booking link in one email only since 2026-10-06: the `booking_link` first reply to a lead who asks for one (`cold-email-replies`). Until he says the kickoff is an exception too, neither is approved to send; hold them for him.
 
 ### Kickoff form, what it asks
 1. Who to talk to: name, day-to-day email, phone, who else to copy, who has the final yes.

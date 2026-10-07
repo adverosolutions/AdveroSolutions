@@ -15,7 +15,7 @@ Goal: once a lead books, get them to show. If they miss, get them rebooked. If t
 
 ## Hard rules (Lorenzo, 2026-09-23, "Everywhere")
 - **Email only.** No texts, no phone calls, no call or voicemail tasks, no pre-read.
-- **Never a booking link.** The lead picks one of two offered times; Lorenzo sends the calendar invite.
+- **No booking link in these emails.** The one booking link is in the `booking_link` first reply (`cold-email-replies`). The lead picks one of two offered times; that time is booked first, then the Locked in confirmation goes (Lorenzo, 2026-10-06). Lorenzo sends the calendar invite.
 - **Earlier times are always "taken".** Any email that offers new times after an earlier email offered times the lead did not book says those times got taken.
 - **Every email is a reply in the lead's cold-email thread, from the same inbox**, under "Re: <thread subject>". The template's own subject is used only when the lead has no thread at all (then it goes as a GHL email).
 - A GHL email is never a fallback for a broken thread, an unknown or mismatched lead, or an unconfirmed recipient: those hold.
@@ -31,11 +31,11 @@ Goal: once a lead books, get them to show. If they miss, get them rebooked. If t
 - `{slots}`: two reserved times, soonest first, never offered to anyone else, refreshed if they pass: "Fri 12:30pm or Mon 3:00pm CT".
 
 ## Confirmation
-- **Engine booking** (Opus booked from a reply): the "Locked in" reply is the confirmation. Lorenzo, 2026-09-23: fine as is, leave it. Text:
+- **Engine booking** (from a reply): book first, then confirm (Lorenzo, 2026-10-06). The time the lead named is booked in GHL (`ask_opus.py` answers `book_call`), the booking is checked, and only then does the "Locked in" reply go, naming exactly the booked start; a failed booking is a hold card (`cold-email-replies`, step 5). The "Locked in" reply is the confirmation. Lorenzo, 2026-09-23: fine as is, leave it. Text:
   - with a Zoom link: "Locked in {when}, invite on the way. Here is the Zoom link:\n{link}\n\nI will keep it to 15 minutes."
   - without: "Locked in {when}. The calendar invite with the video link follows in a separate email. I will keep it to 15 minutes."
   When this goes, the separate `confirm_email` is skipped for that call.
-- **Widget booking** (`show_rate.confirm_email.<niche>_<offer>`, 8 variants): "Locked in for {when}. The calendar invite is on its way with the call link[, and here it is too so you do not have to dig: {link}]", then a three-line agenda (what made you write back now; a niche/offer line; "if it makes sense to work together, a concrete plan for ... If it doesn't, I'll still send you a plan I think would help where you are now."), then "If anything comes up before then, reply here and we will move it." Subject when no thread: "Confirmed: {when}, 15 minutes with Lorenzo". Skipped if the booking is more than 2 h old when first seen.
+- **Widget booking** (`show_rate.confirm_email.<niche>_<offer>`, 8 variants; always a hold card for Lorenzo since 2026-10-06): "Locked in for {when}. The calendar invite is on its way with the call link[, and here it is too so you do not have to dig: {link}]", then a three-line agenda (what made you write back now; a niche/offer line; "if it makes sense to work together, a concrete plan for ... If it doesn't, I'll still send you a plan I think would help where you are now."), then "If anything comes up before then, reply here and we will move it." Subject when no thread: "Confirmed: {when}, 15 minutes with Lorenzo". Skipped if the booking is more than 2 h old when first seen.
 
 ## Reminders
 
@@ -213,8 +213,9 @@ Missed you again today. I don't think this is worth pursuing anymore, and it doe
 Lorenzo
 ```
 
-## Status (as of 2026-09-24/25)
+## Status (as of 2026-09-24/25, updated 2026-10-06)
+- 2026-10-06 (Lorenzo): the only booked-call email that goes on its own is the "Locked in" confirmation, once its booking exists. Every show-rate email (the widget confirmation, R2, R3, R4) and every no-show email is a hold card for Lorenzo. The reminders R2, R3 and R4 are paused since 2026-10-05.
 - Built and tested in shadow; nothing live. Every email above is held until Lorenzo approves its template id (renamed ids do not carry old approvals).
-- Waiting on Lorenzo: connect Zoom in GHL (N1 and automatic detection need it); approve the ids; decide N3's "today" wording when a no-show is marked on a later day.
+- Waiting on Lorenzo: Zoom join data for N1 and automatic detection (Zoom is connected in GHL, but there is no Zoom API app); approve the ids; decide N3's "today" wording when a no-show is marked on a later day.
 - The trigger wiring for the Grok model (appointment and Zoom webhooks to Grok, per-touch timers) is not built yet.
 - Known gaps: a later ladder email can re-offer a time an earlier one called taken (seen for London leads); an out-of-office stops the ladder; a no-show marked by hand between about 19:00 and 01:00 CT loses N3 (too late) and starts at N9; leads in UTC+7 zones get day emails about a week late.

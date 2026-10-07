@@ -1,0 +1,1911 @@
+Every email the system sends
+Every email the system sends, in the order a lead meets them.
+How to use it: Change any words you like. Keep the words in {curly brackets}: they are filled in for each lead. When you are done, tell Claude 'done'. Nothing goes live until you say so.
+When you say 'done', everything in this doc counts as approved, except the first replies marked 'Not approved yet'. Emails still only go out after you tell Claude 'go live'.
+Approved does not mean every email goes out on its own. Only the main text of the five AI agents first replies (a yes, 'tell me more', 'send me info', a booking link ask and a price question) does, once you say 'done' and 'go live'. Their other versions, a referral reply, any other question and the older offers' first replies come to you as drafts, and every reply offering other times is held for you. The other replies to a lead go out on their own only after a reply of yours has reached that lead, except the Locked in booking confirmation. Every send check still applies.
+If a sentence appears in many emails (like the time-offer line in first replies), changing it once is enough; it changes everywhere. If you change two copies differently, Claude will ask.
+Leave the small grey tags at the end of each heading as they are: they tell Claude which email is which. Grey lines marked note or section are only there to help you read.
+Type your changes straight into the text: no suggesting mode, no strikethrough, no highlights or text colours. Claude reads only the words, so a doc with any of those is not approved; Claude asks you instead.
+Other versions of an email, like 'If there are no free times:', show what they change: a grey line quotes the lines of the email above that they replace or leave out, and the lines under it are the new ones. The versions with example dates and times are written out in full.
+Words in brackets: {first_name} their first name, {company} their company, {slots} two open times, {slot} one time, {zoom_link} the call link, {original_subject} the subject of their email. The cold emails use Instantly's double brackets, like {{firstName}}.
+If we don't have their first name, 'Hey {first_name},' becomes 'Hey there,'. If we don't have their company name, {company} becomes 'your business'. A follow-up email that names the company is held until we have it. In a referral reply with no name, {referral_name} becomes 'the right person' and {referral_first_name} becomes 'them'.
+How times are written
+Every time is Central (CT). The engine writes them like this:
+{slots}: Tue 12:05pm or Thu 4:30pm CT (just Tue 12:05pm CT when only one time is free)
+{slot}: Tue 12:05pm (the email adds CT after it)
+{slot1} and {slot2}: Tue 12:05pm CT
+{when_ct}: Tue, Jan 8 at 12:05pm CT, and in another timezone Tue, Jan 8 at 12:05pm CT (1:05pm ET)
+{time_ct}: 12:05pm CT
+{asked_time}: the time they asked for, in their own zone, like Mon 10:45am ET
+{lead_local_time}: their own time, like 1:05pm ET (only added when they are not on Central)
+{alt_slots}: like {slots}; when the times are in another week the dates are added, like Tue Jan 15 12:05pm or Thu Jan 17 4:30pm CT
+Zones are written CT, ET, MT, PT, and MST for Arizona.
+Exactly how the engine writes times, from its own code (part of every email with a time in it): (tag: formats.1)
+Example times: Mon Jan 7 9:45, Tue Jan 8 12:05 and Thu Jan 10 16:30, 2030, Central (America/Chicago). This block is the same on every template that has a time or slot in it.
+Two times, {slots} and {alt_slots}: Tue 12:05pm or Thu 4:30pm CT
+One time, {slots}, {alt_slots}, {slot1} and {slot2}: Tue 12:05pm CT
+A time without its zone, {slot}: Tue 12:05pm | Thu 4:30pm | Mon 9:45am
+A counter-proposal that crosses a week, {alt_slots}: Tue Jan 15 12:05pm or Thu Jan 17 4:30pm CT
+The time the lead proposed, in the zone they wrote it in, {asked_time}: America/Chicago = Mon 9:45am CT | America/New_York = Mon 10:45am ET | America/Denver = Mon 8:45am MT | America/Los_Angeles = Mon 7:45am PT
+The time the lead proposed, when the counter-proposal crosses a week, {asked_time}: America/Chicago = Mon Jan 7 9:45am CT | America/New_York = Mon Jan 7 10:45am ET | America/Denver = Mon Jan 7 8:45am MT | America/Los_Angeles = Mon Jan 7 7:45am PT
+The lead's own time after the call time, {lead_local_time}: America/Chicago = (nothing added) | America/New_York = (1:05pm ET your time) | America/Denver = (11:05am MT your time) | America/Los_Angeles = (10:05am PT your time) | America/Phoenix = (11:05am MST your time)
+The call time, {when_ct}: Tue, Jan 8 at 12:05pm CT
+The call time when the lead's timezone is known, {when_ct}: America/Chicago = Tue, Jan 8 at 12:05pm CT | America/New_York = Tue, Jan 8 at 12:05pm CT (1:05pm ET) | America/Denver = Tue, Jan 8 at 12:05pm CT (11:05am MT) | America/Los_Angeles = Tue, Jan 8 at 12:05pm CT (10:05am PT) | America/Phoenix = Tue, Jan 8 at 12:05pm CT (11:05am MST)
+The clock time only, {time_ct}: 12:05pm CT | 4:30pm CT
+Zone labels: America/Chicago = CT | America/New_York = ET | America/Denver = MT | America/Los_Angeles = PT | America/Phoenix = MST
+Doc build: df0ec92ac7a26ada (tag: X-BUILD)
+Cold emails in Instantly (live copy, checked 2026-09-23) (section)
+Instantly sends these. Step 2 goes out 3 days after step 1, in the same email thread, and only if they haven't replied. {{personalization}} is the opening line written for each lead. (note)
+Cleaning, reactivation offer (section)
+Campaign: 2026 Cleaning - Client Reactivation. Sends between 7am and 7pm Eastern time. (note)
+Step 1: first email (tag: instantly.cleaning_reactivation.step1)
+Subject: {{firstName}}, question (tag: instantly.cleaning_reactivation.step1/subject)
+{{personalization}}
+
+Know this is out of left field, if I could help recover the money from accounts that cancelled or stopped renewing their contracts in exchange for a commission on the accounts I bring back, would you be open? I work mostly on performance and am building my network.
+
+About me: I build client reactivation systems. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months. Would cost you nothing upfront.
+
+Let me know.
+
+Thanks,
+Lorenzo
+Step 2: 3 days later, if they haven't replied (tag: instantly.cleaning_reactivation.step2)
+Subject: (tag: instantly.cleaning_reactivation.step2/subject)
+No subject of its own: it goes as a reply in the same thread. (note)
+Hey {{firstName}},
+
+Checking in, in case the first one got buried. Quick version:
+- I want to build a reactivation system for {{companyName}}. Goal is to bring back the accounts that cancelled or stopped renewing, without you chasing anyone.
+- I did this for a commercial roofer doing $150M/yr and recovered about $6M in contracts in 6 months.
+- Nothing up front. I only take a commission on the accounts I bring back.
+
+Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.
+
+Thanks for the time,
+Lorenzo
+Cleaning, outbound offer (section)
+Campaign: 2026 Cleaning - Trigger Outbound. Sends between 7am and 7pm Eastern time. (note)
+Step 1: first email (tag: instantly.cleaning_trigger.step1)
+Subject: {{firstName}}, question (tag: instantly.cleaning_trigger.step1/subject)
+{{personalization}}
+
+I build outbound acquisition systems. I recently implemented the same system for a commercial roofing company doing around $150M/yr and was able to generate around $180,000 in 90 days.
+
+I do this by watching for triggers (new leases, office expansions, property management changes, new construction) and run outreach under {{companyName}}'s name. All the walkthroughs would land straight on your calendar.
+
+I'm so confident that I guarantee at least $24,000 a year in new cleaning contracts signed within 90 days, or I give your money back and throw in a $200 gift card to your favorite steakhouse.
+
+If this interests you, let's hop on a short 15 minute call. Just reply Yes and I can shoot you over a calendar invite.
+
+Thanks,
+Lorenzo
+Step 2: 3 days later, if they haven't replied (tag: instantly.cleaning_trigger.step2)
+Subject: (tag: instantly.cleaning_trigger.step2/subject)
+No subject of its own: it goes as a reply in the same thread. (note)
+Hey {{firstName}},
+
+Checking in, in case the first one got buried. Quick version:
+- I want to build an outbound system for {{companyName}}. Goal is to catch businesses signing new leases or expanding, reach them under your name, and land the walkthroughs on your calendar.
+- I did this for a commercial roofer doing $150M/yr and generated about $180K in new contracts in 90 days.
+- If you don't have at least $24K a year in new cleaning contracts signed within 90 days, I give your money back and throw in a $200 gift card to your favorite steakhouse.
+
+Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.
+
+Thanks for the time,
+Lorenzo
+Bookkeeping, reactivation offer (section)
+Campaign: 2026 Bookkeeping - Client Reactivation. Sends between 7am and 7pm Eastern time. (note)
+Step 1: first email (tag: instantly.bookkeeping_reactivation.step1)
+Subject: {{firstName}}, question (tag: instantly.bookkeeping_reactivation.step1/subject)
+{{personalization}}
+
+I build client reactivation systems. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.
+
+TLDR: I'd recover lost revenue by building email sequences that would go out to any lost inquiries and former clients, timed to tax season, quarterly estimates, and year-end cleanup. Booked straight onto your calendar.
+
+I'm so certain this would work for you that I won't charge you a single cent up front, only a percentage of first-year fees from clients I bring back, $0 if nothing closes. I truly believe I can benefit {{companyName}}.
+
+Would you be open to a quick 15 minute call about this? If so just say yes and I'll shoot a calendar invite over.
+
+Thanks,
+Lorenzo
+Step 2: 3 days later, if they haven't replied (tag: instantly.bookkeeping_reactivation.step2)
+Subject: (tag: instantly.bookkeeping_reactivation.step2/subject)
+No subject of its own: it goes as a reply in the same thread. (note)
+Hey {{firstName}},
+
+Checking in, in case the first one got buried. Quick version:
+- I want to build a reactivation system for {{companyName}}. Goal is to bring back lost inquiries and former clients with sequences timed to tax season, quarterly estimates, and year-end cleanup.
+- I did this for a commercial roofer doing $150M/yr and recovered about $6M in contracts in 6 months.
+- Nothing up front. I only take a percentage of first-year fees on clients I bring back, $0 if nothing closes.
+
+Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.
+
+Thanks for the time,
+Lorenzo
+Bookkeeping, outbound offer (section)
+Campaign: 2026 Bookkeeping - Trigger Outbound. Sends between 7am and 7pm Eastern time. (note)
+Step 1: first email (tag: instantly.bookkeeping_trigger.step1)
+Subject: {{firstName}}, question (tag: instantly.bookkeeping_trigger.step1/subject)
+{{personalization}}
+
+I build outbound acquisition systems. I recently implemented the same system for a commercial roofing company doing around $150M/yr and was able to generate around $180,000 in 90 days.
+
+I do this by watching for triggers (new business formations, companies posting part time bookkeeper or admin roles, second location openings) and run outreach under {{companyName}}'s name. All the discovery calls land straight on your calendar.
+
+I'm so confident that I guarantee at least $15,000 in new annual client fees signed within 90 days, or I give your money back and throw in a $200 gift card to your favorite steakhouse.
+
+If this interests you, let's hop on a short 15 minute call. Just reply Yes and I can shoot you over a calendar invite.
+
+Thanks,
+Lorenzo
+Step 2: 3 days later, if they haven't replied (tag: instantly.bookkeeping_trigger.step2)
+Subject: (tag: instantly.bookkeeping_trigger.step2/subject)
+No subject of its own: it goes as a reply in the same thread. (note)
+Hey {{firstName}},
+
+Checking in, in case the first one got buried. Quick version:
+- I want to build an outbound system for {{companyName}}. Goal is to catch new business formations and second locations opening, reach them under your name, and land the discovery calls on your calendar.
+- I did this for a commercial roofer doing $150M/yr and generated about $180K in new contracts in 90 days.
+- If you don't have at least $15K in new annual client fees signed within 90 days, I give your money back and throw in a $200 gift card to your favorite steakhouse.
+
+Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.
+
+Thanks for the time,
+Lorenzo
+Recruiting, reactivation offer (section)
+Campaign: 2026 Recruiting - Client Reactivation. Sends between 7am and 7pm Eastern time. (note)
+Step 1: first email (tag: instantly.recruiting_reactivation.step1)
+Subject: {{firstName}}, question (tag: instantly.recruiting_reactivation.step1/subject)
+{{personalization}}
+
+I build client reactivation systems. I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months.
+
+TLDR: I'd recover lost revenue by building email and text sequences that would go out to any dormant or near miss candidate accounts.
+
+I'm so certain this would work for you that I won't charge you a single cent up front, only a percentage of placement fees from accounts I bring back, $0 if nothing closes. I truly believe I can benefit {{companyName}}.
+
+Would you be open to a quick 15 minute call about this? If so just say yes and I'll shoot a calendar invite over.
+
+Thanks,
+Lorenzo
+Step 2: 3 days later, if they haven't replied (tag: instantly.recruiting_reactivation.step2)
+Subject: (tag: instantly.recruiting_reactivation.step2/subject)
+No subject of its own: it goes as a reply in the same thread. (note)
+Hey {{firstName}},
+
+Checking in, in case the first one got buried. Quick version:
+- I want to build a reactivation system for {{companyName}}. Goal is to bring back the accounts that went quiet on you, with email and text sequences that run on their own.
+- I did this for a commercial roofer doing $150M/yr and recovered about $6M in contracts in 6 months.
+- Nothing up front. I only take a percentage of placement fees on accounts I bring back, $0 if nothing closes.
+
+Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.
+
+Thanks for the time,
+Lorenzo
+Recruiting, outbound offer (section)
+Campaign: 2026 Recruiting - Outbound (specialty roles). Sends between 8am and 5pm Central time. (note)
+Step 1: first email (tag: instantly.recruiting_outbound.step1)
+Subject: {{firstName}}, question (tag: instantly.recruiting_outbound.step1/subject)
+{{personalization}}
+
+I build outbound systems for recruiting agencies. I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days.
+
+Here's what this would look like for {{companyName}}: I watch for {{specialty}} roles sitting open on job boards, run outreach to the hiring managers under your name, and put the intro calls straight on your calendar.
+
+I'm so confident this works that I guarantee at least $40,000 in new placement fees from those calls within 180 days, or I return your money and throw in a $200 gift card to your favorite steakhouse.
+
+Open to a quick 15 minute call? Just say yes and I'll send a calendar invite.
+
+Thanks,
+Lorenzo
+Step 2: 3 days later, if they haven't replied (tag: instantly.recruiting_outbound.step2)
+Subject: (tag: instantly.recruiting_outbound.step2/subject)
+No subject of its own: it goes as a reply in the same thread. (note)
+Hey {{firstName}},
+
+Checking in, in case the first one got buried. Quick version:
+- I want to build an outbound system for {{companyName}}. Goal is to find {{specialty}} roles sitting open on job boards, reach the hiring managers under your name, and put the intro calls on your calendar.
+- I did this for a commercial roofer doing $150M/yr and generated about $180K in new contracts in 90 days.
+- If you don't see $40K in new placement fees within 180 days, I return your money and throw in a $200 gift card to your favorite steakhouse.
+
+Worth a quick 15 minute call? Just reply yes and I'll send a calendar invite.
+
+Thanks for the time,
+Lorenzo
+First reply when a lead replies interested (section)
+The system picks one of these when a lead answers a cold email and sounds interested or asks a question, by their offer and what they asked. (note)
+For the AI agents offer, once you say 'done' and then 'go live', the main text of the replies to a yes, 'tell me more', 'send me info', a booking link ask and a price question goes out on its own. Every version under them (no free times, a time they asked for that works, a time that doesn't, a yes that names a time) comes to you as a draft. A referral reply and any other question also come to you as drafts. The first replies for the older six offers are not approved yet: they stay drafts you write yourself until they are rewritten. (note)
+AI agents offer (every AI agents campaign) (section)
+First reply: AI agents offer, they said yes (tag: first_reply.ai_agents.default.full)
+Subject: Re: {original_subject} (tag: first_reply.ai_agents.default.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Glad to hear it. Would {slots} work for a 15 minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.ai_agents.default.full/no_slots)
+Instead of "Glad to hear it. Would {slots} work for a 15 minute call?": (note)
+Glad to hear it. Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.ai_agents.default.full/confirmed_time)
+Instead of "Glad to hear it. Would {slots} work for a 15 minute call?": (note)
+Glad to hear it. {slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.ai_agents.default.full/proposed_time_refused)
+Instead of "Glad to hear it. Would {slots} work for a 15 minute call?": (note)
+Glad to hear it. {asked_time} is tough on my end. Would {slots} work for a 15 minute call?
+First reply: AI agents offer, they asked about price (tag: first_reply.ai_agents.pricing.full)
+Subject: Re: {original_subject} (tag: first_reply.ai_agents.pricing.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+The plan itself is free and yours to keep. Builds after that usually land between $400 and $5,300, depending on how many agents make sense for {company}.
+
+Would {slots} work for a 15 minute call? I'll have the exact number for you by the end of it.
+
+Lorenzo
+If there are no free times: (tag: first_reply.ai_agents.pricing.full/no_slots)
+Instead of "Would {slots} work for a 15 minute call? I'll have the exact number for you by the end of it.": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.ai_agents.pricing.full/confirmed_time)
+Instead of "Would {slots} work for a 15 minute call? I'll have the exact number for you by the end of it.": (note)
+{slot} CT works on my end. I will send the invite over. I'll have the exact number for you by the end of the call.
+If they asked for a time that doesn't work: (tag: first_reply.ai_agents.pricing.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15 minute call? I'll have the exact number for you by the end of it.": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15 minute call? I'll have the exact number for you by the end of it.
+First reply: AI agents offer, they asked you to send info (tag: first_reply.ai_agents.send_info.full)
+Subject: Re: {original_subject} (tag: first_reply.ai_agents.send_info.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Most of what I'd send depends on how {company} runs, so it's quicker to cover on a call. Short version: I find the tasks AI agents can take over and show you what each one is worth in time and money. The plan is free and yours to keep.
+
+Would {slots} work for a 15 minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.ai_agents.send_info.full/no_slots)
+Instead of "Would {slots} work for a 15 minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.ai_agents.send_info.full/confirmed_time)
+Instead of "Would {slots} work for a 15 minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.ai_agents.send_info.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15 minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15 minute call?
+First reply: AI agents offer, they asked how it works (tag: first_reply.ai_agents.mechanism.full)
+Subject: Re: {original_subject} (tag: first_reply.ai_agents.mechanism.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Glad you asked. Quick overview: I look at how {company} runs day to day, find the tasks AI agents can take over, and put that in a plan with what each one is worth in time and money. If you like it, I build them. If not, the plan is yours to keep.
+
+Would {slots} work for a 15 minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.ai_agents.mechanism.full/no_slots)
+Instead of "Would {slots} work for a 15 minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.ai_agents.mechanism.full/confirmed_time)
+Instead of "Would {slots} work for a 15 minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.ai_agents.mechanism.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15 minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15 minute call?
+First reply: AI agents offer, they asked for a booking link (tag: first_reply.ai_agents.booking_link.full)
+Subject: Re: {original_subject} (tag: first_reply.ai_agents.booking_link.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Would {slots} work for a 15 minute call? If neither fits, here's my calendar: https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu
+
+Lorenzo
+If there are no free times: (tag: first_reply.ai_agents.booking_link.full/no_slots)
+Instead of "Would {slots} work for a 15 minute call? If neither fits, here's my calendar: https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu": (note)
+Do you have 15 minutes for a quick call? Here's my calendar: https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu
+If they asked for a time that works: (tag: first_reply.ai_agents.booking_link.full/confirmed_time)
+Instead of "Would {slots} work for a 15 minute call? If neither fits, here's my calendar: https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.ai_agents.booking_link.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15 minute call? If neither fits, here's my calendar: https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15 minute call? If neither fits, here's my calendar: https://api.leadconnectorhq.com/widget/booking/GDugwLmZNdsD13RBDnRu
+Cleaning, reactivation offer (section)
+First reply: cleaning (reactivation), they said yes (tag: first_reply.cleaning_reactivation.default.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_reactivation.default.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Glad to hear it. All I need to start is a list of 60 or more lost or dormant accounts or lost proposals.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_reactivation.default.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.cleaning_reactivation.default.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_reactivation.default.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: cleaning (reactivation), they asked about price (tag: first_reply.cleaning_reactivation.pricing.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_reactivation.pricing.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Good question. The short version is that I build email and text sequences to every account that cancelled, stopped renewing, or never closed, and the ones ready to come back land on your calendar. The rest is easier to cover on a quick call.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_reactivation.pricing.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.cleaning_reactivation.pricing.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_reactivation.pricing.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: cleaning (reactivation), they asked you to send info (tag: first_reply.cleaning_reactivation.send_info.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_reactivation.send_info.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+I build email and text sequences to every account that cancelled, stopped renewing, or never closed, and the ones ready to come back land on your calendar. Instead of sending a deck, I would rather walk you through it in 15 minutes and show you what it would look like for {company}.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_reactivation.send_info.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.cleaning_reactivation.send_info.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_reactivation.send_info.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: cleaning (reactivation), they asked how it works (tag: first_reply.cleaning_reactivation.mechanism.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_reactivation.mechanism.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+I build email and text sequences to every account that cancelled, stopped renewing, or never closed, and the ones ready to come back land on your calendar. All I need to start is a list of 60 or more lost or dormant accounts or lost proposals.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_reactivation.mechanism.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.cleaning_reactivation.mechanism.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_reactivation.mechanism.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: cleaning (reactivation), they asked something else (tag: first_reply.cleaning_reactivation.other.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_reactivation.other.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Good question. The short version is that I build email and text sequences to every account that cancelled, stopped renewing, or never closed, and the ones ready to come back land on your calendar. The rest is easier to cover on a quick call.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_reactivation.other.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.cleaning_reactivation.other.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_reactivation.other.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: cleaning (reactivation), they pointed you to someone else (tag: first_reply.cleaning_reactivation.referral.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_reactivation.referral.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Appreciate you pointing me to {referral_name}. Would you mind looping {referral_first_name} in on this thread so I can send the details over?
+
+Would {slots} work for {referral_first_name}?
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_reactivation.referral.full/no_slots)
+Instead of "Would {slots} work for {referral_first_name}?": (note)
+Would {referral_first_name} have 15 minutes for a quick call? Could you send me a couple of times that work for {referral_first_name} next week?
+If they asked for a time that works: (tag: first_reply.cleaning_reactivation.referral.full/confirmed_time)
+Instead of "Would {slots} work for {referral_first_name}?": (note)
+{slot} CT works on my end. Once {referral_first_name} is on the thread, I will send the invite over.
+Cleaning, outbound offer (section)
+First reply: cleaning (outbound), they said yes (tag: first_reply.cleaning_trigger.default.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_trigger.default.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Glad to hear it. All I need to start is your service area and the building types you want.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_trigger.default.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.cleaning_trigger.default.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_trigger.default.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: cleaning (outbound), they asked about price (tag: first_reply.cleaning_trigger.pricing.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_trigger.pricing.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Good question. The short version is that I watch for triggers like new leases, office expansions, property management changes and new construction, run the outreach under your name, and land the walkthroughs on your calendar. The rest is easier to cover on a quick call.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_trigger.pricing.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.cleaning_trigger.pricing.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_trigger.pricing.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: cleaning (outbound), they asked you to send info (tag: first_reply.cleaning_trigger.send_info.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_trigger.send_info.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+I watch for triggers like new leases, office expansions, property management changes and new construction, run the outreach under your name, and land the walkthroughs on your calendar. Instead of sending a deck, I would rather walk you through it in 15 minutes and show you what it would look like for {company}.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_trigger.send_info.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.cleaning_trigger.send_info.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_trigger.send_info.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: cleaning (outbound), they asked how it works (tag: first_reply.cleaning_trigger.mechanism.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_trigger.mechanism.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+I watch for triggers like new leases, office expansions, property management changes and new construction, run the outreach under your name, and land the walkthroughs on your calendar. All I need to start is your service area and the building types you want.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_trigger.mechanism.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.cleaning_trigger.mechanism.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_trigger.mechanism.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: cleaning (outbound), they asked something else (tag: first_reply.cleaning_trigger.other.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_trigger.other.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Good question. The short version is that I watch for triggers like new leases, office expansions, property management changes and new construction, run the outreach under your name, and land the walkthroughs on your calendar. The rest is easier to cover on a quick call.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_trigger.other.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.cleaning_trigger.other.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.cleaning_trigger.other.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: cleaning (outbound), they pointed you to someone else (tag: first_reply.cleaning_trigger.referral.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.cleaning_trigger.referral.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Appreciate you pointing me to {referral_name}. Would you mind looping {referral_first_name} in on this thread so I can send the details over?
+
+Would {slots} work for {referral_first_name}?
+
+Lorenzo
+If there are no free times: (tag: first_reply.cleaning_trigger.referral.full/no_slots)
+Instead of "Would {slots} work for {referral_first_name}?": (note)
+Would {referral_first_name} have 15 minutes for a quick call? Could you send me a couple of times that work for {referral_first_name} next week?
+If they asked for a time that works: (tag: first_reply.cleaning_trigger.referral.full/confirmed_time)
+Instead of "Would {slots} work for {referral_first_name}?": (note)
+{slot} CT works on my end. Once {referral_first_name} is on the thread, I will send the invite over.
+Bookkeeping, reactivation offer (section)
+First reply: bookkeeping (reactivation), they said yes (tag: first_reply.bookkeeping_reactivation.default.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_reactivation.default.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Glad to hear it. All I need to start is a list of 60 or more former clients or lost inquiries.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_reactivation.default.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.bookkeeping_reactivation.default.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_reactivation.default.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: bookkeeping (reactivation), they asked about price (tag: first_reply.bookkeeping_reactivation.pricing.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_reactivation.pricing.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Good question. The short version is that I build sequences to lost inquiries and former clients, timed to tax season, quarterly estimates and year-end cleanup, and the ones ready to come back get booked onto your calendar. The rest is easier to cover on a quick call.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_reactivation.pricing.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.bookkeeping_reactivation.pricing.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_reactivation.pricing.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: bookkeeping (reactivation), they asked you to send info (tag: first_reply.bookkeeping_reactivation.send_info.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_reactivation.send_info.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+I build sequences to lost inquiries and former clients, timed to tax season, quarterly estimates and year-end cleanup, and the ones ready to come back get booked onto your calendar. Instead of sending a deck, I would rather walk you through it in 15 minutes and show you what it would look like for {company}.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_reactivation.send_info.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.bookkeeping_reactivation.send_info.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_reactivation.send_info.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: bookkeeping (reactivation), they asked how it works (tag: first_reply.bookkeeping_reactivation.mechanism.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_reactivation.mechanism.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+I build sequences to lost inquiries and former clients, timed to tax season, quarterly estimates and year-end cleanup, and the ones ready to come back get booked onto your calendar. All I need to start is a list of 60 or more former clients or lost inquiries.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_reactivation.mechanism.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.bookkeeping_reactivation.mechanism.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_reactivation.mechanism.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: bookkeeping (reactivation), they asked something else (tag: first_reply.bookkeeping_reactivation.other.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_reactivation.other.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Good question. The short version is that I build sequences to lost inquiries and former clients, timed to tax season, quarterly estimates and year-end cleanup, and the ones ready to come back get booked onto your calendar. The rest is easier to cover on a quick call.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_reactivation.other.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.bookkeeping_reactivation.other.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_reactivation.other.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: bookkeeping (reactivation), they pointed you to someone else (tag: first_reply.bookkeeping_reactivation.referral.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_reactivation.referral.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Appreciate you pointing me to {referral_name}. Would you mind looping {referral_first_name} in on this thread so I can send the details over?
+
+Would {slots} work for {referral_first_name}?
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_reactivation.referral.full/no_slots)
+Instead of "Would {slots} work for {referral_first_name}?": (note)
+Would {referral_first_name} have 15 minutes for a quick call? Could you send me a couple of times that work for {referral_first_name} next week?
+If they asked for a time that works: (tag: first_reply.bookkeeping_reactivation.referral.full/confirmed_time)
+Instead of "Would {slots} work for {referral_first_name}?": (note)
+{slot} CT works on my end. Once {referral_first_name} is on the thread, I will send the invite over.
+Bookkeeping, outbound offer (section)
+First reply: bookkeeping (outbound), they said yes (tag: first_reply.bookkeeping_trigger.default.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_trigger.default.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Glad to hear it. All I need to start is the client profile you want more of.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_trigger.default.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.bookkeeping_trigger.default.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_trigger.default.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: bookkeeping (outbound), they asked about price (tag: first_reply.bookkeeping_trigger.pricing.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_trigger.pricing.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Good question. The short version is that I watch for triggers like new business formations, part-time bookkeeper job posts and second locations, run the outreach under your name, and land the discovery calls on your calendar. The rest is easier to cover on a quick call.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_trigger.pricing.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.bookkeeping_trigger.pricing.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_trigger.pricing.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: bookkeeping (outbound), they asked you to send info (tag: first_reply.bookkeeping_trigger.send_info.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_trigger.send_info.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+I watch for triggers like new business formations, part-time bookkeeper job posts and second locations, run the outreach under your name, and land the discovery calls on your calendar. Instead of sending a deck, I would rather walk you through it in 15 minutes and show you what it would look like for {company}.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_trigger.send_info.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.bookkeeping_trigger.send_info.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_trigger.send_info.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: bookkeeping (outbound), they asked how it works (tag: first_reply.bookkeeping_trigger.mechanism.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_trigger.mechanism.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+I watch for triggers like new business formations, part-time bookkeeper job posts and second locations, run the outreach under your name, and land the discovery calls on your calendar. All I need to start is the client profile you want more of.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_trigger.mechanism.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.bookkeeping_trigger.mechanism.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_trigger.mechanism.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: bookkeeping (outbound), they asked something else (tag: first_reply.bookkeeping_trigger.other.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_trigger.other.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Good question. The short version is that I watch for triggers like new business formations, part-time bookkeeper job posts and second locations, run the outreach under your name, and land the discovery calls on your calendar. The rest is easier to cover on a quick call.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_trigger.other.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.bookkeeping_trigger.other.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.bookkeeping_trigger.other.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: bookkeeping (outbound), they pointed you to someone else (tag: first_reply.bookkeeping_trigger.referral.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.bookkeeping_trigger.referral.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Appreciate you pointing me to {referral_name}. Would you mind looping {referral_first_name} in on this thread so I can send the details over?
+
+Would {slots} work for {referral_first_name}?
+
+Lorenzo
+If there are no free times: (tag: first_reply.bookkeeping_trigger.referral.full/no_slots)
+Instead of "Would {slots} work for {referral_first_name}?": (note)
+Would {referral_first_name} have 15 minutes for a quick call? Could you send me a couple of times that work for {referral_first_name} next week?
+If they asked for a time that works: (tag: first_reply.bookkeeping_trigger.referral.full/confirmed_time)
+Instead of "Would {slots} work for {referral_first_name}?": (note)
+{slot} CT works on my end. Once {referral_first_name} is on the thread, I will send the invite over.
+Recruiting, reactivation offer (section)
+First reply: recruiting (reactivation), they said yes (tag: first_reply.recruiting_reactivation.default.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_reactivation.default.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Glad to hear it. All I need to start is a list of 60 or more dormant client accounts.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_reactivation.default.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.recruiting_reactivation.default.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_reactivation.default.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: recruiting (reactivation), they asked about price (tag: first_reply.recruiting_reactivation.pricing.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_reactivation.pricing.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Good question. The short version is that I build sequences to your dormant and near-miss client accounts, and the ones ready to work with you again land on your calendar. The rest is easier to cover on a quick call.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_reactivation.pricing.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.recruiting_reactivation.pricing.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_reactivation.pricing.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: recruiting (reactivation), they asked you to send info (tag: first_reply.recruiting_reactivation.send_info.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_reactivation.send_info.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+I build sequences to your dormant and near-miss client accounts, and the ones ready to work with you again land on your calendar. Instead of sending a deck, I would rather walk you through it in 15 minutes and show you what it would look like for {company}.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_reactivation.send_info.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.recruiting_reactivation.send_info.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_reactivation.send_info.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: recruiting (reactivation), they asked how it works (tag: first_reply.recruiting_reactivation.mechanism.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_reactivation.mechanism.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+I build sequences to your dormant and near-miss client accounts, and the ones ready to work with you again land on your calendar. All I need to start is a list of 60 or more dormant client accounts.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_reactivation.mechanism.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.recruiting_reactivation.mechanism.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_reactivation.mechanism.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: recruiting (reactivation), they asked something else (tag: first_reply.recruiting_reactivation.other.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_reactivation.other.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Good question. The short version is that I build sequences to your dormant and near-miss client accounts, and the ones ready to work with you again land on your calendar. The rest is easier to cover on a quick call.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_reactivation.other.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.recruiting_reactivation.other.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_reactivation.other.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: recruiting (reactivation), they pointed you to someone else (tag: first_reply.recruiting_reactivation.referral.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_reactivation.referral.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Appreciate you pointing me to {referral_name}. Would you mind looping {referral_first_name} in on this thread so I can send the details over?
+
+Would {slots} work for {referral_first_name}?
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_reactivation.referral.full/no_slots)
+Instead of "Would {slots} work for {referral_first_name}?": (note)
+Would {referral_first_name} have 15 minutes for a quick call? Could you send me a couple of times that work for {referral_first_name} next week?
+If they asked for a time that works: (tag: first_reply.recruiting_reactivation.referral.full/confirmed_time)
+Instead of "Would {slots} work for {referral_first_name}?": (note)
+{slot} CT works on my end. Once {referral_first_name} is on the thread, I will send the invite over.
+Recruiting, outbound offer (section)
+First reply: recruiting (outbound), they said yes (tag: first_reply.recruiting_outbound.default.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_outbound.default.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Glad to hear it. All I need to start is your specialty and geography.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_outbound.default.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.recruiting_outbound.default.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_outbound.default.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: recruiting (outbound), they asked about price (tag: first_reply.recruiting_outbound.pricing.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_outbound.pricing.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Good question. The short version is that I watch job boards for your specialty roles as they open, reach the hiring managers under your agency's name, and land the intro calls on your calendar. The rest is easier to cover on a quick call.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_outbound.pricing.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.recruiting_outbound.pricing.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_outbound.pricing.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: recruiting (outbound), they asked you to send info (tag: first_reply.recruiting_outbound.send_info.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_outbound.send_info.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+I watch job boards for your specialty roles as they open, reach the hiring managers under your agency's name, and land the intro calls on your calendar. Instead of sending a deck, I would rather walk you through it in 15 minutes and show you what it would look like for {company}.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_outbound.send_info.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.recruiting_outbound.send_info.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_outbound.send_info.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: recruiting (outbound), they asked how it works (tag: first_reply.recruiting_outbound.mechanism.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_outbound.mechanism.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+I watch job boards for your specialty roles as they open, reach the hiring managers under your agency's name, and land the intro calls on your calendar. All I need to start is your specialty and geography.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_outbound.mechanism.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.recruiting_outbound.mechanism.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_outbound.mechanism.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: recruiting (outbound), they asked something else (tag: first_reply.recruiting_outbound.other.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_outbound.other.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Good question. The short version is that I watch job boards for your specialty roles as they open, reach the hiring managers under your agency's name, and land the intro calls on your calendar. The rest is easier to cover on a quick call.
+
+Would {slots} work for a 15-minute call?
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_outbound.other.full/no_slots)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+Do you have 15 minutes for a quick call? Could you send me a couple of times that work for you next week?
+If they asked for a time that works: (tag: first_reply.recruiting_outbound.other.full/confirmed_time)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{slot} CT works on my end. I will send the invite over.
+If they asked for a time that doesn't work: (tag: first_reply.recruiting_outbound.other.full/proposed_time_refused)
+Instead of "Would {slots} work for a 15-minute call?": (note)
+{asked_time} is tough on my end. Would {slots} work for a 15-minute call?
+First reply: recruiting (outbound), they pointed you to someone else (tag: first_reply.recruiting_outbound.referral.full)
+Not approved yet. This one stays a draft you write yourself until it is rewritten. (note)
+Subject: Re: {original_subject} (tag: first_reply.recruiting_outbound.referral.full/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+Appreciate you pointing me to {referral_name}. Would you mind looping {referral_first_name} in on this thread so I can send the details over?
+
+Would {slots} work for {referral_first_name}?
+
+Lorenzo
+If there are no free times: (tag: first_reply.recruiting_outbound.referral.full/no_slots)
+Instead of "Would {slots} work for {referral_first_name}?": (note)
+Would {referral_first_name} have 15 minutes for a quick call? Could you send me a couple of times that work for {referral_first_name} next week?
+If they asked for a time that works: (tag: first_reply.recruiting_outbound.referral.full/confirmed_time)
+Instead of "Would {slots} work for {referral_first_name}?": (note)
+{slot} CT works on my end. Once {referral_first_name} is on the thread, I will send the invite over.
+Follow-up emails (section)
+For a lead who went quiet after your first reply, in the order below. The first goes out the business day after your first reply; each one goes out at 10am Central on a business day, and they stop as soon as the lead books, replies or asks to stop. (note)
+Follow-up email 1 (tag: cadence.e1)
+Subject: Re: {original_subject} (tag: cadence.e1/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+The time slots I sent got filled. Here are 2 more, let me know if they work: {slots}.
+
+Lorenzo
+Follow-up email 2 (tag: cadence.e2)
+{research_line} is one of the lines right below this email, picked by the lead's offer. (note)
+Read only: {research_line} can also be a line written for each lead by AI (cadence.e2.research_line). It has no fixed words to show here, so saying 'done' does not approve it, and an email carrying one is held, never sent. (note)
+Subject: Re: {original_subject} (tag: cadence.e2/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+{research_line}
+
+Fifteen minutes is enough for me to show you how this would run for {company}. Let me know when a good time is to get a call on the books.
+
+Lorenzo
+Research fallback: reactivation offers (line used inside Follow-up email 2) (tag: cadence.e2.research_fallback.reactivation)
+The quickest place to start is usually the accounts that already know you and went quiet.
+Research fallback: outbound offers (line used inside Follow-up email 2) (tag: cadence.e2.research_fallback.outbound)
+The quickest place to start is usually the prospects who are in market right now.
+Research fallback: AI agents offer (line used inside Follow-up email 2) (tag: cadence.e2.research_fallback.ai_agents)
+The quickest place to start is usually wherever the most money is slipping through right now.
+Follow-up email 3 (tag: cadence.e3)
+Subject: Re: {original_subject} (tag: cadence.e3/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+I really want to get this call on the books with you. Those last two times got taken too.
+
+Would {slots} work instead?
+
+Lorenzo
+Follow-up email 4 (tag: cadence.e4)
+{offer_proof} is one of the lines right below this email, picked by the lead's offer. (note)
+In the version for when we don't have their details (see the top of this doc), {offer_proof} is written out as "a win-back system for a commercial roofer doing $150M a year that recovered about $6M worth of contracts within 6 months" (note)
+Subject: Re: {original_subject} (tag: cadence.e4/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+I really think there's a lot of room for growth at {company}. I've built these systems across numerous industries. A few of my favorites:
+
+- {offer_proof}
+- an outbound system that raised a software consultancy's qualified lead volume 35%
+- $5M in loan applications in 30 days on $1,500 of ad spend for a lender
+
+The first one is the same kind of system I'd build for {company}. Those last two times got booked. Would {slots} work to go over it?
+
+Lorenzo
+Offer proof: reactivation offers (line used inside Follow-up email 4) (tag: cadence.e4.offer_proof.reactivation)
+a win-back system for a commercial roofer doing $150M a year that recovered about $6M worth of contracts within 6 months
+Offer proof: outbound offers (line used inside Follow-up email 4) (tag: cadence.e4.offer_proof.outbound)
+an outbound system for a commercial roofer doing $150M a year that brought in about $180,000 in new contracts in 90 days
+Offer proof: AI agents offer (line used inside Follow-up email 4) (tag: cadence.e4.offer_proof.ai_agents)
+a team of AI agents for a $150M/year commercial roofer that won back about $6M in 6 months
+Follow-up email 5 (tag: cadence.e5)
+{offer_line} is one of the lines right below this email, picked by the lead's niche and offer. (note)
+In the version for when we don't have their details (see the top of this doc), {offer_line} is written out as "win back {company}'s past accounts" (note)
+Subject: Re: {original_subject} (tag: cadence.e5/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+Haven't heard back yet, no worries. It's a busy time of year and the slots keep getting filled.
+
+I'd still like to show you how we'd {offer_line}. Would {slots} work?
+
+Lorenzo
+Offer line: reactivation offers (line used inside Follow-up email 5) (tag: cadence.e5.offer_line.reactivation)
+win back {company}'s past accounts
+Offer line: bookkeeping (reactivation) (line used inside Follow-up email 5) (tag: cadence.e5.offer_line.reactivation_bookkeeping)
+win back {company}'s past clients
+Offer line: outbound offers (line used inside Follow-up email 5) (tag: cadence.e5.offer_line.outbound)
+get {company} in front of new clients right when they need you
+Offer line: AI agents offer (line used inside Follow-up email 5) (tag: cadence.e5.offer_line.ai_agents)
+use AI agents to bring in more revenue and give your team hours back each week
+Follow-up email 6 (tag: cadence.e6)
+{preview} is one of the lines right below this email, picked by the lead's niche and offer. (note)
+In the version for when we don't have their details (see the top of this doc), {preview} is written out as "The first two messages I'd send accounts that cancelled or never signed: "Quick question, who's handling your cleaning these days?" and "Happy to take another look at the space and send a fresh quote. Want me to set that up?"" (note)
+Subject: Re: {original_subject} (tag: cadence.e6/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+Here's a preview of what I'd show you on the call.
+
+{preview}
+
+The rest takes about 15 minutes. Those last two times are gone, but I've got {slots} open.
+
+Lorenzo
+Preview: cleaning (reactivation) (line used inside Follow-up email 6) (tag: cadence.e6.preview.cleaning_reactivation)
+The first two messages I'd send accounts that cancelled or never signed: "Quick question, who's handling your cleaning these days?" and "Happy to take another look at the space and send a fresh quote. Want me to set that up?"
+Preview: cleaning (outbound) (line used inside Follow-up email 6) (tag: cadence.e6.preview.cleaning_outbound)
+The three things I'd watch for in your area: new office leases, companies moving into bigger space, and buildings that just changed property managers. The outreach goes out under your name.
+Preview: bookkeeping (reactivation) (line used inside Follow-up email 6) (tag: cadence.e6.preview.bookkeeping_reactivation)
+The first two messages I'd send former clients and old inquiries: "Checking in, who's keeping your books these days?" and "Want us to get everything caught up before your next quarterly estimate is due?"
+Preview: bookkeeping (outbound) (line used inside Follow-up email 6) (tag: cadence.e6.preview.bookkeeping_outbound)
+The three things I'd watch for in your area: newly registered businesses, companies posting for a part-time bookkeeper, and businesses opening a second location. The outreach goes out under your name.
+Preview: recruiting (reactivation) (line used inside Follow-up email 6) (tag: cadence.e6.preview.recruiting_reactivation)
+The first two messages I'd send clients who've gone quiet: "Anything you're hiring for this quarter that we could help with?" and "If a role's been open longer than you'd like, send it over and we'll take a first pass."
+Preview: recruiting (outbound) (line used inside Follow-up email 6) (tag: cadence.e6.preview.recruiting_outbound)
+What I'd watch for in your market: specialty roles hitting the job boards, especially ones that sit open for weeks or get reposted. The outreach goes out under your name.
+Preview: AI agents offer (line used inside Follow-up email 6) (tag: cadence.e6.preview.ai_agents)
+The tasks your team does every week that an agent could take over, what each one is worth in hours and dollars, and the order I'd build them in.
+Follow-up email 7 (tag: cadence.e7)
+Subject: Re: {original_subject} (tag: cadence.e7/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+Last one from me this week. Should I keep trying to find a time, or is now just not the right moment?
+
+Those last two times went too. If it's still on your list, I can do {slots}.
+
+Lorenzo
+Follow-up email 8 (tag: cadence.e8)
+Subject: Re: {original_subject} (tag: cadence.e8/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+Been a couple of weeks. Was hoping now was a good time to get a call on the books.
+
+The times I sent before are long gone. How about {slots}?
+
+Let me know if right now is a bad time, or if this just isn't a priority.
+
+Lorenzo
+Follow-up email 9 (tag: cadence.e9)
+{observation} is one of the lines right below this email, picked by the lead's niche and offer. (note)
+In the version for when we don't have their details (see the top of this doc), {observation} is written out as "An account that cancelled or never signed already knows your name, so it's usually an easier conversation than a brand-new lead." (note)
+Subject: Re: {original_subject} (tag: cadence.e9/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+Quick thought for you. {observation}
+
+That's where I'd start with you. The last times I sent are gone, but I'm free {slots}.
+
+Lorenzo
+Observation: cleaning (reactivation) (line used inside Follow-up email 9) (tag: cadence.e9.observation.cleaning_reactivation)
+An account that cancelled or never signed already knows your name, so it's usually an easier conversation than a brand-new lead.
+Observation: cleaning (outbound) (line used inside Follow-up email 9) (tag: cadence.e9.observation.cleaning_outbound)
+A company moving into new space has to sort out cleaning around move-in.
+Observation: bookkeeping (reactivation) (line used inside Follow-up email 9) (tag: cadence.e9.observation.bookkeeping_reactivation)
+Quarterly estimates, year-end and tax season each give you a natural reason to check back in with former clients and old inquiries.
+Observation: bookkeeping (outbound) (line used inside Follow-up email 9) (tag: cadence.e9.observation.bookkeeping_outbound)
+A company posting a part-time bookkeeper job has already said out loud it needs help with its books.
+Observation: recruiting (reactivation) (line used inside Follow-up email 9) (tag: cadence.e9.observation.recruiting_reactivation)
+Clients who hired through you before, or almost did, already know how you work, so they're an easier conversation than any cold account.
+Observation: recruiting (outbound) (line used inside Follow-up email 9) (tag: cadence.e9.observation.recruiting_outbound)
+An open specialty role on a job board is a hiring manager saying in public they need someone.
+Observation: AI agents offer (line used inside Follow-up email 9) (tag: cadence.e9.observation.ai_agents)
+Quotes and proposals that went out and never got an answer are usually the first thing I'd hand to an agent.
+Follow-up email 10 (tag: cadence.e10)
+Subject: Re: {original_subject} (tag: cadence.e10/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+You wrote back that you were interested, so I didn't want to just go quiet on you.
+
+I'll give you some room and check back in a few months. If you'd rather talk sooner, those last two times are gone, but {slots} would work.
+
+Lorenzo
+Booking emails (section)
+These answer a lead who writes back about a time for the call. Every reply offering other times (the 'Other times' emails) is held and comes to you first, so you can book their time anyway or send it. The Locked in booking confirmation can go out on its own right away. The others go out on their own only after a reply of yours has reached the lead; before that they come to you as a draft too. (note)
+Booking confirmation, with Zoom link (tag: booking.confirmation.zoom_link)
+When they pick a time that works, the call is booked and this goes out. Used when the call has a Zoom link. (note)
+Subject: Re: {original_subject} (tag: booking.confirmation.zoom_link/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+Locked in {slot} CT, invite on the way. Here is the Zoom link:
+{zoom_link}
+
+I will keep it to 15 minutes.
+
+Lorenzo
+If they are in another timezone: (tag: booking.confirmation.zoom_link/lead_in_other_timezone)
+Instead of "Locked in {slot} CT, invite on the way. Here is the Zoom link:": (note)
+Locked in {slot} CT ({lead_local_time} your time), invite on the way. Here is the Zoom link:
+Booking confirmation, no Zoom link (tag: booking.confirmation.no_zoom_link)
+Same moment, when the call has no Zoom link yet (the calendar invite carries the video link). (note)
+Subject: Re: {original_subject} (tag: booking.confirmation.no_zoom_link/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+Locked in {slot} CT. The calendar invite with the video link follows in a separate email. I will keep it to 15 minutes.
+
+Lorenzo
+If they are in another timezone: (tag: booking.confirmation.no_zoom_link/lead_in_other_timezone)
+Instead of "Locked in {slot} CT. The calendar invite with the video link follows in a separate email. I will keep it to 15 minutes.": (note)
+Locked in {slot} CT ({lead_local_time} your time). The calendar invite with the video link follows in a separate email. I will keep it to 15 minutes.
+Other times: nothing free in their window (tag: booking.counter.window_no_fit)
+When they give a window, like Tuesday afternoon, and nothing in it is free. (note)
+Subject: Re: {original_subject} (tag: booking.counter.window_no_fit/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+Nothing inside that window is open on my side in the next week. Could you do {alt_slots}?
+
+Lorenzo
+If there are no other free times: (tag: booking.counter.window_no_fit/no_alternatives)
+Instead of "Nothing inside that window is open on my side in the next week. Could you do {alt_slots}?": (note)
+Nothing inside that window is open on my side in the next week. Could you send me a couple of times that work for you next week?
+If the other times fall in another week: (tag: booking.counter.window_no_fit/dated)
+The times in this version are examples. (note)
+This version in full: (note)
+Hey {first_name},
+
+Nothing inside that window is open on my side in the next week. Could you do Tue Jan 15 2:43pm or Wed Jan 16 3:17pm CT?
+
+Lorenzo
+Other times: too early (tag: booking.counter.outside_window_early)
+When the time they ask for is before your first slot of the day (noon Central). (note)
+Subject: Re: {original_subject} (tag: booking.counter.outside_window_early/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+{asked_time} is a touch early on my side. Could you do {alt_slots} instead?
+
+Lorenzo
+If there are no other free times: (tag: booking.counter.outside_window_early/no_alternatives)
+Instead of "{asked_time} is a touch early on my side. Could you do {alt_slots} instead?": (note)
+{asked_time} is a touch early on my side. Could you send me a couple of times that work for you next week?
+If we couldn't read the time they asked for: (tag: booking.counter.outside_window_early/no_proposed_time)
+Instead of "{asked_time} is a touch early on my side. Could you do {alt_slots} instead?": (note)
+That time does not work on my side. Could you do {alt_slots} instead?
+If the other times fall in another week: (tag: booking.counter.outside_window_early/dated)
+The times in this version are examples. (note)
+This version in full: (note)
+Hey {first_name},
+
+Tue Jan 8 9:47am CT is a touch early on my side. Could you do Tue Jan 15 2:43pm or Wed Jan 16 3:17pm CT instead?
+
+Lorenzo
+Other times: too late (tag: booking.counter.outside_window_late)
+When the time they ask for is after your last slot of the day. (note)
+Subject: Re: {original_subject} (tag: booking.counter.outside_window_late/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+{asked_time} is past my last slot. Could you do {alt_slots} instead?
+
+Lorenzo
+If there are no other free times: (tag: booking.counter.outside_window_late/no_alternatives)
+Instead of "{asked_time} is past my last slot. Could you do {alt_slots} instead?": (note)
+{asked_time} is past my last slot. Could you send me a couple of times that work for you next week?
+If we couldn't read the time they asked for: (tag: booking.counter.outside_window_late/no_proposed_time)
+Instead of "{asked_time} is past my last slot. Could you do {alt_slots} instead?": (note)
+That time does not work on my side. Could you do {alt_slots} instead?
+If the other times fall in another week: (tag: booking.counter.outside_window_late/dated)
+The times in this version are examples. (note)
+This version in full: (note)
+Hey {first_name},
+
+Tue Jan 8 7:47pm CT is past my last slot. Could you do Tue Jan 15 2:43pm or Wed Jan 16 3:17pm CT instead?
+
+Lorenzo
+Other times: weekend (tag: booking.counter.weekend)
+When the time they ask for is on a weekend. (note)
+Subject: Re: {original_subject} (tag: booking.counter.weekend/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+{asked_time} lands on a weekend for me. Could you do {alt_slots} instead?
+
+Lorenzo
+If there are no other free times: (tag: booking.counter.weekend/no_alternatives)
+Instead of "{asked_time} lands on a weekend for me. Could you do {alt_slots} instead?": (note)
+{asked_time} lands on a weekend for me. Could you send me a couple of times that work for you next week?
+If we couldn't read the time they asked for: (tag: booking.counter.weekend/no_proposed_time)
+Instead of "{asked_time} lands on a weekend for me. Could you do {alt_slots} instead?": (note)
+That time does not work on my side. Could you do {alt_slots} instead?
+If the other times fall in another week: (tag: booking.counter.weekend/dated)
+The times in this version are examples. (note)
+This version in full: (note)
+Hey {first_name},
+
+Sat Jan 12 1:47pm CT lands on a weekend for me. Could you do Tue Jan 15 2:43pm or Wed Jan 16 3:17pm CT instead?
+
+Lorenzo
+Other times: too soon (tag: booking.counter.too_soon)
+When the time they ask for is less than 4 hours away. (note)
+Subject: Re: {original_subject} (tag: booking.counter.too_soon/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+{asked_time} is a little tight on my end. Could you do {alt_slots} instead?
+
+Lorenzo
+If there are no other free times: (tag: booking.counter.too_soon/no_alternatives)
+Instead of "{asked_time} is a little tight on my end. Could you do {alt_slots} instead?": (note)
+{asked_time} is a little tight on my end. Could you send me a couple of times that work for you next week?
+If we couldn't read the time they asked for: (tag: booking.counter.too_soon/no_proposed_time)
+Instead of "{asked_time} is a little tight on my end. Could you do {alt_slots} instead?": (note)
+That time does not work on my side. Could you do {alt_slots} instead?
+If the other times fall in another week: (tag: booking.counter.too_soon/dated)
+The times in this version are examples. (note)
+This version in full: (note)
+Hey {first_name},
+
+Tue Jan 8 1:47pm CT is a little tight on my end. Could you do Tue Jan 15 2:43pm or Wed Jan 16 3:17pm CT instead?
+
+Lorenzo
+Other times: too far out (tag: booking.counter.beyond_horizon)
+When the time they ask for is more than 5 business days out. (note)
+Subject: Re: {original_subject} (tag: booking.counter.beyond_horizon/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+{asked_time} is further out than I can lock in right now. Could you do {alt_slots} instead?
+
+Lorenzo
+If there are no other free times: (tag: booking.counter.beyond_horizon/no_alternatives)
+Instead of "{asked_time} is further out than I can lock in right now. Could you do {alt_slots} instead?": (note)
+{asked_time} is further out than I can lock in right now. Could you send me a couple of times that work for you next week?
+If we couldn't read the time they asked for: (tag: booking.counter.beyond_horizon/no_proposed_time)
+Instead of "{asked_time} is further out than I can lock in right now. Could you do {alt_slots} instead?": (note)
+That time does not work on my side. Could you do {alt_slots} instead?
+If the other times fall in another week: (tag: booking.counter.beyond_horizon/dated)
+The times in this version are examples. (note)
+This version in full: (note)
+Hey {first_name},
+
+Fri Jan 11 1:47pm CT is further out than I can lock in right now. Could you do Tue Jan 15 2:43pm or Wed Jan 16 3:17pm CT instead?
+
+Lorenzo
+Other times: already taken (tag: booking.counter.slot_taken)
+When the time they ask for is already taken on your calendar. (note)
+Subject: Re: {original_subject} (tag: booking.counter.slot_taken/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+{asked_time} just got taken on my calendar. Could you do {alt_slots} instead?
+
+Lorenzo
+If there are no other free times: (tag: booking.counter.slot_taken/no_alternatives)
+Instead of "{asked_time} just got taken on my calendar. Could you do {alt_slots} instead?": (note)
+{asked_time} just got taken on my calendar. Could you send me a couple of times that work for you next week?
+If we couldn't read the time they asked for: (tag: booking.counter.slot_taken/no_proposed_time)
+Instead of "{asked_time} just got taken on my calendar. Could you do {alt_slots} instead?": (note)
+That time does not work on my side. Could you do {alt_slots} instead?
+If the other times fall in another week: (tag: booking.counter.slot_taken/dated)
+The times in this version are examples. (note)
+This version in full: (note)
+Hey {first_name},
+
+Tue Jan 8 1:47pm CT just got taken on my calendar. Could you do Tue Jan 15 2:43pm or Wed Jan 16 3:17pm CT instead?
+
+Lorenzo
+Their time filled up before the booking went through (tag: booking.slot_already_taken)
+When the time they picked got taken between your offer and the booking. (note)
+Always comes to you as a card first. (note)
+Subject: Re: {original_subject} (tag: booking.slot_already_taken/subject)
+If their email had no subject: Re: {first_name}, question. If we also don't have their first name: Re: your reply. (note)
+Hey {first_name},
+
+{slot} CT just got taken on my calendar. Could you do {alt_slots} instead?
+
+Lorenzo
+If there are no other free times: (tag: booking.slot_already_taken/no_alternatives)
+Instead of "{slot} CT just got taken on my calendar. Could you do {alt_slots} instead?": (note)
+{slot} CT just got taken on my calendar. Could you send me a couple of times that work for you next week?
+Already booked, confirmation not sent yet (tag: booking.already_booked.awaiting_approval)
+When a lead with a call booked writes again before your confirmation to them has gone out. (note)
+Subject: Re: {original_subject} (tag: booking.already_booked.awaiting_approval/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+You are locked in for {slot} CT, invite on the way.
+
+Lorenzo
+Already booked, invite not sent (tag: booking.already_booked.invite_withheld)
+When a lead with a call booked writes again and the calendar invite did not go out. (note)
+Subject: Re: {original_subject} (tag: booking.already_booked.invite_withheld/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+We are already set for {slot} CT.
+
+Lorenzo
+Already booked, invite on their calendar (tag: booking.already_booked.invite_on_calendar)
+When a lead with a call booked writes again and the invite is on their calendar. (note)
+Subject: Re: {original_subject} (tag: booking.already_booked.invite_on_calendar/subject)
+If their email had no subject: Re: your reply. (note)
+Hey {first_name},
+
+We are already set for {slot} CT and the invite is on your calendar.
+
+Lorenzo
+Show-rate messages (before the call) (section)
+These go to every lead with a call on your calendar, however they booked. (note)
+Call confirmation email: cleaning (reactivation) (tag: show_rate.confirm_email.cleaning_reactivation)
+Subject: Confirmed: {when_ct}, 15 minutes with Lorenzo (tag: show_rate.confirm_email.cleaning_reactivation/subject)
+Hey {first_name},
+
+Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+Here is what I want to cover in the 15 minutes:
+- what made you write back now
+- your accounts, which ones cancelled or went quiet, and how you win work today
+- if it makes sense to work together, a concrete plan for winning those accounts back. If it doesn't, I'll still send you a plan I think would help where you are now.
+
+If anything comes up before then, reply here and we will move it.
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.confirm_email.cleaning_reactivation/no_call_link)
+Instead of "Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}": (note)
+Locked in for {when_ct}. The calendar invite is on its way with the call link.
+If they are in another timezone: (tag: show_rate.confirm_email.cleaning_reactivation/lead_in_other_timezone)
+The times in this version are examples. (note)
+This version in full: (note)
+Subject: Confirmed: Tue, Jan 8 at 1:47pm CT (2:47pm ET), 15 minutes with Lorenzo
+
+Hey {first_name},
+
+Locked in for Tue, Jan 8 at 1:47pm CT (2:47pm ET). The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+Here is what I want to cover in the 15 minutes:
+- what made you write back now
+- your accounts, which ones cancelled or went quiet, and how you win work today
+- if it makes sense to work together, a concrete plan for winning those accounts back. If it doesn't, I'll still send you a plan I think would help where you are now.
+
+If anything comes up before then, reply here and we will move it.
+
+Lorenzo
+Call confirmation email: cleaning (outbound) (tag: show_rate.confirm_email.cleaning_outbound)
+Subject: Confirmed: {when_ct}, 15 minutes with Lorenzo (tag: show_rate.confirm_email.cleaning_outbound/subject)
+Hey {first_name},
+
+Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+Here is what I want to cover in the 15 minutes:
+- what made you write back now
+- your crews, the buildings you want more of, and how you win new contracts today
+- if it makes sense to work together, a concrete plan for getting in front of new buildings. If it doesn't, I'll still send you a plan I think would help where you are now.
+
+If anything comes up before then, reply here and we will move it.
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.confirm_email.cleaning_outbound/no_call_link)
+Instead of "Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}": (note)
+Locked in for {when_ct}. The calendar invite is on its way with the call link.
+If they are in another timezone: (tag: show_rate.confirm_email.cleaning_outbound/lead_in_other_timezone)
+The times in this version are examples. (note)
+This version in full: (note)
+Subject: Confirmed: Tue, Jan 8 at 1:47pm CT (2:47pm ET), 15 minutes with Lorenzo
+
+Hey {first_name},
+
+Locked in for Tue, Jan 8 at 1:47pm CT (2:47pm ET). The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+Here is what I want to cover in the 15 minutes:
+- what made you write back now
+- your crews, the buildings you want more of, and how you win new contracts today
+- if it makes sense to work together, a concrete plan for getting in front of new buildings. If it doesn't, I'll still send you a plan I think would help where you are now.
+
+If anything comes up before then, reply here and we will move it.
+
+Lorenzo
+Call confirmation email: bookkeeping (reactivation) (tag: show_rate.confirm_email.bookkeeping_reactivation)
+Subject: Confirmed: {when_ct}, 15 minutes with Lorenzo (tag: show_rate.confirm_email.bookkeeping_reactivation/subject)
+Hey {first_name},
+
+Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+Here is what I want to cover in the 15 minutes:
+- what made you write back now
+- your practice, your client base, and where past clients went
+- if it makes sense to work together, a concrete plan for winning those clients back. If it doesn't, I'll still send you a plan I think would help where you are now.
+
+If anything comes up before then, reply here and we will move it.
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.confirm_email.bookkeeping_reactivation/no_call_link)
+Instead of "Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}": (note)
+Locked in for {when_ct}. The calendar invite is on its way with the call link.
+If they are in another timezone: (tag: show_rate.confirm_email.bookkeeping_reactivation/lead_in_other_timezone)
+The times in this version are examples. (note)
+This version in full: (note)
+Subject: Confirmed: Tue, Jan 8 at 1:47pm CT (2:47pm ET), 15 minutes with Lorenzo
+
+Hey {first_name},
+
+Locked in for Tue, Jan 8 at 1:47pm CT (2:47pm ET). The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+Here is what I want to cover in the 15 minutes:
+- what made you write back now
+- your practice, your client base, and where past clients went
+- if it makes sense to work together, a concrete plan for winning those clients back. If it doesn't, I'll still send you a plan I think would help where you are now.
+
+If anything comes up before then, reply here and we will move it.
+
+Lorenzo
+Call confirmation email: bookkeeping (outbound) (tag: show_rate.confirm_email.bookkeeping_outbound)
+Subject: Confirmed: {when_ct}, 15 minutes with Lorenzo (tag: show_rate.confirm_email.bookkeeping_outbound/subject)
+Hey {first_name},
+
+Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+Here is what I want to cover in the 15 minutes:
+- what made you write back now
+- your practice, the clients you want more of, and how new ones find you today
+- if it makes sense to work together, a concrete plan for getting in front of new clients. If it doesn't, I'll still send you a plan I think would help where you are now.
+
+If anything comes up before then, reply here and we will move it.
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.confirm_email.bookkeeping_outbound/no_call_link)
+Instead of "Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}": (note)
+Locked in for {when_ct}. The calendar invite is on its way with the call link.
+If they are in another timezone: (tag: show_rate.confirm_email.bookkeeping_outbound/lead_in_other_timezone)
+The times in this version are examples. (note)
+This version in full: (note)
+Subject: Confirmed: Tue, Jan 8 at 1:47pm CT (2:47pm ET), 15 minutes with Lorenzo
+
+Hey {first_name},
+
+Locked in for Tue, Jan 8 at 1:47pm CT (2:47pm ET). The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+Here is what I want to cover in the 15 minutes:
+- what made you write back now
+- your practice, the clients you want more of, and how new ones find you today
+- if it makes sense to work together, a concrete plan for getting in front of new clients. If it doesn't, I'll still send you a plan I think would help where you are now.
+
+If anything comes up before then, reply here and we will move it.
+
+Lorenzo
+Call confirmation email: recruiting (reactivation) (tag: show_rate.confirm_email.recruiting_reactivation)
+Subject: Confirmed: {when_ct}, 15 minutes with Lorenzo (tag: show_rate.confirm_email.recruiting_reactivation/subject)
+Hey {first_name},
+
+Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+Here is what I want to cover in the 15 minutes:
+- what made you write back now
+- your agency, the clients you've placed with, and which ones went quiet
+- if it makes sense to work together, a concrete plan for winning those clients back. If it doesn't, I'll still send you a plan I think would help where you are now.
+
+If anything comes up before then, reply here and we will move it.
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.confirm_email.recruiting_reactivation/no_call_link)
+Instead of "Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}": (note)
+Locked in for {when_ct}. The calendar invite is on its way with the call link.
+If they are in another timezone: (tag: show_rate.confirm_email.recruiting_reactivation/lead_in_other_timezone)
+The times in this version are examples. (note)
+This version in full: (note)
+Subject: Confirmed: Tue, Jan 8 at 1:47pm CT (2:47pm ET), 15 minutes with Lorenzo
+
+Hey {first_name},
+
+Locked in for Tue, Jan 8 at 1:47pm CT (2:47pm ET). The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+Here is what I want to cover in the 15 minutes:
+- what made you write back now
+- your agency, the clients you've placed with, and which ones went quiet
+- if it makes sense to work together, a concrete plan for winning those clients back. If it doesn't, I'll still send you a plan I think would help where you are now.
+
+If anything comes up before then, reply here and we will move it.
+
+Lorenzo
+Call confirmation email: recruiting (outbound) (tag: show_rate.confirm_email.recruiting_outbound)
+Subject: Confirmed: {when_ct}, 15 minutes with Lorenzo (tag: show_rate.confirm_email.recruiting_outbound/subject)
+Hey {first_name},
+
+Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+Here is what I want to cover in the 15 minutes:
+- what made you write back now
+- your agency, the roles you fill best, and how you land new clients today
+- if it makes sense to work together, a concrete plan for getting in front of new hiring managers. If it doesn't, I'll still send you a plan I think would help where you are now.
+
+If anything comes up before then, reply here and we will move it.
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.confirm_email.recruiting_outbound/no_call_link)
+Instead of "Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}": (note)
+Locked in for {when_ct}. The calendar invite is on its way with the call link.
+If they are in another timezone: (tag: show_rate.confirm_email.recruiting_outbound/lead_in_other_timezone)
+The times in this version are examples. (note)
+This version in full: (note)
+Subject: Confirmed: Tue, Jan 8 at 1:47pm CT (2:47pm ET), 15 minutes with Lorenzo
+
+Hey {first_name},
+
+Locked in for Tue, Jan 8 at 1:47pm CT (2:47pm ET). The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+Here is what I want to cover in the 15 minutes:
+- what made you write back now
+- your agency, the roles you fill best, and how you land new clients today
+- if it makes sense to work together, a concrete plan for getting in front of new hiring managers. If it doesn't, I'll still send you a plan I think would help where you are now.
+
+If anything comes up before then, reply here and we will move it.
+
+Lorenzo
+Call confirmation email: any other niche (reactivation) (tag: show_rate.confirm_email.generic_reactivation)
+Subject: Confirmed: {when_ct}, 15 minutes with Lorenzo (tag: show_rate.confirm_email.generic_reactivation/subject)
+Hey {first_name},
+
+Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+Here is what I want to cover in the 15 minutes:
+- what made you write back now
+- your company, your past customers, and how you bring work in today
+- if it makes sense to work together, a concrete plan for winning those customers back. If it doesn't, I'll still send you a plan I think would help where you are now.
+
+If anything comes up before then, reply here and we will move it.
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.confirm_email.generic_reactivation/no_call_link)
+Instead of "Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}": (note)
+Locked in for {when_ct}. The calendar invite is on its way with the call link.
+If they are in another timezone: (tag: show_rate.confirm_email.generic_reactivation/lead_in_other_timezone)
+The times in this version are examples. (note)
+This version in full: (note)
+Subject: Confirmed: Tue, Jan 8 at 1:47pm CT (2:47pm ET), 15 minutes with Lorenzo
+
+Hey {first_name},
+
+Locked in for Tue, Jan 8 at 1:47pm CT (2:47pm ET). The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+Here is what I want to cover in the 15 minutes:
+- what made you write back now
+- your company, your past customers, and how you bring work in today
+- if it makes sense to work together, a concrete plan for winning those customers back. If it doesn't, I'll still send you a plan I think would help where you are now.
+
+If anything comes up before then, reply here and we will move it.
+
+Lorenzo
+Call confirmation email: any other niche (outbound) (tag: show_rate.confirm_email.generic_outbound)
+Subject: Confirmed: {when_ct}, 15 minutes with Lorenzo (tag: show_rate.confirm_email.generic_outbound/subject)
+Hey {first_name},
+
+Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+Here is what I want to cover in the 15 minutes:
+- what made you write back now
+- your company, who you sell to, and how you bring work in today
+- if it makes sense to work together, a concrete plan for getting in front of new customers. If it doesn't, I'll still send you a plan I think would help where you are now.
+
+If anything comes up before then, reply here and we will move it.
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.confirm_email.generic_outbound/no_call_link)
+Instead of "Locked in for {when_ct}. The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}": (note)
+Locked in for {when_ct}. The calendar invite is on its way with the call link.
+If they are in another timezone: (tag: show_rate.confirm_email.generic_outbound/lead_in_other_timezone)
+The times in this version are examples. (note)
+This version in full: (note)
+Subject: Confirmed: Tue, Jan 8 at 1:47pm CT (2:47pm ET), 15 minutes with Lorenzo
+
+Hey {first_name},
+
+Locked in for Tue, Jan 8 at 1:47pm CT (2:47pm ET). The calendar invite is on its way with the call link, and here it is too so you do not have to dig: {zoom_link}
+
+Here is what I want to cover in the 15 minutes:
+- what made you write back now
+- your company, who you sell to, and how you bring work in today
+- if it makes sense to work together, a concrete plan for getting in front of new customers. If it doesn't, I'll still send you a plan I think would help where you are now.
+
+If anything comes up before then, reply here and we will move it.
+
+Lorenzo
+Reminder email, 24 hours before (tag: show_rate.reminder_24h_email)
+Subject: Tomorrow's call (tag: show_rate.reminder_24h_email/subject)
+Hey {first_name},
+
+Still good for tomorrow? I have you down for {when_ct}. A quick yes works.
+
+Link for tomorrow: {zoom_link}
+
+If the time doesn't work anymore, just reply and I'll send a couple of other times.
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.reminder_24h_email/no_call_link)
+Instead of "Link for tomorrow: {zoom_link}": (note)
+The link is on your calendar invite.
+If they are in another timezone: (tag: show_rate.reminder_24h_email/lead_in_other_timezone)
+The times in this version are examples. (note)
+This version in full: (note)
+Subject: Tomorrow's call
+
+Hey {first_name},
+
+Still good for tomorrow? I have you down for Tue, Jan 8 at 1:47pm CT (2:47pm ET). A quick yes works.
+
+Link for tomorrow: {zoom_link}
+
+If the time doesn't work anymore, just reply and I'll send a couple of other times.
+
+Lorenzo
+Reminder email, the morning of the call (tag: show_rate.reminder_morning_email)
+Subject: Today's call (tag: show_rate.reminder_morning_email/subject)
+Hey {first_name},
+
+Morning. Are we still set for {time_ct} today? Link's here: {zoom_link}
+
+If something came up, just reply and we'll find another time.
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.reminder_morning_email/no_call_link)
+Instead of "Morning. Are we still set for {time_ct} today? Link's here: {zoom_link}": (note)
+Morning. Are we still set for {time_ct} today? The link's on your calendar invite.
+If they are in another timezone: (tag: show_rate.reminder_morning_email/lead_in_other_timezone)
+The times in this version are examples. (note)
+This version in full: (note)
+Subject: Today's call
+
+Hey {first_name},
+
+Morning. Are we still set for 1:47pm CT (2:47pm ET) today? Link's here: {zoom_link}
+
+If something came up, just reply and we'll find another time.
+
+Lorenzo
+Reminder email, 1 hour before (tag: show_rate.reminder_1h_email)
+Subject: See you at {time_ct} (tag: show_rate.reminder_1h_email/subject)
+Hey {first_name},
+
+Talk in an hour. Here's the link:
+{zoom_link}
+
+If {time_ct} won't work after all, reply here and we'll move it.
+
+Lorenzo
+If there is no call link yet: (tag: show_rate.reminder_1h_email/no_call_link)
+Instead of "Talk in an hour. Here's the link:" and "{zoom_link}": (note)
+Talk in an hour. The call link is on the calendar invite from when we booked.
+If they are in another timezone: (tag: show_rate.reminder_1h_email/lead_in_other_timezone)
+The times in this version are examples. (note)
+This version in full: (note)
+Subject: See you at 1:47pm CT (2:47pm ET)
+
+Hey {first_name},
+
+Talk in an hour. Here's the link:
+{zoom_link}
+
+If 1:47pm CT (2:47pm ET) won't work after all, reply here and we'll move it.
+
+Lorenzo
+No-show recovery (section)
+These start when a lead misses the call. (note)
+I'm on email (tag: no_show.ns_still_on_email)
+Subject: I'm on (tag: no_show.ns_still_on_email/subject)
+Hey {first_name},
+
+I'm on the call now. Here's the link:
+{zoom_link}
+
+Lorenzo
+If there is no call link yet: (tag: no_show.ns_still_on_email/no_call_link)
+Instead of "I'm on the call now. Here's the link:" and "{zoom_link}": (note)
+I'm on the call now. The link is on your calendar invite.
+Missed you email (tag: no_show.ns_reschedule_email)
+Subject: New time for our call (tag: no_show.ns_reschedule_email/subject)
+Hey {first_name},
+
+Looks like I missed you on our call today. I understand things come up, so let's get another call on the books at a time that works well for you.
+
+Could we do {slots}? Just reply with the one that works.
+
+Lorenzo
+Day 1 email after a no-show (tag: no_show.ns_d1_email)
+Subject: Two open times (tag: no_show.ns_d1_email/subject)
+Hey {first_name},
+
+Those two times got taken, but I can do {slots} if you still want to find 15 minutes. Just reply with the one that works.
+
+Lorenzo
+Day 2 email after a no-show: cleaning (reactivation) (tag: no_show.ns_d2_value_email.cleaning_reactivation)
+Subject: One thing for {company} (tag: no_show.ns_d2_value_email.cleaning_reactivation/subject)
+Hey {first_name},
+
+One thing I was going to walk you through on our call:
+
+I'd set up emails and texts to every account that cancelled, stopped renewing or never closed, and the ones ready to talk land on your calendar.
+
+The last two times got taken, but if that's worth 15 minutes, I've got {slots} open. Just say which one works.
+
+Lorenzo
+Day 2 email after a no-show: cleaning (outbound) (tag: no_show.ns_d2_value_email.cleaning_outbound)
+Subject: One thing for {company} (tag: no_show.ns_d2_value_email.cleaning_outbound/subject)
+Hey {first_name},
+
+One thing I was going to walk you through on our call:
+
+I'd watch for new leases, office expansions, property-manager changes and new construction, then reach out under your name and put walkthroughs on your calendar.
+
+The last two times got taken, but if that's worth 15 minutes, I've got {slots} open. Just say which one works.
+
+Lorenzo
+Day 2 email after a no-show: bookkeeping (reactivation) (tag: no_show.ns_d2_value_email.bookkeeping_reactivation)
+Subject: One thing for {company} (tag: no_show.ns_d2_value_email.bookkeeping_reactivation/subject)
+Hey {first_name},
+
+One thing I was going to walk you through on our call:
+
+I'd reach back out to your lost inquiries and former clients, timed around tax season, quarterly estimates and year-end cleanup.
+
+The last two times got taken, but if that's worth 15 minutes, I've got {slots} open. Just say which one works.
+
+Lorenzo
+Day 2 email after a no-show: bookkeeping (outbound) (tag: no_show.ns_d2_value_email.bookkeeping_outbound)
+Subject: One thing for {company} (tag: no_show.ns_d2_value_email.bookkeeping_outbound/subject)
+Hey {first_name},
+
+One thing I was going to walk you through on our call:
+
+I'd watch for new business formations, part-time bookkeeper job posts and second locations, then reach out to those businesses under your name.
+
+The last two times got taken, but if that's worth 15 minutes, I've got {slots} open. Just say which one works.
+
+Lorenzo
+Day 2 email after a no-show: recruiting (reactivation) (tag: no_show.ns_d2_value_email.recruiting_reactivation)
+Subject: One thing for {company} (tag: no_show.ns_d2_value_email.recruiting_reactivation/subject)
+Hey {first_name},
+
+One thing I was going to walk you through on our call:
+
+I'd set up follow-up sequences to your dormant and near-miss client accounts.
+
+The last two times got taken, but if that's worth 15 minutes, I've got {slots} open. Just say which one works.
+
+Lorenzo
+Day 2 email after a no-show: recruiting (outbound) (tag: no_show.ns_d2_value_email.recruiting_outbound)
+Subject: One thing for {company} (tag: no_show.ns_d2_value_email.recruiting_outbound/subject)
+Hey {first_name},
+
+One thing I was going to walk you through on our call:
+
+I'd watch job boards for open roles in your specialties, then reach out to the hiring managers under your agency's name.
+
+The last two times got taken, but if that's worth 15 minutes, I've got {slots} open. Just say which one works.
+
+Lorenzo
+Day 3 email after a no-show (tag: no_show.ns_d3_retry_email)
+Subject: Still want to talk? (tag: no_show.ns_d3_retry_email/subject)
+Hey {first_name},
+
+Trying once more to get our call back on the calendar. I can do {slots}. Just reply with the one that works.
+
+Lorenzo
+Day 5 email after a no-show (tag: no_show.ns_d5_yes_no_email)
+Subject: Quick one (tag: no_show.ns_d5_yes_no_email/subject)
+Hey {first_name},
+
+Quick one on the call: still want to chat, later, or not a fit?
+
+A one-word answer is plenty. If it's later, just tell me roughly when. If you still want to chat, the last two times got taken, but I can do {slots}.
+
+Lorenzo
+Day 7 email after a no-show (tag: no_show.ns_d7_breakup_email)
+Subject: Leaving the door open (tag: no_show.ns_d7_breakup_email/subject)
+Hey {first_name},
+
+I'll leave this with you for now.
+
+If the timing gets better later on, just reply here and I'll send over a couple of times.
+
+Lorenzo
+Email after a third no-show (tag: no_show.ns_third_miss_email)
+Subject: Closing this out (tag: no_show.ns_third_miss_email/subject)
+Hey {first_name},
+
+Missed you again today. I don't think this is worth pursuing anymore, and it doesn't make sense for either of us. Wish you the best of luck with {company}.
+
+Lorenzo
+Missed you email, second no-show (tag: no_show.ns_reschedule_email.repeat)
+Subject: Missed you again (tag: no_show.ns_reschedule_email.repeat/subject)
+Hey {first_name},
+
+Looks like I missed you again on today's call. If this isn't a priority right now, just let me know. If you still want to talk, I can do {slots}. If you're not looking to grow {company} right now, that's fine too, just tell me.
+
+Lorenzo
+Upwork pricing lines (section)
+Your Upwork follow-up drafts can only quote a price that is written here. Right now there is none, so drafts never state a price. Write one price per box, the way you would say it to a client. Leave a box empty if you don't need it. (note)
+Pricing line 1 (tag: U-PRICE-1)
+
+Pricing line 2 (tag: U-PRICE-2)
+
+Pricing line 3 (tag: U-PRICE-3)
+
+After you finish (tag: X-AFTER)
+1. Tell Claude "done". Claude reads this doc, puts your wording into the system and tests it. It then shows you any line a send check would stop, for example an exclamation mark or a price that is not on your offer sheet.
+2. Nothing goes live until you tell Claude "go live".
+3. Only you can do these, whenever you have a minute: change the passwords and keys that were saved in the code, register your texting number (A2P), and connect Zoom in GoHighLevel (optional; Google Meet works today).
+4. Say "yes" to Claude for any of these and Claude does them: create the Upwork pipeline in GoHighLevel, start the 8:30 Upwork morning drafts, and send test alerts to your phone during the test week.

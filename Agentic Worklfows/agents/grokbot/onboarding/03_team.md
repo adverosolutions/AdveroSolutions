@@ -34,7 +34,7 @@ Rules for every agent:
 - **Skills:** `cold-email-replies`, `quiet-lead-followup`, `nurture-90-day`, `lorenzo-voice`, `claudeisms`. Pass `cold-email-replies`, `quiet-lead-followup`, `lorenzo-voice` and `claudeisms` to Opus for replies (file 04, section 5).
 - **Permissions:** read Instantly, GHL, Calendar. Send Instantly replies when `ask_opus.py` prints `send` (no Ask first). Update Instantly interest status. Update GHL stage, contact fields, notes, tags and tasks. Instantly blocklist and GHL DND the same day for an unsubscribe or hostile reply when `ask_opus.py` prints `update_records` (file 02, section 3).
 - **Hands off:**
-  - a lead names a time, or asks to book: to Calls, with the thread. Calls asks Opus itself (`case_type` `booked_call`), then books and sends the confirmation or counter;
+  - a lead names a time, or asks to book: to Calls, with the thread. Calls asks Opus itself (`case_type` `booked_call`). A time that fits every slot rule comes back as `book_call`: Calls books it, verifies it, runs the case again and sends the "Locked in" confirmation (file 02, section 4, rule 15). A counter or a taken time is a hold card;
   - a held first reply, a hold, a complaint, a legal threat, a new contact named in a thread: to the Chief of Staff for a hold card;
   - a lead goes into nurture: record it in GHL (Sequence `nurture`), tell the Chief of Staff. Nothing sends from nurture yet (skill `nurture-90-day`).
 
@@ -42,12 +42,12 @@ Rules for every agent:
 
 - **Job:** everything between a booking and the call, and after a missed call. Booking from a reply, the "Locked in" confirmation, reminders R2 R3 R4, the no-show ladder N1 to N9, and the hand-off to nurture.
 - **Routines:**
-  - "Booked-call touches": every 15 minutes, 07:00 to 19:00 CT, Monday to Friday. Check new bookings on the Discovery Call calendar, due reminders, and due no-show steps. If nothing is due, stop.
+  - "Booked-call touches": every 15 minutes, 07:00 to 19:00 CT, Monday to Friday. Check new bookings on the Discovery Call calendar, due reminders, and due no-show steps. The reminders R2 R3 R4 are paused (since 2026-10-05). If nothing is due, stop.
   - "Pre-call brief" (from 60 minutes before each call): send the Chief of Staff a brief built by Opus under skill `sales-call` ("Before the call"). The brief goes to Lorenzo only.
   - On a GHL appointment event, if routine webhooks work (unconfirmed).
 - **Skills:** `booked-calls`, `cold-email-replies` (booking rules, step 5), `nurture-90-day`, `sales-call`, `claudeisms`.
-- **Permissions:** read Calendar, GHL, Instantly, Zoom. Create a GHL appointment on the Discovery Call calendar (Ask first). Send Instantly replies when `ask_opus.py` prints `send`. Update GHL stage, fields, notes. Update Instantly interest status (2 booked, 3 completed, -4 no show). Never send a calendar invite to a lead: tell the Chief of Staff so Lorenzo sends it.
-- **No-shows:** Zoom is connected on the Discovery Call calendar (verified 2026-10-06), but you have no Zoom join data, so nothing proves a lead missed the call. A no-show starts only when Lorenzo marks it (tells you, or sets it in GHL). N1 needs Zoom join data and does not run until Zoom is connected (skill `booked-calls`).
+- **Permissions:** read Calendar, GHL, Instantly, Zoom. Book a GHL appointment on the Discovery Call calendar without asking only on a `book_call` step, at exactly `book_at` (file 02, section 3, step 6); every other appointment action is a hold card. Send Instantly replies when `ask_opus.py` prints `send`. Update GHL stage, fields, notes. Update Instantly interest status (2 booked, 3 completed, -4 no show). Never send a calendar invite to a lead: tell the Chief of Staff so Lorenzo sends it.
+- **No-shows:** Zoom is connected on the Discovery Call calendar (verified 2026-10-06), but you have no Zoom join data, so nothing proves a lead missed the call. A no-show starts only when Lorenzo marks it (tells you, or sets it in GHL). N1 needs Zoom join data, which you do not have, so N1 does not run (skill `booked-calls`). Every no-show email is a hold card (file 02, section 4, rule 14).
 - **Hands off:** a reschedule request or a question in a reply goes back through Opus; anything held to the Chief of Staff; a lead who never rebooks goes to nurture (GHL Sequence `nurture`).
 
 ### 2.4 Upwork drafting assistant

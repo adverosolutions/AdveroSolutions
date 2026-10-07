@@ -8,7 +8,9 @@ import importlib.util
 import io
 import json
 import os
+import re
 import shutil
+import sys
 import tempfile
 import unittest
 import urllib.error
@@ -20,6 +22,12 @@ SCRIPT = os.path.join(HERE, "..", "onboarding", "ask_opus.py")
 FIXTURE_DOC = os.path.join(HERE, "fixtures", "copy_doc_sample.txt")
 REAL_DOC = os.path.join(HERE, "..", "..", "..", "tools", "template_doc", "exports",
                         "2026-09-25T0045Z_build_170b09dd897430a9.txt")
+# Plain-text export of build df0ec92ac7a26ada (the doc Lorenzo will say "done"
+# on), rendered from builds/df0ec92ac7a26ada/advero_all_emails.html with
+# tools/template_doc/doc_areas.html_to_text, the Drive rendering.
+NEW_DOC = os.path.join(HERE, "fixtures", "copy_doc_df0ec92ac7a26ada.txt")
+NEW_BUILD = "df0ec92ac7a26ada"
+TEMPLATE_DOC_DIR = os.path.join(HERE, "..", "..", "..", "tools", "template_doc")
 FAKE_KEY = "test-key-not-real-0000"
 
 _spec = importlib.util.spec_from_file_location("ask_opus", SCRIPT)
@@ -47,7 +55,8 @@ GUARANTEE_LINE = ("I'm so confident that I guarantee at least $24,000 a year in 
                   "$200 gift card to your favorite steakhouse.")
 FIRST_REPLY_LINE = ("Glad to hear it. All I need to start is a list of 60 or more lost or "
                     "dormant accounts or lost proposals.")
-APPROVED = {"doc_done": True, "doc_unchanged": True, "go_live": True}
+APPROVED = {"doc_done": True, "doc_unchanged": True, "go_live": True,
+            "doc_build": "170b09dd897430a9"}
 # Monday 2026-09-28 10:00 CT. "Tue 12:05pm or Thu 4:30pm CT" = Sep 29 and Oct 1.
 NOW = "2026-09-28T10:00:00-05:00"
 FREE = ["2026-09-29T12:05:00-05:00", "2026-10-01T16:30:00-05:00",
@@ -65,6 +74,10 @@ def full_context(**overrides):
             "has_future_appointment": False,
             "offered_times": [{"time": "2026-09-30T15:00:00-05:00",
                                "lead_email": "sam@other.com"}],
+            "thread": [{"id": "out-1", "direction": "out", "from": "lorenzo@theadvero.com",
+                        "body": "(cold email)"},
+                       {"id": "in-2", "direction": "in", "from": "dana@brightline.com",
+                        "body": "Sounds interesting, tell me more."}],
             "lead": {"campaign_key": "cleaning_reactivation", "first_name": "Dana",
                      "company": "Brightline Cleaning LLC"}}
     base.update(overrides)
@@ -500,9 +513,17 @@ class FirstReplyAutoSend(unittest.TestCase):
             self.assertEqual(result["grok_next_step"], "hold_card", value)
             self.assertFalse(result["checks"]["slots_ok"], value)
 
-    def test_times_offered_to_this_lead_may_be_offered_again(self):
+    def test_new_times_never_repeat_a_time_offered_to_this_lead(self):
+        # offered before and released, or still held for this lead: never again
+        for entry in ({"time": "2026-10-01T16:30:00-05:00", "lead_email": "dana@brightline.com"},
+                      {"time": "2026-10-01T16:30:00-05:00", "lead_email": "Dana@Brightline.com",
+                       "released": True}):
+            result = self._slots("Tue 12:05pm or Thu 4:30pm CT", offered_times=[entry])
+            self.assertEqual(result["grok_next_step"], "hold_card", entry)
+            self.assertFalse(result["checks"]["slots_ok"], entry)
+            self.assertIn("already offered to this lead", " ".join(result["checks"]["problems"]))
         result = self._slots("Tue 12:05pm or Thu 4:30pm CT", offered_times=[
-            {"time": "2026-10-01T16:30:00-05:00", "lead_email": "dana@brightline.com"}])
+            {"time": "2026-09-29T14:00:00-05:00", "lead_email": "dana@brightline.com"}])
         self.assertEqual(result["grok_next_step"], "send", result["hold_reasons"])
 
     def test_same_company_domain_sender_passes(self):
@@ -579,8 +600,9 @@ class FirstReplyAutoSend(unittest.TestCase):
         doc = open(self.doc, encoding="utf-8").read()
         self.assertIsNone(ask_opus.template_body(doc, FIRST_REPLY_ID + "/subject"))
         base_lines = ask_opus.template_body(doc, FIRST_REPLY_ID)
+        self.assertEqual(base_lines[1::2], ["", "", ""])          # three paragraph breaks
         no_slots = ask_opus.template_body(doc, FIRST_REPLY_ID + "/no_slots")
-        self.assertEqual(no_slots, base_lines[:2] + [no_slots_line] + base_lines[3:])
+        self.assertEqual(no_slots, base_lines[:4] + [no_slots_line] + base_lines[5:])
         self.assertNotEqual(base_lines, no_slots)
 
     def test_blocklist_only_with_records_only_and_an_opt_out_label(self):
@@ -652,15 +674,24 @@ class FirstReplyAutoSend(unittest.TestCase):
         other_time = full_context(appointment={"start": "2026-09-29T13:05:00-05:00"},
                                   free_times=[])
         lead = "dana@brightline.com"
-        booked = "booking.already_booked.invite_on_calendar"
-        self.assertEqual(ask_opus.check_slots(fields, future, booked, now, now, lead), [])
-        self.assertTrue(ask_opus.check_slots(fields, past, booked, now, now, lead))
-        self.assertTrue(ask_opus.check_slots(fields, other_time, booked, now, now, lead))
-        # a confirmation's time must be free: the appointment is no exemption
+        for template_id in ("booking.already_booked.invite_on_calendar",
+                            "booking.confirmation.no_zoom_link"):
+            self.assertEqual(ask_opus.check_slots(fields, future, template_id, now, now, lead),
+                             ([], None), template_id)
+            self.assertTrue(ask_opus.check_slots(fields, past, template_id, now, now, lead)[0])
+            self.assertTrue(ask_opus.check_slots(fields, other_time, template_id, now, now,
+                                                 lead)[0])
+        # a booked call is not in free_times any more: the appointment is the check
         confirm = full_context(appointment={"start": "2026-09-29T12:05:00-05:00"},
                                free_times=[])
-        self.assertTrue(ask_opus.check_slots(fields, confirm, "booking.confirmation.no_zoom_link",
-                                             now, now, lead))
+        self.assertEqual(ask_opus.check_slots(fields, confirm, "booking.confirmation.no_zoom_link",
+                                              now, now, lead), ([], None))
+        # no appointment yet: a free time that fits every rule comes back to book first
+        problems, book_at = ask_opus.check_slots(fields, full_context(),
+                                                 "booking.confirmation.no_zoom_link",
+                                                 now, now, lead)
+        self.assertEqual(book_at, "2026-09-29T12:05:00-05:00")
+        self.assertEqual(len(problems), 1)
 
     def test_isp_and_free_mail_domains_are_never_a_company_domain(self):
         for domain in ("comcast.net", "ymail.com", "sbcglobal.net", "att.net", "pm.me",
@@ -742,7 +773,7 @@ class Hardening(unittest.TestCase):
         self.assertIn("booking.counter.window_no_fit", counters)
         self.assertIn("booking.counter.slot_taken/no_alternatives", counters)
         for template_id in counters:
-            text = "\n\n".join(ask_opus.template_body(doc, template_id))
+            text = "\n".join(ask_opus.template_body(doc, template_id))
             dec = decision(template_id=template_id, template_text=text, fields=[])
             _, checks = ask_opus.check_email(dec, doc, full_context(), "reply")
             self.assertFalse(checks["approval_ok"], template_id)
@@ -1069,6 +1100,634 @@ class Failures(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+
+
+# ---------------------------------------------------------------- fix round 2
+# Lorenzo's decisions of 2026-10-06 (D1 allow list, D2 book first) and the
+# reviewer-max blockers B1 to B5, on the real build df0ec92ac7a26ada.
+
+def read_new_doc():
+    with open(NEW_DOC, encoding="utf-8") as handle:
+        return handle.read()
+
+
+def ai_context(**overrides):
+    """An ai_agents lead that just replied, on build df0ec92ac7a26ada, with every
+    send check passing for a first reply."""
+    base = full_context(approval=dict(APPROVED, doc_build=NEW_BUILD),
+                        our_reply_reached_lead=False, offered_times=[],
+                        lead={"campaign_key": "ai_agents", "first_name": "Dana",
+                              "company": "Brightline Cleaning LLC"})
+    base.update(overrides)
+    return base
+
+
+def ai_ladder_context(**overrides):
+    """The same lead, quiet after our first reply (which offered Tue 2:00pm
+    and Wed 3:00pm): a follow-up touch is due."""
+    overrides.setdefault("our_reply_after_newest_inbound", True)
+    overrides.setdefault("our_reply_reached_lead", True)
+    overrides.setdefault("offered_times", [
+        {"time": "2026-09-29T14:00:00-05:00", "lead_email": "dana@brightline.com"},
+        {"time": "2026-09-30T15:00:00-05:00", "lead_email": "dana@brightline.com"}])
+    return ai_context(**overrides)
+
+
+def doc_text_of(doc, template_id):
+    """A template's body as Opus is told to copy it: one blank line between
+    paragraphs, lines of one paragraph on consecutive lines."""
+    return "\n".join(ask_opus.template_body(doc, template_id))
+
+
+def valid_fields(doc, template_id, text, context, extra=None):
+    """A valid value for every placeholder: the lead's own values, free times,
+    and copy-doc lines from the template's own block for the lead's offer."""
+    values = {"first_name": "Dana", "company": "Brightline Cleaning",
+              "slots": "Tue 12:05pm or Thu 4:30pm CT", "slot": "Tue 12:05pm",
+              "asked_time": "Sat 10:00am ET", "alt_slots": "Tue 12:05pm or Thu 4:30pm CT",
+              "when_ct": "Tue, Sep 29 at 12:05pm CT", "time_ct": "12:05pm CT",
+              "zoom_link": "https://zoom.us/j/123", "call_link": "https://zoom.us/j/123",
+              "lead_local_time": "1:05pm ET", "referral_name": "Sam",
+              "referral_first_name": "Sam"}
+    allowed = sorted(ask_opus.allowed_fragment_lines(doc, template_id, context))
+    for name in ask_opus.LINE_FIELDS:
+        if allowed:
+            values[name] = allowed[0]
+    values.update(extra or {})
+    names = sorted(set(re.findall(r"\{([A-Za-z_0-9]+)\}", text)))
+    return [{"name": name, "value": values.get(name, "x")} for name in names]
+
+
+def run_checks(doc, template_id, category, context, case_type="reply", fields=None,
+               other_actions=None, text=None, action="send_template"):
+    text = doc_text_of(doc, template_id) if text is None else text
+    if fields is None:
+        fields = valid_fields(doc, template_id, text, context)
+    dec = decision(action=action, template_id=template_id, template_text=text,
+                   category=category, fields=fields, other_actions=other_actions or [])
+    email, checks = ask_opus.check_email(dec, doc, context, case_type)
+    step, reasons = ask_opus.next_step(dec, checks, context)
+    return step, reasons, checks, email
+
+
+def doc_tags(doc, prefix):
+    tags = [ask_opus._tag_of(line) for line in doc.splitlines()]
+    return sorted({tag for tag in tags if tag and tag.startswith(prefix)
+                   and not tag.endswith("/subject")})
+
+
+FIRST_REPLY_LABELS = {"default": "positive_interested", "pricing": "positive_question",
+                      "mechanism": "positive_question", "send_info": "positive_question",
+                      "booking_link": "positive_question", "referral": "positive_referral",
+                      "other": "positive_question"}
+APPOINTMENT = {"start": "2026-09-29T12:05:00-05:00", "call_link": "https://zoom.us/j/123",
+               "status": "confirmed"}
+
+
+class AllowList(unittest.TestCase):
+    """D1: an explicit allow list in code is the primary rule."""
+
+    def test_the_allow_list_is_exactly_lorenzos(self):
+        self.assertEqual(ask_opus.AUTO_SEND_FIRST_REPLIES, {
+            "default": ("positive_interested",), "pricing": ("positive_question",),
+            "mechanism": ("positive_question",), "send_info": ("positive_question",),
+            "booking_link": ("positive_interested", "positive_question")})
+        self.assertEqual(ask_opus.AUTO_SEND_LADDER,
+                         tuple("cadence.e%d" % n for n in range(1, 11)))
+        self.assertEqual(ask_opus.AUTO_SEND_CONFIRMATIONS,
+                         ("booking.confirmation.zoom_link", "booking.confirmation.no_zoom_link"))
+
+    def test_allow_list_problem(self):
+        ok = [("first_reply.ai_agents.default.full", "positive_interested"),
+              ("first_reply.ai_agents.booking_link.full", "positive_interested"),
+              ("first_reply.ai_agents.booking_link.full", "positive_question"),
+              ("cadence.e1", None), ("cadence.e10", None),
+              ("booking.confirmation.zoom_link", "positive_interested"),
+              ("booking.confirmation.no_zoom_link", None)]
+        for template_id, category in ok:
+            self.assertIsNone(ask_opus.allow_list_problem(template_id, category, "ai_agents"),
+                              template_id)
+        held = [("first_reply.ai_agents.default.full/no_slots", "positive_interested"),
+                ("first_reply.ai_agents.default.full", "positive_question"),
+                ("first_reply.ai_agents.referral.full", "positive_referral"),
+                ("first_reply.ai_agents.other.full", "positive_question"),
+                ("first_reply.ai_agents.default", "positive_interested"),
+                ("first_reply.cleaning_reactivation.default.full", "positive_interested"),
+                ("cadence.e1/dated", None), ("cadence.e11", None), ("cadence.e2.research_line", None),
+                ("booking.confirmation.zoom_link/lead_in_other_timezone", None),
+                ("booking.confirmation.other", None),
+                ("booking.already_booked.invite_on_calendar", None),
+                ("booking.counter.weekend", None), ("booking.slot_already_taken", None),
+                ("show_rate.reminder_1h_email", None), ("show_rate.confirm_email.generic_outbound", None),
+                ("no_show.ns_d1_email", None), ("nurture.touch_1", None)]
+        for template_id, category in held:
+            self.assertTrue(ask_opus.allow_list_problem(template_id, category, "ai_agents"),
+                            template_id)
+
+
+class NewDocBuild(unittest.TestCase):
+    """End to end on the plain-text export of build df0ec92ac7a26ada."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.doc = read_new_doc()
+
+    def test_fixture_is_the_drive_rendering_of_the_build(self):
+        self.assertEqual(ask_opus.doc_build_of(self.doc), NEW_BUILD)
+        html = os.path.join(TEMPLATE_DOC_DIR, "builds", NEW_BUILD, "advero_all_emails.html")
+        if not os.path.isfile(html):
+            self.skipTest("build html not in this checkout")
+        sys.path.insert(0, TEMPLATE_DOC_DIR)
+        try:
+            import doc_areas
+        finally:
+            sys.path.remove(TEMPLATE_DOC_DIR)
+        self.assertEqual(doc_areas.html_to_text(html), self.doc)
+
+    def test_template_bodies_match_the_doc_tools_reading(self):
+        sys.path.insert(0, TEMPLATE_DOC_DIR)
+        try:
+            import doc_areas
+        finally:
+            sys.path.remove(TEMPLATE_DOC_DIR)
+        reader = doc_areas.DocReader(self.doc)
+
+        def body(lines):
+            # DocReader puts a subject line with no fallbacks on top of the text
+            if lines and lines[0].startswith("Subject:"):
+                lines = lines[1:]
+            return ask_opus.structure(lines)
+
+        ids = ask_opus.email_template_ids(self.doc)
+        compared = 0
+        for template_id in sorted(ids):
+            mine = ask_opus.template_body(self.doc, template_id)
+            self.assertIsNotNone(mine, template_id)
+            self.assertEqual(mine, body(reader.main(template_id)), template_id)
+            compared += 1
+        variants = [tag for tag in doc_tags(self.doc, "") if "/" in tag
+                    and tag.split("/")[0] in ids]
+        for tag in variants:
+            base, name = tag.split("/", 1)
+            self.assertEqual(ask_opus.template_body(self.doc, tag), body(reader.part(base, name)),
+                             tag)
+            compared += 1
+        self.assertEqual((len(ids), compared), (89, 252))
+
+    def test_the_five_ai_agents_first_replies_send(self):
+        for branch in ("default", "pricing", "mechanism", "send_info", "booking_link"):
+            template_id = "first_reply.ai_agents.%s.full" % branch
+            step, reasons, checks, email = run_checks(self.doc, template_id,
+                                                      FIRST_REPLY_LABELS[branch], ai_context())
+            self.assertEqual(step, "send", (template_id, reasons, checks["problems"]))
+            self.assertTrue(email.startswith("Hey Dana,\n\n"), template_id)
+            self.assertTrue(email.endswith("\n\nLorenzo"), template_id)
+        step = run_checks(self.doc, "first_reply.ai_agents.booking_link.full",
+                          "positive_interested", ai_context())[0]
+        self.assertEqual(step, "send")
+
+    def test_every_version_under_them_holds(self):
+        versions = [tag for tag in doc_tags(self.doc, "first_reply.ai_agents.") if "/" in tag]
+        self.assertEqual(len(versions), 15)
+        for tag in versions:
+            branch = tag.split(".")[2]
+            step, _, checks, _ = run_checks(self.doc, tag, FIRST_REPLY_LABELS[branch],
+                                            ai_context())
+            self.assertEqual(step, "hold_card", tag)
+            self.assertFalse(checks["allow_listed"], tag)
+
+    def test_older_offer_first_replies_hold(self):
+        bases = [tag for tag in doc_tags(self.doc, "first_reply.") if "/" not in tag
+                 and not tag.startswith("first_reply.ai_agents.")]
+        self.assertEqual(len(bases), 36)
+        for tag in bases:
+            offer, branch = tag.split(".")[1:3]
+            context = ai_context(lead={"campaign_key": offer, "first_name": "Dana",
+                                       "company": "Brightline Cleaning LLC"})
+            step, _, checks, _ = run_checks(self.doc, tag, FIRST_REPLY_LABELS[branch], context)
+            self.assertEqual(step, "hold_card", tag)
+            self.assertFalse(checks["template_approved_in_doc"], tag)
+
+    def test_every_counter_and_taken_time_holds(self):
+        tags = doc_tags(self.doc, "booking.counter.") + doc_tags(self.doc,
+                                                                 "booking.slot_already_taken")
+        self.assertGreater(len(tags), 25)
+        for tag in tags:
+            step, _, checks, _ = run_checks(self.doc, tag, "positive_interested", ai_context())
+            self.assertEqual(step, "hold_card", tag)
+            self.assertFalse(checks["allow_listed"], tag)
+
+    def test_show_rate_no_show_and_already_booked_hold(self):
+        booked = ai_context(has_future_appointment=True, appointment=dict(APPOINTMENT),
+                            our_reply_reached_lead=True)
+        tags = (doc_tags(self.doc, "show_rate.") + doc_tags(self.doc, "no_show.")
+                + doc_tags(self.doc, "booking.already_booked."))
+        self.assertGreater(len(tags), 40)
+        for tag in tags:
+            case_type = "no_show" if tag.startswith("no_show.") else "booked_call"
+            step, _, checks, _ = run_checks(self.doc, tag, None, booked, case_type=case_type)
+            self.assertEqual(step, "hold_card", tag)
+            self.assertFalse(checks["allow_listed"], tag)
+
+    def test_a_booked_lead_asking_to_reschedule_gets_no_already_booked_email(self):
+        thread = [{"id": "in-3", "direction": "in", "from": "dana@brightline.com",
+                   "body": "Something came up, can we move it to Thursday?"}]
+        booked = ai_context(has_future_appointment=True, appointment=dict(APPOINTMENT),
+                            our_reply_reached_lead=True, thread=thread, reply_id="in-3")
+        for tag in doc_tags(self.doc, "booking.already_booked."):
+            step, _, checks, _ = run_checks(self.doc, tag, "positive_interested", booked)
+            self.assertEqual(step, "hold_card", tag)
+            self.assertFalse(checks["allow_listed"], tag)
+
+    def test_the_ladder_sends_for_an_ai_agents_lead(self):
+        for n in range(1, 11):
+            template_id = "cadence.e%d" % n
+            step, reasons, checks, email = run_checks(self.doc, template_id, None,
+                                                      ai_ladder_context(),
+                                                      case_type="followup_due")
+            self.assertEqual(step, "send", (template_id, reasons, checks["problems"]))
+        email = run_checks(self.doc, "cadence.e4", None, ai_ladder_context(),
+                           case_type="followup_due")[3]
+        self.assertIn("- a team of AI agents for a $150M/year commercial roofer", email)
+
+    def test_the_ladder_never_repeats_a_time_offered_to_this_lead(self):
+        fields = [{"name": "first_name", "value": "Dana"},
+                  {"name": "slots", "value": "Tue 2:00pm or Thu 4:30pm CT"}]
+        context = ai_ladder_context(free_times=FREE)
+        step, _, checks, _ = run_checks(self.doc, "cadence.e1", None, context,
+                                        case_type="followup_due", fields=fields)
+        self.assertEqual(step, "hold_card")
+        self.assertIn("already offered to this lead", " ".join(checks["problems"]))
+
+    def test_the_ladder_with_another_offers_line_holds(self):
+        context = ai_ladder_context()
+        cleaning = {"lead": {"campaign_key": "cleaning_reactivation"}}
+        line = sorted(ask_opus.allowed_fragment_lines(self.doc, "cadence.e4", cleaning))[0]
+        text = doc_text_of(self.doc, "cadence.e4")
+        fields = valid_fields(self.doc, "cadence.e4", text, context, {"offer_proof": line})
+        step, _, checks, _ = run_checks(self.doc, "cadence.e4", None, context,
+                                        case_type="followup_due", fields=fields)
+        self.assertEqual(step, "hold_card")
+        self.assertFalse(checks["field_values_clean"])
+
+
+class BookFirstThenConfirm(unittest.TestCase):
+    """D2 and B3: the Locked in confirmation goes only once the booking exists."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.doc = read_new_doc()
+
+    def confirm(self, context, template_id="booking.confirmation.no_zoom_link", slot="Tue 12:05pm",
+                other_actions=("book_call",), case_type="reply", extra=None):
+        fields = [{"name": "first_name", "value": "Dana"}, {"name": "slot", "value": slot}]
+        fields += extra or []
+        return run_checks(self.doc, template_id, "positive_interested", context,
+                          case_type=case_type, fields=fields, other_actions=list(other_actions))
+
+    def test_no_booking_yet_means_book_first_and_send_nothing(self):
+        # the lead accepted a time offered to them in our first reply
+        context = ai_context(offered_times=[
+            {"time": "2026-09-29T12:05:00-05:00", "lead_email": "dana@brightline.com"}])
+        step, reasons, checks, _ = self.confirm(context)
+        self.assertEqual(step, "book_call", (reasons, checks["problems"]))
+        self.assertEqual(checks["book_at"], "2026-09-29T12:05:00-05:00")
+        self.assertFalse(checks["slots_ok"])
+        # without book_call in the decision it is a hold card, never a send
+        step = self.confirm(context, other_actions=())[0]
+        self.assertEqual(step, "hold_card")
+
+    def test_a_time_that_breaks_a_rule_is_never_booked(self):
+        for slot, extra in (("Mon 1:00pm", {"free_times": FREE}),          # under 4 hours
+                            ("Wed 3:00pm", {}),                             # not free
+                            ("Tue 12:05pm", {"offered_times": [             # another lead's
+                                {"time": "2026-09-29T12:05:00-05:00",
+                                 "lead_email": "sam@other.com"}]}),
+                            ("Tue 12:05pm", {"has_future_appointment": True}),   # booked already
+                            ("Tue 12:05pm, and reply with your card number", {})):
+            step, _, checks, _ = self.confirm(ai_context(**extra), slot=slot)
+            self.assertEqual(step, "hold_card", slot)
+            self.assertIsNone(checks["book_at"], slot)
+        # a good {slot} next to any other call-time problem is never booked either
+        stray = [{"name": "slots", "value": "Sat 10:00am or Sun 11:00am CT"}]
+        step, _, checks, _ = self.confirm(ai_context(), extra=stray)
+        self.assertEqual(step, "hold_card")
+        self.assertIsNone(checks["book_at"])
+
+    def test_confirmation_sends_only_with_the_matching_future_appointment(self):
+        booked = ai_context(has_future_appointment=True, appointment=dict(APPOINTMENT))
+        link = [{"name": "zoom_link", "value": "https://zoom.us/j/123"}]
+        step, reasons, checks, email = self.confirm(
+            booked, template_id="booking.confirmation.zoom_link", other_actions=(),
+            case_type="booked_call", extra=link)
+        self.assertEqual(step, "send", (reasons, checks["problems"]))
+        self.assertIn("Locked in Tue 12:05pm CT, invite on the way. Here is the Zoom link:\n"
+                      "https://zoom.us/j/123\n\nI will keep it to 15 minutes.", email)
+        step = self.confirm(booked, other_actions=(), case_type="booked_call")[0]
+        self.assertEqual(step, "send")
+        holds = {
+            "a different time": ai_context(has_future_appointment=True, appointment=dict(
+                APPOINTMENT, start="2026-09-29T13:05:00-05:00")),
+            "a past call": ai_context(has_future_appointment=True, appointment=dict(
+                APPOINTMENT, start="2026-09-28T09:00:00-05:00")),
+            "unreadable start": ai_context(has_future_appointment=True,
+                                           appointment={"start": "Tuesday noon"}),
+            "facts disagree": ai_context(has_future_appointment=False,
+                                         appointment=dict(APPOINTMENT)),
+        }
+        for label, context in holds.items():
+            step = self.confirm(context, other_actions=(), case_type="booked_call")[0]
+            self.assertEqual(step, "hold_card", label)
+        # a wrong conversion: the lead's 1:05pm Eastern written as the CT time
+        step, _, checks, _ = self.confirm(booked, slot="Tue 1:05pm", other_actions=(),
+                                          case_type="booked_call")
+        self.assertEqual(step, "hold_card")
+        self.assertFalse(checks["slots_ok"])
+        # a link that is not the appointment's
+        bad_link = [{"name": "zoom_link", "value": "https://zoom.us/j/999"}]
+        step = self.confirm(booked, template_id="booking.confirmation.zoom_link",
+                            other_actions=(), case_type="booked_call", extra=bad_link)[0]
+        self.assertEqual(step, "hold_card")
+
+    def test_the_other_timezone_version_holds(self):
+        booked = ai_context(has_future_appointment=True, appointment=dict(APPOINTMENT))
+        extra = [{"name": "lead_local_time", "value": "1:05pm ET"}]
+        step, _, checks, _ = self.confirm(
+            booked, template_id="booking.confirmation.no_zoom_link/lead_in_other_timezone",
+            other_actions=(), case_type="booked_call", extra=extra)
+        self.assertEqual(step, "hold_card")
+        self.assertFalse(checks["allow_listed"])
+        self.assertIn("no check exists", " ".join(checks["problems"]))
+
+    def test_book_call_anywhere_else_holds(self):
+        booked = ai_context(has_future_appointment=True, appointment=dict(APPOINTMENT))
+        step, reasons, _, _ = self.confirm(booked, case_type="booked_call")   # booked already
+        self.assertEqual(step, "hold_card")
+        self.assertIn("book_call", " ".join(reasons))
+        step = run_checks(self.doc, "first_reply.ai_agents.default.full", "positive_interested",
+                          ai_context(), other_actions=["book_call"])[0]
+        self.assertEqual(step, "hold_card")
+        records = decision(action="records_only", template_id=None, template_text=None,
+                           fields=[], other_actions=["book_call"])
+        self.assertEqual(ask_opus.next_step(records, None, ai_context())[0], "hold_card")
+
+    def test_the_reserved_time_is_not_offered_to_another_lead(self):
+        reserved = {"time": "2026-09-29T12:05:00-05:00", "lead_email": "dana@brightline.com",
+                    "reserved": True}
+        sam = ai_context(lead_email="sam@other.com", newest_inbound_from="sam@other.com",
+                         offered_times=[reserved],
+                         lead={"campaign_key": "ai_agents", "first_name": "Sam",
+                               "company": "Other Co"},
+                         thread=[{"id": "in-9", "direction": "in", "from": "sam@other.com",
+                                  "body": "Sure, what times work?"}], reply_id="in-9")
+        fields = [{"name": "first_name", "value": "Sam"},
+                  {"name": "slots", "value": "Tue 12:05pm or Thu 4:30pm CT"}]
+        step, _, checks, _ = run_checks(self.doc, "first_reply.ai_agents.default.full",
+                                        "positive_interested", sam, fields=fields)
+        self.assertEqual(step, "hold_card")
+        self.assertIn("already offered to another lead", " ".join(checks["problems"]))
+        # and Sam naming that same time is never booked
+        fields = [{"name": "first_name", "value": "Sam"}, {"name": "slot", "value": "Tue 12:05pm"}]
+        step, _, checks, _ = run_checks(self.doc, "booking.confirmation.no_zoom_link",
+                                        "positive_interested", sam, fields=fields,
+                                        other_actions=["book_call"])
+        self.assertEqual(step, "hold_card")
+        self.assertIsNone(checks["book_at"])
+
+    def test_the_script_prints_book_at_and_no_email_text(self):
+        dec = decision(template_id="booking.confirmation.no_zoom_link",
+                       template_text=doc_text_of(self.doc, "booking.confirmation.no_zoom_link"),
+                       category="positive_interested", other_actions=["book_call"],
+                       fields=[{"name": "first_name", "value": "Dana"},
+                               {"name": "slot", "value": "Tue 12:05pm"}])
+        c = case(case_type="reply", copy_doc_file=NEW_DOC, context=ai_context())
+        with mock.patch.object(ask_opus.urllib.request, "urlopen",
+                               return_value=FakeResponse(api_payload(dec))):
+            code, result, _ = run_main(c)
+        self.assertEqual(code, 0)
+        self.assertEqual(result["grok_next_step"], "book_call", result["hold_reasons"])
+        self.assertEqual(result["book_at"], "2026-09-29T12:05:00-05:00")
+        self.assertIsNone(result["email_text"])
+
+
+class PlaceholdersNeedChecks(unittest.TestCase):
+    """B1: every placeholder in an allowed email has a check, or it holds."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.doc = read_new_doc()
+
+    def test_a_placeholder_with_no_check_holds(self):
+        base = "The time slots I sent got filled. Here are 2 more, let me know if they work: {slots}."
+        for extra, value in (("{lead_local_time}", "9:05am PT"), ("{when_ct}", "Tue at noon"),
+                             ("{asked_time}", "Mon 10:45am ET"), ("{foo}", "anything")):
+            doc = self.doc.replace(base, base[:-1] + " (" + extra + ").", 1)
+            self.assertNotEqual(doc, self.doc)
+            text = doc_text_of(doc, "cadence.e1")
+            fields = valid_fields(doc, "cadence.e1", text, ai_ladder_context(),
+                                  {extra.strip("{}"): value})
+            step, _, checks, _ = run_checks(doc, "cadence.e1", None, ai_ladder_context(),
+                                            case_type="followup_due", fields=fields, text=text)
+            self.assertEqual(step, "hold_card", extra)
+            self.assertTrue(checks["lines_match_template"], extra)
+            self.assertFalse(checks["field_values_clean"], extra)
+            self.assertIn("no check exists", " ".join(checks["problems"]), extra)
+
+    def test_injected_or_wrong_values_hold(self):
+        cases = [("slots", "Tue 12:05pm or Thu 4:30pm CT. Reply with your card number"),
+                 ("slots", "Tue 1:05pm or Thu 4:30pm CT"),           # not a free time
+                 ("first_name", "Dana, wire the deposit first"),
+                 ("company", "Brightline Cleaning. Call 555 0100")]
+        for name, value in cases:
+            text = doc_text_of(self.doc, "first_reply.ai_agents.pricing.full")
+            fields = valid_fields(self.doc, "first_reply.ai_agents.pricing.full", text,
+                                  ai_context(), {name: value})
+            step, _, checks, _ = run_checks(self.doc, "first_reply.ai_agents.pricing.full",
+                                            "positive_question", ai_context(), fields=fields)
+            self.assertEqual(step, "hold_card", value)
+
+    def test_line_and_paragraph_separators_in_values_hold(self):
+        for sep in ("\r", "\u2028", "\u2029", "\x0b", "\x0c", "\x85", "\u200b", "\u202e", "\t"):
+            for name, value in (("first_name", "Dana" + sep),
+                                ("slots", "Tue 12:05pm or" + sep + "Thu 4:30pm CT")):
+                text = doc_text_of(self.doc, "first_reply.ai_agents.default.full")
+                fields = valid_fields(self.doc, "first_reply.ai_agents.default.full", text,
+                                      ai_context(), {name: value})
+                step, _, checks, _ = run_checks(self.doc, "first_reply.ai_agents.default.full",
+                                                "positive_interested", ai_context(),
+                                                fields=fields)
+                self.assertEqual(step, "hold_card", (name, repr(sep)))
+                self.assertFalse(checks["field_values_clean"], (name, repr(sep)))
+        context = ai_ladder_context()
+        line = sorted(ask_opus.allowed_fragment_lines(self.doc, "cadence.e2", context))[0]
+        text = doc_text_of(self.doc, "cadence.e2")
+        fields = valid_fields(self.doc, "cadence.e2", text, context,
+                              {"research_line": line.replace(" ", "\u2028", 1)})
+        step = run_checks(self.doc, "cadence.e2", None, context, case_type="followup_due",
+                          fields=fields)[0]
+        self.assertEqual(step, "hold_card")
+
+    def test_paragraph_breaks_must_be_the_templates(self):
+        text = doc_text_of(self.doc, "first_reply.ai_agents.default.full")
+        merged = text.replace("Hey {first_name},\n\n", "Hey {first_name},\n", 1)
+        extra_break = text.replace("Lorenzo", "\nLorenzo")         # one blank line is fine
+        self.assertEqual(run_checks(self.doc, "first_reply.ai_agents.default.full",
+                                    "positive_interested", ai_context(),
+                                    text=extra_break)[0], "send")
+        step, _, checks, _ = run_checks(self.doc, "first_reply.ai_agents.default.full",
+                                        "positive_interested", ai_context(), text=merged)
+        self.assertEqual(step, "hold_card")
+        self.assertFalse(checks["lines_match_template"])
+        e4 = doc_text_of(self.doc, "cadence.e4")
+        split_list = e4.replace("\n- an outbound", "\n\n- an outbound", 1)
+        step, _, checks, _ = run_checks(self.doc, "cadence.e4", None, ai_ladder_context(),
+                                        case_type="followup_due", text=split_list)
+        self.assertEqual(step, "hold_card")
+        self.assertFalse(checks["lines_match_template"])
+        zoom = doc_text_of(self.doc, "booking.confirmation.zoom_link")
+        loose = zoom.replace("Zoom link:\n{zoom_link}", "Zoom link:\n\n{zoom_link}")
+        booked = ai_context(has_future_appointment=True, appointment=dict(APPOINTMENT))
+        fields = [{"name": "first_name", "value": "Dana"}, {"name": "slot", "value": "Tue 12:05pm"},
+                  {"name": "zoom_link", "value": "https://zoom.us/j/123"}]
+        step, _, checks, _ = run_checks(self.doc, "booking.confirmation.zoom_link",
+                                        "positive_interested", booked, case_type="booked_call",
+                                        fields=fields, text=loose)
+        self.assertEqual(step, "hold_card")
+        self.assertFalse(checks["lines_match_template"])
+
+
+class LegalWords(unittest.TestCase):
+    """B4: word forms, no readable thread, and the same scan on auto-sends."""
+
+    STRINGS = ["Our lawyers will be in touch", "I will sue", "Forwarding this to my attorneys",
+               "I'm suing", "I've filed complaints before", "my legal team is cc'd",
+               "Reporting this to the state regulator", "This violates the TCPA",
+               "Remove me or I report you to the BBB", "My lawyer will hear about this",
+               "the attorney general", "That's a CAN-SPAM violation", "cease and desist",
+               "We sued the last vendor", "see you in court", "the FTC and the FCC"]
+
+    def test_every_word_form_is_found(self):
+        for text in self.STRINGS:
+            self.assertTrue(ask_opus.legal_words(text), text)
+        for text in ("Thanks for the courtesy.", "Please remove me.", "Not interested, thanks.",
+                     "Our office suite is on Main St", "That's an issue for next quarter"):
+            self.assertEqual(ask_opus.legal_words(text), [], text)
+
+    def _blocklist(self, context):
+        rec = decision(action="records_only", category="unsubscribe", template_id=None,
+                       template_text=None, fields=[], ghl_stage="lost", instantly_interest=-1,
+                       other_actions=["blocklist_in_instantly", "tag_dnd_in_ghl"],
+                       confidence=0.95)
+        return ask_opus.next_step(rec, None, context)[0]
+
+    def test_a_blocklist_holds_on_legal_words_or_no_readable_email(self):
+        for text in self.STRINGS:
+            thread = [{"id": "in-2", "direction": "in", "body": "Remove me. " + text + "."}]
+            self.assertEqual(self._blocklist({"thread": thread}), "hold_card", text)
+        self.assertEqual(self._blocklist({"thread": [{"id": "in-2", "direction": "in",
+                                                      "body": "Remove me. Thanks."}]}),
+                         "update_records")
+        for context in ({}, {"thread": []}, {"thread": [{"direction": "inbound",
+                                                         "body": "remove me"}]},
+                        {"thread": [{"direction": "in", "body": "   "}]},
+                        {"thread": [{"direction": "out", "body": "Hey Dana"}]}):
+            self.assertEqual(self._blocklist(context), "hold_card", context)
+
+    def test_auto_first_replies_and_follow_ups_hold_on_legal_words(self):
+        doc = read_new_doc()
+        thread = [{"id": "in-2", "direction": "in", "from": "dana@brightline.com",
+                   "body": "Sure, but my attorneys review every contract."}]
+        step, _, checks, _ = run_checks(doc, "first_reply.ai_agents.default.full",
+                                        "positive_interested", ai_context(thread=thread))
+        self.assertEqual(step, "hold_card")
+        self.assertFalse(checks["no_legal_words"])
+        step, _, checks, _ = run_checks(doc, "cadence.e3", None,
+                                        ai_ladder_context(thread=thread),
+                                        case_type="followup_due")
+        self.assertEqual(step, "hold_card")
+        self.assertFalse(checks["no_legal_words"])
+        for context in (ai_context(thread=None), ai_ladder_context(thread=[])):
+            step, _, checks, _ = run_checks(doc, "first_reply.ai_agents.default.full",
+                                            "positive_interested", context)
+            self.assertEqual(step, "hold_card")
+            self.assertFalse(checks["no_legal_words"])
+
+
+class OfferSegments(unittest.TestCase):
+    """B5: a template id that names a niche or offer must fit the lead's offer."""
+
+    def test_offer_segment_problem(self):
+        fits = [("first_reply.ai_agents.pricing.full", "ai_agents"),
+                ("show_rate.confirm_email.cleaning_outbound", "cleaning_trigger"),
+                ("show_rate.confirm_email.generic_outbound", "recruiting_outbound"),
+                ("show_rate.confirm_email.generic_reactivation", "bookkeeping_reactivation"),
+                ("no_show.ns_d2_value_email.cleaning_reactivation", "cleaning_reactivation"),
+                ("cadence.e4", "ai_agents"), ("booking.confirmation.zoom_link", None)]
+        for template_id, key in fits:
+            self.assertIsNone(ask_opus.offer_segment_problem(template_id, key), template_id)
+        wrong = [("show_rate.confirm_email.cleaning_reactivation", "ai_agents"),
+                 ("show_rate.confirm_email.generic_outbound", "ai_agents"),
+                 ("show_rate.confirm_email.generic_reactivation", "cleaning_trigger"),
+                 ("no_show.ns_d2_value_email.recruiting_outbound", "cleaning_trigger"),
+                 ("first_reply.cleaning_trigger.default.full", "cleaning_reactivation"),
+                 ("first_reply.ai_agents.default.full", None)]
+        for template_id, key in wrong:
+            self.assertTrue(ask_opus.offer_segment_problem(template_id, key), template_id)
+
+    def test_another_offers_email_holds_on_the_offer_check(self):
+        doc = read_new_doc()
+        booked = ai_context(has_future_appointment=True, appointment=dict(APPOINTMENT),
+                            our_reply_reached_lead=True)
+        step, _, checks, _ = run_checks(doc, "show_rate.confirm_email.cleaning_reactivation",
+                                        None, booked, case_type="booked_call")
+        self.assertEqual(step, "hold_card")
+        self.assertFalse(checks["offer_matches"])
+
+
+class DocBuildAndApproval(unittest.TestCase):
+    """approval.doc_build must be the build printed on the copy doc."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.doc = read_new_doc()
+
+    def _step(self, doc=None, **approval):
+        merged = dict(APPROVED, doc_build=NEW_BUILD)
+        merged.update(approval)
+        context = ai_context(approval=merged)
+        return run_checks(doc or self.doc, "first_reply.ai_agents.default.full",
+                          "positive_interested", context)
+
+    def test_build_mismatch_or_missing_holds(self):
+        self.assertEqual(self._step()[0], "send")
+        for build in ("170b09dd897430a9", "", None):
+            step, _, checks, _ = self._step(doc_build=build)
+            self.assertEqual(step, "hold_card", build)
+            self.assertFalse(checks["doc_build_ok"], build)
+        no_line = self.doc.replace("Doc build: %s (tag: X-BUILD)" % NEW_BUILD, "")
+        twice = self.doc.replace("Doc build: %s (tag: X-BUILD)" % NEW_BUILD,
+                                 "Doc build: %s (tag: X-BUILD)\nDoc build: %s (tag: X-BUILD)"
+                                 % (NEW_BUILD, NEW_BUILD))
+        for doc in (no_line, twice):
+            step, _, checks, _ = self._step(doc=doc)
+            self.assertEqual(step, "hold_card")
+            self.assertFalse(checks["doc_build_ok"])
+
+    def test_each_approval_flag_still_holds(self):
+        for flag in ("doc_done", "doc_unchanged", "go_live"):
+            step, _, checks, _ = self._step(**{flag: False})
+            self.assertEqual(step, "hold_card", flag)
+            self.assertFalse(checks["approval_ok"], flag)
+
+
+class FreeMailAdditions(unittest.TestCase):
+    def test_new_free_mail_domains_are_never_a_company_domain(self):
+        for domain in ("hey.com", "duck.com", "mail.com", "usa.com", "consultant.com",
+                       "accountant.com", "myself.com", "post.com", "mailbox.org", "posteo.de",
+                       "seznam.cz", "wp.pl"):
+            self.assertFalse(ask_opus.sender_is_lead("pat@" + domain, "dana@" + domain), domain)
+            self.assertTrue(ask_opus.sender_is_lead("dana@" + domain, "dana@" + domain), domain)
+        self.assertTrue(ask_opus.sender_is_lead("info@brightline.com", "dana@brightline.com"))
 
 if __name__ == "__main__":
     unittest.main()

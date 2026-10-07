@@ -37,7 +37,7 @@ E1 goes out at 10:00 CT like every other touch, with no heads-up or veto first (
 
 ## Rules for every email (Lorenzo, 2026-09-23)
 
-1. No booking link anywhere. The lead picks one of the two times and Lorenzo sends the invite.
+1. No link in any of the ten emails (the one booking link is in the `booking_link` first reply, `cold-email-replies`). The lead picks one of the two times; it is booked first, then the Locked in confirmation goes (`cold-email-replies`, step 5).
 2. Any email that offers new times says the earlier times got taken, in different words each time. The engine makes that true: when a touch offers new times, this lead's earlier held times are released first.
 3. Email only. No texts, no calls.
 4. No Claudeisms (`claudeisms` skill). Normal capitalization. No exclamation marks, no em or en dashes, no prices or guarantee figures. "AI" is fine (Lorenzo, 2026-09-30), but never tell or imply to a lead that a bot or AI wrote the email.

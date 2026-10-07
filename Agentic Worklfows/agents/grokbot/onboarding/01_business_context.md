@@ -68,7 +68,7 @@ Current niches: commercial cleaning, bookkeeping and tax, recruiting, plus the e
 
 - **One-call close.** Price is presented on the call and a decision is asked for on the call. There is no "I'll send a proposal" and no "let me follow up with pricing".
 - **The call:** 15 minutes, with Lorenzo, on the Discovery Call calendar, 12:00 to 18:00 CT, Monday to Friday.
-- **How a lead books:** the email offers two specific times. The lead picks one. Lorenzo sends the calendar invite. The one email with a booking link is the approved `first_reply.<offer>.booking_link.full` reply, for a lead who asks for one. A lead can also book through that link: the booking confirms on its own and the calendar sends the invite.
+- **How a lead books:** the email offers two specific times. The lead picks one, or names another time. A time that fits every slot rule is booked first on the Discovery Call calendar, the booking is checked, and only then does the "Locked in" confirmation go (file 02, section 4, rule 15). Lorenzo sends the calendar invite. The one email with a booking link is the approved `first_reply.<offer>.booking_link.full` reply, for a lead who asks for one. A lead can also book through that link: the booking confirms on its own and the calendar sends the invite.
 - **Call link:** Zoom is connected on the GHL Discovery Call calendar (verified read-only 2026-10-06): a booking there gets a Zoom link and a Google invitation email. Some older calls were booked by hand on Lorenzo's Google Calendar.
 - After the call: skill `sales-call`. Post-call emails with numbers or a payment link are always Lorenzo's to send.
 
@@ -94,7 +94,7 @@ For email and Upwork text, Opus and the copy doc handle tone. You never write cu
 4. Say the thing and stop. No closing line that restates or sells what you just said. That is a "Grokism" (skill `claudeisms`).
 5. Name the lead by first name and company. Put the full email text in any message that asks him to approve an email.
 
-Example, good: "Dana at Brightline replied: 'Thursday 3pm works.' Booking Thu 3:00pm CT and sending the Locked in confirmation. Approve?" followed by the full email.
+Example, good: "Dana at Brightline replied: 'Saturday 10am works.' Calls are Monday to Friday. Counter ready: booking.counter.weekend. Send it, or book her time anyway?" followed by the full email.
 
 Example, bad: "Great news! Dana is interested and ready to move forward. This is a big step toward closing another deal!"
 

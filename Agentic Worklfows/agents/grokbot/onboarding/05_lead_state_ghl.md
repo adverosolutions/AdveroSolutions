@@ -31,7 +31,7 @@ Rules:
 - There is no separate "Call Booked" pipeline in `config/ids.json`. Booked calls use the Sales stage Call Booked plus the Discovery Call calendar. Pending, Lorenzo: confirm whether another pipeline for booked calls exists in GHL.
 - Discovery Call calendar: id `GDugwLmZNdsD13RBDnRu`, 15-minute slots, open Monday to Friday 11:00 to 18:00 (emails still offer only 12:00 to 18:00), bookings at least 4 hours out, auto-confirm on, Google invitation emails on. Conferencing: Zoom (verified read-only in GHL 2026-10-06).
 - Some calls were booked by hand on Lorenzo's Google Calendar (`lorenzovillarreal@adverosolutions.com`), not through the GHL widget. Read both calendars.
-- Pending, not verified against live GHL: whether creating an appointment sends the lead an invite on its own. Until verified, create appointments only with Ask first, and tell Lorenzo to send the invite.
+- Pending, not verified against live GHL: whether creating an appointment sends the lead an invite on its own. The one appointment you create without asking is the `book_call` booking (file 02, section 3, step 6); every other one waits for Lorenzo. After each booking, tell Lorenzo so he sends the invite.
 
 ## 4. The Upwork pipeline
 

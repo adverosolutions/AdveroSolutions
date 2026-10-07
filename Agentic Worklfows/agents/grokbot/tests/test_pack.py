@@ -90,9 +90,29 @@ class Pack(unittest.TestCase):
 
     def test_pack_names_the_copy_doc_and_model(self):
         pack = read(os.path.join(ONBOARDING, "GROK_ONBOARDING_PACK.md"))
-        self.assertIn("1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4", pack)
-        self.assertIn("170b09dd897430a9", pack)
+        self.assertIn("df0ec92ac7a26ada", pack)
         self.assertIn("claude-opus-5-5", pack)
+        # the doc build Lorenzo says "done" on, in the approval example and the copy doc section
+        self.assertIn('"doc_build": "df0ec92ac7a26ada"',
+                      read(os.path.join(ONBOARDING, "02_operating_model.md")))
+        self.assertIn("Current build `df0ec92ac7a26ada`",
+                      read(os.path.join(ONBOARDING, "06_systems_and_access.md")))
+
+    def test_file_02_names_the_allow_list_in_code(self):
+        spec = importlib.util.spec_from_file_location(
+            "ask_opus_for_pack", os.path.join(ONBOARDING, "ask_opus.py"))
+        ask_opus = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(ask_opus)
+        doc = read(os.path.join(ONBOARDING, "02_operating_model.md"))
+        rule = [line for line in doc.splitlines()
+                if line.startswith("14. **The auto-send allow list**")]
+        self.assertEqual(len(rule), 1)
+        for branch in ask_opus.AUTO_SEND_FIRST_REPLIES:
+            self.assertIn("." + branch + ".full", rule[0], branch)
+        self.assertIn("`cadence.e1` to `cadence.e10`", rule[0])
+        self.assertEqual(ask_opus.AUTO_SEND_LADDER, tuple("cadence.e%d" % n for n in range(1, 11)))
+        for template_id in ask_opus.AUTO_SEND_CONFIRMATIONS:
+            self.assertIn("`" + template_id + "`", rule[0], template_id)
 
     def test_ai_agents_campaigns_map_to_their_key(self):
         ids = ["e8867dbb-4f94-40ee-81c0-c11d7a256e2d", "d81f1d53-23d6-48a6-aea3-80c21192e17e",
@@ -108,17 +128,37 @@ class Pack(unittest.TestCase):
 
     def test_no_stale_rule_contradicts_files_00_to_07(self):
         stale = {
-            "01_business_context.md": ["No booking link in any email", "Zoom is not connected"],
-            "03_team.md": ["Zoom is not connected"],
-            "05_lead_state_ghl.md": ["Zoom not connected"],
-            "06_systems_and_access.md": ["Zoom is not connected"],
-            "09_company_and_process_overview.md": ["Zoom is not connected"],
+            "00_START_HERE.md": ["1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4",
+                                 "The common first replies send on their own"],
+            "01_business_context.md": ["No booking link in any email", "Zoom is not connected",
+                                       "Booking Thu 3:00pm CT and sending the Locked in "
+                                       "confirmation. Approve?"],
+            "02_operating_model.md": ["(Ask first). If that time is not clear",
+                                      "it is a hold card or a `booked_call` case",
+                                      "Only default, pricing, mechanism, send_info and booking_link"],
+            "03_team.md": ["Zoom is not connected", "does not run until Zoom is connected",
+                           "Create a GHL appointment on the Discovery Call calendar (Ask first)"],
+            "04_ask_opus.md": ["in the chosen template or one of its variants",
+                               "approval_ok` is also false for a first reply"],
+            "05_lead_state_ghl.md": ["Zoom not connected", "create appointments only with Ask first"],
+            "06_systems_and_access.md": ["Zoom is not connected",
+                                         "appointments on the Discovery Call calendar (Ask first)",
+                                         "Current build `170b09dd897430a9`"],
+            "09_company_and_process_overview.md": ["Zoom is not connected",
+                                                   "Grok creates the appointment (Ask first)",
+                                                   "against the no-booking-link rule"],
             "skills/cold-campaigns.md": ["We never talk\nnumbers over email", "Mention AI"],
-            "skills/booked-calls.md": ["never appear in any email"],
-            "skills/client-fulfillment.md": ["tooling, AI or automation"],
+            "skills/booked-calls.md": ["never appear in any email", "Never a booking link"],
+            "skills/client-fulfillment.md": ["tooling, AI or automation",
+                                             'says never a booking link, "Everywhere"'],
             "skills/cold-email-replies.md": ["We never talk numbers over email**",
-                                              "A model may improve the wording"],
-            "skills/quiet-lead-followup.md": ["Veto button", "no AI or automation"],
+                                              "A model may improve the wording",
+                                              "new first-reply copy is being written",
+                                              "it goes to Lorenzo or the booked-call flow"],
+            "skills/grok-operator.md": ['except the Zoom link in the "Locked in" confirmation and',
+                                        "Advero emails: edit here (build 170b09dd897430a9)"],
+            "skills/quiet-lead-followup.md": ["Veto button", "no AI or automation",
+                                              "No booking link anywhere"],
             "skills/lorenzo-voice.md": ['"AI", "automation", "automated", "bot"'],
         }
         for name, phrases in stale.items():

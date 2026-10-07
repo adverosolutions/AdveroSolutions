@@ -9,7 +9,7 @@ Ids are from `config/ids.json` (read-only pull, 2026-09-21) unless marked otherw
 | Tool | Read | Write | Never |
 |---|---|---|---|
 | Instantly | Campaigns, analytics, emails and threads, leads, accounts and warm-up health, blocklist | Replies in a lead's thread (when `ask_opus.py` prints `send`); lead interest status; blocklist entries (same day for an unsubscribe or hostile reply, file 02, section 3) | Campaign copy, `email_list`, sequences, schedules, limits, status (activate or pause); adding, moving or deleting leads; lead lists; inboxes, warm-up, domains; webhooks and API keys without Lorenzo's yes; billing |
-| GoHighLevel | Contacts, opportunities, pipelines, calendars, appointments, notes, tasks | Opportunity stage; the five contact fields; notes; tags (`cold-email`, `instantly-positive-reply`, niche, campaign key, `dnd`); tasks; appointments on the Discovery Call calendar (Ask first); a GHL email only for a booked lead with no thread at all | Workflows, pipelines and stages (structure), calendar settings, users, integrations, phone numbers, SMS, custom field definitions without Lorenzo's yes, billing |
+| GoHighLevel | Contacts, opportunities, pipelines, calendars, appointments, notes, tasks | Opportunity stage; the five contact fields; notes; tags (`cold-email`, `instantly-positive-reply`, niche, campaign key, `dnd`); tasks; a Discovery Call appointment only on a `book_call` step, at exactly `book_at` (file 02, section 3, step 6; any other appointment action is Lorenzo's); a GHL email only for a booked lead with no thread at all | Workflows, pipelines and stages (structure), calendar settings, users, integrations, phone numbers, SMS, custom field definitions without Lorenzo's yes, billing |
 | Gmail (Lorenzo's) | His inbox for context: calendar replies, meeting notices | Emails to Lorenzo himself only, if push is down | Any email to a lead or client. Leads get email only through Instantly, in their thread |
 | Google Calendar | Lorenzo's calendar `lorenzovillarreal@adverosolutions.com`, free and busy | Nothing | Creating, moving or deleting events; sending invites. Lorenzo sends invites |
 | Zoom | Meeting join data, when available | Nothing | Settings, meetings, recordings |
@@ -21,15 +21,15 @@ Ids are from `config/ids.json` (read-only pull, 2026-09-21) unless marked otherw
 
 ## 2. The copy doc
 
-- **Name:** starts with "Advero emails: edit here". Current build `170b09dd897430a9` (the build id is printed near the top of the doc, tag `X-BUILD`).
-- **Link:** https://docs.google.com/document/d/1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4/edit
-- **It is the only source of email text.** 365 tagged blocks: every reply, follow-up, booking, reminder and no-show email, plus the six cold campaigns' live copy.
+- **Name:** starts with "Advero emails: edit here". Current build `df0ec92ac7a26ada`, built 2026-10-06 (the build id is printed near the top of the doc: "Doc build: df0ec92ac7a26ada (tag: X-BUILD)"). This is the doc Lorenzo says "done" on, and the build in `approval.json` (file 02, section 9).
+- **Link:** not set yet. Build `df0ec92ac7a26ada` is waiting for upload; Claude Code fills in its Google Doc link here, in a dated update, when it uploads it. Until then the doc in Drive is the older build `170b09dd897430a9` (https://docs.google.com/document/d/1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4/edit). Its export carries the old build line, so every email from it is a hold card.
+- **It is the only source of email text.** Build `df0ec92ac7a26ada` has 395 tagged blocks: every reply, follow-up, booking, reminder and no-show email, the AI agents first replies, plus the six cold campaigns' live copy.
 - **How it is laid out:** each email has a heading ending in a grey tag, for example `Follow-up email 3 (tag: cadence.e3)`. Variants of an email have tags like `booking.counter.weekend/no_alternatives`. Lines ending in "(note)" or "(section)" are for reading only, never part of an email.
-- **What is approved:** the doc itself says that when Lorenzo says "done", every email in it counts as approved except the first replies (`first_reply.*`), which build 170b09dd897430a9 marks "Not approved yet". Since 2026-10-06, an approved first reply on the auto-send list (default, pricing, mechanism, send_info, booking_link) goes on its own; every other first reply, and any marked "Not approved yet", is a hold card. Emails go out only after he also says "go live". The doc says "tell Claude"; he now tells the Chief of Staff. Pending, Lorenzo: confirm he gives "done" and "go live" to the Chief of Staff.
-- **Status on 2026-09-25:** nothing approved yet. Until Lorenzo says "done" and "go live", every email is a hold card.
+- **What is approved:** the doc itself says that when Lorenzo says "done", every email in it counts as approved except the first replies marked "Not approved yet" (in build `df0ec92ac7a26ada`, the six older offers' first replies). Approved does not mean it goes on its own: only Lorenzo's allow list does (file 02, section 4, rule 14), and `ask_opus.py` enforces it in code. Where the doc's own notes say more emails go on their own, the allow list wins. Emails go out only after he also says "go live". The doc says "tell Claude"; he now tells the Chief of Staff. Pending, Lorenzo: confirm he gives "done" and "go live" to the Chief of Staff.
+- **Status on 2026-10-06:** nothing approved yet. Until Lorenzo says "done" on build `df0ec92ac7a26ada` and "go live", every email is a hold card.
 - **Never used by you:** the `instantly.*` blocks (the cold campaigns, which Instantly sends), the "Upwork pricing lines" boxes (`U-PRICE-*`; Upwork never gets a price), and `X-*` blocks (doc instructions).
 - **Export:** File, Download, Plain text (.txt). Save as `~/advero/copy_doc.txt`. After Lorenzo's "done", also save the same export as `~/advero/copy_doc_approved.txt` (file 02, section 9).
-- **If a newer build appears:** when Lorenzo uploads a new build, the old doc is renamed "OLD, do not edit". Always check you have the newest build before exporting. A new build needs a new "done".
+- **If a newer build appears:** when Lorenzo uploads a new build, the old doc is renamed "OLD, do not edit". Always check you have the newest build before exporting. A new build needs a new "done", and a new `doc_build` in `approval.json`, which comes only with an update from Lorenzo.
 
 ## 3. Instantly
 
@@ -86,4 +86,5 @@ Ids: Upwork organization `2081884703335585732`, freelancer user `208188470333558
 | Whether a GHL appointment sends the lead an invite by itself | Chief of Staff tests on a booking of Lorenzo's own, with his yes |
 | Instantly `reply_received` webhook to a Grok routine | Lorenzo's yes, after routine webhooks are confirmed to work |
 | Writing the Daily Metrics row | Lorenzo |
+| Uploading build `df0ec92ac7a26ada` and its Google Doc link (section 2) | Claude Code, in a dated update |
 | "done" and "go live" on the copy doc | Lorenzo |
