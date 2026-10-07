@@ -1,0 +1,1764 @@
+<title>Advero Scoreboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Tokens: Brand/tokens/brand.css (Spatial look) plus the site.css derived tokens. One light theme on purpose. */
+:root{
+  color-scheme:light;
+  --ink:#16202e;
+  --ink-2:#4d596b;
+  --ink-3:#8792a3;
+  --blue:#2f74f5;
+  --blue-2:#6aa5ff;
+  --blue-deep:#1f5fd6;
+  --mint:#1fb487;
+  --amber:#e8a13a;
+  --rose:#cf5f5a;            /* critical: #d9534f softened toward the sky palette */
+  --indigo:#5d5fd3;          /* LinkedIn tag */
+  --surface:#fff;
+  --page:#e9f0f8;
+  --line:rgba(150,170,200,.28);
+  --sky:
+    radial-gradient(1200px 600px at 78% -10%,rgba(255,255,255,.95),rgba(255,255,255,0) 60%),
+    radial-gradient(900px 520px at 8% 30%,rgba(206,226,250,.75),rgba(206,226,250,0) 70%),
+    linear-gradient(180deg,#c9dcf2 0%,#dce8f5 28%,#ecf1f7 58%,#f3f4f6 82%,#e9edf2 100%);
+  --panel:linear-gradient(180deg,rgba(255,255,255,.94),rgba(248,251,255,.80));
+  --panel-edge:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,0) 28%,rgba(255,255,255,0) 72%,rgba(200,218,242,.35) 100%);
+  --shadow-panel:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.55),0 40px 70px -30px rgba(38,72,128,.30),0 16px 30px -18px rgba(38,72,128,.22);
+  --shadow-pill:inset 0 1px 0 #fff,0 6px 18px -8px rgba(38,72,128,.25);
+  --blur-glass:blur(22px) saturate(1.3);
+  --radius-panel:28px;
+  --radius-pill:99px;
+  --font:"Figtree",system-ui,sans-serif;
+  --eyebrow:600 12.5px/1 var(--font);
+  --ease:cubic-bezier(.16,1,.3,1);
+
+  --r-md:calc(var(--radius-panel) / 2);
+  --r-sm:calc(var(--radius-panel) / 3);
+  --r-xs:calc(var(--radius-panel) / 5);
+  --glass-line:color-mix(in srgb,var(--surface) 90%,transparent);
+  --glass-soft:color-mix(in srgb,var(--surface) 72%,transparent);
+  --glass-strong:color-mix(in srgb,var(--surface) 90%,transparent);
+  --blue-tint:color-mix(in srgb,var(--blue) 9%,transparent);
+  --blue-tint-2:color-mix(in srgb,var(--blue) 18%,transparent);
+  --blue-button:linear-gradient(180deg,color-mix(in srgb,var(--blue) 70%,var(--blue-deep)),var(--blue-deep));
+  --mint-tint:color-mix(in srgb,var(--mint) 14%,transparent);
+  --mint-text:color-mix(in srgb,var(--mint) 55%,var(--ink));
+  --amber-tint:color-mix(in srgb,var(--amber) 17%,transparent);
+  --amber-text:color-mix(in srgb,var(--amber) 45%,var(--ink));
+  --rose-tint:color-mix(in srgb,var(--rose) 13%,transparent);
+  --rose-text:color-mix(in srgb,var(--rose) 70%,var(--ink));
+  --indigo-tint:color-mix(in srgb,var(--indigo) 12%,transparent);
+  --indigo-text:color-mix(in srgb,var(--indigo) 80%,var(--ink));
+  --ui-soft:color-mix(in srgb,var(--page) 55%,var(--surface));
+  --ui-line:color-mix(in srgb,var(--ink) 9%,var(--surface));
+  --ui-dot:color-mix(in srgb,var(--ink) 16%,var(--surface));
+  --veil:color-mix(in srgb,var(--ink) 22%,transparent);
+  --shimmer:color-mix(in srgb,var(--surface) 70%,transparent);
+
+  /* chart series: blue / deep violet / orchid. Off the status hues (mint, amber, rose).
+     dataviz validate_palette.js on #fff, all pairs: CVD worst 9.5, normal-vision worst 15.7, contrast >= 3:1;
+     normal-vision >= 15 against mint, amber and rose too. */
+  --chart-a:var(--blue);
+  --chart-a-soft:color-mix(in srgb,var(--blue) 38%,var(--surface));
+  --chart-b:#8e44ad;
+  --chart-c:#d85fc0;
+  --chart-grid:var(--ui-line);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{margin:0;min-height:100vh;font-family:var(--font);font-size:15px;line-height:1.5;color:var(--ink);
+  background-color:var(--page);background-image:var(--sky);background-attachment:fixed;background-repeat:no-repeat;
+  -webkit-font-smoothing:antialiased;overflow-x:clip;isolation:isolate}
+h1,h2,h3,h4,p,ul,ol,dl,dd,figure{margin:0}
+ul,ol{padding:0;list-style:none}
+a{color:inherit}
+button,input{font:inherit;color:inherit}
+svg{display:block}
+:focus-visible{outline:2px solid var(--blue-deep);outline-offset:3px}
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip-link{position:absolute;left:16px;top:-60px;z-index:100;padding:10px 16px;border-radius:var(--radius-pill);background:var(--surface);color:var(--ink);font-weight:600;text-decoration:none;box-shadow:var(--shadow-pill)}
+.skip-link:focus{top:12px}
+
+/* haze */
+.sky-haze{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.sky-haze i{position:absolute;border-radius:var(--radius-pill);filter:blur(60px);opacity:.55;animation:haze-drift 52s var(--ease) infinite}
+.sky-haze i:nth-child(1){width:520px;height:520px;left:-120px;top:10%;background:color-mix(in srgb,var(--blue-2) 26%,var(--surface))}
+.sky-haze i:nth-child(2){width:460px;height:460px;right:-100px;top:45%;background:color-mix(in srgb,var(--blue-2) 14%,var(--surface));animation-duration:64s}
+.sky-haze i:nth-child(3){width:380px;height:380px;left:40%;top:72%;background:color-mix(in srgb,var(--blue-2) 20%,var(--surface));opacity:.45;animation-duration:76s}
+@keyframes haze-drift{0%,100%{transform:none}50%{transform:translate3d(60px,-50px,0) scale(1.08)}}
+
+/* page wrapper: the one place the side gutter lives */
+.page{max-width:calc(1280px + 64px);margin:0 auto;padding-inline:max(16px,min(32px,3vw));padding-bottom:40px}
+main{display:flex;flex-direction:column;gap:22px;margin-top:18px}
+main > *,.page > *{min-width:0}
+/* --bar-h is the measured top bar height (set from script on resize) */
+section[id]{scroll-margin-top:calc(var(--bar-h,180px) + 24px + env(safe-area-inset-top,0px))}
+/* a source that is refreshing keeps its numbers, slightly dimmed */
+.is-dimmed{opacity:.68;transition:opacity .4s var(--ease)}
+
+/* glass recipe (site.css .glass) */
+.glass{position:relative;background:var(--panel);border:1px solid var(--glass-line);border-radius:var(--radius-panel);
+  box-shadow:var(--shadow-panel);-webkit-backdrop-filter:var(--blur-glass);backdrop-filter:var(--blur-glass)}
+.glass::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:var(--panel-edge);padding:1.5px;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.panel{padding:clamp(18px,2.6vw,30px);min-width:0}
+@media (max-width:520px){.glass{border-radius:22px}}
+
+/* type */
+.eyebrow{display:inline-flex;align-items:center;gap:9px;font:var(--eyebrow);letter-spacing:.14em;text-transform:uppercase;color:var(--blue-deep)}
+.eyebrow::before{content:"";width:7px;height:7px;border-radius:var(--radius-pill);background:var(--blue);outline:4px solid var(--blue-tint)}
+.panel__head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;min-width:0}
+.panel__title{font-size:clamp(21px,2vw,26px);font-weight:600;letter-spacing:-.025em;line-height:1.15}
+.panel__sub{font-size:14px;color:var(--ink-2);margin-top:4px}
+.panel__head .spacer{flex:1 1 auto}
+.section-title{font-size:clamp(21px,2vw,26px);font-weight:600;letter-spacing:-.025em;line-height:1.15;margin:6px 4px 12px}
+.quiet{color:var(--ink-2);font-size:14px}
+.small{font-size:13px;color:var(--ink-2)}
+.wrap-any{overflow-wrap:anywhere}
+.link{color:var(--blue-deep);font-weight:600;text-decoration:none;white-space:nowrap}
+.link:hover{text-decoration:underline;text-underline-offset:3px}
+
+/* pills and tags (site.css .pill / .tag) */
+.pill{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;font-size:12.5px;font-weight:600;color:var(--ink-2);padding:6px 12px;border-radius:var(--radius-pill);
+  background:var(--glass-soft);border:1px solid var(--glass-line);box-shadow:var(--shadow-pill)}
+.tag{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:12px;font-weight:700;line-height:1;padding:5px 9px;border-radius:var(--radius-pill);background:var(--ui-soft);color:var(--ink-2)}
+.tag--blue{background:var(--blue-tint);color:var(--blue-deep)}
+.tag--mint{background:var(--mint-tint);color:var(--mint-text)}
+.tag--indigo{background:var(--indigo-tint);color:var(--indigo-text)}
+.tag--amber{background:var(--amber-tint);color:var(--amber-text)}
+.tag--rose{background:var(--rose-tint);color:var(--rose-text)}
+.state{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:12px;font-weight:700;line-height:1;padding:5px 10px 5px 8px;border-radius:var(--radius-pill);background:var(--ui-soft);color:var(--ink-2)}
+.state::before{content:"";width:7px;height:7px;border-radius:var(--radius-pill);background:var(--ink-3);flex:none}
+.state.is-good{background:var(--mint-tint);color:var(--mint-text)}.state.is-good::before{background:var(--mint)}
+.state.is-watch{background:var(--amber-tint);color:var(--amber-text)}.state.is-watch::before{background:var(--amber)}
+.state.is-alert{background:var(--rose-tint);color:var(--rose-text)}.state.is-alert::before{background:var(--rose)}
+.state.is-info{background:var(--blue-tint);color:var(--blue-deep)}.state.is-info::before{background:var(--blue)}
+.state.is-none{background:var(--ui-soft);color:var(--ink-2)}
+.state.is-lg{font-size:13px;padding:7px 12px 7px 10px}
+
+/* buttons (site.css .btn) */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:0 15px;border-radius:var(--radius-pill);
+  font:600 14px/1 var(--font);text-decoration:none;white-space:nowrap;cursor:pointer;border:1px solid transparent;
+  transition:transform .5s var(--ease),background-color .3s var(--ease)}
+.btn:hover{transform:translateY(-1px)}
+.btn svg{width:16px;height:16px;flex:none}
+.btn--primary{color:var(--surface);background:var(--blue-button);border-color:color-mix(in srgb,var(--blue-deep) 50%,transparent);box-shadow:var(--shadow-pill)}
+.btn--glass{color:var(--ink);background:var(--glass-soft);border-color:var(--glass-line);box-shadow:var(--shadow-pill)}
+.btn--glass:hover{background:var(--glass-strong)}
+.btn[disabled]{cursor:not-allowed;opacity:.6;transform:none}
+.btn.is-spinning svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;margin-top:12px;padding:10px 12px 10px 16px;border-radius:24px;display:flex;flex-direction:column;gap:8px}
+.topbar__row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;min-width:0}
+.brand{display:flex;align-items:center;gap:9px;margin-right:auto;min-width:0}
+.brand__mark{position:relative;width:24px;height:24px;border-radius:8px;flex:none;background:linear-gradient(160deg,var(--blue-2),var(--blue));box-shadow:inset 0 1px 0 color-mix(in srgb,var(--surface) 60%,transparent),0 6px 14px -6px var(--blue)}
+.brand__mark::after{content:"";position:absolute;left:7px;top:7px;width:10px;height:10px;border-radius:3px;background:color-mix(in srgb,var(--surface) 88%,transparent)}
+.brand__word{font-weight:700;font-size:19px;letter-spacing:-.02em;line-height:1}
+.brand__sub{font-weight:500;font-size:15px;color:var(--ink-2);padding-left:10px;border-left:1px solid var(--ui-line);line-height:1}
+.nav{display:none;gap:2px}
+.nav a{padding:8px 11px;border-radius:var(--radius-pill);font-weight:600;font-size:14px;color:var(--ink-2);text-decoration:none}
+.nav a:hover{color:var(--ink);background:var(--blue-tint)}
+@media (min-width:1100px){.nav{display:flex}}
+.seg{display:inline-flex;padding:3px;border-radius:var(--radius-pill);background:var(--ui-soft);border:1px solid var(--ui-line)}
+.seg button{border:0;background:transparent;min-height:32px;padding:0 13px;border-radius:var(--radius-pill);font-weight:600;font-size:13.5px;color:var(--ink-2);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-pill)}
+.actions{display:flex;gap:8px}
+.topbar__strip{display:contents}
+.chips{display:flex;flex-wrap:wrap;gap:6px;min-width:0;order:10;flex-basis:100%}
+.chip{display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:0 11px 0 9px;border-radius:var(--radius-pill);border:1px solid var(--ui-line);
+  background:var(--glass-strong);font-size:12.5px;font-weight:600;color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.chip b{color:var(--ink);font-weight:700}
+.chip__dot{width:8px;height:8px;border-radius:var(--radius-pill);background:var(--ink-3);flex:none}
+.chip.is-ok .chip__dot{background:var(--mint)}
+.chip.is-warn .chip__dot{background:var(--amber)}
+.chip.is-error{border-color:color-mix(in srgb,var(--rose) 35%,transparent);background:color-mix(in srgb,var(--rose) 7%,var(--surface))}
+.chip.is-error .chip__dot{background:var(--rose)}
+.chip.is-error span{color:var(--rose-text)}
+.chip.is-loading .chip__dot{background:var(--blue);animation:pulse 1.4s ease-in-out infinite}
+.chip.is-refreshing .chip__dot{background:var(--mint);animation:pulse 1.4s ease-in-out infinite}
+.chip[aria-expanded="true"]{box-shadow:0 0 0 2px var(--blue-tint-2)}
+@keyframes pulse{50%{opacity:.35}}
+@media (max-width:560px){.chip .ago{display:none}}
+.chip-detail{font-size:13px;color:var(--ink-2);padding:8px 12px;border-radius:var(--r-sm);background:var(--ui-soft);overflow-wrap:anywhere}
+.chip-detail.is-error{background:var(--rose-tint);color:var(--rose-text)}
+.chip-detail[hidden]{display:none}
+.sample-tag[hidden]{display:none}
+@media (max-width:480px){
+  .topbar{padding:8px 8px 8px 12px;gap:6px}
+  .topbar__row{flex-wrap:wrap;gap:6px 8px}
+  .brand__word{font-size:17px}
+  .brand__sub{font-size:14px;padding-left:8px}
+  .actions .btn{width:38px;padding:0}
+  .actions .btn__label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  .topbar__strip{display:flex;align-items:center;gap:6px;order:10;flex:1 0 100%;min-width:0;overflow-x:auto;overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -8px 0 -12px;padding:2px 8px 2px 12px}
+  .topbar__strip::-webkit-scrollbar{display:none}
+  .topbar__strip > *{flex:none}
+  .topbar__strip .chips{flex-wrap:nowrap;flex-basis:auto;order:0}
+  .seg button{min-height:30px;padding:0 11px}
+}
+@media (max-width:340px){.brand__sub{display:none}}
+
+/* banner / notices */
+.banner{display:flex;gap:12px;align-items:flex-start;padding:16px 20px;font-size:15px}
+.banner[hidden]{display:none}
+.banner__icon{width:30px;height:30px;border-radius:var(--radius-pill);flex:none;display:grid;place-items:center;background:var(--blue-tint);color:var(--blue-deep);font-weight:800}
+.banner b{display:block;font-weight:700}
+.banner p{color:var(--ink-2);font-size:14px;margin-top:2px}
+
+.fix{display:flex;gap:10px;align-items:flex-start;margin-top:14px;padding:11px 14px;border-radius:var(--r-sm);background:var(--rose-tint);border-left:3px solid var(--rose);font-size:13.5px;color:var(--rose-text);overflow-wrap:anywhere}
+.fix b{font-weight:700;color:var(--ink)}
+.fix--calm{background:var(--ui-soft);border-left-color:var(--ink-3);color:var(--ink-2)}
+.fix--warn{background:var(--amber-tint);border-left-color:var(--amber);color:var(--amber-text)}
+.is-down{filter:grayscale(1);opacity:.5;pointer-events:none}
+
+/* skeleton */
+.skel{display:grid;gap:10px;margin-top:14px}
+.skel i{display:block;height:14px;border-radius:var(--r-xs);background:linear-gradient(90deg,var(--ui-line) 0%,var(--shimmer) 50%,var(--ui-line) 100%);background-size:200% 100%;animation:shimmer 1.6s linear infinite}
+.skel i.lg{height:40px}
+.skel i.xl{height:120px}
+.skel i.w60{width:60%}.skel i.w40{width:40%}.skel i.w80{width:80%}
+@keyframes shimmer{from{background-position:100% 0}to{background-position:-100% 0}}
+
+/* Today */
+.alerts{display:grid;gap:8px;margin-top:16px}
+.alert{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 14px;border-radius:var(--r-sm);background:var(--surface);border:1px solid var(--ui-line);border-left:4px solid var(--amber);min-width:0}
+.alert.is-critical{border-left-color:var(--rose);background:color-mix(in srgb,var(--rose) 5%,var(--surface))}
+.alert__text{flex:1 1 220px;min-width:0;font-weight:600;overflow-wrap:anywhere}
+.all-clear{margin-top:16px}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+@media (min-width:900px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:340px){.tiles{grid-template-columns:minmax(0,1fr)}}
+.tile{display:flex;flex-direction:column;min-width:0;padding:16px 16px 14px;border-radius:var(--r-md);background:linear-gradient(180deg,var(--surface),var(--ui-soft));border:1px solid var(--ui-line);text-decoration:none;color:inherit}
+a.tile:hover{border-color:var(--blue-tint-2)}
+.tile__label{font-size:13px;font-weight:700;color:var(--ink)}
+.tile__num{font-size:clamp(30px,3.6vw,44px);font-weight:600;letter-spacing:-.04em;line-height:1.05;margin-top:10px;overflow-wrap:anywhere}
+.tile__unit{font-size:.45em;letter-spacing:-.01em;color:var(--ink-2);font-weight:600;margin-left:.15em}
+.tile__foot{margin-top:auto;padding-top:10px;font-size:12.5px;color:var(--ink-2);overflow-wrap:anywhere}
+.tile__foot b{color:var(--ink);font-weight:700}
+.tile.is-down .tile__num{color:var(--ink-3)}
+.tile__num.is-partial{color:var(--ink-2)}
+.tile__flag{display:inline-block;vertical-align:middle;margin-left:8px;font-size:12px;font-weight:700;letter-spacing:0;line-height:1;padding:4px 8px;border-radius:var(--radius-pill);background:var(--ui-soft);color:var(--ink-2)}
+.tile__wait{display:block;color:var(--ink-2);font-weight:600}
+.all-clear.is-pending{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;font-size:13.5px;color:var(--ink-2)}
+
+/* Channels */
+.channels{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+@media (min-width:760px){.channels{grid-template-columns:repeat(2,minmax(0,1fr))}.channels > :nth-child(3){grid-column:1 / -1}}
+@media (min-width:1180px){.channels{grid-template-columns:repeat(3,minmax(0,1fr))}.channels > :nth-child(3){grid-column:auto}}
+.channel{display:flex;flex-direction:column;gap:0}
+.channel.is-ghost{background:color-mix(in srgb,var(--surface) 42%,transparent);border:1.5px dashed color-mix(in srgb,var(--ink-3) 45%,transparent);box-shadow:none}
+.channel.is-ghost::before{display:none}
+.channel__status{font-size:13.5px;color:var(--ink-2);margin-top:6px;overflow-wrap:anywhere}
+.block-title{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);margin:20px 0 8px}
+.funnel{position:relative;display:grid;gap:2px}
+.step{position:relative;display:grid;grid-template-columns:22px minmax(0,1fr) auto;column-gap:10px;row-gap:3px;padding:8px 0;border-top:1px solid var(--ui-line)}
+.step:first-child{border-top:0}
+.step__num{grid-row:1 / span 3;width:22px;height:22px;border-radius:var(--radius-pill);display:grid;place-items:center;font-size:11.5px;font-weight:700;color:var(--blue-deep);background:var(--blue-tint)}
+.step__label{font-size:14px;font-weight:600;color:var(--ink);min-width:0;overflow-wrap:anywhere}
+.step__value{font-size:22px;font-weight:600;letter-spacing:-.03em;line-height:1;text-align:right;font-variant-numeric:tabular-nums}
+.step__delta{grid-column:2 / -1;font-size:12.5px;color:var(--ink-2)}
+.step__delta.is-up{color:var(--mint-text)}
+.step__delta.is-down{color:var(--rose-text)}
+.step__conv{grid-column:2 / -1;display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-2);min-width:0}
+.meter{position:relative;flex:0 0 72px;height:5px;border-radius:var(--radius-pill);background:var(--blue-tint-2);overflow:hidden}
+.meter i{position:absolute;left:0;top:0;bottom:0;border-radius:var(--radius-pill);background:var(--blue)}
+.is-ghost .step__num{color:var(--ink-2);background:var(--ui-soft)}
+.is-ghost .step__value{color:var(--ink-3)}
+.rates{display:grid}
+.rate{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:8px 0;border-top:1px solid var(--ui-line)}
+.rate:first-child{border-top:0}
+.rate__label{font-size:14px;font-weight:600;flex:1 1 120px;min-width:0}
+.rate__value{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+.rate__target{flex-basis:100%;font-size:12.5px;color:var(--ink-2)}
+.money{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.money > div{min-width:0;padding:10px 12px;border-radius:var(--r-sm);background:var(--ui-soft)}
+.money dt{font-size:12px;font-weight:600;color:var(--ink-2)}
+.money dd{font-size:18px;font-weight:700;letter-spacing:-.02em;margin-top:2px;overflow-wrap:anywhere}
+.money__note{font-size:12.5px;color:var(--ink-2);margin-top:8px;overflow-wrap:anywhere}
+.textbtn{border:0;background:none;padding:0;color:var(--blue-deep);font-weight:600;font-size:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.kv{display:grid}
+.kv > div{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-top:1px solid var(--ui-line);font-size:13.5px}
+.kv > div:first-child{border-top:0}
+.kv dt{color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
+.kv dd{font-weight:700;text-align:right;font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
+
+/* chart */
+.chart{position:relative;margin-top:4px;min-width:0}
+.chart__svg{width:100%;height:auto;overflow:visible;border-radius:var(--r-xs)}
+.chart__svg text{font-family:var(--font);font-size:11px;fill:var(--ink-2)}
+.chart__svg .tick{fill:var(--ink-2);font-variant-numeric:tabular-nums}
+.chart__svg .cap{fill:var(--ink-2);font-weight:600}
+.chart__svg .cap-val{fill:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+.chart__svg .val{fill:var(--ink);font-weight:700}
+.chart__svg .grid{stroke:var(--chart-grid);stroke-width:1;fill:none}
+.chart__svg .bar{fill:var(--chart-a-soft)}
+.chart__svg .bar--last{fill:var(--chart-a)}
+.chart__svg .zero-last{fill:var(--surface);stroke:var(--chart-a);stroke-width:2}
+.chart__svg .sw-a{fill:var(--chart-a)}
+.chart__svg .s-b{fill:var(--chart-b)}
+.chart__svg .s-c{fill:var(--chart-c)}
+.chart__svg .dot{stroke:var(--surface);stroke-width:1.5}
+.chart__svg .cross{stroke:var(--ink-3);stroke-width:1}
+.chart__svg .hit{fill:transparent;cursor:crosshair}
+.chart__svg .empty-note{fill:var(--ink-2);font-size:12px;font-weight:600}
+.chart__tip{position:absolute;top:0;left:0;z-index:2;pointer-events:none;min-width:130px;padding:8px 10px;border-radius:var(--r-sm);background:var(--surface);border:1px solid var(--ui-line);box-shadow:var(--shadow-pill);font-size:12.5px;line-height:1.35}
+.chart__tip[hidden]{display:none}
+.chart__tip .d{font-weight:700;color:var(--ink);margin-bottom:4px}
+.chart__tip .r{display:flex;align-items:center;gap:6px;color:var(--ink-2);white-space:nowrap}
+.chart__tip .r b{color:var(--ink);font-variant-numeric:tabular-nums}
+.chart__tip .k{width:10px;height:2px;border-radius:2px;flex:none}
+.k-a{background:var(--chart-a)}.k-b{background:var(--chart-b)}.k-c{background:var(--chart-c)}
+
+/* Pipeline */
+.totals{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.board-scroll{overflow-x:auto;overscroll-behavior-x:contain;margin:16px -6px 0;padding:4px 6px 10px;-webkit-overflow-scrolling:touch}
+.board{display:flex;gap:12px;width:max-content;align-items:flex-start}
+.col{flex:0 0 252px;width:252px;padding:12px;border-radius:var(--r-md);background:color-mix(in srgb,var(--ui-soft) 70%,transparent);border:1px solid var(--ui-line)}
+.col__head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 8px;padding:2px 4px 10px}
+.col__name{font-size:14px;font-weight:700;overflow-wrap:anywhere;min-width:0}
+.col__meta{font-size:12.5px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.col__cards{display:grid;gap:8px}
+.col__empty{font-size:13px;color:var(--ink-2);padding:6px 4px 4px}
+.col__more{display:block;margin-top:8px;padding:6px 4px 2px;font-size:13px}
+.deal{position:relative;padding:11px 12px 10px 14px;border-radius:var(--r-sm);background:var(--surface);border:1px solid var(--ui-line);border-left:4px solid transparent;min-width:0;transition:transform .4s var(--ease),box-shadow .4s var(--ease)}
+.deal:hover{transform:translateY(-2px);box-shadow:var(--shadow-pill)}
+.deal.is-warning{border-left-color:var(--amber)}
+.deal.is-critical{border-left-color:var(--rose)}
+.deal.is-lost{background:var(--ui-soft)}
+.deal.is-lost .deal__name,.deal.is-lost .deal__co,.deal.is-lost .deal__meta{color:var(--ink-2)}
+.deal__link{color:var(--ink);text-decoration:none}
+.deal__link::after{content:"";position:absolute;inset:-1px;border-radius:var(--r-sm);z-index:0}
+.deal__link:focus-visible{outline:none}
+.deal__link:focus-visible::after{outline:2px solid var(--blue-deep);outline-offset:2px}
+.deal__name{display:block;font-size:14px;font-weight:700;line-height:1.3;overflow-wrap:anywhere}
+.deal__co{font-size:12.5px;color:var(--ink-2);margin-top:1px;overflow-wrap:anywhere}
+.deal__tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.deal__meta{font-size:12.5px;color:var(--ink-2);margin-top:7px}
+.deal__meta b{color:var(--ink)}
+.deal__note{position:relative;z-index:1;margin-top:6px;font-size:12.5px}
+.deal__note summary{cursor:pointer;color:var(--blue-deep);font-weight:600;width:max-content;max-width:100%}
+.deal__note p{margin-top:5px;color:var(--ink-2);white-space:pre-line;overflow-wrap:anywhere}
+.callrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;padding-top:14px;border-top:1px solid var(--ui-line)}
+.callrow__label{font-size:13px;font-weight:700;margin-right:4px}
+
+/* Follow-ups and Calls */
+.duo{display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
+@media (min-width:940px){.duo{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}}
+.group{margin-top:18px}
+.group__head{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);padding-bottom:6px}
+.count{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:var(--radius-pill);background:var(--blue-tint);color:var(--blue-deep);font-size:12px;letter-spacing:0}
+.count.is-zero{background:var(--ui-soft);color:var(--ink-2)}
+.items{display:grid;gap:6px}
+.item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:start;gap:4px 12px;padding:10px 12px;border-radius:var(--r-sm);background:var(--surface);border:1px solid var(--ui-line)}
+.item__body{min-width:0}
+.item__title{font-weight:700;font-size:14px;overflow-wrap:anywhere}
+.item__detail{font-size:13px;color:var(--ink-2);margin-top:1px;overflow-wrap:anywhere}
+.item__side{display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right}
+.when{font-size:12.5px;font-weight:600;color:var(--ink-2);white-space:nowrap}
+.when.is-overdue{color:var(--rose-text)}
+@media (max-width:480px){
+  .item{grid-template-columns:minmax(0,1fr) auto}
+  .item > .tag{grid-column:1 / -1;justify-self:start}
+}
+.empty-line{padding:10px 12px;border-radius:var(--r-sm);background:color-mix(in srgb,var(--ui-soft) 70%,transparent);font-size:13.5px;color:var(--ink-2)}
+.call{display:grid;grid-template-columns:54px minmax(0,1fr);gap:12px;padding:10px 12px;border-radius:var(--r-sm);background:var(--surface);border:1px solid var(--ui-line)}
+.call__date{display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:var(--r-xs);background:var(--blue-tint);color:var(--blue-deep);padding:6px 0;line-height:1.1;text-align:center}
+.call__date b{font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.call__date span{font-size:14px;font-weight:700;color:var(--ink)}
+.call__body{min-width:0}
+.call__title{font-weight:700;font-size:14px;overflow-wrap:anywhere}
+.call__meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:13px;color:var(--ink-2);margin-top:3px;overflow-wrap:anywhere}
+.call__links{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px;font-size:13px}
+.held{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--ui-line)}
+.held__n{font-weight:700}
+
+/* Detail */
+.tabs{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;border-radius:var(--radius-pill);background:var(--ui-soft);border:1px solid var(--ui-line);margin-top:14px}
+.tabs button{border:0;background:transparent;min-height:34px;padding:0 15px;border-radius:var(--radius-pill);font-weight:600;font-size:14px;color:var(--ink-2);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-pill)}
+.table-wrap{overflow-x:auto;margin-top:14px;border-radius:var(--r-sm);border:1px solid var(--ui-line);background:var(--surface);-webkit-overflow-scrolling:touch}
+table{width:100%;min-width:680px;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{padding:10px 12px;text-align:left;border-top:1px solid var(--ui-line);vertical-align:top}
+thead th{border-top:0;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);background:var(--ui-soft);white-space:nowrap}
+td.num,th.num{text-align:right;white-space:nowrap}
+td a{color:var(--blue-deep);font-weight:600;text-decoration:none;overflow-wrap:anywhere}
+td a:hover{text-decoration:underline}
+.td-title{min-width:220px;max-width:380px}
+.td-sub{display:block;font-size:12px;color:var(--ink-2);margin-top:2px}
+
+/* Footer */
+.foot{margin-top:26px;padding:16px 20px;font-size:13px;color:var(--ink-2)}
+.foot ul{display:grid;gap:4px}
+.foot li{overflow-wrap:anywhere}
+.foot b{color:var(--ink)}
+.foot__base{margin-top:10px;padding-top:10px;border-top:1px solid var(--ui-line)}
+
+/* Costs sheet */
+.sheet{width:min(460px,calc(100vw - 32px));max-height:calc(100vh - 32px);padding:0;border:1px solid var(--glass-line);border-radius:var(--radius-panel);color:var(--ink);
+  background:var(--panel);box-shadow:var(--shadow-panel);-webkit-backdrop-filter:var(--blur-glass);backdrop-filter:var(--blur-glass);overflow:auto}
+.sheet::backdrop{background:rgba(22,32,46,.22);background:var(--veil,rgba(22,32,46,.22))}
+.sheet__inner{padding:22px 22px 20px;display:grid;gap:14px}
+.sheet__head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sheet__head h2{font-size:21px;font-weight:600;letter-spacing:-.02em}
+.icon-btn{width:38px;height:38px;border-radius:var(--radius-pill);border:1px solid var(--ui-line);background:var(--surface);cursor:pointer;font-size:20px;line-height:1;color:var(--ink-2)}
+.field{display:grid;gap:6px;font-size:13.5px;font-weight:600}
+.field__input{display:flex;align-items:center;gap:6px;padding:0 12px;min-height:42px;border-radius:var(--r-sm);background:var(--surface);border:1px solid var(--ui-line)}
+.field__input:focus-within{outline:2px solid var(--blue-deep);outline-offset:2px}
+.field__input span{color:var(--ink-2)}
+.field input{flex:1;min-width:0;border:0;background:transparent;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.field input:focus{outline:none}
+.field input:disabled{color:var(--ink-3)}
+.sheet__note{font-size:13px;color:var(--ink-2)}
+.sheet__foot{display:flex;align-items:center;gap:12px}
+#costs-status{font-size:13.5px;font-weight:600;color:var(--mint-text)}
+#costs-status.is-error{color:var(--rose-text)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important}
+  .sky-haze i{animation:none}
+  .btn:hover,.deal:hover{transform:none}
+}
+</style>
+
+<a class="skip-link" href="#today">Skip to Today</a>
+<div class="sky-haze" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<div class="page" id="top">
+  <header class="topbar glass" aria-label="Scoreboard controls">
+    <div class="topbar__row">
+      <h1 class="visually-hidden">Advero Scoreboard</h1>
+      <div class="brand">
+        <span class="brand__mark" aria-hidden="true"></span>
+        <span class="brand__word">Advero</span>
+        <span class="brand__sub">Scoreboard</span>
+      </div>
+      <nav class="nav" aria-label="Sections">
+        <a href="#today">Today</a><a href="#channels">Channels</a><a href="#pipeline">Pipeline</a><a href="#followups">Follow-ups</a><a href="#calls">Calls</a><a href="#detail">Detail</a>
+      </nav>
+      <div class="topbar__strip">
+        <span class="tag tag--amber sample-tag" id="sample-tag" hidden>Sample data</span>
+        <div class="seg" role="group" aria-label="Date range">
+          <button type="button" data-range="7" aria-pressed="false" aria-label="Last 7 days">7d</button>
+          <button type="button" data-range="30" aria-pressed="true" aria-label="Last 30 days">30d</button>
+          <button type="button" data-range="90" aria-pressed="false" aria-label="Last 90 days">90d</button>
+        </div>
+        <div class="chips" id="chips" aria-label="Data sources"></div>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn btn--glass" id="refresh-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>
+          <span class="btn__label" id="refresh-label">Refresh</span>
+        </button>
+        <button type="button" class="btn btn--glass" id="costs-btn" aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18"/><path d="M16.5 7.5c0-1.7-2-3-4.5-3s-4.5 1.3-4.5 3 2 2.6 4.5 3 4.5 1.3 4.5 3-2 3-4.5 3-4.5-1.3-4.5-3"/></svg>
+          <span class="btn__label">Costs</span>
+        </button>
+      </div>
+    </div>
+    <div class="chip-detail" id="chip-detail" role="status" aria-live="polite" hidden></div>
+  </header>
+
+  <div class="banner glass" id="banner" role="status" hidden>
+    <span class="banner__icon" aria-hidden="true">i</span>
+    <div><b id="banner-title">Live data loads when this page is open in claude.ai.</b><p id="banner-text"></p></div>
+  </div>
+
+  <main id="main" aria-busy="true">
+    <section id="today" class="glass panel" aria-labelledby="today-title"></section>
+    <section id="channels" aria-labelledby="channels-title">
+      <h2 class="section-title" id="channels-title">Channels</h2>
+      <div class="channels" id="channels-grid"></div>
+    </section>
+    <section id="pipeline" class="glass panel" aria-labelledby="pipeline-title"></section>
+    <div class="duo">
+      <section id="followups" class="glass panel" aria-labelledby="followups-title"></section>
+      <section id="calls" class="glass panel" aria-labelledby="calls-title"></section>
+    </div>
+    <section id="detail" class="glass panel" aria-labelledby="detail-title"></section>
+  </main>
+
+  <footer class="foot glass" id="footer"></footer>
+</div>
+
+<dialog class="sheet" id="costs-sheet" aria-labelledby="costs-title">
+  <form class="sheet__inner" id="costs-form" novalidate>
+    <div class="sheet__head">
+      <h2 id="costs-title">Monthly costs</h2>
+      <button type="button" class="icon-btn" id="costs-close" aria-label="Close costs">&times;</button>
+    </div>
+    <p class="sheet__note">Monthly USD. Spend and cost per call scale these to the selected range.</p>
+    <label class="field">Upwork (membership and anything beyond Connects)
+      <span class="field__input"><span aria-hidden="true">$</span><input type="number" name="upwork" min="0" step="any" inputmode="decimal"></span>
+    </label>
+    <label class="field">Cold email (Instantly, inboxes, domains, lead data)
+      <span class="field__input"><span aria-hidden="true">$</span><input type="number" name="cold_email" min="0" step="any" inputmode="decimal"></span>
+    </label>
+    <label class="field">LinkedIn (Sales Navigator, tools)
+      <span class="field__input"><span aria-hidden="true">$</span><input type="number" name="linkedin" min="0" step="any" inputmode="decimal"></span>
+    </label>
+    <p class="sheet__note" id="connects-note">Connects are counted automatically at $0.15 each.</p>
+    <p class="fix fix--calm" id="costs-reason" hidden>Costs need the claude.ai viewer.</p>
+    <div class="sheet__foot">
+      <button type="submit" class="btn btn--primary" id="costs-save">Save</button>
+      <span id="costs-status" role="status" aria-live="polite"></span>
+    </div>
+  </form>
+</dialog>
+
+<script src="scoreboard-data.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- setup ---------- */
+  const DATA = window.AdveroData || null;
+  const CONFIG = (DATA && DATA.CONFIG) || {};
+  const RANGE_KEY = "advero-scoreboard-range";
+  const TAB_KEY = "advero-scoreboard-tab";
+  const SOURCES = [["instantly", "Instantly"], ["upwork", "Upwork"], ["ghl", "GHL"], ["calendar", "Calendar"]];
+  const SOURCE_NAME = { instantly: "Instantly", upwork: "Upwork", ghl: "GHL", calendar: "Calendar" };
+  const $ = (sel) => document.querySelector(sel);
+
+  const state = {
+    model: null,
+    rangeDays: readStore(RANGE_KEY, ["7", "30", "90"], "30") | 0,
+    tab: readStore(TAB_KEY, ["campaigns", "proposals"], "campaigns"),
+    loading: false,
+    barObs: null,
+    caps: { mcp: null, db: null, user: null },
+    capsReady: null,
+    costs: null,
+    sample: location.hash === "#sample",
+    sampleIdx: 0,
+    openNotes: new Set(),
+    openChip: null,
+    notice: "",
+    noData: false,
+    seq: 0
+  };
+
+  function readStore(key, allowed, fallback) {
+    try {
+      const v = window.localStorage.getItem(key);
+      return allowed.indexOf(v) >= 0 ? v : fallback;
+    } catch (e) { return fallback; }
+  }
+  function writeStore(key, value) {
+    try { window.localStorage.setItem(key, String(value)); } catch (e) { /* storage unavailable */ }
+  }
+  function tz() { return CONFIG.timeZone || "America/Chicago"; }
+
+  /* ---------- DOM helpers: data only ever becomes text nodes or attributes ---------- */
+  function h(tag, props) {
+    const el = document.createElement(tag);
+    setProps(el, props);
+    appendKids(el, Array.prototype.slice.call(arguments, 2));
+    return el;
+  }
+  function s(tag, props) {
+    const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    setProps(el, props);
+    appendKids(el, Array.prototype.slice.call(arguments, 2));
+    return el;
+  }
+  function setProps(el, props) {
+    if (!props) return;
+    Object.keys(props).forEach(function (k) {
+      const v = props[k];
+      if (v == null || v === false) return;
+      if (k === "class") el.setAttribute("class", v);
+      else if (k === "text") el.textContent = String(v);
+      else if (k === "style") Object.keys(v).forEach(function (p) { el.style.setProperty(p, v[p]); });
+      else if (k === "data") Object.keys(v).forEach(function (d) { el.dataset[d] = String(v[d]); });
+      else if (k.slice(0, 2) === "on" && typeof v === "function") el.addEventListener(k.slice(2), v);
+      else if (k === "href") { const u = safeHref(v); if (u) el.setAttribute("href", u); }
+      else el.setAttribute(k, v === true ? "" : String(v));
+    });
+  }
+  function fill(el) { el.replaceChildren(); appendKids(el, Array.prototype.slice.call(arguments, 1)); return el; }
+  function appendKids(el, kids) {
+    kids.forEach(function add(c) {
+      if (c == null || c === false) return;
+      if (Array.isArray(c)) { c.forEach(add); return; }
+      el.appendChild(c instanceof Node ? c : document.createTextNode(String(c)));
+    });
+  }
+  function safeHref(v) {
+    const str = String(v || "");
+    if (/^#[\w-]*$/.test(str)) return str;
+    try {
+      const u = new URL(str);
+      return u.protocol === "https:" || u.protocol === "http:" ? u.href : null;
+    } catch (e) { return null; }
+  }
+  function ext(href, label, cls) {
+    const u = safeHref(href);
+    if (!u) return h("span", { class: cls || null }, label);
+    return h("a", { class: cls || "link", href: u, target: "_blank", rel: "noopener" }, label);
+  }
+
+  /* ---------- formatting ---------- */
+  const nf = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+  const nfCompact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
+  function num(v) { const n = Number(v); return isFinite(n) ? n : 0; }
+  function has(v) { return v !== null && v !== undefined && v !== "" && isFinite(Number(v)); }
+  function fmtNum(v) { return has(v) ? nf.format(Math.round(Number(v))) : "—"; }
+  function fmtCompact(v) { return Math.abs(v) >= 10000 ? nfCompact.format(v) : nf.format(v); }
+  function fmtUsd(v) {
+    if (!has(v)) return "—";
+    const n = Number(v);
+    const cents = Math.abs(n) < 100 && Math.round(n) !== n;
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents ? 2 : 0 }).format(n);
+  }
+  // Rate values with format "pct" are fractions (0.012 = 1.2%).
+  function fmtPct(frac) {
+    if (!has(frac)) return "—";
+    const p = Number(frac) * 100;
+    const a = Math.abs(p);
+    const d = a === 0 ? 0 : a < 1 ? 2 : a < 10 ? 1 : 0;
+    return p.toFixed(d) + "%";
+  }
+  function fmtRate(r) {
+    if (!r || !has(r.value)) return "—";
+    if (r.format === "pct") return fmtPct(r.value);
+    if (r.format === "usd") return fmtUsd(r.value);
+    return fmtNum(r.value);
+  }
+  function joinList(arr) { return arr.length < 3 ? arr.join(" and ") : arr.slice(0, -1).join(", ") + " and " + arr[arr.length - 1]; }
+  function plural(n, one, many) { return n + " " + (n === 1 ? one : (many || one + "s")); }
+
+  const dtfCache = {};
+  function dtf(opts, zone) {
+    const key = (zone || tz()) + JSON.stringify(opts);
+    if (!dtfCache[key]) dtfCache[key] = new Intl.DateTimeFormat(opts.__locale || "en-US", Object.assign({ timeZone: zone || tz() }, stripLocale(opts)));
+    return dtfCache[key];
+  }
+  function stripLocale(o) { const c = Object.assign({}, o); delete c.__locale; return c; }
+  function toDate(v) {
+    if (v == null || v === "") return null;
+    if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+    if (typeof v === "number") return isFinite(v) ? new Date(v) : null;
+    const str = String(v);
+    const d = /^\d{10,}$/.test(str) ? new Date(Number(str)) : new Date(str);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  function dayKey(d) { return dtf({ __locale: "en-CA", year: "numeric", month: "2-digit", day: "2-digit" }).format(d); }
+  function keyToUtc(k) { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(k || ""); return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) : NaN; }
+  function dayDiff(fromDate, toD) { return Math.round((keyToUtc(dayKey(toD)) - keyToUtc(dayKey(fromDate))) / 864e5); }
+  function fmtYmd(k, withDay) {
+    const t = keyToUtc(k);
+    if (!isFinite(t)) return String(k || "");
+    return dtf(withDay ? { weekday: "short", month: "short", day: "numeric" } : { month: "short", day: "numeric" }, "UTC").format(new Date(t));
+  }
+  function fmtDate(v) { const d = toDate(v); return d ? dtf({ month: "short", day: "numeric" }).format(d) : "—"; }
+  function fmtWeekday(v) { const d = toDate(v); return d ? dtf({ weekday: "short" }).format(d) : ""; }
+  function fmtTime(v) { const d = toDate(v); return d ? dtf({ hour: "numeric", minute: "2-digit" }).format(d) : ""; }
+  function fmtDur(ms) {
+    const m = Math.max(0, ms) / 60000;
+    if (m < 60) return plural(Math.max(1, Math.round(m)), "min", "min");
+    const hrs = m / 60;
+    if (hrs < 24) return plural(Math.round(hrs), "hour");
+    return plural(Math.floor(hrs / 24), "day");
+  }
+  function fmtAgo(ms) { return ms < 45000 ? "just now" : fmtDur(ms) + " ago"; }
+  function dueText(ts, overdue, kind) {
+    const now = new Date();
+    const d = toDate(ts);
+    if (!d) return "";
+    if (kind === "call_prep") {
+      const mins = (d.getTime() - now.getTime()) / 60000;
+      if (mins <= 0) return "starting now";
+      return "starts in " + fmtDur(mins * 60000);
+    }
+    const dd = dayDiff(now, d);
+    if (dd < 0) return "overdue " + plural(-dd, "day");
+    if (overdue) return "overdue";
+    if (dd === 0) return "due today";
+    if (dd === 1) return "due tomorrow";
+    if (dd < 7) return "due " + fmtWeekday(d);
+    return "due " + fmtDate(d);
+  }
+  function relText(kind, ts, extra) {
+    const now = Date.now();
+    if (kind === "ago") return fmtAgo(now - ts);
+    if (kind === "live") return "· " + fmtAgo(now - ts);
+    if (kind === "waiting") return "waiting " + fmtDur(now - ts);
+    if (kind === "updated") return "Updated " + fmtAgo(now - ts);
+    if (kind === "due") return dueText(ts, extra === "1", null);
+    if (kind === "starts") return dueText(ts, false, "call_prep");
+    return "";
+  }
+  function rel(tag, kind, ts, extra, cls) {
+    const el = h(tag, { class: cls || null, data: { relKind: kind, relTs: ts, relExtra: extra || "" } });
+    el.textContent = relText(kind, ts, extra || "");
+    return el;
+  }
+  function tickRelative() {
+    document.querySelectorAll("[data-rel-kind]").forEach(function (el) {
+      const t = Number(el.dataset.relTs);
+      if (isFinite(t)) el.textContent = relText(el.dataset.relKind, t, el.dataset.relExtra || "");
+    });
+  }
+
+  /* ---------- shared pieces ---------- */
+  const STATE_WORD = { green: "On target", watch: "Watch", alert: "Alert", no_data: "No data", info: "Info" };
+  const STATE_CLASS = { green: "is-good", watch: "is-watch", alert: "is-alert", no_data: "is-none", info: "is-info" };
+  function statePill(cls, word, big) { return h("span", { class: "state " + cls + (big ? " is-lg" : "") }, word); }
+  function ratePill(r) { const st = (r && r.state) || "no_data"; return statePill(STATE_CLASS[st] || "is-none", STATE_WORD[st] || "No data"); }
+
+  const SOURCE_TAG = {
+    cold_email: ["Cold email", "tag--blue"], upwork: ["Upwork", "tag--mint"], linkedin: ["LinkedIn", "tag--indigo"],
+    other: ["Other", ""], unattributed: ["Unattributed", ""],
+    instantly: ["Instantly", "tag--blue"], ghl: ["GHL", ""], calendar: ["Calendar", ""]
+  };
+  function sourceTag(src) {
+    const def = SOURCE_TAG[src];
+    if (def) return h("span", { class: "tag " + def[1] }, def[0]);
+    return src ? h("span", { class: "tag" }, String(src)) : null;
+  }
+
+  function src(m, key) { return (m && m.sources && m.sources[key]) || { state: "loading", storedAt: null, error: null, warnings: [] }; }
+  function srcState(m, key) { return m ? src(m, key).state : "loading"; }
+  // ok, possibly mid-refresh: data is there and current enough to show
+  function isOk(m, key) { return srcState(m, key) === "ok"; }
+  // ok and reading again (same-range Refresh): keep the numbers, dim them a little
+  function isRefreshing(m, key) { const st = src(m, key); return !!m && st.state === "ok" && st.refreshing === true; }
+  function anyRefreshing(m, keys) { return keys.some(function (k) { return isRefreshing(m, k); }); }
+  function dim(on) { return on ? " is-dimmed" : ""; }
+  function skel(kind) {
+    const rows = {
+      text: ["w80", "w60", "w40"],
+      tiles: ["lg", "lg"],
+      panel: ["w60", "lg", "w80", "w40", "xl"],
+      list: ["lg", "lg", "lg"]
+    }[kind || "text"];
+    return h("div", { class: "skel", "aria-hidden": "true" }, rows.map(function (c) { return h("i", { class: c }); }));
+  }
+  function loadingNote(label) { return h("p", { class: "visually-hidden" }, "Loading " + label); }
+  function fixNote(m, key, what) {
+    const st = src(m, key);
+    if (st.state === "error") {
+      const fix = (st.error && st.error.fix) || (SOURCE_NAME[key] + " didn't answer. Press Refresh in a minute.");
+      if (st.refreshing === true) {
+        return h("div", { class: "fix fix--calm", role: "note" }, h("div", null, h("b", null, "Retrying " + SOURCE_NAME[key] + " now."), " Last try: " + fix));
+      }
+      return h("div", { class: "fix", role: "note" }, h("div", null, h("b", null, what || (SOURCE_NAME[key] + " is not loading.")), " ", fix));
+    }
+    if (st.state === "unavailable") {
+      return h("div", { class: "fix fix--calm", role: "note" }, h("div", null, (what ? what + " " : "") + SOURCE_NAME[key] + " data shows here once it is connected in claude.ai."));
+    }
+    return null;
+  }
+  function sectionHead(id, title, extras) {
+    return h("div", { class: "panel__head" }, h("h2", { class: "panel__title", id: id }, title), h("span", { class: "spacer" }), extras);
+  }
+  function guard(name, fn) {
+    try { fn(); }
+    catch (e) {
+      console.error("Scoreboard: could not draw " + name, e);
+      const el = document.getElementById(name);
+      if (el) fill(el, h("p", { class: "quiet" }, "This section could not be drawn. Press Refresh."));
+    }
+  }
+
+  /* ---------- top bar ---------- */
+  const SHORT_ERR = {
+    needs_reauth: "Reconnect needed", server_not_connected: "Not connected", server_not_found: "Not connected",
+    selection_required: "Pick a connector", not_in_manifest: "Switched off", blocked_by_policy: "Blocked",
+    approval_required: "Blocked", tool_error: "Error", rate_limited: "Busy", server_unavailable: "Not answering",
+    upstream_error: "Not answering"
+  };
+  function chipInfo(st) {
+    if (st.state === "ok" && st.refreshing === true) return { cls: "is-refreshing", text: "Refreshing" };
+    if (st.state === "ok") return { cls: st.warnings && st.warnings.length ? "is-warn" : "is-ok", text: "Live" };
+    if (st.state === "error" && st.refreshing === true) return { cls: "is-refreshing", text: "Retrying" };
+    if (st.state === "error") return { cls: "is-error", text: SHORT_ERR[st.error && st.error.code] || "Not answering" };
+    if (st.state === "unavailable") return { cls: "is-off", text: "Not available" };
+    return { cls: "is-loading", text: "Loading" };
+  }
+  function renderChips(m) {
+    const box = $("#chips");
+    fill(box);
+    SOURCES.forEach(function (pair) {
+      const key = pair[0];
+      const st = src(m, key);
+      const info = chipInfo(st);
+      const chip = h("button", {
+        type: "button", class: "chip " + info.cls, "aria-expanded": state.openChip === key ? "true" : "false", "aria-controls": "chip-detail",
+        onclick: function () { state.openChip = state.openChip === key ? null : key; renderChips(state.model); syncBarHeight(); }
+      }, h("span", { class: "chip__dot", "aria-hidden": "true" }), h("b", null, pair[1]), h("span", null, info.text),
+        st.state === "ok" && has(st.storedAt) ? rel("span", "live", Number(st.storedAt), "", "ago") : null);
+      box.appendChild(chip);
+    });
+    const det = $("#chip-detail");
+    if (!state.openChip) { det.hidden = true; det.textContent = ""; return; }
+    const st = src(m, state.openChip);
+    const name = SOURCE_NAME[state.openChip];
+    det.hidden = false;
+    det.className = "chip-detail" + (st.state === "error" && st.refreshing !== true ? " is-error" : "");
+    fill(det);
+    if (st.state === "error" && st.refreshing === true) det.append(name + ": retrying now. Last try: " + ((st.error && st.error.fix) || "it didn't answer."));
+    else if (st.state === "error") det.append(name + ": " + ((st.error && st.error.fix) || "Press Refresh in a minute."));
+    else if (st.state === "unavailable") det.append(name + ": opens with live data when this page runs in claude.ai.");
+    else if (st.state === "loading") det.append(name + ": reading now.");
+    else if (st.refreshing === true) {
+      det.append(name + ": reading again now. Showing the data read ", has(st.storedAt) ? rel("span", "ago", Number(st.storedAt)) : "earlier", ".");
+    } else {
+      det.append(name + ": live data", has(st.storedAt) ? ", read " : ".", has(st.storedAt) ? rel("span", "ago", Number(st.storedAt)) : null, has(st.storedAt) ? "." : null);
+      (st.warnings || []).forEach(function (w) { det.append(h("div", null, "Note: " + w)); });
+    }
+  }
+  function setLoading(on) {
+    state.loading = on;
+    const btn = $("#refresh-btn");
+    btn.classList.toggle("is-spinning", on);
+    btn.disabled = on;
+    btn.setAttribute("aria-busy", on ? "true" : "false");
+    $("#refresh-label").textContent = on ? "Refreshing" : "Refresh";
+    $("#main").setAttribute("aria-busy", on ? "true" : "false");
+  }
+  // Keeps scroll-margin-top equal to the real sticky bar height (it changes with width, chips and the chip detail).
+  function syncBarHeight() {
+    const bar = document.querySelector(".topbar");
+    if (!bar) return;
+    const hgt = Math.ceil(bar.getBoundingClientRect().height || 0);
+    if (hgt > 0) document.documentElement.style.setProperty("--bar-h", hgt + "px");
+  }
+  function watchBarHeight() {
+    const bar = document.querySelector(".topbar");
+    if (bar && typeof ResizeObserver !== "undefined") {
+      state.barObs = new ResizeObserver(syncBarHeight);
+      state.barObs.observe(bar);
+    }
+    window.addEventListener("resize", syncBarHeight);
+    syncBarHeight();
+  }
+  function syncRangeButtons() {
+    document.querySelectorAll("[data-range]").forEach(function (b) {
+      b.setAttribute("aria-pressed", Number(b.dataset.range) === state.rangeDays ? "true" : "false");
+    });
+  }
+
+  /* ---------- banner ---------- */
+  function renderBanner(m) {
+    const all = m && SOURCES.every(function (p) { return src(m, p[0]).state === "unavailable"; });
+    const banner = $("#banner");
+    banner.hidden = !(all || state.notice);
+    $("#banner-title").textContent = all ? "Live data loads when this page is open in claude.ai." : "Some data did not load.";
+    $("#banner-text").textContent = state.notice || "";
+  }
+
+  /* ---------- Today ---------- */
+  function renderToday(m) {
+    const sec = $("#today");
+    const t = m && m.today;
+    let pill = null;
+    if (m) {
+      const sending = t ? t.coldEmailSending : null;
+      pill = sending === true ? statePill("is-good", "Cold email sending", true)
+        : sending === false ? statePill("is-alert", "Cold email not sending", true)
+        : statePill("is-none", srcState(m, "instantly") === "loading" ? "Cold email: checking" : "Cold email: unknown", true);
+    }
+    const rangeText = m && m.range ? (m.range.label || ("Last " + m.range.days + " days")) + " · " + fmtYmd(m.range.start) + " to " + fmtYmd(m.range.end) : "";
+    const head = h("div", null, h("div", { class: "panel__head" }, h("h2", { class: "panel__title", id: "today-title" }, "Today"), pill),
+      rangeText ? h("p", { class: "panel__sub" }, rangeText) : null);
+    if (!m) { fill(sec, head, loadingNote("today"), skel("text"), skel("tiles")); return; }
+
+    const alerts = ((t && t.alerts) || []).slice().sort(function (a, b) {
+      return (a.severity === "critical" ? 0 : 1) - (b.severity === "critical" ? 0 : 1);
+    });
+    const ALERT_SRC = ["instantly", "upwork", "ghl"];
+    const allLoading = ALERT_SRC.every(function (k) { return srcState(m, k) === "loading"; });
+    const allIn = ALERT_SRC.every(function (k) { return isOk(m, k) && !isRefreshing(m, k); });
+    const notIn = ALERT_SRC.filter(function (k) { return !(isOk(m, k) && !isRefreshing(m, k)); }).map(function (k) {
+      const sx = srcState(m, k);
+      const why = sx === "loading" ? "loading" : sx === "ok" ? "refreshing" : sx === "error" ? "not loading" : "not available";
+      return SOURCE_NAME[k] + " (" + why + ")";
+    });
+    let alertBlock;
+    if (alerts.length) {
+      alertBlock = h("ul", { class: "alerts" + dim(anyRefreshing(m, ALERT_SRC)), "aria-label": "Alerts" }, alerts.map(function (a) {
+        const crit = a.severity === "critical";
+        return h("li", { class: "alert" + (crit ? " is-critical" : "") },
+          statePill(crit ? "is-alert" : "is-watch", crit ? "Critical" : "Warning"),
+          h("span", { class: "alert__text" }, a.text || ""),
+          sourceTag(a.source));
+      }));
+    } else if (allLoading) {
+      alertBlock = skel("text");
+    } else if (allIn) {
+      alertBlock = h("div", { class: "all-clear" }, statePill("is-good", "No alerts right now"));
+    } else {
+      alertBlock = null;
+    }
+    // Never a false all-clear: name every alert source that is not in yet.
+    const pendingLine = !allIn && !state.noData && !(allLoading && !alerts.length)
+      ? h("div", { class: "all-clear is-pending" }, statePill("is-none", alerts.length ? "More alerts may follow" : "No alerts so far"),
+        h("span", null, "Not in yet: " + joinList(notIn) + "."))
+      : null;
+
+    const tiles = h("div", { class: "tiles" },
+      tileWaiting(m, t), tileCalls(m, t), tilePipeline(m, t), tileRevenue(m, t));
+    fill(sec, head, alertBlock, pendingLine, tiles);
+  }
+  // keys: the sources a tile sums. A tile never shows a partial sum as final.
+  function tileShell(m, keys, label, href) {
+    const states = keys.map(function (k) { return srcState(m, k); });
+    const loading = states.every(function (x) { return x === "loading"; });
+    const down = states.every(function (x) { return x === "error" || x === "unavailable"; });
+    const pick = function (fn) { return keys.filter(function (k, i) { return fn(states[i]); }).map(function (k) { return SOURCE_NAME[k]; }); };
+    const missing = pick(function (x) { return x === "error" || x === "unavailable"; });
+    const waiting = pick(function (x) { return x === "loading"; });
+    const none = !states.some(function (x) { return x === "ok"; });   // nothing in yet: no figure at all
+    const partial = !loading && !down && !none && (missing.length > 0 || waiting.length > 0);
+    const el = h(href ? "a" : "div", { class: "tile" + (down ? " is-down" : "") + dim(!loading && !down && anyRefreshing(m, keys)), href: href || null },
+      h("span", { class: "tile__label" }, label));
+    return { el: el, loading: loading, down: down, none: none, missing: missing, waiting: waiting, partial: partial };
+  }
+  // numText: the main figure; unit: optional small suffix node
+  function finishTile(sh, numText, unit, foot) {
+    if (sh.loading) { sh.el.append(loadingNote(sh.el.textContent), skel("tiles")); return sh.el; }
+    const blank = sh.down || sh.none;
+    sh.el.append(h("div", { class: "tile__num" + (sh.partial ? " is-partial" : "") }, blank ? "—" : numText, blank ? null : unit,
+      sh.partial ? h("span", { class: "tile__flag" }, "partial") : null));
+    if (sh.down) foot = "Needs " + joinList(sh.missing) + ".";
+    const notes = [];
+    if (!sh.down && sh.waiting.length) notes.push("Still loading " + joinList(sh.waiting) + ".");
+    if (!sh.down && sh.missing.length) notes.push("Missing " + joinList(sh.missing) + ".");
+    sh.el.append(h("div", { class: "tile__foot" }, foot, notes.length ? h("span", { class: "tile__wait" }, notes.join(" ")) : null));
+    return sh.el;
+  }
+  function tileWaiting(m, t) {
+    const sh = tileShell(m, ["upwork", "instantly", "ghl"], "Waiting on you", "#followups");
+    return finishTile(sh, fmtNum(t && t.waitingOnYou), null, "See follow-ups");
+  }
+  function tileCalls(m, t) {
+    const sh = tileShell(m, ["calendar"], "Calls next 7 days");
+    const c = (t && t.callsNext7d) || { count: null, next: null };
+    const nx = c.next;
+    const foot = nx ? h("span", null, h("b", null, "Next: "), fmtWeekday(nx.start) + " " + fmtTime(nx.start) + (nx.who ? " · " + nx.who : "")) : "No calls booked";
+    return finishTile(sh, fmtNum(c.count), null, foot);
+  }
+  function tilePipeline(m, t) {
+    const sh = tileShell(m, ["ghl"], "Open pipeline");
+    const p = (t && t.openPipeline) || { count: null, value: null };
+    return finishTile(sh, fmtNum(p.count), h("span", { class: "tile__unit" }, "· " + fmtUsd(p.value)), plural(num(p.count), "open deal"));
+  }
+  function tileRevenue(m, t) {
+    const sh = tileShell(m, ["upwork", "ghl"], "Revenue in range");
+    const r = (t && t.revenue) || { value: null, upworkBilled: null, ghlWon: null };
+    // a sub-figure whose source is not ok is "—", never $0
+    // Upwork ok but its billing summary missing: that part is unknown (null), so it shows "—" and the sum is partial
+    const billedUnknown = isOk(m, "upwork") && !has(r.upworkBilled);
+    const billed = isOk(m, "upwork") && !billedUnknown ? fmtUsd(r.upworkBilled) : "—";
+    const won = isOk(m, "ghl") ? fmtUsd(r.ghlWon) : "—";
+    if (billedUnknown && !sh.loading && !sh.down && !sh.none) { sh.partial = true; sh.missing.push("Upwork billing"); }
+    return finishTile(sh, fmtUsd(r.value), null, "Upwork billed " + billed + " · GHL won " + won);
+  }
+
+  /* ---------- Channels ---------- */
+  const CHANNEL_SOURCE = { cold_email: "instantly", upwork: "upwork" };
+  const CHANNEL_STATUS = {
+    live: ["is-good", "Live"], paused: ["is-watch", "Paused"], not_connected: ["is-none", "Not connected"],
+    loading: ["is-info", "Loading"], error: ["is-alert", "Error"]
+  };
+  const charts = [];
+  let resizeObs = null;
+
+  function renderChannels(m) {
+    const grid = $("#channels-grid");
+    charts.length = 0;
+    if (resizeObs) resizeObs.disconnect();
+    if (!m) {
+      fill(grid, [0, 1, 2].map(function () { return h("article", { class: "glass panel channel" }, loadingNote("channel"), skel("panel")); }));
+      return;
+    }
+    const list = Array.isArray(m.channels) ? m.channels : [];
+    fill(grid, list.map(function (ch) { return channelPanel(ch, m); }));
+    drawCharts();
+  }
+  function channelPanel(ch, m) {
+    const key = CHANNEL_SOURCE[ch.key];
+    const st = key ? srcState(m, key) : "ok";
+    const status = ch.status || (st === "loading" ? "loading" : "not_connected");
+    const ghost = status === "not_connected";
+    const pillDef = CHANNEL_STATUS[status] || ["is-none", String(status)];
+    const titleId = "ch-" + String(ch.key || "x").replace(/[^\w-]/g, "") + "-title";
+    const refreshing = !!key && isRefreshing(m, key);
+    const loading = status === "loading" || st === "loading";
+    const note = !loading && key && (st === "error" || (st === "unavailable" && !ghost)) ? fixNote(m, key) : null;
+    // the fix note already carries the error text, so the status line is left out to say it once
+    const statusText = note ? null : ch.statusText;
+    const panel = h("article", { class: "glass panel channel" + (ghost ? " is-ghost" : ""), "aria-labelledby": titleId },
+      h("div", { class: "panel__head" }, h("h3", { class: "panel__title", id: titleId }, ch.name || ch.key), h("span", { class: "spacer" }),
+        refreshing ? statePill("is-info", "Refreshing") : null, statePill(pillDef[0], pillDef[1])),
+      statusText ? h("p", { class: "channel__status" + dim(refreshing) }, statusText) : null);
+
+    if (loading) { panel.append(loadingNote(ch.name || "channel"), skel("panel")); return panel; }
+    if (note) panel.append(note);
+
+    const body = h("div", { class: (st === "error" ? "is-down" : "") + dim(refreshing) });
+    body.append(h("h4", { class: "block-title" }, "Funnel"), funnelList(ch.funnel || [], m, ghost));
+    if (Array.isArray(ch.rates) && ch.rates.length) body.append(h("h4", { class: "block-title" }, "Rates"), rateList(ch.rates));
+    if (ch.series && Array.isArray(ch.series.points)) body.append(h("h4", { class: "block-title" }, "Daily"), chartBlock(ch.series, m));
+    const money = moneyBlock(ch, ghost);
+    if (money) body.append(money);
+    if (Array.isArray(ch.extras) && ch.extras.length) {
+      body.append(h("h4", { class: "block-title" }, "Facts"), h("dl", { class: "kv" }, ch.extras.map(function (x) {
+        return h("div", null, h("dt", null, x.label || ""), h("dd", null, x.value == null ? "—" : String(x.value)));
+      })));
+    }
+    panel.append(body);
+    return panel;
+  }
+  function funnelList(steps, m, ghost) {
+    const days = (m.range && m.range.days) || state.rangeDays;
+    return h("ol", { class: "funnel" }, steps.map(function (st, i) {
+      const prevStep = i > 0 ? steps[i - 1] : null;
+      const li = h("li", { class: "step" },
+        h("span", { class: "step__num", "aria-hidden": "true" }, String(i + 1)),
+        h("span", { class: "step__label" }, st.label || st.key),
+        h("span", { class: "step__value" }, has(st.value) ? fmtNum(st.value) : "—"));
+      if (!ghost && has(st.value)) {
+        const d = deltaEl(st.value, st.prev, days);
+        if (d) li.append(d);
+      }
+      if (prevStep && !ghost && has(st.value) && has(prevStep.value) && Number(prevStep.value) > 0) {
+        const conv = Number(st.value) / Number(prevStep.value);
+        const pct = Math.max(0, Math.min(100, conv * 100));
+        li.append(h("div", { class: "step__conv" },
+          h("span", { class: "meter", "aria-hidden": "true" }, h("i", { style: { width: pct.toFixed(1) + "%" } })),
+          h("span", null, fmtPct(conv) + " of " + (prevStep.label || prevStep.key))));
+      }
+      return li;
+    }));
+  }
+  function deltaEl(v, prev, days) {
+    if (!has(prev)) return h("span", { class: "step__delta" }, "No earlier data to compare");
+    const a = Number(v), b = Number(prev);
+    const diff = a - b;
+    const vs = " vs prev " + days + " days";
+    if (diff === 0) return h("span", { class: "step__delta" }, "No change" + vs);
+    const up = diff > 0;
+    const amt = b > 0 ? fmtPct(Math.abs(diff) / b) : fmtNum(Math.abs(diff));
+    return h("span", { class: "step__delta " + (up ? "is-up" : "is-down") },
+      h("span", { "aria-hidden": "true" }, up ? "▲ " : "▼ "), h("span", { class: "visually-hidden" }, up ? "Up " : "Down "), amt + vs + " (" + fmtNum(b) + ")");
+  }
+  function rateList(rates) {
+    return h("ul", { class: "rates" }, rates.map(function (r) {
+      return h("li", { class: "rate" },
+        h("span", { class: "rate__label" }, r.label || r.key),
+        h("span", { class: "rate__value" }, fmtRate(r)),
+        ratePill(r),
+        r.target ? h("span", { class: "rate__target" }, "Target " + r.target) : null);
+    }));
+  }
+  function moneyBlock(ch, ghost) {
+    const spend = ch.spend || { usd: null, note: "" };
+    if (ghost && !has(spend.usd)) return null;
+    const spendVal = has(spend.usd) ? fmtUsd(spend.usd) : h("button", { type: "button", class: "textbtn", onclick: openCosts }, "Add costs");
+    return h("div", null,
+      h("h4", { class: "block-title" }, "Cost"),
+      h("dl", { class: "money" },
+        h("div", null, h("dt", null, "Spend in range"), h("dd", null, spendVal)),
+        h("div", null, h("dt", null, "Calls booked"), h("dd", null, has(ch.callsBooked) ? fmtNum(ch.callsBooked) : "—")),
+        h("div", null, h("dt", null, "Cost per call"), h("dd", null, has(ch.costPerCall) ? fmtUsd(ch.costPerCall) : "—"))),
+      spend.note ? h("p", { class: "money__note" }, spend.note) : null);
+  }
+
+  /* ---------- chart (inline SVG, one scale per series row, no dual axis) ---------- */
+  function chartBlock(series, m) {
+    const wrap = h("div", { class: "chart" });
+    wrap.__series = series;
+    wrap.__days = (m.range && m.range.days) || state.rangeDays;
+    charts.push(wrap);
+    return wrap;
+  }
+  function drawCharts() {
+    if (typeof ResizeObserver !== "undefined") {
+      if (!resizeObs) {
+        resizeObs = new ResizeObserver(function (entries) {
+          entries.forEach(function (en) {
+            const w = Math.floor(en.contentRect.width);
+            if (w > 0 && Math.abs(w - (en.target.__w || 0)) > 4) drawChart(en.target);
+          });
+        });
+      }
+    }
+    charts.forEach(function (c) {
+      drawChart(c);
+      if (resizeObs) resizeObs.observe(c);
+    });
+  }
+  function niceCeil(v) {
+    if (!(v > 0)) return 1;
+    const e = Math.pow(10, Math.floor(Math.log10(v)));
+    const steps = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+    // round to kill float noise (1.2 * 10000 = 12000.000000000002)
+    for (let i = 0; i < steps.length; i++) { const c = Math.round(steps[i] * e * 1e6) / 1e6; if (c >= v) return c; }
+    return 10 * e;
+  }
+  function drawChart(wrap) {
+    const series = wrap.__series;
+    const pts = (series.points || []).filter(function (p) { return p && p.date; });
+    const W = Math.max(240, Math.floor(wrap.clientWidth || 300));
+    wrap.__w = W;
+    if (!pts.length) { fill(wrap, h("p", { class: "quiet" }, "No daily numbers for this range yet.")); return; }
+    const n = pts.length;
+    const rows = [];
+    if (series.bLabel) rows.push({ k: "b", label: series.bLabel, cls: "s-b" });
+    if (series.cLabel) rows.push({ k: "c", label: series.cLabel, cls: "s-c" });
+    const aLabel = series.aLabel || "Value";
+    const padL = 36, padR = 10, rowH = 30, capH = 24, barH = 96, axisH = 22;
+    const barTop = rows.length * rowH + capH;
+    const H = barTop + barH + axisH;
+    const pw = W - padL - padR;
+    const slot = pw / n;
+    const bw = slot >= 8 ? Math.min(24, slot * 0.68) : Math.max(1, slot - 2 >= 1 ? slot - 2 : slot * 0.6);
+    const cx = function (i) { return padL + slot * i + slot / 2; };
+    const vals = function (k) { return pts.map(function (p) { return Math.max(0, num(p[k])); }); };
+    const aV = vals("a");
+    const aMax = Math.max.apply(null, aV.concat([0]));
+    const top = niceCeil(aMax);
+    const y = function (v) { return barTop + barH - (v / top) * barH; };
+    const sum = function (arr) { return arr.reduce(function (x, v) { return x + v; }, 0); };
+
+    const peakI = aV.indexOf(aMax);
+    let label = aLabel + " per day over " + n + " days: total " + fmtNum(sum(aV)) + (aMax > 0 ? ", peak " + fmtNum(aMax) + " on " + fmtYmd(pts[peakI].date) : "") + ", last day " + fmtNum(aV[n - 1]) + ".";
+    rows.forEach(function (r) { label += " " + r.label + ": " + fmtNum(sum(vals(r.k))) + " in range."; });
+
+    const svg = s("svg", { class: "chart__svg", width: W, height: H, viewBox: "0 0 " + W + " " + H, role: "img", tabindex: "0", "aria-label": label });
+
+    // dot rows: one radius scale shared by every row; a dot is never wider than its day slot
+    const dotMax = Math.max.apply(null, rows.reduce(function (acc, r) { return acc.concat(vals(r.k)); }, [0]));
+    const ring = slot >= 10 ? 1.5 : 0;
+    const rMax = Math.max(0.5, Math.min(6, (slot - ring) / 2));
+    const rMin = Math.min(2.5, rMax);
+    const radius = function (v) { return rMin + (rMax - rMin) * Math.sqrt(v / dotMax); };
+    rows.forEach(function (r, ri) {
+      const y0 = ri * rowH;
+      const vv = vals(r.k);
+      const base = y0 + 22;
+      svg.append(
+        s("circle", { cx: padL + 4, cy: y0 + 8, r: 4, class: r.cls }),
+        s("text", { x: padL + 13, y: y0 + 12, class: "cap" }, r.label),
+        s("text", { x: W - padR, y: y0 + 12, "text-anchor": "end", class: "cap-val" }, fmtNum(sum(vv)) + " total"),
+        s("line", { x1: padL, x2: W - padR, y1: base, y2: base, class: "grid" }));
+      vv.forEach(function (v, i) {
+        if (v > 0) svg.append(s("circle", { cx: cx(i).toFixed(1), cy: base, r: radius(v).toFixed(2), class: (ring ? "dot " : "") + r.cls }));
+      });
+    });
+
+    // bar caption, grid and ticks
+    svg.append(
+      s("rect", { x: padL, y: barTop - 17, width: 9, height: 9, rx: 2, class: "sw-a" }),
+      s("text", { x: padL + 14, y: barTop - 9, class: "cap" }, aLabel + " per day"));
+    // an all-zero chart gets only the 0 line: no tick for a value the chart never reaches
+    const ticks = aMax === 0 ? [0] : [0, top / 2, top].filter(function (v, i) { return i !== 1 || Number.isInteger(v); });
+    ticks.forEach(function (v) {
+      svg.append(
+        s("line", { x1: padL, x2: W - padR, y1: y(v), y2: y(v), class: "grid" }),
+        s("text", { x: padL - 6, y: y(v) + 4, "text-anchor": "end", class: "tick" }, fmtCompact(v)));
+    });
+
+    // bars: rounded data end, square at the baseline
+    aV.forEach(function (v, i) {
+      if (!(v > 0)) return;
+      const x0 = cx(i) - bw / 2;
+      const y1 = y(v);
+      const hgt = barTop + barH - y1;
+      const rr = Math.min(4, bw / 2, hgt);
+      const d = "M" + x0 + "," + (y1 + hgt) + "V" + (y1 + rr) + "Q" + x0 + "," + y1 + " " + (x0 + rr) + "," + y1 +
+        "H" + (x0 + bw - rr) + "Q" + (x0 + bw) + "," + y1 + " " + (x0 + bw) + "," + (y1 + rr) + "V" + (y1 + hgt) + "Z";
+      svg.append(s("path", { d: d, class: i === n - 1 ? "bar bar--last" : "bar" }));
+    });
+    if (aMax === 0) svg.append(s("text", { x: padL + pw / 2, y: barTop + barH / 2, "text-anchor": "middle", class: "empty-note" }, "None in this range"));
+    // the last day is always emphasized: its value label, plus an outlined marker on the baseline when it is 0
+    const lx = cx(n - 1);
+    if (!(aV[n - 1] > 0)) {
+      const mr = Math.max(1.5, Math.min(3.5, slot / 2 - 1));
+      svg.append(s("circle", { cx: lx.toFixed(1), cy: barTop + barH, r: mr.toFixed(2), class: "zero-last" }));
+    }
+    svg.append(s("text", { x: lx, y: (aV[n - 1] > 0 ? y(aV[n - 1]) : barTop + barH) - 7, "text-anchor": lx > W - 30 ? "end" : "middle", class: "val" }, fmtNum(aV[n - 1])));
+
+    // date ticks: first, middle, last
+    const idx = [0, Math.floor((n - 1) / 2), n - 1].filter(function (v, i, arr) { return arr.indexOf(v) === i; });
+    idx.forEach(function (i) {
+      const anchor = i === 0 ? "start" : i === n - 1 ? "end" : "middle";
+      const x = i === 0 ? padL : i === n - 1 ? W - padR : cx(i);
+      svg.append(s("text", { x: x, y: H - 5, "text-anchor": anchor, class: "tick" }, fmtYmd(pts[i].date)));
+    });
+
+    // hover and keyboard layer
+    const cross = s("line", { x1: 0, x2: 0, y1: 0, y2: barTop + barH, class: "cross", visibility: "hidden" });
+    const hit = s("rect", { x: padL, y: 0, width: pw, height: barTop + barH, class: "hit" });
+    svg.append(cross, hit);
+    const tip = h("div", { class: "chart__tip", hidden: true, "aria-hidden": "true" });
+    let cur = -1;
+    function show(i) {
+      cur = Math.max(0, Math.min(n - 1, i));
+      const x = cx(cur);
+      cross.setAttribute("x1", x); cross.setAttribute("x2", x); cross.setAttribute("visibility", "visible");
+      const p = pts[cur];
+      fill(tip, h("div", { class: "d" }, fmtYmd(p.date, true)),
+        h("div", { class: "r" }, h("span", { class: "k k-a" }), h("b", null, fmtNum(p.a)), aLabel),
+        rows.map(function (r) { return h("div", { class: "r" }, h("span", { class: "k k-" + r.k }), h("b", null, fmtNum(p[r.k])), r.label); }));
+      tip.hidden = false;
+      const tw = tip.offsetWidth || 140;
+      const left = Math.max(0, Math.min(W - tw, x + 12 > W - tw ? x - tw - 12 : x + 12));
+      tip.style.left = left + "px";
+    }
+    function hide() { cur = -1; tip.hidden = true; cross.setAttribute("visibility", "hidden"); }
+    svg.addEventListener("pointermove", function (e) {
+      const rect = svg.getBoundingClientRect();
+      const px = (e.clientX - rect.left) * (W / (rect.width || W));
+      show(Math.floor((px - padL) / slot));
+    });
+    svg.addEventListener("pointerleave", hide);
+    svg.addEventListener("focus", function () { show(n - 1); });
+    svg.addEventListener("blur", hide);
+    svg.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowLeft") { e.preventDefault(); show(cur - 1); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); show(cur + 1); }
+      else if (e.key === "Home") { e.preventDefault(); show(0); }
+      else if (e.key === "End") { e.preventDefault(); show(n - 1); }
+      else if (e.key === "Escape") hide();
+    });
+    fill(wrap, svg, tip);
+  }
+
+  /* ---------- Pipeline ---------- */
+  function renderPipeline(m) {
+    const sec = $("#pipeline");
+    const p = m && m.pipeline;
+    const st = srcState(m, "ghl");
+    const link = ext((p && p.url) || (CONFIG.links && CONFIG.links.ghlOpportunities), "Open in GHL", "btn btn--glass");
+    const head = sectionHead("pipeline-title", "Sales pipeline", link);
+    if (!m || st === "loading") { fill(sec, head, loadingNote("pipeline"), skel("text"), skel("list")); return; }
+    if (st !== "ok" || !p) {
+      fill(sec, head, fixNote(m, "ghl", st === "error" ? "Pipeline is not loading." : null) || h("p", { class: "quiet" }, "No pipeline data."),
+        st === "error" ? h("div", { class: "is-down" }, h("p", { class: "quiet", style: { "margin-top": "12px" } }, "Deals show here once GHL answers.")) : null);
+      return;
+    }
+    const tt = p.totals || {};
+    const ghlUrl = p.url || (CONFIG.links && CONFIG.links.ghlOpportunities);
+    const totals = h("div", { class: "totals" + dim(isRefreshing(m, "ghl")) },
+      h("span", { class: "pill" }, "Open " + fmtNum(tt.open) + " · " + fmtUsd(tt.openValue)),
+      h("span", { class: "pill" }, "Won in range " + fmtNum(tt.wonInRange) + " · " + fmtUsd(tt.wonValueInRange)),
+      h("span", { class: "pill" }, "Lost in range " + fmtNum(tt.lostInRange)));
+    const stages = Array.isArray(p.stages) ? p.stages : [];
+    const board = h("div", { class: "board" }, stages.map(function (stg) { return stageColumn(stg, ghlUrl); }));
+    const scroller = h("div", { class: "board-scroll" + dim(isRefreshing(m, "ghl")), tabindex: "0", role: "region", "aria-label": "Sales pipeline board, scrolls sideways" }, stages.length ? board : h("p", { class: "quiet" }, "No stages found in the Sales pipeline."));
+    fill(sec, head, totals, scroller, callsRow(p.calls, isRefreshing(m, "ghl")));
+  }
+  function stageColumn(stg, ghlUrl) {
+    const cards = Array.isArray(stg.cards) ? stg.cards : [];
+    const hidden = Math.max(0, Math.round(num(stg.hiddenCount)));
+    return h("section", { class: "col", "aria-label": (stg.name || "Stage") + ", " + plural(num(stg.count != null ? stg.count : cards.length), "deal") },
+      h("header", { class: "col__head" }, h("h3", { class: "col__name" }, stg.name || "Stage"),
+        h("span", { class: "col__meta" }, fmtNum(stg.count != null ? stg.count : cards.length) + " · " + fmtUsd(stg.value || 0))),
+      cards.length ? h("div", { class: "col__cards" }, cards.map(dealCard)) : (hidden ? null : h("p", { class: "col__empty" }, "No deals")),
+      hidden > 0 ? ext(ghlUrl, "+" + fmtNum(hidden) + " more in GHL", "link col__more") : null);
+  }
+  const CLOSED_TAG = { won: ["Won", "tag--mint"], lost: ["Lost", ""], abandoned: ["Abandoned", ""] };
+  function statusTag(status) {
+    if (!status || status === "open") return null;
+    const def = CLOSED_TAG[String(status).toLowerCase()];
+    if (def) return h("span", { class: "tag " + def[1] }, def[0]);
+    const str = String(status);
+    return h("span", { class: "tag" }, str.charAt(0).toUpperCase() + str.slice(1));
+  }
+  function dealCard(c) {
+    const lvl = c.staleLevel === "critical" || c.staleLevel === "warning" ? c.staleLevel : "none";
+    const title = c.title || "Untitled deal";
+    const href = safeHref(c.url);
+    const nameEl = href ? h("a", { class: "deal__link", href: href, target: "_blank", rel: "noopener" }, h("span", { class: "deal__name" }, title))
+      : h("span", { class: "deal__name" }, title);
+    const days = has(c.daysInStage) ? plural(Math.round(c.daysInStage), "day") + " in stage" : "";
+    const task = has(c.openTasks) && Number(c.openTasks) > 0
+      ? (c.nextTaskDue ? "Task due " + fmtDate(c.nextTaskDue) : "No due date") + " · " + plural(Number(c.openTasks), "open task")
+      : "No open tasks";
+    const st = String(c.status || "open").toLowerCase();
+    const muted = st === "lost" || st === "abandoned";
+    const card = h("article", { class: "deal" + (lvl !== "none" ? " is-" + lvl : "") + (muted ? " is-lost" : "") },
+      nameEl,
+      c.company ? h("p", { class: "deal__co" }, c.company) : null,
+      h("div", { class: "deal__tags" }, sourceTag(c.source || "other"),
+        lvl === "critical" ? h("span", { class: "tag tag--rose" }, "Stale") : lvl === "warning" ? h("span", { class: "tag tag--amber" }, "Going stale") : null,
+        statusTag(c.status)),
+      h("p", { class: "deal__meta" }, days, has(c.value) && Number(c.value) > 0 ? h("b", null, (days ? " · " : "") + fmtUsd(c.value)) : null),
+      h("p", { class: "deal__meta" }, task));
+    if (c.lastNote && c.lastNote.text) {
+      const id = String(c.id || "");
+      const det = h("details", { class: "deal__note", open: state.openNotes.has(id) },
+        h("summary", null, "Last note" + (c.lastNote.date ? " · " + fmtDate(c.lastNote.date) : "")),
+        h("p", null, c.lastNote.text));
+      det.addEventListener("toggle", function () { if (det.open) state.openNotes.add(id); else state.openNotes.delete(id); });
+      card.append(det);
+    }
+    return card;
+  }
+  function callsRow(calls, refreshing) {
+    if (!calls) return null;
+    const stages = Array.isArray(calls.stages) ? calls.stages : [];
+    return h("div", { class: "callrow" + dim(refreshing) },
+      h("span", { class: "callrow__label" }, "Call Booked pipeline"),
+      stages.length ? stages.map(function (x) { return h("span", { class: "tag" }, (x.name || "Stage") + " " + fmtNum(x.count)); }) : h("span", { class: "small" }, "No stages"),
+      showRatePill(calls.showRate));
+  }
+  function showRatePill(r) {
+    if (!r) return null;
+    const st = r.state || "no_data";
+    return h("span", { class: "state is-lg " + (STATE_CLASS[st] || "is-none") }, "Show rate " + fmtRate(r) + " · " + (STATE_WORD[st] || "No data"));
+  }
+
+  /* ---------- Follow-ups ---------- */
+  const KIND = {
+    upwork_reply: ["Upwork", "tag--mint"], upwork_nudge: ["Upwork", "tag--mint"], email_reply: ["Email", "tag--blue"],
+    unibox: ["Email", "tag--blue"], new_lead: ["Deal", ""], stale_deal: ["Deal", ""], ghl_task: ["GHL task", ""], call_prep: ["Call", "tag--indigo"]
+  };
+  const GROUPS = [
+    ["reply_now", "Reply now", "Nothing waiting on you."],
+    ["due", "Due", "Nothing due today."],
+    ["upcoming", "Coming up", "Nothing coming up this week."]
+  ];
+  function renderFollowups(m) {
+    const sec = $("#followups");
+    const head = sectionHead("followups-title", "Follow-ups", null);
+    if (!m) { fill(sec, head, loadingNote("follow-ups"), skel("list")); return; }
+    const keys = ["instantly", "upwork", "ghl", "calendar"];
+    const loading = keys.filter(function (k) { return srcState(m, k) === "loading"; });
+    if (loading.length === keys.length) { fill(sec, head, loadingNote("follow-ups"), skel("list")); return; }
+    const notes = keys.filter(function (k) { return srcState(m, k) === "error"; }).map(function (k) {
+      return fixNote(m, k, SOURCE_NAME[k] + " follow-ups are missing.");
+    });
+    const f = m.followups || {};
+    const now = Date.now();
+    const gen = num(m.generatedAt) || now;
+    const refreshing = keys.filter(function (k) { return isRefreshing(m, k); });
+    fill(sec, head, notes,
+      loading.length ? h("p", { class: "small", style: { "margin-top": "10px" } }, "Still loading: " + loading.map(function (k) { return SOURCE_NAME[k]; }).join(", ") + ".") : null,
+      refreshing.length ? h("p", { class: "small", style: { "margin-top": "10px" } }, "Refreshing: " + refreshing.map(function (k) { return SOURCE_NAME[k]; }).join(", ") + ".") : null,
+      GROUPS.map(function (g) {
+        const items = Array.isArray(f[g[0]]) ? f[g[0]] : [];
+        return h("div", { class: "group" + dim(refreshing.length > 0) },
+          h("h3", { class: "group__head" }, g[1], h("span", { class: "count" + (items.length ? "" : " is-zero") }, String(items.length))),
+          items.length ? h("ul", { class: "items" }, items.map(function (it) { return followItem(it, g[0], gen); })) : h("p", { class: "empty-line" }, g[2]));
+      }));
+  }
+  function followItem(it, group, gen) {
+    const kd = KIND[it.kind] || [String(it.kind || "Item"), ""];
+    let when = null;
+    if (group === "reply_now" && has(it.ageMs)) when = rel("span", "waiting", gen - Number(it.ageMs), "", "when");
+    else if (it.dueAt != null && toDate(it.dueAt)) {
+      const ts = toDate(it.dueAt).getTime();
+      const overdue = !!it.overdue || dayDiff(new Date(), new Date(ts)) < 0;
+      when = rel("span", it.kind === "call_prep" ? "starts" : "due", ts, overdue ? "1" : "", "when" + (overdue ? " is-overdue" : ""));
+    } else if (it.overdue) when = h("span", { class: "when is-overdue" }, "overdue");
+    return h("li", { class: "item" },
+      h("span", { class: "tag " + kd[1] }, kd[0]),
+      h("div", { class: "item__body" }, h("div", { class: "item__title" }, it.title || ""), it.detail ? h("div", { class: "item__detail" }, it.detail) : null),
+      h("div", { class: "item__side" }, when, it.url ? ext(it.url, "Open", "link") : null));
+  }
+
+  /* ---------- Calls ---------- */
+  function renderCalls(m) {
+    const sec = $("#calls");
+    const head = sectionHead("calls-title", "Calls", null);
+    const st = srcState(m, "calendar");
+    if (!m || st === "loading") { fill(sec, head, loadingNote("calls"), skel("list")); return; }
+    const calls = m.calls || {};
+    const showRate = m.pipeline && m.pipeline.calls && m.pipeline.calls.showRate;
+    const ghlSt = srcState(m, "ghl");
+    // show rate comes from GHL: pill when ok, "Loading" while it reads, the "needs" line only when GHL is down
+    const showRow = h("div", { class: "held" + dim(isRefreshing(m, "ghl")) },
+      ghlSt === "ok" ? showRatePill(showRate)
+        : ghlSt === "loading" ? h("span", { class: "state is-lg is-info" }, "Show rate · Loading")
+        : h("span", { class: "small" }, "Show rate needs GHL."));
+    if (st !== "ok") {
+      fill(sec, head, fixNote(m, "calendar", st === "error" ? "Calls are not loading." : null),
+        st === "error" ? h("div", { class: "is-down" }, h("p", { class: "quiet", style: { "margin-top": "12px" } }, "Upcoming calls show here once Google Calendar answers.")) : null,
+        showRow);
+      return;
+    }
+    const calRefreshing = isRefreshing(m, "calendar");
+    const up = Array.isArray(calls.upcoming) ? calls.upcoming : [];
+    const pastN = Array.isArray(calls.pastInRange) ? calls.pastInRange.length : 0;
+    const by = calls.bySource || {};
+    const bySrc = ["cold_email", "upwork", "linkedin", "other", "unattributed"].filter(function (k) { return num(by[k]) > 0; });
+    const rangeLabel = (m.range && m.range.label) ? m.range.label.toLowerCase() : "this range";
+    fill(sec, head,
+      h("div", { class: "group" + dim(calRefreshing) },
+        h("h3", { class: "group__head" }, "Upcoming", h("span", { class: "count" + (up.length ? "" : " is-zero") }, String(up.length))),
+        up.length ? h("ul", { class: "items" }, up.map(callItem)) : h("p", { class: "empty-line" }, "No calls in the next 14 days.")),
+      h("div", { class: "held" + dim(calRefreshing) },
+        h("span", null, "Held in range: ", h("span", { class: "held__n" }, fmtNum(pastN))),
+        bySrc.length ? bySrc.map(function (k) { const t = sourceTag(k); t.append(" " + fmtNum(by[k])); return t; }) : h("span", { class: "small" }, "None " + rangeLabel + ".")),
+      showRow);
+  }
+  function callItem(c) {
+    const d = toDate(c.start);
+    return h("li", { class: "call" },
+      h("div", { class: "call__date" }, h("b", null, d ? fmtWeekday(d) : ""), h("span", null, d ? fmtDate(d) : "—")),
+      h("div", { class: "call__body" },
+        h("div", { class: "call__title" }, c.title || "Call"),
+        h("div", { class: "call__meta" }, h("span", null, (d ? fmtTime(d) + " CT" : "") + (c.who ? " · " + c.who : "")), sourceTag(c.source || "unattributed")),
+        h("div", { class: "call__links" },
+          c.joinUrl && /^https:\/\/([\w-]+\.)*zoom\.us\//i.test(String(c.joinUrl)) ? ext(c.joinUrl, "Join", "link") : null,
+          c.url ? ext(c.url, "Calendar", "link") : null)));
+  }
+
+  /* ---------- Detail ---------- */
+  const CAMPAIGN_STATE = { 1: "is-good", 2: "is-watch", 0: "is-none", 3: "is-none", 4: "is-info" };
+  function renderDetail(m) {
+    const sec = $("#detail");
+    const head = sectionHead("detail-title", "Detail", null);
+    const tabs = [["campaigns", "Campaigns"], ["proposals", "Upwork proposals"]];
+    const tablist = h("div", { class: "tabs", role: "tablist", "aria-label": "Detail tables" }, tabs.map(function (t) {
+      const sel = state.tab === t[0];
+      return h("button", {
+        type: "button", role: "tab", id: "tab-" + t[0], "aria-selected": sel ? "true" : "false", "aria-controls": "tabpanel-" + t[0], tabindex: sel ? "0" : "-1",
+        onclick: function () { selectTab(t[0], false); }, onkeydown: tabKeys
+      }, t[1]);
+    }));
+    const panels = tabs.map(function (t) {
+      const sel = state.tab === t[0];
+      const p = h("div", { role: "tabpanel", id: "tabpanel-" + t[0], "aria-labelledby": "tab-" + t[0], hidden: !sel, tabindex: "0" });
+      if (sel) p.append(t[0] === "campaigns" ? campaignsTable(m) : proposalsTable(m));
+      return p;
+    });
+    fill(sec, head, tablist, panels);
+  }
+  function selectTab(name, focus) {
+    state.tab = name;
+    writeStore(TAB_KEY, name);
+    guard("detail", function () { renderDetail(state.model); });
+    if (focus) { const b = document.getElementById("tab-" + name); if (b) b.focus(); }
+  }
+  function tabKeys(e) {
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      e.preventDefault();
+      selectTab(state.tab === "campaigns" ? "proposals" : "campaigns", true);
+    }
+  }
+  function tableShell(refreshing, heads, rows, label) {
+    return h("div", { class: "table-wrap" + dim(refreshing), role: "region", "aria-label": label + ", scrolls sideways", tabindex: "0" },
+      h("table", null,
+        h("thead", null, h("tr", null, heads.map(function (x) { return h("th", { scope: "col", class: x[1] ? "num" : null }, x[0]); }))),
+        h("tbody", null, rows)));
+  }
+  function campaignsTable(m) {
+    const st = srcState(m, "instantly");
+    if (!m || st === "loading") return h("div", null, loadingNote("campaigns"), skel("list"));
+    if (st !== "ok") return h("div", null, fixNote(m, "instantly", st === "error" ? "Campaigns are not loading." : null));
+    const rows = Array.isArray(m.campaigns) ? m.campaigns : [];
+    if (!rows.length) return h("p", { class: "empty-line", style: { "margin-top": "14px" } }, "No campaigns found in Instantly.");
+    return tableShell(isRefreshing(m, "instantly"), [["Campaign"], ["Status"], ["Sent", 1], ["New leads", 1], ["Replies", 1], ["Positive", 1], ["Bounce", 1], ["Daily limit", 1]],
+      rows.map(function (c) {
+        const cls = CAMPAIGN_STATE[c.status] || (Number(c.status) < 0 ? "is-alert" : "is-none");
+        return h("tr", null,
+          h("td", { class: "td-title" }, c.url ? ext(c.url, c.name || "Untitled campaign", "") : (c.name || "Untitled campaign")),
+          h("td", null, statePill(cls, c.statusLabel || String(c.status))),
+          h("td", { class: "num" }, fmtNum(c.sent)), h("td", { class: "num" }, fmtNum(c.newLeads)),
+          h("td", { class: "num" }, fmtNum(c.replies)), h("td", { class: "num" }, fmtNum(c.positive)),
+          h("td", { class: "num" }, fmtPct(c.bounceRate)), h("td", { class: "num" }, fmtNum(c.dailyLimit)));
+      }), "Campaigns");
+  }
+  function proposalsTable(m) {
+    const st = srcState(m, "upwork");
+    if (!m || st === "loading") return h("div", null, loadingNote("proposals"), skel("list"));
+    if (st !== "ok") return h("div", null, fixNote(m, "upwork", st === "error" ? "Proposals are not loading." : null));
+    const rows = Array.isArray(m.proposals) ? m.proposals : [];
+    if (!rows.length) return h("p", { class: "empty-line", style: { "margin-top": "14px" } }, "No proposals sent in this range.");
+    return tableShell(isRefreshing(m, "upwork"), [["Sent"], ["Job"], ["Status"], ["Boosted"], ["Client reply"]],
+      rows.map(function (p) {
+        const reply = p.replied === true ? h("span", { class: "tag tag--mint" }, "Replied")
+          : p.replied === false ? h("span", { class: "tag" }, "No reply") : "—";
+        return h("tr", null,
+          h("td", { style: { "white-space": "nowrap" } }, fmtDate(p.createdAt)),
+          h("td", { class: "td-title" }, p.url ? ext(p.url, p.title || "Untitled job", "") : (p.title || "Untitled job")),
+          h("td", null, p.statusLabel || "", p.reason ? h("span", { class: "td-sub" }, p.reason) : null),
+          h("td", null, p.boosted ? "Yes" + (has(p.connectsBid) ? " · " + fmtNum(p.connectsBid) + " Connects" : "") : "No"),
+          h("td", null, reply));
+      }), "Upwork proposals");
+  }
+
+  /* ---------- Footer ---------- */
+  function renderFooter(m) {
+    const foot = $("#footer");
+    fill(foot,
+      h("ul", null, SOURCES.map(function (p) {
+        const st = src(m, p[0]);
+        let line;
+        if (st.state === "ok") line = h("span", null, has(st.storedAt) ? ["live, data from ", rel("span", "ago", Number(st.storedAt))] : "live", st.refreshing === true ? ", refreshing now" : null);
+        else if (st.state === "error" && st.refreshing === true) line = "retrying now";
+        else if (st.state === "error") line = (st.error && st.error.fix) || "not loading";
+        else if (st.state === "unavailable") line = "not available on this page";
+        else line = "loading";
+        return h("li", null, h("b", null, p[1] + ": "), line);
+      })),
+      h("p", { class: "foot__base" }, m && has(m.generatedAt) ? rel("span", "updated", Number(m.generatedAt)) : null, m && has(m.generatedAt) ? ". " : null,
+        "Read-only. Data comes live from your connectors."));
+  }
+
+  /* ---------- render ---------- */
+  function render(m) {
+    state.model = m;
+    state.noData = !!(m && SOURCES.every(function (p) { return src(m, p[0]).state === "unavailable"; }));
+    guard("chips", function () { renderChips(m); });
+    guard("banner", function () { renderBanner(m); });
+    guard("today", function () { renderToday(m); });
+    guard("channels-grid", function () { renderChannels(m); });
+    guard("pipeline", function () { renderPipeline(m); });
+    guard("followups", function () { renderFollowups(m); });
+    guard("calls", function () { renderCalls(m); });
+    guard("detail", function () { renderDetail(m); });
+    guard("footer", function () { renderFooter(m); });
+    syncCostsForm();
+    syncBarHeight();
+  }
+
+  function emptyModel(days) {
+    const now = new Date();
+    const start = new Date(now.getTime() - (days - 1) * 864e5);
+    const off = { state: "unavailable", storedAt: null, error: null, warnings: [] };
+    const ghostFunnel = function (labels) { return labels.map(function (l) { return { key: l.toLowerCase(), label: l, value: null, prev: null }; }); };
+    const ghost = function (key, name, labels) {
+      return { key: key, name: name, status: "not_connected", statusText: "", funnel: ghostFunnel(labels), rates: [], series: null,
+        spend: { usd: null, note: "" }, callsBooked: null, costPerCall: null, extras: [] };
+    };
+    return {
+      generatedAt: now.getTime(),
+      range: { days: days, start: dayKey(start), end: dayKey(now), prevStart: "", prevEnd: "", label: "Last " + days + " days" },
+      sources: { instantly: off, upwork: off, ghl: off, calendar: off },
+      today: { waitingOnYou: 0, callsNext7d: { count: 0, next: null }, openPipeline: { count: 0, value: 0 }, revenue: { value: 0, upworkBilled: 0, ghlWon: 0 }, coldEmailSending: null, alerts: [] },
+      channels: [
+        ghost("cold_email", "Cold email", ["Emails sent", "New leads reached", "Human replies", "Positive replies", "Calls booked", "Closed"]),
+        ghost("upwork", "Upwork", ["Proposals sent", "Client replied", "Offers", "Hired"]),
+        ghost("linkedin", "LinkedIn", ["Requests", "Accepted", "Replies", "Positive", "Booked"])
+      ],
+      campaigns: [], proposals: [],
+      pipeline: null,
+      calls: { upcoming: [], pastInRange: [], bySource: {} },
+      followups: { reply_now: [], due: [], upcoming: [] },
+      costs: { upwork: 0, cold_email: 0, linkedin: 0, editable: false }
+    };
+  }
+
+  /* ---------- loading ---------- */
+  async function startLoad(refresh) {
+    if (state.sample) { loadSample(refresh); return; }
+    if (!DATA || typeof DATA.load !== "function") {
+      state.notice = "The scoreboard data script did not load. Reload the page.";
+      render(emptyModel(state.rangeDays));
+      setLoading(false);
+      return;
+    }
+    const my = ++state.seq;
+    setLoading(true);
+    // Every update renders as it comes. The model says which sources are refreshing (kept data, dimmed)
+    // and which are loading for the first time in this range (skeletons).
+    function onUpdate(model) {
+      if (my !== state.seq || !model) return;
+      render(model);
+    }
+    try {
+      await state.capsReady;
+      const caps = state.caps;
+      const final = await DATA.load({ rangeDays: state.rangeDays, refresh: !!refresh, now: new Date(), mcp: caps.mcp, db: caps.db, user: caps.user }, onUpdate);
+      if (my !== state.seq) return;
+      state.notice = "";
+      if (final) render(final);
+    } catch (e) {
+      console.error("Scoreboard: load failed", e);
+      if (my !== state.seq) return;
+      state.notice = "Loading stopped with an error. Press Refresh to try again.";
+      render(state.model && !state.noData ? state.model : emptyModel(state.rangeDays));
+    } finally {
+      if (my === state.seq) setLoading(false);
+    }
+  }
+
+  function loadSample(refresh) {
+    const variants = Array.isArray(window.__SAMPLE_VARIANTS__) ? window.__SAMPLE_VARIANTS__ : [];
+    if (refresh && variants.length) state.sampleIdx = (state.sampleIdx + 1) % variants.length;
+    const v = variants.length ? variants[state.sampleIdx] : null;
+    const model = v && v.model ? v.model : window.__SAMPLE_MODEL__;
+    const tag = $("#sample-tag");
+    tag.hidden = false;
+    tag.textContent = "Sample data" + (v && v.name ? ": " + v.name : "");
+    if (!model) { state.notice = "The sample model did not load."; render(emptyModel(state.rangeDays)); return; }
+    render(model);
+    setLoading(false);
+  }
+
+  function resolveCaps() {
+    const names = ["mcp", "db", "user"];
+    return Promise.all(names.map(function (n) {
+      try {
+        return window.claude && typeof window.claude.use === "function" ? Promise.resolve(window.claude.use(n)).catch(function () { return null; }) : Promise.resolve(null);
+      } catch (e) { return Promise.resolve(null); }
+    })).then(function (res) {
+      state.caps = { mcp: res[0] || null, db: res[1] || null, user: res[2] || null };
+    });
+  }
+
+  /* ---------- costs sheet ---------- */
+  const sheet = $("#costs-sheet");
+  const form = $("#costs-form");
+  const SAVE_TIMEOUT_MS = 5000;
+  function costsEditable() {
+    if (state.sample) return !!(state.model && state.model.costs && state.model.costs.editable);
+    if (state.model && state.model.costs && typeof state.model.costs.editable === "boolean") return state.model.costs.editable;
+    return !!state.caps.db;
+  }
+  function currentCosts() {
+    const c = (state.model && state.model.costs) || state.costs || {};
+    return { upwork: num(c.upwork), cold_email: num(c.cold_email), linkedin: num(c.linkedin) };
+  }
+  // The sheet follows model.costs live, also while it is open: when the costs (or whether they can be edited)
+  // change, the inputs refill and enable. Values the viewer typed are kept until they save or reopen.
+  let costsSynced = "";      // the model.costs snapshot the form last showed
+  let costsDirty = false;    // the viewer typed since then
+  let costsSaving = false;
+  function syncCostsForm(force) {
+    const c = currentCosts();
+    const editable = costsEditable();
+    const snap = JSON.stringify([c.upwork, c.cold_email, c.linkedin, editable]);
+    if (sheet.open && !force && (snap === costsSynced || (costsDirty && editable))) {
+      if (snap !== costsSynced && costsDirty && editable) costsSynced = snap;
+      return;
+    }
+    costsSynced = snap;
+    costsDirty = false;
+    ["upwork", "cold_email", "linkedin"].forEach(function (k) {
+      const input = form.elements[k];
+      input.value = c[k] ? String(c[k]) : "";
+      input.placeholder = "0";
+      input.disabled = !editable;
+    });
+    $("#costs-save").disabled = !editable || costsSaving;
+    $("#costs-reason").hidden = editable;
+  }
+  form.addEventListener("input", function () { costsDirty = true; });
+  function openCosts() {
+    syncCostsForm(true);
+    $("#costs-status").textContent = "";
+    if (typeof sheet.showModal === "function") sheet.showModal(); else sheet.setAttribute("open", "");
+  }
+  function closeCosts() {
+    if (typeof sheet.close === "function") sheet.close(); else sheet.removeAttribute("open");
+    $("#costs-btn").focus();
+  }
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const status = $("#costs-status");
+    status.className = "";
+    if (!costsEditable() || costsSaving) return;
+    const costs = {};
+    ["upwork", "cold_email", "linkedin"].forEach(function (k) {
+      const v = parseFloat(form.elements[k].value);
+      costs[k] = isFinite(v) && v > 0 ? Math.round(v * 100) / 100 : 0;
+    });
+    if (state.sample) {
+      state.model.costs = Object.assign({}, state.model.costs, costs);
+      status.textContent = "Saved";
+      return;
+    }
+    status.textContent = "Saving";
+    costsSaving = true;
+    $("#costs-save").disabled = true;
+    let timer = null;
+    try {
+      // A db that never answers must not hang the sheet: the save races a 5 s timeout.
+      await Promise.race([
+        Promise.resolve().then(function () { return DATA.saveCosts(state.caps.db, costs); }),
+        new Promise(function (_, reject) { timer = setTimeout(function () { reject(new Error("Saving costs timed out")); }, SAVE_TIMEOUT_MS); })
+      ]);
+      clearTimeout(timer);
+      costsSaving = false;
+      state.costs = costs;
+      costsDirty = false;
+      status.textContent = "Saved";
+      applyCosts(costs);
+    } catch (err) {
+      clearTimeout(timer);
+      costsSaving = false;
+      console.error("Scoreboard: saving costs failed", err);
+      status.className = "is-error";
+      status.textContent = "Couldn't save. Try again.";
+    } finally {
+      $("#costs-save").disabled = !costsEditable();
+    }
+  });
+  // Rebuild from the data already read (no connector calls). Older data scripts without rebuild fall back to a reload.
+  function applyCosts(costs) {
+    let rebuilt = null;
+    if (typeof DATA.rebuild === "function") {
+      try { rebuilt = DATA.rebuild({ costs: costs }); }
+      catch (err) { console.error("Scoreboard: rebuild failed, reloading instead", err); rebuilt = null; }
+    }
+    if (rebuilt) render(rebuilt);
+    else startLoad(false);
+  }
+  $("#costs-close").addEventListener("click", closeCosts);
+  $("#costs-btn").addEventListener("click", openCosts);
+  sheet.addEventListener("click", function (e) { if (e.target === sheet) closeCosts(); });
+  if (has(CONFIG.upworkConnectUsd)) $("#connects-note").textContent = "Connects are counted automatically at " + fmtUsd(Number(CONFIG.upworkConnectUsd)) + " each.";
+
+  /* ---------- controls ---------- */
+  document.querySelectorAll("[data-range]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      const v = Number(b.dataset.range);
+      if (v === state.rangeDays && !state.sample) return;
+      state.rangeDays = v;
+      writeStore(RANGE_KEY, v);
+      syncRangeButtons();
+      startLoad(false);
+    });
+  });
+  $("#refresh-btn").addEventListener("click", function () {
+    if (state.loading) return;           // one load at a time; the button is disabled meanwhile
+    startLoad(true);
+  });
+
+  /* ---------- boot ---------- */
+  syncRangeButtons();
+  watchBarHeight();
+  render(null);              // skeletons paint first; nothing waits on claude.use
+  setInterval(tickRelative, 60000);
+
+  if (state.sample) {
+    const tag = document.createElement("script");
+    tag.src = "tests/sample-model.js";
+    tag.onload = function () { loadSample(false); };
+    tag.onerror = function () { state.notice = "tests/sample-model.js did not load."; render(emptyModel(state.rangeDays)); setLoading(false); };
+    document.body.appendChild(tag);
+  } else if (!DATA) {
+    state.notice = "The scoreboard data script did not load. Reload the page.";
+    render(emptyModel(state.rangeDays));
+    setLoading(false);
+  } else {
+    setLoading(true);
+    state.capsReady = resolveCaps();
+    // Start the fetches as soon as the capabilities resolve. Nothing waits on db: load() reads the costs in the
+    // background (with its own timeout) and emits them in a later update, and the costs sheet follows model.costs.
+    state.capsReady.then(function () {
+      syncCostsForm();
+      return startLoad(false);
+    }).catch(function (e) {
+      console.error("Scoreboard: boot failed", e);
+      state.notice = "Loading stopped with an error. Press Refresh to try again.";
+      render(emptyModel(state.rangeDays));
+      setLoading(false);
+    });
+  }
+})();
+</script>

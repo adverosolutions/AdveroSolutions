@@ -1,0 +1,534 @@
+{
+  "proposals": {
+    "Accepted": [
+      {
+        "data": {
+          "vendorProposals": {
+            "edges": [
+              {
+                "node": {
+                  "id": "p1",
+                  "boosted": true,
+                  "auditDetails": {
+                    "createdDateTime": {
+                      "rawValue": "1791219600000"
+                    }
+                  },
+                  "marketplaceJobPosting": {
+                    "id": "job-p1",
+                    "content": {
+                      "title": "Test job p1"
+                    },
+                    "url": "https://www.upwork.com/jobs/~testp1"
+                  },
+                  "status": {
+                    "status": "Active",
+                    "status_label": "Submitted"
+                  },
+                  "terms": {
+                    "connectsBid": 30
+                  }
+                }
+              },
+              {
+                "node": {
+                  "id": "p2",
+                  "boosted": false,
+                  "auditDetails": {
+                    "createdDateTime": {
+                      "rawValue": "1790874000000"
+                    }
+                  },
+                  "marketplaceJobPosting": {
+                    "id": "job-p2",
+                    "content": {
+                      "title": "Test job p2"
+                    },
+                    "url": "https://www.upwork.com/jobs/~testp2"
+                  },
+                  "status": {
+                    "status": "Active",
+                    "status_label": "Submitted"
+                  }
+                }
+              }
+            ],
+            "totalCount": 2
+          }
+        },
+        "hasMore": true,
+        "next_cursor": "acc-2"
+      },
+      {
+        "data": {
+          "vendorProposals": {
+            "edges": [],
+            "totalCount": 0
+          }
+        },
+        "hasMore": true,
+        "next_cursor": "acc-3"
+      },
+      {
+        "data": {
+          "vendorProposals": {
+            "edges": [
+              {
+                "node": {
+                  "id": "p3",
+                  "boosted": false,
+                  "auditDetails": {
+                    "createdDateTime": {
+                      "rawValue": "1789059600000"
+                    }
+                  },
+                  "marketplaceJobPosting": {
+                    "id": "job-p3",
+                    "content": {
+                      "title": "Test job p3"
+                    },
+                    "url": "https://www.upwork.com/jobs/~testp3"
+                  },
+                  "status": {
+                    "status": "Active",
+                    "status_label": "Submitted"
+                  }
+                }
+              },
+              {
+                "node": {
+                  "id": "p4",
+                  "boosted": false,
+                  "auditDetails": {
+                    "createdDateTime": {
+                      "rawValue": "1787245200000"
+                    }
+                  },
+                  "marketplaceJobPosting": {
+                    "id": "job-p4",
+                    "content": {
+                      "title": "Test job p4"
+                    },
+                    "url": "https://www.upwork.com/jobs/~testp4"
+                  },
+                  "status": {
+                    "status": "Active",
+                    "status_label": "Submitted"
+                  }
+                }
+              },
+              {
+                "node": {
+                  "id": "p5",
+                  "boosted": false,
+                  "auditDetails": {
+                    "createdDateTime": {
+                      "rawValue": "1785603600000"
+                    }
+                  },
+                  "marketplaceJobPosting": {
+                    "id": "job-p5",
+                    "content": {
+                      "title": "Test job p5"
+                    },
+                    "url": "https://www.upwork.com/jobs/~testp5"
+                  },
+                  "status": {
+                    "status": "Active",
+                    "status_label": "Submitted"
+                  }
+                }
+              }
+            ],
+            "totalCount": 3
+          }
+        },
+        "hasMore": true,
+        "next_cursor": "acc-4"
+      }
+    ],
+    "Archived": [
+      {
+        "data": {
+          "vendorProposals": {
+            "edges": [
+              {
+                "node": {
+                  "id": "p6",
+                  "boosted": false,
+                  "auditDetails": {
+                    "createdDateTime": {
+                      "rawValue": "1789923600000"
+                    }
+                  },
+                  "marketplaceJobPosting": {
+                    "id": "job-p6",
+                    "content": {
+                      "title": "Test job p6"
+                    },
+                    "url": "https://www.upwork.com/jobs/~testp6"
+                  },
+                  "status": {
+                    "status": "Archived",
+                    "status_label": "Job closed",
+                    "reason": {
+                      "reason": "Job was closed"
+                    }
+                  }
+                }
+              },
+              {
+                "node": {
+                  "id": "p2",
+                  "boosted": false,
+                  "auditDetails": {
+                    "createdDateTime": {
+                      "rawValue": "1790874000000"
+                    }
+                  },
+                  "marketplaceJobPosting": {
+                    "id": "job-p2",
+                    "content": {
+                      "title": "Test job p2"
+                    },
+                    "url": "https://www.upwork.com/jobs/~testp2"
+                  },
+                  "status": {
+                    "status": "Active",
+                    "status_label": "Submitted"
+                  }
+                }
+              }
+            ],
+            "totalCount": 2
+          }
+        },
+        "hasMore": false,
+        "next_cursor": null
+      }
+    ],
+    "Offered": [
+      {
+        "data": {
+          "vendorProposals": {
+            "edges": [
+              {
+                "node": {
+                  "id": "p7",
+                  "boosted": false,
+                  "auditDetails": {
+                    "createdDateTime": {
+                      "rawValue": "1790355600000"
+                    }
+                  },
+                  "marketplaceJobPosting": {
+                    "id": "job-p7",
+                    "content": {
+                      "title": "Test job p7"
+                    },
+                    "url": "https://www.upwork.com/jobs/~testp7"
+                  },
+                  "status": {
+                    "status": "Offered",
+                    "status_label": "Offer received"
+                  }
+                }
+              }
+            ],
+            "totalCount": 1
+          }
+        },
+        "hasMore": false
+      }
+    ],
+    "Hired": [
+      {
+        "data": {
+          "vendorProposals": {
+            "edges": [
+              {
+                "node": {
+                  "id": "p8",
+                  "boosted": false,
+                  "auditDetails": {
+                    "createdDateTime": {
+                      "rawValue": "1789491600000"
+                    }
+                  },
+                  "marketplaceJobPosting": {
+                    "id": "job-p8",
+                    "content": {
+                      "title": "Test job p8"
+                    },
+                    "url": "https://www.upwork.com/jobs/~testp8"
+                  },
+                  "status": {
+                    "status": "Hired",
+                    "status_label": "Hired"
+                  }
+                }
+              }
+            ],
+            "totalCount": 1
+          }
+        },
+        "hasMore": false
+      }
+    ],
+    "Declined": [
+      {
+        "data": {
+          "vendorProposals": {
+            "edges": [],
+            "totalCount": 0
+          }
+        },
+        "hasMore": false
+      }
+    ],
+    "Withdrawn": [
+      {
+        "data": {
+          "vendorProposals": {
+            "edges": [
+              {
+                "node": {
+                  "id": "p9",
+                  "boosted": false,
+                  "auditDetails": {
+                    "createdDateTime": {
+                      "rawValue": "1782925200000"
+                    }
+                  },
+                  "marketplaceJobPosting": {
+                    "id": "job-p9",
+                    "content": {
+                      "title": "Test job p9"
+                    },
+                    "url": "https://www.upwork.com/jobs/~testp9"
+                  },
+                  "status": {
+                    "status": "Withdrawn",
+                    "status_label": "Withdrawn"
+                  }
+                }
+              }
+            ],
+            "totalCount": 1
+          }
+        },
+        "hasMore": false
+      }
+    ]
+  },
+  "rooms": {
+    "p1": {
+      "room": {
+        "id": "room-1"
+      }
+    },
+    "p2": "NOT_FOUND",
+    "p3": {
+      "data": {
+        "room": {
+          "id": "room-3"
+        }
+      }
+    },
+    "p6": "NOT_FOUND",
+    "p7": {
+      "roomId": "room-7"
+    },
+    "p8": {
+      "id": "room-8"
+    },
+    "p4": "NOT_FOUND"
+  },
+  "roomsPages": [
+    {
+      "data": {
+        "rooms": [
+          {
+            "id": "r1",
+            "roomName": "<untrusted_participant_content>\nClient Alpha Test\n</untrusted_participant_content>",
+            "lastActivity": "1791298800000",
+            "awaiting_reply_from": "you",
+            "last_message_from_self": false,
+            "latestStory": {
+              "createdDateTime": "1791298800000",
+              "message": "<untrusted_participant_content>\nHi there, this is a synthetic test message that keeps going. this is a synthetic test message that keeps going. this is a synthetic test message that keeps going. this is a synthetic test message that keeps going. this is a synthetic test message that keeps going. \n</untrusted_participant_content>"
+            },
+            "numUnread": 1
+          },
+          {
+            "id": "r2",
+            "roomName": "<untrusted_participant_content>\nClient Beta Test\n</untrusted_participant_content>",
+            "lastActivity": "1790866800000",
+            "awaiting_reply_from": "them",
+            "last_message_from_self": true,
+            "latestStory": {
+              "createdDateTime": "1790874000000",
+              "message": "<untrusted_participant_content>\nFollowing up on the proposal.\n</untrusted_participant_content>"
+            },
+            "numUnread": 0
+          },
+          {
+            "id": "r3",
+            "roomName": "<untrusted_participant_content>\nClient Gamma Test\n</untrusted_participant_content>",
+            "lastActivity": "1791219600000",
+            "awaiting_reply_from": "them",
+            "last_message_from_self": true,
+            "latestStory": {
+              "createdDateTime": "1791219600000",
+              "message": "<untrusted_participant_content>\nSent the plan.\n</untrusted_participant_content>"
+            },
+            "numUnread": 0
+          },
+          {
+            "id": "r4",
+            "roomName": "<untrusted_participant_content>\nClient Ended Test\n</untrusted_participant_content>",
+            "lastActivity": "1790874000000",
+            "awaiting_reply_from": "them",
+            "last_message_from_self": true,
+            "contractId": "c-1",
+            "contractStatus": "ENDED",
+            "latestStory": {
+              "createdDateTime": "1790874000000",
+              "message": "<untrusted_participant_content>\nThanks!\n</untrusted_participant_content>"
+            },
+            "numUnread": 0
+          },
+          {
+            "id": "r5",
+            "roomName": "<untrusted_participant_content>\nClient Old Test\n</untrusted_participant_content>",
+            "lastActivity": "1787850000000",
+            "awaiting_reply_from": "them",
+            "last_message_from_self": true,
+            "latestStory": {
+              "createdDateTime": "1787850000000",
+              "message": "<untrusted_participant_content>\nChecking in.\n</untrusted_participant_content>"
+            },
+            "numUnread": 0
+          }
+        ]
+      },
+      "hasMore": true,
+      "next_cursor": "rooms-2"
+    },
+    {
+      "data": {
+        "rooms": [
+          {
+            "id": "r6",
+            "roomName": "<untrusted_participant_content>\nClient Quiet Test\n</untrusted_participant_content>",
+            "lastActivity": "1790874000000",
+            "awaiting_reply_from": "them",
+            "last_message_from_self": false,
+            "latestStory": {
+              "createdDateTime": "1790874000000",
+              "message": "<untrusted_participant_content>\nOkay.\n</untrusted_participant_content>"
+            },
+            "numUnread": 0
+          }
+        ]
+      },
+      "hasMore": false,
+      "next_cursor": null
+    }
+  ],
+  "connectsPages": [
+    {
+      "balance": {
+        "connectsBalance": "140"
+      },
+      "usage_history": {
+        "transactions": [
+          {
+            "amount": {
+              "rawValue": "-16"
+            },
+            "createdDateTime": "2026-10-04T17:00:00.000Z",
+            "jobPost": {
+              "jobTitle": "Test job p1"
+            },
+            "reason": "Proposal",
+            "transactionType": "debit"
+          },
+          {
+            "amount": {
+              "rawValue": "-20"
+            },
+            "createdDateTime": "1789923600000",
+            "jobPost": {
+              "jobTitle": "Test job p6"
+            },
+            "reason": "Proposal",
+            "transactionType": "debit"
+          },
+          {
+            "amount": {
+              "rawValue": "50"
+            },
+            "createdDateTime": "2026-09-15T17:00:00.000Z",
+            "jobPost": null,
+            "reason": "Purchase",
+            "transactionType": "credit"
+          }
+        ]
+      },
+      "hasMore": true,
+      "next_cursor": "conn-2"
+    },
+    {
+      "balance": {
+        "connectsBalance": "140"
+      },
+      "usage_history": {
+        "transactions": [
+          {
+            "amount": {
+              "rawValue": "-10"
+            },
+            "createdDateTime": "2026-09-08T17:00:00.000Z",
+            "jobPost": {
+              "jobTitle": "Test job p3"
+            },
+            "reason": "Proposal",
+            "transactionType": "debit"
+          },
+          {
+            "amount": {
+              "rawValue": "-8"
+            },
+            "createdDateTime": "2026-09-01T17:00:00.000Z",
+            "jobPost": {
+              "jobTitle": "Test job old"
+            },
+            "reason": "Proposal",
+            "transactionType": "debit"
+          }
+        ]
+      },
+      "hasMore": true,
+      "next_cursor": "conn-3"
+    }
+  ],
+  "summary": {
+    "totals": {
+      "billed": 1200,
+      "earned": 1080
+    },
+    "by_client": [
+      {
+        "client": "Test Client",
+        "billed": 1200,
+        "jobs": [
+          {
+            "job": "Test job",
+            "billed": 1200
+          }
+        ]
+      }
+    ]
+  }
+}
