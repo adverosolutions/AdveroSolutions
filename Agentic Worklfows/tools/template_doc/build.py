@@ -38,11 +38,11 @@ of the export exactly once. Headings come from KEY_LABELS and friends when
 they know the key, else from the key itself.
 
 What the doc says about sending is doc_rules (DONE_SENTENCE, SENDING_SENTENCE,
-HELD_INTRO): the approved AI agents first replies go out on their own after
-"done" and "go live" (Grok sends them; the legacy engine's own first-reply
-send path stays locked, approval.py), the other first replies are drafts;
-other replies go out on their own only after a reply of his reached the lead,
-the Locked in booking confirmation excepted.
+HELD_INTRO and the section notes), Grok's allow list of 2026-10-06: only the
+main text of the five AI agents first replies, of E1 to E10 with their lines,
+and of the Locked in confirmation (after the GHL booking exists at exactly
+that time) send on their own; everything else is a draft. The legacy engine's
+own first-reply send path stays locked (approval.py).
 
 Before writing anything, the build reads every template back out of the
 doc's own text with doc_areas.DocReader (main text, subject, every version,
@@ -699,8 +699,8 @@ OFFER_WORDS = OrderedDict([("reactivation", "reactivation offers"), ("outbound",
 # key after the section name, a trailing niche and offer left off.
 KEY_LABELS = {
     "confirmation.zoom_link": ("Booking confirmation, with Zoom link",
-                               "When they pick a time that works, the call is booked and this goes out. Used when "
-                               "the call has a Zoom link."),
+                               "When they pick a time that works, once the call is booked in GoHighLevel at exactly "
+                               "that time. Used when the call has a Zoom link."),
     "confirmation.no_zoom_link": ("Booking confirmation, no Zoom link",
                                   "Same moment, when the call has no Zoom link yet (the calendar invite carries the "
                                   "video link)."),
@@ -985,9 +985,7 @@ for _offer in ordered(FIRST, [doc_rules.APPROVED_FIRST_REPLY_OFFER] + list(NICHE
 
 # ---- 3. Follow-up emails (cadence) and the lines spliced into them
 doc.section(1, "Follow-up emails")
-doc.note("For a lead who went quiet after your first reply, in the order below. The first goes out the business "
-         "day after your first reply; each one goes out at 10am Central on a business day, and they stop as soon "
-         "as the lead books, replies or asks to stop.")
+doc.note(doc_rules.CADENCE_NOTE)
 
 
 def cadence_heading(host):
@@ -1043,7 +1041,7 @@ for _tid in section_ids("booking"):
 # ---- 5. Show-rate
 _texts = any("sms" in re.split(r"[._]", t) for t in section_ids("show_rate") + section_ids("no_show"))
 doc.section(1, "Show-rate messages (before the call)")
-doc.note("These go to every lead with a call on your calendar, however they booked."
+doc.note(doc_rules.SHOW_RATE_NOTE
          + (" Texts only go out once your texting number is registered (A2P); until then they are skipped."
             if _texts else ""))
 for _tid in section_ids("show_rate"):
@@ -1051,7 +1049,7 @@ for _tid in section_ids("show_rate"):
 
 # ---- 6. No-show
 doc.section(1, "No-show recovery")
-doc.note("These start when a lead misses the call.")
+doc.note(doc_rules.NO_SHOW_NOTE)
 for _tid in section_ids("no_show"):
     place_template(doc, _tid, labelled(_tid)[0], [])
 
@@ -1073,7 +1071,7 @@ AFTER = [
     "you any line a send check would stop, for example an exclamation mark or a price that is not on your offer sheet.",
     "2. Nothing goes live until you tell Claude \"go live\".",
     "3. Only you can do these, whenever you have a minute: change the passwords and keys that were saved in the code, "
-    "register your texting number (A2P), and connect Zoom in GoHighLevel (optional; Google Meet works today).",
+    "and register your texting number (A2P).",
     "4. Say \"yes\" to Claude for any of these and Claude does them: create the Upwork pipeline in GoHighLevel, start "
     "the 8:30 Upwork morning drafts, and send test alerts to your phone during the test week.",
 ]

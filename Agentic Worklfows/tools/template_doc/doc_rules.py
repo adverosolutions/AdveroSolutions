@@ -13,9 +13,8 @@ from collections import OrderedDict
 # yes, "tell me more", "send me info", a booking link ask and a price question
 # (APPROVED_FIRST_REPLIES), which "done" approves. Only their MAIN text goes out
 # on its own once he also says "go live"; every version under them (no free
-# times, a time that works, a time that doesn't, a yes that names a time) comes
-# to him as a draft, and every booking.counter.* reply is held (Grok sends; the
-# legacy engine's own send
+# times, a time that works, a time that doesn't) comes to him as a draft
+# (Grok sends; the legacy engine's own send
 # path stays locked, approval.py FIRST_REPLY_LOCK_REASON). The older six
 # offers' first replies stay held until they are rewritten (2026-09-24: rebuilt
 # from his own replies). The AI agents referral and "other" replies are not
@@ -27,27 +26,43 @@ APPROVED_FIRST_REPLIES = tuple("first_reply.%s.%s.full" % (APPROVED_FIRST_REPLY_
                                for b in APPROVED_FIRST_REPLY_BRANCHES)
 HELD_INTRO = ("For the AI agents offer, once you say 'done' and then 'go live', the main text of the replies to a "
               "yes, 'tell me more', 'send me info', a booking link ask and a price question goes out on its own. "
-              "Every version under them (no free times, a time they asked for that works, a time that doesn't, a "
-              "yes that names a time) comes to you as a draft. A referral reply and any other question also come "
-              "to you as drafts. The first replies for the older six offers are not approved yet: they stay drafts "
-              "you write yourself until they are rewritten.")
+              "Their three versions (no free times, a time they asked for that works, a time they asked for that "
+              "doesn't) come to you as drafts, and so do a referral reply and any other question. The first "
+              "replies for the older six offers are not approved yet: they stay drafts you write yourself until "
+              "they are rewritten.")
 HELD_NOTE = "Not approved yet. This one stays a draft you write yourself until it is rewritten."
-# The top section's two sentences on approval and sending.
+# The top section's two sentences on approval and sending. Grok's gate is an
+# explicit allow list (agents/grokbot/onboarding/ask_opus.py, 2026-10-06):
+# only the main text of the five AI agents first replies, of E1 to E10 with
+# their lines, and of the Locked in confirmation (after the GHL booking exists
+# at exactly that time) send on their own; everything else is a draft.
 DONE_SENTENCE = ("When you say 'done', everything in this doc counts as approved, except the first replies marked "
                  "'Not approved yet'. Emails still only go out after you tell Claude 'go live'.")
-SENDING_SENTENCE = ("Approved does not mean every email goes out on its own. Only the main text of the five AI "
-                    "agents first replies (a yes, 'tell me more', 'send me info', a booking link ask and a price "
-                    "question) does, once you say 'done' and 'go live'. Their other versions, a referral reply, any "
-                    "other question and the older offers' first replies come to you as drafts, and every reply "
-                    "offering other times is held for you. The other replies to a lead go out on their own only "
-                    "after a reply of yours has reached that lead, except the Locked in booking confirmation. Every "
-                    "send check still applies.")
-# The booking section's note.
-BOOKING_NOTE = ("These answer a lead who writes back about a time for the call. Every reply offering other times "
-                "(the 'Other times' emails) is held and comes to you first, so you can book their time anyway or "
-                "send it. The Locked in booking confirmation can go out on its own right away. The others go out on "
-                "their own only after a reply of yours has reached the lead; before that they come to you as a "
-                "draft too.")
+SENDING_SENTENCE = ("Approved does not mean every email goes out on its own. Only these do, once you say 'done' and "
+                    "'go live': the main text of the five AI agents first replies (a yes, 'tell me more', 'send me "
+                    "info', a booking link ask and a price question); the main text of follow-up emails 1 to 10, "
+                    "with the lines picked for the lead's offer; and the main text of the Locked in booking "
+                    "confirmation, only after the call is booked in GoHighLevel at exactly the time they picked. "
+                    "Everything else comes to you as a draft: every other version of any email, every reply "
+                    "offering other times, the replies about a time that is already taken or a call that is already "
+                    "booked, the Locked in version for another time zone, the show-rate reminders and no-show emails "
+                    "(paused since October 5), any nurture email, and the older offers' first replies. Every send "
+                    "check still applies.")
+# The section notes.
+CADENCE_NOTE = ("For a lead who went quiet after your first reply, in the order below. The first goes out the "
+                "business day after your first reply; each one goes out at 10am Central on a business day, and they "
+                "stop as soon as the lead books, replies or asks to stop. The main text of each, with the line "
+                "picked for the lead's offer, goes out on its own after 'go live'; any other version comes to you "
+                "as a draft.")
+BOOKING_NOTE = ("These answer a lead who writes back about a time for the call. Only the main text of the Locked in "
+                "booking confirmation goes out on its own, and only after the call is booked in GoHighLevel at "
+                "exactly the time they picked. Everything else here comes to you as a draft: its version for "
+                "another time zone, every reply offering other times, and the replies about a time that is already "
+                "taken or a call that is already booked.")
+SHOW_RATE_NOTE = ("These are for every lead with a call on your calendar, however they booked. They are paused "
+                  "since October 5: each one comes to you as a draft, and none goes out on its own.")
+NO_SHOW_NOTE = ("These start when a lead misses the call. They are paused since October 5: each one comes to you "
+                "as a draft, and none goes out on its own.")
 
 
 def is_held(template_id):

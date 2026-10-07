@@ -546,20 +546,24 @@ def test_a_line_that_is_not_approvable_is_read_only_and_never_recorded(doc, fres
 
 
 def test_the_doc_says_how_approved_emails_are_sent(doc, plain):
-    """The approved AI agents first replies go out on their own after "done"
-    and "go live", the other first replies are drafts (2026-10-06); other
-    replies go out on their own only once a reply of his reached the lead,
-    the Locked in confirmation excepted. No line says approved emails simply
-    send."""
+    """Grok's allow list (2026-10-06): only the main text of the five AI agents
+    first replies, of E1 to E10 and of Locked in (after the GHL booking) go out
+    on their own; everything else comes to Lorenzo as a draft. No line says
+    approved emails simply send."""
     low = plain.lower()
     assert "send automatically" not in low and "sends automatically" not in low
-    assert doc_rules.SENDING_SENTENCE in plain and doc_rules.HELD_INTRO in plain and doc_rules.BOOKING_NOTE in plain
-    # only the main text of the five AI agents replies goes out on its own; their versions are drafts
-    assert "Only the main text of the five AI agents first replies" in plain
-    assert "Every version under them" in plain and "comes to you as a draft" in plain
-    assert "every reply offering other times is held" in plain
-    assert "veto" not in low
-    assert "only after a reply of yours has reached" in plain and "Locked in booking confirmation" in plain
+    for sentence in (doc_rules.SENDING_SENTENCE, doc_rules.HELD_INTRO, doc_rules.CADENCE_NOTE, doc_rules.BOOKING_NOTE,
+                     doc_rules.SHOW_RATE_NOTE, doc_rules.NO_SHOW_NOTE):
+        assert sentence in plain, sentence[:60]
+    # Grok's allow list (2026-10-06): main text of the five AI agents first replies, E1 to E10 and Locked in
+    # (after the GHL booking); everything else is a draft
+    assert "Only these do, once you say 'done' and 'go live'" in plain
+    assert "only after the call is booked in GoHighLevel at exactly the time they picked" in plain
+    assert "Everything else comes to you as a draft" in plain and "every reply offering other times" in plain
+    assert "Their three versions" in plain and "a yes that names a time" not in plain
+    assert "only after a reply of yours has reached" not in plain and "right away" not in plain
+    assert "veto" not in low and "connect zoom" not in low
+    assert "Locked in booking confirmation" in plain
 
 
 # ---------------------------------------------- lines outside block bodies
