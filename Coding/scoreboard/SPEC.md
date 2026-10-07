@@ -671,3 +671,82 @@ AdveroData.rebuild({ costs?, linkedinRows? }) -> Model   // linkedinRows replace
 - `today.waitingOnYou` also counts LinkedIn `reply_now` items.
 - The "Waiting on you" tile's sources gain `linkedin`.
 - The top bar shows a fifth source chip, "LinkedIn", whose freshness reads "Saved rows".
+
+---
+
+# Accuracy fixes (2026-10-07)
+
+Lorenzo reported wrong reply rates. A live diagnosis found the causes below. Where the spec above disagrees with this section, this section wins.
+
+## Cold email: rates follow his metric definitions
+
+The source is `~/.claude/skills/daily-reports-and-metrics/SKILL.md`, rule 6 and the KPI table: **real reply rate = unique_replies / emails sent**. Auto-replies are a separate bucket; never add or subtract them.
+
+| Rate | Formula (range) | Thresholds |
+|---|---|---|
+| `reply_rate` "Reply rate" | `reply_count_unique / emails_sent_count` | green ≥ 1.0%, alert < 1.0% |
+| `positive_rate` "Positive reply rate" | `total_opportunities / emails_sent_count` | green ≥ 0.7%, alert < 0.5%, watch between |
+| `bounce_rate` | unchanged: `bounced_count / emails_sent_count` | unchanged |
+| `positive_to_booked` | unchanged | unchanged |
+
+`prev` uses the same formulas on the previous range. Funnel steps are unchanged. The step conversion lines stay, because they are step-to-step and labelled as such.
+
+## Every rate says what it divides by
+
+`Rate` gains `basis: string`, a short plain phrase that the UI shows next to the target (for example "Target ≥ 1.0% · replies ÷ emails sent"):
+
+| Rate | `basis` |
+|---|---|
+| Cold email reply rate | "replies ÷ emails sent" |
+| Positive reply rate | "positive replies ÷ emails sent" |
+| Bounce rate | "bounces ÷ emails sent" |
+| Positive → booked | "calls booked ÷ positive replies" |
+| Upwork client reply rate | "proposals the client answered ÷ proposals sent" |
+| Hire rate | "hires ÷ proposals sent" |
+| Show rate | "showed ÷ (showed + no-show)" |
+| LinkedIn acceptance | "accepted ÷ requests sent 14+ days ago" |
+| LinkedIn reply rate | "replies ÷ Looms sent" |
+| LinkedIn positive rate | "positive replies ÷ Looms sent" |
+
+## Upwork: client replied
+
+Observed live on 2026-10-07:
+
+1. When a client answers a proposal, Upwork moves it to status **`Activated`** (status_label "Invitation accepted"). Proposals that were later hired are `Hired`, and some answered proposals later become `Archived`. The proposal fetch must also page **`Activated`** (max 3 pages, dedupe like the others).
+   - Status precedence for dedupe: Hired > Offered > Activated > Accepted / Archived / Declined / Withdrawn.
+2. `get_room` returns the room at **`payload.data.proposalRoom`**: `{ id: "room_…", createdAtDateTime: "2026-10-02T16:08:25+0000", roomType: "INTERVIEW", topic, roomName, … }`. Parse `data.proposalRoom.id`, and keep the old defensive paths as fallbacks. A missing room is still the NOT_FOUND tool_error.
+3. A proposal counts as **client replied** when any of these holds:
+   - its status is Activated, Offered or Hired (no `get_room` call needed for these)
+   - `get_room` returns a room
+   - the room cache holds a roomId
+
+   Only Accepted, Archived, Declined and Withdrawn proposals need a `get_room` check.
+4. **Cache reset.** Every cache doc written before this fix has `roomId: null` because of the parse bug. Docs now carry `v: 2`. Ignore any cached doc without `v: 2`, which makes it re-check. Write `v: 2` on every new write.
+5. `replied` on proposal rows and the funnel `replies` step use rule 3. The reply rate is `replies / proposals` in range, so proposals sent in the range are the denominator.
+
+## Tests
+
+Use synthetic fixtures that mirror the observed shapes. Cover:
+- an Activated proposal counts as replied with no `get_room` call
+- `data.proposalRoom.id` parsing
+- a cached null without `v:2` gets re-checked
+- the new cold email rate formulas and their states at the threshold edges
+- `basis` present on every rate
+
+## Upwork paging caps (added mid-round, 2026-10-07; revised after review)
+
+Observed live on 2026-10-07:
+- Upwork pages one merged stream of all his proposals, newest first, 10 upstream records a page. The connector removes records of other statuses after fetching (`filtered_note`).
+  - `status=Withdrawn` and `status=Archived` returned the same `next_cursor` on page 1. Withdrawn got 0 of 10 records and Archived got 4 of 10.
+  - Pages can therefore be empty, or nearly empty, while `hasMore` is true.
+- Some statuses are filtered upstream and end cleanly. `Activated` returned its 3 records with `hasMore: false`.
+- `totalCount` is not reliable: the connector says so in `count_note`.
+
+Rules, the same for all seven statuses:
+1. **Cap** = 12, 20 or 40 pages for a 7, 30 or 90-day range. Every status walks the same stream, so each needs the same depth.
+2. **Stop early** as soon as a page holds a proposal created before `prevStart`. The order is CREATEDDATETIME DESC, so nothing after that page can fall in either range.
+3. **Capped** means the cap was reached with `hasMore` true. Missed proposals can fall in range only when the **last page fetched held at least one proposal of that status**. They were all on or after `prevStart`, or rule 2 would have stopped the paging.
+   - An empty last page is the filtered tail, and so is a status that saw nothing at all. In that case: no cutoff, no warning, no nulls.
+4. **When capped with a non-empty last page:**
+   - **Accepted / Archived** (the denominator): cutoff = the oldest createdAt seen. Add "Upwork proposals before <date> did not load; counts for that period may be low." Null every value whose range starts before the cutoff.
+   - **Activated, Offered, Hired, Declined, Withdrawn:** add only "Some <status> proposals may not have loaded." Never null a value.

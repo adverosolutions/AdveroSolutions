@@ -435,3 +435,28 @@ uiTest("Add person onto a doc another tab saved is refused; Edit onto one says t
     assert.deepEqual([o.company, o.stage, o.accepted_date], ["Test Other Co", "Accepted", "2026-10-01"]);
   } finally { p.close(); }
 });
+
+uiTest("every rate shows what it divides by next to its target; the weekly card shows its bases", async () => {
+  const p = makePage({ hash: "#sample" });
+  try {
+    await wait(150);
+    const chans = p.d.querySelectorAll("#channels-grid .channel");
+    const targets = ch => [...ch.querySelectorAll(".rate__target")].map(text);
+    assert.deepEqual(targets(chans[0]), ["Target ≥ 1.0% · replies ÷ emails sent", "Target ≥ 0.7% · positive replies ÷ emails sent",
+      "Target ≤ 1.0% · bounces ÷ emails sent", "Target ≥ 50% · calls booked ÷ positive replies"]);
+    assert.deepEqual([...chans[0].querySelectorAll(".rate__label")].map(text).slice(0, 2), ["Reply rate", "Positive reply rate"]);
+    assert.deepEqual([...chans[0].querySelectorAll(".rate__value")].map(text).slice(0, 2), ["0.50%", "0.21%"], "21 and 9 of 4,210 emails sent");
+    assert.deepEqual(targets(chans[1]), ["Target ≥ 15% · proposals the client answered ÷ proposals sent", "hires ÷ proposals sent"]);
+    assert.deepEqual(targets(chans[2]), ["Target ≥ 30% (alert under 15%) · accepted ÷ requests sent 14+ days ago", "replies ÷ Looms sent",
+      "replies ÷ Looms sent", "positive replies ÷ Looms sent"]);
+    const week = p.q(".li-week");
+    assert.equal(text(week.querySelector(".li-week__basis")), "Reply rate: replies ÷ Looms sent · Positive: positive replies ÷ Looms sent");
+    const acc = [...week.querySelectorAll(".li-stat")].find(x => /^Acceptance/.test(text(x.querySelector("dt"))));
+    assert.equal(text(acc.querySelector(".li-stat__foot")), "Target ≥ 30% · accepted ÷ requests sent 14+ days ago");
+    const showBases = [...p.d.querySelectorAll(".rate-basis")].map(text);
+    assert.ok(showBases.length >= 1, "the show rate's basis is visible text, not a tooltip");
+    assert.ok(showBases.every(t => t === "Target ≥ 90% · showed ÷ (showed + no-show)"));
+    assert.equal(p.d.querySelectorAll(".state[title]").length, 0);
+    assert.deepEqual(p.errors, []);
+  } finally { p.close(); }
+});

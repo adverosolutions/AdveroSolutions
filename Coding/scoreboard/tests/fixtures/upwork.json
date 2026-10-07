@@ -198,6 +198,85 @@
                     "status_label": "Submitted"
                   }
                 }
+              },
+              {
+                "node": {
+                  "id": "p11",
+                  "boosted": false,
+                  "auditDetails": {
+                    "createdDateTime": {
+                      "rawValue": "1790780400000"
+                    }
+                  },
+                  "marketplaceJobPosting": {
+                    "id": "job-p11",
+                    "content": {
+                      "title": "Test job p11"
+                    },
+                    "url": "https://www.upwork.com/jobs/~testp11"
+                  },
+                  "status": {
+                    "status": "Active",
+                    "status_label": "Archived"
+                  }
+                }
+              }
+            ],
+            "totalCount": 3
+          }
+        },
+        "hasMore": false,
+        "next_cursor": null
+      }
+    ],
+    "Activated": [
+      {
+        "data": {
+          "vendorProposals": {
+            "edges": [
+              {
+                "node": {
+                  "id": "p10",
+                  "boosted": false,
+                  "auditDetails": {
+                    "createdDateTime": {
+                      "rawValue": "1790607600000"
+                    }
+                  },
+                  "marketplaceJobPosting": {
+                    "id": "job-p10",
+                    "content": {
+                      "title": "Test job p10"
+                    },
+                    "url": "https://www.upwork.com/jobs/~testp10"
+                  },
+                  "status": {
+                    "status": "Active",
+                    "status_label": "Invitation accepted"
+                  }
+                }
+              },
+              {
+                "node": {
+                  "id": "p12",
+                  "boosted": false,
+                  "auditDetails": {
+                    "createdDateTime": {
+                      "rawValue": "1787670000000"
+                    }
+                  },
+                  "marketplaceJobPosting": {
+                    "id": "job-p12",
+                    "content": {
+                      "title": "Test job p12"
+                    },
+                    "url": "https://www.upwork.com/jobs/~testp12"
+                  },
+                  "status": {
+                    "status": "Active",
+                    "status_label": "Invitation accepted"
+                  }
+                }
               }
             ],
             "totalCount": 2
@@ -342,7 +421,29 @@
     "p8": {
       "id": "room-8"
     },
-    "p4": "NOT_FOUND"
+    "p4": "NOT_FOUND",
+    "p11": {
+      "data": {
+        "proposalRoom": {
+          "id": "room_p11test",
+          "createdAtDateTime": "2026-10-02T16:08:25+0000",
+          "roomType": "INTERVIEW",
+          "topic": "Test job p11",
+          "roomName": "Test Client Eleven"
+        }
+      }
+    },
+    "p10": {
+      "data": {
+        "proposalRoom": {
+          "id": "room_p10test",
+          "createdAtDateTime": "2026-09-29T16:08:25+0000",
+          "roomType": "INTERVIEW",
+          "topic": "Test job p10",
+          "roomName": "Test Client Ten"
+        }
+      }
+    }
   },
   "roomsPages": [
     {

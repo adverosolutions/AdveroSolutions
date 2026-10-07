@@ -243,9 +243,11 @@ test("Instantly funnel, rates and threshold states", async () => {
   ]);
   const r = Object.fromEntries(cold.rates.map(x => [x.key, x]));
   assert.deepEqual(Object.keys(r), ["reply_rate", "positive_rate", "bounce_rate", "positive_to_booked"]);
-  assert.equal(r.reply_rate.value, 0.015); assert.equal(r.reply_rate.state, "green"); assert.equal(r.reply_rate.target, "≥ 1.0%");
-  assert.equal(r.reply_rate.prev, 12 / 1600);
-  assert.equal(r.positive_rate.value, 0.006); assert.equal(r.positive_rate.state, "watch");
+  // replies and positive replies divide by emails sent (Lorenzo's metric definitions), not new leads reached
+  assert.equal(r.reply_rate.value, 30 / 5000); assert.equal(r.reply_rate.state, "alert"); assert.equal(r.reply_rate.target, "≥ 1.0%");
+  assert.equal(r.reply_rate.prev, 12 / 4000);
+  assert.equal(r.positive_rate.label, "Positive reply rate");
+  assert.equal(r.positive_rate.value, 12 / 5000); assert.equal(r.positive_rate.state, "alert"); assert.equal(r.positive_rate.prev, 6 / 4000);
   assert.equal(r.bounce_rate.value, 0.008); assert.equal(r.bounce_rate.state, "green"); assert.equal(r.bounce_rate.prev, 0.025);
   assert.equal(r.positive_to_booked.value, 0.5); assert.equal(r.positive_to_booked.state, "green");
   for (const x of cold.rates) assert.equal(x.format, "pct");
@@ -350,19 +352,24 @@ test("Upwork proposal paging: empty pages, early stop, page caps, dedupe, range 
   }
   assert.ok(!("cursor" in by("Accepted")[0].input.params));
   const ids = raw.upwork.data.proposals.map(p => p.id).sort();
-  assert.deepEqual(ids, ["p1", "p2", "p3", "p4", "p6", "p7", "p8"], "p2 deduped; p5 and p9 outside both ranges");
+  assert.deepEqual(ids, ["p1", "p10", "p11", "p12", "p2", "p3", "p4", "p6", "p7", "p8"], "p2 deduped; p5 and p9 outside both ranges");
+  assert.equal(by("Activated").length, 1, "Activated is paged too");
+  assert.equal(raw.upwork.data.cutoffMs, null, "every status reached past prevStart or ran out of pages");
+  assert.deepEqual(raw.upwork.warnings, []);
 
-  // caps: a status that pages forever with empty pages
+  // caps: every status pages forever with empty pages (the filtered tail of the shared stream)
   const endless = fakeMcp((server, tool, input) => {
     if (input.action === "list") return { payload: { data: { vendorProposals: { edges: [] } }, hasMore: true, next_cursor: "c" + Math.random() } };
     if (tool === "upwork__get_messages") return { payload: { data: { rooms: [] }, hasMore: true, next_cursor: "r" + Math.random() } };
     if (input.action === "connects_balance") return { payload: { balance: { connectsBalance: 1 }, usage_history: { transactions: [] }, hasMore: true, next_cursor: "k" + Math.random() } };
     return { payload: { totals: { billed: 0 } } };
   });
-  await X.fetchUpwork(X.makeCaller({ mcp: endless, serverKey: "upwork", sleep: noSleep }), R30, { db: null, user: null, nowMs: NOW });
+  const endlessOut = await X.fetchUpwork(X.makeCaller({ mcp: endless, serverKey: "upwork", sleep: noSleep }), R30, { db: null, user: null, nowMs: NOW });
   const el = callsTo(endless, "Upwork", "upwork__list_freelancer_proposals");
   const count = s => el.filter(c => c.input.params.status === s).length;
-  assert.deepEqual(["Accepted", "Archived", "Offered", "Hired", "Declined", "Withdrawn"].map(count), [12, 12, 3, 3, 3, 3]);
+  assert.deepEqual(["Accepted", "Archived", "Activated", "Offered", "Hired", "Declined", "Withdrawn"].map(count), [20, 20, 20, 20, 20, 20, 20]);
+  assert.equal(endlessOut.data.cutoffMs, null, "capped with empty last pages: the filtered tail, not missed data");
+  assert.deepEqual(endlessOut.warnings, []);
   assert.equal(callsTo(endless, "Upwork", "upwork__get_messages").length, 3);
   assert.equal(callsTo(endless, "Upwork", "upwork__get_freelancer_financials").filter(c => c.input.action === "connects_balance").length, 10);
 });
@@ -370,20 +377,22 @@ test("Upwork proposal paging: empty pages, early stop, page caps, dedupe, range 
 test("Upwork funnel, reply rate, series, proposal rows and extras", async () => {
   const { raw, mcp } = await fetchAll();
   const rooms = callsTo(mcp, "Upwork", "upwork__list_freelancer_proposals").filter(c => c.input.action === "get_room");
-  assert.deepEqual(rooms.map(c => c.input.params.proposal_id).sort(), ["p1", "p2", "p3", "p4", "p6", "p7", "p8"]);
+  // Activated (p10, p12), Offered (p7) and Hired (p8) count as replied without a get_room call
+  assert.deepEqual(rooms.map(c => c.input.params.proposal_id).sort(), ["p1", "p11", "p2", "p3", "p4", "p6"]);
   const m = D.buildModel(raw, CTX);
   const up = m.channels[1];
   assert.equal(up.key, "upwork");
-  assert.deepEqual(up.funnel.map(f => [f.key, f.value, f.prev]), [["proposals", 6, 1], ["replies", 4, 0], ["offers", 2, 0], ["hired", 1, 0]]);
-  assert.equal(up.rates[0].key, "reply_rate"); assert.equal(up.rates[0].value, 4 / 6); assert.equal(up.rates[0].state, "green");
-  assert.equal(up.rates[0].prev, 0);
+  assert.deepEqual(up.funnel.map(f => [f.key, f.value, f.prev]), [["proposals", 8, 2], ["replies", 6, 1], ["offers", 2, 0], ["hired", 1, 0]]);
+  assert.equal(up.rates[0].key, "reply_rate"); assert.equal(up.rates[0].value, 6 / 8); assert.equal(up.rates[0].state, "green");
+  assert.equal(up.rates[0].prev, 1 / 2);
   assert.equal(up.rates[1].key, "hire_rate"); assert.equal(up.rates[1].state, "info"); assert.equal(up.rates[1].target, null);
   assert.equal(up.series.cLabel, null);
   assert.equal(up.series.points.length, 30);
   assert.ok(up.series.points.every(p => !("c" in p)));
   const day = X.ymd(NOW - DAY);
   assert.deepEqual(up.series.points.find(p => p.date === day), { date: day, a: 1, b: 1 });
-  assert.deepEqual(m.proposals.map(p => [p.id, p.replied]), [["p1", true], ["p2", false], ["p7", true], ["p6", false], ["p8", true], ["p3", true]]);
+  assert.deepEqual(m.proposals.map(p => [p.id, p.replied]),
+    [["p1", true], ["p2", false], ["p11", true], ["p10", true], ["p7", true], ["p6", false], ["p8", true], ["p3", true]]);
   const p1 = m.proposals[0];
   assert.deepEqual(Object.keys(p1), ["id", "title", "url", "createdAt", "statusLabel", "reason", "boosted", "connectsBid", "replied"]);
   assert.equal(p1.boosted, true); assert.equal(p1.connectsBid, 30); assert.equal(p1.createdAt, NOW - DAY);
@@ -391,7 +400,7 @@ test("Upwork funnel, reply rate, series, proposal rows and extras", async () => 
   assert.deepEqual(up.extras, [
     { label: "Connects balance", value: "140" },
     { label: "Connects spent", value: "46 ($6.90)" },
-    { label: "Boosted proposals", value: "17% (1 of 6)" },
+    { label: "Boosted proposals", value: "13% (1 of 8)" },
     { label: "Billed in range", value: "$1,200.00" }
   ]);
   assert.equal(m.today.revenue.upworkBilled, 1200);
@@ -421,10 +430,10 @@ test("connects spent counts only negative transactions inside the range", async 
 test("room cache: found is permanent, null rechecks after 12 h only for proposals under 30 days", async () => {
   const day5 = NOW - 5 * DAY, day40 = NOW - 40 * DAY;
   const db = fakeDb({
-    "upworkRooms/a": { roomId: "room-a", checkedAt: NOW - 39 * DAY },          // found long ago: never re-check
-    "upworkRooms/b": { roomId: null, checkedAt: NOW - 13 * H },                 // stale null, young proposal: re-check
-    "upworkRooms/c": { roomId: null, checkedAt: NOW - 2 * H },                  // fresh null: trust it
-    "upworkRooms/d": { roomId: null, checkedAt: NOW - 13 * H }                  // stale null, old proposal: trust it
+    "upworkRooms/a": { roomId: "room-a", checkedAt: NOW - 39 * DAY, v: 2 },    // found long ago: never re-check
+    "upworkRooms/b": { roomId: null, checkedAt: NOW - 13 * H, v: 2 },           // stale null, young proposal: re-check
+    "upworkRooms/c": { roomId: null, checkedAt: NOW - 2 * H, v: 2 },            // fresh null: trust it
+    "upworkRooms/d": { roomId: null, checkedAt: NOW - 13 * H, v: 2 }            // stale null, old proposal: trust it
   });
   const mcp = fakeMcp((s, t, input) => {
     const id = input.params.proposal_id;
@@ -441,12 +450,12 @@ test("room cache: found is permanent, null rechecks after 12 h only for proposal
   assert.deepEqual(mcp.calls.map(c => c.input.params.proposal_id).sort(), ["b", "e", "f"]);
   assert.deepEqual(["a", "b", "c", "d", "e", "f"].map(id => res.replied.get(id)), [true, true, false, false, false, null]);
   assert.deepEqual(db.writes.map(w => w.path).sort(), ["upworkRooms/b", "upworkRooms/e"], "writes only real check results; failed check is not written");
-  assert.deepEqual(db.writes.find(w => w.path === "upworkRooms/b").body, { roomId: "room-b", checkedAt: NOW });
-  assert.deepEqual(db.writes.find(w => w.path === "upworkRooms/e").body, { roomId: null, checkedAt: NOW });
+  assert.deepEqual(db.writes.find(w => w.path === "upworkRooms/b").body, { roomId: "room-b", checkedAt: NOW, v: 2 });
+  assert.deepEqual(db.writes.find(w => w.path === "upworkRooms/e").body, { roomId: null, checkedAt: NOW, v: 2 });
   assert.equal(res.warnings.length, 1);
   assert.match(res.warnings[0], /1 proposal/);
-  assert.deepEqual(X.roomCacheVerdict({ roomId: null, checkedAt: NOW - 11 * H }, day5, NOW), { use: true, roomId: null });
-  assert.deepEqual(X.roomCacheVerdict({ roomId: null, checkedAt: NOW - 13 * H }, day5, NOW), { use: false });
+  assert.deepEqual(X.roomCacheVerdict({ roomId: null, checkedAt: NOW - 11 * H, v: 2 }, day5, NOW), { use: true, roomId: null });
+  assert.deepEqual(X.roomCacheVerdict({ roomId: null, checkedAt: NOW - 13 * H, v: 2 }, day5, NOW), { use: false });
 });
 
 test("room cache: no writes when the viewer cannot write; memory cache without db", async () => {
@@ -831,6 +840,7 @@ test("alerts", async () => {
   const { raw } = await fetchAll();
   let m = D.buildModel(raw, CTX);
   assert.deepEqual(m.today.alerts.map(a => [a.id, a.severity, a.text]), [
+    ["cold_reply_rate", "warning", "Cold email reply rate is 0.6% (target ≥ 1.0%)."],
     ["stale_deals", "warning", "2 deals are stale"],
     ["overdue_tasks", "warning", "1 task is overdue"]
   ]);
@@ -838,7 +848,7 @@ test("alerts", async () => {
   const r2 = clone(raw);
   r2.instantly.data.daily = [];
   r2.instantly.data.overview.bounced_count = 150;     // 3% → alert
-  r2.instantly.data.overview.reply_count_unique = 10; // 0.5% → alert
+  r2.instantly.data.overview.reply_count_unique = 10; // 0.2% of emails sent → alert
   r2.upwork.data.proposals.forEach(p => { p.replied = false; });
   r2.instantly.data.leadsInterested = []; r2.instantly.data.leadsBooked = [];
   m = D.buildModel(r2, CTX);
@@ -874,7 +884,7 @@ test("B1: room cache read filters on the oldest proposal's createdAt, newest che
   // 1100 found-room docs; id order runs oldest to newest, so an unordered (id-ascending) read would keep the oldest 1000
   for (let i = 0; i < 1100; i++) {
     const id = "a" + String(i).padStart(4, "0");
-    initial["upworkRooms/" + id] = { roomId: "room-" + id, checkedAt: NOW - 24 * DAY + i * 60000 };
+    initial["upworkRooms/" + id] = { roomId: "room-" + id, checkedAt: NOW - 24 * DAY + i * 60000, v: 2 };
   }
   const db = fakeDb(initial);
   const mcp = fakeMcp((s, t, input) => ({ payload: { room: { id: "room-" + input.params.proposal_id } } }));
@@ -1081,7 +1091,7 @@ test("a: a stalled db never blocks the sources; costs race a timeout and arrive 
   assert.deepEqual(counts.filter((c, i) => i === 0 || c !== counts[i - 1]), [0, 1, 2, 3, 4]);
   assert.equal(updates.length, 6);
   assert.deepEqual([final.sources.linkedin.state, final.sources.linkedin.error.code], ["error", "timeout"]);
-  assert.equal(final.channels[1].funnel[1].value, 4, "room checks ran without the cache");
+  assert.equal(final.channels[1].funnel[1].value, 6, "room checks ran without the cache");
 
   // slow costs: load resolves on defaults, then one more update carries the real costs
   const slow = fakeDb({ "settings/costs": { upwork: 30, cold_email: 300, linkedin: 0 } });
@@ -1146,8 +1156,9 @@ test("g: after a rejected room-cache write, no more writes in that load", async 
 });
 
 test("h: dedupe keeps the most advanced status", async () => {
-  const pages = { Accepted: [node("q1", NOW - DAY), node("q3", NOW - DAY)], Archived: [node("q2", NOW - 2 * DAY)], Offered: [node("q2", NOW - 2 * DAY)],
-    Hired: [node("q1", NOW - DAY)], Declined: [], Withdrawn: [node("q3", NOW - DAY)] };
+  const pages = { Accepted: [node("q1", NOW - DAY), node("q3", NOW - DAY), node("q4", NOW - DAY)], Archived: [node("q2", NOW - 2 * DAY)],
+    Activated: [node("q1", NOW - DAY), node("q2", NOW - 2 * DAY), node("q4", NOW - DAY)], Offered: [node("q2", NOW - 2 * DAY)],
+    Hired: [node("q1", NOW - DAY)], Declined: [], Withdrawn: [node("q3", NOW - DAY), node("q4", NOW - DAY)] };
   const mcp = fakeMcp((s, tool, input) => {
     if (input.action === "list") return { payload: page(pages[input.params.status]) };
     if (input.action === "get_room") throw notFound();
@@ -1157,9 +1168,9 @@ test("h: dedupe keeps the most advanced status", async () => {
   });
   const out = await X.fetchUpwork(X.makeCaller({ mcp, serverKey: "upwork", sleep: noSleep }), R30, { db: null, user: null, nowMs: NOW });
   const by = Object.fromEntries(out.data.proposals.map(p => [p.id, p.bucket]));
-  assert.deepEqual(by, { q1: "Hired", q2: "Offered", q3: "Accepted" });
+  assert.deepEqual(by, { q1: "Hired", q2: "Offered", q3: "Accepted", q4: "Activated" });
   const u = X.deriveUpwork(out.data, R30, NOW);
-  assert.deepEqual(u.funnel.map(f => f.value), [3, 0, 2, 1]);
+  assert.deepEqual(u.funnel.map(f => f.value), [4, 3, 2, 1], "Hired, Offered and Activated count as replied; q3's room is NOT_FOUND");
 });
 
 test("i: a throw while deriving one source becomes that source's error and never rejects load", async () => {
@@ -1194,14 +1205,14 @@ test("j: Upwork nudge window is 2 to 30 days inclusive", () => {
 });
 
 test("j: a stale null re-checked to null again writes only the new checkedAt", async () => {
-  const db = fakeDb({ "upworkRooms/n1": { roomId: null, checkedAt: NOW - 13 * H } });
+  const db = fakeDb({ "upworkRooms/n1": { roomId: null, checkedAt: NOW - 13 * H, v: 2 } });
   const mcp = fakeMcp(() => { throw notFound(); });
   const res = await X.checkRooms([{ id: "n1", createdAt: NOW - 3 * DAY }], X.makeCaller({ mcp, serverKey: "upwork", sleep: noSleep }),
     { db, user: { can: async () => true }, nowMs: NOW, R: R30 });
   assert.equal(mcp.calls.length, 1);
   assert.equal(res.replied.get("n1"), false);
-  assert.deepEqual(db.writes, [{ path: "upworkRooms/n1", body: { checkedAt: NOW }, op: "update" }]);
-  assert.deepEqual(db.docs.get("upworkRooms/n1"), { roomId: null, checkedAt: NOW });
+  assert.deepEqual(db.writes, [{ path: "upworkRooms/n1", body: { checkedAt: NOW, v: 2 }, op: "update" }]);
+  assert.deepEqual(db.docs.get("upworkRooms/n1"), { roomId: null, checkedAt: NOW, v: 2 });
 });
 
 // ------------------------------------------------------------------ piece 2: LinkedIn tracker
@@ -1916,4 +1927,315 @@ test("saveMany never overwrites a row changed after the import's basis: newer st
   D.rebuild({ linkedinRows: prepared.concat([Object.assign(row("test-d"), { id: "test-d", updatedAt: 7 })]) });
   const res3 = await LI.saveMany(db2, [row("test-d", { company: "Test D Co" }), row("test-e")], { existing: prepared, now: 21 });
   assert.deepEqual([res3.written, res3.conflicts, res3.saved.map(r => r.id)], [1, ["test-d"], ["test-e"]]);
+});
+
+// ------------------------------------------------------------------ accuracy fixes 2026-10-07
+
+const upworkRoute = (pages, onRoom, extra) => (s, tool, input) => {
+  if (extra) { const o = extra(s, tool, input); if (o !== undefined) return o; }
+  if (input.action === "list") {
+    const st = pages[input.params.status];
+    return { payload: typeof st === "function" ? st(input.params.cursor) : page(st || []) };
+  }
+  if (input.action === "get_room") return onRoom(input.params.proposal_id);
+  if (tool === "upwork__get_messages") return { payload: { data: { rooms: [] } } };
+  if (input.action === "connects_balance") return { payload: { balance: { connectsBalance: 0 }, usage_history: { transactions: [] } } };
+  return { payload: { totals: { billed: 0 } } };
+};
+const proposalRoom = id => ({ payload: { data: { proposalRoom: { id, createdAtDateTime: "2026-10-02T16:08:25+0000", roomType: "INTERVIEW",
+  topic: "Test topic", roomName: "Test Client" } } } });
+
+test("an Activated proposal counts as client replied with no get_room call", async () => {
+  const pages = { Activated: [node("act1", NOW - 2 * DAY)], Accepted: [node("acc1", NOW - 3 * DAY)] };
+  const asked = [];
+  const mcp = fakeMcp(upworkRoute(pages, id => { asked.push(id); if (id === "acc1") throw notFound(); throw mcpError("tool_error", "get_room for " + id); }));
+  const out = await X.fetchUpwork(X.makeCaller({ mcp, serverKey: "upwork", sleep: noSleep }), R30, { db: null, user: null, nowMs: NOW });
+  assert.deepEqual(asked, ["acc1"], "only the Accepted proposal is checked");
+  assert.deepEqual(out.data.proposals.map(p => [p.id, p.bucket, p.replied]).sort(), [["acc1", "Accepted", false], ["act1", "Activated", true]]);
+  assert.deepEqual(out.warnings, []);
+  const u = X.deriveUpwork(out.data, R30, NOW);
+  assert.deepEqual(u.funnel.map(f => f.value), [2, 1, 0, 0]);
+  assert.equal(u.rates[0].value, 0.5);
+});
+
+test("get_room: data.proposalRoom.id is the room; the old shapes still parse; NOT_FOUND is no room", async () => {
+  assert.equal(X.extractRoomId(proposalRoom("room_test123").payload), "room_test123");
+  assert.equal(X.extractRoomId({ room: { id: "room-old" } }), "room-old");
+  assert.equal(X.extractRoomId({ data: { room: { id: "room-old2" } } }), "room-old2");
+  assert.equal(X.extractRoomId({ data: {} }), null);
+  const pages = { Archived: [node("arc1", NOW - 4 * DAY), node("arc2", NOW - 5 * DAY)] };
+  const mcp = fakeMcp(upworkRoute(pages, id => { if (id === "arc1") return proposalRoom("room_arc1"); throw notFound(); }));
+  const db = fakeDb({});
+  const out = await X.fetchUpwork(X.makeCaller({ mcp, serverKey: "upwork", sleep: noSleep }), R30, { db, user: { can: async () => true }, nowMs: NOW });
+  assert.deepEqual(out.data.proposals.map(p => [p.id, p.replied]), [["arc1", true], ["arc2", false]]);
+  assert.deepEqual(db.docs.get("upworkRooms/arc1"), { roomId: "room_arc1", checkedAt: NOW, v: 2 });
+});
+
+test("room cache: a doc without v 2 is re-checked and rewritten with v 2; a v 2 doc with a roomId is used as-is", async () => {
+  const db = fakeDb({
+    "upworkRooms/old1": { roomId: null, checkedAt: NOW - H },                     // written under the parse bug: ignore
+    "upworkRooms/old2": { roomId: "room-stale", checkedAt: NOW - H },             // no v either: ignore
+    "upworkRooms/new1": { roomId: "room_new1", checkedAt: NOW - 20 * DAY, v: 2 }, // trusted
+    "upworkRooms/new2": { roomId: null, checkedAt: NOW - H, v: 2 }                // fresh v 2 null: trusted
+  });
+  const asked = [];
+  const mcp = fakeMcp((s, t, input) => {
+    const id = input.params.proposal_id;
+    asked.push(id);
+    if (id === "old1") return proposalRoom("room_old1");
+    if (id === "old2") throw notFound();
+    throw mcpError("tool_error", "unexpected get_room for " + id);
+  });
+  const props = ["old1", "old2", "new1", "new2"].map(id => ({ id, createdAt: NOW - 25 * DAY }));
+  const res = await X.checkRooms(props, X.makeCaller({ mcp, serverKey: "upwork", sleep: noSleep }), { db, user: { can: async () => true }, nowMs: NOW, R: R30 });
+  assert.deepEqual(asked.sort(), ["old1", "old2"]);
+  assert.deepEqual(props.map(p => res.replied.get(p.id)), [true, false, true, false]);
+  assert.deepEqual(db.writes.map(w => [w.path, w.op, w.body]).sort(), [
+    ["upworkRooms/old1", "set", { roomId: "room_old1", checkedAt: NOW, v: 2 }],
+    ["upworkRooms/old2", "set", { roomId: null, checkedAt: NOW, v: 2 }]
+  ]);
+  assert.deepEqual(X.roomCacheVerdict({ roomId: null, checkedAt: NOW - H }, NOW - DAY, NOW), { use: false });
+  assert.deepEqual(X.roomCacheVerdict({ roomId: "room_x", checkedAt: NOW - 50 * DAY, v: 2 }, NOW - 60 * DAY, NOW), { use: true, roomId: "room_x" });
+  assert.deepEqual(X.roomCacheVerdict({ roomId: "room_x", checkedAt: NOW, v: 1 }, NOW - DAY, NOW), { use: false });
+});
+
+/** The Instantly fixture with its overview numbers replaced. */
+async function coldWith(cur, prev) {
+  const I = fx("instantly");
+  const route = fixtureRouter((server, tool, input) => {
+    if (tool !== "analytics_campaign_overview") return undefined;
+    return { payload: Object.assign({}, input.start_date === R30.start ? I.overview : I.overviewPrev, input.start_date === R30.start ? cur : prev) };
+  });
+  const { raw } = await fetchAll(route);
+  return Object.fromEntries(D.buildModel(raw, CTX).channels[0].rates.map(r => [r.key, r]));
+}
+
+test("cold email reply and positive rates divide by emails sent, with their threshold edges", async () => {
+  // the live numbers Lorenzo sees (30 days to 2026-10-06): 4293 sent, 30 unique replies, 4 opportunities
+  let r = await coldWith({ emails_sent_count: 4293, reply_count_unique: 30, total_opportunities: 4, new_leads_contacted_count: 1500 },
+    { emails_sent_count: 2000, reply_count_unique: 25, total_opportunities: 14, new_leads_contacted_count: 900 });
+  assert.equal(r.reply_rate.value, 30 / 4293); assert.equal(r.reply_rate.state, "alert");
+  assert.equal(r.positive_rate.value, 4 / 4293); assert.equal(r.positive_rate.state, "alert");
+  assert.equal((r.reply_rate.value * 100).toFixed(2), "0.70"); assert.equal((r.positive_rate.value * 100).toFixed(2), "0.09");
+  assert.equal(r.reply_rate.prev, 25 / 2000, "prev uses emails sent too");
+  assert.equal(r.positive_rate.prev, 14 / 2000);
+  // reply rate: green at exactly 1.0%, alert just under (no watch band)
+  r = await coldWith({ emails_sent_count: 1000, reply_count_unique: 10, total_opportunities: 7 }, {});
+  assert.deepEqual([r.reply_rate.value, r.reply_rate.state], [0.01, "green"]);
+  assert.deepEqual([r.positive_rate.value, r.positive_rate.state], [0.007, "green"]);
+  r = await coldWith({ emails_sent_count: 10000, reply_count_unique: 99, total_opportunities: 50 }, {});
+  assert.deepEqual([r.reply_rate.state, r.positive_rate.state], ["alert", "watch"], "0.99% replies; positive exactly 0.5% is watch");
+  r = await coldWith({ emails_sent_count: 10000, reply_count_unique: 100, total_opportunities: 69 }, {});
+  assert.deepEqual([r.reply_rate.state, r.positive_rate.state], ["green", "watch"], "positive 0.69% is watch");
+  r = await coldWith({ emails_sent_count: 10000, reply_count_unique: 100, total_opportunities: 49 }, {});
+  assert.equal(r.positive_rate.state, "alert", "positive 0.49% is alert");
+  // nothing sent: no rate, whatever new_leads_contacted_count says
+  r = await coldWith({ emails_sent_count: 0, reply_count_unique: 3, total_opportunities: 1, new_leads_contacted_count: 50 }, {});
+  assert.deepEqual([r.reply_rate.value, r.reply_rate.state, r.positive_rate.value], [null, "no_data", null]);
+});
+
+test("every rate in the model carries its basis, loaded or empty", async () => {
+  const EXPECT = {
+    cold_email: { reply_rate: "replies ÷ emails sent", positive_rate: "positive replies ÷ emails sent",
+      bounce_rate: "bounces ÷ emails sent", positive_to_booked: "calls booked ÷ positive replies" },
+    upwork: { reply_rate: "proposals the client answered ÷ proposals sent", hire_rate: "hires ÷ proposals sent" },
+    linkedin: { acceptance: "accepted ÷ requests sent 14+ days ago", reply_rate_a: "replies ÷ Looms sent",
+      reply_rate_b: "replies ÷ Looms sent", positive_rate: "positive replies ÷ Looms sent" }
+  };
+  const check = (m, why) => {
+    for (const ch of m.channels) {
+      assert.deepEqual(Object.fromEntries(ch.rates.map(r => [r.key, r.basis])), EXPECT[ch.key], why + ": " + ch.key);
+    }
+    assert.equal(m.pipeline.calls.showRate.basis, "showed ÷ (showed + no-show)", why + ": show rate");
+    const w = m.linkedin.weekly;
+    assert.equal(w.acceptance.basis, "accepted ÷ requests sent 14+ days ago", why + ": weekly acceptance");
+    for (const v of ["A", "B"]) {
+      assert.equal(w.replyRate[v].basis, "replies ÷ Looms sent", why + ": weekly reply " + v);
+      assert.equal(w.positiveRate[v].basis, "positive replies ÷ Looms sent", why + ": weekly positive " + v);
+    }
+  };
+  const { raw } = await fetchAll();
+  raw.linkedin = liRaw(liFx());
+  const full = D.buildModel(raw, CTX);
+  assert.equal(full.sources.ghl.state, "ok");
+  check(full, "loaded");
+  check(D.buildModel({}, CTX), "empty");
+  assert.equal(full.channels[0].rates.find(r => r.key === "positive_rate").label, "Positive reply rate");
+});
+
+/** Accepted pages forever, one proposal per page, `stepDays` apart starting a day ago; every other status is empty. */
+function cappedAccepted(stepDays) {
+  let n = 0;
+  return () => {
+    const i = n++;
+    return { data: { vendorProposals: { edges: [{ node: node("cap" + i, NOW - DAY - i * stepDays * DAY) }] } }, hasMore: true, next_cursor: "cur" + (i + 1) };
+  };
+}
+const dayLabel = ms => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", year: "numeric" }).format(new Date(ms));
+
+test("Upwork page caps scale with the range: 12, 20 and 40 pages for every status", async () => {
+  for (const [days, cap] of [[7, 12], [30, 20], [90, 40]]) {
+    const mcp = fakeMcp(upworkRoute({}, () => { throw notFound(); }, (s, tool, input) => (input.action === "list"
+      ? { payload: { data: { vendorProposals: { edges: [] } }, hasMore: true, next_cursor: "c" + Math.random() } } : undefined)));
+    await X.fetchUpwork(X.makeCaller({ mcp, serverKey: "upwork", sleep: noSleep }), X.rangeFor(NOW, days), { db: null, user: null, nowMs: NOW });
+    const list = callsTo(mcp, "Upwork", "upwork__list_freelancer_proposals").filter(c => c.input.action === "list");
+    const count = st => list.filter(c => c.input.params.status === st).length;
+    assert.deepEqual(["Accepted", "Archived", "Activated", "Offered", "Hired", "Declined", "Withdrawn"].map(count), [cap, cap, cap, cap, cap, cap, cap], days + " days");
+  }
+});
+
+test("Upwork paging cut off inside the previous range: a warning, prev values n/a, current values kept", async () => {
+  // 20 pages at 2.5 days apart: the oldest seen is 48.5 days back, inside the previous range (31 to 60 days back)
+  const mcp = fakeMcp(upworkRoute({ Accepted: cappedAccepted(2.5) }, () => { throw notFound(); }));
+  const out = await X.fetchUpwork(X.makeCaller({ mcp, serverKey: "upwork", sleep: noSleep }), R30, { db: null, user: null, nowMs: NOW });
+  const cutoff = NOW - DAY - 19 * 2.5 * DAY;
+  assert.ok(cutoff >= R30.prevStartMs && cutoff < R30.startMs);
+  assert.equal(out.data.cutoffMs, cutoff);
+  assert.deepEqual(out.warnings, [`Upwork proposals before ${dayLabel(cutoff)} did not load; counts for that period may be low.`]);
+  const raw = { upwork: Object.assign(ok(out.data), { warnings: out.warnings }) };
+  const up = D.buildModel(raw, CTX).channels[1];
+  const inCur = out.data.proposals.filter(p => p.createdAt >= R30.startMs).length;
+  assert.deepEqual(up.funnel.map(f => [f.key, f.value, f.prev]), [["proposals", inCur, null], ["replies", 0, null], ["offers", 0, null], ["hired", 0, null]]);
+  assert.deepEqual(up.rates.map(r => [r.key, r.value, r.prev, r.state]), [["reply_rate", 0, null, "alert"], ["hire_rate", 0, null, "info"]]);
+  assert.equal(up.statusText, `${inCur} proposals sent in the last 30 days`);
+  assert.equal(up.series.points.length, 30);
+});
+
+test("Upwork paging cut off inside the current range: current and prev values are n/a, never 0", async () => {
+  // 20 pages a day apart: the oldest seen is 20 days back, inside the current range
+  const mcp = fakeMcp(upworkRoute({ Accepted: cappedAccepted(1), Hired: [node("h1", NOW - 2 * DAY)] }, () => { throw notFound(); }));
+  const out = await X.fetchUpwork(X.makeCaller({ mcp, serverKey: "upwork", sleep: noSleep }), R30, { db: null, user: null, nowMs: NOW });
+  const cutoff = NOW - DAY - 19 * DAY;
+  assert.equal(out.data.cutoffMs, cutoff);
+  assert.ok(cutoff >= R30.startMs);
+  assert.deepEqual(out.warnings, [`Upwork proposals before ${dayLabel(cutoff)} did not load; counts for that period may be low.`]);
+  const raw = { upwork: Object.assign(ok(out.data), { warnings: out.warnings }) };
+  const m = D.buildModel(raw, CTX);
+  const up = m.channels[1];
+  assert.deepEqual(up.funnel.map(f => [f.value, f.prev]), [[null, null], [null, null], [null, null], [null, null]]);
+  assert.deepEqual(up.rates.map(r => [r.value, r.prev, r.state]), [[null, null, "no_data"], [null, null, "no_data"]]);
+  assert.equal(up.statusText, "Not every proposal from the last 30 days loaded");
+  assert.deepEqual(up.series.points, []);
+  assert.equal(up.extras.find(e => e.label === "Boosted proposals").value, "—");
+  assert.ok(m.sources.upwork.warnings.some(w => /did not load; counts for that period may be low/.test(w)));
+  assert.ok(!m.today.alerts.some(a => a.id === "upwork_reply_rate"), "an unmeasured rate raises no alert");
+  // the 7-day view of the same data: the cutoff (20 days back) is older than its prevStart (13 days back)
+  const R7 = X.rangeFor(NOW, 7);
+  assert.ok(cutoff < R7.prevStartMs);
+  const u7 = X.deriveUpwork(out.data, R7, NOW);
+  assert.ok(u7.funnel.every(f => f.value != null && f.prev != null), "a cutoff older than prevStart measures both ranges");
+});
+
+test("a capped rare status (Hired) with a non-empty last page only warns: no cutoff, every value intact", async () => {
+  // Hired pages forever, one proposal a day per page (the 20th page still holds one); Accepted has one page with two
+  let n = 0;
+  const hired = () => { const i = n++; return { data: { vendorProposals: { edges: [{ node: node("hir" + i, NOW - DAY - i * DAY) }] } }, hasMore: true, next_cursor: "h" + (i + 1) }; };
+  const mcp = fakeMcp(upworkRoute({ Hired: hired, Accepted: [node("acc1", NOW - 2 * DAY), node("acc2", NOW - 40 * DAY)] }, () => { throw notFound(); }));
+  const out = await X.fetchUpwork(X.makeCaller({ mcp, serverKey: "upwork", sleep: noSleep }), R30, { db: null, user: null, nowMs: NOW });
+  assert.equal(callsTo(mcp, "Upwork", "upwork__list_freelancer_proposals").filter(c => c.input.params.status === "Hired").length, 20);
+  assert.equal(out.data.cutoffMs, null);
+  assert.deepEqual(out.warnings, ["Some Hired proposals may not have loaded."]);
+  const raw = { upwork: Object.assign(ok(out.data), { warnings: out.warnings }) };
+  const up = D.buildModel(raw, CTX).channels[1];
+  assert.deepEqual(up.funnel.map(f => [f.key, f.value, f.prev]), [["proposals", 21, 1], ["replies", 20, 0], ["offers", 20, 0], ["hired", 20, 0]]);
+  assert.deepEqual(up.rates.map(r => [r.value, r.prev]), [[20 / 21, 0], [20 / 21, 0]]);
+  assert.equal(up.statusText, "21 proposals sent in the last 30 days");
+  assert.equal(up.series.points.length, 30);
+});
+
+test("Hired stops early on a page older than prevStart: not capped, no warning", async () => {
+  // one proposal a page, 7 days apart: page 10 holds one 64 days back, before prevStart (60 days back), so paging stops there
+  let n = 0;
+  const hired = () => { const i = n++; return { data: { vendorProposals: { edges: [{ node: node("old" + i, NOW - DAY - i * 7 * DAY) }] } }, hasMore: true, next_cursor: "o" + (i + 1) }; };
+  const mcp = fakeMcp(upworkRoute({ Hired: hired, Accepted: [node("acc1", NOW - 2 * DAY)] }, () => { throw notFound(); }));
+  const out = await X.fetchUpwork(X.makeCaller({ mcp, serverKey: "upwork", sleep: noSleep }), R30, { db: null, user: null, nowMs: NOW });
+  assert.equal(callsTo(mcp, "Upwork", "upwork__list_freelancer_proposals").filter(c => c.input.params.status === "Hired").length, 10);
+  assert.ok(NOW - DAY - 9 * 7 * DAY < R30.prevStartMs);
+  assert.equal(out.data.cutoffMs, null);
+  assert.deepEqual(out.warnings, []);
+  const up = D.buildModel({ upwork: Object.assign(ok(out.data), { warnings: out.warnings }) }, CTX).channels[1];
+  // in range: acc1 + hires at 1, 8, 15, 22, 29 days back; previous range: hires at 36, 43, 50, 57 days back
+  assert.deepEqual(up.funnel.map(f => [f.key, f.value, f.prev]), [["proposals", 6, 4], ["replies", 5, 4], ["offers", 5, 4], ["hired", 5, 4]]);
+});
+
+/**
+ * The reviewer's scenario: one merged stream, newest first, 2 proposals a day over 150 days, 10 upstream records a page,
+ * filtered per status after the fetch (empty pages with hasMore true are the filtered tail). Accepted only in the last
+ * 21 days, one recent Hired, a few Activated, every 10th older one Declined, the rest Archived; no Offered or Withdrawn.
+ */
+function mergedStream() {
+  const recs = Array.from({ length: 300 }, (_, j) => {
+    const createdAt = NOW - (j + 1) * 12 * H;
+    let status = j < 42 ? "Accepted" : "Archived";
+    if (j === 3) status = "Hired";
+    else if (j === 50 || j === 80 || j === 140) status = "Activated";
+    else if (j >= 42 && j % 10 === 5) status = "Declined";
+    return { id: "m" + j, createdAt, status };
+  });
+  const lastPage = 29;
+  return upworkRoute({}, () => { throw notFound(); }, (sv, tool, input) => {
+    if (input.action !== "list") return undefined;
+    const k = input.params.cursor ? Number(input.params.cursor.slice(1)) : 0;
+    const edges = recs.slice(k * 10, k * 10 + 10).filter(r => r.status === input.params.status).map(r => ({ node: node(r.id, r.createdAt) }));
+    const more = k < lastPage;
+    return { payload: { data: { vendorProposals: { edges } }, hasMore: more, next_cursor: more ? "m" + (k + 1) : null } };
+  });
+}
+
+test("merged stream: filtered empty pages up to the cap never blank Upwork or warn (30 and 7 days)", async () => {
+  for (const [days, cap] of [[30, 20], [7, 12]]) {
+    X.resetMemory();
+    const R = X.rangeFor(NOW, days);
+    const mcp = fakeMcp(mergedStream());
+    const out = await X.fetchUpwork(X.makeCaller({ mcp, serverKey: "upwork", sleep: noSleep }), R, { db: null, user: null, nowMs: NOW });
+    const list = callsTo(mcp, "Upwork", "upwork__list_freelancer_proposals").filter(c => c.input.action === "list");
+    const count = st => list.filter(c => c.input.params.status === st).length;
+    // 30 days: every Accepted proposal is newer than prevStart (60 days back), so Accepted walks the empty tail to the
+    // cap; 7 days: its proposals reach past prevStart (14 days back) on page 3, so it stops early there
+    assert.equal(count("Accepted"), days === 30 ? cap : 3, days + " days: Accepted pages");
+    assert.ok(count("Archived") < cap, days + ": Archived stops early on a page older than prevStart");
+    assert.equal(out.data.cutoffMs, null, days + " days");
+    assert.deepEqual(out.warnings, [], days + ": no paging warnings");
+    const m = D.buildModel({ upwork: Object.assign(ok(out.data), { warnings: out.warnings }) }, { rangeDays: days, now: new Date(NOW) });
+    const up = m.channels[1];
+    assert.ok(up.funnel.every(f => f.value != null && f.prev != null), days + ": every funnel value measured");
+    assert.ok(up.rates.every(r => r.value != null && r.prev != null), days + ": every rate measured");
+    assert.ok(up.funnel[0].value > 0 && up.funnel[0].prev > 0, days + ": proposals in both ranges");
+    assert.equal(up.series.points.length, days);
+    assert.deepEqual(m.sources.upwork.warnings.filter(w => /did not load|may not have loaded/.test(w)), [], days + " days");
+  }
+});
+
+test("zero proposals seen at the cap: no cutoff, no warning, values are 0 not n/a", async () => {
+  const mcp = fakeMcp(upworkRoute({}, () => { throw notFound(); }, (sv, tool, input) => (input.action === "list"
+    ? { payload: { data: { vendorProposals: { edges: [] } }, hasMore: true, next_cursor: "z" + Math.random() } } : undefined)));
+  const out = await X.fetchUpwork(X.makeCaller({ mcp, serverKey: "upwork", sleep: noSleep }), R30, { db: null, user: null, nowMs: NOW });
+  assert.equal(out.data.cutoffMs, null);
+  assert.deepEqual(out.warnings, []);
+  const up = D.buildModel({ upwork: Object.assign(ok(out.data), { warnings: out.warnings }) }, CTX).channels[1];
+  assert.deepEqual(up.funnel.map(f => [f.value, f.prev]), [[0, 0], [0, 0], [0, 0], [0, 0]]);
+  assert.equal(up.statusText, "0 proposals sent in the last 30 days");
+});
+
+test("room cache precedence: a db doc without v 2 never beats a v 2 memory entry; a v 2 db doc wins", async () => {
+  // writes refused, so the db keeps its pre-fix doc; the first load's check lands only in memory
+  const db = fakeDb({ "upworkRooms/pre1": { roomId: null, checkedAt: NOW - H }, "upworkRooms/cur1": { roomId: "room_db", checkedAt: NOW - H, v: 2 } });
+  const asked = [];
+  const mcp = fakeMcp((sv, t, input) => { asked.push(input.params.proposal_id); return proposalRoom("room_live_" + input.params.proposal_id); });
+  const props = [{ id: "pre1", createdAt: NOW - 5 * DAY }, { id: "cur1", createdAt: NOW - 5 * DAY }];
+  const env = { db, user: { can: async () => false }, nowMs: NOW, R: R30 };
+  const r1 = await X.checkRooms(props, X.makeCaller({ mcp, serverKey: "upwork", sleep: noSleep }), env);
+  assert.deepEqual(asked, ["pre1"], "the v 2 db doc answers cur1; the pre-fix doc is re-checked");
+  assert.deepEqual([r1.replied.get("pre1"), r1.replied.get("cur1")], [true, true]);
+  assert.equal(db.writes.length, 0);
+  assert.deepEqual(X.memRooms.get("pre1"), { roomId: "room_live_pre1", checkedAt: NOW, v: 2 });
+  // next load in the same page session: the pre-fix db doc is still there, but the v 2 memory entry answers
+  const r2 = await X.checkRooms(props, X.makeCaller({ mcp, serverKey: "upwork", sleep: noSleep }), Object.assign({}, env, { nowMs: NOW + H }));
+  assert.deepEqual(asked, ["pre1"], "no get_room on the second load");
+  assert.equal(r2.replied.get("pre1"), true);
+  // a v 2 db doc wins over memory
+  X.memRooms.set("cur1", { roomId: null, checkedAt: NOW, v: 2 });
+  const r3 = await X.checkRooms(props, X.makeCaller({ mcp, serverKey: "upwork", sleep: noSleep }), Object.assign({}, env, { nowMs: NOW + 2 * H }));
+  assert.equal(r3.replied.get("cur1"), true);
+  assert.deepEqual(asked, ["pre1"]);
 });

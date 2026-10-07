@@ -117,10 +117,10 @@
           { key: "won", label: "Closed", value: 1, prev: 0 }
         ],
         rates: [
-          { key: "reply_rate", label: "Reply rate", value: 21 / 1830, prev: 17 / 2210, format: "pct", target: "≥ 1.0%", state: "alert" },
-          { key: "positive_rate", label: "Positive rate", value: 9 / 1830, prev: 9 / 2210, format: "pct", target: "≥ 0.7%", state: "alert" },
-          { key: "bounce_rate", label: "Bounce rate", value: 0.014, prev: 0.009, format: "pct", target: "≤ 1.0%", state: "watch" },
-          { key: "positive_to_booked", label: "Positive → booked", value: 4 / 9, prev: 3 / 9, format: "pct", target: "≥ 50%", state: "watch" }
+          { key: "reply_rate", label: "Reply rate", value: 21 / 4210, prev: 17 / 5120, format: "pct", target: "≥ 1.0%", state: "alert", basis: "replies ÷ emails sent" },
+          { key: "positive_rate", label: "Positive reply rate", value: 9 / 4210, prev: 9 / 5120, format: "pct", target: "≥ 0.7%", state: "alert", basis: "positive replies ÷ emails sent" },
+          { key: "bounce_rate", label: "Bounce rate", value: 0.014, prev: 0.009, format: "pct", target: "≤ 1.0%", state: "watch", basis: "bounces ÷ emails sent" },
+          { key: "positive_to_booked", label: "Positive → booked", value: 4 / 9, prev: 3 / 9, format: "pct", target: "≥ 50%", state: "watch", basis: "calls booked ÷ positive replies" }
         ],
         series: { aLabel: "Sent", bLabel: "Human replies", cLabel: "Positive", points: coldPoints },
         spend: { usd: 410, note: "From your monthly cold email cost of $410." },
@@ -135,8 +135,8 @@
           { key: "hired", label: "Hired", value: 1, prev: 0 }
         ],
         rates: [
-          { key: "reply_rate", label: "Client reply rate", value: 2 / 33, prev: 5 / 41, format: "pct", target: "≥ 15%", state: "alert" },
-          { key: "hire_rate", label: "Hire rate", value: 1 / 33, prev: 0, format: "pct", target: null, state: "info" }
+          { key: "reply_rate", label: "Client reply rate", value: 2 / 33, prev: 5 / 41, format: "pct", target: "≥ 15%", state: "alert", basis: "proposals the client answered ÷ proposals sent" },
+          { key: "hire_rate", label: "Hire rate", value: 1 / 33, prev: 0, format: "pct", target: null, state: "info", basis: "hires ÷ proposals sent" }
         ],
         series: { aLabel: "Proposals", bLabel: "Client replied", cLabel: null, points: upPoints },
         spend: { usd: 87.2, note: "Membership $20 plus 448 Connects at $0.15." },
@@ -174,7 +174,7 @@
       totals: { open: 5, openValue: 8100, wonInRange: 1, wonValueInRange: 1000, lostInRange: 2 },
       calls: {
         stages: [{ name: "Call Booked", count: 1 }, { name: "Cancelled", count: 1 }, { name: "Showed", count: 5 }, { name: "No Show", count: 1 }],
-        showRate: { key: "show_rate", label: "Show rate", value: 5 / 6, prev: 0.75, format: "pct", target: "≥ 90%", state: "watch" }
+        showRate: { key: "show_rate", label: "Show rate", value: 5 / 6, prev: 0.75, format: "pct", target: "≥ 90%", state: "watch", basis: "showed ÷ (showed + no-show)" }
       }
     },
     calls: { upcoming: [], pastInRange: [], bySource: { cold_email: 0, upwork: 0, linkedin: 0, other: 0, unattributed: 0 } },
@@ -255,7 +255,7 @@
     if (!x || !y) return (x ? 0 : 1) - (y ? 0 : 1);
     return x < y ? -1 : x > y ? 1 : 0;
   });
-  var info = function (key, label, value) { return { key: key, label: label, value: value, prev: null, format: "pct", target: null, state: value == null ? "no_data" : "info" }; };
+  var info = function (key, label, value, basis) { return { key: key, label: label, value: value, prev: null, format: "pct", target: null, state: value == null ? "no_data" : "info", basis: basis }; };
   model.sources.linkedin = ok(0);
   model.linkedin = {
     rows: liRows,
@@ -264,10 +264,10 @@
     noReplyDue: ["test-sam-notreal"],
     weekly: {
       weekStart: weekStart, weekEnd: weekEnd, requestsSent: 14, pending: 2, nearLimit: false,
-      acceptance: { key: "acceptance", label: "Acceptance", value: 0.27, prev: null, format: "pct", target: "≥ 30%", state: "watch" },
+      acceptance: { key: "acceptance", label: "Acceptance", value: 0.27, prev: null, format: "pct", target: "≥ 30%", state: "watch", basis: "accepted ÷ requests sent 14+ days ago" },
       looms: { A: 4, B: 3 },
-      replyRate: { A: info("reply_a", "Reply rate A", 0.25), B: info("reply_b", "Reply rate B", 1 / 3) },
-      positiveRate: { A: info("positive_a", "Positive rate A", 0.25), B: info("positive_b", "Positive rate B", 0) },
+      replyRate: { A: info("reply_a", "Reply rate A", 0.25, "replies ÷ Looms sent"), B: info("reply_b", "Reply rate B", 1 / 3, "replies ÷ Looms sent") },
+      positiveRate: { A: info("positive_a", "Positive rate A", 0.25, "positive replies ÷ Looms sent"), B: info("positive_b", "Positive rate B", 0, "positive replies ÷ Looms sent") },
       callsBooked: 1, closedWon: 0, closedLost: 0
     }
   };
@@ -283,10 +283,10 @@
       { key: "won", label: "Closed won", value: 0, prev: 0 }
     ],
     rates: [
-      { key: "acceptance", label: "Acceptance", value: 0.27, prev: 0.22, format: "pct", target: "≥ 30% (alert under 15%)", state: "watch" },
-      info("reply_a", "Reply rate, variant A", 2 / 5),
-      info("reply_b", "Reply rate, variant B", 1 / 4),
-      info("positive", "Positive rate", 2 / 9)
+      { key: "acceptance", label: "Acceptance", value: 0.27, prev: 0.22, format: "pct", target: "≥ 30% (alert under 15%)", state: "watch", basis: "accepted ÷ requests sent 14+ days ago" },
+      info("reply_a", "Reply rate, variant A", 2 / 5, "replies ÷ Looms sent"),
+      info("reply_b", "Reply rate, variant B", 1 / 4, "replies ÷ Looms sent"),
+      info("positive", "Positive rate", 2 / 9, "positive replies ÷ Looms sent")
     ],
     series: null,
     spend: { usd: 99, note: "From your monthly LinkedIn cost of $99." },
@@ -311,7 +311,7 @@
   v2.sources.upwork = { state: "loading", refreshing: false, storedAt: null, error: null, warnings: [] };
   v2.sources.calendar = ok(1);
   v2.pipeline = { name: "Sales", url: ex("ghl/opportunities"), stages: [], totals: { open: 0, openValue: 0, wonInRange: 0, wonValueInRange: 0, lostInRange: 0 },
-    calls: { stages: [], showRate: { key: "show_rate", label: "Show rate", value: null, prev: null, format: "pct", target: "≥ 90%", state: "no_data" } } };
+    calls: { stages: [], showRate: { key: "show_rate", label: "Show rate", value: null, prev: null, format: "pct", target: "≥ 90%", state: "no_data", basis: "showed ÷ (showed + no-show)" } } };
   v2.today.openPipeline = { count: 0, value: 0 };
   v2.today.revenue = { value: 0, upworkBilled: 0, ghlWon: 0 };
   v2.today.coldEmailSending = true;

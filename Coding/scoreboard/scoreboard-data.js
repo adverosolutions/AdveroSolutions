@@ -140,6 +140,13 @@
     return dayFormatter(tz || CONFIG.timeZone).format(new Date(ms));
   }
 
+  /** "Sep 3, 2026" for an instant, in Central. */
+  function fmtDay(ms) {
+    const k = "s|" + CONFIG.timeZone;
+    const f = _fmtCache[k] || (_fmtCache[k] = new Intl.DateTimeFormat("en-US", { timeZone: CONFIG.timeZone, month: "short", day: "numeric", year: "numeric" }));
+    return f.format(new Date(ms));
+  }
+
   /** Pure calendar arithmetic on a YYYY-MM-DD string. */
   function addDays(day, n) {
     const [y, m, d] = day.split("-").map(Number);
@@ -446,11 +453,25 @@
     return "watch";
   }
 
-  function makeRate(key, label, n, d, pn, pd, rule) {
-    const value = d > 0 ? n / d : null;
+  // What each rate divides by, shown next to its target (accuracy fixes 2026-10-07).
+  const BASIS = {
+    cold_reply: "replies ÷ emails sent",
+    cold_positive: "positive replies ÷ emails sent",
+    cold_bounce: "bounces ÷ emails sent",
+    cold_p2b: "calls booked ÷ positive replies",
+    upwork_reply: "proposals the client answered ÷ proposals sent",
+    upwork_hire: "hires ÷ proposals sent",
+    show_rate: "showed ÷ (showed + no-show)",
+    li_accept: "accepted ÷ requests sent 14+ days ago",
+    li_reply: "replies ÷ Looms sent",
+    li_positive: "positive replies ÷ Looms sent"
+  };
+
+  function makeRate(key, label, n, d, pn, pd, rule, basis) {
+    const value = d != null && d > 0 && n != null ? n / d : null;
     const prev = pd != null && pd > 0 && pn != null ? pn / pd : null;
     return { key, label, value, prev, format: "pct", target: rule ? rule.target : null,
-      state: value == null ? "no_data" : rateState(value, rule) };
+      state: value == null ? "no_data" : rateState(value, rule), basis: basis || "" };
   }
 
   const COLD_FUNNEL = [
@@ -458,7 +479,7 @@
     ["positive", "Positive replies"], ["booked", "Calls booked"], ["won", "Closed"]
   ];
   const COLD_RATES = [
-    ["reply_rate", "Reply rate", "cold_reply"], ["positive_rate", "Positive rate", "cold_positive"],
+    ["reply_rate", "Reply rate", "cold_reply"], ["positive_rate", "Positive reply rate", "cold_positive"],
     ["bounce_rate", "Bounce rate", "cold_bounce"], ["positive_to_booked", "Positive → booked", "cold_p2b"]
   ];
 
@@ -475,13 +496,14 @@
     };
   }
 
+  // Rates follow Lorenzo's metric definitions (daily-reports-and-metrics rule 6): unique replies ÷ emails sent.
   function coldRates(c, p) {
     const pv = (k) => (p ? p[k] : null);
     return [
-      makeRate("reply_rate", "Reply rate", c.replies, c.leads, pv("replies"), pv("leads"), RULES.cold_reply),
-      makeRate("positive_rate", "Positive rate", c.positive, c.leads, pv("positive"), pv("leads"), RULES.cold_positive),
-      makeRate("bounce_rate", "Bounce rate", c.bounced, c.sent, pv("bounced"), pv("sent"), RULES.cold_bounce),
-      makeRate("positive_to_booked", "Positive → booked", c.booked, c.positive, pv("booked"), pv("positive"), RULES.cold_p2b)
+      makeRate("reply_rate", "Reply rate", c.replies, c.sent, pv("replies"), pv("sent"), RULES.cold_reply, BASIS.cold_reply),
+      makeRate("positive_rate", "Positive reply rate", c.positive, c.sent, pv("positive"), pv("sent"), RULES.cold_positive, BASIS.cold_positive),
+      makeRate("bounce_rate", "Bounce rate", c.bounced, c.sent, pv("bounced"), pv("sent"), RULES.cold_bounce, BASIS.cold_bounce),
+      makeRate("positive_to_booked", "Positive → booked", c.booked, c.positive, pv("booked"), pv("positive"), RULES.cold_p2b, BASIS.cold_p2b)
     ];
   }
 
@@ -590,16 +612,29 @@
 
   // ------------------------------------------------------------------ source 2: Upwork
 
+  // Upwork pages one merged stream of every proposal (newest first) and the connector filters each status out of it
+  // after fetching, so every status walks the same stream: same cap (12, 20 or 40 pages for a 7, 30 or 90-day range),
+  // and every status stops early on a page holding a proposal older than prevStart (SPEC "Upwork paging caps").
+  // cutoff: Accepted and Archived make up the proposal denominator, so a real cap hit leaves the counts unmeasured
+  // (values null + warning). The rarer statuses only warn; they never null a value.
   const UPWORK_STATUSES = [
-    { status: "Accepted", max: 12, stopEarly: true },
-    { status: "Archived", max: 12, stopEarly: true },
-    { status: "Offered", max: 3, stopEarly: false },
-    { status: "Hired", max: 3, stopEarly: false },
-    { status: "Declined", max: 3, stopEarly: false },
-    { status: "Withdrawn", max: 3, stopEarly: false }
+    { status: "Accepted", cutoff: true },
+    { status: "Archived", cutoff: true },
+    { status: "Activated", cutoff: false },
+    { status: "Offered", cutoff: false },
+    { status: "Hired", cutoff: false },
+    { status: "Declined", cutoff: false },
+    { status: "Withdrawn", cutoff: false }
   ];
+  const UPWORK_RANGE_PAGES = { 7: 12, 30: 20, 90: 40 };
+  const upworkPageCap = days => UPWORK_RANGE_PAGES[days] || UPWORK_RANGE_PAGES[30];
 
-  const statusRank = b => (b === "Hired" ? 2 : b === "Offered" ? 1 : 0);
+  // Upwork moves a proposal the client answered to Activated ("Invitation accepted"); Offered and Hired come later.
+  // These count as client replied without a get_room call.
+  const REPLIED_STATUSES = new Set(["Activated", "Offered", "Hired"]);
+
+  // Dedupe precedence: Hired > Offered > Activated > Accepted / Archived / Declined / Withdrawn.
+  const statusRank = b => (b === "Hired" ? 3 : b === "Offered" ? 2 : b === "Activated" ? 1 : 0);
 
   function normProposal(node, bucket) {
     const n = isObj(node) ? node : {};
@@ -631,7 +666,9 @@
       } catch (_) { /* ignore */ }
     }
     if (!isObj(p)) return null;
-    const cands = [p.id, p.roomId, p.room && p.room.id, p.room && p.room.roomId,
+    // Observed live: { data: { proposalRoom: { id: "room_…", createdAtDateTime, roomType, … } } }. The rest are fallbacks.
+    const pr = isObj(p.data) && isObj(p.data.proposalRoom) ? p.data.proposalRoom : isObj(p.proposalRoom) ? p.proposalRoom : null;
+    const cands = [pr && pr.id, p.id, p.roomId, p.room && p.room.id, p.room && p.room.roomId,
       p.data && p.data.room && p.data.room.id, p.data && p.data.roomId, p.data && p.data.id];
     for (const c of cands) if ((typeof c === "string" && c) || typeof c === "number") return String(c);
     return null;
@@ -652,9 +689,12 @@
     }
   }
 
+  // Cache docs written before the 2026-10-07 parse fix hold roomId null for every proposal; only v 2 docs are trusted.
+  const ROOM_CACHE_V = 2;
+
   /** Decide whether a cached entry answers the question, per the cache rules. */
   function roomCacheVerdict(entry, createdAt, nowMs) {
-    if (!entry) return { use: false };
+    if (!entry || entry.v !== ROOM_CACHE_V) return { use: false };
     if (typeof entry.roomId === "string" && entry.roomId) return { use: true, roomId: entry.roomId };
     if (entry.roomId === null) {
       const checkedAt = num(entry.checkedAt);
@@ -683,7 +723,7 @@
     for (const doc of arr(res.snap && res.snap.docs)) {
       if (!doc || doc.exists === false) continue;
       const body = typeof doc.data === "function" ? doc.data() : null;
-      if (isObj(body)) map.set(str(doc.id), { roomId: body.roomId === undefined ? undefined : body.roomId, checkedAt: body.checkedAt });
+      if (isObj(body)) map.set(str(doc.id), { roomId: body.roomId === undefined ? undefined : body.roomId, checkedAt: body.checkedAt, v: body.v });
     }
     return map;
   }
@@ -702,7 +742,9 @@
 
     await Promise.all(proposals.map(async (pr) => {
       const fromDb = dbMap ? dbMap.get(pr.id) : undefined;
-      const cached = fromDb || _memRooms.get(pr.id);
+      // a db doc counts only when it is current (v 2); otherwise this session's memory entry answers (when writes are
+      // refused, memory is the only place a fresh check lands)
+      const cached = fromDb && fromDb.v === ROOM_CACHE_V ? fromDb : _memRooms.get(pr.id);
       const v = roomCacheVerdict(cached, pr.createdAt, nowMs);
       if (v.use) { out.set(pr.id, v.roomId ? true : false); return; }
       let roomId;
@@ -719,13 +761,14 @@
         else { failed++; out.set(pr.id, null); return; }
       }
       out.set(pr.id, roomId ? true : false);
-      const entry = { roomId: roomId || null, checkedAt: nowMs };
+      const entry = { roomId: roomId || null, checkedAt: nowMs, v: ROOM_CACHE_V };
       _memRooms.set(pr.id, entry);
       if (!dbMap) return;
-      if (fromDb && fromDb.roomId === null && entry.roomId === null) {
-        // A re-checked null that is still null: only checkedAt changed.
-        if (num(fromDb.checkedAt) !== entry.checkedAt) writes.push({ id: pr.id, patch: { checkedAt: entry.checkedAt }, entry });
-      } else if (!fromDb || fromDb.roomId !== entry.roomId || num(fromDb.checkedAt) !== entry.checkedAt) {
+      const current = !!fromDb && fromDb.v === ROOM_CACHE_V;
+      if (current && fromDb.roomId === null && entry.roomId === null) {
+        // A re-checked null that is still null: only checkedAt changed (v rides along, so every write carries it).
+        if (num(fromDb.checkedAt) !== entry.checkedAt) writes.push({ id: pr.id, patch: { checkedAt: entry.checkedAt, v: ROOM_CACHE_V }, entry });
+      } else if (!current || fromDb.roomId !== entry.roomId || num(fromDb.checkedAt) !== entry.checkedAt) {
         writes.push({ id: pr.id, entry });
       }
     }));
@@ -753,25 +796,40 @@
     const org = CONFIG.upworkOrg;
     const warnings = [];
 
+    /** One status's pages. `missedInRange`: the cap was reached with more pages left AND the last page fetched held a
+     *  proposal of this status, so missed proposals can fall in range (all seen are on or after prevStart, or the early
+     *  stop would have ended the paging). An empty last page is the filtered tail of the shared stream, and so is a
+     *  status that saw nothing: no cutoff, no warning. `cutoff` (Accepted and Archived only) is the oldest createdAt seen. */
     async function pageProposals(cfg) {
       const nodes = [];
       let cursor = null;
-      for (let page = 0; page < cfg.max; page++) {
+      let more = false;
+      let lastCount = 0;
+      const cap = upworkPageCap(R.days);
+      for (let page = 0; page < cap; page++) {
         const params = { status: cfg.status, limit: 10, sort_field: "CREATEDDATETIME", sort_order: "DESC" };
         if (cursor) params.cursor = cursor;
         const p = await caller.call(T.proposals, { action: "list", org_uid: org, params });
         const vp = isObj(p) && isObj(p.data) && isObj(p.data.vendorProposals) ? p.data.vendorProposals : {};
         const batch = arr(vp.edges).map(e => normProposal(e && e.node, cfg.status)).filter(x => x.id);
         nodes.push(...batch);
-        if (cfg.stopEarly && batch.length) {
+        lastCount = batch.length;
+        if (batch.length) {
           const times = batch.map(b => b.createdAt).filter(t => t != null);
-          if (times.length && Math.min(...times) < R.prevStartMs) break;
+          if (times.length && Math.min(...times) < R.prevStartMs) { more = false; break; }
         }
         const hasMore = isObj(p) && p.hasMore === true;
         cursor = isObj(p) ? p.next_cursor : null;
-        if (!hasMore || !cursor) break;
+        more = hasMore && !!cursor;
+        if (!more) break;
       }
-      return nodes;
+      let cutoff = null;
+      const missedInRange = more && lastCount > 0;
+      if (missedInRange && cfg.cutoff) {
+        const times = nodes.map(n => n.createdAt).filter(t => typeof t === "number" && Number.isFinite(t));
+        cutoff = times.length ? Math.min(...times) : env.nowMs; // a page of undated proposals: nothing is measured
+      }
+      return { nodes, cutoff, missedInRange, status: cfg.status };
     }
 
     async function rooms() {
@@ -820,10 +878,21 @@
       connects()
     ]);
 
-    // dedupe by id, keeping the most advanced status (Hired > Offered > the rest; ties keep the first seen),
+    // Accepted/Archived capped with proposals still coming: those before the latest such cutoff may be missing
+    let cutoffMs = null;
+    for (const l of lists) if (l.cutoff != null && (cutoffMs == null || l.cutoff > cutoffMs)) cutoffMs = l.cutoff;
+    if (cutoffMs != null) {
+      warnings.push(`Upwork proposals before ${fmtDay(cutoffMs)} did not load; counts for that period may be low.`);
+    }
+    // the rarer statuses only warn
+    for (const l of lists) if (l.missedInRange && !UPWORK_STATUSES.find(c => c.status === l.status).cutoff) {
+      warnings.push(`Some ${l.status} proposals may not have loaded.`);
+    }
+
+    // dedupe by id, keeping the most advanced status (Hired > Offered > Activated > the rest; ties keep the first seen),
     // then keep the range + previous range
     const byId = new Map();
-    for (const list of lists) for (const pr of list) {
+    for (const list of lists) for (const pr of list.nodes) {
       const have = byId.get(pr.id);
       if (!have || statusRank(pr.bucket) > statusRank(have.bucket)) byId.set(pr.id, pr);
     }
@@ -832,9 +901,13 @@
       if (pr.createdAt != null && pr.createdAt >= R.prevStartMs && pr.createdAt <= R.endMs) proposals.push(pr);
     }
 
-    const rc = await checkRooms(proposals, caller, { db: env.db, user: env.user, nowMs: env.nowMs, R,
+    // Activated, Offered and Hired mean the client answered; only the other statuses need a get_room check.
+    const toCheck = proposals.filter(pr => !REPLIED_STATUSES.has(pr.bucket));
+    const rc = await checkRooms(toCheck, caller, { db: env.db, user: env.user, nowMs: env.nowMs, R,
       dbTimeoutMs: env.dbTimeoutMs, roomWrites: env.roomWrites });
-    for (const pr of proposals) pr.replied = rc.replied.has(pr.id) ? rc.replied.get(pr.id) : null;
+    for (const pr of proposals) {
+      pr.replied = REPLIED_STATUSES.has(pr.bucket) ? true : rc.replied.has(pr.id) ? rc.replied.get(pr.id) : null;
+    }
     warnings.push(...rc.warnings);
 
     const s = await summaryP;
@@ -842,7 +915,7 @@
     if (s.ok && isObj(s.p)) summary = s.p;
     else warnings.push(`Upwork billing summary didn't load (${s.ok ? "empty" : s.e.code}).`);
 
-    return { data: { proposals, rooms: roomList, connects: conn, summary }, warnings };
+    return { data: { proposals, rooms: roomList, connects: conn, summary, cutoffMs }, warnings };
   }
 
   function deriveUpwork(d, R, nowMs) {
@@ -850,13 +923,18 @@
     const cur = all.filter(p => inRange(p.createdAt, R));
     const prev = all.filter(p => inPrev(p.createdAt, R));
     const isOffer = p => p.bucket === "Offered" || p.bucket === "Hired";
-    const count = (list) => ({
+    // A paging cutoff on or after a range's start leaves that range unmeasured: n/a, never a low count.
+    const cutoff = typeof d.cutoffMs === "number" && Number.isFinite(d.cutoffMs) ? d.cutoffMs : null;
+    // a range is unmeasured when it starts before the cutoff
+    const curMissing = cutoff != null && R.startMs < cutoff;
+    const prevMissing = cutoff != null && R.prevStartMs < cutoff;
+    const count = (list, missing) => (missing ? { proposals: null, replies: null, offers: null, hired: null } : {
       proposals: list.length,
       replies: list.filter(p => p.replied === true).length,
       offers: list.filter(isOffer).length,
       hired: list.filter(p => p.bucket === "Hired").length
     });
-    const c = count(cur), pv = count(prev);
+    const c = count(cur, curMissing), pv = count(prev, prevMissing);
     const funnel = [
       { key: "proposals", label: "Proposals sent", value: c.proposals, prev: pv.proposals },
       { key: "replies", label: "Client replied", value: c.replies, prev: pv.replies },
@@ -864,8 +942,8 @@
       { key: "hired", label: "Hired", value: c.hired, prev: pv.hired }
     ];
     const rates = [
-      makeRate("reply_rate", "Client reply rate", c.replies, c.proposals, pv.replies, pv.proposals, RULES.upwork_reply),
-      makeRate("hire_rate", "Hire rate", c.hired, c.proposals, pv.hired, pv.proposals, null)
+      makeRate("reply_rate", "Client reply rate", c.replies, c.proposals, pv.replies, pv.proposals, RULES.upwork_reply, BASIS.upwork_reply),
+      makeRate("hire_rate", "Hire rate", c.hired, c.proposals, pv.hired, pv.proposals, null, BASIS.upwork_hire)
     ];
 
     const days = {};
@@ -875,14 +953,14 @@
       days[day].a++;
       if (p.replied === true) days[day].b++;
     }
-    const points = dateList(R.start, R.end).map(date => ({ date, a: days[date] ? days[date].a : 0, b: days[date] ? days[date].b : 0 }));
+    const points = curMissing ? [] : dateList(R.start, R.end).map(date => ({ date, a: days[date] ? days[date].a : 0, b: days[date] ? days[date].b : 0 }));
 
     const conn = isObj(d.connects) ? d.connects : { balance: null, transactions: [] };
     let connectsSpent = 0;
     for (const t of arr(conn.transactions)) if (t.amount < 0 && inRange(t.createdAt, R)) connectsSpent += -t.amount;
     const spendUsd = round2(connectsSpent * CONFIG.upworkConnectUsd);
     const boosted = cur.filter(p => p.boosted).length;
-    const boostedShare = cur.length ? boosted / cur.length : null;
+    const boostedShare = cur.length && !curMissing ? boosted / cur.length : null;
     const billedUsd = isObj(d.summary) && isObj(d.summary.totals) ? num(d.summary.totals.billed) : null;
 
     const proposals = cur.slice().sort((a, b) => b.createdAt - a.createdAt).map(p => ({
@@ -1118,7 +1196,7 @@
     const findCount = (t, re) => Object.keys(t).filter(k => re.test(k)).reduce((s, k) => s + t[k], 0);
     const showed = findCount(curT, /^showed$/i), noShow = findCount(curT, /^no[\s-]?show$/i);
     const pShowed = findCount(prevT, /^showed$/i), pNoShow = findCount(prevT, /^no[\s-]?show$/i);
-    const showRate = makeRate("show_rate", "Show rate", showed, showed + noShow, pShowed, pShowed + pNoShow, RULES.show_rate);
+    const showRate = makeRate("show_rate", "Show rate", showed, showed + noShow, pShowed, pShowed + pNoShow, RULES.show_rate, BASIS.show_rate);
 
     const openCards = cards.filter(c => c.status === "open");
     return {
@@ -2026,10 +2104,10 @@
 
     const funnel = LI_FUNNEL.map(([key, label, conv]) => ({ key, label, value: c[key], prev: p[key], conv }));
     const rates = [
-      makeRate("acceptance", "Acceptance", c.agedAccepted, c.agedSent, p.agedAccepted, p.agedSent, RULES.li_accept),
-      makeRate("reply_rate_a", "Reply rate, variant A", c.repliesA, c.loomsA, p.repliesA, p.loomsA, null),
-      makeRate("reply_rate_b", "Reply rate, variant B", c.repliesB, c.loomsB, p.repliesB, p.loomsB, null),
-      makeRate("positive_rate", "Positive rate", c.positive, c.looms, p.positive, p.looms, null)
+      makeRate("acceptance", "Acceptance", c.agedAccepted, c.agedSent, p.agedAccepted, p.agedSent, RULES.li_accept, BASIS.li_accept),
+      makeRate("reply_rate_a", "Reply rate, variant A", c.repliesA, c.loomsA, p.repliesA, p.loomsA, null, BASIS.li_reply),
+      makeRate("reply_rate_b", "Reply rate, variant B", c.repliesB, c.loomsB, p.repliesB, p.loomsB, null, BASIS.li_reply),
+      makeRate("positive_rate", "Positive rate", c.positive, c.looms, p.positive, p.looms, null, BASIS.li_positive)
     ];
 
     const pending = rows.filter(r => r.stage === "Connect sent").length;
@@ -2047,15 +2125,17 @@
     const allAged = rows.filter(r => r.connect_sent_date !== "" && r.connect_sent_date <= aged);
     const closedIn = outcome => rows.filter(r => liIsClosed(r, outcome) &&
       inWeek(r.updatedAt != null ? ymd(r.updatedAt) : meetingDay(r.meeting_booked))).length;
-    const info = (key, label, n, dd) => makeRate(key, label, n, dd, null, null, null);
+    const info = (key, label, n, dd, basis) => makeRate(key, label, n, dd, null, null, null, basis);
     const weekly = {
       weekStart, weekEnd,
       requestsSent: w.requests,
       pending, nearLimit,
-      acceptance: makeRate("acceptance", "Acceptance", allAged.filter(liAccepted).length, allAged.length, null, null, RULES.li_accept),
+      acceptance: makeRate("acceptance", "Acceptance", allAged.filter(liAccepted).length, allAged.length, null, null, RULES.li_accept, BASIS.li_accept),
       looms: { A: w.loomsA, B: w.loomsB },
-      replyRate: { A: info("reply_rate_a", "Reply rate, variant A", w.repliesA, w.loomsA), B: info("reply_rate_b", "Reply rate, variant B", w.repliesB, w.loomsB) },
-      positiveRate: { A: info("positive_rate_a", "Positive rate, variant A", w.positiveA, w.loomsA), B: info("positive_rate_b", "Positive rate, variant B", w.positiveB, w.loomsB) },
+      replyRate: { A: info("reply_rate_a", "Reply rate, variant A", w.repliesA, w.loomsA, BASIS.li_reply),
+        B: info("reply_rate_b", "Reply rate, variant B", w.repliesB, w.loomsB, BASIS.li_reply) },
+      positiveRate: { A: info("positive_rate_a", "Positive rate, variant A", w.positiveA, w.loomsA, BASIS.li_positive),
+        B: info("positive_rate_b", "Positive rate, variant B", w.positiveB, w.loomsB, BASIS.li_positive) },
       callsBooked: w.booked,
       closedWon: closedIn("Closed won"),
       closedLost: closedIn("Closed lost")
@@ -2183,7 +2263,7 @@
     const cold = {
       key: "cold_email", name: "Cold email", status: coldStatus, statusText: coldText,
       funnel: I ? I.funnel : COLD_FUNNEL.map(([key, label]) => ({ key, label, value: null, prev: null })),
-      rates: I ? I.rates : COLD_RATES.map(([key, label, rule]) => emptyRate(key, label, RULES[rule])),
+      rates: I ? I.rates : COLD_RATES.map(([key, label, rule]) => emptyRate(key, label, RULES[rule], BASIS[rule])),
       series: { aLabel: "Sent", bLabel: "Human replies", cLabel: "Positive", points: I ? I.points : [] },
       spend: { usd: coldSpendUsd, note: coldSpendUsd == null ? "No monthly cost entered. Add it under Costs."
         : `${fmtUsd(costs.cold_email, true)}/mo scaled to ${R.days} days` },
@@ -2211,10 +2291,12 @@
     const upwork = {
       key: "upwork", name: "Upwork",
       status: channelStatus(sources.upwork) || (U ? "live" : "error"),
-      statusText: U ? `${plural(U.counts.proposals, "proposal", "proposals")} sent in the last ${R.days} days` : statusTextFor(sources.upwork, "Upwork"),
+      statusText: U ? (U.counts.proposals == null ? `Not every proposal from the last ${R.days} days loaded`
+        : `${plural(U.counts.proposals, "proposal", "proposals")} sent in the last ${R.days} days`) : statusTextFor(sources.upwork, "Upwork"),
       funnel: U ? U.funnel : [["proposals", "Proposals sent"], ["replies", "Client replied"], ["offers", "Offers"], ["hired", "Hired"]]
         .map(([key, label]) => ({ key, label, value: null, prev: null })),
-      rates: U ? U.rates : [emptyRate("reply_rate", "Client reply rate", RULES.upwork_reply), emptyRate("hire_rate", "Hire rate", null)],
+      rates: U ? U.rates : [emptyRate("reply_rate", "Client reply rate", RULES.upwork_reply, BASIS.upwork_reply),
+        emptyRate("hire_rate", "Hire rate", null, BASIS.upwork_hire)],
       series: { aLabel: "Proposals", bLabel: "Client replied", cLabel: null, points: U ? U.points : [] },
       spend: { usd: upUsd, note: upNote },
       callsBooked: upCalls, costPerCall: costPerCall(upUsd, upCalls),
@@ -2241,8 +2323,9 @@
     const linkedin = {
       key: "linkedin", name: "LinkedIn", status: liStatus, statusText: liText,
       funnel: liHasRows ? L.funnel : LI_FUNNEL.map(([key, label, conv]) => ({ key, label, value: null, prev: null, conv })),
-      rates: liHasRows ? L.rates : [emptyRate("acceptance", "Acceptance", RULES.li_accept), emptyRate("reply_rate_a", "Reply rate, variant A", null),
-        emptyRate("reply_rate_b", "Reply rate, variant B", null), emptyRate("positive_rate", "Positive rate", null)],
+      rates: liHasRows ? L.rates : [emptyRate("acceptance", "Acceptance", RULES.li_accept, BASIS.li_accept),
+        emptyRate("reply_rate_a", "Reply rate, variant A", null, BASIS.li_reply),
+        emptyRate("reply_rate_b", "Reply rate, variant B", null, BASIS.li_reply), emptyRate("positive_rate", "Positive rate", null, BASIS.li_positive)],
       series: null,
       spend: { usd: liUsd, note: liUsd == null ? "No monthly cost entered. Add it under Costs." : `${fmtUsd(costs.linkedin, true)}/mo scaled to ${R.days} days` },
       callsBooked: liCalls, costPerCall: costPerCall(liUsd, liCalls), extras: liHasRows ? L.extras : []
@@ -2252,7 +2335,7 @@
     const pipeline = G ? G.pipeline : {
       name: "Sales", url: CONFIG.links.ghlOpportunities, stages: [],
       totals: { open: 0, openValue: 0, wonInRange: 0, wonValueInRange: 0, lostInRange: 0 },
-      calls: { stages: [], showRate: emptyRate("show_rate", "Show rate", RULES.show_rate) }
+      calls: { stages: [], showRate: emptyRate("show_rate", "Show rate", RULES.show_rate, BASIS.show_rate) }
     };
 
     // today
@@ -2292,8 +2375,8 @@
     };
   }
 
-  function emptyRate(key, label, rule) {
-    return { key, label, value: null, prev: null, format: "pct", target: rule ? rule.target : null, state: "no_data" };
+  function emptyRate(key, label, rule, basis) {
+    return { key, label, value: null, prev: null, format: "pct", target: rule ? rule.target : null, state: "no_data", basis: basis || "" };
   }
 
   function statusTextFor(s, name) {
@@ -2517,7 +2600,7 @@
 
   const _internals = {
     ymd, addDays, startOfDayMs, endOfDayMs, rangeFor, dateList, toMs, num, unwrap, clip, safeUrl,
-    fixFor, toSourceError, publicError, isNotFound, rateState, RULES, makeRate, makeLimiter, makeCaller, readPayload,
+    fixFor, toSourceError, publicError, isNotFound, rateState, RULES, BASIS, makeRate, makeLimiter, makeCaller, readPayload,
     fetchInstantly, fetchUpwork, fetchGhl, fetchCalendar, checkRooms, roomCacheVerdict, extractRoomId, normProposal,
     deriveInstantly, deriveUpwork, deriveGhl, deriveCalendar, deriveFollowups, attributeSource, staleLevelFor,
     isSalesCall, pickEvent, zoomJoinUrl, attributeCall, FREEMAIL, buildAlerts, normCosts, withTimeout, stalePeriod,

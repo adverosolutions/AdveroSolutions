@@ -276,7 +276,7 @@ a.tile:hover{border-color:var(--blue-tint-2)}
 .rate:first-child{border-top:0}
 .rate__label{font-size:14px;font-weight:600;flex:1 1 120px;min-width:0}
 .rate__value{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
-.rate__target{flex-basis:100%;font-size:12.5px;color:var(--ink-2)}
+.rate__target{flex-basis:100%;min-width:0;font-size:12.5px;color:var(--ink-2);overflow-wrap:anywhere}
 .money{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .money > div{min-width:0;padding:10px 12px;border-radius:var(--r-sm);background:var(--ui-soft)}
 .money dt{font-size:12px;font-weight:600;color:var(--ink-2)}
@@ -377,6 +377,7 @@ a.tile:hover{border-color:var(--blue-tint-2)}
 .call__meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:13px;color:var(--ink-2);margin-top:3px;overflow-wrap:anywhere}
 .call__links{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px;font-size:13px}
 .held{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--ui-line)}
+.rate-basis{flex-basis:100%;min-width:0;font-size:12.5px;color:var(--ink-2);overflow-wrap:anywhere}
 .held__n{font-weight:700}
 
 /* Detail */
@@ -445,6 +446,7 @@ table.li-abt{min-width:0;margin-top:10px;background:var(--surface);border:1px so
 .li-abt tbody th{font-weight:600;text-align:left;overflow-wrap:anywhere}
 .li-abt td{font-weight:700}
 .li-week__note{margin-top:8px;font-size:12.5px;color:var(--ink-2)}
+.li-week__basis{margin-top:8px;font-size:12.5px;color:var(--ink-2);overflow-wrap:anywhere}
 .li-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:16px}
 .li-toolbar .spacer{flex:1 1 auto}
 .seg__n{margin-left:5px;font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
@@ -1149,8 +1151,15 @@ table.li-prev{min-width:560px}
         h("span", { class: "rate__label" }, r.label || r.key),
         h("span", { class: "rate__value" }, fmtRate(r)),
         ratePill(r),
-        r.target ? h("span", { class: "rate__target" }, "Target " + r.target) : null);
+        rateTargetText(r) ? h("span", { class: "rate__target" }, rateTargetText(r)) : null);
     }));
+  }
+  /* "Target ≥ 1.0% · replies ÷ emails sent": the target, then what the rate divides by */
+  function rateTargetText(r) {
+    const parts = [];
+    if (r && r.target) parts.push("Target " + r.target);
+    if (r && r.basis) parts.push(r.basis);
+    return parts.join(" · ");
   }
   function moneyBlock(ch, ghost) {
     const spend = ch.spend || { usd: null, note: "" };
@@ -1408,7 +1417,9 @@ table.li-prev{min-width:560px}
   function showRatePill(r) {
     if (!r) return null;
     const st = r.state || "no_data";
-    return h("span", { class: "state is-lg " + (STATE_CLASS[st] || "is-none") }, "Show rate " + fmtRate(r) + " · " + (STATE_WORD[st] || "No data"));
+    const basis = rateTargetText(r);
+    return [h("span", { class: "state is-lg " + (STATE_CLASS[st] || "is-none") }, "Show rate " + fmtRate(r) + " · " + (STATE_WORD[st] || "No data")),
+      basis ? h("span", { class: "rate-basis" }, basis) : null];
   }
 
   /* ---------- Follow-ups ---------- */
@@ -2197,7 +2208,7 @@ table.li-prev{min-width:560px}
       h("dl", { class: "li-stats" },
         stat("Requests sent", fmtNum(w.requestsSent)),
         stat("Pending", fmtNum(w.pending), w.nearLimit ? h("span", { class: "tag tag--rose" }, "Near the 600 limit") : null, w.nearLimit ? null : "Keep it under about 600"),
-        stat("Acceptance", acc ? fmtRate(acc) : "—", acc ? ratePill(acc) : null, "Requests 14+ days old" + (acc && acc.target ? " · target " + acc.target : "")),
+        stat("Acceptance", acc ? fmtRate(acc) : "—", acc ? ratePill(acc) : null, (acc && rateTargetText(acc)) || "Requests 14+ days old"),
         stat("Calls booked", fmtNum(w.callsBooked)),
         stat("Closed", "Won " + fmtNum(w.closedWon) + " · Lost " + fmtNum(w.closedLost))),
       h("table", { class: "li-abt" },
@@ -2208,7 +2219,14 @@ table.li-prev{min-width:560px}
           return h("tr", null, h("th", { scope: "row" }, v + " · " + LI_VARIANT[v]), h("td", { class: "num" }, fmtNum(looms[v])),
             h("td", { class: "num" }, fmtRate(rr[v])), h("td", { class: "num" }, fmtRate(pr[v])));
         }))),
+      weeklyBasis(rr.A || rr.B, pr.A || pr.B),
       h("p", { class: "li-week__note" }, "Judge a variant after about 100 Looms, on positive replies and calls booked more than reply rate."));
+  }
+  function weeklyBasis(reply, positive) {
+    const parts = [];
+    if (reply && reply.basis) parts.push("Reply rate: " + reply.basis);
+    if (positive && positive.basis) parts.push("Positive: " + positive.basis);
+    return parts.length ? h("p", { class: "li-week__basis" }, parts.join(" · ")) : null;
   }
 
   /* Table */

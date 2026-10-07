@@ -32,8 +32,20 @@ It never writes to Instantly, Upwork, GHL or Calendar, so the live-write guard r
 
 ## Metric rules worth knowing
 
-- Human replies are Instantly's `reply_count_unique`. Instantly counts auto-replies separately (`reply_count_automatic_unique`).
-- An Upwork "client replied" means the proposal has a room. Only the client can open a room on a proposal, so this is the true reply rate. It replaces the blank `viewed/replied` columns in `proposals.csv`.
+- Every rate shows what it divides by under its target, for example "Target ≥ 1.0% · replies ÷ emails sent".
+- Cold email rates follow rule 6 of the `daily-reports-and-metrics` skill. Reply rate is unique human replies ÷ emails sent, and positive reply rate is opportunities ÷ emails sent. Before 2026-10-07 both divided by new leads contacted, which overstated them (30 replies on 4,293 emails read as 1.10% instead of 0.70%).
+- Human replies are Instantly's `reply_count_unique`. Instantly counts auto-replies separately (`reply_count_automatic_unique`), and the page never adds or subtracts them.
+- An Upwork "client replied" means the client answered the proposal. A proposal counts as answered in any of these cases:
+  - it is in status `Activated` ("Invitation accepted"), `Offered` or `Hired`
+  - `get_room` returns a room at `data.proposalRoom.id`
+  - the room cache holds a room id
+
+  Only the client can open a room on a proposal. The reply rate is answered proposals ÷ proposals sent in the range. This replaces the blank `viewed/replied` columns in `proposals.csv`.
+- Before 2026-10-07 the Upwork reply rate read 0%. Two causes:
+  - the page never fetched `Activated` proposals
+  - it read the room id from the wrong field, so the cache filled with nulls
+
+  Cache docs now carry `v: 2`, and any doc without it is ignored and checked again.
 - Connects are costed at $0.15 each (`CONFIG.upworkConnectUsd`). Cost per booked call is (monthly cost × days / 30, plus Connects) ÷ calls booked.
 - Thresholds come from the KPI table in the `daily-reports-and-metrics` skill:
 
@@ -41,10 +53,11 @@ It never writes to Instantly, Upwork, GHL or Calendar, so the live-write guard r
   | --- | --- | --- |
   | Bounce | ≤1% | >2% |
   | Real reply rate | ≥1% | <1% |
-  | Positive rate | ≥0.7% | <0.5% |
+  | Positive reply rate | ≥0.7% | <0.5% |
   | Positive → booked | ≥50% | <40% |
   | Upwork reply rate | ≥15% | <8% |
   | Show rate | ≥90% | <80% |
+  | LinkedIn acceptance (requests 14+ days old) | ≥30% | <15% |
 
 - Stale deals:
 
@@ -89,3 +102,9 @@ LinkedIn has no API, and Lorenzo does every LinkedIn action by hand. The `linked
 - Engine follow-up state (E1-E10 cadence, nurture, Upwork T-plan touch index) lives in the engine store, which is local JSON or a Modal Dict that the page cannot reach. The page shows GHL tasks, Upwork rooms and Instantly lead state instead.
 - The Upwork build type per proposal (prototype, n8n, chart) lives in `proposals.csv` on the laptop. It is not joined yet.
 - GHL has no Upwork pipeline yet (`ids.json` `ghl.pipelines.upwork` is null). Upwork deals show on the board only if they are added to the Sales pipeline.
+- Upwork pages one merged list of all proposals, newest first, and the connector drops the other statuses after fetching. A status can therefore get empty pages while more pages exist.
+  - Every status is paged up to 12, 20 or 40 pages (for the 7, 30 or 90-day range). Paging stops early once it reaches proposals older than the previous range.
+  - Hitting the cap counts as missed data only if the last page still held proposals of that status.
+    - **Accepted or Archived** (the denominator): the page then says "Upwork proposals before <date> did not load" and leaves the affected numbers blank rather than showing a count that is too low.
+    - **The other statuses:** only a warning.
+  - `totalCount` from this tool is not reliable, and the page does not use it.
