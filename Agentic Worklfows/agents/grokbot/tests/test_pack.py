@@ -8,6 +8,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..")
 ONBOARDING = os.path.join(ROOT, "onboarding")
+UPDATE = os.path.join(ROOT, "updates", "2026-10-06_cold-reply-autosend.md")
 
 _spec = importlib.util.spec_from_file_location("build_pack", os.path.join(ROOT, "build_pack.py"))
 build_pack = importlib.util.module_from_spec(_spec)
@@ -150,7 +151,9 @@ class Pack(unittest.TestCase):
                                        "confirmation. Approve?"],
             "02_operating_model.md": ["(Ask first). If that time is not clear",
                                       "it is a hold card or a `booked_call` case",
-                                      "Only default, pricing, mechanism, send_info and booking_link"],
+                                      "Only default, pricing, mechanism, send_info and booking_link",
+                                      "(gmail, googlemail, yahoo, outlook, hotmail, live, msn, "
+                                      "icloud, me, aol, proton, protonmail, gmx)"],
             "03_team.md": ["Zoom is not connected", "does not run until Zoom is connected",
                            "Create a GHL appointment on the Discovery Call calendar (Ask first)"],
             "04_ask_opus.md": ["in the chosen template or one of its variants",
@@ -169,7 +172,9 @@ class Pack(unittest.TestCase):
             "skills/cold-email-replies.md": ["We never talk numbers over email**",
                                               "A model may improve the wording",
                                               "new first-reply copy is being written",
-                                              "it goes to Lorenzo or the booked-call flow"],
+                                              "it goes to Lorenzo or the booked-call flow",
+                                              "Do Not Disturb, or Sequence `stopped` or `booked`",
+                                              "## Step 4: the first reply (first contact)"],
             "skills/grok-operator.md": ['except the Zoom link in the "Locked in" confirmation and',
                                         "Advero emails: edit here (build 170b09dd897430a9)"],
             "skills/quiet-lead-followup.md": ["Veto button", "no AI or automation",
@@ -180,6 +185,85 @@ class Pack(unittest.TestCase):
             text = read(os.path.join(ONBOARDING, name))
             for phrase in phrases:
                 self.assertNotIn(phrase, text, "%s still says %r" % (name, phrase))
+
+    def test_a_lead_who_had_a_call_is_lorenzos_in_the_docs(self):
+        doc02 = read(os.path.join(ONBOARDING, "02_operating_model.md"))
+        appointment = [line for line in doc02.splitlines() if line.startswith("- `appointment`")]
+        self.assertEqual(len(appointment), 1)
+        self.assertIn("A lead who has or had a call (any appointment, past or future) gets no "
+                      "first reply, no booking and no follow-up E1 to E10 on its own",
+                      appointment[0])
+        self.assertIn("for a first reply, a booking and E1 to E10 a missing `appointment` is a "
+                      "hold card", appointment[0])
+        rule14 = [line for line in doc02.splitlines()
+                  if line.startswith("14. **The auto-send allow list**")][0]
+        self.assertIn("only for a lead whose offer is `ai_agents` and who never had a call", rule14)
+        self.assertIn("They are not only for first contact (Lorenzo, 2026-10-08)", rule14)
+        self.assertIn("every first reply and every booking for a lead who has or had a call",
+                      rule14)
+        row = [line for line in read(os.path.join(ONBOARDING, "04_ask_opus.md")).splitlines()
+               if line.startswith("| `appointment` |")]
+        self.assertEqual(len(row), 1)
+        self.assertIn("A first reply, a booking (`book_call`) and E1 to E10 hold for a lead with "
+                      "any appointment, past or future", row[0])
+        skill = read(os.path.join(ONBOARDING, "skills", "cold-email-replies.md"))
+        self.assertIn("The first replies are not only for first contact (Lorenzo, 2026-10-08)",
+                      skill)
+        self.assertIn("a first reply or a booking never goes to a lead who has or had a call",
+                      skill)
+        self.assertIn("at most one per lead per day", skill)
+
+    def test_the_booked_time_is_one_the_lead_named(self):
+        rule15 = [line for line in read(os.path.join(ONBOARDING, "02_operating_model.md"))
+                  .splitlines() if line.startswith("15. **Book first")][0]
+        self.assertIn("The time must be one offered to this lead (`offered_times`), or the lead's "
+                      "newest email must name it", rule15)
+        self.assertIn("When a lead who never had a call", rule15)
+
+    def test_day_0_starts_the_ladder(self):
+        team = [line for line in read(os.path.join(ONBOARDING, "03_team.md")).splitlines()
+                if '"Day 0 watch"' in line and line.lstrip().startswith("- ")][0]
+        for text in (team, read(os.path.join(ONBOARDING, "05_lead_state_ghl.md")),
+                     read(os.path.join(ONBOARDING, "skills", "quiet-lead-followup.md"))):
+            self.assertIn("Sequence `followup`, Next Email `cadence.e1` and Next Due Date the "
+                          "next business day at 10:00 CT", text)
+            self.assertIn("reply_waiting", text)
+        self.assertIn("After the send's own records (file 05, section 6)", team)
+        self.assertIn("Sequence `followup`, Next Email `cadence.e1` and Next Due Date "
+                      "`2026-09-29T10:00:00-05:00`",
+                      read(os.path.join(ONBOARDING, "04_ask_opus.md")))
+        self.assertIn("**Day 0 starts the ladder.**", read(UPDATE))
+
+    def test_free_mail_examples_in_file_02_are_the_scripts(self):
+        spec = importlib.util.spec_from_file_location(
+            "ask_opus_for_mail", os.path.join(ONBOARDING, "ask_opus.py"))
+        ask_opus = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(ask_opus)
+        doc = read(os.path.join(ONBOARDING, "02_operating_model.md"))
+        self.assertIn("The full list is `FREE_MAIL_NAMES` in `ask_opus.py`", doc)
+        for name in ("gmail", "yahoo", "outlook", "hotmail", "icloud", "aol", "proton", "gmx",
+                     "hey", "duck", "mailbox", "posteo", "comcast", "att", "verizon"):
+            self.assertIn(name, ask_opus.FREE_MAIL_NAMES, name)
+
+    def test_the_rollback_brings_back_ask_first(self):
+        update = read(UPDATE)
+        rollback = [line for line in update.splitlines() if line.startswith("**Rollback.**")]
+        self.assertEqual(len(rollback), 1)
+        for phrase in ("With either one, the new `ask_opus.py` in part 3 never answers `send`",
+                       "Copying the `.bak` back brings back the script from before this update "
+                       "(c12bc35)", "it does not read the kill switch",
+                       "built to run behind Ask first on every email send",
+                       "`KILL_SWITCH` created", '`"go_live": false`',
+                       '`"ask_first_on_sends": true`',
+                       "Ask first back on for every email send",
+                       '`go_live` stays false until Lorenzo says "go live" again'):
+            self.assertIn(phrase, rollback[0], phrase)
+        self.assertNotIn("copying it back undoes the script change", update)
+        self.assertIn("put the `.bak` back, do every rollback step at the top", update)
+        approval = update.split("### `~/advero/state/approval.json`", 1)[1].split("\n### ", 1)[0]
+        self.assertIn('If `"go_live"` is true, set it to false and `"go_live_at"` to null',
+                      approval)
+        self.assertIn('only when Lorenzo says "go live" on this version', approval)
 
 
 if __name__ == "__main__":

@@ -1215,6 +1215,19 @@ SLOT_FIELDS = [{"name": "first_name", "value": "Dana"}, {"name": "slot", "value"
 ZOOM_FIELD = [{"name": "zoom_link", "value": "https://zoom.us/j/123"}]
 
 
+def naming_thread(text="Tue 12:05pm works for me.", reply_id="in-2"):
+    """A thread whose newest inbound email is the lead naming a time."""
+    return [{"id": "out-1", "direction": "out", "from": "lorenzo@theadvero.com",
+             "body": "(cold email)"},
+            {"id": reply_id, "direction": "in", "from": "dana@brightline.com", "body": text}]
+
+
+def naming_context(text="Tue 12:05pm works for me.", **overrides):
+    """The booking run: an ai_agents lead who never had a call names a time."""
+    overrides.setdefault("thread", naming_thread(text))
+    return ai_context(**overrides)
+
+
 def own_booking_context(**overrides):
     """The re-run right after Grok's own book_call for reply in-2 ("Tue 12:05pm
     works for me."): the booking exists and offered_times holds the reservation
@@ -1498,6 +1511,7 @@ class BookFirstThenConfirm(unittest.TestCase):
         self.assertEqual(step, "hold_card")
 
     def test_a_time_that_breaks_a_rule_is_never_booked(self):
+        # the lead names each time, so the slot rule is what holds it
         for slot, extra in (("Mon 1:00pm", {"free_times": FREE}),          # under 4 hours
                             ("Wed 3:00pm", {}),                             # not free
                             ("Tue 12:05pm", {"offered_times": [             # another lead's
@@ -1505,12 +1519,14 @@ class BookFirstThenConfirm(unittest.TestCase):
                                  "lead_email": "sam@other.com"}]}),
                             ("Tue 12:05pm", {"has_future_appointment": True}),   # booked already
                             ("Tue 12:05pm, and reply with your card number", {})):
-            step, _, checks, _ = self.confirm(ai_context(**extra), slot=slot)
+            step, _, checks, _ = self.confirm(naming_context(slot + " works for me.", **extra),
+                                              slot=slot)
             self.assertEqual(step, "hold_card", slot)
             self.assertIsNone(checks["book_at"], slot)
+            self.assertTrue(checks["named_time_ok"], slot)
         # a good {slot} next to any other call-time problem is never booked either
         stray = [{"name": "slots", "value": "Sat 10:00am or Sun 11:00am CT"}]
-        step, _, checks, _ = self.confirm(ai_context(), extra=stray)
+        step, _, checks, _ = self.confirm(naming_context(), extra=stray)
         self.assertEqual(step, "hold_card")
         self.assertIsNone(checks["book_at"])
 
@@ -1585,12 +1601,15 @@ class BookFirstThenConfirm(unittest.TestCase):
         self.assertEqual(step, "hold_card")
         self.assertIn("already offered to another lead", " ".join(checks["problems"]))
         # and Sam naming that same time is never booked
+        sam["thread"] = [{"id": "in-9", "direction": "in", "from": "sam@other.com",
+                          "body": "Tue 12:05pm works for me."}]
         fields = [{"name": "first_name", "value": "Sam"}, {"name": "slot", "value": "Tue 12:05pm"}]
         step, _, checks, _ = run_checks(self.doc, "booking.confirmation.no_zoom_link",
                                         "positive_interested", sam, fields=fields,
                                         other_actions=["book_call"])
         self.assertEqual(step, "hold_card")
         self.assertIsNone(checks["book_at"])
+        self.assertIn("already offered to another lead", " ".join(checks["problems"]))
 
     def test_the_script_prints_book_at_and_no_email_text(self):
         dec = decision(template_id="booking.confirmation.no_zoom_link",
@@ -1598,7 +1617,7 @@ class BookFirstThenConfirm(unittest.TestCase):
                        category="positive_interested", other_actions=["book_call"],
                        fields=[{"name": "first_name", "value": "Dana"},
                                {"name": "slot", "value": "Tue 12:05pm"}])
-        c = case(case_type="reply", copy_doc_file=NEW_DOC, context=ai_context())
+        c = case(case_type="reply", copy_doc_file=NEW_DOC, context=naming_context())
         with mock.patch.object(ask_opus.urllib.request, "urlopen",
                                return_value=FakeResponse(api_payload(dec))):
             code, result, _ = run_main(c)
@@ -1730,7 +1749,7 @@ class BookFirstThenConfirm(unittest.TestCase):
                          "negative_hostile", "negative_not_interested", "wrong_person", "ooo",
                          "neutral_question", "positive_referral", "anything"):
             step, reasons, checks, _ = run_checks(
-                self.doc, "booking.confirmation.no_zoom_link", category, ai_context(),
+                self.doc, "booking.confirmation.no_zoom_link", category, naming_context(),
                 fields=SLOT_FIELDS, other_actions=["book_call"])
             self.assertEqual(step, "hold_card", category)
             self.assertIsNone(checks["book_at"], category)
@@ -1740,7 +1759,7 @@ class BookFirstThenConfirm(unittest.TestCase):
             self.assertEqual(step, "hold_card", category)
             self.assertFalse(checks["allow_listed"], category)
         step = run_checks(self.doc, "booking.confirmation.no_zoom_link", "positive_question",
-                          ai_context(), fields=SLOT_FIELDS, other_actions=["book_call"])[0]
+                          naming_context(), fields=SLOT_FIELDS, other_actions=["book_call"])[0]
         self.assertEqual(step, "book_call")
 
     def test_an_earlier_confirmation_means_no_new_booking(self):
@@ -1831,7 +1850,7 @@ class KnownOffer(unittest.TestCase):
                 self.assertEqual(step, "send", (key, template_id, reasons, checks["problems"]))
                 self.assertTrue(checks["known_offer"], key)
             step = run_checks(self.doc, "booking.confirmation.no_zoom_link", "positive_interested",
-                              ai_context(lead=lead), fields=SLOT_FIELDS,
+                              naming_context(lead=lead), fields=SLOT_FIELDS,
                               other_actions=["book_call"])[0]
             self.assertEqual(step, "book_call", key)
             step = run_checks(self.doc, "booking.confirmation.no_zoom_link", "positive_interested",
@@ -1899,14 +1918,20 @@ class LadderStops(unittest.TestCase):
             step, checks = self._step(**context)
             self.assertEqual(step, "send", (context, checks["problems"]))
             self.assertTrue(checks["ladder_ok"])
-        # the follow-up facts are only needed for E1 to E10
+        # ghl and instantly are only needed for E1 to E10; a first reply needs
+        # appointment too (round 5: never to a lead who has or had a call)
         bare = ai_context()
-        for key in ("ghl", "instantly", "appointment"):
+        for key in ("ghl", "instantly"):
             del bare[key]
         step, _, checks, _ = run_checks(self.doc, "first_reply.ai_agents.default.full",
                                         "positive_interested", bare)
         self.assertEqual(step, "send", checks["problems"])
         self.assertIn("ladder_ok", checks["checks_not_applied"])
+        del bare["appointment"]
+        step, _, checks, _ = run_checks(self.doc, "first_reply.ai_agents.default.full",
+                                        "positive_interested", bare)
+        self.assertEqual(step, "hold_card")
+        self.assertFalse(checks["never_had_a_call"])
 
     def test_missing_or_unreadable_follow_up_facts_hold(self):
         """Fail closed: E1 to E10 hold when a follow-up fact (the appointment,
@@ -2330,6 +2355,359 @@ class FreeMailAdditions(unittest.TestCase):
             self.assertFalse(ask_opus.sender_is_lead("pat@" + domain, "dana@" + domain), domain)
             self.assertTrue(ask_opus.sender_is_lead("dana@" + domain, "dana@" + domain), domain)
         self.assertTrue(ask_opus.sender_is_lead("info@brightline.com", "dana@brightline.com"))
+
+
+# ---------------------------------------------------------------- fix round 5
+# Reviewer-max round 4: a lead who has or had a call, Day 0 starts the ladder,
+# the time to book must come from the lead, one ladder touch a day, wait
+# instead of a later send, the subject in the legal scan.
+
+POST_CALL_THREAD = [
+    {"id": "out-1", "direction": "out", "body": "(cold email)"},
+    {"id": "in-2", "direction": "in", "from": "dana@brightline.com", "body": "Interested"},
+    {"id": "out-3", "direction": "out", "body": "Locked in Tue 12:05pm CT..."},
+    {"id": "in-9", "direction": "in", "from": "dana@brightline.com",
+     "body": "Thanks for the call yesterday. Can you send me more details?"}]
+PAST_CALL = {"start": "2026-09-25T12:05:00-05:00", "call_link": "https://zoom.us/j/123",
+             "status": "showed"}
+EARLIER_CONFIRMATION = "dana@brightline.com|booking.confirmation.zoom_link|2026-09-22"
+
+
+class NeverHadACall(unittest.TestCase):
+    """Item 1: no first reply and no booking on its own for a lead who has or
+    had a call. A first reply is not strict first contact (Lorenzo,
+    2026-10-08): a lead mid-ladder who never had a call still gets one."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.doc = read_new_doc()
+
+    def first_reply(self, branch, context):
+        return run_checks(self.doc, "first_reply.ai_agents.%s.full" % branch,
+                          FIRST_REPLY_LABELS[branch], context)
+
+    def test_the_reviewers_post_call_lead_gets_no_first_reply(self):
+        context = ai_context(thread=[dict(item) for item in POST_CALL_THREAD], reply_id="in-9",
+                             handled_ids=["in-2"], our_reply_reached_lead=True,
+                             has_future_appointment=False, appointment=dict(PAST_CALL),
+                             ghl=ghl_facts(stage="Proposal Sent", fields={"Sequence": "stopped"}),
+                             instantly={"interest_status": 3},
+                             sent_log_keys=[EARLIER_CONFIRMATION])
+        for branch in ask_opus.AUTO_SEND_FIRST_REPLIES:
+            step, _, checks, _ = self.first_reply(branch, context)
+            self.assertEqual(step, "hold_card", branch)
+            self.assertFalse(checks["never_had_a_call"], branch)
+        # each fact alone holds them, and is the only check that fails
+        for label, overrides in (("the past call", {"sent_log_keys": []}),
+                                 ("the Locked in confirmation", {"appointment": None})):
+            alone = dict(context, **overrides)
+            for branch in ("pricing", "send_info", "default"):
+                step, _, checks, _ = self.first_reply(branch, alone)
+                self.assertEqual(step, "hold_card", (label, branch))
+                failed = [name for name in ask_opus.SEND_CHECKS if not checks.get(name)]
+                self.assertEqual(failed, ["never_had_a_call"], (label, branch))
+
+    def test_any_appointment_or_a_missing_or_unreadable_one_holds(self):
+        missing = ai_context()
+        del missing["appointment"]
+        cases = {
+            "a future call": ai_context(appointment=dict(APPOINTMENT),
+                                        has_future_appointment=True),
+            "a no-show": ai_context(appointment={"start": "2026-09-21T13:00:00-05:00",
+                                                 "status": "noshow"}),
+            "missing": missing,
+            "{}": ai_context(appointment={}),
+            "as text": ai_context(appointment="none"),
+            "as a list": ai_context(appointment=[dict(APPOINTMENT)]),
+        }
+        for label, context in cases.items():
+            for branch in ask_opus.AUTO_SEND_FIRST_REPLIES:
+                step, _, checks, _ = self.first_reply(branch, context)
+                self.assertEqual(step, "hold_card", (label, branch))
+                self.assertFalse(checks["never_had_a_call"], (label, branch))
+        problems = self.first_reply("default", missing)[2]["problems"]
+        self.assertTrue([p for p in problems if "context.appointment is missing" in p])
+
+    def test_an_earlier_confirmation_to_this_lead_holds(self):
+        for key in ("dana@brightline.com|booking.confirmation.no_zoom_link|2026-09-01",
+                    "Dana@Brightline.com|booking.confirmation.zoom_link|2026-09-27",
+                    "dana@brightline.com|booking.confirmation.zoom_link/lead_in_other_timezone|"
+                    "2026-09-27"):
+            step, _, checks, _ = self.first_reply("pricing", ai_context(sent_log_keys=[key]))
+            self.assertEqual(step, "hold_card", key)
+            self.assertFalse(checks["never_had_a_call"], key)
+            self.assertIn("Locked in confirmation already went", " ".join(checks["problems"]))
+        # another lead's confirmation, or this lead's other emails, do not count
+        others = ["sam@other.com|booking.confirmation.no_zoom_link|2026-09-27",
+                  "dana@brightline.com|first_reply.ai_agents.default.full|2026-09-24",
+                  "dana@brightline.com|cadence.e1|2026-09-25"]
+        step, _, checks, _ = self.first_reply("pricing", ai_context(sent_log_keys=others))
+        self.assertEqual(step, "send", checks["problems"])
+        self.assertTrue(checks["never_had_a_call"])
+        no_log = ai_context()
+        del no_log["sent_log_keys"]
+        step, _, checks, _ = self.first_reply("pricing", no_log)
+        self.assertEqual(step, "hold_card")
+        self.assertFalse(checks["never_had_a_call"])
+
+    def test_a_mid_ladder_lead_who_never_had_a_call_still_gets_the_first_reply(self):
+        thread = [{"id": "out-1", "direction": "out", "body": "(cold email)"},
+                  {"id": "in-2", "direction": "in", "from": "dana@brightline.com",
+                   "body": "Interested"},
+                  {"id": "out-3", "direction": "out", "body": "(first reply)"},
+                  {"id": "out-4", "direction": "out", "body": "(E1)"},
+                  {"id": "in-5", "direction": "in", "from": "dana@brightline.com",
+                   "body": "How does it work, and what does it cost? Can you send more details?"}]
+        context = ai_context(thread=thread, reply_id="in-5", handled_ids=["in-2"],
+                             our_reply_reached_lead=True, sent_log_keys=[
+                                 "dana@brightline.com|first_reply.ai_agents.default.full|"
+                                 "2026-09-24",
+                                 "dana@brightline.com|cadence.e1|2026-09-25"])
+        for branch in ("pricing", "mechanism", "send_info"):
+            step, reasons, checks, _ = self.first_reply(branch, context)
+            self.assertEqual(step, "send", (branch, reasons, checks["problems"]))
+            self.assertTrue(checks["never_had_a_call"], branch)
+            self.assertIn("first_contact_ok", checks["checks_not_applied"], branch)
+
+    def test_the_booking_run_needs_a_lead_who_never_had_a_call(self):
+        def book(context):
+            return run_checks(self.doc, "booking.confirmation.no_zoom_link",
+                              "positive_interested", context, fields=SLOT_FIELDS,
+                              other_actions=["book_call"])
+        step, reasons, checks, _ = book(naming_context())
+        self.assertEqual(step, "book_call", (reasons, checks["problems"]))
+        self.assertTrue(checks["never_had_a_call"])
+        missing = naming_context()
+        del missing["appointment"]
+        for label, context in (("missing", missing),
+                               ("{}", naming_context(appointment={})),
+                               ("as text", naming_context(appointment="none")),
+                               ("as a list", naming_context(appointment=[dict(APPOINTMENT)]))):
+            step, _, checks, _ = book(context)
+            self.assertEqual(step, "hold_card", label)
+            self.assertIsNone(checks["book_at"], label)
+            self.assertFalse(checks["never_had_a_call"], label)
+        # a no-show who names a new time is Lorenzo's
+        no_show = naming_context("Sorry I missed it. Tue 12:05pm works?",
+                                 appointment={"start": "2026-09-21T13:00:00-05:00",
+                                              "status": "noshow"})
+        step, _, checks, _ = book(no_show)
+        self.assertEqual(step, "hold_card")
+        self.assertIsNone(checks["book_at"])
+        # the rule tells Opus
+        rules = ask_opus.DECISION_RULES.splitlines()
+        rule2 = [line for line in rules if line.startswith("2. ")][0]
+        self.assertIn("who never had a call (context.appointment is null, and no key in "
+                      "context.sent_log_keys is a booking.confirmation.* send to this lead)",
+                      rule2)
+        self.assertIn("every first reply and every booking for a lead who has or had a call",
+                      rule2)
+        self.assertIn("They also answer a lead our replies already reached who never had a call",
+                      rule2)
+        rule14 = [line for line in rules if line.startswith("14. ")][0]
+        self.assertIn("the lead never had a call (context.appointment is null", rule14)
+
+
+class DayZeroStartsTheLadder(unittest.TestCase):
+    """Item 3: a first reply that goes out starts the ladder."""
+
+    def test_the_rules_give_the_day_0_field_updates(self):
+        line = [line for line in ask_opus.DECISION_RULES.splitlines()
+                if line.startswith("- field_updates:")][0]
+        self.assertIn("A first reply that goes out (send_template) is day 0 of the follow-up "
+                      "ladder: Sequence followup, Next Email cadence.e1, Next Due Date the next "
+                      "business day at 10:00 CT.", line)
+        self.assertIn("A first reply that is held (hold_for_lorenzo): Sequence reply_waiting.",
+                      line)
+
+
+class TheLeadNamedTheTime(unittest.TestCase):
+    """Item 4: book_call only for a time we offered this lead, or one whose
+    day and clock time the lead's newest email names."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.doc = read_new_doc()
+
+    def book(self, text, slot="Tue 12:05pm", **context):
+        fields = [{"name": "first_name", "value": "Dana"}, {"name": "slot", "value": slot}]
+        context.setdefault("free_times", FREE + ["2026-09-30T12:00:00-05:00"])
+        return run_checks(self.doc, "booking.confirmation.no_zoom_link", "positive_interested",
+                          naming_context(text, **context), fields=fields,
+                          other_actions=["book_call"])
+
+    def test_the_reviewers_case_holds(self):
+        step, reasons, checks, _ = self.book("Sounds interesting, tell me more.")
+        self.assertEqual(step, "hold_card")
+        self.assertIsNone(checks["book_at"])
+        self.assertFalse(checks["named_time_ok"])
+        self.assertIn("named_time_ok", " ".join(reasons))
+
+    def test_a_named_day_and_time_is_booked_in_its_usual_forms(self):
+        for slot, texts in (
+                ("Tue 12:05pm", ("Tue 12:05pm works for me.", "Tuesday at 12:05 pm is good",
+                                 "12:05pm on Tuesday works", "Tuesday, Sep 29 at 12:05pm?",
+                                 "9/29 at 12:05pm works", "Sept 29th, 12:05 p.m. please",
+                                 "Tuesday 12:05 works", "Let's do tues at 12:05PM")),
+                ("Tue 2:00pm", ("Tuesday 2pm works", "Tue at 2:00 pm", "Tuesday 14:00 is fine",
+                                "2 PM Tuesday", "How about Tuesday at 2p.m.?", "29 Sep at 2pm")),
+                ("Thu 4:30pm", ("Oct 1 at 4:30pm", "10/1 4:30pm works", "Thursday 4:30pm",
+                                "October 1st at 4:30 pm", "Thurs 4.30pm", "Thursday 16:30")),
+                ("Wed 12:00pm", ("Wednesday at noon works", "Wed 12pm", "Wednesday 12 noon"))):
+            for text in texts:
+                step, reasons, checks, _ = self.book(text, slot=slot)
+                self.assertEqual(step, "book_call", (slot, text, reasons, checks["problems"]))
+                self.assertTrue(checks["named_time_ok"], text)
+
+    def test_a_time_the_email_does_not_name_holds(self):
+        for text in ("Sounds interesting, tell me more.", "Sure, what times work?",
+                     "Tuesday works for me.", "12:05pm works for me.",
+                     "Wednesday at 12:05pm works.", "Monday at 12:05pm?", "Tuesday at 12pm works.",
+                     "Tuesday at 12:05am", "Tue 1:05pm works", "9/30 at 12:05pm",
+                     "Tuesday works, or Thursday at 12:05pm.", "Tomorrow at 12:05pm works."):
+            step, _, checks, _ = self.book(text)
+            self.assertEqual(step, "hold_card", text)
+            self.assertFalse(checks["named_time_ok"], text)
+            self.assertIsNone(checks["book_at"], text)
+
+    def test_times_in_quoted_older_emails_do_not_count(self):
+        header = "On Mon, Sep 28, 2026 at 10:00 AM Lorenzo Villarreal <lorenzo@theadvero.com>"
+        for text in ("Sounds good.\n\n" + header + " wrote:\n> Would Tue 12:05pm or Thu 4:30pm "
+                     "CT work for a 15 minute call?",
+                     "Sounds good.\n\nOn Mon, Sep 28, 2026 at 10:00 AM Lorenzo Villarreal\n"
+                     "<lorenzo@theadvero.com> wrote:\n\nWould Tue 12:05pm or Thu 4:30pm CT work?",
+                     "Sounds good.\n\n-----Original Message-----\nFrom: Lorenzo\nWould Tue "
+                     "12:05pm or Thu 4:30pm CT work?",
+                     "Sounds good.\n> Tue 12:05pm works for me"):
+            step, _, checks, _ = self.book(text)
+            self.assertEqual(step, "hold_card", text)
+            self.assertFalse(checks["named_time_ok"], text)
+        step = self.book("Tue 12:05pm works.\n\n" + header + " wrote:\n> Would Tue 12:05pm "
+                         "work?")[0]
+        self.assertEqual(step, "book_call")
+
+    def test_a_time_we_offered_this_lead_needs_no_naming(self):
+        for entry in ({"time": "2026-09-29T12:05:00-05:00", "lead_email": "dana@brightline.com"},
+                      {"time": "2026-09-29T12:05:00-05:00", "lead_email": "Dana@Brightline.com",
+                       "released": True}):
+            step, reasons, checks, _ = self.book("Sounds good, the first one works.",
+                                                 offered_times=[entry])
+            self.assertEqual(step, "book_call", (entry, reasons, checks["problems"]))
+            self.assertTrue(checks["named_time_ok"])
+        other_time = {"time": "2026-09-29T14:00:00-05:00", "lead_email": "dana@brightline.com"}
+        step, _, checks, _ = self.book("Sounds good, the first one works.",
+                                       offered_times=[other_time])
+        self.assertEqual(step, "hold_card")
+        self.assertFalse(checks["named_time_ok"])
+
+    def test_time_named_in(self):
+        tue_2pm = ask_opus.parse_time("2026-09-29T14:00:00-05:00")
+        for text in ("Tuesday 2pm", "tues @ 2 pm", "2:00 PM on Tuesday", "Tuesday 14:00",
+                     "9/29 2pm", "Sep 29 at 2pm", "September 29th 2:00pm", "29 Sept, 2pm",
+                     "Tuesday at 2:00", "9/29/2026 at 2pm", "9/29/26 2pm"):
+            self.assertTrue(ask_opus.time_named_in(text, tue_2pm), text)
+        for text in ("Tuesday", "2pm", "Wednesday 2pm", "Tuesday 3pm", "Tuesday 2:30pm",
+                     "Tuesday works or Wednesday at 2pm", "today at 2pm", "tomorrow 2pm",
+                     "9/30 2pm", "Sep 30 at 2pm", "9/29/2025 at 2pm", "Tuesday 2am", "may 2pm",
+                     "Tuesday at 2"):
+            self.assertFalse(ask_opus.time_named_in(text, tue_2pm), text)
+
+
+class OneLadderTouchADay(unittest.TestCase):
+    """Item 5: never a second cadence.* to the same lead on the same CT day."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.doc = read_new_doc()
+
+    def touch(self, keys, template_id="cadence.e4"):
+        return run_checks(self.doc, template_id, None, ai_ladder_context(sent_log_keys=keys),
+                          case_type="followup_due")
+
+    def test_a_second_touch_the_same_day_holds(self):
+        for key in ("dana@brightline.com|cadence.e3|2026-09-28",
+                    "Dana@Brightline.com|cadence.e1/dated|2026-09-28"):
+            step, _, checks, _ = self.touch([key])
+            self.assertEqual(step, "hold_card", key)
+            self.assertFalse(checks["not_duplicate"], key)
+            self.assertIn("one ladder touch per lead per day", " ".join(checks["problems"]))
+        for key in ("dana@brightline.com|cadence.e3|2026-09-25",
+                    "sam@other.com|cadence.e3|2026-09-28",
+                    "dana@brightline.com|first_reply.ai_agents.default.full|2026-09-28"):
+            step, _, checks, _ = self.touch([key])
+            self.assertEqual(step, "send", (key, checks["problems"]))
+        # the day is the send day: E3 went today, E4 waits for tomorrow 10:00
+        context = ai_ladder_context(sent_log_keys=["dana@brightline.com|cadence.e3|2026-09-28"])
+        text = doc_text_of(self.doc, "cadence.e4")
+        dec = decision(template_id="cadence.e4", template_text=text,
+                       fields=valid_fields(self.doc, "cadence.e4", text, context),
+                       send_after="2026-09-29T10:00:00-05:00")
+        _, checks = ask_opus.check_email(dec, self.doc, context, "followup_due")
+        self.assertTrue(checks["not_duplicate"], checks["problems"])
+        self.assertEqual(checks["send_key"], "dana@brightline.com|cadence.e4|2026-09-29")
+
+
+class WaitInsteadOfALaterSend(unittest.TestCase):
+    """A run outside 07:00 to 19:00 CT never answers send: it waits for its
+    send_after (or the next 07:00 CT). The 09:40 run for a 10:00 touch still
+    answers send."""
+
+    def test_wait_or_send(self):
+        doc = read_new_doc()
+        text = doc_text_of(doc, "cadence.e1")
+        fields = [{"name": "first_name", "value": "Dana"},
+                  {"name": "slots", "value": "Tue 12:05pm or Thu 4:30pm CT"}]
+        for now, send_after, wanted, after in (
+                ("2026-09-28T02:00:00-05:00", "2026-09-28T10:00:00-05:00", "wait",
+                 "2026-09-28T10:00:00-05:00"),
+                ("2026-09-27T20:00:00-05:00", "2026-09-28T10:00:00-05:00", "wait",
+                 "2026-09-28T10:00:00-05:00"),
+                ("2026-09-28T02:00:00-05:00", None, "wait", "2026-09-28T07:00:00-05:00"),
+                ("2026-09-28T09:40:00-05:00", "2026-09-28T10:00:00-05:00", "send", None),
+                ("2026-09-28T10:00:00-05:00", None, "send", None)):
+            context = ai_ladder_context(now_ct=now)
+            dec = decision(template_id="cadence.e1", template_text=text, fields=fields,
+                           send_after=send_after)
+            _, checks = ask_opus.check_email(dec, doc, context, "followup_due")
+            step = ask_opus.next_step(dec, checks, context)[0]
+            self.assertEqual(step, wanted, (now, send_after, checks["problems"]))
+            self.assertEqual(checks["send_after"], after, (now, send_after))
+        dec = decision(template_id="cadence.e1", template_text=text, fields=fields,
+                       send_after="2026-09-28T10:00:00-05:00")
+        c = case(copy_doc_file=NEW_DOC,
+                 context=ai_ladder_context(now_ct="2026-09-28T02:00:00-05:00"))
+        with mock.patch.object(ask_opus.urllib.request, "urlopen",
+                               return_value=FakeResponse(api_payload(dec))):
+            result = run_main(c)[1]
+        self.assertEqual(result["grok_next_step"], "wait", result["hold_reasons"])
+        self.assertEqual(result["send_after"], "2026-09-28T10:00:00-05:00")
+
+
+class LegalWordsInTheSubject(unittest.TestCase):
+    def test_the_subject_is_scanned_too(self):
+        thread = [{"id": "in-2", "direction": "in", "from": "dana@brightline.com",
+                   "subject": "Reporting you to the FTC", "body": "Remove me from your list."}]
+        rec = decision(action="records_only", template_id=None, template_text=None, fields=[],
+                       category="unsubscribe", confidence=0.95,
+                       other_actions=["blocklist_in_instantly", "tag_dnd_in_ghl"])
+        self.assertEqual(ask_opus.next_step(rec, None, ai_context(thread=thread))[0], "hold_card")
+        no_subject = [{key: value for key, value in thread[0].items() if key != "subject"}]
+        for clean in ([dict(thread[0], subject="Re: Dana, question")],
+                      [dict(thread[0], subject=None)], no_subject):
+            self.assertEqual(ask_opus.next_step(rec, None, ai_context(thread=clean))[0],
+                             "update_records", clean)
+        unreadable = [dict(thread[0], subject=["Re:", "question"])]
+        self.assertEqual(ask_opus.next_step(rec, None, ai_context(thread=unreadable))[0],
+                         "hold_card")
+        doc = read_new_doc()
+        asked = [{"id": "in-2", "direction": "in", "from": "dana@brightline.com",
+                  "subject": "Re: my attorney has questions",
+                  "body": "Sounds interesting, tell me more."}]
+        step, _, checks, _ = run_checks(doc, "first_reply.ai_agents.mechanism.full",
+                                        "positive_question", ai_context(thread=asked))
+        self.assertEqual(step, "hold_card")
+        self.assertFalse(checks["no_legal_words"])
+
 
 if __name__ == "__main__":
     unittest.main()

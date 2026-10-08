@@ -11,9 +11,9 @@ Who does what (2026-09-25; see `grok-operator`): the engine timer wakes Grok onl
 
 ## When the ladder starts
 
-- **Day 0 is the first reply** to the lead (Lorenzo, 2026-09-23; since 2026-10-06 the AI agents first replies auto-send from approved templates for an `ai_agents` lead, the rest go to Lorenzo, see `cold-email-replies`).
+- **Day 0 is the first reply** to the lead (Lorenzo, 2026-09-23; since 2026-10-06 the AI agents first replies auto-send from approved templates for an `ai_agents` lead who never had a call, the rest go to Lorenzo, see `cold-email-replies`).
 - Day 0 is recorded in one of four ways: a first reply that auto-sent, an approved send from a hold card, Lorenzo tapping Mark sent after sending it himself, or the engine finding his hand-sent reply in the Instantly thread (a manual email from the same inbox, in the same thread, after the reply the draft answered, within 14 days of that reply).
-- When day 0 is found, the two times in that reply are recorded as offered to this lead, the lead leaves nurture if enrolled (`re_engaged`), and E1 is set for the next business day at 10:00 CT (a Friday reply means a Monday E1).
+- When day 0 is found, the two times in that reply are recorded as offered to this lead, the lead leaves nurture if enrolled (`re_engaged`), and GHL gets Sequence `followup`, Next Email `cadence.e1` and Next Due Date the next business day at 10:00 CT (a Friday reply means a Monday E1), written after the send's own records. A held first reply records Sequence `reply_waiting` until a first reply goes out; Lorenzo's own reply, once sent, is day 0 the same way.
 - A lead who wrote again after the first reply, or has another open draft, is not armed.
 
 ## Schedule
@@ -31,7 +31,7 @@ Who does what (2026-09-25; see `grok-operator`): the engine timer wakes Grok onl
 | E9 | 7 days after E8 | yes | `cadence.e9` + `cadence.e9.observation.<niche>_<offer>` |
 | E10 | 7 days after E9 | yes | `cadence.e10` |
 
-Every touch goes at 10:00 CT on a business day, never on weekends, never before 10:00, only inside the 07:00 to 19:00 CT send window, one touch per lead per day. Subject "Re: {original_subject}" in the same thread from the same inbox (no subject: "Re: {first_name}, question", then "Re: your reply").
+Every touch goes at 10:00 CT on a business day, never on weekends, never before 10:00, only inside the 07:00 to 19:00 CT send window, one touch per lead per day (`ask_opus.py` holds a second `cadence.*` touch to the same lead on the same CT day). Subject "Re: {original_subject}" in the same thread from the same inbox (no subject: "Re: {first_name}, question", then "Re: your reply").
 
 E1 goes out at 10:00 CT like every other touch, with no heads-up or veto first (Lorenzo, 2026-10-06).
 

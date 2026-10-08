@@ -50,6 +50,8 @@ Status: **pending creation.** They do not exist in GHL yet. Lorenzo creates them
 | Next Email | Text | Template id due next, for example `cadence.e4`, or `none` |
 | Next Due Date | Date and time | When the next email is due, CT. Empty when Next Email is `none` |
 
+Day 0 starts the ladder. When a first reply goes out (on its own, from a hold card Lorenzo approved, or sent by Lorenzo himself), set Sequence `followup`, Next Email `cadence.e1` and Next Due Date the next business day at 10:00 CT, after the send's own records (section 6) and over whatever they wrote (file 03, "Day 0 watch"). A held first reply records Sequence `reply_waiting` until a first reply goes out.
+
 ## 6. After every send (and every step with no send)
 
 In this order:
