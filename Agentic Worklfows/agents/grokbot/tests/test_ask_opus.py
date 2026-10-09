@@ -87,7 +87,8 @@ def full_context(**overrides):
                                "lead_email": "sam@other.com"}],
             "thread": [{"id": "out-1", "direction": "out", "from": "lorenzo@theadvero.com",
                         "body": "(cold email)"},
-                       {"id": "in-2", "direction": "in", "from": "dana@brightline.com",
+                       {"id": "in-2", "direction": "in", "subject": "Re: Dana, question",
+                        "from": "dana@brightline.com",
                         "body": "Sounds interesting, tell me more."}],
             "lead": {"campaign_key": "cleaning_reactivation", "first_name": "Dana",
                      "company": "Brightline Cleaning LLC"}}
@@ -649,7 +650,8 @@ class FirstReplyAutoSend(unittest.TestCase):
     def test_legal_threat_is_never_a_silent_blocklist(self):
         dec = decision(action="records_only", category="unsubscribe", template_id=None,
                        template_text=None, fields=[], other_actions=["blocklist_in_instantly"])
-        thread = [{"id": "in-2", "direction": "in", "from": "dana@brightline.com",
+        thread = [{"id": "in-2", "direction": "in", "subject": "Re: Dana, question",
+                   "from": "dana@brightline.com",
                    "body": "Remove me or my lawyer will hear about this."}]
         self.assertEqual(self._run(dec, thread=thread)["grok_next_step"], "hold_card")
         thread[0]["body"] = "Remove me. Thanks for the courtesy."
@@ -1219,7 +1221,8 @@ def naming_thread(text="Tue 12:05pm works for me.", reply_id="in-2"):
     """A thread whose newest inbound email is the lead naming a time."""
     return [{"id": "out-1", "direction": "out", "from": "lorenzo@theadvero.com",
              "body": "(cold email)"},
-            {"id": reply_id, "direction": "in", "from": "dana@brightline.com", "body": text}]
+            {"id": reply_id, "direction": "in", "subject": "Re: Dana, question",
+             "from": "dana@brightline.com", "body": text}]
 
 
 def naming_context(text="Tue 12:05pm works for me.", **overrides):
@@ -1236,7 +1239,8 @@ def own_booking_context(**overrides):
             "offered_times": [dict(RESERVATION)],
             "thread": [{"id": "out-1", "direction": "out", "from": "lorenzo@theadvero.com",
                         "body": "(cold email)"},
-                       {"id": "in-2", "direction": "in", "from": "dana@brightline.com",
+                       {"id": "in-2", "direction": "in", "subject": "Re: Dana, question",
+                        "from": "dana@brightline.com",
                         "body": "Tue 12:05pm works for me."}]}
     base.update(overrides)
     return ai_context(**base)
@@ -1443,7 +1447,8 @@ class NewDocBuild(unittest.TestCase):
             self.assertFalse(checks["allow_listed"], tag)
 
     def test_a_booked_lead_asking_to_reschedule_gets_no_already_booked_email(self):
-        thread = [{"id": "in-3", "direction": "in", "from": "dana@brightline.com",
+        thread = [{"id": "in-3", "direction": "in", "subject": "Re: Dana, question",
+                   "from": "dana@brightline.com",
                    "body": "Something came up, can we move it to Thursday?"}]
         booked = ai_context(has_future_appointment=True, appointment=dict(APPOINTMENT),
                             our_reply_reached_lead=True, thread=thread, reply_id="in-3")
@@ -1592,7 +1597,8 @@ class BookFirstThenConfirm(unittest.TestCase):
                          offered_times=[reserved],
                          lead={"campaign_key": "ai_agents", "first_name": "Sam",
                                "company": "Other Co"},
-                         thread=[{"id": "in-9", "direction": "in", "from": "sam@other.com",
+                         thread=[{"id": "in-9", "direction": "in", "subject": "Re: Sam, question",
+                                  "from": "sam@other.com",
                                   "body": "Sure, what times work?"}], reply_id="in-9")
         fields = [{"name": "first_name", "value": "Sam"},
                   {"name": "slots", "value": "Tue 12:05pm or Thu 4:30pm CT"}]
@@ -1601,7 +1607,8 @@ class BookFirstThenConfirm(unittest.TestCase):
         self.assertEqual(step, "hold_card")
         self.assertIn("already offered to another lead", " ".join(checks["problems"]))
         # and Sam naming that same time is never booked
-        sam["thread"] = [{"id": "in-9", "direction": "in", "from": "sam@other.com",
+        sam["thread"] = [{"id": "in-9", "direction": "in", "subject": "Re: Sam, question",
+                          "from": "sam@other.com",
                           "body": "Tue 12:05pm works for me."}]
         fields = [{"name": "first_name", "value": "Sam"}, {"name": "slot", "value": "Tue 12:05pm"}]
         step, _, checks, _ = run_checks(self.doc, "booking.confirmation.no_zoom_link",
@@ -1661,7 +1668,8 @@ class BookFirstThenConfirm(unittest.TestCase):
         # X1: the lead booked through the calendar link (no reservation, never a
         # book_call), then wrote with a question
         thread = [{"id": "out-1", "direction": "out", "body": "(our first reply with the link)"},
-                  {"id": "in-5", "direction": "in", "from": "dana@brightline.com",
+                  {"id": "in-5", "direction": "in", "subject": "Re: Dana, question",
+                   "from": "dana@brightline.com",
                    "body": "I grabbed Tuesday 12:05 on your calendar. Can you send me "
                            "something to look over before we talk?"}]
         for offered in ([], [dict(RESERVATION)]):         # none, or one for an older reply
@@ -1678,7 +1686,8 @@ class BookFirstThenConfirm(unittest.TestCase):
         # X2: booked through Grok and confirmed on Sunday; Tuesday the lead asks
         # to move it
         thread = [{"id": "out-3", "direction": "out", "body": "Locked in Tue 12:05pm CT..."},
-                  {"id": "in-6", "direction": "in", "from": "dana@brightline.com",
+                  {"id": "in-6", "direction": "in", "subject": "Re: Dana, question",
+                   "from": "dana@brightline.com",
                    "body": "Something came up, can we move it to Thursday?"}]
         earlier = "dana@brightline.com|booking.confirmation.no_zoom_link|2026-09-27"
         for case_type in ("reply", "booked_call"):
@@ -1704,7 +1713,8 @@ class BookFirstThenConfirm(unittest.TestCase):
 
     def test_a_cancellation_holds(self):
         # X3: the lead cancels in words while the appointment still shows in GHL
-        thread = [{"id": "in-7", "direction": "in", "from": "dana@brightline.com",
+        thread = [{"id": "in-7", "direction": "in", "subject": "Re: Dana, question",
+                   "from": "dana@brightline.com",
                    "body": "Please cancel Tuesday, we went another way."}]
         context = own_booking_context(thread=thread, reply_id="in-7",
                                       our_reply_reached_lead=True)
@@ -1735,7 +1745,8 @@ class BookFirstThenConfirm(unittest.TestCase):
         # a stale reply_id: the thread's newest inbound email is a newer one,
         # or carries no id
         newer = own_booking_context()["thread"] + [
-            {"id": "in-9", "direction": "in", "from": "dana@brightline.com",
+            {"id": "in-9", "direction": "in", "subject": "Re: Dana, question",
+             "from": "dana@brightline.com",
              "body": "Actually, can we do Thursday instead?"}]
         no_id = [dict(item) for item in own_booking_context()["thread"]]
         del no_id[-1]["id"]
@@ -1882,6 +1893,10 @@ class LadderStops(unittest.TestCase):
             "DND on": dict(ghl=ghl_facts(dnd=True, tags=[])),
             "DND on, as text": dict(ghl=ghl_facts(dnd="True")),
             "a dnd tag": dict(ghl=ghl_facts(tags=["cold-email", " DND "])),
+            "a do-not-disturb tag": dict(ghl=ghl_facts(tags=["cold-email", "do-not-disturb"])),
+            "a Do Not Disturb tag": dict(ghl=ghl_facts(tags=["Do Not Disturb"])),
+            "a DO_NOT_DISTURB tag": dict(ghl=ghl_facts(tags=["DO_NOT_DISTURB"])),
+            "a dnd tag in capitals": dict(ghl=ghl_facts(tags=["DND"])),
             "Sequence stopped": dict(ghl=ghl_facts(fields={"Sequence": "stopped"})),
             "Sequence booked": dict(ghl=ghl_facts(fields={"sequence": "Booked"})),
             "Sequence stopped, as a list": dict(ghl=ghl_facts(fields=[{"name": "Sequence",
@@ -1907,6 +1922,8 @@ class LadderStops(unittest.TestCase):
     def test_facts_that_say_nothing_against_it_still_send(self):
         for context in (dict(ghl=ghl_facts(dnd="false", tags=["cold-email"],
                                            fields={"Sequence": "followup"})),
+                        dict(ghl=ghl_facts(tags=["dnd-review", "disturbance-cleanup",
+                                                 "do not call list import"])),
                         dict(ghl=ghl_facts(tags=None)),
                         dict(ghl={"stage": "New Reply/Lead", "dnd": False, "dnd_settings": {},
                                   "fields": [{"name": "Sequence", "value": "Followup"},
@@ -2173,20 +2190,28 @@ class LegalWords(unittest.TestCase):
 
     def test_a_blocklist_holds_on_legal_words_or_no_readable_email(self):
         for text in self.STRINGS:
-            thread = [{"id": "in-2", "direction": "in", "body": "Remove me. " + text + "."}]
+            thread = [{"id": "in-2", "direction": "in", "subject": "Re: Dana, question",
+                       "body": "Remove me. " + text + "."}]
             self.assertEqual(self._blocklist({"thread": thread}), "hold_card", text)
         self.assertEqual(self._blocklist({"thread": [{"id": "in-2", "direction": "in",
+                                                      "subject": None,
                                                       "body": "Remove me. Thanks."}]}),
                          "update_records")
+        # no subject key: the subject could hide a legal word
+        self.assertEqual(self._blocklist({"thread": [{"id": "in-2", "direction": "in",
+                                                      "body": "Remove me. Thanks."}]}),
+                         "hold_card")
         for context in ({}, {"thread": []}, {"thread": [{"direction": "inbound",
                                                          "body": "remove me"}]},
-                        {"thread": [{"direction": "in", "body": "   "}]},
+                        {"thread": [{"direction": "in", "subject": "Re: Dana, question",
+                                     "body": "   "}]},
                         {"thread": [{"direction": "out", "body": "Hey Dana"}]}):
             self.assertEqual(self._blocklist(context), "hold_card", context)
 
     def test_auto_first_replies_and_follow_ups_hold_on_legal_words(self):
         doc = read_new_doc()
-        thread = [{"id": "in-2", "direction": "in", "from": "dana@brightline.com",
+        thread = [{"id": "in-2", "direction": "in", "subject": "Re: Dana, question",
+                   "from": "dana@brightline.com",
                    "body": "Sure, but my attorneys review every contract."}]
         step, _, checks, _ = run_checks(doc, "first_reply.ai_agents.default.full",
                                         "positive_interested", ai_context(thread=thread))
@@ -2211,7 +2236,8 @@ class LegalWords(unittest.TestCase):
             self.assertTrue(ask_opus.legal_words(text), repr(text))
         self.assertEqual(ask_opus.legal_words("Thanks" + zwsp + " for the cour" + shy + "tesy."), [])
         doc = read_new_doc()
-        thread = [{"id": "in-2", "direction": "in", "from": "dana@brightline.com",
+        thread = [{"id": "in-2", "direction": "in", "subject": "Re: Dana, question",
+                   "from": "dana@brightline.com",
                    "body": "Sure, but my at" + zwsp + "torneys review every contract."}]
         step, _, checks, _ = run_checks(doc, "first_reply.ai_agents.default.full",
                                         "positive_interested", ai_context(thread=thread))
@@ -2221,18 +2247,21 @@ class LegalWords(unittest.TestCase):
         self.assertEqual(self._blocklist({"thread": thread}), "hold_card")
 
     def test_the_newest_email_is_found_whatever_the_case_of_direction(self):
-        thread = [{"id": "in-1", "direction": "in", "body": "Sounds good."},
-                  {"id": "in-2", "direction": "IN", "body": "Remove me or my lawyer will hear "
-                                                             "about this."}]
+        thread = [{"id": "in-1", "direction": "in", "subject": "Re: Dana, question",
+                   "body": "Sounds good."},
+                  {"id": "in-2", "direction": "IN", "subject": None,
+                   "body": "Remove me or my lawyer will hear about this."}]
         self.assertEqual(ask_opus.newest_inbound_text({"thread": thread}), thread[1]["body"])
         self.assertEqual(self._blocklist({"thread": thread}), "hold_card")
         for direction in ("In", " in ", "IN"):
-            clean = [{"id": "in-2", "direction": direction, "body": "Remove me. Thanks."}]
+            clean = [{"id": "in-2", "direction": direction, "subject": None,
+                      "body": "Remove me. Thanks."}]
             self.assertEqual(self._blocklist({"thread": clean}), "update_records", direction)
         doc = read_new_doc()
-        thread = [{"id": "in-1", "direction": "in", "from": "dana@brightline.com",
+        thread = [{"id": "in-1", "direction": "in", "subject": "Re: Dana, question",
+                   "from": "dana@brightline.com",
                    "body": "Sounds interesting."},
-                  {"id": "in-2", "direction": "In", "from": "dana@brightline.com",
+                  {"id": "in-2", "direction": "In", "from": "dana@brightline.com", "subject": None,
                    "body": "Sure, but my attorneys review every contract."}]
         step, _, checks, _ = run_checks(doc, "first_reply.ai_agents.default.full",
                                         "positive_interested", ai_context(thread=thread))
@@ -2364,9 +2393,11 @@ class FreeMailAdditions(unittest.TestCase):
 
 POST_CALL_THREAD = [
     {"id": "out-1", "direction": "out", "body": "(cold email)"},
-    {"id": "in-2", "direction": "in", "from": "dana@brightline.com", "body": "Interested"},
+    {"id": "in-2", "direction": "in", "subject": "Re: Dana, question",
+     "from": "dana@brightline.com", "body": "Interested"},
     {"id": "out-3", "direction": "out", "body": "Locked in Tue 12:05pm CT..."},
-    {"id": "in-9", "direction": "in", "from": "dana@brightline.com",
+    {"id": "in-9", "direction": "in", "subject": "Re: Dana, question",
+     "from": "dana@brightline.com",
      "body": "Thanks for the call yesterday. Can you send me more details?"}]
 PAST_CALL = {"start": "2026-09-25T12:05:00-05:00", "call_link": "https://zoom.us/j/123",
              "status": "showed"}
@@ -2398,9 +2429,15 @@ class NeverHadACall(unittest.TestCase):
             self.assertEqual(step, "hold_card", branch)
             self.assertFalse(checks["never_had_a_call"], branch)
         # each fact alone holds them, and is the only check that fails
-        for label, overrides in (("the past call", {"sent_log_keys": []}),
-                                 ("the Locked in confirmation", {"appointment": None})):
-            alone = dict(context, **overrides)
+        quiet = {"appointment": None, "sent_log_keys": [], "ghl": ghl_facts(),
+                 "instantly": {"interest_status": 1}}
+        for label, fact in (("the past call", {"appointment": dict(PAST_CALL)}),
+                            ("the Locked in confirmation",
+                             {"sent_log_keys": [EARLIER_CONFIRMATION]}),
+                            ("the Proposal Sent stage",
+                             {"ghl": ghl_facts(stage="Proposal Sent")}),
+                            ("interest status 3", {"instantly": {"interest_status": 3}})):
+            alone = dict(context, **dict(quiet, **fact))
             for branch in ("pricing", "send_info", "default"):
                 step, _, checks, _ = self.first_reply(branch, alone)
                 self.assertEqual(step, "hold_card", (label, branch))
@@ -2452,11 +2489,13 @@ class NeverHadACall(unittest.TestCase):
 
     def test_a_mid_ladder_lead_who_never_had_a_call_still_gets_the_first_reply(self):
         thread = [{"id": "out-1", "direction": "out", "body": "(cold email)"},
-                  {"id": "in-2", "direction": "in", "from": "dana@brightline.com",
+                  {"id": "in-2", "direction": "in", "subject": "Re: Dana, question",
+                   "from": "dana@brightline.com",
                    "body": "Interested"},
                   {"id": "out-3", "direction": "out", "body": "(first reply)"},
                   {"id": "out-4", "direction": "out", "body": "(E1)"},
-                  {"id": "in-5", "direction": "in", "from": "dana@brightline.com",
+                  {"id": "in-5", "direction": "in", "subject": "Re: Dana, question",
+                   "from": "dana@brightline.com",
                    "body": "How does it work, and what does it cost? Can you send more details?"}]
         context = ai_context(thread=thread, reply_id="in-5", handled_ids=["in-2"],
                              our_reply_reached_lead=True, sent_log_keys=[
@@ -2506,6 +2545,112 @@ class NeverHadACall(unittest.TestCase):
                       rule2)
         rule14 = [line for line in rules if line.startswith("14. ")][0]
         self.assertIn("the lead never had a call (context.appointment is null", rule14)
+
+
+class CallInTheRecords(unittest.TestCase):
+    """Round 6: an Instantly interest status of 2, 3 or 4 (meeting booked,
+    completed, won) or a GHL stage of Call Booked, Proposal Sent or Won means
+    the lead has or had a call, with or without an appointment on file: no
+    first reply and no booking on its own."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.doc = read_new_doc()
+
+    def first_reply(self, branch, context):
+        return run_checks(self.doc, "first_reply.ai_agents.%s.full" % branch,
+                          FIRST_REPLY_LABELS[branch], context)
+
+    def book(self, context):
+        return run_checks(self.doc, "booking.confirmation.no_zoom_link", "positive_interested",
+                          context, fields=SLOT_FIELDS, other_actions=["book_call"])
+
+    def assert_held(self, label, overrides):
+        for branch in ask_opus.AUTO_SEND_FIRST_REPLIES:
+            step, _, checks, _ = self.first_reply(branch, ai_context(**overrides))
+            self.assertEqual(step, "hold_card", (label, branch))
+            failed = [name for name in ask_opus.SEND_CHECKS if not checks.get(name)]
+            self.assertEqual(failed, ["never_had_a_call"], (label, branch))
+        step, _, checks, _ = self.book(naming_context(**overrides))
+        self.assertEqual(step, "hold_card", label)
+        self.assertIsNone(checks["book_at"], label)
+        self.assertFalse(checks["never_had_a_call"], label)
+        return checks["problems"]
+
+    def assert_not_held(self, label, overrides):
+        for branch in ("default", "pricing"):
+            step, _, checks, _ = self.first_reply(branch, ai_context(**overrides))
+            self.assertEqual(step, "send", (label, branch, checks["problems"]))
+            self.assertTrue(checks["never_had_a_call"], (label, branch))
+        step, _, checks, _ = self.book(naming_context(**overrides))
+        self.assertEqual(step, "book_call", (label, checks["problems"]))
+        self.assertTrue(checks["never_had_a_call"], label)
+
+    def test_interest_2_3_or_4_holds(self):
+        for value in (2, 3, 4, "2", "3", " 4 ", 2.0):
+            problems = self.assert_held(repr(value), {"instantly": {"interest_status": value}})
+            self.assertTrue([p for p in problems if "the lead has or had a call" in p], value)
+
+    def test_a_call_stage_holds_by_name_or_id(self):
+        for stage in ("Call Booked", "call_booked", "CALL BOOKED", "call-booked",
+                      "Proposal Sent", "proposal_sent", "Won", " won ",
+                      "f12615dc-66e1-412d-902b-4d1adab812c9",
+                      "FCF3359E-F8E0-4354-92EE-2D7B396B769E",
+                      "48eca719-502a-46cc-9e39-7db0aeffb41e"):
+            problems = self.assert_held(stage, {"ghl": ghl_facts(stage=stage)})
+            self.assertTrue([p for p in problems if "the lead has or had a call" in p], stage)
+
+    def test_a_given_record_that_cannot_be_read_holds(self):
+        for label, overrides in (
+                ("interest as words", {"instantly": {"interest_status": "meeting booked"}}),
+                ("interest true", {"instantly": {"interest_status": True}}),
+                ("interest not a value", {"instantly": {"interest_status": 7}}),
+                ("interest as a list", {"instantly": {"interest_status": [2]}}),
+                ("instantly as text", {"instantly": "2"}),
+                ("ghl as text", {"ghl": "Call Booked"}),
+                ("stage as a number", {"ghl": ghl_facts(stage=3)}),
+                ("stage as a list", {"ghl": ghl_facts(stage=["Won"])})):
+            problems = self.assert_held(label, overrides)
+            self.assertTrue([p for p in problems if "cannot be read" in p], label)
+
+    def test_records_that_say_no_call_or_are_not_there_yet_pass(self):
+        bare = {"ghl": None, "instantly": None}
+        for label, overrides in (
+                ("New Reply/Lead and 1", {}),
+                ("interest 0", {"instantly": {"interest_status": 0}}),
+                ("interest -1", {"instantly": {"interest_status": -1}}),
+                ("interest null", {"instantly": {"interest_status": None}}),
+                ("interest blank", {"instantly": {"interest_status": " "}}),
+                ("no interest status", {"instantly": {"lead_id": "l-1"}}),
+                ("stage Follow Up Later", {"ghl": ghl_facts(stage="Follow Up Later")}),
+                ("stage id of New Reply/Lead",
+                 {"ghl": ghl_facts(stage="f000f05d-5732-40c1-866a-bd71cd0f95b6")}),
+                ("stage null", {"ghl": ghl_facts(stage=None)}),
+                ("stage blank", {"ghl": ghl_facts(stage="")}),
+                ("no ghl or instantly yet", bare)):
+            self.assert_not_held(label, overrides)
+
+    def test_the_run_after_groks_own_booking_is_not_held_by_its_own_records(self):
+        # Grok's booking moves the lead to Call Booked and interest 2 before
+        # the re-run: the Locked in confirmation still goes
+        context = own_booking_context(ghl=ghl_facts(stage="Call Booked"),
+                                      instantly={"interest_status": 2})
+        step, _, checks, _ = run_checks(self.doc, "booking.confirmation.no_zoom_link",
+                                        "positive_interested", context,
+                                        case_type="booked_call", fields=SLOT_FIELDS)
+        self.assertEqual(step, "send", checks["problems"])
+        self.assertIn("never_had_a_call", checks["checks_not_applied"])
+
+    def test_the_rules_and_docs_say_so(self):
+        rules = ask_opus.DECISION_RULES.splitlines()
+        rule2 = [line for line in rules if line.startswith("2. ")][0]
+        self.assertIn("with no call in the records either (context.instantly.interest_status is "
+                      "not 2, 3 or 4, and context.ghl.stage is not Call Booked, Proposal Sent or "
+                      "Won)", rule2)
+        self.assertIn("an Instantly interest status of 2, 3 or 4, or a GHL stage of Call Booked, "
+                      "Proposal Sent or Won: post-call emails are Lorenzo's", rule2)
+        rule14 = [line for line in rules if line.startswith("14. ")][0]
+        self.assertIn("no call in the records as rule 2 says", rule14)
 
 
 class DayZeroStartsTheLadder(unittest.TestCase):
@@ -2691,9 +2836,8 @@ class LegalWordsInTheSubject(unittest.TestCase):
                        category="unsubscribe", confidence=0.95,
                        other_actions=["blocklist_in_instantly", "tag_dnd_in_ghl"])
         self.assertEqual(ask_opus.next_step(rec, None, ai_context(thread=thread))[0], "hold_card")
-        no_subject = [{key: value for key, value in thread[0].items() if key != "subject"}]
         for clean in ([dict(thread[0], subject="Re: Dana, question")],
-                      [dict(thread[0], subject=None)], no_subject):
+                      [dict(thread[0], subject=None)]):
             self.assertEqual(ask_opus.next_step(rec, None, ai_context(thread=clean))[0],
                              "update_records", clean)
         unreadable = [dict(thread[0], subject=["Re:", "question"])]
@@ -2708,6 +2852,316 @@ class LegalWordsInTheSubject(unittest.TestCase):
         self.assertEqual(step, "hold_card")
         self.assertFalse(checks["no_legal_words"])
 
+    def test_an_email_with_no_subject_key_holds(self):
+        # Grok must give the subject key (null when the email has none): a
+        # subject left out could hide a legal word.
+        no_subject = [{"id": "in-2", "direction": "in", "from": "dana@brightline.com",
+                       "body": "Remove me from your list."}]
+        self.assertIsNone(ask_opus.newest_inbound_text({"thread": no_subject}))
+        rec = decision(action="records_only", template_id=None, template_text=None, fields=[],
+                       category="unsubscribe", confidence=0.95,
+                       other_actions=["blocklist_in_instantly", "tag_dnd_in_ghl"])
+        step, reasons = ask_opus.next_step(rec, None, ai_context(thread=no_subject))
+        self.assertEqual(step, "hold_card")
+        self.assertIn("a subject key", " ".join(reasons))
+        doc = read_new_doc()
+        asked = [{"id": "in-2", "direction": "in", "from": "dana@brightline.com",
+                  "body": "Sounds interesting, tell me more."}]
+        step, _, checks, _ = run_checks(doc, "first_reply.ai_agents.mechanism.full",
+                                        "positive_question", ai_context(thread=asked))
+        self.assertEqual(step, "hold_card")
+        self.assertFalse(checks["no_legal_words"])
+        failed = [name for name in ask_opus.SEND_CHECKS if not checks.get(name)]
+        self.assertEqual(failed, ["no_legal_words"])
+        self.assertIn("a subject key", " ".join(checks["problems"]))
+        # only the newest inbound email needs the key
+        older = [{"id": "in-1", "direction": "in", "from": "dana@brightline.com",
+                  "body": "Sounds interesting."},
+                 dict(asked[0], subject=None)]
+        self.assertEqual(run_checks(doc, "first_reply.ai_agents.mechanism.full",
+                                    "positive_question", ai_context(thread=older))[0], "send")
+
+
+class BookingsAreCentralOnly(unittest.TestCase):
+    """Round 6: call times are Central. A time the lead may mean in another
+    time zone is never booked on its own, not even a time we offered this
+    lead: the thread names another zone, or the lead's known time zone is not
+    Central and the lead did not write the time with CT, CST, CDT or Central."""
+
+    THU_2PM = "2026-10-01T14:00:00-05:00"
+    THU_430PM = "2026-10-01T16:30:00-05:00"
+    OFFERED = [{"time": "2026-09-29T12:05:00-05:00", "lead_email": "dana@brightline.com"},
+               {"time": "2026-10-01T16:30:00-05:00", "lead_email": "dana@brightline.com"}]
+    # Thursday 2pm, and the CT times an Eastern, Mountain or Pacific 2pm or
+    # 4:30pm would be: all free, so that only the time zone can hold them.
+    MORE_FREE = ["2026-10-01T14:00:00-05:00", "2026-10-01T13:00:00-05:00",
+                 "2026-10-01T15:00:00-05:00", "2026-10-01T15:30:00-05:00",
+                 "2026-10-01T16:00:00-05:00"]
+
+    @classmethod
+    def setUpClass(cls):
+        cls.doc = read_new_doc()
+
+    def lead(self, timezone):
+        return {"campaign_key": "ai_agents", "first_name": "Dana",
+                "company": "Brightline Cleaning LLC", "timezone": timezone}
+
+    def book(self, text, slot="Thu 2:00pm", **context):
+        fields = [{"name": "first_name", "value": "Dana"}, {"name": "slot", "value": slot}]
+        context.setdefault("free_times", FREE + self.MORE_FREE)
+        return run_checks(self.doc, "booking.confirmation.no_zoom_link", "positive_interested",
+                          naming_context(text, **context), fields=fields,
+                          other_actions=["book_call"])
+
+    def assert_held(self, result, label, why="time zone other than Central"):
+        step, reasons, checks, _ = result
+        self.assertEqual(step, "hold_card", (label, reasons))
+        self.assertIsNone(checks["book_at"], label)
+        self.assertFalse(checks["named_time_ok"], label)
+        self.assertTrue([p for p in checks["problems"] if why in p], (label, checks["problems"]))
+
+    def assert_booked(self, result, label, at=None):
+        step, reasons, checks, _ = result
+        self.assertEqual(step, "book_call", (label, reasons, checks["problems"]))
+        self.assertEqual(checks["book_at"], at or self.THU_2PM, label)
+        self.assertTrue(checks["named_time_ok"], label)
+
+    def test_rule_6s_example_against_an_offered_time_holds(self):
+        # offered Thu 4:30pm CT; "Thursday 4:30pm Eastern" is 3:30pm CT, a new
+        # time: held whether Opus takes it as the offered time or converts it
+        text = "Thursday 4:30pm Eastern works for me."
+        for slot in ("Thu 4:30pm", "Thu 3:30pm"):
+            self.assert_held(self.book(text, slot=slot, offered_times=list(self.OFFERED)), slot)
+        problems = self.book(text, slot="Thu 4:30pm",
+                             offered_times=list(self.OFFERED))[2]["problems"]
+        self.assertIn("'Eastern'", " ".join(problems))
+        # another zone anywhere in the email holds the offered time too
+        for text in ("Sounds good, the Thursday one works (I'm on Pacific time).",
+                     "Thursday works. What time zone is that?",
+                     "Thu 4:30 my time is great (I'm in Boston)"):
+            self.assert_held(self.book(text, slot="Thu 4:30pm",
+                                       offered_times=list(self.OFFERED)), text)
+        # the offered time accepted with no zone, or in Central, is booked
+        for text in ("Thursday 4:30pm works for me.", "Thursday 4:30pm CT works for me.",
+                     "Sounds good, Thursday works."):
+            self.assert_booked(self.book(text, slot="Thu 4:30pm",
+                                         offered_times=list(self.OFFERED)),
+                               text, at=self.THU_430PM)
+
+    def test_a_time_written_in_another_zone_holds(self):
+        for text, converted in (
+                ("Thursday at 2pm EST works for me.", "Thu 1:00pm"),
+                ("Thursday 2pm PT", "Thu 4:00pm"),
+                ("Thursday at 2pm my time", "Thu 3:00pm"),
+                ("Thursday 2pm Eastern works", "Thu 1:00pm"),
+                ("Thursday at 2pm ET", "Thu 1:00pm"),
+                ("Thursday 2pm EDT", "Thu 1:00pm"),
+                ("Thursday 2pm Pacific", "Thu 4:00pm"),
+                ("Thursday 2pm PDT", "Thu 4:00pm"),
+                ("Thursday 2pm Mountain time", "Thu 3:00pm"),
+                ("Thursday 2pm MST", "Thu 3:00pm")):
+            for slot in ("Thu 2:00pm", converted):
+                self.assert_held(self.book(text, slot=slot), (text, slot))
+        for text in ("Thursday 2pm AKST", "Thursday 2pm Alaska time", "Thursday 2pm HST",
+                     "Thursday 2pm Hawaii time", "Thursday 2pm AT", "Thursday 2pm Atlantic",
+                     "Thursday 2pm GMT", "Thursday 14:00 UTC", "Thursday 2pm BST",
+                     "Thursday 2pm CET", "Thursday 2pm Central European Time",
+                     "Thursday 2pm local time", "Thursday 2pm my local time",
+                     "Thursday 2pm our time", "Thursday 2pm New York time",
+                     "Thursday 2pm Denver time", "Thursday 2pm America/New_York",
+                     "Thursday at 2pm, is that your time or mine?",
+                     "Thursday 2pm works, we're an hour ahead of you",
+                     "Thursday 2pm works, I'm on the west coast"):
+            self.assert_held(self.book(text), text)
+
+    def test_zone_spellings_hide_nothing(self):
+        zwsp = chr(0x200B)
+        for text in ("Thursday 2pm est", "Thursday 2pm et", "Thursday 2pm pt", "Thursday 2pmEST",
+                     "Thursday 2:00PMET", "Thursday 14:00EST", "Thursday 2 p.m. E.S.T.",
+                     "Thursday 2pm (ET)", "Thursday 2pm-PT", "Thursday 2pm/MT",
+                     "Thursday 2pm E" + zwsp + "ST", "Thursday 2pm East" + zwsp + "ern",
+                     "Thursday 2pm ＥＳＴ"):
+            self.assert_held(self.book(text), repr(text))
+
+    def test_central_or_no_zone_still_books(self):
+        for text in ("Thursday 2pm CT", "Thursday 2pm Central", "Thursday 2pm CST",
+                     "Thursday 2pm CDT", "Thursday at 2pm central time",
+                     "Thursday 2:00 PM (CT)", "Thursday 2pm C.T.", "Thursday 2pm US Central",
+                     "Thursday at 2pm your time works", "Thursday at 2pm works",
+                     "Thanks for your time. Thursday at 2pm works.",
+                     "Thursday at 2pm is a good time"):
+            self.assert_booked(self.book(text), text)
+
+    def test_a_zone_anywhere_in_the_thread_holds(self):
+        def thread(older_body, newest_body="Thursday at 2pm works.", newest_subject="Re: Dana"):
+            return [{"id": "out-1", "direction": "out", "from": "lorenzo@theadvero.com",
+                     "body": "(cold email)"},
+                    {"id": "in-1", "direction": "in", "subject": "Re: Dana",
+                     "from": "dana@brightline.com", "body": older_body},
+                    {"id": "out-2", "direction": "out", "from": "lorenzo@theadvero.com",
+                     "body": "Would Tue 12:05pm or Thu 4:30pm CT work for a 15-minute call?"},
+                    {"id": "in-2", "direction": "in", "subject": newest_subject,
+                     "from": "dana@brightline.com", "body": newest_body}]
+        quoted = ("Thursday at 2pm works.\n\nOn Mon, Sep 28, 2026 at 10:00 AM Dana "
+                  "<dana@brightline.com> wrote:\n> We're in PT, so afternoons are best.")
+        for label, items in (
+                ("an older email", thread("Interested. Heads up, we're on Eastern time.")),
+                ("a quoted email", thread("Interested.", newest_body=quoted)),
+                ("the subject", thread("Interested.", newest_subject="Thursday 2pm EST?"))):
+            self.assert_held(self.book("unused", thread=items), label)
+        # our own email with CT and an older email with no zone change nothing
+        self.assert_booked(self.book("unused", thread=thread("Interested.")), "no zone")
+
+    def test_a_thread_email_that_cannot_be_read_holds(self):
+        # an email the zone scan cannot read could name a zone: no booking,
+        # not even for a time we offered this lead
+        for label, item in (
+                ("a body object", {"id": "in-1", "direction": "in", "subject": "Re: Dana",
+                                   "body": {"text": "We're on Eastern time."}}),
+                ("no body", {"id": "out-0", "direction": "out", "subject": "Dana, question"}),
+                ("a null body", {"id": "out-0", "direction": "out", "body": None}),
+                ("a subject list", {"id": "out-0", "direction": "out", "subject": ["Eastern"],
+                                    "body": "(cold email)"}),
+                ("not an object", "We're on Eastern time.")):
+            items = [item] + naming_thread("Thursday at 2pm works.")
+            self.assert_held(self.book("unused", thread=items), label, why="cannot be checked")
+            items = [item] + naming_thread("Sounds good, Thursday works.")
+            self.assert_held(self.book("unused", slot="Thu 4:30pm", thread=items,
+                                       offered_times=list(self.OFFERED)),
+                             label, why="cannot be checked")
+        # an older email with an empty body or no subject key is read
+        items = [{"id": "out-0", "direction": "out", "body": ""}] + naming_thread(
+            "Thursday at 2pm works.")
+        self.assert_booked(self.book("unused", thread=items), "empty body")
+
+    def test_a_lead_outside_central_needs_the_time_written_in_central(self):
+        for zone in ("America/New_York", "US/Eastern", "America/Denver", "America/Los_Angeles",
+                     "Pacific/Honolulu", "America/Anchorage", "America/Phoenix", "Europe/London",
+                     "EST", "Eastern", "(UTC-05:00) Eastern Time (US & Canada)"):
+            lead = self.lead(zone)
+            self.assert_held(self.book("Thursday at 2pm", lead=lead), zone, why="not Central")
+            self.assert_held(self.book("Thursday at 2pm works for me.", lead=lead), zone,
+                             why="not Central")
+            # a time we offered, accepted with no zone, holds too
+            self.assert_held(self.book("Sounds good, Thursday works.", slot="Thu 4:30pm",
+                                       lead=lead, offered_times=list(self.OFFERED)),
+                             zone, why="not Central")
+            for text in ("Thursday 2pm CT", "Thursday 2pm Central", "Thursday at 2pm CST",
+                         "Thursday 2:00 PM (Central)", "Thursday at 2pm central time"):
+                self.assert_booked(self.book(text, lead=lead), (zone, text))
+            self.assert_booked(self.book("Thursday 4:30pm CT works", slot="Thu 4:30pm",
+                                         lead=lead, offered_times=list(self.OFFERED)),
+                               zone, at=self.THU_430PM)
+            # CT next to another time, or Central for another day, is not this time
+            for text in ("Thursday at 2pm, or 3pm CT", "Wednesday 2pm CT or Thursday at 2pm"):
+                self.assert_held(self.book(text, lead=lead), (zone, text), why="not Central")
+
+    def test_a_central_or_unknown_lead_time_zone_books(self):
+        for zone in ("America/Chicago", "US/Central", "CST6CDT", "Central Time (US & Canada)",
+                     "(UTC-06:00) Central Time (US & Canada)", "central", "America/Winnipeg",
+                     None, "", "  "):
+            self.assert_booked(self.book("Thursday at 2pm", lead=self.lead(zone)), repr(zone))
+
+    def test_an_unreadable_lead_time_zone_holds(self):
+        for zone in (5, ["America/Chicago"], {"name": "America/Chicago"}, True):
+            self.assert_held(self.book("Thursday 2pm CT", lead=self.lead(zone)), repr(zone),
+                             why="cannot be read")
+
+    def test_the_run_after_the_booking_checks_the_zone_too(self):
+        def run2(context):
+            return run_checks(self.doc, "booking.confirmation.no_zoom_link",
+                              "positive_interested", context, case_type="booked_call",
+                              fields=SLOT_FIELDS)
+        self.assertEqual(run2(own_booking_context())[0], "send")
+        ny = dict(own_booking_context()["lead"], timezone="America/New_York")
+        for label, context in (
+                ("Eastern in the thread", own_booking_context(
+                    thread=naming_thread("Tue 12:05pm Eastern works for me."))),
+                ("a New York lead", own_booking_context(lead=ny))):
+            step, _, checks, _ = run2(context)
+            self.assertEqual(step, "hold_card", label)
+            self.assertFalse(checks["named_time_ok"], label)
+        step, _, checks, _ = run2(own_booking_context(
+            lead=ny, thread=naming_thread("Tue 12:05pm CT works for me.")))
+        self.assertEqual(step, "send", checks["problems"])
+        self.assertTrue(checks["named_time_ok"])
+
+    def test_both_runs_hold_end_to_end(self):
+        """Rule 6's own example through main(): the booking run gives no
+        book_at, and a re-run with a booking that should not exist sends
+        nothing (a hold card still shows Lorenzo the rendered email)."""
+        text = "Thursday 4:30pm Eastern works for me."
+
+        def run(dec, context):
+            c = case(case_type="booked_call", copy_doc_file=NEW_DOC, context=context)
+            with mock.patch.object(ask_opus.urllib.request, "urlopen",
+                                   return_value=FakeResponse(api_payload(dec))):
+                return run_main(c)[1]
+
+        first = decision(template_id="booking.confirmation.no_zoom_link",
+                         template_text=doc_text_of(self.doc, "booking.confirmation.no_zoom_link"),
+                         category="positive_interested", other_actions=["book_call"],
+                         fields=[{"name": "first_name", "value": "Dana"},
+                                 {"name": "slot", "value": "Thu 4:30pm"}])
+        result = run(first, naming_context(text, offered_times=list(self.OFFERED)))
+        self.assertEqual(result["grok_next_step"], "hold_card")
+        self.assertIsNone(result["book_at"])
+        self.assertIsNone(result["checks"]["book_at"])
+        self.assertIn("named_time_ok", " ".join(result["hold_reasons"]))
+        appointment = dict(APPOINTMENT, start=self.THU_430PM)
+        reservation = dict(RESERVATION, time=self.THU_430PM)
+        second = decision(template_id="booking.confirmation.zoom_link",
+                          template_text=doc_text_of(self.doc, "booking.confirmation.zoom_link"),
+                          category="positive_interested", other_actions=["release_offered_times"],
+                          ghl_stage="call_booked", instantly_interest=2,
+                          fields=[{"name": "first_name", "value": "Dana"},
+                                  {"name": "slot", "value": "Thu 4:30pm"},
+                                  {"name": "zoom_link", "value": "https://zoom.us/j/123"}])
+        result = run(second, own_booking_context(appointment=appointment,
+                                                 offered_times=list(self.OFFERED) + [reservation],
+                                                 thread=naming_thread(text)))
+        self.assertEqual(result["grok_next_step"], "hold_card")
+        self.assertIsNone(result["book_at"])
+        self.assertIn("named_time_ok", " ".join(result["hold_reasons"]))
+
+    def test_other_zones(self):
+        for text in ("Thursday 4:30pm Eastern works for me.", "2pm EST", "2pm et", "2pmEST",
+                     "14:00ET", "2 p.m. E.S.T.", "2pm (ET)", "2pm-PT", "2PM AT", "2pm Pacific Time",
+                     "2pm AKST", "2pm Hawaii", "2pm GMT", "2pm UTC", "14:00 BST", "2pm CET",
+                     "2pm Central European Time", "2pm IST", "2pm AEST", "2pm local time",
+                     "2pm local", "2pm our time", "2pm their time", "2pm New York time",
+                     "2pm NY time", "4:30 UK time", "2pm east coast time", "2pm West Coast",
+                     "I'm on Pacific time.", "What time zone are you in?",
+                     "we're in the same time zone", "is that your time or mine?",
+                     "My zone is America/New_York", "we're an hour ahead of you",
+                     "Thursday at 2 New York time", "2pm Newfoundland", "2pm Arizona time",
+                     "Thursday at 2pm (my local time)", "I'm 2 hours behind you", "2pm Zulu",
+                     "Thursday 2pm US/Eastern", "Thursday at 2pm, Eastern Standard"):
+            self.assertTrue(ask_opus.other_zones(text), text)
+        for text in ("Thursday 2pm CT", "Thursday 2pm Central", "Thursday 2pm CST",
+                     "Thursday 2pm CDT", "2pm Central Standard Time", "2pm US Central",
+                     "2:00 PM (CT)", "2pm C.T.", "Thursday at 2pm your time works",
+                     "2pm in your time zone", "Thanks for your time.", "Tue 12:05pm works for me.",
+                     "Thursday 4:30pm is a good time", "same time as last week",
+                     "4:30pm or any time after", "Let's talk in 2 weeks time",
+                     "Sure, what times work?", "I will get back to you in no time",
+                     "Thursday at 2pm at the latest", "Would Tue 12:05pm or Thu 4:30pm CT work?",
+                     "On Mon, Sep 28, 2026 at 10:00 AM Lorenzo Villarreal "
+                     "<lorenzo@theadvero.com> wrote:", "https://zoom.us/j/123",
+                     "Mt. Pleasant Cleaning", "My zone is America/Chicago", "(cold email)",
+                     "Thursday at 2pm, real time demo please"):
+            self.assertEqual(ask_opus.other_zones(text), [], text)
+
+    def test_the_rules_and_docs_say_so(self):
+        rules = ask_opus.DECISION_RULES.splitlines()
+        rule14 = [line for line in rules if line.startswith("14. ")][0]
+        self.assertIn("It must also be a Central time: the script holds the booking, even for a "
+                      "time offered to this lead, when the thread names any other time zone",
+                      rule14)
+        self.assertIn("when context.lead.timezone is known and not Central unless the lead wrote "
+                      "that time with CT, CST, CDT or Central", rule14)
+        rule6 = [line for line in rules if line.startswith("6. ")][0]
+        self.assertIn("It is never booked on its own (rule 14).", rule6)
 
 if __name__ == "__main__":
     unittest.main()

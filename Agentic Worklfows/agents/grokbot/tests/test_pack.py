@@ -220,6 +220,40 @@ class Pack(unittest.TestCase):
                       "newest email must name it", rule15)
         self.assertIn("When a lead who never had a call", rule15)
 
+    def test_bookings_are_central_and_both_calendars_are_read(self):
+        doc02 = read(os.path.join(ONBOARDING, "02_operating_model.md")).splitlines()
+        rule15 = [line for line in doc02 if line.startswith("15. **Book first")][0]
+        for phrase in ("no Instantly interest status 2, 3 or 4, no GHL stage Call Booked, "
+                       "Proposal Sent or Won",
+                       "The time must also be Central: nothing is booked on its own, not even a "
+                       "time we offered this lead, when the thread names any other time zone",
+                       "or when `lead.timezone` is known and not Central and the lead did not "
+                       "write the time with CT, CST, CDT or Central",
+                       'Offered Thursday 4:30pm CT, the lead wrote "Thursday 4:30pm Eastern '
+                       'works": a hold card for Lorenzo.'):
+            self.assertIn(phrase, rule15)
+        item9 = [line for line in doc02 if line.startswith("9. Does the lead have a future")][0]
+        self.assertIn("or on Lorenzo's Google Calendar (`lorenzovillarreal@adverosolutions.com`)? "
+                      "Read both calendars", item9)
+        thread = [line for line in doc02 if line.startswith("- the thread:")][0]
+        self.assertIn("a `subject` key (`null` when it has no subject)", thread)
+        doc04 = read(os.path.join(ONBOARDING, "04_ask_opus.md")).splitlines()
+        row = [line for line in doc04 if line.startswith("| `thread` |")][0]
+        self.assertIn("a missing key is a hold card", row)
+        self.assertIn("every `subject` and `body` in the thread for a time zone other than Central",
+                      row)
+        row = [line for line in doc04 if line.startswith("| `instantly` |")][0]
+        self.assertIn("A first reply and a booking hold when it is 2, 3 or 4", row)
+        skill = read(os.path.join(ONBOARDING, "skills", "cold-email-replies.md"))
+        self.assertIn("The time must be Central: no booking goes on its own, not even for a time "
+                      "we offered", skill)
+        self.assertIn("an Instantly interest status of 2, 3 or 4, or a GHL stage of Call Booked, "
+                      "Proposal Sent or Won", skill)
+        for name in ("cold-email-replies", "quiet-lead-followup"):
+            self.assertIn("a `dnd`, `do-not-disturb` or `do not disturb` tag",
+                          read(os.path.join(ONBOARDING, "skills", name + ".md")), name)
+        self.assertIn("**Bookings are Central only.**", read(UPDATE))
+
     def test_day_0_starts_the_ladder(self):
         team = [line for line in read(os.path.join(ONBOARDING, "03_team.md")).splitlines()
                 if '"Day 0 watch"' in line and line.lstrip().startswith("- ")][0]

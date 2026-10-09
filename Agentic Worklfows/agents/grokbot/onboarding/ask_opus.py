@@ -12,7 +12,8 @@ Input on stdin, one JSON object:
                       Before any email can be sent the script also needs:
                       now_ct, kill_switch, lead_email, sent_log_keys, and a
                       thread whose newest inbound email has a readable body
-                      (its subject and body are scanned for legal words);
+                      and a subject key (null when it has no subject): its
+                      subject and body are scanned for legal words;
                       for a reply (first_reply.*, booking.*, or case_type
                       reply) also newest_inbound_from,
                       our_reply_after_newest_inbound, reply_id,
@@ -23,6 +24,14 @@ Input on stdin, one JSON object:
                       before its booking exists; for cadence.* also
                       ghl.stage, ghl.dnd, ghl.dnd_settings, the Sequence
                       field in ghl.fields and instantly.interest_status;
+                      ghl.stage and instantly.interest_status, when given,
+                      are read for first_reply.* and a booking too (a call
+                      stage or interest 2, 3 or 4 holds them);
+                      lead.timezone when known: a booking holds for a lead
+                      outside Central unless the lead wrote the time with
+                      CT or Central, and for any lead when the thread names
+                      another time zone or has an email whose body is not
+                      text;
                       free_times and offered_times for any email with
                       {slots} or {alt_slots}, and for a booking
                       confirmation before its booking exists; appointment
@@ -77,6 +86,7 @@ import random
 import re
 import sys
 import time
+import unicodedata
 import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
@@ -147,8 +157,8 @@ KNOWN_OFFERS = ("ai_agents", "cleaning_reactivation", "cleaning_trigger",
 # A follow-up E1 to E10 goes only while GHL Sequence is followup and the
 # Instantly interest status is 1 or 0, and never to a lead with any appointment
 # (past or future), a "no" reply label, or Do Not Disturb on in GHL (overall,
-# for email, or a dnd tag); never when one of those facts is missing or cannot
-# be read (fail closed).
+# for email, or a dnd tag, DND_TAGS); never when one of those facts is missing
+# or cannot be read (fail closed).
 NEGATIVE_LABELS = ("negative_notnow", "negative_notfit", "negative_hostile", "unsubscribe",
                    "wrong_person")
 # The GHL Sequence values (file 05). Any other value cannot be read. Only
@@ -163,6 +173,18 @@ LADDER_INTEREST_VALUES = (0, 1)
 # A GHL dndSettings channel status. active and permanent mean Do Not Disturb.
 DND_STATUSES = ("active", "inactive", "permanent")
 DND_ON_STATUSES = ("active", "permanent")
+# GHL tags that mean Do Not Disturb, in any case, with spaces, "-" or "_":
+# dnd, DND, do-not-disturb, do not disturb.
+DND_TAGS = ("dnd", "do not disturb")
+# The records of a lead who has or had a call (file 05): Instantly interest
+# status 2, 3 or 4 (meeting booked, meeting completed, won), or the GHL Sales
+# stage Call Booked, Proposal Sent or Won (by name, as call_booked, or by stage
+# id). A first reply or a booking holds for such a lead, like an appointment.
+CALL_INTEREST_VALUES = (2, 3, 4)
+CALL_STAGE_NAMES = ("call booked", "proposal sent", "won")
+CALL_STAGE_IDS = ("f12615dc-66e1-412d-902b-4d1adab812c9",
+                  "fcf3359e-f8e0-4354-92ee-2d7b396b769e",
+                  "48eca719-502a-46cc-9e39-7db0aeffb41e")
 
 # A template whose own text carries a literal day, date or clock time (every
 # /dated variant, the example versions) is an example, never sent.
@@ -347,11 +369,11 @@ One JSON object in the required schema, nothing else.
 
 RULES YOU NEVER BREAK
 1. Customer-facing text comes only from the copy doc, word for word. Never write, polish, shorten or merge email text. If no template fits, the action is hold_for_lorenzo, or draft_for_lorenzo with a draft he will read. Never send_template.
-2. Only three kinds of email ever go on their own (Lorenzo's allow list, 2026-10-06), each only as the base template, never a version (an id with a "/"), only for a lead whose context.lead.campaign_key is one of the seven offers (ai_agents, cleaning_reactivation, cleaning_trigger, bookkeeping_reactivation, bookkeeping_trigger, recruiting_reactivation, recruiting_outbound), and only when rule 3 holds and your confidence is 0.8 or more: (a) the five AI agents first replies, only for a lead whose campaign_key is ai_agents and who never had a call (context.appointment is null, and no key in context.sent_log_keys is a booking.confirmation.* send to this lead): first_reply.ai_agents.default.full for positive_interested with no time named; first_reply.ai_agents.pricing.full for positive_question about price; first_reply.ai_agents.mechanism.full for positive_question about how it works or "tell me more"; first_reply.ai_agents.send_info.full for positive_question asking for info, a deck or more details; first_reply.ai_agents.booking_link.full for positive_interested or positive_question whose only ask is a booking or Calendly link. They also answer a lead our replies already reached who never had a call and asks again (the price, how it works, more details, a booking link); (b) the follow-up ladder cadence.e1 to cadence.e10, with the lines from their own blocks for the lead's offer; (c) the "Locked in" booking confirmation, booking.confirmation.zoom_link or booking.confirmation.no_zoom_link, only as rule 14 says. Everything else is hold_for_lorenzo: every first reply for the six older offers, every first reply and every booking for a lead who has or had a call (any context.appointment, past or future, or a booking.confirmation.* send to this lead in context.sent_log_keys: post-call emails are Lorenzo's), show-rate and no-show emails (the booked-call reminders are paused), booking.already_booked.*, every booking.counter.*, booking.slot_already_taken, nurture, every version, the referral and other first replies, any neutral_question, a no that also carries a buying signal, talk of a competitor, a contract or anything legal, a reply not in English, and every email and every booking for a lead whose campaign_key is missing or not one of the seven. No other email goes to a lead that no reply of ours has reached yet, except the first replies in (a) and the booking confirmation.
+2. Only three kinds of email ever go on their own (Lorenzo's allow list, 2026-10-06), each only as the base template, never a version (an id with a "/"), only for a lead whose context.lead.campaign_key is one of the seven offers (ai_agents, cleaning_reactivation, cleaning_trigger, bookkeeping_reactivation, bookkeeping_trigger, recruiting_reactivation, recruiting_outbound), and only when rule 3 holds and your confidence is 0.8 or more: (a) the five AI agents first replies, only for a lead whose campaign_key is ai_agents and who never had a call (context.appointment is null, and no key in context.sent_log_keys is a booking.confirmation.* send to this lead), with no call in the records either (context.instantly.interest_status is not 2, 3 or 4, and context.ghl.stage is not Call Booked, Proposal Sent or Won): first_reply.ai_agents.default.full for positive_interested with no time named; first_reply.ai_agents.pricing.full for positive_question about price; first_reply.ai_agents.mechanism.full for positive_question about how it works or "tell me more"; first_reply.ai_agents.send_info.full for positive_question asking for info, a deck or more details; first_reply.ai_agents.booking_link.full for positive_interested or positive_question whose only ask is a booking or Calendly link. They also answer a lead our replies already reached who never had a call and asks again (the price, how it works, more details, a booking link); (b) the follow-up ladder cadence.e1 to cadence.e10, with the lines from their own blocks for the lead's offer; (c) the "Locked in" booking confirmation, booking.confirmation.zoom_link or booking.confirmation.no_zoom_link, only as rule 14 says. Everything else is hold_for_lorenzo: every first reply for the six older offers, every first reply and every booking for a lead who has or had a call (any context.appointment, past or future, a booking.confirmation.* send to this lead in context.sent_log_keys, an Instantly interest status of 2, 3 or 4, or a GHL stage of Call Booked, Proposal Sent or Won: post-call emails are Lorenzo's), show-rate and no-show emails (the booked-call reminders are paused), booking.already_booked.*, every booking.counter.*, booking.slot_already_taken, nurture, every version, the referral and other first replies, any neutral_question, a no that also carries a buying signal, talk of a competitor, a contract or anything legal, a reply not in English, and every email and every booking for a lead whose campaign_key is missing or not one of the seven. No other email goes to a lead that no reply of ours has reached yet, except the first replies in (a) and the booking confirmation.
 3. send_template only when context.approval.doc_done, context.approval.doc_unchanged and context.approval.go_live are all true, context.approval.doc_build is the build printed on the copy doc's "Doc build:" line, and the template is not marked "Not approved yet" in the copy doc. Otherwise hold_for_lorenzo.
 4. No price, fee, commission percentage, dollar amount or guarantee figure in any email or draft. The one exception is the price range written into an offer's approved first_reply.<offer>.pricing.full template, sent exactly as the copy doc has it. Proof lines only where the copy doc already carries them.
 5. No links in an email, except the call link in a template that has a {zoom_link} or {call_link} placeholder, and the booking calendar link written into first_reply.<offer>.booking_link.full, sent exactly as the copy doc has it.
-6. Emails go out 07:00 to 19:00 CT only. Follow-up touches go at 10:00 CT on business days, at most one per lead per day: no cadence.* when context.sent_log_keys already has a cadence.* key for this lead on the send day. Email call times: 12:00 to 18:00 CT, Monday to Friday, at least 4 hours from now, within 5 business days, only from context.free_times. An email that offers times ({slots} or {alt_slots}: a first reply, E1 to E10) never offers a time listed in context.offered_times: never a time already offered to this lead (released or not) or offered to any other lead. A booking confirmation's {slot} is the time the lead named: it may be a time offered to this lead, never one offered to another lead. With fewer than two usable times, follow the skill's no-free-times rule. Upwork call times follow upwork-followups: three times stated in the client's time zone, all inside 12:00 to 18:00 CT, Monday to Friday, at least 4 hours from now, no more than 5 business days out, plus one line offering to work around their schedule. Use context.free_times when it is there; an Upwork case does not need it. Lorenzo checks the times against his calendar before he sends. When a lead "accepts" an offered time but names a different time zone or a different time (offered 4pm CT, the lead wrote "Thursday 4pm Eastern works"), that is a new time the lead named, never an acceptance: convert it to CT and check it against these slot rules like any time a lead names.
+6. Emails go out 07:00 to 19:00 CT only. Follow-up touches go at 10:00 CT on business days, at most one per lead per day: no cadence.* when context.sent_log_keys already has a cadence.* key for this lead on the send day. Email call times: 12:00 to 18:00 CT, Monday to Friday, at least 4 hours from now, within 5 business days, only from context.free_times. An email that offers times ({slots} or {alt_slots}: a first reply, E1 to E10) never offers a time listed in context.offered_times: never a time already offered to this lead (released or not) or offered to any other lead. A booking confirmation's {slot} is the time the lead named: it may be a time offered to this lead, never one offered to another lead. With fewer than two usable times, follow the skill's no-free-times rule. Upwork call times follow upwork-followups: three times stated in the client's time zone, all inside 12:00 to 18:00 CT, Monday to Friday, at least 4 hours from now, no more than 5 business days out, plus one line offering to work around their schedule. Use context.free_times when it is there; an Upwork case does not need it. Lorenzo checks the times against his calendar before he sends. When a lead "accepts" an offered time but names a different time zone or a different time (offered 4pm CT, the lead wrote "Thursday 4pm Eastern works"), that is a new time the lead named, never an acceptance: convert it to CT and check it against these slot rules like any time a lead names. It is never booked on its own (rule 14).
 7. Any no from the lead (unsubscribe, hostile, not a fit, wrong person, not now) stops every email to that lead. Never argue. An unsubscribe or negative_hostile reply at confidence 0.8 or more with no buying signal is records_only with blocklist_in_instantly and tag_dnd_in_ghl, done the same day without Lorenzo's yes. If it carries any buying signal (a price question, a time, interest), or any legal threat (a lawyer or attorney, suing or a lawsuit, a court, a regulator or attorney general, the FTC, FCC, TCPA, CAN-SPAM or BBB, a complaint, a cease and desist), set escalate_to_lorenzo and leave out the blocklist and DND. Blocklist and DND are for those two labels only, always with records_only. The script also holds any email and any blocklist when the lead's newest email (its subject or body) carries such a word or cannot be read.
 8. A newer reply from the lead replaces any pending email. Answer the newest reply. In the reply and follow-up flows (case_type reply or followup_due), if context.has_future_appointment is true (the lead booked a Discovery Call, for example through the calendar link), no first reply, booking email or follow-up goes: records_only with ghl_stage call_booked, instantly_interest 2, field_updates Sequence booked, and other_actions release_offered_times, then the lead belongs to the booked-calls flow. If that booked lead's reply asks for anything (a new time, a cancellation, a question), escalate_to_lorenzo: a booked lead's question always reaches Lorenzo, never booking.already_booked.* or any other email.
 9. Before any email, the thread's newest inbound email must be from the lead: the lead's own address, or the same company domain when that domain is not a free-mail provider (gmail, yahoo, outlook, hotmail, icloud and the like). If the context shows otherwise, or you cannot tell, escalate.
@@ -359,7 +381,7 @@ RULES YOU NEVER BREAK
 11. Upwork: draft_for_lorenzo only. Never a price, rate, retainer, budget, hours estimate or payment term. Never an email address, phone number, off-platform channel or booking link.
 12. Say the thing and stop. No sentence or clause that restates, sums up or sells the point before it. This applies to draft_text and reason.
 13. When unsure, escalate. A held email costs Lorenzo a minute; a wrong email can lose the lead.
-14. Book first, then confirm, only for a booking Grok makes itself. The booking run: the lead's newest email is positive_interested or positive_question and names a time that fits every rule in rule 6, the lead never had a call (context.appointment is null, context.has_future_appointment false), and no key in context.sent_log_keys is a booking.confirmation.* send to this lead. The time must be one offered to this lead in context.offered_times, or the lead's newest email must name its day (the weekday or the date) and its clock time; the script holds any other time. Then send_template with booking.confirmation.no_zoom_link, that label as category, fields first_name and slot (that time, like "Tue 12:05pm"), other_actions book_call, and nothing else in other_actions. Nothing is sent on this run: ask_opus.py tells Grok to book that exact time; Grok reserves it in offered_times with this reply's id, books it, checks the booking and runs the case again as case_type booked_call with context.appointment. The confirmation run is that re-run, and you recognise it by all of these: context.appointment.start is the time of a context.offered_times entry for this lead with "reserved": true and a "reply_id" equal to context.reply_id (the lead has not written since), context.has_future_appointment is true, no key in context.sent_log_keys is a booking.confirmation.* send to this lead, and the newest email is still positive_interested or positive_question. On that run only, return booking.confirmation.zoom_link with {slot} naming context.appointment.start and {zoom_link} the appointment's call link (booking.confirmation.no_zoom_link when it has none), the same category, ghl_stage call_booked, instantly_interest 2, field_updates Sequence booked, other_actions release_offered_times, and never book_call again. Every other booked_call case is hold_for_lorenzo and never gets a "Locked in" email: a lead who booked through the calendar link, a booked lead who writes (a question, a reschedule, a cancellation), an appointment that is not that reservation, a lead who already got a confirmation. Every other booking action (a time that breaks a rule, a reschedule, a cancellation, any label other than those two) is hold_for_lorenzo.
+14. Book first, then confirm, only for a booking Grok makes itself. The booking run: the lead's newest email is positive_interested or positive_question and names a time that fits every rule in rule 6, the lead never had a call (context.appointment is null, context.has_future_appointment false, no call in the records as rule 2 says), and no key in context.sent_log_keys is a booking.confirmation.* send to this lead. The time must be one offered to this lead in context.offered_times, or the lead's newest email must name its day (the weekday or the date) and its clock time; the script holds any other time. It must also be a Central time: the script holds the booking, even for a time offered to this lead, when the thread names any other time zone (ET, EST, Eastern, PT, Pacific, MT, Mountain, Alaska, Hawaii, Atlantic, GMT, UTC, "my time", "local time", "New York time" and the like), and when context.lead.timezone is known and not Central unless the lead wrote that time with CT, CST, CDT or Central. Such a booking is hold_for_lorenzo. Then send_template with booking.confirmation.no_zoom_link, that label as category, fields first_name and slot (that time, like "Tue 12:05pm"), other_actions book_call, and nothing else in other_actions. Nothing is sent on this run: ask_opus.py tells Grok to book that exact time; Grok reserves it in offered_times with this reply's id, books it, checks the booking and runs the case again as case_type booked_call with context.appointment. The confirmation run is that re-run, and you recognise it by all of these: context.appointment.start is the time of a context.offered_times entry for this lead with "reserved": true and a "reply_id" equal to context.reply_id (the lead has not written since), context.has_future_appointment is true, no key in context.sent_log_keys is a booking.confirmation.* send to this lead, and the newest email is still positive_interested or positive_question. On that run only, return booking.confirmation.zoom_link with {slot} naming context.appointment.start and {zoom_link} the appointment's call link (booking.confirmation.no_zoom_link when it has none), the same category, ghl_stage call_booked, instantly_interest 2, field_updates Sequence booked, other_actions release_offered_times, and never book_call again. Every other booked_call case is hold_for_lorenzo and never gets a "Locked in" email: a lead who booked through the calendar link, a booked lead who writes (a question, a reschedule, a cancellation), an appointment that is not that reservation, a lead who already got a confirmation. Every other booking action (a time that breaks a rule, a reschedule, a cancellation, any label other than those two) is hold_for_lorenzo.
 
 The skills and the copy doc follow. Where a skill talks about "the engine", "decide()", engine timers or a "Resume link", that machinery is not running: Grok does the work and GHL holds the record. When a skill and these rules differ, these rules win."""
 
@@ -1245,13 +1267,248 @@ def time_named_in(text, moment):
     return False
 
 
+# ---------------------------------------------------------------- time zones
+
+# Call times are Central. A time is booked on its own only when it is a
+# Central time: no other time zone is named anywhere in the thread, and a lead
+# whose known time zone is not Central wrote the time with CT, CST, CDT or
+# Central. "Thursday 4:30pm Eastern works" for an offered Thu 4:30pm CT is a
+# new time (3:30pm CT) and Lorenzo's.
+# Time zones that are Central: in the lead's record (context.lead.timezone) and
+# as an IANA name in an email.
+CENTRAL_ZONE_NAMES = (
+    "america/chicago", "us/central", "cst6cdt", "canada/central", "america/winnipeg",
+    "america/menominee", "america/indiana/knox", "america/indiana/tell_city",
+    "america/knox_in", "us/indiana-starke", "america/north_dakota/center",
+    "america/north_dakota/new_salem", "america/north_dakota/beulah", "america/matamoros",
+    "america/rankin_inlet", "america/resolute", "america/rainy_river",
+    "ct", "cst", "cdt", "central", "central time", "central standard time",
+    "central daylight time", "us central", "central time (us & canada)",
+    "central time (us and canada)")
+_CENTRAL_WORDS = ("central", "ct", "cst", "cdt")
+_CENTRAL_EXTRA_WORDS = ("us", "standard", "daylight")
+_NON_US_CENTRAL = (r"europe|european|africa|african|asia|asian|australia|australian|america"
+                   r"|american|indonesia|indonesian|greenland|brazil|brazilian|mexico|mexican")
+# A clock time (2pm, 2:00 p.m., 14:00), a bare hour ("at 2") or noon: a zone
+# written right after it qualifies that time.
+_ZONE_ANCHOR = r"(?:\b\d{1,2}(?:[:.]\d{2})?(?:\s?[aApP]\.?\s?[mM]\b\.?)?|\b[nN][oO][oO][nN]\b)"
+_ZONE_SEP = r"\s*[(\[,/-]?\s*"
+_ZONE_NOUN = r"(?:time\s*zone|timezone|time-zone|time|tz)"
+# Zones other than Central, named anywhere, in any case: the US and Canadian
+# zones and their abbreviations, common world zones, the coasts, Arizona,
+# "my time", "our time zone", "local time", "an hour ahead", Central Europe.
+_OTHER_ZONE_RE = re.compile(
+    r"\b(?:e[sd]t|p[sd]t|m[sd]t|ak[sd]t|ha?[sd]t|a[sd]t|n[sd]t|gmt|utc|bst|ist|cet|cest|eet"
+    r"|eest|msk|aest|aedt|acst|acdt|awst|nzst|nzdt|zulu|greenwich|eastern|pacific|mountain"
+    r"|alaska|alaskan|aleutian|hawaii|hawaiian|atlantic|newfoundland|arizona"
+    r"|east[\s-]+coast|west[\s-]+coast"
+    r"|(?:my|our|their)\s+(?:own\s+)?(?:local\s+)?" + _ZONE_NOUN +
+    r"|local\s+time|hours?\s+(?:ahead|behind)"
+    r"|central\s+(?:" + _NON_US_CENTRAL + r"))\b", re.I)
+# ET, PT and MT in capitals anywhere; in any case right after a time ("2pm
+# et"), and so is "local" ("2pm local"); AT (Atlantic) only in capitals right
+# after a time, since "at" is everywhere.
+_ZONE_CODE_RE = re.compile(r"\b(?:ET|PT|MT)\b")
+_ZONE_AFTER_TIME_RE = re.compile(_ZONE_ANCHOR + _ZONE_SEP + r"(?:et|pt|mt|local)\b", re.I)
+_AT_AFTER_TIME_RE = re.compile(_ZONE_ANCHOR + _ZONE_SEP + r"AT\b")
+_IANA_RE = re.compile(r"\b(?:America|US|Canada|Europe|Asia|Africa|Australia|Pacific|Atlantic"
+                      r"|Indian|Etc|Antarctica|Mexico|Brazil|Chile)/[A-Z][A-Za-z_+-]*"
+                      r"(?:/[A-Z][A-Za-z_+-]*)?")
+# "<words> time" right after a time, or after "in" or "on": "2pm Denver time",
+# "at 2 New York time", "on London time". The words decide (_qualifier_kind).
+_PLACE_TIME_RE = re.compile(
+    r"(?:" + _ZONE_ANCHOR + r"|\b(?:in|on)\b)" + _ZONE_SEP + r"(?:(?:in|on)\s+)?"
+    r"(?P<words>[a-z]+(?:[ '.-]+[a-z]+){0,2})\s*" + _ZONE_NOUN + r"\b", re.I)
+# Any "time zone" mention is another zone, except after "your" or a Central
+# word: "what time zone are you in?", "same time zone".
+_TZ_MENTION_RE = re.compile(r"(?P<before>(?:\b[a-z]+[ ]+){0,2})(?:time\s*zone|timezone"
+                            r"|time-zone)\b", re.I)
+# "Your time" is ours, Central, unless "mine" or "yours" next to it makes it a
+# question: "is 2pm your time or mine?".
+_YOUR_TIME_RE = re.compile(r"\byour\s+(?:own\s+)?(?:local\s+)?" + _ZONE_NOUN + r"\b", re.I)
+_MINE_RE = re.compile(r"\b(?:mine|yours)\b", re.I)
+# CT, CST, CDT or Central written right after a time: "2pm CT", "2:00 PM (Central)".
+_CENTRAL_AFTER_TIME_RE = re.compile(
+    _ZONE_SEP + r"(?:(?:in|on)\s+)?(?:us\s+)?(?:c\.?s\.?t|c\.?d\.?t|c\.?t|central(?!\s+(?:"
+    + _NON_US_CENTRAL + r")\b))\b", re.I)
+# Everyday words before "time" that name no zone: "2pm is a good time", "same
+# time", "any time after", "in no time", "in 2 weeks time".
+_NOT_A_ZONE_WORDS = frozenset((
+    "a", "an", "the", "any", "some", "every", "each", "no", "that", "this", "these", "those",
+    "what", "which", "whatever", "whenever", "good", "great", "best", "better", "fine", "ok",
+    "okay", "perfect", "nice", "ideal", "right", "wrong", "same", "other", "another", "next",
+    "last", "first", "second", "third", "earliest", "earlier", "latest", "later", "free",
+    "spare", "busy", "slow", "quiet", "real", "short", "long", "full", "part", "due", "lunch",
+    "dinner", "breakfast", "meeting", "call", "start", "end", "is", "are", "was", "were", "be",
+    "been", "works", "work", "worked", "working", "for", "me", "or", "and", "to", "would",
+    "will", "should", "could", "can", "may", "might", "of", "by", "from", "with", "about",
+    "around", "too", "so", "very", "much", "more", "less", "enough", "plenty", "convenient",
+    "possible", "available", "preferred", "open", "it", "its", "i", "we", "you", "at", "as",
+    "if", "then", "than", "also", "just", "only", "still", "all", "both", "either", "s",
+    "monday", "mon", "tuesday", "tue", "tues", "wednesday", "wed", "thursday", "thu", "thur",
+    "thurs", "friday", "fri", "saturday", "sat", "sunday", "sun", "today", "tonight",
+    "tomorrow", "week", "weeks", "day", "days", "morning", "afternoon", "evening", "night",
+    "hour", "hours", "minute", "minutes", "min", "mins", "half", "quarter", "sharp", "ish",
+    "o", "clock", "oclock", "am", "pm"))
+
+
+def _qualifier_kind(words):
+    """What the words before "time" say: "central" (CT, Central, US Central
+    standard ...), "yours" (your time: ours, Central), None (no zone at all,
+    like "a good") or "other" (a zone, like "Denver" or "my")."""
+    tokens = [token for token in re.split(r"[\s'.-]+", words.lower()) if token]
+    if tokens[:1] in (["in"], ["on"]):
+        tokens = tokens[1:]
+    if not tokens:
+        return None
+    if (any(token in _CENTRAL_WORDS for token in tokens)
+            and all(token in _CENTRAL_WORDS + _CENTRAL_EXTRA_WORDS for token in tokens)):
+        return "central"
+    if tokens == ["your"]:
+        return "yours"
+    if any(token in _NOT_A_ZONE_WORDS for token in tokens):
+        return None
+    return "other"
+
+
+def _zone_forms(text):
+    """The text as the zone scan reads it: full-width letters folded, invisible
+    characters taken out and as spaces, dots taken out ("E.S.T.", "p.m."), and
+    a space between a time and a zone written onto it ("2pmEST", "14:00ET")."""
+    text = unicodedata.normalize("NFKC", text).replace("’", "'").replace("‘", "'")
+    forms = []
+    for variant in (text.translate(_DROP_INVISIBLE), text.translate(_SPACE_INVISIBLE)):
+        for form in (variant, variant.replace(".", "")):
+            form = re.sub(r"(\d\s?[aApP]\.?\s?[mM]\.?)(?=[A-Za-z])", r"\1 ", form)
+            form = re.sub(r"(?<=\d)(?=[A-Za-z])", " ", form)
+            if form not in forms:
+                forms.append(form)
+    return forms
+
+
+def other_zones(text):
+    """The time zones other than Central that a text names: EST, Eastern, PT,
+    Mountain, GMT, "my time", "local time", "New York time", America/Denver,
+    Central European and the like. CT, CST, CDT, Central and "your time" (ours)
+    are Central. Empty when the text names none."""
+    found = []
+
+    def add(word):
+        word = " ".join(word.split())
+        if word.lower() not in [seen.lower() for seen in found]:
+            found.append(word)
+
+    for form in _zone_forms(text):
+        for regex in (_OTHER_ZONE_RE, _ZONE_CODE_RE, _ZONE_AFTER_TIME_RE, _AT_AFTER_TIME_RE):
+            for match in regex.finditer(form):
+                add(match.group(0))
+        for match in _IANA_RE.finditer(form):
+            if match.group(0).lower() not in CENTRAL_ZONE_NAMES:
+                add(match.group(0))
+        for match in _PLACE_TIME_RE.finditer(form):
+            if _qualifier_kind(match.group("words")) == "other":
+                add(match.group(0))
+        for match in _TZ_MENTION_RE.finditer(form):
+            before = match.group("before").lower().split()
+            if "your" not in before and _qualifier_kind(" ".join(before) or "x") != "central":
+                add(match.group(0))
+        if _YOUR_TIME_RE.search(form) and _MINE_RE.search(form):
+            add("your time or mine")
+    return found
+
+
+def lead_zone(context):
+    """The lead's time zone from context.lead.timezone: ("unknown", None) when
+    it is missing or blank, ("central", value), ("other", value), or
+    ("unreadable", value) when it is not text."""
+    lead = context.get("lead") if isinstance(context, dict) else None
+    value = lead.get("timezone") if isinstance(lead, dict) else None
+    if value is None or (isinstance(value, str) and not value.strip()):
+        return "unknown", None
+    if not isinstance(value, str):
+        return "unreadable", value
+    name = re.sub(r"^\((?:utc|gmt)\s*[+-]\s*\d{1,2}(?::?\d{2})?\)\s*", "",
+                  " ".join(value.strip().lower().split()))
+    return ("central" if name in CENTRAL_ZONE_NAMES else "other"), value
+
+
+def central_time_named(text, moment):
+    """True when the text writes this CT time with CT, CST, CDT or Central
+    right after it ("Thursday 2pm CT", "2:00 PM (Central)"), and the day word
+    nearest to it, when there is one, is its day."""
+    days = _day_mentions(text)
+    for start, end, hours, minute in _time_mentions(text):
+        if moment.hour not in hours or moment.minute != minute:
+            continue
+        if not _CENTRAL_AFTER_TIME_RE.match(text, end):
+            continue
+        day = _nearest_day(days, start, end)
+        if day is None:
+            return True
+        value = day[2]
+        if isinstance(value, int) and value == moment.weekday():
+            return True
+        if (isinstance(value, tuple) and value[:2] == (moment.month, moment.day)
+                and value[2] in (None, moment.year)):
+            return True
+    return False
+
+
+def zone_problem(context, moment):
+    """None when the time to book is a Central time for this lead: no subject
+    or body in context.thread (quoted emails and older emails too) names a time
+    zone other than Central, and for a lead whose context.lead.timezone is
+    known and not Central, the lead's newest email (its own words above any
+    quoted email) writes this time with CT, CST, CDT or Central. Else why it
+    is not booked on its own. Applies to a time we offered this lead too. An
+    email in the thread whose body is not text, or whose subject is neither
+    text nor null, holds it too: what it says cannot be checked."""
+    thread = context.get("thread")
+    if not isinstance(thread, list):
+        return ("context.thread cannot be read, so the time zone of the time cannot be "
+                "checked: no booking on its own")
+    named = []
+    for item in thread:
+        subject = item.get("subject") if isinstance(item, dict) else None
+        body = item.get("body") if isinstance(item, dict) else None
+        if (not isinstance(item, dict) or not isinstance(body, str)
+                or not (subject is None or isinstance(subject, str))):
+            return ("an email in context.thread has no body as text, or a subject that is not "
+                    "text or null, so the time zones it names cannot be checked: no booking on "
+                    "its own")
+        for text in (subject, body):
+            for word in other_zones(text) if isinstance(text, str) else []:
+                if word.lower() not in [seen.lower() for seen in named]:
+                    named.append(word)
+    if named:
+        return ("the thread names a time zone other than Central (%s): a time the lead may "
+                "mean in another zone is never booked on its own, even one we offered"
+                % ", ".join(repr(word) for word in named[:3]))
+    kind, value = lead_zone(context)
+    if kind == "unreadable":
+        return "context.lead.timezone %r cannot be read: no booking on its own" % (value,)
+    if kind == "other":
+        newest = newest_inbound(context)
+        body = newest.get("body") if newest else None
+        if (moment is None or not isinstance(body, str)
+                or not central_time_named(own_words(body), moment)):
+            return ("the lead's time zone is %r, not Central, and the lead's newest email does "
+                    "not write this time with CT, CST, CDT or Central: no booking on its own"
+                    % value)
+    return None
+
+
 def named_time_problem(context, lead_email, moment):
     """None when the time to book first is one we offered this lead
     (context.offered_times, released or not) or the lead's newest email names
     it (its day and its clock time, in the lead's own words above any quoted
-    email). Else why it is not booked."""
+    email), and it is a Central time (zone_problem). Else why it is not
+    booked."""
     if moment is None:
         return "the time to book cannot be read"
+    zone = zone_problem(context, moment)
+    if zone:
+        return zone
     mine, _ = _offered_times(context, lead_email)
     if mine and any(moment == own for own in mine):
         return None
@@ -1358,12 +1615,58 @@ def appointment_problems(context, held):
     return []
 
 
+def _given(value):
+    """False for a fact that is missing: None, or blank text."""
+    return value is not None and not (isinstance(value, str) and not value.strip())
+
+
+def call_record_problems(context, held):
+    """Why the records say the lead has or had a call: an Instantly interest
+    status of 2, 3 or 4 (context.instantly.interest_status) or a GHL stage of
+    Call Booked, Proposal Sent or Won (context.ghl.stage, by name, as
+    call_booked, or by stage id). Only facts that are given count (a brand-new
+    reply may have no GHL record yet); a given fact that cannot be read holds
+    too. held says what is held."""
+    problems = []
+    instantly = context.get("instantly")
+    if instantly is not None and not isinstance(instantly, dict):
+        problems.append("context.instantly cannot be read (an object with interest_status): %s"
+                        % held)
+    elif isinstance(instantly, dict) and _given(instantly.get("interest_status")):
+        value = instantly.get("interest_status")
+        number = _interest_status(value)
+        if number is None:
+            problems.append("context.instantly.interest_status %r cannot be read: %s"
+                            % (value, held))
+        elif number in CALL_INTEREST_VALUES:
+            problems.append("the Instantly interest status is %s (2 meeting booked, 3 meeting "
+                            "completed, 4 won): the lead has or had a call: %s" % (value, held))
+    ghl = context.get("ghl")
+    if ghl is not None and not isinstance(ghl, dict):
+        problems.append("context.ghl cannot be read (an object with stage): %s" % held)
+    elif isinstance(ghl, dict) and _given(ghl.get("stage")):
+        stage = ghl.get("stage")
+        if not isinstance(stage, str):
+            problems.append("context.ghl.stage %r cannot be read: %s" % (stage, held))
+        elif (stage.strip().lower() in CALL_STAGE_IDS
+              or " ".join(re.split(r"[\s_-]+", stage.strip().lower())) in CALL_STAGE_NAMES):
+            problems.append("the GHL stage is %r (Call Booked, Proposal Sent or Won): the lead "
+                            "has or had a call: %s" % (stage.strip(), held))
+    return problems
+
+
+def is_dnd_tag(tag):
+    """True for a GHL tag that means Do Not Disturb: dnd, DND, do-not-disturb,
+    do not disturb, Do_Not_Disturb (any case)."""
+    return " ".join(re.split(r"[\s_-]+", tag.strip().lower())) in DND_TAGS
+
+
 def ladder_stop_problems(decision, context):
     """Why a follow-up E1 to E10 must not go to this lead. It goes only while
     GHL Sequence is followup and the Instantly interest status is 1 or 0, and
     never with an appointment, past or future (context.appointment); a "no"
     reply label; or Do Not Disturb in GHL (ghl.dnd, the email channel of
-    ghl.dnd_settings, or a "dnd" tag). Fail closed: a fact that is missing or
+    ghl.dnd_settings, or a dnd tag: is_dnd_tag). Fail closed: a fact that is missing or
     cannot be read holds the email too. context.appointment must be given
     (null when the lead never had one), and so must ghl.stage, ghl.dnd (true
     or false), ghl.dnd_settings (GHL's dndSettings, {} when it has none), the
@@ -1405,9 +1708,9 @@ def ladder_stop_problems(decision, context):
         problems.append("context.ghl.tags cannot be read (a list of tag names): "
                         "no follow-up email")
         tags = []
-    if dnd or email_dnd or any(tag.strip().lower() == "dnd" for tag in tags):
+    if dnd or email_dnd or any(is_dnd_tag(tag) for tag in tags):
         problems.append("Do Not Disturb is on for this lead in GHL (overall, for email, or a "
-                        "dnd tag): no follow-up email")
+                        "dnd, do-not-disturb or do not disturb tag): no follow-up email")
     values = _ghl_field_values(ghl, "Sequence") or []
     sequences = set(value.strip().lower() if isinstance(value, str) else None
                     for value in values)
@@ -1474,12 +1777,20 @@ def check_send(decision, context, case_type):
     result["slots_ok"] = not slot_problems
     problems.extend(slot_problems)
     # The time to book first must come from the lead: one we offered this
-    # lead, or its day and clock time in the lead's newest email.
+    # lead, or its day and clock time in the lead's newest email, and a
+    # Central time.
     if candidate:
         named = named_time_problem(context, lead_email, parse_time(candidate))
         result["named_time_ok"] = named is None
         if named:
             problems.append(named)
+    elif confirmation and appointment_given:
+        # The run after Grok's own booking: the reply that named the time is
+        # still the newest, and the booked time must still be a Central time.
+        zone = zone_problem(context, parse_time(appointment.get("start")))
+        result["named_time_ok"] = zone is None
+        if zone:
+            problems.append(zone)
     else:
         result["named_time_ok"] = True
         result["checks_not_applied"].append("named_time_ok")
@@ -1582,11 +1893,13 @@ def check_send(decision, context, case_type):
     # A lead who has or had a call gets no first reply and no booking on its
     # own: post-call emails are Lorenzo's. context.appointment is read as for
     # the ladder (given, null only when the lead never had one, any
-    # appointment holds), and a first reply also holds on a Locked in
-    # confirmation in the send log (the booking run checks that below).
+    # appointment holds), so are the call records (Instantly interest 2, 3 or
+    # 4, GHL stage Call Booked, Proposal Sent or Won), and a first reply also
+    # holds on a Locked in confirmation in the send log (the booking run
+    # checks that below).
     if template_id.startswith("first_reply.") or (confirmation and not appointment_given):
-        had = appointment_problems(context, "no first reply or booking on its own (a lead who "
-                                            "has or had a call is Lorenzo's)")
+        held = "no first reply or booking on its own (a lead who has or had a call is Lorenzo's)"
+        had = appointment_problems(context, held) + call_record_problems(context, held)
         if template_id.startswith("first_reply."):
             if not isinstance(keys, list) or not lead_email:
                 had.append("sent_log_keys or lead_email is missing, so an earlier call cannot "
@@ -1766,8 +2079,9 @@ def check_email(decision, doc_text, context, case_type=None):
 
     lead_text = newest_inbound_text(context)
     if lead_text is None:
-        problems.append("the lead's newest email is not readable in context.thread, so it "
-                        "cannot be checked for legal words")
+        problems.append("the lead's newest email is not readable in context.thread (a body, and "
+                        "a subject key, null when it has no subject), so it cannot be checked "
+                        "for legal words")
     else:
         legal = legal_words(lead_text)
         checks["no_legal_words"] = not legal
@@ -1914,12 +2228,14 @@ def newest_inbound(context):
 
 def newest_inbound_text(context):
     """What the legal scan reads of the lead's newest inbound email in
-    context.thread: its subject (when given) and its body. None when there is
-    no thread, no inbound email, no readable body, or a subject that is not
-    text."""
+    context.thread: its subject and its body. The subject key must be there
+    (null when the email has no subject), so a subject Grok left out never
+    hides a legal word. None when there is no thread, no inbound email, no
+    readable body, no subject key, or a subject that is neither text nor
+    null."""
     item = newest_inbound(context)
     body = item.get("body") if item else None
-    if not isinstance(body, str) or not body.strip():
+    if not isinstance(body, str) or not body.strip() or "subject" not in item:
         return None
     subject = item.get("subject")
     if subject is None:
@@ -1952,8 +2268,9 @@ def next_step(decision, checks, context=None):
                            "reply" % " and ".join(blocking))
         text = newest_inbound_text(context or {})
         if text is None:
-            reasons.append("the lead's newest email is not readable in context.thread: "
-                           "Lorenzo decides, no silent blocklist")
+            reasons.append("the lead's newest email is not readable in context.thread (a body, "
+                           "and a subject key, null when it has no subject): Lorenzo decides, "
+                           "no silent blocklist")
         else:
             legal = legal_words(text)
             if legal:
