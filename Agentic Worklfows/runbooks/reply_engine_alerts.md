@@ -7,7 +7,8 @@ change; each section ends with the one thing to do.
 
 On a public ntfy topic (neither `NTFY_TOKEN` nor `NTFY_ALLOW_SENSITIVE=1` is
 set), pushes carry no lead names: an approval card is titled by its
-classification only ("Reply to approve: positive question"), the chase leaves
+classification only ("Reply to approve: positive question", or "Reply to send
+yourself: positive question" for a lead not answered yet), the chase leaves
 out the thread's subject, and the full card with its links is in the email.
 In the headings below, `{lead}` is the lead's email on a protected topic and
 reads "a lead" on a public one; the cadence pushes (D1 held, D1 Veto, slots
@@ -855,6 +856,43 @@ read, the lead counts as not answered yet. These cards say "Not auto-sent:
 first replies are drafts you send yourself from the thread." (reason
 `first_reply_draft_only` below).
 
+## "Reply to send yourself: {name} ({label})"
+
+**What you see.** The approval card for a lead no reply of ours has reached
+yet (any reply but a booking confirmation, including a draft with no
+template id; a lead row that cannot be read counts as not answered). Its
+first line is "Send this yourself from the thread in Instantly, then tap Mark
+sent." Its buttons are **Mark sent** and **Veto** (plus "Book {time}" when
+they asked for a time outside your slot rule); there is no Approve and no
+Edit, and tapping the push opens the Mark sent page. On a public ntfy topic
+it is titled "Reply to send yourself: {label}" and names no one; the full
+card is in the email.
+
+**What it means.** The engine never sends a reply to a lead we have not
+answered yet (except a booking confirmation): you send it yourself, and
+Mark sent tells the engine you did.
+
+Every approval card that has it (this one and the ordinary "Reply to
+approve" card) shows what the lead wrote above the draft: "They wrote:",
+their reply with the quoted history cut and capped at about 1,500
+characters ("[cut: the rest is in the Instantly thread]"), a line of dashes,
+then the draft under "Your reply, to send yourself from the thread:" (or
+"Your reply (Approve sends it):" on an ordinary card). The lead's words go to
+the email and to a protected topic only, never to the public topic. Cards
+raised before this change have no "They wrote" part.
+
+**What to do.** Open the thread in Instantly, send the draft (edit it there
+if you want), then tap **Mark sent** and confirm. Mark sent sends nothing: it
+records the card as sent by hand (`sent_manually`), adds
+`reply_sent_manually` to the lead's history (so the lead counts as answered
+and later replies can auto-send again), keeps the offered times held and
+arms the follow-ups, as for any sent reply. It never confirms a call the
+card holds: that call stays held and "Call for {lead} still held after Mark
+sent" says what to do in GHL. Mark sent takes a pending card only when it is
+this kind; an ordinary pending card is refused as before. Veto drops the
+card if you do not want to answer. The approve link still works if you open
+it yourself, but the card does not offer it.
+
 ## "Auto-sent from approved templates: {n} sent, {q} queued, {h} held"
 
 **What you see.** A normal-priority push, at most one per 30 minutes, only
@@ -1008,9 +1046,10 @@ the link.
 
 ## A card whose first line is "Not auto-sent: ..."
 
-**What you see.** An ordinary approval card ("Reply to approve: {name}
-({label})", with Approve, Veto and Edit) whose first line says why the gate
-did not let it go on its own. The reason sentences (`approval.REASON_TEXT`):
+**What you see.** An approval card whose first line (the second, under "Send
+this yourself ...", on a "Reply to send yourself" card) says why the gate did
+not let it go on its own: an ordinary card ("Reply to approve: {name}
+({label})", with Approve, Veto and Edit), or the send-yourself card above. The reason sentences (`approval.REASON_TEXT`):
 
 | Reason | The line says "Not auto-sent: ..." |
 |---|---|
@@ -1021,7 +1060,7 @@ did not let it go on its own. The reason sentences (`approval.REASON_TEXT`):
 | `unknown_id` | its template is not in the catalogue for this kind of email. |
 | `unapproved` | its template is not approved yet; approve it in the emails doc, then tell Claude "done". |
 | `changed_since_approval` | its template changed since you approved it; review it and approve it again in the emails doc, then tell Claude "done". |
-| `first_reply_draft_only` | first replies are drafts you send yourself from the thread. (A first reply, or any reply but a booking confirmation to a lead no reply of ours has reached yet.) |
+| `first_reply_draft_only` | first replies are drafts you send yourself from the thread. |
 | `not_approvable` | its template cannot be approved for auto-send. |
 | `stale_render` | the template changed after this draft was written. |
 | `classification` | the reply was not read as a clear positive with enough confidence. |
@@ -1035,10 +1074,14 @@ did not let it go on its own. The reason sentences (`approval.REASON_TEXT`):
 | `recipient_unconfirmed` | the thread could not be re-read to confirm the lead wrote it, so nothing was sent; check the thread in Instantly. |
 | `send_raised` | the send stopped on an error, so the reply may or may not have gone out; check the thread in Instantly before you press anything. |
 
+`first_reply_draft_only` covers a first reply, and any reply but a booking
+confirmation to a lead no reply of ours has reached yet.
+
 The last four are a send that ended at `send_failed`: see the next section.
 
-A first reply's card, and the card of any reply but a booking confirmation
-to a lead not answered yet, always says `first_reply_draft_only`: that check runs
+A first reply's card, and the card of any reply with a template id but a
+booking confirmation to a lead not answered yet, says `first_reply_draft_only`
+(a reply with no template id shows the gate's own reason): that check runs
 before the gate, so approving the template, the kill switch and the gate's
 own reason make no difference to it, and the `unapproved` advice never
 appears on it. The one gate reason still shown after it is a pending GHL

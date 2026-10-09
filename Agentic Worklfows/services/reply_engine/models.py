@@ -534,6 +534,10 @@ class Approval(BaseModel):
     # text), plus the classification it was judged on ({"label",
     # "confidence", "method"}). None for a card raised without a verdict.
     auto_send: Optional[Dict[str, Any]] = None
+    # What the lead wrote (the reply this card answers), quoted history cut
+    # and capped (approval.lead_reply_excerpt), shown above the draft on the
+    # email leg and a protected topic only. None on a card stored before it.
+    lead_reply: Optional[str] = None
 
 
 class LeadState(BaseModel):

@@ -4,8 +4,8 @@ The engine drafts the first reply (two held times, no booking link) and
 Lorenzo sends it himself from the thread. So a first_reply.* draft is always
 an approval card, whatever the approvals file, the kill switch or the template
 gate say (approval.FIRST_REPLY_LOCK_REASON, checked before the gate at every
-point a card can go out with no tap). A counter-proposal template still
-auto-sends as before. Shadow only, zero HTTP, no LLM; the gate environment is
+point a card can go out with no tap). A counter-proposal template auto-sends
+only once the lead is answered (a reply of ours reached them). Shadow only, zero HTTP, no LLM; the gate environment is
 the tmp one test_ct3_card_autosend's world fixture builds.
 """
 from datetime import timedelta
@@ -21,9 +21,11 @@ from services.reply_engine.models import LeadState
 from services.reply_engine.models import Draft
 from services.reply_engine.tests.test_ct3_card_autosend import (  # noqa: F401
     CAMPAIGN, COMPANY, FIRST, FLUSH, LEAD, LINK, NIGHT, NOW, OFFER, TID, _booking_reply, _card, _cls, _event,
-    _fyi_entries, _pushes, _rows, _stored, booking_world, world)
+    _fyi_entries, _rows, _stored, booking_world, world)
+from services.reply_engine.tests import test_ct3_card_autosend as ct3
 
 LOCK_LINE = "Not auto-sent: first replies are drafts you send yourself from the thread."
+SEND_LINE = "Send this yourself from the thread in Instantly, then tap Mark sent.\n"
 # The four first replies the emails doc lists per offer, and a classification
 # that draws each one.
 VARIANTS = {
@@ -32,6 +34,12 @@ VARIANTS = {
     "other": {"label": "neutral_question", "question_type": "other"},
     "referral": {"label": "positive_referral"},
 }
+
+
+def _pushes():
+    """Every approval card push: "Reply to approve" and, for a lead not
+    answered yet, "Reply to send yourself"."""
+    return ct3._pushes("Reply to ")
 
 
 def _classification(variant):
@@ -69,16 +77,19 @@ def _first_card(world, variant="default", now=NOW, email_id="f-1", verdict="real
 
 
 def _assert_is_an_ordinary_card(world, card, pushes_before=0):
+    """A first-contact card (the lead is not answered yet): Lorenzo sends it
+    himself, so Mark sent and Veto, never Approve or Edit."""
     stored = _stored(world, card)
     assert stored.status == "pending" and stored.approved_by is None
     assert "deferred" not in (stored.notify_result or {})
     pushes = _pushes()
     assert len(pushes) == pushes_before + 1
     push = pushes[-1]
-    assert push["message"].startswith(LOCK_LINE + "\n")
-    # the same card an unapproved draft gets: Approve, Veto and Edit
-    for action in ("Approve", "Veto", "Edit"):
-        assert action in push["actions"], action
+    assert push["title"].startswith("Reply to send yourself: ")
+    assert push["message"].startswith(SEND_LINE + LOCK_LINE + "\n")
+    assert "view, Mark sent, https://engine.test/mark-sent/" in push["actions"]
+    assert "view, Veto, " in push["actions"]
+    assert "Approve" not in push["actions"] and "Edit" not in push["actions"]
     assert world["inst"].sent == [] and _fyi_entries(world) == []
     return stored
 
@@ -172,7 +183,7 @@ def test_a_deferred_first_reply_is_pushed_once_and_never_sent(world):
     assert out["ok"] is False and out["reason"] == A.REASON_TEXT["first_reply_draft_only"] and out["pushed"]
     assert world["inst"].sent == [] and _stored(world, card).status == "pending"
     pushes = _pushes()
-    assert len(pushes) == 1 and pushes[0]["message"].startswith(LOCK_LINE + "\n")
+    assert len(pushes) == 1 and pushes[0]["message"].startswith(SEND_LINE + LOCK_LINE + "\n")
     # a second call and the orphan sweep push nothing more
     A.auto_send_approved(card, world["inst"], store=world["store"], now=NOW, verdict=v)
     assert A.push_orphaned_deferred(world["store"], now=NOW + timedelta(minutes=30)) == []
@@ -194,7 +205,7 @@ def test_a_queued_template_first_reply_is_refused_at_the_flush_before_the_gate_r
     stored = _stored(world, card)
     assert stored.status == "pending" and stored.approved_by is None and stored.auto_send["reason"] == "first_reply_draft_only"
     pushes = _pushes()
-    assert len(pushes) == 1 and pushes[0]["message"].startswith(LOCK_LINE + "\n")
+    assert len(pushes) == 1 and pushes[0]["message"].startswith(SEND_LINE + LOCK_LINE + "\n")
     assert [r["reason"] for r in _rows(world, "template_auto_send_refused")] == ["first_reply_draft_only"]
     # the send-time re-check says the same for any "template" card
     assert A._template_verdict(stored, world["store"].get(stored.state_key)).reason == "first_reply_draft_only"

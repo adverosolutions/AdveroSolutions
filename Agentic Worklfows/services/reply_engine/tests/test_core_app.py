@@ -144,13 +144,14 @@ def test_webhook_positive_creates_state_draft_and_approval_without_http(env):
     # the push to Lorenzo carries the draft and the action URLs
     assert len(notify.sent_in_test) == 1
     rec = notify.sent_in_test[0]
-    # the ntfy topic is public in tests: the title names no one, the email leg has the card
-    assert rec["title"] == "Reply to approve: positive question"
+    # the ntfy topic is public in tests: the title names no one, the email leg has the card.
+    # A lead nothing of ours reached yet: a first-contact card, sent by Lorenzo himself.
+    assert rec["title"] == "Reply to send yourself: positive question"
     assert "Sopio" not in rec["message"] and draft["body_text"] in rec["email_message"]
     token = state["approvals"][0]
-    assert "view, Approve, https://engine.test/approve/%s" % token in rec["actions"]
+    assert "view, Mark sent, https://engine.test/mark-sent/%s" % token in rec["actions"]
     assert "view, Veto, https://engine.test/veto/%s" % token in rec["actions"]
-    assert "view, Edit, https://engine.test/edit/%s" % token in rec["actions"]
+    assert "Approve" not in rec["actions"] and "Edit" not in rec["actions"]
     # shadow log: GHL + Instantly would_do, nothing sent
     actions = [x["action"] for x in job_log.read_shadow_log()]
     assert actions == ["upsert_contact", "upsert_opportunity", "create_note", "update_interest_status"]
@@ -959,8 +960,10 @@ def test_the_approval_card_body_carries_no_action_urls(env):
     card = notify.sent_in_test[-1]
     assert "https://engine.test/approve/" not in card["message"]
     assert "https://engine.test/veto/" not in card["message"]
-    assert card["click"] == "https://engine.test/approve/%s" % token  # the confirmation page, not the send
-    assert "view, Approve, https://engine.test/approve/%s" % token in card["actions"]
+    # a first-contact card: the tap opens Mark sent's confirmation page, which sends nothing
+    assert card["click"] == "https://engine.test/mark-sent/%s" % token
+    assert "view, Mark sent, https://engine.test/mark-sent/%s" % token in card["actions"]
+    assert "https://engine.test/mark-sent/" not in card["message"]
 
 
 def test_reflected_path_segments_and_draft_text_are_escaped(env):
