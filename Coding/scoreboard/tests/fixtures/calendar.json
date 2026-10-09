@@ -1,0 +1,249 @@
+{
+  "pastPage1": {
+    "events": [
+      {
+        "id": "e1",
+        "summary": "Discovery call",
+        "status": "confirmed",
+        "start": {
+          "dateTime": "2026-10-03T17:00:00.000Z"
+        },
+        "end": {
+          "dateTime": "2026-10-03T17:30:00.000Z"
+        },
+        "attendees": [
+          {
+            "email": "me@self.example.com",
+            "self": true,
+            "organizer": true
+          },
+          {
+            "email": "test.lead@alpha.example.com"
+          }
+        ],
+        "location": "https://us02web.zoom.us/j/1234567890",
+        "htmlLink": "https://www.google.com/calendar/event?eid=e1",
+        "description": "Passcode: 000000 (synthetic, must never be read)"
+      },
+      {
+        "id": "e2",
+        "summary": "Zoom call",
+        "status": "cancelled",
+        "start": {
+          "dateTime": "2026-10-04T17:00:00.000Z"
+        },
+        "end": {
+          "dateTime": "2026-10-04T17:30:00.000Z"
+        },
+        "attendees": [
+          {
+            "email": "me@self.example.com",
+            "self": true,
+            "organizer": true
+          },
+          {
+            "email": "cancel@kilo.example.com"
+          }
+        ],
+        "location": "",
+        "htmlLink": "https://www.google.com/calendar/event?eid=e2",
+        "description": "Passcode: 000000 (synthetic, must never be read)"
+      },
+      {
+        "id": "e3",
+        "summary": "Planning call",
+        "status": "confirmed",
+        "start": {
+          "dateTime": "2026-10-04T17:00:00.000Z"
+        },
+        "end": {
+          "dateTime": "2026-10-04T17:30:00.000Z"
+        },
+        "attendees": [
+          {
+            "email": "me@self.example.com",
+            "self": true,
+            "organizer": true
+          }
+        ],
+        "location": "",
+        "htmlLink": "https://www.google.com/calendar/event?eid=e3",
+        "description": "Passcode: 000000 (synthetic, must never be read)"
+      },
+      {
+        "id": "e4",
+        "summary": "Lunch",
+        "status": "confirmed",
+        "start": {
+          "dateTime": "2026-10-05T17:00:00.000Z"
+        },
+        "end": {
+          "dateTime": "2026-10-05T17:30:00.000Z"
+        },
+        "attendees": [
+          {
+            "email": "me@self.example.com",
+            "self": true,
+            "organizer": true
+          },
+          {
+            "email": "friend@lima.example.com"
+          }
+        ],
+        "location": "Cafe",
+        "htmlLink": "https://www.google.com/calendar/event?eid=e4",
+        "description": "Passcode: 000000 (synthetic, must never be read)"
+      },
+      {
+        "id": "e5",
+        "summary": "Intro",
+        "status": "confirmed",
+        "start": {
+          "dateTime": "2026-10-02T17:00:00.000Z"
+        },
+        "end": {
+          "dateTime": "2026-10-02T17:30:00.000Z"
+        },
+        "attendees": [
+          {
+            "email": "me@self.example.com",
+            "self": true,
+            "organizer": true
+          },
+          {
+            "email": "someone@bravo-co.example.com"
+          }
+        ],
+        "location": "https://zoom.us/j/555",
+        "htmlLink": "https://www.google.com/calendar/event?eid=e5",
+        "description": "Passcode: 000000 (synthetic, must never be read)"
+      }
+    ],
+    "nextPageToken": "past-2"
+  },
+  "pastPage2": {
+    "events": [
+      {
+        "id": "e6",
+        "summary": "Discovery Meeting",
+        "status": "confirmed",
+        "start": {
+          "dateTime": "2026-09-30T17:00:00.000Z"
+        },
+        "end": {
+          "dateTime": "2026-09-30T17:30:00.000Z"
+        },
+        "attendees": [
+          {
+            "email": "me@self.example.com",
+            "self": true,
+            "organizer": true
+          },
+          {
+            "email": "new.person@mike.example.com"
+          }
+        ],
+        "location": "",
+        "htmlLink": "https://www.google.com/calendar/event?eid=e6",
+        "description": "Passcode: 000000 (synthetic, must never be read)"
+      },
+      {
+        "id": "e7",
+        "summary": "All-day call day",
+        "status": "confirmed",
+        "start": {
+          "date": "2026-10-01"
+        },
+        "end": {
+          "date": "2026-10-02"
+        },
+        "attendees": [
+          {
+            "email": "me@self.example.com",
+            "self": true,
+            "organizer": true
+          },
+          {
+            "email": "x@november.example.com"
+          }
+        ]
+      }
+    ]
+  },
+  "upcoming": {
+    "events": [
+      {
+        "id": "u1",
+        "summary": "Discovery Call",
+        "status": "confirmed",
+        "start": {
+          "dateTime": "2026-10-06T22:00:00.000Z"
+        },
+        "end": {
+          "dateTime": "2026-10-06T22:30:00.000Z"
+        },
+        "attendees": [
+          {
+            "email": "me@self.example.com",
+            "self": true,
+            "organizer": true
+          },
+          {
+            "email": "client@golf.example.com"
+          }
+        ],
+        "location": "Phone",
+        "htmlLink": "https://www.google.com/calendar/event?eid=u1",
+        "description": "Passcode: 000000 (synthetic, must never be read)"
+      },
+      {
+        "id": "u2",
+        "summary": "Follow-up call",
+        "status": "confirmed",
+        "start": {
+          "dateTime": "2026-10-09T17:00:00.000Z"
+        },
+        "end": {
+          "dateTime": "2026-10-09T17:30:00.000Z"
+        },
+        "attendees": [
+          {
+            "email": "me@self.example.com",
+            "self": true,
+            "organizer": true
+          },
+          {
+            "email": "hotel@hotel.example.com"
+          }
+        ],
+        "location": "https://zoom.us/j/999",
+        "htmlLink": "https://www.google.com/calendar/event?eid=u2",
+        "description": "Passcode: 000000 (synthetic, must never be read)"
+      },
+      {
+        "id": "u3",
+        "summary": "Strategy meeting",
+        "status": "confirmed",
+        "start": {
+          "dateTime": "2026-10-16T17:00:00.000Z"
+        },
+        "end": {
+          "dateTime": "2026-10-16T17:30:00.000Z"
+        },
+        "attendees": [
+          {
+            "email": "me@self.example.com",
+            "self": true,
+            "organizer": true
+          },
+          {
+            "email": "new.person@mike.example.com"
+          }
+        ],
+        "location": "",
+        "htmlLink": "https://www.google.com/calendar/event?eid=u3",
+        "description": "Passcode: 000000 (synthetic, must never be read)"
+      }
+    ]
+  }
+}

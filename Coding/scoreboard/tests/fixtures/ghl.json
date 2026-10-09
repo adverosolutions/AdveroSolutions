@@ -1,0 +1,376 @@
+{
+  "pipelines": {
+    "success": true,
+    "status": 200,
+    "data": {
+      "pipelines": [
+        {
+          "id": "GCBkIzFpung73cIDVPzn",
+          "name": "Sales",
+          "stages": [
+            {
+              "id": "s-won",
+              "name": "Won",
+              "position": 3
+            },
+            {
+              "id": "s-new",
+              "name": "New Reply/Lead",
+              "position": 0
+            },
+            {
+              "id": "s-prop",
+              "name": "Proposal Sent",
+              "position": 2
+            },
+            {
+              "id": "s-call",
+              "name": "Call Booked",
+              "position": 1
+            }
+          ]
+        },
+        {
+          "id": "vNB4nHSeDZlu6URPbtmP",
+          "name": "Call Booked Pipeline",
+          "stages": [
+            {
+              "id": "k-booked",
+              "name": "Call Booked",
+              "position": 0
+            },
+            {
+              "id": "k-cancel",
+              "name": "Cancelled",
+              "position": 1
+            },
+            {
+              "id": "k-showed",
+              "name": "Showed",
+              "position": 2
+            },
+            {
+              "id": "k-noshow",
+              "name": "No Show",
+              "position": 3
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "opportunities": {
+    "success": true,
+    "status": 200,
+    "data": {
+      "opportunities": [
+        {
+          "id": "o1",
+          "name": "Opportunity o1",
+          "monetaryValue": 1000,
+          "status": "open",
+          "source": "",
+          "createdAt": "2026-08-07T17:00:00.000Z",
+          "lastStageChangeAt": "2026-10-04T05:00:00.000Z",
+          "lastStatusChangeAt": "2026-08-07T17:00:00.000Z",
+          "contactId": "c-o1",
+          "contact": {
+            "name": "Test Lead",
+            "companyName": "Alpha Test Co",
+            "email": "test.lead@alpha.example.com",
+            "tags": [
+              "cold-email"
+            ]
+          },
+          "notes": {
+            "notes": [
+              {
+                "body": "<p>older <b>html</b></p>",
+                "bodyText": "Older note.",
+                "dateAdded": "2026-10-01T17:00:00.000Z"
+              },
+              {
+                "body": "<script>bad()</script>",
+                "bodyText": "Newest note. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. Synthetic detail. ",
+                "dateAdded": "2026-10-05T17:00:00.000Z"
+              }
+            ]
+          },
+          "tasks": [
+            {
+              "id": "t1",
+              "title": "Send the recap",
+              "body": "<b>x</b>",
+              "dueDate": "2026-10-05T11:00:00.000Z",
+              "completed": false
+            },
+            {
+              "id": "t2",
+              "title": "Done task",
+              "dueDate": "2026-10-03T17:00:00.000Z",
+              "completed": true
+            }
+          ],
+          "pipelineId": "GCBkIzFpung73cIDVPzn",
+          "pipelineStageId": "s-new"
+        },
+        {
+          "id": "o2",
+          "name": "Foxtrot opportunity",
+          "monetaryValue": 500,
+          "status": "open",
+          "source": "Instantly campaign",
+          "createdAt": "2026-08-07T17:00:00.000Z",
+          "lastStageChangeAt": "2026-10-02T17:00:00.000Z",
+          "lastStatusChangeAt": "2026-08-07T17:00:00.000Z",
+          "contactId": "c-o2",
+          "contact": {
+            "name": "",
+            "companyName": "Foxtrot Test Inc",
+            "email": "ops@foxtrot.example.com",
+            "tags": []
+          },
+          "notes": {
+            "notes": []
+          },
+          "tasks": [],
+          "pipelineId": "GCBkIzFpung73cIDVPzn",
+          "pipelineStageId": "s-new"
+        },
+        {
+          "id": "o3",
+          "name": "Opportunity o3",
+          "monetaryValue": 2000,
+          "status": "open",
+          "source": "",
+          "createdAt": "2026-08-07T17:00:00.000Z",
+          "lastStageChangeAt": "2026-09-28T17:00:00.000Z",
+          "lastStatusChangeAt": "2026-08-07T17:00:00.000Z",
+          "contactId": "c-o3",
+          "contact": {
+            "name": "Upwork Client Test",
+            "companyName": "Golf Test Co",
+            "email": "client@golf.example.com",
+            "tags": [
+              "upwork"
+            ]
+          },
+          "notes": {
+            "notes": []
+          },
+          "tasks": [
+            {
+              "id": "t3",
+              "title": "Prep the call",
+              "dueDate": "2026-10-06T22:00:00.000Z",
+              "completed": false
+            },
+            {
+              "id": "t4",
+              "title": "Send the proposal",
+              "dueDate": "2026-10-09T17:00:00.000Z",
+              "completed": false
+            },
+            {
+              "id": "t5",
+              "title": "Far task",
+              "dueDate": "2026-10-16T17:00:00.000Z",
+              "completed": false
+            }
+          ],
+          "pipelineId": "GCBkIzFpung73cIDVPzn",
+          "pipelineStageId": "s-call"
+        },
+        {
+          "id": "o4",
+          "name": "Opportunity o4",
+          "monetaryValue": 3000,
+          "status": "open",
+          "source": "LinkedIn DM",
+          "createdAt": "2026-08-07T17:00:00.000Z",
+          "lastStageChangeAt": "2026-09-21T17:00:00.000Z",
+          "lastStatusChangeAt": "2026-08-07T17:00:00.000Z",
+          "contactId": "c-o4",
+          "contact": {
+            "name": "Hotel Test",
+            "companyName": "Hotel Test LLC",
+            "email": "hotel@hotel.example.com",
+            "tags": []
+          },
+          "notes": {
+            "notes": []
+          },
+          "tasks": [],
+          "pipelineId": "GCBkIzFpung73cIDVPzn",
+          "pipelineStageId": "s-prop"
+        },
+        {
+          "id": "o5",
+          "name": "Opportunity o5",
+          "monetaryValue": 800,
+          "status": "open",
+          "source": "Referral",
+          "createdAt": "2026-08-07T17:00:00.000Z",
+          "lastStageChangeAt": "2026-10-03T17:00:00.000Z",
+          "lastStatusChangeAt": "2026-08-07T17:00:00.000Z",
+          "contactId": "c-o5",
+          "contact": {
+            "name": "India Test",
+            "companyName": "",
+            "email": "india@india.example.com",
+            "tags": []
+          },
+          "notes": {
+            "notes": []
+          },
+          "tasks": [],
+          "pipelineId": "GCBkIzFpung73cIDVPzn",
+          "pipelineStageId": "s-prop"
+        },
+        {
+          "id": "o6",
+          "name": "Juliet build (Upwork)",
+          "monetaryValue": 2500,
+          "status": "won",
+          "source": "",
+          "createdAt": "2026-08-07T17:00:00.000Z",
+          "lastStageChangeAt": "2026-10-01T17:00:00.000Z",
+          "lastStatusChangeAt": "2026-10-01T17:00:00.000Z",
+          "contactId": "c-o6",
+          "contact": {
+            "name": "Juliet Test",
+            "companyName": "Juliet Test Co",
+            "email": "juliet@juliet.example.com",
+            "tags": []
+          },
+          "notes": {
+            "notes": []
+          },
+          "tasks": [],
+          "pipelineId": "GCBkIzFpung73cIDVPzn",
+          "pipelineStageId": "s-won"
+        },
+        {
+          "id": "o7",
+          "name": "Opportunity o7",
+          "monetaryValue": 900,
+          "status": "lost",
+          "source": "",
+          "createdAt": "2026-08-07T17:00:00.000Z",
+          "lastStageChangeAt": "2026-09-16T17:00:00.000Z",
+          "lastStatusChangeAt": "2026-10-03T17:00:00.000Z",
+          "contactId": "c-o7",
+          "contact": {
+            "name": "Contact o7",
+            "companyName": "Company o7",
+            "email": "o7@o7.example.com",
+            "tags": []
+          },
+          "notes": {
+            "notes": []
+          },
+          "tasks": [],
+          "pipelineId": "GCBkIzFpung73cIDVPzn",
+          "pipelineStageId": "s-prop"
+        },
+        {
+          "id": "o8",
+          "name": "Opportunity o8",
+          "monetaryValue": 0,
+          "status": "open",
+          "source": "",
+          "createdAt": "2026-08-07T17:00:00.000Z",
+          "lastStageChangeAt": "2026-10-02T17:00:00.000Z",
+          "lastStatusChangeAt": "2026-08-07T17:00:00.000Z",
+          "contactId": "c-o8",
+          "contact": {
+            "name": "Contact o8",
+            "companyName": "Company o8",
+            "email": "o8@o8.example.com",
+            "tags": []
+          },
+          "notes": {
+            "notes": []
+          },
+          "tasks": [],
+          "pipelineId": "vNB4nHSeDZlu6URPbtmP",
+          "pipelineStageId": "k-showed"
+        },
+        {
+          "id": "o9",
+          "name": "Opportunity o9",
+          "monetaryValue": 0,
+          "status": "open",
+          "source": "",
+          "createdAt": "2026-08-07T17:00:00.000Z",
+          "lastStageChangeAt": "2026-09-30T17:00:00.000Z",
+          "lastStatusChangeAt": "2026-08-07T17:00:00.000Z",
+          "contactId": "c-o9",
+          "contact": {
+            "name": "Contact o9",
+            "companyName": "Company o9",
+            "email": "o9@o9.example.com",
+            "tags": []
+          },
+          "notes": {
+            "notes": []
+          },
+          "tasks": [],
+          "pipelineId": "vNB4nHSeDZlu6URPbtmP",
+          "pipelineStageId": "k-noshow"
+        },
+        {
+          "id": "o10",
+          "name": "Opportunity o10",
+          "monetaryValue": 0,
+          "status": "open",
+          "source": "",
+          "createdAt": "2026-08-07T17:00:00.000Z",
+          "lastStageChangeAt": "2026-08-22T17:00:00.000Z",
+          "lastStatusChangeAt": "2026-08-07T17:00:00.000Z",
+          "contactId": "c-o10",
+          "contact": {
+            "name": "Contact o10",
+            "companyName": "Company o10",
+            "email": "o10@o10.example.com",
+            "tags": []
+          },
+          "notes": {
+            "notes": []
+          },
+          "tasks": [],
+          "pipelineId": "vNB4nHSeDZlu6URPbtmP",
+          "pipelineStageId": "k-showed"
+        },
+        {
+          "id": "o11",
+          "name": "Opportunity o11",
+          "monetaryValue": 0,
+          "status": "open",
+          "source": "",
+          "createdAt": "2026-08-07T17:00:00.000Z",
+          "lastStageChangeAt": "2026-10-05T17:00:00.000Z",
+          "lastStatusChangeAt": "2026-08-07T17:00:00.000Z",
+          "contactId": "c-o11",
+          "contact": {
+            "name": "Contact o11",
+            "companyName": "Company o11",
+            "email": "o11@o11.example.com",
+            "tags": []
+          },
+          "notes": {
+            "notes": []
+          },
+          "tasks": [],
+          "pipelineId": "vNB4nHSeDZlu6URPbtmP",
+          "pipelineStageId": "k-booked"
+        }
+      ],
+      "meta": {
+        "total": 11,
+        "startAfter": null,
+        "startAfterId": null
+      }
+    }
+  }
+}

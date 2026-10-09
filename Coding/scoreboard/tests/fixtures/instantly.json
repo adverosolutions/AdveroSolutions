@@ -1,0 +1,215 @@
+{
+  "overview": {
+    "emails_sent_count": 5000,
+    "new_leads_contacted_count": 2000,
+    "contacted_count": 2100,
+    "reply_count_unique": 30,
+    "reply_count_automatic_unique": 12,
+    "bounced_count": 40,
+    "unsubscribed_count": 5,
+    "total_opportunities": 12,
+    "total_opportunity_value": 6000,
+    "total_interested": 10,
+    "total_meeting_booked": 4,
+    "total_meeting_completed": 1,
+    "total_closed": 1
+  },
+  "overviewPrev": {
+    "emails_sent_count": 4000,
+    "new_leads_contacted_count": 1600,
+    "contacted_count": 1650,
+    "reply_count_unique": 12,
+    "reply_count_automatic_unique": 4,
+    "bounced_count": 100,
+    "unsubscribed_count": 3,
+    "total_opportunities": 6,
+    "total_opportunity_value": 3000,
+    "total_interested": 5,
+    "total_meeting_booked": 2,
+    "total_meeting_completed": 0,
+    "total_closed": 0
+  },
+  "daily": {
+    "result": [
+      {
+        "date": "2026-09-07",
+        "sent": 100,
+        "new_leads_contacted": 50,
+        "replies": 1,
+        "unique_replies": 1,
+        "replies_automatic": 0,
+        "opportunities": 0,
+        "unique_opportunities": 0
+      },
+      {
+        "date": "2026-10-01",
+        "sent": 200,
+        "new_leads_contacted": 80,
+        "replies": 3,
+        "unique_replies": 2,
+        "replies_automatic": 1,
+        "opportunities": 1,
+        "unique_opportunities": 1
+      },
+      {
+        "date": "2026-10-05",
+        "sent": 250,
+        "new_leads_contacted": 100,
+        "replies": 2,
+        "unique_replies": 2,
+        "replies_automatic": 1,
+        "opportunities": 2,
+        "unique_opportunities": 1
+      }
+    ]
+  },
+  "campaignAnalytics": {
+    "result": [
+      {
+        "campaign_id": "camp-a",
+        "campaign_name": "Test Campaign A",
+        "campaign_status": 1,
+        "leads_count": 1500,
+        "emails_sent_count": 3000,
+        "new_leads_contacted_count": 1200,
+        "reply_count_unique": 20,
+        "reply_count_automatic_unique": 8,
+        "bounced_count": 30,
+        "total_opportunities": 8
+      },
+      {
+        "campaign_id": "camp-b",
+        "campaign_name": "Test Campaign B",
+        "campaign_status": 2,
+        "leads_count": 900,
+        "emails_sent_count": 2000,
+        "new_leads_contacted_count": 800,
+        "reply_count_unique": 10,
+        "reply_count_automatic_unique": 4,
+        "bounced_count": 10,
+        "total_opportunities": 4
+      },
+      {
+        "campaign_id": "camp-gone",
+        "campaign_name": "Test Campaign Deleted",
+        "campaign_status": 3,
+        "leads_count": 10,
+        "emails_sent_count": 0,
+        "new_leads_contacted_count": 0,
+        "reply_count_unique": 0,
+        "reply_count_automatic_unique": 0,
+        "bounced_count": 0,
+        "total_opportunities": 0
+      }
+    ]
+  },
+  "campaignsPage1": {
+    "items": [
+      {
+        "id": "camp-b",
+        "name": "Test Campaign B",
+        "status": 2,
+        "daily_limit": 150,
+        "email_list": [
+          "sender.two@sender.example.com"
+        ]
+      },
+      {
+        "id": "camp-a",
+        "name": "Test Campaign A",
+        "status": 1,
+        "daily_limit": 200,
+        "email_list": [
+          "sender.one@sender.example.com"
+        ]
+      }
+    ],
+    "next_starting_after": "camp-a"
+  },
+  "campaignsPage2": {
+    "items": [
+      {
+        "id": "camp-c",
+        "name": "Test Campaign C",
+        "status": 0,
+        "daily_limit": 100,
+        "email_list": []
+      },
+      {
+        "id": "camp-d",
+        "name": "Test Campaign D",
+        "status": -2,
+        "daily_limit": 50,
+        "email_list": []
+      }
+    ]
+  },
+  "leadsInterested": {
+    "items": [
+      {
+        "id": "lead-1",
+        "email": "test.lead@alpha.example.com",
+        "first_name": "Test",
+        "last_name": "Lead",
+        "company_name": "Alpha Test Co",
+        "campaign": "camp-a",
+        "lt_interest_status": 1,
+        "timestamp_last_reply": "2026-10-05T21:00:00.000Z",
+        "timestamp_last_contact": "2026-10-04T17:00:00.000Z",
+        "timestamp_last_interest_change": "2026-10-05T21:00:00.000Z"
+      },
+      {
+        "id": "lead-2",
+        "email": "sample.person@delta.example.com",
+        "first_name": "Sample",
+        "last_name": "Person",
+        "company_name": "Delta Sample LLC",
+        "campaign": "camp-b",
+        "lt_interest_status": 1,
+        "timestamp_last_reply": "2026-10-03T17:00:00.000Z",
+        "timestamp_last_contact": "2026-10-04T17:00:00.000Z",
+        "timestamp_last_interest_change": "2026-10-03T17:00:00.000Z"
+      },
+      {
+        "id": "lead-3",
+        "email": "no.contact@echo.example.com",
+        "first_name": "No",
+        "last_name": "Contact",
+        "company_name": "",
+        "campaign": "camp-zzz",
+        "lt_interest_status": 1,
+        "timestamp_last_reply": "2026-10-06T12:00:00.000Z",
+        "timestamp_last_interest_change": "2026-10-06T12:00:00.000Z"
+      }
+    ]
+  },
+  "leadsBooked": {
+    "items": [
+      {
+        "id": "lead-4",
+        "email": "owner@bravo-co.example.com",
+        "first_name": "Bravo",
+        "last_name": "Owner",
+        "company_name": "Bravo Test Co",
+        "campaign": "camp-a",
+        "lt_interest_status": 2,
+        "timestamp_last_reply": "2026-09-30T17:00:00.000Z",
+        "timestamp_last_contact": "2026-10-01T17:00:00.000Z"
+      },
+      {
+        "id": "lead-1",
+        "email": "test.lead@alpha.example.com",
+        "first_name": "Test",
+        "last_name": "Lead",
+        "company_name": "Alpha Test Co",
+        "campaign": "camp-a",
+        "lt_interest_status": 2,
+        "timestamp_last_reply": "2026-10-05T21:00:00.000Z",
+        "timestamp_last_contact": "2026-10-04T17:00:00.000Z"
+      }
+    ]
+  },
+  "unread": {
+    "count": 3
+  }
+}
