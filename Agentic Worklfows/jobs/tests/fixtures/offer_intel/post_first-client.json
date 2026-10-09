@@ -1,0 +1,53 @@
+{
+ "postTree": {
+  "children": [
+   {
+    "children": [
+     {
+      "children": [],
+      "post": {
+       "createdAt": "2026-09-15T11:20:00Z",
+       "id": "c-202",
+       "metadata": {
+        "content": "Cold email, about 900 sends before this one replied."
+       },
+       "user": {
+        "id": "u-bravo",
+        "name": "Member Bravo"
+       }
+      }
+     }
+    ],
+    "post": {
+     "createdAt": "2026-09-15T11:00:00Z",
+     "id": "c-201",
+     "metadata": {
+      "content": "How did you find them?"
+     },
+     "user": {
+      "id": "u-hotel",
+      "name": "Member Hotel"
+     }
+    }
+   }
+  ],
+  "post": {
+   "createdAt": "2026-09-15T10:00:00Z",
+   "id": "p-002",
+   "metadata": {
+    "comments": 3,
+    "content": "After 4 months in Maker School I finally got my first client. Dental office, we set up an AI receptionist that answers missed calls and books appointments. $3k setup.",
+    "title": "First client!!",
+    "upvotes": 12
+   },
+   "name": "first-client",
+   "user": {
+    "id": "u-bravo",
+    "name": "Member Bravo"
+   }
+  }
+ },
+ "self": {
+  "name": "Rehearsal Viewer"
+ }
+}

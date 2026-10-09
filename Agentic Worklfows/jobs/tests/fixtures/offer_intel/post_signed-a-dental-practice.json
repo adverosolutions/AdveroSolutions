@@ -1,0 +1,67 @@
+{
+ "postTree": {
+  "children": [
+   {
+    "children": [
+     {
+      "children": [],
+      "post": {
+       "createdAt": "2026-09-20T16:30:00Z",
+       "id": "c-102",
+       "metadata": {
+        "content": "Leads came from Apollo, I targeted the practice owners directly."
+       },
+       "user": {
+        "id": "u-alpha",
+        "name": "Member Alpha"
+       }
+      }
+     }
+    ],
+    "post": {
+     "createdAt": "2026-09-20T16:00:00Z",
+     "id": "c-101",
+     "metadata": {
+      "content": "Congrats! what niche?"
+     },
+     "user": {
+      "id": "u-hotel",
+      "name": "Member Hotel"
+     }
+    }
+   },
+   {
+    "children": [],
+    "post": {
+     "createdAt": "2026-09-20T17:00:00Z",
+     "id": "c-103",
+     "metadata": {
+      "content": "Which offer did you lead with?"
+     },
+     "user": {
+      "id": "u-hotel",
+      "name": "Member Hotel"
+     }
+    }
+   }
+  ],
+  "post": {
+   "createdAt": "2026-09-20T15:04:05.123456789Z",
+   "id": "p-001",
+   "metadata": {
+    "comments": 3,
+    "content": "Just closed my 3rd client! A 4-location dental practice in Ohio. We're running a database reactivation campaign on their 6,000 old patients. $2,500 setup and $1,500/mo retainer. Found them through cold email, sent about 1,200 emails with Instantly, got 14 positive replies and 5 calls booked.",
+    "title": "Signed a dental practice",
+    "upvotes": 12
+   },
+   "name": "signed-a-dental-practice",
+   "user": {
+    "id": "u-alpha",
+    "name": "Member Alpha"
+   }
+  }
+ },
+ "self": {
+  "name": "Rehearsal Viewer"
+ }
+}

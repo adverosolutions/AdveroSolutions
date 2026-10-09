@@ -1,0 +1,68 @@
+{
+ "post_tree": {
+  "children": [
+   {
+    "post": {
+     "id": "c-11",
+     "metadata": {"content": "Setup was paid up front, the monthly starts next week.", "upvotes": 2},
+     "created_at": "2026-09-22T14:00:00.12345Z",
+     "updated_at": "2026-09-22T14:00:00.12345Z",
+     "group_id": "grp-0001",
+     "user_id": "u-ann",
+     "post_type": "comment",
+     "parent_id": "mp-001",
+     "root_id": "mp-001",
+     "user": {"id": "u-ann", "name": "ann-example-1234", "first_name": "Ann", "last_name": "Example"}
+    },
+    "children": []
+   },
+   {
+    "post": {
+     "id": "c-12",
+     "metadata": {"content": "Congrats! How did you find them?", "upvotes": 0},
+     "created_at": "2026-09-22T10:00:00.5Z",
+     "updated_at": "2026-09-22T10:00:00.5Z",
+     "group_id": "grp-0001",
+     "user_id": "u-bob",
+     "post_type": "comment",
+     "parent_id": "mp-001",
+     "root_id": "mp-001",
+     "user": {"id": "u-bob", "name": "bob-other", "first_name": "Bob", "last_name": "Other"}
+    },
+    "children": [
+     {
+      "post": {
+       "id": "c-13",
+       "metadata": {"content": "Cold email to roofers in Texas, about 900 sends.", "upvotes": 1},
+       "created_at": "2026-09-22T11:00:00Z",
+       "updated_at": "2026-09-22T11:00:00Z",
+       "group_id": "grp-0001",
+       "user_id": "u-ann",
+       "post_type": "comment",
+       "parent_id": "c-12",
+       "root_id": "mp-001",
+       "user": {"name": "ann-example-1234", "first_name": "Ann", "last_name": "Example"}
+      }
+     }
+    ]
+   },
+   {
+    "post": {
+     "id": "c-14",
+     "metadata": {"content": "Nice one.", "upvotes": 0},
+     "created_at": "2026-09-22T16:00:00Z",
+     "updated_at": "2026-09-22T16:00:00Z",
+     "group_id": "grp-0001",
+     "user_id": "u-bob",
+     "post_type": "comment",
+     "parent_id": "mp-001",
+     "root_id": "mp-001",
+     "user": {"id": "u-bob", "name": "bob-other", "first_name": "Bob", "last_name": "Other"}
+    },
+    "children": []
+   }
+  ]
+ },
+ "pinned_post_tree": {},
+ "last": 0
+}

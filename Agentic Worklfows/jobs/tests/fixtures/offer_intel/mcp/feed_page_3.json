@@ -1,0 +1,32 @@
+{
+ "self": true,
+ "total": 6,
+ "postTrees": [
+  {
+   "post": {
+    "id": "mp-006",
+    "name": "older-win-two",
+    "metadata": {
+     "title": "Older win two",
+     "content": "First paid pilot with a pest control company.",
+     "comments": 0,
+     "upvotes": 3,
+     "labels": "lab-wins-0001"
+    },
+    "createdAt": "2026-07-10T12:00:00Z",
+    "updatedAt": "2026-07-10T12:00:00Z",
+    "groupId": "grp-0001",
+    "userId": "u-hal",
+    "labelId": "lab-wins-0001",
+    "postType": "generic",
+    "rootId": "mp-006",
+    "user": {
+     "id": "u-hal",
+     "name": "hal-fictional",
+     "firstName": "Hal",
+     "lastName": "Fictional"
+    }
+   }
+  }
+ ]
+}

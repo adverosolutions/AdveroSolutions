@@ -1,0 +1,262 @@
+{
+ "currentPage": {
+  "path": "/makerschool"
+ },
+ "labels": [
+  {
+   "id": "lab-general",
+   "metadata": {
+    "displayName": "General"
+   }
+  },
+  {
+   "id": "lab-wins",
+   "metadata": {
+    "displayName": "Wins"
+   }
+  },
+  {
+   "id": "lab-help",
+   "metadata": {
+    "displayName": "Help"
+   }
+  }
+ ],
+ "postTrees": [
+  {
+   "children": [
+    {
+     "children": [],
+     "post": {
+      "createdAt": "2026-09-20T16:00:00Z",
+      "id": "c-101",
+      "metadata": {
+       "content": "Congrats! what niche?"
+      },
+      "user": {
+       "id": "u-hotel",
+       "name": "Member Hotel"
+      }
+     }
+    }
+   ],
+   "post": {
+    "createdAt": "2026-09-20T15:04:05.123456789Z",
+    "id": "p-001",
+    "metadata": {
+     "comments": 3,
+     "content": "Just closed my 3rd client! A 4-location dental practice in Ohio. We're running a database reactivation campaign on their 6,000 old patients. $2,500 setup and $1,500/mo retainer. Found them through cold email, sent about 1,200 emails with Instantly, got 14 positive replies and 5 calls booked.",
+     "title": "Signed a dental practice",
+     "upvotes": 12
+    },
+    "name": "signed-a-dental-practice",
+    "user": {
+     "id": "u-alpha",
+     "name": "Member Alpha"
+    }
+   }
+  },
+  {
+   "children": [],
+   "post": {
+    "createdAt": "2026-09-15T10:00:00Z",
+    "id": "p-002",
+    "metadata": {
+     "comments": 3,
+     "content": "After 4 months in Maker School I finally got my first client. Dental office, we set up an AI receptionist that answers missed calls and books appointments. $3k setup.",
+     "title": "First client!!",
+     "upvotes": 12
+    },
+    "name": "first-client",
+    "user": {
+     "id": "u-bravo",
+     "name": "Member Bravo"
+    }
+   }
+  },
+  {
+   "children": [],
+   "post": {
+    "createdAt": "2026-09-10T09:30:00Z",
+    "id": "p-003",
+    "metadata": {
+     "comments": 3,
+     "content": "Second dental client this month, same reactivation offer. They pay 20% of revenue from reactivated patients. All from cold email.",
+     "title": "Dental reactivation works",
+     "upvotes": 12
+    },
+    "name": "dental-reactivation-works",
+    "user": {
+     "id": "u-charlie",
+     "name": "Member Charlie"
+    }
+   }
+  },
+  {
+   "children": [],
+   "post": {
+    "createdAt": "2026-09-05T18:00:00Z",
+    "id": "p-004",
+    "metadata": {
+     "comments": 3,
+     "content": "Another dental clinic signed for reactivation, $2,000 setup. Same cold email campaign as last time.",
+     "title": "Another one",
+     "upvotes": 12
+    },
+    "name": "another-one",
+    "user": {
+     "id": "u-alpha",
+     "name": "Member Alpha"
+    }
+   }
+  },
+  {
+   "children": [],
+   "post": {
+    "createdAt": "2026-08-28T12:00:00Z",
+    "id": "p-005",
+    "metadata": {
+     "comments": 3,
+     "content": "Signed an HVAC company for missed call text back and speed to lead. $997/mo. Came from a referral from my first client.",
+     "title": "HVAC client signed",
+     "upvotes": 12
+    },
+    "name": "hvac-client-signed",
+    "user": {
+     "id": "u-delta",
+     "name": "Member Delta"
+    }
+   }
+  },
+  {
+   "children": [],
+   "post": {
+    "createdAt": "2026-09-18T14:00:00Z",
+    "id": "p-006",
+    "metadata": {
+     "comments": 3,
+     "content": "Roofing contractor in Texas signed. Reactivating their old estimates list. Performance deal, 10% of closed jobs. Sent 2,000 emails, 1.8% reply rate.",
+     "title": "Roofing win",
+     "upvotes": 12
+    },
+    "name": "roofing-win",
+    "user": {
+     "id": "u-echo",
+     "name": "Member Echo"
+    }
+   }
+  },
+  {
+   "children": [],
+   "post": {
+    "createdAt": "2026-09-22T08:00:00Z",
+    "id": "p-007",
+    "metadata": {
+     "comments": 3,
+     "content": "Question for the group: how do you guys price retainers for your first client?",
+     "title": "Pricing question",
+     "upvotes": 12
+    },
+    "name": "pricing-question",
+    "user": {
+     "id": "u-foxtrot",
+     "name": "Member Foxtrot"
+    }
+   }
+  },
+  {
+   "children": [],
+   "post": {
+    "createdAt": "2026-09-21T20:00:00Z",
+    "id": "p-008",
+    "metadata": {
+     "comments": 3,
+     "content": "Best month yet. Screenshot below.",
+     "imagePreview": "https://example.invalid/shot.png",
+     "title": "Wins wins wins",
+     "upvotes": 12
+    },
+    "name": "wins-wins-wins",
+    "user": {
+     "id": "u-golf",
+     "name": "Member Golf"
+    }
+   }
+  },
+  {
+   "children": [],
+   "post": {
+    "createdAt": "2026-08-01T16:00:00Z",
+    "id": "p-009",
+    "metadata": {
+     "comments": 3,
+     "content": "Closed a personal injury law firm for an AI intake chatbot, $5,000 one-off build. Found the job on Upwork.",
+     "title": "Law firm build",
+     "upvotes": 12
+    },
+    "name": "law-firm-build",
+    "user": {
+     "id": "u-bravo",
+     "name": "Member Bravo"
+    }
+   }
+  },
+  {
+   "children": [],
+   "post": {
+    "createdAt": "2026-09-12T11:00:00Z",
+    "id": "p-010",
+    "metadata": {
+     "comments": 3,
+     "content": "Med spa signed for review generation, $500/mo. Booked the call off my cold email campaign.",
+     "title": "Med spa signed",
+     "upvotes": 12
+    },
+    "name": "med-spa-signed",
+    "user": {
+     "id": "u-delta",
+     "name": "Member Delta"
+    }
+   }
+  },
+  {
+   "children": [],
+   "post": {
+    "createdAt": "2026-07-20T13:00:00Z",
+    "id": "p-011",
+    "metadata": {
+     "comments": 3,
+     "content": "Staffing agency client signed: we watch job posts and email hiring managers for them. $4k/mo. Cold email got the first call.",
+     "title": "Staffing client",
+     "upvotes": 12
+    },
+    "name": "staffing-client",
+    "user": {
+     "id": "u-echo",
+     "name": "Member Echo"
+    }
+   }
+  },
+  {
+   "children": [],
+   "post": {
+    "createdAt": "2026-09-23T17:45:00Z",
+    "id": "p-012",
+    "metadata": {
+     "comments": 3,
+     "content": "Janitorial company signed for reactivating lost bids, $1,500 setup. Found them with cold email.",
+     "title": "Cleaning company",
+     "upvotes": 12
+    },
+    "name": "cleaning-company",
+    "user": {
+     "id": "u-charlie",
+     "name": "Member Charlie"
+    }
+   }
+  }
+ ],
+ "self": {
+  "name": "Rehearsal Viewer"
+ }
+}

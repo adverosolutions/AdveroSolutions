@@ -1,0 +1,72 @@
+{
+ "post_tree": {
+  "children": [
+   {
+    "post": {
+     "id": "c-21",
+     "metadata": {"content": "Pinned: the offer is a $1,500/mo retainer for booked jobs.", "upvotes": 5},
+     "created_at": "2026-09-20T16:00:00Z",
+     "updated_at": "2026-09-20T16:00:00Z",
+     "group_id": "grp-0001",
+     "user_id": "u-cat",
+     "post_type": "comment",
+     "parent_id": "mp-002",
+     "root_id": "mp-002",
+     "user": {"id": "u-cat", "name": "cat-sample-99", "first_name": "Cat", "last_name": ""}
+    },
+    "children": []
+   },
+   {
+    "post": {
+     "id": "c-22",
+     "metadata": {"content": "What niche is that?", "upvotes": 0},
+     "created_at": "2026-09-20T15:10:00Z",
+     "updated_at": "2026-09-20T15:10:00Z",
+     "group_id": "grp-0001",
+     "user_id": "u-dan",
+     "post_type": "comment",
+     "parent_id": "mp-002",
+     "root_id": "mp-002",
+     "user": {"id": "u-dan", "name": "dan-other", "first_name": "Dan", "last_name": "Other"}
+    },
+    "children": [
+     {
+      "post": {
+       "id": "c-23",
+       "metadata": {"content": "Residential plumbing, all three.", "upvotes": 1},
+       "created_at": "2026-09-20T15:30:00Z",
+       "updated_at": "2026-09-20T15:30:00Z",
+       "group_id": "grp-0001",
+       "user_id": "u-cat",
+       "post_type": "comment",
+       "parent_id": "c-22",
+       "root_id": "mp-002",
+       "user": {"id": "u-cat", "name": "cat-sample-99", "first_name": "Cat", "last_name": ""}
+      },
+      "children": []
+     }
+    ]
+   }
+  ]
+ },
+ "pinned_post_tree": {
+  "children": [
+   {
+    "post": {
+     "id": "c-21",
+     "metadata": {"content": "Pinned: the offer is a $1,500/mo retainer for booked jobs.", "upvotes": 5},
+     "created_at": "2026-09-20T16:00:00Z",
+     "updated_at": "2026-09-20T16:00:00Z",
+     "group_id": "grp-0001",
+     "user_id": "u-cat",
+     "post_type": "comment",
+     "parent_id": "mp-002",
+     "root_id": "mp-002",
+     "user": {"id": "u-cat", "name": "cat-sample-99", "first_name": "Cat", "last_name": ""}
+    },
+    "children": []
+   }
+  ]
+ },
+ "last": 1758384000
+}

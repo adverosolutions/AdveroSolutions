@@ -1,0 +1,108 @@
+{
+ "self": true,
+ "total": 6,
+ "postTrees": [
+  {
+   "post": {
+    "id": "mp-001",
+    "name": "closed-a-roofing-company",
+    "metadata": {
+     "title": "Closed a roofing company",
+     "content": "Signed my second client today, a roofing company. $1,000 setup and $800/mo for missed-call text back.",
+     "comments": 3,
+     "upvotes": 9,
+     "labels": "lab-wins-0001"
+    },
+    "createdAt": "2026-09-22T09:30:00.123456Z",
+    "updatedAt": "2026-09-22T09:30:00.123456Z",
+    "groupId": "grp-0001",
+    "userId": "u-ann",
+    "labelId": "lab-wins-0001",
+    "postType": "generic",
+    "rootId": "mp-001",
+    "user": {
+     "id": "u-ann",
+     "name": "ann-example-1234",
+     "firstName": "Ann",
+     "lastName": "Example"
+    }
+   }
+  },
+  {
+   "post": {
+    "id": "mp-002",
+    "name": "first-5k-month",
+    "metadata": {
+     "title": "First $5k month",
+     "content": "Hit $5k this month from three plumbing clients.",
+     "comments": 30,
+     "upvotes": 21,
+     "labels": "lab-wins-0001"
+    },
+    "createdAt": "2026-09-20T15:00:00.5Z",
+    "updatedAt": "2026-09-20T15:00:00.5Z",
+    "groupId": "grp-0001",
+    "userId": "u-cat",
+    "labelId": "lab-wins-0001",
+    "postType": "generic",
+    "rootId": "mp-002",
+    "user": {
+     "id": "u-cat",
+     "name": "cat-sample-99",
+     "firstName": "Cat",
+     "lastName": ""
+    }
+   }
+  },
+  {
+   "post": {
+    "id": "mp-003",
+    "name": "quiet-win",
+    "metadata": {
+     "title": "Quiet win",
+     "content": "Booked two calls from a reactivation list for a cleaning company.",
+     "comments": 0,
+     "upvotes": 2,
+     "labels": "lab-wins-0001"
+    },
+    "createdAt": "2026-09-18T08:00:00Z",
+    "updatedAt": "2026-09-18T08:00:00Z",
+    "groupId": "grp-0001",
+    "userId": "u-eve",
+    "labelId": "lab-wins-0001",
+    "postType": "generic",
+    "rootId": "mp-003",
+    "user": {
+     "id": "u-eve",
+     "name": "eve-handle"
+    }
+   }
+  },
+  {
+   "post": {
+    "id": "mp-004",
+    "name": "old-win",
+    "metadata": {
+     "title": "Old win",
+     "content": "Landed a bookkeeping firm on a $500/mo retainer.",
+     "comments": 1,
+     "upvotes": 4,
+     "labels": "lab-wins-0001"
+    },
+    "createdAt": "2026-08-01T12:00:00Z",
+    "updatedAt": "2026-08-01T12:00:00Z",
+    "groupId": "grp-0001",
+    "userId": "u-fay",
+    "labelId": "lab-wins-0001",
+    "postType": "generic",
+    "rootId": "mp-004",
+    "user": {
+     "id": "u-fay",
+     "name": "fay-placeholder",
+     "firstName": "Fay",
+     "lastName": "Placeholder"
+    }
+   }
+  }
+ ]
+}

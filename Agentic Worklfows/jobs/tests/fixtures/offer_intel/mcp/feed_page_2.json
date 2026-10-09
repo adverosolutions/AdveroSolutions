@@ -1,0 +1,32 @@
+{
+ "self": true,
+ "total": 6,
+ "postTrees": [
+  {
+   "post": {
+    "id": "mp-005",
+    "name": "older-win-one",
+    "metadata": {
+     "title": "Older win one",
+     "content": "Signed a landscaping company for lead follow-up.",
+     "comments": 0,
+     "upvotes": 1,
+     "labels": "lab-wins-0001"
+    },
+    "createdAt": "2026-07-20T12:00:00Z",
+    "updatedAt": "2026-07-20T12:00:00Z",
+    "groupId": "grp-0001",
+    "userId": "u-gus",
+    "labelId": "lab-wins-0001",
+    "postType": "generic",
+    "rootId": "mp-005",
+    "user": {
+     "id": "u-gus",
+     "name": "gus-made-up",
+     "firstName": "Gus",
+     "lastName": "Madeup"
+    }
+   }
+  }
+ ]
+}

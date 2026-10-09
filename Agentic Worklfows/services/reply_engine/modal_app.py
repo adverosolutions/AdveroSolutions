@@ -436,6 +436,9 @@ ENV_NOT_IN_SECRET = {
                            "collector reads job folders there); unset in a container",
     "ADVERO_TEST_SESSION": "test-only: set by conftest.py so shared.settings.load_env() reads no "
                            "dotenv file in a test or its child processes; never set in a container",
+    "OFFER_INTEL_DIR": "Offer Intel on Lorenzo's Mac only (data dir override); never set on Modal",
+    "NODE_BIN": "Offer Intel on Lorenzo's Mac only (node for the skool-mcp reader); never set on Modal",
+    "SKOOL_MCP_CLIENT": "Offer Intel on Lorenzo's Mac only (skool-mcp client.js path); never set on Modal",
 }
 
 LOCAL_DIRS = {
