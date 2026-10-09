@@ -198,17 +198,26 @@ def niche_of(appointment: Dict[str, Any]) -> str:
     return "generic"
 
 
+# An AI agents booking (2026-10-06) keeps its own offer: no show-rate or
+# no-show entry covers it yet, so resolve_template_id finds no id and the gate
+# holds every lead-facing touch until an ai_agents line is written and
+# approved, instead of sending the reactivation wording.
+AI_AGENTS_OFFER = "ai_agents"
+
+
 def offer_of(appointment: Dict[str, Any]) -> str:
     offer = (appointment.get("offer") or "").strip().lower()
-    if offer in ("reactivation", "outbound"):
+    if offer in ("reactivation", "outbound", AI_AGENTS_OFFER):
         return offer
     tagged = tagged_offer(appointment)
     if tagged:
         return tagged
+    if (appointment.get("campaign_key") or "").strip().lower() == AI_AGENTS_OFFER:
+        return AI_AGENTS_OFFER
     camp = settings.CAMPAIGNS.get(appointment.get("campaign_key") or "") or settings.CAMPAIGN_BY_ID.get(
         appointment.get("campaign_id")
     )
-    if camp and camp.get("offer") in ("reactivation", "outbound"):
+    if camp and camp.get("offer") in ("reactivation", "outbound", AI_AGENTS_OFFER):
         return camp["offer"]
     return "reactivation"
 

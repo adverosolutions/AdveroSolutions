@@ -314,10 +314,12 @@ def test_the_doc_approves_every_id_but_the_held_first_replies(doc, fresh, plain,
     # the one count check: the doc holds exactly the catalogue's approvable ids
     assert set(b["template_id"] for b in _template_blocks(doc)) == set(approvable) == set(fresh["hashes"])
     assert sorted(data["approvals"]) == sorted(set(approvable) - set(HELD))
-    # Lorenzo said "done" and still no first reply, main text or variant, is approved
+    # Lorenzo said "done": the approved AI agents first replies are approved (2026-10-06), and no
+    # other first reply, main text or variant, is
     first_replies = sorted(t for t in approvable if t.startswith("first_reply."))
-    assert first_replies and HELD == first_replies
-    assert not [t for t in data["approvals"] if t.startswith("first_reply")]
+    assert first_replies and HELD == sorted(set(first_replies) - set(doc_rules.APPROVED_FIRST_REPLIES))
+    assert sorted(t for t in data["approvals"] if t.startswith("first_reply")) == sorted(
+        doc_rules.APPROVED_FIRST_REPLIES)
     assert set(data) == {"version", "approvals"}
     by = 'Lorenzo (Google Doc): "done", build %s' % doc["fingerprint"][:12]
     for tid in data["approvals"]:
@@ -544,13 +546,24 @@ def test_a_line_that_is_not_approvable_is_read_only_and_never_recorded(doc, fres
 
 
 def test_the_doc_says_how_approved_emails_are_sent(doc, plain):
-    """First replies are drafts Lorenzo sends himself; other replies go out on
-    their own only once a reply of his reached the lead, the Locked in
-    confirmation excepted. No line says approved emails simply send."""
+    """Grok's allow list (2026-10-06): only the main text of the five AI agents
+    first replies, of E1 to E10 and of Locked in (after the GHL booking) go out
+    on their own; everything else comes to Lorenzo as a draft. No line says
+    approved emails simply send."""
     low = plain.lower()
     assert "send automatically" not in low and "sends automatically" not in low
-    assert "you send them yourself from the email thread" in plain
-    assert "only after a reply of yours has reached" in plain and "Locked in booking confirmation" in plain
+    for sentence in (doc_rules.SENDING_SENTENCE, doc_rules.HELD_INTRO, doc_rules.CADENCE_NOTE, doc_rules.BOOKING_NOTE,
+                     doc_rules.SHOW_RATE_NOTE, doc_rules.NO_SHOW_NOTE):
+        assert sentence in plain, sentence[:60]
+    # Grok's allow list (2026-10-06): main text of the five AI agents first replies, E1 to E10 and Locked in
+    # (after the GHL booking); everything else is a draft
+    assert "Only these do, once you say 'done' and 'go live'" in plain
+    assert "only after the call is booked in GoHighLevel at exactly the time they picked" in plain
+    assert "Everything else comes to you as a draft" in plain and "every reply offering other times" in plain
+    assert "Their three versions" in plain and "a yes that names a time" not in plain
+    assert "only after a reply of yours has reached" not in plain and "right away" not in plain
+    assert "veto" not in low and "connect zoom" not in low
+    assert "Locked in booking confirmation" in plain
 
 
 # ---------------------------------------------- lines outside block bodies

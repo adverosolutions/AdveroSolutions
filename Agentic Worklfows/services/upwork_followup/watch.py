@@ -1,7 +1,9 @@
 """Upwork follow-up watch: the cheap, frequent trigger (plan + light ingest).
 
-A Claude scheduled task (``watch_task_prompt.md``) runs every 30 minutes on
-weekdays. Each run makes ONE read-only MCP call, ``upwork__get_messages``
+A Claude scheduled task (``watch_task_prompt.md``) runs every 30 minutes,
+08:00 to 19:00 CT, on the days in ``WATCH_DAYS``: every day of the week since
+2026-10-06 (Lorenzo: a Saturday client message gets its draft that day).
+``watch_cron()`` gives the task's cron lines from that one constant. Each run makes ONE read-only MCP call, ``upwork__get_messages``
 ``list_rooms`` (first page, ``{"limit": 50, "room_type": "ALL"}``), saves it,
 and asks :func:`plan` what to do next:
 
@@ -143,6 +145,11 @@ LIGHT_RAW_NAME = "upwork_followup/raw_light.json"
 FULL_MARKER_NAME = "upwork_followup/full_start.json"
 MODES = ("none", "run", "light", "full")
 RUN = "_run"
+# The days the watch runs, Monday=0 .. Sunday=6 (CT). The one place the
+# schedule's days live: plan() answers "none" on any other day, and
+# watch_cron() writes the scheduled task's cron from it. Every day since
+# 2026-10-06, same hours on weekends as on weekdays.
+WATCH_DAYS = (0, 1, 2, 3, 4, 5, 6)
 FULL_IN_PROGRESS = timedelta(minutes=45)
 FULL_RETRY = timedelta(hours=2)
 # Light pulls in a row (distinct collected_at) that come back without the
@@ -352,6 +359,14 @@ def _result(mode: str, rooms: List[str], reasons: Dict[str, str], checked: int) 
             "checked": checked}
 
 
+def watch_cron() -> List[str]:
+    """The scheduled task's cron lines: every 30 minutes 08:00-18:30 CT and
+    once at 19:00, on WATCH_DAYS (cron counts Sunday as 0)."""
+    days = sorted({(d + 1) % 7 for d in WATCH_DAYS})
+    field = "*" if len(days) == 7 else ",".join(str(d) for d in days)
+    return ["*/30 8-18 * * %s" % field, "0 19 * * %s" % field]
+
+
 def plan(rooms_raw: Any, snapshot: Optional[Dict[str, Any]], store: Any, now: Any, ghl: Any = None,
          ghl_factory: Optional[Callable[[], Any]] = None, snapshot_error: Optional[str] = None,
          rooms_error: Optional[str] = None, marker: Any = None) -> Dict[str, Any]:
@@ -359,6 +374,8 @@ def plan(rooms_raw: Any, snapshot: Optional[Dict[str, Any]], store: Any, now: An
     module docstring for every rule. ``marker`` is the full-run marker
     (``--mark-full-start``), or None."""
     now = slots.ensure_aware(now)
+    if now.astimezone(sequence.CT).weekday() not in WATCH_DAYS:
+        return _result("none", [], {RUN: "not a watch day (WATCH_DAYS)"}, 0)
     pages = room_pages(rooms_raw) if rooms_error is None else None
     cards = room_cards(pages) if pages is not None else {}
     checked = len(cards)

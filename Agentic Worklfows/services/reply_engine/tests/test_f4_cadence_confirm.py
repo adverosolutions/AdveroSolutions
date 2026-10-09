@@ -40,6 +40,9 @@ from services.reply_engine.models import LeadState
 
 from test_send_safety_round2 import FakeInstantly, Recorder, _go_live, ct
 
+# These tests cover the E1 Veto window, switched off on 2026-10-06 (cadence.E1_VETO).
+pytestmark = pytest.mark.usefixtures("e1_veto_on")
+
 BASE = "https://engine.test"
 LEAD = "pat.quill@example-cleaning.test"
 FIRST = "Pat"

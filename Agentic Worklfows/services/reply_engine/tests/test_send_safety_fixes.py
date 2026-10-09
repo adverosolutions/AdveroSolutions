@@ -38,6 +38,9 @@ from services.reply_engine import cadence
 from services.reply_engine import show_rate
 from services.reply_engine.models import ReplyEvent
 
+# These tests cover the E1 Veto window, switched off on 2026-10-06 (cadence.E1_VETO).
+pytestmark = pytest.mark.usefixtures("e1_veto_on")
+
 FIXTURES = Path(__file__).parent / "fixtures"
 REPLIES_PATH = FIXTURES / "instantly_replies_2026-09.json"
 REPLIES = json.loads(REPLIES_PATH.read_text(encoding="utf-8"))

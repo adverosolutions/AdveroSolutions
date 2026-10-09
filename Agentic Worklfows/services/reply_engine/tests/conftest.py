@@ -136,3 +136,13 @@ def approvals_file(monkeypatch, tmp_path_factory, request):
         ungate(monkeypatch)
     yield env
     gate.clear_cache()
+
+
+@pytest.fixture
+def e1_veto_on(monkeypatch):
+    """The E1 Veto window was dropped on 2026-10-06 (cadence.E1_VETO = False:
+    E1 goes out at 10:00 CT like the rest). Its code stays behind the switch,
+    and the tests of that code run with it switched back on."""
+    from services.reply_engine import cadence
+
+    monkeypatch.setattr(cadence, "E1_VETO", True)

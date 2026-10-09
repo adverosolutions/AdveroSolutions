@@ -188,7 +188,7 @@ MAX_SUBJECT_CHARS = 300
 # Resume on its stop (runbooks/template_approvals.md, "Cadence holds, stalls
 # and resume"). tests/test_gate_rules_version.py pins this module's source
 # per version, so a change to this file without a bump fails the suite.
-GATE_RULES_VERSION = 3
+GATE_RULES_VERSION = 4
 
 # Placeholder types.
 NAME_PLACEHOLDERS = ("first_name", "referral_name", "referral_first_name")
@@ -1561,10 +1561,13 @@ def draft_verdict(draft: Any, *, kind: str, campaign_key: Optional[str] = None, 
             # draft's own first_reply check, with the draft's link field (None
             # for a first reply) and settings.BOOKING_URL as known links. A
             # booking card's links are fixed by conformance (step 9).
+            # The one link and the one price band a first reply may carry
+            # belong to their own template ids (draft.template_gate_flags).
+            flags = draft_mod.template_gate_flags(template_id) if kind == "first_reply" else {}
             problems = list(draft_mod.validate_draft(body, booking_link=link if kind == "first_reply" else None,
                                                      campaign_key=campaign_key,
                                                      allow_terms=list(allow_terms) if allow_terms else None,
-                                                     first_reply=kind == "first_reply"))
+                                                     first_reply=kind == "first_reply", **flags))
         problems += _subject_problems(subject, campaign_key, allow_terms)
         if problems:
             raise _Fail("copy_gate", "; ".join(str(p) for p in problems))

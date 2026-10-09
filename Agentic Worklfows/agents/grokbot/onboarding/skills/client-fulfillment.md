@@ -13,7 +13,7 @@ State as of 2026-09-22 to 2026-09-24: **nothing here is live.** The onboarding w
 - Lorenzo sends scorecards and every numbers-bearing email himself.
 
 ## Rules for every client-facing word
-- No em dashes, no exclamation marks, no mention of tooling, AI or automation, signed "Lorenzo". No Claudeisms (see `claudeisms`).
+- No em dashes, no exclamation marks, signed "Lorenzo". "AI" is fine (Lorenzo lifted the ban 2026-09-30); never tell or imply that a bot or AI wrote the message. No Claudeisms (see `claudeisms`).
 - Numbers only from the client's scorecard. Prices only from the offer sheet. None of the three product prices (bid follow-up, cold-email infrastructure, content and lead system) is in the offer sheet yet, so none of them goes in writing.
 - No Loom script names a price.
 - Credentials: never a password field, never a password by email. A password-manager invite (1Password, Bitwarden or LastPass) to a vault that holds only this project, or a screen share where the client types it.
@@ -67,7 +67,7 @@ Lorenzo
 ```
 Nudge (2 days, once), subject "Two things still open, {company}": says the form is still open, repeats both links, and that access and the lists are the only parts that block the start.
 
-Open conflict: both emails carry a booking link, and Lorenzo's 2026-09-23 rule says never a booking link, "Everywhere". Until he says the kickoff is an exception, neither is approved to send; hold them for him.
+Open conflict: both emails carry a booking link. Lorenzo's rule (2026-09-23, "Everywhere") allows a booking link in one email only since 2026-10-06: the `booking_link` first reply to a lead who asks for one (`cold-email-replies`). Until he says the kickoff is an exception too, neither is approved to send; hold them for him.
 
 ### Kickoff form, what it asks
 1. Who to talk to: name, day-to-day email, phone, who else to copy, who has the final yes.

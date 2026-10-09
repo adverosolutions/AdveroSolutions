@@ -90,6 +90,18 @@ STATUS_UNAPPROVED = "unapproved"
 STATUS_UNKNOWN = "unknown_id"
 
 FIRST_REPLY_BRANCHES = ("pricing", "send_info", "mechanism", "other", "referral", "default")
+# The AI agents offer (Lorenzo, 2026-10-06) also answers a booking-link ask.
+# Its referral and other replies stay cards Lorenzo writes on: listed, never
+# approvable (AI_AGENTS_HELD_BRANCHES).
+AI_AGENTS_BRANCHES = FIRST_REPLY_BRANCHES + ("booking_link",)
+AI_AGENTS_HELD_BRANCHES = ("referral", "other")
+
+
+def first_reply_branches(offer: str) -> Tuple[str, ...]:
+    """The first-reply branches the catalogue lists for ``offer``."""
+    from services.reply_engine import draft
+
+    return AI_AGENTS_BRANCHES if offer == draft.AI_AGENTS_KEY else FIRST_REPLY_BRANCHES
 NICHE_COMBOS = (
     ("cleaning", "reactivation"), ("cleaning", "outbound"),
     ("bookkeeping", "reactivation"), ("bookkeeping", "outbound"),
@@ -369,8 +381,8 @@ def _first_reply_entries() -> List[Dict[str, Any]]:
     out = []  # type: List[Dict[str, Any]]
     confirmed = _ct(2030, 1, 8, 15, 30)  # Tue, inside every slot rule relative to FIXED_NOW
     refused = _ct(2030, 1, 12, 14, 0)  # Saturday: refused, so the draft counters
-    for offer in draft.PRICING:
-        for branch in FIRST_REPLY_BRANCHES:
+    for offer in draft.FIRST_REPLY_OFFERS:
+        for branch in first_reply_branches(offer):
             tid = "first_reply.%s.%s.full" % (offer, branch)
 
             def build(offer=offer, branch=branch, tid=tid):
@@ -388,8 +400,12 @@ def _first_reply_entries() -> List[Dict[str, Any]]:
                          "A polished body is different text and is not covered by this approval.")
                 if branch == "other":
                     notes += " Also used for every neutral_question that is not pricing, send_info or mechanism."
+                held = offer == draft.AI_AGENTS_KEY and branch in AI_AGENTS_HELD_BRANCHES
+                if held:
+                    notes += (" Held (Lorenzo, 2026-10-06): always a card he edits and sends, never approvable, so "
+                              "it is not in the doc.")
                 return [_entry(tid, "first_reply", main, "services/reply_engine/draft.py:build_draft (skeleton)",
-                               notes=notes, variants=variants)]
+                               approvable=not held, notes=notes, variants=variants)]
             out.extend(_guard(tid, "first_reply", "services/reply_engine/draft.py:build_draft", build))
     return out
 
@@ -401,13 +417,15 @@ def _first_reply_pieces() -> List[Dict[str, Any]]:
     kind = "first_reply_piece"
     out = []  # type: List[Dict[str, Any]]
     a, b = _ct(2030, 1, 8, 13, 47), _ct(2030, 1, 10, 16, 13)
-    for offer in draft.PRICING:
+    for offer in draft.FIRST_REPLY_OFFERS:
         ev = _first_reply_event(offer)
         tid = "first_reply.%s.greeting" % offer
         out.extend(_guard(tid, kind, "services/reply_engine/draft.py:greeting", lambda tid=tid, ev=ev: [
             _entry(tid, kind, _swap(draft.greeting(ev), _base_mapping()), "services/reply_engine/draft.py:greeting",
                    approvable=False)]))
-        for branch in FIRST_REPLY_BRANCHES:
+        for branch in first_reply_branches(offer):
+            if offer == draft.AI_AGENTS_KEY and branch == "booking_link":
+                continue  # no answer paragraph: the time ask and the calendar line are the whole reply
             tid = "first_reply.%s.answer.%s" % (offer, branch)
 
             def build(tid=tid, ev=ev, branch=branch):
@@ -417,10 +435,12 @@ def _first_reply_pieces() -> List[Dict[str, Any]]:
             out.extend(_guard(tid, kind, "services/reply_engine/draft.py:answer_paragraph", build))
         tid = "first_reply.%s.slots" % offer
 
-        def build_slots(tid=tid):
+        def build_slots(tid=tid, offer=offer):
             mapping = _base_mapping()
             mapping[slot_rules.format_slots([a, b])] = "{slots}"
-            return [_entry(tid, kind, _swap(draft.slot_paragraph([a, b], S_BOOKING), mapping),
+            text = (draft.AI_AGENTS_TIME_ASK % slot_rules.format_slots([a, b]) if offer == draft.AI_AGENTS_KEY
+                    else draft.slot_paragraph([a, b], S_BOOKING))
+            return [_entry(tid, kind, _swap(text, mapping),
                            "services/reply_engine/draft.py:slot_paragraph", approvable=False)]
         out.extend(_guard(tid, kind, "services/reply_engine/draft.py:slot_paragraph", build_slots))
     return out
@@ -488,12 +508,13 @@ def _cadence_entries() -> List[Dict[str, Any]]:
               "never sent. Without a company on file the email is held.",
         "e4": "{offer_proof} is cadence.e4.offer_proof.<offer>; the variants show the reactivation line in place. "
               "Without a company on file the email is held.",
-        "e5": "{offer_line} is cadence.e5.offer_line.<reactivation|reactivation_bookkeeping|outbound>; the "
-              "variants show the cleaning reactivation line in place. Without a company on file the email is held.",
-        "e6": "{preview} is cadence.e6.preview.<niche>_<offer>; the variants show the cleaning reactivation line "
-              "in place.",
-        "e9": "{observation} is cadence.e9.observation.<niche>_<offer>; the variants show the cleaning "
-              "reactivation line in place.",
+        "e5": "{offer_line} is cadence.e5.offer_line.<reactivation|reactivation_bookkeeping|outbound|ai_agents>; "
+              "the variants show the cleaning reactivation line in place. Without a company on file the email is "
+              "held (not for ai_agents, whose line does not name it).",
+        "e6": "{preview} is cadence.e6.preview.<niche>_<offer>, or cadence.e6.preview.ai_agents for every AI agents "
+              "campaign; the variants show the cleaning reactivation line in place.",
+        "e9": "{observation} is cadence.e9.observation.<niche>_<offer>, or cadence.e9.observation.ai_agents for "
+              "every AI agents campaign; the variants show the cleaning reactivation line in place.",
     }
     two = [_ct(2030, 1, 8, 13, 47), _ct(2030, 1, 10, 16, 13)]
     for name in cadence_template_names():
@@ -524,7 +545,7 @@ def _cadence_fragments() -> List[Dict[str, Any]]:
 
     kind = "cadence_fragment"
     out = []  # type: List[Dict[str, Any]]
-    for offer in cadence.OFFERS:
+    for offer in cadence.LINE_OFFERS:
         tid = "cadence.e2.research_fallback.%s" % offer
         out.extend(_guard(tid, kind, "services/reply_engine/cadence.py:fallback_research_line",
                           lambda tid=tid, offer=offer: [
@@ -537,7 +558,7 @@ def _cadence_fragments() -> List[Dict[str, Any]]:
         "Written per lead by the LLM (shared.llm role 'research') from the prompt in prompts/cadence_research.md, "
         "so there is no fixed text to hash. CT3: E2 uses the fallback line by default; a touch carrying an "
         "LLM line is always held, never sent."))
-    for offer in cadence.OFFERS:
+    for offer in cadence.LINE_OFFERS:
         tid = "cadence.e4.offer_proof.%s" % offer
         out.extend(_guard(tid, kind, "services/reply_engine/cadence.py:offer_proof_line",
                           lambda tid=tid, offer=offer: [
@@ -548,13 +569,15 @@ def _cadence_fragments() -> List[Dict[str, Any]]:
         tid = "cadence.e5.offer_line.%s" % key
         niche, offer = {"reactivation": ("cleaning", "reactivation"),
                         "reactivation_bookkeeping": ("bookkeeping", "reactivation"),
-                        "outbound": ("cleaning", "outbound")}[key]
+                        "outbound": ("cleaning", "outbound"),
+                        cadence.AI_AGENTS_OFFER: (None, cadence.AI_AGENTS_OFFER)}[key]
         out.extend(_guard(tid, kind, "services/reply_engine/cadence.py:offer_line_text",
                           lambda tid=tid, niche=niche, offer=offer: [
                               _entry(tid, kind, _swap(cadence.offer_line_text(niche, offer, S_COMPANY),
                                                       _base_mapping()),
                                      "services/reply_engine/cadence.py:OFFER_LINES",
-                                     notes="'reactivation' is cleaning and recruiting; 'outbound' is every niche.")]))
+                                     notes="'reactivation' is cleaning and recruiting; 'outbound' and "
+                                           "'ai_agents' are every niche.")]))
     for label, fn in (("e6.preview", cadence.preview_line), ("e9.observation", cadence.observation_line)):
         for niche in cadence.NICHES:
             for offer in cadence.OFFERS:
@@ -562,6 +585,11 @@ def _cadence_fragments() -> List[Dict[str, Any]]:
                 source = "services/reply_engine/cadence.py:%s" % fn.__name__
                 out.extend(_guard(tid, kind, source, lambda tid=tid, fn=fn, niche=niche, offer=offer, source=source: [
                     _entry(tid, kind, fn(niche, offer), source)]))
+        tid = "cadence.%s.%s" % (label, cadence.AI_AGENTS_OFFER)
+        source = "services/reply_engine/cadence.py:%s" % fn.__name__
+        out.extend(_guard(tid, kind, source, lambda tid=tid, fn=fn, source=source: [
+            _entry(tid, kind, fn(None, cadence.AI_AGENTS_OFFER), source,
+                   notes="Every AI agents campaign, whatever the niche.")]))
     return out
 
 

@@ -24,6 +24,9 @@ from services.reply_engine import cadence, no_show as ns, show_rate as sr
 from services.reply_engine import template_gate as gate
 from services.reply_engine.cadence import LeadState
 
+# These tests cover the E1 Veto window, switched off on 2026-10-06 (cadence.E1_VETO).
+pytestmark = pytest.mark.usefixtures("e1_veto_on")
+
 CLEANING_REACT = "8086b41e-b546-4b36-9fa0-2d01f5cc119a"
 LEAD = "dana@examplecleaning.test"
 COMPANY = "Brightside Janitorial"

@@ -318,6 +318,7 @@ def test_e6_is_a_plain_email_with_no_calendar_hold(store, tmp_env):
     assert [r for r in read_shadow_log() if r["action"] == "create_appointment"] == []
 
 
+@pytest.mark.usefixtures("e1_veto_on")  # the E1 Veto window, off since 2026-10-06
 def test_d1_live_opens_veto_window_then_sends_via_mock(store, live_mode, tmp_env):
     calls = []
 
@@ -442,7 +443,7 @@ def test_touch_with_copy_problems_is_not_sent(store, tmp_env, monkeypatch):
     from shared import llm
 
     monkeypatch.setattr(cadence, "fallback_research_line", lambda company, offer: (
-        "I saw your team still books jobs by hand, so the automation I built for a similar shop "
+        "I saw your team still books jobs by hand, so the bot I built for a similar shop "
         "should recover $50,000 in contracts"))
     try:
         state = cadence.arm(make_state(), NOW)
@@ -463,7 +464,8 @@ def test_touch_with_copy_problems_is_not_sent(store, tmp_env, monkeypatch):
 
 
 def test_copy_problems_catches_capitalised_automation_and_invented_money():
-    assert "mentions_ai_or_automation" in cadence.copy_problems("The Automation runs itself\n\nLorenzo")
+    # "automation" is allowed since the AI agents offer (2026-10-06); a capitalised bot is not
+    assert "mentions_ai_or_automation" in cadence.copy_problems("The Bot runs itself\n\nLorenzo")
     assert "money_not_in_offer_sheet" in cadence.copy_problems("I can guarantee $50,000 back\n\nLorenzo")
     # the offer sheet's own proof numbers are fine
     assert cadence.copy_problems("I recovered about $6M worth of contracts\n\nLorenzo") == []
@@ -738,7 +740,7 @@ def test_copy_gate_catches_percentages_guarantees_and_dotted_ai():
     assert "unverified_guarantee" in flagged("I guarantee you 50 new cleaning contracts in 90 days")
     assert "unverified_guarantee" in flagged("Guaranteed $24,000/yr in new cleaning contracts within 90 days")
     assert "money_not_in_offer_sheet" in flagged("We can do this for $3,750 a month")
-    assert "mentions_ai_or_automation" in flagged("I'll have the A.I. draft it")
+    assert "mentions_ai_or_automation" not in flagged("I'll have the A.I. draft it")  # allowed since 2026-10-06
     assert "mentions_ai_or_automation" in flagged("Our bots handle the outreach")
     assert "mentions_ai_or_automation" in flagged("A chatbot could do the first pass")
     # the offer sheet's own numbers still pass
@@ -749,12 +751,13 @@ def test_copy_gate_catches_percentages_guarantees_and_dotted_ai():
 def test_a_leads_own_name_does_not_trip_the_copy_gate():
     """A prospect called "Automation Depot" is not a copy failure. Blocking on
     it lost that lead D2 onwards and re-pinged Lorenzo every hour."""
-    touch = cadence.build_touch(make_state(company="Automation Depot", first_name="Dana"), 4, SLOTS)
-    assert "Automation Depot" in touch.body_text
+    # ("automation" is allowed since 2026-10-06; a bot is still banned, so the case is a "Bot" name)
+    touch = cadence.build_touch(make_state(company="Bot Depot", first_name="Dana"), 4, SLOTS)
+    assert "Bot Depot" in touch.body_text
     assert touch.problems == []
     # but the same word in the prose is still caught
     assert "mentions_ai_or_automation" in cadence.copy_problems(
-        touch.body_text.replace("Lorenzo", "The automation runs itself\n\nLorenzo"), allow=touch.allow_terms)
+        touch.body_text.replace("Lorenzo", "The bot runs itself\n\nLorenzo"), allow=touch.allow_terms)
 
 
 def test_blocked_copy_is_reported_once_per_day(store, tmp_env, monkeypatch):
@@ -866,6 +869,7 @@ def test_an_unsigned_veto_is_refused_once_a_secret_is_configured(store, live_mod
     assert cadence.decision_is_current(cadence.record_veto(store, state, ct(2026, 9, 22, 9, 41)), state) is True
 
 
+@pytest.mark.usefixtures("e1_veto_on")  # the E1 Veto window, off since 2026-10-06
 def test_d1_veto_window_does_not_open_when_the_veto_link_was_withheld(store, live_mode, tmp_env):
     """shared.notify strips action buttons from an unauthenticated topic and the
     email fallback never rendered them, so the only human hold on the live D1
@@ -892,6 +896,7 @@ def test_d1_veto_window_does_not_open_when_the_veto_link_was_withheld(store, liv
                              notify_fn=lambda *a, **k: delivered)["action"] == "veto_window_opened"
 
 
+@pytest.mark.usefixtures("e1_veto_on")  # the E1 Veto window, off since 2026-10-06
 def test_the_veto_card_passes_the_link_as_click_so_the_email_leg_carries_it(store, live_mode, tmp_env):
     state = cadence.arm(make_state(), ct(2026, 9, 21, 16, 0))
     now = ct(2026, 9, 22, 10, 0)

@@ -94,11 +94,12 @@ How the reactivation campaigns word the no-risk offer (verbatim, 2026-09-21 snap
 
 ### Figures: cold copy versus everything else
 
-The cold campaigns are Lorenzo's own copy and keep their guarantee lines. Every other email
-the system sends (first replies, follow-ups, booking, show-rate, no-show) never states a
-price, fee, commission percentage or guarantee amount (Lorenzo, 2026-09-24: "We never talk
-numbers over email."). A price question gets the mechanism in one line and "The rest is
-easier to cover on a quick call." Proof lines come only from the offer sheet.
+The cold campaigns are Lorenzo's own copy and keep their guarantee lines. A price question
+gets the price range written into the offer's approved pricing first reply
+(`first_reply.<offer>.pricing.full`, Lorenzo 2026-10-06; AI agents: $400 to $5,300). Every
+other email the system sends (other first replies, follow-ups, booking, show-rate, no-show)
+never states a price, fee, commission percentage or guarantee amount. Proof lines come only
+from the offer sheet.
 
 ## Sending capacity
 
@@ -118,7 +119,9 @@ uploaded 2026-09-25, 365 tagged blocks: the engine templates plus the six campai
 steps (all 24 `instantly.*` blocks, body and subject for each step). Lorenzo edits there,
 never in the Instantly editor. When a new build is uploaded, the previous doc is renamed
 "OLD, do not edit" and is never edited again; check the newest entry in the doc upload list
-before pointing anyone at a doc.
+before pointing anyone at a doc. Build `e95a04557f8a8faa` (2026-10-06, 395 tagged blocks, adds
+the AI agents first replies) is built and waits for upload; once uploaded it is the doc
+Lorenzo says "done" on, and its Google Doc id goes into the upload list.
 
 1. Export the doc as plain text and keep the export unchanged (later steps verify it by hash).
 2. Route it: the router lists each changed block, who owns it, and `also_in` (every other
@@ -192,8 +195,8 @@ lines are kept, marked superseded, under Legacy.
   change-set that Lorenzo applies.
 - Edit copy in the Instantly editor, or overwrite his live edits. His copy is the source of
   truth for wording; the system is the source of truth for mechanics.
-- Add a booking link to any email (2026-09-23 rule: the lead picks a time, Lorenzo sends the invite).
-- Mention AI, automation or tools; use em dashes or exclamation marks (offer sheet rule 8).
+- Add a booking link to any email (2026-09-23 rule: the lead picks a time, Lorenzo sends the invite). The one exception is the approved `first_reply.<offer>.booking_link.full` reply to a lead who asks for a booking or Calendly link (2026-10-06).
+- Tell or imply that a bot or AI wrote an email; use em dashes or exclamation marks (offer sheet rule 8). The word "AI" itself is fine (the AI agents offer, 2026-09-30).
 - Add a Claudeism (see `claudeisms`).
 
 ## Legacy contractor SOPs (January 2025, not running)

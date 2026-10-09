@@ -9,8 +9,9 @@ one at ``--now`` (default: current CT time), sends the touches that are due
 through Instantly's reply endpoint (guarded: would_do in MODE=shadow), writes a
 Job_Log row and sends Lorenzo one digest per tick that had anything to say.
 
-Safe to run hourly: a lead gets at most one touch per day, D1 waits for the
-30-minute veto window in live mode, and sends only happen 10:00-19:00 CT on
+Safe to run hourly: a lead gets at most one touch per day, D1 goes out at
+10:00 CT like every other day (the 30-minute Veto window is off since
+2026-10-06, cadence.E1_VETO = False), and sends only happen 10:00-19:00 CT on
 business days. ``--dry-run`` plans and prints; it
 never mutates the store, never calls a client, never notifies.
 

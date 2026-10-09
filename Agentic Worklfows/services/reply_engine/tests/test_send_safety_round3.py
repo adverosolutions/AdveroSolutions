@@ -47,6 +47,9 @@ from test_send_safety_round2 import (  # noqa: F401 - shared fakes and worlds fr
     webhook_payload,
 )
 
+# These tests cover the E1 Veto window, switched off on 2026-10-06 (cadence.E1_VETO).
+pytestmark = pytest.mark.usefixtures("e1_veto_on")
+
 REPO = Path(__file__).resolve().parents[3]
 FRI_1PM = "2026-09-25T13:00:00-05:00"
 

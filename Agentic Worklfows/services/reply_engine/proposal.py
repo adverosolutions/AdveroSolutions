@@ -615,7 +615,15 @@ def build_proposal(
 
     problems = copy_problems(text, campaign_key=key, allow_terms=terms, quoted=quotes)
     notes = notes + quote_notes(quotes, campaign_key=key, allow_terms=terms)
-    if niche == "generic":
+    missing = resolved.get("offer_block_missing") or precall.offer_block_missing(
+        draft_mod.AI_AGENTS_KEY if campaign_key == draft_mod.AI_AGENTS_KEY else None)
+    if missing:
+        # An AI agents call (no proposal block in offers.md yet): never a clean
+        # document quoting another offer's pricing.
+        problems = problems + [missing]
+        notes = notes + ["the campaign's offer has no proposal block, so the whole offer block is the %s default"
+                         % draft_mod.GENERIC_KEY]
+    elif niche == "generic":
         # The brief for this same call prints "check it before you quote
         # anything". A clean-looking document that silently commits to the
         # default offer is far more likely to go out unedited than one carrying

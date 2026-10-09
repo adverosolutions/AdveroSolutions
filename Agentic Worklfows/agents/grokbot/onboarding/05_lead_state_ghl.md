@@ -29,9 +29,9 @@ Rules:
 ## 3. Booked calls
 
 - There is no separate "Call Booked" pipeline in `config/ids.json`. Booked calls use the Sales stage Call Booked plus the Discovery Call calendar. Pending, Lorenzo: confirm whether another pipeline for booked calls exists in GHL.
-- Discovery Call calendar: id `GDugwLmZNdsD13RBDnRu`, 15-minute slots, Monday to Friday 12:00 to 18:00, bookings at least 4 hours out, auto-confirm on. Conferencing: Google Meet (Zoom not connected as of 2026-09-21).
+- Discovery Call calendar: id `GDugwLmZNdsD13RBDnRu`, 15-minute slots, open Monday to Friday 11:00 to 18:00 (emails still offer only 12:00 to 18:00), bookings at least 4 hours out, auto-confirm on, Google invitation emails on. Conferencing: Zoom (verified read-only in GHL 2026-10-06).
 - Some calls were booked by hand on Lorenzo's Google Calendar (`lorenzovillarreal@adverosolutions.com`), not through the GHL widget. Read both calendars.
-- Pending, not verified against live GHL: whether creating an appointment sends the lead an invite on its own. Until verified, create appointments only with Ask first, and tell Lorenzo to send the invite.
+- Pending, not verified against live GHL: whether creating an appointment sends the lead an invite on its own. The one appointment you create without asking is the `book_call` booking (file 02, section 3, step 6); every other one waits for Lorenzo. After each booking, tell Lorenzo so he sends the invite.
 
 ## 4. The Upwork pipeline
 
@@ -49,6 +49,8 @@ Status: **pending creation.** They do not exist in GHL yet. Lorenzo creates them
 | Last Email Date | Date and time | When it went, CT |
 | Next Email | Text | Template id due next, for example `cadence.e4`, or `none` |
 | Next Due Date | Date and time | When the next email is due, CT. Empty when Next Email is `none` |
+
+Day 0 starts the ladder. When a first reply goes out (on its own, from a hold card Lorenzo approved, or sent by Lorenzo himself), set Sequence `followup`, Next Email `cadence.e1` and Next Due Date the next business day at 10:00 CT, after the send's own records (section 6) and over whatever they wrote (file 03, "Day 0 watch"). A held first reply records Sequence `reply_waiting` until a first reply goes out.
 
 ## 6. After every send (and every step with no send)
 
@@ -84,7 +86,7 @@ Then use this table to pick the `case_type` and the question for Opus. Opus deci
 | The lead wrote last, and no email of ours came after it | `reply` | "The lead replied. Classify and decide what we do." |
 | Sequence `followup` and Next Due Date is today or past | `followup_due` | "Is the next follow-up due for this lead, and which one?" |
 | Lorenzo's own first reply is in the thread and Sequence is `none` or `reply_waiting` | `followup_due` | "Lorenzo sent a first reply by hand. Record day 0 and set the next follow-up." |
-| A new booking on a calendar, or Sequence `booked` | `booked_call` | "A call is booked. What is due: confirmation, reminder, or nothing yet?" |
+| A new booking on a calendar, or Sequence `booked` | `booked_call` | "A call is booked. What is due: confirmation, reminder, or nothing yet?" Only the re-run right after your own `book_call` (file 02, section 3, step 6) can end in the "Locked in" confirmation: the appointment starts at the time you reserved for this lead, the reservation's `reply_id` is still the newest reply's, and no confirmation went to this lead before. Every other booked call (a calendar-link booking, a booked lead who writes, a reschedule, a cancellation) is a hold card. Do not open a second case for a booking you made yourself. |
 | Lorenzo marked a no-show, or Sequence `no_show` | `no_show` | "Which no-show step is due, if any?" |
 | Sequence `nurture` | `nurture` | "The lead is in nurture. Is anything due?" (Today the answer is always no.) |
 | GHL and Instantly disagree about the stage (you see it here, or the 06:30 pipeline check in file 07, section 8 lists it) | `pipeline` | "GHL and Instantly disagree for this lead. Which is right, and what do we change?" |
@@ -106,7 +108,7 @@ All in `~/advero/state/`. Bots share files. One JSON object per line in `.jsonl`
 
 | File | Holds |
 |---|---|
-| `approval.json` | Lorenzo's "done", "go live" and Ask first settings (file 02, section 9) |
+| `approval.json` | Lorenzo's "done" and "go live" (file 02, section 9) |
 | `KILL_SWITCH` | Exists only while everything is stopped |
 | `sent_log.jsonl` | One line per email sent: key, lead, template id, inbox, time, email id |
 | `offered_times.jsonl` | One line per time offered: time, lead, offered at, released (true/false) |

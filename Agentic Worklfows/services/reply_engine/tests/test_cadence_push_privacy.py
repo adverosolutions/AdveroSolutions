@@ -21,6 +21,9 @@ from services.reply_engine import cadence
 
 from test_send_safety_round2 import FakeInstantly, _d1_state, _go_live, ct  # noqa: F401
 
+# These tests cover the E1 Veto window, switched off on 2026-10-06 (cadence.E1_VETO).
+pytestmark = pytest.mark.usefixtures("e1_veto_on")
+
 EMAIL = "tiffany@flowerhillfs.com"
 COMPANY = "Flowerhill Facility Services"
 FIRST = "Tiffany"

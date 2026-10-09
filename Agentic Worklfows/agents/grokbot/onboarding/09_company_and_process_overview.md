@@ -1,12 +1,12 @@
 # 09 Company and process map
 
-One page. It says who owns each step and where the step is covered. Files 00 to 07 win if anything here seems to differ. Offers, niches and pricing rules: file 01 (prices are said on calls, never in email).
+One page. It says who owns each step and where the step is covered. Files 00 to 07 win if anything here seems to differ. Offers, niches and pricing rules: file 01 (exact prices are said on calls; email carries only the fixed range in the approved pricing reply).
 
 ```
 Leads (Apify, MillionVerifier) -> Instantly cold email, 6 campaigns
   -> lead replies -------------------> not a fit, unsubscribe, hostile: stop
-  -> first reply by Lorenzo (offers two call times) -> quiet: E1 to E10 -> no answer: 90-day nurture
-  -> call booked -> confirmation, reminders R2 R3 R4 -> missed: no-show ladder -> nurture
+  -> first reply, on its own from an approved template or by Lorenzo (offers two call times) -> quiet: E1 to E10 -> no answer: 90-day nurture
+  -> lead names a time -> booked first, then the Locked in confirmation -> reminders R2 R3 R4 (paused) -> missed: no-show ladder (held for Lorenzo) -> nurture
   -> 15-minute call, one-call close ---> lost or not now: Follow Up Later, nurture
   -> won -> onboarding -> delivery -> weekly scorecard -> day 7/21/25/30 -> referral, case study
 
@@ -19,10 +19,10 @@ Upwork: saved job -> prop + Loom -> proposal -> client opens chat -> drafts T1 t
 |---|---|---|---|
 | 1 | Lead sourcing and verification | Lorenzo (spend, uploads); Opus judges fit; Claude Code keeps the scripts | Not your job |
 | 2 | Campaign sending | Lorenzo owns copy and every change; Instantly sends; Grok reads | File 01, section 4; skill `cold-campaigns` |
-| 3 | Reply handling | Grok gathers and acts; Opus decides; Lorenzo sends first replies | File 02; skill `cold-email-replies` |
+| 3 | Reply handling | Grok gathers and acts; Opus decides; the AI agents first replies send on their own; Lorenzo answers the held ones | File 02; skill `cold-email-replies` |
 | 4 | Follow-up E1 to E10 | Grok sends; Opus decides | Skill `quiet-lead-followup` |
-| 5 | Booking | Opus picks two times; Grok creates the appointment (Ask first); Lorenzo sends the invite | File 05, section 3; skill `cold-email-replies`, step 5 |
-| 6 | Confirmation, reminders, no-shows | Grok sends; Opus decides; Lorenzo marks a no-show | Skill `booked-calls` |
+| 5 | Booking | Opus picks two times; a time the lead names that fits every slot rule is booked by Grok first, without Ask first; every other booking action is Lorenzo's; Lorenzo sends the invite | File 02, section 4, rule 15; file 05, section 3; skill `cold-email-replies`, step 5 |
+| 6 | Confirmation, reminders, no-shows | Grok sends the Locked in confirmation once its own booking exists; Opus decides; every show-rate and no-show email is held for Lorenzo; reminders paused since 2026-10-05; Lorenzo marks a no-show | Skill `booked-calls` |
 | 7 | The call | Lorenzo; Opus builds the brief; Grok delivers it | Skill `sales-call` |
 | 8 | Won: onboarding and delivery | Lorenzo (nothing automated this month) | Skill `client-fulfillment` |
 | 9 | Weekly client scorecard | Lorenzo sends it | Skill `client-fulfillment` |
@@ -48,7 +48,7 @@ Routines: file 00, section 10. Reports, KPIs and targets: file 07 and skill `dai
 | GoHighLevel | The record of every lead (Sales pipeline), the Discovery Call calendar, the Deal Won workflow |
 | Google Docs, Sheets, Drive | The copy doc; the Daily Metrics sheet, lead sheet, Offer Intel and LinkedIn queue; client folders |
 | Gmail, Google Calendar | Lorenzo's inbox and calendar |
-| Google Meet, Zoom | Call links. Meet is the default; Zoom is not connected to GHL |
+| Google Meet, Zoom | Call links. Zoom is connected on the GHL Discovery Call calendar (2026-10-06); Meet only on older hand-booked calls |
 | Upwork, Loom | Freelance jobs, proposals, client chats; the proposal videos |
 | n8n, Make | Upwork props and client builds |
 | Apify, MillionVerifier | Finding leads and verifying their emails |
@@ -65,7 +65,7 @@ Routines: file 00, section 10. Reports, KPIs and targets: file 07 and skill `dai
 3. Deposit rule, where the signed agreement lives, the payment link (skill `sales-call`, "Open with Lorenzo").
 4. Lender and consultancy proof wording (file 01, section 6).
 5. Nurture: how often, what each touch offers, what happens at day 90, engine or Instantly (skill `nurture-90-day`).
-6. The kickoff emails carry a booking link, against the no-booking-link rule (skill `client-fulfillment`).
+6. The kickoff emails carry a booking link; the only email allowed one is the `booking_link` first reply (skill `client-fulfillment`).
 7. The current content client's day-25 renewal draft is blocked (skill `client-fulfillment`).
 8. How many of the 33 warmed inboxes join the campaigns after 2026-10-11 (skill `cold-campaigns`).
 9. Whether the 09:30 CT heads-up before E1 stays (skill `quiet-lead-followup`).

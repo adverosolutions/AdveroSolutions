@@ -37,9 +37,13 @@ Build:     python3 build.py --export <export.md>   -> builds/<fingerprint>/adver
            every part comes back exactly.
            builds/ is committed, not ignored: record_doc_approvals.py needs builds/<fingerprint>/manifest.json of
            the doc Lorenzo said "done" on, in whichever checkout runs it.
-           The doc's words on sending follow the engine's locks (approval.py): first replies are drafts Lorenzo sends
-           himself from the thread; other replies go out on their own only once a reply of his reached the lead,
-           the Locked in booking confirmation excepted.
+           The doc's words on sending are doc_rules.py (DONE_SENTENCE, SENDING_SENTENCE, HELD_INTRO and the section
+           notes), Grok's allow list of 2026-10-06 (agents/grokbot/onboarding/ask_opus.py): only the main text of the
+           five AI agents first replies, of E1 to E10 with their lines, and of the Locked in confirmation (after the
+           GHL booking exists at exactly that time) send on their own after "done" and "go live"; every version under
+           any template, every booking.counter.*, slot_already_taken, already_booked, show-rate, no-show, nurture and
+           the older offers' first replies ("Not approved yet") are drafts. The legacy engine's own first-reply path
+           stays locked (approval.py).
 Upload and promote (only when a new doc goes to Lorenzo):
   1. create_file the build's HTML as a new Google Doc; rename the old doc OLD.
   2. Add {"doc_id", "title", "fingerprint", "build": "builds/<fingerprint>/", "uploaded_at"} to uploads.json.

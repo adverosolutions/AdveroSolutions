@@ -37,10 +37,12 @@ written here; the one count check is that the doc holds every approvable id
 of the export exactly once. Headings come from KEY_LABELS and friends when
 they know the key, else from the key itself.
 
-What the doc says about sending follows the engine's locks (approval.py):
-first replies are drafts Lorenzo sends himself from the thread; other replies
-go out on their own only after a reply of his reached the lead, the Locked in
-booking confirmation excepted.
+What the doc says about sending is doc_rules (DONE_SENTENCE, SENDING_SENTENCE,
+HELD_INTRO and the section notes), Grok's allow list of 2026-10-06: only the
+main text of the five AI agents first replies, of E1 to E10 with their lines,
+and of the Locked in confirmation (after the GHL booking exists at exactly
+that time) send on their own; everything else is a draft. The legacy engine's
+own first-reply send path stays locked (approval.py).
 
 Before writing anything, the build reads every template back out of the
 doc's own text with doc_areas.DocReader (main text, subject, every version,
@@ -670,6 +672,7 @@ OFFER_H2 = {
     "bookkeeping_trigger": "Bookkeeping, outbound offer",
     "recruiting_reactivation": "Recruiting, reactivation offer",
     "recruiting_outbound": "Recruiting, outbound offer",
+    "ai_agents": "AI agents offer (every AI agents campaign)",
 }
 QT = OrderedDict([
     ("default", "they said yes"),
@@ -678,6 +681,7 @@ QT = OrderedDict([
     ("mechanism", "they asked how it works"),
     ("other", "they asked something else"),
     ("referral", "they pointed you to someone else"),
+    ("booking_link", "they asked for a booking link"),
 ])
 SR_KEYS = OrderedDict([
     ("cleaning_reactivation", "cleaning (reactivation)"),
@@ -690,13 +694,13 @@ SR_KEYS = OrderedDict([
     ("generic_outbound", "any other niche (outbound)"),
 ])
 OFFER_WORDS = OrderedDict([("reactivation", "reactivation offers"), ("outbound", "outbound offers"),
-                           ("trigger", "outbound offers")])
+                           ("trigger", "outbound offers"), ("ai_agents", "AI agents offer")])
 # Headings (and, for the booking emails, a line on when each goes out) by the
 # key after the section name, a trailing niche and offer left off.
 KEY_LABELS = {
     "confirmation.zoom_link": ("Booking confirmation, with Zoom link",
-                               "When they pick a time that works, the call is booked and this goes out. Used when "
-                               "the call has a Zoom link."),
+                               "When they pick a time that works, once the call is booked in GoHighLevel at exactly "
+                               "that time. Used when the call has a Zoom link."),
     "confirmation.no_zoom_link": ("Booking confirmation, no Zoom link",
                                   "Same moment, when the call has no Zoom link yet (the calendar invite carries the "
                                   "video link)."),
@@ -871,12 +875,8 @@ HAS_TEXTS = any("sms" in re.split(r"[._]", t) for t in approvable_ids)
 doc.top_p("Every email%s the system sends, in the order a lead meets them." % (" and text" if HAS_TEXTS else ""))
 doc.top_p("How to use it: Change any words you like. Keep the words in {curly brackets}: they are filled in for "
           "each lead. When you are done, tell Claude 'done'. Nothing goes live until you say so.")
-doc.top_p("When you say 'done', everything in this doc counts as approved, except the first replies: those are "
-          "not approved yet. Emails still only go out after you tell Claude 'go live'.")
-doc.top_p("Approved does not mean every email goes out on its own. First replies never do: the system drafts them "
-          "and you send them yourself from the email thread. The other replies to a lead go out on their own only "
-          "after a reply of yours has reached that lead, except the Locked in booking confirmation. Every send "
-          "check still applies.")
+doc.top_p(doc_rules.DONE_SENTENCE)
+doc.top_p(doc_rules.SENDING_SENTENCE)
 doc.top_p("If a sentence appears in many emails (like the time-offer line in first replies), changing it once is "
           "enough; it changes everywhere. If you change two copies differently, Claude will ask.")
 doc.top_p("Leave the small grey tags at the end of each heading as they are: they tell Claude which email is which. "
@@ -967,15 +967,14 @@ for key in NICHE_OFFER:
 # in the catalogue's order; the check at the end is that the doc holds every
 # approvable id of the export exactly once.
 doc.section(1, "First reply when a lead replies interested")
-doc.note("The system drafts one of these when a lead answers a cold email and sounds interested or asks a "
-         "question, picked by their offer and what they asked. It never goes out on its own: it comes to you as a "
-         "draft and you send it yourself from the email thread.")
+doc.note("The system picks one of these when a lead answers a cold email and sounds interested or asks a "
+         "question, by their offer and what they asked.")
 doc.note(doc_rules.HELD_INTRO)
 FIRST = OrderedDict()  # offer -> [ids]
 for _tid in section_ids("first_reply"):
     _p = _tid.split(".")
     FIRST.setdefault(_p[1] if len(_p) == 4 else "", []).append(_tid)
-for _offer in ordered(FIRST, NICHE_OFFER):
+for _offer in ordered(FIRST, [doc_rules.APPROVED_FIRST_REPLY_OFFER] + list(NICHE_OFFER)):
     _label = combo_label(_offer) if _offer else "other"
     doc.section(2, OFFER_H2.get(_offer) or "%s offer" % key_words(_offer or "other"))
     _by_qt = OrderedDict((t.split(".")[2] if _offer else t, t) for t in FIRST[_offer])
@@ -986,10 +985,7 @@ for _offer in ordered(FIRST, NICHE_OFFER):
 
 # ---- 3. Follow-up emails (cadence) and the lines spliced into them
 doc.section(1, "Follow-up emails")
-doc.note("For a lead who went quiet after your first reply, in the order below. The first goes out the business "
-         "day after your first reply; each one goes out at 10am Central on a business day, and they stop as soon "
-         "as the lead books, replies or asks to stop. Before the first one goes out you get a heads-up with a Veto "
-         "button.")
+doc.note(doc_rules.CADENCE_NOTE)
 
 
 def cadence_heading(host):
@@ -1034,11 +1030,7 @@ for _host in [t for t in section_ids("cadence") if not doc_rules.splice_host(t, 
 
 # ---- 4. Booking
 doc.section(1, "Booking emails")
-doc.note("These answer a lead who writes back about a time for the call. They go out on their own only after a "
-         "reply of yours has reached the lead; before that they come to you as a draft too. The one exception is "
-         "the Locked in booking confirmation, which can go out on its own right away. When the time they ask for "
-         "breaks your rules (too early, too late, a weekend, too soon or too far out), the reply offering other "
-         "times comes to you as a card first, so you can book it anyway or send it.")
+doc.note(doc_rules.BOOKING_NOTE)
 for _tid in section_ids("booking"):
     _heading, _note = labelled(_tid)
     _n = [_note] if _note else []
@@ -1049,7 +1041,7 @@ for _tid in section_ids("booking"):
 # ---- 5. Show-rate
 _texts = any("sms" in re.split(r"[._]", t) for t in section_ids("show_rate") + section_ids("no_show"))
 doc.section(1, "Show-rate messages (before the call)")
-doc.note("These go to every lead with a call on your calendar, however they booked."
+doc.note(doc_rules.SHOW_RATE_NOTE
          + (" Texts only go out once your texting number is registered (A2P); until then they are skipped."
             if _texts else ""))
 for _tid in section_ids("show_rate"):
@@ -1057,7 +1049,7 @@ for _tid in section_ids("show_rate"):
 
 # ---- 6. No-show
 doc.section(1, "No-show recovery")
-doc.note("These start when a lead misses the call.")
+doc.note(doc_rules.NO_SHOW_NOTE)
 for _tid in section_ids("no_show"):
     place_template(doc, _tid, labelled(_tid)[0], [])
 
@@ -1079,7 +1071,7 @@ AFTER = [
     "you any line a send check would stop, for example an exclamation mark or a price that is not on your offer sheet.",
     "2. Nothing goes live until you tell Claude \"go live\".",
     "3. Only you can do these, whenever you have a minute: change the passwords and keys that were saved in the code, "
-    "register your texting number (A2P), and connect Zoom in GoHighLevel (optional; Google Meet works today).",
+    "and register your texting number (A2P).",
     "4. Say \"yes\" to Claude for any of these and Claude does them: create the Upwork pipeline in GoHighLevel, start "
     "the 8:30 Upwork morning drafts, and send test alerts to your phone during the test week.",
 ]

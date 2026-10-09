@@ -159,7 +159,8 @@ def test_every_shipped_touch_for_every_campaign_still_clears_the_gate():
 
 # ----------------------------------------------- the old vocabulary stands
 def test_the_existing_cadence_codes_are_unchanged():
-    assert "mentions_ai_or_automation" in cadence.copy_problems("The Automation runs itself\n\nLorenzo")
+    # "AI" and "automation" are allowed since the AI agents offer (2026-10-06); a bot is not
+    assert "mentions_ai_or_automation" in cadence.copy_problems("The Bot runs itself\n\nLorenzo")
     assert "money_not_in_offer_sheet" in cadence.copy_problems("I can guarantee $50,000 back\n\nLorenzo")
     assert "unverified_guarantee" in cadence.copy_problems("I guarantee it\n\nLorenzo")
     assert "percentage_not_in_offer_sheet" in cadence.copy_problems("I take 45% of fees\n\nLorenzo")

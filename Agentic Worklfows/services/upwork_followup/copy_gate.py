@@ -54,7 +54,18 @@ Codes (stable; tick.py and the cards key on them):
                           month works"; round 12) and a relative price ("half
                           the price"). A "k" figure before a count noun is a
                           volume, not money ("approx 25k emails", "a 25k list";
-                          round 11)
+                          round 11). One exception (Lorenzo, 2026-10-06): a
+                          framework reply is checked with ``band=(low,
+                          high)``, and exactly that range, both ends together
+                          in a range form ("between $750 and $1,000", "$750 to
+                          $1,000"), stated once in a sentence with no rate or
+                          per-unit word anywhere in it, passes this check,
+                          private_fact and the price-agreement check; see
+                          ``band_spans``. A framework reply (``framework=True``,
+                          with or without a band) also may not name another
+                          price point beside the range ("closer to 1,200",
+                          "two grand", "the midpoint"; see
+                          ``framework_figure_problems``)
     agrees_to_client_price
                           a number the client stated as a price or budget
                           (money, a price word near it, a price position, or
@@ -66,7 +77,13 @@ Codes (stable; tick.py and the cards key on them):
                           Private notes or not. A count with its noun ("the
                           2,000 contacts") passes, and so does a number the
                           client used only as a volume (round 13, probe p49;
-                          see ``client_price_agreements``)
+                          see ``client_price_agreements``). In a framework
+                          reply, when any unanswered client message proposes
+                          a price, an agreement with no figure in any
+                          sentence ("Sure, that works.", "Happy to work
+                          within your budget") is refused too, and no
+                          deferral to the call cancels it (Lorenzo,
+                          2026-10-06; see ``framework_price_agreement``)
     private_fact          a money amount, percentage, likelihood, hours
                           estimate or review fact from ``private_texts``, any
                           bare number of 100 or more that appears in the
@@ -1397,19 +1414,22 @@ def client_price_source(room: Optional[Dict[str, Any]]) -> str:
     return "\n".join(out)[:CLIENT_PRICE_CHARS]
 
 
-@functools.lru_cache(maxsize=32)
-def client_price_values(client_text: str) -> FrozenSet[str]:
-    """Canonical values the client states as a price or budget in
-    ``client_text`` (``client_source_text(room)``); see above."""
+def client_price_spans(client_text: str) -> List[Tuple[int, int, str]]:
+    """(start, end, canonical value) of every figure ``client_text`` states
+    as a price or budget (see above), in text order: every money amount
+    ("$2,000", "EUR 1,000", "2k", "five grand") and every bare number of 100
+    or more in a price position ("Would 1,200 work?", "Our budget is 1500").
+    Offsets are into ``normalise(client_text)``, which keeps every offset
+    (each smart quote becomes one ASCII quote)."""
     body = normalise(client_text or "")[:CLIENT_PRICE_CHARS]
     if not body.strip():
-        return frozenset()
+        return []
     spans, starts = _sentence_starts(body)
-    out = set()  # type: Set[str]
+    out = []  # type: List[Tuple[int, int, str]]
     uses, cover = _number_uses(body)
     for s, e, val, m in uses:
         if m is None:
-            out.add(val)  # "$2,000", "2k", "2,000 dollars"
+            out.append((s, e, val))  # "$2,000", "2k", "2,000 dollars"
             continue
         if float(val) < 100:
             continue  # a year is not skipped: "would 2000 work?" is a price, and "in 2026" never agrees to one
@@ -1423,8 +1443,15 @@ def client_price_values(client_text: str) -> FrozenSet[str]:
         if (_CLIENT_PRICE_WORD_RE.search(near) or _bare_price(body, m, sent_start)
                 or _CLIENT_MAX_AFTER_RE.match(body[e:e + 40]) or _CLIENT_MAX_BEFORE_RE.search(before)
                 or (question and (_PROPOSE_BEFORE_RE.search(before) or _PROPOSE_AFTER_RE.match(body[e:e + 40])))):
-            out.add(val)
-    return frozenset(out)
+            out.append((s, e, val))
+    return out
+
+
+@functools.lru_cache(maxsize=32)
+def client_price_values(client_text: str) -> FrozenSet[str]:
+    """Canonical values the client states as a price or budget in
+    ``client_text`` (``client_source_text(room)``); see above."""
+    return frozenset(v for _, _, v in client_price_spans(client_text))
 
 
 def client_price_agreements(body: str, room: Optional[Dict[str, Any]]) -> List[str]:
@@ -1547,34 +1574,58 @@ def _latest_client_text(room: Optional[Dict[str, Any]]) -> str:
     return ""
 
 
+def _proposal_in(text: str, prices: FrozenSet[str]) -> Optional[str]:
+    """The figure ``text`` (one client message, normalised) proposes as a
+    price (trigger 1 above), or None. ``prices`` is client_price_values over
+    the room's client text."""
+    if not text.strip() or not prices:
+        return None
+    spans, starts = _sentence_starts(text)
+    uses, cover = _number_uses(text)
+    for s, e, val, m in uses:
+        if val not in prices or (m is not None and _count_use(text, s, e, cover)):
+            continue
+        sent_start, sent_end = _sentence_span(spans, starts, s)
+        sent_end = sent_end or len(text)
+        before, after = text[max(sent_start, s - _CLIENT_PRICE_WINDOW):s], text[e:e + 40]
+        if "?" in text[sent_start:sent_end] and (_PROPOSE_BEFORE_RE.search(before) or _PROPOSE_AFTER_RE.match(after)):
+            return text[s:e].strip()
+        if _PROPOSE_STATEMENT_BEFORE_RE.search(before) or _PROPOSE_STATEMENT_AFTER_RE.match(after):
+            return text[s:e].strip()
+    return None
+
+
 def client_price_proposal(room: Optional[Dict[str, Any]]) -> Optional[str]:
     """The figure the client's latest message proposes as a price (trigger 1
     above), or None."""
     latest = _latest_client_text(room)
     if not latest.strip():
         return None
+    return _proposal_in(latest, client_price_values(client_price_source(room)))
+
+
+def unanswered_price_proposal(room: Optional[Dict[str, Any]]) -> Optional[str]:
+    """The figure any of the client's unanswered messages proposes as a
+    price (trigger 1 above, read message by message, newest first), or None.
+    A framework reply reads them all: "Would $750 work?" followed by "Also,
+    how long would it take?" still proposes $750."""
     prices = client_price_values(client_price_source(room))
     if not prices:
         return None
-    spans, starts = _sentence_starts(latest)
-    uses, cover = _number_uses(latest)
-    for s, e, val, m in uses:
-        if val not in prices or (m is not None and _count_use(latest, s, e, cover)):
-            continue
-        sent_start, sent_end = _sentence_span(spans, starts, s)
-        sent_end = sent_end or len(latest)
-        before, after = latest[max(sent_start, s - _CLIENT_PRICE_WINDOW):s], latest[e:e + 40]
-        if "?" in latest[sent_start:sent_end] and (_PROPOSE_BEFORE_RE.search(before) or _PROPOSE_AFTER_RE.match(after)):
-            return latest[s:e].strip()
-        if _PROPOSE_STATEMENT_BEFORE_RE.search(before) or _PROPOSE_STATEMENT_AFTER_RE.match(after):
-            return latest[s:e].strip()
+    for msg in reversed(unanswered_client_messages(room)):
+        text = msg.get("text")
+        if isinstance(text, str) and text.strip():
+            found = _proposal_in(normalise(decode_escapes(text))[:CLIENT_PRICE_CHARS], prices)
+            if found:
+                return found
     return None
 
 
 def figureless_price_agreement(body: str, room: Optional[Dict[str, Any]]) -> Optional[str]:
     """The opening sentence of ``body`` when it agrees, without naming the
     figure, to a price the client's latest message proposes (see above), or
-    None. A draft that defers the price anywhere passes."""
+    None. A draft that defers the price anywhere passes. A framework reply
+    is read by framework_price_agreement instead, with no deferral escape."""
     if not body or _DEFER_PRICE_RE.search(body):
         return None
     opening = ""
@@ -1648,6 +1699,210 @@ def price_subject_agreement(body: str, room: Optional[Dict[str, Any]]) -> Option
     if hit is None or client_price_proposal(room) is None:
         return None
     return hit
+
+
+# ------------------------------------------------------------ agreeing in a framework reply
+# Lorenzo, 2026-10-06: a framework reply (draft.is_framework_reply) answers a
+# client who asked questions, often after naming a figure ("Would $750 work
+# for the showroom intake?"). It always defers the exact price to the call,
+# so a deferral frees nothing there, with or without a range, and it must
+# never agree to their figure anywhere in the message, not only in the
+# opening sentence. In a framework reply this check takes the place of the
+# opening-sentence and price-subject checks above (it reads every sentence
+# with their forms and more, and has no deferral escape); the number check
+# (client_price_agreements) still runs. Same code (agrees_to_client_price).
+#
+# Trigger, all must hold:
+#  1. One of the client's unanswered messages proposes a price
+#     (unanswered_price_proposal).
+#  2. A sentence of the draft agrees, either
+#     a. as a whole: yes-words only ("Sure.", "Yes, absolutely.");
+#     b. anywhere in it: the work done for, at or within their figure ("I can
+#        do it for your budget", "I can do the showroom intake at your
+#        budget", "I can do the showroom intake for that.", "work within your
+#        budget", "I can work with that."); or
+#     c. at the start of one of its clauses (the sentence start, after "," ";"
+#        ":" "(" or a spaced dash, before a capitalised word that follows a
+#        lower-case one, after "and / but / so / also / plus / then",
+#        yes-words and "I think"): "that / this / it / your budget / the
+#        price / that number" plus "works", "would work", "will be fine",
+#        "is fine / good / doable / fair / ...", "sounds good", "should cover
+#        it"; "deal", "agreed", "done", "fair enough", "works for me", "let's
+#        do it", "doable", "no problem", "sounds good"; "(I'm) happy / fine /
+#        ok with that / your budget"; "(I) can do / work with / work within /
+#        go with / accept / match / meet / stick to / stay within that / your
+#        budget"; "(I can) make that work"; "(I'm) happy / able / willing to
+#        work within / go with / accept / do it for that / your budget".
+#     A clause-start agreement does not count when what follows it is a time
+#     ("I can do that by Friday", "it's doable in about 2 weeks", "that works
+#     for Thursday at 2pm"), a tool ("it works with HubSpot Starter", "I can
+#     do that in Zapier"), unless that is their figure again ("that works
+#     with your budget"), or an explanation ("this works by tagging each
+#     request", "it works the same way"). "that" and "this" count only as
+#     pronouns ("I can meet that deadline" passes). A real question never
+#     starts with the agreement, so it passes ("Does that work for you?",
+#     "Would that budget work?"); "Sure, that works, does Thursday suit
+#     you?" does not.
+_FW_PRICE_REF = (r"(?:(?:your|the|that|this)\s+(?:budget|price|pricing|number|figure|amount|offer|quote|rate|fee)s?|"
+                 r"what\s+you\s+(?:mentioned|offered|proposed|suggested|named))")
+_FW_PRICE_REF_RE = re.compile(r"\b" + _FW_PRICE_REF + r"\b", re.I)
+# "that" / "this" / "it" as a pronoun: the clause ends, or a function word follows.
+_FW_REF_END = (r"(?:" + _FW_PRICE_REF + r"|(?:that|this|it)(?=\s*(?:[.,;:!?)]|$)|\s+(?:for|at|in|too|as|then|now|"
+               r"easily|no|happily|gladly|on|with|within|under|by|before|from|starting|this|next|tomorrow|today|"
+               r"completely|fully|perfectly|right)\b))")
+_FW_P_WORK = (r"(?:works\b(?!\s+out\s+to\b)|(?:'ll|would|should|will|can|could)\s+(?:definitely\s+|totally\s+|"
+              r"easily\s+)?work\b(?!\s+out\s+to\b))")
+_FW_P_BE = (
+    r"(?:(?:'ll|would|should|will|can|could)\s+(?:definitely\s+|totally\s+|easily\s+)?be\s+(?:fine|good|ok|okay|great|"
+    r"perfect|doable|workable|no\s+problem)\b|"
+    r"(?:is|'s)\s+(?:(?:totally|perfectly|completely|definitely|absolutely|really|more\s+than|very|quite|pretty)\s+)?"
+    r"(?:fine|good|ok|okay|great|perfect|fair|reasonable|doable|workable|acceptable|agreed|a\s+deal|"
+    r"(?:just\s+)?about\s+right|enough|no\s+problem|manageable|feasible|realistic|achievable)\b|"
+    r"sounds\s+(?:good|great|fine|fair|right|about\s+right|reasonable|ok|okay|perfect|doable)\b|"
+    r"(?:(?:should|would|will|can|could)\s+(?:easily\s+)?cover|covers)\s+(?:it|this|that|everything)\b)")
+_FW_P_TAIL = r"(?!\s+(?:to\s+(?:hear|know|see|read)|news|questions?|points?|ideas?|catch)\b)"
+_FW_ADV = r"(?:also\s+|still\s+|honestly\s+|definitely\s+)?"
+_FW_MODAL = r"(?:i\s+)?(?:(?:can|could|will|would|'ll|'d)\s+)?(?:(?:definitely|easily|certainly|absolutely|happily|gladly|still|also)\s+)?"
+_FW_YES = r"(?:yes|yep|yeah|sure\s+thing|sure|ok|okay|great|perfect|absolutely|definitely|of\s+course|cool|awesome)"
+_FW_AGREE_START_RE = re.compile(
+    r"^(?:"
+    r"(?:that|this|it|" + _FW_PRICE_REF + r")(?:\s+|(?='))" + _FW_ADV + r"(?:" + _FW_P_WORK + r"|" + _FW_P_BE + r")"
+    + _FW_P_TAIL + r"|"
+    r"(?:it's\s+a\s+)?deal\b|agreed\b|done\b|fair\s+enough\b|works(?:\s+for\s+(?:me|us))?\b|fine\s+by\s+me\b|"
+    r"let's\s+(?:do\s+it|go\s+with\s+(?:that|it|" + _FW_PRICE_REF + r")|lock\s+(?:it|that)\s+in)\b|"
+    r"(?:(?:totally|definitely|absolutely|completely)\s+)?(?:doable|workable|no\s+problem)\b|"
+    r"sounds\s+(?:good|great|fine|fair|about\s+right|reasonable|perfect)\b|"
+    r"(?:(?:i'm|i\s+am|i'd\s+be|i\s+would\s+be|i'll\s+be)\s+)?(?:(?:totally|very|more\s+than|really|perfectly)\s+)?"
+    r"(?:happy|fine|good|ok|okay|comfortable|glad|cool)\s+with\s+" + _FW_REF_END + r"|"
+    r"(?:i\s+)?accept\s*[.!]*$|"
+    + _FW_MODAL + r"(?:do|work\s+with(?:in)?|live\s+with|go\s+with|accept|honou?r|match|meet|hit|stick\s+(?:to|with)|"
+    r"stay\s+(?:within|under|at)|keep\s+(?:it|this|things)\s+(?:within|under|at)|fit\s+(?:within|into|in))\s+"
+    + _FW_REF_END + r"|"
+    + _FW_MODAL + r"make\s+(?:that|it|this|" + _FW_PRICE_REF + r")\s+work\b|"
+    r"(?:(?:i'm|i\s+am|i'd\s+be|i\s+would\s+be|i'll\s+be)\s+)?(?:happy|glad|able|willing|more\s+than\s+happy|ready)\s+to\s+"
+    r"(?:work\s+with(?:in)?|go\s+with|accept|do\s+(?:it|this|that)\s+(?:for|at)|stay\s+(?:within|under)|"
+    r"keep\s+(?:it|this)\s+(?:within|under))\s+" + _FW_REF_END
+    + r")", re.I)
+_FW_AGREE_ANY_RE = re.compile(
+    r"\b(?:do|build|deliver|handle|finish|complete|take\s+on|get)\s+(?:(?:it|this|that|everything|all\s+of\s+it)\s+|"
+    r"(?:the|your|this)\s+[\w-]+(?:\s+[\w-]+)?\s+)?(?:done\s+)?(?:for|at|within|under|inside)\s+" + _FW_PRICE_REF
+    + r"\b|"
+    r"\b(?:work|stay|keep\s+(?:it|this|things|everything)|fit|come\s+in)\s+(?:within|under|inside|at)\s+"
+    + _FW_PRICE_REF + r"\b|"
+    r"\bwithin\s+(?:your|that|the)\s+(?:budget|price|number|figure|amount)\b|"
+    r"\b(?:at|for)\s+that\s+(?:price|budget|number|figure|rate|amount)\b|"
+    r"\b(?:got|have)\s+(?:yourself\s+)?a\s+deal\b|"
+    r"\b(?:work|live)\s+with(?:in)?\s+(?:that|this|it)\s*(?:[.,;:!)]|$)|"
+    r"\b(?:do|build|deliver|handle)\s+(?:it|this|that|the\s+[\w-]+(?:\s+[\w-]+)?)\s+(?:for|at)\s+(?:that|this)"
+    r"\s*(?:[.,;:!)]|$)", re.I)
+# Where a clause can start inside a sentence: after "," ";" ":" "(" ")" or a
+# spaced dash, and before a capitalised word that follows a lower-case one.
+_FW_CLAUSE_START_RE = re.compile(r"[,;:()]|\s-\s|(?<=[a-z0-9])\s+(?=[A-Z](?:[a-z']|\s))")
+_FW_LEAD_RE = re.compile(
+    r"^(?:(?:and|but|so|also|plus|then|honestly|anyway|well)\s+|" + _FW_YES + r"[!.:]?\s+|i\s+think\s+)+", re.I)
+# What follows a clause-start agreement that makes it about a time or a tool.
+_FW_DURATION = (r"(?:(?:a|an|one|two|three|four|five|six|seven|eight|nine|ten|a\s+couple\s+of|a\s+few|"
+                r"\d+(?:\.\d+)?(?:\s*(?:-|to)\s*\d+(?:\.\d+)?)?)\s+(?:business\s+|calendar\s+|working\s+)?"
+                r"(?:days?|weeks?|hours?))")
+_FW_AFTER_EXEMPT_RE = re.compile(
+    r"^\s*(?:"
+    r"(?:for|on|at|by|before|from|starting|in|within|under|inside|this|next)?\s*"
+    r"(?:(?:me|us)\s+(?:(?:for|on|at)\s+)?)?"
+    r"(?:(?:a|the|our)\s+(?:(?:quick|short|brief)\s+)?(?:upwork\s+)?(?:call|chat|meeting)\s+(?:(?:on|at)\s+)?)?"
+    r"(?:(?:the|this|next|about|around|roughly|approximately)\s+)*(?:" + _TIME_WORD + r"|" + _FW_DURATION + r")|"
+    r"(?:in|with|on|inside|using|through|via|from)\s+(?!" + _FW_PRICE_REF + r")|"
+    r"(?:by\s+\w+ing|like|the\s+same|when|whenever|because|automatically|out\s+of\s+the\s+box|behind\s+the\s+scenes|"
+    r"end\s+to\s+end|so\s+that)\b)", re.I)
+_FW_SENTENCE_END_RE = re.compile(r"[.?!](?=\s|$)|\n")
+# A sentence of yes-words only: "Sure.", "Yes, absolutely."
+_FW_BARE_YES_RE = re.compile(r"^(?:%s)(?:[,\s]+(?:%s))*\s*[.!]*$" % (_YES_WORD, _YES_WORD), re.I)
+
+
+def _fw_sentences(body: str) -> List[Tuple[int, int]]:
+    """(start, end) of each sentence: a "." "?" or "!" before whitespace or
+    the end, or a newline. A period inside a number ("3.5k") does not end
+    one; a period after one ("for $3,500. Thanks") does."""
+    out, start = [], 0
+    for m in _FW_SENTENCE_END_RE.finditer(body):
+        out.append((start, m.end()))
+        start = m.end()
+    if start < len(body):
+        out.append((start, len(body)))
+    return out
+
+
+def framework_price_agreement(body: str, room: Optional[Dict[str, Any]]) -> Optional[str]:
+    """The first sentence of a framework reply that agrees to a price one of
+    the client's unanswered messages proposes (see above), or None."""
+    if not body or unanswered_price_proposal(room) is None:
+        return None
+    for s, e in _fw_sentences(body[:5000]):
+        sentence = body[s:e].strip()
+        if not sentence:
+            continue
+        if _FW_BARE_YES_RE.match(sentence) or _FW_AGREE_ANY_RE.search(sentence):
+            return sentence
+        starts = [0] + [m.end() for m in _FW_CLAUSE_START_RE.finditer(sentence)]
+        for start in starts:
+            rest = sentence[start:].lstrip()
+            rest = rest[_FW_LEAD_RE.match(rest).end():] if _FW_LEAD_RE.match(rest) else rest
+            m = _FW_AGREE_START_RE.match(rest)
+            if m and (_FW_PRICE_REF_RE.search(m.group(0)) or not _FW_AFTER_EXEMPT_RE.match(rest[m.end():])):
+                return sentence  # naming their figure ("work with your budget") is never excused
+    return None
+
+
+# ------------------------------------------------------------ other price points in a framework reply
+# Lorenzo, 2026-10-06: a framework reply states one price, the band, both
+# ends together ("never a single number, never only one end"). Anything else
+# that names a price point is refused (figure_not_in_offers), with or
+# without a band: a bare number of 100 or more that is not a count with its
+# noun, a time, a percentage, a multiplier or a year after "in / by / since"
+# ("probably closer to 1,200", "roughly 1500 for this one", "likely around
+# 2,000"); a spelled amount ("a bit over two thousand", "fifteen hundred",
+# "two grand"; "thousands of leads" counts things); and a word that points
+# inside the range ("the midpoint", "near the top end", "the low end",
+# "closer to the bottom").
+_FW_YEAR_BEFORE_RE = re.compile(
+    r"\b(?:in|since|by|until|till|of|from|before|after|early|mid|late|spring|summer|fall|autumn|winter|"
+    r"(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?)\s*$", re.I)
+_FW_SPELLED_RE = re.compile(r"\b(?:hundreds?|thousands?|grand)\b(?!\s+of\b)", re.I)
+_FW_POSITION_RE = re.compile(
+    r"\b(?:mid-?point|middle\s+of\s+(?:the|that|this|my)\s+range|mid-?range|"
+    r"(?:top|high|higher|upper|low|lower|bottom)\s+end|(?:lower|upper|top|bottom)\s+half|"
+    r"(?:closer|close|nearer|near)\s+to\s+the\s+(?:top|bottom|high|low|upper|lower)|"
+    r"near\s+the\s+(?:top|bottom)|(?:high|low)\s+side)\b", re.I)
+
+
+def framework_figure_problems(body: str) -> List[str]:
+    """Price points in a framework reply other than the band (see above).
+    ``body`` has the band masked already (mask_band)."""
+    out = []  # type: List[str]
+    cover = bytearray(len(body) + 1)
+    for s, e, _ in money_spans(body):
+        cover[s:e] = b"\x01" * (e - s)  # a money amount is figure_problems' to judge
+    for m in _BARE_NUM_RE.finditer(body):
+        if cover[m.start()] or m.group(2):
+            continue
+        raw = m.group(1).rstrip(",")
+        val = _canon(raw)
+        try:
+            if val is None or float(val) < 100:
+                continue
+        except ValueError:
+            continue
+        end = m.start(1) + len(raw)
+        if _NOT_PRICE_TAIL_RE.match(body[end:end + 40]):
+            continue  # a time, a percentage, a multiplier or a phone number
+        if ("," not in raw and _YEAR_RE.match(raw.replace(",", ""))
+                and _FW_YEAR_BEFORE_RE.search(body[max(0, m.start() - 20):m.start()])):
+            continue  # "by 2027"
+        if _count_use(body, m.start(), end, cover):
+            continue  # "the 2,000 contacts"
+        out.append("%s (a price beside the range)" % raw)
+    out += ["%r (a spelled amount)" % m.group(0) for m in _FW_SPELLED_RE.finditer(body)]
+    out += ["%r (points inside the range)" % m.group(0) for m in _FW_POSITION_RE.finditer(body)]
+    return out
 
 
 # ------------------------------------------------------------ contact: explicit data
@@ -5364,14 +5619,147 @@ def shared_terms(text: str, room: Optional[Dict[str, Any]]) -> Set[str]:
     return distinctive_terms(text, names) & distinctive_terms(client_source_text(room), names)
 
 
+# ------------------------------------------------------------ the framework band
+# Lorenzo, 2026-10-06: a framework reply (draft.is_framework_reply) states
+# the price as a range computed from the assessment (draft.price_band). The
+# gate is handed that band and lets exactly its two figures through, together,
+# in a range form: "between $1,500 and $2,000", "$1,500 to $2,000",
+# "$1,500-$2,000" (the second "$" optional, commas optional), stated once in
+# its sentence. Everything else keeps its rule: a single price, one end
+# alone, an off-band figure and agreeing to the client's number are still
+# refused.
+BAND_MASK = "the band"
+_BAND_RE = re.compile(
+    r"(\bbetween\s+)?\$\s?(\d[\d,]*(?:\.\d+)?)(\s?k)?\s*(-|to|and)\s*\$?\s?(\d[\d,]*(?:\.\d+)?)(\s?k)?(?![\d,]*\d)",
+    re.I)
+
+
+# A band next to a rate or a per-unit word is a rate, not the project's
+# price, so it is not masked and the figure check refuses it (Lorenzo,
+# 2026-10-06: anywhere in the same sentence, before or after the range).
+# Right after the range: "/" and a word, per / each / every, a/an plus a
+# period or a unit ("a month", "an hour", "a lead"), monthly / hourly / ....
+_BAND_RATE_TAIL_RE = re.compile(
+    r"^\s*(?:/\s?\w|(?:per|each|every)\b|(?:a|an)\s+(?:month|mo|hour|hr|week|wk|year|yr|day|workflow|seat|user|"
+    r"location|lead|client|clinic|site|call|message|unit|piece|account|inbox|domain|sequence|campaign|page)s?\b|"
+    r"(?:monthly|hourly|annually|yearly|weekly|daily)\b)", re.I)
+# Anywhere in the sentence that states the range: per, each, every, apiece,
+# "a pop", a rate adverb (monthly, quarterly, weekly, hourly, daily, yearly,
+# annually, ...), retainer, subscription, billed, "/", "x 2", times, "on a
+# monthly basis", "the first month", and a/an plus a unit ("a seat", "a
+# location") or a period ("a month", "a quarter"). A period after "about /
+# within / in / under / ..." is a duration, not a rate ("I aim to finish in
+# about a week").
+_BAND_CUE_RE = re.compile(
+    r"\b(?:per|each|every|apiece|retainers?|subscriptions?|billed|invoiced|times|multiplied|monthly|quarterly|weekly|"
+    r"hourly|daily|yearly|annually|annual|biweekly|bi-weekly|fortnightly|installments?|instalments?|basis)\b|"
+    r"\ba\s+pop\b|\bx\s*\d|\d\s*x\b|/|"
+    r"\b(?:first|second|third)\s+(?:month|quarter|year)s?\b|"
+    r"\b(?:a|an)\s+(?:workflow|seat|user|location|lead|client|clinic|site|unit|piece|account|inbox|mailbox|domain|"
+    r"license|licence|store|branch|office|agent|campaign|sequence|form|page|integration|automation|bot|head|member|"
+    r"contact)s?\b", re.I)
+_BAND_PERIOD_RE = re.compile(r"\b(?:a|an)\s+(?:hour|hr|day|week|wk|month|mo|quarter|year|yr)s?\b", re.I)
+_BAND_DURATION_BEFORE = frozenset(
+    "about around roughly approximately approx within in inside under over than after before by half just only "
+    "almost nearly".split())
+_BAND_URL_RE = re.compile(r"(?:https?://|www\.)\S+|<[^>\s]*://[^>]*>", re.I)
+BAND_TOKEN = " _range_ "
+
+
+def _band_cue(sentence: str) -> Optional[str]:
+    """The first rate, per-unit or period cue in ``sentence`` (the range
+    itself already replaced by BAND_TOKEN), or None."""
+    text = _BAND_URL_RE.sub(" ", sentence)
+    m = _BAND_CUE_RE.search(text)
+    if m:
+        return m.group(0)
+    for m in _BAND_PERIOD_RE.finditer(text):
+        before = re.findall(r"[\w']+", text[:m.start()])
+        if not before or before[-1].lower() not in _BAND_DURATION_BEFORE:
+            return m.group(0)
+    return None
+
+
+def _band_statements(body: str, band: Optional[Sequence[Any]]) -> List[Tuple[int, int, Optional[str]]]:
+    """(start, end, cue) of every place ``body`` states exactly ``band``
+    (low, high) in a range form ("and" only after "between"). ``cue`` is None
+    for a statement that counts, else what keeps it from counting: a rate or
+    per-unit word right after it, a cue anywhere in its sentence (see
+    _BAND_CUE_RE), or the range stated twice in one sentence ("$750 to
+    $3,500 for the build plus $750 to $3,500 for phase two")."""
+    if not band or len(band) != 2 or not body:
+        return []
+    want = (_canon(str(band[0])), _canon(str(band[1])))
+    found = []  # type: List[Tuple[int, int]]
+    for m in _BAND_RE.finditer(body):
+        if m.group(4).lower() == "and" and not m.group(1):
+            continue
+        low = _canon(m.group(2), (m.group(3) or "").strip())
+        high = _canon(m.group(5), (m.group(6) or "").strip())
+        if (low, high) == want:
+            found.append((m.start(), m.end()))
+    if not found:
+        return []
+    sentences = _fw_sentences(body)
+    out = []  # type: List[Tuple[int, int, Optional[str]]]
+    for start, end in found:
+        s_start, s_end = next(((s, e) for s, e in sentences if s <= start < e), (0, len(body)))
+        tail = _BAND_RATE_TAIL_RE.match(body[end:end + 40])
+        cue = tail.group(0).strip() if tail else None
+        if cue is None:
+            others = [(s, e) for s, e in found if s_start <= s < s_end and (s, e) != (start, end)]
+            if others:
+                cue = "the range twice in one sentence"
+        if cue is None:
+            cue = _band_cue(body[s_start:start] + BAND_TOKEN + body[end:s_end])
+        out.append((start, end, cue))
+    return out
+
+
+def band_spans(body: str, band: Optional[Sequence[Any]]) -> List[Tuple[int, int]]:
+    """(start, end) of every place ``body`` states exactly ``band`` (low,
+    high) in a range form that counts: "and" only after "between", and no
+    rate, per-unit or period cue in its sentence (see _band_statements)."""
+    return [(s, e) for s, e, cue in _band_statements(body, band) if cue is None]
+
+
+def band_rate_cues(body: str, band: Optional[Sequence[Any]]) -> List[str]:
+    """The cues that kept a stated band from counting, in order."""
+    return [cue for _, _, cue in _band_statements(body, band) if cue]
+
+
+def mask_band(body: str, band: Optional[Sequence[Any]]) -> str:
+    """``body`` with every stated band replaced by BAND_MASK, for the figure,
+    price-agreement and private-fact checks only."""
+    spans = band_spans(body, band)
+    if not spans:
+        return body
+    out, last = [], 0
+    for s, e in spans:
+        out.append(body[last:s])
+        out.append(BAND_MASK)
+        last = e
+    out.append(body[last:])
+    return "".join(out)
+
+
 # ------------------------------------------------------------ the gate
 def _strip_quotes(text: str) -> str:
     return _QUOTED_RE.sub(" ", text)
 
 
 def check_detailed(text: Any, kind: str, room: Optional[Dict[str, Any]], offers_text: str,
-                   private_texts: Sequence[str] = ()) -> List[Tuple[str, str]]:
-    """[(code, reason), ...] in CODES order, one entry per code."""
+                   private_texts: Sequence[str] = (), band: Optional[Sequence[Any]] = None,
+                   framework: bool = False) -> List[Tuple[str, str]]:
+    """[(code, reason), ...] in CODES order, one entry per code. ``band`` is
+    the (low, high) price range of a framework reply (draft.price_band), or
+    None for every other draft: see "the framework band" above.
+    ``framework`` is True for every framework reply, with or without a band
+    (a band implies it): a deferral to the call never frees an agreement to
+    the client's figure, every sentence is read for one ("agreeing in a
+    framework reply"), and any other price point is refused ("other price
+    points in a framework reply")."""
+    framework = bool(framework or band)
     room = room or {}
     body = normalise(decode_escapes(text))
     found = {}  # type: Dict[str, str]
@@ -5415,17 +5803,33 @@ def check_detailed(text: Any, kind: str, room: Optional[Dict[str, Any]], offers_
         if any(_blocked_host(_host(u)) and not _host(u).endswith("upwork.com") for u in bad_links):
             flag("off_platform_contact", "links to a booking or chat host: %s" % bad_links[0])
 
-    # Figures
-    stray = figure_problems(body, offers_text)
+    # Figures. A framework reply's band is masked first, so its two figures
+    # pass only together, in a range form, in a sentence with no rate or
+    # per-unit word (Lorenzo, 2026-10-06), and no other price point passes.
+    priced = mask_band(body, band) if band else body
+    stray = figure_problems(priced, offers_text)
+    if framework:
+        stray += [p for p in framework_figure_problems(priced)
+                  if not any(s.split(" ", 1)[0] == p.split(" ", 1)[0] for s in stray)]
     if stray:
-        flag("figure_not_in_offers", "figures not allowed: %s" % ", ".join(stray[:5]))
+        detail = "figures not allowed: %s" % ", ".join(stray[:5])
+        cues = band_rate_cues(body, band) if band else []
+        if cues:
+            detail += ("; the range sits in a sentence with %s, which makes it a rate or a per-unit price: state "
+                       "the range once, in a sentence of its own, as the price of this one build"
+                       % ", ".join(repr(c) for c in cues[:3]))
+        flag("figure_not_in_offers", detail)
 
     # Agreeing to the client's price (round 13): Lorenzo's call, notes or not.
-    agreed = client_price_agreements(body, room)
+    agreed = client_price_agreements(priced, room)
     if not agreed:
-        figureless = figureless_price_agreement(body, room)  # round 14: "Sure, that works."
-        if not figureless:
-            figureless = price_subject_agreement(body, room)  # round 16: "..., and the price is fine."
+        if framework:
+            # 2026-10-06: every sentence of a framework reply, and no deferral
+            # frees it (that reply always defers the exact figure to the call)
+            figureless = framework_price_agreement(priced, room)
+        else:
+            figureless = (figureless_price_agreement(priced, room)  # round 14: "Sure, that works."
+                          or price_subject_agreement(priced, room))  # round 16
         if figureless:
             agreed = ['"%s" with no figure' % figureless[:60]]
     if agreed:
@@ -5439,14 +5843,14 @@ def check_detailed(text: Any, kind: str, room: Optional[Dict[str, Any]], offers_
     if private.strip():
         leaks = []  # type: List[str]
         figs = private_figures(private_texts, public_texts(room))
-        money = money_spans(body)
+        money = money_spans(priced)
         leaks += ["$" + f for f in {v for _, _, v in money} & figs["money"]]
-        leaks += [f + "%" for f in set(percent_figures(body)) & figs["percent"]]
-        leaks += [f + " hours" for f in _hours(body) & figs["hours"]]
-        leaks += [f + " (review)" for f in _reviews(body) & figs["reviews"]]
-        leaks += [v + " (private pricing)" for _, _, v in _private_pricing_uses(body, figs["priced"], figs["stated"],
-                                                                                money)]
-        leaks += [f + " (private rate)" for f in rate_values(body) & figs["rated"]]
+        leaks += [f + "%" for f in set(percent_figures(priced)) & figs["percent"]]
+        leaks += [f + " hours" for f in _hours(priced) & figs["hours"]]
+        leaks += [f + " (review)" for f in _reviews(priced) & figs["reviews"]]
+        leaks += [v + " (private pricing)" for _, _, v in _private_pricing_uses(priced, figs["priced"],
+                                                                                figs["stated"], money)]
+        leaks += [f + " (private rate)" for f in rate_values(priced) & figs["rated"]]
         if _ODDS_RE.search(body) and _LIKELIHOOD_RE.search(private):
             leaks.append("likelihood")
         for m in _REVIEW_WORDS_RE.finditer(body):
@@ -5488,7 +5892,8 @@ def check_detailed(text: Any, kind: str, room: Optional[Dict[str, Any]], offers_
 
 
 def check(text: Any, kind: str, room: Optional[Dict[str, Any]], offers_text: str,
-          private_texts: Sequence[str] = ()) -> List[str]:
+          private_texts: Sequence[str] = (), band: Optional[Sequence[Any]] = None,
+          framework: bool = False) -> List[str]:
     """Problem codes for ``text`` (empty list == ready to copy).
 
     ``kind`` is "touch", "checkin" or "reply" (only the length limit differs).
@@ -5496,9 +5901,11 @@ def check(text: Any, kind: str, room: Optional[Dict[str, Any]], offers_text: str
     client's terms, named platforms, a signed name), ``messages`` (the client's
     terms and signed name), ``client`` and ``client_first_name``.
     ``offers_text`` is config/upwork_offers.md. ``private_texts`` are the
-    assessment notes and client intel.
+    assessment notes and client intel. ``band`` and ``framework``: see
+    ``check_detailed``.
     """
-    return [code for code, _ in check_detailed(text, kind, room, offers_text, private_texts)]
+    return [code for code, _ in check_detailed(text, kind, room, offers_text, private_texts, band=band,
+                                               framework=framework)]
 
 
 def describe(codes: Iterable[str]) -> List[str]:

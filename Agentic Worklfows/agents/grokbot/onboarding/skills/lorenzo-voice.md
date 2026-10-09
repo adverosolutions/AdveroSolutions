@@ -69,8 +69,9 @@ a stranger at a bar, it goes.
 
 ## Words and moves that never appear
 
-- In any email to a lead: "AI", "automation", "automated", "bot", or
-  anything implying software wrote it.
+- In any email to a lead: anything that tells or implies a bot or AI wrote
+  it. The word "AI" itself is fine (the offer is AI agents; Lorenzo lifted
+  the ban 2026-09-30).
 - Guessing words about the lead: "must be", "probably", "I bet", "gotta be",
   "looks like you", "no wonder".
 - Labels and verdicts on them: "that's a wide range", "that takes nerve",
@@ -91,10 +92,13 @@ a stranger at a bar, it goes.
 
 ## Money and proof
 
-- **Never talk numbers over email** (2026-09-24). No price, fee, commission
-  percentage, retainer or guarantee figure in any reply, follow-up,
-  booked-call or nurture email. A price question gets how the offer works and
-  "The rest is easier to cover on a quick call."
+- **A price question gets a price range** (2026-10-06, replaces "never talk
+  numbers over email"). The range is fixed text in each offer's approved
+  `first_reply.<offer>.pricing.full` reply (AI agents: $400 to $5,300),
+  sent word for word. That reply is the only email with a figure: no other
+  reply, follow-up, booked-call or nurture email carries a price, fee,
+  commission percentage, retainer or guarantee figure, and no model writes
+  one.
 - **Never discuss billing on Upwork** (2026-09-24, hard stop). No prices,
   rates, retainers, budgets or payment terms in a proposal or chat, even when
   the post asks. Never question or comment on the client's budget.
@@ -123,7 +127,9 @@ a stranger at a bar, it goes.
 
 - Email and standard Upwork proposals: a 15-minute call. In email, always
   two specific times, never a booking link. The lead picks one and Lorenzo
-  sends the invite.
+  sends the invite. One exception (2026-10-06): a lead who asks for a
+  Calendly or booking link gets the approved `booking_link` reply, two times
+  plus his Discovery Call booking calendar link as fixed template text.
 - Upwork chats: three specific times, stated in the client's time zone with
   its label ("Thursday at 1pm ET"; label with ET, CT, MT or PT, or the
   client's local zone name for non-US clients), plus one line offering to

@@ -7,21 +7,69 @@ Python 3.9, standard library only.
 import re
 from collections import OrderedDict
 
-# No first reply is approved from the doc (Lorenzo, 2026-09-24: first replies
-# will be rebuilt from his own sent replies, so he approves none of today's
-# text). Every first_reply.* id, main text and every variant, is held: saying
-# "done" never approves it, and the doc says so on each one. Every first reply
-# is also a draft Lorenzo sends himself (approval.py, FIRST_REPLY_LOCK_REASON).
-# (Before 2026-09-24 only the "other" and "referral" first replies were held.)
+# First replies held from the doc: saying "done" never approves them, and the
+# doc says so on each one. Since 2026-10-06 (Lorenzo approved the AI agents
+# reply copy) that is every first_reply.* id EXCEPT the AI agents replies to a
+# yes, "tell me more", "send me info", a booking link ask and a price question
+# (APPROVED_FIRST_REPLIES), which "done" approves. Only their MAIN text goes out
+# on its own once he also says "go live"; every version under them (no free
+# times, a time that works, a time that doesn't) comes to him as a draft
+# (Grok sends; the legacy engine's own send
+# path stays locked, approval.py FIRST_REPLY_LOCK_REASON). The older six
+# offers' first replies stay held until they are rewritten (2026-09-24: rebuilt
+# from his own replies). The AI agents referral and "other" replies are not
+# approvable at all, so they are not in the doc; they stay cards.
 HELD_SECTION = "first_reply"
-HELD_INTRO = ("Not approved yet. These stay drafts you write yourself until they are rebuilt from your own "
-              "replies.")
-HELD_NOTE = "Not approved yet. This one stays a draft you write yourself until it is rebuilt from your own replies."
+APPROVED_FIRST_REPLY_OFFER = "ai_agents"
+APPROVED_FIRST_REPLY_BRANCHES = ("default", "mechanism", "send_info", "booking_link", "pricing")
+APPROVED_FIRST_REPLIES = tuple("first_reply.%s.%s.full" % (APPROVED_FIRST_REPLY_OFFER, b)
+                               for b in APPROVED_FIRST_REPLY_BRANCHES)
+HELD_INTRO = ("For the AI agents offer, once you say 'done' and then 'go live', the main text of the replies to a "
+              "yes, 'tell me more', 'send me info', a booking link ask and a price question goes out on its own. "
+              "Their three versions (no free times, a time they asked for that works, a time they asked for that "
+              "doesn't) come to you as drafts, and so do a referral reply and any other question. The first "
+              "replies for the older six offers are not approved yet: they stay drafts you write yourself until "
+              "they are rewritten.")
+HELD_NOTE = "Not approved yet. This one stays a draft you write yourself until it is rewritten."
+# The top section's two sentences on approval and sending. Grok's gate is an
+# explicit allow list (agents/grokbot/onboarding/ask_opus.py, 2026-10-06):
+# only the main text of the five AI agents first replies, of E1 to E10 with
+# their lines, and of the Locked in confirmation (after the GHL booking exists
+# at exactly that time) send on their own; everything else is a draft.
+DONE_SENTENCE = ("When you say 'done', everything in this doc counts as approved, except the first replies marked "
+                 "'Not approved yet'. Emails still only go out after you tell Claude 'go live'.")
+SENDING_SENTENCE = ("Approved does not mean every email goes out on its own. Only these do, once you say 'done' and "
+                    "'go live': the main text of the five AI agents first replies (a yes, 'tell me more', 'send me "
+                    "info', a booking link ask and a price question); the main text of follow-up emails 1 to 10, "
+                    "with the lines picked for the lead's offer; and the main text of the Locked in booking "
+                    "confirmation, only after the call is booked in GoHighLevel at exactly the time they picked. "
+                    "Everything else comes to you as a draft: every other version of any email, every reply "
+                    "offering other times, the replies about a time that is already taken or a call that is already "
+                    "booked, the Locked in version for another time zone, the show-rate reminders and no-show emails "
+                    "(paused since October 5), any nurture email, and the older offers' first replies. Every send "
+                    "check still applies.")
+# The section notes.
+CADENCE_NOTE = ("For a lead who went quiet after your first reply, in the order below. The first goes out the "
+                "business day after your first reply; each one goes out at 10am Central on a business day, and they "
+                "stop as soon as the lead books, replies or asks to stop. The main text of each, with the line "
+                "picked for the lead's offer, goes out on its own after 'go live'; any other version comes to you "
+                "as a draft.")
+BOOKING_NOTE = ("These answer a lead who writes back about a time for the call. Only the main text of the Locked in "
+                "booking confirmation goes out on its own, and only after the call is booked in GoHighLevel at "
+                "exactly the time they picked. Everything else here comes to you as a draft: its version for "
+                "another time zone, every reply offering other times, and the replies about a time that is already "
+                "taken or a call that is already booked.")
+SHOW_RATE_NOTE = ("These are for every lead with a call on your calendar, however they booked. They are paused "
+                  "since October 5: each one comes to you as a draft, and none goes out on its own.")
+NO_SHOW_NOTE = ("These start when a lead misses the call. They are paused since October 5: each one comes to you "
+                "as a draft, and none goes out on its own.")
 
 
 def is_held(template_id):
-    """True for every first_reply.* id: saying "done" never approves one."""
-    return (template_id or "").startswith(HELD_SECTION + ".")
+    """True for every first_reply.* id except APPROVED_FIRST_REPLIES: saying
+    "done" never approves one."""
+    tid = template_id or ""
+    return tid.startswith(HELD_SECTION + ".") and tid not in APPROVED_FIRST_REPLIES
 
 
 # Spliced lines: a cadence email "cadence.<name>" carries a placeholder that

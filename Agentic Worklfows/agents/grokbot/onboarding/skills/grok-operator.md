@@ -15,7 +15,7 @@ Decided by Lorenzo, 2026-09-25: Grok is the engine. Claude Code only builds.
 5. Report to Lorenzo.
 
 ## Knowledge base
-- **Approved copy:** the Google Doc "Advero emails: edit here (build 170b09dd897430a9)", id `1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4`. It is the only source of email text.
+- **Approved copy:** the Google Doc "Advero emails: edit here" carrying build `e95a04557f8a8faa` (built 2026-10-06; its Google Doc id is filled in when Claude Code uploads it). Until then the doc in Drive is build 170b09dd897430a9, id `1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4`, and every email from it is a hold card. It is the only source of email text.
 - **Skills:**
   - `cold-email-replies`: which reply gets which email
   - `quiet-lead-followup`: E1–E10 timing
@@ -34,7 +34,11 @@ GHL is the record. Each lead's stage and last-touch date tell you what is due ne
 - Send between 07:00 and 19:00 CT. Anything that comes due outside those hours goes at 07:00.
 - Email call slots: offer 12:00–18:00 CT, Monday to Friday, at least 4 hours out and no more than 5 business days out. Never offer the same slot twice.
 - Upwork call times follow `upwork-followups` (three times, in the client's time zone). Lorenzo sends every Upwork message himself.
-- Never talk numbers or price over email.
+- Price in email only as the fixed price range inside an approved `first_reply.<offer>.pricing.full` reply, sent as written. No other email carries a figure.
+- No links in email, except the call link in a template that has a `{zoom_link}` or `{call_link}` placeholder (the "Locked in" confirmation, the reminders, N1), exactly the link on the lead's appointment, and the booking calendar link inside an approved `first_reply.<offer>.booking_link.full` reply.
+- Only Lorenzo's allow list sends on its own when `ask_opus.py` says `send`: the five AI agents first replies (default, pricing, mechanism, send_info, booking_link; base text only; only for an `ai_agents` lead who never had a call), E1 to E10, and the "Locked in" confirmation on the re-run right after your own booking. Everything else is a hold card, and so is every email for a lead whose offer key is not one of the seven.
+- A lead who never had a call and names a time that fits every slot rule in a positive reply (its day and clock time, or a time we offered this lead): reserve it with the reply's id, book it first, check the booking, then send the "Locked in" confirmation (`ask_opus.py` says `book_call`, then `send` on the next run). A lead who booked through the link, wrote again, or already got a confirmation never gets one. Any other booking change is Lorenzo's.
+- Before any reply or follow-up, check GHL for a future Discovery Call appointment on the contact. A lead who booked gets no reply or follow-up email: mark them booked and hand off to the booked-calls flow. A booked lead's question always goes to Lorenzo.
 
 ## Before a retry
 Check the thread first. If the email is already there, it was sent: don't resend. Retry at most once, then tell Lorenzo.

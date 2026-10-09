@@ -40,9 +40,9 @@ shared.settings.guard_write first, so in MODE=shadow a touch is a would_do
 record and no HTTP request is made. Every send passes ``to=recipient_for(state)``
 - the address that actually wrote the thread, which is not always the CRM
 ``lead_email`` - so Instantly validates the recipient against the thread. D1
-(E1) auto-sends only in live mode after a 30-minute veto window, and only when
-that veto link was actually delivered and points at a usable BASE_URL
-(``veto_undeliverable`` otherwise); a live touch goes out only when the thread
+(E1) goes out at 10:00 CT like every other day (the 30-minute Veto window
+before it was dropped on 2026-10-06; it is still there behind E1_VETO); a live
+touch goes out only when the thread
 re-read CONFIRMS the recipient (decision R6: a read error holds it). No email
 carries a booking link. A touch whose copy fails copy_problems() is never sent
 (action ``blocked_copy``), a touch whose lead data it needs is missing (the
@@ -169,6 +169,10 @@ SLOTLESS_DAYS = (2,)
 # Calendar days from the email before to E8, E9 and E10 (rolled to a business day).
 LONG_GAP_DAYS = {7: 14, 8: 7, 9: 7}
 VETO_WINDOW_MINUTES = 30
+# The E1 Veto heads-up is dropped (Lorenzo, 2026-10-06): E1 goes out at 10:00
+# CT like every other email, through the same template gate, with no push
+# and no window first. The window code below stays behind this switch.
+E1_VETO = False
 # CT3 / P4: where E2's research line comes from. "fallback" (the default) is
 # the fixed line fallback_research_line() writes, which Lorenzo can approve
 # (cadence.e2.research_fallback.<offer>): no page is read and shared.llm role
@@ -246,6 +250,12 @@ DEFAULT_BOOKING_URL = settings.BOOKING_URL or "https://api.leadconnectorhq.com/w
 NICHES = ("cleaning", "bookkeeping", "recruiting")
 CLEANING_NICHE_ALIASES = ("cleaning", "commercial_cleaning", "janitorial")
 OFFERS = ("reactivation", "outbound")
+# The AI agents offer (config/offers.md ai_agents; Lorenzo approved its lines
+# 2026-10-06). One line per email for every AI agents campaign, whatever the
+# niche: its lines are keyed by the offer alone.
+AI_AGENTS_OFFER = "ai_agents"
+# Every offer a per-lead line can be written for.
+LINE_OFFERS = OFFERS + (AI_AGENTS_OFFER,)
 
 # E4 {offer_proof}: one proof per offer type, never mixed (config/offers.md).
 OFFER_PROOF = {
@@ -253,6 +263,8 @@ OFFER_PROOF = {
                     "contracts within 6 months",
     "outbound": "an outbound system for a commercial roofer doing $150M a year that brought in about $180,000 in new "
                 "contracts in 90 days",
+    # Lorenzo's line, lower-cased "a" to match the bullets around it.
+    "ai_agents": "a team of AI agents for a $150M/year commercial roofer that won back about $6M in 6 months",
 }
 # E4's fixed third bullet. Lorenzo's case-study wording writes the lender's
 # ad spend as "$1,500"; offers.md has the same figure as "$1.5k". The cadence's
@@ -263,6 +275,7 @@ OFFER_LINES = {
     "reactivation": "win back {company}'s past accounts",
     "reactivation_bookkeeping": "win back {company}'s past clients",
     "outbound": "get {company} in front of new clients right when they need you",
+    "ai_agents": "use AI agents to bring in more revenue and give your team hours back each week",
 }
 # E6 {preview}, by "<niche>_<offer>".
 PREVIEWS = {
@@ -283,6 +296,8 @@ PREVIEWS = {
                             "outreach goes out under your name.",
     "recruiting_outbound": "What I'd watch for in your market: specialty roles hitting the job boards, especially "
                            "ones that sit open for weeks or get reposted. The outreach goes out under your name.",
+    "ai_agents": "The tasks your team does every week that an agent could take over, what each one is worth in hours "
+                 "and dollars, and the order I'd build them in.",
 }
 # E9 {observation}, by "<niche>_<offer>".
 OBSERVATIONS = {
@@ -297,6 +312,8 @@ OBSERVATIONS = {
                             "with its books.",
     "recruiting_outbound": "An open specialty role on a job board is a hiring manager saying in public they need "
                            "someone.",
+    "ai_agents": "Quotes and proposals that went out and never got an answer are usually the first thing I'd hand to "
+                 "an agent.",
 }
 
 
@@ -337,11 +354,10 @@ _MONEY_RE = re.compile(r"\$\s?\d[\d,\.]*\s?(?:[KkMmBb]\b|thousand|million|billio
 # Percentages are pricing too: offers.md quotes 20-30% for every reactivation
 # deal, so "45% of first-year fees" in an unattended touch is an invented price.
 _PERCENT_RE = re.compile(r"\d[\d,\.]*\s?(?:-\s?\d[\d,\.]*\s?)?%")
-# "AI", "A.I.", "bots", "chatbot": offers.md rule 8 forbids signalling that a
-# system wrote the mail, and \bAI\b alone missed the dotted and plural forms.
-_AI_RE = re.compile(
-    r"(\bAI\b|\bA\.\s?I\.?|\bartificial intelligence\b|\bautomation\b|\bautomated\b|\bautomating\b|"
-    r"\bautomate[sd]?\b|\bbots?\b|\bchat\s?bots?\b|\bGPT\b|\bChatGPT\b|\bClaude\b|\bLLM\b)", re.I)
+# "bots", "chatbot", "GPT": offers.md rule 8 forbids signalling that a bot
+# wrote the mail. "AI" and "automation" are allowed since the AI agents offer
+# (Lorenzo, 2026-10-06).
+_AI_RE = re.compile(r"(\bbots?\b|\bchat\s?bots?\b|\bGPT\b|\bChatGPT\b|\bClaude\b|\bLLM\b)", re.I)
 # No cadence template promises a guarantee; only an invented line can, and the
 # guarantees in offers.md belong to the outbound rows, never to a follow-up.
 _GUARANTEE_RE = re.compile(r"\bguarantee[sd]?\b|\bguaranteeing\b", re.I)
@@ -413,14 +429,13 @@ def _unverified_percent(text: str) -> List[str]:
 _SHARED_PROBLEM_CODES = (
     ("em or en dash", "dash"),
     ("exclamation mark", "exclamation"),
-    ("mentions AI", "mentions_ai_or_automation"),
-    ("mentions automation", "mentions_ai_or_automation"),
     ("mentions machine learning", "mentions_ai_or_automation"),
     ("mentions an algorithm", "mentions_ai_or_automation"),
     ("mentions a bot", "mentions_ai_or_automation"),
     ("must end with the signature line", "unsigned"),
     ("empty body", "empty_body"),
     ("is marked TO CONFIRM", "money_marked_to_confirm"),
+    ("is only for the approved pricing reply", "money_pricing_reply_only"),
     # Percentages (Defect 8) come before the dollar needle: "percentage 25% not
     # in offers.md" also contains "not in offers.md". The flat one shares its
     # code with the cadence's own verbatim check below, as the dollar one does;
@@ -655,12 +670,13 @@ def lead_niche(state: Any) -> Optional[str]:
 
 
 def lead_offer(state: Any) -> Optional[str]:
-    """"reactivation" or "outbound" from the lead or its campaign, or None.
-    Unlike niche_and_offer() an unknown offer is not read as reactivation."""
+    """"reactivation", "outbound" or "ai_agents" from the lead or its
+    campaign, or None. Unlike niche_and_offer() an unknown offer is not read
+    as reactivation."""
     offer = str(_field(state, "offer") or campaign_meta(state).get("offer") or "").strip().lower()
     if offer in ("trigger", "outbound"):
         return "outbound"
-    return offer if offer == "reactivation" else None
+    return offer if offer in ("reactivation", AI_AGENTS_OFFER) else None
 
 
 # Reply prefixes a mail client stacks up, and the auto-responder prefixes a
@@ -1539,26 +1555,30 @@ def offer_proof_line(offer: Optional[str]) -> Optional[str]:
 
 def offer_line_key(niche: Optional[str], offer: Optional[str]) -> Optional[str]:
     """Which E5 {offer_line} a lead gets: "reactivation" (cleaning and
-    recruiting), "reactivation_bookkeeping" or "outbound" (every niche), or
-    None when the offer, or a reactivation lead's niche, is unknown."""
-    if offer == "outbound":
-        return "outbound"
+    recruiting), "reactivation_bookkeeping", "outbound" or "ai_agents" (every
+    niche), or None when the offer, or a reactivation lead's niche, is
+    unknown."""
+    if offer in ("outbound", AI_AGENTS_OFFER):
+        return offer
     if offer != "reactivation" or niche not in NICHES:
         return None
     return "reactivation_bookkeeping" if niche == "bookkeeping" else "reactivation"
 
 
 def offer_line_text(niche: Optional[str], offer: Optional[str], company: Optional[str]) -> Optional[str]:
-    """E5's {offer_line} with the company filled in, or None when the line or
-    the company is unknown."""
+    """E5's {offer_line} with the company filled in, or None when the line is
+    unknown, or it names the company and the company is unknown."""
     key = offer_line_key(niche, offer)
-    if key is None or not company:
+    if key is None or (not company and "{company}" in OFFER_LINES[key]):
         return None
-    return OFFER_LINES[key].replace("{company}", company)
+    return OFFER_LINES[key].replace("{company}", company or "")
 
 
 def _combo(niche: Optional[str], offer: Optional[str]) -> Optional[str]:
-    """"<niche>_<offer>" for a known niche and offer, else None."""
+    """"<niche>_<offer>" for a known niche and offer, "ai_agents" for the AI
+    agents offer whatever the niche, else None."""
+    if offer == AI_AGENTS_OFFER:
+        return AI_AGENTS_OFFER
     if niche not in NICHES or offer not in OFFERS:
         return None
     return "%s_%s" % (niche, offer)
@@ -1622,6 +1642,8 @@ def fallback_research_line(company: str, offer: str) -> str:
     is enough for me to show you how this would run for {company}", so a
     second "fifteen minutes" clause here said it twice. ``company`` is kept in
     the signature for callers; the line no longer names it (the body does)."""
+    if (offer or "").lower() == AI_AGENTS_OFFER:
+        return "The quickest place to start is usually wherever the most money is slipping through right now."
     if (offer or "").lower() == "reactivation":
         return "The quickest place to start is usually the accounts that already know you and went quiet."
     return "The quickest place to start is usually the prospects who are in market right now."
@@ -1641,14 +1663,16 @@ _E5_NEEDS_NICHE = ("reactivation",)
 
 def missing_lead_data(state: Any, day: int) -> List[str]:
     """What the lead record lacks for email ``day``, in the order company,
-    niche, offer: E2 and E4 need the company and the offer, E5 the company,
-    the offer and, for reactivation, the niche; E6 and E9 the niche and the
-    offer. Empty when nothing is missing (always for E1, E3, E7, E8, E10)."""
+    niche, offer: E2 and E4 need the company and the offer, E5 the company
+    (not for ai_agents, whose line does not name it), the offer and, for
+    reactivation, the niche; E6 and E9 the niche (not for ai_agents, whose
+    lines are the same for every niche) and the offer. Empty when nothing is
+    missing (always for E1, E3, E7, E8, E10)."""
     niche, offer = lead_niche(state), lead_offer(state)
     need = []  # type: List[str]
-    if day in (2, 4, 5):
+    if day in (2, 4) or (day == 5 and offer != AI_AGENTS_OFFER):
         need.append("company")
-    if day in (6, 9) or (day == 5 and offer in _E5_NEEDS_NICHE):
+    if (day in (6, 9) and offer != AI_AGENTS_OFFER) or (day == 5 and offer in _E5_NEEDS_NICHE):
         need.append("niche")
     if day in (2, 4, 5, 6, 9):
         need.append("offer")
@@ -3673,7 +3697,7 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
     # The one human hold on the live D1 auto-send could not be delivered. An
     # unattended send whose only control was dropped escalates, it does not
     # proceed; said once, then quiet.
-    if day == 1 and is_live() and (state.cadence or {}).get("veto_undeliverable_at"):
+    if E1_VETO and day == 1 and is_live() and (state.cadence or {}).get("veto_undeliverable_at"):
         return dict(base, action="veto_undeliverable", day=1, quiet=True,
                     reason="the Veto link was withheld from the push and no email leg carried it",
                     since=(state.cadence or {}).get("veto_undeliverable_at"))
@@ -3683,7 +3707,7 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
     # moves to another day never keeps its old window in the first place
     # (_defer_d1_window opens none; resume_after_recipient_hold drops it).
     # Before the CT3 pre-check below, so a re-opened window is checked too.
-    if day == 1 and is_live() and not dry_run and (state.cadence or {}).get("veto_notified_at"):
+    if E1_VETO and day == 1 and is_live() and not dry_run and (state.cadence or {}).get("veto_notified_at"):
         pinged = _parse(state.cadence.get("veto_notified_at"))
         if pinged is not None and ct - slot_rules.to_tz(pinged) >= timedelta(hours=DECISION_TTL_HOURS - 1):
             state.cadence = dict(state.cadence, veto_notified_at=None, veto_reopened_from=pinged.isoformat())
@@ -3698,7 +3722,7 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
     # it pass. A body the copy check refuses opens no window either: it is
     # reported as blocked_copy when it falls due.
     d1_copy_blocked = False
-    if day == 1 and not dry_run and ((is_live() and veto_notify_due(state, ct)) or due(state, ct)):
+    if E1_VETO and day == 1 and not dry_run and ((is_live() and veto_notify_due(state, ct)) or due(state, ct)):
         pre = _template_ids_verdict("cadence.e1")
         if not pre.allowed:
             return _hold_for_template(state, 1, pre, ct, store, base, notify_fn)
@@ -3711,7 +3735,7 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
                             next_send_at=(state.cadence or {}).get("next_send_at"))
 
     # D1 veto window (live only; shadow records the intent inside the would_do)
-    if day == 1 and is_live() and veto_notify_due(state, ct) and not dry_run and not d1_copy_blocked:
+    if E1_VETO and day == 1 and is_live() and veto_notify_due(state, ct) and not dry_run and not d1_copy_blocked:
         held = _hold_d1_without_base_url(state, ct, base, notify_fn)
         if held is not None:
             return held
@@ -3755,7 +3779,7 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
             stop(state, "vetoed", ct)
         return dict(base, action="vetoed", day=1)
 
-    if (day == 1 and is_live() and not (state.cadence or {}).get("veto_notified_at") and not dry_run
+    if (E1_VETO and day == 1 and is_live() and not (state.cadence or {}).get("veto_notified_at") and not dry_run
             and not d1_copy_blocked):
         # Never auto-send D1 live without the veto window having been opened
         # first, and (CT3, the pre-check above) never open it for a template
@@ -3945,13 +3969,13 @@ def tick_lead(state: Any, now: datetime, store: Any = None, instantly: Any = Non
     # Belt and braces: a live D1 never goes out without its Veto window. Only
     # a D1 the pre-check found copy-blocked gets here without one, and only
     # the copy block above was meant to report it.
-    if day == 1 and is_live() and not (state.cadence or {}).get("veto_notified_at"):
+    if E1_VETO and day == 1 and is_live() and not (state.cadence or {}).get("veto_notified_at"):
         return dict(base, action="not_due", day=1, reason="veto_window_not_open",
                     next_send_at=(state.cadence or {}).get("next_send_at"))
 
     # The D1 auto-send only ever goes out behind a working Veto link. The
     # window was opened with one, but if BASE_URL has gone since, hold.
-    if day == 1 and is_live():
+    if E1_VETO and day == 1 and is_live():
         held = _hold_d1_without_base_url(state, ct, base, notify_fn)
         if held is not None:
             return held

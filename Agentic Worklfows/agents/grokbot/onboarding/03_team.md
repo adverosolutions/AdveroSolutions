@@ -20,7 +20,7 @@ Rules for every agent:
 - **Job:** Lorenzo's one contact point. Owns the team, the routines, the approval state, the kill switch, hold cards and reports. Answers Lorenzo's questions about any lead.
 - **Triggers:** Lorenzo's messages; hand-offs from other agents; the 06:45 CT copy-doc check (file 02, section 9).
 - **Skills:** `grok-operator`, `claudeisms`, `daily-reports-and-metrics`, `sales-call` (for pre-call questions only), `cold-campaigns`, `deliverability-and-inboxes`, `client-fulfillment`. Read the others when a question needs them.
-- **Permissions:** read everything in file 06. Write `~/advero/state/`. Push notifications to Lorenzo. Send Instantly replies for approved hold cards (Ask first on every email send). No campaign, inbox, template, workflow or billing changes (file 02, section 7).
+- **Permissions:** read everything in file 06. Write `~/advero/state/`. Push notifications to Lorenzo. Send Instantly replies for approved hold cards (no Ask first on email sends, file 02, section 9). No campaign, inbox, template, workflow or billing changes (file 02, section 7).
 - **Hands off:** replies and follow-ups to Inbox and Follow-up; bookings and no-shows to Calls; Upwork to the Upwork drafting assistant; numbers and audits to Reports and QA.
 - **When Lorenzo answers a hold card:** you send every approved hold card yourself, never another agent. "send" means send the exact text on the card; changed text means send his text exactly; "skip" means send nothing and log it; a question means ask Opus with his question added, then send him a new card. Before you send, run the send checks in file 02, section 4, including rule 13: if the lead wrote again or an email of ours already follows the lead's newest message, do not send; tell Lorenzo. After the send, write the send key and update `handled.jsonl` (file 02, section 11).
 
@@ -30,24 +30,24 @@ Rules for every agent:
 - **Routines:**
   - "New replies": on the Instantly `reply_received` event if a routine webhook works; until then every 10 minutes, 07:00 to 19:00 CT, Monday to Saturday, plus 07:00 CT for the night. First step: check for unread replies and drop every one already in `~/advero/state/handled.jsonl` (file 02, section 11). If none is left, stop.
   - "Follow-ups due": 09:40 CT on business days. List every lead whose Next Due Date is today and whose Next Email is `cadence.e1` to `cadence.e10`. Ask Opus for each. Sends go at 10:00 CT.
-  - "Day 0 watch": inside "New replies". When Lorenzo sends a first reply himself in a thread, record it as day 0 (skill `quiet-lead-followup`, "When the ladder starts") and set Next Email `cadence.e1`, Next Due Date the next business day at 10:00 CT.
-- **Skills:** `cold-email-replies`, `quiet-lead-followup`, `nurture-90-day`, `lorenzo-voice`, `claudeisms`. Pass `cold-email-replies` and `quiet-lead-followup` to Opus (file 04, section 5).
-- **Permissions:** read Instantly, GHL, Calendar. Send Instantly replies (Ask first). Update Instantly interest status. Update GHL stage, contact fields, notes, tags and tasks. Instantly blocklist and GHL DND: Ask first, every time.
+  - "Day 0 watch": inside "New replies". When a first reply goes out (on its own, from a hold card Lorenzo approved, or sent by Lorenzo himself in a thread), record it as day 0 (skill `quiet-lead-followup`, "When the ladder starts"). After the send's own records (file 05, section 6), set Sequence `followup`, Next Email `cadence.e1` and Next Due Date the next business day at 10:00 CT, over whatever those records wrote. A held first reply records Sequence `reply_waiting`; it becomes `followup` when the first reply goes out.
+- **Skills:** `cold-email-replies`, `quiet-lead-followup`, `nurture-90-day`, `lorenzo-voice`, `claudeisms`. Pass `cold-email-replies`, `quiet-lead-followup`, `lorenzo-voice` and `claudeisms` to Opus for replies (file 04, section 5).
+- **Permissions:** read Instantly, GHL, Calendar. Send Instantly replies when `ask_opus.py` prints `send` (no Ask first). Update Instantly interest status. Update GHL stage, contact fields, notes, tags and tasks. Instantly blocklist and GHL DND the same day for an unsubscribe or hostile reply when `ask_opus.py` prints `update_records` (file 02, section 3).
 - **Hands off:**
-  - a lead names a time, or asks to book: to Calls, with the thread. Calls asks Opus itself (`case_type` `booked_call`), then books and sends the confirmation or counter;
-  - a first reply, a hold, a complaint, a legal threat, a new contact named in a thread: to the Chief of Staff for a hold card;
+  - a lead names a time, or asks to book: to Calls, with the thread. Calls asks Opus itself (`case_type` `booked_call`). A time that fits every slot rule, for a lead who never had a call, and that we offered this lead or the lead's email names with its day and clock time, in Central time, comes back as `book_call`: Calls books it, verifies it, runs the case again and sends the "Locked in" confirmation (file 02, section 4, rule 15). A counter or a taken time is a hold card;
+  - a held first reply, a hold, a complaint, a legal threat, a new contact named in a thread: to the Chief of Staff for a hold card;
   - a lead goes into nurture: record it in GHL (Sequence `nurture`), tell the Chief of Staff. Nothing sends from nurture yet (skill `nurture-90-day`).
 
 ### 2.3 Calls agent
 
 - **Job:** everything between a booking and the call, and after a missed call. Booking from a reply, the "Locked in" confirmation, reminders R2 R3 R4, the no-show ladder N1 to N9, and the hand-off to nurture.
 - **Routines:**
-  - "Booked-call touches": every 15 minutes, 07:00 to 19:00 CT, Monday to Friday. Check new bookings on the Discovery Call calendar, due reminders, and due no-show steps. If nothing is due, stop.
+  - "Booked-call touches": every 15 minutes, 07:00 to 19:00 CT, Monday to Friday. Check new bookings on the Discovery Call calendar, due reminders, and due no-show steps. A booking you made at a `book_call` step is handled by its own re-run; any other new booking is a hold card, never a "Locked in" email. The reminders R2 R3 R4 are paused (since 2026-10-05). If nothing is due, stop.
   - "Pre-call brief" (from 60 minutes before each call): send the Chief of Staff a brief built by Opus under skill `sales-call` ("Before the call"). The brief goes to Lorenzo only.
   - On a GHL appointment event, if routine webhooks work (unconfirmed).
 - **Skills:** `booked-calls`, `cold-email-replies` (booking rules, step 5), `nurture-90-day`, `sales-call`, `claudeisms`.
-- **Permissions:** read Calendar, GHL, Instantly, Zoom. Create a GHL appointment on the Discovery Call calendar (Ask first). Send Instantly replies (Ask first). Update GHL stage, fields, notes. Update Instantly interest status (2 booked, 3 completed, -4 no show). Never send a calendar invite to a lead: tell the Chief of Staff so Lorenzo sends it.
-- **No-shows:** Zoom is not connected, so nothing proves a lead missed the call. A no-show starts only when Lorenzo marks it (tells you, or sets it in GHL). N1 needs Zoom join data and does not run until Zoom is connected (skill `booked-calls`).
+- **Permissions:** read Calendar, GHL, Instantly, Zoom. Book a GHL appointment on the Discovery Call calendar without asking only on a `book_call` step, at exactly `book_at` (file 02, section 3, step 6); every other appointment action is a hold card. Send Instantly replies when `ask_opus.py` prints `send`. Update GHL stage, fields, notes. Update Instantly interest status (2 booked, 3 completed, -4 no show). Never send a calendar invite to a lead: tell the Chief of Staff so Lorenzo sends it.
+- **No-shows:** Zoom is connected on the Discovery Call calendar (verified 2026-10-06), but you have no Zoom join data, so nothing proves a lead missed the call. A no-show starts only when Lorenzo marks it (tells you, or sets it in GHL). N1 needs Zoom join data, which you do not have, so N1 does not run (skill `booked-calls`). Every no-show email is a hold card (file 02, section 4, rule 14).
 - **Hands off:** a reschedule request or a question in a reply goes back through Opus; anything held to the Chief of Staff; a lead who never rebooks goes to nurture (GHL Sequence `nurture`).
 
 ### 2.4 Upwork drafting assistant
