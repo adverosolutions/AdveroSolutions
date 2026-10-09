@@ -1,0 +1,20 @@
+Batch dir: /Users/lorenzovillarreal/Desktop/AdveroSolutions/Coding/lead-scrape-2026/personalize/batches/20260930_2114
+Read `/Users/lorenzovillarreal/Desktop/AdveroSolutions/Coding/lead-scrape-2026/personalize/prompts.json` (template, x_rules, x_examples, y_rules, y_examples) and `/Users/lorenzovillarreal/Desktop/AdveroSolutions/Coding/lead-scrape-2026/personalize/batches/20260930_2114/fill_chunk_0.json` (40 leads). For EVERY lead in the file write X and Y. Do not modify, split or delete any file in the batch dir. Write ONLY the file `/Users/lorenzovillarreal/Desktop/AdveroSolutions/Coding/lead-scrape-2026/personalize/batches/20260930_2114/x_0.json` (that exact absolute path) as a JSON array with one object per lead: [{"lead_id":"", "x":"", "y":"", "specialty":""}]. After writing, verify the file exists at that path and holds one object per lead in the input. No commentary; reply only with the count written.
+
+Each lead has a `campaign` (its niche). X: a 3 to 10 word grounded noun phrase for what that company specifically does, so "saw that you do <X>" reads naturally. Use ONLY that lead's own data (named_niche, what_it_is, service_traits, headline, company_description, city, state), in the priority order x_rules gives. X MUST contain its niche word:
+ - bookkeeping: tax, accounting, bookkeeping, CPA or payroll
+ - msp: IT support, managed IT, network, cybersecurity, help desk or computer
+ - marketing_agency: marketing, SEO, ads, advertising, web design, branding or social media
+ - insurance_broker: insurance, benefits or coverage
+ - landscaping: landscaping, lawn, grounds, turf, tree, irrigation, hardscaping or snow
+ - pest_control: pest, extermination, termite, wildlife, mosquito or rodent
+Never a 1 or 2 word X. Lowercase except proper nouns and acronyms (IT, SEO, CPA, HOA). No pronouns, no company name, no marketing words (solutions, premier, tailored, comprehensive, full service, trusted, innovative, affordable, quality), no trailing period, no dashes. X always starts with the service they do (e.g. "managed IT for dental offices", "commercial insurance for contractors"), never a bare list of client types.
+
+Y: 4 to 12 words starting "you must", a warm playful exaggeration built on ONE detail from X or the lead's city/state. Rotate these shapes evenly across the lines, no shape on more than a third of lines:
+ - "you must have half of <City> on speed dial"
+ - "you must know every <client type named in X> in <City> by name"
+ - "you must be able to <core task from X> in your sleep"
+ - "you must have a desk at half your clients' offices by now" (exactly these 12 words)
+Always use the lead's city when it is given; use the state only when the city is blank (never "half of Ohio" when the city is Dayton). Rules: use the lead's city (capitalized properly) or state only; if both are blank use the desk shape or the sleep shape. Never a region, county, nickname or acronym that is not in the data. The client type in a "by name" line must be a noun that appears in X (never "every business in"); a "by name" line always ends "by name". Only the desk line ends in "by now". The task in a "sleep" line must be a concrete task from X (e.g. "fix a network", "treat a lawn", "spot a termite", "run a Google Ads account", "quote a commercial policy"; never "handle everything" or "any ..."). Do not use the same task or client type twice in the file. NEVER: busy, handful, grind, nightmare, headache, stress, tough, hard, crazy, problem, struggle, should, need to, questions, rolodex, "in your network/market/area", and never a noun for the person themselves (marketer, agent, exterminator, landscaper, techie, accountant). No pitch, no advice, no judgement. Plain spoken words, grammatical, one line.
+
+specialty: always blank "".
