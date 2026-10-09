@@ -1,0 +1,52 @@
+url: https://www.upwork.com/jobs/~022107497427771450002
+AI Automation System for Legal Contract Review and Internal Workflows
+Fixed $450, expert. Client in Canada: a law firm (amounts on the page stay in US dollars). Saved 2026-10-06. Avg bid $500. Asks examples of similar systems, recommended stack and architecture, rules vs AI approach, timeline and availability, one technical risk, and how to keep AI outputs useful without unsupported legal conclusions.
+
+About the Project
+
+We are a law firm looking to reduce the amount of manual review involved in processing routine contracts and internal legal documents. The goal is not to replace lawyers, but to give them a reliable AI-assisted system that can flag issues, summarize key clauses, and route documents through the right internal workflow.
+
+Current Problem
+
+Right now, contracts are reviewed manually against internal rules and client-specific requirements. This creates delays, inconsistent checks, and too much back-and-forth between team members. We want an internal platform that helps lawyers review documents faster while keeping control and final approval with the legal team.
+
+What Needs to Be Built
+
+We are looking for an experienced AI developer or full-stack engineer to build a production-ready internal system with AI integration, backend logic, user roles, notifications, and a simple dashboard.
+
+The platform should be able to:
+
+- Upload and process contracts and related documents
+- Apply predefined legal/business rules to identify possible issues
+- Use AI to summarize clauses, highlight risks, and suggest review points
+- Show flagged items in a clear dashboard for lawyers
+- Support different user roles and permissions
+- Send notifications when a document needs attention or approval
+- Keep document status history and audit-friendly activity logs
+- Connect with AWS services for storage, deployment, or processing where appropriate
+
+Technical Direction
+
+We are open to Python or JavaScript/Next.js depending on your recommendation. The backend needs to be clean, secure, and maintainable. Experience with AI agent development, API integrations, document processing, and workflow automation is important. This should be more than a basic chatbot; it needs structured rules, AI assistance, and reliable internal workflows.
+
+Required Experience
+
+- Building AI automation tools for business processes
+- Python, JavaScript, or full-stack web development
+- OpenAI, Claude, or similar AI integrations
+- API design and backend architecture
+- AWS deployment or AWS-based services
+- Role-based access control and dashboards
+- Secure handling of sensitive documents
+
+To Apply
+
+Please include:
+
+- Examples of similar AI or automation systems you have built
+- Your recommended tech stack and architecture
+- How you would approach contract rule processing versus AI-based analysis
+- A realistic timeline and your availability
+- One technical risk you would watch for in a legal document review system
+
+Also answer this: how would you keep the AI outputs useful to lawyers without allowing the system to make unsupported legal conclusions?

@@ -1,0 +1,487 @@
+{
+  "workflowId": "826e151a-6947-409d-a09f-566cbb8daa8c",
+  "workflowName": "Your GHL Leads: Captured, Followed Up and Assigned Automatically",
+  "locationId": "ebyNANPagaK7ycf1pfge",
+  "url": "https://app.gohighlevel.com/v2/location/ebyNANPagaK7ycf1pfge/automation/workflow/826e151a-6947-409d-a09f-566cbb8daa8c",
+  "capturedAt": "2026-09-26T22:41:09.339787Z",
+  "status": "draft",
+  "folder": null,
+  "references": {
+    "other": {
+      "826e151a-6947-409d-a09f-566cbb8daa8c": "Your GHL Leads: Captured, Followed Up and Assigned Automatically",
+      "yA8lUlBdxpwhOGzeVi0u": "A lead fills out your website form",
+      "fb5b8a0e-6b39-48ec-8797-6fdf6a25b70c": "Tag the contact website-lead so you know where they came from",
+      "956b87e5-4d9a-4fb6-b2fe-54d6d47e91d3": "Save Website form in the contact's Lead Source field",
+      "tJrGY3Iw4pGPcwusI3ja": "Lead Source",
+      "b8bcc5a0-6827-4bbd-ac53-9bf1c230ce04": "Open the lead in your pipeline at the New Lead stage",
+      "350e46b9-063a-41a2-9e3b-9c1eb3a93a7e": "Text the lead right away so they hear from you first",
+      "ec05f007-cad0-4464-a8d0-90191e3fe6d0": "Email the lead the same details plus a link to book a call",
+      "626342f2-28df-4460-a442-da993e6d39b6": "Wait one day to give the lead time to answer",
+      "ca1efce8-38d5-4f91-a5ba-975c5e4547ea": "Did they reply or book a call?",
+      "ce6e28dc-bcc1-439a-ba81-ff535ed102a5": "Yes",
+      "ef217cd4-a694-44a9-b042-5109a7cc2c73": "None",
+      "507652de-eb2f-4760-900b-24e9ff7e509d": "Move the opportunity to the Engaged stage",
+      "a6e68779-ef24-4508-9e15-681ad6c44b75": "Give the owner a task to follow up today",
+      "b56d98cd-648b-49c1-b3f8-d7fb7610c8ac": "Text the owner that a hot lead is waiting",
+      "06da4b11-cf17-40b6-baed-6d3245b98956": "Send a second text to a lead who has not answered yet",
+      "2de6c246-39b9-4656-ab16-88e40532781c": "Wait two more days before the next follow-up",
+      "c59e6494-8337-44a4-9692-d94178c16d4d": "Email a short check-in that keeps the door open",
+      "c8cd1ab9-1fd8-4b91-a2f5-c25db2166c9b": "Give the owner a task to call the lead who went quiet"
+    }
+  },
+  "unresolvedReferenceIds": [],
+  "captureComplete": {
+    "triggers": true,
+    "tier": "compiled:upwork_gen"
+  },
+  "triggers": [
+    {
+      "id": "yA8lUlBdxpwhOGzeVi0u",
+      "date_added": "2026-09-26T22:41:09.339787Z",
+      "deleted": false,
+      "active": false,
+      "actions": [
+        {
+          "workflow_id": "826e151a-6947-409d-a09f-566cbb8daa8c",
+          "type": "add_to_workflow",
+          "workflow_name": "Your GHL Leads: Captured, Followed Up and Assigned Automatically"
+        }
+      ],
+      "conditions": [],
+      "type": "form_submission",
+      "masterType": "highlevel",
+      "workflow_id": "826e151a-6947-409d-a09f-566cbb8daa8c",
+      "location_id": "ebyNANPagaK7ycf1pfge",
+      "name": "A lead fills out your website form",
+      "belongs_to": "workflow",
+      "date_updated": "2026-09-26T22:41:09.339787Z",
+      "status": "draft",
+      "workflow_name": "Your GHL Leads: Captured, Followed Up and Assigned Automatically"
+    }
+  ],
+  "metadata": {
+    "createdAt": "2026-09-26T22:41:09.339787Z",
+    "updatedAt": "2026-09-26T22:41:09.339787Z",
+    "settings": {
+      "locationId": "ebyNANPagaK7ycf1pfge",
+      "version": 1,
+      "dataVersion": 7,
+      "allowMultiple": true,
+      "timezone": "account",
+      "removeContactFromLastStep": true,
+      "stopOnResponse": false,
+      "autoMarkAsRead": false,
+      "type": "workflow",
+      "deleted": false,
+      "allowMultipleOpportunity": true,
+      "creationSource": "upwork_gen",
+      "originType": "user"
+    }
+  },
+  "nodes": [
+    {
+      "type": "add_contact_tag",
+      "id": "fb5b8a0e-6b39-48ec-8797-6fdf6a25b70c",
+      "name": "Tag the contact website-lead so you know where they came from",
+      "attributes": {
+        "tags": [
+          "website-lead"
+        ]
+      },
+      "order": 0,
+      "next": "956b87e5-4d9a-4fb6-b2fe-54d6d47e91d3",
+      "nextName": "Save Website form in the contact's Lead Source field"
+    },
+    {
+      "type": "update_contact_field",
+      "id": "956b87e5-4d9a-4fb6-b2fe-54d6d47e91d3",
+      "name": "Save Website form in the contact's Lead Source field",
+      "attributes": {
+        "type": "update_contact_field",
+        "actionType": "update_field_data",
+        "fields": [
+          {
+            "field": "tJrGY3Iw4pGPcwusI3ja",
+            "value": "Website form",
+            "title": "Lead Source",
+            "type": "string",
+            "date": ""
+          }
+        ]
+      },
+      "order": 1,
+      "parentKey": "fb5b8a0e-6b39-48ec-8797-6fdf6a25b70c",
+      "parentKeyName": "Tag the contact website-lead so you know where they came from",
+      "next": "b8bcc5a0-6827-4bbd-ac53-9bf1c230ce04",
+      "nextName": "Open the lead in your pipeline at the New Lead stage"
+    },
+    {
+      "type": "create_opportunity",
+      "id": "b8bcc5a0-6827-4bbd-ac53-9bf1c230ce04",
+      "name": "Open the lead in your pipeline at the New Lead stage",
+      "attributes": {
+        "pipeline_id": "",
+        "pipeline_stage_id": "",
+        "opportunity_name": "{{contact.first_name}} {{contact.last_name}} - Website form",
+        "opportunity_source": "",
+        "monetary_value": "",
+        "opportunity_status": "open",
+        "pipeline_name": "Upwork Demo - Lead Pipeline",
+        "pipeline_stage_name": "New Lead"
+      },
+      "order": 2,
+      "parentKey": "956b87e5-4d9a-4fb6-b2fe-54d6d47e91d3",
+      "parentKeyName": "Save Website form in the contact's Lead Source field",
+      "next": "350e46b9-063a-41a2-9e3b-9c1eb3a93a7e",
+      "nextName": "Text the lead right away so they hear from you first"
+    },
+    {
+      "type": "sms",
+      "id": "350e46b9-063a-41a2-9e3b-9c1eb3a93a7e",
+      "name": "Text the lead right away so they hear from you first",
+      "attributes": {
+        "body": "Hi {{contact.first_name}}, this is {{user.first_name}} with {{location.name}}. Thanks for reaching out, I got your request. What is the best time to give you a quick call today?",
+        "assignedOwners": [
+          "contact_owner"
+        ],
+        "alsoNotifyContactFollowers": false,
+        "alsoNotifyOpportunityFollowers": false
+      },
+      "order": 3,
+      "parentKey": "b8bcc5a0-6827-4bbd-ac53-9bf1c230ce04",
+      "parentKeyName": "Open the lead in your pipeline at the New Lead stage",
+      "next": "ec05f007-cad0-4464-a8d0-90191e3fe6d0",
+      "nextName": "Email the lead the same details plus a link to book a call"
+    },
+    {
+      "type": "email",
+      "id": "ec05f007-cad0-4464-a8d0-90191e3fe6d0",
+      "name": "Email the lead the same details plus a link to book a call",
+      "attributes": {
+        "subject": "Got your request, {{contact.first_name}}",
+        "html": "Hi {{contact.first_name}},\n\nThanks for reaching out to {{location.name}}. I have your request and I will be the one helping you.\n\nIf it is easier, you can pick a time for a quick call here: {{custom_values.booking_link}}\n\nOr just reply to this email with any questions.\n\n{{user.first_name}}",
+        "body": "Hi {{contact.first_name}},\n\nThanks for reaching out to {{location.name}}. I have your request and I will be the one helping you.\n\nIf it is easier, you can pick a time for a quick call here: {{custom_values.booking_link}}\n\nOr just reply to this email with any questions.\n\n{{user.first_name}}",
+        "from_name": "",
+        "from_email": "",
+        "cc": "",
+        "bcc": "",
+        "preHeader": "",
+        "assignedOwners": [
+          "contact_owner"
+        ],
+        "alsoNotifyContactFollowers": false,
+        "alsoNotifyOpportunityFollowers": false
+      },
+      "order": 4,
+      "parentKey": "350e46b9-063a-41a2-9e3b-9c1eb3a93a7e",
+      "parentKeyName": "Text the lead right away so they hear from you first",
+      "next": "626342f2-28df-4460-a442-da993e6d39b6",
+      "nextName": "Wait one day to give the lead time to answer"
+    },
+    {
+      "type": "wait",
+      "id": "626342f2-28df-4460-a442-da993e6d39b6",
+      "name": "Wait one day to give the lead time to answer",
+      "attributes": {
+        "type": "time",
+        "convertToMultipath": false,
+        "hybridActionType": "wait",
+        "isHybridAction": true,
+        "name": "Wait one day to give the lead time to answer",
+        "cat": "action",
+        "transitions": [],
+        "startAfter": {
+          "when": "after",
+          "type": "days",
+          "value": 1
+        },
+        "timePeriodInputMode": "standard",
+        "unitInputMode": "standard"
+      },
+      "order": 5,
+      "parentKey": "ec05f007-cad0-4464-a8d0-90191e3fe6d0",
+      "parentKeyName": "Email the lead the same details plus a link to book a call",
+      "next": "ca1efce8-38d5-4f91-a5ba-975c5e4547ea",
+      "nextName": "Did they reply or book a call?"
+    },
+    {
+      "type": "if_else",
+      "id": "ca1efce8-38d5-4f91-a5ba-975c5e4547ea",
+      "name": "Did they reply or book a call?",
+      "attributes": {
+        "currentRecipeType": "CUSTOM",
+        "branches": [
+          {
+            "name": "Yes",
+            "operator": "and",
+            "segments": [
+              {
+                "operator": "and",
+                "conditions": [
+                  {
+                    "conditionType": "contact_detail",
+                    "conditionSubType": "tags",
+                    "conditionOperator": "index-of-true",
+                    "conditionValue": [
+                      "lead-engaged"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "id": "ce6e28dc-bcc1-439a-ba81-ff535ed102a5"
+          }
+        ],
+        "if": true,
+        "operator": "and",
+        "conditionName": "Did they reply or book a call?",
+        "version": 2,
+        "noneBranchName": "None"
+      },
+      "order": 6,
+      "parentKey": "626342f2-28df-4460-a442-da993e6d39b6",
+      "parentKeyName": "Wait one day to give the lead time to answer",
+      "nodeType": "condition-node",
+      "cat": "conditions",
+      "next": [
+        "ce6e28dc-bcc1-439a-ba81-ff535ed102a5",
+        "ef217cd4-a694-44a9-b042-5109a7cc2c73"
+      ],
+      "nextNames": [
+        "Yes",
+        "None"
+      ]
+    },
+    {
+      "type": "if_else",
+      "id": "ce6e28dc-bcc1-439a-ba81-ff535ed102a5",
+      "name": "Yes",
+      "parentKey": "ca1efce8-38d5-4f91-a5ba-975c5e4547ea",
+      "parent": "ca1efce8-38d5-4f91-a5ba-975c5e4547ea",
+      "nodeType": "branch-yes",
+      "cat": "conditions",
+      "sibling": [
+        "ef217cd4-a694-44a9-b042-5109a7cc2c73"
+      ],
+      "attributes": {
+        "if": false,
+        "conditionName": "Condition",
+        "operator": "and",
+        "branches": []
+      },
+      "order": 7,
+      "parentKeyName": "Did they reply or book a call?",
+      "parentName": "Did they reply or book a call?",
+      "siblingNames": [
+        "None"
+      ],
+      "next": "507652de-eb2f-4760-900b-24e9ff7e509d",
+      "nextName": "Move the opportunity to the Engaged stage"
+    },
+    {
+      "type": "internal_update_opportunity",
+      "id": "507652de-eb2f-4760-900b-24e9ff7e509d",
+      "name": "Move the opportunity to the Engaged stage",
+      "attributes": {
+        "type": "internal_update_opportunity",
+        "allowBackward": true,
+        "pipelineId": "",
+        "__customInputFields__": [
+          {
+            "filterField": "pipelineStageId",
+            "value": "",
+            "dataType": "SINGLE_OPTIONS",
+            "valueFieldType": "select",
+            "__customInputs__": {}
+          }
+        ],
+        "__customInputs__": {},
+        "DYNAMIC": "Update opportunity to 'Engaged' stage with status open in 'Upwork Demo - Lead Pipeline' pipeline",
+        "pipeline_name": "Upwork Demo - Lead Pipeline",
+        "pipeline_stage_name": "Engaged"
+      },
+      "order": 0,
+      "parentKey": "ce6e28dc-bcc1-439a-ba81-ff535ed102a5",
+      "parentKeyName": "Yes",
+      "parent": "ce6e28dc-bcc1-439a-ba81-ff535ed102a5",
+      "parentName": "Yes",
+      "workflowsActionType": "INTERNAL",
+      "next": "a6e68779-ef24-4508-9e15-681ad6c44b75",
+      "nextName": "Give the owner a task to follow up today"
+    },
+    {
+      "type": "task-notification",
+      "id": "a6e68779-ef24-4508-9e15-681ad6c44b75",
+      "name": "Give the owner a task to follow up today",
+      "attributes": {
+        "type": "task_notification",
+        "title": "Follow up with {{contact.first_name}} {{contact.last_name}} today",
+        "body": "{{contact.first_name}} replied or booked a call. Check the conversation, confirm next steps and update the stage. Phone {{contact.phone}}, email {{contact.email}}.\n\nDue in 1 day. Assign to: the contact's assigned user.",
+        "assignedTo": "contact.assigned_user",
+        "dueDate": {
+          "duration": 1,
+          "unit": "days",
+          "skipWeekends": false
+        }
+      },
+      "order": 1,
+      "parentKey": "507652de-eb2f-4760-900b-24e9ff7e509d",
+      "parentKeyName": "Move the opportunity to the Engaged stage",
+      "parent": "ce6e28dc-bcc1-439a-ba81-ff535ed102a5",
+      "parentName": "Yes",
+      "workflowsActionType": "INTERNAL",
+      "stepIndex": 1,
+      "next": "b56d98cd-648b-49c1-b3f8-d7fb7610c8ac",
+      "nextName": "Text the owner that a hot lead is waiting"
+    },
+    {
+      "type": "internal_notification",
+      "id": "b56d98cd-648b-49c1-b3f8-d7fb7610c8ac",
+      "name": "Text the owner that a hot lead is waiting",
+      "attributes": {
+        "type": "sms",
+        "email": null,
+        "sms": {
+          "userType": "assign",
+          "assignedOwners": [
+            "contact_owner"
+          ],
+          "alsoNotifyContactFollowers": false,
+          "alsoNotifyOpportunityFollowers": false,
+          "body": "Hot lead: {{contact.first_name}} {{contact.last_name}} replied or booked a call. Task is in GHL. {{contact.phone}}"
+        },
+        "userType": "assign",
+        "whatsapp": null,
+        "notification": null
+      },
+      "order": 2,
+      "parentKey": "a6e68779-ef24-4508-9e15-681ad6c44b75",
+      "parentKeyName": "Give the owner a task to follow up today",
+      "parent": "ce6e28dc-bcc1-439a-ba81-ff535ed102a5",
+      "parentName": "Yes",
+      "next": ""
+    },
+    {
+      "type": "if_else",
+      "id": "ef217cd4-a694-44a9-b042-5109a7cc2c73",
+      "name": "None",
+      "parentKey": "ca1efce8-38d5-4f91-a5ba-975c5e4547ea",
+      "parent": "ca1efce8-38d5-4f91-a5ba-975c5e4547ea",
+      "nodeType": "branch-no",
+      "cat": "conditions",
+      "sibling": [
+        "ce6e28dc-bcc1-439a-ba81-ff535ed102a5"
+      ],
+      "attributes": {
+        "else": true
+      },
+      "order": 7,
+      "parentKeyName": "Did they reply or book a call?",
+      "parentName": "Did they reply or book a call?",
+      "siblingNames": [
+        "Yes"
+      ],
+      "next": "06da4b11-cf17-40b6-baed-6d3245b98956",
+      "nextName": "Send a second text to a lead who has not answered yet"
+    },
+    {
+      "type": "sms",
+      "id": "06da4b11-cf17-40b6-baed-6d3245b98956",
+      "name": "Send a second text to a lead who has not answered yet",
+      "attributes": {
+        "body": "Hi {{contact.first_name}}, {{user.first_name}} again from {{location.name}}. Just checking you saw my message about your request. Reply here or pick a time that works: {{custom_values.booking_link}}",
+        "assignedOwners": [
+          "contact_owner"
+        ],
+        "alsoNotifyContactFollowers": false,
+        "alsoNotifyOpportunityFollowers": false
+      },
+      "order": 0,
+      "parentKey": "ef217cd4-a694-44a9-b042-5109a7cc2c73",
+      "parentKeyName": "None",
+      "parent": "ef217cd4-a694-44a9-b042-5109a7cc2c73",
+      "parentName": "None",
+      "next": "2de6c246-39b9-4656-ab16-88e40532781c",
+      "nextName": "Wait two more days before the next follow-up"
+    },
+    {
+      "type": "wait",
+      "id": "2de6c246-39b9-4656-ab16-88e40532781c",
+      "name": "Wait two more days before the next follow-up",
+      "attributes": {
+        "type": "time",
+        "convertToMultipath": false,
+        "hybridActionType": "wait",
+        "isHybridAction": true,
+        "name": "Wait two more days before the next follow-up",
+        "cat": "action",
+        "transitions": [],
+        "startAfter": {
+          "when": "after",
+          "type": "days",
+          "value": 2
+        },
+        "timePeriodInputMode": "standard",
+        "unitInputMode": "standard"
+      },
+      "order": 1,
+      "parentKey": "06da4b11-cf17-40b6-baed-6d3245b98956",
+      "parentKeyName": "Send a second text to a lead who has not answered yet",
+      "parent": "ef217cd4-a694-44a9-b042-5109a7cc2c73",
+      "parentName": "None",
+      "next": "c59e6494-8337-44a4-9692-d94178c16d4d",
+      "nextName": "Email a short check-in that keeps the door open"
+    },
+    {
+      "type": "email",
+      "id": "c59e6494-8337-44a4-9692-d94178c16d4d",
+      "name": "Email a short check-in that keeps the door open",
+      "attributes": {
+        "subject": "Still want help with your request?",
+        "html": "Hi {{contact.first_name}},\n\nI did not want your request to slip through the cracks. If you still want help, reply to this email or grab a time here: {{custom_values.booking_link}}\n\nIf now is not a good time, just let me know and I will check back later.\n\n{{user.first_name}}",
+        "body": "Hi {{contact.first_name}},\n\nI did not want your request to slip through the cracks. If you still want help, reply to this email or grab a time here: {{custom_values.booking_link}}\n\nIf now is not a good time, just let me know and I will check back later.\n\n{{user.first_name}}",
+        "from_name": "",
+        "from_email": "",
+        "cc": "",
+        "bcc": "",
+        "preHeader": "",
+        "assignedOwners": [
+          "contact_owner"
+        ],
+        "alsoNotifyContactFollowers": false,
+        "alsoNotifyOpportunityFollowers": false
+      },
+      "order": 2,
+      "parentKey": "2de6c246-39b9-4656-ab16-88e40532781c",
+      "parentKeyName": "Wait two more days before the next follow-up",
+      "parent": "ef217cd4-a694-44a9-b042-5109a7cc2c73",
+      "parentName": "None",
+      "next": "c8cd1ab9-1fd8-4b91-a2f5-c25db2166c9b",
+      "nextName": "Give the owner a task to call the lead who went quiet"
+    },
+    {
+      "type": "task-notification",
+      "id": "c8cd1ab9-1fd8-4b91-a2f5-c25db2166c9b",
+      "name": "Give the owner a task to call the lead who went quiet",
+      "attributes": {
+        "type": "task_notification",
+        "title": "Call {{contact.first_name}} {{contact.last_name}}, no reply yet",
+        "body": "{{contact.first_name}} got two texts and two emails with no reply. Give them one call and note the outcome.\n\nDue in 1 day. Assign to: the contact's assigned user.",
+        "assignedTo": "contact.assigned_user",
+        "dueDate": {
+          "duration": 1,
+          "unit": "days",
+          "skipWeekends": false
+        }
+      },
+      "order": 3,
+      "parentKey": "c59e6494-8337-44a4-9692-d94178c16d4d",
+      "parentKeyName": "Email a short check-in that keeps the door open",
+      "parent": "ef217cd4-a694-44a9-b042-5109a7cc2c73",
+      "parentName": "None",
+      "workflowsActionType": "INTERNAL",
+      "stepIndex": 1,
+      "next": ""
+    }
+  ]
+}

@@ -1,0 +1,689 @@
+<title>HubSpot Lead System · Loud and Clear</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=JetBrains+Mono:wght@500;700;800&family=Lexend+Deca:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --y:#FFE14A;--b:#2A3CFF;--w:#F4F3EE;--k:#0B0B0C;--p:#FF8FC7;--g:#1FD17C;--o:#FF6A3D;--paper:#FFFFFF;
+  --bd:3px solid var(--k);--sh:6px 6px 0 var(--k);--shl:10px 10px 0 var(--k);
+  --disp:'Bricolage Grotesque',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  --spring:cubic-bezier(.3,1.6,.5,1);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--w);color:var(--k);font-family:var(--disp);font-optical-sizing:auto;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.wrap{width:min(100% - 96px,1280px);margin:0 auto;position:relative}
+section{position:relative;overflow:clip;border-bottom:var(--bd)}
+.dots{background-image:radial-gradient(rgba(11,11,12,.13) 1.3px,transparent 1.6px);background-size:22px 22px}
+/* ---------- top ---------- */
+.top{position:sticky;top:0;z-index:20;background:var(--k);color:var(--y);border-bottom:var(--bd);height:44px;display:flex;align-items:center;overflow:hidden}
+.mq{display:flex;white-space:nowrap;animation:mq 38s linear infinite;font-family:var(--mono);font-weight:800;font-size:13px;letter-spacing:.14em}
+.mq span{padding:0 18px}.mq span i{font-style:normal;color:var(--p);margin-left:18px}
+@keyframes mq{to{transform:translateX(-50%)}}
+/* ---------- primitives ---------- */
+.card{background:var(--paper);border:var(--bd);box-shadow:var(--sh);border-radius:14px}
+.tag{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-weight:800;font-size:13px;letter-spacing:.12em;text-transform:uppercase}
+.tag .n{background:var(--k);color:var(--y);padding:6px 10px;border-radius:6px}
+.tag .l{border:var(--bd);background:var(--paper);padding:4px 12px;border-radius:999px;box-shadow:3px 3px 0 var(--k)}
+h1,h2{font-family:var(--disp);font-weight:800;letter-spacing:-.045em;line-height:.9;margin:0}
+h2{font-size:clamp(46px,6.4vw,92px);margin:18px 0 44px;max-width:14ch}
+.hlite{background:var(--y);padding:0 .12em;border:var(--bd);border-radius:12px;box-shadow:var(--sh);display:inline-block;transform:rotate(-1.5deg);line-height:1.02}
+.stamp{position:absolute;z-index:5;font-family:var(--mono);font-weight:800;letter-spacing:.08em;font-size:18px;text-transform:uppercase;padding:10px 16px;border:3px solid currentColor;border-radius:10px;background:var(--paper);box-shadow:4px 4px 0 var(--k);white-space:nowrap;transform:rotate(var(--r,-8deg))}
+.stamp.g{background:var(--g);color:var(--k);border-color:var(--k)}
+.stamp.p{background:var(--p);color:var(--k);border-color:var(--k)}
+.stamp.y{background:var(--y);color:var(--k);border-color:var(--k)}
+.stamp.b{background:var(--b);color:#fff;border-color:var(--k)}
+.mono{font-family:var(--mono)}
+.av{width:48px;height:48px;border-radius:50%;border:var(--bd);display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex:none;background:var(--c,var(--p))}
+/* ---------- motion ---------- */
+.js .sl,.js .st,.js .pp{opacity:0}
+.in .sl{animation:slam .8s var(--d,0s) both}
+@keyframes slam{0%{opacity:0;transform:translateY(-70px) rotate(calc(var(--r,0deg) - 5deg)) scale(1.1)}55%{opacity:1;transform:translateY(10px) rotate(calc(var(--r,0deg) + 1.5deg)) scale(.98);animation-timing-function:cubic-bezier(.3,.8,.4,1)}78%{transform:translateY(-4px) rotate(var(--r,0deg)) scale(1.005)}100%{opacity:1;transform:rotate(var(--r,0deg))}}
+.in .st{animation:stampIn .55s var(--d,0s) both}
+@keyframes stampIn{0%{opacity:0;transform:scale(2.8) rotate(-28deg)}55%{opacity:1;transform:scale(.88) rotate(var(--r,-8deg))}75%{transform:scale(1.06) rotate(var(--r,-8deg))}100%{opacity:1;transform:scale(1) rotate(var(--r,-8deg))}}
+.in .pp{animation:pop .5s var(--spring) var(--d,0s) both}
+@keyframes pop{from{opacity:0;transform:scale(.6) translateY(12px)}to{opacity:1;transform:none}}
+.in .sl.shake,.in .nd.cur{opacity:1;animation:shk .45s ease both}
+@keyframes shk{0%,100%{transform:rotate(var(--r,0deg))}20%{transform:translate(-6px,2px) rotate(-.4deg)}40%{transform:translate(5px,-2px)}60%{transform:translate(-3px,1px)}80%{transform:translate(2px,0)}}
+/* ---------- hero ---------- */
+.hero{background:var(--y);min-height:calc(100vh - 44px);display:flex;align-items:center;padding:56px 0 72px}
+.hero .wrap{display:grid;grid-template-columns:1.12fr .88fr;gap:64px;align-items:center}
+.hero h1{font-size:clamp(64px,10.4vw,168px);line-height:.84;letter-spacing:-.055em}
+.hero h1 .big{display:block}
+.hero h1 .sm{display:block;font-size:.5em;letter-spacing:-.04em;margin-top:.18em;line-height:.95}
+.hero h1 .sm u{text-decoration:none;background:var(--k);color:var(--y);padding:0 .14em;border-radius:10px;display:inline-block;transform:rotate(-2deg)}
+.meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:36px}
+.chip{font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.06em;border:var(--bd);background:var(--paper);padding:8px 14px;border-radius:999px;box-shadow:3px 3px 0 var(--k);white-space:nowrap}
+.chip.k{background:var(--k);color:var(--y)}
+.sticker{position:absolute;right:-8px;top:-88px;width:132px;height:132px;z-index:6}
+.sticker svg{width:100%;height:100%;animation:spin 18s linear infinite}
+.sticker b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:30px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hstack{position:relative;display:flex;flex-direction:column;gap:22px}
+.note{padding:20px 22px;display:grid;grid-template-columns:auto 1fr auto;gap:4px 16px;align-items:start;--r:-2deg}
+.note .ic{grid-row:span 3;width:52px;height:52px;border:var(--bd);border-radius:12px;background:var(--b);display:flex;align-items:center;justify-content:center;color:#fff}
+.note .ic svg{width:26px;height:26px}
+.note .k1{font-family:var(--mono);font-weight:800;font-size:12px;letter-spacing:.12em;color:var(--b)}
+.note .t{font-family:var(--mono);font-size:12px;font-weight:700;opacity:.6}
+.note b{grid-column:2/4;font-size:21px;font-weight:700;letter-spacing:-.01em}
+.note p{grid-column:2/4;margin:2px 0 0;font-size:17px;line-height:1.35}
+.handled{background:var(--k);color:#fff;padding:22px 24px;--r:1.5deg;position:relative;box-shadow:var(--sh);border:var(--bd);border-radius:14px}
+.handled .hd{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px}
+.handled .hd span{font-family:var(--mono);font-weight:800;font-size:12px;letter-spacing:.14em;color:var(--y)}
+.handled .clk{font-family:var(--mono);font-weight:800;font-size:64px;line-height:.9;color:var(--y);font-variant-numeric:tabular-nums}
+.hrow{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:2px dashed rgba(255,255,255,.22);font-size:18px;font-weight:600}
+.hrow .bx{width:26px;height:26px;border:3px solid #fff;border-radius:7px;flex:none;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.hrow .bx svg{width:16px;height:16px;opacity:0;transform:scale(.3);transition:all .35s var(--spring)}
+.hrow.on .bx{background:var(--g);border-color:var(--g)}
+.hrow.on .bx svg{opacity:1;transform:none}
+.hrow em{margin-left:auto;font-style:normal;font-family:var(--mono);font-size:13px;opacity:.55}
+.handled .stamp{right:-18px;bottom:-26px;--r:-9deg;font-size:20px}
+/* ---------- 01 cleanup ---------- */
+.s1{padding:84px 0 120px}
+.s1 .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:start}
+.dupzone{position:relative;height:500px}
+.dup{position:absolute;width:360px;padding:18px 20px;font-size:16px}
+.dup b{display:flex;justify-content:space-between;align-items:baseline;font-size:22px;font-weight:700;margin-bottom:6px}
+.dup b small{font-family:var(--mono);font-size:12px;font-weight:700;opacity:.55}
+.dup .bad{font-family:var(--mono);font-size:13.5px;font-weight:700;background:var(--p);border:2px solid var(--k);border-radius:6px;padding:2px 8px;display:inline-block}
+.dup:nth-child(1){left:0;top:0;--r:-4deg;background:#fff}
+.dup:nth-child(2){left:70px;top:92px;--r:3deg;background:#E4E7FF}
+.dup:nth-child(3){left:20px;top:184px;--r:-2deg;background:#FFF6C4}
+.in .dup{animation:slam .8s var(--d) both,merge .6s cubic-bezier(.6,0,.8,.4) var(--m) forwards}
+@keyframes merge{to{opacity:0;transform:translate(var(--mx,120px),var(--my,60px)) rotate(0deg) scale(.5)}}
+.gold{position:absolute;left:90px;top:60px;width:420px;padding:22px 24px 10px;--r:-1deg;box-shadow:var(--shl)}
+.gold .gh{display:flex;gap:14px;align-items:center;margin-bottom:10px}
+.gold .gh b{display:block;font-size:26px;font-weight:800;letter-spacing:-.02em}
+.gold .gh span{font-family:var(--mono);font-size:12.5px;font-weight:800;letter-spacing:.06em;background:var(--y);border:2px solid var(--k);border-radius:6px;padding:1px 7px}
+.row{display:flex;justify-content:space-between;padding:11px 0;border-top:2px solid var(--k);font-size:16.5px}
+.row span{opacity:.65}.row b{font-weight:700}
+.gold .stamp{right:-26px;top:-26px;--r:9deg;font-size:22px}
+.stats{display:grid;gap:22px}
+.stat{padding:24px 26px;position:relative}
+.stat.y{background:var(--y)}.stat.p{background:var(--p)}
+.stat .lb{font-family:var(--mono);font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+.stat .num{font-size:128px;font-weight:800;letter-spacing:-.06em;line-height:.85;margin-top:12px;font-variant-numeric:tabular-nums;display:flex;align-items:flex-end;gap:14px}
+.stat .num small{font-size:22px;letter-spacing:0;font-family:var(--mono);font-weight:800;padding-bottom:12px}
+.segs{display:grid;grid-template-columns:repeat(25,1fr);gap:4px;margin-top:18px}
+.segs i{height:26px;border:2px solid var(--k);border-radius:4px;background:var(--paper);transition:background .15s}
+.segs i.f{background:var(--k)}
+.segs i.f.new{background:var(--g)}
+.stat .from{font-family:var(--mono);font-weight:700;font-size:14px;margin-top:12px}
+/* ---------- 02 capture ---------- */
+.s2{background:var(--b);color:#fff;padding:84px 0 120px}
+.s2 .tag .l{color:var(--k)}
+.s2 h2 .hlite{color:var(--k)}
+.cap{display:grid;grid-template-columns:280px 1fr 400px;gap:0;align-items:center;position:relative;min-height:470px}
+.srcs{display:flex;flex-direction:column;gap:18px;position:relative;z-index:2}
+.src{display:flex;align-items:center;gap:12px;padding:12px 16px;font-size:18px;font-weight:700;color:var(--k);border-radius:12px;--r:0deg}
+.src svg{width:22px;height:22px;flex:none}
+.src:nth-child(odd){--r:-1.5deg}.src:nth-child(even){--r:1.2deg}
+.hub{justify-self:center;width:190px;height:190px;background:var(--k);border:3px solid #fff;border-radius:22px;box-shadow:8px 8px 0 var(--y);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font-size:24px;font-weight:800;position:relative;z-index:2;--r:3deg}
+.hub svg{width:44px;height:44px;color:var(--y)}
+.hub .cnt{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--y)}
+.in .hub.beat{animation:slam .8s var(--d) both,thump 1.7s ease-in-out 2s infinite}
+@keyframes thump{0%,100%{transform:rotate(3deg) scale(1)}10%{transform:rotate(3deg) scale(1.06)}20%{transform:rotate(3deg) scale(1)}}
+.wires{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:visible;pointer-events:none}
+.wires path{fill:none;stroke:#fff;stroke-width:3;stroke-dasharray:var(--len);stroke-dashoffset:var(--len)}
+.in .wires path{transition:stroke-dashoffset .9s cubic-bezier(.65,0,.35,1)}
+.wires.drawn path{stroke-dashoffset:0}
+.wires rect{fill:var(--y);stroke:var(--k);stroke-width:2}
+.contact{padding:22px 24px 10px;color:var(--k);position:relative;--r:-1.5deg;box-shadow:8px 8px 0 var(--k)}
+.contact .gh{display:flex;gap:14px;align-items:center;margin-bottom:10px}
+.contact .gh b{display:block;font-size:24px;font-weight:800}
+.contact .gh span{font-size:14px;font-family:var(--mono);font-weight:700;opacity:.6}
+.contact .stamp{right:-22px;top:-24px;--r:8deg}
+.today{display:flex;align-items:center;gap:16px;margin-top:26px;justify-content:flex-end}
+.today b{font-size:78px;font-weight:800;letter-spacing:-.05em;line-height:.8;font-variant-numeric:tabular-nums}
+.today span{font-size:18px;font-weight:700;line-height:1.1}
+.today .chip{color:var(--k);font-size:11.5px;padding:5px 10px;background:var(--y)}
+/* ---------- 03 qualify ---------- */
+.s3{padding:84px 0 120px}
+.s3 .grid{display:grid;grid-template-columns:440px 1fr;gap:72px;align-items:start}
+.chat{padding:0;overflow:hidden;--r:-1.5deg;box-shadow:var(--shl)}
+.chat .ch{background:var(--k);color:#fff;display:flex;align-items:center;gap:12px;padding:14px 18px}
+.chat .ch .av{border-color:#fff;width:40px;height:40px;font-size:15px}
+.chat .ch b{font-size:18px;font-weight:700;display:block}
+.chat .ch span{font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.1em;color:var(--y)}
+.chat .body{padding:20px 18px 24px;display:flex;flex-direction:column;gap:12px;min-height:400px;background:var(--w)}
+.msg{max-width:84%;padding:12px 16px;border:var(--bd);border-radius:18px;font-size:17px;line-height:1.35;font-weight:500;box-shadow:3px 3px 0 var(--k)}
+.msg.o{align-self:flex-end;background:var(--b);color:#fff;border-bottom-right-radius:4px}
+.msg.i{align-self:flex-start;background:var(--paper);border-bottom-left-radius:4px}
+.score{position:relative;padding:28px 30px 30px;background:var(--paper)}
+.score .lb{font-family:var(--mono);font-weight:800;font-size:13px;letter-spacing:.14em}
+.score .num{font-size:220px;font-weight:800;letter-spacing:-.07em;line-height:.8;margin:18px 0 22px;font-variant-numeric:tabular-nums}
+.bar{position:relative;height:48px;border:var(--bd);border-radius:10px;background:repeating-linear-gradient(-45deg,#fff 0 8px,#ECEBE4 8px 16px);overflow:visible}
+.bar .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--y);border-right:3px solid var(--k);border-radius:7px 0 0 7px;transition:width 2.2s cubic-bezier(.2,.9,.25,1)}
+.bar .fill.ok{background:var(--g)}
+.bar .th{position:absolute;left:80%;top:-16px;bottom:-16px;width:4px;background:var(--k)}
+.bar .th span{position:absolute;left:10px;top:-10px;font-family:var(--mono);font-size:12px;font-weight:800;white-space:nowrap}
+.score .stamp{right:-18px;top:36px;--r:8deg;font-size:26px;padding:12px 20px}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px}
+.fact{padding:14px 16px;font-size:14px;font-family:var(--mono);font-weight:700;border-radius:12px}
+.fact b{display:block;font-family:var(--disp);font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:4px}
+.fact:nth-child(1){background:var(--y);--r:-1.5deg}.fact:nth-child(2){background:var(--p);--r:1deg}.fact:nth-child(3){background:#C9CEFF;--r:-1deg}
+/* ---------- 04 assign ---------- */
+.s4{background:var(--p);padding:84px 0 120px}
+.s4 .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:start}
+.leadrow{display:flex;align-items:center;gap:14px;padding:16px 20px;margin-bottom:26px;background:var(--y);--r:-1deg;width:max-content;max-width:100%}
+.leadrow b{font-size:22px;font-weight:800;display:block}
+.leadrow span{font-family:var(--mono);font-size:13px;font-weight:700}
+.leadrow .arr{font-family:var(--mono);font-weight:800;font-size:22px;margin-left:10px}
+.agents{display:flex;flex-direction:column;gap:14px}
+.agt{display:flex;align-items:center;gap:16px;padding:14px 18px;position:relative;transition:opacity .4s,filter .4s,transform .5s var(--spring),background .3s}
+.agt b{display:block;font-size:19px;font-weight:800}
+.agt span{font-family:var(--mono);font-size:13px;font-weight:700;opacity:.65}
+.agt .ld{margin-left:auto;font-family:var(--mono);font-size:13px;font-weight:800;border:2px solid var(--k);border-radius:6px;padding:3px 8px;white-space:nowrap}
+.agt .why{position:absolute;right:92px;top:50%;margin-top:-13px;font-family:var(--mono);font-size:12px;font-weight:800;background:var(--k);color:#fff;padding:4px 8px;border-radius:6px;opacity:0;transform:scale(.6);transition:all .35s var(--spring)}
+.agt.out{opacity:.45;filter:grayscale(1)}
+.agt.out .why{opacity:1;transform:none}
+.agt.out b{text-decoration:line-through;text-decoration-thickness:3px}
+.agt.win{background:var(--g);transform:scale(1.03) translateX(-8px)}
+.agt .stamp{right:-16px;top:-22px;--r:7deg;font-size:15px;padding:7px 12px}
+.sla{background:var(--k);color:#fff;padding:26px 28px;position:relative;--r:1.5deg;box-shadow:var(--shl)}
+.sla .lb{font-family:var(--mono);font-weight:800;font-size:13px;letter-spacing:.14em;color:var(--y)}
+.sla .tm{display:flex;align-items:baseline;gap:16px;margin:12px 0 18px}
+.sla .tm b{font-family:var(--mono);font-size:112px;font-weight:800;line-height:.85;color:var(--y);font-variant-numeric:tabular-nums;letter-spacing:-.04em}
+.sla .tm span{font-family:var(--mono);font-size:22px;font-weight:800;opacity:.5}
+.slabar{height:22px;border:3px solid #fff;border-radius:8px;overflow:hidden;position:relative}
+.slabar i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--y)}
+.sla .note2{margin-top:18px;background:#fff;color:var(--k);border-radius:12px;border:var(--bd);padding:14px 16px;font-size:17px;font-weight:700;display:flex;gap:12px;align-items:center}
+.sla .note2 i{width:34px;height:34px;border:var(--bd);border-radius:9px;background:var(--y);display:flex;align-items:center;justify-content:center;flex:none;font-style:normal}
+.sla .note2 i svg{width:18px;height:18px}
+.sla p{margin:16px 0 0;font-family:var(--mono);font-size:13px;font-weight:700;opacity:.7}
+.sla .stamp{right:-22px;top:-26px;--r:7deg;font-size:22px}
+/* ---------- 05 automation ---------- */
+.s5{background:var(--k);color:#fff;padding:84px 0 120px}
+.s5 .tag .l{color:var(--k)}
+.s5 .tag .n,.s2 .tag .n{background:var(--y);color:var(--k);border:2px solid var(--k)}
+.s5 .hlite{box-shadow:6px 6px 0 var(--p)}
+.s5 h2 .hlite{color:var(--k)}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);column-gap:64px;row-gap:72px}
+.nd{position:relative;background:#fff;color:var(--k);border:var(--bd);border-radius:14px;padding:16px 18px 16px;box-shadow:6px 6px 0 #4A4A52;min-height:112px;transition:background .3s,box-shadow .3s,transform .4s var(--spring)}
+.nd .ty{display:inline-block;font-family:var(--mono);font-weight:800;font-size:11.5px;letter-spacing:.14em;padding:3px 8px;border:2px solid var(--k);border-radius:6px;background:var(--tc,#fff)}
+.nd b{display:block;font-size:21px;font-weight:800;letter-spacing:-.015em;margin:10px 0 3px;line-height:1.1}
+.nd span{display:block;font-family:var(--mono);font-size:13px;font-weight:700;opacity:.65}
+.nd .ck{position:absolute;right:12px;top:12px;width:26px;height:26px;border:3px solid var(--k);border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center}
+.nd .ck svg{width:14px;height:14px;opacity:0;transform:scale(.3);transition:all .3s var(--spring)}
+.nd.lit{background:var(--y);box-shadow:6px 6px 0 #fff}
+.js .in .nd.lit{opacity:1}
+.nd.lit .ck{background:var(--g)}
+.nd.lit .ck svg{opacity:1;transform:none}
+.ar{position:absolute;width:44px;height:22px;color:#6E6E78;transition:color .3s}
+.ar svg{width:100%;height:100%;display:block}
+.ar.r{left:calc(100% + 11px);top:50%;margin-top:-11px}
+.ar.l{right:calc(100% + 11px);top:50%;margin-top:-11px;transform:rotate(180deg)}
+.ar.d{left:50%;margin-left:-22px;top:calc(100% + 24px);transform:rotate(90deg)}
+.nd.lit .ar{color:var(--y)}
+.no{margin-top:12px;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;font-weight:800;border:2px dashed var(--k);border-radius:8px;padding:6px 8px;transition:opacity .4s}
+.no em{font-style:normal;background:var(--k);color:#fff;border-radius:4px;padding:1px 6px}
+.nd.lit .no{opacity:.45;text-decoration:line-through}
+.yes{position:absolute;left:50%;top:calc(100% + 10px);margin-left:28px;font-family:var(--mono);font-weight:800;font-size:12px;background:var(--g);color:var(--k);border:2px solid #fff;border-radius:6px;padding:2px 8px;opacity:0;transition:opacity .3s}
+.nd.lit .yes{opacity:1}
+.booked{grid-column:1/3;display:flex;align-items:center;gap:22px;background:var(--b);color:#fff;border:3px solid #fff;border-radius:16px;padding:20px 24px;box-shadow:8px 8px 0 var(--y);position:relative;opacity:.25;transform:scale(.97);transition:opacity .4s,transform .6s var(--spring)}
+.booked.lit{opacity:1;transform:none}
+.cal{width:90px;border:3px solid #fff;border-radius:12px;overflow:hidden;text-align:center;flex:none;background:#fff;color:var(--k)}
+.cal i{display:block;font-style:normal;background:var(--y);border-bottom:3px solid var(--k);font-family:var(--mono);font-weight:800;font-size:13px;letter-spacing:.14em;padding:4px 0}
+.cal b{display:block;font-size:48px;font-weight:800;line-height:1.15}
+.booked strong{display:block;font-size:30px;font-weight:800;letter-spacing:-.02em}
+.booked span{font-family:var(--mono);font-size:14px;font-weight:700;opacity:.8}
+.booked .stamp{right:-18px;top:-26px;--r:8deg;font-size:22px;opacity:0;transform:scale(2.6) rotate(-20deg);transition:all .45s var(--spring)}
+.booked.lit .stamp{opacity:1;transform:rotate(8deg)}
+.log{grid-column:3/5;align-self:center;border:3px solid #fff;border-radius:14px;padding:16px 18px;font-family:var(--mono);font-size:14px;font-weight:700;background:#17171A;min-height:120px}
+.log .lh{display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.14em;color:var(--y);margin-bottom:10px}
+.log .lh i{width:10px;height:10px;border-radius:50%;background:var(--g);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.2}}
+.log .ln{display:flex;gap:14px;opacity:.5;padding:2px 0}
+.log .ln:last-child{opacity:1}
+.log .ln b{color:var(--y);flex:none}
+/* ---------- 06 hubspot ---------- */
+.s6{padding:84px 0 130px}
+.s6 .hdr{display:flex;justify-content:space-between;align-items:flex-end;gap:24px}
+.s6 h2{margin-bottom:40px}
+.s6 .lbl{margin-bottom:52px}
+.frame{border:var(--bd);border-radius:18px;box-shadow:14px 14px 0 var(--k);background:var(--b);padding:14px;--r:0deg}
+.hs{font-family:'Lexend Deca',system-ui,sans-serif;background:#F5F8FA;color:#33475B;border-radius:8px;overflow:hidden;height:620px;display:flex;flex-direction:column;border:3px solid var(--k)}
+.hs .tb{height:56px;background:#fff;border-bottom:1px solid #DFE3EB;display:flex;align-items:center;gap:14px;padding:0 18px;flex:none}
+.hs .tb .bk{color:#0091AE;font-size:20px}
+.hs .tb b{font-size:15px;font-weight:600;white-space:nowrap}
+.hs .tb .ty{font-size:12px;color:#516F90;background:#EAF0F6;border-radius:3px;padding:3px 8px;white-space:nowrap}
+.hs .tabs{display:flex;gap:22px;margin-left:22px;font-size:14px;color:#516F90;height:100%;align-items:center}
+.hs .tabs span{height:100%;display:flex;align-items:center}
+.hs .tabs span:first-child{color:#33475B;font-weight:500;box-shadow:inset 0 -3px 0 #00A4BD}
+.hs .sw{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px;color:#516F90}
+.tgl{width:40px;height:22px;border-radius:11px;background:#CBD6E2;position:relative;transition:background .3s}
+.tgl::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .35s var(--spring)}
+.hs.live .tgl{background:#00BDA5}.hs.live .tgl::after{transform:translateX(18px)}
+.hs .pub{background:#FF7A59;color:#fff;font-weight:500;font-size:13.5px;border-radius:3px;padding:8px 14px;white-space:nowrap}
+.hs .main{flex:1;display:flex;min-height:0}
+.hs .cv{flex:1;position:relative;overflow:hidden;background-color:#F5F8FA;background-image:radial-gradient(#D5DEE8 1px,transparent 1.2px);background-size:18px 18px}
+.hs .trk{position:absolute;left:0;right:0;top:0;padding:30px 0 40px;display:flex;flex-direction:column;align-items:center;transition:transform 5.5s cubic-bezier(.65,0,.35,1)}
+.hc{width:300px;background:#fff;border:1px solid #CBD6E2;border-radius:6px;padding:10px 14px 11px;box-shadow:0 1px 2px rgba(45,62,80,.08),0 6px 18px -8px rgba(45,62,80,.18);position:relative}
+.hc .hh{display:flex;align-items:center;gap:8px;font-size:12px;color:#516F90;margin-bottom:4px}
+.hc .hh i{width:20px;height:20px;border-radius:4px;background:var(--ic,#00A4BD);flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-style:normal;font-size:11px;font-weight:600}
+.hc b{display:block;font-size:14px;font-weight:600}
+.hc p{margin:3px 0 0;font-size:12.5px;color:#516F90}
+.hc.trg{border-top:3px solid #FF7A59}
+.hc.sel{border-color:#00A4BD;box-shadow:0 0 0 3px rgba(0,164,189,.25)}
+.hc .tg{position:absolute;right:10px;top:9px;font-size:10.5px;font-weight:600;color:#00A38D;background:#E5F8F6;border-radius:3px;padding:2px 6px}
+.vl{width:2px;height:16px;background:#CBD6E2}
+.pl{width:22px;height:22px;border-radius:50%;background:#fff;border:1.5px solid #CBD6E2;color:#7C98B6;font-size:15px;line-height:19px;text-align:center}
+.split{display:flex;gap:40px;align-items:flex-start;position:relative;padding-top:18px}
+.split::before{content:"";position:absolute;top:0;left:150px;right:150px;height:2px;background:#CBD6E2}
+.lane{display:flex;flex-direction:column;align-items:center;position:relative}
+.lane::before{content:"";width:2px;height:10px;background:#CBD6E2;position:absolute;top:-18px}
+.bp{font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:12px;margin-bottom:6px}
+.bp.y{background:#E5F8F6;color:#00A38D;border:1px solid #7FD1C7}
+.bp.n{background:#EAF0F6;color:#516F90;border:1px solid #CBD6E2}
+.endp{font-size:11.5px;color:#7C98B6;background:#fff;border:1px solid #DFE3EB;border-radius:12px;padding:3px 12px}
+.js .hs .hc,.js .hs .pl,.js .hs .bp,.js .hs .endp{opacity:0}
+.in .hs .hc,.in .hs .pl,.in .hs .bp,.in .hs .endp{animation:hcIn .5s var(--spring) var(--d,0s) both}
+@keyframes hcIn{from{opacity:0;transform:translateY(-12px) scale(.94)}to{opacity:1;transform:none}}
+.hs .side{width:300px;flex:none;background:#fff;border-left:1px solid #DFE3EB;padding:18px 20px;transform:translateX(100%);transition:transform .6s cubic-bezier(.2,.9,.25,1)}
+.hs.panel .side{transform:none}
+.side h4{margin:0 0 16px;font-size:16px;font-weight:600;display:flex;justify-content:space-between}
+.side h4 span{color:#7C98B6;font-weight:400}
+.fl{margin-bottom:13px}
+.fl label{display:block;font-size:12px;color:#516F90;margin-bottom:5px}
+.fl div{border:1px solid #CBD6E2;border-radius:3px;background:#F5F8FA;font-size:13.5px;padding:8px 10px}
+.fl div.hi{border-color:#00A4BD;background:#fff;box-shadow:0 0 0 2px rgba(0,164,189,.15)}
+.side .sv{margin-top:18px;display:flex;gap:10px}
+.side .sv span{font-size:13px;padding:8px 14px;border-radius:3px;border:1px solid #CBD6E2}
+.side .sv span:first-child{background:#FF7A59;border-color:#FF7A59;color:#fff}
+/* ---------- close ---------- */
+.s7{background:var(--y);padding:120px 0 100px;border-bottom:0}
+.words{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+.wd{font-size:clamp(36px,4.3vw,64px);font-weight:800;letter-spacing:-.05em;line-height:1;padding:40px 12px;border-radius:18px;text-align:center;box-shadow:var(--shl)}
+.wd:nth-child(1){background:#fff;--r:-3deg}
+.wd:nth-child(2){background:var(--p);--r:2deg}
+.wd:nth-child(3){background:var(--b);color:#fff;--r:-1.5deg}
+.wd:nth-child(4){background:var(--k);color:var(--y);--r:2.5deg}
+.end{display:flex;justify-content:space-between;align-items:center;margin-top:84px;font-family:var(--mono);font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;border-top:var(--bd);padding-top:22px;gap:16px;flex-wrap:wrap}
+/* ---------- responsive ---------- */
+@media (max-width:1100px){
+  .cap{grid-template-columns:240px 1fr 340px}
+  .hub{width:150px;height:150px;font-size:20px}
+}
+@media (max-width:900px){
+  .wrap{width:calc(100% - 32px)}
+  .hero{min-height:auto;padding:64px 0 72px}
+  .hero .wrap{grid-template-columns:1fr;gap:44px}
+  .sticker{width:100px;height:100px;top:-70px;right:0}
+  .sticker b{font-size:24px}
+  .s1,.s2,.s3,.s4,.s5,.s6{padding:76px 0 84px}
+  h2{margin:18px 0 40px}
+  .s1 .grid,.s3 .grid,.s4 .grid{grid-template-columns:1fr;gap:40px}
+  .dupzone{height:430px}
+  .dup{width:min(300px,78%)}
+  .dup:nth-child(2){left:auto;right:0}
+  .gold{left:0;right:0;width:auto;top:70px}
+  .gold .stamp{right:-6px}
+  .stat .num{font-size:96px}
+  .cap{grid-template-columns:1fr;gap:26px;min-height:0}
+  .wires{display:none}
+  .hub{width:100%;height:auto;padding:22px;flex-direction:row;--r:0deg}
+  .hub svg{width:34px;height:34px}
+  .today{justify-content:flex-start;flex-wrap:wrap}
+  .score .num{font-size:150px}
+  .facts{grid-template-columns:1fr}
+  .flow{grid-template-columns:1fr;row-gap:60px}
+  .flow>*{grid-column:auto!important;grid-row:auto!important}
+  .ar.r,.ar.l{left:50%;right:auto;margin-left:-22px;top:calc(100% + 19px);margin-top:0;transform:rotate(90deg)}
+  .ar.d{top:calc(100% + 19px)}
+  .yes{top:calc(100% + 16px)}
+  .booked .stamp{right:-6px}
+  .s6 .hdr{flex-direction:column;align-items:flex-start;gap:0}
+  .frame{padding:8px;box-shadow:8px 8px 0 var(--k)}
+  .hs{height:560px}
+  .hs .tabs,.hs .side,.hs .tb .ty{display:none}
+  .hs .tb{gap:10px;padding:0 12px}
+  .hs .tb b{overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .hs .pub{display:none}
+  .hc{width:250px}
+  .split{gap:12px;transform:scale(.62);transform-origin:50% 0}
+  .words{grid-template-columns:1fr 1fr;gap:16px}
+  .wd{padding:24px 10px;font-size:clamp(28px,8.4vw,60px)}
+}
+@media (max-width:480px){
+  .hero h1{font-size:74px}
+  .note b{font-size:18px}.note p{font-size:15.5px}
+  .handled .clk{font-size:48px}
+  .hrow{font-size:16px}
+  .agt{padding:12px 12px;gap:10px}
+  .agt .av{width:40px;height:40px;font-size:15px}
+  .agt b{font-size:16px}.agt span{font-size:11.5px}
+  .agt .why{right:auto;left:62px;top:auto;bottom:-10px;margin-top:0}
+  .agt .ld{font-size:11.5px}
+  .sla .tm b{font-size:80px}
+  .leadrow .arr{display:none}
+  .stat .num{font-size:84px}
+  .stamp{font-size:15px}
+  .score .stamp{font-size:19px;right:-6px}
+  .contact .stamp,.handled .stamp{right:-4px}
+  .note .t{display:none}
+  .dupzone{height:340px}
+}
+@media (prefers-reduced-motion:reduce){.mq,.sticker svg{animation:none}}
+</style>
+<script>document.documentElement.classList.add('js')</script>
+
+<div class="top" aria-hidden="true"><div class="mq" id="mq"></div></div>
+
+<!-- HERO -->
+<section class="hero" id="s0">
+  <div class="wrap">
+    <div style="position:relative">
+      <div class="tag sl" style="--d:.05s"><span class="n">HUBSPOT</span><span class="l">Real estate lead management</span></div>
+      <h1 style="margin-top:28px"><span class="big sl" style="--d:.15s">9:42 PM.</span><span class="sm sl" style="--d:.35s">Handled in <u>38 seconds.</u></span></h1>
+      <div class="meta">
+        <span class="chip k pp" style="--d:.7s">NEW INQUIRY · 9:42 PM</span>
+        <span class="chip pp" style="--d:.8s">214 Linden Ave</span>
+        <span class="chip pp" style="--d:.9s">Maya Chen · pre-approved</span>
+      </div>
+    </div>
+    <div class="hstack">
+      <div class="sticker st" style="--d:1.2s;--r:0deg" aria-label="Sample data">
+        <svg viewBox="0 0 140 140"><defs><path id="cp" d="M70,70 m-50,0 a50,50 0 1,1 100,0 a50,50 0 1,1 -100,0"/></defs><circle cx="70" cy="70" r="67" fill="#FF8FC7" stroke="#0B0B0C" stroke-width="3"/><circle cx="70" cy="70" r="34" fill="#FFE14A" stroke="#0B0B0C" stroke-width="3"/><text font-family="JetBrains Mono,monospace" font-weight="800" font-size="14.5" letter-spacing="3.2" fill="#0B0B0C"><textPath href="#cp">SAMPLE DATA ✦ SAMPLE DATA ✦</textPath></text></svg>
+        <b>✦</b>
+      </div>
+      <div class="note card sl" style="--d:.5s">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg></div>
+        <span class="k1">SHOWING REQUEST</span><span class="t">now</span>
+        <b>214 Linden Ave</b>
+        <p>Maya Chen: “Is this still available? We’re pre-approved.”</p>
+      </div>
+      <div class="handled sl" style="--d:.9s" id="handled">
+        <div class="hd"><span>HANDLED IN</span><div class="clk" id="clk">0:00</div></div>
+        <div class="hrow" data-t="3"><div class="bx"><svg viewBox="0 0 16 16" fill="none" stroke="#0B0B0C" stroke-width="3"><path d="M3 8.5l3 3 7-7"/></svg></div>In HubSpot<em>0:03</em></div>
+        <div class="hrow" data-t="12"><div class="bx"><svg viewBox="0 0 16 16" fill="none" stroke="#0B0B0C" stroke-width="3"><path d="M3 8.5l3 3 7-7"/></svg></div>Texted<em>0:12</em></div>
+        <div class="hrow" data-t="38"><div class="bx"><svg viewBox="0 0 16 16" fill="none" stroke="#0B0B0C" stroke-width="3"><path d="M3 8.5l3 3 7-7"/></svg></div>Routed to Jordan<em>0:38</em></div>
+        <div class="stamp y st" style="--d:3.4s">38 SEC ✦</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 01 CLEAN UP -->
+<section class="s1 dots" id="s1">
+  <div class="wrap">
+    <div class="tag sl"><span class="n">01</span><span class="l">Clean up</span></div>
+    <h2 class="sl" style="--d:.1s">One Maya. <span class="hlite">Not three.</span></h2>
+    <div class="grid">
+      <div class="dupzone">
+        <div class="dup card" style="--d:.3s;--m:1.9s;--mx:110px;--my:70px"><b>Maya Chen <small>2023</small></b><span class="bad">No phone · no owner</span></div>
+        <div class="dup card" style="--d:.55s;--m:2.0s;--mx:30px;--my:-10px"><b>M. Chen <small>2024</small></b><span class="bad">Stage: “HOT!!”</span></div>
+        <div class="dup card" style="--d:.8s;--m:2.1s;--mx:90px;--my:-90px"><b>maya chen <small>2025</small></b><span class="bad">Type: “b/s”</span></div>
+        <div class="gold card sl" style="--d:2.45s">
+          <div class="gh"><span class="av" style="--c:var(--y)">MC</span><div><b>Maya Chen</b><span>3 RECORDS → 1</span></div></div>
+          <div class="row"><span>Phone</span><b>(555) 014-7720</b></div>
+          <div class="row"><span>Lead type</span><b>Buyer</b></div>
+          <div class="row"><span>Lifecycle</span><b>Lead</b></div>
+          <div class="row"><span>Owner</span><b>Jordan Reyes</b></div>
+          <div class="stamp g st" style="--d:3.2s">0 DUPES</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat y card sl" style="--d:.4s;--r:1deg">
+          <div class="lb">CRM health</div>
+          <div class="num"><span data-c="58,97,2.6,2.2">58</span><small>/ 100</small></div>
+          <div class="segs" id="segs"></div>
+          <div class="from">58 → 97</div>
+        </div>
+        <div class="stat p card sl" style="--d:.6s;--r:-1deg">
+          <div class="lb">Duplicates</div>
+          <div class="num"><span data-c="412,0,2.6,2.2">412</span><small>left</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 CAPTURE -->
+<section class="s2" id="s2">
+  <div class="wrap">
+    <div class="tag sl"><span class="n">02</span><span class="l">Capture</span></div>
+    <h2 class="sl" style="--d:.1s">Five doors. <span class="hlite">One HubSpot.</span></h2>
+    <div class="cap" id="cap">
+      <svg class="wires" id="wires"></svg>
+      <div class="srcs">
+        <div class="src card sl" style="--d:.3s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6"/></svg>Website form</div>
+        <div class="src card sl" style="--d:.4s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="6"/><path d="M16 16l5 5"/></svg>Portal inquiry</div>
+        <div class="src card sl" style="--d:.5s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 21V8l8-5 8 5v13zM10 21v-6h4v6"/></svg>Open house</div>
+        <div class="src card sl" style="--d:.6s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 18l5-6 4 3 7-9"/><path d="M15 6h5v5"/></svg>Home valuation</div>
+        <div class="src card sl" style="--d:.7s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 4h4l2 5-3 2a11 11 0 005 5l2-3 5 2v4a2 2 0 01-2 2A17 17 0 013 6a2 2 0 012-2z"/></svg>Calls and texts</div>
+      </div>
+      <div class="hub sl beat" id="hub" style="--d:.9s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="3.5" r="1.6"/><circle cx="19.4" cy="16.3" r="1.6"/><circle cx="4.6" cy="16.3" r="1.6"/><path d="M12 5.1v3.7M18 15.4l-3.2-1.8M6 15.4l3.2-1.8"/></svg>HubSpot<span class="cnt">ONE CONTACT</span></div>
+      <div>
+        <div class="contact card sl" style="--d:2.2s">
+          <div class="gh"><span class="av" style="--c:var(--y)">MC</span><div><b>Maya Chen</b><span>Contact · created 9:42 PM</span></div></div>
+          <div class="row"><span>Listing</span><b>214 Linden Ave</b></div>
+          <div class="row"><span>Source</span><b>Website form</b></div>
+          <div class="row"><span>Lead type</span><b>Buyer</b></div>
+          <div class="row"><span>Duplicate</span><b>None found</b></div>
+          <div class="stamp g st" style="--d:3s">NO DUPE</div>
+        </div>
+        <div class="today sl" style="--d:2.8s"><b data-c="0,29,1.4,2.9">0</b><span>new leads<br>today</span><span class="chip">Illustrative</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 QUALIFY -->
+<section class="s3 dots" id="s3">
+  <div class="wrap">
+    <div class="tag sl"><span class="n">03</span><span class="l">Qualify</span></div>
+    <h2 class="sl" style="--d:.1s">Three texts. <span class="hlite">Sales-ready.</span></h2>
+    <div class="grid">
+      <div class="chat card sl" style="--d:.2s">
+        <div class="ch"><span class="av" style="--c:var(--y);color:var(--k)">MC</span><div><b>Maya Chen</b><span>SMS · 9:42 PM</span></div></div>
+        <div class="body">
+          <div class="msg o pp" style="--d:.7s">Hi Maya, thanks for asking about 214 Linden. When are you hoping to move?</div>
+          <div class="msg i pp" style="--d:1.5s">Lease ends in November. Pre-approved up to $520k.</div>
+          <div class="msg o pp" style="--d:2.3s">Great. Which areas, and how many beds?</div>
+          <div class="msg i pp" style="--d:3.1s">Northside or Riverside. 3 beds.</div>
+        </div>
+      </div>
+      <div>
+        <div class="score card sl" style="--d:.35s;--r:1deg">
+          <div class="lb">LEAD SCORE</div>
+          <div class="num" data-c="0,86,3.1,1.3">0</div>
+          <div class="bar"><div class="fill" id="fill"></div><div class="th"><span>≥ 80</span></div></div>
+          <div class="stamp g st" style="--d:3.4s">SALES-READY</div>
+        </div>
+        <div class="facts">
+          <div class="fact card pp" style="--d:1.2s">Moving<b>60 days</b></div>
+          <div class="fact card pp" style="--d:1.9s">Pre-approved<b>$520k</b></div>
+          <div class="fact card pp" style="--d:3.3s">Looking<b>Northside · 3 bd</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 ASSIGN -->
+<section class="s4" id="s4">
+  <div class="wrap">
+    <div class="tag sl"><span class="n">04</span><span class="l">Assign</span></div>
+    <h2 class="sl" style="--d:.1s">Right agent. <span class="hlite">Called in 2:14.</span></h2>
+    <div class="grid">
+      <div>
+        <div class="leadrow card sl" style="--d:.25s"><span class="av" style="--c:#fff">MC</span><div><b>Maya Chen</b><span>Buyer · Northside · score 86</span></div><span class="arr">→</span></div>
+        <div class="agents" id="agents">
+          <div class="agt card sl" style="--d:.45s" data-out="1.6"><span class="av" style="--c:#C9CEFF">SO</span><div><b>Sam Okafor</b><span>Buyers · Downtown</span></div><span class="why">WRONG AREA</span><span class="ld">2 open</span></div>
+          <div class="agt card sl" style="--d:.55s" data-out="1.9"><span class="av" style="--c:var(--y)">PN</span><div><b>Priya Nair</b><span>Sellers · Riverside</span></div><span class="why">SELLERS</span><span class="ld">3 open</span></div>
+          <div class="agt card sl" style="--d:.65s" data-out="2.2"><span class="av" style="--c:#fff">EB</span><div><b>Elena Brooks</b><span>Buyers · Northside</span></div><span class="why">AT CAPACITY</span><span class="ld">7 open</span></div>
+          <div class="agt card sl" style="--d:.75s" data-win="2.6"><span class="av" style="--c:var(--g)">JR</span><div><b>Jordan Reyes</b><span>Buyers · Northside · on shift</span></div><span class="ld">4 open</span><div class="stamp y st" style="--d:2.8s">ASSIGNED</div></div>
+        </div>
+      </div>
+      <div class="sla card sl" style="--d:.5s">
+        <div class="lb">CALL SLA · 5:00</div>
+        <div class="tm"><b id="sla">0:00</b><span>/ 5:00</span></div>
+        <div class="slabar"><i id="slabar"></i></div>
+        <div class="note2"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M5 4h4l2 5-3 2a11 11 0 005 5l2-3 5 2v4a2 2 0 01-2 2A17 17 0 013 6a2 2 0 012-2z"/></svg></i>Text to Jordan: call Maya</div>
+        <p>5 minutes, or it moves to the next agent</p>
+        <div class="stamp g st" style="--d:5.4s">CALLED ✓ 2:14</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 AUTOMATION -->
+<section class="s5" id="s5">
+  <div class="wrap">
+    <div class="tag sl"><span class="n">05</span><span class="l">The automation</span></div>
+    <h2 class="sl" style="--d:.1s">The workflow, <span class="hlite">running live.</span></h2>
+    <div class="flow" id="flow">
+      <div class="nd sl" style="--d:.2s;--tc:var(--p);grid-column:1;grid-row:1"><span class="ty">TRIGGER</span><b>Form submitted</b><span>Listing page · 214 Linden</span><i class="ck"><svg viewBox="0 0 16 16" fill="none" stroke="#0B0B0C" stroke-width="3"><path d="M3 8.5l3 3 7-7"/></svg></i><i class="ar r"></i></div>
+      <div class="nd sl" style="--d:.3s;--tc:#C9CEFF;grid-column:2;grid-row:1"><span class="ty">ACTION</span><b>Set type + lifecycle</b><span>Buyer · Lead</span><i class="ck"><svg viewBox="0 0 16 16" fill="none" stroke="#0B0B0C" stroke-width="3"><path d="M3 8.5l3 3 7-7"/></svg></i><i class="ar r"></i></div>
+      <div class="nd sl" style="--d:.4s;--tc:#C9CEFF;grid-column:3;grid-row:1"><span class="ty">ACTION</span><b>Send qualifying SMS</b><span>Timeline, budget, area</span><i class="ck"><svg viewBox="0 0 16 16" fill="none" stroke="#0B0B0C" stroke-width="3"><path d="M3 8.5l3 3 7-7"/></svg></i><i class="ar r"></i></div>
+      <div class="nd sl" style="--d:.5s;--tc:var(--g);grid-column:4;grid-row:1"><span class="ty">BRANCH</span><b>Lead score ≥ 80?</b><span>Maya scores 86</span><div class="no"><em>NO</em>Enrol in nurture · not taken</div><i class="ck"><svg viewBox="0 0 16 16" fill="none" stroke="#0B0B0C" stroke-width="3"><path d="M3 8.5l3 3 7-7"/></svg></i><i class="ar d"></i><span class="yes">YES</span></div>
+      <div class="nd sl" style="--d:.6s;--tc:var(--y);grid-column:4;grid-row:2"><span class="ty">ROTATE</span><b>Northside buyer agent</b><span>Assigned to Jordan Reyes</span><i class="ck"><svg viewBox="0 0 16 16" fill="none" stroke="#0B0B0C" stroke-width="3"><path d="M3 8.5l3 3 7-7"/></svg></i><i class="ar l"></i></div>
+      <div class="nd sl" style="--d:.7s;--tc:#fff;grid-column:3;grid-row:2"><span class="ty">TASK</span><b>Call Maya Chen</b><span>SLA 5 minutes</span><i class="ck"><svg viewBox="0 0 16 16" fill="none" stroke="#0B0B0C" stroke-width="3"><path d="M3 8.5l3 3 7-7"/></svg></i><i class="ar l"></i></div>
+      <div class="nd sl" style="--d:.8s;--tc:#fff;grid-column:2;grid-row:2"><span class="ty">DELAY</span><b>Wait 1 day</b><span>Resumes Tue 8:00 AM</span><i class="ck"><svg viewBox="0 0 16 16" fill="none" stroke="#0B0B0C" stroke-width="3"><path d="M3 8.5l3 3 7-7"/></svg></i><i class="ar l"></i></div>
+      <div class="nd sl" style="--d:.9s;--tc:var(--p);grid-column:1;grid-row:2"><span class="ty">EMAIL</span><b>3 similar listings</b><span>Stops when she replies</span><i class="ck"><svg viewBox="0 0 16 16" fill="none" stroke="#0B0B0C" stroke-width="3"><path d="M3 8.5l3 3 7-7"/></svg></i><i class="ar d"></i></div>
+      <div class="booked" id="booked" style="grid-row:3"><div class="cal"><i>SAT</i><b>11</b></div><div><strong>Showing booked</strong><span>214 Linden · 11:00 AM</span></div><div class="stamp y">BOOKED</div></div>
+      <div class="log" id="log" style="grid-row:3"><div class="lh"><i></i>LIVE RUN · MAYA CHEN</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 HUBSPOT -->
+<section class="s6 dots" id="s6">
+  <div class="wrap">
+    <div class="hdr">
+      <div><div class="tag sl"><span class="n">06</span><span class="l">In your HubSpot</span></div>
+      <h2 class="sl" style="--d:.1s">How it looks in <span class="hlite">your HubSpot.</span></h2></div>
+      <span class="chip lbl pp" style="--d:.4s">Your workflow in HubSpot · illustrative</span>
+    </div>
+    <div class="frame sl" style="--d:.25s">
+      <div class="hs" id="hs">
+        <div class="tb"><span class="bk">‹</span><b>Listing inquiry · buyer routing</b><span class="ty">Contact-based</span>
+          <div class="tabs"><span>Actions</span><span>Settings</span><span>Performance</span></div>
+          <div class="sw"><span id="onoff">Off</span><div class="tgl"></div><span class="pub">Review and publish</span></div>
+        </div>
+        <div class="main">
+          <div class="cv" id="cv">
+            <div class="trk" id="trk">
+              <div class="hc trg" style="--d:.6s"><div class="hh"><i style="--ic:#FF7A59">⚡</i>Trigger · Contact enrollment</div><b>Form submission</b><p>Listing page inquiry form</p></div>
+              <div class="vl"></div><div class="pl" style="--d:.8s">+</div><div class="vl"></div>
+              <div class="hc" style="--d:.9s"><div class="hh"><i>✎</i>1 · Edit record</div><b>Set Lead type to Buyer</b></div>
+              <div class="vl"></div><div class="pl" style="--d:1s">+</div><div class="vl"></div>
+              <div class="hc" style="--d:1.1s"><div class="hh"><i>✎</i>2 · Edit record</div><b>Set Lifecycle stage to Lead</b></div>
+              <div class="vl"></div><div class="pl" style="--d:1.2s">+</div><div class="vl"></div>
+              <div class="hc" style="--d:1.3s"><div class="hh"><i style="--ic:#6A78D1">✉</i>3 · Send SMS</div><b>Qualifying questions to Maya</b></div>
+              <div class="vl"></div><div class="pl" style="--d:1.4s">+</div><div class="vl"></div>
+              <div class="hc" style="--d:1.5s"><div class="hh"><i style="--ic:#F5C26B">⑂</i>4 · If/then branch</div><b>Lead score is ≥ 80</b></div>
+              <div class="vl"></div>
+              <div class="split">
+                <div class="lane"><span class="bp y" style="--d:1.7s">Yes</span>
+                  <div class="hc" style="--d:1.8s"><div class="hh"><i>↻</i>5 · Rotate record to owner</div><b>Northside buyer agents</b></div>
+                  <div class="vl"></div><div class="pl" style="--d:1.9s">+</div><div class="vl"></div>
+                  <div class="hc sel" style="--d:2s"><div class="hh"><i>☑</i>6 · Create task</div><b>Call Maya · due in 5 min</b><span class="tg">Editing</span></div>
+                  <div class="vl"></div><div class="pl" style="--d:2.1s">+</div><div class="vl"></div>
+                  <div class="hc" style="--d:2.2s"><div class="hh"><i style="--ic:#7C98B6">◷</i>7 · Delay</div><b>Wait 1 day</b></div>
+                  <div class="vl"></div><div class="pl" style="--d:2.3s">+</div><div class="vl"></div>
+                  <div class="hc" style="--d:2.4s"><div class="hh"><i style="--ic:#6A78D1">✉</i>8 · Send email</div><b>3 similar listings</b><p>Unenroll on reply</p></div>
+                  <div class="vl"></div><span class="endp" style="--d:2.5s">End</span>
+                </div>
+                <div class="lane"><span class="bp n" style="--d:1.7s">None met</span>
+                  <div class="hc" style="--d:1.9s"><div class="hh"><i style="--ic:#6A78D1">➜</i>9 · Enroll in sequence</div><b>Buyer nurture</b></div>
+                  <div class="vl"></div><span class="endp" style="--d:2.1s">End</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="side">
+            <h4>Create task <span>×</span></h4>
+            <div class="fl"><label>Task title</label><div class="hi">Call Maya Chen</div></div>
+            <div class="fl"><label>Due date</label><div>5 minutes after enrollment</div></div>
+            <div class="fl"><label>Assign to</label><div>Contact owner</div></div>
+            <div class="fl"><label>Priority</label><div>High</div></div>
+            <div class="fl"><label>Type</label><div>Call</div></div>
+            <div class="sv"><span>Save</span><span>Cancel</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CLOSE -->
+<section class="s7" id="s7">
+  <div class="wrap">
+    <div class="words">
+      <div class="wd card sl" style="--d:.1s">Captured.</div>
+      <div class="wd card sl" style="--d:.35s">Qualified.</div>
+      <div class="wd card sl" style="--d:.6s">Assigned.</div>
+      <div class="wd card sl" style="--d:.85s">Booked.</div>
+    </div>
+    <div class="end"><span>Your HubSpot · real estate lead management</span><span>✦ ✦ ✦</span></div>
+  </div>
+</section>
+
+<script>
+(function(){
+  var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.from((r||document).querySelectorAll(s))};
+  // marquee
+  var words=['CAPTURE','QUALIFY','ASSIGN','FOLLOW UP','BOOKED','0 DUPES','SALES-READY'],h='';
+  for(var k=0;k<4;k++)words.forEach(function(w){h+='<span>'+w+'<i>✦</i></span>'});
+  $('#mq').innerHTML=h+h;
+  // arrows
+  var arr='<svg viewBox="0 0 44 22" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="square"><path d="M2 11h36M28 3l9 8-9 8"/></svg>';
+  $$('.ar').forEach(function(a){a.innerHTML=arr});
+  // segments
+  var segs=$('#segs');for(var i=0;i<25;i++){var e=document.createElement('i');if(i<14)e.className='f';segs.appendChild(e)}
+  function fmtT(s){s=Math.round(s);return Math.floor(s/60)+':'+('0'+s%60).slice(-2)}
+  function tween(from,to,dur,delay,fn,done){
+    setTimeout(function(){var t0=performance.now();(function f(n){var p=Math.min(1,(n-t0)/(dur*1000));var q=1-Math.pow(1-p,3);fn(from+(to-from)*q,p);if(p<1)requestAnimationFrame(f);else if(done)done()})(t0)},delay*1000)}
+  function counters(sec){$$('[data-c]',sec).forEach(function(el){var a=el.getAttribute('data-c').split(',').map(Number);tween(a[0],a[1],a[2],a[3],function(v){el.textContent=Math.round(v)})})}
+  var run={
+    s0:function(){
+      tween(0,38,2.6,1.1,function(v){$('#clk').textContent=fmtT(v)});
+      $$('.hrow').forEach(function(r){var t=+r.getAttribute('data-t');setTimeout(function(){r.classList.add('on')},(1.1+2.6*(1-Math.cbrt(1-t/38)))*1000)});
+      setTimeout(function(){$('#handled').classList.add('shake')},3400);
+    },
+    s1:function(sec){
+      counters(sec);
+      var cells=$$('#segs i');tween(14,24,2.6,2.2,function(v){cells.forEach(function(c,i){if(i<Math.round(v)){if(!c.classList.contains('f'))c.className='f new'}})});
+    },
+    s2:function(sec){
+      counters(sec);drawWires();setTimeout(function(){$('#wires').classList.add('drawn')},900);
+    },
+    s3:function(sec){
+      counters(sec);var f=$('#fill');setTimeout(function(){f.style.width='52%'},1700);setTimeout(function(){f.style.width='86%';setTimeout(function(){f.classList.add('ok')},900)},3050);
+    },
+    s4:function(){
+      $$('#agents .agt').forEach(function(a){var o=a.getAttribute('data-out'),w=a.getAttribute('data-win');if(o)setTimeout(function(){a.classList.add('out')},o*1000);if(w)setTimeout(function(){a.classList.add('win')},w*1000)});
+      tween(0,134,2.2,3.1,function(v){$('#sla').textContent=fmtT(v);$('#slabar').style.width=(v/300*100)+'%'});
+    },
+    s5:function(){
+      var nodes=$$('#flow .nd'),log=$('#log');
+      var lines=[['9:42:07 PM','Maya Chen enrolled · form submitted'],['9:42:08 PM','Lead type Buyer · lifecycle Lead'],['9:42:19 PM','Qualifying SMS sent'],['9:45:31 PM','Score 86 · YES branch'],['9:45:32 PM','Rotated to Jordan Reyes'],['9:45:32 PM','Task: call Maya · 5 min'],['Tue 8:00 AM','Resumed after 1 day'],['Tue 8:00 AM','3 similar listings sent'],['Tue 9:12 AM','Showing booked · Sat 11:00']];
+      function add(i){var d=document.createElement('div');d.className='ln';d.innerHTML='<b>'+lines[i][0]+'</b><span>'+lines[i][1]+'</span>';log.appendChild(d);var ls=$$('.ln',log);if(ls.length>3)ls[0].remove()}
+      nodes.forEach(function(n,i){setTimeout(function(){n.classList.add('lit','cur');add(i)},(2.0+i*.62)*1000)});
+      setTimeout(function(){$('#booked').classList.add('lit');add(8)},(2.0+nodes.length*.62+.2)*1000);
+    },
+    s6:function(){
+      var hs=$('#hs');setTimeout(function(){hs.classList.add('panel')},2400);
+      setTimeout(function(){var cv=$('#cv'),trk=$('#trk'),t=trk.getBoundingClientRect().top,m=0;$$('.hc,.endp',trk).forEach(function(e){m=Math.max(m,e.getBoundingClientRect().bottom-t)});var pan=Math.max(0,m+30-cv.clientHeight);trk.style.transform='translateY('+(-pan)+'px)'},3000);
+      setTimeout(function(){hs.classList.add('live');$('#onoff').textContent='On'},8800);
+    }
+  };
+  function drawWires(){
+    var cap=$('#cap'),svg=$('#wires');if(getComputedStyle(svg).display==='none')return;
+    var cr=cap.getBoundingClientRect(),hub=$('#hub').getBoundingClientRect(),ct=$('.contact').getBoundingClientRect();
+    var hx=hub.left-cr.left,hy=hub.top-cr.top+hub.height/2,out='';
+    $$('.src').forEach(function(s,i){var r=s.getBoundingClientRect();var x=r.right-cr.left,y=r.top-cr.top+r.height/2,mx=(x+hx)/2;
+      var d='M'+x+' '+y+' C'+mx+' '+y+' '+mx+' '+hy+' '+hx+' '+hy;
+      out+='<path d="'+d+'" style="--len:600;transition-delay:'+(i*.1)+'s"/><rect width="10" height="10" x="-5" y="-5"><animateMotion dur="1.6s" begin="'+(1.2+i*.3)+'s" repeatCount="indefinite" path="'+d+'"/></rect>'});
+    var x2=hub.right-cr.left,x3=ct.left-cr.left,y3=ct.top-cr.top+ct.height/2,m2=(x2+x3)/2;
+    var d2='M'+x2+' '+hy+' C'+m2+' '+hy+' '+m2+' '+y3+' '+x3+' '+y3;
+    out+='<path d="'+d2+'" style="--len:600;stroke-width:5;transition-delay:.9s"/>';
+    svg.innerHTML=out;
+  }
+  var done={};
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting&&!done[e.target.id]){done[e.target.id]=1;e.target.classList.add('in');if(run[e.target.id])run[e.target.id](e.target)}})},{threshold:.28});
+  $$('section').forEach(function(s){io.observe(s)});
+  var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){if(done.s2){drawWires();$('#wires').classList.add('drawn')}},150)});
+})();
+</script>

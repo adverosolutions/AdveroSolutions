@@ -1,0 +1,241 @@
+{
+  "workflowId": "33476dd9-aad9-453e-8689-494e255d5907",
+  "workflowName": "From Capturing a Lead to the Opportunity and the Follow-Up - Appointment Booked on the Calendar",
+  "locationId": "ebyNANPagaK7ycf1pfge",
+  "url": "https://app.gohighlevel.com/v2/location/ebyNANPagaK7ycf1pfge/automation/workflow/33476dd9-aad9-453e-8689-494e255d5907",
+  "capturedAt": "2026-09-28T14:34:25.445002Z",
+  "status": "draft",
+  "folder": null,
+  "references": {
+    "other": {
+      "33476dd9-aad9-453e-8689-494e255d5907": "From Capturing a Lead to the Opportunity and the Follow-Up - Appointment Booked on the Calendar",
+      "DIk7FD3UyGxenoUrgW8a": "Appointment Booked on the Calendar",
+      "6005b16b-2047-4be3-8d15-1e44c06a0a8a": "Is This a Lead in the Follow-Up?",
+      "77be8fb5-acdc-4e42-a7c2-b86e60993e67": "Yes",
+      "f0a13d64-d889-4292-999d-a707a0191282": "None",
+      "68e00753-f8f6-45da-8dcd-95a4a2bfb9f3": "Tag the Contact lead-engaged",
+      "659c5f70-2901-47af-bbdd-d9abde02a25f": "Move the Opportunity to Call Booked",
+      "74f72e57-430a-45c6-8c2e-1c8cc6a4f56c": "Email the Owner the Booking"
+    }
+  },
+  "unresolvedReferenceIds": [],
+  "captureComplete": {
+    "triggers": true,
+    "tier": "compiled:upwork_gen"
+  },
+  "triggers": [
+    {
+      "id": "DIk7FD3UyGxenoUrgW8a",
+      "date_added": "2026-09-28T14:34:25.445002Z",
+      "deleted": false,
+      "active": false,
+      "actions": [
+        {
+          "workflow_id": "33476dd9-aad9-453e-8689-494e255d5907",
+          "type": "add_to_workflow",
+          "workflow_name": "From Capturing a Lead to the Opportunity and the Follow-Up - Appointment Booked on the Calendar"
+        }
+      ],
+      "conditions": [],
+      "type": "appointment",
+      "masterType": "highlevel",
+      "workflow_id": "33476dd9-aad9-453e-8689-494e255d5907",
+      "location_id": "ebyNANPagaK7ycf1pfge",
+      "name": "Appointment Booked on the Calendar",
+      "belongs_to": "workflow",
+      "date_updated": "2026-09-28T14:34:25.445002Z",
+      "status": "draft",
+      "workflow_name": "From Capturing a Lead to the Opportunity and the Follow-Up - Appointment Booked on the Calendar"
+    }
+  ],
+  "metadata": {
+    "createdAt": "2026-09-28T14:34:25.445002Z",
+    "updatedAt": "2026-09-28T14:34:25.445002Z",
+    "settings": {
+      "locationId": "ebyNANPagaK7ycf1pfge",
+      "version": 1,
+      "dataVersion": 7,
+      "allowMultiple": true,
+      "timezone": "account",
+      "removeContactFromLastStep": true,
+      "stopOnResponse": false,
+      "autoMarkAsRead": false,
+      "type": "workflow",
+      "deleted": false,
+      "allowMultipleOpportunity": true,
+      "creationSource": "upwork_gen",
+      "originType": "user"
+    }
+  },
+  "nodes": [
+    {
+      "type": "if_else",
+      "id": "6005b16b-2047-4be3-8d15-1e44c06a0a8a",
+      "name": "Is This a Lead in the Follow-Up?",
+      "attributes": {
+        "currentRecipeType": "CUSTOM",
+        "branches": [
+          {
+            "name": "Yes",
+            "operator": "and",
+            "segments": [
+              {
+                "operator": "and",
+                "conditions": [
+                  {
+                    "conditionType": "contact_detail",
+                    "conditionSubType": "tags",
+                    "conditionOperator": "index-of-true",
+                    "conditionValue": [
+                      "lead-form"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "id": "77be8fb5-acdc-4e42-a7c2-b86e60993e67"
+          }
+        ],
+        "if": true,
+        "operator": "and",
+        "conditionName": "Is This a Lead in the Follow-Up?",
+        "version": 2,
+        "noneBranchName": "None"
+      },
+      "order": 0,
+      "nodeType": "condition-node",
+      "cat": "conditions",
+      "next": [
+        "77be8fb5-acdc-4e42-a7c2-b86e60993e67",
+        "f0a13d64-d889-4292-999d-a707a0191282"
+      ],
+      "nextNames": [
+        "Yes",
+        "None"
+      ]
+    },
+    {
+      "type": "if_else",
+      "id": "77be8fb5-acdc-4e42-a7c2-b86e60993e67",
+      "name": "Yes",
+      "parentKey": "6005b16b-2047-4be3-8d15-1e44c06a0a8a",
+      "parent": "6005b16b-2047-4be3-8d15-1e44c06a0a8a",
+      "nodeType": "branch-yes",
+      "cat": "conditions",
+      "sibling": [
+        "f0a13d64-d889-4292-999d-a707a0191282"
+      ],
+      "attributes": {
+        "if": false,
+        "conditionName": "Condition",
+        "operator": "and",
+        "branches": []
+      },
+      "order": 1,
+      "parentKeyName": "Is This a Lead in the Follow-Up?",
+      "parentName": "Is This a Lead in the Follow-Up?",
+      "siblingNames": [
+        "None"
+      ],
+      "next": "68e00753-f8f6-45da-8dcd-95a4a2bfb9f3",
+      "nextName": "Tag the Contact lead-engaged"
+    },
+    {
+      "type": "add_contact_tag",
+      "id": "68e00753-f8f6-45da-8dcd-95a4a2bfb9f3",
+      "name": "Tag the Contact lead-engaged",
+      "attributes": {
+        "tags": [
+          "lead-engaged"
+        ]
+      },
+      "order": 0,
+      "parentKey": "77be8fb5-acdc-4e42-a7c2-b86e60993e67",
+      "parentKeyName": "Yes",
+      "parent": "77be8fb5-acdc-4e42-a7c2-b86e60993e67",
+      "parentName": "Yes",
+      "next": "659c5f70-2901-47af-bbdd-d9abde02a25f",
+      "nextName": "Move the Opportunity to Call Booked"
+    },
+    {
+      "type": "internal_update_opportunity",
+      "id": "659c5f70-2901-47af-bbdd-d9abde02a25f",
+      "name": "Move the Opportunity to Call Booked",
+      "attributes": {
+        "type": "internal_update_opportunity",
+        "allowBackward": true,
+        "pipelineId": "",
+        "__customInputFields__": [
+          {
+            "filterField": "pipelineStageId",
+            "value": "",
+            "dataType": "SINGLE_OPTIONS",
+            "valueFieldType": "select",
+            "__customInputs__": {}
+          }
+        ],
+        "__customInputs__": {},
+        "DYNAMIC": "Update opportunity to 'Call Booked' stage with status open in 'Lead Pipeline' pipeline",
+        "pipeline_name": "Lead Pipeline",
+        "pipeline_stage_name": "Call Booked"
+      },
+      "order": 1,
+      "parentKey": "68e00753-f8f6-45da-8dcd-95a4a2bfb9f3",
+      "parentKeyName": "Tag the Contact lead-engaged",
+      "parent": "77be8fb5-acdc-4e42-a7c2-b86e60993e67",
+      "parentName": "Yes",
+      "workflowsActionType": "INTERNAL",
+      "next": "74f72e57-430a-45c6-8c2e-1c8cc6a4f56c",
+      "nextName": "Email the Owner the Booking"
+    },
+    {
+      "type": "internal_notification",
+      "id": "74f72e57-430a-45c6-8c2e-1c8cc6a4f56c",
+      "name": "Email the Owner the Booking",
+      "attributes": {
+        "type": "email",
+        "email": {
+          "userType": "assign",
+          "assignedOwners": [
+            "contact_owner"
+          ],
+          "alsoNotifyContactFollowers": false,
+          "alsoNotifyOpportunityFollowers": false,
+          "subject": "Call booked: {{contact.first_name}} {{contact.last_name}}",
+          "html": "{{contact.first_name}} {{contact.last_name}} booked a call from the lead follow-up. Phone {{contact.phone}}, email {{contact.email}}. The follow-up has stopped and the opportunity is at Call Booked."
+        },
+        "sms": null,
+        "userType": "assign",
+        "whatsapp": null,
+        "notification": null
+      },
+      "order": 2,
+      "parentKey": "659c5f70-2901-47af-bbdd-d9abde02a25f",
+      "parentKeyName": "Move the Opportunity to Call Booked",
+      "parent": "77be8fb5-acdc-4e42-a7c2-b86e60993e67",
+      "parentName": "Yes",
+      "next": ""
+    },
+    {
+      "type": "if_else",
+      "id": "f0a13d64-d889-4292-999d-a707a0191282",
+      "name": "None",
+      "parentKey": "6005b16b-2047-4be3-8d15-1e44c06a0a8a",
+      "parent": "6005b16b-2047-4be3-8d15-1e44c06a0a8a",
+      "nodeType": "branch-no",
+      "cat": "conditions",
+      "sibling": [
+        "77be8fb5-acdc-4e42-a7c2-b86e60993e67"
+      ],
+      "attributes": {
+        "else": true
+      },
+      "order": 1,
+      "parentKeyName": "Is This a Lead in the Follow-Up?",
+      "parentName": "Is This a Lead in the Follow-Up?",
+      "siblingNames": [
+        "Yes"
+      ]
+    }
+  ]
+}

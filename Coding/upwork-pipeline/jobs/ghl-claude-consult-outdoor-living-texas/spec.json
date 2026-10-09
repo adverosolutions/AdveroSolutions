@@ -1,0 +1,211 @@
+{
+  "title": "Your Outdoor Living Lead Engine: 60-Minute GHL and Claude Review",
+  "platform": "diagram",
+  "client": {
+    "industry": "design-build outdoor living (patios, outdoor kitchens, pergolas)",
+    "location": "Texas, US"
+  },
+  "sections": [
+    {
+      "key": "review",
+      "label": "1 - WORKFLOW REVIEW (20 MIN)",
+      "color": 0,
+      "note": "Your intake/lead-routing workflow first, then the 8 follow-ups: speed-to-lead, consult reminders, proposal chase, nurture, reactivation, reviews and referrals. Anything that overlaps an older workflow goes on your list."
+    },
+    {
+      "key": "strategy",
+      "label": "2 - CLAUDE STRATEGY (15 MIN)",
+      "color": 1,
+      "note": "Claude already reads and writes your contacts, tags and opportunities through the connector. Timed messages stay in GHL, judgment calls go to Claude, and tags pass the work between them."
+    },
+    {
+      "key": "testing",
+      "label": "3 - TESTING AND REPORTING (15 MIN)",
+      "color": 2,
+      "note": "Your two silent failures: empty merge fields and leads that never enter a workflow. GHL catches the first before the send, and Claude finds the second by the missing tag."
+    },
+    {
+      "key": "next",
+      "label": "4 - NEXT STEPS (10 MIN)",
+      "color": 3,
+      "note": "Your prioritized list of improvements, in writing after the call. The fixes that protect the most leads come first."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "meet",
+      "kind": "data.transform",
+      "label": "1 - We meet for 60 minutes on Zoom or Google Meet, with your GHL on screen",
+      "section": "review"
+    },
+    {
+      "key": "trace",
+      "kind": "data.transform",
+      "label": "2 - We follow one new lead through your intake and lead-routing workflow",
+      "section": "review"
+    },
+    {
+      "key": "followups",
+      "kind": "data.transform",
+      "label": "3 - We check the triggers, branching, timing and routing of your 8 follow-ups",
+      "section": "review"
+    },
+    {
+      "key": "collide",
+      "kind": "data.transform",
+      "label": "4 - Does an older workflow fire on the same trigger? We mark which one stays",
+      "section": "review"
+    },
+    {
+      "key": "native",
+      "kind": "data.transform",
+      "label": "5 - Anything instant or timed stays in GHL, like speed-to-lead and consult reminders",
+      "section": "strategy"
+    },
+    {
+      "key": "decide",
+      "kind": "data.transform",
+      "label": "6 - A webhook sends each reply to Claude, and Claude's tag starts proposal chase or nurture",
+      "section": "strategy"
+    },
+    {
+      "key": "entrytag",
+      "kind": "data.transform",
+      "label": "7 - Each workflow adds an entry tag in its first step, so Claude can see who entered it",
+      "section": "strategy"
+    },
+    {
+      "key": "check",
+      "kind": "data.transform",
+      "label": "8 - An If/Else step before each message checks that its merge fields are filled in",
+      "section": "testing"
+    },
+    {
+      "key": "hold",
+      "kind": "data.transform",
+      "label": "9 - A field is blank? The message waits and you get a task to fill it in",
+      "section": "testing"
+    },
+    {
+      "key": "filter",
+      "kind": "data.transform",
+      "label": "10 - Claude looks only for new leads with no entry tag, not through all ~2,400 contacts",
+      "section": "testing"
+    },
+    {
+      "key": "report",
+      "kind": "data.aggregate",
+      "label": "11 - Claude sends you one report: blank fields, missed leads, anyone stuck in a pipeline",
+      "section": "testing"
+    },
+    {
+      "key": "list",
+      "kind": "data.aggregate",
+      "label": "12 - After the call, you get your prioritized list in writing, leads at risk first",
+      "section": "next"
+    }
+  ],
+  "edges": [
+    {
+      "from": "meet",
+      "to": "trace"
+    },
+    {
+      "from": "trace",
+      "to": "followups"
+    },
+    {
+      "from": "followups",
+      "to": "collide"
+    },
+    {
+      "from": "collide",
+      "to": "native"
+    },
+    {
+      "from": "native",
+      "to": "decide"
+    },
+    {
+      "from": "decide",
+      "to": "entrytag"
+    },
+    {
+      "from": "entrytag",
+      "to": "check"
+    },
+    {
+      "from": "check",
+      "to": "hold"
+    },
+    {
+      "from": "hold",
+      "to": "filter"
+    },
+    {
+      "from": "filter",
+      "to": "report"
+    },
+    {
+      "from": "report",
+      "to": "list"
+    }
+  ],
+  "input_sample": {
+    "contact": {
+      "firstName": "",
+      "lastName": "Whitaker",
+      "phone": "+1 512-555-0187",
+      "email": "rwhitaker.atx@gmail.com",
+      "city": "Round Rock",
+      "state": "TX",
+      "source": "Website form - Outdoor Kitchen"
+    },
+    "customFields": {
+      "project_type": "Outdoor kitchen + pergola",
+      "property_type": "Single family, existing concrete patio"
+    },
+    "tags": [
+      "new-lead",
+      "outdoor-kitchen"
+    ],
+    "opportunity": {
+      "pipeline": "Sales",
+      "stage": "New Lead"
+    },
+    "calendar": {
+      "discovery_call": null,
+      "in_home_consult": null
+    },
+    "created": "2026-09-22 18:41 CT"
+  },
+  "output_sample": {
+    "prioritized_improvements": [
+      {
+        "rank": 1,
+        "area": "Testing and reporting",
+        "fix": "If/Else before every send in the 8 follow-ups: a blank first name holds the message and opens a task",
+        "why": "A blank merge field reaches the homeowner as is"
+      },
+      {
+        "rank": 2,
+        "area": "Claude strategy",
+        "fix": "Each of the 9 workflows adds an entry tag in its first step; Claude lists contacts past intake with none",
+        "why": "A lead that never enters a workflow gets no follow-up and nobody sees it"
+      },
+      {
+        "rank": 3,
+        "area": "Workflow review",
+        "fix": "Older workflow on the same trigger as speed-to-lead: turn it off",
+        "why": "One lead, two first texts"
+      },
+      {
+        "rank": 4,
+        "area": "Claude strategy",
+        "fix": "Claude tags the reply category; the tag starts proposal chase or nurture in GHL",
+        "why": "Judgment stays with Claude, timing stays in GHL"
+      }
+    ],
+    "delivered": "In writing after the 60-minute call"
+  }
+}

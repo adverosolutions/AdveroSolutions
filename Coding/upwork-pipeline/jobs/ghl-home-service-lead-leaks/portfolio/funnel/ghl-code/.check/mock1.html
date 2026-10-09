@@ -1,0 +1,267 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{margin:0;font-family:Arial}.c-section{padding:20px 0}.c-row{max-width:1170px;margin:0 auto;padding:10px 5px}.c-column>.inner{padding:10px 5px}</style>
+</head><body><div class="c-section"><div class="inner"><div class="c-row"><div class="inner"><div class="c-column"><div class="inner"><div class="c-code"><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Cedar & Main Plumbing funnel. Shared by both GHL Custom Code blocks; build.py inlines it. */
+html,body{overflow-x:hidden}
+.c-section:has(.cm),.c-section:has(.cm)>.inner,.c-row:has(.cm),.c-row:has(.cm)>.inner,
+.c-column:has(.cm),.c-column:has(.cm)>.inner,.c-wrapper:has(.cm),.c-code:has(.cm),.c-custom-code:has(.cm){
+  padding:0!important;margin-top:0!important;margin-bottom:0!important;max-width:none!important}
+
+.cm,.cm *{box-sizing:border-box}
+.cm{--ink:#16202e;--ink2:#4d596b;--muted:#5f6b7d;--cu:#b4501c;--cu-hi:#d4733a;--cu-tint:#fbeee5;--mint:#1a9e76;--mint-tint:#e3f5ee;
+  position:relative;width:100vw;left:50%;margin-left:-50vw;background:#eef3f8;color:var(--ink2);
+  font:400 16px/1.55 "Figtree",system-ui,sans-serif;-webkit-font-smoothing:antialiased;text-align:left}
+.cm h1,.cm h2,.cm p{margin:0;padding:0}
+.cm h1,.cm h2{font-family:"Figtree",system-ui,sans-serif;color:var(--ink);font-weight:600;line-height:1.04;letter-spacing:-.035em;text-wrap:balance}
+.cm .ac{color:var(--cu)}
+.cm strong{font-weight:600;color:var(--ink)}
+.cm svg.i{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cm-wrap{max-width:1160px;margin:0 auto}
+.cm-sky{background-color:#eef3f8;background-repeat:no-repeat;background-position:center top;background-size:100% 1200px;background-image:
+  radial-gradient(1300px 640px at 80% -8%,rgba(255,255,255,.95),rgba(255,255,255,0) 62%),
+  radial-gradient(1000px 560px at 6% 26%,rgba(206,226,250,.8),rgba(206,226,250,0) 70%),
+  radial-gradient(900px 420px at 60% 58%,rgba(255,244,236,.55),rgba(255,244,236,0) 70%),
+  linear-gradient(180deg,#c6daf1 0%,#d8e6f5 24%,#e6eef7 46%,#eef3f8 68%,#eef3f8 100%)}
+
+/* logo */
+.cm-logo{display:flex;align-items:center;gap:11px;height:44px}
+.cm-mark{width:36px;height:36px;border-radius:11px;flex:none;display:grid;place-items:center;
+  background:linear-gradient(160deg,var(--cu-hi),var(--cu) 70%);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 6px 12px -6px rgba(180,80,28,.55)}
+.cm-mark svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.cm-wm b{display:block;font-size:21px;font-weight:700;letter-spacing:-.025em;line-height:1;color:var(--ink)}
+.cm-wm span{display:block;font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);margin-top:4px;line-height:1.2;white-space:nowrap}
+
+/* buttons */
+.cm-btn{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:99px;color:#fff!important;text-decoration:none!important;
+  font:600 17px "Figtree",sans-serif;letter-spacing:-.005em;cursor:pointer;background:linear-gradient(180deg,#c9622a,#b4501c);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 14px 24px -12px rgba(180,80,28,.65);transition:transform .25s cubic-bezier(.16,1,.3,1),box-shadow .25s}
+.cm-btn:hover{transform:translateY(-1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 18px 28px -12px rgba(180,80,28,.7)}
+.cm-btn:focus-visible{outline:3px solid rgba(180,80,28,.35);outline-offset:3px}
+
+/* phones */
+.cm-phone{position:absolute;width:290px;height:596px;border-radius:48px;padding:9px;
+  background:linear-gradient(155deg,#ffffff 0%,#eef2f7 55%,#dfe6ef 100%);
+  box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.7),0 0 0 1px rgba(160,178,204,.35),0 50px 60px -34px rgba(38,72,128,.42),0 20px 30px -20px rgba(38,72,128,.28)}
+.cm-screen{position:relative;width:100%;height:100%;border-radius:39px;overflow:hidden;background:#f6f8fb;display:flex;flex-direction:column;color:var(--ink)}
+.cm-island{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:78px;height:22px;border-radius:99px;background:#1b2330;z-index:3}
+.cm-sbar{height:44px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:4px 24px 0 28px;font-size:13.5px;font-weight:600;position:relative;z-index:2}
+.cm-sbar .ic{display:flex;gap:5px;align-items:center}
+.cm-sbar svg{height:11px;fill:var(--ink)}
+
+/* footer */
+.cm-foot{border-top:1px solid rgba(150,170,200,.35);padding:32px 40px 40px;text-align:center;font-size:13.5px;line-height:1.7;color:var(--muted)}
+</style>
+<style>
+/* hero */
+.cm-hero{padding:28px 40px 72px}
+.cm-herorow{display:flex;margin-top:48px}
+.cm-herotext{flex:0 0 55%;padding:192px 56px 0 0}
+.cm-h1{font-size:64px}
+.cm .cm-sub{margin-top:24px;font-size:20px;line-height:1.5;font-weight:500;max-width:500px}
+.cm-panel{flex:0 0 45%;position:relative;padding:34px 34px 28px;border-radius:28px;
+  background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(248,251,255,.82));border:1px solid rgba(255,255,255,.95);
+  box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.55),0 40px 70px -30px rgba(38,72,128,.30),0 16px 30px -18px rgba(38,72,128,.22);
+  -webkit-backdrop-filter:blur(22px) saturate(1.3);backdrop-filter:blur(22px) saturate(1.3)}
+.cm-panel::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;padding:1.5px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,0) 28%,rgba(255,255,255,0) 72%,rgba(200,218,242,.45) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.cm-panel::after{content:"";position:absolute;left:10%;right:10%;bottom:-40px;height:30px;border-radius:50%;pointer-events:none;z-index:-1;
+  background:radial-gradient(closest-side,rgba(52,86,140,.20),rgba(52,86,140,0));filter:blur(6px)}
+
+/* form */
+.cm-form{display:flex;flex-direction:column;gap:14px;margin:0}
+.cm-form label{display:block;font-size:14px;font-weight:600;color:var(--ink);margin:0 0 6px;line-height:1.3}
+.cm-form input,.cm-form select{display:block;width:100%;height:48px;padding:0 14px;margin:0;font:400 16px "Figtree",sans-serif;color:var(--ink);
+  background:#fff;border:1px solid #d5deea;border-radius:12px;box-shadow:inset 0 1px 2px rgba(38,72,128,.05);outline:none;transition:border-color .2s,box-shadow .2s}
+.cm-form input::placeholder{color:#8792a3}
+.cm-form input:focus,.cm-form select:focus{border-color:var(--cu);box-shadow:0 0 0 4px rgba(180,80,28,.14)}
+.cm-form select{appearance:none;-webkit-appearance:none;color:#8792a3;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%235f6b7d' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center}
+.cm-form .cm-btn{margin-top:8px;height:56px;width:100%}
+.cm .cm-consent{font-size:12px;line-height:1.5;color:var(--muted);text-align:center;margin-top:2px}
+
+/* trust bar */
+.cm-trust{display:flex;margin-top:72px;padding:6px;border-radius:24px;
+  background:linear-gradient(180deg,rgba(255,255,255,.78),rgba(255,255,255,.58));border:1px solid rgba(255,255,255,.9);
+  box-shadow:inset 0 1px 0 #fff,0 22px 40px -28px rgba(38,72,128,.30);-webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2)}
+.cm-trust>div{flex:1 1 0;padding:22px 28px;font-size:15.5px;line-height:1.5}
+.cm-trust>div+div{border-left:1px solid rgba(150,170,200,.30)}
+.cm-trust strong{display:block;font-size:17px;letter-spacing:-.01em;margin-bottom:4px}
+
+/* three steps */
+.cm-steps{padding:104px 40px 64px}
+.cm-h2{font-size:48px}
+.cm-steprow{display:flex;margin-top:56px}
+.cm-steprow>div{flex:1 1 0;padding-right:48px}
+.cm-steprow>div:last-child{padding-right:0}
+.cm-tile{width:48px;height:48px;margin:4px 0 0 8px;border-radius:15px;display:grid;place-items:center;color:var(--cu);
+  background:linear-gradient(180deg,#fff,#f6f8fc);border:1px solid rgba(255,255,255,.95);
+  box-shadow:inset 0 1px 0 #fff,0 12px 18px -10px rgba(38,72,128,.38),0 2px 5px -1px rgba(38,72,128,.08)}
+.cm-tile svg{width:22px;height:22px}
+.cm-steprow p{margin-top:30px;padding-left:8px;font-size:16.5px;line-height:1.55}
+.cm-steprow strong{display:block;font-size:20px;letter-spacing:-.015em;margin-bottom:6px}
+
+/* phone + closing CTA */
+.cm-close{padding:40px 40px 64px;background:
+  radial-gradient(760px 470px at 32% 50%,rgba(255,255,255,.95),rgba(255,255,255,0) 70%),
+  radial-gradient(700px 440px at 80% 50%,rgba(214,230,250,.75),rgba(214,230,250,0) 70%),
+  radial-gradient(600px 300px at 58% 68%,rgba(255,240,229,.5),rgba(255,240,229,0) 70%),#eef3f8}
+.cm-closerow{display:flex}
+.cm-phonecol{flex:0 0 56%;padding-right:24px;display:flex;justify-content:center}
+.cm-ctacol{flex:1 1 0;min-width:0;padding:228px 0 0 16px}
+.cm .cm-closep{margin-top:20px;font-size:19px;line-height:1.55;max-width:460px}
+.cm-ctacol .cm-btn{margin-top:36px;height:58px;padding:0 36px;font-size:18px}
+
+.cm-thread{width:540px;height:700px;position:relative;flex:none;zoom:1.1}
+.cm-thread .cm-phone{left:196px;top:10px}
+.cm-th{flex:none;display:flex;flex-direction:column;align-items:center;padding:4px 16px 10px;border-bottom:1px solid #e7ecf3;background:rgba(255,255,255,.7)}
+.cm-th .cm-mark{width:40px;height:40px;border-radius:13px}
+.cm-th .cm-mark svg{width:23px;height:23px}
+.cm-th b{font-size:13px;font-weight:700;margin-top:6px;letter-spacing:-.01em}
+.cm-th small{font-size:10.5px;color:var(--muted);font-weight:500;margin-top:1px}
+.cm-tb{flex:1;padding:12px 12px 0;display:flex;flex-direction:column;gap:7px}
+.cm-stamp{align-self:center;font-size:10px;font-weight:600;color:var(--muted);margin:4px 0 1px;letter-spacing:.01em}
+.cm-bb{max-width:84%;padding:8px 12px 9px;font-size:12.6px;line-height:1.37;border-radius:18px}
+.cm-bb.in{align-self:flex-start;background:#fff;border:1px solid #e3e9f1;border-bottom-left-radius:6px;box-shadow:0 1px 2px rgba(38,72,128,.05)}
+.cm-bb.out{align-self:flex-end;color:#fff;background:linear-gradient(180deg,#c45e27,var(--cu));border-bottom-right-radius:6px}
+.cm-dlv{align-self:flex-end;font-size:9.5px;color:var(--muted);font-weight:600;margin-top:-3px;margin-right:4px}
+.cm-comp{flex:none;margin:8px 10px 22px;height:36px;border-radius:99px;border:1px solid #dfe5ee;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 4px 0 14px;font-size:12px;color:#98a2b3}
+.cm-comp i{width:28px;height:28px;border-radius:50%;background:#e7ebf1;display:grid;place-items:center}
+.cm-comp i svg{width:13px;height:13px;stroke:#98a2b3;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.cm-float{position:absolute;display:flex;gap:11px;align-items:center;padding:12px 16px 12px 12px;border-radius:20px;
+  background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(248,251,255,.9));border:1px solid rgba(255,255,255,.95);
+  box-shadow:inset 0 1px 0 #fff,0 26px 36px -20px rgba(38,72,128,.40),0 8px 16px -10px rgba(38,72,128,.20)}
+.cm-float .fi{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;flex:none}
+.cm-float .fi svg{width:19px;height:19px}
+.cm-float b{display:block;font-size:13.5px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;color:var(--ink)}
+.cm-float small{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-top:1px;white-space:nowrap}
+.cm-f1{left:6px;top:150px}
+.cm-f1 .fi{background:var(--cu-tint);color:var(--cu)}
+.cm-f2{left:40px;top:430px}
+.cm-f2 .fi{background:var(--mint-tint);color:var(--mint)}
+
+@media (max-width:600px){
+  .cm-hero{padding:20px 16px 48px}
+  .cm-herorow,.cm-trust,.cm-steprow,.cm-closerow{flex-direction:column}
+  .cm-herorow{margin-top:32px}
+  .cm-herotext{flex:1 1 auto;padding:0 0 28px}
+  .cm-h1{font-size:40px}
+  .cm .cm-sub{margin-top:16px;font-size:17px}
+  .cm-panel{flex:1 1 auto;padding:24px 20px 20px;border-radius:24px}
+  .cm-panel::after{display:none}
+  .cm-trust{margin-top:28px}
+  .cm-trust>div{padding:18px 20px}
+  .cm-trust>div+div{border-left:0;border-top:1px solid rgba(150,170,200,.30)}
+  .cm-steps{padding:64px 16px 56px}
+  .cm-h2{font-size:34px}
+  .cm-steprow{margin-top:32px}
+  .cm-steprow>div{padding:0 0 36px}
+  .cm-steprow>div:last-child{padding:0}
+  .cm-steprow strong{font-size:19px}
+  .cm-close{padding:48px 16px 64px}
+  .cm-phonecol{flex:1 1 auto;padding:0 0 12px}
+  .cm-thread{zoom:.64}
+  .cm-ctacol{padding:0}
+  .cm-close .cm-h2{font-size:32px}
+  .cm .cm-closep{font-size:17px}
+  .cm-ctacol .cm-btn{display:flex;width:100%;margin-top:28px}
+  .cm-foot{padding:28px 16px 32px}
+}
+</style>
+
+<div class="cm">
+  <section class="cm-hero cm-sky">
+    <div class="cm-wrap">
+      <div class="cm-logo">
+        <div class="cm-mark"><svg viewBox="0 0 24 24"><path d="M12 3.2c3.4 4.1 5.8 7.4 5.8 10.4a5.8 5.8 0 0 1-11.6 0c0-3 2.4-6.3 5.8-10.4z"/><path d="M9.3 14.2a2.8 2.8 0 0 0 2.6 2.6"/></svg></div>
+        <div class="cm-wm"><b>Cedar &amp; Main</b><span>Plumbing</span></div>
+      </div>
+
+      <div class="cm-herorow">
+        <div class="cm-herotext">
+          <h1 class="cm-h1">Drain backed up?<br><span class="ac">We'll text your price.</span></h1>
+          <p class="cm-sub">Clogged drains, sewer backups and burst pipes across Fort Worth. Send the form and we text you back in seconds.</p>
+        </div>
+        <div class="cm-panel" id="cm-quote">
+          <form class="cm-form" onsubmit="return false">
+            <div><label for="cm-f1">First Name</label><input id="cm-f1" placeholder="First name" autocomplete="off"></div>
+            <div><label for="cm-f2">Phone</label><input id="cm-f2" placeholder="Mobile number" autocomplete="off"></div>
+            <div><label for="cm-f3">Email</label><input id="cm-f3" placeholder="Email address" autocomplete="off"></div>
+            <div><label for="cm-f4">Service Needed</label><select id="cm-f4"><option>Choose a service</option><option>Clogged drain</option><option>Sewer backup</option><option>Burst or leaking pipe</option><option>Water heater</option><option>Something else</option></select></div>
+            <div><label for="cm-f5">ZIP code</label><input id="cm-f5" placeholder="76107" autocomplete="off"></div>
+            <button type="button" class="cm-btn">Get my quote</button>
+            <p class="cm-consent">By sending this you agree to get texts from Cedar &amp; Main Plumbing about your request. Msg and data rates may apply. Reply STOP to opt out.</p>
+          </form>
+        </div>
+      </div>
+
+      <div class="cm-trust">
+        <div><strong>Price before we start</strong>You approve the full price before any work begins.</div>
+        <div><strong>Same-day slots</strong>Pick a time today, or any day that works for you.</div>
+        <div><strong>Text us anytime</strong>Questions before or after the visit? Reply to our text.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cm-steps">
+    <div class="cm-wrap">
+      <h2 class="cm-h2">Three steps. No phone tag.</h2>
+      <div class="cm-steprow">
+        <div>
+          <div class="cm-tile"><svg class="i" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+          <p><strong>Tell us what's wrong</strong>Pick the problem, add your ZIP code and send. It takes about 30 seconds.</p>
+        </div>
+        <div>
+          <div class="cm-tile"><svg class="i" viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/><path d="M9.3 8.2h5.4M9.3 11.4h3.6"/></svg></div>
+          <p><strong>Get a price by text in minutes</strong>A real person on our team prices the job and texts it to you. No callback to wait for.</p>
+        </div>
+        <div>
+          <div class="cm-tile"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M8 2.8v3.4M16 2.8v3.4M3.5 9.5h17"/><path d="m9.3 15 2 2 3.7-3.8"/></svg></div>
+          <p><strong>Pick your time</strong>Reply with the slot that suits you. Your plumber texts when they're on the way.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cm-close">
+    <div class="cm-wrap cm-closerow">
+      <div class="cm-phonecol">
+        <div class="cm-thread" role="img" aria-label="Text thread: Cedar and Main confirms the request in seconds, texts a price, and books a 3 to 5 PM visit">
+          <div class="cm-phone"><div class="cm-screen">
+            <div class="cm-island"></div>
+            <div class="cm-sbar"><span>10:16</span><span class="ic">
+              <svg viewBox="0 0 18 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="6" rx="1"/><rect x="10" y="2.5" width="3" height="8.5" rx="1"/><rect x="15" y="0" width="3" height="11" rx="1"/></svg>
+              <svg viewBox="0 0 25 11"><rect x=".5" y=".5" width="21" height="10" rx="3" fill="none" stroke="#16202e" stroke-opacity=".45"/><rect x="2" y="2" width="15" height="7" rx="1.6"/><rect x="22.6" y="3.6" width="1.8" height="3.8" rx=".9" fill-opacity=".45"/></svg>
+            </span></div>
+            <div class="cm-th">
+              <div class="cm-mark"><svg viewBox="0 0 24 24"><path d="M12 3.2c3.4 4.1 5.8 7.4 5.8 10.4a5.8 5.8 0 0 1-11.6 0c0-3 2.4-6.3 5.8-10.4z"/><path d="M9.3 14.2a2.8 2.8 0 0 0 2.6 2.6"/></svg></div>
+              <b>Cedar &amp; Main Plumbing</b><small>Text message</small>
+            </div>
+            <div class="cm-tb">
+              <div class="cm-stamp">Today 10:12 AM</div>
+              <div class="cm-bb in">Hi Dana, it's Cedar &amp; Main Plumbing. We got your clogged drain request for 76107. A plumber is pricing it now and will text you in a few minutes.</div>
+              <div class="cm-stamp">10:16 AM</div>
+              <div class="cm-bb in">Your drain visit is $89, and the plumber confirms the full price before any work starts. Open today: 1 to 3 or 3 to 5. Which works?</div>
+              <div class="cm-bb out">3 to 5 please</div>
+              <div class="cm-dlv">Delivered</div>
+              <div class="cm-bb in">You're booked for 3 to 5. Mike will text when he's on the way.</div>
+            </div>
+            <div class="cm-comp"><span>Text message</span><i><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></i></div>
+          </div></div>
+          <div class="cm-float cm-f1"><div class="fi"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/></svg></div>
+            <div><b>First text sent</b><small>4 seconds after the form</small></div></div>
+          <div class="cm-float cm-f2"><div class="fi"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M8 2.8v3.4M16 2.8v3.4M3.5 9.5h17"/><path d="m9.3 15 2 2 3.7-3.8"/></svg></div>
+            <div><b>Booked</b><small>Today, 3 to 5 PM</small></div></div>
+        </div>
+      </div>
+      <div class="cm-ctacol">
+        <h2 class="cm-h2">Your phone buzzes before you put it down.</h2>
+        <p class="cm-closep">The first text lands seconds after you send the form. Your price follows a few minutes later, and you book by replying.</p>
+        <a class="cm-btn" href="#cm-quote">Get my quote</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="cm-foot">Cedar &amp; Main Plumbing, Fort Worth, TX</footer>
+</div>
+</div></div></div></div></div></div></div></body></html>

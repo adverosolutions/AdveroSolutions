@@ -1,0 +1,329 @@
+{
+  "title": "Your Claude Agent Layer: CRM, Database and Slack From One Webhook",
+  "platform": "n8n",
+  "client": {
+    "industry": "business systems",
+    "location": "Delaware, US"
+  },
+  "overview": {
+    "how_it_works": [
+      "The first piece of your automation layer: one webhook in, one Claude agent, four tools.",
+      "The agent finds the contact in HubSpot, reads their open orders and invoices from your database, updates HubSpot and hands anything it should not decide to Slack.",
+      "Whatever sent the request gets the answer back on the same webhook call.",
+      "Every run is logged; any failed step alerts Slack with the run link.",
+      "Room to add next: the same tools opened to Claude Code as an MCP server, so it can call each tool directly."
+    ],
+    "setup": [
+      "Connect Anthropic, HubSpot, Supabase, Slack and Postgres, then fill in 0 - Config.",
+      "Point your inbox, web form or internal tools at the step 1 URL.",
+      "Set this workflow as its own error workflow so step 5 catches failures.",
+      "Your part 9: tested on your real past requests, then a written doc of every tool and prompt."
+    ],
+    "need_from_you": [
+      "Which CRM, database and chat tool you run today, if not HubSpot, Supabase and Slack.",
+      "The credit or discount limit the agent may approve on its own.",
+      "Twenty real past customer and team requests to test against."
+    ]
+  },
+  "config": {
+    "business_name": "PASTE-YOUR-BUSINESS-NAME",
+    "approval_limit_usd": "PASTE-YOUR-APPROVAL-LIMIT",
+    "supabase_url": "PASTE-YOUR-SUPABASE-PROJECT-URL",
+    "slack_team_channel": "PASTE-YOUR-SLACK-CHANNEL"
+  },
+  "sections": [
+    {
+      "key": "agent",
+      "label": "1 - CLAUDE AGENT AND ITS CRM, DATABASE AND SLACK TOOLS",
+      "color": 0,
+      "note": "Your parts 1 to 4 and 6. A customer or team request, or a Claude Code task, hits the webhook. The Claude agent finds the contact in HubSpot, reads their records, updates HubSpot and hands off to Slack."
+    },
+    {
+      "key": "systems",
+      "label": "2 - ANSWER SENT BACK ON THE WEBHOOK",
+      "color": 1,
+      "note": "Your part 5. Whatever called the webhook gets the reply draft and a list of what the agent did."
+    },
+    {
+      "key": "monitor",
+      "label": "3 - ERROR HANDLING, MONITORING AND TESTING",
+      "color": 2,
+      "note": "Your parts 7 to 9. Every run is logged with the tools the agent called, and any failed step posts to Slack with a link to retry it."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 - New Request Arrives by Webhook",
+      "section": "agent",
+      "params": {
+        "path": "requests",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "key": "hook_cc",
+      "kind": "trigger.webhook",
+      "label": "1b - Claude Code Calls the Same Agent by Webhook",
+      "section": "agent",
+      "params": {
+        "path": "claude-code",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      },
+      "notes": "Claude Code sends a task here and gets the same four tools and the same log."
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "2 - Claude Agent Reads It and Picks Its Tools",
+      "section": "agent",
+      "notes": "An agent, not a fixed script: an order question and a billing dispute take different tools.",
+      "params": {
+        "system_message": "You are the operations agent for a business. Requests come to you from customers (email or the web form) and from the team (internal tools or Claude Code). Your job: understand what is needed, check the facts with your tools, keep HubSpot current, hand anything you must not decide to the team in Slack, and write the reply.\n\nAlways in this order: 1) HubSpot - Find the Contact, by the sender's email. 2) Database - Look Up Their Orders and Invoices, by the same email. Answer order and invoice questions only from what the database returns: order status, scheduled date, invoice number, amount, due date and paid date. Never guess a date or promise one the records do not show. 3) HubSpot - Update the Contact with the topic and whether an issue is still open. 4) Slack - Hand It to the Team only when a person must decide: any credit or discount above the approval limit you are given, a billing dispute, a legal threat, a request to cancel an account, an upset customer, or a request you cannot match to any record.\n\ntopic is one of: order_status, invoice_question, billing_dispute, account_change, service_request, sales_inquiry, other. If the email matches no HubSpot contact, still look up records; if both come back empty, ask for the order or invoice number in the reply and set needs_person to false. If the request is empty or unreadable, set topic to other and needs_person to true.\n\nThe reply is 2 to 4 short sentences in a warm, plain voice, signed with the business name you are given. When a person must decide, the reply says the team is checking and will answer today; it never promises a credit.",
+        "prompt": "=Business: {{ $('0 - Config: Your Settings').item.json.business_name }}\nCredit or discount limit you may approve alone: ${{ $('0 - Config: Your Settings').item.json.approval_limit_usd }}\n\nChannel: {{ $json.body.channel }}\nFrom: {{ $json.body.from_name }} <{{ $json.body.from_email }}>\nCompany: {{ $json.body.company }}\nSubject: {{ $json.body.subject }}\nMessage: {{ $json.body.message }}\nReceived: {{ $json.body.received_at }}\n\nUse your tools, then return topic, order_number, invoice_number, hubspot_contact_id, tools_called, needs_person, slack_posted and reply_draft."
+      }
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "app": "anthropic",
+      "label": "Claude - Runs the Operations Agent",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "t_find",
+      "kind": "ai.tool",
+      "app": "http",
+      "label": "HubSpot - Find the Contact",
+      "parent": "agent",
+      "port": "ai_tool",
+      "notes": "Reads your CRM first, so the agent knows who it is talking to.",
+      "params": {
+        "toolDescription": "Find the contact in HubSpot by email. Call first, once per request. Returns the contact id, name, company, lifecycle stage, last request topic and whether an issue is open.",
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"filterGroups\": [ {\"filters\": [ {\"propertyName\": \"email\", \"operator\": \"EQ\", \"value\": \"{email}\"} ] } ], \"properties\": [\"email\", \"firstname\", \"lastname\", \"company\", \"lifecyclestage\", \"last_request_topic\", \"open_issue\"], \"limit\": 1}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "email",
+              "description": "The sender's email exactly as it arrived",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "t_orders",
+      "kind": "ai.tool",
+      "app": "http",
+      "label": "Database - Look Up Their Orders and Invoices",
+      "parent": "agent",
+      "port": "ai_tool",
+      "notes": "The answer comes from your data, never from the model's guess.",
+      "params": {
+        "toolDescription": "Look up the contact's five most recent orders and their invoices in the database, by email. Returns order number, status, scheduled date, invoice number, amount, due date and paid date.",
+        "method": "GET",
+        "url": "={{ $('0 - Config: Your Settings').item.json.supabase_url }}/rest/v1/orders?customer_email=eq.{email}&select=order_number,status,scheduled_date,invoice_number,amount,due_date,paid_at&order=created_at.desc&limit=5",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "email",
+              "description": "The sender's email, lowercase",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "t_update",
+      "kind": "ai.tool",
+      "app": "http",
+      "label": "HubSpot - Update the Contact",
+      "parent": "agent",
+      "port": "ai_tool",
+      "params": {
+        "toolDescription": "Update the HubSpot contact after you know the topic. Call once, only when Find the Contact returned a contact id.",
+        "method": "PATCH",
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/{contact_id}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"properties\": {\"last_request_topic\": \"{topic}\", \"open_issue\": \"{open_issue}\", \"last_order_number\": \"{order_number}\"}}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "contact_id",
+              "description": "The HubSpot contact id from Find the Contact",
+              "type": "string"
+            },
+            {
+              "name": "topic",
+              "description": "The topic you chose for this request",
+              "type": "string"
+            },
+            {
+              "name": "open_issue",
+              "description": "true when the team still has to act, else false",
+              "type": "string"
+            },
+            {
+              "name": "order_number",
+              "description": "The order the request is about, or an empty string",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "t_slack",
+      "kind": "ai.tool",
+      "app": "http",
+      "label": "Slack - Hand It to the Team",
+      "parent": "agent",
+      "port": "ai_tool",
+      "notes": "Credits over your limit, disputes and anything touchy go to a person, with the facts attached.",
+      "params": {
+        "toolDescription": "Post a hand-off to the team's Slack channel when a person must decide. Call at most once per request, last.",
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"channel\": \"{{ $('0 - Config: Your Settings').item.json.slack_team_channel }}\", \"text\": \"{handoff}\"}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "handoff",
+              "description": "Contact name, company and email, order and invoice numbers with status, what they want, why a person must decide, and the reply draft",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Claude's Answer Form - Topic, Actions and Reply Draft",
+      "parent": "agent",
+      "port": "ai_outputParser",
+      "params": {
+        "schema": {
+          "topic": "invoice_question",
+          "order_number": "4471",
+          "invoice_number": "INV-2291",
+          "hubspot_contact_id": "90412733",
+          "tools_called": [
+            "HubSpot - Find the Contact",
+            "Database - Look Up Their Orders and Invoices",
+            "HubSpot - Update the Contact"
+          ],
+          "needs_person": false,
+          "slack_posted": false,
+          "reply_draft": "Hi Marcus, order 4471 is scheduled for delivery on Tuesday, Sept 29. Invoice INV-2291 for $3,480.00 is due Oct 9 and shows as open, so nothing is late. I have sent a fresh copy to your AP inbox. Thanks, Harbor Line Services"
+        }
+      }
+    },
+    {
+      "key": "reply",
+      "kind": "net.respond",
+      "label": "3 - Send the Answer Back on the Webhook",
+      "section": "systems",
+      "notes": "The caller gets the reply draft and what the agent did, in one response."
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "app": "postgres",
+      "op": "insert",
+      "label": "4 - Log the Run: Topic, Tools Called, Hand-Off",
+      "section": "monitor",
+      "notes": "The run log is what we read each week to tune the prompt and catch drift."
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "app": "n8n",
+      "op": "error_trigger",
+      "label": "5 - If Any Step Fails",
+      "section": "monitor"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "post",
+      "label": "6 - Slack: Alert With the Failed Step and Run Link",
+      "section": "monitor",
+      "params": {
+        "channel": "#automation-alerts",
+        "text": ":rotating_light: Operations agent stopped at *{{ $json.execution.lastNodeExecuted }}*\n{{ $json.execution.error.message }}\nThe original request is kept in this run. Retry it here: {{ $json.execution.url }}"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "agent"
+    },
+    {
+      "from": "hook_cc",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "reply"
+    },
+    {
+      "from": "reply",
+      "to": "log"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "body": {
+      "channel": "email",
+      "from_name": "Marcus Reyes",
+      "from_email": "marcus.reyes@brightlinefacilities.com",
+      "company": "Brightline Facilities",
+      "subject": "Order 4471 and invoice INV-2291",
+      "message": "Hi, can you confirm when order 4471 is scheduled? Our AP team also cannot find invoice INV-2291 and wants to know the due date before they close the month.",
+      "received_at": "2026-09-25T14:12:00Z"
+    }
+  },
+  "output_sample": {
+    "run_id": "8841",
+    "from_email": "marcus.reyes@brightlinefacilities.com",
+    "topic": "invoice_question",
+    "order_number": "4471",
+    "order_status": "scheduled, delivery 2026-09-29",
+    "invoice_number": "INV-2291",
+    "invoice_status": "open, $3,480.00 due 2026-10-09",
+    "hubspot_contact_id": "90412733",
+    "hubspot_updated": "last_request_topic=invoice_question, open_issue=false",
+    "tools_called": 3,
+    "needs_person": false,
+    "slack_posted": false,
+    "reply_returned": true,
+    "logged_at": "2026-09-25T14:12:19Z"
+  }
+}

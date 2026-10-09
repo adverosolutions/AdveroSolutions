@@ -1,0 +1,8 @@
+- Here's a working prototype of your outbound system for qualified calls.
+- Only commercial cleaning owners, every email verified before anything sends.
+- By our estimate, five lookalike domains and fifteen inboxes to start.
+- Every first line is about the owner's own cleaning company.
+- Two first emails tested weekly, the winner judged on booked calls.
+- Replies handled same day; only qualified owners reach your calendar.
+- Personalized outbound like this grew a software consultancy's qualified leads 35%.
+- Worth a quick 15 minute call? Reply here and I'll send times.

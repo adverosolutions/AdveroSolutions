@@ -1,0 +1,8 @@
+- This is your 2-step funnel, cloned exactly from ClickFunnels into your GHL.
+- Five parts in your post, five sections on this chart, same order
+- Both pages rebuilt, colors, fonts and spacing checked side by side
+- Fonts are the usual catch; I load yours so it's pixel-perfect
+- Opt-in form recreated and embedded, every lead lands in your GHL contacts
+- For a lender, $5M in loan applications in 30 days on $1,500
+- Every button and link checked, then a test opt-in end to end
+- Share the funnel link and GHL access, quick 15-minute call to start

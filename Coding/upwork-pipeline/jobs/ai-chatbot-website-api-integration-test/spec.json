@@ -1,0 +1,302 @@
+{
+  "title": "Your Chatbot Test: Every Staging Lead Checked, Logged and Answered",
+  "platform": "n8n",
+  "client": {
+    "industry": "team rolling out its own AI chatbot to client websites",
+    "location": "not stated in the post"
+  },
+  "overview": {
+    "how_it_works": [
+      "Your chatbot snippet on the staging site posts each lead to one webhook",
+      "Name, email, phone and message are checked the moment they arrive",
+      "Every capture lands in a test sheet, passed or not, with what was missing",
+      "The chatbot gets an answer back: received, or which field it dropped",
+      "Next phase: the same lead becomes a HubSpot contact and a Google Calendar booking"
+    ],
+    "setup": [
+      "Paste the webhook URL into your code snippet's submit or lead callback",
+      "Share a test sheet with columns for the four fields plus Passed and Missing",
+      "Run five test chats on staging: one complete, one per missing field",
+      "Point the error trigger's alert at the inbox you watch during the test"
+    ],
+    "need_from_you": [
+      "Your chatbot's code snippet and the staging site login",
+      "What the snippet sends today (one sample payload or its docs)",
+      "The inbox that should get missing-field flags",
+      "For the next phase: your CRM login (shown here in HubSpot) and the Google Calendar to book into"
+    ]
+  },
+  "config": {
+    "test_sheet_id": "PASTE-YOUR-TEST-SHEET-ID",
+    "flag_inbox": "PASTE-YOUR-TEST-INBOX",
+    "booking_calendar": "PASTE-YOUR-GOOGLE-CALENDAR-ID",
+    "call_length_minutes": "PASTE-YOUR-CALL-LENGTH"
+  },
+  "sections": [
+    {
+      "key": "site",
+      "label": "1 - YOUR STAGING SITE AND CODE SNIPPET",
+      "color": 0,
+      "note": "Your parts 1 and 2: the chatbot goes on staging, and its snippet posts every lead to this one webhook. If it posts through your own backend instead, that backend's webhook points here."
+    },
+    {
+      "key": "collect",
+      "label": "2 - TEST THE LEAD AND CONTACT COLLECTION",
+      "color": 0,
+      "note": "Your part 3: each lead is checked for name, email, phone and message, whatever the snippet calls those fields."
+    },
+    {
+      "key": "hook",
+      "label": "3 - THE WEBHOOK: LOG EVERY CAPTURE",
+      "color": 0,
+      "note": "Your part 4: every capture goes into the test sheet, good or bad, so you can see the test yourself."
+    },
+    {
+      "key": "verify",
+      "label": "4 - VERIFY IT PASSED CORRECTLY, FLAG WHAT DID NOT",
+      "color": 0,
+      "note": "Your parts 5 and 6: a complete lead gets a received reply, a broken one gets flagged with the exact field so troubleshooting starts there."
+    },
+    {
+      "key": "next",
+      "label": "5 - NEXT PHASE: YOUR CRM (SHOWN IN HUBSPOT) AND GOOGLE CALENDAR",
+      "color": 0,
+      "note": "The onboarding work you named: a verified lead becomes a CRM contact and a booked call. HubSpot stands in for your CRM here. Switched on after the test passes."
+    },
+    {
+      "key": "errors",
+      "label": "6 - IF A RUN BREAKS",
+      "color": 0,
+      "note": "Any failed step emails you the step, the error and a link to the run, so no test chat disappears without a trace."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 - Chatbot Snippet on Staging Posts the Lead Here",
+      "section": "site",
+      "notes": "The one URL your code snippet needs. Nothing else on the site changes.",
+      "params": {
+        "path": "staging-chatbot-leads",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "key": "check",
+      "kind": "data.code",
+      "label": "2 - Check Name, Email, Phone and Message Arrived",
+      "section": "collect",
+      "notes": "If the snippet names a field differently, only this map changes.",
+      "params": {
+        "jsCode": "// 2 - Check Name, Email, Phone and Message Arrived\n// The chatbot snippet posts one JSON body per lead. Field names are mapped here once,\n// so if the snippet sends fullName or tel instead, only this map changes.\nconst MAP = { name: ['name', 'fullName', 'full_name'], email: ['email', 'emailAddress'], phone: ['phone', 'tel', 'phoneNumber'], message: ['message', 'msg', 'question'] };\nconst REQUIRED = ['name', 'email', 'phone', 'message'];\n\nreturn $input.all().map(({ json }) => {\n  const b = json.body || {};\n  const pick = (keys) => { for (const k of keys) { const v = b[k]; if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim(); } return ''; };\n  const lead = {};\n  for (const f of REQUIRED) lead[f] = pick(MAP[f]);\n  lead.email = lead.email.toLowerCase();\n\n  const missing = REQUIRED.filter((f) => !lead[f]);\n  const problems = [...missing];\n  if (lead.email && !/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(lead.email)) problems.push('email format');\n  if (lead.phone && lead.phone.replace(/[^0-9]/g, '').length < 7) problems.push('phone too short');\n\n  return { json: {\n    ...lead,\n    session_id: b.session_id || '',\n    page_url: b.page_url || json.headers?.referer || '',\n    preferred_time: b.preferred_time || '',\n    captured_at: b.captured_at || new Date().toISOString(),\n    received_at: new Date().toISOString(),\n    passed: problems.length === 0,\n    missing: problems.join(', '),\n    raw_keys: Object.keys(b).join(', '),\n  } };\n});"
+      }
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "append",
+      "label": "3 - Log Every Capture to the Test Sheet",
+      "section": "hook",
+      "notes": "Your proof: one row per test chat, with Passed and Missing columns.",
+      "params": {
+        "sheet": "Chatbot Test Captures",
+        "columns": [
+          "received_at",
+          "session_id",
+          "page_url",
+          "name",
+          "email",
+          "phone",
+          "message",
+          "passed",
+          "missing",
+          "raw_keys"
+        ]
+      }
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "4 - All Four Fields There and Valid?",
+      "section": "verify",
+      "params": {
+        "condition": {
+          "left": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.passed }}",
+          "op": "true"
+        }
+      }
+    },
+    {
+      "key": "ok",
+      "kind": "net.respond",
+      "label": "5 - Tell the Chatbot: Lead Received",
+      "section": "verify",
+      "params": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"received\", \"session_id\": $('2 - Check Name, Email, Phone and Message Arrived').item.json.session_id } }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "key": "flag",
+      "kind": "app.action",
+      "app": "gmail",
+      "op": "send",
+      "label": "5b - Flag the Missing Field to Your Test Inbox",
+      "section": "verify",
+      "notes": "Troubleshooting starts at the field that broke, not a guess.",
+      "params": {
+        "sendTo": "={{ $('0 - Config: Your Settings').item.json.flag_inbox }}",
+        "subject": "=Chatbot test: lead missing {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.missing }}",
+        "message": "=Session {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.session_id }} on {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.page_url }} arrived without: {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.missing }}.\nKeys the snippet sent: {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.raw_keys }}\nName: {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.name }} | Email: {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.email }} | Phone: {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.phone }}"
+      }
+    },
+    {
+      "key": "bad",
+      "kind": "net.respond",
+      "label": "5c - Tell the Chatbot Which Field Was Missing",
+      "section": "verify",
+      "params": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"incomplete\", \"missing\": $('2 - Check Name, Email, Phone and Message Arrived').item.json.missing } }}",
+        "options": {
+          "responseCode": 422
+        }
+      }
+    },
+    {
+      "key": "crm",
+      "kind": "app.action",
+      "app": "hubspot",
+      "op": "create_contact",
+      "label": "6 - Next Phase: HubSpot Creates the Contact From the Chat",
+      "section": "next",
+      "notes": "Your next phase. HubSpot stands in for your CRM. Off during the test, on once the sheet shows clean captures.",
+      "params": {
+        "email": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.email }}",
+        "additionalFields": {
+          "firstName": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.name.split(' ')[0] }}",
+          "lastName": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.name.split(' ').slice(1).join(' ') }}",
+          "phoneNumber": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.phone }}",
+          "leadStatus": "NEW"
+        }
+      }
+    },
+    {
+      "key": "cal",
+      "kind": "app.action",
+      "app": "googleCalendar",
+      "op": "create",
+      "label": "7 - Google Calendar: Book the Call Time They Asked For",
+      "section": "next",
+      "params": {
+        "calendar": "={{ $('0 - Config: Your Settings').item.json.booking_calendar }}",
+        "start": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.preferred_time }}",
+        "end": "={{ DateTime.fromISO($('2 - Check Name, Email, Phone and Message Arrived').item.json.preferred_time).plus({ minutes: Number($('0 - Config: Your Settings').item.json.call_length_minutes) }).toISO() }}",
+        "additionalFields": {
+          "summary": "=Call with {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.name }}",
+          "description": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.message }}\nPhone: {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.phone }}",
+          "attendees": [
+            "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.email }}"
+          ]
+        }
+      }
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "app": "n8n",
+      "op": "error_trigger",
+      "label": "8 - Any Step Fails",
+      "section": "errors"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "app": "gmail",
+      "op": "send",
+      "label": "9 - Email You the Failed Step and a Link to the Run",
+      "section": "errors",
+      "params": {
+        "sendTo": "PASTE-YOUR-TEST-INBOX",
+        "subject": "=Chatbot test run failed at {{ $json.execution.lastNodeExecuted }}",
+        "message": "=Step: {{ $json.execution.lastNodeExecuted }}\nError: {{ $json.execution.error.message }}\nRun: {{ $json.execution.url }}"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "check"
+    },
+    {
+      "from": "check",
+      "to": "log"
+    },
+    {
+      "from": "log",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "ok",
+      "branch": "true"
+    },
+    {
+      "from": "gate",
+      "to": "flag",
+      "branch": "false"
+    },
+    {
+      "from": "flag",
+      "to": "bad"
+    },
+    {
+      "from": "ok",
+      "to": "crm"
+    },
+    {
+      "from": "crm",
+      "to": "cal"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "body": {
+      "source": "staging-chatbot",
+      "session_id": "cb_7f3a91e2",
+      "page_url": "https://staging.brightlinehomeservices.com/contact",
+      "name": "Sam Carter",
+      "email": "sam.carter@brightlinehomeservices.com",
+      "phone": "+1 555 014 2273",
+      "message": "Hi, I'd like a quote for next month. Can we talk Thursday afternoon?",
+      "preferred_time": "2026-10-01T14:00:00Z",
+      "captured_at": "2026-09-25T10:42:17Z"
+    }
+  },
+  "output_sample": {
+    "kind": "calendar#event",
+    "status": "confirmed",
+    "summary": "Call with Sam Carter",
+    "start": {
+      "dateTime": "2026-10-01T14:00:00Z"
+    },
+    "end": {
+      "dateTime": "2026-10-01T14:30:00Z"
+    },
+    "attendees": [
+      {
+        "email": "sam.carter@brightlinehomeservices.com"
+      }
+    ],
+    "description": "Hi, I'd like a quote for next month. Can we talk Thursday afternoon?\nPhone: +1 555 014 2273"
+  }
+}

@@ -1,0 +1,671 @@
+<title>HubSpot Lead System · Luxury Brochure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --green:#0f271f; --green2:#143228; --ink:#0b100e; --bone:#efeae1; --bone2:#e5ded2;
+  --gold:#b89a5e; --goldl:#d9c28f; --gold-a:rgba(184,154,94,.55);
+  --t-dark:#18201c; --t-mute:#6b6a62; --t-light:#ece6da; --t-lmute:#9db0a5;
+  --paper:#fbf9f4; --line:#e4ddcf;
+  --serif:"Bodoni Moda", "Didot", Georgia, serif; --sans:"Jost", "Futura", "Avenir Next", sans-serif;
+  --ease:cubic-bezier(.19,.7,.12,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--green);color:var(--t-light);font-family:var(--sans);font-weight:400;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.lbl{font-family:var(--sans);font-size:11px;font-weight:500;letter-spacing:.3em;text-transform:uppercase}
+.gold{color:var(--gold)}
+.serif{font-family:var(--serif)}
+
+/* ---------- spreads ---------- */
+.spread{position:relative;min-height:100vh;padding:112px 6.5vw 104px;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:0 7vw;align-items:center;overflow:hidden}
+.spread.green{background:var(--green)}
+.spread.bone{background:var(--bone);color:var(--t-dark)}
+.spread.ink{background:var(--ink)}
+.spread::after{content:"";position:absolute;top:96px;bottom:88px;left:calc(6.5vw + (100% - 13vw - 7vw) * 5/12 + 3.5vw);width:1px;background:linear-gradient(transparent,var(--gold-a) 18%,var(--gold-a) 82%,transparent);opacity:.0;transition:opacity 2.4s var(--ease) .3s}
+.spread.in::after{opacity:.45}
+.spread.nogutter::after{display:none}
+.runhead{position:absolute;top:40px;left:6.5vw;right:6.5vw;display:flex;justify-content:space-between;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--gold-a);color:var(--gold)}
+.runhead .lbl{font-size:10px}
+.folio{position:absolute;bottom:34px;left:6.5vw;right:6.5vw;display:flex;justify-content:space-between;align-items:baseline;font-family:var(--serif);font-style:italic;font-size:15px;color:var(--gold)}
+.folio span.c{font-family:var(--sans);font-style:normal;font-size:10px;letter-spacing:.3em;text-transform:uppercase;opacity:.8}
+
+.left{position:relative;z-index:3;min-width:0}
+.exhibit{min-width:0}
+.runhead,.folio,.mast{z-index:3}
+.num{font-family:var(--serif);font-style:italic;font-size:22px;color:var(--gold);display:flex;align-items:center;gap:16px;margin-bottom:26px}
+.num::after{content:"";height:1px;width:64px;background:var(--gold)}
+h1,h2{font-family:var(--serif);font-weight:400;letter-spacing:-.01em;font-variation-settings:"opsz" 96}
+h2{font-size:clamp(40px,4.7vw,76px);line-height:1.02;margin:18px 0 0}
+h2 em,h1 em{font-style:italic;color:var(--gold)}
+.bone h2 em{color:#8f7440}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(26px);transition:opacity 1.6s var(--ease),transform 1.8s var(--ease)}
+.in .rv{opacity:1;transform:none}
+.in .d1{transition-delay:.15s}.in .d2{transition-delay:.35s}.in .d3{transition-delay:.6s}.in .d4{transition-delay:.9s}.in .d5{transition-delay:1.2s}
+.line-draw{display:block;height:1px;background:var(--gold);width:0;transition:width 2s var(--ease) .5s}
+.in .line-draw{width:100%}
+
+/* ---------- exhibits ---------- */
+.exhibit{position:relative;z-index:2;opacity:0;transform:translateY(40px) scale(.985);transition:opacity 1.8s var(--ease) .25s,transform 2.2s var(--ease) .25s}
+.in .exhibit{opacity:1;transform:none}
+.exhibit .light{position:absolute;left:-18%;right:-18%;top:-46%;height:110%;pointer-events:none;background:radial-gradient(ellipse 50% 60% at 50% 30%,rgba(255,238,200,.16),transparent 70%);opacity:0;transition:opacity 3s ease 1s}
+.bone .exhibit .light{background:radial-gradient(ellipse 50% 60% at 50% 30%,rgba(255,255,255,.95),transparent 70%)}
+.in .exhibit .light{opacity:1}
+.frame{position:relative;border:1px solid var(--gold-a);padding:16px;background:rgba(255,255,255,.015)}
+.bone .frame{background:#f6f2ea;border-color:rgba(160,130,75,.45)}
+.frame::before{content:"";position:absolute;inset:6px;border:1px solid rgba(184,154,94,.18);pointer-events:none}
+.ui{position:relative;background:var(--paper);color:var(--t-dark);box-shadow:0 50px 90px -40px rgba(0,0,0,.65),0 18px 30px -18px rgba(0,0,0,.35);filter:brightness(.82);transition:filter 2.6s ease 1.1s}
+.bone .ui{box-shadow:0 50px 90px -40px rgba(40,30,10,.35),0 18px 30px -18px rgba(40,30,10,.18)}
+.in .ui{filter:none}
+.caption{display:flex;justify-content:space-between;margin-top:18px;color:var(--gold);gap:12px}
+.caption .lbl{font-size:10px}
+.caption i{font-family:var(--serif);font-size:14px;letter-spacing:0}
+.bone .caption{color:#8f7440}
+
+/* ---------- cover ---------- */
+#cover{padding-top:150px}
+.mast{position:absolute;top:40px;left:6.5vw;right:6.5vw;text-align:center;color:var(--gold)}
+.mast .brand{font-family:var(--serif);font-size:15px;letter-spacing:.42em;text-transform:uppercase}
+.mast .rule{display:flex;align-items:center;gap:14px;margin-top:14px}
+.mast .rule i{flex:1;height:1px;background:var(--gold-a)}
+.mast .rule b{width:5px;height:5px;transform:rotate(45deg);border:1px solid var(--gold)}
+h1{font-size:clamp(54px,7.2vw,118px);line-height:.96;margin:26px 0 30px}
+.cover-meta{display:flex;gap:40px;margin-top:34px;flex-wrap:wrap}
+.cover-meta div{border-top:1px solid var(--gold-a);padding-top:12px;min-width:120px}
+.cover-meta .lbl{color:var(--gold);font-size:10px}
+.cover-meta p{font-family:var(--serif);font-size:22px;margin-top:6px}
+.sample{display:inline-block;margin-top:40px;color:var(--t-lmute);font-size:10px;border:1px solid rgba(157,176,165,.35);padding:7px 12px}
+.inq{padding:34px 34px 30px}
+.inq .top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--line);padding-bottom:18px}
+.inq .clock{font-family:var(--serif);font-size:72px;line-height:.9;letter-spacing:-.02em}
+.inq .clock small{font-size:22px;margin-left:6px;font-style:italic;color:#8f7440}
+.inq .date{color:var(--t-mute);font-size:10px}
+.note{margin-top:22px;border:1px solid var(--line);background:#fff;padding:18px 20px;opacity:0;transform:translateY(14px);transition:all 1.4s var(--ease)}
+.note.on{opacity:1;transform:none}
+.note .h{display:flex;justify-content:space-between;color:#8f7440;font-size:10px}
+.note .t{font-family:var(--serif);font-size:21px;margin:10px 0 6px}
+.note .q{font-size:15px;color:#3b403d;line-height:1.5}
+.done{margin-top:14px;background:var(--green);color:var(--t-light);padding:20px 22px;display:grid;grid-template-columns:auto 1fr;gap:6px 22px;align-items:center;opacity:0;transform:translateY(14px);transition:all 1.4s var(--ease)}
+.done.on{opacity:1;transform:none}
+.done .sec{grid-row:span 2;font-family:var(--serif);font-size:54px;line-height:1;color:var(--goldl);min-width:92px}
+.done .sec small{font-size:15px;font-style:italic;margin-left:4px}
+.done .lbl{color:var(--goldl);font-size:10px}
+.ticks{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--t-lmute)}
+.ticks span{opacity:.25;transition:opacity .8s}
+.ticks span.on{opacity:1;color:var(--t-light)}
+.ticks span::before{content:"";display:inline-block;width:6px;height:6px;transform:rotate(45deg);border:1px solid var(--gold);margin-right:8px;vertical-align:1px}
+.ticks span.on::before{background:var(--gold)}
+
+/* ---------- 01 clean up ---------- */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:48px;max-width:460px}
+.stat .lbl{color:#8f7440;font-size:10px}
+.stat .v{font-family:var(--serif);font-size:clamp(52px,5.4vw,84px);line-height:1;margin:8px 0 12px;font-variant-numeric:lining-nums tabular-nums}
+.stat .bar{height:1px;background:rgba(0,0,0,.12);position:relative}
+.stat .bar i{position:absolute;left:0;top:-1px;height:3px;background:var(--gold);width:0;transition:width 2.6s var(--ease)}
+.merge{padding:30px;position:relative}
+.merge .head{display:flex;justify-content:space-between;color:#8f7440;font-size:10px;border-bottom:1px solid var(--line);padding-bottom:14px}
+.recs{position:relative;height:280px;margin-top:22px;transition:height 1.6s var(--ease) .8s}
+.merged .recs{height:238px}
+.rec{position:absolute;left:0;right:0;background:#fff;border:1px solid var(--line);padding:16px 18px;display:grid;grid-template-columns:40px 1fr auto;gap:0 14px;align-items:center;transition:transform 1.8s var(--ease),opacity 1.4s ease,filter 1.4s}
+.rec .av{width:40px;height:40px;border-radius:50%;background:var(--bone2);display:grid;place-items:center;font-family:var(--serif);font-size:14px;color:#6b5a38}
+.rec b{font-weight:500;font-size:16px}
+.rec p{font-size:12.5px;color:var(--t-mute);margin-top:3px}
+.rec .yr{font-family:var(--serif);font-style:italic;color:#8f7440;font-size:16px}
+.rec.r1{top:0}.rec.r2{top:94px}.rec.r3{top:188px}
+.rec .flag{color:#9a4b3a}
+.merged .rec.r1,.merged .rec.r2,.merged .rec.r3{transform:translateY(var(--to));opacity:0;filter:blur(2px)}
+.rec.r1{--to:40px}.rec.r2{--to:-54px}.rec.r3{--to:-148px}
+.golden{position:absolute;inset:0 0 auto 0;background:#fff;border:1px solid var(--gold);padding:20px 22px;opacity:0;transform:scale(.97);transition:opacity 1.6s var(--ease) .9s,transform 1.8s var(--ease) .9s;box-shadow:0 0 0 6px rgba(184,154,94,.08)}
+.merged .golden{opacity:1;transform:none}
+.golden .who{display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--line);padding-bottom:16px}
+.golden .av{width:48px;height:48px;border-radius:50%;background:var(--green);color:var(--goldl);display:grid;place-items:center;font-family:var(--serif);font-size:17px}
+.golden .who b{font-family:var(--serif);font-size:24px;font-weight:400}
+.golden .who span{margin-left:auto;color:#8f7440;font-size:10px}
+.golden dl{display:grid;grid-template-columns:1fr 1fr;gap:18px 24px;margin-top:18px}
+.golden dt{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--t-mute)}
+.golden dd{font-size:16px;margin-top:4px}
+
+/* ---------- 02 capture ---------- */
+.capture{padding:30px;display:grid;grid-template-columns:minmax(0,1fr) 84px minmax(0,1.15fr);align-items:center}
+.srcs{display:grid;grid-template-rows:repeat(5,52px);gap:10px}
+.src{display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);font-size:15px;opacity:0;transform:translateX(-10px);transition:all 1.2s var(--ease)}
+.src.on{opacity:1;transform:none}
+.src i{font-family:var(--serif);font-style:italic;color:#8f7440;width:26px;font-size:15px}
+.wires{width:100%;height:300px;overflow:visible}
+.wires path{fill:none;stroke:var(--gold);stroke-width:1}
+.wires .base{stroke-dasharray:140;stroke-dashoffset:140;transition:stroke-dashoffset 1.6s var(--ease)}
+.wires .base.on{stroke-dashoffset:0}
+.wires .flow{stroke-width:2;stroke-dasharray:6 134;stroke-dashoffset:140;opacity:0}
+.flowing .wires .flow{opacity:1;animation:flow 3.2s linear infinite}
+@keyframes flow{to{stroke-dashoffset:0}}
+.contact{background:#fff;border:1px solid var(--line);padding:22px;opacity:0;transform:translateY(10px);transition:all 1.6s var(--ease)}
+.contact.on{opacity:1;transform:none;border-color:var(--gold)}
+.contact .who{display:flex;gap:14px;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.contact .av{width:44px;height:44px;border-radius:50%;background:var(--green);color:var(--goldl);display:grid;place-items:center;font-family:var(--serif)}
+.contact .who b{font-family:var(--serif);font-weight:400;font-size:22px;display:block}
+.contact .who small{font-size:12px;color:var(--t-mute)}
+.contact dl{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;margin-top:14px;font-size:14px}
+.contact dt{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--t-mute);padding-top:3px}
+.contact dd.ok{color:#2f6b4f}
+.leadsline{display:flex;align-items:baseline;gap:16px;margin-top:40px}
+.leadsline .v{font-family:var(--serif);font-size:clamp(56px,5.6vw,88px);line-height:1;color:var(--goldl)}
+.leadsline p{font-size:15px;color:var(--t-light)}
+.illus{font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--t-lmute);border:1px solid rgba(157,176,165,.4);padding:4px 8px;margin-left:4px}
+
+/* ---------- 03 qualify ---------- */
+.qual{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+.thread{padding:26px 26px 30px;border-right:1px solid var(--line);min-height:430px}
+.thread .who{display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:18px}
+.thread .av{width:36px;height:36px;border-radius:50%;background:var(--bone2);display:grid;place-items:center;font-family:var(--serif);font-size:13px;color:#6b5a38}
+.thread .who b{font-weight:500}
+.thread .who small{display:block;font-size:11px;color:var(--t-mute)}
+.msg{max-width:84%;padding:12px 15px;font-size:14.5px;line-height:1.45;margin-bottom:12px;opacity:0;transform:translateY(10px);transition:all 1.1s var(--ease)}
+.msg.on{opacity:1;transform:none}
+.msg.out{background:var(--green);color:var(--t-light);margin-left:auto;border-radius:14px 14px 3px 14px}
+.msg.in_{background:#fff;border:1px solid var(--line);border-radius:14px 14px 14px 3px}
+.typing{display:inline-flex;gap:4px;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:14px;opacity:0;transition:opacity .4s}
+.typing.on{opacity:1}
+.typing i{width:5px;height:5px;border-radius:50%;background:#b4ab98;animation:bl 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes bl{50%{opacity:.25}}
+.score{padding:28px 24px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.dial{position:relative;width:170px;height:170px;margin:8px 0 10px}
+.dial svg{transform:rotate(-90deg)}
+.dial .trk{stroke:var(--line)}
+.dial .arc{stroke:var(--gold);stroke-dasharray:452;stroke-dashoffset:452;transition:stroke-dashoffset .8s var(--ease)}
+.dial .v{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--serif);font-size:62px}
+.score .lbl{color:#8f7440;font-size:10px}
+.ready{margin-top:6px;font-size:13px;color:var(--t-mute);opacity:.3;transition:all 1s}
+.ready.on{opacity:1;color:#2f6b4f}
+.facts{width:100%;margin-top:22px;border-top:1px solid var(--line)}
+.facts div{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px;opacity:0;transition:opacity 1s}
+.facts div.on{opacity:1}
+.facts span{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--t-mute);padding-top:3px}
+
+/* ---------- 04 assign ---------- */
+.roster{padding:28px 30px 30px}
+.roster .head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:16px}
+.roster .lead{display:flex;align-items:center;gap:12px}
+.roster .lead .av{width:36px;height:36px;border-radius:50%;background:var(--green);color:var(--goldl);display:grid;place-items:center;font-family:var(--serif);font-size:13px}
+.roster .lead b{font-weight:500}.roster .lead small{display:block;font-size:11px;color:var(--t-mute)}
+.roster .head .lbl{color:#8f7440;font-size:10px}
+.agent{display:grid;grid-template-columns:38px 1fr auto;gap:14px;align-items:center;padding:14px 4px;border-bottom:1px solid var(--line);transition:all 1.2s var(--ease);position:relative}
+.agent .av{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-family:var(--serif);font-size:13px;color:#6b5a38}
+.agent b{font-weight:500;font-size:15px}
+.agent small{display:block;font-size:12px;color:var(--t-mute);margin-top:2px}
+.agent .open{font-family:var(--serif);font-style:italic;font-size:15px;color:#8f7440}
+.agent .why{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--t-mute);opacity:0;transition:opacity 1s;position:absolute;right:70px}
+.filtered .agent.no{opacity:.28}
+.filtered .agent.no .why{opacity:1}
+.chosen .agent.yes{background:var(--green);color:var(--t-light);padding-left:14px;padding-right:14px}
+.chosen .agent.yes small{color:var(--t-lmute)}
+.chosen .agent.yes .av{background:var(--gold);border-color:var(--gold);color:var(--green)}
+.chosen .agent.yes .open{color:var(--goldl)}
+.sla{display:grid;grid-template-columns:auto 1fr;gap:4px 22px;align-items:center;margin-top:22px;padding:18px 20px;border:1px solid var(--line);background:#fff;opacity:0;transition:opacity 1.2s}
+.sla.on{opacity:1}
+.sla .t{grid-row:span 2;font-family:var(--serif);font-size:50px;line-height:1;font-variant-numeric:tabular-nums;min-width:118px}
+.sla .t.done_{color:#2f6b4f}
+.sla b{font-weight:500;font-size:15px}
+.sla small{font-size:12px;color:var(--t-mute)}
+.slabar{grid-column:1/-1;height:2px;background:var(--line);margin-top:12px;position:relative}
+.slabar i{position:absolute;left:0;top:0;bottom:0;background:var(--gold);width:0}
+.slabar em{position:absolute;right:0;top:8px;font-size:10px;letter-spacing:.2em;font-style:normal;color:var(--t-mute)}
+
+/* ---------- 05 workflow ---------- */
+#logic{grid-template-columns:minmax(0,4fr) minmax(0,8fr)}
+#logic::after{left:calc(6.5vw + (100% - 13vw - 7vw) * 4/12 + 3.5vw)}
+.log{margin-top:44px;border-top:1px solid var(--gold-a);font-size:13px;color:var(--t-lmute);max-width:380px}
+.log div{display:grid;grid-template-columns:92px 1fr;padding:10px 0;border-bottom:1px solid rgba(184,154,94,.18);opacity:0;transform:translateY(6px);transition:all .9s var(--ease)}
+.log div.on{opacity:1;transform:none}
+.log time{font-family:var(--serif);font-style:italic;color:var(--gold);font-size:14px}
+.toc{position:relative}
+.toc .row{display:grid;grid-template-columns:44px minmax(0,auto) 1fr auto;align-items:baseline;gap:0 14px;padding:9px 0;border-bottom:1px solid rgba(184,154,94,.16);opacity:.22;transition:opacity 1s var(--ease)}
+.toc .row.on{opacity:1}
+.toc .n{font-family:var(--serif);font-style:italic;color:var(--gold);font-size:18px}
+.toc .k{display:block;font-size:9.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:1px}
+.toc .ti{font-family:var(--serif);font-size:20px;line-height:1.15}
+.toc .sub{display:inline-block;margin-left:14px;font-size:12.5px;color:var(--t-lmute);margin-top:3px;font-family:var(--sans)}
+.toc .lead_{border-bottom:1px dotted rgba(184,154,94,.45);margin-bottom:8px;align-self:end}
+.toc .st{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--t-lmute);white-space:nowrap}
+.toc .row.on .st{color:var(--goldl)}
+.toc .row.cur .n::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--goldl);margin-right:8px;vertical-align:4px;animation:bl 1s infinite}
+.toc .branch{display:flex;gap:10px;margin-top:6px;flex-wrap:wrap}
+.toc .branch span{font-size:10px;letter-spacing:.2em;text-transform:uppercase;padding:4px 9px;border:1px solid rgba(184,154,94,.35);color:var(--t-lmute)}
+.toc .branch span.y{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.toc .branch span.nn{text-decoration:line-through;opacity:.55}
+.booked{display:flex;align-items:center;gap:22px;margin-top:20px;padding:14px 22px;border:1px solid var(--gold);background:rgba(184,154,94,.06);opacity:0;transform:translateY(12px);transition:all 1.6s var(--ease)}
+.booked.on{opacity:1;transform:none}
+.cal{width:70px;text-align:center;border:1px solid var(--gold);flex:none}
+.cal .lbl{display:block;background:var(--gold);color:var(--ink);font-size:10px;padding:4px 0;letter-spacing:.3em}
+.cal b{display:block;font-family:var(--serif);font-weight:400;font-size:36px;padding:4px 0 6px;color:var(--t-light)}
+.booked h3{font-family:var(--serif);font-weight:400;font-size:28px}
+.booked p{color:var(--t-lmute);font-size:14px;margin-top:4px}
+
+/* ---------- 06 hubspot ---------- */
+#yours{grid-template-columns:minmax(0,1fr);align-content:center;padding-top:130px}
+#yours .left{display:flex;justify-content:space-between;align-items:flex-end;gap:40px;margin-bottom:44px}
+#yours h2{max-width:900px}
+.hs-tag{color:#8f7440;font-size:10px;white-space:nowrap}
+.hs{background:#fff;font-family:var(--sans);color:#33475b;overflow:hidden}
+.hs-top{background:#2d3e50;color:#fff;display:flex;align-items:center;gap:18px;padding:0 18px;height:52px}
+.hs-top .back{opacity:.7;font-size:20px}
+.hs-top .nm{font-weight:500;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hs-top .pill{font-size:11px;background:rgba(255,255,255,.12);padding:3px 8px;border-radius:3px;white-space:nowrap}
+.hs-tabs{display:flex;gap:22px;margin-left:24px;font-size:13px;height:100%}
+.hs-tabs span{display:flex;align-items:center;opacity:.72;border-bottom:3px solid transparent}
+.hs-tabs span.a{opacity:1;border-color:#ff7a59}
+.hs-top .sp{flex:1}
+.tog{display:flex;align-items:center;gap:8px;font-size:12px}
+.tog i{width:34px;height:18px;border-radius:9px;background:#7c98b6;position:relative;transition:background .6s}
+.tog i::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .6s}
+.published .tog i{background:#00bda5}.published .tog i::after{left:18px}
+.hs-btn{background:#ff7a59;color:#fff;font-size:13px;font-weight:500;padding:8px 14px;border-radius:3px;white-space:nowrap}
+.hs-body{display:grid;grid-template-columns:minmax(0,1fr) 310px;min-height:640px}
+.canvas{background:#f5f8fa;background-image:radial-gradient(#cbd6e2 1px,transparent 1px);background-size:18px 18px;padding:30px 20px 40px;display:flex;flex-direction:column;align-items:center}
+.card{width:270px;max-width:100%;background:#fff;border:1px solid #cbd6e2;border-radius:4px;box-shadow:0 1px 3px rgba(45,62,80,.08);opacity:0;transform:translateY(8px);transition:opacity .8s var(--ease),transform .8s var(--ease),box-shadow .5s,border-color .5s}
+.card.on{opacity:1;transform:none}
+.card .ch{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #eaf0f6;font-size:11.5px;font-weight:600;color:#516f90}
+.card .ic{width:18px;height:18px;border-radius:3px;display:grid;place-items:center;font-size:10px;color:#fff;background:#7c98b6}
+.card .cb{padding:10px 12px;font-size:13px;color:#33475b}
+.card.trig{border-top:3px solid #ff7a59}.card.trig .ic{background:#ff7a59}
+.card .ic.crm{background:#00a4bd}.card .ic.com{background:#6a78d1}.card .ic.flow{background:#f5c26b}
+.card.sel{border-color:#00a4bd;box-shadow:0 0 0 3px rgba(0,164,189,.2)}
+.card.end{width:auto;padding:6px 16px;border-radius:14px;font-size:12px;color:#516f90}
+.conn{width:1px;height:26px;background:#7c98b6;position:relative;flex:none}
+.conn b{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;background:#fff;border:1px solid #7c98b6;font-size:12px;line-height:14px;text-align:center;color:#516f90;font-weight:400}
+.split{position:relative;width:min(600px,100%);height:24px;flex:none}
+.split::before{content:"";position:absolute;left:25%;right:25%;top:12px;height:1px;background:#7c98b6}
+.split::after{content:"";position:absolute;left:50%;top:0;height:12px;width:1px;background:#7c98b6}
+.cols{display:grid;grid-template-columns:1fr 1fr;width:min(600px,100%);gap:12px}
+.col{display:flex;flex-direction:column;align-items:center}
+.col>.bl{font-size:11px;background:#eaf0f6;padding:2px 8px;border-radius:3px;margin-bottom:6px;position:relative}
+.col>.bl::before{content:"";position:absolute;left:50%;top:-12px;height:12px;width:1px;background:#7c98b6}
+.panel{border-left:1px solid #cbd6e2;background:#fff;transform:translateX(30px);opacity:0;transition:all 1.2s var(--ease)}
+.panel.on{transform:none;opacity:1}
+.panel .ph{display:flex;justify-content:space-between;align-items:center;background:#00a4bd;color:#fff;padding:14px 18px;font-weight:500;font-size:15px}
+.panel .pb{padding:18px}
+.fld{margin-bottom:16px}
+.fld label{display:block;font-size:12px;font-weight:600;color:#33475b;margin-bottom:6px}
+.fld div{border:1px solid #cbd6e2;background:#f5f8fa;border-radius:3px;padding:8px 10px;font-size:13px;min-height:35px}
+.fld div.typed::after{content:"";display:inline-block;width:1px;height:14px;background:#33475b;vertical-align:-2px;margin-left:1px;animation:bl 1s infinite}
+.hs-foot{display:flex;justify-content:flex-end;gap:10px;border-top:1px solid #eaf0f6;padding:14px 18px}
+.hs-foot span{font-size:13px;padding:7px 14px;border-radius:3px;border:1px solid #cbd6e2}
+.hs-foot span.p{background:#ff7a59;border-color:#ff7a59;color:#fff}
+
+/* ---------- close ---------- */
+#close{grid-template-columns:minmax(0,1fr);text-align:center;justify-items:center;align-content:center}
+.words{width:min(900px,100%)}
+.word{display:grid;grid-template-columns:70px 1fr 70px;align-items:center;padding:14px 0}
+.word .r{font-family:var(--serif);font-style:italic;color:var(--gold);font-size:18px;text-align:left}
+.word h3{font-family:var(--serif);font-weight:400;font-size:clamp(46px,7vw,112px);line-height:1;opacity:0;transform:translateY(20px);transition:all 1.8s var(--ease);font-variation-settings:"opsz" 96}
+.word:nth-child(even) h3{font-style:italic;color:var(--goldl)}
+.word .hl{grid-column:1/-1;height:1px;background:var(--gold-a);width:0;margin:14px auto 0;transition:width 2.2s var(--ease)}
+.in .word h3{opacity:1;transform:none}.in .word .hl{width:100%}
+.in .word:nth-child(2) h3,.in .word:nth-child(2) .hl{transition-delay:.5s}
+.in .word:nth-child(3) h3,.in .word:nth-child(3) .hl{transition-delay:1s}
+.in .word:nth-child(4) h3,.in .word:nth-child(4) .hl{transition-delay:1.5s}
+.colo{margin-top:56px;color:var(--gold)}
+.colo .lbl{font-size:10px}
+
+/* ambient: slow sheen on gold hairlines */
+.runhead{background-image:linear-gradient(90deg,transparent,rgba(217,194,143,.0) 40%,rgba(217,194,143,.9) 50%,rgba(217,194,143,0) 60%,transparent);background-size:300% 1px;background-repeat:no-repeat;background-position:100% 100%;animation:sheen 11s ease-in-out infinite}
+@keyframes sheen{0%{background-position:120% 100%}60%,100%{background-position:-20% 100%}}
+
+/* ---------- responsive ---------- */
+@media (max-width:1100px){
+  .spread,#logic{grid-template-columns:1fr;gap:56px 0;padding:120px 6vw 110px}
+  .spread::after{display:none}
+  .hs-body{grid-template-columns:1fr}
+  .panel{border-left:0;border-top:1px solid #cbd6e2}
+}
+@media (max-width:700px){
+  .spread,#logic,#yours{padding:104px 16px 96px;min-height:auto}
+  .runhead,.folio,.mast{left:16px;right:16px}
+  .runhead{top:28px}.runhead .lbl:last-child{display:none}
+  .mast{top:28px}.mast .brand{font-size:12px;letter-spacing:.3em}
+  #cover{padding-top:120px}
+  h1{font-size:50px}
+  .frame{padding:8px}
+  .inq{padding:22px 18px}.inq .clock{font-size:54px}
+  .done{grid-template-columns:1fr}.done .sec{grid-row:auto}
+  .merge{padding:18px;min-height:0}.recs{height:320px}
+  .golden dl{grid-template-columns:1fr 1fr;gap:12px}
+  .capture{grid-template-columns:1fr;padding:18px;gap:18px}
+  .wires{display:none}
+  .qual{grid-template-columns:1fr}
+  .thread{border-right:0;border-bottom:1px solid var(--line);min-height:0;padding:18px}
+  .roster{padding:18px}.agent .why{display:none}
+  .sla .t{font-size:40px;min-width:96px}
+  .toc .row{grid-template-columns:34px minmax(0,1fr) auto}
+  .toc .lead_{display:none}
+  .toc .ti{font-size:19px}
+  .toc .sub{display:block;margin-left:0;margin-top:2px}
+  .hs-btn{font-size:12px;padding:7px 10px}
+  #yours h2{font-size:36px}
+  #yours .left{flex-direction:column;align-items:flex-start;gap:16px;margin-bottom:28px}
+  .hs-tabs,.hs-top .pill,.tog{display:none}
+  .hs-top .nm{font-size:13px}
+  .cols{grid-template-columns:1fr;gap:0}
+  .split{display:none}
+  .col>.bl::before{display:none}
+  .col+.col{margin-top:18px}
+  .word{grid-template-columns:36px 1fr 36px}
+  .stats{gap:20px}
+  .caption{flex-direction:column;gap:4px}
+}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation:none!important}}
+</style>
+
+<!-- COVER -->
+<section class="spread green" id="cover" data-run="cover">
+  <div class="mast"><div class="brand">HubSpot Lead System</div><div class="rule"><i></i><b></b><i></i></div></div>
+  <div class="left">
+    <div class="lbl gold rv">Real estate lead management · HubSpot</div>
+    <h1 class="rv d1">Every inquiry, <em>answered.</em></h1>
+    <span class="line-draw" style="max-width:420px"></span>
+    <div class="cover-meta rv d3">
+      <div><span class="lbl">The listing</span><p>214 Linden Ave</p></div>
+      <div><span class="lbl">The hour</span><p><i>Monday,</i> 9:42 PM</p></div>
+    </div>
+    <span class="lbl sample rv d4">Sample data</span>
+  </div>
+  <figure class="exhibit">
+    <div class="light"></div>
+    <div class="frame"><div class="ui inq">
+      <div class="top"><div><div class="lbl date">Monday, October 5</div><div class="clock">9:42<small>PM</small></div></div><div class="lbl date">The inquiry</div></div>
+      <div class="note" id="cvNote">
+        <div class="h lbl"><span>New inquiry · 9:42 PM</span><span>now</span></div>
+        <div class="t">Showing request · 214 Linden Ave</div>
+        <div class="q">Maya Chen: “Is this still available? We’re pre-approved.”</div>
+      </div>
+      <div class="done" id="cvDone">
+        <div class="sec"><span id="cvSec">0</span><small>sec</small></div>
+        <div class="lbl">Handled in 38 seconds</div>
+        <div class="ticks"><span>In HubSpot</span><span>Texted</span><span>Routed to Jordan</span></div>
+      </div>
+    </div></div>
+    <figcaption class="caption"><span class="lbl">Plate I</span><i>The inquiry</i></figcaption>
+  </figure>
+  <div class="folio"><span>i</span><span class="c">Captured to booked</span><span>ii</span></div>
+</section>
+
+<!-- 01 CLEAN UP -->
+<section class="spread bone" id="clean" data-run="clean">
+  <div class="runhead"><span class="lbl">HubSpot Lead System</span><span class="lbl">Chapter one · Clean up</span></div>
+  <div class="left">
+    <div class="num rv">01</div>
+    <div class="lbl rv d1" style="color:#8f7440">Clean up</div>
+    <h2 class="rv d2">One record <em>per person.</em></h2>
+    <div class="stats rv d3">
+      <div class="stat"><span class="lbl">CRM health</span><div class="v" id="health">58</div><div class="bar"><i id="healthBar" style="width:58%"></i></div></div>
+      <div class="stat"><span class="lbl">Duplicates</span><div class="v" id="dups">412</div><div class="bar"><i id="dupBar" style="width:100%"></i></div></div>
+    </div>
+  </div>
+  <figure class="exhibit">
+    <div class="light"></div>
+    <div class="frame"><div class="ui merge" id="merge">
+      <div class="head lbl"><span>Contacts · Maya Chen</span><span id="mergeLbl">3 records</span></div>
+      <div class="recs">
+        <div class="rec r1"><div class="av">MC</div><div><b>Maya Chen</b><p>No phone · no owner</p></div><span class="yr">2023</span></div>
+        <div class="rec r2"><div class="av">MC</div><div><b>M. Chen</b><p>Stage: <span class="flag">“HOT!!”</span></p></div><span class="yr">2024</span></div>
+        <div class="rec r3"><div class="av">mc</div><div><b>maya chen</b><p>Type: <span class="flag">“b/s”</span></p></div><span class="yr">2025</span></div>
+        <div class="golden">
+          <div class="who"><div class="av">MC</div><b>Maya Chen</b><span class="lbl">3 records → 1</span></div>
+          <dl><div><dt>Phone</dt><dd>(555) 014-7720</dd></div><div><dt>Lead type</dt><dd>Buyer</dd></div><div><dt>Lifecycle</dt><dd>Lead</dd></div><div><dt>Owner</dt><dd>Jordan Reyes</dd></div></dl>
+        </div>
+      </div>
+    </div></div>
+    <figcaption class="caption"><span class="lbl">Plate II</span><i>Three records, one person</i></figcaption>
+  </figure>
+  <div class="folio"><span>2</span><span class="c">Clean up</span><span>3</span></div>
+</section>
+
+<!-- 02 CAPTURE -->
+<section class="spread green" id="capture" data-run="capture">
+  <div class="runhead"><span class="lbl">HubSpot Lead System</span><span class="lbl">Chapter two · Capture</span></div>
+  <div class="left">
+    <div class="num rv">02</div>
+    <div class="lbl gold rv d1">Capture</div>
+    <h2 class="rv d2">Every source, <em>one contact.</em></h2>
+    <div class="leadsline rv d3"><span class="v" id="leads">0</span><p>new leads today <span class="illus">Illustrative</span></p></div>
+  </div>
+  <figure class="exhibit">
+    <div class="light"></div>
+    <div class="frame"><div class="ui capture" id="cap">
+      <div class="srcs">
+        <div class="src"><i>i.</i>Website form</div>
+        <div class="src"><i>ii.</i>Portal inquiry</div>
+        <div class="src"><i>iii.</i>Open house</div>
+        <div class="src"><i>iv.</i>Home valuation</div>
+        <div class="src"><i>v.</i>Calls and texts</div>
+      </div>
+      <svg class="wires" viewBox="0 0 84 300" preserveAspectRatio="none">
+        <g id="wbase"></g><g id="wflow"></g>
+      </svg>
+      <div class="contact" id="contact">
+        <div class="who"><div class="av">MC</div><div><b>Maya Chen</b><small>Contact · created 9:42 PM</small></div></div>
+        <dl><dt>Listing</dt><dd>214 Linden Ave</dd><dt>Source</dt><dd>Website form</dd><dt>Lead type</dt><dd>Buyer</dd><dt>Duplicate</dt><dd class="ok">None found</dd></dl>
+      </div>
+    </div></div>
+    <figcaption class="caption"><span class="lbl">Plate III</span><i>Five doors, one address book</i></figcaption>
+  </figure>
+  <div class="folio"><span>4</span><span class="c">Capture</span><span>5</span></div>
+</section>
+
+<!-- 03 QUALIFY -->
+<section class="spread bone" id="qualify" data-run="qualify">
+  <div class="runhead"><span class="lbl">HubSpot Lead System</span><span class="lbl">Chapter three · Qualify</span></div>
+  <div class="left">
+    <div class="num rv">03</div>
+    <div class="lbl rv d1" style="color:#8f7440">Qualify</div>
+    <h2 class="rv d2">Qualified in <em>one conversation.</em></h2>
+  </div>
+  <figure class="exhibit">
+    <div class="light"></div>
+    <div class="frame"><div class="ui qual">
+      <div class="thread">
+        <div class="who"><div class="av">MC</div><div><b>Maya Chen</b><small>SMS · 9:42 PM</small></div></div>
+        <div class="msg out">Hi Maya, thanks for asking about 214 Linden. When are you hoping to move?</div>
+        <div class="msg in_">Lease ends in November. Pre-approved up to $520k.</div>
+        <div class="msg out">Great. Which areas, and how many beds?</div>
+        <div class="msg in_">Northside or Riverside. 3 beds.</div>
+        <div class="typing"><i></i><i></i><i></i></div>
+      </div>
+      <div class="score">
+        <span class="lbl">Lead score</span>
+        <div class="dial"><svg width="170" height="170" viewBox="0 0 170 170"><circle class="trk" cx="85" cy="85" r="72" fill="none" stroke-width="2"/><circle class="arc" id="arc" cx="85" cy="85" r="72" fill="none" stroke-width="3"/></svg><div class="v" id="scoreV">0</div></div>
+        <div class="ready" id="ready">Sales-ready · handed to an agent</div>
+        <div class="facts">
+          <div><span>Moving</span>60 days</div>
+          <div><span>Pre-approved</span>$520k</div>
+          <div><span>Looking</span>Northside · 3 bd</div>
+        </div>
+      </div>
+    </div></div>
+    <figcaption class="caption"><span class="lbl">Plate IV</span><i>Timeline, budget, area</i></figcaption>
+  </figure>
+  <div class="folio"><span>6</span><span class="c">Qualify</span><span>7</span></div>
+</section>
+
+<!-- 04 ASSIGN -->
+<section class="spread green" id="assign" data-run="assign">
+  <div class="runhead"><span class="lbl">HubSpot Lead System</span><span class="lbl">Chapter four · Assign</span></div>
+  <div class="left">
+    <div class="num rv">04</div>
+    <div class="lbl gold rv d1">Assign</div>
+    <h2 class="rv d2">The right agent, <em>in seconds.</em></h2>
+  </div>
+  <figure class="exhibit">
+    <div class="light"></div>
+    <div class="frame"><div class="ui roster" id="roster">
+      <div class="head"><div class="lead"><div class="av">MC</div><div><b>Maya Chen</b><small>Buyer · Northside</small></div></div><span class="lbl">Routing</span></div>
+      <div class="agent no"><div class="av">SO</div><div><b>Sam Okafor</b><small>Buyers · Downtown</small></div><span class="why">Other area</span><span class="open">2 open</span></div>
+      <div class="agent no"><div class="av">PN</div><div><b>Priya Nair</b><small>Sellers · Riverside</small></div><span class="why">Sellers</span><span class="open">3 open</span></div>
+      <div class="agent no"><div class="av">EB</div><div><b>Elena Brooks</b><small>Buyers · Northside</small></div><span class="why">Full load</span><span class="open">7 open</span></div>
+      <div class="agent yes"><div class="av">JR</div><div><b>Jordan Reyes</b><small>Buyers · Northside · on shift</small></div><span class="open">4 open</span></div>
+      <div class="sla" id="sla">
+        <div class="t" id="slaT">0:00</div>
+        <b id="slaB">Text to Jordan: call Maya</b>
+        <small id="slaS">5 minutes, or it moves to the next agent</small>
+        <div class="slabar"><i id="slaBar"></i><em>SLA 5:00</em></div>
+      </div>
+    </div></div>
+    <figcaption class="caption"><span class="lbl">Plate V</span><i>Area, lead type, workload</i></figcaption>
+  </figure>
+  <div class="folio"><span>8</span><span class="c">Assign</span><span>9</span></div>
+</section>
+
+<!-- 05 THE AUTOMATION -->
+<section class="spread ink" id="logic" data-run="logic">
+  <div class="runhead"><span class="lbl">HubSpot Lead System</span><span class="lbl">Chapter five · The automation</span></div>
+  <div class="left">
+    <div class="num rv">05</div>
+    <div class="lbl gold rv d1">The automation</div>
+    <h2 class="rv d2">The logic, <em>running live.</em></h2>
+    <div class="log rv d3" id="log">
+      <div><time>9:42:07 PM</time>Maya Chen enrolled · form submitted</div>
+      <div><time>9:42:31 PM</time>Qualifying SMS sent</div>
+      <div><time>9:45:10 PM</time>Score 86 · routed to Jordan Reyes</div>
+      <div><time>9:47:24 PM</time>Jordan called Maya</div>
+      <div><time>Tue 8:00 AM</time>3 similar listings sent</div>
+    </div>
+  </div>
+  <div class="exhibit" style="transition-delay:.1s">
+    <div class="toc" id="toc">
+      <div class="row"><span class="n">i</span><div><span class="k">Trigger</span><span class="ti">Form submitted</span><span class="sub">Listing page · 214 Linden</span></div><span class="lead_"></span><span class="st">Done</span></div>
+      <div class="row"><span class="n">ii</span><div><span class="k">Action</span><span class="ti">Set type + lifecycle</span><span class="sub">Buyer · Lead</span></div><span class="lead_"></span><span class="st">Done</span></div>
+      <div class="row"><span class="n">iii</span><div><span class="k">Action</span><span class="ti">Send qualifying SMS</span><span class="sub">Timeline, budget, area</span></div><span class="lead_"></span><span class="st">Done</span></div>
+      <div class="row"><span class="n">iv</span><div><span class="k">Branch</span><span class="ti">Lead score ≥ 80?</span><span class="sub">Maya scores 86</span><div class="branch"><span class="y">Yes · continue</span><span class="nn">No · enrol in nurture</span></div></div><span class="lead_"></span><span class="st">Yes</span></div>
+      <div class="row"><span class="n">v</span><div><span class="k">Rotate</span><span class="ti">Northside buyer agent</span><span class="sub">Assigned to Jordan Reyes</span></div><span class="lead_"></span><span class="st">Done</span></div>
+      <div class="row"><span class="n">vi</span><div><span class="k">Task</span><span class="ti">Call Maya Chen</span><span class="sub">SLA 5 minutes · called in 2:14</span></div><span class="lead_"></span><span class="st">Done</span></div>
+      <div class="row"><span class="n">vii</span><div><span class="k">Delay</span><span class="ti">Wait 1 day</span><span class="sub">Resumes Tue 8:00 AM</span></div><span class="lead_"></span><span class="st">Done</span></div>
+      <div class="row"><span class="n">viii</span><div><span class="k">Email</span><span class="ti">3 similar listings</span><span class="sub">Stops when she replies</span></div><span class="lead_"></span><span class="st">Replied</span></div>
+    </div>
+    <div class="booked" id="booked"><div class="cal"><span class="lbl">Sat</span><b>11</b></div><div><h3>Showing booked</h3><p>214 Linden · 11:00 AM</p></div></div>
+  </div>
+  <div class="folio"><span>10</span><span class="c">The automation</span><span>11</span></div>
+</section>
+
+<!-- 06 IN YOUR HUBSPOT -->
+<section class="spread bone nogutter" id="yours" data-run="yours">
+  <div class="runhead"><span class="lbl">HubSpot Lead System</span><span class="lbl">Chapter six · In your HubSpot</span></div>
+  <div class="left">
+    <div><div class="num rv">06</div><h2 class="rv d1">This is what it will look like <em>in your HubSpot.</em></h2></div>
+    <span class="lbl hs-tag rv d2">Your workflow in HubSpot · illustrative</span>
+  </div>
+  <figure class="exhibit">
+    <div class="light"></div>
+    <div class="frame"><div class="ui hs" id="hs">
+      <div class="hs-top">
+        <span class="back">‹</span><span class="nm">Listing inquiry · buyer routing</span><span class="pill">Contact-based</span>
+        <div class="hs-tabs"><span class="a">Actions</span><span>Settings</span><span>Performance</span></div>
+        <span class="sp"></span>
+        <div class="tog">Off <i></i> On</div>
+        <span class="hs-btn">Review and publish</span>
+      </div>
+      <div class="hs-body">
+        <div class="canvas">
+          <div class="card trig"><div class="ch"><span class="ic">⚡</span>Trigger · Contact enrollment</div><div class="cb"><b>Form submission</b><br><span style="color:#7c98b6">Listing page inquiry form</span></div></div>
+          <div class="conn"><b>+</b></div>
+          <div class="card"><div class="ch"><span class="ic crm">✎</span>1 · Edit record</div><div class="cb">Set <b>Lead type</b> to Buyer</div></div>
+          <div class="conn"><b>+</b></div>
+          <div class="card"><div class="ch"><span class="ic crm">✎</span>2 · Edit record</div><div class="cb">Set <b>Lifecycle stage</b> to Lead</div></div>
+          <div class="conn"><b>+</b></div>
+          <div class="card"><div class="ch"><span class="ic com">✉</span>3 · Send SMS</div><div class="cb">Qualifying questions to Maya</div></div>
+          <div class="conn"><b>+</b></div>
+          <div class="card"><div class="ch"><span class="ic flow">⑂</span>4 · If/then branch</div><div class="cb"><b>Lead score</b> is ≥ 80</div></div>
+          <div class="split"></div>
+          <div class="cols">
+            <div class="col">
+              <span class="bl">Yes</span>
+              <div class="card"><div class="ch"><span class="ic crm">↻</span>5 · Rotate record to owner</div><div class="cb">Northside buyer agents</div></div>
+              <div class="conn"><b>+</b></div>
+              <div class="card" id="taskCard"><div class="ch"><span class="ic crm">☑</span>6 · Create task</div><div class="cb">Call Maya · due in 5 min</div></div>
+              <div class="conn"><b>+</b></div>
+              <div class="card"><div class="ch"><span class="ic flow">◷</span>7 · Delay</div><div class="cb">Wait 1 day</div></div>
+              <div class="conn"><b>+</b></div>
+              <div class="card"><div class="ch"><span class="ic com">✉</span>8 · Send email</div><div class="cb">3 similar listings<br><span style="color:#7c98b6">Unenroll on reply</span></div></div>
+              <div class="conn"></div>
+              <div class="card end">End</div>
+            </div>
+            <div class="col">
+              <span class="bl">None met</span>
+              <div class="card"><div class="ch"><span class="ic com">➜</span>9 · Enroll in sequence</div><div class="cb">Buyer nurture</div></div>
+              <div class="conn"></div>
+              <div class="card end">End</div>
+            </div>
+          </div>
+        </div>
+        <div class="panel" id="panel">
+          <div class="ph">Create task <span>×</span></div>
+          <div class="pb">
+            <div class="fld"><label>Task title</label><div id="ftitle"></div></div>
+            <div class="fld"><label>Due date</label><div>5 minutes after enrollment</div></div>
+            <div class="fld"><label>Assign to</label><div>Contact owner</div></div>
+            <div class="fld"><label>Priority</label><div>High</div></div>
+            <div class="fld"><label>Type</label><div>Call</div></div>
+          </div>
+          <div class="hs-foot"><span>Cancel</span><span class="p">Save</span></div>
+        </div>
+      </div>
+    </div></div>
+  </figure>
+  <div class="folio"><span>12</span><span class="c">In your HubSpot</span><span>13</span></div>
+</section>
+
+<!-- CLOSE -->
+<section class="spread green nogutter" id="close" data-run="close">
+  <div class="runhead"><span class="lbl">HubSpot Lead System</span><span class="lbl">Colophon</span></div>
+  <div class="words">
+    <div class="word"><span class="r">i.</span><h3>Captured.</h3><span></span><i class="hl"></i></div>
+    <div class="word"><span class="r">ii.</span><h3>Qualified.</h3><span></span><i class="hl"></i></div>
+    <div class="word"><span class="r">iii.</span><h3>Assigned.</h3><span></span><i class="hl"></i></div>
+    <div class="word"><span class="r">iv.</span><h3>Booked.</h3><span></span><i class="hl"></i></div>
+  </div>
+  <div class="colo rv d5"><span class="lbl">Your HubSpot · real estate lead management</span></div>
+  <div class="folio"><span>14</span><span class="c">Fin</span><span>15</span></div>
+</section>
+
+<script>
+(function(){
+  const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  const ease=t=>1-Math.pow(1-t,3);
+  function count(el,from,to,dur,fmt){return new Promise(res=>{const t0=performance.now();(function f(n){const p=Math.min(1,(n-t0)/dur);const v=from+(to-from)*ease(p);el.textContent=fmt?fmt(v):Math.round(v);p<1?requestAnimationFrame(f):res();})(t0);});}
+
+  // capture wires
+  (function(){const b=$('#wbase'),f=$('#wflow');for(let i=0;i<5;i++){const y=26+i*62;const d=`M0 ${y} C 46 ${y}, 38 150, 84 150`;b.insertAdjacentHTML('beforeend',`<path class="base" d="${d}"/>`);f.insertAdjacentHTML('beforeend',`<path class="flow" d="${d}" style="animation-delay:${i*.55}s"/>`);}})();
+
+  const runs={
+    async cover(){await wait(1400);$('#cvNote').classList.add('on');await wait(1500);$('#cvDone').classList.add('on');
+      const ticks=$$('#cvDone .ticks span');count($('#cvSec'),0,38,3000);for(const t of ticks){await wait(900);t.classList.add('on');}},
+    async clean(){await wait(1800);$('#merge').classList.add('merged');$('#mergeLbl').textContent='Merged';
+      await wait(600);count($('#health'),58,97,2600);$('#healthBar').style.width='97%';count($('#dups'),412,0,2600);$('#dupBar').style.width='0%';},
+    async capture(){await wait(1000);const s=$$('#cap .src'),p=$$('#wbase path');for(let i=0;i<5;i++){s[i].classList.add('on');await wait(260);p[i].classList.add('on');}
+      await wait(900);$('#contact').classList.add('on');$('#cap').classList.add('flowing');count($('#leads'),0,29,2400);},
+    async qualify(){await wait(1300);const m=$$('#qualify .msg'),ty=$('#qualify .typing'),f=$$('#qualify .facts div');const arc=$('#arc'),C=452;let sc=0;
+      const setScore=v=>{arc.style.strokeDashoffset=C-C*v/100;};
+      const steps=[22,48,70,86];
+      for(let i=0;i<m.length;i++){ if(i%2===1){ty.classList.add('on');await wait(650);ty.classList.remove('on');}
+        m[i].classList.add('on');ty.parentNode.appendChild(ty);
+        if(i%2===1&&f[(i-1)/2])f[(i-1)/2].classList.add('on');
+        const to=steps[i];setScore(to);await count($('#scoreV'),sc,to,700);sc=to;await wait(450);}
+      f[2].classList.add('on');$('#ready').classList.add('on');ty.style.display='none';},
+    async assign(){const r=$('#roster');await wait(1600);r.classList.add('filtered');await wait(1500);r.classList.add('chosen');await wait(900);$('#sla').classList.add('on');await wait(500);
+      const T=$('#slaT'),bar=$('#slaBar');await count(T,0,134,3200,v=>{bar.style.width=(v/300*100)+'%';const s=Math.round(v);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');});
+      T.classList.add('done_');$('#slaB').textContent='Jordan called Maya in 2:14';$('#slaS').textContent='Inside the 5-minute SLA';},
+    async logic(){const rows=$$('#toc .row'),logs=$$('#log div');const map={0:0,2:1,4:2,5:3,7:4};await wait(1200);
+      for(let i=0;i<rows.length;i++){rows.forEach(r=>r.classList.remove('cur'));rows[i].classList.add('on','cur');if(map[i]!==undefined)logs[map[i]].classList.add('on');await wait(i===6?1100:650);}
+      rows[rows.length-1].classList.remove('cur');await wait(400);$('#booked').classList.add('on');},
+    async yours(){const cards=$$('#hs .card');await wait(1300);for(const c of cards){c.classList.add('on');await wait(140);}
+      await wait(500);$('#taskCard').classList.add('sel');$('#panel').classList.add('on');await wait(900);
+      const ft=$('#ftitle'),txt='Call Maya Chen';ft.classList.add('typed');for(let i=1;i<=txt.length;i++){ft.textContent=txt.slice(0,i);await wait(70);}
+      await wait(700);ft.classList.remove('typed');$('#hs').classList.add('published');},
+    async close(){}
+  };
+  const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){const s=e.target;io.unobserve(s);s.classList.add('in');const fn=runs[s.dataset.run];fn&&fn();}});},{threshold:.01,rootMargin:'0px 0px -35% 0px'});
+  $$('.spread').forEach(s=>io.observe(s));
+})();
+</script>

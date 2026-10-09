@@ -1,0 +1,1050 @@
+<title>Venture Studio Agents</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#F4F2ED; --surface:#FBFAF7; --raise:#FFFFFF;
+  --ink:#16171B; --ink-2:#4C4E55; --ink-3:#8A8A90;
+  --line:rgba(22,23,27,.09); --line-2:rgba(22,23,27,.16);
+  --accent:#EE4B26; --accent-ink:#FFFFFF; --accent-soft:rgba(238,75,38,.09); --accent-line:rgba(238,75,38,.35);
+  --ok:#1F7A55; --ok-soft:rgba(31,122,85,.10);
+  --warn:#9A6212; --warn-soft:rgba(154,98,18,.10);
+  --track:rgba(22,23,27,.08);
+  --shadow:0 1px 2px rgba(22,23,27,.04), 0 12px 32px -12px rgba(22,23,27,.12);
+  --r:14px; --r-sm:8px;
+  --serif:"Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --sans:"Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --ease:cubic-bezier(.22,.8,.24,1);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#111215; --surface:#16171B; --raise:#1B1D22;
+    --ink:#EEECE7; --ink-2:#B2B0AA; --ink-3:#7C7C82;
+    --line:rgba(238,236,231,.08); --line-2:rgba(238,236,231,.15);
+    --accent:#FF6A45; --accent-ink:#1A0D08; --accent-soft:rgba(255,106,69,.12); --accent-line:rgba(255,106,69,.4);
+    --ok:#4CC08A; --ok-soft:rgba(76,192,138,.12);
+    --warn:#E0A548; --warn-soft:rgba(224,165,72,.12);
+    --track:rgba(238,236,231,.09);
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 16px 40px -16px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#111215; --surface:#16171B; --raise:#1B1D22;
+  --ink:#EEECE7; --ink-2:#B2B0AA; --ink-3:#7C7C82;
+  --line:rgba(238,236,231,.08); --line-2:rgba(238,236,231,.15);
+  --accent:#FF6A45; --accent-ink:#1A0D08; --accent-soft:rgba(255,106,69,.12); --accent-line:rgba(255,106,69,.4);
+  --ok:#4CC08A; --ok-soft:rgba(76,192,138,.12);
+  --warn:#E0A548; --warn-soft:rgba(224,165,72,.12);
+  --track:rgba(238,236,231,.09);
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 16px 40px -16px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:15px; line-height:1.55;
+  -webkit-font-smoothing:antialiased; font-feature-settings:"ss01","cv11"; overflow-x:hidden}
+button{font:inherit; color:inherit; background:none; border:0; cursor:pointer; padding:0}
+:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:6px}
+svg.i{width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; flex:none}
+.num,.mono{font-family:var(--mono); font-variant-numeric:tabular-nums}
+.eyebrow{font-family:var(--mono); font-size:11.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3)}
+
+/* Top bar */
+.bar{position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter:saturate(1.4) blur(14px); -webkit-backdrop-filter:saturate(1.4) blur(14px); border-bottom:1px solid var(--line)}
+.bar-in{max-width:1240px; margin:0 auto; padding:0 40px; height:60px; display:flex; align-items:center; gap:28px}
+.brand{display:flex; align-items:center; gap:10px; font-weight:600; letter-spacing:-.01em; white-space:nowrap}
+.brand svg{width:22px; height:22px}
+.brand small{font-weight:400; color:var(--ink-3); font-size:13px}
+nav.tabs{display:flex; gap:2px; overflow-x:auto; scrollbar-width:none; flex:1; min-width:0}
+nav.tabs.fade-r{-webkit-mask-image:linear-gradient(to right, #000 calc(100% - 48px), transparent); mask-image:linear-gradient(to right, #000 calc(100% - 48px), transparent)}
+nav.tabs.fade-l{-webkit-mask-image:linear-gradient(to right, transparent, #000 48px); mask-image:linear-gradient(to right, transparent, #000 48px)}
+nav.tabs.fade-l.fade-r{-webkit-mask-image:linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent); mask-image:linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent)}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{padding:7px 12px; border-radius:999px; font-size:13.5px; color:var(--ink-2); white-space:nowrap; transition:color .2s, background .2s}
+nav.tabs button:hover{color:var(--ink); background:var(--track)}
+nav.tabs button[aria-current="page"]{color:var(--ink); background:var(--raise); box-shadow:0 0 0 1px var(--line)}
+.tools{display:flex; gap:4px; align-items:center}
+.icon-btn{display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 10px; border-radius:999px; color:var(--ink-2); font-size:13px; transition:background .2s,color .2s}
+.icon-btn:hover{background:var(--track); color:var(--ink)}
+.icon-btn:active{transform:scale(.97)}
+
+main{max-width:1240px; margin:0 auto; padding:0 40px}
+.screen{display:none; padding:72px 0 96px; animation:enter .5s var(--ease) both}
+.screen.on{display:block}
+@keyframes enter{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+
+h1,h2{font-family:var(--serif); font-weight:400; letter-spacing:-.02em; text-wrap:balance; margin:0}
+h1{font-size:76px; line-height:.98}
+h2{font-size:48px; line-height:1.02}
+h1 em,h2 em{font-style:italic; color:var(--accent)}
+.lede{font-size:18px; color:var(--ink-2); max-width:62ch; margin:20px 0 0; text-wrap:pretty}
+.head{display:flex; align-items:flex-end; justify-content:space-between; gap:32px; margin-bottom:48px}
+.head .lede{font-size:16px}
+
+.btn{display:inline-flex; align-items:center; gap:8px; height:42px; padding:0 18px; border-radius:999px; font-weight:500; font-size:14.5px;
+  transition:transform .15s var(--ease), background .2s, box-shadow .2s}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--ink); color:var(--bg)}
+.btn.primary:hover{box-shadow:0 8px 24px -8px rgba(0,0,0,.35)}
+.btn.primary .dot{width:7px; height:7px; border-radius:50%; background:var(--accent)}
+.btn.ghost{color:var(--ink); box-shadow:inset 0 0 0 1px var(--line-2)}
+.btn.ghost:hover{background:var(--track)}
+.btn[disabled]{opacity:.55; cursor:default}
+
+/* Overview */
+.hero{display:grid; grid-template-columns:1.25fr .75fr; gap:64px; align-items:end}
+.hero .ctas{display:flex; gap:10px; margin-top:36px; flex-wrap:wrap}
+.hero-aside{border-left:1px solid var(--line); padding-left:28px; color:var(--ink-2); font-size:14px}
+.hero-aside .row{display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line)}
+.hero-aside .row:last-child{border-bottom:0}
+.hero-aside b{color:var(--ink); font-weight:500}
+.live-dot{display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--ok); margin-right:8px; box-shadow:0 0 0 3px var(--ok-soft); vertical-align:1px}
+
+.loop{margin-top:88px}
+.loop-track{position:relative; display:grid; grid-template-columns:repeat(5,1fr); border-top:1px solid var(--line-2)}
+.stage{position:relative; padding:28px 24px 0 0}
+.stage::before{content:""; position:absolute; top:-5px; left:0; width:9px; height:9px; border-radius:50%; background:var(--bg); box-shadow:inset 0 0 0 1.5px var(--ink-3)}
+.stage.done::before{background:var(--ink); box-shadow:none}
+.stage.here::before{background:var(--accent); box-shadow:0 0 0 5px var(--accent-soft)}
+.stage .n{font-family:var(--mono); font-size:11.5px; color:var(--ink-3); letter-spacing:.08em}
+.stage h3{font-family:var(--sans); font-weight:600; font-size:15px; letter-spacing:.14em; margin:10px 0 8px}
+.stage p{margin:0; color:var(--ink-2); font-size:14px; max-width:26ch}
+.stage .here-tag{display:none; margin-top:14px; font-size:12.5px; color:var(--accent); font-weight:500}
+.stage.here .here-tag{display:block}
+.loop-back{display:flex; align-items:center; gap:10px; margin-top:28px; color:var(--ink-3); font-size:13px}
+.loop-back svg{color:var(--ink-3)}
+
+.why{margin-top:96px; display:grid; grid-template-columns:200px repeat(3,1fr); gap:40px}
+.why h4{margin:0 0 8px; font-weight:600; font-size:15px}
+.why p{margin:0; color:var(--ink-2); font-size:14px}
+.why .col{border-top:1px solid var(--line); padding-top:18px}
+
+/* Studio */
+.agents{border-top:1px solid var(--line-2)}
+.agent{border-bottom:1px solid var(--line)}
+.agent-row{width:100%; display:grid; grid-template-columns:44px 1.6fr 1fr 110px 84px 20px; align-items:center; gap:20px; padding:22px 4px; text-align:left; transition:background .2s}
+.agent-row:hover{background:color-mix(in srgb, var(--track) 55%, transparent)}
+.a-ic{width:40px; height:40px; border-radius:10px; display:grid; place-items:center; color:var(--ink-2); box-shadow:inset 0 0 0 1px var(--line-2)}
+.agent.live .a-ic{color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent-line); background:var(--accent-soft)}
+.a-name{font-weight:600; font-size:16px; letter-spacing:-.01em}
+.a-scope{color:var(--ink-2); font-size:14px; margin-top:2px}
+.track{display:flex; align-items:center; gap:0}
+.track i{width:8px; height:8px; border-radius:50%; box-shadow:inset 0 0 0 1.5px var(--line-2); flex:none}
+.track i.f{background:var(--ink); box-shadow:none}
+.track i.c{background:var(--accent); box-shadow:0 0 0 4px var(--accent-soft)}
+.track b{height:1.5px; flex:1; max-width:22px; background:var(--line-2)}
+.track-l{font-family:var(--mono); font-size:11px; letter-spacing:.1em; color:var(--ink-3); margin-top:8px}
+.status{font-size:13px; color:var(--ink-2)}
+.status.live{color:var(--ok); font-weight:500}
+.est{font-size:14px; font-variant-numeric:tabular-nums; color:var(--ink-2); text-align:right}
+.agents-h{display:grid; grid-template-columns:44px 1.6fr 1fr 110px 84px 20px; gap:20px; padding:0 4px 12px}
+.agents-h span:nth-child(5){text-align:right}
+.chev{color:var(--ink-3); transition:transform .3s var(--ease)}
+.agent.open .chev{transform:rotate(90deg)}
+.agent-more{display:grid; grid-template-rows:0fr; transition:grid-template-rows .45s var(--ease)}
+.agent.open .agent-more{grid-template-rows:1fr}
+.agent-more > div{overflow:hidden}
+.more-in{display:grid; grid-template-columns:44px 1fr 1fr 1fr 214px; gap:20px 28px; padding:0 4px 28px}
+.more-in .k{grid-column:auto}
+.more-in h5{margin:0 0 6px; font-family:var(--mono); font-weight:400; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3)}
+.more-in p{margin:0; font-size:14px; color:var(--ink-2)}
+.more-in .go{align-self:center; justify-self:end}
+.brief{grid-column:2 / -1; border-top:1px solid var(--line); padding-top:18px}
+.brief-h{display:flex; align-items:baseline; gap:14px; margin-bottom:6px}
+.brief-h h5{margin:0}
+.brief-h span{font-size:13px; color:var(--ink-2)}
+.brief-h em{font-style:normal; color:var(--ink-3); font-size:12px; margin-left:6px}
+.brief ol{margin:0; padding:0; list-style:none; counter-reset:b; display:grid; grid-template-columns:repeat(3,1fr); gap:28px}
+.brief li{counter-increment:b; font-size:14px}
+.brief li::before{content:"Angle " counter(b); display:block; font-family:var(--mono); font-size:11px; letter-spacing:.08em; color:var(--accent); margin:10px 0 4px}
+.brief li b{display:block; font-family:var(--serif); font-weight:400; font-size:19px; line-height:1.2; margin-bottom:4px}
+.brief li span{color:var(--ink-2)}
+.brief-f{margin:14px 0 0 !important; font-size:13px !important; color:var(--ink-3) !important}
+.foot-note{margin-top:28px; color:var(--ink-3); font-size:13px}
+
+/* Interview */
+.iv-head{display:flex; justify-content:space-between; align-items:flex-end; gap:32px; margin-bottom:32px}
+.iv-right{display:flex; align-items:flex-end; gap:36px}
+#s-interview{padding-top:56px}
+.iv-meta{display:flex; gap:28px; flex-wrap:wrap}
+.iv-meta div{font-size:14px}
+.iv-meta span{display:block; font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); margin-bottom:2px}
+.iv-grid{display:grid; grid-template-columns:1.2fr .8fr; gap:48px; align-items:start}
+.call{min-width:0}
+.wave-wrap{display:flex; align-items:center; gap:20px; padding:18px 0; border-top:1px solid var(--line-2); border-bottom:1px solid var(--line)}
+.speaker{width:128px; flex:none}
+.speaker .who{font-weight:600; font-size:14px}
+.speaker .st{font-size:12.5px; color:var(--ink-3)}
+.wave{flex:1; height:56px; min-width:0}
+.wave rect{transition:fill .3s}
+.clock{font-family:var(--mono); font-size:22px; font-variant-numeric:tabular-nums; letter-spacing:-.02em; width:78px; text-align:right}
+.clock small{display:block; font-size:10.5px; letter-spacing:.12em; color:var(--ink-3); text-transform:uppercase}
+.mini{display:none}
+.transcript{-webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 28px); mask-image:linear-gradient(to bottom, transparent 0, #000 28px); height:480px; overflow-y:auto; padding:28px 8px 28px 0; scroll-behavior:smooth; scrollbar-width:thin}
+.empty{height:100%; display:grid; place-items:center; text-align:center; color:var(--ink-3); font-size:14px}
+.empty p{max-width:36ch; margin:12px auto 22px}
+.turn{display:grid; grid-template-columns:96px 1fr; gap:16px; margin-bottom:26px; animation:enter .4s var(--ease) both}
+.turn .lbl{font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); padding-top:4px}
+.turn.t-agent .lbl{color:var(--accent)}
+.turn .txt{font-size:16px; line-height:1.6; max-width:60ch}
+.turn.t-cand .txt{color:var(--ink-2)}
+.turn .txt span{opacity:0; transition:opacity .25s}
+.turn .txt span.v{opacity:1}
+.note{display:grid; grid-template-columns:96px 1fr; gap:16px; margin:-8px 0 26px; animation:enter .45s var(--ease) both}
+.note-in{display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border-radius:var(--r-sm); background:var(--accent-soft); color:var(--ink); font-size:13.5px; box-shadow:inset 2px 0 0 var(--accent)}
+.note-in svg{color:var(--accent); margin-top:1px}
+.note-in b{font-weight:600}
+
+.card{background:var(--raise); border-radius:var(--r); box-shadow:var(--shadow), 0 0 0 1px var(--line)}
+.score{padding:24px 26px; position:sticky; top:84px}
+.score-h{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px}
+.score-h h3{margin:0; font-family:var(--serif); font-weight:400; font-size:28px; letter-spacing:-.01em}
+.pill{font-size:12px; font-weight:500; display:inline-flex; align-items:center; gap:7px; color:var(--ink-3)}
+.pill i{width:6px; height:6px; border-radius:50%; background:var(--ink-3)}
+.pill.run{color:var(--accent)} .pill.run i{background:var(--accent); animation:pulse 1.2s ease-in-out infinite}
+.pill.done{color:var(--ok)} .pill.done i{background:var(--ok)}
+@keyframes pulse{50%{opacity:.3}}
+.score-sub{font-size:13px; color:var(--ink-3); margin-bottom:14px}
+.comp{padding:12px 0; border-top:1px solid var(--line)}
+.comp-top{display:flex; align-items:center; justify-content:space-between; gap:12px}
+.comp-name{font-size:14px; font-weight:500}
+.segs{display:flex; gap:3px; align-items:center}
+.segs i{width:18px; height:5px; border-radius:3px; background:var(--track); transition:background .35s var(--ease)}
+.segs i.f{background:var(--ink)}
+.comp.low .segs i.f{background:var(--warn)}
+.segs .sv{font-family:var(--mono); font-size:13px; width:28px; text-align:right; color:var(--ink-3); margin-left:8px}
+.comp.set .segs .sv{color:var(--ink)}
+.quote{font-family:var(--serif); font-style:italic; font-size:15.5px; line-height:1.35; color:var(--ink-2); margin-top:8px; max-height:0; opacity:0; overflow:hidden; transition:max-height .5s var(--ease), opacity .5s var(--ease)}
+.quote.wait{font-family:var(--sans); font-style:normal; font-size:12.5px; color:var(--ink-3); max-height:40px; opacity:1; margin-top:4px}
+.comp.set .quote{max-height:90px; opacity:1}
+.flags{padding:14px 0 4px; border-top:1px solid var(--line)}
+.flags h5, .rec h5{margin:0 0 8px; font-family:var(--mono); font-weight:400; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3)}
+.flag{display:flex; gap:10px; font-size:13.5px; margin-bottom:10px; opacity:0; transform:translateY(4px); transition:opacity .4s var(--ease), transform .4s var(--ease)}
+.flag.v{opacity:1; transform:none}
+.flag svg{width:16px; height:16px; color:var(--warn); margin-top:2px}
+.flag.probe svg{color:var(--ink-3)}
+.flags .none{font-size:12.5px; color:var(--ink-3); margin-bottom:10px}
+.rec{margin-top:10px; padding:18px; border-radius:10px; background:var(--bg); transition:background .4s, box-shadow .4s}
+.rec.v{background:var(--ok-soft); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--ok) 25%, transparent)}
+.rec-row{display:flex; justify-content:space-between; align-items:baseline; gap:12px}
+.rec-t{font-family:var(--serif); font-size:22px; line-height:1.15; color:var(--ink-3)}
+.rec.v .rec-t{color:var(--ink)}
+.rec-s{font-family:var(--mono); font-size:22px; color:var(--ink-3); white-space:nowrap}
+.rec.v .rec-s{color:var(--ok)}
+.rec-s small{font-size:12px; color:var(--ink-3)}
+.rec p{margin:8px 0 0; font-size:12.5px; color:var(--ink-3)}
+.dest{margin-top:14px; font-family:var(--mono); font-size:11.5px; color:var(--ink-3); display:flex; gap:8px; align-items:center}
+.dest svg{width:14px; height:14px}
+
+/* Build plan */
+.stack{display:grid; grid-template-columns:repeat(4,1fr); margin:0 0 72px; border-top:1px solid var(--line-2); border-bottom:1px solid var(--line)}
+.node{position:relative; padding:26px 24px 26px 0}
+.node + .node{padding-left:24px; border-left:1px solid var(--line)}
+.node .ic{width:36px; height:36px; border-radius:10px; display:grid; place-items:center; box-shadow:inset 0 0 0 1px var(--line-2); color:var(--ink); margin-bottom:16px}
+.node h4{margin:0; font-size:16px; font-weight:600}
+.node .tool{font-family:var(--mono); font-size:12px; color:var(--accent); margin:2px 0 8px}
+.node p{margin:0; font-size:14px; color:var(--ink-2)}
+.node .arr{position:absolute; top:34px; right:-10px; width:20px; height:20px; color:var(--ink-3); background:var(--bg); z-index:1}
+.plan{display:grid; grid-template-columns:1fr 320px; gap:64px}
+.hours{border-top:1px solid var(--line-2)}
+.hour{display:grid; grid-template-columns:96px 1fr 36px; gap:20px; padding:24px 0; border-bottom:1px solid var(--line); align-items:start}
+.hour .t{font-family:var(--mono); font-size:13px; color:var(--ink-3); padding-top:3px}
+.hour h4{margin:0 0 6px; font-size:17px; font-weight:600; letter-spacing:-.01em}
+.hour p{margin:0; color:var(--ink-2); font-size:14.5px; max-width:62ch}
+.hour .dw{margin-top:10px; font-size:13px; color:var(--ink-3)}
+.hour .dw b{color:var(--ink-2); font-weight:500}
+.chk{width:28px; height:28px; border-radius:50%; box-shadow:inset 0 0 0 1.5px var(--line-2); display:grid; place-items:center; color:transparent; transition:all .25s var(--ease)}
+.chk:hover{box-shadow:inset 0 0 0 1.5px var(--ink-3)}
+.hour.done .chk{background:var(--ink); color:var(--bg); box-shadow:none}
+.hour.done h4{color:var(--ink)}
+.hour.done .t{color:var(--ink)}
+.chk svg{width:15px; height:15px; stroke-width:2}
+.prog{display:flex; align-items:center; gap:14px; margin-bottom:18px; font-size:13px; color:var(--ink-3)}
+.prog .bar2{flex:1; height:2px; background:var(--track); border-radius:2px; overflow:hidden}
+.prog .bar2 i{display:block; height:100%; width:0; background:var(--accent); transition:width .5s var(--ease)}
+.skip h5{margin:0 0 4px; font-family:var(--mono); font-weight:400; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3)}
+.skip .ttl{font-family:var(--serif); font-size:26px; line-height:1.1; margin:0 0 18px}
+.skip ul{list-style:none; margin:0; padding:0}
+.skip li{padding:12px 0; border-top:1px solid var(--line); font-size:14px}
+.skip li b{display:block; font-weight:500; color:var(--ink-2); text-decoration:line-through; text-decoration-color:var(--ink-3)}
+.skip li span{color:var(--ink-3); font-size:13px}
+
+/* Teach */
+.docs{display:grid; grid-template-columns:260px 1fr; gap:64px; align-items:start}
+.doc-nav{position:sticky; top:84px; border-top:1px solid var(--line-2)}
+.doc-nav button{display:flex; gap:14px; width:100%; text-align:left; padding:16px 0; border-bottom:1px solid var(--line); color:var(--ink-2); font-size:14.5px; transition:color .2s}
+.doc-nav button .q{font-family:var(--mono); font-size:11.5px; color:var(--ink-3); padding-top:2px}
+.doc-nav button:hover{color:var(--ink)}
+.doc-nav button[aria-selected="true"]{color:var(--ink); font-weight:500}
+.doc-nav button[aria-selected="true"] .q{color:var(--accent)}
+.doc{max-width:720px; display:none; animation:enter .4s var(--ease) both}
+.doc.on{display:block}
+.doc .crumb{font-family:var(--mono); font-size:12px; color:var(--ink-3); margin-bottom:14px}
+.doc h3{font-family:var(--serif); font-weight:400; font-size:38px; line-height:1.05; letter-spacing:-.015em; margin:0 0 18px; text-wrap:balance}
+.doc p{color:var(--ink-2); font-size:16px; line-height:1.65; margin:0 0 18px; max-width:64ch}
+.doc ol{margin:8px 0 24px; padding:0; list-style:none; counter-reset:s}
+.doc ol li{counter-increment:s; display:grid; grid-template-columns:36px 1fr; padding:14px 0; border-top:1px solid var(--line); font-size:15px}
+.doc ol li::before{content:counter(s, decimal-leading-zero); font-family:var(--mono); font-size:12px; color:var(--ink-3); padding-top:3px}
+.doc ol li b{font-weight:600}
+.doc ol li span{color:var(--ink-2)}
+.sheet{width:100%; border-collapse:collapse; font-size:13.5px; margin:8px 0 22px}
+.sheet th{text-align:left; font-family:var(--mono); font-weight:400; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); padding:10px 12px; border-bottom:1px solid var(--line-2)}
+.sheet td{padding:12px; border-bottom:1px solid var(--line); color:var(--ink-2); vertical-align:top}
+.sheet td:first-child{color:var(--ink); font-weight:500}
+.sheet tr.new td{background:var(--accent-soft)}
+.sheet tr.new td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
+.code{font-family:var(--mono); font-size:13px; line-height:1.7; background:var(--raise); border-radius:10px; box-shadow:0 0 0 1px var(--line); padding:18px 20px; color:var(--ink-2); white-space:pre-wrap; margin:6px 0 22px}
+.code .hl{color:var(--ink); background:var(--accent-soft); box-shadow:inset 2px 0 0 var(--accent); display:block; margin:0 -20px; padding:0 20px 0 18px}
+.code .c{color:var(--ink-3)}
+.decision{display:grid; grid-template-columns:1fr 1fr; gap:28px; padding:18px 0; border-top:1px solid var(--line)}
+.decision h5{margin:0 0 4px; font-family:var(--mono); font-weight:400; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3)}
+.decision div{font-size:14.5px}
+.decision .no{color:var(--ink-3)}
+.recipe{display:grid; grid-template-columns:repeat(4,1fr); gap:0; border-top:1px solid var(--line-2); margin:8px 0 24px}
+.recipe div{padding:18px 16px 0 0}
+.recipe div + div{padding-left:16px; border-left:1px solid var(--line)}
+.recipe b{display:block; font-size:14.5px; margin:6px 0 4px}
+.recipe span{font-size:13.5px; color:var(--ink-2)}
+
+/* Opinion */
+.opinion{padding:72px 72px 64px; position:relative; overflow:hidden}
+.opinion::after{content:""; position:absolute; right:-120px; top:-120px; width:360px; height:360px; border-radius:50%;
+  background:radial-gradient(closest-side, var(--accent-soft), transparent); pointer-events:none}
+.opinion blockquote{margin:18px 0 0; font-family:var(--serif); font-size:56px; line-height:1.02; letter-spacing:-.02em; max-width:21ch; text-wrap:balance}
+.opinion blockquote em{color:var(--accent)}
+.vs{display:grid; grid-template-columns:1fr 1fr; gap:56px; margin-top:56px}
+.vs h5{margin:0 0 6px; font-family:var(--mono); font-weight:400; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3)}
+.vs ul{list-style:none; margin:0; padding:0}
+.vs li{display:flex; justify-content:space-between; align-items:baseline; gap:16px; padding:13px 0; border-top:1px solid var(--line); font-size:15px}
+.vs .over li{color:var(--ink-3)}
+.vs .over li s{text-decoration-color:color-mix(in srgb, var(--ink-3) 70%, transparent)}
+.vs .ship li{color:var(--ink)}
+.vs li .mono{font-size:12px; color:var(--ink-3); text-decoration:none}
+.vs .count{font-family:var(--serif); font-size:40px; line-height:1; margin:6px 0 16px}
+.vs .ship .count{color:var(--accent)}
+.rule{margin-top:48px; padding-top:28px; border-top:1px solid var(--line-2); display:flex; justify-content:space-between; gap:32px; align-items:flex-end}
+.rule p{margin:0; font-size:17px; max-width:56ch; color:var(--ink-2)}
+.rule p b{color:var(--ink); font-weight:500}
+.sign{font-family:var(--serif); font-style:italic; font-size:20px; white-space:nowrap}
+
+footer{max-width:1240px; margin:0 auto; padding:24px 40px 48px; display:flex; justify-content:space-between; gap:16px; color:var(--ink-3); font-size:12.5px; border-top:1px solid var(--line)}
+
+@media (max-width: 1080px){
+  h1{font-size:60px} .hero{grid-template-columns:1fr; gap:40px}
+  .hero-aside{border-left:0; padding-left:0; border-top:1px solid var(--line)}
+  .iv-grid{grid-template-columns:1fr} .score{position:static}
+  .plan{grid-template-columns:1fr} .why{grid-template-columns:1fr 1fr}
+}
+@media (max-width: 760px){
+  body{font-size:14.5px}
+  .bar-in{padding:0 16px; gap:12px; height:auto; flex-wrap:wrap; padding-top:10px; padding-bottom:8px}
+  .brand small{display:none}
+  nav.tabs{order:3; flex:0 0 100%; margin:0 -16px; padding:0 12px}
+  .tools{margin-left:auto}
+  .icon-btn{box-shadow:inset 0 0 0 1px var(--line-2)}
+  #resetBtn .lbl{display:inline; font-size:12.5px}
+  main{padding:0 16px} footer{padding:24px 16px 40px; flex-direction:column}
+  .screen{padding:40px 0 64px}
+  h1{font-size:46px} h2{font-size:36px} .lede{font-size:16px}
+  .head,.iv-head,.rule,.iv-right{flex-direction:column; align-items:flex-start}
+  .iv-right{gap:20px} #s-interview{padding-top:40px}
+  .agents-h{display:none}
+  .loop{margin-top:56px}
+  .loop-track{grid-template-columns:1fr; border-top:0; border-left:1px solid var(--line-2); margin-left:4px}
+  .stage{padding:0 0 26px 24px} .stage::before{top:5px; left:-5px}
+  .why{grid-template-columns:1fr; gap:24px; margin-top:56px}
+  .agent-row{grid-template-columns:40px 1fr 20px; gap:14px}
+  .agent-row .trk, .agent-row .est{display:none}
+  .agent-row .status{grid-column:2; margin-top:-8px}
+  .more-in{grid-template-columns:1fr; gap:16px; padding-left:4px}
+  .more-in .go{justify-self:start}
+  .brief{grid-column:auto} .brief ol{grid-template-columns:1fr; gap:4px} .brief-h{flex-direction:column; gap:2px}
+  .more-in .sp{display:none}
+  .speaker{width:auto} .wave-wrap{flex-wrap:wrap; gap:12px} .wave{order:3; flex:0 0 100%}
+  .transcript{height:auto; min-height:260px; overflow:visible; -webkit-mask-image:none; mask-image:none}
+  .mini{display:grid; grid-template-columns:repeat(5,1fr); position:sticky; top:var(--bar-h, 96px); z-index:5; background:var(--bg); border-bottom:1px solid var(--line); padding:10px 0}
+  .mini-s span{display:block; font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3)}
+  .mini-s b{font-family:var(--mono); font-weight:500; font-size:16px; color:var(--ink-3); transition:color .3s}
+  .mini-s b.on{color:var(--ink)} .mini-s b.low{color:var(--warn)} .mini-o b.on{color:var(--ok)}
+  .turn,.note{grid-template-columns:1fr; gap:4px}
+  .note .sp{display:none}
+  .score{padding:22px}
+  .stack{grid-template-columns:1fr 1fr} .node:nth-child(3){padding-left:0; border-left:0}
+  .node:nth-child(n+3){border-top:1px solid var(--line)} .node .arr{display:none}
+  .hour{grid-template-columns:1fr 32px} .hour .t{grid-column:1/-1; padding:0}
+  .docs{grid-template-columns:1fr; gap:28px} .doc-nav{position:static}
+  .doc h3{font-size:30px}
+  .decision{grid-template-columns:1fr; gap:10px}
+  .recipe{grid-template-columns:1fr 1fr} .recipe div:nth-child(3){padding-left:0; border-left:0}
+  .recipe div{padding-bottom:16px}
+  .sheet{font-size:12.5px} .sheet th:nth-child(3), .sheet td:nth-child(3){display:none}
+  .opinion{padding:36px 22px} .opinion blockquote{font-size:36px}
+  .vs{grid-template-columns:1fr; gap:36px}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></symbol>
+    <symbol id="i-mega" viewBox="0 0 24 24"><path d="M3.5 10.5v3a1 1 0 0 0 1 1H7l6.5 4.5v-15L7 8.5H4.5a1 1 0 0 0-1 1z"/><path d="M17 9a4 4 0 0 1 0 6M19.5 6.5a7.5 7.5 0 0 1 0 11"/></symbol>
+    <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20h16M5 15.5l4-4.5 3.5 3L19 6.5"/><path d="M15 6.5h4v4"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3.5 8.5 4.5-8.5 4.5L3.5 8z"/><path d="m3.5 12.5 8.5 4.5 8.5-4.5M3.5 16.5 12 21l8.5-4.5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5.5 21V4M5.5 4.5h11l-2.2 4 2.2 4h-11"/></symbol>
+    <symbol id="i-q" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.6M12 17h.01"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.3-5.4"/><path d="M4.5 4.5v4h4"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2.5 12h2M19.5 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.5 14.5A7.5 7.5 0 1 1 9.5 4.5a6 6 0 0 0 10 10z"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3.5 13.8 10l6.7 2-6.7 2L12 20.5 10.2 14l-6.7-2 6.7-2z"/></symbol>
+    <symbol id="i-flow" viewBox="0 0 24 24"><circle cx="6" cy="17" r="2.5"/><circle cx="18" cy="17" r="2.5"/><circle cx="12" cy="6.5" r="2.5"/><path d="M10.8 8.7 7.2 14.8M13.2 8.7l3.6 6.1M8.5 17h7"/></symbol>
+    <symbol id="i-sheet" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9.5h16M4 14.5h16M9.5 4v16"/></symbol>
+    <symbol id="i-loop" viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 1-14.3 4.9M4 12a8 8 0 0 1 14.3-4.9"/><path d="M18.5 3v4.2h-4.2M5.5 21v-4.2h4.2"/></symbol>
+  </defs>
+</svg>
+
+<header class="bar">
+  <div class="bar-in">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="6" fill="var(--ink)"/><path d="M7 15.5a5 5 0 1 1 9.4 2.4" fill="none" stroke="var(--bg)" stroke-width="1.8" stroke-linecap="round"/><circle cx="16.4" cy="17.9" r="1.7" fill="var(--accent)"/></svg>
+      Agent Studio <small>for your venture studio</small>
+    </div>
+    <nav class="tabs" aria-label="Screens">
+      <button data-go="overview" aria-current="page">Overview</button>
+      <button data-go="studio">Agent studio</button>
+      <button data-go="interview">Recruiting interview</button>
+      <button data-go="build">v0.1 in 4 hours</button>
+      <button data-go="teach">Teach us</button>
+      <button data-go="simple">Overengineered</button>
+    </nav>
+    <div class="tools">
+      <button class="icon-btn" id="themeBtn" aria-label="Toggle theme"><svg class="i"><use href="#i-moon"/></svg></button>
+      <button class="icon-btn" id="resetBtn" aria-label="Reset prototype"><svg class="i"><use href="#i-reset"/></svg><span class="lbl">Reset</span></button>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- OVERVIEW -->
+<section class="screen on" id="s-overview">
+  <div class="hero">
+    <div>
+      <div class="eyebrow">Working prototype</div>
+      <h1 style="margin-top:18px">Practical agents,<br>shipped <em>continuously.</em></h1>
+      <p class="lede">Your agent library, starting with the recruiting agent: it interviews candidates by voice, asks the follow-up a good recruiter would, and hands your hiring manager a scorecard with the evidence in the candidate's own words.</p>
+      <div class="ctas">
+        <button class="btn primary" data-go="interview" data-autostart><span class="dot"></span>Watch it interview</button>
+        <button class="btn ghost" data-go="studio">Open the agent studio <svg class="i"><use href="#i-arrow"/></svg></button>
+      </div>
+    </div>
+    <div class="hero-aside">
+      <div class="row"><span>Live now</span><b><span class="live-dot"></span>Recruiting agent v0.1</b></div>
+      <div class="row"><span>Next in line</span><b>Content &amp; research</b></div>
+      <div class="row"><span>Stack</span><b>Vapi, Claude, n8n, Sheets</b></div>
+      <div class="row"><span>Time to v0.1</span><b>4 hours</b></div>
+    </div>
+  </div>
+
+  <div class="loop">
+    <div class="eyebrow" style="margin-bottom:22px">How every agent moves</div>
+    <div class="loop-track">
+      <div class="stage done"><div class="n">01</div><h3>BUILD</h3><p>v0.1 in an afternoon, on tools you already pay for.</p></div>
+      <div class="stage done"><div class="n">02</div><h3>TEST</h3><p>Your team plays three candidates the same day.</p></div>
+      <div class="stage here"><div class="n">03</div><h3>USE</h3><p>Real candidates, one open role, a person still decides.</p><div class="here-tag">Recruiting agent is here</div></div>
+      <div class="stage"><div class="n">04</div><h3>LEARN</h3><p>Scorecards checked against the hiring manager's calls.</p></div>
+      <div class="stage"><div class="n">05</div><h3>IMPROVE</h3><p>Tune the rubric and the follow-up rule, ship v0.2.</p></div>
+    </div>
+    <div class="loop-back"><svg class="i"><use href="#i-loop"/></svg>Then back to build, for this agent and the next one.</div>
+  </div>
+
+  <div class="why">
+    <div><div class="eyebrow">Why it's built this way</div></div>
+    <div class="col"><h4>Existing tools for the 80%</h4><p>A hosted voice tool already handles calls, turn-taking and transcripts. The custom part is the questions, the follow-up rule and the rubric.</p></div>
+    <div class="col"><h4>One workflow before many agents</h4><p>One voice agent, one scoring call, one sheet. A second agent earns its place only when the first one is trusted.</p></div>
+    <div class="col"><h4>No black box</h4><p>Every agent ships with how it works, why it's built that way and how to change it yourself, so the next one is faster.</p></div>
+  </div>
+</section>
+
+<!-- STUDIO -->
+<section class="screen" id="s-studio">
+  <div class="head">
+    <div>
+      <div class="eyebrow">What we want to build</div>
+      <h2 style="margin-top:14px">Agent studio</h2>
+      <p class="lede">Six agents in your words. One is live; the others are queued with a v0.1 scope small enough to ship in a day.</p>
+    </div>
+  </div>
+  <div class="agents-h eyebrow"><span></span><span>Agent and v0.1 scope</span><span class="trk">Loop stage</span><span>Status</span><span>To v0.1</span><span></span></div>
+  <div class="agents" id="agents"></div>
+  <div class="foot-note">Hours to v0.1 are illustrative, sized to the scope shown.</div>
+</section>
+
+<!-- INTERVIEW -->
+<section class="screen" id="s-interview">
+  <div class="iv-head">
+    <div>
+      <div class="eyebrow">Recruiting agent, v0.1</div>
+      <h2 style="margin-top:14px">Voice interview, <em>live</em></h2>
+    </div>
+    <div class="iv-right">
+      <div class="iv-meta">
+        <div><span>Role</span>Performance Marketing Manager</div>
+        <div><span>Venture</span>Venture 03</div>
+        <div><span>Candidate</span>Lena Hartmann</div>
+        <div><span>Round</span>First, 15 min</div>
+      </div>
+      <button class="btn primary" id="startBtn"><svg class="i"><use href="#i-play"/></svg><span>Start interview</span></button>
+    </div>
+  </div>
+
+  <div class="iv-grid">
+    <div class="call">
+      <div class="wave-wrap">
+        <div class="speaker"><div class="who" id="who">Line open</div><div class="st" id="whoSt">Waiting to start</div></div>
+        <svg class="wave" id="wave" viewBox="0 0 400 56" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <div class="clock"><small>Call</small><span id="clock">00:00</span></div>
+      </div>
+      <div class="mini" id="mini" aria-hidden="true">
+        <div class="mini-s"><span>Ownership</span><b data-m="own">-</b></div>
+        <div class="mini-s"><span>Creative</span><b data-m="cre">-</b></div>
+        <div class="mini-s"><span>Failure</span><b data-m="fail">-</b></div>
+        <div class="mini-s"><span>Specifics</span><b data-m="spec">-</b></div>
+        <div class="mini-s mini-o"><span>Overall</span><b id="miniO">-</b></div>
+      </div>
+      <div class="transcript" id="transcript">
+        <div class="empty" id="empty"><div>
+          <svg class="i" style="width:28px;height:28px;color:var(--ink-3)"><use href="#i-mic"/></svg>
+          <p>Press start. The agent runs a first-round interview with a sample candidate, compressed to under a minute.</p>
+        </div></div>
+      </div>
+    </div>
+
+    <aside class="card score" aria-live="polite">
+      <div class="score-h"><h3>Candidate scorecard</h3><span class="pill" id="pill"><i></i><span>Not started</span></span></div>
+      <div class="score-sub">Scored against the role rubric, 1 to 5. Every score cites the candidate.</div>
+      <div id="comps"></div>
+      <div class="flags">
+        <h5>Red flags and probes</h5>
+        <div class="none" id="noFlags">None yet</div>
+        <div id="flagList"></div>
+      </div>
+      <div class="rec" id="rec">
+        <h5>Recommendation</h5>
+        <div class="rec-row"><div class="rec-t" id="recT">Pending the interview</div><div class="rec-s" id="recS">- <small>/ 5</small></div></div>
+        <p>For the hiring manager. A person makes the call.</p>
+      </div>
+      <div class="dest" id="dest"><svg class="i"><use href="#i-sheet"/></svg><span>Writes to Scorecards sheet and #hiring</span></div>
+    </aside>
+  </div>
+</section>
+
+<!-- BUILD -->
+<section class="screen" id="s-build">
+  <div class="head">
+    <div>
+      <div class="eyebrow">Question 4, the first working version</div>
+      <h2 style="margin-top:14px">v0.1 in <em>4 hours</em>, not 4 days</h2>
+      <p class="lede">An existing voice tool does the calling. One model call does the judging. A sheet your team already reads holds the result.</p>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="node"><div class="ic"><svg class="i"><use href="#i-mic"/></svg></div><h4>Voice interview</h4><div class="tool">Vapi</div><p>Asks the role questions, listens, fires one follow-up when an answer is vague.</p><svg class="i arr"><use href="#i-arrow"/></svg></div>
+    <div class="node"><div class="ic"><svg class="i"><use href="#i-flow"/></svg></div><h4>End-of-call hand-off</h4><div class="tool">n8n</div><p>Catches the transcript the moment the call ends and pulls the role's rubric.</p><svg class="i arr"><use href="#i-arrow"/></svg></div>
+    <div class="node"><div class="ic"><svg class="i"><use href="#i-spark"/></svg></div><h4>Scoring</h4><div class="tool">Claude</div><p>Scores each competency with a quote as evidence, lists red flags, recommends.</p><svg class="i arr"><use href="#i-arrow"/></svg></div>
+    <div class="node"><div class="ic"><svg class="i"><use href="#i-sheet"/></svg></div><h4>Scorecard</h4><div class="tool">Google Sheets + Slack</div><p>One row per candidate, a three-line summary in the hiring channel.</p></div>
+  </div>
+
+  <div class="plan">
+    <div>
+      <div class="prog"><span id="progT" class="num">0 of 4 hours done</span><div class="bar2"><i id="progB"></i></div></div>
+      <div class="hours" id="hours"></div>
+    </div>
+    <div class="skip">
+      <h5>Left out of v0.1, on purpose</h5>
+      <p class="ttl">Five things that can wait until it's trusted.</p>
+      <ul>
+        <li><b>Multi-agent orchestration</b><span>One agent asks, one call scores. That's the whole system.</span></li>
+        <li><b>Custom speech pipeline</b><span>The voice tool covers turn-taking and transcripts.</span></li>
+        <li><b>Vector database</b><span>The rubric is one sheet tab, read on every call.</span></li>
+        <li><b>ATS integration</b><span>v0.2, once the scorecards match your judgment.</span></li>
+        <li><b>Auto-reject</b><span>Never. The scorecard informs, a person decides.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- TEACH -->
+<section class="screen" id="s-teach">
+  <div class="head">
+    <div>
+      <div class="eyebrow">Teach us while you build</div>
+      <h2 style="margin-top:14px">No black box</h2>
+      <p class="lede">Every agent ships with this page. Your four questions, answered for the recruiting agent.</p>
+    </div>
+  </div>
+  <div class="docs">
+    <div class="doc-nav" role="tablist">
+      <button role="tab" aria-selected="true" data-doc="0"><span class="q">01</span>How did you build it?</button>
+      <button role="tab" aria-selected="false" data-doc="1"><span class="q">02</span>Why this approach?</button>
+      <button role="tab" aria-selected="false" data-doc="2"><span class="q">03</span>How can we modify it ourselves?</button>
+      <button role="tab" aria-selected="false" data-doc="3"><span class="q">04</span>How do we build the next one faster?</button>
+    </div>
+    <div>
+      <article class="doc on" data-doc="0">
+        <div class="crumb">Recruiting agent / How it's built</div>
+        <h3>Four pieces, each one you can open and read.</h3>
+        <p>Nothing here is hidden in code. Each piece lives in a tool you can log into, and the order below is the order data moves.</p>
+        <ol>
+          <li><div><b>Rubric sheet.</b> <span>One tab per role: the questions, the competencies, and what a 1 and a 5 sound like.</span></div></li>
+          <li><div><b>Vapi assistant.</b> <span>Reads the questions from the sheet, holds the call, applies the follow-up rule.</span></div></li>
+          <li><div><b>n8n workflow.</b> <span>Four steps: catch the end-of-call webhook, fetch the rubric, ask Claude, write the row.</span></div></li>
+          <li><div><b>Claude scoring prompt.</b> <span>Returns JSON: a score, a quote and a reason per competency, then flags and a recommendation.</span></div></li>
+        </ol>
+      </article>
+      <article class="doc" data-doc="1">
+        <div class="crumb">Recruiting agent / Why this approach</div>
+        <h3>Every choice, and what we said no to.</h3>
+        <div class="decision"><div><h5>Chose</h5>A hosted voice tool</div><div class="no"><h5>Instead of</h5>Building speech-to-text, turn-taking and voice from parts</div></div>
+        <div class="decision"><div><h5>Chose</h5>One follow-up rule in the prompt</div><div class="no"><h5>Instead of</h5>A separate "follow-up agent" deciding what to ask</div></div>
+        <div class="decision"><div><h5>Chose</h5>Scoring after the call, from the full transcript</div><div class="no"><h5>Instead of</h5>Live scoring mid-call, which adds latency and distraction</div></div>
+        <div class="decision"><div><h5>Chose</h5>A Google Sheet for rubrics and results</div><div class="no"><h5>Instead of</h5>A database and admin panel nobody on the team will open</div></div>
+        <div class="decision" style="border-bottom:1px solid var(--line)"><div><h5>Chose</h5>Quotes as evidence for every score</div><div class="no"><h5>Instead of</h5>A bare number the hiring manager has to trust blindly</div></div>
+      </article>
+      <article class="doc" data-doc="2">
+        <div class="crumb">Recruiting agent / Change it yourself</div>
+        <h3>Add a competency by adding a row.</h3>
+        <p>Open the rubric tab for the role and add a line. The next interview asks about it and the scorecard grows a row for it. No code, no redeploy.</p>
+        <table class="sheet">
+          <thead><tr><th>Competency</th><th>Sounds like a 1</th><th>Sounds like a 5</th></tr></thead>
+          <tbody>
+            <tr><td>Performance ownership</td><td>"We grew fast"</td><td>Names spend, CPA and the change that moved it</td></tr>
+            <tr><td>Creative testing</td><td>"We tried a lot of ads"</td><td>Specific hooks, how they were tested, what won</td></tr>
+            <tr><td>Learning from failure</td><td>No failure named</td><td>A real mistake and the rule it changed</td></tr>
+            <tr class="new"><td>Stakeholder communication</td><td>"I kept everyone updated"</td><td>How a bad week was explained to a founder</td></tr>
+          </tbody>
+        </table>
+        <p>To make the interviewer stricter or softer, edit one line of its instructions:</p>
+        <div class="code"><span class="c"># Vapi assistant, follow-up rule</span>
+After each answer, check for one concrete example and one number.
+<span class="hl">If either is missing, ask one follow-up that names what's missing.</span>Never ask more than one follow-up per question. Move on politely.</div>
+      </article>
+      <article class="doc" data-doc="3">
+        <div class="crumb">Studio playbook / The next one</div>
+        <h3>Every agent is the same four parts.</h3>
+        <p>Once you see the shape, the content &amp; research agent is the recruiting agent with a different trigger and a different rubric.</p>
+        <div class="recipe">
+          <div><span class="eyebrow">Trigger</span><b>What starts it</b><span>A call ends, a Monday arrives, a report lands.</span></div>
+          <div><span class="eyebrow">Judgment</span><b>One model call</b><span>With a rubric written in your words.</span></div>
+          <div><span class="eyebrow">Output</span><b>Where it lands</b><span>A sheet, a doc or a channel you already read.</span></div>
+          <div><span class="eyebrow">Check</span><b>A person looks</b><span>Until the output is trusted, then less often.</span></div>
+        </div>
+        <p>Each build comes with this page, so the fifth agent is one your team can build on its own.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- OVERENGINEERED -->
+<section class="screen" id="s-simple">
+  <div class="card opinion">
+    <div class="eyebrow">Question 5, what people overengineer</div>
+    <blockquote>A crew of agents for a job <em>one good prompt</em> and a spreadsheet can do.</blockquote>
+    <div class="vs">
+      <div class="over">
+        <h5>What usually gets built</h5>
+        <div class="count">7 parts</div>
+        <ul>
+          <li><s>Planner agent</s> <span class="mono">decides the questions</span></li>
+          <li><s>Interviewer agent</s> <span class="mono">asks them</span></li>
+          <li><s>Follow-up agent</s> <span class="mono">decides what's vague</span></li>
+          <li><s>Evaluator agent</s> <span class="mono">scores</span></li>
+          <li><s>Memory store</s> <span class="mono">remembers the call</span></li>
+          <li><s>Vector database</s> <span class="mono">holds the rubric</span></li>
+          <li><s>Custom dashboard</s> <span class="mono">shows the result</span></li>
+        </ul>
+      </div>
+      <div class="ship">
+        <h5>What ships the same afternoon</h5>
+        <div class="count">4 parts</div>
+        <ul>
+          <li>One voice agent with the questions and a follow-up rule <span class="mono">Vapi</span></li>
+          <li>One end-of-call hand-off <span class="mono">n8n</span></li>
+          <li>One scoring call with a rubric <span class="mono">Claude</span></li>
+          <li>One sheet the team already reads <span class="mono">Sheets</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="rule">
+      <p><b>Add a second agent when the first one's output is trusted and the bottleneck is obvious.</b> Until then, every extra part is one more thing to debug and one less thing your team can change on its own.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <span>Prototype on sample data. The candidate, role and venture are illustrative.</span>
+  <span>Build, test, use, learn, improve.</span>
+</footer>
+
+<script>
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var $ = function(s, r){ return (r||document).querySelector(s); };
+  var $$ = function(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); };
+  function ic(id, cls){ return '<svg class="i'+(cls?' '+cls:'')+'"><use href="#i-'+id+'"/></svg>'; }
+
+  /* ---------- navigation ---------- */
+  function go(name, autostart){
+    $$('.screen').forEach(function(s){ s.classList.toggle('on', s.id === 's-'+name); });
+    $$('nav.tabs button').forEach(function(b){
+      if (b.dataset.go === name) { b.setAttribute('aria-current','page'); b.scrollIntoView({block:'nearest', inline:'nearest'}); }
+      else b.removeAttribute('aria-current');
+    });
+    window.scrollTo({top:0, behavior: reduce ? 'auto' : 'smooth'});
+    if (autostart && !running && !finished) setTimeout(startInterview, 450);
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('[data-go]');
+    if (!b) return;
+    e.preventDefault();
+    go(b.dataset.go, b.hasAttribute('data-autostart'));
+  });
+
+  var navEl = $('nav.tabs');
+  function syncNavFade(){
+    navEl.classList.toggle('fade-l', navEl.scrollLeft > 4);
+    navEl.classList.toggle('fade-r', navEl.scrollLeft + navEl.clientWidth < navEl.scrollWidth - 4);
+    root.style.setProperty('--bar-h', $('header.bar').offsetHeight + 'px');
+  }
+  navEl.addEventListener('scroll', syncNavFade, {passive:true});
+  window.addEventListener('resize', syncNavFade);
+  setTimeout(syncNavFade, 0); setTimeout(syncNavFade, 600);
+
+  /* ---------- theme ---------- */
+  var root = document.documentElement;
+  function isDark(){
+    var t = root.getAttribute('data-theme');
+    if (t) return t === 'dark';
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  function syncThemeIcon(){ $('#themeBtn').innerHTML = ic(isDark() ? 'sun' : 'moon'); }
+  $('#themeBtn').addEventListener('click', function(){
+    root.setAttribute('data-theme', isDark() ? 'light' : 'dark');
+    try { localStorage.setItem('vs-theme', root.getAttribute('data-theme')); } catch(err){}
+    syncThemeIcon(); drawWave(true);
+  });
+  try { var saved = localStorage.getItem('vs-theme'); if (saved) root.setAttribute('data-theme', saved); } catch(err){}
+  syncThemeIcon();
+
+  /* ---------- agent studio ---------- */
+  var STAGES = ['BUILD','TEST','USE','LEARN','IMPROVE'];
+  var AGENTS = [
+    {id:'rec', icon:'mic', name:'Recruiting agent', scope:'Voice interview for one role, dynamic follow-ups, a scorecard with evidence.', stage:2, status:'Live, v0.1', live:true, est:'4 hours',
+      input:'A candidate books a slot from the job ad and gets a call link.', does:'Interviews by voice, follows up on vague answers, scores against the role rubric.', out:'A scorecard row in the sheet and a summary in #hiring.'},
+    {id:'con', icon:'doc', name:'Content & research agent', scope:'A weekly topic brief from competitors and search, with three drafts to edit.', stage:0, status:'Next in line', est:'6 hours', sample:true,
+      input:'Your list of competitors and topics, every Monday.', does:'Researches what they published and what people search, picks ten angles, drafts three.', out:'One brief and three drafts in a shared doc.'},
+    {id:'adv', icon:'mega', name:'Advertising & creative agent', scope:'Competitor ads clustered into winning angles, then hooks and scripts.', stage:-1, status:'Queued', est:'6 hours',
+      input:'A product, a market and the competitors to watch.', does:'Pulls their live ads, groups them by angle, writes twenty hooks and five scripts.', out:'A creative brief your team tests, with results fed back next round.'},
+    {id:'mkt', icon:'compass', name:'Market research agent', scope:'A standing scan of one market for new products, competitors and trends.', stage:-1, status:'Queued', est:'8 hours',
+      input:'The markets you are weighing for the next venture.', does:'Checks launches, pricing, reviews and trends on a schedule, flags what changed.', out:'A weekly opportunity note, ranked, with sources.'},
+    {id:'per', icon:'chart', name:'Performance agent', scope:'A morning read of campaign and business data with three recommendations.', stage:-1, status:'Queued', est:'6 hours',
+      input:'Yesterday’s campaign and revenue numbers.', does:'Spots anomalies against the last 14 days and explains the likely cause.', out:'Three actions in the channel before the team starts.'},
+    {id:'ops', icon:'layers', name:'Operations agent', scope:'One repetitive internal workflow turned into a one-click run.', stage:-1, status:'Queued', est:'4 hours',
+      input:'The documents, data or messages the task starts from.', does:'Does the reading, sorting and drafting a person does today.', out:'A finished report, doc or reply, waiting for a yes.'}
+  ];
+  var SAMPLE_BRIEF = '<span class="sp"></span><div class="brief"><div class="brief-h"><h5>Sample output</h5><span>Weekly brief, Venture 03, week 41 <em>illustrative</em></span></div>'+
+    '<ol>'+
+    '<li><b>The 20-minute plan nobody sells.</b><span>Three competitors lead with hour-long programs; searches for short home workouts keep climbing.</span></li>'+
+    '<li><b>Show the week-four drop-off, then fix it.</b><span>Reviews across the category complain about motivation after a month; no one talks about it openly.</span></li>'+
+    '<li><b>Coach notes, not AI hype.</b><span>Competitor posts that name a real coach outperform their feature posts in comments.</span></li>'+
+    '</ol><p class="brief-f">Three drafts attached, one per angle, ready for an editor.</p></div>';
+  function track(stage){
+    var h = '<div class="track">';
+    for (var i=0;i<5;i++){
+      h += '<i class="'+(i<stage?'f':(i===stage?'c':''))+'"></i>' + (i<4?'<b></b>':'');
+    }
+    return h + '</div><div class="track-l">'+(stage>=0 ? STAGES[stage] : 'NOT STARTED')+'</div>';
+  }
+  var agentsEl = $('#agents');
+  agentsEl.innerHTML = AGENTS.map(function(a){
+    return '<div class="agent'+(a.live?' live open':'')+'" data-a="'+a.id+'">'+
+      '<button class="agent-row" aria-expanded="'+(a.live?'true':'false')+'">'+
+        '<span class="a-ic">'+ic(a.icon)+'</span>'+
+        '<span><div class="a-name">'+a.name+'</div><div class="a-scope">'+a.scope+'</div></span>'+
+        '<span class="trk">'+track(a.stage)+'</span>'+
+        '<span class="status'+(a.live?' live':'')+'">'+(a.live?'<span class="live-dot"></span>':'')+a.status+'</span>'+
+        '<span class="est">'+a.est+'</span>'+
+        '<span class="chev">'+ic('chev')+'</span>'+
+      '</button>'+
+      '<div class="agent-more"><div><div class="more-in">'+
+        '<span class="sp"></span>'+
+        '<div><h5>Input</h5><p>'+a.input+'</p></div>'+
+        '<div><h5>v0.1 does</h5><p>'+a.does+'</p></div>'+
+        '<div><h5>Output</h5><p>'+a.out+'</p></div>'+
+        (a.live ? '<div class="go"><button class="btn ghost" data-go="interview" data-autostart>Watch it interview '+ic('arrow')+'</button></div>' : '<div class="go"></div>')+
+        (a.sample ? SAMPLE_BRIEF : '')+
+      '</div></div></div></div>';
+  }).join('');
+  agentsEl.addEventListener('click', function(e){
+    var row = e.target.closest('.agent-row');
+    if (!row) return;
+    var a = row.parentNode, open = !a.classList.contains('open');
+    a.classList.toggle('open', open);
+    row.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  function resetAgents(){
+    $$('.agent', agentsEl).forEach(function(a){
+      var live = a.classList.contains('live');
+      a.classList.toggle('open', live);
+      $('.agent-row', a).setAttribute('aria-expanded', live ? 'true' : 'false');
+    });
+  }
+
+  /* ---------- build plan ---------- */
+  var HOURS = [
+    {t:'0:00 - 1:00', h:'Rubric and questions', p:'One sheet tab for the role: five questions, four competencies, and what a 1 and a 5 sound like.', d:'the hiring manager agrees with the anchors.'},
+    {t:'1:00 - 2:00', h:'Voice interviewer', p:'A Vapi assistant reads the questions and applies one rule: no example or no number, ask once more.', d:'it holds a 15-minute call without talking over anyone.'},
+    {t:'2:00 - 3:00', h:'Scoring', p:'The end-of-call webhook runs an n8n flow; Claude scores the transcript against the rubric and returns JSON with quotes.', d:'every score cites a line the candidate actually said.'},
+    {t:'3:00 - 4:00', h:'Hand-off and test', p:'The scorecard lands as a row in the sheet and a short summary in #hiring. Three of your team play candidates.', d:'the three test scorecards match what your team would have written.'}
+  ];
+  var hoursEl = $('#hours');
+  hoursEl.innerHTML = HOURS.map(function(x,i){
+    return '<div class="hour" data-h="'+i+'"><div class="t">'+x.t+'</div><div><h4>'+x.h+'</h4><p>'+x.p+'</p><div class="dw"><b>Done when</b> '+x.d+'</div></div>'+
+      '<button class="chk" aria-label="Mark '+x.h+' done" aria-pressed="false">'+ic('check')+'</button></div>';
+  }).join('');
+  function syncProg(){
+    var n = $$('.hour.done', hoursEl).length;
+    $('#progT').textContent = n + ' of 4 hours done' + (n===4 ? ', v0.1 is live' : '');
+    $('#progB').style.width = (n/4*100)+'%';
+  }
+  hoursEl.addEventListener('click', function(e){
+    var c = e.target.closest('.chk'); if (!c) return;
+    var h = c.parentNode; var on = !h.classList.contains('done');
+    h.classList.toggle('done', on); c.setAttribute('aria-pressed', on ? 'true':'false'); syncProg();
+  });
+  function resetHours(){ $$('.hour', hoursEl).forEach(function(h){ h.classList.remove('done'); $('.chk',h).setAttribute('aria-pressed','false'); }); syncProg(); }
+
+  /* ---------- docs ---------- */
+  function showDoc(i){
+    $$('.doc-nav button').forEach(function(b){ b.setAttribute('aria-selected', b.dataset.doc == i ? 'true':'false'); });
+    $$('.doc').forEach(function(d){ d.classList.toggle('on', d.dataset.doc == i); });
+  }
+  $$('.doc-nav button').forEach(function(b){ b.addEventListener('click', function(){ showDoc(b.dataset.doc); }); });
+
+  /* ---------- scorecard ---------- */
+  var COMPS = [
+    {k:'own', n:'Performance ownership'},
+    {k:'cre', n:'Creative testing'},
+    {k:'fail', n:'Learning from failure'},
+    {k:'spec', n:'Specific first answers'}
+  ];
+  var compsEl = $('#comps');
+  function renderComps(){
+    compsEl.innerHTML = COMPS.map(function(c){
+      return '<div class="comp" data-k="'+c.k+'"><div class="comp-top"><span class="comp-name">'+c.n+'</span>'+
+        '<span class="segs"><i></i><i></i><i></i><i></i><i></i><span class="sv">-</span></span></div>'+
+        '<div class="quote wait">Waiting for evidence</div></div>';
+    }).join('');
+  }
+  function setScore(k, score, quote, low){
+    var c = $('.comp[data-k="'+k+'"]', compsEl); if (!c) return;
+    var q = $('.quote', c); q.classList.remove('wait'); q.textContent = '“' + quote + '”';
+    c.classList.add('set'); if (low) c.classList.add('low');
+    var segs = $$('.segs i', c);
+    segs.forEach(function(s, i){ if (i < score) setTimeout(function(){ s.classList.add('f'); }, reduce ? 0 : 90*i); });
+    $('.sv', c).textContent = score + '.0';
+    var m = $('[data-m="'+k+'"]'); m.textContent = score + '.0'; m.classList.add(low ? 'low' : 'on');
+  }
+  function addFlag(text, probe){
+    $('#noFlags').style.display = 'none';
+    var d = document.createElement('div');
+    d.className = 'flag' + (probe ? ' probe' : '');
+    d.innerHTML = ic(probe ? 'q' : 'flag') + '<span>' + text + '</span>';
+    $('#flagList').appendChild(d);
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ d.classList.add('v'); }); });
+  }
+  function setPill(state, text){ var p = $('#pill'); p.className = 'pill' + (state ? ' '+state : ''); $('span', p).textContent = text; }
+
+  /* ---------- waveform ---------- */
+  var BARS = 64, wave = $('#wave'), heights = [], targets = [], speaker = null, raf = null;
+  (function(){
+    var h = '';
+    for (var i=0;i<BARS;i++){ heights.push(2); targets.push(2); h += '<rect x="'+(i*400/BARS+1.2)+'" width="'+(400/BARS-2.4)+'" y="27" height="2" rx="1.2"></rect>'; }
+    wave.innerHTML = h;
+  })();
+  function cssVar(n){ return getComputedStyle(root).getPropertyValue(n).trim(); }
+  function drawWave(force){
+    var rects = wave.children, col = speaker === 'agent' ? cssVar('--accent') : (speaker === 'cand' ? cssVar('--ink') : cssVar('--line-2'));
+    for (var i=0;i<BARS;i++){
+      var h = heights[i];
+      rects[i].setAttribute('y', (28 - h/2).toFixed(1));
+      rects[i].setAttribute('height', h.toFixed(1));
+      rects[i].setAttribute('fill', col);
+    }
+  }
+  var tick = 0;
+  function loop(){
+    tick++;
+    var settled = true;
+    for (var i=0;i<BARS;i++){
+      if (speaker && tick % 4 === 0){
+        var env = Math.sin(i/BARS*Math.PI);
+        var syll = 0.45 + 0.55*Math.abs(Math.sin(tick*0.07 + i*0.35));
+        targets[i] = 3 + Math.random()*48*env*syll;
+      } else if (!speaker){ targets[i] = 2; }
+      heights[i] += (targets[i]-heights[i])*0.28;
+      if (Math.abs(targets[i]-heights[i]) > 0.3) settled = false;
+    }
+    drawWave();
+    if (speaker || !settled) raf = requestAnimationFrame(loop); else raf = null;
+  }
+  function speak(who){
+    speaker = who;
+    $('#who').textContent = who === 'agent' ? 'Agent' : (who === 'cand' ? 'Lena' : 'Line open');
+    $('#whoSt').textContent = who === 'agent' ? 'Speaking' : (who === 'cand' ? 'Speaking' : (finished ? 'Call ended' : 'Listening'));
+    if (reduce){ drawWave(); return; }
+    if (!raf) raf = requestAnimationFrame(loop);
+  }
+  drawWave();
+
+  /* ---------- interview script ---------- */
+  var runId = 0, running = false, finished = false, clockT = null, clockStart = 0;
+  var SCRIPT = [
+    {w:'agent', t:'Hi Lena, thanks for making time. This is the first-round interview for the Performance Marketing Manager role, about fifteen minutes. First question: walk me through a campaign you scaled. What did you own, and what changed because of you?'},
+    {w:'cand', t:'Sure. At my last company I managed a lot of campaigns, mostly Meta and Google. We grew really fast, and I was responsible for optimizing performance overall, working closely with the creative team.'},
+    {note:'<b>Follow-up rule fired.</b> No single campaign and no numbers in that answer, so the agent asks for both.'},
+    {w:'agent', t:'Let’s make it concrete. Pick one campaign. What was the daily spend when you took it over, and what was the one change that moved cost per install the most?'},
+    {w:'cand', t:'Okay, the app-install campaign for our fitness app. We were spending about two thousand euros a day at roughly fourteen euros per install. I cut the broad lookalikes and rebuilt everything around three UGC hooks. Three weeks later we were at nine euros.',
+      after:function(){ setScore('own', 4, 'We were spending about two thousand euros a day at roughly fourteen euros per install.'); later(function(){ setScore('cre', 4, 'I cut the broad lookalikes and rebuilt everything around three UGC hooks.'); }, 500); }},
+    {w:'agent', t:'Good. What did you try on that campaign that didn’t work?'},
+    {w:'cand', t:'Scaling the budget fifty percent overnight. Cost per install spiked for four days. Now I step budgets up twenty percent every forty-eight hours.',
+      after:function(){ setScore('fail', 5, 'Now I step budgets up twenty percent every forty-eight hours.'); later(function(){ setScore('spec', 2, 'I was responsible for optimizing performance overall.', true); later(function(){ addFlag('Opening answer was generic. The numbers only came after a follow-up.'); }, 450); }, 500); }},
+    {w:'agent', t:'That’s everything for today, Lena. Thank you. You’ll hear from the team within two working days.',
+      after:function(){ addFlag('Probe in round two: how she measured whether the drop to nine euros was real.', true); }}
+  ];
+  var timers = [];
+  function later(fn, ms){ var id = runId; timers.push(setTimeout(function(){ if (id === runId) fn(); }, reduce ? 0 : ms)); }
+  function sleep(ms){ return new Promise(function(r){ timers.push(setTimeout(r, reduce ? 0 : ms)); }); }
+  function scrollT(){
+    var t = $('#transcript');
+    if (t.scrollHeight > t.clientHeight + 2) { t.scrollTop = t.scrollHeight; return; }
+    if (!$('#s-interview').classList.contains('on')) return;
+    var last = t.lastElementChild; if (!last) return;
+    var b = last.getBoundingClientRect().bottom;
+    if (b > window.innerHeight - 24) window.scrollBy({top: b - window.innerHeight + 48, behavior: reduce ? 'auto' : 'smooth'});
+  }
+  function typeTurn(item, id){
+    return new Promise(function(resolve){
+      var el = document.createElement('div');
+      el.className = 'turn t-' + item.w;
+      var words = item.t.split(' ');
+      el.innerHTML = '<div class="lbl">'+(item.w==='agent'?'Agent':'Lena')+'</div><div class="txt">'+words.map(function(w){ return '<span>'+w+' </span>'; }).join('')+'</div>';
+      $('#transcript').appendChild(el);
+      speak(item.w);
+      var spans = $$('.txt span', el), i = 0;
+      if (reduce){ spans.forEach(function(s){ s.classList.add('v'); }); scrollT(); resolve(); return; }
+      (function step(){
+        if (id !== runId) return resolve();
+        if (i >= spans.length){ resolve(); return; }
+        spans[i++].classList.add('v');
+        if (i % 6 === 0) scrollT();
+        timers.push(setTimeout(step, item.w === 'agent' ? 58 : 66));
+      })();
+      scrollT();
+    });
+  }
+  function fmt(s){ s = Math.floor(s); return (s/60<10?'0':'')+Math.floor(s/60)+':'+(s%60<10?'0':'')+(s%60); }
+  function startClock(){
+    clockStart = performance.now();
+    clockT = setInterval(function(){ $('#clock').textContent = fmt(Math.min((performance.now()-clockStart)/1000*19, 14*60)); }, 200);
+  }
+  function stopClock(final){ clearInterval(clockT); clockT = null; if (final) $('#clock').textContent = final; }
+
+  async function startInterview(){
+    if (running) return;
+    var id = ++runId;
+    clearInterview();
+    running = true; finished = false;
+    var sb = $('#startBtn'); sb.disabled = true; $('span', sb).textContent = 'Interviewing';
+    setPill('run', 'Scoring');
+    $('#empty').style.display = 'none';
+    startClock();
+    for (var k=0;k<SCRIPT.length;k++){
+      if (id !== runId) return;
+      var item = SCRIPT[k];
+      if (item.note){
+        speak(null); $('#whoSt').textContent = 'Checking the answer';
+        await sleep(500); if (id !== runId) return;
+        var n = document.createElement('div'); n.className = 'note';
+        n.innerHTML = '<span class="sp"></span><div class="note-in">'+ic('spark')+'<span>'+item.note+'</span></div>';
+        $('#transcript').appendChild(n); scrollT();
+        await sleep(1100);
+        continue;
+      }
+      await typeTurn(item, id); if (id !== runId) return;
+      if (item.after) item.after();
+      speak(null);
+      await sleep(item.w === 'cand' ? 900 : 650);
+    }
+    if (id !== runId) return;
+    await sleep(700); if (id !== runId) return;
+    stopClock('14:08');
+    running = false; finished = true;
+    speak(null);
+    $('#who').textContent = 'Call ended'; $('#whoSt').textContent = 'Scorecard written';
+    var rec = $('#rec'); rec.classList.add('v');
+    $('#recT').textContent = 'Advance to a paid test task';
+    $('#recS').innerHTML = '3.8 <small>/ 5</small>';
+    $('#miniO').textContent = '3.8'; $('#miniO').classList.add('on');
+    setPill('done', 'Complete');
+    $('#dest span').textContent = 'Written to Scorecards sheet, row 48, and posted in #hiring';
+    sb.disabled = false; $('span', sb).textContent = 'Replay interview';
+    later(function(){ var r = rec.getBoundingClientRect(); if (r.bottom > window.innerHeight) window.scrollBy({top: r.bottom - window.innerHeight + 32, behavior: reduce ? 'auto' : 'smooth'}); }, 350);
+  }
+  function clearInterview(){
+    timers.forEach(clearTimeout); timers = [];
+    stopClock(); $('#clock').textContent = '00:00';
+    $$('#mini b').forEach(function(b){ b.textContent = '-'; b.className = ''; });
+    $$('#transcript .turn, #transcript .note').forEach(function(n){ n.remove(); });
+    $('#empty').style.display = '';
+    $('#transcript').scrollTop = 0;
+    renderComps();
+    $('#flagList').innerHTML = ''; $('#noFlags').style.display = '';
+    var rec = $('#rec'); rec.classList.remove('v');
+    $('#recT').textContent = 'Pending the interview';
+    $('#recS').innerHTML = '- <small>/ 5</small>';
+    $('#dest span').textContent = 'Writes to Scorecards sheet and #hiring';
+    setPill('', 'Not started');
+    finished = false; speaker = null;
+    $('#who').textContent = 'Line open'; $('#whoSt').textContent = 'Waiting to start';
+    if (!raf) raf = requestAnimationFrame(loop);
+  }
+  function resetInterview(){
+    runId++; running = false; clearInterview();
+    var sb = $('#startBtn'); sb.disabled = false; $('span', sb).textContent = 'Start interview';
+  }
+  $('#startBtn').addEventListener('click', function(){ if (!running) startInterview(); });
+  renderComps();
+
+  /* ---------- reset ---------- */
+  $('#resetBtn').addEventListener('click', function(){
+    resetInterview(); resetHours(); resetAgents(); showDoc(0);
+  });
+
+  window.__proto = {go:go, start:startInterview, reset:function(){ $('#resetBtn').click(); }};
+})();
+</script>

@@ -1,0 +1,333 @@
+{
+  "title": "Your Leads Into Zoho CRM: Enriched, Deduped, Followed Up, Reported",
+  "platform": "n8n",
+  "client": {
+    "industry": "CRM and lead-gen / GTM",
+    "location": "Virginia, US"
+  },
+  "overview": {
+    "how_it_works": [
+      "Your post left three blanks. Filled: UTM-tagged website forms, Apollo, Gmail then Twilio SMS.",
+      "Every lead gets Apollo's job title, company and website, then lands in Zoho CRM with each field mapped.",
+      "Zoho matches on email, then phone: a repeat form fill updates the lead and never restarts the follow-up.",
+      "New leads get Email 1 within a minute and a text the next day, unless Zoho already shows them contacted.",
+      "Room to add next: Meta instant forms, more touches, WhatsApp through the same Twilio node."
+    ],
+    "setup": [
+      "Add hidden utm_source and utm_campaign fields to your forms and point them at this webhook.",
+      "Before go-live, set Authentication on the three Zoho nodes (3, 7, 11) to n8n's Zoho OAuth2 credential. The Config token is only for a first test, because a Zoho token expires in an hour.",
+      "Add Google Ads and Website to your Zoho Lead Source picklist.",
+      "Register your Twilio number for US business texting (A2P 10DLC) before the text goes live.",
+      "Set this workflow's Error Workflow to your n8n alert so a failed Zoho write reaches you."
+    ],
+    "need_from_you": [
+      "Zoho CRM admin access, your edition, and any mandatory fields on your Lead layout.",
+      "Your Apollo API key, the Gmail inbox that sends Email 1, and your Twilio number.",
+      "Your booking link and the wording you want in Email 1 and the text.",
+      "Your lead volume per month and every source you run ads on."
+    ]
+  },
+  "config": {
+    "your_company_name": "PASTE-YOUR-COMPANY-NAME",
+    "sender_name": "PASTE-YOUR-SENDER-NAME",
+    "booking_link": "PASTE-YOUR-BOOKING-LINK",
+    "zoho_bcc_dropbox": "PASTE-YOUR-ZOHO-BCC-DROPBOX-ADDRESS",
+    "twilio_number": "PASTE-YOUR-TWILIO-NUMBER"
+  },
+  "sections": [
+    {
+      "key": "capture",
+      "label": "1 - CAPTURE LEADS FROM YOUR ADS AND WEBSITE FORMS",
+      "color": 0,
+      "note": "Your website and ad landing-page forms post every lead to one webhook, carrying the UTM tag your Google and Facebook ads add. That tag becomes the lead's source in Zoho. A form that drops the tag files the lead as Website, and your by-source report goes flat."
+    },
+    {
+      "key": "enrich",
+      "label": "2 - ENRICH EACH LEAD THROUGH APOLLO",
+      "color": 1,
+      "note": "Apollo looks the lead up by work email and adds job title, company, website and location. No match, and the lead carries on without them."
+    },
+    {
+      "key": "zoho",
+      "label": "3 - ROUTE INTO ZOHO CRM: FIELD MAPPING AND DEDUP",
+      "color": 2,
+      "note": "Every field maps to your Zoho CRM lead layout, and Zoho checks email, then phone, before it writes. New leads are created; returning ones are updated and skip the follow-up."
+    },
+    {
+      "key": "follow",
+      "label": "4 - FOLLOW-UP SEQUENCE: EMAIL NOW, TEXT NEXT DAY",
+      "color": 3,
+      "note": "Email 1 goes from your Gmail within a minute, BCC'd to Zoho so it shows on the lead. The next day a text goes out, only if Zoho still shows them not contacted."
+    },
+    {
+      "key": "report",
+      "label": "5 - REPORT: LEAD VOLUME AND CONVERSION BY SOURCE",
+      "color": 4,
+      "note": "Every Monday your Lead Dashboard tab refreshes from Zoho: leads, converted leads and conversion rate per source for the last 30 days."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 - New Lead From Your Ads or Website Form",
+      "section": "capture",
+      "notes": "The UTM tag rides in with each lead, so its source is set before anything else runs.",
+      "params": {
+        "path": "zoho-lead-capture",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "key": "apollo",
+      "kind": "net.http",
+      "label": "2 - Apollo: Enrich With Job Title, Company and Website",
+      "section": "enrich",
+      "params": {
+        "service": "apollo",
+        "method": "POST",
+        "url": "https://api.apollo.io/api/v1/people/match",
+        "body": {
+          "email": "{{ $('1 - New Lead From Your Ads or Website Form').item.json.body.email }}",
+          "first_name": "{{ $('1 - New Lead From Your Ads or Website Form').item.json.body.first_name }}",
+          "last_name": "{{ $('1 - New Lead From Your Ads or Website Form').item.json.body.last_name }}",
+          "organization_name": "{{ $('1 - New Lead From Your Ads or Website Form').item.json.body.company }}",
+          "reveal_personal_emails": false
+        },
+        "onError": "continueRegularOutput"
+      }
+    },
+    {
+      "key": "upsert",
+      "kind": "net.http",
+      "label": "3 - Zoho CRM: Match by Email or Phone, Then Create or Update",
+      "section": "zoho",
+      "notes": "One person from two ads stays one Zoho lead: email is checked first, then phone.",
+      "params": {
+        "service": "zoho",
+        "method": "POST",
+        "url": "https://www.zohoapis.com/crm/v2/Leads/upsert",
+        "body": "{{ JSON.stringify({\n  data: [{\n    First_Name: $('1 - New Lead From Your Ads or Website Form').item.json.body.first_name,\n    Last_Name: $('1 - New Lead From Your Ads or Website Form').item.json.body.last_name || 'Not given',\n    Email: $('1 - New Lead From Your Ads or Website Form').item.json.body.email,\n    Phone: $('1 - New Lead From Your Ads or Website Form').item.json.body.phone || undefined,\n    Company: $('1 - New Lead From Your Ads or Website Form').item.json.body.company || $json.person?.organization?.name || 'Not given',\n    Designation: $json.person?.title || undefined,\n    Website: $json.person?.organization?.website_url || undefined,\n    City: $json.person?.city || undefined,\n    State: $json.person?.state || undefined,\n    Lead_Source: { google: 'Google Ads', facebook: 'Facebook', instagram: 'Facebook' }[($('1 - New Lead From Your Ads or Website Form').item.json.body.utm_source || '').toLowerCase()] || 'Website',\n    Description: 'Inquiry: ' + ($('1 - New Lead From Your Ads or Website Form').item.json.body.message || 'none') + '\\nAd campaign: ' + ($('1 - New Lead From Your Ads or Website Form').item.json.body.utm_campaign || 'none')\n  }],\n  duplicate_check_fields: ['Email', 'Phone'],\n  trigger: ['workflow']\n}) }}"
+      }
+    },
+    {
+      "key": "isnew",
+      "kind": "flow.branch",
+      "label": "4 - New to Zoho CRM?",
+      "section": "zoho",
+      "notes": "A returning lead is updated in Zoho and does not get the sequence again.",
+      "params": {
+        "condition": {
+          "left": "={{ $json.data[0].action }}",
+          "op": "eq",
+          "right": "insert"
+        }
+      }
+    },
+    {
+      "key": "email1",
+      "kind": "app.action",
+      "app": "gmail",
+      "op": "send",
+      "label": "5 - Gmail: Send Email 1 Within a Minute",
+      "section": "follow",
+      "params": {
+        "sendTo": "={{ $('1 - New Lead From Your Ads or Website Form').item.json.body.email }}",
+        "subject": "=Thanks for reaching out, {{ $('1 - New Lead From Your Ads or Website Form').item.json.body.first_name }}",
+        "emailType": "text",
+        "message": "=Hi {{ $('1 - New Lead From Your Ads or Website Form').item.json.body.first_name }},\n\nThanks for getting in touch with {{ $('0 - Config: Your Settings').item.json.your_company_name }}. I have your message and I'll be the one helping you.\n\nIf a call is easier, pick a time here: {{ $('0 - Config: Your Settings').item.json.booking_link }}\n\nOr reply to this email and I'll take it from there.\n\n{{ $('0 - Config: Your Settings').item.json.sender_name }}",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "={{ $('0 - Config: Your Settings').item.json.sender_name }}",
+          "bccList": "={{ $('0 - Config: Your Settings').item.json.zoho_bcc_dropbox }}"
+        }
+      }
+    },
+    {
+      "key": "wait",
+      "kind": "flow.wait",
+      "label": "6 - Wait 1 Day",
+      "section": "follow",
+      "params": {
+        "amount": 1,
+        "unit": "days"
+      }
+    },
+    {
+      "key": "status",
+      "kind": "net.http",
+      "label": "7 - Zoho CRM: Check the Lead Status",
+      "section": "follow",
+      "params": {
+        "service": "zoho",
+        "method": "GET",
+        "url": "https://www.zohoapis.com/crm/v2/Leads/{{ $('3 - Zoho CRM: Match by Email or Phone, Then Create or Update').item.json.data[0].details.id }}",
+        "onError": "continueRegularOutput"
+      }
+    },
+    {
+      "key": "notyet",
+      "kind": "flow.branch",
+      "label": "8 - Not Contacted Yet and Has a Phone?",
+      "section": "follow",
+      "notes": "Once your rep marks the lead contacted in Zoho, the text never goes out.",
+      "params": {
+        "condition": {
+          "left": "={{ Boolean($json.data?.[0]?.Phone) && !$json.data[0].$converted && ($json.data[0].Lead_Status || 'Not Contacted') === 'Not Contacted' }}",
+          "op": "true"
+        }
+      }
+    },
+    {
+      "key": "sms",
+      "kind": "app.action",
+      "app": "twilio",
+      "op": "send",
+      "label": "9 - Twilio: Send the Next-Day Text",
+      "section": "follow",
+      "params": {
+        "from": "={{ $('0 - Config: Your Settings').item.json.twilio_number }}",
+        "to": "={{ $json.data[0].Phone.startsWith('+') ? $json.data[0].Phone.replace(/[^\\d+]/g, '') : '+1' + $json.data[0].Phone.replace(/\\D/g, '').slice(-10) }}",
+        "toWhatsapp": false,
+        "message": "=Hi {{ $json.data[0].First_Name }}, it's {{ $('0 - Config: Your Settings').item.json.sender_name }} from {{ $('0 - Config: Your Settings').item.json.your_company_name }}. I emailed you yesterday about your inquiry. If a quick call is easier, pick a time here: {{ $('0 - Config: Your Settings').item.json.booking_link }} Reply STOP to opt out."
+      }
+    },
+    {
+      "key": "monday",
+      "kind": "trigger.schedule",
+      "label": "10 - Every Monday Morning",
+      "section": "report",
+      "params": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "pull",
+      "kind": "net.http",
+      "label": "11 - Zoho CRM: Pull Leads, Converted Ones Included",
+      "section": "report",
+      "params": {
+        "service": "zoho",
+        "method": "GET",
+        "url": "https://www.zohoapis.com/crm/v2/Leads?converted=both&sort_by=Created_Time&sort_order=desc&per_page=200"
+      }
+    },
+    {
+      "key": "count",
+      "kind": "data.code",
+      "label": "12 - Count Leads and Conversions by Source",
+      "section": "report",
+      "notes": "Converted means Zoho converted the lead, counted against the source it came in on.",
+      "params": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// 12 - Count Leads and Conversions by Source\n// Input: Zoho's reply from step 11, the newest 200 leads, converted ones included.\n// Output: one row per Lead Source for the Lead Dashboard tab, last 30 days.\nconst leads = $input.all().flatMap(item => item.json.data || []);\nconst since = DateTime.now().minus({ days: 30 });\nconst bySource = {};\n\nfor (const lead of leads) {\n  if (DateTime.fromISO(lead.Created_Time) < since) continue;\n  const source = lead.Lead_Source || 'No source';\n  bySource[source] = bySource[source] || { leads: 0, converted: 0 };\n  bySource[source].leads += 1;\n  if (lead.$converted) bySource[source].converted += 1;\n}\n\nconst updatedAt = DateTime.now().toFormat('yyyy-LL-dd');\nreturn Object.entries(bySource).map(([source, count]) => ({\n  json: {\n    source,\n    leads_last_30_days: count.leads,\n    converted: count.converted,\n    conversion_rate: Math.round((count.converted / count.leads) * 100) + '%',\n    updated_at: updatedAt,\n  },\n}));\n"
+      }
+    },
+    {
+      "key": "dash",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "update",
+      "label": "13 - Google Sheets: Refresh Your Lead Dashboard",
+      "section": "report",
+      "params": {
+        "operation": "appendOrUpdate",
+        "document": "PASTE-YOUR-DASHBOARD-GOOGLE-SHEET-ID",
+        "sheet": "Lead Dashboard",
+        "columns": [
+          "source",
+          "leads_last_30_days",
+          "converted",
+          "conversion_rate",
+          "updated_at"
+        ]
+      },
+      "notes": "One row per source (Facebook, Google Ads, Website): leads in the last 30 days, converted, conversion rate."
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "apollo"
+    },
+    {
+      "from": "apollo",
+      "to": "upsert"
+    },
+    {
+      "from": "upsert",
+      "to": "isnew"
+    },
+    {
+      "from": "isnew",
+      "to": "email1",
+      "branch": "true"
+    },
+    {
+      "from": "email1",
+      "to": "wait"
+    },
+    {
+      "from": "wait",
+      "to": "status"
+    },
+    {
+      "from": "status",
+      "to": "notyet"
+    },
+    {
+      "from": "notyet",
+      "to": "sms",
+      "branch": "true"
+    },
+    {
+      "from": "monday",
+      "to": "pull"
+    },
+    {
+      "from": "pull",
+      "to": "count"
+    },
+    {
+      "from": "count",
+      "to": "dash"
+    }
+  ],
+  "input_sample": {
+    "headers": {
+      "content-type": "application/json"
+    },
+    "params": {},
+    "query": {},
+    "body": {
+      "first_name": "Alicia",
+      "last_name": "Moreno",
+      "email": "alicia.moreno@tidewaterfreight.com",
+      "phone": "(757) 555-0184",
+      "company": "Tidewater Freight Partners",
+      "message": "Saw your ad on Facebook. Can we get a demo for our sales team next week?",
+      "utm_source": "facebook",
+      "utm_medium": "paid_social",
+      "utm_campaign": "fall-demo-offer"
+    },
+    "webhookUrl": "https://your-n8n.app.n8n.cloud/webhook/zoho-lead-capture",
+    "executionMode": "production"
+  },
+  "output_sample": {
+    "to": "+17575550184",
+    "status": "queued",
+    "body": "Hi Alicia, it's PASTE-YOUR-SENDER-NAME from PASTE-YOUR-COMPANY-NAME. I emailed you yesterday about your inquiry. If a quick call is easier, pick a time here: PASTE-YOUR-BOOKING-LINK Reply STOP to opt out."
+  }
+}

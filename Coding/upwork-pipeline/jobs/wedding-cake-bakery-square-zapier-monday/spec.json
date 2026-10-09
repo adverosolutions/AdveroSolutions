@@ -1,0 +1,160 @@
+{
+  "title": "Your Wedding Cake Orders, Step by Step: Enquiry to Delivered",
+  "platform": "diagram",
+  "client": {
+    "industry": "wedding cakes bakery",
+    "location": "New Jersey, US"
+  },
+  "sections": [
+    {
+      "key": "enquiry",
+      "label": "1 - A COUPLE ENQUIRES",
+      "color": 0,
+      "note": "Every enquiry lands in Monday on its own, and the couple hears back right away."
+    },
+    {
+      "key": "consult",
+      "label": "2 - CONSULTATION: TASTING, DESIGN, DEPOSIT",
+      "color": 1,
+      "note": "Your consultations in Monday: Zapier moves each couple along as they book and pay in Square."
+    },
+    {
+      "key": "delivery",
+      "label": "3 - DELIVERY DAY AND AFTER",
+      "color": 2,
+      "note": "Your deliveries in Monday: the balance, the day's list and the photo at the venue, then a thank-you."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "enquire",
+      "kind": "data.transform",
+      "section": "enquiry",
+      "label": "1 - A couple sends an enquiry, and it lands on your Monday consultations board"
+    },
+    {
+      "key": "reply",
+      "kind": "data.transform",
+      "section": "enquiry",
+      "label": "2 - They get an email right away with a link to book a tasting"
+    },
+    {
+      "key": "tasting",
+      "kind": "data.transform",
+      "section": "consult",
+      "label": "3 - They book a tasting in Square, and Zapier adds the date to their Monday item"
+    },
+    {
+      "key": "design",
+      "kind": "data.transform",
+      "section": "consult",
+      "label": "4 - After the tasting, you add the design, tiers, flavors and servings"
+    },
+    {
+      "key": "deposit",
+      "kind": "data.transform",
+      "section": "consult",
+      "label": "5 - They pay the deposit in Square, and Zapier marks them Booked in Monday"
+    },
+    {
+      "key": "nudge",
+      "kind": "data.transform",
+      "section": "consult",
+      "label": "6 - No deposit yet? Monday reminds you to follow up with them"
+    },
+    {
+      "key": "move",
+      "kind": "data.transform",
+      "section": "delivery",
+      "label": "7 - Booked cakes move to your deliveries board with the venue and setup time"
+    },
+    {
+      "key": "balance",
+      "kind": "data.transform",
+      "section": "delivery",
+      "label": "8 - Before your due date, Monday checks the final balance came in through Square"
+    },
+    {
+      "key": "daylist",
+      "kind": "data.transform",
+      "section": "delivery",
+      "label": "9 - On the day, your driver sees the delivery list in the Monday app"
+    },
+    {
+      "key": "photo",
+      "kind": "data.transform",
+      "section": "delivery",
+      "label": "10 - At the venue, a setup photo goes on the item and it's marked Delivered"
+    },
+    {
+      "key": "review",
+      "kind": "data.transform",
+      "section": "delivery",
+      "label": "11 - After the wedding, the couple gets a thank-you email asking for a review"
+    }
+  ],
+  "edges": [
+    {
+      "from": "enquire",
+      "to": "reply"
+    },
+    {
+      "from": "reply",
+      "to": "tasting"
+    },
+    {
+      "from": "tasting",
+      "to": "design"
+    },
+    {
+      "from": "design",
+      "to": "deposit"
+    },
+    {
+      "from": "deposit",
+      "to": "nudge"
+    },
+    {
+      "from": "nudge",
+      "to": "move"
+    },
+    {
+      "from": "move",
+      "to": "balance"
+    },
+    {
+      "from": "balance",
+      "to": "daylist"
+    },
+    {
+      "from": "daylist",
+      "to": "photo"
+    },
+    {
+      "from": "photo",
+      "to": "review"
+    }
+  ],
+  "input_sample": {
+    "source": "Website enquiry form",
+    "names": "Jenna Morales and Ravi Patel",
+    "email": "jenna.m.weds@gmail.com",
+    "wedding_date": "2027-05-22",
+    "venue": "Willow Creek Barn, Flemington NJ",
+    "guests": 120,
+    "message": "We loved your lemon cake at a friend's wedding. Do you do tastings in October?"
+  },
+  "output_sample": {
+    "board": "Deliveries",
+    "item": "Morales / Patel - May 22, 2027",
+    "wedding_date": "2027-05-22",
+    "venue": "Willow Creek Barn, Flemington NJ",
+    "coordinator": "Dana Ruiz, 908-555-0147",
+    "design_details": "3 tiers, vanilla bean / lemon curd / chocolate ganache, pressed florals, serves 120",
+    "delivery_and_setup_window": "1:30-2:30 PM",
+    "deposit": "Paid 2026-10-03",
+    "final_balance": "Paid 2027-05-01",
+    "status": "Delivered and set up",
+    "setup_photo": "morales-patel-venue.jpg"
+  }
+}

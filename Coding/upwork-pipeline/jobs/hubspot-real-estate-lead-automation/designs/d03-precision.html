@@ -1,0 +1,793 @@
+<title>HubSpot Lead System · Precision Dark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050506; --bg2:#0a0a0c; --panel:#0c0c0f; --panel2:#111115;
+  --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.14); --line3:rgba(255,255,255,.22);
+  --fg:#ededef; --mut:#8a8f98; --dim:#5b5f67;
+  --acc:#5ee6c5; --acc2:#7aa2ff; --amb:#ffb45e; --red:#ff6b6b;
+  --mono:'Geist Mono',ui-monospace,Menlo,monospace; --sans:'Geist',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.mono{font-family:var(--mono)}
+/* grid-line background */
+.grid-bg{position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:64px 64px;background-position:center top;
+  -webkit-mask-image:radial-gradient(ellipse 70% 60% at 50% 30%,#000 30%,transparent 80%);
+          mask-image:radial-gradient(ellipse 70% 60% at 50% 30%,#000 30%,transparent 80%);opacity:.55}
+.spot{position:absolute;pointer-events:none;border-radius:50%;filter:blur(10px);
+  background:radial-gradient(closest-side,rgba(94,230,197,.16),rgba(94,230,197,.04) 55%,transparent)}
+.spot.b{background:radial-gradient(closest-side,rgba(122,162,255,.16),rgba(122,162,255,.04) 55%,transparent)}
+.spot.w{background:radial-gradient(closest-side,rgba(255,255,255,.09),transparent 70%)}
+
+/* nav */
+nav{position:sticky;top:0;z-index:50;height:56px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;border-bottom:1px solid var(--line);background:rgba(5,5,6,.82);backdrop-filter:saturate(1.2) blur(8px)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14px;letter-spacing:-.01em}
+.mark{width:20px;height:20px;border-radius:5px;border:1px solid var(--line3);display:grid;place-items:center;background:linear-gradient(180deg,#1a1a1f,#0d0d10)}
+.mark i{width:8px;height:8px;border-radius:2px;background:var(--acc);box-shadow:0 0 12px var(--acc)}
+.navr{display:flex;gap:18px;align-items:center;color:var(--mut);font-size:13px}
+.navr a{color:inherit;text-decoration:none;display:flex;align-items:center;gap:6px}
+.navr a:hover{color:var(--fg)}
+kbd,.kbd{font-family:var(--mono);font-size:11px;line-height:1;color:var(--mut);border:1px solid var(--line2);border-bottom-width:2px;
+  border-radius:5px;padding:3px 6px;background:linear-gradient(180deg,#141418,#0c0c0f);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.badge{font-family:var(--mono);font-size:11px;color:var(--amb);border:1px solid rgba(255,180,94,.3);background:rgba(255,180,94,.06);padding:4px 8px;border-radius:99px;letter-spacing:.02em}
+
+/* layout */
+section{position:relative;padding:130px 28px;border-bottom:1px solid var(--line);overflow:hidden}
+.wrap{max-width:1180px;margin:0 auto;position:relative}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;color:var(--mut);letter-spacing:.04em;text-transform:uppercase}
+.eyebrow .n{color:var(--acc)}
+.eyebrow .bar{width:28px;height:1px;background:var(--line3)}
+h1,h2{font-weight:600;letter-spacing:-.045em;line-height:1.02;
+  background:linear-gradient(180deg,#fff 20%,#9aa0aa 110%);-webkit-background-clip:text;background-clip:text;color:transparent}
+h1{font-size:clamp(44px,7.2vw,96px);margin:22px 0 0}
+h2{font-size:clamp(34px,4.6vw,60px);margin:18px 0 0}
+.lede{color:var(--mut);font-size:17px;margin-top:18px}
+.head{margin-bottom:56px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.hint{display:flex;gap:8px;align-items:center;color:var(--dim);font-size:12px;font-family:var(--mono)}
+
+/* panels */
+.panel{position:relative;background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 0 0 1px rgba(0,0,0,.6),0 30px 80px -30px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.04)}
+.panel::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0) 40%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);font-size:12px;color:var(--mut);font-family:var(--mono)}
+.dots{display:flex;gap:6px}.dots i{width:9px;height:9px;border-radius:50%;background:#1f1f24;border:1px solid var(--line2)}
+.av{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:11px;font-weight:600;font-family:var(--mono);flex:none;
+  background:linear-gradient(135deg,#1d2b28,#101615);border:1px solid rgba(94,230,197,.35);color:var(--acc)}
+.av.bl{background:linear-gradient(135deg,#1b2033,#10131c);border-color:rgba(122,162,255,.35);color:var(--acc2)}
+.av.g{background:#131317;border-color:var(--line2);color:var(--mut)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--acc);box-shadow:0 0 10px var(--acc);display:inline-block}
+.pulse{animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(14px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+.in .rv{opacity:1;transform:none}
+.in .d1{transition-delay:.1s}.in .d2{transition-delay:.2s}.in .d3{transition-delay:.3s}.in .d4{transition-delay:.4s}.in .d5{transition-delay:.5s}.in .d6{transition-delay:.6s}
+
+/* HERO */
+#hero{padding:90px 28px 100px;min-height:calc(100vh - 56px);display:flex;align-items:center}
+#hero .wrap{width:100%}
+.hero-g{display:grid;grid-template-columns:1.05fr 1fr;gap:56px;align-items:center}
+.hero-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:34px}
+.stat-chip{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:rgba(255,255,255,.015)}
+.stat-chip b{font-family:var(--mono);font-weight:500;font-size:20px;letter-spacing:-.02em}
+.stat-chip span{font-size:12px;color:var(--mut)}
+.inq{padding:18px}
+.msg{display:flex;gap:12px;padding:14px;border:1px solid var(--line);border-radius:10px;background:#0e0e12}
+.msg .t{font-size:12px;color:var(--mut);font-family:var(--mono)}
+.msg q{display:block;margin-top:6px;font-size:15px;quotes:"\201C" "\201D"}
+.log{margin-top:14px;font-family:var(--mono);font-size:12.5px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.log .r{display:grid;grid-template-columns:88px 1fr auto;gap:12px;padding:9px 12px;border-bottom:1px solid var(--line);align-items:center;opacity:.18;transition:opacity .4s,background .4s}
+.log .r:last-child{border-bottom:0}
+.log .r.on{opacity:1}
+.log .r.cur{background:rgba(94,230,197,.05)}
+.log .ts{color:var(--dim)}
+.log .ok{color:var(--acc)}
+.clock{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:14px 16px;border:1px solid rgba(94,230,197,.25);border-radius:10px;
+  background:linear-gradient(90deg,rgba(94,230,197,.07),transparent)}
+.clock b{font-family:var(--mono);font-size:34px;font-weight:500;letter-spacing:-.03em;color:#fff}
+.clock span{font-size:12px;color:var(--mut)}
+
+/* 01 CLEAN */
+.clean-g{display:grid;grid-template-columns:1.25fr .75fr;gap:20px}
+.dups{padding:18px;min-height:312px;position:relative}
+.dup{display:grid;grid-template-columns:30px 1fr auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#0e0e12;margin-bottom:10px;
+  transition:transform .8s cubic-bezier(.7,0,.2,1),opacity .6s .3s,border-color .4s}
+.dup .nm{font-weight:500}.dup .sub{font-size:12px;color:var(--mut);font-family:var(--mono)}
+.dup .bad{font-family:var(--mono);font-size:11px;color:var(--red);border:1px solid rgba(255,107,107,.3);padding:3px 7px;border-radius:5px}
+.dups.merged .dup{border-color:rgba(255,107,107,.25)}
+.dups.merged .dup.a{transform:translateY(62px);opacity:0}
+.dups.merged .dup.c{transform:translateY(-62px);opacity:0}
+.dups.merged .dup.b{opacity:0}
+.golden{position:absolute;left:18px;right:18px;top:18px;opacity:0;transform:scale(.97);transition:opacity .6s 1s,transform .6s 1s;
+  border:1px solid rgba(94,230,197,.35);border-radius:12px;background:#0d1211;box-shadow:0 0 60px -10px rgba(94,230,197,.25)}
+.dups.merged .golden{opacity:1;transform:none}
+.golden .top{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--line)}
+.golden .top .kbd{margin-left:auto;color:var(--acc);border-color:rgba(94,230,197,.35)}
+.kv{display:grid;grid-template-columns:130px 1fr;font-size:13.5px}
+.kv div{padding:10px 14px;border-bottom:1px solid var(--line)}
+.kv div:nth-child(odd){color:var(--mut);font-family:var(--mono);font-size:12px}
+.kv div:nth-last-child(-n+2){border-bottom:0}
+.metric{padding:22px}
+.metric + .metric{margin-top:20px}
+.metric .lab{font-family:var(--mono);font-size:12px;color:var(--mut);display:flex;justify-content:space-between}
+.metric .big{font-family:var(--mono);font-size:64px;font-weight:500;letter-spacing:-.05em;margin-top:10px;line-height:1}
+.metric .big small{font-size:18px;color:var(--dim);margin-left:6px;letter-spacing:0}
+.meter{height:6px;border-radius:9px;background:#17171b;margin-top:16px;overflow:hidden;border:1px solid var(--line)}
+.meter i{display:block;height:100%;width:58%;background:linear-gradient(90deg,var(--amb),var(--acc));transition:width 1.8s cubic-bezier(.3,.8,.2,1) .9s}
+.in .meter i.go{width:97%}
+.ticks{display:flex;justify-content:space-between;margin-top:8px;font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+
+/* 02 CAPTURE */
+.cap{display:grid;grid-template-columns:260px 1fr 360px;gap:0;align-items:center;position:relative}
+.srcs{display:flex;flex-direction:column;gap:14px;position:relative;z-index:2}
+.src{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#0c0c0f;font-size:14px}
+.src .ic{width:26px;height:26px;border-radius:7px;border:1px solid var(--line2);display:grid;place-items:center;font-family:var(--mono);font-size:10px;color:var(--mut)}
+.src .kbd{margin-left:auto}
+.wires{position:relative;height:100%;min-height:330px}
+.wires svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.hub{position:absolute;right:-8px;top:50%;transform:translate(0,-50%);z-index:3;width:74px;height:74px;border-radius:18px;display:grid;place-items:center;
+  background:linear-gradient(180deg,#16161b,#0b0b0e);border:1px solid var(--line3);box-shadow:0 0 0 6px rgba(255,255,255,.02),0 0 60px rgba(94,230,197,.25)}
+.hub span{font-family:var(--mono);font-size:10px;color:var(--mut);position:absolute;bottom:-22px;white-space:nowrap}
+.hub i{width:22px;height:22px;border-radius:6px;background:var(--acc);box-shadow:0 0 24px var(--acc)}
+.rec{margin-left:34px;overflow:hidden}
+.rec .kv{grid-template-columns:120px 1fr}
+.none{color:var(--acc);font-family:var(--mono);font-size:12.5px}
+.today{display:flex;align-items:baseline;gap:10px;padding:14px;border-top:1px solid var(--line)}
+.today b{font-family:var(--mono);font-size:28px;font-weight:500;letter-spacing:-.03em}
+.today span{color:var(--mut);font-size:13px}
+.today .badge{margin-left:auto;color:var(--mut);border-color:var(--line2);background:transparent}
+.beam{fill:none;stroke-width:1.5;stroke-linecap:round;stroke-dasharray:60 940;stroke-dashoffset:1000;opacity:0}
+.in .beam{opacity:1;animation:beam 2.6s linear infinite}
+@keyframes beam{to{stroke-dashoffset:0}}
+.rail{fill:none;stroke:rgba(255,255,255,.1);stroke-width:1}
+
+/* 03 QUALIFY */
+.q-g{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.phone{padding:0;overflow:hidden}
+.thread{padding:18px;display:flex;flex-direction:column;gap:10px;min-height:340px}
+.bub{max-width:80%;padding:10px 13px;border-radius:12px;font-size:14px;border:1px solid var(--line);opacity:0;transform:translateY(8px);transition:all .5s}
+.bub.out{align-self:flex-end;background:#10161a;border-color:rgba(122,162,255,.25);border-bottom-right-radius:4px}
+.bub.inn{align-self:flex-start;background:#121215;border-bottom-left-radius:4px}
+.bub.show{opacity:1;transform:none}
+.bub .who{display:block;font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-bottom:3px}
+.score{padding:22px}
+.gauge{display:flex;align-items:flex-end;gap:18px;margin-top:6px}
+.gauge .big{font-family:var(--mono);font-size:92px;font-weight:500;letter-spacing:-.06em;line-height:.9}
+.gauge .of{color:var(--dim);font-family:var(--mono);font-size:14px;padding-bottom:10px}
+.segs{display:grid;grid-template-columns:repeat(20,1fr);gap:3px;margin-top:22px}
+.segs i{height:22px;border-radius:2px;background:#16161a;border:1px solid var(--line);transition:background .2s,box-shadow .2s}
+.segs i.on{background:var(--acc2);border-color:transparent}
+.segs i.on.hi{background:var(--acc);box-shadow:0 0 12px rgba(94,230,197,.5)}
+.segs i.th{position:relative}
+.segs i.th::after{content:"80";position:absolute;top:-18px;left:-3px;font-family:var(--mono);font-size:10px;color:var(--mut)}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:24px}
+.fact{border:1px solid var(--line);border-radius:10px;padding:12px;opacity:.25;transition:opacity .5s,border-color .5s}
+.fact.on{opacity:1;border-color:var(--line2)}
+.fact .l{font-family:var(--mono);font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+.fact .v{margin-top:4px;font-weight:500}
+.ready{margin-top:18px;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;border:1px solid rgba(94,230,197,.3);background:rgba(94,230,197,.06);
+  font-size:14px;opacity:0;transition:opacity .5s}
+.ready.on{opacity:1}
+.ready .kbd{margin-left:auto}
+
+/* 04 ASSIGN */
+.as-g{display:grid;grid-template-columns:1.2fr .8fr;gap:20px}
+.agents .row{display:grid;grid-template-columns:30px 1fr 110px 80px;gap:14px;align-items:center;padding:13px 16px;border-bottom:1px solid var(--line);font-size:14px;position:relative;transition:background .3s,opacity .3s}
+.agents .row:last-child{border-bottom:0}
+.agents .row .s{font-size:12px;color:var(--mut);font-family:var(--mono)}
+.agents .row .load{display:flex;gap:3px}
+.agents .row .load i{width:8px;height:14px;border-radius:2px;background:#1a1a1f;border:1px solid var(--line)}
+.agents .row .load i.f{background:#3a3f4a}
+.agents .row .m{font-family:var(--mono);font-size:11px;text-align:right;color:var(--dim)}
+.agents .row.scan{background:rgba(255,255,255,.03)}
+.agents .row.x{opacity:.38}
+.agents .row.win{background:linear-gradient(90deg,rgba(94,230,197,.09),transparent);opacity:1}
+.agents .row.win::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--acc);box-shadow:0 0 12px var(--acc)}
+.agents .row.win .m{color:var(--acc)}
+.agents .hd{display:grid;grid-template-columns:30px 1fr 110px 80px;gap:14px;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+.rules{display:flex;gap:8px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--line)}
+.rules .kbd{color:var(--fg)}
+.sla{padding:22px;display:flex;flex-direction:column}
+.ring{position:relative;width:200px;height:200px;margin:14px auto 0}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.ring .c b{font-family:var(--mono);font-size:44px;font-weight:500;letter-spacing:-.04em;display:block}
+.ring .c span{font-family:var(--mono);font-size:11px;color:var(--mut)}
+.called{margin-top:20px;display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:14px;transition:all .5s}
+.called.on{border-color:rgba(94,230,197,.35);background:rgba(94,230,197,.06)}
+.called b{font-family:var(--mono);margin-left:auto;color:var(--acc)}
+
+/* 05 WORKFLOW */
+.wf-g{display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:start}
+.flow{padding:34px 20px 40px;position:relative}
+.flow .col{display:flex;flex-direction:column;align-items:center;position:relative}
+.node{width:340px;max-width:100%;border:1px solid var(--line);border-radius:12px;background:#0d0d10;padding:12px 14px;display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:center;
+  position:relative;z-index:2;transition:border-color .4s,box-shadow .4s,opacity .4s;opacity:.45}
+.node .ico{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;border:1px solid var(--line2);font-family:var(--mono);font-size:11px;color:var(--mut)}
+.node .k{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--dim)}
+.node .t{font-weight:500;font-size:14px}
+.node .d{font-size:12px;color:var(--mut)}
+.node .st{font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+.node.on{opacity:1;border-color:rgba(94,230,197,.4);box-shadow:0 0 0 3px rgba(94,230,197,.06),0 0 40px -12px rgba(94,230,197,.5)}
+.node.on .ico{border-color:rgba(94,230,197,.5);color:var(--acc)}
+.node.on .st{color:var(--acc)}
+.node.skip{opacity:.3}
+.node.done{opacity:1;border-color:rgba(255,180,94,.5);box-shadow:0 0 50px -12px rgba(255,180,94,.45)}
+.node.done .ico{color:var(--amb);border-color:rgba(255,180,94,.5)}
+.conn{width:2px;height:30px;position:relative;background:rgba(255,255,255,.1);overflow:hidden}
+.conn::after{content:"";position:absolute;left:0;right:0;height:18px;top:-18px;background:linear-gradient(180deg,transparent,var(--acc),#fff);opacity:0}
+.conn.run::after{opacity:1;animation:drop .4s linear forwards}
+.conn.lit{background:rgba(94,230,197,.45)}
+@keyframes drop{to{top:30px}}
+.branch{display:grid;grid-template-columns:1fr 1fr;gap:24px;width:100%;max-width:640px;position:relative}
+.branch .lane{display:flex;flex-direction:column;align-items:center}
+.branch .lane .node{width:100%}
+.split{position:relative;width:100%;max-width:640px;height:34px}
+.split svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.split .lbl{position:absolute;top:8px;font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid var(--line2);background:var(--bg);color:var(--mut);z-index:2}
+.split .lbl.y{left:calc(25% + 8px);color:var(--acc);border-color:rgba(94,230,197,.4)}
+.split .lbl.n{right:calc(25% + 8px)}
+.console{position:sticky;top:80px;overflow:hidden}
+.console .lines{font-family:var(--mono);font-size:12px;padding:12px 0;height:420px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
+.console .ln{display:grid;grid-template-columns:78px 1fr;gap:10px;padding:5px 16px;animation:ln .35s ease both}
+.console .ln .ts{color:var(--dim)}
+.console .ln .g{color:var(--acc)}.console .ln .a{color:var(--amb)}.console .ln .bl{color:var(--acc2)}
+@keyframes ln{from{opacity:0;transform:translateY(6px)}}
+.console .ft{border-top:1px solid var(--line);padding:10px 16px;display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--mut)}
+
+/* 06 HUBSPOT */
+#hs .wrap{max-width:1240px}
+.hsw{border-radius:12px;overflow:hidden;border:1px solid var(--line2);box-shadow:0 60px 140px -40px rgba(0,0,0,1),0 0 0 1px #000,0 0 120px -30px rgba(122,162,255,.3);background:#f5f8fa;color:#33475b;font-family:"Lexend Deca",var(--sans)}
+.hs-top{height:44px;background:#2d3e50;display:flex;align-items:center;gap:14px;padding:0 16px;color:#fff;font-size:13px}
+.hs-top .sq{width:22px;height:22px;border-radius:5px;background:#3e5368;display:grid;place-items:center}
+.hs-top .sq i{width:8px;height:8px;border-radius:50%;background:#ff7a59}
+.hs-top .nv{display:flex;gap:18px;color:#cbd6e2;font-size:12.5px}
+.hs-top .srch{margin-left:auto;background:#3e5368;border-radius:4px;padding:5px 12px;font-size:12px;color:#b0c1d4;width:220px}
+.hs-bar{background:#fff;border-bottom:1px solid #cbd6e2;display:flex;align-items:center;padding:10px 18px;gap:16px}
+.hs-bar .back{color:#0091ae;font-size:13px;font-weight:600}
+.hs-bar .nm{font-weight:600;font-size:15px;color:#33475b}
+.hs-bar .pill{font-size:11px;background:#eaf0f6;border:1px solid #cbd6e2;border-radius:3px;padding:2px 8px;color:#516f90}
+.hs-tabs{display:flex;gap:22px;margin-left:24px;font-size:13px;color:#516f90}
+.hs-tabs span.a{color:#33475b;font-weight:600;box-shadow:inset 0 -3px 0 #0091ae;padding-bottom:10px;margin-bottom:-11px}
+.hs-bar .tog{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:#516f90}
+.sw{width:34px;height:18px;border-radius:9px;background:#cbd6e2;position:relative;transition:background .4s}
+.sw::after{content:"";position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:2px;left:2px;transition:left .4s}
+.hsw.live .sw{background:#00bda5}.hsw.live .sw::after{left:18px}
+.btn-or{background:#ff7a59;color:#fff;font-size:12.5px;font-weight:600;border-radius:3px;padding:7px 14px}
+.hs-body{display:grid;grid-template-columns:minmax(0,1fr) 330px;min-height:640px}
+.hs-canvas{position:relative;padding:28px 20px 40px;background-color:#f5f8fa;background-image:radial-gradient(#d6e0ea 1px,transparent 1px);background-size:18px 18px;display:flex;flex-direction:column;align-items:center}
+.hcard{width:320px;max-width:100%;background:#fff;border:1px solid #cbd6e2;border-radius:4px;box-shadow:0 1px 3px rgba(45,62,80,.08);font-size:13px;opacity:0;transform:translateY(8px);transition:opacity .45s,transform .45s,box-shadow .3s,border-color .3s}
+.hcard.show{opacity:1;transform:none}
+.hcard .hh{padding:7px 12px;border-bottom:1px solid #eaf0f6;font-size:11.5px;color:#516f90;display:flex;justify-content:space-between}
+.hcard .hb{padding:9px 12px;color:#33475b}
+.hcard .hb b{font-weight:600}
+.hcard.trig{border-top:3px solid #ff7a59}
+.hcard.sel{border-color:#0091ae;box-shadow:0 0 0 2px rgba(0,145,174,.25)}
+.hplus{width:22px;height:22px;border-radius:50%;border:1px solid #cbd6e2;background:#fff;color:#516f90;display:grid;place-items:center;font-size:14px;line-height:1;margin:0 auto}
+.hline{width:1px;height:14px;background:#99afc4;margin:0 auto}
+.hstep{display:flex;flex-direction:column;align-items:center}
+.hbr{display:grid;grid-template-columns:1fr 1fr;gap:18px;width:100%;max-width:640px}
+.hbr .lane{display:flex;flex-direction:column;align-items:center}
+.hbr .tag{font-size:11px;border-radius:3px;padding:1px 8px;margin-bottom:6px;background:#e5f8f6;color:#00a4bd;border:1px solid #7fded2}
+.hbr .tag.no{background:#eaf0f6;color:#516f90;border-color:#cbd6e2}
+.hend{font-size:11px;color:#7c98b6;border:1px solid #cbd6e2;border-radius:3px;padding:2px 10px;background:#fff}
+.hsplit{width:100%;max-width:640px;height:16px;position:relative}
+.hsplit::before{content:"";position:absolute;left:25%;right:25%;top:0;height:100%;border:1px solid #99afc4;border-bottom:0;border-radius:4px 4px 0 0}
+.hs-side{background:#fff;border-left:1px solid #cbd6e2;display:flex;flex-direction:column}
+.hs-side .sh{background:#00a4bd;color:#fff;padding:14px 16px;font-weight:600;font-size:14px;display:flex;justify-content:space-between}
+.hs-side .sb{padding:16px;font-size:13px;display:flex;flex-direction:column;gap:14px}
+.hs-side label{display:block;font-size:12px;font-weight:600;color:#33475b;margin-bottom:5px}
+.hs-side .hin{border:1px solid #cbd6e2;border-radius:3px;padding:8px 10px;background:#f5f8fa;color:#33475b;font-size:13px}
+.hs-side .grp{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#7c98b6;margin-top:4px}
+.hs-side .act{padding:7px 10px;border:1px solid #eaf0f6;border-radius:3px;font-size:12.5px}
+.hs-side .act.a{border-color:#0091ae;background:#e5f5f8}
+.hs-foot{display:flex;justify-content:space-between;align-items:center;margin-top:18px;font-family:var(--mono);font-size:12px;color:var(--mut)}
+
+/* CLOSE */
+#close{padding:160px 28px 120px;text-align:center}
+#close h2{font-size:clamp(40px,6.6vw,92px);line-height:1.02}
+#close h2 span{display:inline-block;opacity:0;transform:translateY(12px);filter:blur(6px);transition:all .7s cubic-bezier(.2,.7,.2,1)}
+#close.in h2 span{opacity:1;transform:none;filter:none}
+#close.in h2 span:nth-child(2){transition-delay:.25s}#close.in h2 span:nth-child(3){transition-delay:.5s}#close.in h2 span:nth-child(4){transition-delay:.75s}
+.steps{display:flex;justify-content:center;gap:10px;margin-top:40px;flex-wrap:wrap}
+.steps .kbd{font-size:12.5px;padding:7px 11px;color:var(--fg)}
+.steps .kbd em{font-style:normal;color:var(--acc)}
+footer{padding:26px 28px;display:flex;justify-content:space-between;color:var(--dim);font-family:var(--mono);font-size:11.5px;flex-wrap:wrap;gap:10px}
+
+/* responsive */
+.wf-g>*,.branch .lane,.hbr .lane,.hs-canvas,.cap>*,.as-g>*,.q-g>*,.clean-g>*,.hero-g>*{min-width:0}
+@media (max-width:1100px){
+  .cap{grid-template-columns:220px 1fr 320px}
+  .hs-body{grid-template-columns:minmax(0,1fr)}
+  .hs-side{display:none}
+  .wf-g{grid-template-columns:1fr}
+  .console{position:relative;top:0}
+  .console .lines{height:260px}
+}
+@media (max-width:860px){
+  section{padding:84px 16px}
+  #hero{padding:64px 16px 80px;min-height:0}
+  nav{padding:0 16px}
+  .navr .hide-m{display:none}
+  .hero-g,.clean-g,.q-g,.as-g{grid-template-columns:1fr}
+  .head{margin-bottom:34px}
+  .hint{display:none}
+  .cap{grid-template-columns:1fr}
+  .wires{display:none}
+  .srcs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .src .kbd{display:none}
+  .rec{margin:16px 0 0}
+  .dups{min-height:360px}
+  .metric .big{font-size:52px}
+  .gauge .big{font-size:72px}
+  .agents .row,.agents .hd{grid-template-columns:30px 1fr 64px;}
+  .agents .row .m,.agents .hd .m{display:none}
+  .facts{grid-template-columns:1fr 1fr 1fr}
+  .branch{gap:10px}
+  .node{grid-template-columns:24px 1fr;padding:10px}
+  .node .st{display:none}
+  .node .ico{width:24px;height:24px}
+  .hs-top .nv,.hs-top .srch,.hs-tabs,.hs-bar .pill{display:none}
+  .hbr{gap:8px}
+  .hs-canvas{padding:20px 10px 30px}
+  .hs-foot{flex-direction:column;gap:6px;align-items:flex-start}
+  .log .r{grid-template-columns:70px 1fr}
+  .log .r .ok{display:none}
+}
+@media (max-width:420px){
+  .srcs{grid-template-columns:1fr}
+  .facts{grid-template-columns:1fr}
+  .kv{grid-template-columns:104px 1fr}
+  .rec .kv{grid-template-columns:104px 1fr}
+  .btn-or{padding:6px 8px;font-size:11px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
+</style>
+
+<nav>
+  <div class="brand"><span class="mark"><i></i></span>HubSpot Lead System</div>
+  <div class="navr">
+    <a href="#s1" class="hide-m">Clean up <kbd>1</kbd></a>
+    <a href="#s2" class="hide-m">Capture <kbd>2</kbd></a>
+    <a href="#s3" class="hide-m">Qualify <kbd>3</kbd></a>
+    <a href="#s4" class="hide-m">Assign <kbd>4</kbd></a>
+    <a href="#s5" class="hide-m">Workflow <kbd>5</kbd></a>
+    <span class="badge">Sample data</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero" data-s="hero">
+  <div class="grid-bg"></div>
+  <div class="spot" style="width:900px;height:900px;right:-200px;top:-250px"></div>
+  <div class="spot w" style="width:700px;height:500px;left:-200px;top:-100px"></div>
+  <div class="wrap hero-g">
+    <div>
+      <div class="eyebrow rv"><span class="dot pulse"></span>New inquiry<span class="bar"></span><span class="n">Mon · 9:42 PM</span></div>
+      <h1 class="rv d1">Every inquiry, answered at 9:42&nbsp;PM.</h1>
+      <div class="hero-meta rv d3">
+        <div class="stat-chip"><b>38s</b><span>inquiry to agent</span></div>
+        <div class="stat-chip"><b>1</b><span>clean record</span></div>
+        <div class="stat-chip"><b>Sat 11:00</b><span>showing booked</span></div>
+      </div>
+      <div class="hint rv d4" style="margin-top:30px">Scroll <kbd>↓</kbd> or jump <kbd>1</kbd>–<kbd>5</kbd></div>
+    </div>
+    <div class="panel rv d2">
+      <div class="ph"><div class="dots"><i></i><i></i><i></i></div><span>lead-inbox · real estate</span><span>live</span></div>
+      <div class="inq">
+        <div class="msg">
+          <span class="av">MC</span>
+          <div style="flex:1;min-width:0">
+            <div class="t">Maya Chen · Showing request · 214 Linden Ave</div>
+            <q>Is this still available? We’re pre-approved.</q>
+          </div>
+        </div>
+        <div class="log" id="heroLog">
+          <div class="r"><span class="ts">21:42:00</span><span>Inquiry received · website form</span><span class="ok">200</span></div>
+          <div class="r"><span class="ts">21:42:03</span><span>Contact matched · no duplicate</span><span class="ok">ok</span></div>
+          <div class="r"><span class="ts">21:42:07</span><span>Enrolled · listing inquiry workflow</span><span class="ok">ok</span></div>
+          <div class="r"><span class="ts">21:42:21</span><span>Qualifying SMS sent to Maya</span><span class="ok">sent</span></div>
+          <div class="r"><span class="ts">21:42:38</span><span>Routed to Jordan Reyes · Northside</span><span class="ok">done</span></div>
+        </div>
+        <div class="clock"><div><span>Handled in</span></div><b id="heroClock">00:00</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 01 CLEAN -->
+<section id="s1" data-s="clean">
+  <div class="grid-bg" style="opacity:.3"></div>
+  <div class="spot b" style="width:800px;height:700px;left:-250px;top:0"></div>
+  <div class="wrap">
+    <div class="head">
+      <div><div class="eyebrow rv"><span class="n">01</span><span class="bar"></span>Clean up</div>
+      <h2 class="rv d1">One record per person.</h2></div>
+      <div class="hint rv d2"><kbd>⌘</kbd><kbd>M</kbd> merge duplicates</div>
+    </div>
+    <div class="clean-g">
+      <div class="panel dups rv d2" id="dups">
+        <div class="dup a"><span class="av g">MC</span><div><div class="nm">Maya Chen</div><div class="sub">created 2023 · no phone · no owner</div></div><span class="bad">DUPLICATE</span></div>
+        <div class="dup b"><span class="av g">MC</span><div><div class="nm">M. Chen</div><div class="sub">created 2024 · stage “HOT!!”</div></div><span class="bad">DUPLICATE</span></div>
+        <div class="dup c"><span class="av g">mc</span><div><div class="nm">maya chen</div><div class="sub">created 2025 · type “b/s”</div></div><span class="bad">DUPLICATE</span></div>
+        <div class="golden">
+          <div class="top"><span class="av">MC</span><div><div style="font-weight:600">Maya Chen</div><div class="sub mono" style="font-size:12px;color:var(--mut)">3 records → 1</div></div><span class="kbd">MERGED</span></div>
+          <div class="kv">
+            <div>Phone</div><div class="mono">(555) 014-7720</div>
+            <div>Email</div><div class="mono">maya.chen@example.com</div>
+            <div>Lead type</div><div>Buyer</div>
+            <div>Lifecycle</div><div>Lead</div>
+            <div>Owner</div><div>Jordan Reyes</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="panel metric rv d3">
+          <div class="lab"><span>CRM health</span><span>/100</span></div>
+          <div class="big"><span data-count="58:97" data-delay="900">58</span></div>
+          <div class="meter"><i id="healthBar"></i></div>
+          <div class="ticks"><span>0</span><span>50</span><span>100</span></div>
+        </div>
+        <div class="panel metric rv d4">
+          <div class="lab"><span>Duplicates</span><span>portal-wide</span></div>
+          <div class="big"><span data-count="412:0" data-delay="900">412</span><small>open</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 CAPTURE -->
+<section id="s2" data-s="capture">
+  <div class="spot" style="width:900px;height:700px;right:-200px;top:40px"></div>
+  <div class="wrap">
+    <div class="head">
+      <div><div class="eyebrow rv"><span class="n">02</span><span class="bar"></span>Capture</div>
+      <h2 class="rv d1">Five sources. One contact.</h2></div>
+      <div class="hint rv d2">dedupe on <kbd>email</kbd><kbd>phone</kbd></div>
+    </div>
+    <div class="cap">
+      <div class="srcs">
+        <div class="src rv d1"><span class="ic">WF</span>Website form<span class="kbd">form</span></div>
+        <div class="src rv d2"><span class="ic">PI</span>Portal inquiry<span class="kbd">email</span></div>
+        <div class="src rv d3"><span class="ic">OH</span>Open house<span class="kbd">sign-in</span></div>
+        <div class="src rv d4"><span class="ic">HV</span>Home valuation<span class="kbd">form</span></div>
+        <div class="src rv d5"><span class="ic">CT</span>Calls and texts<span class="kbd">sms</span></div>
+      </div>
+      <div class="wires rv d2">
+        <svg viewBox="0 0 400 330" preserveAspectRatio="none" id="wireSvg">
+          <defs>
+            <linearGradient id="bm" x1="0" x2="1"><stop offset="0" stop-color="#5ee6c5" stop-opacity="0"/><stop offset=".7" stop-color="#5ee6c5"/><stop offset="1" stop-color="#fff"/></linearGradient>
+          </defs>
+        </svg>
+        <div class="hub"><i></i><span>HubSpot CRM</span></div>
+      </div>
+      <div class="panel rec rv d4">
+        <div class="ph"><span>contact · created 9:42 PM</span><span class="none">● new</span></div>
+        <div style="display:flex;gap:12px;align-items:center;padding:14px;border-bottom:1px solid var(--line)"><span class="av">MC</span><div><div style="font-weight:600">Maya Chen</div><div class="mono" style="font-size:12px;color:var(--mut)">maya.chen@example.com</div></div></div>
+        <div class="kv">
+          <div>Listing</div><div>214 Linden Ave</div>
+          <div>Source</div><div>Website form</div>
+          <div>Lead type</div><div>Buyer</div>
+          <div>Duplicate</div><div class="none">None found</div>
+        </div>
+        <div class="today"><b data-count="0:29" data-delay="400">0</b><span>new leads today</span><span class="badge">Illustrative</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 QUALIFY -->
+<section id="s3" data-s="qualify">
+  <div class="grid-bg" style="opacity:.25"></div>
+  <div class="spot b" style="width:800px;height:700px;right:-150px;top:60px"></div>
+  <div class="wrap">
+    <div class="head">
+      <div><div class="eyebrow rv"><span class="n">03</span><span class="bar"></span>Qualify</div>
+      <h2 class="rv d1">Three questions. Sales-ready.</h2></div>
+      <div class="hint rv d2">threshold <kbd>score ≥ 80</kbd></div>
+    </div>
+    <div class="q-g">
+      <div class="panel phone rv d2">
+        <div class="ph"><span style="display:flex;gap:8px;align-items:center"><span class="av" style="width:22px;height:22px;font-size:9px;border-radius:6px">MC</span>Maya Chen · SMS</span><span>9:42 PM</span></div>
+        <div class="thread" id="thread">
+          <div class="bub out"><span class="who">Assistant</span>Hi Maya, thanks for asking about 214 Linden. When are you hoping to move?</div>
+          <div class="bub inn"><span class="who">Maya</span>Lease ends in November. Pre-approved up to $520k.</div>
+          <div class="bub out"><span class="who">Assistant</span>Great. Which areas, and how many beds?</div>
+          <div class="bub inn"><span class="who">Maya</span>Northside or Riverside. 3 beds.</div>
+        </div>
+      </div>
+      <div class="panel score rv d3">
+        <div class="ph" style="margin:-22px -22px 18px;padding:12px 16px"><span>lead score · Maya Chen</span><span>HubSpot property</span></div>
+        <div class="gauge"><div class="big" id="scoreNum">0</div><div class="of">/ 100</div></div>
+        <div class="segs" id="segs"></div>
+        <div class="facts">
+          <div class="fact" id="f1"><div class="l">Timeline</div><div class="v">60 days</div></div>
+          <div class="fact" id="f2"><div class="l">Budget</div><div class="v">Pre-approved $520k</div></div>
+          <div class="fact" id="f3"><div class="l">Area</div><div class="v">Northside · 3 bd</div></div>
+        </div>
+        <div class="ready" id="ready"><span class="dot"></span>Sales-ready · handed to an agent<span class="kbd">SQL</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 ASSIGN -->
+<section id="s4" data-s="assign">
+  <div class="spot" style="width:800px;height:700px;left:-200px;top:40px"></div>
+  <div class="wrap">
+    <div class="head">
+      <div><div class="eyebrow rv"><span class="n">04</span><span class="bar"></span>Assign</div>
+      <h2 class="rv d1">The right agent, in seconds.</h2></div>
+      <div class="hint rv d2">SLA <kbd>5:00</kbd> then next agent</div>
+    </div>
+    <div class="as-g">
+      <div class="panel agents rv d2" id="agents">
+        <div class="ph"><span style="display:flex;gap:10px;align-items:center"><span class="av" style="width:22px;height:22px;font-size:9px;border-radius:6px">MC</span>Maya Chen · Buyer · Northside</span><span>routing</span></div>
+        <div class="rules"><span class="kbd">type = Buyer</span><span class="kbd">area = Northside</span><span class="kbd">on shift</span><span class="kbd">lowest load</span></div>
+        <div class="hd"><span></span><span>Agent</span><span>Open leads</span><span class="m">Match</span></div>
+        <div class="row" data-r="x"><span class="av g">SO</span><div>Sam Okafor<div class="s">Buyers · Downtown</div></div><div class="load"><i class="f"></i><i class="f"></i><i></i><i></i><i></i><i></i><i></i></div><span class="m">area ✕</span></div>
+        <div class="row" data-r="x"><span class="av g">PN</span><div>Priya Nair<div class="s">Sellers · Riverside</div></div><div class="load"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i><i></i></div><span class="m">type ✕</span></div>
+        <div class="row" data-r="x"><span class="av g">EB</span><div>Elena Brooks<div class="s">Buyers · Northside</div></div><div class="load"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div><span class="m">load ✕</span></div>
+        <div class="row" data-r="w"><span class="av bl">JR</span><div>Jordan Reyes<div class="s">Buyers · Northside · on shift</div></div><div class="load"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i></div><span class="m">assigned ✓</span></div>
+      </div>
+      <div class="panel sla rv d3">
+        <div class="ph" style="margin:-22px -22px 0;padding:12px 16px"><span>call SLA · Jordan Reyes</span><span>text sent</span></div>
+        <div class="ring">
+          <svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="88" fill="none" stroke="#17171b" stroke-width="8"/>
+            <circle id="slaArc" cx="100" cy="100" r="88" fill="none" stroke="url(#slag)" stroke-width="8" stroke-linecap="round" stroke-dasharray="553" stroke-dashoffset="0"/>
+            <defs><linearGradient id="slag"><stop offset="0" stop-color="#7aa2ff"/><stop offset="1" stop-color="#5ee6c5"/></linearGradient></defs></svg>
+          <div class="c"><div><b id="slaT">5:00</b><span id="slaL">to call Maya</span></div></div>
+        </div>
+        <div class="called" id="called"><span class="av bl" style="width:24px;height:24px;font-size:9px;border-radius:6px">JR</span>Jordan called Maya<b id="calledT">…</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 WORKFLOW -->
+<section id="s5" data-s="flow">
+  <div class="grid-bg" style="opacity:.35"></div>
+  <div class="spot" style="width:1000px;height:900px;left:10%;top:100px"></div>
+  <div class="wrap">
+    <div class="head">
+      <div><div class="eyebrow rv"><span class="n">05</span><span class="bar"></span>The automation</div>
+      <h2 class="rv d1">The logic, running live.</h2></div>
+      <div class="hint rv d2"><span class="dot pulse"></span> run #1 · Maya Chen</div>
+    </div>
+    <div class="wf-g">
+      <div class="panel flow rv d2">
+        <div class="col" id="flowCol">
+          <div class="node" data-i="0"><span class="ico">⚡</span><div><div class="k">TRIGGER</div><div class="t">Form submitted</div><div class="d">Listing page · 214 Linden</div></div><span class="st">21:42:00</span></div>
+          <div class="conn"></div>
+          <div class="node" data-i="1"><span class="ico">≡</span><div><div class="k">ACTION</div><div class="t">Set type + lifecycle</div><div class="d">Buyer · Lead</div></div><span class="st">21:42:07</span></div>
+          <div class="conn"></div>
+          <div class="node" data-i="2"><span class="ico">✉</span><div><div class="k">SMS</div><div class="t">Qualifying SMS</div><div class="d">Timeline, budget, area</div></div><span class="st">21:42:21</span></div>
+          <div class="conn"></div>
+          <div class="node" data-i="3"><span class="ico">◇</span><div><div class="k">BRANCH</div><div class="t">Lead score ≥ 80?</div><div class="d">Maya scores 86</div></div><span class="st">86</span></div>
+          <div class="split"><svg viewBox="0 0 640 34" preserveAspectRatio="none"><path d="M320 0 V10 Q320 16 314 16 H166 Q160 16 160 22 V34" class="rail"/><path d="M320 0 V10 Q320 16 326 16 H474 Q480 16 480 22 V34" class="rail"/><path id="yesPath" d="M320 0 V10 Q320 16 314 16 H166 Q160 16 160 22 V34" fill="none" stroke="#5ee6c5" stroke-width="2" stroke-dasharray="400" stroke-dashoffset="400" style="transition:stroke-dashoffset .6s"/></svg><span class="lbl y">YES</span><span class="lbl n">NO</span></div>
+          <div class="branch">
+            <div class="lane">
+              <div class="node" data-i="4"><span class="ico">↻</span><div><div class="k">ROTATE</div><div class="t">Northside buyer agent</div><div class="d">Assigned to Jordan Reyes</div></div><span class="st">21:42:38</span></div>
+              <div class="conn"></div>
+              <div class="node" data-i="5"><span class="ico">☐</span><div><div class="k">TASK</div><div class="t">Call Maya Chen</div><div class="d">SLA 5 minutes</div></div><span class="st">2:14</span></div>
+              <div class="conn"></div>
+              <div class="node" data-i="6"><span class="ico">◷</span><div><div class="k">DELAY</div><div class="t">Wait 1 day</div><div class="d">Resumes Tue 8:00 AM</div></div><span class="st">1d</span></div>
+              <div class="conn"></div>
+              <div class="node" data-i="7"><span class="ico">@</span><div><div class="k">EMAIL</div><div class="t">3 similar listings</div><div class="d">Stops when she replies</div></div><span class="st">sent</span></div>
+              <div class="conn"></div>
+              <div class="node" data-i="8"><span class="ico">★</span><div><div class="k">GOAL</div><div class="t">Showing booked</div><div class="d">Sat 11:00 · 214 Linden</div></div><span class="st">met</span></div>
+            </div>
+            <div class="lane">
+              <div class="node skip" data-skip><span class="ico">⋯</span><div><div class="k">SEQUENCE</div><div class="t">Enrol in nurture</div><div class="d">Not taken · score 86</div></div><span class="st">skipped</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel console rv d3">
+        <div class="ph"><div class="dots"><i></i><i></i><i></i></div><span>execution log</span><span class="dot pulse"></span></div>
+        <div class="lines" id="lines"></div>
+        <div class="ft"><span>workflow · listing inquiry</span><span id="stepN">0 / 9 steps</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 HUBSPOT -->
+<section id="hs" data-s="hs">
+  <div class="spot b" style="width:1200px;height:900px;left:50%;margin-left:-600px;top:120px"></div>
+  <div class="wrap">
+    <div class="head">
+      <div><div class="eyebrow rv"><span class="n">06</span><span class="bar"></span>In your HubSpot</div>
+      <h2 class="rv d1">This is what it will look like in your HubSpot.</h2></div>
+    </div>
+    <div class="hsw rv d2" id="hsw">
+      <div class="hs-top"><span class="sq"><i></i></span><div class="nv"><span>Contacts</span><span>Conversations</span><span>Marketing</span><span>Sales</span><span>Automation</span><span>Reporting</span></div><span class="srch">Search HubSpot</span></div>
+      <div class="hs-bar"><span class="back">‹ Workflows</span><span class="nm">Listing inquiry · buyer routing</span><span class="pill">Contact-based</span>
+        <div class="hs-tabs"><span class="a">Actions</span><span>Settings</span><span>Performance</span></div>
+        <div class="tog"><span id="hsState">Off</span><span class="sw"></span></div><span class="btn-or">Review and publish</span></div>
+      <div class="hs-body">
+        <div class="hs-canvas" id="hsCanvas">
+          <div class="hcard trig"><div class="hh"><span>Trigger · Contact enrollment</span></div><div class="hb"><b>Form submission</b><br>Listing page inquiry form</div></div>
+          <div class="hstep"><div class="hline"></div><div class="hplus">+</div><div class="hline"></div></div>
+          <div class="hcard"><div class="hh"><span>1 · Edit record</span></div><div class="hb">Set <b>Lead type</b> to Buyer</div></div>
+          <div class="hstep"><div class="hline"></div><div class="hplus">+</div><div class="hline"></div></div>
+          <div class="hcard"><div class="hh"><span>2 · Edit record</span></div><div class="hb">Set <b>Lifecycle stage</b> to Lead</div></div>
+          <div class="hstep"><div class="hline"></div><div class="hplus">+</div><div class="hline"></div></div>
+          <div class="hcard"><div class="hh"><span>3 · Send SMS</span></div><div class="hb">Qualifying questions to Maya</div></div>
+          <div class="hstep"><div class="hline"></div><div class="hplus">+</div><div class="hline"></div></div>
+          <div class="hcard"><div class="hh"><span>4 · If/then branch</span></div><div class="hb"><b>Lead score</b> is ≥ 80</div></div>
+          <div class="hline"></div><div class="hsplit"></div>
+          <div class="hbr">
+            <div class="lane">
+              <span class="tag">Yes</span>
+              <div class="hcard"><div class="hh"><span>5 · Rotate record to owner</span></div><div class="hb">Northside buyer agents</div></div>
+              <div class="hstep"><div class="hline"></div><div class="hplus">+</div><div class="hline"></div></div>
+              <div class="hcard sel"><div class="hh"><span>6 · Create task</span></div><div class="hb">Call Maya · due in 5 min</div></div>
+              <div class="hstep"><div class="hline"></div><div class="hplus">+</div><div class="hline"></div></div>
+              <div class="hcard"><div class="hh"><span>7 · Delay</span></div><div class="hb">Wait 1 day</div></div>
+              <div class="hstep"><div class="hline"></div><div class="hplus">+</div><div class="hline"></div></div>
+              <div class="hcard"><div class="hh"><span>8 · Send email</span></div><div class="hb">3 similar listings<br><span style="color:#7c98b6;font-size:12px">Unenroll on reply</span></div></div>
+              <div class="hline"></div><span class="hend">End</span>
+            </div>
+            <div class="lane">
+              <span class="tag no">None met</span>
+              <div class="hcard"><div class="hh"><span>9 · Enroll in sequence</span></div><div class="hb">Buyer nurture</div></div>
+              <div class="hline"></div><span class="hend">End</span>
+            </div>
+          </div>
+        </div>
+        <div class="hs-side">
+          <div class="sh"><span>Create task</span><span>×</span></div>
+          <div class="sb">
+            <div><label>Task title</label><div class="hin">Call Maya Chen</div></div>
+            <div><label>Due date</label><div class="hin">5 minutes after enrollment</div></div>
+            <div><label>Assign to</label><div class="hin">Contact owner</div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label>Priority</label><div class="hin">High</div></div><div><label>Type</label><div class="hin">Call</div></div></div>
+            <div class="grp">Other actions</div>
+            <div class="act">Edit record</div><div class="act">Rotate record to owner</div><div class="act a">Create task</div><div class="act">Send SMS</div><div class="act">Send email</div><div class="act">If/then branch</div><div class="act">Delay</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hs-foot rv d3"><span>Your workflow in HubSpot · illustrative</span><span>9 actions · 1 branch · <kbd>⌘</kbd><kbd>↵</kbd> publish</span></div>
+  </div>
+</section>
+
+<!-- CLOSE -->
+<section id="close" data-s="close">
+  <div class="grid-bg"></div>
+  <div class="spot" style="width:1100px;height:800px;left:50%;margin-left:-550px;top:0"></div>
+  <div class="wrap">
+    <div class="eyebrow rv" style="justify-content:center">Maya Chen · 9:42 PM → Sat 11:00</div>
+    <h2 style="margin-top:26px"><span>Captured.</span> <span>Qualified.</span> <span>Assigned.</span> <span>Booked.</span></h2>
+    <div class="steps rv d5"><span class="kbd"><em>01</em> Clean up</span><span class="kbd"><em>02</em> Capture</span><span class="kbd"><em>03</em> Qualify</span><span class="kbd"><em>04</em> Assign</span><span class="kbd"><em>05</em> Follow up</span></div>
+  </div>
+</section>
+<footer><span>Your HubSpot · real estate lead management</span><span>Illustrative numbers</span></footer>
+
+<script>
+(function(){
+  var ran={};
+  function wait(ms){return new Promise(function(r){setTimeout(r,ms)})}
+  function count(el,from,to,dur){
+    var t0=null;
+    function f(t){if(!t0)t0=t;var p=Math.min(1,(t-t0)/dur);var e=1-Math.pow(1-p,3);el.textContent=Math.round(from+(to-from)*e);if(p<1)requestAnimationFrame(f)}
+    requestAnimationFrame(f);
+  }
+  function counters(sec){
+    sec.querySelectorAll('[data-count]').forEach(function(el){
+      var a=el.getAttribute('data-count').split(':');var d=+el.getAttribute('data-delay')||0;
+      setTimeout(function(){count(el,+a[0],+a[1],1800)},d);
+    });
+  }
+  var run={
+    hero:async function(s){
+      var rows=s.querySelectorAll('#heroLog .r'),clk=document.getElementById('heroClock');
+      var secs=[0,3,7,21,38];
+      var t0=performance.now();
+      (function tick(){var v=Math.min(38,Math.floor((performance.now()-t0)/1000*14));clk.textContent='00:'+(v<10?'0':'')+v;if(v<38)requestAnimationFrame(tick)})();
+      for(var i=0;i<rows.length;i++){
+        await wait(i===0?300:(secs[i]-secs[i-1])*1000/14);
+        rows.forEach(function(r){r.classList.remove('cur')});
+        rows[i].classList.add('on','cur');
+      }
+    },
+    clean:async function(s){
+      counters(s);
+      await wait(800);document.getElementById('dups').classList.add('merged');
+      document.getElementById('healthBar').classList.add('go');
+    },
+    capture:function(s){
+      counters(s);
+      var svg=document.getElementById('wireSvg');var ys=[33,99,165,231,297];var ns='http://www.w3.org/2000/svg';
+      ys.forEach(function(y,i){
+        var d='M0 '+y+' C 180 '+y+', 220 165, 360 165';
+        var r=document.createElementNS(ns,'path');r.setAttribute('d',d);r.setAttribute('class','rail');svg.appendChild(r);
+        var b=document.createElementNS(ns,'path');b.setAttribute('d',d);b.setAttribute('class','beam');b.setAttribute('pathLength','1000');b.setAttribute('stroke','url(#bm)');
+        b.style.animationDelay=(i*0.45)+'s';svg.appendChild(b);
+      });
+    },
+    qualify:async function(s){
+      var segs=document.getElementById('segs');
+      if(!segs.children.length){for(var i=0;i<20;i++){var e=document.createElement('i');if(i===16)e.className='th';segs.appendChild(e)}}
+      var bs=s.querySelectorAll('#thread .bub'),num=document.getElementById('scoreNum');
+      var targets=[12,38,61,86],cur=0;
+      function to(v){var from=cur;cur=v;count(num,from,v,700);
+        var n=Math.round(v/5);[].forEach.call(segs.children,function(e,i){e.classList.toggle('on',i<n);e.classList.toggle('hi',i<n&&v>=80)})}
+      for(var i=0;i<bs.length;i++){
+        await wait(i===0?500:900);bs[i].classList.add('show');
+        if(i===1){document.getElementById('f1').classList.add('on');await wait(250);document.getElementById('f2').classList.add('on')}
+        if(i===3){document.getElementById('f3').classList.add('on')}
+        to(targets[i]);
+      }
+      await wait(800);document.getElementById('ready').classList.add('on');
+    },
+    assign:async function(s){
+      var rows=s.querySelectorAll('#agents .row');
+      await wait(600);
+      for(var i=0;i<rows.length;i++){
+        rows[i].classList.add('scan');await wait(420);rows[i].classList.remove('scan');
+        rows[i].classList.add(rows[i].dataset.r==='w'?'win':'x');
+      }
+      await wait(400);
+      var arc=document.getElementById('slaArc'),T=document.getElementById('slaT'),C=553,start=300,end=300-134,dur=2400,t0=null;
+      function f(t){if(!t0)t0=t;var p=Math.min(1,(t-t0)/dur);var left=Math.round(start-(start-end)*p);
+        T.textContent=Math.floor(left/60)+':'+('0'+left%60).slice(-2);arc.setAttribute('stroke-dashoffset',C*(1-left/300));
+        if(p<1)requestAnimationFrame(f);else{var el=document.getElementById('called');el.classList.add('on');document.getElementById('calledT').textContent='2:14';
+          T.textContent='2:14';document.getElementById('slaL').textContent='called · within SLA'}}
+      requestAnimationFrame(f);
+    },
+    flow:async function(s){
+      var col=document.getElementById('flowCol'),lines=document.getElementById('lines'),stepN=document.getElementById('stepN');
+      var logs=[
+        ['21:42:00','<span class="g">trigger</span> form submitted · 214 Linden'],
+        ['21:42:07','set lead_type=<span class="bl">Buyer</span> lifecycle=<span class="bl">Lead</span>'],
+        ['21:42:21','sms → Maya · timeline, budget, area'],
+        ['21:44:52','branch score=<span class="g">86</span> ≥ 80 → <span class="g">YES</span>'],
+        ['21:44:53','rotate → <span class="bl">Jordan Reyes</span> · Northside'],
+        ['21:44:53','task call Maya · sla 5m · done <span class="g">2:14</span>'],
+        ['Tue 08:00','delay 1d · resumed'],
+        ['Tue 08:00','email 3 similar listings · unenroll on reply'],
+        ['Tue 10:18','<span class="a">goal met</span> · showing booked Sat 11:00']
+      ];
+      var nodes=col.querySelectorAll('.node[data-i]');
+      function nodeAt(i){return col.querySelector('.node[data-i="'+i+'"]')}
+      function connBefore(n){var p=n.previousElementSibling;return p&&p.classList.contains('conn')?p:null}
+      for(var i=0;i<9;i++){
+        var n=nodeAt(i);
+        if(i===4){document.getElementById('yesPath').style.strokeDashoffset='0';await wait(500)}
+        var c=connBefore(n);if(c){c.classList.add('run');await wait(380);c.classList.add('lit')}
+        nodes.forEach(function(x){if(x.classList.contains('on'))x.classList.remove('on')});
+        n.classList.add(i===8?'done':'on');
+        if(i>0&&i<8){}
+        var d=document.createElement('div');d.className='ln';d.innerHTML='<span class="ts">'+logs[i][0]+'</span><span>'+logs[i][1]+'</span>';lines.appendChild(d);
+        stepN.textContent=(i+1)+' / 9 steps';
+        await wait(i===3?650:340);
+        if(i<8){n.classList.remove('on');n.style.opacity='1';n.style.borderColor='rgba(94,230,197,.22)'}
+      }
+    },
+    hs:async function(s){
+      var cards=s.querySelectorAll('.hcard');
+      await wait(400);
+      for(var i=0;i<cards.length;i++){cards[i].classList.add('show');await wait(110)}
+      await wait(300);document.getElementById('hsw').classList.add('live');document.getElementById('hsState').textContent='On';
+    },
+    close:function(){}
+  };
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){
+    if(e.isIntersecting){var s=e.target,k=s.dataset.s;s.classList.add('in');if(!ran[k]){ran[k]=1;run[k]&&run[k](s)}io.unobserve(s)}
+  })},{threshold:.28});
+  document.querySelectorAll('section[data-s]').forEach(function(s){io.observe(s)});
+  document.addEventListener('keydown',function(e){var m={'1':'s1','2':'s2','3':'s3','4':'s4','5':'s5','6':'hs'}[e.key];if(m){var el=document.getElementById(m);el&&el.scrollIntoView({behavior:'smooth'})}});
+})();
+</script>

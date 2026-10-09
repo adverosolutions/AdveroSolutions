@@ -1,0 +1,30 @@
+url: https://www.upwork.com/jobs/~022107114400982634317
+GoHighLevel + AI Automation Expert for Roofing: Attribution, AI Follow-Up, Lead Re-Engagement
+Hourly $25-65, part-time, expert. Client: a US agency building for an established roofing and siding company (3 years on GHL, A2P in place); NDA and whitelabel under the agency. Saved 2026-10-05. Avg bid $38. Six milestones, spec already decided. Requires 3 builds with WhatConverts/CallRail plus offline conversions (do not claim this). Stack: GHL (LC Phone, Conversation AI, Voice AI), WhatConverts, Sendara iMessage, n8n, Looker Studio.
+
+We're building a lead acquisition system for an established roofing and siding company that has run on GoHighLevel for three years and has A2P 10DLC in place. The instance works, but it's underbuilt: leads are captured, follow-up is manual and inconsistent, and nothing connects pipeline outcomes back to the ad campaigns. We're adding the layer that fixes that, and we need an experienced GHL builder to do it with us.
+
+The architecture, platform choices, and workflow map are already decided. You're extending a live system against a defined spec, not designing from scratch, and the client's sales team keeps working in GHL throughout.
+
+What we're adding:
+AI-driven follow-up that responds to every new inquiry in under a minute across text (iMessage via Sendara with SMS fallback), email, and voice until an inspection is booked. Re-engagement sequences that keep in touch with open leads and automatically wake up any that have gone quiet, including a database reactivation campaign for the existing contact list. And WhatConverts attribution so every call, form, and chat is tracked to its source, with inspections, estimates, and signed contracts sent back to Google and Meta as offline conversions (WhatConverts handles the ad platform API connections; your job is making sure the right events with the right values reach it).
+
+Stack (accounts provisioned by us):
+Existing GHL sub-account (with LC Phone, Conversation AI, and Voice AI), WhatConverts, Sendara for iMessage via the GHL marketplace, and n8n for any orchestration GHL workflows can't handle natively. The client's job management system is the source of truth for job outcomes; we'll confirm which one during the audit.
+
+Scope, by milestone
+
+1. Audit and plan: review the existing sub-account (pipeline, fields, calendars, current workflows, phone setup) and deliver a written plan for what gets kept, rebuilt, or added, plus a number-routing diagram covering WhatConverts tracking numbers, the existing GHL line, and the new iMessage line. Nothing changes in the live instance until we sign off.
+
+2. Attribution foundation: WhatConverts installed with dynamic number insertion, form and chat tracking, spam filtering, and the GHL integration mapped to custom fields. Pipeline stages aligned to the outcomes we need to track. Acceptance: a test call and a test form each land in GHL with source, campaign, keyword, and click ID attached.
+
+3.Speed-to-lead: missed-call text-back via Sendara with SMS fallback, new-inquiry first touch across text, email, and call attempt in under 60 seconds, Voice AI answering inbound calls and booking inspections, confirmations, reminders, and no-show recovery. Acceptance: timed test scenarios from an iPhone and an Android.
+
+4. AI follow-up and re-engagement: multi-day follow-up sequences for unresponsive new leads; nurture sequences for open leads by pipeline stage; automatic re-engagement when a lead goes quiet for a defined period; a one-time database reactivation campaign for dormant contacts; quiet hours, opt-out handling, stop conditions, and human handoff. We supply the conversation design and prompts; you build the workflows and Conversation AI configuration. Acceptance: a 20-scenario test script passes with transcripts reviewed by us.
+
+5. Outcome loop and reporting: pipeline stage changes and contract value flow to WhatConverts so offline conversions post to Google and Meta with the correct value. Looker Studio dashboard joining ad spend, WhatConverts, and the GHL pipeline. Acceptance: a test lead marked "signed" appears as a valued conversion in both platforms.
+
+6. Documentation and handoff: Loom walkthroughs, a runbook for the client's team, and 30 days of bug-fix support.
+
+Requirements
+At least three GHL builds that included WhatConverts or CallRail attribution and an offline conversion loop to Google or Meta. Experience modifying a live GHL instance without disrupting an active sales team. Hands-on with Conversation AI, Voice AI, and workflow builder; n8n or Make a plus. Home services or roofing experience a plus. Comfortable working under NDA & whitelabel under our agency.

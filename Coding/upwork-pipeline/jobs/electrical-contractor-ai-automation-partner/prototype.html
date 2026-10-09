@@ -1,0 +1,1473 @@
+<title>Lead Intake Hub</title>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap");
+
+:root{
+  color-scheme: light;
+  --bg:#F4F2EC;
+  --surface:#FBFAF6;
+  --sunk:#EDEAE2;
+  --ink:#1A1916;
+  --ink-2:#55524A;
+  --ink-3:#8C887D;
+  --line:rgba(58,46,20,.11);
+  --line-2:rgba(58,46,20,.19);
+  --accent:#B25E0C;
+  --accent-ink:#FFFFFF;
+  --accent-soft:rgba(178,94,12,.09);
+  --accent-line:rgba(178,94,12,.32);
+  --ok:#2C7552;
+  --ok-soft:rgba(44,117,82,.09);
+  --err:#B2372A;
+  --err-soft:rgba(178,55,42,.08);
+  --shadow:0 1px 2px rgba(40,30,10,.05), 0 8px 24px -12px rgba(40,30,10,.14);
+  --radius:10px;
+  --serif:"Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --sans:"Geist", ui-sans-serif, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  --mono:"Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --ease:cubic-bezier(.22,.8,.24,1);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#131210; --surface:#1B1A17; --sunk:#100F0D;
+    --ink:#EDEAE2; --ink-2:#AAA59A; --ink-3:#76726A;
+    --line:rgba(255,240,210,.08); --line-2:rgba(255,240,210,.15);
+    --accent:#EFA24C; --accent-ink:#1A1206; --accent-soft:rgba(239,162,76,.10); --accent-line:rgba(239,162,76,.38);
+    --ok:#6CC398; --ok-soft:rgba(108,195,152,.10);
+    --err:#F08470; --err-soft:rgba(240,132,112,.10);
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px -14px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#131210; --surface:#1B1A17; --sunk:#100F0D;
+  --ink:#EDEAE2; --ink-2:#AAA59A; --ink-3:#76726A;
+  --line:rgba(255,240,210,.08); --line-2:rgba(255,240,210,.15);
+  --accent:#EFA24C; --accent-ink:#1A1206; --accent-soft:rgba(239,162,76,.10); --accent-line:rgba(239,162,76,.38);
+  --ok:#6CC398; --ok-soft:rgba(108,195,152,.10);
+  --err:#F08470; --err-soft:rgba(240,132,112,.10);
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px -14px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;font-feature-settings:"ss01","cv11";overflow-x:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.num,.mono{font-family:var(--mono);font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}
+.rail{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:28px 18px 20px;border-right:1px solid var(--line)}
+.mark{display:flex;align-items:center;gap:10px;padding:0 10px 28px}
+.mark .logo{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--ink);color:var(--bg)}
+.mark .logo svg{width:16px;height:16px}
+.mark b{font-weight:600;font-size:14px;letter-spacing:-.01em;display:block;line-height:1.2}
+.mark span{font-size:12px;color:var(--ink-3)}
+.nav{display:flex;flex-direction:column;gap:1px}
+.nav button{display:grid;grid-template-columns:30px 1fr;align-items:baseline;text-align:left;border:0;background:none;padding:8px 10px;border-radius:8px;color:var(--ink-2);transition:background .2s var(--ease),color .2s}
+.nav button .n{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.nav button:hover{background:var(--sunk);color:var(--ink)}
+.nav button[aria-current="page"]{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.nav button[aria-current="page"] .n{color:var(--accent)}
+.nav .sep{height:1px;background:var(--line);margin:10px 10px}
+.rail-foot{margin-top:auto;padding:16px 10px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
+.rail-foot p{margin:0;font-size:12px;color:var(--ink-3);line-height:1.5}
+.rail-ctl{display:flex;gap:6px}
+.icon-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);background:transparent;border-radius:8px;padding:6px 10px;font-size:12px;color:var(--ink-2);transition:background .2s,color .2s}
+.icon-btn:hover{background:var(--surface);color:var(--ink)}
+.icon-btn svg.i{width:14px;height:14px}
+
+main{min-width:0}
+.view{display:none;padding:64px 72px 96px;max-width:1240px}
+.view.on{display:block;animation:viewIn .5s var(--ease)}
+@keyframes viewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---------- type ---------- */
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:0 0 16px;display:flex;align-items:center;gap:10px}
+.eyebrow .num{color:var(--accent);letter-spacing:0}
+h1,h2{font-family:var(--serif);font-weight:400;letter-spacing:-.015em;text-wrap:balance;margin:0}
+h1{font-size:64px;line-height:1.02}
+h2{font-size:44px;line-height:1.05}
+h3{font-size:16px;font-weight:600;letter-spacing:-.005em;margin:0}
+.lede{font-size:16px;color:var(--ink-2);max-width:62ch;margin:18px 0 0;text-wrap:pretty}
+.label{font-size:12px;color:var(--ink-3);letter-spacing:.06em;text-transform:uppercase}
+.muted{color:var(--ink-3)}
+.small{font-size:12px}
+em.hl{font-style:normal;color:var(--accent)}
+
+.head-row{display:flex;align-items:flex-end;justify-content:space-between;gap:32px;flex-wrap:wrap}
+.section{margin-top:64px}
+.section > .label{display:block;margin-bottom:16px}
+.rule{height:1px;background:var(--line);border:0;margin:0}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:9px;padding:10px 16px;font-weight:500;font-size:14px;background:var(--accent);color:var(--accent-ink);box-shadow:0 1px 0 rgba(255,255,255,.18) inset, 0 1px 2px rgba(0,0,0,.12);transition:transform .15s var(--ease),filter .2s,opacity .2s}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:translateY(1px) scale(.99)}
+.btn[disabled]{opacity:.45;cursor:default;filter:none;transform:none}
+.btn.done,.btn.done[disabled]{opacity:1;background:var(--sunk);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2);cursor:default;filter:none}
+.btn.done svg.i{color:var(--ok)}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2)}
+.btn.ghost:hover{background:var(--surface)}
+.seg{display:inline-flex;padding:3px;border-radius:9px;background:var(--sunk);gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;border-radius:7px;padding:6px 12px;font-size:13px;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08),inset 0 0 0 1px var(--line)}
+
+/* ---------- panels ---------- */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--ink-3);display:inline-block;flex:none}
+.dot.live{background:var(--accent)}
+.dot.ok{background:var(--ok)}
+.dot.err{background:var(--err)}
+.state{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-2);white-space:nowrap}
+.state.ok{color:var(--ok)} .state.err{color:var(--err)} .state.live{color:var(--accent)}
+
+/* ---------- overview ---------- */
+.hero{padding-top:24px;max-width:900px}
+.hero h1 em{font-style:italic;color:var(--accent)}
+.hero .actions{display:flex;gap:10px;margin-top:32px;flex-wrap:wrap}
+.flow{margin-top:72px;display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line-2)}
+.flow .st{padding:22px 22px 0 0;position:relative}
+.flow .st + .st{padding-left:22px;border-left:1px solid var(--line)}
+.flow .st .num{font-size:11px;color:var(--accent)}
+.flow .st h3{margin:10px 0 8px;font-size:15px}
+.flow .st p{margin:0;color:var(--ink-2);font-size:13px}
+.flow .st ul{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink-2)}
+.flow .st li{display:flex;gap:8px;align-items:center}
+.flow .st li svg.i{width:14px;height:14px;color:var(--ink-3)}
+.areas{display:grid;grid-template-columns:1fr 1fr;column-gap:56px}
+.area{display:grid;grid-template-columns:44px 1fr 16px;gap:8px;align-items:baseline;padding:18px 0;border-bottom:1px solid var(--line);text-align:left;background:none;border-left:0;border-right:0;border-top:0;width:100%;color:inherit}
+.area:hover h3{color:var(--accent)}
+.area .num{font-size:12px;color:var(--ink-3)}
+.area p{margin:4px 0 0;color:var(--ink-2);font-size:13px}
+.area svg.i{color:var(--ink-3);align-self:center;transition:transform .25s var(--ease)}
+.area:hover svg.i{transform:translateX(3px);color:var(--accent)}
+.why{display:grid;grid-template-columns:repeat(4,1fr);gap:32px}
+.why div h3{font-size:14px;margin:12px 0 6px}
+.why div p{margin:0;color:var(--ink-2);font-size:13px}
+.why svg.i{width:20px;height:20px;color:var(--accent)}
+
+/* ---------- intake ---------- */
+.metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));margin-top:40px;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line)}
+.metric{padding:16px 20px 18px 0}
+.metric + .metric{padding-left:20px;border-left:1px solid var(--line)}
+.metric .v{font-family:var(--mono);font-size:28px;letter-spacing:-.02em;line-height:1.1;margin-top:6px;font-variant-numeric:tabular-nums;transition:color .3s}
+.metric .v small{font-size:13px;color:var(--ink-3);margin-left:6px}
+.metric.flash .v{color:var(--accent)}
+.runbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.clock{font-family:var(--mono);font-size:13px;color:var(--ink-2);display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:var(--sunk)}
+.clock .dot{transition:background .3s}
+
+.desk{display:grid;grid-template-columns:360px minmax(0,1fr);margin-top:32px;min-height:560px;overflow:hidden}
+.inbox{border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+.inbox-h{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.inbox-h b{font-weight:600;font-size:13px}
+.list{flex:1;overflow:auto}
+.empty{padding:56px 28px;text-align:center;color:var(--ink-3)}
+.empty svg.i{width:28px;height:28px;margin-bottom:12px;color:var(--ink-3)}
+.empty p{margin:0 auto;max-width:30ch;font-size:13px}
+.msg{display:grid;grid-template-columns:18px 1fr auto;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);text-align:left;background:none;border-left:0;border-right:0;border-top:0;width:100%;position:relative;transition:background .2s}
+.msg:hover{background:var(--sunk)}
+.msg[aria-selected="true"]{background:var(--accent-soft)}
+.msg[aria-selected="true"]::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:2px;border-radius:2px;background:var(--accent)}
+.msg svg.i{margin-top:2px;color:var(--ink-3)}
+.msg .who{font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msg .sub{font-size:12.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msg .meta{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12px;color:var(--ink-3);min-height:18px}
+.msg .t{font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+.msg.enter{animation:msgIn .6s var(--ease) both}
+@keyframes msgIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.cat{font-size:12px;color:var(--ink-2);display:inline-flex;align-items:center;gap:6px}
+.cat.pending{color:var(--ink-3)}
+.shimmer{display:inline-block;width:88px;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--sunk),var(--line-2),var(--sunk));background-size:200% 100%;animation:sh 1s linear infinite}
+@keyframes sh{to{background-position:-200% 0}}
+
+.detail{min-width:0;padding:28px 32px 32px;overflow:auto}
+.detail .src{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-3)}
+.detail h3.subj{font-family:var(--serif);font-weight:400;font-size:28px;line-height:1.15;letter-spacing:-.01em;margin:10px 0 0;text-wrap:balance}
+.body{margin-top:16px;font-size:14px;color:var(--ink-2);max-width:64ch;white-space:pre-line}
+.body .tr{display:block;margin-top:10px;padding-left:12px;border-left:2px solid var(--line-2);color:var(--ink-3);font-size:13px}
+.blocks{margin-top:28px;display:flex;flex-direction:column}
+.blk{padding:18px 0;border-top:1px solid var(--line);display:grid;grid-template-columns:150px 1fr;gap:20px;opacity:0;transform:translateY(6px);transition:opacity .45s var(--ease),transform .45s var(--ease)}
+.blk.in{opacity:1;transform:none}
+.blk > .label{padding-top:2px}
+.fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 24px}
+.fields div span{display:block;font-size:12px;color:var(--ink-3)}
+.fields div b{font-weight:500;font-size:13.5px}
+.fields b.urg-e{color:var(--err)}
+.alert-card{display:flex;gap:12px;padding:14px 16px;border-radius:10px;background:var(--bg);border:1px solid var(--line);max-width:520px}
+.alert-card .av{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex:none}
+.alert-card .av.e{background:var(--err-soft);color:var(--err)}
+.alert-card b{font-size:13px;font-weight:600}
+.alert-card p{margin:3px 0 0;font-size:13px;color:var(--ink-2)}
+.reply{font-size:13.5px;color:var(--ink);max-width:62ch;padding:14px 16px;border-radius:10px;border:1px dashed var(--line-2)}
+.checks{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px}
+.checks span{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ok)}
+.checks span svg.i{width:13px;height:13px}
+.checks .t{color:var(--ink-3)}
+.ladder{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.ladder li{display:grid;grid-template-columns:18px 1fr auto;gap:12px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line);animation:msgIn .5s var(--ease) both}
+.ladder li:last-child{border-bottom:0}
+.ladder li svg.i{margin-top:2px}
+.ladder li .w{font-size:13.5px;font-weight:500}
+.ladder li .d{font-size:12.5px;color:var(--ink-2)}
+.ladder .no svg.i{color:var(--ink-3)}
+.ladder .wait svg.i{color:var(--accent)}
+.ladder .yes svg.i{color:var(--ok)}
+.tag-no{font-size:11.5px;color:var(--err);white-space:nowrap}
+.tag-yes{font-size:11.5px;color:var(--ok);white-space:nowrap}
+.confirm-row{display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap}
+.confirm-row .hint{font-size:12px;color:var(--ink-3)}
+.timer{display:flex;align-items:center;gap:16px}
+.timer svg.ring{width:44px;height:44px;transform:rotate(-90deg)}
+.timer .tt{font-family:var(--mono);font-size:20px;font-variant-numeric:tabular-nums}
+.timer p{margin:2px 0 0;font-size:12.5px;color:var(--ink-2)}
+.detail-empty{height:100%;display:grid;place-items:center;text-align:center;color:var(--ink-3);padding:40px}
+.detail-empty h3{font-family:var(--serif);font-weight:400;font-size:28px;color:var(--ink);margin-bottom:8px}
+.detail-empty p{max-width:44ch;margin:0 auto;font-size:13.5px}
+
+/* table */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-weight:500;font-size:12px;color:var(--ink-3);text-align:left;padding:10px 14px;border-bottom:1px solid var(--line-2);white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+td.mono,td .mono{font-size:12px;white-space:nowrap}
+#tracker td:nth-child(2){white-space:nowrap}
+.rank td:nth-child(5),.rank td:nth-child(6){white-space:nowrap}
+td{transition:background 1.2s var(--ease)}
+tr.new td{background:var(--accent-soft)}
+@keyframes rowIn{0%{background:var(--accent-soft)}100%{background:transparent}}
+th:first-child,td:first-child{padding-left:0}
+.tbl-note{font-size:12px;color:var(--ink-3);margin-top:12px}
+
+.bars{display:flex;flex-direction:column;gap:12px}
+.bar{display:grid;grid-template-columns:140px 1fr 56px;gap:14px;align-items:center;font-size:13px}
+.bar .track{height:6px;border-radius:3px;background:var(--sunk);overflow:hidden}
+.bar .fill{height:100%;border-radius:3px;background:var(--ink-2);transform-origin:left;transition:transform .8s var(--ease)}
+.bar .fill.a{background:var(--accent)}
+.bar .num{text-align:right;color:var(--ink-2)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:56px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line-2)}
+.kpis > div{padding:16px 20px 0 0}
+.kpis > div + div{padding-left:20px;border-left:1px solid var(--line)}
+.kpis .v{font-family:var(--mono);font-size:28px;letter-spacing:-.02em;margin-top:6px}
+.kpis p{margin:4px 0 0;font-size:12.5px;color:var(--ink-2)}
+
+/* toasts */
+.toasts{position:fixed;left:18px;bottom:128px;display:flex;flex-direction:column;gap:10px;z-index:50;width:212px;max-width:calc(100vw - 32px);pointer-events:none}
+.toast{pointer-events:auto;display:flex;gap:12px;padding:14px 16px;border-radius:12px;background:var(--surface);border:1px solid var(--line-2);box-shadow:var(--shadow);animation:toastIn .5s var(--ease) both}
+.toast.out{animation:toastOut .4s var(--ease) both}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateY(6px)}}
+.toast{padding:12px 12px}
+.toast .av{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex:none}
+.toast .av.e{background:var(--err-soft);color:var(--err)}
+.toast b{font-size:12.5px;font-weight:600;display:block}
+.toast p{margin:2px 0 0;font-size:12.5px;color:var(--ink-2)}
+.toast .ch{font-size:11.5px;color:var(--ink-3)}
+
+/* phones */
+.lines{margin-top:40px}
+.line-row{display:grid;grid-template-columns:170px 1fr;gap:24px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.line-row b{font-weight:500;font-size:13.5px;display:block}
+.line-row span{font-size:12px;color:var(--ink-3)}
+.day{position:relative;height:26px;border-radius:6px;overflow:hidden;display:flex;background:var(--sunk)}
+.day .seg-a{background:repeating-linear-gradient(135deg,transparent 0 5px,var(--line) 5px 6px)}
+.day .seg-b{background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent-line);border-radius:4px}
+.day .now{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);border-radius:2px;transition:left .5s var(--ease)}
+.day-axis{display:grid;grid-template-columns:170px 1fr;gap:24px;margin-top:8px}
+.day-axis .ticks{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.legend{display:flex;gap:20px;font-size:12px;color:var(--ink-2);margin-top:14px;flex-wrap:wrap}
+.legend i{display:inline-block;width:14px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.sim{display:grid;grid-template-columns:320px 1fr;margin-top:40px}
+.sim-ctl{padding:28px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:20px}
+.sim-ctl .fld .label{display:block;margin-bottom:8px}
+.sim-ctl .seg{display:flex;width:100%}
+.sim-ctl .seg button{flex:1 1 auto}
+#pWhen{display:grid;grid-template-columns:1fr}
+#pWhen button{text-align:left}
+.select{width:100%;appearance:none;border:1px solid var(--line-2);background:var(--bg);border-radius:8px;padding:9px 12px;font-size:13.5px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238C887D' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.sim-out{padding:28px 32px;min-width:0}
+.steps{list-style:none;margin:0;padding:0}
+.steps li{display:grid;grid-template-columns:28px 1fr auto;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);animation:msgIn .5s var(--ease) both}
+.steps li .k{font-family:var(--mono);font-size:11px;color:var(--ink-3);padding-top:2px}
+.steps li .w{font-weight:500;font-size:13.5px}
+.steps li .d{font-size:13px;color:var(--ink-2);margin-top:2px}
+.steps li .q{display:block;margin-top:6px;font-family:var(--serif);font-style:italic;font-size:17px;color:var(--ink)}
+
+/* website */
+.chat-wrap{display:grid;grid-template-columns:minmax(0,440px) 1fr;gap:56px;margin-top:40px;align-items:start}
+.chat{display:flex;flex-direction:column;overflow:hidden}
+.chat-h{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.chat-h .logo{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:var(--bg)}
+.chat-h .logo svg{width:14px;height:14px}
+.chat-h b{font-size:13.5px;font-weight:600;display:block;line-height:1.2}
+.chat-h span{font-size:12px;color:var(--ink-3)}
+.chat-body{padding:18px;display:flex;flex-direction:column;gap:12px;min-height:240px}
+.bub{max-width:86%;padding:10px 14px;border-radius:14px;font-size:13.5px;line-height:1.5;animation:msgIn .4s var(--ease) both}
+.bub.bot{background:var(--sunk);border-bottom-left-radius:4px}
+.bub.me{align-self:flex-end;background:var(--ink);color:var(--bg);border-bottom-right-radius:4px}
+.bub .srcl{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11.5px;color:var(--ink-3)}
+.bub .held{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11.5px;color:var(--accent)}
+.bub .srcl svg.i,.bub .held svg.i{width:12px;height:12px}
+.typing{display:inline-flex;gap:4px;padding:12px 14px}
+.typing i{width:5px;height:5px;border-radius:50%;background:var(--ink-3);animation:bl 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes bl{0%,100%{opacity:.25}50%{opacity:1}}
+.chat-q{display:flex;flex-wrap:wrap;gap:6px;padding:12px 18px 16px;border-top:1px solid var(--line)}
+.chat-q button{border:1px solid var(--line-2);background:transparent;border-radius:999px;padding:6px 11px;font-size:12.5px;color:var(--ink-2);transition:background .2s,color .2s}
+.chat-q button:hover{background:var(--sunk);color:var(--ink)}
+.chat-q button[disabled]{opacity:.4;cursor:default}
+.rq{display:grid;gap:8px;margin-top:10px}
+.rq input{border:1px solid var(--line-2);background:var(--surface);border-radius:8px;padding:8px 10px;font-size:13px;width:100%}
+.rq .btn{justify-self:start;padding:8px 14px;font-size:13px}
+.rules{display:flex;flex-direction:column;gap:40px}
+.rules ul{list-style:none;margin:0;padding:0}
+.rules li{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px;color:var(--ink-2)}
+.rules li svg.i{margin-top:3px}
+.rules .yes svg.i{color:var(--ok)}
+.rules .never svg.i{color:var(--err)}
+.memo{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;border-top:1px solid var(--line-2);padding-top:22px}
+.memo h3{font-size:14px;margin-bottom:6px}
+.memo p{margin:0;font-size:13px;color:var(--ink-2)}
+
+/* email */
+.mail-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:56px;margin-top:40px;align-items:start}
+.mailbox{overflow:hidden}
+.mailbox .inbox-h{padding:14px 20px}
+.mrow{display:grid;grid-template-columns:1fr auto;gap:12px;padding:12px 20px;border-bottom:1px solid var(--line);animation:msgIn .45s var(--ease) both}
+.mrow:last-child{border-bottom:0}
+.mrow .who{font-size:13px;font-weight:500}
+.mrow .sub{font-size:12.5px;color:var(--ink-2)}
+.mrow .why{display:block;font-size:12px;color:var(--accent);margin-top:3px}
+.mrow.dim .who,.mrow.dim .sub{color:var(--ink-3);font-weight:400}
+.grp{padding:14px 20px 8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+.settings{list-style:none;margin:0;padding:0}
+.settings li{padding:14px 0;border-bottom:1px solid var(--line)}
+.settings b{font-size:13.5px;font-weight:500;display:block}
+.settings span{font-size:12.5px;color:var(--ink-2)}
+.big-stat{display:flex;align-items:baseline;gap:14px;margin-top:10px}
+.big-stat .num{font-size:44px;letter-spacing:-.03em}
+.big-stat .from{font-size:20px;color:var(--ink-3);text-decoration:line-through;text-decoration-thickness:1px}
+
+/* copilot */
+.progress{margin-top:32px;display:flex;align-items:center;gap:16px}
+.progress .track{flex:1;height:4px;border-radius:2px;background:var(--sunk);position:relative;overflow:hidden}
+.progress .track i{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:2px}
+.delta{color:var(--ok)}
+.rec{font-size:12.5px;display:inline-flex;align-items:center;gap:6px}
+.rec.keep{color:var(--ink)} .rec.expand{color:var(--accent)} .rec.drop{color:var(--ink-3)}
+.spark{display:inline-block;width:80px;height:6px;border-radius:3px;background:var(--sunk);position:relative;vertical-align:middle}
+.spark i{position:absolute;inset:0 auto 0 0;border-radius:3px;background:var(--ink-2)}
+.spark b{position:absolute;top:0;bottom:0;width:2px;background:var(--accent)}
+
+/* marketing */
+.mk{display:grid;grid-template-columns:300px minmax(0,1fr);gap:48px;margin-top:40px;align-items:start}
+.photo{border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#0F1420}
+.photo svg{display:block;width:100%;height:auto}
+.photo-meta{padding:14px 2px 0;font-size:12.5px;color:var(--ink-2);display:flex;flex-direction:column;gap:4px}
+.photo-meta .mono{color:var(--ink-3);font-size:11.5px}
+.draft{padding:26px 28px}
+.draft .cap{font-size:15px;line-height:1.6;margin:14px 0 0;max-width:60ch;min-height:72px}
+.draft .cap .cur{display:inline-block;width:1px;height:1em;background:var(--accent);vertical-align:-2px;margin-left:1px}
+.draft-foot{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.cal{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--line-2)}
+.cal > div{padding:12px 14px 16px 0;min-height:132px}
+.cal > div + div{padding-left:14px;border-left:1px solid var(--line)}
+.cal .dh{font-size:12px;color:var(--ink-3);margin-bottom:10px}
+.post{font-size:12.5px;padding:8px 10px;border-radius:8px;background:var(--sunk);margin-bottom:6px}
+.post .mono{font-size:11px;color:var(--ink-3);display:block}
+.post.new{background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent-line);animation:msgIn .6s var(--ease) both}
+.post.pend{background:transparent;box-shadow:inset 0 0 0 1px dashed var(--line-2);border:1px dashed var(--line-2)}
+
+/* time savers */
+.rank td:first-child{font-family:var(--mono);color:var(--ink-3);width:36px}
+.hbar{display:flex;align-items:center;gap:10px;min-width:130px}
+.hbar .track{flex:1;height:5px;border-radius:3px;background:var(--sunk);overflow:hidden}
+.hbar .track i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.lvl{display:inline-flex;gap:3px;vertical-align:middle;margin-right:6px}
+.lvl i{width:6px;height:10px;border-radius:2px;background:var(--line-2)}
+.lvl i.on{background:var(--ink-2)}
+.paid{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ok)}
+.paid svg.i{width:13px;height:13px}
+
+/* training */
+.doc{padding:44px 52px;max-width:760px}
+.doc h2{font-size:36px}
+.doc h4{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:500;margin:28px 0 10px}
+.doc p{font-size:14.5px;color:var(--ink-2);margin:10px 0 0;max-width:64ch}
+.doc ol{margin:0;padding-left:20px;color:var(--ink-2);font-size:14px}
+.doc ol li{padding:4px 0}
+.doc-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.checklist{list-style:none;margin:0;padding:0}
+.checklist li{display:flex;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.checklist li svg.i{color:var(--ok);margin-top:3px}
+
+/* roadmap */
+.phases{display:grid;grid-template-columns:repeat(3,1fr);margin-top:48px;border-top:1px solid var(--line-2)}
+.phase{padding:26px 28px 8px 0;position:relative}
+.phase + .phase{padding-left:28px;border-left:1px solid var(--line)}
+.phase::before{content:"";position:absolute;top:-4px;left:0;width:7px;height:7px;border-radius:50%;background:var(--ink-3)}
+.phase + .phase::before{left:-4px}
+.phase.cur::before{background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.phase h3{font-family:var(--serif);font-weight:400;font-size:28px;letter-spacing:-.01em;margin:8px 0 4px}
+.phase .when{font-size:12.5px;color:var(--ink-3)}
+.phase ul{list-style:none;padding:0;margin:18px 0 0}
+.phase li{padding:9px 0;border-top:1px solid var(--line);font-size:13.5px;color:var(--ink-2)}
+.principles{display:grid;grid-template-columns:repeat(5,1fr);gap:28px}
+.principles h3{font-size:13.5px;margin:10px 0 4px}
+.principles p{margin:0;font-size:12.5px;color:var(--ink-2)}
+.principles svg.i{width:18px;height:18px;color:var(--accent)}
+
+/* mobile top bar */
+.topbar{display:none}
+
+@media (max-width: 1180px){
+  .view{padding:56px 44px 88px}
+  .desk{grid-template-columns:300px minmax(0,1fr)}
+  .fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .memo,.why,.principles{grid-template-columns:repeat(2,1fr)}
+  .mail-grid{grid-template-columns:1fr}
+}
+@media (max-width: 860px){
+  .app{grid-template-columns:1fr}
+  .rail{display:none}
+  .topbar{display:block;position:sticky;top:0;z-index:40;background:var(--bg);border-bottom:1px solid var(--line)}
+  .topbar .row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
+  .topbar .mark{padding:0}
+  .topbar nav{display:flex;gap:4px;overflow-x:auto;padding:0 16px 10px;scrollbar-width:none}
+  .topbar nav::-webkit-scrollbar{display:none}
+  .topbar nav button{flex:none;border:0;background:none;padding:6px 10px;border-radius:8px;font-size:13px;color:var(--ink-2);white-space:nowrap}
+  .topbar nav button .n{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-right:6px}
+  .topbar nav button[aria-current="page"]{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+  .view{padding:36px 16px 72px}
+  h1{font-size:44px}
+  h2{font-size:34px}
+  .flow{grid-template-columns:1fr}
+  .flow .st,.flow .st + .st{padding:18px 0;border-left:0;border-bottom:1px solid var(--line)}
+  .areas,.two,.doc-grid{grid-template-columns:1fr;gap:32px}
+  .why,.memo,.principles{grid-template-columns:1fr}
+  .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .metric,.metric + .metric{padding:14px 12px 14px 0;border-left:0;border-bottom:1px solid var(--line)}
+  .metric:nth-child(even){padding-left:12px;border-left:1px solid var(--line)}
+  .metric:last-child{grid-column:1 / -1}
+  .desk{grid-template-columns:1fr;min-height:0}
+  .inbox{border-right:0;border-bottom:1px solid var(--line)}
+  .list{max-height:330px}
+  .detail{padding:22px 18px}
+  .blk{grid-template-columns:1fr;gap:10px}
+  .fields{grid-template-columns:1fr 1fr}
+  .kpis{grid-template-columns:1fr 1fr}
+  .kpis > div,.kpis > div + div{padding:14px 12px 14px 0;border-left:0}
+  .sim,.chat-wrap,.mk{grid-template-columns:1fr}
+  .sim-ctl{border-right:0;border-bottom:1px solid var(--line);padding:20px}
+  .sim-out{padding:20px}
+  .line-row,.day-axis{grid-template-columns:96px 1fr;gap:12px}
+  .phases{grid-template-columns:1fr}
+  .phase,.phase + .phase{padding:22px 0 8px 20px;border-left:1px solid var(--line)}
+  .phase::before,.phase + .phase::before{left:-4px;top:26px}
+  .cal{grid-template-columns:1fr}
+  .cal > div,.cal > div + div{padding:12px 0;border-left:0;border-bottom:1px solid var(--line);min-height:0}
+  .doc{padding:28px 20px}
+  .bar{grid-template-columns:96px 1fr 48px}
+  .hide-m{display:none}
+  .toasts{left:16px;right:16px;bottom:16px;width:auto}
+  .head-row{align-items:flex-start}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+</style>
+
+<div class="topbar" id="topbar">
+  <div class="row">
+    <div class="mark"><div class="logo" data-icon="pole"></div><div><b>Intake Hub</b><span>Electrical, MD and VA</span></div></div>
+    <div class="rail-ctl">
+      <button class="icon-btn" data-act="theme" aria-label="Toggle theme"><span data-icon="moon"></span></button>
+      <button class="icon-btn" data-act="reset" aria-label="Reset the prototype"><span data-icon="reset"></span></button>
+    </div>
+  </div>
+  <nav id="mnav" aria-label="Sections"></nav>
+</div>
+
+<div class="app">
+  <aside class="rail">
+    <div class="mark"><div class="logo" data-icon="pole"></div><div><b>Intake Hub</b><span>Electrical, MD and VA</span></div></div>
+    <nav class="nav" id="nav" aria-label="Sections"></nav>
+    <div class="rail-foot">
+      <p>Prototype on sample data. People, sites and volumes are illustrative.</p>
+      <div class="rail-ctl">
+        <button class="icon-btn" data-act="theme"><span data-icon="moon"></span><span class="tlabel">Dark</span></button>
+        <button class="icon-btn" data-act="reset"><span data-icon="reset"></span>Reset</button>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+  <!-- ================= OVERVIEW ================= -->
+  <section class="view on" data-view="overview">
+    <div class="hero">
+      <p class="eyebrow">AI and automation partner &middot; working prototype</p>
+      <h1>Every lead and request in one place, <em>answered within minutes.</em></h1>
+      <p class="lede">This is your lead and request intake (3.1) running inside Microsoft 365: one shared mailbox, AI sorting, Teams alerts, a tracker with an owner and a status, and escalation when something sits. The other seven areas are here at the depth they would have after discovery.</p>
+      <div class="actions">
+        <button class="btn" data-go="intake"><span data-icon="play"></span>Open the live inbox</button>
+        <button class="btn ghost" data-go="roadmap">See Phases 1 to 3</button>
+      </div>
+    </div>
+
+    <div class="flow">
+      <div class="st"><span class="num">01</span><h3>It arrives</h3>
+        <ul><li><span data-icon="mail"></span>Email</li><li><span data-icon="globe"></span>Website form</li><li><span data-icon="phone"></span>Phone-call summary</li></ul></div>
+      <div class="st"><span class="num">02</span><h3>One shared mailbox</h3><p>Everything lands in a single mailbox in your tenant, whatever the channel or language.</p></div>
+      <div class="st"><span class="num">03</span><h3>AI sorts and reads it</h3><p>New lead, service request, existing job, vendor pitch or junk, with name, company, site address, division and urgency pulled out.</p></div>
+      <div class="st"><span class="num">04</span><h3>The right person knows</h3><p>A Teams alert to the division, a tracker row with an owner, and an auto-reply saying who is handling it.</p></div>
+      <div class="st"><span class="num">05</span><h3>Nothing goes unanswered</h3><p>Silence past the limit escalates. Emergencies wait for a person to confirm. A weekly summary shows the numbers.</p></div>
+    </div>
+
+    <div class="section">
+      <span class="label">The eight areas</span>
+      <div class="areas" id="areas"></div>
+    </div>
+
+    <div class="section">
+      <span class="label">Why it is built this way</span>
+      <div class="why">
+        <div><span data-icon="building"></span><h3>Inside your Microsoft 365</h3><p>Shared mailbox, Teams, SharePoint Lists and Power Automate in your tenant, so it can connect to your job-management system later.</p></div>
+        <div><span data-icon="lock"></span><h3>You own all of it</h3><p>Company-owned accounts, dedicated service accounts with MFA and least privilege. You can remove access at any time.</p></div>
+        <div><span data-icon="shield"></span><h3>It never promises</h3><p>No arrival times, prices, authorizations, contract coverage or completed repairs, checked on every customer-facing message.</p></div>
+        <div><span data-icon="user"></span><h3>A person confirms emergencies</h3><p>A ring or a voicemail never counts. The ladder keeps going until someone accepts.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 3.1 INTAKE ================= -->
+  <section class="view" data-view="intake">
+    <div class="head-row">
+      <div>
+        <p class="eyebrow"><span class="num">3.1</span>Lead and request intake</p>
+        <h2>One place, the right person, within minutes.</h2>
+      </div>
+      <div class="runbar">
+        <span class="clock" id="clock"><span class="dot" id="clockDot"></span><span id="clockT">Tue 7:41 AM</span></span>
+        <button class="btn" id="runBtn"><span data-icon="play"></span>Run the morning inbox</button>
+      </div>
+    </div>
+
+    <div class="metrics" id="metrics">
+      <div class="metric" data-m="in"><span class="label">In this morning</span><div class="v">0</div></div>
+      <div class="metric" data-m="resp"><span class="label">First response</span><div class="v">&ndash;</div></div>
+      <div class="metric" data-m="routed"><span class="label">Routed correctly</span><div class="v">&ndash;</div></div>
+      <div class="metric" data-m="open"><span class="label">Unanswered</span><div class="v">0</div></div>
+      <div class="metric" data-m="emerg"><span class="label">On-call confirmed</span><div class="v">&ndash;</div></div>
+    </div>
+
+    <div class="desk panel">
+      <div class="inbox">
+        <div class="inbox-h"><b>intake@ shared mailbox</b><span class="small muted" id="inCount">0 items</span></div>
+        <div class="list" id="list">
+          <div class="empty"><span data-icon="inbox"></span><p>Quiet for now. Run the morning inbox to watch six messages arrive by email, website form and phone.</p></div>
+        </div>
+      </div>
+      <div class="detail" id="detail">
+        <div class="detail-empty"><div><h3>Select a message</h3><p>Each one shows what the AI read, where it went, the auto-reply it sent, and the clock it is on.</p></div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="head-row" style="margin-bottom:16px"><span class="label">Tracker &middot; SharePoint list &middot; every item has an owner and a status</span></div>
+      <div class="tbl-wrap">
+        <table id="tracker">
+          <thead><tr><th>ID</th><th>Received</th><th>Type</th><th>Company / site</th><th class="hide-m">Division</th><th class="hide-m">Location</th><th>Owner</th><th>Status</th><th class="hide-m">First response</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <span class="label">Weekly summary &middot; sent to leadership Monday 7:00 AM</span>
+      <div class="kpis">
+        <div><span class="label">Median first response</span><div class="v">7<small class="muted" style="font-size:14px"> min</small></div><p>Target set in discovery.</p></div>
+        <div><span class="label">Routed correctly</span><div class="v">96%</div><p>Owner changes are counted as misroutes.</p></div>
+        <div><span class="label">Escalated</span><div class="v">3</div><p>All three answered after escalation.</p></div>
+        <div><span class="label">Lost leads</span><div class="v">0</div><p>Every new lead has an owner and a reply.</p></div>
+      </div>
+      <div class="two" style="margin-top:40px">
+        <div>
+          <span class="label" style="display:block;margin-bottom:16px">Volume by type</span>
+          <div class="bars">
+            <div class="bar"><span>Service requests</span><div class="track"><div class="fill a" style="transform:scaleX(.57)"></div></div><span class="num">64</span></div>
+            <div class="bar"><span>Existing jobs</span><div class="track"><div class="fill" style="transform:scaleX(.37)"></div></div><span class="num">41</span></div>
+            <div class="bar"><span>New leads</span><div class="track"><div class="fill a" style="transform:scaleX(.21)"></div></div><span class="num">23</span></div>
+            <div class="bar"><span>Vendor pitches</span><div class="track"><div class="fill" style="transform:scaleX(.34)"></div></div><span class="num">38</span></div>
+            <div class="bar"><span>Junk</span><div class="track"><div class="fill" style="transform:scaleX(1)"></div></div><span class="num">112</span></div>
+          </div>
+        </div>
+        <div>
+          <span class="label" style="display:block;margin-bottom:16px">Median first response by location</span>
+          <div class="bars">
+            <div class="bar"><span>MD Central</span><div class="track"><div class="fill" style="transform:scaleX(.46)"></div></div><span class="num">6 min</span></div>
+            <div class="bar"><span>MD South</span><div class="track"><div class="fill" style="transform:scaleX(.69)"></div></div><span class="num">9 min</span></div>
+            <div class="bar"><span>MD West</span><div class="track"><div class="fill" style="transform:scaleX(.38)"></div></div><span class="num">5 min</span></div>
+            <div class="bar"><span>VA North</span><div class="track"><div class="fill" style="transform:scaleX(.62)"></div></div><span class="num">8 min</span></div>
+            <div class="bar"><span>VA Central</span><div class="track"><div class="fill a" style="transform:scaleX(.85)"></div></div><span class="num">11 min</span></div>
+          </div>
+        </div>
+      </div>
+      <p class="tbl-note">Illustrative week. Real numbers start the week intake goes live, measured against the volumes counted in discovery.</p>
+    </div>
+  </section>
+
+  <!-- ================= 3.2 PHONES ================= -->
+  <section class="view" data-view="phones">
+    <p class="eyebrow"><span class="num">3.2</span>AI phone system</p>
+    <h2>Every call answered, routed, and every emergency confirmed by a person.</h2>
+    <p class="lede">Configured on the platform you select, across the main number and five local numbers. Call summaries and transcripts go into the intake mailbox from 3.1.</p>
+
+    <div class="lines" id="lines"></div>
+    <div class="day-axis"><span></span><div class="ticks"><span>12a</span><span>6a</span><span>12p</span><span>6p</span><span>12a</span></div></div>
+    <div class="legend"><span><i style="background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent-line)"></i>Business hours: AI answers, transfers to the location</span><span><i style="background:repeating-linear-gradient(135deg,transparent 0 3px,var(--line-2) 3px 4px)"></i>After hours: AI intake, on-call ladder for emergencies</span></div>
+
+    <div class="sim panel">
+      <div class="sim-ctl">
+        <div class="fld"><span class="label">Line</span><select class="select" id="pLine"></select></div>
+        <div class="fld"><span class="label">When</span><div class="seg" id="pWhen"><button aria-pressed="false" data-v="day">Weekday 10:30 AM</button><button aria-pressed="true" data-v="night">Weekday 9:40 PM</button><button aria-pressed="false" data-v="sat">Saturday 2:15 PM</button></div></div>
+        <div class="fld"><span class="label">Caller speaks</span><div class="seg" id="pLang"><button aria-pressed="false" data-v="en">English</button><button aria-pressed="true" data-v="es">Espa&ntilde;ol</button></div></div>
+        <div class="fld"><span class="label">Reason</span><div class="seg" id="pWhy"><button aria-pressed="false" data-v="svc">Service request</button><button aria-pressed="true" data-v="em">Emergency</button></div></div>
+        <button class="btn" id="callBtn"><span data-icon="phone"></span>Place a test call</button>
+      </div>
+      <div class="sim-out">
+        <span class="label">Call path</span>
+        <ol class="steps" id="steps"><li style="grid-template-columns:1fr;animation:none"><span class="d">Pick a line, a time and a language, then place a test call. The path shows each decision the system makes.</span></li></ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 3.3 WEBSITE ================= -->
+  <section class="view" data-view="website">
+    <p class="eyebrow"><span class="num">3.3</span>Website</p>
+    <h2>Answers common questions at any hour, and only from approved content.</h2>
+    <div class="chat-wrap">
+      <div class="panel chat">
+        <div class="chat-h"><div class="logo" data-icon="pole"></div><div><b>Questions about our services?</b><span>Answers come only from approved pages</span></div></div>
+        <div class="chat-body" id="chatBody"></div>
+        <div class="chat-q" id="chatQ"></div>
+      </div>
+      <div class="rules">
+        <div>
+          <span class="label" style="display:block;margin-bottom:8px">Approved content it may use</span>
+          <ul class="yes">
+            <li><span data-icon="check"></span>Services: lighting service and maintenance, construction, roadway and highway lighting, traffic signals, sports lighting</li>
+            <li><span data-icon="check"></span>Service area: Maryland and Virginia, five locations</li>
+            <li><span data-icon="check"></span>How to request work, and the request form that feeds the intake mailbox</li>
+          </ul>
+        </div>
+        <div>
+          <span class="label" style="display:block;margin-bottom:8px">It never promises</span>
+          <ul class="never">
+            <li><span data-icon="x"></span>Arrival times</li>
+            <li><span data-icon="x"></span>Prices</li>
+            <li><span data-icon="x"></span>Authorizations</li>
+            <li><span data-icon="x"></span>Contract coverage</li>
+            <li><span data-icon="x"></span>Completed repairs</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <span class="label">Written recommendations for the site, delivered after a review of the site</span>
+      <div class="memo">
+        <div><h3>Mobile experience</h3><p>Tap-to-call and a request button a thumb can reach, a short form, and pages that read without zooming.</p></div>
+        <div><h3>Speed</h3><p>Load time on a phone connection, image weight on project pages, and anything blocking the first screen.</p></div>
+        <div><h3>Location pages</h3><p>One page per location with its service area and divisions, matched to each Google Business Profile.</p></div>
+        <div><h3>Calls to action</h3><p>One clear next step per page, separated for property managers, public agencies and emergencies.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 3.4 EMAIL ================= -->
+  <section class="view" data-view="email">
+    <div class="head-row">
+      <div><p class="eyebrow"><span class="num">3.4</span>Email</p><h2>Less junk. The messages that matter stand out.</h2></div>
+      <div class="seg" id="mailSeg"><button aria-pressed="false" data-v="before">Before tuning</button><button aria-pressed="true" data-v="after">After tuning</button></div>
+    </div>
+    <div class="mail-grid">
+      <div class="panel mailbox"><div class="inbox-h"><b>Operations director &middot; leadership mailbox</b><span class="small muted">Tuesday morning</span></div><div id="mailList"></div></div>
+      <div>
+        <span class="label">Junk reaching leadership, per week</span>
+        <div class="big-stat"><span class="num" id="junkNow">22</span><span class="from num" id="junkWas">180</span></div>
+        <p class="small muted" style="margin:6px 0 0">Illustrative. Legitimate mail lost: 0, checked against the quarantine release log.</p>
+        <ul class="settings" style="margin-top:28px">
+          <li><b>Stricter bulk-mail threshold for leadership</b><span>Leadership mailboxes filter bulk mail harder than the company default.</span></li>
+          <li><b>Impersonation protection</b><span>Mail pretending to be leadership or a known vendor is held.</span></li>
+          <li><b>Daily quarantine digest</b><span>Anything held can be released in one click, and every release is logged.</span></li>
+          <li><b>AI priority where it pays for itself</b><span>Rules and views first. AI flags only what they miss, and says why.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 3.5 COPILOT ================= -->
+  <section class="view" data-view="copilot">
+    <p class="eyebrow"><span class="num">3.5</span>Microsoft 365 Copilot</p>
+    <h2>Decide with data who should have Copilot.</h2>
+    <p class="lede">A 60-day pilot with eight heavy email and document users, measured on the same tasks before and after, with training in week one.</p>
+    <div class="progress"><span class="small mono">Day 34 of 60</span><div class="track"><i style="width:56.6%"></i></div><span class="small muted">Training 2 of 3 done</span></div>
+    <div class="section" style="margin-top:40px">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Pilot user</th><th class="hide-m">Measured tasks</th><th>Before, min / wk</th><th>Now, min / wk</th><th>Change</th><th>Trending</th></tr></thead>
+          <tbody id="pilot"></tbody>
+        </table>
+      </div>
+      <p class="tbl-note">Minutes per week on the measured tasks, from each user's own before-and-after estimates plus spot checks. Illustrative.</p>
+    </div>
+    <div class="section">
+      <span class="label">Projected at day 60</span>
+      <div class="kpis" style="margin-top:8px">
+        <div><span class="label">Keep</span><div class="v">5</div><p>Clear weekly savings on email and documents.</p></div>
+        <div><span class="label">Expand</span><div class="v">2</div><p>Roles with similar work get a license next.</p></div>
+        <div><span class="label">Drop</span><div class="v">1</div><p>Savings too small to justify a seat.</p></div>
+        <div><span class="label">Plan</span><div class="v" style="font-family:var(--sans);font-size:18px;padding-top:8px">Chosen per role</div><p>Named in the final recommendation with licensing.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 3.6 MARKETING ================= -->
+  <section class="view" data-view="marketing">
+    <p class="eyebrow"><span class="num">3.6</span>Marketing automation</p>
+    <h2>CompanyCam photos become approved project posts.</h2>
+    <p class="lede">Built for your marketing staff to run. Crews mark a photo as usable, a draft appears, marketing approves, and it goes out on schedule.</p>
+    <div class="mk">
+      <div>
+        <div class="photo">
+          <svg viewBox="0 0 300 220" role="img" aria-label="Sample job photo: ballfield light poles at dusk">
+            <defs>
+              <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1B2338"/><stop offset=".62" stop-color="#3A3550"/><stop offset="1" stop-color="#7A5A4A"/></linearGradient>
+              <radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFE6B0" stop-opacity=".95"/><stop offset="1" stop-color="#FFE6B0" stop-opacity="0"/></radialGradient>
+              <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE9BF" stop-opacity=".32"/><stop offset="1" stop-color="#FFE9BF" stop-opacity="0"/></linearGradient>
+            </defs>
+            <rect width="300" height="220" fill="url(#sky)"/>
+            <path d="M58 44 L10 190 L150 190 Z" fill="url(#beam)"/>
+            <path d="M242 52 L150 190 L292 190 Z" fill="url(#beam)"/>
+            <rect x="0" y="178" width="300" height="42" fill="#243325"/>
+            <path d="M0 186 Q150 170 300 186 L300 220 L0 220 Z" fill="#2E4430"/>
+            <path d="M92 204 Q150 186 208 204" stroke="#C9A36A" stroke-opacity=".5" fill="none"/>
+            <g stroke="#0C0F18" stroke-width="3"><line x1="58" y1="44" x2="58" y2="182"/><line x1="242" y1="52" x2="242" y2="182"/></g>
+            <g fill="#0C0F18"><rect x="44" y="36" width="28" height="12" rx="2"/><rect x="228" y="44" width="28" height="12" rx="2"/></g>
+            <circle cx="58" cy="44" r="26" fill="url(#glow)"/><circle cx="242" cy="52" r="26" fill="url(#glow)"/>
+            <g fill="#FFF3D6"><circle cx="50" cy="42" r="2.2"/><circle cx="58" cy="42" r="2.2"/><circle cx="66" cy="42" r="2.2"/><circle cx="234" cy="50" r="2.2"/><circle cx="242" cy="50" r="2.2"/><circle cx="250" cy="50" r="2.2"/></g>
+          </svg>
+        </div>
+        <div class="photo-meta">
+          <span>Field 2 LED retrofit, pole 3 of 4</span>
+          <span class="mono">CompanyCam &middot; job SL-114 &middot; crew lead, 6:52 PM</span>
+          <span class="state ok"><span class="dot ok"></span>Marked usable for marketing by the crew</span>
+        </div>
+      </div>
+      <div class="panel draft">
+        <div class="head-row" style="align-items:center">
+          <div class="seg" id="netSeg"><button aria-pressed="true" data-v="li">LinkedIn</button><button aria-pressed="false" data-v="fb">Facebook</button></div>
+          <span class="state" id="draftState"><span class="dot"></span>Waiting for a photo</span>
+        </div>
+        <p class="cap" id="cap"><span class="muted">Draft a post from the selected photo to see it here.</span></p>
+        <div class="checks" id="capChecks" style="display:none">
+          <span><span data-icon="check"></span>Customer not named until they approve</span>
+          <span><span data-icon="check"></span>No faces or plates in frame</span>
+          <span><span data-icon="check"></span>No price, schedule or warranty claims</span>
+        </div>
+        <div class="draft-foot">
+          <span class="small muted" id="slot">Next open slot: Thursday 11:30 AM</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn ghost" id="draftBtn"><span data-icon="spark"></span>Draft from photo</button>
+            <button class="btn" id="approveBtn" disabled><span data-icon="check"></span>Approve and schedule</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <span class="label">This week's schedule &middot; Facebook and LinkedIn, every post approved</span>
+      <div class="cal" id="cal"></div>
+    </div>
+    <div class="section two">
+      <div>
+        <span class="label" style="display:block;margin-bottom:8px">Google Business Profiles</span>
+        <table><thead><tr><th>Location</th><th>Hours checked</th><th>Last post</th></tr></thead><tbody id="gbp"></tbody></table>
+      </div>
+      <div>
+        <span class="label" style="display:block;margin-bottom:8px">Email marketing and signatures</span>
+        <ul class="settings">
+          <li><b>Fall lighting checklist for property managers</b><span>Seasonal newsletter &middot; approved &middot; sends Tuesday 9:00 AM</span></li>
+          <li><b>Customer newsletter, quarterly</b><span>Draft built from approved project posts &middot; in review</span></li>
+          <li><b>Signature rotation</b><span>Three approved messages rotate monthly across all company signatures</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 3.7 TIME SAVERS ================= -->
+  <section class="view" data-view="savers">
+    <p class="eyebrow"><span class="num">3.7</span>Time-savers across departments</p>
+    <h2>The biggest time drains, ranked by hours saved, cost and risk.</h2>
+    <p class="lede">From interviews with service, construction, estimating, accounting, HR, fleet and administration. Features you already pay for come first, and every rollout is checked 60 days later.</p>
+    <div class="section" style="margin-top:40px">
+      <div class="tbl-wrap">
+        <table class="rank">
+          <thead><tr><th>#</th><th>Department</th><th>Time drain and fix</th><th>Hours saved / week</th><th class="hide-m">Cost</th><th class="hide-m">Risk</th><th class="hide-m">Status</th></tr></thead>
+          <tbody id="savers"></tbody>
+        </table>
+      </div>
+      <p class="tbl-note">Illustrative ranking. Hours come from interviews in discovery and are re-measured 60 days after each rollout.</p>
+    </div>
+  </section>
+
+  <!-- ================= 3.8 TRAINING ================= -->
+  <section class="view" data-view="training">
+    <p class="eyebrow"><span class="num">3.8</span>Training, documentation and policy</p>
+    <h2>A clean handoff, so your team runs and maintains it alone.</h2>
+    <div class="section" style="margin-top:40px">
+      <span class="label">Documentation for every automation</span>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Automation</th><th>What it does</th><th class="hide-m">Where it lives</th><th class="hide-m">How to fix it</th><th>Monthly cost</th></tr></thead>
+          <tbody>
+            <tr><td><b style="font-weight:500">Intake sorter</b></td><td>Sorts the shared mailbox and fills the tracker</td><td class="hide-m">Power Automate, intake service account</td><td class="hide-m">Runbook 01: re-run a failed item</td><td class="muted">Listed in the roadmap</td></tr>
+            <tr><td><b style="font-weight:500">Escalation timer</b></td><td>Escalates items past the response limit</td><td class="hide-m">Power Automate, scheduled every 5 min</td><td class="hide-m">Runbook 02: change a limit or owner</td><td class="muted">In your Microsoft 365 plan</td></tr>
+            <tr><td><b style="font-weight:500">Call summary feed</b></td><td>Posts call summaries and transcripts into intake</td><td class="hide-m">Phone platform to the shared mailbox</td><td class="hide-m">Runbook 03: a summary did not arrive</td><td class="muted">Listed in the roadmap</td></tr>
+            <tr><td><b style="font-weight:500">Photo to post</b></td><td>Drafts project posts from marked CompanyCam photos</td><td class="hide-m">Power Automate, marketing account</td><td class="hide-m">Runbook 04: a draft is missing</td><td class="muted">Listed in the roadmap</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="section doc-grid">
+      <div>
+        <span class="label" style="display:block;margin-bottom:8px">Short training for each rollout, recorded</span>
+        <ul class="checklist">
+          <li><span data-icon="play"></span><span>Intake hub for owners and dispatchers &middot; <span class="muted">recorded</span></span></li>
+          <li><span data-icon="play"></span><span>On-call confirmation drill for each location &middot; <span class="muted">recorded</span></span></li>
+          <li><span data-icon="play"></span><span>Copilot pilot, three sessions &middot; <span class="muted">two recorded</span></span></li>
+          <li><span data-icon="play"></span><span>Photo to post for marketing staff &middot; <span class="muted">scheduled</span></span></li>
+        </ul>
+      </div>
+      <div>
+        <span class="label" style="display:block;margin-bottom:8px">Handoff</span>
+        <ul class="checklist">
+          <li><span data-icon="check"></span>Everything built in your tenant and company-owned accounts</li>
+          <li><span data-icon="check"></span>Dedicated service accounts with MFA and least privilege</li>
+          <li><span data-icon="check"></span>Outside access removable by you at any time, in one step</li>
+          <li><span data-icon="check"></span>Runbooks, owners and monthly costs in one SharePoint page</li>
+        </ul>
+      </div>
+    </div>
+    <div class="section">
+      <div class="panel doc">
+        <p class="eyebrow">Policy &middot; draft for your review</p>
+        <h2>AI acceptable-use policy</h2>
+        <p>This policy covers every employee who uses AI tools for company work. It says which tools are approved and what data may and may not go into them.</p>
+        <div class="doc-grid" style="margin-top:8px">
+          <div>
+            <h4>May go into approved tools</h4>
+            <ol>
+              <li>Drafts of emails, letters and reports</li>
+              <li>Published service descriptions and public project information</li>
+              <li>Internal procedures and meeting notes without personal details</li>
+            </ol>
+          </div>
+          <div>
+            <h4>Never goes into any AI tool</h4>
+            <ol>
+              <li>Employee personal, payroll or HR records</li>
+              <li>Customer contract terms and pricing</li>
+              <li>Passwords, access codes and bank details</li>
+              <li>Bid documents before they are public</li>
+            </ol>
+          </div>
+        </div>
+        <h4>Approved tools</h4>
+        <p>Microsoft 365 Copilot signed in with a company account, and the automations listed in the documentation register. Personal AI accounts are not used for company work.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ROADMAP ================= -->
+  <section class="view" data-view="roadmap">
+    <p class="eyebrow">Section 4 &middot; How it starts</p>
+    <h2>Discovery first, then intake, then the rest of the roadmap.</h2>
+    <div class="phases">
+      <div class="phase cur"><span class="label">Phase 1</span><h3>Discovery and roadmap</h3><span class="when">About 2 to 3 weeks &middot; fixed price</span>
+        <ul><li>Interviews and workflow mapping with actual volumes: emails, calls and leads per week</li><li>Quick wins done, starting with spam and bulk-mail tuning</li><li>Written roadmap: priority, cost, licensing, hours saved and timeline per item</li><li>A day or two on-site in Maryland or Virginia if useful</li></ul></div>
+      <div class="phase"><span class="label">Phase 2</span><h3>First build: intake (3.1)</h3><span class="when">Fixed price with milestones &middot; 30 days of support</span>
+        <ul><li>Shared mailbox, AI sorting, Teams alerts and the tracker</li><li>Auto-replies, escalation timers and the weekly summary</li><li>Phone summaries feeding in once your platform is live</li><li>Tested, trained, documented, then 30 days of support</li></ul></div>
+      <div class="phase"><span class="label">Phase 3</span><h3>The rest of the roadmap</h3><span class="when">Separate fixed-price projects or a retainer</span>
+        <ul><li>Phones, website assistant, leadership email and Copilot decision</li><li>Marketing workflows your staff operate</li><li>Top-ranked time-savers, checked at 60 days</li><li>Only if Phases 1 and 2 go well</li></ul></div>
+    </div>
+    <div class="section">
+      <span class="label">Rules every piece is built to</span>
+      <div class="principles">
+        <div><span data-icon="building"></span><h3>Microsoft 365 first</h3><p>Another tool only with a reason and its monthly cost.</p></div>
+        <div><span data-icon="lock"></span><h3>You own everything</h3><p>Your tenant, company-owned accounts, nothing in an agency account.</p></div>
+        <div><span data-icon="key"></span><h3>Least privilege</h3><p>Dedicated accounts, MFA, removable any time.</p></div>
+        <div><span data-icon="shield"></span><h3>No promises</h3><p>Customer-facing AI never commits to times, prices or coverage.</p></div>
+        <div><span data-icon="doc"></span><h3>Weekly status</h3><p>A plain-English update every week.</p></div>
+      </div>
+    </div>
+  </section>
+  </main>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+/* ---------- icons ---------- */
+var P={
+  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/>',
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.8 3.9 5.8 3.9 9s-1.3 6.2-3.9 9c-2.6-2.8-3.9-5.8-3.9-9S9.4 5.8 12 3z"/>',
+  phone:'<path d="M5 4h3.5l1.8 4.6-2.2 1.4a11 11 0 0 0 5.9 5.9l1.4-2.2 4.6 1.8V19a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  play:'<path d="M8 5.5v13l10-6.5z"/>',
+  inbox:'<path d="M3 13.5 6 5h12l3 8.5V19H3z"/><path d="M3 13.5h5l1.2 2.5h5.6l1.2-2.5h5"/>',
+  check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  x:'<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/>',
+  shield:'<path d="M12 3 5 6v5.5c0 4.2 2.9 7.6 7 9.5 4.1-1.9 7-5.3 7-9.5V6z"/><path d="m9 12 2 2 4-4"/>',
+  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/>',
+  key:'<circle cx="8" cy="15" r="4"/><path d="m11 12 8-8M16 7l2 2M14 9l2 2"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/>',
+  building:'<path d="M4 21V5.5L12 3v18M12 8h8v13M3 21h18"/><path d="M7.5 9v.01M7.5 13v.01M7.5 17v.01M16 12v.01M16 16v.01"/>',
+  bell:'<path d="M6 9a6 6 0 0 1 12 0c0 6.5 2.5 8 2.5 8h-17S6 15.5 6 9z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+  alert:'<path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4.5M12 17.2v.01"/>',
+  reset:'<path d="M4 12a8 8 0 1 0 2.6-5.9"/><path d="M4 4.5V9h4.5"/>',
+  moon:'<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/>',
+  spark:'<path d="M12 3c.7 4.6 2.4 6.3 7 7-4.6.7-6.3 2.4-7 7-.7-4.6-2.4-6.3-7-7 4.6-.7 6.3-2.4 7-7z"/>',
+  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  doc:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>',
+  pole:'<path d="M9 21h6M12 21V6.5M12 6.5h6.5M18.5 6.5v1.5"/><path d="M16 8h5l-1 2h-3z"/>',
+  voicemail:'<circle cx="6.5" cy="12" r="3.5"/><circle cx="17.5" cy="12" r="3.5"/><path d="M6.5 15.5h11"/>',
+  tag:'<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8" r="1.2"/>',
+  route:'<circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5"/>'
+};
+function ic(n,cls){return '<svg class="i'+(cls?' '+cls:'')+'" viewBox="0 0 24 24" aria-hidden="true">'+(P[n]||'')+'</svg>';}
+function paintIcons(root){(root||document).querySelectorAll('[data-icon]').forEach(function(el){el.innerHTML=ic(el.getAttribute('data-icon'));el.removeAttribute('data-icon');});}
+function $(s,r){return (r||document).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+/* ---------- nav ---------- */
+var VIEWS=[
+  ['overview','','Overview'],
+  ['intake','3.1','Lead and request intake'],
+  ['phones','3.2','AI phone system'],
+  ['website','3.3','Website'],
+  ['email','3.4','Email'],
+  ['copilot','3.5','Microsoft 365 Copilot'],
+  ['marketing','3.6','Marketing automation'],
+  ['savers','3.7','Time-savers'],
+  ['training','3.8','Training, docs and policy'],
+  ['roadmap','4','Phases 1 to 3']
+];
+var AREA_TXT={
+  intake:'Every lead and request lands in one place and reaches the right person within minutes.',
+  phones:'Routing by location and time, English and Spanish, emergencies confirmed by a person.',
+  website:'An assistant limited to approved content, with forms that feed intake.',
+  email:'Less junk for leadership, and important messages stand out.',
+  copilot:'A 60-day pilot with 5 to 10 users to decide who gets a license.',
+  marketing:'CompanyCam photos to approved posts, on a schedule, run by your staff.',
+  savers:'The biggest time drains ranked by hours saved, cost and risk.',
+  training:'Recorded training, docs for every automation, and an AI use policy.'
+};
+function buildNav(){
+  var h='',m='',a='';
+  VIEWS.forEach(function(v,i){
+    if(i===9) h+='<div class="sep"></div>';
+    h+='<button data-go="'+v[0]+'"><span class="n">'+(v[1]||'')+'</span><span>'+v[2]+'</span></button>';
+    m+='<button data-go="'+v[0]+'">'+(v[1]?'<span class="n">'+v[1]+'</span>':'')+(v[0]==='overview'?'Overview':v[2])+'</button>';
+    if(AREA_TXT[v[0]]) a+='<button class="area" data-go="'+v[0]+'"><span class="num">'+v[1]+'</span><span><h3>'+v[2]+'</h3><p>'+AREA_TXT[v[0]]+'</p></span>'+ic('arrow')+'</button>';
+  });
+  $('#nav').innerHTML=h;$('#mnav').innerHTML=m;$('#areas').innerHTML=a;
+}
+var current='overview';
+function go(id){
+  current=id;
+  $$('.view').forEach(function(v){v.classList.toggle('on',v.getAttribute('data-view')===id);});
+  $$('[data-go]').forEach(function(b){ if(b.closest('.nav')||b.closest('#mnav')) b.setAttribute('aria-current',b.getAttribute('data-go')===id?'page':'false');});
+  var mb=$('#mnav [aria-current="page"]'); if(mb&&mb.scrollIntoView){ try{mb.scrollIntoView({block:'nearest',inline:'center'});}catch(e){} }
+  window.scrollTo(0,0);
+}
+document.addEventListener('click',function(e){
+  var g=e.target.closest('[data-go]'); if(g){go(g.getAttribute('data-go'));return;}
+  var a=e.target.closest('[data-act]'); if(!a) return;
+  if(a.getAttribute('data-act')==='theme') toggleTheme();
+  if(a.getAttribute('data-act')==='reset') resetAll();
+});
+
+/* ---------- theme ---------- */
+function isDark(){var t=document.documentElement.getAttribute('data-theme'); if(t) return t==='dark'; return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;}
+function paintTheme(){var d=isDark();$$('[data-act="theme"]').forEach(function(b){var l=b.querySelector('.tlabel');b.firstElementChild.innerHTML=ic(d?'sun':'moon');if(l)l.textContent=d?'Light':'Dark';});}
+function toggleTheme(){document.documentElement.setAttribute('data-theme',isDark()?'light':'dark');try{localStorage.setItem('ih-theme',document.documentElement.getAttribute('data-theme'));}catch(e){}paintTheme();}
+try{var st=localStorage.getItem('ih-theme');if(st)document.documentElement.setAttribute('data-theme',st);}catch(e){}
+
+/* ---------- toasts ---------- */
+function toast(title,text,ch,emerg){
+  var box=$('#toasts');var t=document.createElement('div');t.className='toast';
+  t.innerHTML='<div class="av'+(emerg?' e':'')+'">'+ic(emerg?'alert':'bell')+'</div><div><span class="ch">'+esc(ch)+'</span><b>'+esc(title)+'</b><p>'+esc(text)+'</p></div>';
+  box.appendChild(t); var mx=1;while(box.children.length>mx) box.removeChild(box.firstChild);
+  later(function(){t.classList.add('out');later(function(){if(t.parentNode)t.parentNode.removeChild(t);},420,true);},3600,true);
+}
+
+/* ---------- timers (reset-safe) ---------- */
+var timers=[];
+function later(fn,ms,keep){var id=setTimeout(function(){timers=timers.filter(function(x){return x!==id;});fn();},ms);if(!keep)timers.push(id);return id;}
+function clearTimers(){timers.forEach(clearTimeout);timers=[];}
+
+/* =========================================================
+   3.1 INTAKE SIMULATION
+   ========================================================= */
+var START_MIN=7*60+42; // 7:42 AM
+var TICK=620;
+var ITEMS=[
+ {id:'SR-24817',ch:'mail',chName:'Email',at:0,who:'Dana Whitfield',addr:'Property manager, Brightwater Commons',
+  subj:'Parking lot lights out, rows F to H',
+  body:'Hi, about a third of the pole lights in rows F through H went dark over the weekend. Tenants are asking about it before the evening shift. Can someone take a look? Site is 1200 Harbor Point Blvd.',
+  cat:'Service request',f:{Name:'Dana Whitfield',Company:'Brightwater Commons',Site:'1200 Harbor Point Blvd, rows F to H',Division:'Lighting service and maintenance',Location:'MD Central',Urgency:'Standard'},
+  owner:'Service desk, MD Central',team:'Service, MD Central',
+  alert:'New service request: parking lot lights out, rows F to H, Brightwater Commons.',
+  reply:'Hi Dana, we have your request about the parking lot lights in rows F to H at 1200 Harbor Point Blvd. Our MD Central service desk is handling it and will contact you to schedule a visit. Your reference is SR-24817.',
+  ackAt:3,company:'Brightwater Commons'},
+ {id:'LD-3106',ch:'globe',chName:'Website form',at:2,who:'Marcus Reyes',addr:'Linden Valley Parks and Recreation',
+  subj:'Sports field lighting for 4 ballfields',
+  body:'Service: Sports lighting\nMessage: We are planning LED upgrades for 4 ballfields at Linden Valley Park and want to talk through options before our budget cycle.',
+  cat:'New lead',f:{Name:'Marcus Reyes',Company:'Linden Valley Parks and Recreation',Site:'Linden Valley Park, 4 ballfields',Division:'Sports lighting',Location:'VA North',Urgency:'Normal'},
+  owner:'Sports lighting, VA North',team:'Sports lighting, VA North',
+  alert:'New lead: LED upgrades for 4 ballfields, Linden Valley Parks and Recreation.',
+  reply:'Hi Marcus, thanks for reaching out about lighting for the 4 ballfields at Linden Valley Park. Our sports lighting team in Northern Virginia is handling your request and will be in touch. Your reference is LD-3106.',
+  limit:15,escalateTo:'Sports lighting manager, VA North',managerAck:2,company:'Linden Valley Parks and Rec.'},
+ {id:'SR-24818',ch:'phone',chName:'Phone-call summary',at:4,who:'Rosa Delgado',addr:'Caller, Route 1 Plaza, in Spanish',
+  subj:'Light pole knocked down, wires exposed',lang:'es',
+  body:'Un vehículo chocó contra un poste de luz en la entrada del estacionamiento. El poste está en el suelo y hay cables expuestos. Estoy en 845 Route 1, frente a la gasolinera.',
+  tr:'A vehicle hit a light pole at the parking lot entrance. The pole is on the ground and wires are exposed. I am at 845 Route 1, in front of the gas station.',
+  cat:'Service request',emergency:true,f:{Name:'Rosa Delgado',Company:'Route 1 Plaza',Site:'845 Route 1, parking lot entrance',Division:'Lighting service and maintenance',Location:'MD South',Urgency:'Emergency'},
+  owner:'On-call, MD South',team:'On-call, MD South',
+  alert:'Emergency: pole down with exposed wires at 845 Route 1. On-call must confirm.',
+  told:'Estamos contactando al técnico de guardia ahora. Por su seguridad, manténgase lejos de los cables.',
+  toldTr:'We are contacting the on-call technician now. For your safety, stay away from the wires.',
+  company:'Route 1 Plaza'},
+ {id:'TS-2291',ch:'mail',chName:'Email',at:5,who:'Priya Natarajan, P.E.',addr:'County Department of Public Works',
+  subj:'RE: Oak Ridge Rd at Rt 50 signal retrofit, timing plan rev 2',
+  body:'Attached is revision 2 of the timing plan. Please make sure your crew has the updated sheets before next week’s cutover.',
+  cat:'Existing job',f:{Name:'Priya Natarajan',Company:'County Department of Public Works',Site:'Oak Ridge Rd at Rt 50',Division:'Traffic signals',Location:'MD West',Urgency:'Normal'},
+  owner:'Project manager, job TS-2291',team:'Traffic signals, MD West',
+  alert:'Existing job TS-2291: timing plan rev 2 received from the county.',
+  reply:'Thank you, we received revision 2 of the timing plan. It is filed to job TS-2291 and the project manager has it.',
+  ackAt:4,company:'County DPW, Oak Ridge at Rt 50'},
+ {id:'VP-0412',ch:'mail',chName:'Email',at:6,who:'Rankly Growth Partners',addr:'Sales outreach',
+  subj:'Get your contractor business to #1 on Google this month',
+  body:'We help contractors dominate local search. Can I get 15 minutes on your calendar this week?',
+  cat:'Vendor or sales pitch',f:{Name:'Rankly Growth Partners',Company:'Rankly Growth Partners',Site:'Not a site request',Division:'None',Location:'None',Urgency:'None'},
+  owner:'Weekly vendor digest',quiet:true,company:'Rankly Growth Partners'},
+ {id:'JK-9921',ch:'mail',chName:'Email',at:7,who:'Mailbox Support',addr:'no-reply, external sender',
+  subj:'Your mailbox storage is full, verify now',
+  body:'Your mailbox will be suspended in 24 hours. Click here to verify your credentials.',
+  cat:'Junk',f:{Name:'Unknown',Company:'External sender',Site:'None',Division:'None',Location:'None',Urgency:'None'},
+  owner:'Quarantine',quiet:true,junk:true,company:'External sender'}
+];
+var PRE=[
+ ['SR-24809','Mon 4:12 PM','Service request','Oakmont Business Park','Lighting service','VA North','Service desk, VA North','Scheduled','6 min'],
+ ['LD-3101','Mon 2:37 PM','New lead','Harlow Crossing Shopping Center','Construction','MD Central','Estimating, MD Central','In estimating','11 min'],
+ ['SR-24806','Mon 11:05 AM','Service request','State highway district, interchange','Roadway and highway lighting','MD West','Roadway, MD West','Closed','4 min']
+];
+var S;
+function freshState(){return {running:false,done:false,minute:-1,arrived:[],sel:null,follow:true,st:{},ladder:[],confirmed:false,confirmAt:null,rowsAdded:{}};}
+S=freshState();
+function tfmt(min){var h=Math.floor(min/60),m=min%60,ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+ap;}
+function item(id){for(var i=0;i<ITEMS.length;i++) if(ITEMS[i].id===id) return ITEMS[i];}
+
+function renderList(){
+  var L=$('#list');
+  if(!S.arrived.length){L.innerHTML='<div class="empty">'+ic('inbox')+'<p>Quiet for now. Run the morning inbox to watch six messages arrive by email, website form and phone.</p></div>';return;}
+  var h='';
+  S.arrived.slice().reverse().forEach(function(id){
+    var it=item(id),st=S.st[id];
+    var cat=st.sorted?'<span class="cat">'+(it.emergency?'<span class="dot err"></span>':'<span class="dot'+(it.quiet?'':' live')+'"></span>')+esc(it.emergency?'Emergency':it.cat)+'</span>':'<span class="cat pending"><span class="shimmer"></span></span>';
+    var stat=statusText(it,st);
+    h+='<button class="msg'+(st.fresh?' enter':'')+'" role="option" aria-selected="'+(S.sel===id)+'" data-id="'+id+'">'+ic(it.ch)+
+       '<span style="min-width:0"><span class="who" style="display:block">'+esc(it.who)+'</span><span class="sub" style="display:block">'+esc(it.subj)+'</span><span class="meta">'+cat+(stat?'<span>&middot;</span><span>'+stat+'</span>':'')+'</span></span>'+
+       '<span class="t">'+tfmt(START_MIN+it.at)+'</span></button>';
+    st.fresh=false;
+  });
+  L.innerHTML=h;
+  $('#inCount').textContent=S.arrived.length+(S.arrived.length===1?' item':' items');
+}
+function statusText(it,st){
+  if(!st.sorted) return 'Reading';
+  if(it.junk) return 'Quarantined';
+  if(it.quiet) return 'Filed, no alert';
+  if(it.emergency) return S.confirmed?'<span class="state ok" style="font-size:12px">Confirmed by a person</span>':'<span class="state err" style="font-size:12px">Awaiting on-call</span>';
+  if(st.escalated&&!st.ack) return '<span class="state err" style="font-size:12px">Escalated</span>';
+  if(st.ack) return 'Acknowledged';
+  if(it.limit&&st.routed){var left=it.limit-(S.minute-it.at);return '<span class="num">'+Math.max(left,0)+' min</span> to escalate';}
+  return st.routed?'Owner alerted':'Routing';
+}
+$('#list').addEventListener('click',function(e){var b=e.target.closest('.msg');if(!b)return;S.sel=b.getAttribute('data-id');S.follow=false;renderList();renderDetail(true);});
+
+function renderDetail(anim){
+  var D=$('#detail');
+  if(!S.sel){D.innerHTML='<div class="detail-empty"><div><h3>Select a message</h3><p>Each one shows what the AI read, where it went, the auto-reply it sent, and the clock it is on.</p></div></div>';return;}
+  var it=item(S.sel),st=S.st[S.sel];
+  var h='<div class="src">'+ic(it.ch)+'<span>'+esc(it.chName)+' &middot; '+esc(it.who)+' &middot; '+esc(it.addr)+'</span><span class="num" style="margin-left:auto">'+tfmt(START_MIN+it.at)+'</span></div>'+
+        '<h3 class="subj">'+esc(it.subj)+'</h3>'+
+        '<div class="body">'+esc(it.body)+(it.tr?'<span class="tr">Translated: '+esc(it.tr)+'</span>':'')+'</div><div class="blocks">';
+  var blocks=[];
+  if(st.sorted){
+    var fh='';Object.keys(it.f).forEach(function(k){fh+='<div><span>'+k+'</span><b class="'+(k==='Urgency'&&it.emergency?'urg-e':'')+'">'+esc(it.f[k])+'</b></div>';});
+    blocks.push(['What the AI read','<div style="margin-bottom:14px" class="state '+(it.emergency?'err':it.quiet?'':'live')+'"><span class="dot '+(it.emergency?'err':it.quiet?'':'live')+'"></span>'+esc(it.cat)+(it.emergency?' &middot; emergency':'')+'</div><div class="fields">'+fh+'</div>']);
+  }
+  if(it.emergency && st.routed){
+    var lh='<ol class="ladder">';
+    S.ladder.forEach(function(l){lh+='<li class="'+l.k+'">'+ic(l.i)+'<span><span class="w">'+esc(l.w)+'</span><span class="d" style="display:block">'+esc(l.d)+'</span></span>'+(l.tag?'<span class="'+(l.k==='yes'?'tag-yes':'tag-no')+'">'+esc(l.tag)+'</span>':'<span class="num small muted">'+esc(l.t||'')+'</span>')+'</li>';});
+    lh+='</ol>';
+    if(!S.confirmed && S.ladder.length && S.ladder[S.ladder.length-1].k==='wait'){
+      lh+='<div class="confirm-row"><button class="btn" id="confirmBtn">'+ic('check')+'Accept as '+esc(S.ladder[S.ladder.length-1].role)+'</button><span class="hint">Pressing accept on the call is the only thing that counts.</span></div>';
+    }
+    blocks.push(['On-call confirmation',lh]);
+  }
+  if(st.routed){
+    if(it.junk) blocks.push(['Where it went','<p style="margin:0;font-size:13.5px;color:var(--ink-2)">Quarantined as a phishing attempt. No alert, no reply, logged in the tracker for the weekly count.</p>']);
+    else if(it.quiet) blocks.push(['Where it went','<p style="margin:0;font-size:13.5px;color:var(--ink-2)">Filed to the weekly vendor digest. No Teams alert and no auto-reply, so nobody is interrupted by a pitch.</p>']);
+    else blocks.push(['Teams alert','<div class="alert-card"><div class="av'+(it.emergency?' e':'')+'">'+ic(it.emergency?'alert':'bell')+'</div><div><b>'+esc(it.team)+'</b><p>'+esc(it.alert)+'</p><p class="small muted" style="margin-top:6px">Owner: '+esc(it.owner)+' &middot; tracker row '+esc(it.id)+'</p></div></div>']);
+  }
+  if(st.replied && it.reply){
+    blocks.push(['Auto-reply sent','<div class="reply">'+esc(it.reply)+'</div>'+promiseChecks()]);
+  }
+  if(st.replied && it.emergency){
+    blocks.push(['Caller was told','<div class="reply"><span style="font-family:var(--serif);font-style:italic;font-size:17px">'+esc(it.told)+'</span><span class="tr" style="display:block;margin-top:8px;color:var(--ink-3);font-size:12.5px">'+esc(it.toldTr)+'</span></div>'+promiseChecks()]);
+  }
+  if(it.limit && st.routed){
+    var el=Math.max(0,Math.min(it.limit,S.minute-it.at)),frac=el/it.limit,C=2*Math.PI*18;
+    var txt=st.escalated?(st.ack?'Escalated at 15 min to '+it.escalateTo+', who answered '+it.managerAck+' min later.':'Nobody answered in 15 min. Escalated to '+it.escalateTo+'.'):'Unanswered. Escalates to '+it.escalateTo+' at 15 min.';
+    blocks.push(['Response clock','<div class="timer"><svg class="ring" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="none" stroke="var(--line-2)" stroke-width="3"/><circle cx="22" cy="22" r="18" fill="none" stroke="'+(st.escalated?'var(--err)':'var(--accent)')+'" stroke-width="3" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+(C*(1-frac)).toFixed(1)+'" style="transition:stroke-dashoffset .5s var(--ease)"/></svg><div><span class="tt">'+el+':00 <span class="muted" style="font-size:13px">/ '+it.limit+':00</span></span><p>'+esc(txt)+'</p></div></div>']);
+  }
+  if(it.ackAt && st.ack){
+    blocks.push(['First response','<div class="state ok"><span class="dot ok"></span>'+esc(it.owner)+' acknowledged in '+it.ackAt+' min</div>']);
+  }
+  blocks.forEach(function(b){h+='<div class="blk'+(anim?'':' in')+'"><span class="label">'+b[0]+'</span><div>'+b[1]+'</div></div>';});
+  h+='</div>';
+  D.innerHTML=h;
+  if(anim){$$('.blk',D).forEach(function(b,i){setTimeout(function(){b.classList.add('in');},60+i*160);});}
+  var cb=$('#confirmBtn');if(cb)cb.addEventListener('click',confirmEmergency);
+}
+function promiseChecks(){
+  var k=['Arrival time','Price','Authorization','Contract coverage','Completed repair'];
+  return '<div class="checks"><span class="t">Promise check</span>'+k.map(function(x){return '<span>'+ic('check')+'No '+x.toLowerCase()+'</span>';}).join('')+'</div>';
+}
+function refreshDetail(id,anim){if(S.sel===id) renderDetail(anim);}
+
+function addRow(id,status,resp){
+  var it=item(id),tb=$('#tracker tbody');
+  var existing=tb.querySelector('tr[data-id="'+id+'"]');
+  var cells=[it.id,'Tue '+tfmt(START_MIN+it.at),it.emergency?'Service request, emergency':it.cat,it.company,it.f.Division,it.f.Location,it.owner,status,resp||'&ndash;'];
+  var html=cells.map(function(c,i){var cls=(i===4||i===5||i===8)?' class="hide-m'+(i===8?' mono':'')+'"':(i===0?' class="mono"':'');return '<td'+cls+'>'+(i===7?statusCell(c):(i===8?c:esc(c)))+'</td>';}).join('');
+  if(existing){existing.innerHTML=html;return;}
+  var tr=document.createElement('tr');tr.setAttribute('data-id',id);tr.className='new';tr.innerHTML=html;tb.insertBefore(tr,tb.firstChild);later(function(){tr.className='';},1400,true);
+}
+function statusCell(s){var cls='';if(/Escalated|Awaiting/.test(s))cls='err';else if(/Confirmed|Acknowledged|Closed|Scheduled/.test(s))cls='ok';else if(/Owner alerted|Waiting/.test(s))cls='live';return '<span class="state '+cls+'"><span class="dot '+cls+'"></span>'+esc(s)+'</span>';}
+function renderPre(){var tb=$('#tracker tbody');tb.innerHTML=PRE.map(function(r){return '<tr>'+r.map(function(c,i){var cls=(i===4||i===5||i===8)?' class="hide-m'+(i===8?' mono':'')+'"':(i===0?' class="mono"':'');return '<td'+cls+'>'+(i===7?statusCell(c):esc(c))+'</td>';}).join('')+'</tr>';}).join('');}
+
+function setMetric(k,val,flash){var m=$('.metric[data-m="'+k+'"]');if(!m)return;m.querySelector('.v').innerHTML=val;if(flash){m.classList.add('flash');later(function(){m.classList.remove('flash');},900,true);}}
+function updateMetrics(flash){
+  setMetric('in',String(S.arrived.length),flash);
+  var resp=[];ITEMS.forEach(function(it){var st=S.st[it.id];if(!st)return;if(st.ack&&it.ackAt)resp.push(it.ackAt);if(st.ack&&it.limit)resp.push(it.limit+it.managerAck);if(it.emergency&&S.confirmed)resp.push(S.confirmAt-it.at);});
+  if(resp.length){resp.sort(function(a,b){return a-b;});var med=resp[Math.floor((resp.length-1)/2)];setMetric('resp',med+'<small>min median</small>');}
+  var sorted=S.arrived.filter(function(id){return S.st[id].routed;}).length;
+  if(sorted) setMetric('routed',sorted+'<small>/ '+sorted+'</small>');
+  var open=S.arrived.filter(function(id){var it=item(id),st=S.st[id];if(it.quiet||!st.routed)return false;if(it.emergency)return !S.confirmed;return !st.ack;}).length;
+  setMetric('open',String(open));
+  if(S.st['SR-24818']&&S.st['SR-24818'].routed) setMetric('emerg',(S.confirmed?'1':'0')+'<small>/ 1</small>');
+}
+
+function arrive(it){
+  S.arrived.push(it.id);S.st[it.id]={fresh:true};
+  if(S.follow||it.emergency){S.sel=it.id;}
+  if(it.emergency) S.follow=false;
+  renderList();refreshDetail(it.id,true);updateMetrics(true);
+  later(function(){S.st[it.id].sorted=true;renderList();refreshDetail(it.id,false);},700);
+  later(function(){
+    var st=S.st[it.id];st.routed=true;
+    addRow(it.id,it.junk?'Quarantined':it.quiet?'Filed':it.emergency?'Awaiting on-call':'Owner alerted');
+    if(!it.quiet) toast(it.f.Name+(it.emergency?', emergency':''),it.alert,'Teams · '+it.team,it.emergency);
+    if(it.emergency) ladderStep({k:'wait',i:'phone',w:'Primary on-call, MD South',d:'Calling now. Must press 1 to accept.',t:tfmt(START_MIN+S.minute),role:'primary'},true);
+    renderList();refreshDetail(it.id,false);updateMetrics();
+  },1250);
+  later(function(){S.st[it.id].replied=true;refreshDetail(it.id,false);},1700);
+}
+function ladderStep(step,replaceWait){
+  if(replaceWait&&S.ladder.length&&S.ladder[S.ladder.length-1].k==='wait'){}
+  S.ladder.push(step);
+}
+function ladderResolve(k,tag,d){var l=S.ladder[S.ladder.length-1];l.k=k;l.tag=tag;l.d=d;l.i=k==='yes'?'check':(tag&&/Voicemail/.test(tag)?'voicemail':'x');}
+function confirmEmergency(){
+  if(S.confirmed)return;
+  var l=S.ladder[S.ladder.length-1];
+  S.confirmed=true;S.confirmAt=S.minute;
+  ladderResolve('yes','Confirmed by a person','Answered and pressed 1 at '+tfmt(START_MIN+S.minute)+'. Request and site details sent to their phone.');
+  addRow('SR-24818','Confirmed','<span class="mono">'+(S.minute-4)+' min</span>');
+  toast('Emergency accepted','The '+l.role+' on-call accepted SR-24818 at 845 Route 1.','Teams · On-call, MD South',false);
+  renderList();refreshDetail('SR-24818',false);updateMetrics(true);
+}
+var EMERG_SCRIPT={
+  5:function(){ladderResolve('no','Rang, no answer: does not count','Rang for 45 seconds. No one pressed 1.');ladderStep({k:'no',i:'voicemail',w:'Primary on-call, MD South',d:'Call went to voicemail.',tag:''});ladderResolve('no','Voicemail: does not count','Went to voicemail. A voicemail is not a confirmation.');ladderStep({k:'wait',i:'phone',w:'Backup on-call, MD South',d:'Calling now. Must press 1 to accept.',t:tfmt(START_MIN+S.minute),role:'backup'});},
+  11:function(){ladderResolve('no','No answer: does not count','Rang for 45 seconds. No one pressed 1.');ladderStep({k:'wait',i:'phone',w:'Division manager, lighting service',d:'Calling now. The ladder keeps going until a person accepts.',t:tfmt(START_MIN+S.minute),role:'division manager'});toast('Still unconfirmed','Backup on-call did not answer. Calling the division manager.','Teams · On-call, MD South',true);}
+};
+function tick(){
+  S.minute++;
+  $('#clockT').textContent='Tue '+tfmt(START_MIN+S.minute);
+  ITEMS.forEach(function(it){if(it.at===S.minute) arrive(it);});
+  // emergency ladder
+  var em=S.st['SR-24818'];
+  if(em&&em.routed&&!S.confirmed){var off=S.minute-4;if(EMERG_SCRIPT[off]){EMERG_SCRIPT[off]();refreshDetail('SR-24818',false);}}
+  // acknowledgements
+  ITEMS.forEach(function(it){var st=S.st[it.id];if(!st||!st.routed)return;
+    if(it.ackAt&&!st.ack&&S.minute===it.at+it.ackAt){st.ack=true;addRow(it.id,'Acknowledged','<span class="mono">'+it.ackAt+' min</span>');refreshDetail(it.id,false);updateMetrics(true);}
+    if(it.limit&&!st.escalated&&S.minute===it.at+it.limit){st.escalated=true;addRow(it.id,'Escalated');toast('Escalated: unanswered 15 min','LD-3106, Linden Valley Parks and Recreation. Now with the '+it.escalateTo+'.','Teams · '+it.escalateTo,true);updateMetrics(true);}
+    if(it.limit&&st.escalated&&!st.ack&&S.minute===it.at+it.limit+it.managerAck){st.ack=true;addRow(it.id,'Acknowledged, after escalation','<span class="mono">'+(it.limit+it.managerAck)+' min</span>');updateMetrics(true);}
+  });
+  if(S.sel&&S.st[S.sel]&&item(S.sel).limit) refreshDetail(S.sel,false);
+  renderList();updateMetrics();
+  if(S.minute>=21){S.running=false;S.done=true;$('#clockDot').className='dot ok';var b=$('#runBtn');b.disabled=false;b.classList.remove('done');b.innerHTML=ic('reset')+'Run it again';return;}
+  later(tick,TICK);
+}
+function runInbox(){
+  if(S.running)return;
+  if(S.done) resetIntake();
+  S.running=true;var b=$('#runBtn');b.disabled=true;b.classList.add('done');b.innerHTML=ic('clock')+'Running live';
+  $('#clockDot').className='dot live';
+  later(tick,250);
+}
+$('#runBtn').addEventListener('click',runInbox);
+function resetIntake(){
+  S=freshState();
+  $('#clockT').textContent='Tue 7:41 AM';$('#clockDot').className='dot';
+  var b=$('#runBtn');b.disabled=false;b.classList.remove('done');b.innerHTML=ic('play')+'Run the morning inbox';
+  setMetric('in','0');setMetric('resp','&ndash;');setMetric('routed','&ndash;');setMetric('open','0');setMetric('emerg','&ndash;');
+  $('#inCount').textContent='0 items';
+  renderList();renderDetail(false);renderPre();
+}
+
+/* =========================================================
+   3.2 PHONES
+   ========================================================= */
+var LINES=[['Main number','Routes by site address',[7,18],[8,12]],['MD Central','Local number',[7,17],null],['MD South','Local number',[6,17],[7,11]],['MD West','Local number',[7,17],null],['VA North','Local number',[7,17.5],null],['VA Central','Local number',[7,16],null]];
+var PH={when:'night',lang:'es',why:'em'};
+function hfmt(h){var H=Math.floor(h),m=Math.round((h-H)*60),ap=H>=12?'p':'a';H=H%12||12;return H+(m?':'+(m<10?'0':'')+m:'')+ap;}
+function renderLines(){
+  var nowPct={day:(10.5/24*100),night:(21.67/24*100),sat:(14.25/24*100)}[PH.when];
+  var h='';LINES.forEach(function(l){
+    var hr=PH.when==='sat'?l[3]:l[2];var segs=!hr?'<div class="seg-a" style="width:100%"></div>':'<div class="seg-a" style="width:'+(hr[0]/24*100)+'%"></div><div class="seg-b" style="width:'+((hr[1]-hr[0])/24*100)+'%"></div><div class="seg-a" style="flex:1"></div>';
+    h+='<div class="line-row"><div><b>'+l[0]+'</b><span>'+(PH.when==='sat'?(l[3]?'Sat '+hfmt(l[3][0])+' to '+hfmt(l[3][1]):'Closed Saturday'):hfmt(l[2][0])+' to '+hfmt(l[2][1]))+'</span></div><div class="day">'+segs+'<span class="now" style="left:'+nowPct+'%"></span></div></div>';
+  });
+  $('#lines').innerHTML=h;
+}
+function seg(id,key,cb){$('#'+id).addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;$$('#'+id+' button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});PH[key]=b.getAttribute('data-v');if(cb)cb();});}
+function placeCall(){
+  clearCall();
+  var line=$('#pLine').value,loc=line==='Main number'?'MD South':line,es=PH.lang==='es',biz=PH.when==='day',em=PH.why==='em';
+  var steps=[];
+  steps.push({w:'Answered by the AI line in '+(es?'Spanish':'English'),d:line==='Main number'?'Main number. The site address decides the location.':line+' local number.',q:es?'Gracias por llamar. ¿Hay alguien en peligro, o hay cables caídos o expuestos?':'Thanks for calling. Is anyone in danger, or are any wires down or exposed?'});
+  steps.push({w:'Intake questions',d:'Name, company, site address and what is wrong. '+(line==='Main number'?'Site address matched to '+loc+'.':'')});
+  if(em){
+    var first=biz?'Service dispatcher, '+loc:'Primary on-call, '+loc;
+    var second=biz?'Division manager, '+loc:'Backup on-call, '+loc;
+    steps.push({w:first,d:'Rang for 45 seconds, no one pressed 1.',tag:'Does not count',bad:true});
+    steps.push({w:first,d:'Reached voicemail.',tag:'Does not count',bad:true});
+    steps.push({w:second,d:'Answered and pressed 1 to accept.',tag:'Confirmed by a person',good:true});
+    steps.push({w:'Caller told',d:'No arrival time given.',q:es?'El técnico de guardia ya tiene su solicitud y le llamará.':'The on-call technician has your request and will call you.'});
+  } else if(biz){
+    steps.push({w:'Transferred to the '+loc+' office',d:'Business hours, so a person picks up at the location.'});
+  } else {
+    steps.push({w:'Logged for the '+loc+' service desk',d:'After hours and not an emergency, so it waits for the morning desk.',q:es?'Su solicitud está registrada. El equipo de servicio se comunicará con usted.':'Your request is logged. The service team will contact you.'});
+  }
+  steps.push({w:'Summary and transcript sent to intake (3.1)',d:(es?'Spanish transcript with an English summary. ':'')+'Lands in the shared mailbox, sorted and tracked like any email.',good:true});
+  var ol=$('#steps');ol.innerHTML='';
+  var b=$('#callBtn');b.disabled=true;
+  steps.forEach(function(s,i){later(function(){
+    var li=document.createElement('li');
+    li.innerHTML='<span class="k">'+(i<9?'0':'')+(i+1)+'</span><span><span class="w" style="display:block">'+esc(s.w)+'</span><span class="d" style="display:block">'+esc(s.d)+'</span>'+(s.q?'<span class="q">“'+esc(s.q)+'”</span>':'')+'</span>'+(s.tag?'<span class="'+(s.good?'tag-yes':'tag-no')+'">'+esc(s.tag)+'</span>':(s.good?'<span class="tag-yes">'+ic('check')+'</span>':'<span></span>'));
+    ol.appendChild(li);
+    if(i===steps.length-1){b.disabled=false;}
+  },i*650);});
+}
+function clearCall(){ $('#steps').innerHTML='<li style="grid-template-columns:1fr;animation:none"><span class="d">Pick a line, a time and a language, then place a test call. The path shows each decision the system makes.</span></li>'; $('#callBtn').disabled=false;}
+function initPhones(){
+  $('#pLine').innerHTML=LINES.map(function(l){return '<option>'+l[0]+'</option>';}).join('');
+  seg('pWhen','when',function(){renderLines();clearCall();});seg('pLang','lang',clearCall);seg('pWhy','why',clearCall);
+  $('#pLine').addEventListener('change',clearCall);
+  $('#callBtn').addEventListener('click',placeCall);
+  renderLines();
+}
+
+/* =========================================================
+   3.3 WEBSITE ASSISTANT
+   ========================================================= */
+var QA=[
+  {q:'Do you service parking lot lighting?',a:'Yes. Lighting service and maintenance for commercial properties, shopping centers and public agencies is one of our core services. Want me to start a service request?',src:'Services page'},
+  {q:'Can a tech be here by 3 today?',a:'I can’t give arrival times. I can send your request to our service team right now, and they will contact you to schedule.',held:'Arrival time not promised',form:true},
+  {q:'How much does a new light pole cost?',a:'I can’t quote prices here. An estimator can, once they know the site. I can start that request for you.',held:'Price not given',form:true},
+  {q:'Is this covered under our maintenance contract?',a:'I can’t confirm contract coverage. Your account contact can, and I will include the question in your request.',held:'Coverage not confirmed',form:true}
+];
+var chatBusy=false,formShown=false;
+function chatInit(){
+  chatBusy=false;formShown=false;
+  $('#chatBody').innerHTML='<div class="bub bot">Hi. I can answer questions about our services, where we work, and how to request work. For anything else, I will get your request to the right team.</div>';
+  $('#chatQ').style.display='';
+  $('#chatQ').innerHTML=QA.map(function(x,i){return '<button data-q="'+i+'">'+esc(x.q)+'</button>';}).join('');
+}
+$('#chatQ').addEventListener('click',function(e){var b=e.target.closest('button');if(!b||chatBusy)return;ask(+b.getAttribute('data-q'));b.remove();if(!$('#chatQ button'))$('#chatQ').style.display='none';});
+function ask(i){
+  var x=QA[i],body=$('#chatBody');chatBusy=true;
+  body.insertAdjacentHTML('beforeend','<div class="bub me">'+esc(x.q)+'</div>');
+  body.insertAdjacentHTML('beforeend','<div class="bub bot typing" id="typing"><i></i><i></i><i></i></div>');
+  body.scrollTop=body.scrollHeight;
+  later(function(){
+    var t=$('#typing');if(t)t.remove();
+    var extra=x.src?'<span class="srcl">'+ic('doc')+'From: '+esc(x.src)+'</span>':'<span class="held">'+ic('shield')+esc(x.held)+'</span>';
+    var form='';
+    if(x.form&&!formShown){formShown=true;form='<form class="rq" id="rq"><input aria-label="Name" value="Dana Whitfield"><input aria-label="Company" value="Brightwater Commons"><input aria-label="Site address" value="1200 Harbor Point Blvd"><input aria-label="What is wrong" value="Pole lights out in rows F to H"><button class="btn" type="submit">'+ic('arrow')+'Send request</button></form>';}
+    body.insertAdjacentHTML('beforeend','<div class="bub bot">'+esc(x.a)+extra+form+'</div>');
+    chatBusy=false;var lastB=body.lastElementChild;if(lastB&&lastB.scrollIntoView){try{lastB.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){}}
+    var f=$('#rq');if(f&&!f.dataset.bound){f.dataset.bound='1';f.addEventListener('submit',function(ev){ev.preventDefault();f.outerHTML='<span class="srcl" style="color:var(--ok)">'+ic('check')+'Sent to the intake mailbox as a website form. Reference LD-3107.</span>';body.scrollTop=body.scrollHeight;});}
+  },900);
+}
+
+/* =========================================================
+   3.4 EMAIL
+   ========================================================= */
+var MAIL_BEFORE=[
+  ['LED Wholesale Direct','Final hours: 40% off high bay fixtures'],
+  ['County Department of Public Works','Addendum 3 to the signal maintenance bid, due Friday'],
+  ['IT Help Desk (external)','Password expires today, confirm your login'],
+  ['Industry Weekly','This week in commercial construction'],
+  ['Conference Registrations','Early bird ends tonight'],
+  ['Brightwater Commons','Escalation: tenants asking about lot lighting'],
+  ['Fleet Leasing Offers','Pre-approved rates for your fleet'],
+  ['Payroll','Approval needed for this period, by noon'],
+  ['Webinar Invites','Is AI right for your trade business?']
+];
+var MAIL_AFTER=[
+  ['g','Needs you today','3'],
+  ['County Department of Public Works','Addendum 3 to the signal maintenance bid, due Friday','Bid deadline from a public agency'],
+  ['Payroll','Approval needed for this period, by noon','Approval with a deadline'],
+  ['Brightwater Commons','Escalation: tenants asking about lot lighting','Customer escalation, open item SR-24817'],
+  ['g','Read later','1'],
+  ['Industry Weekly','This week in commercial construction',''],
+  ['g','Held as bulk, reviewed in the daily digest','4'],
+  ['LED Wholesale Direct, Fleet Leasing Offers, Conference Registrations, Webinar Invites','Released in one click if any of them matter','',true],
+  ['g','Blocked','1'],
+  ['IT Help Desk (external)','Impersonation attempt, never delivered','',true]
+];
+function renderMail(which){
+  var h='';
+  if(which==='before'){MAIL_BEFORE.forEach(function(m,i){h+='<div class="mrow" style="animation-delay:'+(i*40)+'ms"><span><span class="who" style="display:block">'+esc(m[0])+'</span><span class="sub">'+esc(m[1])+'</span></span><span class="num small muted">'+(8-Math.floor(i/2))+':'+(i%2?'12':'47')+' AM</span></div>';});}
+  else {MAIL_AFTER.forEach(function(m,i){if(m[0]==='g'){h+='<div class="grp"><span>'+esc(m[1])+'</span><span class="num">'+m[2]+'</span></div>';return;}h+='<div class="mrow'+(m[3]?' dim':'')+'" style="animation-delay:'+(i*40)+'ms"><span><span class="who" style="display:block">'+esc(m[0])+'</span><span class="sub">'+esc(m[1])+'</span>'+(m[2]?'<span class="why">'+esc(m[2])+'</span>':'')+'</span><span></span></div>';});}
+  $('#mailList').innerHTML=h;
+  $('#junkNow').textContent=which==='before'?'180':'22';
+  $('#junkWas').style.visibility=which==='before'?'hidden':'visible';
+}
+$('#mailSeg').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;$$('#mailSeg button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});renderMail(b.getAttribute('data-v'));});
+
+/* =========================================================
+   3.5 COPILOT
+   ========================================================= */
+var PILOT=[
+  ['Estimator, VA North','Bid summaries, addenda review',410,250,'keep'],
+  ['Project manager, traffic signals','Meeting notes, RFIs, status emails',380,215,'expand'],
+  ['Service coordinator, MD Central','Customer emails, scheduling notes',300,205,'keep'],
+  ['Controller','Monthly narratives, email',260,190,'keep'],
+  ['HR generalist','Policy drafts, onboarding letters',220,130,'expand'],
+  ['Operations director','Inbox, reports, board updates',450,300,'keep'],
+  ['Marketing coordinator','Post drafts, newsletters',240,170,'keep'],
+  ['Office administrator','Forms, short emails',150,140,'drop']
+];
+function renderPilot(){
+  $('#pilot').innerHTML=PILOT.map(function(p){var ch=Math.round((p[2]-p[3])/p[2]*100);
+    var label={keep:'Keep',expand:'Expand to similar roles',drop:'Drop'}[p[4]];
+    return '<tr><td><b style="font-weight:500">'+esc(p[0])+'</b></td><td class="hide-m muted">'+esc(p[1])+'</td><td class="num">'+p[2]+'</td><td class="num">'+p[3]+'</td><td><span class="spark"><i style="width:'+(p[3]/460*100)+'%"></i><b style="left:'+(p[2]/460*100)+'%"></b></span> <span class="num '+(ch>=15?'delta':'muted')+'" style="margin-left:6px">&minus;'+ch+'%</span></td><td><span class="rec '+p[4]+'">'+label+'</span></td></tr>';}).join('');
+}
+
+/* =========================================================
+   3.6 MARKETING
+   ========================================================= */
+var CAPS={
+  li:'Field 2 is back under the lights. Our sports lighting crew finished an LED retrofit this week: new fixtures on all four poles, aimed for even light from infield to outfield, with less spill into the neighborhood.',
+  fb:'Lights on at Field 2. Our sports lighting crew wrapped up new LED fixtures on all four poles this week, aimed for even light across the whole field.'
+};
+var MK={net:'li',drafted:false,approved:false};
+var CAL=[['Mon',[['LinkedIn','Signal cutover, Oak Ridge Rd','9:00 AM']]],['Tue',[['Facebook','Fall checklist for property managers','10:00 AM']]],['Wed',[]],['Thu',[]],['Fri',[['LinkedIn','Crew spotlight: roadway lighting','12:00 PM']]]];
+function renderCal(){
+  $('#cal').innerHTML=CAL.map(function(d){var h='<div><div class="dh">'+d[0]+'</div>';d[1].forEach(function(p){h+='<div class="post"><span class="mono">'+p[0]+' &middot; '+p[2]+'</span>'+esc(p[1])+'</div>';});
+    if(d[0]==='Thu'){h+=MK.approved?'<div class="post new"><span class="mono">LinkedIn + Facebook &middot; 11:30 AM</span>Field 2 LED retrofit</div>':(MK.drafted?'<div class="post pend"><span class="mono">Awaiting approval &middot; 11:30 AM</span>Field 2 LED retrofit</div>':'');}
+    return h+'</div>';}).join('');
+}
+function typeCap(txt){
+  var el=$('#cap'),i=0;el.innerHTML='<span class="cur"></span>';
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){el.textContent=txt;return;}
+  (function step(){i=Math.min(txt.length,i+3);el.innerHTML=esc(txt.slice(0,i))+(i<txt.length?'<span class="cur"></span>':'');if(i<txt.length)later(step,16);})();
+}
+$('#draftBtn').addEventListener('click',function(){
+  if(MK.drafted)return;MK.drafted=true;
+  var dbn=$('#draftBtn');dbn.disabled=true;dbn.classList.add('done');dbn.innerHTML=ic('check')+'Drafted';
+  $('#draftState').className='state live';$('#draftState').innerHTML='<span class="dot live"></span>Drafting from photo';
+  typeCap(CAPS[MK.net]);
+  later(function(){$('#capChecks').style.display='flex';$('#approveBtn').disabled=false;$('#draftState').innerHTML='<span class="dot live"></span>Waiting for marketing approval';renderCal();},1400);
+});
+$('#approveBtn').addEventListener('click',function(){
+  if(MK.approved)return;MK.approved=true;var ab=$('#approveBtn');ab.disabled=true;ab.classList.add('done');ab.innerHTML=ic('check')+'Scheduled';
+  $('#draftState').className='state ok';$('#draftState').innerHTML='<span class="dot ok"></span>Approved, scheduled Thursday 11:30 AM';
+  $('#slot').textContent='Scheduled for LinkedIn and Facebook';
+  renderCal();
+});
+$('#netSeg').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;$$('#netSeg button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});MK.net=b.getAttribute('data-v');if(MK.drafted)$('#cap').textContent=CAPS[MK.net];});
+function resetMarketing(){MK={net:'li',drafted:false,approved:false};$$('#netSeg button').forEach(function(x){x.setAttribute('aria-pressed',x.getAttribute('data-v')==='li'?'true':'false');});
+  $('#cap').innerHTML='<span class="muted">Draft a post from the selected photo to see it here.</span>';$('#capChecks').style.display='none';
+  var dbn=$('#draftBtn');dbn.disabled=false;dbn.classList.remove('done');dbn.innerHTML=ic('spark')+'Draft from photo';var ab=$('#approveBtn');ab.disabled=true;ab.classList.remove('done');ab.innerHTML=ic('check')+'Approve and schedule';$('#draftState').className='state';$('#draftState').innerHTML='<span class="dot"></span>Waiting for a photo';$('#slot').textContent='Next open slot: Thursday 11:30 AM';renderCal();}
+function renderGbp(){var rows=[['MD Central','This week','3 days ago'],['MD South','This week','6 days ago'],['MD West','This week','2 days ago'],['VA North','This week','4 days ago'],['VA Central','Due Friday','9 days ago']];
+  $('#gbp').innerHTML=rows.map(function(r){var due=/Due/.test(r[1]);return '<tr><td>'+r[0]+'</td><td><span class="state '+(due?'live':'ok')+'"><span class="dot '+(due?'live':'ok')+'"></span>'+r[1]+'</span></td><td class="muted">'+r[2]+'</td></tr>';}).join('');}
+
+/* =========================================================
+   3.7 TIME SAVERS
+   ========================================================= */
+var SAV=[
+  ['Service','Typing up job reports after each visit','CompanyCam AI field reports, already paid for',9,1,1,'Rolled out, day 60 check in 3 weeks',true],
+  ['Administration','Retyping requests from email and voicemail','The intake hub from 3.1',8,2,1,'Phase 2 build'],
+  ['Estimating','Filing bid documents and addenda by hand','Agency emails filed to the right SharePoint bid folder',6,1,1,'Next'],
+  ['Accounting','Matching vendor invoices to jobs','Waits for the job-management connection',6,3,2,'Phase 3'],
+  ['Construction','Assembling daily reports','Microsoft Forms daily report into a SharePoint list',5,1,1,'Next'],
+  ['HR','Chasing new-hire paperwork','Onboarding checklist in Lists with Teams reminders',4,1,1,'Next'],
+  ['Fleet','Paper vehicle inspection sheets','Forms inspection, defects flagged to the fleet lead',3,1,2,'Later']
+];
+function lvl(n){var s='<span class="lvl">';for(var i=1;i<=3;i++)s+='<i class="'+(i<=n?'on':'')+'"></i>';return s+'</span>'+['','Low','Medium','High'][n];}
+function renderSavers(){
+  $('#savers').innerHTML=SAV.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td>'+r[0]+'</td><td><b style="font-weight:500;display:block">'+esc(r[1])+'</b><span class="muted small">'+esc(r[2])+'</span>'+(r[7]?'<span class="paid" style="display:flex;margin-top:4px">'+ic('check')+'Uses what you already pay for</span>':'')+'</td><td><span class="hbar"><span class="track"><i style="width:'+(r[3]/9*100)+'%"></i></span><span class="num">'+r[3]+' h</span></span></td><td class="hide-m">'+lvl(r[4])+'</td><td class="hide-m">'+lvl(r[5])+'</td><td class="hide-m muted">'+esc(r[6])+'</td></tr>';}).join('');
+}
+
+/* ---------- reset ---------- */
+function resetAll(){
+  clearTimers();
+  $('#toasts').innerHTML='';
+  resetIntake();clearCall();chatInit();resetMarketing();
+  $$('#mailSeg button').forEach(function(x){x.setAttribute('aria-pressed',x.getAttribute('data-v')==='after'?'true':'false');});renderMail('after');
+}
+
+/* ---------- init ---------- */
+buildNav();paintIcons();paintTheme();
+renderPre();initPhones();chatInit();renderMail('after');renderPilot();renderCal();renderGbp();renderSavers();
+go('overview');
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',paintTheme);}
+window.__ih={go:go,run:runInbox,reset:resetAll,confirm:confirmEmergency,S:function(){return S;}};
+})();
+</script>

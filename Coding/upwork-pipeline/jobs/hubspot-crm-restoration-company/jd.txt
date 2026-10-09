@@ -1,0 +1,21 @@
+url: https://www.upwork.com/jobs/~022104599336215815216
+HubSpot CRM Architect - Clean Setup for Multi-Location Restoration Company
+Hourly $20-$100, intermediate, part time. Client in the United States (South Florida). Client record not pulled. Posted 2026-09-28, 9 invites. Recorded bids avg $56.35 (basis unspecified). Lorenzo has worked with construction companies (confirmed).
+
+We're a property restoration company (water, fire, mold, reconstruction) with two offices in South Florida. We're moving our sales and relationship tracking into HubSpot and want the architecture done right from day one, not patched later.
+
+Our business is referral-driven. Work comes from insurance carriers, adjusters, property managers, plumbers, and commercial accounts. We need HubSpot built around how we actually get work, not a generic SaaS sales funnel.
+
+Scope of work:
+
+Discovery session to understand how we win and track work
+Design the data model: objects, associations, and parent/child company hierarchy (e.g., carrier -> regional office -> adjuster)
+Custom properties with clear naming conventions and a property dictionary
+Account Type / referral source classification that supports reporting
+Deal pipeline(s) matched to our job lifecycle (lead -> inspection -> mitigation -> reconstruction -> closed)
+Office/territory segmentation for two locations (Palm Beach, Treasure Coast)
+Users, teams, and permissions
+Data import plan and cleanup of existing contact/company exports (dedupe, standardize)
+Core dashboards: referral source performance, pipeline by stage/office, BD activity
+Integration recommendations for our stack (Outlook, QuickBooks; job management runs in RMS/Luxor)
+Documentation and a recorded handoff/training session

@@ -1,0 +1,851 @@
+<title>AI Sales Inbox</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@200;300;400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  color-scheme:dark;
+  --ink:#EEF0F8;--ink2:rgba(238,240,248,.76);--mut:rgba(238,240,248,.56);--line:rgba(255,255,255,.1);
+  --mint:#9AA6FF;--mint2:#5B67F0;--cy:#7FE0FF;--red:#FF4B5C;--amber:#F5B35A;
+  --serif:'Instrument Serif',Georgia,serif;--sans:'Geist',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'Geist Mono',ui-monospace,Menlo,monospace;
+  --e:cubic-bezier(.16,1,.3,1);--io:cubic-bezier(.65,0,.35,1);--sp:cubic-bezier(.34,1.45,.5,1);
+}
+html{background:#05060B;overflow-x:hidden}
+body{margin:0;background:#05060B;color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* fixed atmosphere behind the page */
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.aur{position:absolute;inset:-25%;filter:blur(90px) saturate(125%);transition:filter 2.4s ease,opacity 2.4s ease;opacity:.8}
+.aur i{position:absolute;border-radius:50%;mix-blend-mode:screen}
+.aur .b1{width:60vw;height:60vw;left:18%;top:22%;background:radial-gradient(circle,rgba(80,92,235,.5),transparent 62%);animation:d1 16s ease-in-out infinite alternate}
+.aur .b2{width:54vw;height:54vw;left:52%;top:8%;background:radial-gradient(circle,rgba(40,150,210,.4),transparent 62%);animation:d2 19s ease-in-out infinite alternate}
+.aur .b3{width:42vw;height:42vw;left:40%;top:52%;background:radial-gradient(circle,rgba(190,90,220,.22),transparent 62%);animation:d3 14s ease-in-out infinite alternate}
+@keyframes d1{to{transform:translate(12vw,-5vw) scale(1.15)}}
+@keyframes d2{to{transform:translate(-14vw,7vw) scale(.9)}}
+@keyframes d3{to{transform:translate(9vw,-9vw) scale(1.2)}}
+body[data-s="1"] .aur,body[data-s="2"] .aur{filter:blur(90px) saturate(130%) hue-rotate(-14deg)}
+body[data-s="3"] .aur,body[data-s="4"] .aur{filter:blur(90px) saturate(140%) hue-rotate(40deg)}
+body[data-s="5"] .aur{filter:blur(90px) saturate(130%) hue-rotate(20deg)}
+body[data-s="6"] .aur,body[data-s="7"] .aur{filter:blur(90px) saturate(125%) hue-rotate(-28deg)}
+body[data-s="8"] .aur{filter:blur(90px) saturate(145%) hue-rotate(-40deg)}
+body[data-s="9"] .aur{filter:blur(90px) saturate(120%) hue-rotate(-20deg);opacity:.65}
+#bokeh{position:absolute;inset:0;width:100%;height:100%;opacity:.8}
+.grain{position:absolute;inset:0;opacity:.08;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.vig{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,transparent 50%,rgba(0,0,0,.6) 100%)}
+
+/* top bar */
+.top{position:fixed;left:0;right:0;top:0;z-index:30;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 max(16px,calc((100vw - 1280px)/2 + 24px));box-sizing:border-box;background:linear-gradient(180deg,rgba(5,6,11,.82),rgba(5,6,11,.55));backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);border-bottom:1px solid rgba(255,255,255,.07);font-size:14px}
+.top .nm{display:flex;align-items:center;gap:10px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .nm i{width:9px;height:9px;border-radius:50%;flex:none;background:radial-gradient(circle at 35% 30%,#fff,var(--mint) 45%,var(--mint2));box-shadow:0 0 12px 3px rgba(154,166,255,.6)}
+.top .nm span{color:var(--mut);font-weight:400}
+.top .sd{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);white-space:nowrap}
+
+/* sections */
+main{position:relative;z-index:1;padding:52px 0 40px}
+.sec{position:relative;padding:72px 16px 40px;overflow-x:clip}
+.sec.hero{padding-top:24px}
+.eye{max-width:1180px;margin:0 auto 10px;display:flex;align-items:center;gap:16px;font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.eye::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.16),transparent)}
+.eye b{color:var(--mint);font-weight:500}
+.stw{position:relative;width:100%;max-width:1280px;margin:0 auto;aspect-ratio:16/9}
+.stage{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0}
+.scroll{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut)}
+.scroll i{width:1px;height:38px;background:linear-gradient(180deg,var(--mint),transparent);animation:sc 2s ease-in-out infinite;transform-origin:top}
+@keyframes sc{0%{transform:scaleY(0);opacity:1}60%{transform:scaleY(1);opacity:1}100%{transform:scaleY(1);opacity:0}}
+.foot{position:relative;z-index:1;text-align:center;padding:10px 16px 48px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+@media (max-width:700px){.sec{padding:44px 16px 18px}.eye{font-size:10.5px;letter-spacing:.12em}.top .nm span{display:none}}
+
+/* shots */
+.shot{position:absolute;inset:0;opacity:0;visibility:hidden;perspective:1600px}
+.shot.on{visibility:visible;animation:shotIn 1.2s var(--e) both}
+@keyframes shotIn{from{opacity:0;transform:scale(.95);filter:blur(16px)}to{opacity:1;transform:none;filter:none}}
+.cam{position:absolute;inset:0;transform-style:preserve-3d}
+.shot.on .cam{animation:push 7s cubic-bezier(.3,.1,.3,1) both}
+@keyframes push{from{transform:scale(1)}to{transform:scale(1.04)}}
+.streak{position:absolute;top:-10%;left:0;width:260px;height:120%;z-index:9;pointer-events:none;opacity:0;background:linear-gradient(90deg,transparent,rgba(200,210,255,.5) 48%,#fff 50%,rgba(127,224,255,.45) 53%,transparent 80%);filter:blur(6px);mix-blend-mode:screen}
+.shot.on .streak{animation:streak 1.1s var(--io) .15s both}
+@keyframes streak{0%{opacity:0;transform:translateX(-400px) skewX(-14deg)}15%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translateX(1500px) skewX(-14deg)}}
+
+/* the AI orb */
+.orb{position:absolute;z-index:6;pointer-events:none;left:calc(var(--ox) - var(--os)/2);top:calc(var(--oy) - var(--os)/2);width:var(--os);height:var(--os);opacity:0}
+.shot.on .orb{animation:orbIn 1.4s var(--e) var(--od,.2s) both}
+@keyframes orbIn{from{opacity:0;transform:scale(.6);filter:blur(12px)}to{opacity:1;transform:none;filter:none}}
+.orb>*{position:absolute;border-radius:50%}
+.orb .hal{inset:-60%;background:radial-gradient(circle,rgba(120,135,255,.42),rgba(90,200,255,.12) 45%,transparent 68%);animation:breathe 3.2s ease-in-out infinite}
+.orb .rim{inset:-7%;background:conic-gradient(from 0deg,transparent 0 12%,rgba(127,224,255,.95) 22%,transparent 34%,transparent 52%,rgba(154,166,255,.9) 64%,transparent 78%);-webkit-mask:radial-gradient(circle,transparent 64%,#000 66%,#000 70%,transparent 72%);mask:radial-gradient(circle,transparent 64%,#000 66%,#000 70%,transparent 72%);animation:spin 5s linear infinite}
+.orb .rim2{inset:-18%;border:1px solid rgba(154,166,255,.28);animation:spin 9s linear infinite reverse;border-top-color:rgba(127,224,255,.8)}
+.orb .core{inset:0;background:radial-gradient(circle at 36% 30%,#fff 0,rgba(225,230,255,.95) 9%,rgba(154,166,255,.85) 30%,rgba(70,80,220,.75) 58%,rgba(20,22,70,.9) 80%);box-shadow:0 0 40px 8px rgba(120,135,255,.55),inset 0 0 30px rgba(127,224,255,.45);animation:breathe 3.2s ease-in-out infinite}
+.orb .swirl{inset:8%;background:conic-gradient(from 90deg,transparent,rgba(127,224,255,.55),transparent 40%,rgba(255,255,255,.35),transparent 75%);filter:blur(6px);mix-blend-mode:screen;animation:spin 3.4s linear infinite}
+.orb .rip{inset:0;border:1px solid rgba(154,166,255,.6);opacity:0;animation:ring 2.6s ease-out infinite}
+.orb .rip.r2{animation-delay:1.3s}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes ring{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(1.9)}}
+
+/* reveals */
+.a{opacity:0}
+.shot.on .a{animation:var(--k,rise) 1.1s var(--e) var(--d,0s) both}
+@keyframes rise{from{opacity:0;transform:translateY(34px);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
+@keyframes pop{0%{opacity:0;transform:scale(.86) translateY(14px);filter:blur(8px)}100%{opacity:1;transform:none;filter:none}}
+@keyframes fromL{from{opacity:0;transform:translateX(-70px);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
+@keyframes fromR{from{opacity:0;transform:translateX(70px);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+@keyframes drop{0%{opacity:0;transform:translateY(-40px) scale(.96);filter:blur(8px)}100%{opacity:1;transform:none;filter:none}}
+.ln{display:block;overflow:hidden;padding:0 .04em .12em}
+.ln>span{display:inline-block;transform:translateY(115%)}
+.shot.on .ln>span{animation:lineUp 1.2s var(--e) var(--d,0s) both}
+@keyframes lineUp{to{transform:none}}
+.hl{font-family:var(--serif);font-weight:400;font-size:64px;line-height:1;letter-spacing:-.015em;margin:0}
+.hl em{font-style:italic;background:linear-gradient(100deg,#DDE2FF,var(--mint) 45%,var(--cy));-webkit-background-clip:text;background-clip:text;color:transparent}
+.cap{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.hd{position:absolute;left:72px;top:96px}
+
+/* glass */
+.g{position:absolute;border-radius:22px;background:linear-gradient(155deg,rgba(255,255,255,.12),rgba(255,255,255,.035) 60%);backdrop-filter:blur(26px) saturate(160%);-webkit-backdrop-filter:blur(26px) saturate(160%);border:1px solid rgba(255,255,255,.13);box-shadow:0 50px 100px -36px rgba(0,0,0,.85),0 12px 30px -18px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.16);overflow:hidden}
+.g::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.16) 50%,transparent 62%);background-size:260% 100%;background-position:130% 0}
+.shot.on .g.sh::after{animation:sheen 1.8s ease var(--s,1.2s) both}
+@keyframes sheen{to{background-position:-40% 0}}
+.row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--line);font-size:16px;color:var(--ink2)}
+.row b{font-weight:500;color:var(--ink)}
+.av{width:48px;height:48px;border-radius:50%;flex:none;display:inline-flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:21px;color:#fff;background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.85),transparent 26%),radial-gradient(circle at 50% 60%,var(--c1,#7A86F5),var(--c2,#262C86));box-shadow:0 8px 24px -8px var(--c1,#7A86F5),inset 0 0 0 1px rgba(255,255,255,.25)}
+.av.sm{width:30px;height:30px;font-size:13px}
+.av.md{width:40px;height:40px;font-size:17px}
+.c-ps{--c1:#F2A65C;--c2:#8A4212}.c-sr{--c1:#5FD4E8;--c2:#12637A}.c-ml{--c1:#9097A8;--c2:#3A3F4E}.c-dw{--c1:#C79BF0;--c2:#51308C}.c-tb{--c1:#6FD3A6;--c2:#1C6B4E}.c-wd{--c1:#6E7385;--c2:#2A2D38}.c-bc{--c1:#F08FB0;--c2:#7A2250}.c-jm{--c1:#E8C46A;--c2:#7A5A12}.c-dk{--c1:#7FB2F5;--c2:#1F4A8A}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;font-size:14px;font-weight:500;background:rgba(154,166,255,.14);color:#C9CFFF;border:1px solid rgba(154,166,255,.38)}
+.pill i{width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint)}
+.pill.am{background:rgba(245,179,90,.13);color:#FFD49A;border-color:rgba(245,179,90,.45)}
+.pill.am i{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.pt{position:absolute;left:0;top:0;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:#E6EAFF;box-shadow:0 0 10px 3px rgba(154,166,255,.9),0 0 24px 6px rgba(127,224,255,.35);opacity:0;offset-rotate:0deg}
+.shot.on .pt{animation:flow var(--f,1.7s) cubic-bezier(.55,0,.45,1) var(--d) infinite}
+@keyframes flow{0%{offset-distance:0%;opacity:0}12%{opacity:1}88%{opacity:1}100%{offset-distance:100%;opacity:0}}
+.wires{position:absolute;inset:0;width:1280px;height:720px;overflow:visible;pointer-events:none}
+.wires path{fill:none;stroke:url(#sg);stroke-width:1.5;stroke-dasharray:700;stroke-dashoffset:700;opacity:.85}
+.shot.on .wires path{animation:draw 1.2s var(--io) var(--d) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* S0 cold open */
+.fl{position:absolute;left:640px;top:282px;display:flex;align-items:center;gap:10px;padding:9px 16px 9px 10px;border-radius:14px;white-space:nowrap;font-size:14px;color:var(--ink2);background:linear-gradient(155deg,rgba(255,255,255,.11),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);opacity:0;transform:translate(-50%,-50%)}
+.fl b{color:var(--ink);font-weight:500}
+.fl .av{width:24px;height:24px;font-size:11px}
+.shot.on .fl{animation:inflow var(--f,4.2s) cubic-bezier(.55,.05,.6,1) var(--d) infinite}
+@keyframes inflow{0%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) scale(var(--z,1))}14%{opacity:var(--o,.9)}72%{opacity:var(--o,.9)}100%{opacity:0;transform:translate(-50%,-50%) scale(.18)}}
+.s0cap{position:absolute;left:0;right:0;top:100px;text-align:center}
+.s0t{position:absolute;left:0;right:0;top:440px;text-align:center}
+.s0t .hl{font-size:80px;line-height:1}
+
+/* S1 read and sort */
+.inbox{left:72px;top:252px;width:372px;padding:16px 18px 8px;transform:rotateY(16deg);transform-origin:left center}
+.shot.on .inbox{animation:inboxIn 1.2s var(--e) .3s both}
+@keyframes inboxIn{from{opacity:0;transform:rotateY(34deg) translateX(-60px);filter:blur(10px)}to{opacity:1;transform:rotateY(16deg);filter:none}}
+.ibh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:15px;font-weight:500}
+.ibh span{font-family:var(--mono);font-size:11.5px;color:var(--mint);letter-spacing:.06em}
+.tr{position:relative;display:flex;align-items:center;gap:10px;height:44px;border-top:1px solid var(--line)}
+.tr::before{content:"";position:absolute;inset:2px -8px;border-radius:10px;background:linear-gradient(90deg,rgba(154,166,255,.28),rgba(127,224,255,.08));opacity:0}
+.shot.on .tr::before{animation:scanRow .9s ease var(--r) both}
+@keyframes scanRow{0%{opacity:0}35%{opacity:1}100%{opacity:0}}
+.tr .tx{min-width:0;flex:1;position:relative}
+.tr .tx b{display:block;font-size:14px;font-weight:500}
+.tr .tx span{display:block;font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr .tt{font-family:var(--mono);font-size:11px;color:var(--mut);position:relative}
+.tr .rd{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.18);position:relative;flex:none}
+.shot.on .tr .rd{animation:rdOn .4s ease var(--r) forwards}
+@keyframes rdOn{to{background:var(--mint);box-shadow:0 0 8px 2px rgba(154,166,255,.8)}}
+.rdc{position:absolute;left:540px;width:200px;top:520px;text-align:center;font-size:15px;color:var(--ink2)}
+.rdc b{font-family:var(--mono);font-weight:500;color:var(--mint)}
+.lane{left:800px;width:408px;padding:14px 18px 8px;border-radius:18px}
+.lane h4{margin:0 0 6px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;letter-spacing:.02em}
+.lane h4 i{width:8px;height:8px;border-radius:50%;background:var(--lc);box-shadow:0 0 10px var(--lc)}
+.lane h4 small{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--mut);font-weight:400}
+.li{display:flex;align-items:center;gap:10px;height:30px;font-size:14px;color:var(--ink2)}
+.li .av{width:22px;height:22px;font-size:10px}
+.li b{font-weight:500;color:var(--ink)}
+.li>span:last-child{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--mut)}
+
+/* S2 next action */
+.mail{left:72px;top:260px;width:500px;padding:22px 26px 18px;transform:rotateY(10deg);transform-origin:left center}
+.shot.on .mail{animation:mailIn 1.2s var(--e) .2s both}
+@keyframes mailIn{from{opacity:0;transform:rotateY(26deg) translateY(30px);filter:blur(10px)}to{opacity:1;transform:rotateY(10deg);filter:none}}
+.mh{display:flex;align-items:center;gap:12px;font-size:14px;color:var(--mut)}
+.mh b{color:var(--ink);font-size:16px;font-weight:500}
+.mh .tm{margin-left:auto;font-family:var(--mono);font-size:12px}
+.subj{font-family:var(--serif);font-size:28px;margin:14px 0 8px;letter-spacing:-.01em}
+.mb{font-size:16.5px;line-height:1.62;color:var(--ink2);margin:0}
+.mk{color:var(--ink);background:linear-gradient(90deg,rgba(154,166,255,.34),rgba(127,224,255,.22)) no-repeat 0 0/0% 100%;border-radius:4px;padding:1px 2px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.mk.w{background-image:linear-gradient(90deg,rgba(245,179,90,.42),rgba(245,179,90,.2))}
+.shot.on .mk{animation:mark .7s var(--e) var(--d) forwards}
+@keyframes mark{to{background-size:100% 100%}}
+.hist{display:flex;gap:0;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);position:relative}
+.hist div{flex:1;font-family:var(--mono);font-size:11px;color:var(--mut);position:relative;padding-top:16px}
+.hist div::before{content:"";position:absolute;left:0;top:0;width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.25)}
+.hist div.now::before{background:var(--mint);box-shadow:0 0 10px 2px rgba(154,166,255,.8)}
+.hist div b{display:block;color:var(--ink2);font-weight:500;font-family:var(--sans);font-size:13px}
+.hist .hc{position:absolute;right:0;top:-26px;font-family:var(--mono);font-size:10.5px;color:var(--mint);letter-spacing:.08em}
+.xp{left:730px;top:196px;width:430px;padding:20px 24px 14px}
+.xp .xh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.xp .xh b{font-size:19px;font-weight:500}
+.xp .row{padding:10px 0;font-size:15px}
+.xp .row b{opacity:0}
+.shot.on .xp .row b{animation:rise .8s var(--e) var(--d) both}
+.xp .row b.w{color:#FFD49A}
+.na{margin-top:10px;padding-top:12px;border-top:1px solid var(--line)}
+.na .cap{margin-bottom:6px;display:block}
+.nai{display:flex;align-items:center;gap:10px;height:30px;font-size:15px}
+.nai i{width:18px;height:18px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:rgba(154,166,255,.18);border:1px solid rgba(154,166,255,.5)}
+.nai i svg{width:11px;height:11px;color:var(--mint)}
+.nai.w i{background:rgba(245,179,90,.16);border-color:rgba(245,179,90,.55)}
+.nai.w i svg{color:var(--amber)}
+.nai small{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--mut)}
+
+/* S3 checks */
+.shot.gr.on .cam{animation:grPush 7s cubic-bezier(.45,0,.25,1) both;transform-origin:520px 480px}
+@keyframes grPush{0%{transform:scale(1)}38%{transform:scale(1.015)}58%{transform:scale(1.08)}100%{transform:scale(1.085)}}
+.draft{left:72px;top:252px;width:640px;padding:20px 28px 22px}
+.dh{display:flex;gap:14px;align-items:center;height:26px;font-size:14px;color:var(--mut)}
+.dh span{width:62px;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase}
+.dh b{font-weight:500;color:var(--ink2)}
+.dh i{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--mint);margin-left:6px}
+.dst{position:absolute;right:24px;top:20px}
+.db{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:18px;line-height:1.55;color:var(--ink)}
+.db p{margin:0 0 10px}
+.slot{position:relative;height:30px;margin:0 0 10px}
+.risk{position:absolute;left:0;top:0;white-space:nowrap;opacity:0}
+.shot.on .risk{animation:fade .6s ease 1.3s both,riskRed .5s ease 1.6s forwards,riskOut .7s var(--io) 3.7s forwards}
+@keyframes riskRed{to{color:#FF9AA3;text-shadow:0 0 18px rgba(255,75,92,.85)}}
+@keyframes riskOut{from{opacity:1}to{opacity:0;transform:translateY(-14px);filter:blur(8px)}}
+.risk::after{content:"";position:absolute;left:-8px;right:-8px;top:53%;height:3px;border-radius:3px;background:linear-gradient(90deg,#FF2E45,#FF6B78 70%,#FFE3E6);box-shadow:0 0 10px 2px rgba(255,75,92,.95),0 0 36px 10px rgba(255,75,92,.45);transform:scaleX(0);transform-origin:left}
+.shot.on .risk::after{animation:strike .65s var(--e) 2.8s forwards}
+@keyframes strike{to{transform:scaleX(1)}}
+.rw{position:absolute;left:0;top:0;white-space:nowrap;clip-path:inset(0 100% 0 0);border-radius:4px}
+.shot.on .rw{animation:type 1.1s steps(44) 3.95s forwards,rwHeld .6s ease 4.9s forwards}
+@keyframes type{to{clip-path:inset(0 0 0 0)}}
+@keyframes rwHeld{to{background:rgba(245,179,90,.16);box-shadow:0 0 0 1px rgba(245,179,90,.35)}}
+.rflash{position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse 55% 40% at 28% 66%,rgba(255,50,70,.42),transparent 70%)}
+.shot.on .rflash{animation:rfl 1.6s ease 2.85s both}
+@keyframes rfl{0%{opacity:0}22%{opacity:1}100%{opacity:0}}
+.cks{left:800px;top:120px;width:368px;padding:18px 20px 8px}
+.cks .xh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.cks .xh b{font-size:19px;font-weight:500}
+.cks .xh span{font-family:var(--mono);font-size:11.5px;color:var(--mint)}
+.ck{position:relative;display:flex;align-items:center;gap:12px;height:50px;border-top:1px solid var(--line);border-radius:10px}
+.ck .ic{position:relative;width:22px;height:22px;flex:none}
+.ck .ic>*{position:absolute;inset:0;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.ck .ic svg{width:12px;height:12px}
+.ck .p{border:1.5px solid rgba(255,255,255,.25);border-top-color:var(--mint);animation:spin 1s linear infinite}
+.ck .o,.ck .x,.ck .h{opacity:0;transform:scale(.4)}
+.ck .o{background:rgba(154,166,255,.2);border:1px solid rgba(154,166,255,.6);color:#D6DBFF}
+.ck .x{background:rgba(255,75,92,.22);border:1px solid rgba(255,75,92,.8);color:#FF9AA3;box-shadow:0 0 14px rgba(255,75,92,.7)}
+.ck .h{background:rgba(245,179,90,.2);border:1px solid rgba(245,179,90,.7);color:#FFD49A}
+.shot.on .ck .p{animation:spin 1s linear infinite,fadeOut .2s ease var(--d) forwards}
+.shot.on .ck .o{animation:tick .5s var(--sp) var(--d) forwards}
+.shot.on .ck.bad .o{animation:none}
+.shot.on .ck.bad .x{animation:tick .5s var(--sp) var(--d) forwards,fadeOut .3s ease 4.6s forwards}
+.shot.on .ck.bad .h{animation:tick .5s var(--sp) 4.7s forwards}
+@keyframes tick{to{opacity:1;transform:scale(1)}}
+.ck .tx{flex:1;min-width:0}
+.ck .tx b{display:block;font-size:14.5px;font-weight:500}
+.ck .tx span{display:block;font-family:var(--mono);font-size:11px;color:var(--mut);height:15px;position:relative}
+.ck .tx span em{position:absolute;left:0;top:0;font-style:normal;white-space:nowrap}
+.ck.bad{animation:none}
+.shot.on .ck.bad{animation:ckRed .4s ease 1.5s forwards,ckAmb .6s ease 4.7s forwards}
+@keyframes ckRed{to{background:rgba(255,75,92,.1)}}
+@keyframes ckAmb{to{background:rgba(245,179,90,.09)}}
+.ck.bad .tx span em.e1{color:#FF9AA3;opacity:0}
+.ck.bad .tx span em.e2{color:#FFD49A;opacity:0}
+.shot.on .ck.bad .e0{animation:fadeOut .2s ease 1.5s forwards}
+.shot.on .ck.bad .e1{animation:fade .3s ease 1.5s forwards,fadeOut .3s ease 4.6s forwards}
+.shot.on .ck.bad .e2{animation:fade .4s ease 4.8s forwards}
+.held{position:absolute;left:800px;top:556px;opacity:0}
+.shot.on .held{animation:pop 1s var(--e) 5s both}
+.shot.on .cks{animation:fromR 1.1s var(--e) .4s both}
+@keyframes beatOut{from{opacity:1}to{opacity:0;transform:translateX(40px) scale(.96);filter:blur(12px)}}
+
+
+/* S4 approval */
+.apc{left:560px;top:150px;width:596px;padding:22px 26px 24px;border-color:rgba(245,179,90,.35)}
+.shot.on .apc{animation:pop 1.1s var(--e) .2s both,apGlow .8s ease 1.45s forwards}
+@keyframes apGlow{to{border-color:rgba(154,166,255,.55);box-shadow:0 0 0 1px rgba(154,166,255,.25),0 40px 90px -30px rgba(91,103,240,.7)}}
+.aph{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.aph b{font-size:18px;font-weight:500}
+.aph .pill{margin-left:auto;font-size:13px;padding:5px 12px}
+.apm{font-size:14px;color:var(--mut);margin-bottom:4px}
+.apm b{color:var(--ink2);font-weight:500}
+.apx{margin:14px 0 16px;padding:14px 16px;border-radius:14px;background:rgba(0,0,0,.22);border:1px solid var(--line);font-size:16px;line-height:1.55;color:var(--ink2)}
+.apx mark{background:rgba(245,179,90,.16);color:#FFE2B8;border-radius:4px;padding:1px 3px;box-shadow:0 0 0 1px rgba(245,179,90,.3)}
+.apf{display:flex;align-items:center;gap:12px}
+.apf .cap{letter-spacing:.1em}
+.btn{position:relative;height:46px;padding:0 20px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:15px;font-weight:500}
+.btn.gh{margin-left:auto;border:1px solid rgba(255,255,255,.18);color:var(--ink2)}
+.btn.pr{width:190px;padding:0;background:linear-gradient(160deg,#AEB7FF,#5B67F0);color:#0A0D2E;box-shadow:0 12px 30px -10px rgba(91,103,240,.9)}
+.shot.on .btn.pr{animation:press .35s ease 1.3s both,sent .6s ease 1.5s forwards}
+@keyframes press{50%{transform:scale(.94)}100%{transform:scale(1)}}
+@keyframes sent{to{background:rgba(154,166,255,.14);color:#DDE1FF;box-shadow:0 0 0 1px rgba(154,166,255,.55),0 0 30px -4px rgba(154,166,255,.6)}}
+.btn .l1,.btn .l2{position:absolute;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.btn .l2{opacity:0}
+.btn .l2 svg{width:15px;height:15px}
+.shot.on .btn .l1{animation:fadeOut .25s ease 1.45s forwards}
+.shot.on .btn .l2{animation:fade .4s ease 1.6s forwards}
+.tap{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;pointer-events:none;opacity:0}
+.tap.f{background:radial-gradient(circle,rgba(255,255,255,.55),rgba(255,255,255,.08) 70%);border:1px solid rgba(255,255,255,.6)}
+.shot.on .tap.f{animation:finger 1s var(--e) .8s both}
+@keyframes finger{0%{opacity:0;transform:scale(1.6)}40%{opacity:1;transform:scale(1)}55%{transform:scale(.8)}75%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.1)}}
+.tap.r{border:2px solid rgba(220,225,255,.9)}
+.shot.on .tap.r{animation:tapR .9s ease-out 1.32s both}
+@keyframes tapR{0%{opacity:.9;transform:scale(.6)}100%{opacity:0;transform:scale(3)}}
+.logb{left:560px;top:530px;width:596px;padding:10px 22px;border-radius:18px;filter:blur(.4px)}
+.lg{display:flex;gap:16px;align-items:center;height:36px;font-size:14px;color:var(--mut)}
+.lg .ts{font-family:var(--mono);font-size:12px;width:44px}
+.lg em{font-style:normal;color:var(--ink2)}
+.lg.now{color:var(--ink)}
+.lg.now em{color:var(--mint)}
+.s4sub{position:absolute;left:72px;top:250px;max-width:420px;font-size:17px;line-height:1.5;color:var(--ink2)}
+
+.ghostd{left:72px;top:282px;width:400px;padding:18px 22px;filter:blur(1.2px);opacity:.5}
+.ghostd .dh{height:24px}
+.ghostd p{margin:10px 0 0;font-size:15px;line-height:1.5;color:var(--ink2)}
+/* S5 Zoho board */
+.board{position:absolute;left:72px;top:250px;width:760px;height:300px;transform:rotateX(9deg);transform-origin:50% 100%}
+.col{top:0;width:178px;height:300px;padding:14px 12px;border-radius:18px;box-sizing:border-box}
+.col h5{margin:0;font-size:14px;font-weight:500;display:flex;justify-content:space-between;align-items:center}
+.col h5 span{font-family:var(--mono);font-size:11.5px;color:var(--mut);font-weight:400}
+.col .bar2{height:3px;border-radius:2px;margin:10px 0 0;background:var(--bc)}
+.deal{position:absolute;width:154px;height:66px;padding:10px 12px;box-sizing:border-box;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.11)}
+.deal b{display:block;font-size:14px;font-weight:500}
+.deal span{display:block;font-size:12px;color:var(--mut);margin-top:3px;white-space:nowrap}
+.deal.dim{opacity:.55}
+.deal.hero{z-index:2;background:linear-gradient(160deg,rgba(154,166,255,.26),rgba(91,103,240,.12));border-color:rgba(154,166,255,.55);box-shadow:0 20px 40px -18px rgba(91,103,240,.9)}
+.shot.on .deal.hero{animation:pop .8s var(--e) .7s both,slide 1.1s var(--e) 1.5s forwards,dglow 1.1s ease 1.5s both}
+@keyframes slide{to{transform:translate(194px,80px)}}
+@keyframes dglow{0%{box-shadow:0 20px 40px -18px rgba(91,103,240,.9)}50%{box-shadow:-60px 0 60px -20px rgba(127,224,255,.8),0 20px 40px -18px rgba(91,103,240,.9)}100%{box-shadow:0 0 0 1px rgba(154,166,255,.4),0 24px 50px -16px rgba(91,103,240,1)}}
+.rec{left:852px;top:150px;width:318px;padding:20px 22px 10px}
+.rec .xh b{display:block;font-size:18px;font-weight:500}
+.rec .xh span{font-family:var(--mono);font-size:11px;color:var(--mut);letter-spacing:.08em;text-transform:uppercase}
+.rec .row{font-size:14.5px;padding:11px 0}
+.rec .row b{text-align:right}
+.rec .new{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.rec .new em{font-style:normal;font-weight:500;color:var(--ink)}
+.tagn{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#0A0D2E;background:var(--mint);border-radius:5px;padding:1px 6px;margin-left:6px}
+#stv{transition:color .5s}
+#stv.on{color:var(--mint)}
+
+/* S6 follow-ups stop */
+.ben{left:72px;top:262px;width:540px;padding:20px 24px 12px}
+.ben .bh{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.ben .bh b{display:block;font-size:18px;font-weight:500}
+.ben .bh span{font-size:13px;color:var(--mut)}
+.tg{margin-left:auto;display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11.5px;color:var(--mut)}
+.tg .sw2{position:relative;width:42px;height:24px;border-radius:12px;background:var(--mint2);box-shadow:0 0 14px rgba(91,103,240,.8)}
+.tg .sw2::after{content:"";position:absolute;right:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff}
+.shot.on .tg .sw2{animation:swOff .5s var(--e) 1.95s forwards}
+.shot.on .tg .sw2::after{animation:knob .5s var(--e) 1.95s forwards}
+@keyframes swOff{to{background:rgba(255,255,255,.14);box-shadow:none}}
+@keyframes knob{to{transform:translateX(-18px);background:rgba(255,255,255,.7)}}
+.tg .t1,.tg .t2{position:absolute;right:52px;white-space:nowrap}
+.tg .lbw{position:relative;width:130px;height:14px}
+.tg .t2{opacity:0;color:#FFD49A}
+.shot.on .tg .t1{animation:fadeOut .25s ease 1.95s forwards}
+.shot.on .tg .t2{animation:fade .4s ease 2.1s forwards}
+.tl{position:relative;display:flex;align-items:center;gap:14px;height:44px;border-top:1px solid var(--line);font-size:15px;color:var(--ink2)}
+.tl .ts{font-family:var(--mono);font-size:11.5px;color:var(--mut);width:84px;flex:none}
+.tl.rp{color:var(--ink)}
+.tl.rp::before{content:"";position:absolute;inset:3px -10px;border-radius:10px;background:linear-gradient(90deg,rgba(154,166,255,.22),transparent);z-index:-1}
+.tl.rm{color:#FFD49A}
+.tl .st{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--mut)}
+.ref{left:680px;top:250px;width:480px;padding:20px 24px 10px;transform:rotateY(-10deg);transform-origin:right center}
+.shot.on .ref{animation:refIn 1.2s var(--e) .5s both}
+@keyframes refIn{from{opacity:0;transform:rotateY(-26deg) translateX(60px);filter:blur(10px)}to{opacity:1;transform:rotateY(-10deg);filter:none}}
+.ref .xh{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:8px}
+.ref .xh b{font-size:18px;font-weight:500}
+.ref .xh strong{font-family:var(--serif);font-weight:400;font-size:64px;line-height:.8;color:#FFB3BA}
+.rr{display:flex;align-items:center;gap:14px;height:72px;border-top:1px solid var(--line)}
+.rr .tx{flex:1;min-width:0}
+.rr .tx b{display:block;font-size:15px;font-weight:500}
+.rr .tx span{display:block;font-size:14px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rt2{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:999px;font-family:var(--mono);font-size:11px;white-space:nowrap;background:rgba(255,75,92,.12);border:1px solid rgba(255,75,92,.45);color:#FFB3BA}
+.rt2 svg{width:10px;height:10px}
+.rt2.am{background:rgba(245,179,90,.12);border-color:rgba(245,179,90,.45);color:#FFD49A}
+
+/* S7 flow */
+.fn{position:absolute;display:flex;align-items:center;gap:10px;padding:0 14px;height:64px;box-sizing:border-box;border-radius:16px;background:linear-gradient(155deg,rgba(255,255,255,.12),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.14);box-shadow:0 30px 60px -30px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.14)}
+.fn .fi{width:30px;height:30px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;background:rgba(154,166,255,.16);border:1px solid rgba(154,166,255,.4)}
+.fn .fi svg{width:16px;height:16px;color:#C9CFFF}
+.fn .fi.em{background:none;border:0;position:relative}
+.mo{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 36% 30%,#fff 0,rgba(225,230,255,.95) 10%,rgba(154,166,255,.85) 32%,rgba(70,80,220,.8) 62%,rgba(20,22,70,.9) 84%);box-shadow:0 0 18px 3px rgba(120,135,255,.7);animation:breathe 2.6s ease-in-out infinite}
+.mo::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:1px solid rgba(127,224,255,.35);border-top-color:rgba(127,224,255,.95);animation:spin 2.4s linear infinite}
+.fn b{display:block;font-size:14px;font-weight:500;white-space:nowrap}
+.fn span{display:block;font-family:var(--mono);font-size:10.5px;color:var(--mut);white-space:nowrap;margin-top:2px}
+.fn.sm{height:40px;border-radius:12px;padding:0 12px}
+.fn.sm b{font-size:13px}
+.fn.sm .dotc{width:8px;height:8px;border-radius:50%;background:var(--lc);box-shadow:0 0 8px var(--lc);flex:none}
+.fn.sm span{margin:0 0 0 auto}
+.fn.q{border-style:dashed;border-color:rgba(245,179,90,.5);height:56px}
+.fn.hd2{border-color:rgba(245,179,90,.5)}
+.fn.hd2 .fi{background:rgba(245,179,90,.16);border-color:rgba(245,179,90,.5)}
+.fn.hd2 .fi svg{color:#FFD49A}
+.shot.on .fn{animation:pop .8s var(--e) var(--d) both,nglow 3.6s ease var(--g,99s) infinite}
+@keyframes nglow{0%{border-color:rgba(255,255,255,.14);box-shadow:0 30px 60px -30px rgba(0,0,0,.9)}8%{border-color:rgba(154,166,255,.95);box-shadow:0 0 0 1px rgba(154,166,255,.45),0 0 36px -2px rgba(120,135,255,.8)}30%{border-color:rgba(255,255,255,.14);box-shadow:0 30px 60px -30px rgba(0,0,0,.9)}100%{border-color:rgba(255,255,255,.14)}}
+.flw path{stroke:rgba(180,190,255,.42);stroke-width:1.5}
+.flw path.hot{stroke:url(#sg2);stroke-width:2}
+.ptm{position:absolute;left:0;top:0;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#fff;box-shadow:0 0 10px 3px rgba(154,166,255,.95),0 0 26px 8px rgba(127,224,255,.4);opacity:0}
+.shot.on .ptm{animation:seg 3.6s linear var(--d) infinite}
+@keyframes seg{0%{offset-distance:0%;opacity:0}2%{opacity:1}13%{offset-distance:100%;opacity:1}15%{opacity:0;offset-distance:100%}100%{opacity:0;offset-distance:100%}}
+.el{position:absolute;font-family:var(--mono);font-size:10.5px;color:var(--mut);letter-spacing:.06em}
+
+/* S8 Zoho-style builder (illustrative) */
+.s8h{position:absolute;left:72px;top:82px}
+.s8h .hl{font-size:46px}
+.zw{position:absolute;left:84px;top:204px;width:1112px;height:500px;border-radius:16px;overflow:hidden;background:#F4F6FA;color:#1F2733;box-shadow:0 60px 120px -40px rgba(0,0,0,.95),0 0 0 1px rgba(255,255,255,.14),0 0 80px -20px rgba(91,103,240,.45);transform-origin:50% 0}
+.shot.on .zw{animation:zwIn 1.3s var(--e) .25s both}
+@keyframes zwIn{from{opacity:0;transform:perspective(1400px) rotateX(18deg) translateY(60px) scale(.94);filter:blur(10px)}to{opacity:1;transform:perspective(1400px) rotateX(0) translateY(0);filter:none}}
+.zt{height:46px;display:flex;align-items:center;gap:14px;padding:0 18px;background:#fff;border-bottom:1px solid #E1E6EE;font-size:13px;color:#5B6675}
+.zt .crumb b{color:#1F2733;font-weight:600}
+.zt .lab{margin-left:auto;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#6B7686;background:#EEF1F6;border-radius:6px;padding:4px 8px}
+.zt .zb{height:30px;padding:0 14px;border-radius:6px;display:flex;align-items:center;font-size:13px;font-weight:500}
+.zt .zb.c{border:1px solid #CDD5E0;color:#3A4555}
+.zt .zb.s{background:#2F6FE0;color:#fff}
+.zs{position:absolute;left:0;top:46px;bottom:0;width:250px;background:#fff;border-right:1px solid #E1E6EE;padding:18px 18px;box-sizing:border-box;font-size:13px}
+.zs .f{margin-bottom:16px}
+.zs .f span{display:block;font-size:11px;color:#7A8594;margin-bottom:5px}
+.zs .f b{display:block;font-weight:500;color:#1F2733;padding:8px 10px;border:1px solid #DDE3EC;border-radius:6px;background:#FAFBFD;font-size:13px;line-height:1.35}
+.zs .act{display:flex;align-items:center;gap:10px;color:#1F2733;font-weight:500}
+.zs .act i{width:34px;height:20px;border-radius:10px;background:#2F6FE0;position:relative}
+.zs .act i::after{content:"";position:absolute;right:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff}
+.zcv{position:absolute;left:250px;right:0;top:46px;bottom:0;overflow:hidden;background-color:#F4F6FA;background-image:radial-gradient(#D5DBE5 1px,transparent 1px);background-size:18px 18px}
+.zc{position:absolute;left:0;top:0;width:100%;height:760px}
+.shot.on .zc{animation:track 3s cubic-bezier(.5,0,.25,1) 2.3s both}
+@keyframes track{to{transform:translateY(-236px)}}
+.zn{position:absolute;background:#fff;border:1px solid #DCE2EB;border-radius:10px;box-shadow:0 6px 16px -8px rgba(30,45,70,.25);padding:12px 14px;box-sizing:border-box;opacity:0}
+.shot.on .zn{animation:zpop .7s var(--e) var(--d) both}
+@keyframes zpop{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+.zn .zk{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.08em;padding:3px 8px;border-radius:4px;margin-bottom:7px}
+.zk.w{background:#E6F0FD;color:#1F63CF}
+.zk.c{background:#FFF1DE;color:#B45F00}
+.zn .zl{font-size:13.5px;line-height:1.45;color:#2A3442}
+.zn .zl b{font-weight:600;color:#10171F}
+.zn .zl code{font-family:var(--mono);font-size:12px;background:#F1F4F8;border:1px solid #E1E6EE;border-radius:4px;padding:0 4px}
+.zg{position:absolute;background:#FAFBFD;border:1px dashed #C9D2DE;border-radius:10px;padding:10px 12px;box-sizing:border-box;opacity:0}
+.shot.on .zg{animation:zpop .7s var(--e) var(--d) both}
+.zg .gt{font-size:10.5px;font-weight:600;letter-spacing:.08em;color:#6B7686;margin:2px 0 6px}
+.za{display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;background:#fff;border:1px solid #DCE2EB;border-radius:8px;margin-bottom:6px;font-size:13px;color:#2A3442;white-space:nowrap}
+.za i{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;font-style:normal}
+.za i svg{width:13px;height:13px}
+.za .t{background:#E6F0FD;color:#1F63CF}.za .u{background:#E7F7EF;color:#17854F}.za .h{background:#F1E9FD;color:#6B3FC7}.za .s{background:#FFF1DE;color:#B45F00}
+.za b{font-weight:600;color:#10171F}
+.za small{margin-left:auto;color:#7A8594;font-size:11.5px}
+.zv{position:absolute;width:2px;background:#C3CCD9}
+.zh{position:absolute;height:0;border-top:2px dashed #C3CCD9}
+.zp{position:absolute;width:22px;height:22px;margin-left:-11px;border-radius:50%;background:#fff;border:1px solid #C3CCD9;color:#5B6675;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;opacity:0}
+.shot.on .zp{animation:zpop .5s var(--e) var(--d) both}
+.zadd{position:absolute;font-size:13px;color:#2F6FE0;font-weight:500;opacity:0}
+.shot.on .zadd{animation:zpop .6s var(--e) var(--d) both}
+.zlive{outline:2px solid rgba(47,111,224,.0)}
+.shot.on .zlive{animation:zpop .7s var(--e) var(--d) both,zring 1.6s ease var(--r) both}
+@keyframes zring{0%{box-shadow:0 0 0 0 rgba(47,111,224,.0)}30%{box-shadow:0 0 0 5px rgba(47,111,224,.25)}100%{box-shadow:0 6px 16px -8px rgba(30,45,70,.25)}}
+
+/* S9 close */
+.endt{position:absolute;left:0;right:0;top:300px;text-align:center}
+.endt .hl{font-size:96px;line-height:1.02}
+.endt .ln{display:inline-block;vertical-align:top}
+.endc2{position:absolute;left:0;right:0;top:548px;text-align:center}
+
+
+.typ{position:absolute;left:0;top:0;white-space:nowrap;clip-path:inset(0 100% 0 0)}
+.shot.on .typ{animation:type 1.3s steps(42) 2.1s forwards}
+.car{display:inline-block;width:2px;height:20px;margin-left:3px;vertical-align:-3px;background:var(--mint);box-shadow:0 0 8px var(--mint);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.ctx{left:800px;top:190px;width:368px;padding:18px 20px 8px}
+.ctx .xh{margin-bottom:6px}.ctx .xh b{font-size:19px;font-weight:500}
+.cx{display:flex;align-items:center;gap:12px;height:58px;border-top:1px solid var(--line)}
+.cx i{width:22px;height:22px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:rgba(154,166,255,.2);border:1px solid rgba(154,166,255,.6);color:#D6DBFF}
+.cx i svg{width:12px;height:12px}
+.cx b{display:block;font-size:15px;font-weight:500}
+.cx span{display:block;font-family:var(--mono);font-size:11.5px;color:var(--mut);margin-top:2px}
+.nxt{position:absolute;left:72px;top:614px}
+</style>
+<div class="bg"><div class="aur"><i class="b1"></i><i class="b2"></i><i class="b3"></i></div><canvas id="bokeh"></canvas><div class="grain"></div><div class="vig"></div></div>
+<header class="top"><div class="nm"><i></i>AI Sales Inbox<span>· Gmail + Zoho CRM</span></div><div class="sd">Sample data</div></header>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="sg" x1="0" x2="1"><stop offset="0" stop-color="rgba(154,166,255,.08)"/><stop offset="1" stop-color="rgba(154,166,255,.8)"/></linearGradient>
+  <linearGradient id="sg2" x1="0" x2="1"><stop offset="0" stop-color="#7FE0FF"/><stop offset="1" stop-color="#9AA6FF"/></linearGradient>
+</defs></svg>
+<main>
+<section class="sec hero" data-i="0">
+  <div class="stw"><div class="stage"><div class="shot" data-key="hero"><div class="cam">
+
+        <div class="s0cap cap a" style="--k:fade;--d:.3s">Monday · 8:02 AM · the sales inbox</div>
+        <div class="fl" style="--x:-520px;--y:-150px;--d:.2s"><span class="av c-ps">PS</span><b>Priya Shah</b>Re: Revised quote</div>
+        <div class="fl" style="--x:500px;--y:-120px;--d:.6s;--f:4.6s"><span class="av c-sr">SR</span><b>Sofia Reyes</b>Intro call next week?</div>
+        <div class="fl" style="--x:-470px;--y:110px;--d:1s;--z:.85;--o:.6"><span class="av c-ml">ML</span><b>Marcus Lee</b>Re: Next steps</div>
+        <div class="fl" style="--x:540px;--y:150px;--d:1.3s;--z:.9;--o:.7"><span class="av c-dw">DW</span><b>Dana Whitfield</b>Automatic reply</div>
+        <div class="fl" style="--x:-300px;--y:-220px;--d:1.7s;--z:.75;--o:.5;--f:4.8s"><span class="av c-tb">TB</span><b>Tom Brandt</b>Re: Proposal</div>
+        <div class="fl" style="--x:330px;--y:-230px;--d:2.1s;--z:.8;--o:.55"><span class="av c-bc">BC</span><b>You</b>Re: Proposal for Halden</div>
+        <div class="fl" style="--x:-560px;--y:-10px;--d:2.5s;--z:1.1"><span class="av c-wd">WD</span><b>Weekly digest</b>Your weekly roundup</div>
+        <div class="fl" style="--x:580px;--y:10px;--d:2.9s;--z:1.05"><span class="av c-jm">JM</span><b>Jess Moreno</b>Re: Following up</div>
+        <div class="fl" style="--x:-380px;--y:200px;--d:3.2s;--z:.8;--o:.55"><span class="av c-ps">PS</span><b>You</b>Quote attached</div>
+        <div class="fl" style="--x:400px;--y:210px;--d:3.6s;--z:.8;--o:.55"><span class="av c-sr">SR</span><b>Sofia Reyes</b>Tuesday works</div>
+        <div class="s0t"><h1 class="hl"><span class="ln"><span style="--d:1.5s">Every thread,</span></span><span class="ln"><span style="--d:1.75s"><em>read in context.</em></span></span></h1></div>
+      <div class="orb" style="--ox:640px;--oy:282px;--os:196px;--od:0.1s"><i class="hal"></i><i class="rim2"></i><i class="core"></i><i class="swirl"></i><i class="rim"></i><i class="rip"></i><i class="rip r2"></i></div>
+      </div></div></div>
+    <div class="scroll"><i></i>Scroll</div></div>
+</section>
+<section class="sec " data-i="1">
+  <div class="eye"><span>01 · <b>Read and sort</b></span></div>
+  <div class="stw"><div class="stage"><div class="shot" data-key="inbox"><div class="cam">
+
+        <div class="hd"><h2 class="hl"><span class="ln"><span style="--d:.15s">Sorted by</span></span><span class="ln"><span style="--d:.3s"><em>what’s next.</em></span></span></h2></div>
+        <div class="g inbox">
+          <div class="ibh">Inbox · sales<span>7 NEW</span></div>
+          <div class="tr" style="--r:1.1s"><span class="av sm c-ps">PS</span><div class="tx"><b>Priya Shah</b><span>Could you send the revised quote before…</span></div><span class="tt">8:02</span><span class="rd"></span></div>
+          <div class="tr" style="--r:1.3s"><span class="av sm c-sr">SR</span><div class="tx"><b>Sofia Reyes</b><span>Tuesday or Wednesday afternoon works…</span></div><span class="tt">7:48</span><span class="rd"></span></div>
+          <div class="tr" style="--r:1.5s"><span class="av sm c-ml">ML</span><div class="tx"><b>Marcus Lee</b><span>We’ve decided to go another direction.</span></div><span class="tt">7:31</span><span class="rd"></span></div>
+          <div class="tr" style="--r:1.7s"><span class="av sm c-dw">DW</span><div class="tx"><b>Dana Whitfield</b><span>I’m out of the office until October 6.</span></div><span class="tt">7:12</span><span class="rd"></span></div>
+          <div class="tr" style="--r:1.9s"><span class="av sm c-tb">TB</span><div class="tx"><b>Tom Brandt</b><span>Reviewing internally, back by Friday.</span></div><span class="tt">Sun</span><span class="rd"></span></div>
+          <div class="tr" style="--r:2.1s"><span class="av sm c-wd">WD</span><div class="tx"><b>Weekly digest</b><span>Five reads for the week ahead.</span></div><span class="tt">Sun</span><span class="rd"></span></div>
+          <div class="tr" style="--r:2.3s"><span class="av sm c-bc">BC</span><div class="tx"><b>Ben Carter</b><span>You: Just checking this landed okay.</span></div><span class="tt">Sep 19</span><span class="rd"></span></div>
+        </div>
+        <svg class="wires" viewBox="0 0 1280 720">
+          <path style="--d:.9s" d="M440 330 C520 330 520 426 570 426"/>
+          <path style="--d:1s" d="M440 418 C510 418 520 426 570 426"/>
+          <path style="--d:1.1s" d="M440 506 C510 506 520 426 570 426"/>
+          <path style="--d:1.2s" d="M440 594 C520 594 520 426 570 426"/>
+          <path style="--d:1.6s" d="M712 426 C760 426 760 192 800 192"/>
+          <path style="--d:1.7s" d="M712 426 C760 426 760 312 800 312"/>
+          <path style="--d:1.8s" d="M712 426 C760 426 760 406 800 406"/>
+          <path style="--d:1.9s" d="M712 426 C760 426 760 526 800 526"/>
+        </svg>
+        <i class="pt" style="offset-path:path('M440 330 C520 330 520 426 570 426');--d:1.2s"></i>
+        <i class="pt" style="offset-path:path('M440 374 C515 374 520 426 570 426');--d:1.5s"></i>
+        <i class="pt" style="offset-path:path('M440 418 C510 418 520 426 570 426');--d:1.8s"></i>
+        <i class="pt" style="offset-path:path('M440 462 C510 462 520 426 570 426');--d:2.1s"></i>
+        <i class="pt" style="offset-path:path('M440 506 C510 506 520 426 570 426');--d:2.4s"></i>
+        <i class="pt" style="offset-path:path('M440 594 C520 594 520 426 570 426');--d:2.6s"></i>
+        <i class="pt" style="offset-path:path('M712 426 C760 426 760 192 800 192');--d:2s"></i>
+        <i class="pt" style="offset-path:path('M712 426 C760 426 760 312 800 312');--d:2.4s"></i>
+        <i class="pt" style="offset-path:path('M712 426 C760 426 760 406 800 406');--d:2.8s"></i>
+        <i class="pt" style="offset-path:path('M712 426 C760 426 760 526 800 526');--d:3.1s"></i>
+        <div class="rdc a" style="--k:fade;--d:1s">Threads read <b id="rd">0</b> / 7</div>
+        <div class="g lane a" style="--k:fromR;--d:.6s;top:146px;--lc:#9AA6FF"><h4><i></i>Reply needed<small>2</small></h4>
+          <div class="li a" style="--k:pop;--d:2s"><span class="av c-ps">PS</span><b>Priya Shah</b><span>revised quote · Thu</span></div>
+          <div class="li a" style="--k:pop;--d:2.2s"><span class="av c-sr">SR</span><b>Sofia Reyes</b><span>picked Tue or Wed</span></div></div>
+        <div class="g lane a" style="--k:fromR;--d:.7s;top:276px;--lc:#7FE0FF"><h4><i></i>Follow-up due<small>1</small></h4>
+          <div class="li a" style="--k:pop;--d:2.5s"><span class="av c-bc">BC</span><b>Ben Carter</b><span>9 days quiet</span></div></div>
+        <div class="g lane a" style="--k:fromR;--d:.8s;top:376px;--lc:#F5B35A"><h4><i></i>Waiting<small>2</small></h4>
+          <div class="li a" style="--k:pop;--d:2.8s"><span class="av c-tb">TB</span><b>Tom Brandt</b><span>answer by Fri</span></div>
+          <div class="li a" style="--k:pop;--d:3s"><span class="av c-dw">DW</span><b>Dana Whitfield</b><span>away to Oct 6</span></div></div>
+        <div class="g lane a" style="--k:fromR;--d:.9s;top:506px;--lc:#8A90A2"><h4><i></i>No action · stop<small>2</small></h4>
+          <div class="li a" style="--k:pop;--d:3.2s"><span class="av c-ml">ML</span><b>Marcus Lee</b><span>said no</span></div>
+          <div class="li a" style="--k:pop;--d:3.4s"><span class="av c-wd">WD</span><b>Weekly digest</b><span>not a lead</span></div></div>
+        <div class="orb" style="--ox:640px;--oy:426px;--os:146px;--od:0.3s"><i class="hal"></i><i class="rim2"></i><i class="core"></i><i class="swirl"></i><i class="rim"></i><i class="rip"></i><i class="rip r2"></i></div>
+      </div></div></div></div>
+</section>
+<section class="sec " data-i="2">
+  <div class="eye"><span>02 · <b>The ask, pulled out</b></span></div>
+  <div class="stw"><div class="stage"><div class="shot" data-key="priya"><div class="cam">
+        <div class="hd"><h2 class="hl"><span class="ln"><span style="--d:.1s">The asks,</span></span><span class="ln"><span style="--d:.25s"><em>pulled out.</em></span></span></h2></div>
+
+        <div class="g mail sh" style="--s:3.2s">
+          <div class="mh"><span class="av md c-ps">PS</span><div><b>Priya Shah</b><br>to Alex</div><span class="tm">Mon 8:02 AM</span></div>
+          <div class="subj">Re: Revised quote</div>
+          <p class="mb">Hi Alex, could you send the <span class="mk" style="--d:1.0s">revised quote</span> <span class="mk" style="--d:1.35s">before our review on Thursday</span>? I’m looping in <span class="mk" style="--d:1.7s">Dan Okafor, our CFO</span>, who signs off. Also, <span class="mk w" style="--d:2.05s">is 15% possible if we sign this month?</span><br>Thanks, Priya</p>
+          <div class="hist a" style="--k:fade;--d:0.9s"><span class="hc">BOTH DIRECTIONS READ</span>
+            <div><b>Sep 8</b>discovery call</div><div><b>Sep 15</b>demo</div><div><b>Sep 22</b>you sent quote</div><div class="now"><b>Today</b>Priya replied</div></div>
+        </div>
+        <svg class="wires" viewBox="0 0 1280 720">
+          <path style="--d:1.1s" d="M598 440 C615 440 615 450 629 450"/>
+          <path style="--d:1.4s" d="M707 450 C720 450 718 274 732 274"/>
+          <path style="--d:1.6s" d="M707 450 C720 450 718 360 732 360"/>
+          <path style="--d:1.8s" d="M707 450 C720 450 718 446 732 446"/>
+        </svg>
+        <i class="pt" style="offset-path:path('M598 440 C615 440 615 450 629 450');--d:1.1s;--f:.9s"></i>
+        <i class="pt" style="offset-path:path('M707 450 C720 450 718 274 732 274');--d:1.5s;--f:1s"></i>
+        <i class="pt" style="offset-path:path('M707 450 C720 450 718 360 732 360');--d:1.9s;--f:1s"></i>
+        <i class="pt" style="offset-path:path('M707 450 C720 450 718 446 732 446');--d:2.3s;--f:1s"></i>
+        <div class="g xp sh a" style="--k:fromR;--d:0.5s;--s:3.4s">
+          <div class="xh"><b>Read by the agent</b><span class="cap">thread + Zoho</span></div>
+          <div class="row"><span>Ask</span><b style="--d:1.3s">Revised quote</b></div>
+          <div class="row"><span>Deadline</span><b style="--d:1.65s">Before Thursday’s review</b></div>
+          <div class="row"><span>New contact</span><b style="--d:2.0s">Dan Okafor · CFO</b></div>
+          <div class="row"><span>Pricing</span><b class="w" style="--d:2.35s">15% asked · a person decides</b></div>
+          <div class="row"><span>Buying intent</span><b style="--d:2.6s">High</b></div>
+          <div class="na"><span class="cap">Next actions</span>
+            <div class="nai a" style="--k:fromR;--d:2.8s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>Reply today with the quote<small>draft ready</small></div>
+            <div class="nai a" style="--k:fromR;--d:2.95s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>Add Dan Okafor to Zoho<small>role · CFO</small></div>
+            <div class="nai a" style="--k:fromR;--d:3.1s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>Move deal to Negotiation<small>was Proposal</small></div>
+            <div class="nai w a" style="--k:fromR;--d:3.25s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 7v6"/><path d="M12 17h.01"/></svg></i>Alex decides on the 15%<small>never the AI</small></div>
+          </div>
+        </div>
+        <div class="orb" style="--ox:668px;--oy:450px;--os:78px;--od:0.6s"><i class="hal"></i><i class="rim2"></i><i class="core"></i><i class="swirl"></i><i class="rim"></i><i class="rip"></i><i class="rip r2"></i></div>
+      </div></div></div></div>
+</section>
+<section class="sec " data-i="3">
+  <div class="eye"><span>03 · <b>Drafted</b></span></div>
+  <div class="stw"><div class="stage"><div class="shot" data-key="draft"><div class="cam">
+
+        <div class="hd"><h2 class="hl"><span class="ln"><span style="--d:.15s">Drafted in</span></span><span class="ln"><span style="--d:.3s"><em>your voice.</em></span></span></h2></div>
+        <div class="g draft a" style="--d:.3s">
+          <span class="dst pill"><i></i>Draft · reply needed</span>
+          <div class="dh"><span>To</span><b>priya.shah@corvane.co</b><i>IN THREAD</i></div>
+          <div class="dh"><span>Cc</span><b>dan.okafor@corvane.co</b><i>NEW CONTACT</i></div>
+          <div class="dh"><span>Subject</span><b>Re: Revised quote</b></div>
+          <div class="db">
+            <p class="a" style="--k:fade;--d:1s">Hi Priya,</p>
+            <p class="a" style="--k:fade;--d:1.5s">Here’s the revised quote, ready for your review on Thursday. I’ve copied Dan so he has it too.</p>
+            <div class="slot"><span class="typ">We can do the 15% if you sign by the 30th.<i class="car"></i></span></div>
+            <p class="a" style="--k:fade;--d:3.4s;margin:0">Best, Alex</p>
+          </div>
+        </div>
+        <div class="g ctx a" style="--k:fromR;--d:.5s">
+          <div class="xh"><b>What it drew on</b></div>
+          <div class="cx a" style="--k:fromR;--d:.9s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i><div><b>The whole thread</b><span>4 emails · both directions</span></div></div>
+          <div class="cx a" style="--k:fromR;--d:1.1s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i><div><b>The Zoho deal</b><span>Corvane · Proposal · Q-2291</span></div></div>
+          <div class="cx a" style="--k:fromR;--d:1.3s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i><div><b>Your sent mail</b><span>tone · length · sign-off</span></div></div>
+          <div class="cx a" style="--k:fromR;--d:1.5s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i><div><b>Her asks</b><span>quote · Thursday · Dan</span></div></div>
+        </div>
+        <div class="nxt a" style="--k:pop;--d:3.9s"><span class="pill"><i></i>Next: seven checks before anything sends</span></div>
+
+      </div></div></div></div>
+</section>
+<section class="sec " data-i="4">
+  <div class="eye"><span>04 · <b>Seven checks</b></span></div>
+  <div class="stw"><div class="stage"><div class="shot gr" data-key="checks"><div class="cam">
+
+        <div class="hd"><h2 class="hl"><span class="ln"><span style="--d:.15s">Seven checks.</span></span><span class="ln"><span style="--d:.3s"><em>Price waits.</em></span></span></h2></div>
+        <div class="g draft a" style="--d:.3s">
+          <span class="dst pill"><i></i>Drafted in your voice</span>
+          <div class="dh"><span>To</span><b>priya.shah@corvane.co</b><i>IN THREAD</i></div>
+          <div class="dh"><span>Cc</span><b>dan.okafor@corvane.co</b></div>
+          <div class="dh"><span>Subject</span><b>Re: Revised quote</b></div>
+          <div class="db">
+            <p class="a" style="--k:fade;--d:.8s">Hi Priya,</p>
+            <p class="a" style="--k:fade;--d:1s">Here’s the revised quote, ready for your review on Thursday. I’ve copied Dan so he has it too.</p>
+            <div class="slot"><span class="risk">We can do the 15% if you sign by the 30th.</span><span class="rw">On the 15%, I’ll come back to you and Dan directly.</span></div>
+            <p class="a" style="--k:fade;--d:1.5s;margin:0">Best, Alex</p>
+          </div>
+        </div>
+        <div class="rflash"></div>
+        <div class="g cks a" style="--k:fromR;--d:.4s">
+          <div class="xh"><b>Seven checks</b><span id="ckh">checking</span></div>
+          <div class="ck" style="--d:.9s"><span class="ic"><i class="p"></i><i class="o"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i></span><div class="tx"><b>Right person, right thread</b><span><em>priya.shah · in thread</em></span></div></div>
+          <div class="ck" style="--d:1.2s"><span class="ic"><i class="p"></i><i class="o"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i></span><div class="tx"><b>Facts match Zoho</b><span><em>quote Q-2291 · Illustrative</em></span></div></div>
+          <div class="ck bad" style="--d:1.5s"><span class="ic"><i class="p"></i><i class="o"></i><i class="x"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></i><i class="h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M9 6v12M15 6v12"/></svg></i></span><div class="tx"><b>No promises outside your rules</b><span><em class="e0">checking</em><em class="e1">15% offered · not approved</em><em class="e2">rewritten · held for Alex</em></span></div></div>
+          <div class="ck" style="--d:1.8s"><span class="ic"><i class="p"></i><i class="o"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i></span><div class="tx"><b>Not already answered</b><span><em>no reply since 8:02</em></span></div></div>
+          <div class="ck" style="--d:2.1s"><span class="ic"><i class="p"></i><i class="o"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i></span><div class="tx"><b>Lead hasn’t said stop</b><span><em>no opt-out · deal open</em></span></div></div>
+          <div class="ck" style="--d:2.4s"><span class="ic"><i class="p"></i><i class="o"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i></span><div class="tx"><b>Tone and length</b><span><em>your style · short</em></span></div></div>
+          <div class="ck" style="--d:2.7s"><span class="ic"><i class="p"></i><i class="o"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i></span><div class="tx"><b>Send window</b><span><em>weekday · 8 AM to 6 PM</em></span></div></div>
+        </div>
+        <div class="held"><span class="pill am"><i></i>Touches price · held for a person</span></div>
+      </div><div class="streak"></div></div></div></div>
+</section>
+<section class="sec " data-i="5">
+  <div class="eye"><span>05 · <b>Approval</b></span></div>
+  <div class="stw"><div class="stage"><div class="shot" data-key="approve"><div class="cam">
+
+        <div class="hd"><h2 class="hl"><span class="ln"><span style="--d:.1s">A person approves.</span></span><span class="ln"><span style="--d:.25s"><em>It sends.</em></span></span></h2></div>
+        <div class="g ghostd a" style="--k:fade;--d:.4s">
+          <div class="dh"><span>To</span><b>priya.shah@corvane.co</b></div>
+          <div class="dh"><span>Subject</span><b>Re: Revised quote</b></div>
+          <p>Here’s the revised quote, ready for your review on Thursday. I’ve copied Dan so he has it too. On the 15%, I’ll come back to you and Dan directly.</p>
+        </div>
+        <div class="g apc sh" style="--s:1.6s">
+          <div class="aph"><span class="av md" style="--c1:#9AA6FF;--c2:#2A2F86">A</span><div><b>Alex, approve this reply?</b></div><span class="pill am"><i></i>held · price</span></div>
+          <div class="apm">To <b>Priya Shah</b> · cc <b>Dan Okafor</b> · Re: Revised quote</div>
+          <div class="apx">Here’s the revised quote, ready for your review on Thursday. I’ve copied Dan so he has it too. <mark>On the 15%, I’ll come back to you and Dan directly.</mark></div>
+          <div class="apf"><span class="cap">7 of 7 checks</span><span class="btn gh">Edit</span><span class="btn pr"><span class="l1">Approve and send</span><span class="l2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Sent · 8:14 AM</span><i class="tap f"></i><i class="tap r"></i></span></div>
+        </div>
+        <div class="g logb a" style="--k:fade;--d:.7s">
+          <div class="lg"><span class="ts">08:06</span>Priya Shah · <em>drafted</em> · reply needed</div>
+          <div class="lg"><span class="ts">08:07</span>Priya Shah · <em>held</em> · pricing asked</div>
+          <div class="lg now a" style="--k:fromL;--d:1.7s"><span class="ts">08:14</span>Priya Shah · <em>sent</em> · approved by Alex</div>
+        </div>
+      
+      </div></div></div></div>
+</section>
+<section class="sec " data-i="6">
+  <div class="eye"><span>06 · <b>Zoho CRM</b></span></div>
+  <div class="stw"><div class="stage"><div class="shot" data-key="zoho"><div class="cam">
+        <div class="hd"><h2 class="hl"><span class="ln"><span style="--d:.15s">Zoho moves</span></span><span class="ln"><span style="--d:.3s"><em>on its own.</em></span></span></h2></div>
+
+        <div class="board">
+          <div class="g col a" style="left:0;--d:.3s;--bc:#7FE0FF"><h5>Qualified<span>2</span></h5><div class="bar2"></div></div>
+          <div class="g col a" style="left:194px;--d:.4s;--bc:#9AA6FF"><h5>Proposal<span id="pc">2</span></h5><div class="bar2"></div></div>
+          <div class="g col a" style="left:388px;--d:.5s;--bc:#C79BF0"><h5>Negotiation<span id="nc">1</span></h5><div class="bar2"></div></div>
+          <div class="g col a" style="left:582px;--d:.6s;--bc:#6FD3A6"><h5>Closed<span>1</span></h5><div class="bar2"></div></div>
+          <div class="deal a" style="left:12px;top:64px;--k:fade;--d:.7s"><b>Tallis Group</b><span>Sofia Reyes · call Tue</span></div>
+          <div class="deal a" style="left:12px;top:144px;--k:fade;--d:.75s"><b>Norvik Partners</b><span>Tom Brandt · waiting</span></div>
+          <div class="deal a" style="left:206px;top:144px;--k:fade;--d:.8s"><b>Halden</b><span>Ben Carter · follow-ups</span></div>
+          <div class="deal a" style="left:400px;top:64px;--k:fade;--d:.85s"><b>Pinecrest Supply</b><span>Dana · paused Oct 6</span></div>
+          <div class="deal dim a" style="left:594px;top:64px;--k:fade;--d:.9s"><b>Oakline</b><span>Marcus · closed lost</span></div>
+          <div class="deal hero" style="left:206px;top:64px"><b>Corvane · 2026</b><span>Priya Shah · quote sent</span></div>
+        </div>
+        <div class="g rec sh a" style="--k:fromR;--d:.5s;--s:3.2s">
+          <div class="xh"><span>Deal · owner Alex</span><b>Corvane · 2026 contract</b></div>
+          <div class="row" style="margin-top:10px"><span>Stage</span><b id="stv">Proposal</b></div>
+          <div class="row"><span>Contacts</span><div class="new"><em>Priya Shah · primary</em><em class="a" style="--k:pop;--d:2.4s">Dan Okafor · CFO<span class="tagn">NEW</span></em></div></div>
+          <div class="row"><span>Last activity</span><b class="a" style="--k:fade;--d:2.8s">Quote sent · 8:14 AM</b></div>
+          <div class="row"><span>Next follow-up</span><b class="a" style="--k:fade;--d:3.1s">Wed · if no reply</b></div>
+        </div>
+        
+      </div><div class="streak"></div></div></div></div>
+</section>
+<section class="sec " data-i="7">
+  <div class="eye"><span>07 · <b>Follow-ups</b></span></div>
+  <div class="stw"><div class="stage"><div class="shot" data-key="stop"><div class="cam">
+        <div class="hd"><h2 class="hl"><span class="ln"><span style="--d:.15s">They reply.</span></span><span class="ln"><span style="--d:.3s"><em>It stops.</em></span></span></h2></div>
+<div class="g ben a" style="--d:0.3s">
+          <div class="bh"><span class="av md c-bc">BC</span><div><b>Ben Carter</b><span>Halden · proposal sent Sep 15</span></div>
+            <div class="tg"><span class="lbw"><span class="t1">follow-ups on</span><span class="t2">stopped · he replied</span></span><span class="sw2"></span></div></div>
+          <div class="tl a" style="--k:fade;--d:0.5s"><span class="ts">Sep 19</span>You: Just checking this landed okay.</div>
+          <div class="tl a" style="--k:fade;--d:0.8s"><span class="ts">Today 9:00</span>Follow-up 2 sent<span class="st">auto · checks passed</span></div>
+          <div class="tl rp a" style="--k:pop;--d:1.5s"><span class="ts">Today 11:42</span>Ben replied<span class="st">sequence stopped</span></div>
+          <div class="tl rm a" style="--k:fromL;--d:2.3s"><span class="ts">Today 1:00</span>Reminder to Alex: reply to Ben</div>
+        </div>
+        <div class="g ref">
+          <div class="xh"><b>Follow-ups it refused<br>to send today</b><strong id="rf">0</strong></div>
+          <div class="rr a" style="--k:fromR;--d:1.0s"><span class="av md c-ml">ML</span><div class="tx"><b>Marcus Lee</b><span>“We’ve decided to go another direction.”</span></div><span class="rt2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>said no</span></div>
+          <div class="rr a" style="--k:fromR;--d:1.4s"><span class="av md c-dw">DW</span><div class="tx"><b>Dana Whitfield</b><span>Out of office until Oct 6</span></div><span class="rt2 am"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M9 6v12M15 6v12"/></svg>out of office</span></div>
+          <div class="rr a" style="--k:fromR;--d:1.8s"><span class="av md c-jm">JM</span><div class="tx"><b>Jess Moreno</b><span>“Please take me off your list.”</span></div><span class="rt2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>unsubscribed</span></div>
+        </div>
+        
+      </div></div></div></div>
+</section>
+<section class="sec " data-i="8">
+  <div class="eye"><span>08 · <b>The automation</b></span></div>
+  <div class="stw"><div class="stage"><div class="shot" data-key="logic"><div class="cam">
+
+        <div class="hd"><h2 class="hl"><span class="ln"><span style="--d:.15s">How it</span></span><span class="ln"><span style="--d:.3s"><em>decides.</em></span></span></h2></div>
+        <svg class="wires flw" viewBox="0 0 1280 720">
+          <path style="--d:.5s" d="M218 330 L262 330"/>
+          <path style="--d:.7s" d="M448 330 L492 330"/>
+          <path class="hot" style="--d:.9s" d="M632 330 C655 330 650 208 676 208"/>
+          <path style="--d:.95s" d="M632 330 C655 330 650 270 676 270"/>
+          <path style="--d:1s" d="M632 330 C655 330 650 390 676 390"/>
+          <path style="--d:1.05s" d="M632 330 C655 330 650 452 676 452"/>
+          <path class="hot" style="--d:1.3s" d="M846 208 C870 208 866 238 890 238"/>
+          <path style="--d:1.35s" d="M846 270 C870 270 866 238 890 238"/>
+          <path style="--d:1.5s" d="M1030 238 L1070 238"/>
+          <path style="--d:1.7s" d="M1140 270 L1140 352"/>
+          <path style="--d:1.9s" d="M1140 408 L1140 470"/>
+          <path style="--d:1.9s" d="M1070 380 L1030 380"/>
+          <path style="--d:2.1s" d="M1070 502 C980 502 900 572 850 572"/>
+          <path style="--d:2.1s" d="M960 408 C960 500 900 548 850 560"/>
+          <path style="--d:2.1s" d="M846 390 C890 390 880 520 830 540"/>
+          <path style="--d:2.1s" d="M846 452 C875 452 870 520 830 540"/>
+          <path style="--d:2.3s" d="M700 572 L640 572"/>
+        </svg>
+        <div class="fn" style="left:48px;top:298px;width:170px;--d:.3s;--g:2.4s"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span><div><b>New Gmail message</b><span>in or out</span></div></div>
+        <div class="fn" style="left:262px;top:298px;width:186px;--d:.5s;--g:2.85s"><span class="fi em"><i class="mo"></i></span><div><b>AI reads it all</b><span>thread + Zoho record</span></div></div>
+        <div class="fn" style="left:492px;top:298px;width:140px;--d:.7s;--g:3.3s"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h10M4 18h6"/></svg></span><div><b>Classify</b><span>what’s next</span></div></div>
+        <div class="fn sm" style="left:672px;top:188px;width:176px;--d:.9s;--g:3.75s;--lc:#9AA6FF"><i class="dotc"></i><b>Needs reply</b></div>
+        <div class="fn sm" style="left:672px;top:250px;width:176px;--d:.95s;--lc:#7FE0FF"><i class="dotc"></i><b>Follow-up due</b></div>
+        <div class="fn sm" style="left:672px;top:370px;width:176px;--d:1s;--lc:#F5B35A"><i class="dotc"></i><b>No action</b><span>log</span></div>
+        <div class="fn sm" style="left:672px;top:432px;width:176px;--d:1.05s;--lc:#FF7582"><i class="dotc"></i><b>Stop</b><span>no · OOO · unsub</span></div>
+        <div class="fn" style="left:890px;top:206px;width:140px;--d:1.3s;--g:4.2s"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/></svg></span><div><b>Draft</b><span>your voice</span></div></div>
+        <div class="fn" style="left:1070px;top:206px;width:140px;--d:1.5s;--g:4.65s"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span><div><b>7 checks</b><span>your rules</span></div></div>
+        <div class="fn q" style="left:1070px;top:352px;width:140px;--d:1.7s;--g:5.1s"><div><b>Touches price?</b><span>or any check fails</span></div></div>
+        <div class="fn" style="left:890px;top:352px;width:140px;height:56px;--d:1.9s"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l16-8-6 16-2-6z"/></svg></span><div><b>Sends</b><span>from Gmail</span></div></div>
+        <div class="fn hd2" style="left:1070px;top:470px;width:140px;--d:1.9s;--g:5.55s"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span><div><b>Held</b><span>you approve</span></div></div>
+        <div class="fn" style="left:700px;top:540px;width:150px;--d:2.1s;--g:6s"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span><div><b>Update Zoho</b><span>deal stage</span></div></div>
+        <div class="fn" style="left:440px;top:540px;width:200px;--d:2.3s;--g:6.45s"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></span><div><b>Next follow-up</b><span>stops on any reply</span></div></div>
+        <span class="el a" style="--k:fade;--d:2s;left:1150px;top:430px">YES</span>
+        <span class="el a" style="--k:fade;--d:2s;left:1040px;top:362px">NO</span>
+        <i class="ptm" style="offset-path:path('M218 330 L262 330');--d:2.4s"></i>
+        <i class="ptm" style="offset-path:path('M448 330 L492 330');--d:2.85s"></i>
+        <i class="ptm" style="offset-path:path('M632 330 C655 330 650 208 676 208');--d:3.3s"></i>
+        <i class="ptm" style="offset-path:path('M846 208 C870 208 866 238 890 238');--d:3.75s"></i>
+        <i class="ptm" style="offset-path:path('M1030 238 L1070 238');--d:4.2s"></i>
+        <i class="ptm" style="offset-path:path('M1140 270 L1140 352');--d:4.65s"></i>
+        <i class="ptm" style="offset-path:path('M1140 408 L1140 470');--d:5.1s"></i>
+        <i class="ptm" style="offset-path:path('M1070 502 C980 502 900 572 850 572');--d:5.55s"></i>
+        <i class="ptm" style="offset-path:path('M700 572 L640 572');--d:6s"></i>
+        <i class="ptm" style="offset-path:path('M632 330 C655 330 650 452 676 452');--d:3.9s"></i>
+        <i class="ptm" style="offset-path:path('M846 452 C875 452 870 520 830 540');--d:4.35s"></i>
+        <i class="ptm" style="offset-path:path('M846 270 C870 270 866 238 890 238');--d:5.2s"></i>
+        <i class="ptm" style="offset-path:path('M1070 380 L1030 380');--d:6.3s"></i>
+      
+      </div><div class="streak"></div></div></div></div>
+</section>
+<section class="sec " data-i="9">
+  <div class="eye"><span>09 · <b>Your Zoho CRM</b></span></div>
+  <div class="stw"><div class="stage"><div class="shot" data-key="builder"><div class="cam">
+
+        <div class="s8h"><h2 class="hl"><span class="ln"><span style="--d:.1s">This is what it will look like</span></span><span class="ln"><span style="--d:.25s"><em>in your Zoho CRM.</em></span></span></h2></div>
+        <div class="zw">
+          <div class="zt"><span class="crumb">Setup › Automation › Workflow Rules › <b>AI sales inbox</b></span><span class="lab">Your workflow in Zoho CRM · illustrative</span><span class="zb c">Cancel</span><span class="zb s">Save</span></div>
+          <div class="zs">
+            <div class="f"><span>Module</span><b>Deals</b></div>
+            <div class="f"><span>Rule name</span><b>AI sales inbox</b></div>
+            <div class="f"><span>Description</span><b>The agent reads every thread and writes its decision to the deal. These rules act on it.</b></div>
+            <div class="act"><i></i>Active</div>
+          </div>
+          <div class="zcv"><div class="zc">
+            <div class="zn" style="left:40px;top:24px;width:360px;--d:.8s"><span class="zk w">WHEN</span><div class="zl">A deal is <b>edited</b> and <code>AI Next Action</code> is modified. Repeat every time.</div></div>
+            <div class="zv" style="left:219px;top:118px;height:32px"></div><div class="zp" style="left:220px;top:123px;--d:1s">+</div>
+            <div class="zn zlive" style="left:40px;top:150px;width:360px;--d:1.2s;--r:1.4s"><span class="zk c">CONDITION 1</span><div class="zl"><code>AI Next Action</code> is <b>Reply needed</b><br>and <code>Touches price</code> is <b>Yes</b></div></div>
+            <div class="zh" style="left:400px;top:196px;width:40px"></div>
+            <div class="zg" style="left:440px;top:150px;width:360px;--d:1.6s"><div class="gt">INSTANT ACTIONS</div>
+              <div class="za"><i class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>Task · <b>Approve the pricing reply</b><small>deal owner</small></div>
+              <div class="za"><i class="u"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></i>Field update · <b>Send status = Held</b></div></div>
+            <div class="zv" style="left:219px;top:246px;height:52px"></div>
+            <div class="zn zlive" style="left:40px;top:298px;width:360px;--d:2.3s;--r:2.5s"><span class="zk c">CONDITION 2</span><div class="zl"><code>AI Next Action</code> is <b>Follow-up due</b><br>and <code>Lead replied</code> is <b>No</b></div></div>
+            <div class="zh" style="left:400px;top:344px;width:40px"></div>
+            <div class="zg" style="left:440px;top:298px;width:360px;--d:2.7s"><div class="gt">INSTANT ACTIONS</div>
+              <div class="za"><i class="h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/></svg></i>Webhook · <b>Draft follow-up, run 7 checks</b></div>
+              <div class="gt" style="margin-top:8px">SCHEDULED ACTIONS</div>
+              <div class="za"><i class="s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></i>2 days after · <b>Next follow-up</b><small>if still no reply</small></div></div>
+            <div class="zv" style="left:219px;top:394px;height:116px"></div>
+            <div class="zn zlive" style="left:40px;top:510px;width:360px;--d:3.5s;--r:3.7s"><span class="zk c">CONDITION 3</span><div class="zl"><code>Lead replied</code> is <b>Yes</b>, or <code>Said no</code>,<br><code>Unsubscribed</code> or <code>Out of office</code> is <b>Yes</b></div></div>
+            <div class="zh" style="left:400px;top:556px;width:40px"></div>
+            <div class="zg" style="left:440px;top:510px;width:360px;--d:3.9s"><div class="gt">INSTANT ACTIONS</div>
+              <div class="za"><i class="u"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></i>Field update · <b>Follow-ups = Stopped</b></div>
+              <div class="za"><i class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>Task · <b>Reply to the lead</b><small>deal owner</small></div></div>
+            <div class="zv" style="left:219px;top:606px;height:30px"></div>
+            <div class="zadd" style="left:170px;top:644px;--d:4.4s">+ Add condition</div>
+          </div></div>
+        </div>
+        
+      </div></div></div></div>
+</section>
+<section class="sec " data-i="10">
+  <div class="stw"><div class="stage"><div class="shot" data-key="close"><div class="cam">
+
+        <div class="endt"><h2 class="hl"><span class="ln"><span style="--d:.4s">Read.</span></span> <span class="ln"><span style="--d:.65s">Decided.</span></span><br><span class="ln"><span style="--d:.9s"><em>Checked.</em></span></span> <span class="ln"><span style="--d:1.15s"><em>Sent.</em></span></span></h2></div>
+        <div class="endc2 cap a" style="--k:fade;--d:1.9s">Your Gmail + Zoho CRM · AI sales pipeline</div>
+<div class="orb" style="--ox:640px;--oy:196px;--os:104px;--od:0.2s"><i class="hal"></i><i class="rim2"></i><i class="core"></i><i class="swirl"></i><i class="rim"></i><i class="rip"></i><i class="rip r2"></i></div>
+      </div></div></div></div>
+</section>
+</main>
+<footer class="foot">Sample data · Illustrative</footer>
+<script>
+(function(){
+  var stages=[].slice.call(document.querySelectorAll('.stage'));
+  function fit(){ stages.forEach(function(s){ s.style.transform='scale('+(s.parentNode.clientWidth/1280)+')'; }); }
+  window.addEventListener('resize',fit); fit();
+  function $(id){ return document.getElementById(id); }
+  function count(id,a,b,ms){ var el=$(id), t0=performance.now(); (function g(n){ var p=Math.min(1,(n-t0)/ms), e=1-Math.pow(1-p,3); el.textContent=Math.round(a+(b-a)*e); if(p<1) requestAnimationFrame(g); })(t0); }
+  var CUES={
+    inbox:[[1.1,function(){ count('rd',0,7,1900); }]],
+    checks:[[2.8,function(){ $('ckh').textContent='6 passed · 1 flagged'; }],[4.7,function(){ $('ckh').textContent='7 of 7 · held'; }]],
+    zoho:[[2.4,function(){ $('pc').textContent='1'; $('nc').textContent='2'; $('stv').textContent='Negotiation'; $('stv').classList.add('on'); }]],
+    stop:[[1.0,function(){ count('rf',0,3,1300); }]]
+  };
+  var shots=[].slice.call(document.querySelectorAll('.shot'));
+  function start(sh){ if(sh.classList.contains('on')) return; sh.classList.add('on'); (CUES[sh.dataset.key]||[]).forEach(function(c){ setTimeout(c[1],c[0]*1000); }); }
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ start(e.target.querySelector('.shot')); io.unobserve(e.target); } }); },{threshold:.35});
+    [].slice.call(document.querySelectorAll('.stw')).forEach(function(w){ io.observe(w); });
+    var io2=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting) document.body.dataset.s=e.target.dataset.i; }); },{rootMargin:'-45% 0px -45% 0px'});
+    [].slice.call(document.querySelectorAll('.sec')).forEach(function(s){ io2.observe(s); });
+  } else { shots.forEach(start); }
+
+  /* drifting bokeh, fixed behind the page */
+  var cv=$('bokeh'), cx=cv.getContext('2d'), P=[], W=0, H=0;
+  function size(){ W=cv.width=window.innerWidth; H=cv.height=window.innerHeight; }
+  window.addEventListener('resize',size); size();
+  for(var i=0;i<34;i++) P.push({x:Math.random()*W,y:Math.random()*H,r:2+Math.random()*9,vx:(Math.random()-.5)*.12,vy:-.05-Math.random()*.18,a:.05+Math.random()*.16,h:Math.random()<.7?'154,166,255':'127,224,255'});
+  (function draw(){
+    cx.clearRect(0,0,W,H);
+    P.forEach(function(p){ p.x+=p.vx; p.y+=p.vy; if(p.y<-20){p.y=H+20;p.x=Math.random()*W;}
+      var gr=cx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*2.4); gr.addColorStop(0,'rgba('+p.h+','+p.a+')'); gr.addColorStop(1,'rgba('+p.h+',0)');
+      cx.fillStyle=gr; cx.beginPath(); cx.arc(p.x,p.y,p.r*2.4,0,6.283); cx.fill(); });
+    requestAnimationFrame(draw);
+  })();
+})();
+</script>

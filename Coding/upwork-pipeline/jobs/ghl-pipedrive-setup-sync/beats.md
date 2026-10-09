@@ -1,0 +1,8 @@
+- This is a working prototype of your GHL and Pipedrive setup.
+- Pipedrive: one sales pipeline, stages matching GHL one for one.
+- GHL sub-account: custom fields, tags, and one spelling per lead source.
+- Follow-up workflows start on each stage; SMS only where consent exists.
+- Routing: lead source picks the rep, returning people keep theirs.
+- Sync: checked by email first; rep moves a deal, GHL follows.
+- Dry-run migration, every path tested, then a runbook and training call.
+- Quick 15 minute call to map your stages and lead sources?

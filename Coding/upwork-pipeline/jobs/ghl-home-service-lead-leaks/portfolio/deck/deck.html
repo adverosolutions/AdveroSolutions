@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920">
+<title>Home Service Lead System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+@page { size: 1920px 1080px; margin: 0 }
+:root{
+  --ink:#16202e; --ink2:#4d596b; --ink3:#8792a3;
+  --blue:#2f74f5; --blue2:#6aa5ff;
+  --panel:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,251,255,.86));
+  --shadow:0 50px 90px -36px rgba(38,72,128,.34),0 18px 34px -20px rgba(38,72,128,.24);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#e9f0f8;color:var(--ink);font-family:"Figtree",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+/* one slide = one 1920x1080 page */
+.slide{position:relative;width:1920px;height:1080px;overflow:hidden;break-after:page;page-break-after:always;
+  display:flex;align-items:center;padding:0 88px;
+  background:
+    radial-gradient(1300px 640px at 80% -12%,rgba(255,255,255,.95),rgba(255,255,255,0) 62%),
+    radial-gradient(980px 560px at 6% 32%,rgba(206,226,250,.78),rgba(206,226,250,0) 70%),
+    radial-gradient(760px 520px at 62% 92%,rgba(223,240,236,.55),rgba(223,240,236,0) 70%),
+    radial-gradient(1500px 360px at 50% 70%,rgba(255,255,255,.55),rgba(255,255,255,0) 70%),
+    linear-gradient(180deg,#c9dcf2 0%,#dce8f5 28%,#ecf1f7 58%,#f3f4f6 82%,#e9edf2 100%);}
+.slide:last-child{break-after:auto;page-break-after:auto}
+
+/* type */
+.eyebrow{font-size:15px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--blue)}
+h1,h2{font-weight:600;letter-spacing:-.035em;line-height:1.02;color:var(--ink);text-wrap:balance}
+h1{font-size:104px}
+h2{font-size:74px;margin-top:18px}
+h1 em,h2 em{font-style:normal;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:27px;line-height:1.42;font-weight:450;color:var(--ink2);margin-top:26px;letter-spacing:-.008em;text-wrap:pretty}
+.meta{position:absolute;left:88px;bottom:52px;font-size:14px;font-weight:600;letter-spacing:.12em;color:var(--ink3)}
+
+.text{flex:none;width:500px;position:relative;z-index:2}
+.visual{flex:1;position:relative;height:100%;display:flex;align-items:center;justify-content:flex-end}
+
+/* glass panels */
+.panel{position:relative;background:var(--panel);border-radius:30px;padding:10px;border:1px solid rgba(255,255,255,.95);
+  box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.5),var(--shadow)}
+.panel::after{content:"";position:absolute;left:8%;right:8%;bottom:-58px;height:48px;border-radius:50%;pointer-events:none;z-index:-1;
+  background:radial-gradient(closest-side,rgba(52,86,140,.20),rgba(52,86,140,0))}
+.panel img{display:block;border-radius:21px}
+.ghost{position:absolute;border-radius:34px;background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,.22));
+  border:1px solid rgba(255,255,255,.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 40px 80px -40px rgba(38,72,128,.22)}
+
+/* cover */
+.cover .text{width:860px}
+.cover .sub{font-size:30px;margin-top:34px}
+.cover .name{position:absolute;left:88px;bottom:72px;font-size:19px;font-weight:600;color:var(--ink2);letter-spacing:.01em;display:flex;align-items:center;gap:12px}
+.cover .name b{width:9px;height:9px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 4px rgba(47,116,245,.15)}
+.stage{position:absolute;right:0;top:0;width:980px;height:1080px;perspective:2200px;perspective-origin:30% 45%}
+.stage .board{position:absolute;left:110px;top:215px;width:800px;transform:rotateY(-24deg) rotateX(9deg) rotateZ(1.5deg);transform-origin:0 50%}
+.stage .board img{width:780px}
+.stage .ph{position:absolute;left:20px;top:455px;transform:rotateY(-16deg) rotateX(7deg) rotateZ(1deg);transform-origin:0 50%}
+
+
+/* PDF mode. build_deck.py bakes each slide's visual layer (background, panels, shadows,
+   screenshots) at 2x into assets/bake-NN.jpg with the text hidden ("baking"), then prints the
+   page with that image behind the live text ("baked"). The PDF so carries no CSS blur shadows
+   or soft masks, which Apple's PDF engine draws as solid gray boxes. */
+.bake{display:none;position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:0}
+.baked .bake{display:block}
+.baked .slide{background:none}
+.baked .visual,.baked .stage{visibility:hidden}
+.baking .text,.baking .meta,.baking .name{visibility:hidden}
+/* gradient text prints as an alpha soft mask; the PDF uses the gradient's middle colour */
+.baked h1 em,.baked h2 em{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:#4386f9}
+
+/* phone + browser frames */
+.phone{position:relative;width:364px;padding:12px;border-radius:58px;background:linear-gradient(160deg,#fdfdfe,#e6ecf4);
+  border:1px solid rgba(255,255,255,.95);box-shadow:inset 0 0 0 1px rgba(160,176,200,.35),inset 0 2px 0 #fff,var(--shadow)}
+.phone .scr{border-radius:44px;overflow:hidden;background:#0e2620;position:relative;padding-top:40px}
+.phone .scr img{display:block;width:320px}
+.phone .scr::before{content:"";position:absolute;top:10px;left:50%;width:96px;height:27px;margin-left:-48px;border-radius:20px;background:#05090c}
+.phone{width:344px}
+.phone.sm{width:250px;padding:9px;border-radius:42px}
+.phone.sm .scr{border-radius:34px;padding-top:30px}
+.phone.sm .scr img{width:232px}
+.phone.sm .scr::before{top:7px;width:70px;height:20px;margin-left:-35px}
+
+.browser{position:relative;width:1022px;padding:0;border-radius:24px;overflow:visible}
+.browser .bar{height:46px;display:flex;align-items:center;gap:8px;padding:0 18px;border-bottom:1px solid rgba(150,170,200,.25)}
+.browser .bar i{width:12px;height:12px;border-radius:50%;background:#dfe5ee}
+.browser .bar .url{margin-left:22px;flex:1;max-width:420px;height:26px;border-radius:9px;background:rgba(150,170,200,.16);display:flex;align-items:center;padding:0 12px}
+.browser .bar .url svg{width:12px;height:12px;fill:none;stroke:#98a2b3;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.browser .win{padding:0 10px 10px}
+.browser .win img{width:1000px;border-radius:0 0 16px 16px}
+
+/* slide-specific layout */
+.s-pipe .text{width:430px}
+.s-pipe .board img{width:1180px}
+
+/* workflow panels: sizes and slide-5 positions come from assets/layout.css */
+.s-wf img.wf{height:882px}
+.s-wf3 .visual{position:static}
+.s-wf3 .a,.s-wf3 .b{position:absolute}
+.s-wf3 .next{position:absolute;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.85);border:1px solid #fff;box-shadow:inset 0 1px 0 #fff,0 14px 26px -12px rgba(38,72,128,.35)}
+.s-wf3 .next svg{width:20px;height:20px;fill:none;stroke:var(--blue);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+.s-fun .text{width:420px}
+.s-fun .visual{display:block}
+.s-fun .browser{position:absolute;left:20px;top:130px}
+.s-fun .phone{position:absolute;right:0;top:190px}
+</style>
+<link href="assets/layout.css" rel="stylesheet"><!-- generated by build_deck.py: panel sizes from the screenshot crops -->
+</head>
+<body>
+
+<!-- 1 COVER -->
+<section class="slide cover">
+  <img class="bake" src="assets/bake-01.jpg" alt="">
+  <div class="text">
+    <h1>Home service lead system in <em>HighLevel</em></h1>
+    <p class="sub">Pipeline, follow-up workflows and a quote funnel</p>
+  </div>
+  <div class="name"><b></b>Lorenzo Villarreal</div>
+  <div class="stage">
+    <div class="ghost" style="left:300px;top:110px;width:640px;height:520px;transform:rotateY(-24deg) rotateX(9deg);opacity:.8"></div>
+    <div class="panel board"><img src="assets/pipeline.jpg" alt="Lead pipeline board"></div>
+    <div class="ph"><div class="phone sm"><div class="scr"><img src="assets/quote-mobile.jpg" alt="Quote page on mobile"></div></div></div>
+  </div>
+</section>
+
+<!-- 2 PIPELINE -->
+<section class="slide s-pipe">
+  <img class="bake" src="assets/bake-02.jpg" alt="">
+  <div class="text">
+    <div class="eyebrow">Pipeline</div>
+    <h2>Lead pipeline</h2>
+    <p class="sub">Every lead tracked from first contact to won or lost.</p>
+  </div>
+  <div class="visual">
+    <div class="panel board"><img src="assets/pipeline.jpg" alt="Lead pipeline board with New, Contacted, Quoted, Booked, Won and Lost stages"></div>
+  </div>
+  <div class="meta">02 / 08</div>
+</section>
+
+<!-- 3 WORKFLOW 1 -->
+<section class="slide s-wf">
+  <img class="bake" src="assets/bake-03.jpg" alt="">
+  <div class="text">
+    <div class="eyebrow">Workflow 01</div>
+    <h2>Instant Lead Reply</h2>
+    <p class="sub">New leads get a text and an email right away, and the rep gets a call alert.</p>
+  </div>
+  <div class="visual">
+    <div class="panel"><img class="wf wf1" src="assets/wf1.jpg" alt="Instant Lead Reply workflow"></div>
+  </div>
+  <div class="meta">03 / 08</div>
+</section>
+
+<!-- 4 WORKFLOW 2 -->
+<section class="slide s-wf">
+  <img class="bake" src="assets/bake-04.jpg" alt="">
+  <div class="text">
+    <div class="eyebrow">Workflow 02</div>
+    <h2>Missed Call Reply</h2>
+    <p class="sub">A missed call gets a text back a minute later and a callback task.</p>
+  </div>
+  <div class="visual">
+    <div class="panel"><img class="wf wf2" src="assets/wf2.jpg" alt="Missed Call Reply workflow"></div>
+  </div>
+  <div class="meta">04 / 08</div>
+</section>
+
+<!-- 5 WORKFLOW 3 (tall: shown as the top of the canvas plus the rest of the steps, on one top line) -->
+<section class="slide s-wf s-wf3">
+  <img class="bake" src="assets/bake-05.jpg" alt="">
+  <div class="text">
+    <div class="eyebrow">Workflow 03</div>
+    <h2>Quote Follow-Up</h2>
+    <p class="sub">Open quotes get a text, an email, then a call alert over six days.</p>
+  </div>
+  <div class="visual">
+    <div class="panel a"><img src="assets/wf3a.jpg" alt="Quote Follow-Up workflow, first steps"></div>
+    <div class="next" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 10h12M11 5l5 5-5 5"/></svg></div>
+    <div class="panel b"><img src="assets/wf3b.jpg" alt="Quote Follow-Up workflow, remaining steps"></div>
+  </div>
+  <div class="meta">05 / 08</div>
+</section>
+
+<!-- 6 WORKFLOW 4 -->
+<section class="slide s-wf">
+  <img class="bake" src="assets/bake-06.jpg" alt="">
+  <div class="text">
+    <div class="eyebrow">Workflow 04</div>
+    <h2>Stale Lead Alert</h2>
+    <p class="sub">Leads with no activity for three days get flagged to the rep and a check-in text.</p>
+  </div>
+  <div class="visual">
+    <div class="panel"><img class="wf wf4" src="assets/wf4.jpg" alt="Stale Lead Alert workflow"></div>
+  </div>
+  <div class="meta">06 / 08</div>
+</section>
+
+<!-- 7 QUOTE PAGE -->
+<section class="slide s-fun">
+  <img class="bake" src="assets/bake-07.jpg" alt="">
+  <div class="text">
+    <div class="eyebrow">Funnel page 1</div>
+    <h2>Quote page</h2>
+    <p class="sub">The form sits in the first screen.</p>
+  </div>
+  <div class="visual">
+    <div class="panel browser">
+      <div class="bar"><i></i><i></i><i></i><div class="url"><svg viewBox="0 0 12 12"><rect x="2.5" y="5.5" width="7" height="5" rx="1.2"/><path d="M4 5.5V4a2 2 0 0 1 4 0v1.5"/></svg></div></div>
+      <div class="win"><img src="assets/quote-desktop.jpg" alt="Quote page on desktop"></div>
+    </div>
+    <div class="phone"><div class="scr"><img src="assets/quote-mobile.jpg" alt="Quote page on mobile"></div></div>
+  </div>
+  <div class="meta">07 / 08</div>
+</section>
+
+<!-- 8 THANK-YOU PAGE -->
+<section class="slide s-fun">
+  <img class="bake" src="assets/bake-08.jpg" alt="">
+  <div class="text">
+    <div class="eyebrow">Funnel page 2</div>
+    <h2><span style="white-space:nowrap">Thank-you</span> page</h2>
+    <p class="sub">After the form, the lead is told their price is coming by text.</p>
+  </div>
+  <div class="visual">
+    <div class="panel browser">
+      <div class="bar"><i></i><i></i><i></i><div class="url"><svg viewBox="0 0 12 12"><rect x="2.5" y="5.5" width="7" height="5" rx="1.2"/><path d="M4 5.5V4a2 2 0 0 1 4 0v1.5"/></svg></div></div>
+      <div class="win"><img src="assets/thanks-desktop.jpg" alt="Thank-you page on desktop"></div>
+    </div>
+    <div class="phone"><div class="scr"><img src="assets/thanks-mobile.jpg" alt="Thank-you page on mobile"></div></div>
+  </div>
+  <div class="meta">08 / 08</div>
+</section>
+
+</body>
+</html>

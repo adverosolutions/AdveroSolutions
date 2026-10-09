@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Your Claude Agents Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@page{size:8.5in 11in;margin:0}
+:root{
+  --ink:#16202e; --ink2:#4d596b; --ink3:#8792a3;
+  --blue:#2f74f5; --blueDeep:#1f5fd6; --mint:#1fb487; --mintDeep:#0f8a63; --amberDeep:#a8650f;
+  --line:rgba(150,170,200,.28);
+  --panel:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,251,255,.86));
+  --shadow:0 22px 40px -22px rgba(38,72,128,.32),0 8px 18px -12px rgba(38,72,128,.22);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:816px;height:1056px}
+body{font-family:"Figtree",system-ui,sans-serif;color:var(--ink);position:relative;overflow:hidden;
+  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  background:
+   radial-gradient(620px 320px at 82% -4%,rgba(255,255,255,.95),rgba(255,255,255,0) 62%),
+   radial-gradient(520px 360px at 4% 26%,rgba(206,226,250,.85),rgba(206,226,250,0) 70%),
+   radial-gradient(460px 300px at 96% 58%,rgba(230,241,251,.9),rgba(230,241,251,0) 70%),
+   radial-gradient(520px 260px at 40% 92%,rgba(223,240,236,.75),rgba(223,240,236,0) 70%),
+   linear-gradient(180deg,#c9dcf2 0%,#dce8f5 26%,#ecf1f7 56%,#f3f4f6 82%,#e9edf2 100%);}
+.page{position:relative;padding:26px 36px 0;height:1056px;display:flex;flex-direction:column;gap:12px}
+
+.toprow{display:flex;justify-content:space-between;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:8px;font-size:10.5px;font-weight:600;letter-spacing:.02em;color:var(--ink2);
+  padding:5px 11px 5px 10px;border-radius:99px;background:rgba(255,255,255,.78);border:1px solid rgba(255,255,255,.95);
+  box-shadow:inset 0 1px 0 #fff,0 5px 14px -8px rgba(38,72,128,.3)}
+.chip b{width:7px;height:7px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 3px rgba(47,116,245,.16)}
+.hero{margin-top:4px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--blueDeep)}
+h1{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.06;margin-top:7px}
+h1 em{font-style:normal;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:12.5px;line-height:1.45;color:var(--ink2);font-weight:500;margin-top:7px;max-width:640px}
+
+.panel{position:relative;background:var(--panel);border-radius:18px;border:1px solid rgba(255,255,255,.98);
+  box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.5),var(--shadow)}
+.panel::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,0) 30%,rgba(255,255,255,0) 70%,rgba(200,218,242,.32) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;padding:1.2px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+.sec-h .t{font-size:15px;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
+.sec-h .t i{font-style:normal;font-size:9.5px;font-weight:700;letter-spacing:.14em;color:var(--blueDeep);margin-right:8px;vertical-align:2px}
+.tagI{display:inline-block;font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);border:1px dashed rgba(135,146,163,.6);padding:2px 7px;border-radius:99px;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:8.5px;font-weight:700;padding:2.5px 8px;border-radius:99px;background:rgba(31,180,135,.13);color:var(--mintDeep);white-space:nowrap;letter-spacing:.01em}
+.pill.blue{background:rgba(47,116,245,.11);color:var(--blueDeep)}
+svg.ic{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.icb{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;color:#fff;flex:none;
+  background:linear-gradient(160deg,#7fb2ff,#2f74f5);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 6px 12px -6px rgba(47,116,245,.65)}
+.icb.g{background:linear-gradient(160deg,#5fd3ad,#1fb487);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 6px 12px -6px rgba(31,180,135,.7)}
+
+/* 01 agents */
+.agents{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.agent{padding:12px 13px 12px}
+.agent .ah{display:flex;align-items:center;gap:9px}
+.agent .ah .n{font-size:12px;font-weight:700;letter-spacing:-.01em}
+.agent .ah .s{font-size:9.2px;color:var(--ink3);font-weight:600;margin-top:1px}
+.flow{position:relative;display:grid;margin-top:10px}
+.flow.f5{grid-template-columns:repeat(5,1fr)}
+.flow.f4{grid-template-columns:repeat(4,1fr)}
+.flow::before{content:"";position:absolute;top:17px;left:10%;right:10%;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,rgba(47,116,245,.35),rgba(47,116,245,.55) 70%,rgba(31,180,135,.7))}
+.flow.f4::before{left:12.5%;right:12.5%}
+.step{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:0 2px}
+.node{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--blue);background:#fff;
+  border:1px solid rgba(47,116,245,.22);box-shadow:0 0 0 4px rgba(255,255,255,.85),0 8px 14px -8px rgba(38,72,128,.45)}
+.node svg{width:14px;height:14px}
+.step.win .node{color:#fff;border-color:transparent;background:linear-gradient(160deg,#5fd3ad,#1fb487);box-shadow:0 0 0 4px rgba(31,180,135,.14),0 8px 14px -8px rgba(31,180,135,.7)}
+.step .l{font-size:9px;line-height:1.3;font-weight:600;color:var(--ink)}
+
+/* 02 two ways */
+.ways{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.way{padding:13px 15px 12px;display:flex;flex-direction:column}
+.way.one{box-shadow:0 0 0 2px rgba(31,180,135,.30),inset 0 1px 0 #fff,var(--shadow)}
+.way .wh{display:flex;align-items:center;gap:10px}
+.way .wh .n{font-size:14px;font-weight:700;letter-spacing:-.02em}
+.way .wh .s{font-size:9.4px;color:var(--ink3);font-weight:600;margin-top:1px}
+.way .wh .pill{margin-left:auto;align-self:flex-start}
+.convo{margin-top:10px;padding:8px 10px;border-radius:13px;background:rgba(236,242,250,.7);border:1px solid rgba(150,170,200,.22);display:flex;flex-direction:column;gap:6px}
+.convo .where{display:flex;align-items:center;gap:6px;font-size:8.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+.convo .where svg{width:11px;height:11px}
+.convo .where .tagI{margin-left:auto}
+.me{align-self:flex-end;max-width:88%;font-size:9.6px;line-height:1.38;font-weight:500;color:#fff;padding:6px 9px;border-radius:11px 11px 3px 11px;
+  background:linear-gradient(170deg,#4d8cfb,#2f74f5);box-shadow:0 6px 12px -8px rgba(47,116,245,.8)}
+.ai{align-self:flex-start;max-width:92%;font-size:9.6px;line-height:1.4;font-weight:500;color:var(--ink);padding:6px 9px;border-radius:11px 11px 11px 3px;
+  background:#fff;border:1px solid rgba(150,170,200,.25);box-shadow:0 6px 14px -10px rgba(38,72,128,.35)}
+.ai.alert{background:linear-gradient(180deg,#f1fbf7,#fff);border-color:rgba(31,180,135,.3)}
+.ai b{font-weight:700}
+.facts{margin-top:9px;display:flex;flex-direction:column}
+.fact{display:grid;grid-template-columns:78px 1fr;gap:8px;padding:5px 0;border-top:1px solid var(--line);font-size:9.8px;line-height:1.35}
+.fact:first-child{border-top:none;padding-top:0}
+.fact .k{font-size:8px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);padding-top:2px}
+.fact .v{font-weight:600;color:var(--ink)}
+.pc{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:7px;padding-top:8px;border-top:1px solid var(--line)}
+.pc .h{font-size:8px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px}
+.pc .good .h{color:var(--mintDeep)}
+.pc .bad .h{color:var(--amberDeep)}
+.pc ul{list-style:none;display:flex;flex-direction:column;gap:4px}
+.pc li{display:flex;gap:6px;font-size:9.4px;line-height:1.35;color:var(--ink2);font-weight:500}
+.pc li .m{width:13px;height:13px;border-radius:50%;flex:none;display:grid;place-items:center;margin-top:0}
+.pc .good .m{background:rgba(31,180,135,.14);color:var(--mintDeep)}
+.pc .bad .m{background:rgba(232,161,58,.18);color:var(--amberDeep)}
+.pc li .m svg{width:8px;height:8px;stroke-width:3}
+.bridge{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:9px;font-size:10px;font-weight:600;color:var(--ink2)}
+.bridge svg{width:13px;height:13px;color:var(--blue)}
+.bridge b{color:var(--ink);font-weight:700}
+
+/* 03 software */
+.soft{display:flex;flex-wrap:wrap;gap:7px}
+.sw{display:inline-flex;align-items:center;gap:7px;padding:6px 11px 6px 7px;border-radius:12px;background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.98);
+  box-shadow:inset 0 1px 0 #fff,0 6px 14px -9px rgba(38,72,128,.4);font-size:10px;font-weight:700;color:var(--ink)}
+.sw .si{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;color:var(--blue);background:rgba(47,116,245,.10);flex:none}
+.sw .si svg{width:12px;height:12px}
+.sw small{font-weight:600;color:var(--ink3);font-size:9px}
+.sw.c2 .si{color:var(--blueDeep);background:rgba(47,116,245,.06);border:1px dashed rgba(47,116,245,.35)}
+
+/* 04 05 */
+.row3{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{padding:12px 14px 12px}
+.card .sec-h .t{font-size:13px}
+.steps,.checks{list-style:none;display:flex;flex-direction:column;gap:7px}
+.steps li,.checks li{display:flex;gap:8px;font-size:9.8px;line-height:1.4;color:var(--ink2);font-weight:500}
+.steps li b,.checks li b{color:var(--ink);font-weight:700}
+.num{width:18px;height:18px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:9px;font-weight:800;color:var(--blueDeep);
+  background:rgba(47,116,245,.10);border:1px solid rgba(47,116,245,.18);margin-top:-1px}
+.ck{width:18px;height:18px;border-radius:6px;flex:none;display:grid;place-items:center;color:var(--blue);background:rgba(47,116,245,.09);margin-top:-1px}
+.ck svg{width:11px;height:11px}
+
+.foot{margin-top:auto;padding:6px 2px 18px;display:flex;justify-content:space-between;align-items:center;font-size:9.6px;color:var(--ink2);font-weight:600}
+.foot .next{display:inline-flex;align-items:center;gap:8px;color:var(--ink)}
+.foot .next .dot{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 3px rgba(31,180,135,.18)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-truck" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><line x1="6" y1="12" x2="18" y2="12"/></symbol>
+    <symbol id="i-reply" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></symbol>
+    <symbol id="i-dash" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></symbol>
+    <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l3-2 3 2 3-2 3 2 3-2 1 .7V2l-1 .7-3-2-3 2-3-2-3 2-3-2z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/></symbol>
+  </defs>
+</svg>
+
+<div class="page">
+
+  <div class="toprow">
+    <span class="chip"><b></b>Plan for Hal</span>
+    <span class="chip">Lead generation and paperwork agents</span>
+  </div>
+
+  <div class="hero">
+    <div class="eyebrow">Built once in Claude</div>
+    <h1>Two agents. <em>Two ways to run them.</em></h1>
+    <p class="sub">I build both agents once, as Claude skills. Start simple and move them to the cloud later without rebuilding.</p>
+  </div>
+
+  <!-- 01 agents -->
+  <div>
+    <div class="sec-h"><div class="t"><i>01</i>What they do</div></div>
+    <div class="agents">
+      <div class="panel agent">
+        <div class="ah">
+          <div class="icb"><svg class="ic"><use href="#i-file"/></svg></div>
+          <div><div class="n">Paperwork agent</div><div class="s">Every order, start to finish</div></div>
+        </div>
+        <div class="flow f5">
+          <div class="step"><div class="node"><svg class="ic"><use href="#i-box"/></svg></div><div class="l">Order comes in</div></div>
+          <div class="step"><div class="node"><svg class="ic"><use href="#i-file"/></svg></div><div class="l">Invoice made and sent</div></div>
+          <div class="step"><div class="node"><svg class="ic"><use href="#i-truck"/></svg></div><div class="l">UPS label or trucking BOL</div></div>
+          <div class="step"><div class="node"><svg class="ic"><use href="#i-folder"/></svg></div><div class="l">Filed in the order's folder</div></div>
+          <div class="step win"><div class="node"><svg class="ic"><use href="#i-send"/></svg></div><div class="l">Customer gets tracking</div></div>
+        </div>
+      </div>
+      <div class="panel agent">
+        <div class="ah">
+          <div class="icb"><svg class="ic"><use href="#i-users"/></svg></div>
+          <div><div class="n">Lead generation agent</div><div class="s">Finds buyers, hands them to you</div></div>
+        </div>
+        <div class="flow f4">
+          <div class="step"><div class="node"><svg class="ic"><use href="#i-search"/></svg></div><div class="l">Searches your buyers' forums</div></div>
+          <div class="step"><div class="node"><svg class="ic"><use href="#i-send"/></svg></div><div class="l">Messages people where allowed</div></div>
+          <div class="step"><div class="node"><svg class="ic"><use href="#i-reply"/></svg></div><div class="l">Tracks every reply</div></div>
+          <div class="step win"><div class="node"><svg class="ic"><use href="#i-bell"/></svg></div><div class="l">Tells you when one is ready</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 two ways -->
+  <div>
+    <div class="sec-h"><div class="t"><i>02</i>Where they run</div><span class="tagI">Same agents either way</span></div>
+    <div class="ways">
+      <div class="panel way one">
+        <div class="wh">
+          <div class="icb g"><svg class="ic"><use href="#i-monitor"/></svg></div>
+          <div><div class="n">In your Claude app</div><div class="s">Cowork, inside the Claude desktop app</div></div>
+          <span class="pill">Simplest, start here</span>
+        </div>
+        <div class="convo">
+          <div class="where"><svg class="ic"><use href="#i-monitor"/></svg>Claude desktop app<span class="tagI">Sample</span></div>
+          <div class="me">New order 1048, two pallets to Ridgeway Supply.</div>
+          <div class="ai">Done. Invoice sent, BOL filed, shipment notice ready. Send it?</div>
+        </div>
+        <div class="facts">
+          <div class="fact"><span class="k">You talk</span><span class="v">Type or talk in the Claude app</span></div>
+          <div class="fact"><span class="k">It runs</span><span class="v">On your computer, while Claude is open</span></div>
+          <div class="fact"><span class="k">Usage</span><span class="v">Included in your Claude plan</span></div>
+        </div>
+        <div class="pc">
+          <div class="good"><div class="h">Good</div><ul>
+            <li><span class="m"><svg class="ic"><use href="#i-check"/></svg></span>Nothing new to set up</li>
+            <li><span class="m"><svg class="ic"><use href="#i-check"/></svg></span>No second bill</li>
+            <li><span class="m"><svg class="ic"><use href="#i-check"/></svg></span>You see every step</li>
+          </ul></div>
+          <div class="bad"><div class="h">Trade-off</div><ul>
+            <li><span class="m"><svg class="ic"><use href="#i-minus"/></svg></span>Pauses when your computer is off</li>
+            <li><span class="m"><svg class="ic"><use href="#i-minus"/></svg></span>You check in from the app</li>
+          </ul></div>
+        </div>
+      </div>
+
+      <div class="panel way">
+        <div class="wh">
+          <div class="icb"><svg class="ic"><use href="#i-cloud"/></svg></div>
+          <div><div class="n">Always on, in the cloud</div><div class="s">Text them from Slack or WhatsApp</div></div>
+          <span class="pill blue">When you're ready</span>
+        </div>
+        <div class="convo">
+          <div class="where"><svg class="ic"><use href="#i-phone"/></svg>Slack or WhatsApp<span class="tagI">Sample</span></div>
+          <div class="ai alert"><b>Lead ready for you.</b> A forum member replied asking for pricing.</div>
+          <div class="me">Send me the thread.</div>
+        </div>
+        <div class="facts">
+          <div class="fact"><span class="k">You talk</span><span class="v">Message them like a coworker</span></div>
+          <div class="fact"><span class="k">It runs</span><span class="v">On a cloud server, around the clock</span></div>
+          <div class="fact"><span class="k">Usage</span><span class="v">Pay as you go through Claude, only when there's work</span></div>
+        </div>
+        <div class="pc">
+          <div class="good"><div class="h">Good</div><ul>
+            <li><span class="m"><svg class="ic"><use href="#i-check"/></svg></span>Works while you're away</li>
+            <li><span class="m"><svg class="ic"><use href="#i-check"/></svg></span>Alerts land on your phone</li>
+            <li><span class="m"><svg class="ic"><use href="#i-check"/></svg></span>Nothing to keep open</li>
+          </ul></div>
+          <div class="bad"><div class="h">Trade-off</div><ul>
+            <li><span class="m"><svg class="ic"><use href="#i-minus"/></svg></span>A usage bill on top of your plan</li>
+            <li><span class="m"><svg class="ic"><use href="#i-minus"/></svg></span>A bit more setup</li>
+          </ul></div>
+        </div>
+      </div>
+    </div>
+    <div class="bridge"><svg class="ic"><use href="#i-dash"/></svg><span><b>The dashboard from the video</b> can sit on top of either one, whenever you want it.</span></div>
+  </div>
+
+  <!-- 03 software -->
+  <div>
+    <div class="sec-h"><div class="t"><i>03</i>The software</div><span class="tagI">We confirm each one on the call</span></div>
+    <div class="soft">
+      <span class="sw"><span class="si"><svg class="ic"><use href="#i-chat"/></svg></span>Claude <small>you have it</small></span>
+      <span class="sw"><span class="si"><svg class="ic"><use href="#i-mail"/></svg></span>Your email</span>
+      <span class="sw"><span class="si"><svg class="ic"><use href="#i-folder"/></svg></span>Your files <small>and one tracking sheet</small></span>
+      <span class="sw"><span class="si"><svg class="ic"><use href="#i-truck"/></svg></span>UPS and your trucking company</span>
+      <span class="sw"><span class="si"><svg class="ic"><use href="#i-receipt"/></svg></span>Your invoicing software <small>if you use one</small></span>
+      <span class="sw c2"><span class="si"><svg class="ic"><use href="#i-phone"/></svg></span>Slack or WhatsApp <small>cloud option only</small></span>
+    </div>
+  </div>
+
+  <!-- 04 05 -->
+  <div class="row3">
+    <div class="panel card">
+      <div class="sec-h"><div class="t"><i>04</i>Setup</div></div>
+      <ol class="steps">
+        <li><span class="num">1</span><span><b>15 minute call</b> on your software, how you invoice and ship, and your forums.</span></li>
+        <li><span class="num">2</span><span><b>I build both agents</b> as Claude skills.</span></li>
+        <li><span class="num">3</span><span><b>We test on sample orders</b> before anything reaches a customer.</span></li>
+        <li><span class="num">4</span><span><b>You approve the first real runs,</b> then switch on the parts you trust.</span></li>
+      </ol>
+    </div>
+    <div class="panel card">
+      <div class="sec-h"><div class="t"><i>05</i>Training</div></div>
+      <ul class="checks">
+        <li><span class="ck"><svg class="ic"><use href="#i-play"/></svg></span><span><b>A walkthrough of each agent</b> with me, plus a short video of each to keep.</span></li>
+        <li><span class="ck"><svg class="ic"><use href="#i-edit"/></svg></span><span><b>Change a rule in plain English,</b> like when an order goes trucking instead of UPS.</span></li>
+        <li><span class="ck"><svg class="ic"><use href="#i-eye"/></svg></span><span><b>See what each agent did</b> on any order or lead, and why.</span></li>
+        <li><span class="ck"><svg class="ic"><use href="#i-pause"/></svg></span><span><b>Pause either agent</b> anytime.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>Lorenzo Villarreal</span>
+    <span class="next"><span class="dot"></span>Next step: a quick 15 minute call here on Upwork</span>
+  </div>
+
+</div>
+</body>
+</html>

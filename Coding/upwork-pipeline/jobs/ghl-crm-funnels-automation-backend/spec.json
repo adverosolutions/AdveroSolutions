@@ -1,0 +1,482 @@
+{
+ "title": "From Capturing a Lead to the Opportunity and the Follow-Up",
+ "platform": "gohighlevel",
+ "sections": [
+  {
+   "key": "capture",
+   "label": "1 - CAPTURING THE LEAD",
+   "note": "This covers your forms, surveys, calendars and lead capture, and your tags, custom fields, triggers and actions. A form or survey starts everything, the lead gets a source tag and field, and the team is told."
+  },
+  {
+   "key": "opp",
+   "label": "2 - MANAGING THE OPPORTUNITY",
+   "note": "This covers your pipelines and opportunity stages and connecting leads to the right pipeline. Every lead opens at New Lead so the stage always shows where it stands."
+  },
+  {
+   "key": "follow",
+   "label": "3 - AUTOMATING THE FOLLOW-UP",
+   "note": "This covers your workflows, automated follow-ups and email and SMS automation."
+  },
+  {
+   "key": "reply",
+   "label": "4 - STOP WHEN THEY REPLY",
+   "note": "A small second workflow catches any reply, moves the opportunity to Replied and tags the lead so the follow-up stops wherever it is."
+  },
+  {
+   "key": "booked",
+   "label": "5 - STOP WHEN THEY BOOK ON THE CALENDAR",
+   "note": "A third workflow fires on the calendar booking, moves the opportunity to Call Booked and stops the follow-up the same way."
+  }
+ ],
+ "nodes": [
+  {
+   "key": "form",
+   "kind": "trigger.app",
+   "app": "ghl",
+   "op": "form_submitted",
+   "label": "1 - Lead Capture Form Submitted",
+   "section": "capture",
+   "params": {
+    "form": "Lead Capture Form"
+   },
+   "notes": "The form sits on your funnel's landing page. Swap the filter for a survey and the rest of the workflow stays the same."
+  },
+  {
+   "key": "tag_src",
+   "kind": "app.action",
+   "app": "ghl",
+   "op": "add_tag",
+   "label": "2 - Tag the Contact lead-form",
+   "section": "capture",
+   "params": {
+    "tag": "lead-form"
+   },
+   "notes": "Two tags in the whole system: this source tag and lead-engaged. The pipeline stage carries the status, not a pile of tags."
+  },
+  {
+   "key": "field_src",
+   "kind": "app.action",
+   "app": "ghl",
+   "op": "update_contact_field",
+   "label": "3 - Save the Lead Source on the Contact",
+   "section": "capture",
+   "params": {
+    "field": "Lead Source",
+    "value": "Lead capture form"
+   }
+  },
+  {
+   "key": "notify_new",
+   "kind": "app.action",
+   "app": "ghl",
+   "op": "internal_notification",
+   "label": "4 - Tell the Team a New Lead Came In",
+   "section": "capture",
+   "params": {
+    "type": "in_app",
+    "to": "the contact's assigned user, and if none is assigned, all users",
+    "message": "New lead from the lead capture form: {{contact.first_name}} {{contact.last_name}}, {{contact.phone}}, {{contact.email}}. The follow-up has started."
+   }
+  },
+  {
+   "key": "create_opp",
+   "kind": "app.action",
+   "app": "ghl",
+   "op": "create_opportunity",
+   "label": "5 - Open the Opportunity at the New Lead Stage",
+   "section": "opp",
+   "params": {
+    "pipeline": "Lead Pipeline",
+    "stage": "New Lead",
+    "stages": [
+     "New Lead",
+     "Replied",
+     "Call Booked",
+     "No Response"
+    ],
+    "name": "{{contact.first_name}} {{contact.last_name}} - Lead capture form",
+    "status": "open"
+   },
+   "notes": "This is where the lead is connected to the appropriate pipeline and follow-up sequence."
+  },
+  {
+   "key": "sms1",
+   "kind": "app.action",
+   "app": "ghl",
+   "op": "send_sms",
+   "label": "6 - Text Them Right Away",
+   "section": "follow",
+   "params": {
+    "message": "Hi {{contact.first_name}}, this is {{user.first_name}} with {{location.name}}. Thanks for filling out the form, I have your details. Want to grab a quick call? Pick any time that suits you here: {{custom_values.booking_link}}"
+   }
+  },
+  {
+   "key": "email1",
+   "kind": "app.action",
+   "app": "ghl",
+   "op": "send_email",
+   "label": "7 - Email Them the Booking Link",
+   "section": "follow",
+   "params": {
+    "subject": "Got your details, {{contact.first_name}}",
+    "body": "Hi {{contact.first_name}},\n\nThanks for reaching out to {{location.name}}. I have what you sent over and I'll be the one helping you.\n\nThe quickest next step is a short call. Pick a time that works for you here: {{custom_values.booking_link}}\n\nIf you'd rather write, just reply to this email.\n\n{{user.first_name}}"
+   }
+  },
+  {
+   "key": "w1",
+   "kind": "flow.wait",
+   "label": "8 - Wait 1 Day",
+   "section": "follow",
+   "params": {
+    "amount": 1,
+    "unit": "days"
+   }
+  },
+  {
+   "key": "sms2",
+   "kind": "app.action",
+   "app": "ghl",
+   "op": "send_sms",
+   "label": "9 - Text: Still Want to Chat",
+   "section": "follow",
+   "params": {
+    "message": "Hi {{contact.first_name}}, {{user.first_name}} again from {{location.name}}. Still happy to help with what you asked about. Here's the link to pick a time: {{custom_values.booking_link}}"
+   }
+  },
+  {
+   "key": "w2",
+   "kind": "flow.wait",
+   "label": "10 - Wait 2 Days",
+   "section": "follow",
+   "params": {
+    "amount": 2,
+    "unit": "days"
+   }
+  },
+  {
+   "key": "email2",
+   "kind": "app.action",
+   "app": "ghl",
+   "op": "send_email",
+   "label": "11 - Email: Two Quick Questions Before the Call",
+   "section": "follow",
+   "params": {
+    "subject": "Two quick questions, {{contact.first_name}}",
+    "body": "Hi {{contact.first_name}},\n\nTo make the call worth your time, it helps to know two things: what you'd like to get done, and when you'd like it done by. Reply with a line on each, or book a time and we'll cover it there: {{custom_values.booking_link}}\n\n{{user.first_name}}"
+   }
+  },
+  {
+   "key": "w3",
+   "kind": "flow.wait",
+   "label": "12 - Wait 3 Days",
+   "section": "follow",
+   "params": {
+    "amount": 3,
+    "unit": "days"
+   }
+  },
+  {
+   "key": "sms3",
+   "kind": "app.action",
+   "app": "ghl",
+   "op": "send_sms",
+   "label": "13 - Text: Last Check In",
+   "section": "follow",
+   "params": {
+    "message": "Hi {{contact.first_name}}, last note from me so I don't crowd your messages. If you still want help, grab a time here whenever you're ready: {{custom_values.booking_link}}"
+   }
+  },
+  {
+   "key": "w4",
+   "kind": "flow.wait",
+   "label": "14 - Wait 2 Days for a Reply to the Last Text",
+   "section": "follow",
+   "params": {
+    "amount": 2,
+    "unit": "days"
+   }
+  },
+  {
+   "key": "no_resp",
+   "kind": "app.action",
+   "app": "ghl",
+   "op": "update_opportunity",
+   "label": "15 - Move the Opportunity to No Response",
+   "section": "follow",
+   "params": {
+    "pipeline": "Lead Pipeline",
+    "stage": "No Response",
+    "status": "open"
+   },
+   "notes": "Leads who never answered leave New Lead, so the pipeline stays honest about who is active."
+  },
+  {
+   "key": "task",
+   "kind": "app.action",
+   "app": "ghl",
+   "op": "create_task",
+   "label": "16 - Give the Team a Task to Call Them Once",
+   "section": "follow",
+   "params": {
+    "title": "Call {{contact.first_name}} {{contact.last_name}}: no reply to the follow-up",
+    "due_in_days": 1,
+    "assign_to": "the contact's assigned user"
+   }
+  },
+  {
+   "key": "goal",
+   "kind": "app.action",
+   "app": "ghl",
+   "op": "goal",
+   "label": "17 - Goal: They Replied or Booked",
+   "section": "reply",
+   "params": {
+    "goal_type": "tag_added",
+    "tag": "lead-engaged",
+    "if_not_met": "end"
+   },
+   "notes": "A reply or booking on any day jumps straight here and skips every remaining touch. No wait sits watching for it."
+  },
+  {
+   "key": "replied",
+   "kind": "trigger.app",
+   "app": "ghl",
+   "op": "customer_replied",
+   "label": "1 - Lead Replied on Any Channel",
+   "section": "reply",
+   "params": {
+    "channels": [
+     "all channels"
+    ]
+   }
+  },
+  {
+   "key": "r_gate",
+   "kind": "flow.branch",
+   "label": "2 - Is This a Lead in the Follow-Up?",
+   "section": "reply",
+   "params": {
+    "condition": "Contact has tag \"lead-form\"",
+    "tag": "lead-form"
+   }
+  },
+  {
+   "key": "r_tag",
+   "kind": "app.action",
+   "app": "ghl",
+   "op": "add_tag",
+   "label": "3 - Tag the Contact lead-engaged",
+   "section": "reply",
+   "params": {
+    "tag": "lead-engaged"
+   }
+  },
+  {
+   "key": "r_opp",
+   "kind": "app.action",
+   "app": "ghl",
+   "op": "update_opportunity",
+   "label": "4 - Move the Opportunity to Replied",
+   "section": "reply",
+   "params": {
+    "pipeline": "Lead Pipeline",
+    "stage": "Replied",
+    "status": "open"
+   }
+  },
+  {
+   "key": "r_notify",
+   "kind": "app.action",
+   "app": "ghl",
+   "op": "internal_notification",
+   "label": "5 - Text the Owner to Answer Now",
+   "section": "reply",
+   "params": {
+    "type": "sms",
+    "to": "the contact's assigned user, and if none is assigned, all users",
+    "message": "{{contact.first_name}} {{contact.last_name}} just replied to the lead follow-up. Answer while it's warm: {{contact.phone}}"
+   }
+  },
+  {
+   "key": "appt",
+   "kind": "trigger.app",
+   "app": "ghl",
+   "op": "appointment_status",
+   "label": "1 - Appointment Booked on the Calendar",
+   "section": "booked",
+   "params": {
+    "status": "confirmed"
+   }
+  },
+  {
+   "key": "b_gate",
+   "kind": "flow.branch",
+   "label": "2 - Is This a Lead in the Follow-Up?",
+   "section": "booked",
+   "params": {
+    "condition": "Contact has tag \"lead-form\"",
+    "tag": "lead-form"
+   }
+  },
+  {
+   "key": "b_tag",
+   "kind": "app.action",
+   "app": "ghl",
+   "op": "add_tag",
+   "label": "3 - Tag the Contact lead-engaged",
+   "section": "booked",
+   "params": {
+    "tag": "lead-engaged"
+   }
+  },
+  {
+   "key": "b_opp",
+   "kind": "app.action",
+   "app": "ghl",
+   "op": "update_opportunity",
+   "label": "4 - Move the Opportunity to Call Booked",
+   "section": "booked",
+   "params": {
+    "pipeline": "Lead Pipeline",
+    "stage": "Call Booked",
+    "status": "open"
+   },
+   "notes": "The calendar moves the stage, nobody drags the card by hand."
+  },
+  {
+   "key": "b_notify",
+   "kind": "app.action",
+   "app": "ghl",
+   "op": "internal_notification",
+   "label": "5 - Email the Owner the Booking",
+   "section": "booked",
+   "params": {
+    "type": "email",
+    "to": "the contact's assigned user, and if none is assigned, all users",
+    "subject": "Call booked: {{contact.first_name}} {{contact.last_name}}",
+    "message": "{{contact.first_name}} {{contact.last_name}} booked a call from the lead follow-up. Phone {{contact.phone}}, email {{contact.email}}. The follow-up has stopped and the opportunity is at Call Booked."
+   },
+   "notes": "Before launch a test contact runs through the reply, booking and no-reply paths."
+  }
+ ],
+ "edges": [
+  {
+   "from": "form",
+   "to": "tag_src"
+  },
+  {
+   "from": "tag_src",
+   "to": "field_src"
+  },
+  {
+   "from": "field_src",
+   "to": "notify_new"
+  },
+  {
+   "from": "notify_new",
+   "to": "create_opp"
+  },
+  {
+   "from": "create_opp",
+   "to": "sms1"
+  },
+  {
+   "from": "sms1",
+   "to": "email1"
+  },
+  {
+   "from": "email1",
+   "to": "w1"
+  },
+  {
+   "from": "w1",
+   "to": "sms2"
+  },
+  {
+   "from": "sms2",
+   "to": "w2"
+  },
+  {
+   "from": "w2",
+   "to": "email2"
+  },
+  {
+   "from": "email2",
+   "to": "w3"
+  },
+  {
+   "from": "w3",
+   "to": "sms3"
+  },
+  {
+   "from": "sms3",
+   "to": "w4"
+  },
+  {
+   "from": "w4",
+   "to": "no_resp"
+  },
+  {
+   "from": "no_resp",
+   "to": "task"
+  },
+  {
+   "from": "task",
+   "to": "goal"
+  },
+  {
+   "from": "replied",
+   "to": "r_gate"
+  },
+  {
+   "from": "r_gate",
+   "to": "r_tag",
+   "branch": "true"
+  },
+  {
+   "from": "r_tag",
+   "to": "r_opp"
+  },
+  {
+   "from": "r_opp",
+   "to": "r_notify"
+  },
+  {
+   "from": "appt",
+   "to": "b_gate"
+  },
+  {
+   "from": "b_gate",
+   "to": "b_tag",
+   "branch": "true"
+  },
+  {
+   "from": "b_tag",
+   "to": "b_opp"
+  },
+  {
+   "from": "b_opp",
+   "to": "b_notify"
+  }
+ ],
+ "input_sample": {
+  "form": "Lead Capture Form",
+  "contact": {
+   "first_name": "Jordan",
+   "last_name": "Reyes",
+   "email": "jordan.reyes@gmail.com",
+   "phone": "+15125550187"
+  }
+ },
+ "output_sample": {
+  "opportunity": "Jordan Reyes - Lead capture form",
+  "pipeline": "Lead Pipeline",
+  "stage": "Call Booked",
+  "tags": [
+   "lead-form",
+   "lead-engaged"
+  ],
+  "follow_up": "stopped at the booking",
+  "owner_alert": "sent by email"
+ }
+}

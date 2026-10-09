@@ -1,0 +1,179 @@
+{
+  "title": "Your GHL Follow-Up That Never Double-Texts or Chases a Booked Lead",
+  "platform": "diagram",
+  "sections": [
+    {
+      "key": "entry",
+      "label": "1 - A NEW LEAD COMES IN",
+      "color": 0,
+      "note": "Whether someone fills out a form or you miss their call, they end up as one contact in GHL with a tag that says where they came from."
+    },
+    {
+      "key": "followup",
+      "label": "2 - FOLLOW-UP THAT STOPS AT THE RIGHT TIME",
+      "color": 1,
+      "note": "Duplicate texts usually happen when two workflows start from the same trigger. So one workflow handles each lead, and it stops the moment they reply, book, become an opportunity or ask not to be contacted."
+    },
+    {
+      "key": "booked",
+      "label": "3 - BOOKINGS, REMINDERS AND YOUR PIPELINE",
+      "color": 2,
+      "note": "Once someone books, the follow-up is already off and only their appointment messages go out."
+    },
+    {
+      "key": "routing",
+      "label": "4 - YOUR TEAM GETS TOLD",
+      "color": 3,
+      "note": "Every lead has one owner on your team, and that person hears about it the moment something needs them."
+    },
+    {
+      "key": "review",
+      "label": "5 - CLEANING UP AND TESTING",
+      "color": 4,
+      "note": "I go through your existing workflows for conflicts and extra steps, then run a test lead through the whole journey and fix anything that misbehaves."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "in",
+      "kind": "data.transform",
+      "section": "entry",
+      "label": "1 - A new lead fills out a form or survey, or calls while you're busy"
+    },
+    {
+      "key": "mctb",
+      "kind": "data.transform",
+      "section": "entry",
+      "label": "2 - If you missed their call, they get a text back from your number right away"
+    },
+    {
+      "key": "seq",
+      "kind": "data.transform",
+      "section": "followup",
+      "label": "3 - One follow-up workflow sends their texts and emails, so they never get two at once",
+      "notes": "This is where your duplicate messages stop."
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "section": "followup",
+      "label": "4 - Before each message, has the lead replied, booked, or asked not to be contacted?",
+      "notes": "Checked before every single message, not once at the start."
+    },
+    {
+      "key": "stop",
+      "kind": "data.transform",
+      "section": "followup",
+      "label": "5 - If they have, their follow-up stops in every workflow, not just this one"
+    },
+    {
+      "key": "remind",
+      "kind": "data.transform",
+      "section": "booked",
+      "label": "6 - When they book, they get a confirmation right away and reminders before the visit",
+      "notes": "No more follow-up after someone has booked."
+    },
+    {
+      "key": "after",
+      "kind": "data.transform",
+      "section": "booked",
+      "label": "7 - After the appointment they get a follow-up text, or a rebook link if they missed it"
+    },
+    {
+      "key": "pipe",
+      "kind": "data.transform",
+      "section": "booked",
+      "label": "8 - Their opportunity moves down your pipeline on its own at each step"
+    },
+    {
+      "key": "route",
+      "kind": "data.transform",
+      "section": "routing",
+      "label": "9 - The right person on your team gets a text and a task for the lead"
+    },
+    {
+      "key": "audit",
+      "kind": "data.transform",
+      "section": "review",
+      "label": "10 - I review your existing workflows for conflicts, like two on the same trigger",
+      "notes": "Where surprise triggering usually hides."
+    },
+    {
+      "key": "test",
+      "kind": "data.aggregate",
+      "section": "review",
+      "label": "11 - Then I run a test lead from form to booking to make sure each message sends once"
+    }
+  ],
+  "edges": [
+    {
+      "from": "in",
+      "to": "mctb"
+    },
+    {
+      "from": "mctb",
+      "to": "seq"
+    },
+    {
+      "from": "seq",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "stop",
+      "branch": "Yes"
+    },
+    {
+      "from": "gate",
+      "to": "seq",
+      "branch": "No",
+      "loop": true
+    },
+    {
+      "from": "stop",
+      "to": "remind"
+    },
+    {
+      "from": "remind",
+      "to": "after"
+    },
+    {
+      "from": "after",
+      "to": "pipe"
+    },
+    {
+      "from": "pipe",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "audit"
+    },
+    {
+      "from": "audit",
+      "to": "test"
+    }
+  ],
+  "input_sample": {
+    "contact": "Jordan Ellis",
+    "phone": "+1 (404) 555-0182",
+    "email": "jordan.ellis@gmail.com",
+    "source": "Website form",
+    "tags": [
+      "new lead",
+      "source: form"
+    ],
+    "replied": false,
+    "appointment": "not booked",
+    "dnd": false
+  },
+  "output_sample": {
+    "contact": "Jordan Ellis",
+    "follow_up_messages_sent": "each once",
+    "follow_up_after_booking": "none",
+    "appointment": "booked, reminders sent",
+    "opportunity_stage": "Booked",
+    "owner_notified": true,
+    "other_workflows_triggered": "none"
+  }
+}

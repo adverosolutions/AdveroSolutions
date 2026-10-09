@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Harlow Quote Funnel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  Reference render of the 2-step funnel exactly as it should come out of the GHL builder.
+  Structure = GHL's own: section > row > column > element, with GHL-style ids and .inner wrappers.
+  <style id="native"> stands in for the builder's own settings (every value is in BUILD_SHEET.md).
+  ghl-custom.css is the page Custom CSS, loaded as-is. The UPPERCASE ids here are the same
+  placeholders the builder replaces in ghl-custom.css with the real GHL ids.
+  ?page=1 or ?page=2 shows one page; no parameter shows both.
+-->
+<style id="native">
+/* ===== Page settings (both pages) ===== */
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#eef3f8;color:#4d596b;font:400 16px/1.55 "Figtree",system-ui,sans-serif}
+img{display:block;max-width:100%;height:auto}
+h1,h2,p{margin:0}
+
+/* ===== GHL layout primitives (what the builder generates) ===== */
+.c-section{position:relative;background-size:cover;background-position:center top;background-repeat:no-repeat}
+.c-row{width:100%;max-width:1160px;margin:0 auto}
+.c-row > .inner{display:flex;align-items:stretch}
+.c-column{flex:1 1 0;min-width:0}
+.c-column > .inner{height:100%}
+.c-heading h1,.c-heading h2{color:#16202e;font-weight:600;line-height:1.04}
+.c-heading .accent{color:#b4501c}
+.c-paragraph{color:#4d596b}
+.c-image img{margin:0}
+.c-image.center img{margin:0 auto}
+
+/* ===== PAGE 1 ===== */
+/* S1 hero */
+#section-HERO{background-image:url(assets/bg-sky.jpg);background-color:#eef3f8;padding:28px 40px 72px}
+#row-HERO{margin-top:48px}
+#col-HEROTEXT{flex:0 0 55%}
+#col-HEROTEXT > .inner{padding:192px 56px 0 0}
+#col-FORMPANEL{flex:0 0 45%}
+#col-FORMPANEL > .inner{background:rgba(255,255,255,.86);border:1px solid #ffffff;border-radius:28px;padding:34px 34px 28px;box-shadow:0 20px 40px -20px rgba(38,72,128,.3)}
+#image-logo1 img,#image-logo2 img{width:232px}
+#heading-h1 h1{font-size:64px}
+#paragraph-sub{margin-top:24px;font-size:20px;line-height:1.5;font-weight:500;max-width:500px}
+#row-TRUSTBAR{margin-top:72px}
+#row-TRUSTBAR > .inner{background:rgba(255,255,255,.7);border:1px solid #ffffff;border-radius:24px;padding:6px}
+#row-TRUSTBAR .c-column > .inner{padding:22px 28px}
+#row-TRUSTBAR .c-paragraph{font-size:15.5px;line-height:1.5}
+
+/* the embedded form: these values come from the Form Builder "Styles" panel */
+.ghl-form{display:flex;flex-direction:column;gap:14px}
+.ghl-form label{display:block;font-size:14px;font-weight:600;color:#16202e;margin-bottom:6px}
+.ghl-form input,.ghl-form select{width:100%;height:48px;padding:0 14px;font:400 16px "Figtree",sans-serif;color:#16202e;background:#fff;border:1px solid #d5deea;border-radius:12px}
+.ghl-form input::placeholder{color:#8792a3}
+.ghl-form select{appearance:none;-webkit-appearance:none;color:#8792a3;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%235f6b7d' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center}
+.ghl-form button{margin-top:8px;height:56px;width:100%;font:600 17px "Figtree",sans-serif;color:#fff;background:#b4501c;border:0;border-radius:99px;cursor:pointer}
+.ghl-form .consent{font-size:12px;line-height:1.5;color:#5f6b7d;text-align:center;margin-top:2px}
+
+/* S2 steps */
+#section-STEPS{padding:104px 40px 64px}
+#heading-steps h2{font-size:48px}
+#row-STEPS{margin-top:56px}
+#row-STEPS .c-column > .inner{padding-right:48px}
+#row-STEPS .c-column:last-child > .inner{padding-right:0}
+#row-STEPS .c-image img{width:64px}
+#row-STEPS .c-paragraph{margin-top:18px;padding-left:8px;font-size:16.5px;line-height:1.55}
+
+/* S3 phone + closing CTA */
+#section-CLOSE{background-image:url(assets/bg-soft.jpg);background-position:center;padding:40px 40px 64px}
+#col-PHONE{flex:0 0 56%}
+#col-PHONE > .inner{padding-right:24px}
+#image-phone img{width:600px;margin:0 auto}
+#col-CTA > .inner{padding:228px 0 0 16px}
+#heading-close h2{font-size:48px}
+#paragraph-close{margin-top:20px;font-size:19px;line-height:1.55;max-width:460px}
+#button-cta{margin-top:36px}
+#button-cta a{display:inline-flex;align-items:center;justify-content:center;height:58px;padding:0 36px;font:600 18px "Figtree",sans-serif;color:#fff;text-decoration:none;background:#b4501c;border-radius:99px}
+
+/* S4 footer (both pages) */
+.footer{border-top:1px solid rgba(150,170,200,.35);padding:32px 40px 40px}
+.footer .c-paragraph{text-align:center;font-size:13.5px;line-height:1.7;color:#5f6b7d}
+
+/* ===== PAGE 2 ===== */
+#section-THANKS{background-image:url(assets/bg-sky.jpg);background-color:#eef3f8;padding:28px 40px 112px}
+#row-THANKS{margin-top:40px}
+#col-THANKSTEXT{flex:0 0 56%}
+#col-THANKSTEXT > .inner{padding:88px 48px 0 0}
+#heading-thanks h1{font-size:64px}
+#paragraph-NEXTSTEPS{margin-top:40px;font-size:17px;line-height:1.5;max-width:540px}
+#image-received img{width:420px;margin:0 auto}
+
+/* ===== Mobile view overrides (set in the builder's mobile view) ===== */
+@media (max-width:480px){
+  .c-row > .inner{flex-direction:column}
+  .c-column,#col-HEROTEXT,#col-FORMPANEL,#col-THANKSTEXT{flex:1 1 auto}
+  #section-HERO{padding:20px 16px 48px}
+  #image-logo1 img,#image-logo2 img{width:190px}
+  #row-HERO{margin-top:32px}
+  #col-HEROTEXT > .inner{padding:0 0 28px}
+  #heading-h1 h1{font-size:40px}
+  #paragraph-sub{margin-top:16px;font-size:17px}
+  #col-FORMPANEL > .inner{padding:24px 20px 20px}
+  #row-TRUSTBAR{margin-top:28px}
+  #row-TRUSTBAR .c-column > .inner{padding:18px 20px}
+  #section-STEPS{padding:64px 16px 56px}
+  #heading-steps h2{font-size:34px}
+  #row-STEPS{margin-top:32px}
+  #row-STEPS .c-column > .inner{padding:0 0 36px}
+  #row-STEPS .c-column:last-child > .inner{padding:0}
+  #section-CLOSE{padding:48px 16px 64px}
+  #col-PHONE > .inner{padding:0 0 12px}
+  #image-phone img{width:100%}
+  #col-CTA > .inner{padding:0}
+  #heading-close h2{font-size:32px}
+  #paragraph-close{font-size:17px}
+  #button-cta{margin-top:28px}
+  #button-cta a{display:flex;width:100%}
+  .footer{padding:28px 16px 32px}
+  #section-THANKS{padding:20px 16px 48px}
+  #row-THANKS{margin-top:32px}
+  #col-THANKSTEXT > .inner{padding:0 0 12px}
+  #heading-thanks h1{font-size:40px}
+  #paragraph-NEXTSTEPS{margin-top:24px;font-size:16px}
+  #image-received img{width:300px}
+}
+
+/* reference-page chrome only (not part of the funnel) */
+.ref-divider{padding:28px 40px;background:#16202e;color:#c9d3e0;font:600 13px/1 "Figtree",sans-serif;letter-spacing:.12em;text-transform:uppercase}
+body[data-only="1"] #page2,body[data-only="2"] #page1,body[data-only] .ref-divider{display:none}
+</style>
+<link rel="stylesheet" href="ghl-custom.css">
+</head>
+<body>
+
+<!-- ======================= PAGE 1  "Get a quote" ======================= -->
+<div id="page1">
+
+  <!-- S1 HERO -->
+  <div class="c-section" id="section-HERO"><div class="inner">
+    <div class="c-row" id="row-LOGO"><div class="inner">
+      <div class="c-column" id="col-LOGO"><div class="inner">
+        <div class="c-image" id="image-logo1"><img src="assets/logo-harlow.png" alt="Harlow Heating & Plumbing"></div>
+      </div></div>
+    </div></div>
+
+    <div class="c-row" id="row-HERO"><div class="inner">
+      <div class="c-column" id="col-HEROTEXT"><div class="inner">
+        <div class="c-heading" id="heading-h1"><h1>Tell us what's broken.<br><span class="accent">We'll text your price.</span></h1></div>
+        <div class="c-paragraph" id="paragraph-sub"><p>AC, heating, water heaters and drains across Fort Worth. Send the form and we text you back in seconds.</p></div>
+      </div></div>
+      <div class="c-column" id="col-FORMPANEL"><div class="inner">
+        <div class="c-form" id="form-quote">
+          <form class="ghl-form" onsubmit="return false">
+            <div><label for="f1">First Name</label><input id="f1" placeholder="First name"></div>
+            <div><label for="f2">Phone</label><input id="f2" placeholder="(817) 555-0142"></div>
+            <div><label for="f3">Email</label><input id="f3" placeholder="you@example.com"></div>
+            <div><label for="f4">Service Needed</label><select id="f4"><option>Choose a service</option><option>AC repair</option><option>Heating repair</option><option>Water heater</option><option>Drains and plumbing</option><option>New system estimate</option></select></div>
+            <div><label for="f5">ZIP code</label><input id="f5" placeholder="76107"></div>
+            <button type="button">Get my quote</button>
+            <p class="consent">By sending this you agree to get texts from Harlow Heating &amp; Plumbing about your request. Msg and data rates may apply. Reply STOP to opt out.</p>
+          </form>
+        </div>
+      </div></div>
+    </div></div>
+
+    <div class="c-row" id="row-TRUSTBAR"><div class="inner">
+      <div class="c-column" id="col-T1"><div class="inner">
+        <div class="c-paragraph" id="paragraph-t1"><p><strong>Price before we start</strong>You approve the full price before any work begins.</p></div>
+      </div></div>
+      <div class="c-column" id="col-T2"><div class="inner">
+        <div class="c-paragraph" id="paragraph-t2"><p><strong>Same-day slots</strong>Pick a time today, or any day that works for you.</p></div>
+      </div></div>
+      <div class="c-column" id="col-T3"><div class="inner">
+        <div class="c-paragraph" id="paragraph-t3"><p><strong>Text us anytime</strong>Questions before or after the visit? Reply to our text.</p></div>
+      </div></div>
+    </div></div>
+  </div></div>
+
+  <!-- S2 STEPS -->
+  <div class="c-section" id="section-STEPS"><div class="inner">
+    <div class="c-row" id="row-STEPSHEAD"><div class="inner">
+      <div class="c-column"><div class="inner">
+        <div class="c-heading" id="heading-steps"><h2>Three steps. No phone tag.</h2></div>
+      </div></div>
+    </div></div>
+    <div class="c-row" id="row-STEPS"><div class="inner">
+      <div class="c-column" id="col-S1"><div class="inner">
+        <div class="c-image" id="image-s1"><img src="assets/step-1.png" alt=""></div>
+        <div class="c-paragraph" id="paragraph-s1"><p><strong>Tell us what's wrong</strong>Pick the service, add your ZIP code and send. It takes about 30 seconds.</p></div>
+      </div></div>
+      <div class="c-column" id="col-S2"><div class="inner">
+        <div class="c-image" id="image-s2"><img src="assets/step-2.png" alt=""></div>
+        <div class="c-paragraph" id="paragraph-s2"><p><strong>Get a price by text in minutes</strong>A real person on our team prices the job and texts it to you. No callback to wait for.</p></div>
+      </div></div>
+      <div class="c-column" id="col-S3"><div class="inner">
+        <div class="c-image" id="image-s3"><img src="assets/step-3.png" alt=""></div>
+        <div class="c-paragraph" id="paragraph-s3"><p><strong>Pick your time</strong>Reply with the slot that suits you. Your tech texts when they're on the way.</p></div>
+      </div></div>
+    </div></div>
+  </div></div>
+
+  <!-- S3 PHONE + CLOSING CTA -->
+  <div class="c-section" id="section-CLOSE"><div class="inner">
+    <div class="c-row" id="row-CLOSE"><div class="inner">
+      <div class="c-column" id="col-PHONE"><div class="inner">
+        <div class="c-image center" id="image-phone"><img src="assets/phone-thread.png" alt="Text thread: Harlow confirms the request in seconds, texts a price, and books a 3 to 5 PM visit"></div>
+      </div></div>
+      <div class="c-column" id="col-CTA"><div class="inner">
+        <div class="c-heading" id="heading-close"><h2>Your phone buzzes before you put it down.</h2></div>
+        <div class="c-paragraph" id="paragraph-close"><p>The first text lands seconds after you send the form. Your price follows a few minutes later, and you book by replying.</p></div>
+        <div class="c-button" id="button-cta"><a href="#section-HERO">Get my quote</a></div>
+      </div></div>
+    </div></div>
+  </div></div>
+
+  <!-- S4 FOOTER -->
+  <div class="c-section footer" id="section-FOOTER"><div class="inner">
+    <div class="c-row"><div class="inner"><div class="c-column"><div class="inner">
+      <div class="c-paragraph" id="paragraph-foot1"><p>Harlow Heating &amp; Plumbing, Fort Worth, TX</p><p>Sample funnel designed by Advero Solutions</p></div>
+    </div></div></div></div>
+  </div></div>
+</div>
+
+<div class="ref-divider">Step 2 &nbsp;/check-your-phone</div>
+
+<!-- ======================= PAGE 2  "Check your phone" ======================= -->
+<div id="page2">
+  <!-- S1 THANKS -->
+  <div class="c-section" id="section-THANKS"><div class="inner">
+    <div class="c-row" id="row-LOGO2"><div class="inner">
+      <div class="c-column"><div class="inner">
+        <div class="c-image" id="image-logo2"><img src="assets/logo-harlow.png" alt="Harlow Heating & Plumbing"></div>
+      </div></div>
+    </div></div>
+    <div class="c-row" id="row-THANKS"><div class="inner">
+      <div class="c-column" id="col-THANKSTEXT"><div class="inner">
+        <div class="c-heading" id="heading-thanks"><h1>Check your phone.<br><span class="accent">We just texted you.</span></h1></div>
+        <div class="c-paragraph" id="paragraph-NEXTSTEPS">
+          <p><strong>In a few minutes.</strong> Your price arrives in this same thread.</p>
+          <p><strong>When it suits you.</strong> Reply with a time and we book the visit.</p>
+          <p><strong>On the day.</strong> Your tech texts when they're on the way.</p>
+        </div>
+      </div></div>
+      <div class="c-column" id="col-THANKSPHONE"><div class="inner">
+        <div class="c-image center" id="image-received"><img src="assets/phone-received.png" alt="Lock screen with a new text from Harlow Heating & Plumbing"></div>
+      </div></div>
+    </div></div>
+  </div></div>
+
+  <!-- S2 FOOTER -->
+  <div class="c-section footer" id="section-FOOTER2"><div class="inner">
+    <div class="c-row"><div class="inner"><div class="c-column"><div class="inner">
+      <div class="c-paragraph" id="paragraph-foot2"><p>Harlow Heating &amp; Plumbing, Fort Worth, TX</p><p>Sample funnel designed by Advero Solutions</p></div>
+    </div></div></div></div>
+  </div></div>
+</div>
+
+<script>
+  var only = new URLSearchParams(location.search).get("page");
+  if (only === "1" || only === "2") document.body.setAttribute("data-only", only);
+</script>
+</body>
+</html>

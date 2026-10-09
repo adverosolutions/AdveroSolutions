@@ -1,0 +1,205 @@
+{
+  "title": "Your Personal Injury Cases: First Call to Settlement in 3 Languages",
+  "platform": "diagram",
+  "client": {
+    "industry": "personal injury law firm",
+    "location": "Florida, US"
+  },
+  "sections": [
+    {
+      "key": "reception",
+      "label": "1 - AI RECEPTIONIST AND FRONT DESK",
+      "color": 0,
+      "note": "Every call is answered 24/7 in English, Spanish or Haitian Creole, several at once. Haitian Creole voice gets tested on real-style calls with a Creole speaker you trust before any line goes live."
+    },
+    {
+      "key": "intake",
+      "label": "2 - CLIENT INTAKE AND NEW CASE ONBOARDING",
+      "color": 0,
+      "note": "The intake runs by phone, website, text or email in the caller's language. Nothing becomes a case until your conflict check and an attorney have cleared it."
+    },
+    {
+      "key": "records",
+      "label": "3 - MEDICAL RECORDS AND MEDICAL BILLING",
+      "color": 0,
+      "note": "Records and bills are requested with your approved templates and authorizations, then chased until they arrive. Every visit, diagnosis and bill is logged with the page it came from."
+    },
+    {
+      "key": "demand",
+      "label": "4 - SETTLEMENT BROCHURE AND DEMAND PACKAGE",
+      "color": 0,
+      "note": "The draft is built only from what is in the file, so nothing is invented. An attorney approves it before anything leaves the firm."
+    },
+    {
+      "key": "casemgmt",
+      "label": "5 - CASE MANAGEMENT AND CLIENT COMMUNICATION",
+      "color": 0,
+      "note": "Your parts 5 and 6: one case file in your case management system drives staff tasks and client updates. Staff verify every legally significant deadline."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "answer",
+      "kind": "data.transform",
+      "section": "reception",
+      "label": "1 - AI Receptionist Answers Every Call 24/7 in English, Spanish or Haitian Creole",
+      "notes": "The caller picks a language or it is detected, and several calls are handled at once."
+    },
+    {
+      "key": "whocalls",
+      "kind": "data.transform",
+      "section": "reception",
+      "label": "2 - Each Caller Routed to the Right Person, Consults Booked, Reminders by Text and Email",
+      "notes": "Urgent or sensitive calls go straight through to a live staff member."
+    },
+    {
+      "key": "interview",
+      "kind": "data.transform",
+      "section": "intake",
+      "label": "3 - AI Intake in Their Language: Accident, Date, Place, Injuries, Treatment, Insurance"
+    },
+    {
+      "key": "sign",
+      "kind": "data.transform",
+      "section": "intake",
+      "label": "4 - Conflict Check, Attorney Review, Agreement Sent to Sign, Unfinished Intakes Chased"
+    },
+    {
+      "key": "request",
+      "kind": "data.transform",
+      "section": "records",
+      "label": "5 - Records and Bills Requested From Every Provider, Followed Up Until They Arrive"
+    },
+    {
+      "key": "log",
+      "kind": "data.aggregate",
+      "section": "records",
+      "label": "6 - Every Visit, Diagnosis and Bill Logged With the Page It Came From",
+      "notes": "This is what makes the demand letter traceable later."
+    },
+    {
+      "key": "gaps",
+      "kind": "data.transform",
+      "section": "records",
+      "label": "7 - Gaps in Treatment or Missing Bills Flagged to the Case Manager"
+    },
+    {
+      "key": "draft",
+      "kind": "data.transform",
+      "section": "demand",
+      "label": "8 - Brochure and Demand Letter Drafted From Your Templates, Each Line Tied to a Record",
+      "notes": "Each line points to the record page it came from, so nothing is made up."
+    },
+    {
+      "key": "approve",
+      "kind": "flow.branch",
+      "section": "demand",
+      "label": "9 - Attorney Approves Before Anything Leaves the Firm?"
+    },
+    {
+      "key": "edits",
+      "kind": "data.transform",
+      "section": "demand",
+      "label": "9b - Not Yet: The Attorney's Edits Go Back Into the Draft"
+    },
+    {
+      "key": "export",
+      "kind": "data.transform",
+      "section": "demand",
+      "label": "10 - Word and PDF Package With the Exhibit Index Built In"
+    },
+    {
+      "key": "casefile",
+      "kind": "data.aggregate",
+      "section": "casemgmt",
+      "label": "11 - Your Case System Updated Once, Stalled Cases Flagged on the Dashboard",
+      "notes": "No one types the same information into two systems."
+    },
+    {
+      "key": "updates",
+      "kind": "data.transform",
+      "section": "casemgmt",
+      "label": "12 - Client Updates in Their Language From Approved Wording, Legal Questions Go to Staff"
+    }
+  ],
+  "edges": [
+    {
+      "from": "answer",
+      "to": "whocalls"
+    },
+    {
+      "from": "whocalls",
+      "to": "interview"
+    },
+    {
+      "from": "interview",
+      "to": "sign"
+    },
+    {
+      "from": "sign",
+      "to": "request"
+    },
+    {
+      "from": "request",
+      "to": "log"
+    },
+    {
+      "from": "log",
+      "to": "gaps"
+    },
+    {
+      "from": "gaps",
+      "to": "draft"
+    },
+    {
+      "from": "draft",
+      "to": "approve"
+    },
+    {
+      "from": "approve",
+      "to": "export",
+      "branch": "Yes, approved"
+    },
+    {
+      "from": "approve",
+      "to": "edits",
+      "branch": "Not yet"
+    },
+    {
+      "from": "edits",
+      "to": "draft",
+      "loop": true,
+      "branch": "Back to the draft"
+    },
+    {
+      "from": "export",
+      "to": "casefile"
+    },
+    {
+      "from": "casefile",
+      "to": "updates"
+    }
+  ],
+  "input_sample": {
+    "caller_language": "Haitian Creole",
+    "caller_type": "new prospective client",
+    "claim_type": "automobile accident",
+    "incident_date": "2026-09-12",
+    "incident_location": "NW 7th Ave and 62nd St, Miami",
+    "injuries": "neck and lower back pain, seen at the ER the same day",
+    "treatment": "hospital ER, then chiropractor twice a week",
+    "insurance": "own PIP carrier and the other driver's carrier, claim numbers pending",
+    "police_report": "requested",
+    "urgent": false
+  },
+  "output_sample": {
+    "case_stage": "demand package approved",
+    "approved_by": "handling attorney",
+    "treatment_timeline": "ER visit 2026-09-12, chiropractic 2026-09-15 to 2026-11-20, MRI 2026-10-03",
+    "billed_expenses_by_provider": "ER, chiropractor, imaging center, each total linked to its bill page",
+    "missing_before_final": "none, imaging bill received 2026-11-24",
+    "exhibits": "police report, ER records, chiropractic notes, MRI report, bills, scene photos, indexed",
+    "export": "demand letter and settlement brochure in Word and PDF",
+    "client_update_sent": "Haitian Creole text from approved wording: your demand package has been sent"
+  }
+}

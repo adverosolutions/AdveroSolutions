@@ -1,0 +1,1083 @@
+<title>GHL Pipedrive CRM Setup</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+:root{
+  --bg:#f5f3ee; --panel:#fffdf9; --soft:#f9f7f2; --ink:#1b1f1d; --ink2:#3a423e; --muted:#6b726d; --line:#e4e0d6; --line2:#d3cec1;
+  --side:#15241f; --side2:#1b2e28; --sideink:#c9d3cd; --sidemuted:#8da197; --sidehi:rgba(255,255,255,.07); --sideon:rgba(111,196,164,.18); --sidebar:#6fc4a4;
+  --brand:#1f5f4e; --brandink:#ffffff; --brandsoft:#e3efe9; --brandline:#b7d3c6;
+  --ghl:#0e7490; --ghlink:#0b5f75; --ghlsoft:#e6f3f6; --ghlline:#a9d6e1;
+  --pd:#b8581a; --pdink:#8f430f; --pdsoft:#fbeee3; --pdline:#efc9a8; --pdon:#ffffff;
+  --ok:#15803d; --okink:#166534; --oksoft:#e8f5ec; --okline:#a7dcb8;
+  --warn:#b7791f; --warnink:#8a5a12; --warnsoft:#fdf4e3; --warnline:#f0d49a;
+  --bad:#b91c3c; --badink:#9f1239; --badsoft:#fcebee; --badline:#f3c1cb;
+  --info:#2563a8; --infoink:#1e4f86; --infosoft:#e8f0fa; --infoline:#bcd3ee;
+  --chip:#efece4; --chipink:#4a524d; --track:#e4e0d6; --dot:#ddd8cc;
+  --code:#17201c; --codeink:#d4ddd8; --codek:#8fa39a; --codebad:#f4a3b1; --codeok:#8fd9ae;
+  --toast:#1b1f1d; --toastink:#f5f3ee;
+  --shadow:0 1px 2px rgba(27,31,29,.05),0 8px 24px rgba(27,31,29,.06);
+  --fh:"Space Grotesk",system-ui,sans-serif; --fb:"IBM Plex Sans",system-ui,sans-serif; --fm:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1513; --panel:#161e1b; --soft:#1a2320; --ink:#e8ede9; --ink2:#c3ccc7; --muted:#8e9a94; --line:#26322d; --line2:#33423b;
+    --side:#0b110f; --side2:#101a16;
+    --brand:#4fb393; --brandink:#0b1411; --brandsoft:#17312a; --brandline:#285447;
+    --ghl:#38b2cc; --ghlink:#7fd3e6; --ghlsoft:#10303a; --ghlline:#1e5563;
+    --pd:#e8894a; --pdink:#f3b98f; --pdsoft:#3a2415; --pdline:#6a3e20; --pdon:#1b0f06;
+    --ok:#4ade80; --okink:#86efac; --oksoft:#12301f; --okline:#1f5a37;
+    --warn:#f0b74d; --warnink:#f6cf85; --warnsoft:#33280f; --warnline:#6a521c;
+    --bad:#f47389; --badink:#f9a8b8; --badsoft:#3a1720; --badline:#6d2a39;
+    --info:#6fa8e8; --infoink:#a8cbf2; --infosoft:#14263a; --infoline:#24466b;
+    --chip:#222d29; --chipink:#b9c4be; --track:#26322d; --dot:#24302b;
+    --code:#0a0f0d; --codeink:#d4ddd8; --codek:#7d8f87;
+    --toast:#e8ede9; --toastink:#0f1513;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1513; --panel:#161e1b; --soft:#1a2320; --ink:#e8ede9; --ink2:#c3ccc7; --muted:#8e9a94; --line:#26322d; --line2:#33423b;
+  --side:#0b110f; --side2:#101a16;
+  --brand:#4fb393; --brandink:#0b1411; --brandsoft:#17312a; --brandline:#285447;
+  --ghl:#38b2cc; --ghlink:#7fd3e6; --ghlsoft:#10303a; --ghlline:#1e5563;
+  --pd:#e8894a; --pdink:#f3b98f; --pdsoft:#3a2415; --pdline:#6a3e20; --pdon:#1b0f06;
+  --ok:#4ade80; --okink:#86efac; --oksoft:#12301f; --okline:#1f5a37;
+  --warn:#f0b74d; --warnink:#f6cf85; --warnsoft:#33280f; --warnline:#6a521c;
+  --bad:#f47389; --badink:#f9a8b8; --badsoft:#3a1720; --badline:#6d2a39;
+  --info:#6fa8e8; --infoink:#a8cbf2; --infosoft:#14263a; --infoline:#24466b;
+  --chip:#222d29; --chipink:#b9c4be; --track:#26322d; --dot:#24302b;
+  --code:#0a0f0d; --codeink:#d4ddd8; --codek:#7d8f87;
+  --toast:#e8ede9; --toastink:#0f1513;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg)}
+body{font-family:var(--fb);background:var(--bg);color:var(--ink);height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;color:inherit}
+h1,h2,h3,h4,h5,.fh{font-family:var(--fh)}
+.app{display:grid;grid-template-columns:268px minmax(0,1fr);height:100vh}
+/* sidebar */
+.side{background:linear-gradient(180deg,var(--side),var(--side2));color:var(--sideink);padding:20px 14px;display:flex;flex-direction:column;gap:3px;overflow:auto}
+.logo{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;color:#fff;font:600 14.5px var(--fh);line-height:1.25}
+.logo i{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#0e7490,#b8581a);display:grid;place-items:center;font-style:normal;font-size:15px;flex:none}
+.logo small{display:block;font:500 11px var(--fb);color:var(--sidemuted);margin-top:2px}
+.nav{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:10px;cursor:pointer;font-size:13.5px;font-weight:500;transition:.2s;position:relative;line-height:1.25;border:0;background:none;text-align:left;color:var(--sideink);width:100%}
+.nav:hover{background:var(--sidehi);color:#fff}
+.nav.on{background:var(--sideon);color:#fff}
+.nav.on::before{content:"";position:absolute;left:-14px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:var(--sidebar)}
+.nav .ic{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font:600 11px var(--fm);background:var(--sidehi);flex:none}
+.nav.on .ic{background:var(--sidebar);color:#0b1411}
+.nav.seen .ic{background:rgba(111,196,164,.22);color:#9fe0c6}
+.nav small{display:block;font-size:11px;color:var(--sidemuted);font-weight:400}
+.sidetools{display:flex;gap:6px;margin-top:10px;padding:0 4px}
+.sbtn{flex:1;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#e6ece8;border-radius:9px;padding:8px 10px;font:600 12px var(--fb);cursor:pointer;transition:.2s}
+.sbtn:hover{background:rgba(255,255,255,.1)}
+.side .foot{margin-top:auto;padding:13px 12px;border-radius:12px;background:rgba(255,255,255,.04);font-size:12px;line-height:1.5}
+.side .foot b{color:#fff;display:block;margin-bottom:2px}
+/* main */
+.main{overflow:auto;padding:24px 32px 44px;min-width:0}
+.top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:20px}
+.top h1{font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.top p{color:var(--muted);font-size:14px;margin-top:5px;max-width:740px;line-height:1.55}
+.top .acts{display:flex;gap:10px;flex:none;align-items:center;flex-wrap:wrap}
+.hint{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--ink2);background:var(--brandsoft);border:1px solid var(--brandline);border-radius:12px;padding:10px 14px;margin-bottom:18px;line-height:1.5}
+.hint b{font-family:var(--fh);color:var(--brand);white-space:nowrap}
+.btn{border:0;cursor:pointer;font:600 13.5px var(--fb);padding:10px 16px;border-radius:10px;background:var(--brand);color:var(--brandink);box-shadow:0 4px 14px rgba(31,95,78,.22);transition:.2s;display:inline-flex;gap:8px;align-items:center;white-space:nowrap}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.06)}
+.btn:disabled{opacity:.5;cursor:default;transform:none;filter:none}
+.btn.ghost{background:var(--panel);color:var(--ink);box-shadow:none;border:1px solid var(--line2)}
+.btn.ghost:hover{border-color:var(--brand)}
+.btn.pd{background:var(--pd);color:var(--pdon);box-shadow:0 4px 14px rgba(184,88,26,.22)}
+.btn.sm{padding:7px 12px;font-size:12.5px}
+.view{display:none;animation:fade .35s ease}
+.view.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);min-width:0}
+.pad{padding:22px}
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;border:1px solid transparent}
+.c-brand{background:var(--brandsoft);color:var(--brand);border-color:var(--brandline)}
+.c-ok{background:var(--oksoft);color:var(--okink);border-color:var(--okline)}
+.c-warn{background:var(--warnsoft);color:var(--warnink);border-color:var(--warnline)}
+.c-bad{background:var(--badsoft);color:var(--badink);border-color:var(--badline)}
+.c-info{background:var(--infosoft);color:var(--infoink);border-color:var(--infoline)}
+.c-ghl{background:var(--ghlsoft);color:var(--ghlink);border-color:var(--ghlline)}
+.c-pd{background:var(--pdsoft);color:var(--pdink);border-color:var(--pdline)}
+.c-gray{background:var(--chip);color:var(--chipink)}
+.label{font:600 11px var(--fm);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+.mono{font-family:var(--fm);font-size:12px}
+h3.t{font-size:16px;font-weight:600;margin:7px 0 4px}
+p.s{font-size:13px;color:var(--muted);line-height:1.55}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font:600 10.5px var(--fm);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:9px 10px;border-bottom:1px solid var(--line);background:var(--soft);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.progress{display:flex;align-items:center;gap:10px;font:500 12px var(--fm);color:var(--muted)}
+.progress .trk{width:110px;height:5px;background:var(--track);border-radius:4px;overflow:hidden}
+.progress .trk i{display:block;height:100%;width:11%;background:linear-gradient(90deg,var(--ghl),var(--pd));transition:width .4s}
+/* overview */
+.hero{padding:26px 28px;background:radial-gradient(circle at 96% 0%,var(--pdsoft) 0,transparent 40%),radial-gradient(circle at 0% 100%,var(--ghlsoft) 0,transparent 42%),var(--panel)}
+.hero h2{font-size:26px;letter-spacing:-.02em;line-height:1.22;max-width:760px;margin-top:12px}
+.hero p{font-size:14px;color:var(--muted);margin-top:8px;max-width:720px;line-height:1.6}
+.two{display:flex;gap:12px;margin-top:20px;align-items:center}
+.crm{flex:1;border-radius:14px;padding:14px 16px;border:1px solid var(--line);background:var(--panel)}
+.crm.g{border-color:var(--ghlline);background:linear-gradient(180deg,var(--panel),var(--ghlsoft))}
+.crm.p{border-color:var(--pdline);background:linear-gradient(180deg,var(--panel),var(--pdsoft))}
+.crm b{font:600 15px var(--fh);margin-right:6px}
+.crm ul{list-style:none;margin-top:9px}
+.crm li{font-size:13px;color:var(--ink2);padding:3px 0}
+.crm li::before{content:"–";margin-right:8px;color:var(--muted)}
+.bridge{width:160px;text-align:center;font:500 11px var(--fm);color:var(--muted);flex:none}
+.bridge .w{height:2px;background:linear-gradient(90deg,var(--ghl),var(--pd));margin:9px 0;position:relative;border-radius:2px}
+.bridge .w i{position:absolute;top:-4px;left:0;width:10px;height:10px;border-radius:50%;background:var(--ghl);box-shadow:0 0 0 4px var(--ghlsoft);animation:ride 2.4s ease-in-out infinite}
+.bridge .w i.b{background:var(--pd);box-shadow:0 0 0 4px var(--pdsoft);animation-delay:1.2s;animation-direction:reverse}
+@keyframes ride{0%{left:0}100%{left:calc(100% - 10px)}}
+.journey{padding:22px 24px;margin-top:18px}
+.jrow{display:flex;align-items:stretch;margin-top:14px}
+.jstep{flex:1;padding:14px;border-radius:13px;background:var(--soft);border:1px solid var(--line);transition:.3s;min-width:0}
+.jstep.lit{background:var(--brandsoft);border-color:var(--brandline);transform:translateY(-2px)}
+.jstep .num{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.jstep .num b{width:26px;height:26px;border-radius:8px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;font:600 12.5px var(--fm)}
+.jstep.lit .num b{background:var(--brand);color:var(--brandink);border-color:var(--brand)}
+.jstep h4{font-size:14px;font-weight:600;margin-bottom:4px}
+.jstep p{font-size:12.5px;color:var(--muted);line-height:1.45}
+.arrow{width:24px;display:grid;place-items:center;color:var(--muted);font-size:15px;flex:none}
+.why{padding:20px 24px;margin-top:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.why h5{font-size:15px;font-weight:600;margin:10px 0 4px}
+.why p{font-size:13px;color:var(--muted);line-height:1.55}
+/* pipedrive tab */
+.pdwrap{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px}
+.board{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:12px;overflow-x:auto;padding-bottom:4px}
+.col{background:var(--soft);border-radius:13px;padding:10px;min-height:250px;cursor:pointer;transition:.2s;border:2px solid var(--line);text-align:left;font:inherit}
+.col:hover{border-color:var(--pdline)}
+.col.sel{border-color:var(--pd);background:var(--pdsoft)}
+.colh{padding:3px 5px 9px}
+.colh b{font:600 13px var(--fh);display:block}
+.colh span{font-size:11.5px;color:var(--muted)}
+.bar2{height:3px;border-radius:3px;margin:0 5px 10px}
+.deal{background:var(--panel);border-radius:10px;padding:10px 11px;margin-bottom:8px;border:1px solid var(--line);transition:all .5s cubic-bezier(.2,.8,.2,1)}
+.deal .nm{font-weight:600;font-size:12.5px}
+.deal .meta{font-size:11.5px;color:var(--muted);margin-top:3px;display:flex;justify-content:space-between;align-items:center}
+.deal.new{animation:pop .6s cubic-bezier(.2,.8,.2,1);border-color:var(--pd);box-shadow:0 0 0 3px var(--pdsoft)}
+@keyframes pop{0%{transform:scale(.88) translateY(-8px);opacity:0}100%{transform:none;opacity:1}}
+.av{width:22px;height:22px;border-radius:7px;display:inline-grid;place-items:center;font:600 9.5px var(--fm);color:#fff;background:var(--pd);flex:none}
+.stinfo{padding:20px}
+.stinfo .row{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:9px 0;border-bottom:1px solid var(--line)}
+.stinfo .row span{color:var(--muted)}
+.setup3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:18px}
+.mini{list-style:none}
+.mini li{font-size:12.5px;padding:7px 0;border-bottom:1px dashed var(--line);display:flex;justify-content:space-between;gap:10px}
+.mini li:last-child{border-bottom:0}
+.mini li span{color:var(--muted);text-align:right}
+/* ghl tab */
+.subtabs{display:flex;gap:6px;background:var(--chip);padding:4px;border-radius:11px;width:max-content;max-width:100%;overflow-x:auto;margin-bottom:16px}
+.subtabs button{padding:7px 14px;border-radius:8px;font:600 13px var(--fb);cursor:pointer;color:var(--muted);transition:.2s;border:0;background:none;white-space:nowrap}
+.subtabs button.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.sub{display:none}
+.sub.on{display:block;animation:fade .3s}
+.ghlwrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px}
+.tagcloud{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tagc{border:1px solid var(--line);border-radius:12px;padding:11px 13px;cursor:pointer;transition:.2s;background:var(--panel);text-align:left;font:inherit;color:inherit}
+.tagc:hover,.tagc.on{border-color:var(--ghl);background:var(--ghlsoft)}
+.tagc code{font:500 12px var(--fm);color:var(--ghlink)}
+.tagc p{font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.45}
+.srcmap td:first-child{font:12px var(--fm);color:var(--badink)}
+.trybox{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.trybox button{border:1px solid var(--line2);background:var(--panel);border-radius:8px;padding:6px 10px;font:500 12px var(--fm);cursor:pointer}
+.trybox button:hover{border-color:var(--ghl)}
+.tryout{margin-top:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;border-radius:12px;background:var(--soft);border:1px solid var(--line);font-size:13px;min-height:48px}
+.tryout .raw{font-family:var(--fm);color:var(--badink)}
+.tryout .clean{font-weight:700;color:var(--okink)}
+.contact{padding:20px}
+.cav{width:52px;height:52px;border-radius:15px;background:linear-gradient(135deg,#0e7490,#1f5f4e);display:grid;place-items:center;color:#fff;font:700 18px var(--fh);flex:none}
+.kv{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:8px 0;border-bottom:1px solid var(--line)}
+.kv span{color:var(--muted)}
+.kv b{font-weight:600;text-align:right;min-width:0;overflow-wrap:anywhere}
+/* workflows */
+.wfwrap{display:grid;grid-template-columns:250px minmax(0,1fr) 300px;gap:16px}
+.wflist{padding:10px}
+.wfi{display:block;width:100%;text-align:left;padding:12px 13px;border-radius:11px;cursor:pointer;margin-bottom:5px;border:1px solid transparent;transition:.2s;background:none;font:inherit;color:inherit}
+.wfi:hover{background:var(--soft)}
+.wfi.on{background:var(--brandsoft);border-color:var(--brandline)}
+.wfi b{font-size:13px;display:block}
+.wfi small{font-size:11.5px;color:var(--muted)}
+.canvas{padding:22px;background-color:var(--panel);background-image:radial-gradient(var(--dot) 1px,transparent 1px);background-size:18px 18px;min-height:560px;max-height:640px;overflow:auto}
+.flow{display:flex;flex-direction:column;align-items:center}
+.node{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 13px;display:flex;gap:11px;align-items:center;transition:.3s}
+.node .ni{min-width:34px;height:30px;padding:0 5px;border-radius:9px;display:grid;place-items:center;font:600 10.5px var(--fm);flex:none}
+.node b{font-size:13px;display:block}
+.node small{font-size:11.5px;color:var(--muted)}
+.node.trig{border-color:var(--warnline);background:var(--warnsoft)}
+.node.run{border-color:var(--brand);box-shadow:0 0 0 4px var(--brandsoft);transform:scale(1.02)}
+.node.done{border-color:var(--okline)}
+.node.done::after{content:"✓";margin-left:auto;color:var(--ok);font-weight:800}
+.conn{width:2px;height:16px;background:var(--line2)}
+.conn.lit{background:var(--brand)}
+.wait{font:600 11.5px var(--fm);color:var(--warnink);background:var(--warnsoft);border:1px dashed var(--warnline);padding:5px 12px;border-radius:20px;transition:.3s}
+.wait.run{box-shadow:0 0 0 4px var(--warnsoft)}
+.gate{font-size:12px;font-weight:600;color:var(--infoink);background:var(--infosoft);border:1px solid var(--infoline);padding:7px 14px;border-radius:9px;transition:.3s}
+.gate.run{box-shadow:0 0 0 4px var(--infosoft)}
+.goal{border-style:dashed;border-color:var(--okline);background:var(--oksoft)}
+.phone{padding:16px;display:flex;flex-direction:column}
+.inbox{flex:1;margin-top:12px;display:flex;flex-direction:column;gap:10px;min-height:380px;max-height:520px;overflow:auto}
+.inbox .empty{font-size:12.5px;color:var(--muted);text-align:center;margin-top:60px;line-height:1.6}
+.msg{border:1px solid var(--line);border-radius:13px;padding:11px 13px;background:var(--panel);animation:pop .45s cubic-bezier(.2,.8,.2,1)}
+.msg .h{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.msg .h b{font-size:12.5px}
+.msg p{font-size:12.5px;line-height:1.5;color:var(--ink2)}
+.msg.sms{background:var(--ghlsoft);border-color:var(--ghlline)}
+.rules{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.rule{padding:14px 16px}
+.rule b{font:600 14px var(--fh);display:block;margin:8px 0 3px}
+.rule p{font-size:12px;color:var(--muted);line-height:1.5}
+/* routing */
+.rtwrap{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px}
+.rt tr{transition:.25s}
+.rt tr.hit td{background:var(--pdsoft)}
+.rt tr.hit td:first-child{box-shadow:inset 3px 0 0 var(--pd)}
+.pick{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.pick button{border:1px solid var(--line2);background:var(--panel);border-radius:9px;padding:8px 12px;font:600 12.5px var(--fb);cursor:pointer;transition:.2s}
+.pick button.on{border-color:var(--pd);background:var(--pdsoft);color:var(--pdink)}
+.toggle{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:13px;cursor:pointer;user-select:none;border:0;background:none;text-align:left;font-family:var(--fb)}
+.toggle .sw{width:38px;height:22px;border-radius:20px;background:var(--line2);position:relative;transition:.2s;flex:none}
+.toggle .sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s}
+.toggle.on .sw{background:var(--pd)}
+.toggle.on .sw::after{left:19px}
+.result{margin-top:16px;border-radius:14px;border:1px solid var(--pdline);background:linear-gradient(180deg,var(--panel),var(--pdsoft));padding:16px}
+.result .rr{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:7px 0;border-bottom:1px dashed var(--pdline)}
+.result .rr b{text-align:right}
+.result .rr span{color:var(--muted)}
+.result .why2{font-size:12.5px;color:var(--ink2);margin-top:10px;line-height:1.5;background:var(--panel);border-radius:9px;padding:9px 11px;border:1px solid var(--line)}
+.flash{animation:flash .6s}
+@keyframes flash{0%{box-shadow:0 0 0 0 rgba(184,88,26,.35)}100%{box-shadow:0 0 0 14px rgba(184,88,26,0)}}
+/* sync */
+.syncbar{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.sync{display:grid;grid-template-columns:minmax(0,1fr) 300px minmax(0,1fr);gap:14px;align-items:start}
+.sys{padding:16px;min-height:470px}
+.sys.g{border-top:3px solid var(--ghl)}
+.sys.p{border-top:3px solid var(--pd)}
+.sysh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.sysh b{font:600 15px var(--fh)}
+.stg{display:flex;gap:5px;margin:10px 0 4px}
+.stg div{flex:1;text-align:center;font-size:10.5px;font-weight:600;padding:6px 3px;border-radius:7px;background:var(--chip);color:var(--muted);transition:.4s}
+.stg div.on{background:var(--ghl);color:#fff}
+.fld{transition:background .5s}
+.fld.upd{background:var(--oksoft)}
+.tagrow{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.tagrow span{font:500 11px var(--fm);padding:2px 7px;border-radius:6px;background:var(--ghlsoft);color:var(--ghlink);animation:pop .4s}
+.wfhit{margin-top:12px;border-radius:11px;padding:10px 12px;border:1px dashed var(--line2);font-size:12.5px;color:var(--muted);transition:.4s;line-height:1.45}
+.wfhit.on{border:1px solid var(--okline);background:var(--oksoft);color:var(--okink)}
+.lane{padding:14px;background:var(--panel)}
+.wire{height:26px;position:relative;margin:4px 0 10px;overflow:hidden}
+.wire::before{content:"";position:absolute;left:0;right:0;top:12px;height:2px;background:linear-gradient(90deg,var(--ghl),var(--pd));border-radius:2px;opacity:.55}
+.wire .pk{position:absolute;top:5px;left:0;padding:1px 8px;border-radius:10px;font:600 10.5px var(--fm);background:var(--brand);color:var(--brandink);opacity:0;transition:left 1.1s cubic-bezier(.5,0,.3,1),opacity .2s;white-space:nowrap}
+.steps{display:flex;flex-direction:column;gap:6px}
+.st{display:flex;gap:9px;align-items:flex-start;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--panel);opacity:.45;transition:.35s}
+.st .d{min-width:22px;height:22px;border-radius:7px;flex:none;display:grid;place-items:center;font:600 10.5px var(--fm);background:var(--chip);color:var(--chipink)}
+.st b{font-size:12px;display:block;line-height:1.35}
+.st small{font-size:11px;color:var(--muted);display:block;margin-top:2px;line-height:1.35}
+.st.run{opacity:1;border-color:var(--brand);box-shadow:0 0 0 3px var(--brandsoft)}
+.st.run .d{background:var(--brand);color:var(--brandink)}
+.st.ok{opacity:1;border-color:var(--okline)}
+.st.ok .d{background:var(--ok);color:#fff}
+.st.skip{opacity:1;border-color:var(--warnline);background:var(--warnsoft)}
+.st.skip .d{background:var(--warn);color:#fff}
+.rec{margin-top:10px;border-radius:10px;background:var(--code);color:var(--codeink);padding:10px 12px;font:11px/1.6 var(--fm);min-height:92px;white-space:pre;overflow-x:auto}
+.rec .k{color:var(--codek)} .rec .bad{color:var(--codebad)} .rec .ok{color:var(--codeok)}
+.pboard{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.pcol{background:var(--pdsoft);border-radius:10px;padding:7px;min-height:150px;min-width:0}
+.pcol h6{font:600 10.5px var(--fm);color:var(--pdink);margin:0 2px 7px}
+.pcol .deal{padding:7px 8px;margin-bottom:6px}
+.pcol .deal .nm{font-size:11.5px;overflow-wrap:anywhere}
+.pcol .deal .meta{font-size:10.5px}
+.acts2{margin-top:12px}
+.acts2 .a{display:flex;gap:9px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12px;animation:pop .4s}
+.acts2 .a .dot{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;flex:none;font:600 11px var(--fm)}
+.acts2 .a small{display:block;color:var(--muted);font-size:11px;margin-top:1px}
+.slog{margin-top:14px;padding:14px 16px}
+.slog .ln{font:11.5px/1.7 var(--fm);color:var(--ink2);animation:fade .3s;overflow-wrap:anywhere}
+.slog .ln i{font-style:normal;color:var(--muted);margin-right:8px}
+/* migration */
+.mstep{display:flex;margin-bottom:16px;overflow-x:auto}
+.mstep div{flex:1;padding:10px 12px;font-size:12.5px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-left:0;display:flex;gap:8px;align-items:center;transition:.3s;white-space:nowrap}
+.mstep div:first-child{border-left:1px solid var(--line);border-radius:11px 0 0 11px}
+.mstep div:last-child{border-radius:0 11px 11px 0}
+.mstep div b{width:21px;height:21px;border-radius:6px;display:grid;place-items:center;background:var(--chip);font:600 11px var(--fm);flex:none}
+.mstep div.on{color:var(--ink);background:var(--brandsoft)}
+.mstep div.on b{background:var(--brand);color:var(--brandink)}
+.mstep div.done b{background:var(--ok);color:#fff}
+.mwrap{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.mhead{padding:14px 16px 8px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.mt{min-width:520px}
+.mt td,.mt th{padding:8px 9px;font-size:12px}
+.mt td{font:11.5px var(--fm);transition:background .4s;white-space:nowrap}
+.mt .bad{color:var(--badink);background:var(--badsoft)}
+.mt tr.dup td{opacity:.45;text-decoration:line-through}
+.mt tr.rev td{background:var(--warnsoft)}
+.mt tr.scan td{background:var(--brandsoft)}
+.mt .okc{color:var(--okink)}
+.mstats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.mstats .card{padding:14px 16px}
+.mstats .v{font:700 26px var(--fh);letter-spacing:-.02em;margin-top:4px}
+.mstats .d{font-size:12px;color:var(--muted);margin-top:2px}
+/* testing */
+.twrap{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px}
+.tg .label{margin:14px 0 6px}
+.tg:first-child .label{margin-top:0}
+.test{display:flex;gap:12px;align-items:flex-start;padding:11px 12px;border-radius:11px;border:1px solid var(--line);margin-bottom:7px;transition:.3s;background:var(--panel)}
+.test .bx{width:22px;height:22px;border-radius:7px;border:2px solid var(--line2);flex:none;display:grid;place-items:center;font-size:12px;font-weight:800;color:transparent;transition:.3s}
+.test b{font-size:13px;display:block;font-weight:500}
+.test .res{margin-left:auto;font:500 11.5px var(--fm);color:var(--muted);text-align:right;padding-top:2px;flex:none;max-width:45%}
+.test.run{border-color:var(--brand);box-shadow:0 0 0 3px var(--brandsoft)}
+.test.pass{border-color:var(--okline)}
+.test.pass .bx{background:var(--ok);border-color:var(--ok);color:#fff}
+.test.pass .res{color:var(--okink)}
+.mail{overflow:hidden;transition:.4s}
+.mail .mh{padding:14px 16px;border-bottom:1px solid var(--line);background:var(--soft);font-size:12.5px;line-height:1.7}
+.mail .mh span{color:var(--muted);display:inline-block;width:62px}
+.mail .mb{padding:16px;font-size:13px;line-height:1.6;color:var(--ink2)}
+.mail .mb .code{margin:10px 0;padding:10px 12px;border-radius:9px;background:var(--badsoft);border:1px solid var(--badline);font:11.5px/1.6 var(--fm);color:var(--badink);overflow-wrap:anywhere}
+.ring{width:120px;height:120px;margin:4px auto 10px;position:relative}
+.ring svg{transform:rotate(-90deg)}
+.ring .n{position:absolute;inset:0;display:grid;place-items:center;font:700 26px var(--fh);text-align:center}
+.ring .n small{display:block;font:500 11px var(--fb);color:var(--muted)}
+/* docs */
+.dwrap{display:grid;grid-template-columns:240px minmax(0,1fr) 320px;gap:16px}
+.toc{padding:10px}
+.toc button{display:block;width:100%;text-align:left;padding:10px 12px;border-radius:10px;font:500 13px var(--fb);cursor:pointer;margin-bottom:3px;transition:.2s;color:var(--ink2);border:0;background:none}
+.toc button:hover{background:var(--soft)}
+.toc button.on{background:var(--brandsoft);color:var(--brand);font-weight:600}
+.doc{padding:28px 32px;min-height:520px}
+.doc .crumb{font:500 11.5px var(--fm);color:var(--muted)}
+.doc h2{font-size:22px;letter-spacing:-.02em;margin:6px 0 12px}
+.doc p{font-size:14px;line-height:1.65;color:var(--ink2);margin-bottom:10px}
+.doc ol,.doc ul{margin:4px 0 12px 20px;font-size:14px;line-height:1.75;color:var(--ink2)}
+.doc .callout{border-left:3px solid var(--brand);background:var(--brandsoft);padding:10px 14px;border-radius:0 10px 10px 0;font-size:13px;color:var(--ink);margin:12px 0}
+.ag{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:12.5px;cursor:pointer;width:100%;text-align:left;border-left:0;border-right:0;border-top:0;background:none;font-family:var(--fb)}
+.ag .ck{width:18px;height:18px;border-radius:5px;border:2px solid var(--line2);flex:none;margin-top:1px;display:grid;place-items:center;font-size:10px;color:transparent;font-weight:800;transition:.2s}
+.ag.on .ck{background:var(--ok);border-color:var(--ok);color:#fff}
+.ag small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
+.toast{position:fixed;right:26px;bottom:26px;background:var(--toast);color:var(--toastink);padding:13px 18px;border-radius:12px;font-size:13.5px;box-shadow:0 12px 30px rgba(0,0,0,.3);transform:translateY(150%);transition:.4s cubic-bezier(.2,.8,.2,1);z-index:10;max-width:460px;line-height:1.45}
+.toast.on{transform:none}
+.kbd{font:600 10.5px var(--fm);border:1px solid rgba(255,255,255,.25);border-radius:5px;padding:0 5px}
+/* phone and tablet */
+@media (max-width:1180px){
+  .wfwrap{grid-template-columns:220px minmax(0,1fr)}
+  .wfwrap .phone{grid-column:1 / -1}
+  .sync{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .sync .lane{grid-column:1 / -1;grid-row:1}
+  .dwrap{grid-template-columns:220px minmax(0,1fr)}
+  .dwrap .train{grid-column:1 / -1}
+  .rules{grid-template-columns:1fr 1fr}
+}
+@media (max-width:860px){
+  body{height:auto;overflow:auto}
+  .app{display:block;height:auto}
+  .side{position:sticky;top:0;z-index:5;flex-direction:row;align-items:center;overflow-x:auto;padding:10px 12px;gap:6px}
+  .logo,.side .foot,.nav small{display:none}
+  .nav{width:auto;flex:none;padding:8px 11px;white-space:nowrap}
+  .nav.on::before{display:none}
+  .sidetools{margin:0;padding:0;flex:none}
+  .sbtn{flex:none;white-space:nowrap}
+  .main{overflow:visible;padding:18px 16px 40px}
+  .top{flex-direction:column;gap:12px}
+  .top h1{font-size:21px}
+  .hero{padding:20px}
+  .hero h2{font-size:20px}
+  .two,.jrow{flex-direction:column}
+  .bridge{width:100%}
+  .arrow{transform:rotate(90deg);height:22px;width:auto}
+  .why,.g2,.g3,.setup3,.pdwrap,.ghlwrap,.wfwrap,.rtwrap,.sync,.mwrap,.twrap,.dwrap,.rules,.tagcloud{grid-template-columns:minmax(0,1fr)}
+  .mstats{grid-template-columns:1fr 1fr}
+  .wfwrap .phone,.dwrap .train,.sync .lane{grid-column:auto}
+  .sync .lane{grid-row:auto}
+  .canvas{min-height:0;max-height:none;padding:16px}
+  .inbox{min-height:160px}
+  .sys{min-height:0}
+  .doc{padding:20px;min-height:0}
+  .test{flex-wrap:wrap}
+  .test .res{max-width:none;margin-left:34px;text-align:left}
+  .toast{left:16px;right:16px;bottom:16px;max-width:none}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+</style>
+
+<div class="app">
+  <nav class="side" aria-label="Sections">
+    <div class="logo"><i>⇄</i><div>Your GHL and Pipedrive CRM Setup<small>Working prototype</small></div></div>
+    <button class="nav on" data-v="overview"><span class="ic">0</span><div>Overview<small>How it fits together</small></div></button>
+    <button class="nav" data-v="pipedrive"><span class="ic">1</span><div>Pipedrive CRM<small>Sales pipelines and stages</small></div></button>
+    <button class="nav" data-v="ghl"><span class="ic">2</span><div>GHL sub-account<small>Custom fields, tags, lead sources</small></div></button>
+    <button class="nav" data-v="followup"><span class="ic">3</span><div>Lead follow-up<small>Workflows and email/SMS</small></div></button>
+    <button class="nav" data-v="routing"><span class="ic">4</span><div>Lead assignment<small>And routing</small></div></button>
+    <button class="nav" data-v="sync"><span class="ic">5</span><div>Connect GHL and Pipedrive<small>Pipeline movement and activity</small></div></button>
+    <button class="nav" data-v="migrate"><span class="ic">6</span><div>Migrate contacts<small>And opportunities</small></div></button>
+    <button class="nav" data-v="testing"><span class="ic">7</span><div>Test workflows<small>And integrations</small></div></button>
+    <button class="nav" data-v="docs"><span class="ic">8</span><div>Documentation<small>And basic training</small></div></button>
+    <div class="sidetools"><button class="sbtn" onclick="resetAll()">↺ Reset</button><button class="sbtn" id="themeBtn" onclick="toggleTheme()">Dark mode</button></div>
+    <div class="foot"><b>Connected with n8n</b>GHL runs the follow-up, Pipedrive runs the pipeline, and one clean record lives in both. Use <span class="kbd">←</span> <span class="kbd">→</span> to move between sections.</div>
+  </nav>
+
+  <main class="main" id="main">
+
+    <!-- OVERVIEW -->
+    <section class="view on" id="overview">
+      <div class="top"><div><h1>Your GHL and Pipedrive CRM Setup</h1><p>From configuration through testing and launch: both CRMs set up, connected, and holding the same clean record for every lead.</p></div>
+        <div class="acts"><div class="progress"><span id="pg1">1 / 9</span><div class="trk"><i id="pgbar"></i></div></div><button class="btn" onclick="go('pipedrive')">Start here →</button></div></div>
+      <div class="hint"><b>How to use this</b><span>Each section on the left is one part of your post, in your order. The buttons inside each section run a test lead through it. Reset puts everything back to the start.</span></div>
+      <div class="card hero">
+        <span class="chip c-brand">A working prototype of your GHL and Pipedrive setup</span>
+        <h2>Leads come into GoHighLevel, land with the right rep in Pipedrive, and every stage move keeps both in step.</h2>
+        <p>Each CRM does the job it's best at. The connection between them cleans every record, checks for duplicates before creating anyone, and never loops a change back on itself.</p>
+        <div class="two">
+          <div class="crm g"><b>GoHighLevel</b><span class="chip c-ghl">Lead capture and follow-up</span>
+            <ul><li>Sub-account, custom fields, tags, lead sources</li><li>Automated follow-up workflows</li><li>Email and SMS where required</li></ul></div>
+          <div class="bridge">n8n sync<div class="w"><i></i><i class="b"></i></div>new leads → · ← stage moves</div>
+          <div class="crm p"><b>Pipedrive</b><span class="chip c-pd">Pipelines and selling</span>
+            <ul><li>Sales pipeline and stages</li><li>Lead assignment to the right rep</li><li>Activities and next calls logged</li></ul></div>
+        </div>
+      </div>
+      <div class="card journey">
+        <div class="label">One lead's journey through both CRMs</div>
+        <div class="jrow">
+          <div class="jstep"><div class="num"><b>1</b><span class="chip c-ghl">GHL</span></div><h4>Lead arrives</h4><p>A form, ad or import creates the contact with its lead source.</p></div>
+          <div class="arrow">→</div>
+          <div class="jstep"><div class="num"><b>2</b><span class="chip c-brand">Sync</span></div><h4>Cleaned and checked</h4><p>Names, phone and source are fixed, then Pipedrive is searched by email.</p></div>
+          <div class="arrow">→</div>
+          <div class="jstep"><div class="num"><b>3</b><span class="chip c-pd">Pipedrive</span></div><h4>Routed to a rep</h4><p>Lead source picks the owner, and the deal opens in the right stage.</p></div>
+          <div class="arrow">→</div>
+          <div class="jstep"><div class="num"><b>4</b><span class="chip c-ghl">GHL</span></div><h4>Follow-up starts</h4><p>Texts and emails go out until the lead replies or the stage moves.</p></div>
+          <div class="arrow">→</div>
+          <div class="jstep"><div class="num"><b>5</b><span class="chip c-pd">Pipedrive</span></div><h4>Rep moves the deal</h4><p>GHL moves to the same stage, its workflow fires and the next call is booked.</p></div>
+        </div>
+      </div>
+      <div class="card why">
+        <div><span class="chip c-brand">Why email is the match key</span><h5>One person, never two</h5><p>Every lead is looked up in Pipedrive by email before anyone is created, so a lead who fills in two forms stays one person with one rep.</p></div>
+        <div><span class="chip c-ok">Why each CRM owns one job</span><h5>No fighting over the record</h5><p>GHL owns follow-up and messaging, Pipedrive owns the pipeline. Stage is the one thing both share, and it syncs both ways.</p></div>
+        <div><span class="chip c-warn">Why the sync ignores its own echo</span><h5>Two-way without loops</h5><p>A stage change the sync made itself is dropped on the way back, so the two CRMs never bounce the same move back and forth.</p></div>
+      </div>
+    </section>
+
+    <!-- PIPEDRIVE -->
+    <section class="view" id="pipedrive">
+      <div class="top"><div><h1>Set up and configure Pipedrive CRM</h1><p>A sales pipeline built for your reps, with stages that match your GHL pipeline one for one.</p></div>
+        <div class="acts"><button class="btn ghost" onclick="go('ghl')">Next: GHL sub-account →</button></div></div>
+      <div class="hint"><b>Try it</b><span>Click any stage to see what happens when a deal enters it, and which GHL stage it matches.</span></div>
+      <div class="pdwrap">
+        <div class="card pad">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px"><div><div class="label">Pipeline</div><b class="fh" style="font-size:16px">Sales Pipeline</b></div><span class="chip c-gray">Sample deals, illustrative</span></div>
+          <div class="board" id="pdBoard"></div>
+        </div>
+        <div class="card stinfo" id="stInfo"></div>
+      </div>
+      <div class="setup3">
+        <div class="card pad"><div class="label">Users and permissions</div><h3 class="t">One seat per rep</h3>
+          <ul class="mini"><li>Admin<span>You, full settings</span></li><li>Reps<span>Their own deals</span></li><li>Sync user<span>API only, so its changes are recognisable</span></li><li>Default owner<span>Catches unmapped lead sources</span></li></ul></div>
+        <div class="card pad"><div class="label">Deal and person fields</div><h3 class="t">The link back to GHL</h3>
+          <ul class="mini"><li>GHL Contact ID<span>Set by the sync</span></li><li>GHL Opportunity ID<span>Set by the sync</span></li><li>Lead Source<span>Same list as GHL</span></li><li>Deal value<span>From the GHL opportunity</span></li></ul></div>
+        <div class="card pad"><div class="label">Activities and views</div><h3 class="t">What reps work from</h3>
+          <ul class="mini"><li>Activity types<span>Call, Follow-up, Meeting</span></li><li>Idle deal flag<span>Per stage</span></li><li>Saved filter<span>My open deals by next activity</span></li><li>Lost reasons<span>Required on Lost</span></li></ul></div>
+      </div>
+    </section>
+
+    <!-- GHL -->
+    <section class="view" id="ghl">
+      <div class="top"><div><h1>GoHighLevel sub-account and CRM structure</h1><p>Custom fields, tags and lead sources, named once and used the same way in both CRMs.</p></div>
+        <div class="acts"><button class="btn ghost" onclick="go('followup')">Next: lead follow-up →</button></div></div>
+      <div class="hint"><b>Try it</b><span>Switch between the four views below. Under Lead sources, pick a messy value to see how it gets saved.</span></div>
+      <div class="subtabs" id="ghlSub"><button class="on" data-s="g-fields">Custom fields</button><button data-s="g-tags">Tags</button><button data-s="g-sources">Lead sources</button><button data-s="g-struct">Sub-account structure</button></div>
+      <div class="ghlwrap">
+        <div style="min-width:0">
+          <div class="sub on card" id="g-fields">
+            <div class="tw"><table style="min-width:520px"><thead><tr><th>Field</th><th>Type</th><th>Filled by</th><th>Syncs to Pipedrive</th></tr></thead><tbody>
+              <tr><td><b>Lead Source</b></td><td>Dropdown</td><td>Form, ad or import</td><td><span class="chip c-pd">Lead Source</span></td></tr>
+              <tr><td><b>Pipedrive Deal ID</b></td><td>Text</td><td>The sync</td><td><span class="chip c-gray">Link key</span></td></tr>
+              <tr><td><b>Pipedrive Owner</b></td><td>Text</td><td>The sync, from routing</td><td><span class="chip c-pd">Deal owner</span></td></tr>
+              <tr><td><b>Lead Value</b></td><td>Monetary</td><td>Opportunity</td><td><span class="chip c-pd">Deal value</span></td></tr>
+              <tr><td><b>Last Synced</b></td><td>Date</td><td>The sync</td><td><span class="chip c-gray">Audit only</span></td></tr>
+              <tr><td><b>Consent to Text</b></td><td>Checkbox</td><td>Form</td><td><span class="chip c-gray">GHL only</span></td></tr>
+            </tbody></table></div>
+            <p class="note" style="padding:0 16px 16px">Field names and the dropdown list are examples. Yours get set together before anything is built.</p>
+          </div>
+          <div class="sub card pad" id="g-tags">
+            <div class="label" style="margin-bottom:12px">Tags and what each one does</div>
+            <div class="tagcloud" id="tagCloud"></div>
+          </div>
+          <div class="sub card pad" id="g-sources">
+            <div class="label">One spelling per lead source</div>
+            <p class="s" style="margin-top:6px">Every variation that comes in is mapped to one name, so routing and reports never split the same source in two.</p>
+            <div class="tw" style="margin-top:12px"><table class="srcmap" style="min-width:440px"><thead><tr><th>Comes in as</th><th>Saved as</th><th>Routed to</th></tr></thead><tbody id="srcTable"></tbody></table></div>
+            <div class="label" style="margin-top:16px">Pick a messy value</div>
+            <div class="trybox" id="tryBox"></div>
+            <div class="tryout" id="tryOut"><span class="s">Pick one above to see how it's saved.</span></div>
+          </div>
+          <div class="sub card pad" id="g-struct">
+            <div class="grid g2">
+              <div><div class="label">Pipeline</div><h3 class="t">Sales Pipeline</h3><p class="s">New Lead, Contacted, Appointment Set, Proposal Sent, then Won or Lost. Same names as Pipedrive.</p></div>
+              <div><div class="label">Users</div><h3 class="t">Each rep has a login</h3><p class="s">Texts and emails go out under the owner's name, taken from the Pipedrive owner field.</p></div>
+              <div><div class="label">Phone and email</div><h3 class="t">Sending set up properly</h3><p class="s">A sending number for SMS and an authenticated email domain, so messages land.</p></div>
+              <div><div class="label">Smart lists</div><h3 class="t">Saved views</h3><p class="s">New today, Needs review, No reply after follow-up, and one per lead source.</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="card contact">
+          <div class="label" style="margin-bottom:12px">Contact record (sample)</div>
+          <div style="display:flex;gap:12px;align-items:center"><div class="cav">DM</div><div style="min-width:0"><b class="fh" style="font-size:17px">Dana Morales</b><div style="font-size:12px;color:var(--muted);overflow-wrap:anywhere">dana.morales@example.com</div></div></div>
+          <div class="tagrow" style="margin:12px 0 6px"><span>new-lead</span><span>source-facebook-ads</span><span>synced-to-pipedrive</span></div>
+          <div class="kv"><span>Phone</span><b>+1 732 555 0148</b></div>
+          <div class="kv"><span>Lead Source</span><b>Facebook Ads</b></div>
+          <div class="kv"><span>Pipedrive Deal ID</span><b class="mono">4127</b></div>
+          <div class="kv"><span>Pipedrive Owner</span><b>Alex</b></div>
+          <div class="kv"><span>Lead Value</span><b>$2,500</b></div>
+          <div class="kv"><span>Opportunity stage</span><b>New Lead</b></div>
+          <div class="kv" style="border:0"><span>Last Synced</span><b>Just now</b></div>
+          <p class="note">Sample contact. Names, value and ids are illustrative.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOLLOW-UP -->
+    <section class="view" id="followup">
+      <div class="top"><div><h1>Automated lead follow-up, with email/SMS where required</h1><p>Each GHL workflow starts on a pipeline stage, so when a rep moves a deal in Pipedrive, the right one starts.</p></div>
+        <div class="acts"><button class="btn" id="wfBtn" onclick="runWf()">► Run this workflow</button><button class="btn ghost sm" onclick="resetWf()">↺ Reset</button></div></div>
+      <div class="hint"><b>Try it</b><span>Pick a workflow on the left, then press Run. Each text and email appears on the right as the lead would get it.</span></div>
+      <div class="wfwrap">
+        <div class="card wflist" id="wfList"></div>
+        <div class="card canvas" id="canvas"><div class="flow" id="flow"></div></div>
+        <div class="card phone"><div class="label">What Dana receives</div><div class="inbox" id="inbox"></div></div>
+      </div>
+      <div class="rules">
+        <div class="card rule"><span class="chip c-ghl">Where required</span><b>SMS only with consent</b><p>Texts go only to contacts with a phone number and Consent to Text. Everyone else gets email.</p></div>
+        <div class="card rule"><span class="chip c-warn">Quiet hours</span><b>8am to 8pm, lead's time</b><p>A text due overnight waits until the morning.</p></div>
+        <div class="card rule"><span class="chip c-ok">Stops itself</span><b>A reply or a stage move ends it</b><p>Nobody gets a check-in after they've answered or booked.</p></div>
+        <div class="card rule"><span class="chip c-bad">Opt-outs respected</span><b>STOP means stop</b><p>STOP replies and unsubscribes mark the contact DND in GHL, and every workflow skips them.</p></div>
+      </div>
+    </section>
+
+    <!-- ROUTING -->
+    <section class="view" id="routing">
+      <div class="top"><div><h1>Lead assignment and routing</h1><p>One table decides who owns each lead in Pipedrive, and GHL is told the same owner.</p></div></div>
+      <div class="hint"><b>Try it</b><span>Pick a lead source on the right. Then switch on "already a person in Pipedrive" to see a returning lead stay with their rep.</span></div>
+      <div class="rtwrap">
+        <div class="card">
+          <div class="tw"><table class="rt" style="min-width:600px"><thead><tr><th>Lead source</th><th>Owner in Pipedrive</th><th>Pipeline</th><th>Opens at stage</th><th>GHL workflow</th></tr></thead><tbody id="rtBody"></tbody></table></div>
+          <p class="note" style="padding:0 16px 16px">Sources and rep names are examples. Your real ones fill this table, and adding a source later is one line.</p>
+        </div>
+        <div class="card pad">
+          <div class="label">Test a new lead</div>
+          <div class="pick" id="rtPick"></div>
+          <button class="toggle" id="rtRet"><span class="sw"></span>This email is already a person in Pipedrive</button>
+          <div class="result" id="rtRes"></div>
+        </div>
+      </div>
+      <div class="grid g3" style="margin-top:18px">
+        <div class="card pad"><span class="chip c-pd">Rule 1</span><h3 class="t">Returning people keep their rep</h3><p class="s">If the email is already in Pipedrive, the lead stays with whoever owns that person, whatever the new source says.</p></div>
+        <div class="card pad"><span class="chip c-warn">Rule 2</span><h3 class="t">Unmapped sources go to a default owner</h3><p class="s">A source nobody mapped yet lands with the default owner and the needs-review tag, so nothing sits unassigned.</p></div>
+        <div class="card pad"><span class="chip c-ghl">Rule 3</span><h3 class="t">GHL knows the owner too</h3><p class="s">The owner is written back to GHL, so texts and emails go out under the right rep's name.</p></div>
+      </div>
+    </section>
+
+    <!-- SYNC -->
+    <section class="view" id="sync">
+      <div class="top"><div><h1>Connect GHL and Pipedrive</h1><p>Runs on n8n with webhooks and both APIs, including the pipeline movement and activity automation.</p></div></div>
+      <div class="hint"><b>Try it</b><span>Press the three buttons in order: a new lead arrives, the same person fills in a second form, then a rep moves the deal in Pipedrive.</span></div>
+      <div class="syncbar">
+        <button class="btn" id="bNew" onclick="newLead()">1 · A new lead comes into GHL</button>
+        <button class="btn ghost" id="bDup" onclick="dupLead()">2 · Same lead fills in a second form</button>
+        <button class="btn pd" id="bMove" onclick="repMove()">3 · Rep moves the deal in Pipedrive</button>
+        <button class="btn ghost sm" onclick="resetSync()">↺ Reset</button>
+      </div>
+      <div class="sync">
+        <div class="card sys g">
+          <div class="sysh"><b>GoHighLevel</b><span class="chip c-ghl">Contact and opportunity</span></div>
+          <div style="display:flex;gap:11px;align-items:center"><div class="cav" style="width:42px;height:42px;font-size:15px;border-radius:12px" id="gAv">?</div><div style="min-width:0"><b id="gName" style="font-size:14px;white-space:pre">Waiting for a lead</b><div style="font-size:11.5px;color:var(--muted);overflow-wrap:anywhere" id="gEmail">Press button 1</div></div></div>
+          <div class="kv fld" id="gfPhone"><span>Phone</span><b id="gPhone">-</b></div>
+          <div class="kv fld" id="gfSrc"><span>Lead Source</span><b id="gSrc">-</b></div>
+          <div class="kv fld" id="gfDeal"><span>Pipedrive Deal ID</span><b id="gDeal" class="mono">-</b></div>
+          <div class="kv fld" id="gfOwner"><span>Pipedrive Owner</span><b id="gOwner">-</b></div>
+          <div class="label" style="margin-top:12px">Opportunity stage</div>
+          <div class="stg" id="gStg"><div>New Lead</div><div>Contacted</div><div>Appt Set</div><div>Proposal</div></div>
+          <div class="tagrow" id="gTags"></div>
+          <div class="wfhit" id="gWf">No workflow running yet.</div>
+        </div>
+        <div class="card lane">
+          <div class="label" style="text-align:center">The sync, step by step</div>
+          <div class="wire"><span class="pk" id="pk">lead →</span></div>
+          <div class="steps" id="steps"></div>
+          <div class="rec" id="rec"></div>
+        </div>
+        <div class="card sys p">
+          <div class="sysh"><b>Pipedrive</b><span class="chip c-pd">Sales Pipeline</span></div>
+          <div class="pboard" id="pBoard"></div>
+          <div class="acts2" id="pActs"></div>
+        </div>
+      </div>
+      <div class="card slog"><div class="label" style="margin-bottom:6px">Sync log</div><div id="slog"></div></div>
+    </section>
+
+    <!-- MIGRATE -->
+    <section class="view" id="migrate">
+      <div class="top"><div><h1>Migrate and organize existing contacts and opportunities</h1><p>Your existing records go through the same cleaner, duplicate check and routing as a new lead, with a dry run you approve first.</p></div>
+        <div class="acts"><button class="btn ghost" id="mDry" onclick="migDry()">Dry run</button><button class="btn" id="mRun" onclick="migRun()">► Migrate</button><button class="btn ghost sm" onclick="resetMig()">↺ Reset</button></div></div>
+      <div class="hint"><b>Try it</b><span>Press Dry run to see every problem flagged without writing anything, then Migrate to see the clean result.</span></div>
+      <div class="mstep" id="mStep"><div><b>1</b>Export from GHL</div><div><b>2</b>Dry run report</div><div><b>3</b>You approve</div><div><b>4</b>Migrate</div><div><b>5</b>Spot check</div></div>
+      <div class="mwrap">
+        <div class="card"><div class="mhead"><div class="label">Before: as it sits today</div><span class="chip c-bad" id="mBadCt">Not checked yet</span></div>
+          <div class="tw"><table class="mt"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Source</th><th>Stage</th></tr></thead><tbody id="mBefore"></tbody></table></div></div>
+        <div class="card"><div class="mhead"><div class="label">After: in both CRMs</div><span class="chip c-ok" id="mOkCt">Waiting</span></div>
+          <div class="tw"><table class="mt"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Source</th><th>Owner</th></tr></thead><tbody id="mAfter"></tbody></table></div></div>
+      </div>
+      <div class="mstats">
+        <div class="card"><div class="label">Records in</div><div class="v" id="ms1">0</div><div class="d">From the GHL export</div></div>
+        <div class="card"><div class="label">People in Pipedrive</div><div class="v" id="ms2">0</div><div class="d">One per email, each with a deal</div></div>
+        <div class="card"><div class="label">Duplicates merged</div><div class="v" id="ms3">0</div><div class="d">Same email, fuller record kept</div></div>
+        <div class="card"><div class="label">Sent to review</div><div class="v" id="ms4">0</div><div class="d">No email, tagged needs-review</div></div>
+      </div>
+      <p class="note">Sample rows and counts are illustrative. The real run goes 100 records at a time, and each opportunity keeps its current stage.</p>
+    </section>
+
+    <!-- TESTING -->
+    <section class="view" id="testing">
+      <div class="top"><div><h1>Test all workflows and integrations</h1><p>Every path runs with test leads before launch, including the ones that are meant to fail.</p></div>
+        <div class="acts"><button class="btn" id="tBtn" onclick="runTests()">► Run all tests</button><button class="btn ghost sm" onclick="resetTests()">↺ Reset</button></div></div>
+      <div class="hint"><b>Try it</b><span>Press Run all tests. The last test breaks a step on purpose, and the alert email it sends appears on the right.</span></div>
+      <div class="twrap">
+        <div class="card pad" id="tests"></div>
+        <div>
+          <div class="card pad" style="text-align:center"><div class="label">Launch readiness</div>
+            <div class="ring"><svg width="120" height="120" aria-hidden="true"><defs><linearGradient id="rg"><stop offset="0" stop-color="#0e7490"/><stop offset="1" stop-color="#b8581a"/></linearGradient></defs><circle cx="60" cy="60" r="50" stroke="var(--track)" stroke-width="10" fill="none"/><circle id="ringC" cx="60" cy="60" r="50" stroke="url(#rg)" stroke-width="10" fill="none" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16" style="transition:stroke-dashoffset .5s"/></svg><div class="n"><div><span id="ringN">0</span><small>of <span id="ringT">0</span> passed</small></div></div></div>
+            <p class="s">Launch happens only when every test is green.</p></div>
+          <div class="card mail" style="margin-top:16px;opacity:.35" id="alertMail">
+            <div class="mh"><div><span>To</span>you</div><div><span>From</span>CRM sync alerts</div><div><span>Subject</span><b>Sync stopped at step 5: create person in Pipedrive</b></div></div>
+            <div class="mb">A test lead didn't make it into Pipedrive, and nothing was half-created.
+              <div class="code">Contact: test.broken@example.com<br>Error: 401 Unauthorized (API token)<br>Run: link to the failed run</div>
+              Fix the token, press retry on the run, and the lead goes through.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOCS -->
+    <section class="view" id="docs">
+      <div class="top"><div><h1>Documentation and basic training</h1><p>A written runbook your team can follow on their own, and one recorded training call.</p></div></div>
+      <div class="hint"><b>Try it</b><span>Click a runbook page on the left to read it. Tick off the training agenda on the right.</span></div>
+      <div class="dwrap">
+        <div class="card toc" id="toc"></div>
+        <div class="card doc" id="doc"></div>
+        <div class="card pad train">
+          <div class="label">Training call agenda</div>
+          <p class="s" style="margin:6px 0">Recorded, so new reps can watch it later.</p>
+          <div id="agenda"></div>
+          <div class="label" style="margin-top:16px">Handover</div>
+          <ul class="mini" style="margin-top:6px"><li>Runbook<span>Shared doc</span></li><li>Rep cheat sheet<span>One page</span></li><li>Logins and tokens<span>Your accounts, your ownership</span></li><li>Training recording<span>Linked in the runbook</span></li></ul>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const RM=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep=ms=>new Promise(r=>setTimeout(r,RM?Math.min(ms,150):ms));
+const SB=RM?'auto':'smooth';
+const ORDER=['overview','pipedrive','ghl','followup','routing','sync','migrate','testing','docs'];
+const seen=new Set(['overview']);
+function go(v){
+  $$('.nav').forEach(n=>{n.classList.toggle('on',n.dataset.v===v); if(seen.has(n.dataset.v)&&n.dataset.v!==v) n.classList.add('seen');});
+  $$('.view').forEach(x=>x.classList.toggle('on',x.id===v));
+  seen.add(v); $('#main').scrollTop=0; if(window.innerWidth<=860) window.scrollTo(0,0);
+  const i=ORDER.indexOf(v); $('#pg1').textContent=(i+1)+' / '+ORDER.length; $('#pgbar').style.width=((i+1)/ORDER.length*100)+'%';
+  const nb=$('.nav[data-v="'+v+'"]'); if(nb&&nb.scrollIntoView&&window.innerWidth<=860) nb.scrollIntoView({block:'nearest',inline:'center',behavior:SB});
+}
+$$('.nav').forEach(n=>n.onclick=()=>go(n.dataset.v));
+document.addEventListener('keydown',e=>{
+  if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+  const cur=ORDER.indexOf($('.view.on').id);
+  if(e.key==='ArrowRight'&&cur<ORDER.length-1) go(ORDER[cur+1]);
+  if(e.key==='ArrowLeft'&&cur>0) go(ORDER[cur-1]);
+});
+function toast(t){const e=$('#toast');e.innerHTML=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),3000)}
+function now(){return new Date().toTimeString().slice(0,8)}
+function isDark(){const t=document.documentElement.dataset.theme; if(t) return t==='dark'; return !!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)}
+function toggleTheme(){document.documentElement.dataset.theme=isDark()?'light':'dark'; $('#themeBtn').textContent=isDark()?'Light mode':'Dark mode'}
+$('#themeBtn').textContent=isDark()?'Light mode':'Dark mode';
+if(!RM){let jn=0;setInterval(()=>{$$('.jstep').forEach((s,i)=>s.classList.toggle('lit',i===jn));jn=(jn+1)%5},1500);}
+let busy=false;
+
+/* ---------- shared data (illustrative) ---------- */
+const ROUTES=[
+  {src:'Facebook Ads',owner:'Alex',stage:'New Lead',wf:'New lead follow-up'},
+  {src:'Google Ads',owner:'Jordan',stage:'New Lead',wf:'New lead follow-up'},
+  {src:'Website',owner:'Taylor',stage:'New Lead',wf:'New lead follow-up'},
+  {src:'Referral',owner:'Morgan',stage:'Contacted',wf:'Referral welcome'},
+  {src:'Unmapped source',owner:'Default owner',stage:'New Lead',wf:'New lead follow-up, tagged needs-review'}
+];
+
+/* ---------- Pipedrive tab ---------- */
+const PDCOLS=[
+  {n:'New Lead',p:'10%',c:'var(--pd)',deals:[['Kevin O\'Brien','$1,800','JO'],['Lena Brooks','$3,200','TA']],
+   does:'The deal opens here from routing, and GHL starts the new lead follow-up.',rot:'2 days',ghl:'New Lead',act:'Call the same day, booked for the owner'},
+  {n:'Contacted',p:'25%',c:'var(--warn)',deals:[['Marcus Allen','$4,000','MO']],
+   does:'The rep has spoken to them. GHL stops the new lead texts and sends a recap email.',rot:'4 days',ghl:'Contacted',act:'Follow-up in 2 days'},
+  {n:'Appointment Set',p:'50%',c:'var(--info)',deals:[['Priya Shah','$2,700','AL']],
+   does:'GHL sends the confirmation and the reminders before the appointment.',rot:'7 days',ghl:'Appointment Set',act:'Meeting on the date set'},
+  {n:'Proposal Sent',p:'75%',c:'var(--ghl)',deals:[['Sam Ortega','$5,500','TA']],
+   does:'GHL checks in by email, then by text, and alerts the owner if there is no reply.',rot:'7 days',ghl:'Proposal Sent',act:'Follow-up in 3 days'},
+  {n:'Won / Lost',p:'-',c:'var(--ok)',deals:[['Chris Patel','Won','JO']],
+   does:'Won stops every workflow. Lost asks for a reason and ends the follow-up.',rot:'-',ghl:'Won / Lost',act:'None'}
+];
+function drawPd(sel){
+  $('#pdBoard').innerHTML=PDCOLS.map((c,i)=>`<button class="col ${i===sel?'sel':''}" data-i="${i}"><div class="colh"><b>${c.n}</b><span>${c.deals.length} deal${c.deals.length>1?'s':''} · ${c.p}</span></div><div class="bar2" style="background:${c.c}"></div>${c.deals.map(d=>`<div class="deal"><div class="nm">${d[0]}</div><div class="meta"><span>${d[1]}</span><span class="av">${d[2]}</span></div></div>`).join('')}</button>`).join('');
+  $$('#pdBoard .col').forEach(c=>c.onclick=()=>drawPd(+c.dataset.i));
+  const c=PDCOLS[sel];
+  $('#stInfo').innerHTML=`<div class="label">Stage</div><h3 class="t" style="font-size:19px">${c.n}</h3><p class="s" style="margin:4px 0 10px">${c.does}</p>
+   <div class="row"><span>Win probability</span><b>${c.p}</b></div><div class="row"><span>Flag as idle after</span><b>${c.rot}</b></div>
+   <div class="row"><span>Matching GHL stage</span><b><span class="chip c-ghl">${c.ghl}</span></b></div><div class="row" style="border:0"><span>Activity booked on entry</span><b style="text-align:right;max-width:170px">${c.act}</b></div>
+   <p class="note">Probabilities and idle times are examples. Yours are set with you.</p>`;
+}
+drawPd(0);
+
+/* ---------- GHL tab ---------- */
+function ghlTab(id){$$('#ghlSub button').forEach(x=>x.classList.toggle('on',x.dataset.s===id));$$('.sub').forEach(s=>s.classList.toggle('on',s.id===id));}
+$$('#ghlSub button').forEach(d=>d.onclick=()=>ghlTab(d.dataset.s));
+const TAGS=[['new-lead','Added on arrival. Starts the new lead follow-up.'],['source-facebook-ads','One tag per lead source, for smart lists and reports.'],
+  ['synced-to-pipedrive','The person and deal exist in Pipedrive and are linked.'],['replied','Any reply by text or email. Stops the follow-up.'],
+  ['needs-review','No email, or a lead source nobody mapped yet. Lands in a smart list.'],['migrated','Came over in the migration, so old records can be filtered.']];
+$('#tagCloud').innerHTML=TAGS.map((t,i)=>`<button class="tagc ${i===0?'on':''}"><code>${t[0]}</code><p>${t[1]}</p></button>`).join('');
+$$('.tagc').forEach(t=>t.onclick=()=>{$$('.tagc').forEach(x=>x.classList.toggle('on',x===t))});
+const SRCMAP=[['fb, facebook, Facebook Lead Ad','Facebook Ads','Alex'],['google, adwords, Google Ads','Google Ads','Jordan'],['website, Website form, web','Website','Taylor'],['referral, ref, Referred by','Referral','Morgan'],['anything else','kept as typed, tagged needs-review','Default owner']];
+$('#srcTable').innerHTML=SRCMAP.map(r=>`<tr><td>${r[0]}</td><td><b>${r[1]}</b></td><td>${r[2]}</td></tr>`).join('');
+const TRY=[['Facebook Lead Ad','Facebook Ads'],['  fb ','Facebook Ads'],['GOOGLE','Google Ads'],['Website form','Website'],['Referred by Dana','Referral'],['Trade show','Trade show, tagged needs-review']];
+$('#tryBox').innerHTML=TRY.map((k,i)=>`<button data-i="${i}">"${k[0].replace(/ /g,'&nbsp;')}"</button>`).join('');
+$$('#tryBox button').forEach(b=>b.onclick=()=>{
+  const k=TRY[+b.dataset.i],o=$('#tryOut');o.classList.remove('flash');void o.offsetWidth;o.classList.add('flash');
+  o.innerHTML=`<span class="raw">"${k[0].replace(/ /g,'&nbsp;')}"</span><span style="color:var(--muted)">→</span><span class="clean">${k[1]}</span>`;
+});
+function resetGhl(){ghlTab('g-fields');$$('.tagc').forEach((x,i)=>x.classList.toggle('on',i===0));$('#tryOut').innerHTML='<span class="s">Pick one above to see how it\'s saved.</span>'}
+
+/* ---------- follow-up tab ---------- */
+const WF=[
+ {name:'New lead follow-up',sub:'Stage: New Lead · 13 steps',done:'Follow-up finished. It stops early on a reply, or asks the owner to call once.',steps:[
+  ['t','IN','1 · Opportunity enters New Lead','Trigger · any lead source'],
+  ['a','TAG','2 · Tag new-lead and the source tag','Add tags'],
+  ['q','Has a phone and Consent to Text?'],
+  ['s','SMS','4 · Text right away','SMS from the owner',{ch:'SMS',t:'Hi Dana, it\'s Alex. Thanks for reaching out. When\'s a good time for a quick call today?'}],
+  ['s','EML','5 · Email right away','Email from the owner',{ch:'Email',h:'Got your request, Dana',t:'Thanks for getting in touch. I\'ve got your details, and the quickest next step is a short call. Reply with a time that suits you, or pick one from my calendar.'}],
+  ['w','Wait 1 day, quiet hours respected'],
+  ['s','SMS','7 · Text: still want to talk?','SMS',{ch:'SMS',t:'Hi Dana, Alex again. Still happy to help. Want me to give you a call this afternoon?'}],
+  ['w','Wait 2 days'],
+  ['s','EML','9 · Email: one quick question','Email',{ch:'Email',h:'Quick question, Dana',t:'So I can make the call useful, what would you most like help with, and roughly when? A one-line reply is plenty.'}],
+  ['w','Wait 3 days'],
+  ['a','!','11 · Tell the owner to call once','Internal notification'],
+  ['a','SET','12 · Update Last Synced','Update field'],
+  ['g','END','13 · Goal: replied, or stage moved past New Lead','Stops the workflow']]},
+ {name:'Appointment Set: confirm and remind',sub:'Stage: Appointment Set · 7 steps',done:'Confirmation and reminders sent. This one fires when a rep sets the stage in Pipedrive.',steps:[
+  ['t','IN','1 · Opportunity enters Appointment Set','Trigger · often from a Pipedrive move'],
+  ['s','SMS','2 · Text the confirmation','SMS',{ch:'SMS',t:'Hi Dana, you\'re booked with Alex. I\'ll send a reminder the day before.'}],
+  ['s','EML','3 · Email the details','Email',{ch:'Email',h:'You\'re booked, Dana',t:'Here are the details for your appointment with Alex, with a link to reschedule if the time stops working.'}],
+  ['w','Wait until 1 day before'],
+  ['s','SMS','5 · Reminder text','SMS',{ch:'SMS',t:'Hi Dana, quick reminder about tomorrow with Alex. Reply C to confirm or R to reschedule.'}],
+  ['w','Wait until 1 hour before'],
+  ['g','END','7 · Goal: appointment done or stage moved','Stops the workflow']]},
+ {name:'Proposal Sent: check in',sub:'Stage: Proposal Sent · 7 steps',done:'Check-ins sent. The owner is alerted if Dana never replies.',steps:[
+  ['t','IN','1 · Opportunity enters Proposal Sent','Trigger'],
+  ['w','Wait 2 days'],
+  ['s','EML','3 · Email: any questions?','Email',{ch:'Email',h:'Any questions on the proposal?',t:'Hi Dana, happy to walk through anything in the proposal. Reply here and I\'ll answer or set up a quick call.'}],
+  ['w','Wait 2 days'],
+  ['s','SMS','5 · Text a short nudge','SMS',{ch:'SMS',t:'Hi Dana, Alex here. Did the proposal land OK? Happy to answer anything.'}],
+  ['a','!','6 · No reply after 7 days: alert the owner','Internal notification'],
+  ['g','END','7 · Goal: Won, Lost or replied','Stops the workflow']]},
+ {name:'Reply received',sub:'Any channel · 4 steps',done:'Follow-ups stopped, and the owner was told to answer now.',steps:[
+  ['t','IN','1 · Contact replies by text or email','Trigger · customer replied'],
+  ['a','TAG','2 · Tag replied','Ends every follow-up through its goal'],
+  ['a','!','3 · Text the owner to answer now','SMS to the assigned rep'],
+  ['a','NOTE','4 · Add a note with the reply','Contact note']]}
+];
+let cw=0,wfRunning=false;
+$('#wfList').innerHTML=WF.map((w,i)=>`<button class="wfi ${i?'':'on'}" data-w="${i}"><b>${i+1} · ${w.name}</b><small>${w.sub}</small></button>`).join('');
+$$('.wfi').forEach(w=>w.onclick=()=>{if(!wfRunning) drawWf(+w.dataset.w)});
+const ICOL={'TAG':'c-warn','SMS':'c-ghl','EML':'c-info','!':'c-bad','SET':'c-brand','NOTE':'c-warn','IN':'c-warn','END':'c-ok'};
+const EMPTY='<div class="empty">Press Run to see<br>each text and email arrive.</div>';
+function drawWf(i){cw=i;$$('.wfi').forEach(w=>w.classList.toggle('on',+w.dataset.w===i));
+  const f=$('#flow');f.innerHTML='';
+  WF[i].steps.forEach((s,k)=>{ if(k) f.insertAdjacentHTML('beforeend','<div class="conn"></div>');
+    if(s[0]==='w') f.insertAdjacentHTML('beforeend',`<div class="wait step" data-k="${k}">${s[1]}</div>`);
+    else if(s[0]==='q') f.insertAdjacentHTML('beforeend',`<div class="gate step" data-k="${k}">◇ ${s[1]}</div>`);
+    else f.insertAdjacentHTML('beforeend',`<div class="node step ${s[0]==='t'?'trig':''} ${s[0]==='g'?'goal':''}" data-k="${k}"><div class="ni ${ICOL[s[1]]||'c-brand'}">${s[1]}</div><div><b>${s[2]}</b><small>${s[3]}</small></div></div>`);
+  });
+  $('#inbox').innerHTML=EMPTY; $('#canvas').scrollTop=0;
+}
+async function runWf(){ if(wfRunning) return; wfRunning=true; $('#wfBtn').disabled=true; drawWf(cw);
+  const box=$('#inbox'); box.innerHTML='';
+  const steps=$$('#flow .step'), conns=$$('#flow .conn');
+  for(let k=0;k<steps.length;k++){ if(k) conns[k-1].classList.add('lit'); const el=steps[k]; el.classList.add('run');
+    const cv=$('#canvas'); if(cv.scrollHeight>cv.clientHeight) cv.scrollTo({top:el.offsetTop-cv.clientHeight/2,behavior:SB});
+    await sleep(el.classList.contains('wait')?750:560);
+    const def=WF[cw].steps[+el.dataset.k];
+    if(def&&def[0]==='s'){const m=def[4]; box.insertAdjacentHTML('beforeend',`<div class="msg ${m.ch==='SMS'?'sms':''}"><div class="h"><span class="chip ${m.ch==='SMS'?'c-ghl':'c-info'}">${m.ch}</span><b>${m.h||'Text from Alex'}</b></div><p>${m.t}</p></div>`); box.scrollTop=box.scrollHeight;}
+    el.classList.remove('run'); if(el.classList.contains('node')) el.classList.add('done'); }
+  wfRunning=false; $('#wfBtn').disabled=false; toast(WF[cw].done); }
+function resetWf(){ if(wfRunning){toast('Let the run finish, then reset.');return false} drawWf(0); return true }
+drawWf(0);
+
+/* ---------- routing tab ---------- */
+let rtSel=0,rtRet=false;
+$('#rtBody').innerHTML=ROUTES.map((r,i)=>`<tr data-i="${i}"><td><b>${r.src}</b></td><td><span class="av" style="margin-right:6px">${r.owner.slice(0,2).toUpperCase()}</span>${r.owner}</td><td>Sales Pipeline</td><td><span class="chip c-pd">${r.stage}</span></td><td style="font-size:12px;color:var(--muted)">${r.wf}</td></tr>`).join('');
+$('#rtPick').innerHTML=ROUTES.map((r,i)=>`<button data-i="${i}">${r.src}</button>`).join('');
+$$('#rtPick button').forEach(b=>b.onclick=()=>{rtSel=+b.dataset.i;drawRt()});
+$('#rtRet').onclick=()=>{rtRet=!rtRet;drawRt()};
+function drawRt(){
+  const r=ROUTES[rtSel];
+  $$('#rtPick button').forEach(b=>b.classList.toggle('on',+b.dataset.i===rtSel));
+  $$('#rtBody tr').forEach(t=>t.classList.toggle('hit',+t.dataset.i===rtSel&&!rtRet));
+  $('#rtRet').classList.toggle('on',rtRet);
+  const keep=r.owner==='Taylor'?'Morgan':'Taylor';
+  const owner=rtRet?keep+' (already owns this person)':r.owner;
+  const why=rtRet?`The email matched an existing person, so the new deal stays with ${keep} instead of going to ${r.owner}. One person, one rep.`
+    :(rtSel===4?'Nobody has mapped this source yet, so it goes to the default owner with the needs-review tag. Add the source to the table and it routes from then on.'
+    :`${r.src} is mapped to ${r.owner}. A new person and a new deal are created and linked back to GHL.`);
+  const res=$('#rtRes'); res.classList.remove('flash'); void res.offsetWidth; res.classList.add('flash');
+  res.innerHTML=`<div class="label" style="margin-bottom:6px">Where this lead goes</div>
+    <div class="rr"><span>Person</span><b>${rtRet?'Existing, updated':'New, created'}</b></div>
+    <div class="rr"><span>Owner</span><b>${owner}</b></div><div class="rr"><span>Pipeline and stage</span><b>Sales Pipeline · ${r.stage}</b></div>
+    <div class="rr" style="border:0"><span>GHL workflow</span><b>${r.wf}</b></div><div class="why2">${why}</div>`;
+}
+function resetRt(){rtSel=0;rtRet=false;drawRt()}
+drawRt();
+
+/* ---------- sync tab ---------- */
+const S_NEW=[
+ ['1','GHL webhook received','A new opportunity from a Facebook lead ad'],
+ ['2','Record cleaned','Names, phone to +1 format, email lowercased, source spelled one way'],
+ ['3','Pipedrive searched by email','Looks for this person before creating anyone'],
+ ['4','Routed by lead source','Facebook Ads goes to Alex, Sales Pipeline, New Lead'],
+ ['5','Person created in Pipedrive','Clean name and phone, owner Alex'],
+ ['6','Deal created and linked','GHL contact and opportunity ids saved on the deal'],
+ ['7','Written back to GHL','Clean record, deal id, owner and synced tag']];
+const S_MOVE=[
+ ['8','Pipedrive webhook: deal moved','Alex moved the deal to Appointment Set'],
+ ['9','Stage matched, echo check','Moved by a person, not the sync, so it continues'],
+ ['10','GHL opportunity moved','Appointment Set, so its workflow fires'],
+ ['11','Activity logged in Pipedrive','Stage note and Alex\'s next call booked'],
+ ['↩','GHL echoes the change back','Made by the sync itself, so it is ignored']];
+let synced=false,moved=false;
+const RAW=`<span class="k">first_name</span>: <span class="bad">"  dana "</span>
+<span class="k">last_name</span>:  <span class="bad">"MORALES"</span>
+<span class="k">email</span>:      <span class="bad">"Dana.Morales@Example.com "</span>
+<span class="k">phone</span>:      <span class="bad">"(732) 555-0148"</span>
+<span class="k">source</span>:     <span class="bad">"Facebook Lead Ad"</span>`;
+const CLEAN=`<span class="k">first_name</span>: <span class="ok">"Dana"</span>
+<span class="k">last_name</span>:  <span class="ok">"Morales"</span>
+<span class="k">email</span>:      <span class="ok">"dana.morales@example.com"</span>
+<span class="k">phone</span>:      <span class="ok">"+17325550148"</span>
+<span class="k">source</span>:     <span class="ok">"Facebook Ads"</span>`;
+const PSEED=[['Kevin O\'Brien','JO',0],['Lena Brooks','TA',0],['Marcus Allen','MO',1],['Priya Shah','AL',2],['Sam Ortega','TA',3]];
+function drawSteps(list){$('#steps').innerHTML=list.map(s=>`<div class="st"><div class="d">${s[0]}</div><div><b>${s[1]}</b><small>${s[2]}</small></div></div>`).join('')}
+function drawPBoard(){
+  const short=['New Lead','Contacted','Appt Set','Proposal'];
+  $('#pBoard').innerHTML=short.map((n,i)=>`<div class="pcol"><h6>${n}</h6><div id="pc${i}">${PSEED.filter(d=>d[2]===i).map(d=>`<div class="deal"><div class="nm">${d[0]}</div><div class="meta"><span></span><span class="av">${d[1]}</span></div></div>`).join('')}</div></div>`).join('');
+}
+function log(t){$('#slog').insertAdjacentHTML('afterbegin',`<div class="ln"><i>${now()}</i>${t}</div>`)}
+function setStage(i){$$('#gStg div').forEach((d,k)=>d.classList.toggle('on',k===i))}
+function upd(id){const e=$(id);e.classList.remove('upd');void e.offsetWidth;e.classList.add('upd');setTimeout(()=>e.classList.remove('upd'),1400)}
+async function packet(dir,label){const p=$('#pk'),w=p.parentElement.clientWidth;p.textContent=label;p.style.transition='none';p.style.opacity=1;
+  const end=Math.max(0,w-p.offsetWidth);p.style.left=(dir>0?0:end)+'px';void p.offsetWidth;p.style.transition='';p.style.left=(dir>0?end:0)+'px';await sleep(1150);p.style.opacity=0}
+async function stepOn(i,ms,cls){const s=$$('#steps .st')[i];s.classList.add('run');await sleep(ms||650);s.classList.remove('run');s.classList.add(cls||'ok')}
+function lockBtns(b){busy=b;['#bNew','#bDup','#bMove'].forEach(x=>$(x).disabled=b)}
+function pAct(icon,cls,t,s){$('#pActs').insertAdjacentHTML('beforeend',`<div class="a"><div class="dot ${cls}">${icon}</div><div><b>${t}</b><small>${s}</small></div></div>`)}
+function resetSync(){ if(busy){toast('Let the run finish, then reset.');return false}
+  synced=false;moved=false;
+  drawSteps(S_NEW);drawPBoard();$('#rec').innerHTML='<span class="k">// the lead\'s record appears here</span>';
+  $('#gAv').textContent='?';$('#gName').textContent='Waiting for a lead';$('#gEmail').textContent='Press button 1';
+  ['#gPhone','#gSrc','#gDeal','#gOwner'].forEach(x=>$(x).textContent='-');setStage(-1);$('#gTags').innerHTML='';
+  $('#gWf').className='wfhit';$('#gWf').textContent='No workflow running yet.';
+  $('#pActs').innerHTML='<div class="label" style="margin-top:4px">Deal activity</div>';
+  $('#slog').innerHTML='<div class="ln"><i>--:--:--</i>Listening for GHL and Pipedrive webhooks.</div>';
+  return true;
+}
+async function newLead(){ if(busy) return; if(synced){toast('Dana is already in both CRMs. Try button 2 or 3, or press Reset.');return}
+  lockBtns(true); drawSteps(S_NEW);
+  $('#gAv').textContent='DM';$('#gName').textContent='  dana  MORALES';$('#gEmail').textContent='Dana.Morales@Example.com';
+  $('#gPhone').textContent='(732) 555-0148';$('#gSrc').textContent='Facebook Lead Ad';setStage(0);
+  $('#gTags').innerHTML='<span>new-lead</span>';
+  log('GHL: new opportunity for Dana Morales (Facebook Lead Ad)');
+  await packet(1,'lead →'); await stepOn(0);
+  $('#rec').innerHTML=RAW; await sleep(700); await stepOn(1,800); $('#rec').innerHTML=CLEAN; log('Cleaned: name, phone, email and lead source');
+  $$('#steps .st')[2].querySelector('small').textContent='No match found, safe to create';
+  await stepOn(2); log('Pipedrive: no person with dana.morales@example.com, creating one');
+  await stepOn(3); await stepOn(4);
+  const c=document.createElement('div');c.className='deal new';c.id='dana';c.innerHTML='<div class="nm">Dana Morales</div><div class="meta"><span>$2,500</span><span class="av">AL</span></div>';
+  $('#pc0').prepend(c); await stepOn(5);
+  pAct('+','c-pd','Deal created: Dana Morales','Owner Alex · from GHL');
+  pAct('C','c-info','Call Dana today','Booked for Alex');
+  log('Pipedrive: person and deal #4127 created, owner Alex');
+  await packet(-1,'← deal id'); await stepOn(6);
+  $('#gName').textContent='Dana Morales';$('#gEmail').textContent='dana.morales@example.com';$('#gPhone').textContent='+1 732 555 0148';$('#gSrc').textContent='Facebook Ads';
+  $('#gDeal').textContent='4127';$('#gOwner').textContent='Alex';['#gfPhone','#gfSrc','#gfDeal','#gfOwner'].forEach(upd);
+  $('#gTags').innerHTML='<span>new-lead</span><span>source-facebook-ads</span><span>synced-to-pipedrive</span>';
+  $('#gWf').className='wfhit on';$('#gWf').innerHTML='<b>New lead follow-up</b> started: first text and email sent from Alex.';
+  log('GHL: clean record and deal id written back, follow-up started');
+  synced=true; lockBtns(false); toast('<b>Dana Morales</b> is in both CRMs, owned by Alex. Now try button 2.');
+}
+async function dupLead(){ if(busy) return; if(!synced){toast('Press button 1 first, so there is a lead to duplicate.');return}
+  lockBtns(true); drawSteps(S_NEW);
+  const s=$$('#steps .st');
+  s[0].querySelector('small').textContent='Dana filled in the website form too';
+  log('GHL: second form from dana.morales@example.com (Website)');
+  await packet(1,'lead →'); await stepOn(0); await stepOn(1);
+  s[2].querySelector('small').textContent='Found Dana Morales, already owned by Alex';
+  await stepOn(2,800);
+  s[3].querySelector('small').textContent='Returning person keeps Alex, not re-routed';
+  await stepOn(3);
+  s[4].querySelector('b').textContent='Create person: skipped';s[4].querySelector('small').textContent='Existing person updated instead';
+  await stepOn(4,600,'skip');
+  s[5].querySelector('b').textContent='Deal already linked: updated';s[5].querySelector('small').textContent='No second deal';
+  await stepOn(5,600,'skip');
+  const d=$('#dana'); if(d){d.classList.remove('new');void d.offsetWidth;d.classList.add('new')}
+  pAct('N','c-warn','Note: also filled in the website form','Same person, no duplicate');
+  await packet(-1,'← updated'); await stepOn(6);
+  log('Pipedrive: matched existing person, 0 duplicates created');
+  lockBtns(false); toast('Same email, same person. <b>No duplicate created.</b> Now try button 3.');
+}
+async function repMove(){ if(busy) return; if(moved){toast('The deal already moved. Press Reset to run it again.');return}
+  if(!synced){await newLead(); await sleep(500)}
+  lockBtns(true); drawSteps(S_MOVE);
+  const d=$('#dana'); d.style.opacity=0; d.style.transform='translateX(20px)'; await sleep(350);
+  $('#pc2').prepend(d); d.style.opacity=1; d.style.transform='none'; d.classList.remove('new'); void d.offsetWidth; d.classList.add('new');
+  log('Pipedrive: Alex moved Dana Morales to Appointment Set');
+  await packet(-1,'← stage'); await stepOn(0); await stepOn(1,800); log('Echo check: changed by Alex, continue');
+  await stepOn(2); setStage(2);
+  $('#gWf').className='wfhit on';$('#gWf').innerHTML='<b>Appointment Set: confirm and remind</b> fired: confirmation text and email sent to Dana.';
+  $('#gTags').insertAdjacentHTML('beforeend','<span>appointment-set</span>');
+  log('GHL: opportunity moved to Appointment Set, workflow fired');
+  await packet(1,'activity →'); await stepOn(3);
+  pAct('→','c-pd','Stage changed to Appointment Set','By Alex · synced to GHL');
+  pAct('C','c-info','Prep call before the appointment','Booked for Alex');
+  log('Pipedrive: stage note logged, next call booked for Alex');
+  await sleep(300); await packet(1,'echo →'); await stepOn(4,800,'skip');
+  log('Echo from GHL: made by the sync itself, ignored. No loop.');
+  moved=true; lockBtns(false); toast('Both CRMs show <b>Appointment Set</b>. The follow-up fired and the echo was ignored.');
+}
+resetSync();
+
+/* ---------- migration tab ---------- */
+const MB=[
+ {n:'  dana  MORALES',e:'Dana.Morales@Example.com ',p:'(732) 555-0148',s:'Facebook Lead Ad',st:'New Lead',bad:['n','e','s']},
+ {n:'Dana Morales',e:'dana.morales@example.com',p:'732.555.0148',s:'fb',st:'New Lead',bad:['p','s'],dup:1},
+ {n:'KEVIN o\'brien',e:'kobrien@example.com',p:'7325550199',s:'google',st:'Contacted',bad:['n','p','s']},
+ {n:'priya shah',e:'',p:'908-555-0122',s:'website',st:'New Lead',bad:['n','e','s'],rev:1},
+ {n:'Marcus Allen ',e:'marcus.allen@example.com',p:'1 (201) 555 0177',s:'Referral',st:'Proposal Sent',bad:['n','p']},
+ {n:'lena brooks',e:'LENA@EXAMPLE.COM',p:'(201)5550135',s:'Website form',st:'Appt Set',bad:['n','e','p','s']},
+ {n:'Kevin O\'Brien',e:'KOBRIEN@example.com',p:'',s:'Google Ads',st:'Contacted',bad:['e','p'],dup:1}
+];
+const MA=[
+ ['Dana Morales','dana.morales@example.com','+1 732 555 0148','Facebook Ads','Alex'],
+ ['Kevin O\'Brien','kobrien@example.com','+1 732 555 0199','Google Ads','Jordan'],
+ ['Marcus Allen','marcus.allen@example.com','+1 201 555 0177','Referral','Morgan'],
+ ['Lena Brooks','lena@example.com','+1 201 555 0135','Website','Taylor']];
+let migState=0,migBusy=false;
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/ /g,'&nbsp;');
+function drawBefore(mark){
+  $('#mBefore').innerHTML=MB.map((r,i)=>{const b=k=>mark&&r.bad.includes(k)?'bad':'';
+    return `<tr id="mb${i}"><td class="${b('n')}">${esc(r.n)}</td><td class="${b('e')}">${r.e?esc(r.e):'<i>(blank)</i>'}</td><td class="${b('p')}">${r.p?esc(r.p):'<i>(blank)</i>'}</td><td class="${b('s')}">${esc(r.s)}</td><td>${esc(r.st)}</td></tr>`}).join('');
+}
+function mSteps(n){$$('#mStep div').forEach((d,i)=>{d.classList.toggle('done',i<n);d.classList.toggle('on',i===n)})}
+function count(id,to){const el=$(id);if(RM){el.textContent=to;return}let v=0;const t=setInterval(()=>{v++;el.textContent=Math.min(v,to);if(v>=to)clearInterval(t)},120)}
+async function migDry(){ if(migState||migBusy) return; migBusy=true; migState=1; $('#mDry').disabled=true; mSteps(1);
+  drawBefore(false);
+  for(let i=0;i<MB.length;i++){const tr=$('#mb'+i);tr.classList.add('scan');await sleep(260);tr.classList.remove('scan')}
+  drawBefore(true);
+  const bad=MB.reduce((a,r)=>a+r.bad.length,0); $('#mBadCt').textContent=bad+' problems found';
+  MB.forEach((r,i)=>{ if(r.dup) $('#mb'+i).classList.add('dup'); if(r.rev) $('#mb'+i).classList.add('rev'); });
+  count('#ms1',7); count('#ms3',2); count('#ms4',1);
+  $('#mAfter').innerHTML='<tr><td colspan="5" style="font-family:var(--fb);color:var(--muted);padding:16px;white-space:normal">Dry run done. Nothing has been written yet: you read this report, then press Migrate.</td></tr>';
+  mSteps(2); migBusy=false; toast('Dry run: 7 records, 2 duplicates, 1 with no email. <b>Nothing written.</b> Now press Migrate.');
+}
+async function migRun(){ if(migState===2||migBusy) return; if(!migState){await migDry();await sleep(900)}
+  migBusy=true; migState=2; $('#mRun').disabled=true; mSteps(3); $('#mAfter').innerHTML='';
+  for(const r of MA){ $('#mAfter').insertAdjacentHTML('beforeend',`<tr class="mrow"><td class="okc">${esc(r[0])}</td><td class="okc">${r[1]}</td><td class="okc">${esc(r[2])}</td><td class="okc">${esc(r[3])}</td><td>${esc(r[4])}</td></tr>`); await sleep(420); }
+  $('#mAfter').insertAdjacentHTML('beforeend',`<tr class="rev"><td>Priya&nbsp;Shah</td><td><i>needs-review</i></td><td>+1&nbsp;908&nbsp;555&nbsp;0122</td><td>Website</td><td>Held&nbsp;in&nbsp;GHL</td></tr>`);
+  count('#ms2',4); $('#mOkCt').textContent='4 people, 4 deals, tagged migrated';
+  await sleep(600); mSteps(4); await sleep(700); mSteps(5);
+  migBusy=false; toast('Migration done. Every record went through the same cleaner and duplicate check.');
+}
+function resetMig(){ if(migBusy){toast('Let the run finish, then reset.');return false}
+  migState=0; $('#mDry').disabled=false; $('#mRun').disabled=false; mSteps(0); drawBefore(false);
+  $('#mBadCt').textContent='Not checked yet'; $('#mOkCt').textContent='Waiting';
+  $('#mAfter').innerHTML='<tr><td colspan="5" style="font-family:var(--fb);color:var(--muted);padding:16px;white-space:normal">Press Dry run to check the records first.</td></tr>';
+  ['#ms1','#ms2','#ms3','#ms4'].forEach(x=>$(x).textContent='0'); return true;
+}
+resetMig();
+
+/* ---------- testing tab ---------- */
+const TESTS=[
+ ['Routing and duplicates',[
+  ['A test lead from each lead source reaches the right rep','4 of 4 routed'],
+  ['The same email twice creates one person','1 person, 1 deal'],
+  ['Messy names and phones arrive clean in both CRMs','Clean in both'],
+  ['An unmapped source goes to the default owner','Tagged needs-review']]],
+ ['Two-way sync and activity',[
+  ['A rep moves a deal, and GHL moves to the same stage','Stages match'],
+  ['The GHL workflow for that stage fires','Confirmation sent'],
+  ['The sync ignores its own echo','No loop'],
+  ['The owner\'s next call is booked in Pipedrive','Activity created']]],
+ ['Follow-up, migration and failures',[
+  ['Texts respect quiet hours and stop on a reply','Held, then stopped'],
+  ['The migration dry run matches the final counts','Counts match'],
+  ['A lead with no email stops before either CRM','Nothing created'],
+  ['A broken token emails you the failed step','Alert received']]]
+];
+let tTotal=0,tRan=false,tBusy=false;
+$('#tests').innerHTML=TESTS.map(g=>`<div class="tg"><div class="label">${g[0]}</div>${g[1].map(t=>{tTotal++;return `<div class="test"><div class="bx">✓</div><div><b>${t[0]}</b></div><div class="res" data-r="${t[1]}">Not run</div></div>`}).join('')}</div>`).join('');
+$('#ringT').textContent=tTotal;
+async function runTests(){ if(tRan||tBusy) return; tRan=true; tBusy=true; $('#tBtn').disabled=true;
+  const all=$$('.test'); let n=0;
+  for(const t of all){ t.classList.add('run'); t.querySelector('.res').textContent='Running…'; await sleep(430);
+    t.classList.remove('run'); t.classList.add('pass'); const r=t.querySelector('.res'); r.textContent=r.dataset.r; n++;
+    $('#ringN').textContent=n; $('#ringC').style.strokeDashoffset=314.16*(1-n/all.length);
+    if(n===all.length) $('#alertMail').style.opacity=1; }
+  tBusy=false; toast('All '+all.length+' tests passed. <b>Ready to launch.</b>');
+}
+function resetTests(){ if(tBusy){toast('Let the tests finish, then reset.');return false}
+  tRan=false; $('#tBtn').disabled=false;
+  $$('.test').forEach(t=>{t.classList.remove('pass','run');const r=t.querySelector('.res');r.textContent='Not run'});
+  $('#ringN').textContent=0; $('#ringC').style.strokeDashoffset=314.16; $('#alertMail').style.opacity=.35; return true;
+}
+
+/* ---------- docs tab ---------- */
+const DOCS=[
+ ['How it fits together',`<p>GoHighLevel captures leads and sends every text and email. Pipedrive is where your reps work deals. An n8n workflow keeps the two in step.</p><ol><li>A new lead in GHL is cleaned, checked by email and routed to a rep.</li><li>A person and a deal are created in Pipedrive and linked back to GHL.</li><li>When a rep moves a deal, GHL moves too and the matching follow-up fires.</li></ol><div class="callout">Stage is the only thing both CRMs change. Everything else has one home.</div>`],
+ ['Change a lead source or rep',`<p>Lead sources and owners live in one routing table.</p><ol><li>Add the new spelling to the Lead Source dropdown in GHL.</li><li>Add one line to the routing table: the source, then the rep's Pipedrive user.</li><li>Send one test lead from that source and check it lands with the rep.</li></ol><p>Until a source is mapped, its leads go to the default owner with the needs-review tag.</p>`],
+ ['The stage map',`<p>Each GHL stage has one Pipedrive stage with the same name.</p><ul><li>New Lead ↔ New Lead</li><li>Contacted ↔ Contacted</li><li>Appointment Set ↔ Appointment Set</li><li>Proposal Sent ↔ Proposal Sent</li></ul><div class="callout">Renaming a stage? Rename it in both CRMs and update the stage map at the same time.</div>`],
+ ['When an alert email arrives',`<p>The alert names the step that stopped and links to the run.</p><ol><li>Open the run from the link in the email.</li><li>Read the error. A 401 means a token expired; a missing email means the lead needs one.</li><li>Fix it, then press retry. The lead goes through from where it stopped.</li></ol><p>A lead that fails is never half-created in either CRM.</p>`],
+ ['Adding a new rep',`<ol><li>Create the user in Pipedrive and in the GHL sub-account.</li><li>Give them lead sources in the routing table.</li><li>Send them the one-page cheat sheet and the training recording.</li></ol>`],
+ ['Migration report',`<p>The dry run report and the final counts are kept here, with the list of records sent to review and what was decided for each.</p><p>Migrated records carry the migrated tag in GHL, so they can be filtered or rolled back as a group.</p>`]
+];
+$('#toc').innerHTML=DOCS.map((d,i)=>`<button class="${i?'':'on'}" data-i="${i}">${d[0]}</button>`).join('');
+function drawDoc(i){$$('#toc button').forEach(d=>d.classList.toggle('on',+d.dataset.i===i));$('#doc').innerHTML=`<div class="crumb">Runbook · page ${i+1} of ${DOCS.length}</div><h2>${DOCS[i][0]}</h2>${DOCS[i][1]}`}
+$$('#toc button').forEach(d=>d.onclick=()=>drawDoc(+d.dataset.i));
+drawDoc(0);
+const AG=[['Tour of both CRMs','Where leads arrive, where deals live'],['Working a deal in Pipedrive','Moving stages and what fires in GHL'],['Reading a GHL contact','Tags, fields and the follow-up history'],['Adding a lead source or rep','The routing table, live'],['What to do with an alert','Open the run, fix, retry'],['Questions','Recorded for new reps']];
+$('#agenda').innerHTML=AG.map(a=>`<button class="ag"><span class="ck">✓</span><span><b>${a[0]}</b><small>${a[1]}</small></span></button>`).join('');
+$$('.ag').forEach(a=>a.onclick=()=>a.classList.toggle('on'));
+
+/* ---------- reset everything ---------- */
+function resetAll(){
+  if(busy||wfRunning||migBusy||tBusy){toast('A run is still going. Let it finish, then press Reset.');return}
+  resetWf(); resetSync(); resetMig(); resetTests(); resetRt(); resetGhl(); drawPd(0); drawDoc(0);
+  $$('.ag').forEach(a=>a.classList.remove('on'));
+  seen.clear(); seen.add('overview'); $$('.nav').forEach(n=>n.classList.remove('seen'));
+  go('overview'); toast('Everything is back to the start.');
+}
+go('overview');
+</script>

@@ -1,0 +1,869 @@
+<title>Finance Agents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16202e; --ink2:#4d596b; --ink3:#8792a3;
+  --blue:#2f74f5; --blue2:#6aa5ff; --mint:#1fb487; --amber:#e8a13a; --red:#e0445a;
+  --line:rgba(150,170,200,.28);
+  --panel:linear-gradient(180deg,rgba(255,255,255,.94),rgba(248,251,255,.80));
+  --shadow:0 40px 70px -30px rgba(38,72,128,.30),0 16px 30px -18px rgba(38,72,128,.22);
+  --ease:cubic-bezier(.16,1,.3,1);
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;background:#e9f0f8}
+body{font-family:"Figtree",system-ui,sans-serif;color:var(--ink);background:#e9f0f8;overflow-x:hidden;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+.sky{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+   radial-gradient(1200px 600px at 78% -10%,rgba(255,255,255,.95),rgba(255,255,255,0) 60%),
+   radial-gradient(900px 520px at 8% 30%,rgba(206,226,250,.75),rgba(206,226,250,0) 70%),
+   linear-gradient(180deg,#c9dcf2 0%,#dce8f5 28%,#ecf1f7 58%,#f3f4f6 82%,#e9edf2 100%);}
+.sky::after{content:"";position:absolute;left:-10%;right:-10%;top:calc(58% - var(--sp,0) * 18%);height:40%;
+  background:radial-gradient(60% 50% at 50% 0%,rgba(255,255,255,.85),rgba(255,255,255,0) 70%);filter:blur(10px)}
+.haze{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.haze i{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;animation:drift 26s ease-in-out infinite alternate}
+.haze i:nth-child(1){width:520px;height:520px;left:-120px;top:10%;background:#d6e6fb}
+.haze i:nth-child(2){width:460px;height:460px;right:-100px;top:45%;background:#e6f1fb;animation-duration:32s}
+.haze i:nth-child(3){width:380px;height:380px;left:40%;top:70%;background:#dff0ec;opacity:.45;animation-duration:38s}
+@keyframes drift{to{transform:translate3d(60px,-50px,0) scale(1.08)}}
+
+main{position:relative;z-index:1}
+.top{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:18px 32px;pointer-events:none}
+.top .brand{font-weight:600;font-size:13px;letter-spacing:.02em;color:var(--ink2);display:flex;gap:10px;align-items:center;padding:7px 14px 7px 12px;border-radius:99px;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff,0 6px 18px -8px rgba(38,72,128,.25);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.top .brand b{width:9px;height:9px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 4px rgba(47,116,245,.15)}
+.chip{white-space:nowrap;font-size:12px;font-weight:600;color:var(--ink2);padding:7px 13px;border-radius:99px;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff,0 6px 18px -8px rgba(38,72,128,.25);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(14px)}
+
+section{position:relative;min-height:100vh;padding:120px 48px 110px;display:flex;flex-direction:column;justify-content:center;perspective:1700px;perspective-origin:50% 40%}
+.wrap{width:100%;max-width:1240px;margin:0 auto;position:relative;transform-style:preserve-3d}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
+.eyebrow span{font-variant-numeric:tabular-nums;color:var(--ink3);letter-spacing:.06em}
+h1,h2{font-weight:600;letter-spacing:-.035em;line-height:1.02;color:var(--ink)}
+h1{font-size:clamp(44px,6.6vw,96px)}
+h2{font-size:clamp(38px,4.8vw,70px);margin-top:14px}
+h2 em,h1 em{font-style:normal;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.head{margin-bottom:56px}
+.head.c{text-align:center}
+.sub{font-size:clamp(17px,1.45vw,21px);line-height:1.45;font-weight:450;color:var(--ink2);max-width:660px;margin-top:18px;letter-spacing:-.005em}
+.head.c .sub{margin-left:auto;margin-right:auto}
+
+/* panels */
+.par{will-change:transform;transform-style:preserve-3d}
+.panel{position:relative;background:var(--panel);border-radius:28px;border:1px solid rgba(255,255,255,.95);
+  box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.55),var(--shadow);backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3)}
+.panel::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,0) 28%,rgba(255,255,255,0) 72%,rgba(200,218,242,.35) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;padding:1.5px}
+.panel::after{content:"";position:absolute;left:10%;right:10%;bottom:-46px;height:34px;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(52,86,140,.22),rgba(52,86,140,0));filter:blur(6px);pointer-events:none;transform:translateZ(-1px)}
+.rise{opacity:0;transform:perspective(1400px) translate3d(0,90px,-180px) rotateX(20deg);transform-origin:50% 100%;
+  transition:opacity 1.1s var(--ease),transform 1.6s var(--ease);transition-delay:var(--d,0s)}
+.in .rise{opacity:1;transform:perspective(1400px) translate3d(0,0,0) rotateX(0)}
+.fade{opacity:0;transform:translateY(18px);transition:opacity .9s var(--ease),transform 1.2s var(--ease);transition-delay:var(--d,0s)}
+.in .fade{opacity:1;transform:none}
+
+.label{font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+.avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(160deg,#7fb2ff,#2f74f5);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 6px 14px -6px rgba(47,116,245,.6);flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;background:rgba(31,180,135,.12);color:#12926b;white-space:nowrap}
+.pill.blue{background:rgba(47,116,245,.1);color:var(--blue)}
+.tagI{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);border:1px dashed rgba(135,146,163,.6);padding:4px 9px;border-radius:99px}
+.ring{position:relative;width:86px;height:86px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .num{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:24px;letter-spacing:-.02em;line-height:1;text-align:center}
+.ring .num small{display:block;font-size:11px;font-weight:600;color:var(--ink3);margin-top:2px}
+.lb{display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:6px;white-space:nowrap;line-height:1.3}
+.lb.red{background:rgba(224,68,90,.12);color:#c22f47}
+.lb.amb{background:rgba(232,161,58,.18);color:#a8650f}
+.lb.grn{background:rgba(31,180,135,.14);color:#0f8a63}
+.lb.gry{background:rgba(135,146,163,.16);color:#5b6576}
+.lb.blu{background:rgba(47,116,245,.12);color:#2360d6}
+.ts{font-family:var(--mono);font-size:11.5px;font-weight:700;color:#2360d6;background:rgba(47,116,245,.1);border-radius:6px;padding:2px 7px;white-space:nowrap;flex:none}
+.shell{padding:10px;border-radius:30px}
+.shin{border-radius:20px;overflow:hidden;background:#fff;position:relative}
+.scrollcue{margin-top:40px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);display:flex;flex-direction:column;align-items:center;gap:10px}
+.scrollcue b{width:1.5px;height:36px;background:linear-gradient(var(--ink3),transparent);animation:cue 2.4s ease-in-out infinite}
+@keyframes cue{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+@keyframes blink{50%{opacity:0}}
+.on-seq{opacity:0;transform:translateY(8px);transition:opacity .55s var(--ease),transform .8s var(--ease)}
+.on-seq.on{opacity:1;transform:none}
+
+/* HERO + GOAL (from pilots/impact-hero.html) */
+#hero .wrap{display:grid;grid-template-columns:1fr;justify-items:center;text-align:center}
+#hero .kicker{font-size:15px;font-weight:500;color:var(--ink2);margin-bottom:22px}
+.goal{margin-top:26px;font-size:clamp(17px,1.45vw,21px);line-height:1.4;font-weight:500;color:var(--ink2);letter-spacing:-.005em;display:inline-flex;align-items:center;gap:12px}
+.goal b{font-weight:700;color:var(--ink)}
+.goal i{width:9px;height:9px;border-radius:50%;background:#12926b;box-shadow:0 0 0 4px rgba(31,180,135,.16);flex:none}
+.hgoal{width:min(1040px,100%);margin-top:22px}
+.gcard{padding:24px 28px 26px;text-align:left;display:flex;flex-direction:column;gap:20px}
+.gtopr{display:grid;grid-template-columns:auto minmax(0,1fr);gap:36px;align-items:center}
+.gres{display:flex;flex-direction:column;gap:10px}
+.gres .label{color:#12926b}
+.gmath{display:flex;flex-direction:column;gap:8px;padding-left:32px;border-left:1px solid var(--line)}
+.gin{display:flex;flex-direction:column;gap:12px;padding-top:18px;border-top:1px solid var(--line)}
+.ginh{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ginh .label{color:var(--blue)}
+.ginr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.hmet{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:min(640px,100%);margin-top:92px;text-align:left}
+.imtag{align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#667085;border:1px dashed #98a2b3;padding:4px 10px;border-radius:99px;white-space:nowrap}
+.imf{display:flex;flex-direction:column;gap:7px}
+.imf label{font-size:13.5px;font-weight:600;color:var(--ink2)}
+.imbox{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #d0d5dd;border-radius:14px;padding:0 16px;height:56px;box-shadow:0 1px 2px rgba(16,24,40,.05);transition:border-color .3s,box-shadow .3s}
+.imbox:focus-within{border-color:var(--blue);box-shadow:0 0 0 4px rgba(47,116,245,.14)}
+.imbox span{font-size:22px;font-weight:600;color:var(--ink3)}
+.imbox input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:24px;font-weight:700;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums;-moz-appearance:textfield;appearance:textfield}
+.imbox input::-webkit-outer-spin-button,.imbox input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.imbox small{font-size:12.5px;font-weight:600;color:var(--ink3);white-space:nowrap}
+.imbig{font-size:clamp(52px,6.2vw,90px);font-weight:600;letter-spacing:-.045em;line-height:.95;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
+.imbig small{font-size:.32em;letter-spacing:-.01em;font-weight:600;margin-left:6px}
+.imeq{font-size:17px;line-height:1.55;font-weight:500;color:var(--ink2)}
+.imeq b{color:var(--ink);font-weight:700}
+.imeq .tot{color:#12926b}
+.ims{background:#fff;border:1px solid #eaecf0;border-radius:16px;padding:14px 16px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.ims .v{font-size:28px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.ims .v small{font-size:14px;font-weight:600;color:var(--ink3);margin-left:3px;letter-spacing:0}
+.ims .k{font-size:12.5px;line-height:1.4;color:var(--ink3);font-weight:500;margin-top:6px}
+.imnote{font-size:12.5px;line-height:1.45;color:var(--ink3);font-weight:500}
+#hero{padding-top:84px;padding-bottom:28px}
+#hero .hmet{margin-top:22px}
+#hero .scrollcue{margin-top:18px}
+#hero h1{font-size:clamp(40px,5.2vw,76px)}
+#hero .goal{margin-top:22px}
+#hero .hgoal{margin-top:26px}
+
+/* IN -> OUT */
+#io .wrap{text-align:center}
+.iog{display:grid;grid-template-columns:minmax(0,1fr) 170px minmax(0,1fr);align-items:center;gap:20px;max-width:1060px;margin:0 auto;transform-style:preserve-3d;text-align:left}
+.iocol{display:flex;flex-direction:column;gap:18px;min-width:0}
+.iop{padding:24px 24px 26px;display:flex;flex-direction:column;gap:12px}
+.iop .label{color:var(--blue)}
+.iop.out .label{color:#12926b}
+.iocap{font-size:15.5px;line-height:1.45;font-weight:500;color:var(--ink2);text-align:center;padding:0 10px}
+.iocall{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid #eaecf0;border-radius:16px;padding:14px 16px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.iocall .t{font-weight:700;font-size:16px}.iocall .s{font-size:13px;color:var(--ink3);margin-top:2px}
+.iocall .ring2{margin-left:auto;font-size:11.5px;font-weight:700;color:#2360d6;background:#eff4ff;border:1px solid #c7d7fe;border-radius:99px;padding:4px 10px;white-space:nowrap}
+.ic40{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;flex:none;background:linear-gradient(160deg,#6aa5ff,#155eef);box-shadow:0 8px 16px -8px rgba(21,94,239,.7)}
+.ic40 svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.trl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;font-size:13.5px;line-height:1.45;padding:0 4px}
+.trl .sp{font-weight:700;color:var(--ink)}
+.trl .sp.p{color:#7a5af8}
+.trl q{quotes:none;color:var(--ink2)}
+.iorow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:0 4px}
+.iorow span:first-child{color:var(--ink3)}.iorow span:last-child{font-weight:600;text-align:right}
+.ioscore{display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #eaecf0;border-radius:16px;padding:12px 16px;box-shadow:0 0 0 2px #12b76a,0 14px 24px -14px rgba(18,183,106,.5)}
+.ioscore .big{font-size:34px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.ioscore .big small{font-size:14px;color:var(--ink3);font-weight:600}
+.ioscore .t{font-weight:700;font-size:14.5px}.ioscore .s{font-size:12.5px;color:var(--ink3);margin-top:2px}
+.ioitem{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.45;background:#fff;border:1px solid #eaecf0;border-radius:12px;padding:10px 12px}
+.ioitem b{font-weight:700}
+.ioar{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.ioar .tt{font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:1;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ioar svg{width:150px;height:24px;overflow:visible}
+.ioar svg path{fill:none;stroke:url(#gm);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.ioar .label{letter-spacing:.1em}
+.iop .pin,.iop .pout{opacity:0;transform:translateY(10px);transition:opacity .6s var(--ease),transform .8s var(--ease)}
+.iop .on{opacity:1;transform:none}
+/* 06 CLAUDE CODE */
+#cc .head{text-align:center}
+#cc .sub{margin-left:auto;margin-right:auto}
+.cclab{margin-top:14px;display:inline-block}
+.ccgrid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:30px;align-items:start;transform-style:preserve-3d}
+.term{border-radius:18px;overflow:hidden;background:#1b1b1d;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.tbar{display:flex;align-items:center;gap:8px;padding:11px 14px;background:#2a2a2d;border-bottom:1px solid #111}
+.tbar i{width:12px;height:12px;border-radius:50%;background:#55555b;flex:none}
+.tbar span{flex:1;text-align:center;font-family:var(--mono);font-size:12px;color:#9a9aa2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:44px}
+.tbody{padding:16px 20px 18px;font-family:var(--mono);font-size:12.5px;line-height:1.55;color:#e4e4e7;overflow-wrap:anywhere}
+.wel{border:1px solid #d7825f;border-radius:8px;padding:10px 14px;display:inline-block;max-width:100%}
+.wel .w1{display:flex;align-items:center;gap:8px;color:#f2f2f2}
+.wel .w1 svg{width:14px;height:14px;fill:#d7825f;flex:none}
+.wel .w2{color:#8b8b93;margin-top:8px}
+.wel .w3{color:#8b8b93}
+.tl{opacity:0;transition:opacity .35s}
+.tl.on{opacity:1}
+.upr{margin-top:14px;color:#a9a9b1;background:#26262a;border-radius:4px;padding:2px 8px;display:flex;gap:8px;align-items:center}
+.upr b{color:#e4e4e7;font-weight:500;flex:1;min-width:0}
+.iot{flex:none;font-family:"Figtree",sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:99px;padding:1px 8px;color:#fff;background:#155eef}
+.iot.o{background:#12b76a}
+.stp{margin-top:7px;display:grid;grid-template-columns:16px minmax(0,1fr)}
+.dot{width:8px;height:8px;border-radius:50%;background:#6b6b73;margin-top:7px}
+.stp.ok .dot{background:#4cc38a}
+.stp.txt .dot{background:#e4e4e7}
+.stp .tn b{color:#f2f2f2;font-weight:700}
+.stp .tn span{color:#b8b8c0}
+.res{display:grid;grid-template-columns:30px minmax(0,1fr);color:#8b8b93}
+.res::before{content:"\23BF";padding-left:6px;color:#6b6b73}
+.todo{display:grid;grid-template-columns:30px minmax(0,1fr)}
+.todo::before{content:"";}
+.todo.f::before{content:"\23BF";padding-left:6px;color:#6b6b73}
+.todo .c{display:inline-block;width:20px;color:#8b8b93}
+.todo.done{color:#6b6b73;text-decoration:line-through;text-decoration-color:#55555b}
+.todo.done .c{color:#4cc38a;text-decoration:none}
+.todo.cur{color:#e4e4e7;font-weight:700}
+.sumy{color:#e4e4e7}
+.sumy .iot{margin-right:8px;vertical-align:1px}
+.spin{margin-top:12px;color:#d7825f;min-height:1.6em}
+.spin small{color:#6b6b73;font-size:inherit}
+.inp{margin-top:6px;border:1px solid #4a4a50;border-radius:6px;padding:6px 12px;color:#8b8b93;display:flex;gap:10px}
+.inp i{width:8px;height:16px;background:#bdbdc4;margin-top:3px;animation:blink 1s steps(1) infinite}
+.hint{color:#6b6b73;font-size:12px;margin-top:6px;padding-left:4px}
+.tree{padding:18px 18px 16px}
+.tree .th{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tree .th b{font-size:14.5px;font-weight:700}
+.tree ul{list-style:none;margin-top:12px;font-family:var(--mono);font-size:12.5px}
+.tree li{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;white-space:nowrap;color:var(--ink2);transition:background .5s,color .5s}
+.tree li svg{width:15px;height:15px;flex:none;fill:none;stroke:var(--ink3);stroke-width:1.8;stroke-linejoin:round}
+.tree li.dir svg{fill:rgba(47,116,245,.14);stroke:var(--blue)}
+.tree li.hit{background:rgba(47,116,245,.1);color:var(--ink)}
+.tree li .nw{margin-left:auto;font-family:"Figtree",sans-serif;font-size:11px;font-weight:700;color:#0f8a63;background:rgba(31,180,135,.14);padding:2px 7px;border-radius:99px;opacity:0;transition:opacity .5s}
+.tree li.new{opacity:.35}
+.tree li.new.made{opacity:1}
+.tree li.new.made .nw{opacity:1}
+.hand{padding:16px 18px;margin-top:22px;display:flex;gap:12px;align-items:center}
+.hand .ic{width:36px;height:36px;border-radius:50%;background:rgba(31,180,135,.14);display:grid;place-items:center;flex:none}
+.hand .ic::after{content:"";width:12px;height:6px;border-left:2.5px solid var(--mint);border-bottom:2.5px solid var(--mint);transform:rotate(-45deg) translate(1px,-1px)}
+.hand .t{font-weight:700;font-size:14.5px}.hand .s{font-size:12.5px;color:var(--ink3);margin-top:2px;overflow-wrap:anywhere}
+
+/* CLOSE */
+#close .wrap{text-align:center}
+.words{position:relative;display:flex;flex-direction:column;align-items:center;gap:22px;transform-style:preserve-3d}
+.word{padding:18px 40px 20px 30px;border-radius:99px;display:flex;align-items:center;gap:18px;font-size:clamp(40px,5.4vw,78px);font-weight:600;letter-spacing:-.04em;line-height:1}
+.word i{width:40px;height:40px;border-radius:50%;background:rgba(31,180,135,.14);display:grid;place-items:center;flex:none}
+.word i::after{content:"";width:15px;height:8px;border-left:3px solid var(--mint);border-bottom:3px solid var(--mint);transform:rotate(-45deg) translate(2px,-2px)}
+.word.w1{margin-right:280px}.word.w2{margin-left:120px}.word.w3{margin-right:160px}.word.w4{margin-left:260px}
+.word.w4 span{background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.foot{margin-top:70px;font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase}
+
+.gfrom{font-size:17px;font-weight:600;color:var(--ink2);letter-spacing:-.01em}
+/* shared screen pieces */
+.g2{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:36px;align-items:start;transform-style:preserve-3d}
+.side{display:grid;gap:24px}
+.thd{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid #eef1f5}
+.thd .nm{font-weight:700;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.thd .sum{margin-left:auto;display:flex;gap:8px;flex:none}
+.tb{width:100%;border-collapse:collapse;font-size:13.5px}
+.tb th{font-size:11.5px;text-align:left;color:var(--ink3);font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:9px 10px;border-bottom:1.5px solid #e4e8ef;white-space:nowrap}
+.tb td{padding:9px 10px;border-bottom:1px solid #f0f2f6;vertical-align:middle;white-space:nowrap}
+.tb th.r,.tb td.r{text-align:right}
+.tb td.nm b{display:block;font-weight:700;color:var(--ink)}
+.tb td.nm span{display:block;font-size:12.5px;color:var(--ink3);margin-top:1px}
+.tb td.dy{color:var(--ink2);font-size:13px;text-align:center;width:38px}
+.tb th.dy{text-align:center}
+.tb td.tot{font-weight:700;text-align:right}
+.tb td.mono{font-family:var(--mono);font-size:12.5px}
+.tb tbody tr{opacity:0;transition:opacity .45s,background .6s}
+.tb tbody tr.on{opacity:1}
+.tb tr.fl td{background:rgba(232,161,58,.07)}
+.tb tr.bad td{background:rgba(224,68,90,.05)}
+.tb tr.sum td{font-weight:700;color:var(--ink);background:#f7f9fc;border-bottom:0}
+.tb tr.more td{color:var(--ink3);font-size:12.5px;font-weight:600}
+.tb .st{display:inline-flex;flex-direction:column;gap:3px;align-items:flex-start}
+.tb .st small{font-size:11.5px;color:var(--ink3);font-weight:600}
+.tfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 18px;font-size:12px;color:var(--ink3);font-weight:600;flex-wrap:wrap}
+.card{padding:20px 22px 22px}
+.card .ch{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.card .t{font-weight:700;font-size:16px;letter-spacing:-.01em;margin-top:10px}
+.card .s{font-size:12.5px;color:var(--ink3);margin-top:2px}
+
+/* 01 timesheets */
+.mail{margin-top:12px;background:#fff;border:1px solid #eaecf0;border-radius:14px;padding:12px 14px;font-size:13.5px;line-height:1.5;color:var(--ink2)}
+.mail .mh{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--ink3);font-weight:600;margin-bottom:6px}
+.mail .mh b{color:var(--ink);font-weight:700}
+.rep{margin-top:10px;margin-left:34px;background:#eef4ff;border:1px solid #d5e3ff;border-radius:14px;padding:9px 12px;font-size:13.5px;color:var(--ink);opacity:0;transform:translateY(8px);transition:opacity .5s var(--ease),transform .7s var(--ease)}
+.rep.on{opacity:1;transform:none}
+.rep small{display:block;font-size:11.5px;color:var(--ink3);font-weight:600;margin-top:2px}
+.chk{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13.5px;padding:9px 0;border-top:1px solid var(--line);color:var(--ink2);font-weight:500}
+.chk:first-of-type{margin-top:8px;border-top:0}
+.chk b{font-weight:700;color:var(--ink)}
+
+/* 02 payroll */
+.appr{padding:22px 24px}
+.appr .big{font-size:44px;font-weight:600;letter-spacing:-.04em;line-height:1;margin-top:14px;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.appr .bl{font-size:12.5px;color:var(--ink3);font-weight:600;margin-top:8px;margin-bottom:8px}
+.kv{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:8px 0;border-top:1px solid var(--line);color:var(--ink2);font-weight:500}
+.kv:first-of-type{margin-top:14px}
+.kv b{color:var(--ink);font-weight:700}
+.held{margin-top:12px;display:grid;gap:8px}
+.hi{background:#fff;border:1px solid #f3e1c2;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.45;color:var(--ink2)}
+.hi b{color:var(--ink);font-weight:700;display:block;margin-bottom:2px}
+.btns{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.btn{font:inherit;font-size:14px;font-weight:700;border-radius:12px;padding:11px 16px;border:1px solid #d0d5dd;background:#fff;color:var(--ink);white-space:nowrap}
+.btn.pri{background:linear-gradient(180deg,#4b8bff,#2f74f5);border-color:#2f74f5;color:#fff;box-shadow:0 8px 18px -10px rgba(47,116,245,.8)}
+.gate{margin-top:12px;font-size:12.5px;color:var(--ink3);font-weight:600;display:flex;gap:8px;align-items:center}
+.gate i{width:8px;height:8px;border-radius:50%;background:var(--amber);flex:none;animation:blink 1.6s steps(1) infinite}
+
+/* 03 invoices */
+.inv{padding:22px 24px}
+.inv .ih{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.inv .no{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--ink2)}
+.inv .to{font-size:13px;color:var(--ink3);margin-top:12px;line-height:1.5}
+.inv .to b{display:block;color:var(--ink);font-size:16px;font-weight:700}
+.li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:10px 0;border-top:1px solid var(--line);font-size:13.5px}
+.li:first-of-type{margin-top:14px}
+.li .d{color:var(--ink);font-weight:600}
+.li .q{grid-column:1;font-size:12.5px;color:var(--ink3)}
+.li .a{grid-row:1/3;grid-column:2;font-weight:700;align-self:center}
+.itot{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding-top:12px;border-top:1.5px solid #e4e8ef;margin-top:4px}
+.itot span{font-size:13px;color:var(--ink3);font-weight:600}
+.itot b{font-size:26px;letter-spacing:-.03em}
+.inote{margin-top:12px;font-size:12.5px;line-height:1.45;color:#a8650f;background:rgba(232,161,58,.1);border-radius:10px;padding:8px 11px}
+
+/* 04 reconciliation */
+.wins{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.wins .pill{font-size:12.5px}
+.rcard{padding:20px 22px 22px}
+.rtop{display:flex;gap:16px;align-items:center}
+.rtop .t{font-weight:700;font-size:16px}.rtop .s{font-size:12.5px;color:var(--ink3);margin-top:2px;line-height:1.4}
+.ex{margin-top:10px;background:#fff;border:1px solid #edf0f5;border-radius:14px;padding:11px 13px}
+.ex .er{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ex .er .amt{margin-left:auto;font-weight:700;font-size:13.5px}
+.ex .et{font-weight:700;font-size:13.5px;margin-top:7px;line-height:1.4}
+.ex .es{font-size:13px;color:var(--ink2);margin-top:3px;line-height:1.45}
+.ex .es b{color:var(--blue)}
+
+/* 05 architecture */
+.arch{transform-style:preserve-3d}
+.orch{width:min(520px,100%);margin:0 auto;padding:16px 20px;display:flex;gap:14px;align-items:center}
+.orch .ic40{flex:none}
+.orch .t{font-weight:700;font-size:16px}.orch .s{font-size:12.5px;color:var(--ink3);margin-top:2px}
+.orch .pill{margin-left:auto}
+.bus{position:relative;height:44px}
+.bus::before{content:"";position:absolute;left:50%;top:0;height:22px;border-left:2px solid rgba(47,116,245,.45)}
+.bus::after{content:"";position:absolute;top:22px;left:calc((100% - 60px)/8);right:calc((100% - 60px)/8);border-top:2px solid rgba(47,116,245,.45)}
+.agents{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;transform-style:preserve-3d}
+.ag{position:relative}
+.ag::before{content:"";position:absolute;left:50%;top:-22px;height:22px;border-left:2px solid rgba(47,116,245,.45)}
+.agc{padding:18px 18px 18px;height:100%;display:flex;flex-direction:column;gap:10px}
+.agc .an{display:flex;gap:10px;align-items:center}
+.agc .an b{font-size:15px;font-weight:700}
+.agc .num{width:26px;height:26px;border-radius:50%;background:rgba(47,116,245,.12);color:var(--blue);font-weight:800;font-size:12.5px;display:grid;place-items:center;flex:none}
+.agc .do{font-size:13.5px;line-height:1.45;color:var(--ink2)}
+.agc .row{font-size:12px;line-height:1.4}
+.agc .row .label{display:block;margin-bottom:5px;font-size:10.5px}
+.cn{display:flex;gap:6px;flex-wrap:wrap}
+.cn span{font-size:12px;font-weight:600;color:var(--ink2);background:#fff;border:1px solid #e4e8ef;border-radius:8px;padding:3px 8px;white-space:nowrap}
+.gt{margin-top:auto;display:flex;gap:8px;align-items:center;font-size:12.5px;font-weight:700;color:#a8650f;background:rgba(232,161,58,.12);border-radius:10px;padding:7px 10px}
+.gt svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;flex:none}
+.gt.no{color:#5b6576;background:rgba(135,146,163,.14)}
+.alog{margin-top:30px}
+.alog .thd .nm{font-family:var(--mono);font-size:13px}
+.al{display:grid;grid-template-columns:52px 170px minmax(0,1fr);gap:10px;padding:9px 18px;border-bottom:1px solid #f0f2f6;font-size:13.5px;opacity:0;transition:opacity .4s}
+.al.on{opacity:1}
+.al .tm{font-family:var(--mono);font-size:12.5px;color:var(--ink3)}
+.al .who{font-family:var(--mono);font-size:12.5px;font-weight:700;color:#7a5af8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.al .wt{color:var(--ink2)}
+
+@media (max-width:1100px){
+  .g2,.ccgrid{grid-template-columns:minmax(0,1fr)}
+  .side{grid-template-columns:1fr 1fr;align-items:start}
+  .agents{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .bus,.ag::before{display:none}
+  .orch{margin-bottom:22px}
+  .tree-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start}
+  .hand{margin-top:0}
+}
+@media (max-width:860px){
+  section{padding:100px 16px 80px;min-height:auto;perspective:1100px}
+  #hero{min-height:100vh;padding-top:84px}
+  .top{padding:14px 16px}.top .brand{font-size:12px}
+  .top .xs{display:none}
+  .head{margin-bottom:34px}
+  .goal{margin-top:20px;align-items:flex-start;text-align:left}.goal i{margin-top:8px}
+  .gcard{padding:20px 16px 22px;gap:16px}
+  .gtopr{grid-template-columns:1fr;gap:14px}
+  .gmath{padding-left:0;border-left:0}
+  .ginr{grid-template-columns:1fr;gap:12px}
+  .hmet{grid-template-columns:1fr;margin-top:24px}
+  .imeq{font-size:16px}
+  .iog{grid-template-columns:1fr;gap:18px}
+  .iop{padding:18px 16px 20px}
+  .ioar svg{width:80px;height:24px;transform:rotate(90deg);margin:22px 0}
+  .ioar .tt{font-size:32px}
+  .iocall{flex-wrap:wrap}.iocall .ring2{margin-left:54px}
+  .ioscore .big{font-size:28px}
+  .side{grid-template-columns:1fr}
+  .tb th,.tb td{padding:8px 7px}
+  .tb .dy,.tb .mh{display:none}
+  .tb td{white-space:normal}
+  .tb td.tot,.tb td.r{white-space:nowrap}
+  .thd{flex-wrap:wrap}
+  .card,.appr,.inv,.rcard{padding:18px 16px}
+  .appr .big{font-size:36px}
+  .agents{grid-template-columns:minmax(0,1fr)}
+  .orch{flex-wrap:wrap}.orch .pill{margin-left:0}
+  .al{grid-template-columns:44px minmax(0,1fr);padding:9px 12px}
+  .al .wt{grid-column:2}
+  .tbody{padding:12px 12px 14px;font-size:11.5px}
+  .tbar span{margin-right:0}
+  .tree-wrap{grid-template-columns:minmax(0,1fr)}
+  .word{font-size:34px;padding:14px 24px 16px 18px}.word i{width:30px;height:30px}
+  .word.w1,.word.w2,.word.w3,.word.w4{margin:0}
+}
+.ctagrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;width:min(1000px,100%);margin:0 auto;transform-style:preserve-3d;text-align:left}
+.ctac{padding:26px 26px 28px;display:flex;flex-direction:column;gap:8px}
+.ctac b{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,#2f74f5,#5b9bff);color:#fff;font-size:15px;font-weight:700;margin-bottom:6px}
+.ctac h3{font-size:22px;font-weight:650;letter-spacing:-.02em;color:var(--ink)}
+.ctac p{font-size:15px;line-height:1.45;color:var(--ink2)}
+.ctabtn{margin:44px auto 0;display:inline-flex;align-items:center;gap:12px;padding:18px 30px;border-radius:99px;background:linear-gradient(180deg,#2f74f5,#3d84ff);color:#fff;font-size:18px;font-weight:650;letter-spacing:-.01em;box-shadow:0 18px 40px -12px rgba(47,116,245,.55)}
+.ctabtn .dot{width:9px;height:9px;border-radius:50%;background:#7ef0c2;box-shadow:0 0 0 4px rgba(126,240,194,.25)}
+#close .wrap{text-align:center}
+#close .foot{margin-top:40px}
+#close .sub{margin-left:auto;margin-right:auto}
+@media (max-width:760px){.ctagrid{grid-template-columns:1fr}.ctabtn{font-size:16px;padding:16px 22px;text-align:center}}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation:none!important}}
+</style>
+
+<div class="sky"></div>
+<div class="haze"><i></i><i></i><i></i></div>
+<div class="top"><div class="brand"><b></b><span data-t="brand"></span><span class="xs"> · finance agents</span></div><div class="chip">Sample data</div></div>
+
+<main>
+<!-- SCREEN: hero -->
+<section id="hero" data-run="goal">
+  <div class="wrap">
+    <div class="kicker fade" data-t="kicker"></div>
+    <h1 class="fade" style="--d:.1s">Payroll, invoices and the books,<br><em>prepared by Claude agents.</em></h1>
+    <p class="goal fade" style="--d:.2s"><i></i><span>A system built around one clear goal: <b>the weekly finance work done for you, and you only sign off.</b></span></p>
+    <div class="hgoal par" data-z="0.4"><div class="panel gcard rise" style="--d:.4s">
+      <div class="gtopr">
+        <div class="gres"><div class="label">The goal</div><div class="imbig"><span id="imR">55</span><small>hours a month saved</small></div><div class="gfrom">on payroll, timesheets and invoicing</div></div>
+        <div class="gmath"><p class="imeq" id="imEq"></p><p class="imnote" id="imNote"></p></div>
+      </div>
+      <div class="gin">
+        <div class="ginh"><div class="label">Your numbers</div><span class="imtag">Illustrative · we'll use your real numbers</span></div>
+        <div class="ginr">
+          <div class="imf"><label for="imE">Employees on timesheets</label><div class="imbox"><input id="imE" type="number" inputmode="numeric" min="0" max="5000" step="1" value="24"><small>people</small></div></div>
+          <div class="imf"><label for="imH">Hours per payroll run by hand</label><div class="imbox"><input id="imH" type="number" inputmode="decimal" min="0" max="200" step="0.5" value="6"><small>hrs, weekly</small></div></div>
+          <div class="imf"><label for="imI">Invoices a month</label><div class="imbox"><input id="imI" type="number" inputmode="numeric" min="0" max="10000" step="1" value="48"><small>invoices</small></div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="hmet">
+      <div class="ims fade" style="--d:.7s"><div class="v"><span id="imW">12.8</span><small>hrs a week</small></div><div class="k">of finance prep handed to the agents</div></div>
+      <div class="ims fade" style="--d:.8s"><div class="v">0<small>sent unsigned</small></div><div class="k">payroll runs or invoices go out without your approval</div></div>
+    </div>
+    <div class="scrollcue fade" style="--d:1.4s">Scroll<b></b></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: in -> out -->
+<section id="io" data-run="io">
+  <div class="wrap">
+    <div class="head c"><h2 class="fade">A week's timesheets in.<br><em>Payroll, invoices and books out.</em></h2></div>
+    <div class="iog">
+      <div class="iocol par" data-z="0.4">
+        <div><div class="panel iop rise" style="--d:.2s">
+          <div class="label">What goes in</div>
+          <div class="iocall pin"><span class="ic40"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3M8 17h6"/></svg></span><div><div class="t">Timesheets · w/e 2 Oct</div><div class="s">24 employees · from your timesheet tool</div></div><span class="ring2">Mon 9:00 AM</span></div>
+          <div class="iorow pin"><span>Aoife Byrne · Kestrel Foods</span><span>40.0 hrs</span></div>
+          <div class="iorow pin"><span>Sean Murphy · Kestrel Foods</span><span style="color:#a8650f">52.5 hrs</span></div>
+          <div class="iorow pin"><span>Ciara Walsh · Brightwater Homes</span><span style="color:#c22f47">Not submitted</span></div>
+          <div class="iorow pin"><span>Conor Ryan · Northgate Clinics</span><span style="color:#c22f47">Not submitted</span></div>
+          <div class="iorow pin"><span>+ 20 more</span><span>Billable and internal hours</span></div>
+        </div></div>
+        <p class="iocap fade" style="--d:.5s">Every employee's hours for the week, straight from your timesheet tool, gaps and all.</p>
+      </div>
+      <div class="ioar fade" style="--d:.6s">
+        <div class="tt" id="iot">0 min</div>
+        <svg viewBox="0 0 150 24"><path d="M4 12H144M134 3l10 9-10 9"/></svg>
+        <div class="label">to your sign-off</div>
+      </div>
+      <div class="iocol par" data-z="0.9">
+        <div><div class="panel iop out rise" style="--d:.45s">
+          <div class="label">What comes out</div>
+          <div class="ioscore pout"><div class="big">22<small>/24</small></div><div><div class="t">Payroll ready for approval</div><div class="s">$31,846.50 gross · 2 held with reasons</div></div></div>
+          <div class="ioitem pout"><span class="lb blu">Invoices</span><span><b>11 drafted</b> from billable hours, $52,630.00, waiting to send</span></div>
+          <div class="ioitem pout"><span class="lb grn">Books</span><span><b>86 of 89</b> bank lines matched to the ledger, 3 flagged for you</span></div>
+        </div></div>
+        <p class="iocap fade" style="--d:.8s">Payroll and invoices waiting for your sign-off, and the books matched with every exception listed.</p>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: timesheet agent (input) -->
+<section id="ts" data-run="ts">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>01</span>Input · Timesheet agent</div><h2 class="fade" style="--d:.1s">Every timesheet in, <em>and checked.</em></h2><p class="sub fade" style="--d:.2s">The agent collects the week's timesheets, chases anyone missing, and flags hours that break your rules instead of fixing them.</p></div>
+    <div class="g2">
+      <div class="par" data-z="0.3"><div class="panel shell rise" style="--d:.2s"><div class="shin">
+        <div class="thd"><span class="nm">Timesheets · week ending Fri 2 Oct</span><div class="sum"><span class="lb gry" id="tsIn">22/24 in</span></div></div>
+        <table class="tb"><thead><tr><th>Employee</th><th class="dy">M</th><th class="dy">T</th><th class="dy">W</th><th class="dy">T</th><th class="dy">F</th><th class="r">Total</th><th>Status</th></tr></thead><tbody id="tsRows"></tbody></table>
+        <div class="tfoot"><span>Rule: over 40 hrs needs overtime approval</span><span class="tagI">Illustrative</span></div>
+      </div></div></div>
+      <div class="side">
+        <div class="par" data-z="1.1"><div class="panel card rise" style="--d:.6s">
+          <div class="ch"><span class="label">Reminder sent</span><span class="lb blu">9:02 AM</span></div>
+          <div class="mail"><div class="mh"><span>To <b>Ciara Walsh</b></span><span>Email</span></div><span id="chase"></span></div>
+          <div class="rep" id="chaseRep">Sorry, done now!<small>Ciara · 9:41 AM · 38.0 hrs submitted</small></div>
+        </div></div>
+        <div class="par" data-z="0.7"><div class="panel card rise" style="--d:.8s">
+          <div class="label">Checks on this week</div>
+          <div id="tsChecks"></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: payroll agent -->
+<section id="pay" data-run="pay">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>02</span>Payroll agent</div><h2 class="fade" style="--d:.1s">Payroll prepared, <em>waiting for you.</em></h2><p class="sub fade" style="--d:.2s">Approved hours times each rate make the run. Anything unclear is held with a question, and nothing is submitted without you.</p></div>
+    <div class="g2">
+      <div class="par" data-z="0.3"><div class="panel shell rise" style="--d:.2s"><div class="shin">
+        <div class="thd"><span class="nm">Payroll run · week ending 2 Oct</span><div class="sum"><span class="lb amb">Draft · not submitted</span></div></div>
+        <table class="tb"><thead><tr><th>Employee</th><th class="r">Hours</th><th class="r mh">Rate</th><th class="r mh">Regular</th><th class="r mh">Overtime</th><th class="r">Gross</th></tr></thead><tbody id="payRows"></tbody></table>
+        <div class="tfoot"><span>Overtime at 1.5x over 40 hrs · rates from rules/rates.csv</span><span class="tagI">Illustrative</span></div>
+      </div></div></div>
+      <div class="par" data-z="1"><div class="panel appr rise" style="--d:.5s">
+        <div class="ch" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><span class="label">Ready for your approval</span><span class="lb gry">Your payroll provider</span></div>
+        <div class="big" id="payBig">$0.00</div>
+        <div class="bl">Gross pay · 22 of 24 employees</div>
+        <div class="kv"><span>Hours paid</span><b>836.0</b></div>
+        <div class="kv"><span>Overtime pay</span><b>$1,128.00</b></div>
+        <div class="kv"><span>Held for a decision</span><b>2</b></div>
+        <div class="held" id="held"></div>
+        <div class="btns"><span class="btn pri">Approve and submit</span><span class="btn">Send back</span></div>
+        <div class="gate"><i></i>Nothing goes to your payroll provider until you approve.</div>
+      </div></div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: invoicing agent -->
+<section id="inv" data-run="inv">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>03</span>Invoicing agent</div><h2 class="fade" style="--d:.1s">Billable hours, <em>invoiced per client.</em></h2><p class="sub fade" style="--d:.2s">Billable hours are grouped by client and priced at each client's rate. The drafts sit in your accounting system until you approve them.</p></div>
+    <div class="g2">
+      <div class="par" data-z="0.3"><div class="panel shell rise" style="--d:.2s"><div class="shin">
+        <div class="thd"><span class="nm">Invoice drafts · week ending 2 Oct</span><div class="sum"><span class="lb blu" id="invCount">0 drafted</span></div></div>
+        <table class="tb"><thead><tr><th>Client</th><th class="r mh">Billable hrs</th><th class="r">Amount</th><th>Status</th></tr></thead><tbody id="invRows"></tbody></table>
+        <div class="tfoot"><span>Total 554.0 billable hrs · $52,630.00</span><span class="tagI">Illustrative</span></div>
+      </div></div></div>
+      <div class="par" data-z="1"><div class="panel inv rise" style="--d:.5s">
+        <div class="ih"><div><div class="label">Invoice draft</div><div class="no" style="margin-top:6px">INV-2026-0418</div></div><span class="lb amb">Waiting for approval</span></div>
+        <div class="to"><b>Kestrel Foods</b>Work from 28 Sep to 2 Oct · Net 30</div>
+        <div id="invLines"></div>
+        <div class="itot"><span>Total due</span><b id="invTot">$0.00</b></div>
+        <div class="inote">Sean Murphy's 12.5 extra hours are left off until his overtime is approved.</div>
+        <div class="btns"><span class="btn pri">Approve and send</span><span class="btn">Edit</span></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: financial data agent (output) -->
+<section id="rec" data-run="rec">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>04</span>Output · Financial data agent</div><h2 class="fade" style="--d:.1s">The books, <em>reconciled.</em></h2><p class="sub fade" style="--d:.2s">Each bank line is matched to its ledger entry. What doesn't match is listed with what the agent found, and nothing is posted without you.</p>
+      <div class="wins fade" style="--d:.3s"><span class="pill">Payroll ready for sign-off</span><span class="pill">11 invoices ready to send</span><span class="pill">86 of 89 bank lines matched</span></div></div>
+    <div class="g2">
+      <div class="par" data-z="0.3"><div class="panel shell rise" style="--d:.2s"><div class="shin">
+        <div class="thd"><span class="nm">Bank vs ledger · 28 Sep to 2 Oct</span><div class="sum"><span class="lb grn" id="recCount">0 matched</span></div></div>
+        <table class="tb"><thead><tr><th class="mh">Date</th><th>Bank line</th><th class="r">Amount</th><th class="mh">Ledger</th><th>Status</th></tr></thead><tbody id="recRows"></tbody></table>
+        <div class="tfoot"><span>6 of 89 lines shown</span><span class="tagI">Illustrative</span></div>
+      </div></div></div>
+      <div class="par" data-z="1"><div class="panel rcard rise" style="--d:.5s">
+        <div class="rtop">
+          <div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="rgba(150,170,200,.25)" stroke-width="8"/><circle id="rring" cx="50" cy="50" r="44" fill="none" stroke="url(#gm)" stroke-width="8" stroke-linecap="round" stroke-dasharray="276.5" stroke-dashoffset="276.5"/></svg><div class="num"><div><span id="rnum">0</span><small>of 89</small></div></div></div>
+          <div><div class="t">Week reconciled, 3 for you</div><div class="s">Flagged, not guessed. Each one says what it needs.</div></div>
+        </div>
+        <div id="recEx"></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: architecture -->
+<section id="arch" data-run="arch">
+  <div class="wrap">
+    <div class="head c"><div class="eyebrow fade"><span>05</span>The architecture</div><h2 class="fade" style="--d:.1s">One orchestrator, <em>four agents.</em></h2><p class="sub fade" style="--d:.2s">The orchestrator runs the week in order. Each agent has its own connectors and its own approval gate, and every step is written to the audit log.</p></div>
+    <div class="arch">
+      <div class="par" data-z="0.9"><div class="panel orch rise" style="--d:.2s"><span class="ic40"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg></span><div><div class="t">Weekly close orchestrator</div><div class="s">Claude · runs Monday 9:00 AM</div></div><span class="pill blue">Hands off in order</span></div></div>
+      <div class="bus fade" style="--d:.4s"></div>
+      <div class="agents" id="agents"></div>
+      <div class="par alog" data-z="0.4"><div class="panel shell rise" style="--d:.9s"><div class="shin">
+        <div class="thd"><span class="nm">audit/log.jsonl</span><div class="sum"><span class="lb gry">Every step, kept</span></div></div>
+        <div id="alog"></div>
+      </div></div></div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: platform (Claude Code) -->
+<section id="cc" data-run="cc">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>06</span>In your Claude Code</div><h2 class="fade" style="--d:.1s">This is what it will look like<br><em>in your Claude Code.</em></h2><p class="sub fade" style="--d:.2s">One line starts the weekly close. The orchestrator hands each step to its agent and stops at the approval queue.</p><div class="chip cclab fade" style="--d:.2s">Your finance agents in Claude Code · illustrative</div></div>
+    <div class="ccgrid">
+      <div class="par" data-z="0.4"><div class="panel shell rise" style="--d:.3s"><div class="term">
+        <div class="tbar"><i></i><i></i><i></i><span id="ttitle"></span></div>
+        <div class="tbody" id="tbody2"></div>
+      </div></div></div>
+      <div class="tree-wrap">
+        <div class="par" data-z="1.1"><div class="panel tree rise" style="--d:.6s">
+          <div class="th"><b>Project</b><span class="label" id="troot"></span></div>
+          <ul id="tree"></ul>
+        </div></div>
+        <div class="par" data-z="0.7"><div class="panel hand rise" style="--d:.8s">
+          <div class="ic"></div>
+          <div><div class="t">Waiting for your sign-off</div><div class="s" data-t="handoff"></div></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: close -->
+<section id="close" data-run="close">
+  <div class="wrap">
+    <div class="head c"><div class="eyebrow fade"><span>Next</span>One 15-minute call</div><h2 class="fade" style="--d:.1s">It's built.<br><em>Let's switch it on.</em></h2><p class="sub fade" style="--d:.2s">Everything you just saw is ready. One 15-minute call and we fit it to how your business runs.</p></div>
+    <div class="ctagrid">
+      <div class="par" data-z="0.4"><div class="panel ctac rise" style="--d:.2s"><b>1</b><h3>Your software</h3><p>What you use today, and how it connects to this.</p></div></div>
+      <div class="par" data-z="0.8"><div class="panel ctac rise" style="--d:.4s"><b>2</b><h3>Your process</h3><p>How the work moves through your team now, and where it slows down.</p></div></div>
+      <div class="par" data-z="1.2"><div class="panel ctac rise" style="--d:.6s"><b>3</b><h3>Your numbers</h3><p>Your real figures in the goal above, so we know what it is worth.</p></div></div>
+    </div>
+    <div class="ctabtn fade" style="--d:.9s"><span class="dot"></span>Reply on Upwork and I'll send three times</div>
+    <div class="foot fade" style="--d:1.2s">Harbourline Services · finance agents</div>
+  </div>
+</section>
+<!-- /SCREEN -->
+</main>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <linearGradient id="gm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8ec0ff"/><stop offset="1" stop-color="#2f74f5"/></linearGradient>
+</defs></svg>
+
+<script>
+/* ============ SAMPLE CONTENT: a real job edits this object (and the headlines) ============ */
+const DATA={
+ brand:'Harbourline Services',
+ kicker:'Harbourline Services · weekly close · Monday 10:12 AM',
+ ioMins:72,
+ ts:[
+  {n:'Aoife Byrne',r:'Consultant · Kestrel Foods',d:[8,8,8,8,8],t:'40.0',s:'ok'},
+  {n:'Liam Doyle',r:'Technician · Northgate Clinics',d:[9,9,9,9,8.5],t:'44.5',s:'ot'},
+  {n:'Ciara Walsh',r:'Analyst · Brightwater Homes',d:[8,7.5,8,7.5,7],t:'38.0',s:'late'},
+  {n:'Sean Murphy',r:'Technician · Kestrel Foods',d:[10.5,10.5,11,10.5,10],t:'52.5',s:'over'},
+  {n:'Niamh Kelly',r:'Bookkeeper · internal',d:[7.5,7.5,7.5,7.5,7.5],t:'37.5',s:'ok'},
+  {n:'Conor Ryan',r:'Consultant · Northgate Clinics',d:null,t:'',s:'miss'},
+  {n:'Emma Quinn',r:'Analyst · Brightwater Homes',d:[8,8,8,8,8],t:'40.0',s:'ok'}
+ ],
+ tsMore:'+ 17 more · all submitted, no issues',
+ chase:'Hi Ciara, your timesheet for the week ending 2 Oct isn\'t in yet. Could you add it in the timesheet tool by 10 AM so payroll can run? Thanks.',
+ checks:[['Missing timesheets','2 → chased'],['Over 40 hrs, no overtime approval','1 → flagged'],['Hours on a closed project','0'],['Billable hours with no client','0']],
+ pay:[
+  ['Aoife Byrne',40,42,1680,0,1680],
+  ['Liam Doyle',44.5,34,1360,229.5,1589.5],
+  ['Ciara Walsh',38,36,1368,0,1368],
+  ['Sean Murphy',52.5,34,null,null,null],
+  ['Niamh Kelly',37.5,31,1162.5,0,1162.5],
+  ['Conor Ryan',null,40,null,null,null],
+  ['Emma Quinn',40,36,1440,0,1440]
+ ],
+ payTotal:31846.50,
+ held:[
+  ['Sean Murphy · held','52.5 hrs with no overtime approval on file. Approve the 12.5 extra hours, or send it back to his manager?'],
+  ['Conor Ryan · held','No timesheet after two reminders. His manager has been asked. Pay him when his hours are in, or hold to next week?']
+ ],
+ inv:[
+  ['Kestrel Foods',126,11970,'amb','12.5 hrs held'],
+  ['Brightwater Homes',112,10640,'blu','Ready'],
+  ['Northgate Clinics',88.5,8407.5,'blu','Ready'],
+  ['Alder & Finch',34,3230,'blu','Ready'],
+  ['Marlow Dental',22.5,2137.5,'blu','Ready']
+ ],
+ invMore:'+ 6 more clients · 171.0 hrs · $16,245.00',
+ invLines:[['Project consulting · Aoife Byrne','40.0 hrs × $95.00',3800],['Field service · Sean Murphy','40.0 hrs × $95.00 · 12.5 hrs held',3800],['Analysis · 2 analysts','46.0 hrs × $95.00',4370]],
+ rec:[
+  ['Sep 28','Kestrel Foods · payment',9450,'INV-2026-0391','m'],
+  ['Sep 29','Payroll · w/e 25 Sep',-31212.4,'Payroll run 25 Sep','m'],
+  ['Sep 30','Office rent · October',-4200,'Bill #882','m'],
+  ['Sep 30','Deposit · NGC REF 7741',1240,'No match','x'],
+  ['Oct 1','Bank fee',-25,'Not in ledger','x'],
+  ['Oct 2','Software subscription',-380,'2 ledger entries','x']
+ ],
+ matched:86,
+ ex:[
+  {tag:'No match',amt:'+$1,240.00',t:'Deposit from Northgate Clinics with no open invoice for that amount.',s:'It is exactly half of INV-2026-0402 ($2,480.00). <b>Needs from you:</b> confirm it\'s a part payment before it\'s posted.'},
+  {tag:'Not in ledger',amt:'−$25.00',t:'Bank fee on 1 Oct with no ledger entry.',s:'Entry drafted to bank charges. <b>Needs from you:</b> approve the entry.'},
+  {tag:'Possible duplicate',amt:'−$380.00',t:'One subscription payment, two ledger entries for it.',s:'Both entries are dated 2 Oct with the same supplier. <b>Needs from you:</b> say which one to remove.'}
+ ],
+ agents:[
+  {n:'Timesheet agent',d:'Collects the week\'s timesheets, chases anyone missing and checks hours against your rules.',c:['Your timesheet tool','Email'],g:'Exceptions go to the manager',no:1},
+  {n:'Payroll agent',d:'Approved hours × rates and overtime become a payroll run, with holds explained.',c:['Rates sheet','Your payroll provider'],g:'Your sign-off before submit'},
+  {n:'Invoicing agent',d:'Billable hours grouped by client become draft invoices at each client\'s rate.',c:['Client rates','Your accounting system'],g:'Your approval before send'},
+  {n:'Financial data agent',d:'Matches every bank line to the ledger and lists what doesn\'t match.',c:['Your bank feed','Your accounting system'],g:'Your approval before posting'}
+ ],
+ audit:[
+  ['09:00','orchestrator','Started weekly close · week ending 2 Oct'],
+  ['09:02','timesheet-agent','Reminded Ciara Walsh and Conor Ryan by email'],
+  ['09:41','timesheet-agent','Ciara Walsh submitted 38.0 hrs'],
+  ['09:46','timesheet-agent','Flagged Sean Murphy: 52.5 hrs, no overtime approval'],
+  ['09:58','payroll-agent','Run built: 22 ready, 2 held, $31,846.50. Not submitted'],
+  ['10:04','invoicing-agent','11 invoices drafted, $52,630.00. Not sent'],
+  ['10:11','financial-data-agent','86 of 89 bank lines matched, 3 flagged'],
+  ['10:12','orchestrator','3 approvals waiting for you']
+ ],
+ cc:{
+  title:'harbourline-finance — claude',cwd:'/Users/you/harbourline-finance',prompt:'run the weekly close for the week ending 2 Oct',
+  todos:['Collect and check timesheets','Prepare the payroll run','Draft client invoices','Reconcile bank vs ledger','Queue approvals'],
+  steps:[
+   {tool:'Read',arg:'CLAUDE.md',res:'Read 46 lines · never submit, send or post without approval; flag, don\'t guess',hit:'CLAUDE.md',todos:1},
+   {tool:'Task',arg:'timesheet-agent · collect week ending 2 Oct',res:'24 timesheets · 2 chased, 1 came in · 1 over hours flagged',hit:'timesheet-agent.md',tick:0,spin:'Collecting timesheets'},
+   {tool:'Task',arg:'payroll-agent · build the run',res:'22 ready · $31,846.50 gross · 2 held with questions',hit:'payroll-agent.md',tick:1,spin:'Preparing payroll'},
+   {tool:'Task',arg:'invoicing-agent · draft from billable hours',res:'11 drafts · $52,630.00 · saved as drafts, not sent',hit:'invoicing-agent.md',tick:2,spin:'Drafting invoices'},
+   {tool:'Task',arg:'financial-data-agent · reconcile 28 Sep to 2 Oct',res:'86 of 89 matched · 3 exceptions listed',hit:'financial-data-agent.md',tick:3,spin:'Reconciling'},
+   {tool:'Write',arg:'approvals/2026-10-02.md',res:'3 items: payroll run, 11 invoices, 1 journal entry',hit:'2026-10-02.md',tick:4,made:1,spin:'Queueing approvals'},
+   {tool:'Bash',arg:'python audit/append.py --run 2026-10-02',res:'8 steps written to audit/log.jsonl',hit:'log.jsonl'}
+  ],
+  summary:'Weekly close done up to sign-off. Payroll for 22 of 24 is ready ($31,846.50), 2 held with questions. 11 invoices drafted ($52,630.00). 86 of 89 bank lines matched, 3 listed for you. Nothing submitted, sent or posted.'
+ },
+ tree:[
+  {n:'CLAUDE.md',d:0},
+  {n:'.claude/agents/',d:0,dir:1},{n:'timesheet-agent.md',d:1},{n:'payroll-agent.md',d:1},{n:'invoicing-agent.md',d:1},{n:'financial-data-agent.md',d:1},
+  {n:'connectors/',d:0,dir:1},{n:'timesheets.py',d:1},{n:'payroll_provider.py',d:1},{n:'accounting.py',d:1},{n:'bank_feed.py',d:1},
+  {n:'rules/',d:0,dir:1},{n:'rates.csv',d:1},{n:'overtime.md',d:1},
+  {n:'approvals/',d:0,dir:1},{n:'2026-10-02.md',d:1,nw:1},
+  {n:'audit/',d:0,dir:1},{n:'log.jsonl',d:1}
+ ],
+ handoff:'approvals/2026-10-02.md · payroll run, 11 invoices, 1 entry'
+};
+</script>
+
+<script>
+(function(){
+const D=DATA;
+const $=id=>document.getElementById(id);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const ease=t=>1-Math.pow(1-t,3);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function count(el,a,b,dur,fmt,cb){const t0=performance.now();(function f(n){const p=Math.min(1,(n-t0)/dur),v=a+(b-a)*ease(p);if(cb)cb(v,p);if(el)el.textContent=fmt?fmt(v):Math.round(v);if(p<1)requestAnimationFrame(f)})(t0)}
+const fmtN=v=>Math.round(v).toLocaleString('en-US');
+const usd=v=>(v<0?'−':'')+'$'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const hrs=v=>v==null?'—':(+v).toFixed(1);
+
+/* ---------- render from DATA ---------- */
+const TX={brand:D.brand,kicker:D.kicker,handoff:D.handoff};
+document.querySelectorAll('[data-t]').forEach(el=>{const v=TX[el.dataset.t];if(v!=null)el.textContent=v});
+/* timesheets */
+const ST={ok:'<span class="lb grn">Submitted</span>',ot:'<span class="st"><span class="lb blu">Overtime approved</span></span>',late:'<span class="lb red">Missing</span>',over:'<span class="lb grn">Submitted</span>',miss:'<span class="lb red">Missing</span>'};
+$('tsRows').innerHTML=D.ts.map((r,i)=>'<tr id="tr'+i+'"><td class="nm"><b>'+esc(r.n)+'</b><span>'+esc(r.r)+'</span></td>'+[0,1,2,3,4].map(k=>'<td class="dy" id="d'+i+'_'+k+'">'+(r.d&&r.s!=='late'?r.d[k]:'·')+'</td>').join('')+'<td class="tot" id="tt'+i+'">'+(r.s==='late'||r.s==='miss'?'—':r.t)+'</td><td id="ts'+i+'">'+ST[r.s]+'</td></tr>').join('')+'<tr class="more"><td colspan="8">'+esc(D.tsMore)+'</td></tr>';
+$('chase').textContent=D.chase;
+$('tsChecks').innerHTML=D.checks.map((c,i)=>'<div class="chk on-seq" id="ck'+i+'"><span>'+esc(c[0])+'</span><b>'+esc(c[1])+'</b></div>').join('');
+/* payroll */
+$('payRows').innerHTML=D.pay.map((r,i)=>{const h=r[3]==null;return '<tr id="pr'+i+'"'+(h?' class="fl"':'')+'><td class="nm"><b>'+esc(r[0])+'</b></td><td class="r">'+hrs(r[1])+'</td><td class="r mh">'+usd(r[2])+'</td><td class="r mh">'+(h?'—':usd(r[3]))+'</td><td class="r mh">'+(h?'—':(r[4]?usd(r[4]):'—'))+'</td><td class="r">'+(h?'<span class="lb amb">Held</span>':'<b>'+usd(r[5])+'</b>')+'</td></tr>'}).join('')
+ +'<tr class="more"><td colspan="6">+ 17 more employees</td></tr><tr class="sum"><td>22 ready</td><td class="r">836.0</td><td class="mh"></td><td class="mh"></td><td class="r mh">'+usd(1128)+'</td><td class="r">'+usd(D.payTotal)+'</td></tr>';
+$('held').innerHTML=D.held.map((h,i)=>'<div class="hi on-seq" id="hl'+i+'"><b>'+esc(h[0])+'</b>'+esc(h[1])+'</div>').join('');
+/* invoices */
+$('invRows').innerHTML=D.inv.map((r,i)=>'<tr id="ir'+i+'"><td class="nm"><b>'+esc(r[0])+'</b></td><td class="r mh">'+hrs(r[1])+'</td><td class="r"><b>'+usd(r[2])+'</b></td><td><span class="lb '+r[3]+'">'+(r[3]==='amb'?'Draft · ':'Draft · ')+esc(r[4])+'</span></td></tr>').join('')+'<tr class="more"><td colspan="4">'+esc(D.invMore)+'</td></tr>';
+$('invLines').innerHTML=D.invLines.map((l,i)=>'<div class="li on-seq" id="il'+i+'"><span class="d">'+esc(l[0])+'</span><span class="q">'+esc(l[1])+'</span><span class="a">'+usd(l[2])+'</span></div>').join('');
+/* reconciliation */
+$('recRows').innerHTML=D.rec.map((r,i)=>'<tr id="rr'+i+'"><td class="mh">'+esc(r[0])+'</td><td class="nm"><b>'+esc(r[1])+'</b></td><td class="r">'+usd(r[2])+'</td><td class="mh mono">'+esc(r[3])+'</td><td id="rs'+i+'"><span class="lb gry">Checking</span></td></tr>').join('');
+$('recEx').innerHTML=D.ex.map((e,i)=>'<div class="ex on-seq" id="ex'+i+'"><div class="er"><span class="lb amb">'+esc(e.tag)+'</span><span class="amt">'+esc(e.amt)+'</span></div><div class="et">'+esc(e.t)+'</div><div class="es">'+e.s+'</div></div>').join('');
+/* architecture */
+const LOCK='<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+$('agents').innerHTML=D.agents.map((a,i)=>'<div class="ag par" data-z="'+(0.6+i*0.15).toFixed(2)+'"><div class="panel agc rise" style="--d:'+(0.45+i*0.12).toFixed(2)+'s"><div class="an"><span class="num">'+(i+1)+'</span><b>'+esc(a.n)+'</b></div><div class="do">'+esc(a.d)+'</div><div class="row"><span class="label">Connects to</span><div class="cn">'+a.c.map(c=>'<span>'+esc(c)+'</span>').join('')+'</div></div><div class="gt'+(a.no?' no':'')+'">'+LOCK+esc(a.g)+'</div></div></div>').join('');
+$('alog').innerHTML=D.audit.map((a,i)=>'<div class="al" id="al'+i+'"><span class="tm">'+esc(a[0])+'</span><span class="who">'+esc(a[1])+'</span><span class="wt">'+esc(a[2])+'</span></div>').join('');
+/* claude code terminal */
+const C=D.cc;$('ttitle').textContent=C.title;$('troot').textContent=C.cwd.split('/').pop();
+const SPARK='<svg viewBox="0 0 24 24"><path d="M12 1.5l2.2 7.2 7.3 2.3-7.3 2.3L12 20.5l-2.2-7.2L2.5 11l7.3-2.3z"/></svg>';
+let th='<div class="wel"><div class="w1">'+SPARK+'<span>Welcome to Claude Code!</span></div><div class="w2">/help for help, /status for your current setup</div><div class="w3">cwd: '+esc(C.cwd)+'</div></div>';
+th+='<div class="upr tl" id="tl-p"><span>&gt;</span><b>'+esc(C.prompt)+'</b><span class="iot">In</span></div>';
+C.steps.forEach((s,i)=>{
+ th+='<div class="stp tl" id="tl-s'+i+'"><span class="dot"></span><div><div class="tn"><b>'+s.tool+'</b><span>('+esc(s.arg)+')</span></div><div class="res"><span>'+esc(s.res)+'</span></div></div></div>';
+ if(s.todos){th+='<div class="stp tl ok" id="tl-todo"><span class="dot"></span><div><div class="tn"><b>Update Todos</b></div>'+C.todos.map((t,j)=>'<div class="todo'+(j?'':' f')+'" id="td'+j+'"><span><span class="c">☐</span>'+esc(t)+'</span></div>').join('')+'</div></div>'}
+});
+th+='<div class="stp txt tl" id="tl-sum"><span class="dot"></span><div class="sumy"><span class="iot o">Out</span>'+esc(C.summary)+'</div></div>';
+th+='<div class="spin" id="spin">&nbsp;</div><div class="inp"><span>&gt;</span><i></i></div><div class="hint">? for shortcuts</div>';
+$('tbody2').innerHTML=th;
+const FILE_ICON='<svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>',DIR_ICON='<svg viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v11H3z"/></svg>';
+$('tree').innerHTML=D.tree.map(f=>'<li class="'+(f.dir?'dir':'')+(f.nw?' new':'')+'" data-n="'+esc(f.n)+'" style="padding-left:'+(8+f.d*16)+'px">'+(f.dir?DIR_ICON:FILE_ICON)+'<span style="overflow:hidden;text-overflow:ellipsis;min-width:0">'+esc(f.n)+'</span>'+(f.nw?'<span class="nw">new</span>':'')+'</li>').join('');
+const treeLi=n=>document.querySelector('#tree li[data-n="'+n+'"]');
+
+/* ---------- goal card (from pilots/impact-hero.html) ---------- */
+const imIn=['imE','imH','imI'].map($);
+const num=(el,max)=>{const v=parseFloat(el.value);return isFinite(v)?Math.min(max,Math.max(0,v)):0};
+const RUNS=52/12;
+function imCalc(){const E=num(imIn[0],5000),H=num(imIn[1],200),I=num(imIn[2],10000);
+ const pay=H*RUNS,ts=E*10/60*RUNS,inv=I*15/60,mo=pay+ts+inv,wk=mo/RUNS;
+ return {E,H,I,pay,ts,inv,mo,wk}}
+const h1=v=>(Math.round(v*10)/10).toLocaleString('en-US');
+function imRender(){const m=imCalc();
+ $('imEq').innerHTML='Payroll by hand takes <b>'+h1(m.H)+' hrs</b> a week, collecting and checking <b>'+fmtN(m.E)+'</b> timesheets about <b>'+h1(m.ts/RUNS)+' hrs</b>, and <b>'+fmtN(m.I)+'</b> invoices about <b>'+h1(m.inv)+' hrs</b> a month. The agents do the prep and you sign off = <b class="tot">'+fmtN(m.mo)+' hrs a month</b> back.';
+ $('imNote').textContent='Assumes weekly payroll, 10 min a week per timesheet and 15 min per invoice by hand. Your sign-off time and the reconciliation aren\'t counted.';
+ $('imW').textContent=h1(m.wk);
+ $('imR').textContent=fmtN(m.mo)}
+imRender();
+let imUser=false;imIn.forEach(el=>el.addEventListener('input',()=>{imUser=true;imRender()}));
+
+/* ---------- runners ---------- */
+const setTs=(i,h)=>{$('ts'+i).innerHTML=h};
+const R={
+ goal:async()=>{await wait(700);if(!imUser)count($('imR'),0,imCalc().mo,1800,v=>fmtN(imUser?imCalc().mo:v))},
+ io:async()=>{const it=[...document.querySelectorAll('#io .pin,#io .pout')];await wait(500);
+  for(const e of it.filter(e=>e.classList.contains('pin'))){e.classList.add('on');await wait(200)}
+  count($('iot'),0,D.ioMins,1800,v=>Math.round(v)+' min');await wait(1500);
+  for(const e of it.filter(e=>e.classList.contains('pout'))){e.classList.add('on');await wait(380)}},
+ ts:async()=>{await wait(500);for(let i=0;i<D.ts.length;i++){$('tr'+i).classList.add('on');await wait(140)}
+  document.querySelector('#tsRows tr.more').classList.add('on');
+  await wait(700);
+  D.ts.forEach((r,i)=>{if(r.s==='late'||r.s==='miss'){$('tr'+i).classList.add('bad');setTs(i,'<span class="st"><span class="lb amb">Reminded 9:02</span></span>')}});
+  await wait(900);$('chaseRep').classList.add('on');
+  D.ts.forEach((r,i)=>{if(r.s==='late'){r.d.forEach((v,k)=>$('d'+i+'_'+k).textContent=v);$('tt'+i).textContent=r.t;$('tr'+i).classList.remove('bad');setTs(i,'<span class="st"><span class="lb grn">Submitted</span><small>9:41 after reminder</small></span>')}});
+  $('tsIn').textContent='23/24 in';
+  await wait(700);
+  D.ts.forEach((r,i)=>{if(r.s==='over'){$('tr'+i).classList.add('fl');setTs(i,'<span class="st"><span class="lb amb">Flagged</span><small>No overtime approval</small></span>')}
+   if(r.s==='miss'){setTs(i,'<span class="st"><span class="lb red">Still missing</span><small>2 reminders · manager asked</small></span>')}});
+  for(let i=0;i<D.checks.length;i++){await wait(260);$('ck'+i).classList.add('on')}},
+ pay:async()=>{await wait(600);for(let i=0;i<D.pay.length;i++){$('pr'+i).classList.add('on');await wait(150)}
+  document.querySelectorAll('#payRows tr.more,#payRows tr.sum').forEach(e=>e.classList.add('on'));
+  count($('payBig'),0,D.payTotal,1500,v=>usd(v));
+  for(let i=0;i<D.held.length;i++){await wait(500);$('hl'+i).classList.add('on')}},
+ inv:async()=>{await wait(600);for(let i=0;i<D.inv.length;i++){$('ir'+i).classList.add('on');$('invCount').textContent=(i+1)+' drafted';await wait(220)}
+  document.querySelector('#invRows tr.more').classList.add('on');$('invCount').textContent='11 drafted';
+  for(let i=0;i<D.invLines.length;i++){$('il'+i).classList.add('on');await wait(300)}
+  count($('invTot'),0,D.invLines.reduce((a,l)=>a+l[2],0),1000,v=>usd(v))},
+ rec:async()=>{await wait(600);for(let i=0;i<D.rec.length;i++){$('rr'+i).classList.add('on');await wait(140)}
+  count($('rnum'),0,D.matched,1600,null,v=>{$('rring').style.strokeDashoffset=276.5*(1-v/89)});
+  count($('recCount'),0,D.matched,1600,v=>Math.round(v)+' matched');
+  for(let i=0;i<D.rec.length;i++){await wait(260);const r=D.rec[i];
+   if(r[4]==='m'){$('rs'+i).innerHTML='<span class="lb grn">Matched</span>'}else{$('rr'+i).classList.add('fl');$('rs'+i).innerHTML='<span class="lb amb">Flagged</span>'}}
+  for(let i=0;i<D.ex.length;i++){await wait(350);$('ex'+i).classList.add('on')}},
+ arch:async()=>{await wait(1400);for(let i=0;i<D.audit.length;i++){$('al'+i).classList.add('on');await wait(260)}},
+ cc:async()=>{await wait(900);$('tl-p').classList.add('on');await wait(700);
+  for(let i=0;i<C.steps.length;i++){const s=C.steps[i],el=$('tl-s'+i);
+   if(s.spin)$('spin').innerHTML='✻ '+esc(s.spin)+'… <small>(esc to interrupt)</small>';
+   if(s.tick!=null){$('td'+s.tick).classList.add('cur')}
+   el.classList.add('on');const li=treeLi(s.hit);document.querySelectorAll('#tree li.hit').forEach(x=>x.classList.remove('hit'));if(li){li.classList.add('hit');if(s.made)li.classList.add('made')}
+   await wait(650);el.classList.add('ok');
+   if(s.tick!=null){const td=$('td'+s.tick);td.classList.remove('cur');td.classList.add('done');td.querySelector('.c').textContent='☒'}
+   if(s.todos){await wait(300);$('tl-todo').classList.add('on')}
+   await wait(200)}
+  $('spin').innerHTML='&nbsp;';document.querySelectorAll('#tree li.hit').forEach(x=>x.classList.remove('hit'));$('tl-sum').classList.add('on')},
+ close:async()=>{}
+};
+
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const s=e.target;s.classList.add('in');io.unobserve(s);const f=R[s.dataset.run];if(f)f()}}),{threshold:.22});
+document.querySelectorAll('section').forEach(s=>io.observe(s));
+
+/* spatial parallax */
+const pars=[...document.querySelectorAll('.par')].map(el=>({el,z:parseFloat(el.dataset.z||0),sec:el.closest('section')}));
+let mx=0,my=0,tx=0,ty=0;addEventListener('mousemove',e=>{tx=e.clientX/innerWidth-.5;ty=e.clientY/innerHeight-.5},{passive:true});
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(){mx+=(tx-mx)*.06;my+=(ty-my)*.06;const vh=innerHeight,small=innerWidth<860,amp=reduce?0:(small?.35:1);
+ document.documentElement.style.setProperty('--sp',(scrollY/(document.body.scrollHeight-vh||1)).toFixed(3));
+ for(const p of pars){const r=p.sec.getBoundingClientRect();if(r.bottom<-200||r.top>vh+200)continue;
+  const t=Math.max(-1.2,Math.min(1.2,(r.top+Math.min(r.height,vh)/2-vh/2)/vh));
+  const big=p.el.offsetHeight>500?.35:1;
+  const y=-t*p.z*70*amp,rx=Math.max(-10,Math.min(12,t*9*(0.5+p.z*.4)))*amp*big,x=small?0:mx*p.z*-16*amp,ry=small?0:mx*p.z*3*amp*big;
+  p.el.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,'+(p.z*20*amp).toFixed(1)+'px) rotateX('+rx.toFixed(2)+'deg) rotateY('+ry.toFixed(2)+'deg)'}
+ requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+})();
+</script>

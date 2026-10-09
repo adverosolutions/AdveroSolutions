@@ -1,0 +1,44 @@
+Build this GoHighLevel workflow exactly as specified. Name the workflow exactly "Your GHL Leads: Captured, Followed Up and Assigned Automatically".
+Rules: create every step listed below, in the order given, with the exact step names and field values given. Do not add steps, do not remove steps, do not merge steps, do not reorder them, do not rename anything, do not ask me questions. Where a tag, pipeline, stage, form or field is named, use that exact name. Leave the workflow as a draft; do not publish.
+
+Trigger - name it exactly "A lead fills out your website form". Trigger "Form submitted". Filter: form is any form (no filter).
+
+Actions, in this exact order:
+Step 1 - name this step exactly "Tag the contact website-lead so you know where they came from". Action "Add contact tag". Tag: "website-lead".
+Step 2 - name this step exactly "Save Website form in the contact's Lead Source field". Action "Update contact field". Field: "Lead Source". Value: "Website form".
+Step 3 - name this step exactly "Open the lead in your pipeline at the New Lead stage". Action "Create/Update opportunity". Pipeline: "Upwork Demo - Lead Pipeline". Stage: "New Lead". Opportunity name: "{{contact.first_name}} {{contact.last_name}} - Website form". Status: open.
+  (Purpose: Pipeline updates happen on their own from here, nobody drags cards by hand.)
+Step 4 - name this step exactly "Text the lead right away so they hear from you first". Action "Send SMS". Message text, exactly: "Hi {{contact.first_name}}, this is {{user.first_name}} with {{location.name}}. Thanks for reaching out, I got your request. What is the best time to give you a quick call today?"
+  (Purpose: Speed to lead: the text goes out within a minute of the form.)
+Step 5 - name this step exactly "Email the lead the same details plus a link to book a call". Action "Send email". Subject: "Got your request, {{contact.first_name}}". Body, exactly: "Hi {{contact.first_name}},
+
+Thanks for reaching out to {{location.name}}. I have your request and I will be the one helping you.
+
+If it is easier, you can pick a time for a quick call here: {{custom_values.booking_link}}
+
+Or just reply to this email with any questions.
+
+{{user.first_name}}"
+Step 6 - name this step exactly "Wait one day to give the lead time to answer". Action "Wait". Wait for a set time: 1 day.
+Step 7 - name this step exactly "Did they reply or book a call?". Action "If/Else". Branch name: "Did they reply or book a call?". Condition: Contact has tag "lead-engaged".
+  (Purpose: One check on lead activity: a reply or a booking tags them lead-engaged.)
+  YES branch (condition is true):
+    Step 8 - name this step exactly "Move the opportunity to the Engaged stage". Action "Create/Update opportunity" (update the existing one). Pipeline: "Upwork Demo - Lead Pipeline". Move to stage: "Engaged". Status: open.
+    Step 9 - name this step exactly "Give the owner a task to follow up today". Action "Create task". Title: "Follow up with {{contact.first_name}} {{contact.last_name}} today". Due in 1 days. Assign to: the contact's assigned user.
+      (Purpose: Task assignments go to whoever owns the contact, so your team always knows whose lead it is.)
+    Step 10 - name this step exactly "Text the owner that a hot lead is waiting". Action "Send internal notification". Type: SMS. Send to: the contact's assigned user, and if none is assigned, all users. Message, exactly: "Hot lead: {{contact.first_name}} {{contact.last_name}} replied or booked a call. Task is in GHL. {{contact.phone}}"
+      End of the workflow after this step.
+  NO branch (condition is false, the "None" branch):
+    Step 11 - name this step exactly "Send a second text to a lead who has not answered yet". Action "Send SMS". Message text, exactly: "Hi {{contact.first_name}}, {{user.first_name}} again from {{location.name}}. Just checking you saw my message about your request. Reply here or pick a time that works: {{custom_values.booking_link}}"
+    Step 12 - name this step exactly "Wait two more days before the next follow-up". Action "Wait". Wait for a set time: 2 days.
+    Step 13 - name this step exactly "Email a short check-in that keeps the door open". Action "Send email". Subject: "Still want help with your request?". Body, exactly: "Hi {{contact.first_name}},
+
+I did not want your request to slip through the cracks. If you still want help, reply to this email or grab a time here: {{custom_values.booking_link}}
+
+If now is not a good time, just let me know and I will check back later.
+
+{{user.first_name}}"
+    Step 14 - name this step exactly "Give the owner a task to call the lead who went quiet". Action "Create task". Title: "Call {{contact.first_name}} {{contact.last_name}}, no reply yet". Due in 1 days. Assign to: the contact's assigned user.
+      End of the workflow after this step.
+
+Checklist before you finish: 1 trigger(s), 14 action steps, workflow name "Your GHL Leads: Captured, Followed Up and Assigned Automatically". Every Send SMS, Send email and internal notification contains the exact message text above. Every Wait has the duration above. Every If/Else has both branches. Nothing is left unconfigured.

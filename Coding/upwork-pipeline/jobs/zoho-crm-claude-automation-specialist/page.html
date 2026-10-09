@@ -1,0 +1,1088 @@
+<title>Zoho Lead Routing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16202e; --ink2:#4d596b; --ink3:#8792a3;
+  --blue:#2f74f5; --blue2:#6aa5ff; --mint:#1fb487; --amber:#e8a13a;
+  --line:rgba(150,170,200,.28);
+  --panel:linear-gradient(180deg,rgba(255,255,255,.94),rgba(248,251,255,.80));
+  --shadow:0 40px 70px -30px rgba(38,72,128,.30),0 16px 30px -18px rgba(38,72,128,.22);
+  --ease:cubic-bezier(.16,1,.3,1);
+  /* Zoho-CRM-style app palette (no logo) */
+  --h-ink:#1f2a37; --h-ink2:#5b6778; --h-ink3:#8a95a5; --h-line:#e3e7ee; --h-line2:#cfd6e0; --h-bg:#f4f6f9;
+  --h-teal:#1a6fd6; --h-teal2:#3b86e6; --h-green:#1e9e62; --h-orange:#1a6fd6; --h-coral:#3b86e6; --h-nav:#1d2735;
+  --z-red:#d64545; --z-redbg:#fdecec; --z-greenbg:#e6f6ee; --z-bluebg:#e8f1fc;
+  /* phone app palette (generic) */
+  --rc-or:#f47a20; --rc-blue:#0a78b8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;background:#e9f0f8}
+body{font-family:"Figtree",system-ui,sans-serif;color:var(--ink);background:#e9f0f8;overflow-x:hidden;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+.sky{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+   radial-gradient(1200px 600px at 78% -10%,rgba(255,255,255,.95),rgba(255,255,255,0) 60%),
+   radial-gradient(900px 520px at 8% 30%,rgba(206,226,250,.75),rgba(206,226,250,0) 70%),
+   linear-gradient(180deg,#c9dcf2 0%,#dce8f5 28%,#ecf1f7 58%,#f3f4f6 82%,#e9edf2 100%);}
+.sky::after{content:"";position:absolute;left:-10%;right:-10%;top:calc(58% - var(--sp,0) * 18%);height:40%;
+  background:radial-gradient(60% 50% at 50% 0%,rgba(255,255,255,.85),rgba(255,255,255,0) 70%);filter:blur(10px)}
+.haze{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.haze i{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;animation:drift 26s ease-in-out infinite alternate}
+.haze i:nth-child(1){width:520px;height:520px;left:-120px;top:10%;background:#d6e6fb}
+.haze i:nth-child(2){width:460px;height:460px;right:-100px;top:45%;background:#e6f1fb;animation-duration:32s}
+.haze i:nth-child(3){width:380px;height:380px;left:40%;top:70%;background:#dff0ec;opacity:.45;animation-duration:38s}
+@keyframes drift{to{transform:translate3d(60px,-50px,0) scale(1.08)}}
+@keyframes blink{50%{opacity:0}}
+
+main{position:relative;z-index:1}
+.top{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:18px 32px;pointer-events:none}
+.top .brand{font-weight:600;font-size:13px;letter-spacing:.02em;color:var(--ink2);display:flex;gap:10px;align-items:center;padding:7px 14px 7px 12px;border-radius:99px;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff,0 6px 18px -8px rgba(38,72,128,.25);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.top .brand b{width:9px;height:9px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 4px rgba(47,116,245,.15)}
+.chip{white-space:nowrap;font-size:12px;font-weight:600;color:var(--ink2);padding:7px 13px;border-radius:99px;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff,0 6px 18px -8px rgba(38,72,128,.25);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(14px)}
+.label{font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+
+section{position:relative;min-height:100vh;padding:120px 48px 110px;display:flex;flex-direction:column;justify-content:center;perspective:1700px;perspective-origin:50% 40%}
+.wrap{width:100%;max-width:1240px;margin:0 auto;position:relative;transform-style:preserve-3d}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
+.eyebrow span{font-variant-numeric:tabular-nums;color:var(--ink3);letter-spacing:.06em}
+h1,h2{font-weight:600;letter-spacing:-.035em;line-height:1.02;color:var(--ink)}
+h1{font-size:clamp(44px,6.6vw,96px)}
+h2{font-size:clamp(38px,4.8vw,70px);margin-top:14px}
+h2 em,h1 em{font-style:normal;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.head{margin-bottom:56px}
+.sub{font-size:clamp(17px,1.45vw,21px);line-height:1.45;font-weight:450;color:var(--ink2);max-width:660px;margin-top:18px;letter-spacing:-.005em}
+#hero .sub,#zss .sub,#close .sub,#cc .sub{margin-left:auto;margin-right:auto}
+.head.c{text-align:center}
+
+/* panels */
+.par{will-change:transform;transform-style:preserve-3d}
+.panel{position:relative;background:var(--panel);border-radius:28px;border:1px solid rgba(255,255,255,.95);
+  box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.55),var(--shadow);backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3)}
+.panel::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,0) 28%,rgba(255,255,255,0) 72%,rgba(200,218,242,.35) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;padding:1.5px}
+.panel::after{content:"";position:absolute;left:10%;right:10%;bottom:-46px;height:34px;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(52,86,140,.22),rgba(52,86,140,0));filter:blur(6px);pointer-events:none;transform:translateZ(-1px)}
+.rise{opacity:0;transform:perspective(1400px) translate3d(0,90px,-180px) rotateX(20deg);transform-origin:50% 100%;
+  transition:opacity 1.1s var(--ease),transform 1.6s var(--ease);transition-delay:var(--d,0s)}
+.in .rise{opacity:1;transform:perspective(1400px) translate3d(0,0,0) rotateX(0)}
+.fade{opacity:0;transform:translateY(18px);transition:opacity .9s var(--ease),transform 1.2s var(--ease);transition-delay:var(--d,0s)}
+.in .fade{opacity:1;transform:none}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;background:rgba(31,180,135,.12);color:#12926b}
+.pill.blue{background:rgba(47,116,245,.1);color:var(--blue)}
+
+.scrollcue{margin-top:40px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);display:flex;flex-direction:column;align-items:center;gap:10px}
+.scrollcue b{width:1.5px;height:36px;background:linear-gradient(var(--ink3),transparent);animation:cue 2.4s ease-in-out infinite}
+@keyframes cue{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* HERO */
+#hero{padding-top:110px}
+#hero .wrap{display:grid;grid-template-columns:1fr;justify-items:center;text-align:center}
+#hero .kicker{font-size:15px;font-weight:500;color:var(--ink2);margin-bottom:22px}
+.hstage{position:relative;width:min(1100px,100%);height:420px;margin-top:40px;transform-style:preserve-3d}
+.hstage>.par{position:absolute}
+.hc{padding:22px 24px;text-align:left}
+.mform{width:320px}
+.mform .h{display:flex;gap:12px;align-items:center}
+.ic40{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;flex:none}
+.ic40 svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ic40.org{background:linear-gradient(160deg,#ffb27a,#f47a20);box-shadow:0 8px 16px -8px rgba(244,122,32,.7)}
+.ic40.blue{background:linear-gradient(160deg,#6aa5ff,#155eef);box-shadow:0 8px 16px -8px rgba(21,94,239,.7)}
+.ic40.teal{background:linear-gradient(160deg,#4fd1a0,#1e9e62);box-shadow:0 8px 16px -8px rgba(30,158,98,.7)}
+.hc .t{font-weight:700;font-size:16px}
+.hc .s{font-size:13px;color:var(--ink3);margin-top:2px}
+.mform .sent{margin-top:16px;font-size:13.5px;font-weight:600;color:#12926b;display:flex;gap:8px;align-items:center;opacity:0;transform:translateY(6px);transition:all .7s var(--ease)}
+.mform .sent.on{opacity:1;transform:none}
+.ntf{width:450px;border-radius:30px}
+.ntf .app{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+.ntf .app .ic40{width:30px;height:30px;border-radius:9px}.ntf .app .ic40 svg{width:15px;height:15px}
+.ntf .app span:last-child{margin-left:auto;letter-spacing:0;text-transform:none;font-weight:500}
+.ntf .tt{font-size:20px;font-weight:700;letter-spacing:-.015em;margin-top:14px}
+.ntf .bd{font-size:17px;line-height:1.4;color:var(--ink2);margin-top:6px;font-weight:500}
+.ntf .tags{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.bkd{width:320px;display:flex;gap:18px;align-items:center}
+.ring{position:relative;width:86px;height:86px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;letter-spacing:-.02em}
+.ring .num small{font-size:12px;font-weight:600;color:var(--ink3);margin-left:1px}
+.bkd .t{font-size:19px;letter-spacing:-.02em}
+.st3{width:560px;padding:16px 18px;display:flex;justify-content:space-between;gap:8px}
+.st3 div{flex:1;display:flex;gap:8px;align-items:center;font-size:13.5px;font-weight:600;color:var(--ink2);opacity:.35;transition:opacity .6s;white-space:nowrap}
+.st3 div.on{opacity:1}
+.tick{width:20px;height:20px;border-radius:50%;background:rgba(31,180,135,.14);display:grid;place-items:center;flex:none}
+.tick::after{content:"";width:8px;height:4px;border-left:2px solid var(--mint);border-bottom:2px solid var(--mint);transform:rotate(-45deg) translate(1px,-1px)}
+
+/* IN -> OUT */
+#io .wrap{text-align:center}
+.iog{display:grid;grid-template-columns:minmax(0,1fr) 170px minmax(0,1fr);align-items:center;gap:20px;max-width:1060px;margin:0 auto;transform-style:preserve-3d;text-align:left}
+.iocol{display:flex;flex-direction:column;gap:18px;min-width:0}
+.iop{padding:24px 24px 26px;display:flex;flex-direction:column;gap:14px}
+.iop .label{color:var(--blue)}
+.iop.out .label{color:#12926b}
+.iocap{font-size:15.5px;line-height:1.45;font-weight:500;color:var(--ink2);text-align:center;padding:0 10px}
+.iocall{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid #eaecf0;border-radius:16px;padding:14px 16px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.iocall>div{min-width:0}
+.iocall .t{font-weight:700;font-size:16px}.iocall .s{font-size:13px;color:var(--ink3);margin-top:2px}
+.iocall .ring2{margin-left:auto;font-size:11.5px;font-weight:700;color:#b54708;background:#fffaeb;border:1px solid #fedf89;border-radius:99px;padding:4px 10px;white-space:nowrap}
+.iorow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:0 4px}
+.iorow span:first-child{color:var(--ink3)}.iorow span:last-child{font-weight:600;text-align:right}
+.ioown{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--h-line);border-radius:12px;padding:10px 12px;box-shadow:0 0 0 2px #12b76a,0 14px 24px -14px rgba(18,183,106,.5)}
+.ioown>div{min-width:0}
+.ioown .k{font-size:11.5px;font-weight:700;color:var(--h-teal)}
+.ioown .v{font-size:14px;font-weight:700;color:#101828;margin-top:1px}
+.ioown .v small{font-weight:500;color:#475467;font-size:12px}
+.iosms{align-self:flex-end;max-width:92%;display:flex;flex-direction:column;align-items:flex-end}
+.iosms .mm{margin:0 4px 3px;font-size:11px;font-weight:600;color:var(--ink3)}
+.iosms .bb{background:linear-gradient(180deg,#2a8fd0,var(--rc-blue));color:#fff;border-radius:16px;border-bottom-right-radius:4px;padding:9px 13px;font-size:13.5px;line-height:1.4}
+.ioq{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid #fde0c8;border-left:3px solid var(--rc-or);border-radius:10px;padding:9px 12px}
+.ioq>div{min-width:0;flex:1}
+.ioq .k{font-size:11.5px;font-weight:700;color:#c25a0c}
+.ioq .v{font-size:13.5px;font-weight:700;color:#101828;margin-top:1px}
+.ioq .nb{font-size:11px;font-weight:700;color:#fff;background:var(--rc-or);border-radius:99px;padding:2px 8px;white-space:nowrap}
+.ioar{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.ioar .tt{font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:1;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ioar svg{width:150px;height:24px;overflow:visible}
+.ioar svg path{fill:none;stroke:url(#gm);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.ioar .label{letter-spacing:.1em}
+.iop .pin,.iop .pout{opacity:0;transform:translateY(10px);transition:opacity .6s var(--ease),transform .8s var(--ease)}
+.iop .on{opacity:1;transform:none}
+
+/* APP SHELL (Zoho-CRM-style, no logo) */
+.appf{padding:10px;border-radius:30px}
+.hw{border-radius:20px;overflow:hidden;background:var(--h-bg);display:flex;color:var(--h-ink);font-size:13px;position:relative;text-align:left}
+.hnav{width:58px;flex:none;background:var(--h-nav);display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 0}
+.hnav .acct{width:34px;height:34px;border-radius:8px;background:linear-gradient(160deg,#6aa5ff,#1a6fd6);display:grid;place-items:center;margin-bottom:10px}
+.hnav .acct svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.hnav .ni{width:38px;height:34px;border-radius:6px;display:grid;place-items:center}
+.hnav .ni svg{width:18px;height:18px;fill:none;stroke:#aab6c6;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hnav .ni.a{background:rgba(255,255,255,.12);box-shadow:inset 3px 0 0 var(--h-coral)}.hnav .ni.a svg{stroke:#fff}
+.hbody{flex:1;min-width:0;display:flex;flex-direction:column}
+.htop{height:50px;flex:none;background:#fff;border-bottom:1px solid var(--h-line);display:flex;align-items:center;padding:0 18px;gap:14px}
+.htop .pt{font-weight:700;font-size:15px;white-space:nowrap}
+.htop .srch{margin:0 auto;width:300px;height:32px;border:1px solid var(--h-line2);background:var(--h-bg);border-radius:6px;display:flex;align-items:center;padding:0 10px;color:var(--h-ink3);font-size:12.5px;gap:8px}
+.htop .srch svg{width:14px;height:14px;fill:none;stroke:var(--h-ink3);stroke-width:2}
+.htop .me{width:30px;height:30px;border-radius:50%;background:var(--z-bluebg);color:var(--h-teal);font-weight:700;font-size:11.5px;display:grid;place-items:center;flex:none}
+.hbtn{white-space:nowrap;background:var(--h-orange);color:#fff;font-weight:700;font-size:12.5px;padding:7px 13px;border-radius:6px}
+.hbtn.o{background:#fff;color:var(--h-ink);border:1px solid var(--h-line2)}
+.hsel{border:1px solid var(--h-line2);border-radius:6px;padding:6px 11px;font-size:12.5px;font-weight:600;color:var(--h-ink);background:#fff;white-space:nowrap}
+.hsel::after{content:" ▾";color:var(--h-ink3);font-size:10px}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12px;color:#fff;flex:none;background:#99afc4}
+.av.p{background:#6a78d1}.av.t{background:#2a8fd0}.av.o{background:#e8833a}.av.g{background:#1e9e62}.av.y{background:#d9a63a}.av.n{background:#5b6778}.av.r{background:#c2577a}
+
+/* 01 LEAD RECORD */
+.rec{display:grid;grid-template-columns:262px minmax(0,1fr) 244px;flex:1;min-height:0}
+.rl{background:#fff;border-right:1px solid var(--h-line);padding:14px 16px 16px}
+.rl .bk{font-size:12.5px;color:var(--h-teal);font-weight:600}
+.rl .who{display:flex;gap:12px;align-items:center;margin-top:14px}
+.rl .who .av{width:52px;height:52px;font-size:17px}
+.rl .nm{font-weight:700;font-size:16px}
+.rl .tl{font-size:12px;color:var(--h-ink2);margin-top:2px;line-height:1.35}
+.acts{display:flex;gap:6px;margin:14px 0 12px;flex-wrap:wrap}
+.acts span{font-size:11.5px;font-weight:600;color:var(--h-ink);border:1px solid var(--h-line2);border-radius:6px;padding:5px 9px;background:#fff;white-space:nowrap}
+.acts span.pr{background:var(--h-teal);border-color:var(--h-teal);color:#fff}
+.sech{font-size:12.5px;font-weight:700;padding:12px 0 4px;border-top:1px solid #edf0f5;display:flex;justify-content:space-between}
+.sech small{font-weight:600;color:var(--h-teal);font-size:12px}
+.fld{padding:5px 0;display:grid;grid-template-columns:104px minmax(0,1fr);gap:8px;align-items:center}
+.fld .fk{font-size:11.5px;color:var(--h-ink3)}
+.fld .fv{font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:7px;border-radius:3px;transition:background .6s,box-shadow .6s;min-width:0}
+.fld .fv.flash{background:var(--z-greenbg);box-shadow:0 0 0 4px var(--z-greenbg)}
+.fld .fv .av{width:20px;height:20px;font-size:8.5px}
+.fld .fv.mute{color:#99a6b8;font-weight:500}
+.rm{padding:0 16px 16px;min-width:0}
+.rtabs{display:flex;gap:22px;height:44px;border-bottom:1px solid var(--h-line);font-size:13px;font-weight:600;color:var(--h-ink2)}
+.rtabs span{display:flex;align-items:center;border-bottom:3px solid transparent;white-space:nowrap}
+.rtabs span.a{color:var(--h-teal);border-color:var(--h-teal)}
+.fchips{display:flex;gap:6px;margin:12px 0 10px;flex-wrap:wrap}
+.fchips span{font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:99px;border:1px solid var(--h-line2);background:#fff;color:var(--h-ink2)}
+.fchips span.a{background:var(--z-bluebg);color:var(--h-teal);border-color:#b9d3f3}
+.tmon{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--h-ink3);margin-bottom:8px}
+.tlx{position:relative;height:470px;overflow:hidden;display:flex;flex-direction:column;gap:8px}
+.tli{display:flex;gap:10px;background:#fff;border:1px solid var(--h-line);border-radius:6px;padding:10px 12px;opacity:0;transform:translateY(-12px) scale(.985);transition:opacity .5s var(--ease),transform .7s var(--ease),box-shadow 1.2s}
+.tli.show{opacity:1;transform:none}
+.tli.hot{box-shadow:0 0 0 2px rgba(26,111,214,.35)}
+.tli .ti{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none}
+.tli .ti svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.tli>div{flex:1;min-width:0}
+.tli .hd{display:flex;gap:10px;align-items:baseline}
+.tli .tt{font-size:13px;font-weight:700;min-width:0}
+.tli .tm{font-size:11.5px;color:var(--h-ink3);margin-left:auto;white-space:nowrap}
+.tli .td{font-size:12px;color:var(--h-ink2);margin-top:3px;line-height:1.4}
+.rr{background:#fff;border-left:1px solid var(--h-line);padding:14px}
+.ac2{border:1px solid var(--h-line);border-radius:6px;margin-bottom:12px;transition:box-shadow .8s}
+.ac2 .h{padding:9px 12px;font-size:12.5px;font-weight:700;border-bottom:1px solid #edf0f5;display:flex;justify-content:space-between}
+.ac2 .h small{font-weight:600;color:var(--h-teal)}
+.ac2 .b{padding:10px 12px;font-size:12.5px;line-height:1.45}
+.ac2 .b b{color:var(--h-ink);display:block;font-size:13px}
+.ac2 .b span{color:var(--h-ink2)}
+.ac2 .emp{color:#99a6b8}
+.stp2{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--z-bluebg);color:var(--h-teal);margin-top:6px}
+.stp2.g{background:var(--z-greenbg);color:#15834f}
+.ac2.hot{box-shadow:0 0 0 2px rgba(26,111,214,.35)}
+.ac2 .fillin{display:none}.ac2.on .fillin{display:block}.ac2.on .emp{display:none}
+
+/* 02 PHONE APP (RingCentral-style, no logo) */
+.rcw{border-radius:20px;overflow:hidden;background:#fff;display:flex;color:#1c2430;font-size:13px;text-align:left}
+.rcnav{width:62px;flex:none;background:#f6f7f9;border-right:1px solid #e6e8ec;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 0}
+.rcnav .me2{width:34px;height:34px;border-radius:50%;background:var(--rc-blue);color:#fff;font-weight:700;font-size:12px;display:grid;place-items:center;margin-bottom:10px}
+.rcnav .ni{position:relative;width:40px;height:36px;border-radius:8px;display:grid;place-items:center}
+.rcnav .ni svg{width:18px;height:18px;fill:none;stroke:#6b7480;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.rcnav .ni.a{background:#fff1e6}.rcnav .ni.a svg{stroke:var(--rc-or)}
+.rcnav .ni b{position:absolute;top:3px;right:3px;min-width:15px;height:15px;border-radius:99px;background:var(--rc-or);color:#fff;font-size:9.5px;font-weight:700;display:grid;place-items:center;padding:0 3px;opacity:0;transform:scale(.4);transition:all .5s var(--ease)}
+.rcnav .ni b.on{opacity:1;transform:none}
+.rcb{flex:1;min-width:0;display:flex;flex-direction:column}
+.rctop{height:50px;flex:none;border-bottom:1px solid #e6e8ec;display:flex;align-items:center;gap:12px;padding:0 16px}
+.rctop .pt{font-weight:700;font-size:15px;white-space:nowrap}
+.rctop .srch{margin:0 auto;width:280px;height:32px;border-radius:99px;background:#f1f3f5;display:flex;align-items:center;gap:8px;padding:0 12px;color:#8a929c;font-size:12.5px}
+.rctop .srch svg{width:14px;height:14px;fill:none;stroke:#8a929c;stroke-width:2}
+.rctop .pres{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#4b5563;white-space:nowrap}
+.rctop .pres i{width:9px;height:9px;border-radius:50%;background:#22a55a}
+.rcg{display:grid;grid-template-columns:300px minmax(0,1fr) 250px;flex:1;min-height:450px}
+.rcl{border-right:1px solid #e6e8ec;padding:12px 0}
+.rcl .lh{display:flex;justify-content:space-between;align-items:center;padding:0 14px 10px;font-weight:700;font-size:13.5px}
+.rcl .lh small{font-weight:600;font-size:11.5px;color:#8a929c}
+.qi{display:flex;gap:10px;align-items:center;padding:10px 14px;border-left:3px solid transparent;transition:background .6s}
+.qi>div{min-width:0;flex:1}
+.qi .n{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qi .d{font-size:11.5px;color:#6b7480;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qi .tg{font-size:10.5px;font-weight:700;border-radius:99px;padding:2px 8px;white-space:nowrap;background:#f1f3f5;color:#4b5563}
+.qi .tg.or{background:var(--rc-or);color:#fff}.qi .tg.g{background:#e6f6ee;color:#15834f}
+.qi.sel{background:#fff6ee;border-left-color:var(--rc-or)}
+.qi.new{max-height:0;padding-top:0;padding-bottom:0;opacity:0;overflow:hidden;transition:max-height .7s var(--ease),padding .7s var(--ease),opacity .6s,background .6s}
+.qi.new.on{max-height:70px;padding-top:10px;padding-bottom:10px;opacity:1}
+.rct{display:flex;flex-direction:column;min-width:0}
+.rct .th{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #e6e8ec}
+.rct .th>div{min-width:0}
+.rct .th .n{font-weight:700;font-size:14px}.rct .th .s{font-size:12px;color:#6b7480}
+.callb{margin-left:auto;display:flex;align-items:center;gap:6px;background:#22a55a;color:#fff;font-weight:700;font-size:12.5px;padding:7px 14px;border-radius:99px;white-space:nowrap}
+.callb svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.msgs{flex:1;padding:16px;display:flex;flex-direction:column;gap:10px;background:#fafbfc}
+.day{align-self:center;font-size:11px;font-weight:600;color:#8a929c}
+.bub{max-width:78%;display:flex;flex-direction:column;opacity:0;transform:translateY(8px);transition:opacity .5s,transform .7s var(--ease)}
+.bub.on{opacity:1;transform:none}
+.bub .mm{font-size:11px;color:#8a929c;margin:0 6px 3px}
+.bub .bb{padding:9px 13px;border-radius:16px;font-size:13px;line-height:1.45}
+.bub.out{align-self:flex-end;align-items:flex-end}.bub.out .bb{background:var(--rc-blue);color:#fff;border-bottom-right-radius:4px}
+.bub.in{align-self:flex-start}.bub.in .bb{background:#fff;border:1px solid #e6e8ec;border-bottom-left-radius:4px}
+.typ{align-self:flex-start;display:none;gap:4px;background:#fff;border:1px solid #e6e8ec;border-radius:14px;padding:10px 12px}
+.typ.on{display:flex}
+.typ i{width:6px;height:6px;border-radius:50%;background:#9aa3ad;animation:blink 1s infinite}
+.typ i:nth-child(2){animation-delay:.2s}.typ i:nth-child(3){animation-delay:.4s}
+.cmp{margin:0 16px 14px;border:1px solid #e6e8ec;border-radius:99px;padding:8px 14px;color:#8a929c;font-size:12.5px}
+.rcr{border-left:1px solid #e6e8ec;padding:14px;background:#fff}
+.zc{border:1px solid #e6e8ec;border-radius:10px;overflow:hidden}
+.zc .zh{background:var(--z-bluebg);color:var(--h-teal);font-weight:700;font-size:12px;padding:8px 12px;letter-spacing:.02em}
+.zc .zr{display:flex;justify-content:space-between;gap:8px;padding:7px 12px;border-top:1px solid #f0f2f5;font-size:12px}
+.zc .zr span:first-child{color:#8a929c;white-space:nowrap}.zc .zr span:last-child{font-weight:600;text-align:right;transition:background .6s,color .6s;border-radius:3px;padding:0 3px}
+.zc .zr span.flash{background:var(--z-greenbg);color:#15834f}
+.ctask{margin-top:12px;border:1px solid #e6e8ec;border-radius:10px;padding:10px 12px;opacity:0;transform:translateY(6px);transition:all .6s var(--ease)}
+.ctask.on{opacity:1;transform:none;box-shadow:0 0 0 2px rgba(34,165,90,.35)}
+.ctask .k{font-size:11px;font-weight:700;color:#15834f;letter-spacing:.04em;text-transform:uppercase}
+.ctask .v{font-weight:700;font-size:13px;margin-top:3px}.ctask .s{font-size:12px;color:#6b7480;margin-top:1px}
+
+/* 03 CADENCE */
+.seqh{display:flex;align-items:center;gap:14px;padding:0 16px;background:#fff;border-bottom:1px solid var(--h-line);height:48px}
+.seqh .nm{font-weight:700;font-size:14.5px;white-space:nowrap}
+.seqh .nm small{font-weight:600;color:var(--h-ink3);font-size:12.5px}
+.seqh .rtabs{height:100%;border:0;margin-left:10px}
+.seqh .hbtn{margin-left:auto}
+.exitc{display:flex;align-items:center;gap:10px;margin:12px 16px 0;background:#fff;border:1px solid var(--h-line);border-left:3px solid var(--z-red);border-radius:6px;padding:10px 12px;font-size:12.5px;flex-wrap:wrap}
+.exitc b{font-weight:700}
+.exitc span{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--z-redbg);color:#b53030;white-space:nowrap}
+.exitc span.n{background:var(--h-bg);color:var(--h-ink2)}
+.seqg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:14px;padding:12px 16px 16px}
+.sttl{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--h-ink3);margin:2px 0 8px}
+.steps{display:flex;flex-direction:column;gap:10px;position:relative}
+.stp{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--h-line);border-radius:6px;padding:10px 12px;position:relative;transition:opacity .6s,box-shadow .6s}
+.stp+.stp::before{content:"";position:absolute;left:36px;top:-11px;height:10px;border-left:1.5px dashed var(--h-line2)}
+.stp .dy{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--h-ink3);width:38px;flex:none;line-height:1.2}
+.stp .si{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;flex:none}
+.stp .si svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.stp>div{min-width:0;flex:1}
+.stp .tt{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stp .sb{font-size:11.5px;color:var(--h-ink2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stp.act{box-shadow:0 0 0 2px rgba(26,111,214,.35)}
+.sc{font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;white-space:nowrap;background:#edf0f5;color:var(--h-ink2);flex:none;transition:background .4s,color .4s}
+.sc.b{background:var(--z-bluebg);color:var(--h-teal)}.sc.g{background:var(--z-greenbg);color:#15834f}.sc.x{background:var(--z-redbg);color:#b53030}.sc.m{background:var(--h-bg);color:#99a6b8}
+.enl{background:#fff;border:1px solid var(--h-line);border-radius:6px;overflow:hidden}
+.enl .eh{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1.25fr);gap:10px;padding:9px 14px;background:var(--h-bg);border-bottom:1px solid var(--h-line);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--h-ink3)}
+.er2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1.25fr);gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid #edf0f5;transition:background .6s}
+.er2:last-child{border-bottom:0}
+.er2 .p{display:flex;gap:9px;align-items:center;min-width:0}
+.er2 .p .av{width:26px;height:26px;font-size:9.5px}
+.er2 .p div{min-width:0}
+.er2 .p b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.er2 .p small{font-size:11px;color:var(--h-ink3);white-space:nowrap}
+.er2 .cs{font-size:12px;color:var(--h-ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.er2 .sc{justify-self:start;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.er2.flash{background:#fff5f5}
+.sms2{margin-top:12px;background:#fff;border:1px solid var(--h-line);border-radius:6px;padding:10px 14px;display:flex;gap:10px;align-items:center;opacity:0;transform:translateY(6px);transition:all .6s var(--ease)}
+.sms2.on{opacity:1;transform:none}
+.sms2 .q{font-size:13px;font-weight:700;background:#f1f3f5;border-radius:12px;padding:5px 12px}
+.sms2 .w{font-size:12px;color:var(--h-ink2);min-width:0}
+
+/* 04 DASHBOARD */
+.dsh{padding:14px 16px 16px;display:grid;gap:12px}
+.dtop{display:flex;align-items:center;gap:10px}
+.dtop .dn{font-weight:700;font-size:15px;white-space:nowrap}
+.dtop .illu{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--h-ink2);border:1px dashed #99a6b8;padding:4px 9px;border-radius:99px;white-space:nowrap}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tile{background:#fff;border:1px solid var(--h-line);border-radius:6px;padding:14px 16px}
+.tile .k{font-size:12.5px;font-weight:600;color:var(--h-ink2)}
+.tile .v{font-size:32px;font-weight:700;letter-spacing:-.03em;margin-top:10px;line-height:1}
+.tile .v small{font-size:15px;font-weight:600;color:var(--h-ink2);margin-left:2px}
+.tile .d{display:inline-block;margin-top:8px;font-size:11.5px;font-weight:700;color:#15834f;background:var(--z-greenbg);border-radius:99px;padding:2px 8px}
+.tile.hi{box-shadow:0 0 0 2px rgba(30,158,98,.35)}
+.dgrid{display:grid;grid-template-columns:1.55fr 1fr;gap:12px}
+.card2{background:#fff;border:1px solid var(--h-line);border-radius:6px;padding:14px 16px}
+.card2 .ct{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:13.5px;gap:10px}
+.lg2{display:flex;gap:12px;font-size:11.5px;font-weight:600;color:var(--h-ink2);white-space:nowrap}
+.lg2 i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px}
+.bars{display:flex;align-items:flex-end;gap:10px;height:170px;margin-top:14px;padding-bottom:22px;position:relative;border-bottom:1px solid var(--h-line)}
+.bars .g{flex:1;display:flex;gap:4px;align-items:flex-end;justify-content:center;height:100%;position:relative}
+.bars .g i{width:40%;max-width:22px;border-radius:3px 3px 0 0;height:0;transition:height 1.4s var(--ease)}
+.bars .g i:nth-child(1){background:#b9d3f3}.bars .g i:nth-child(2){background:var(--h-teal)}
+.bars .g span{position:absolute;bottom:-20px;font-size:11px;color:var(--h-ink2);font-weight:600}
+.src2{margin-top:14px;display:grid;gap:14px}
+.src2 .r{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px 10px;font-size:12.5px;font-weight:600}
+.src2 .r .av{width:24px;height:24px;font-size:9px}
+.src2 .r small{display:block;font-size:11px;color:var(--h-ink3);font-weight:500}
+.src2 .r em{font-style:normal;color:var(--h-ink2)}
+.src2 .tr{grid-column:1/-1;height:7px;border-radius:9px;background:#edf0f5;overflow:hidden}
+.src2 .tr i{display:block;height:100%;width:0;background:var(--h-green);border-radius:9px;transition:width 1.6s var(--ease)}
+.src2 .nt{font-size:11.5px;color:var(--h-ink3);font-weight:500}
+
+/* 05 CLAUDE CODE */
+.cclab{margin-top:14px;display:inline-block}
+.ccgrid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:30px;align-items:start;transform-style:preserve-3d}
+.shell{padding:10px;border-radius:30px}
+.term{border-radius:18px;overflow:hidden;background:#1b1b1d;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.tbar{display:flex;align-items:center;gap:8px;padding:11px 14px;background:#2a2a2d;border-bottom:1px solid #111}
+.tbar i{width:12px;height:12px;border-radius:50%;background:#55555b;flex:none}
+.tbar span{flex:1;text-align:center;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12px;color:#9a9aa2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:44px}
+.tbody{padding:16px 20px 18px;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.55;color:#e4e4e7;overflow-wrap:anywhere}
+.wel{border:1px solid #d7825f;border-radius:8px;padding:10px 14px;display:inline-block;max-width:100%}
+.wel .w1{display:flex;align-items:center;gap:8px;color:#f2f2f2}
+.wel .w1 svg{width:14px;height:14px;fill:#d7825f;flex:none}
+.wel .w2{color:#8b8b93;margin-top:8px}
+.wel .w3{color:#8b8b93}
+.tl{opacity:0;transition:opacity .35s}
+.tl.on{opacity:1}
+.upr{margin-top:14px;color:#a9a9b1;background:#26262a;border-radius:4px;padding:2px 8px}
+.upr b{color:#e4e4e7;font-weight:500}
+.tstp{margin-top:7px;display:grid;grid-template-columns:16px minmax(0,1fr)}
+.dot{width:8px;height:8px;border-radius:50%;background:#6b6b73;margin-top:7px}
+.tstp.ok .dot{background:#4cc38a}
+.tstp.txt .dot{background:#e4e4e7}
+.tstp .tn b{color:#f2f2f2;font-weight:700}
+.tstp .tn span{color:#b8b8c0}
+.res{display:grid;grid-template-columns:30px minmax(0,1fr);color:#8b8b93}
+.res::before{content:"\23BF";padding-left:6px;color:#6b6b73}
+.todo{display:grid;grid-template-columns:30px minmax(0,1fr)}
+.todo::before{content:"";}
+.todo.f::before{content:"\23BF";padding-left:6px;color:#6b6b73}
+.todo .c{display:inline-block;width:20px;color:#8b8b93}
+.todo.done{color:#6b6b73;text-decoration:line-through;text-decoration-color:#55555b}
+.todo.done .c{color:#4cc38a;text-decoration:none}
+.todo.cur{color:#e4e4e7;font-weight:700}
+.sumy{color:#e4e4e7}
+.spin{margin-top:12px;color:#d7825f;min-height:1.6em}
+.spin small{color:#6b6b73;font-size:inherit}
+.inp{margin-top:6px;border:1px solid #4a4a50;border-radius:6px;padding:6px 12px;color:#8b8b93;display:flex;gap:10px}
+.inp i{width:8px;height:16px;background:#bdbdc4;margin-top:3px;animation:blink 1s steps(1) infinite}
+.hint{color:#6b6b73;font-size:12px;margin-top:6px;padding-left:4px}
+.tree{padding:18px 18px 16px}
+.tree .th{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tree .th b{font-size:14.5px;font-weight:700}
+.tree ul{list-style:none;margin-top:12px;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12.5px}
+.tree li{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;white-space:nowrap;color:var(--ink2);transition:background .5s,color .5s}
+.tree li svg{width:15px;height:15px;flex:none;fill:none;stroke:var(--ink3);stroke-width:1.8;stroke-linejoin:round}
+.tree li.dir svg{fill:rgba(47,116,245,.14);stroke:var(--blue)}
+.tree li.hit{background:rgba(47,116,245,.1);color:var(--ink)}
+.tree li .nw{margin-left:auto;font-family:"Figtree",sans-serif;font-size:11px;font-weight:700;color:#0f8a63;background:rgba(31,180,135,.14);padding:2px 7px;border-radius:99px;opacity:0;transition:opacity .5s}
+.tree li.ed .nw{opacity:1}
+.sch{padding:16px 18px;margin-top:22px;display:flex;gap:12px;align-items:center}
+.sch .ic{width:36px;height:36px;border-radius:50%;background:rgba(47,116,245,.1);display:grid;place-items:center;flex:none}
+.sch .ic svg{width:18px;height:18px;stroke:var(--blue);fill:none;stroke-width:2;stroke-linecap:round}
+.sch .t{font-weight:700;font-size:14.5px}.sch .s{font-size:12.5px;color:var(--ink3);margin-top:2px}
+
+/* 06 ZOHO WORKFLOW RULE + DELUGE EDITOR */
+.hslab{margin-top:14px;display:inline-block}
+.hswrap{position:relative;width:100%;transform-style:preserve-3d}
+.hsframe{padding:12px;border-radius:30px;margin:0 auto;width:max-content;max-width:100%}
+.hsbox{overflow:hidden;border-radius:20px;position:relative}
+.zs{width:1100px;transform-origin:0 0;background:var(--h-bg);color:var(--h-ink);position:relative;border-radius:20px;overflow:hidden;text-align:left}
+.zs .bar1{height:58px;background:#fff;border-bottom:1px solid var(--h-line);display:flex;align-items:center;padding:0 18px;gap:12px}
+.zs .back{width:30px;height:30px;border-radius:6px;display:grid;place-items:center;color:var(--h-teal);font-size:22px;font-weight:600;flex:none}
+.zs .crumb{font-size:12px;color:var(--h-ink3);white-space:nowrap}
+.zs .wname{font-weight:700;font-size:16px;white-space:nowrap}
+.zs .tog{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--h-ink3);white-space:nowrap}
+.zs .sw{width:40px;height:22px;border-radius:99px;background:var(--h-line2);position:relative;transition:background .4s;flex:none}
+.zs .sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .4s var(--ease)}
+.zs.live .sw{background:var(--h-green)}.zs.live .sw::after{left:21px}
+.zs .pub{white-space:nowrap;background:var(--h-teal);color:#fff;font-weight:700;font-size:13px;padding:9px 18px;border-radius:6px}
+.zs .pub.o{background:#fff;color:var(--h-ink);border:1px solid var(--h-line2)}
+.zbody{display:grid;grid-template-columns:486px minmax(0,1fr);min-height:640px}
+.zrule{padding:18px 20px 22px;border-right:1px solid var(--h-line)}
+.zmeta{display:grid;grid-template-columns:92px minmax(0,1fr);gap:8px 12px;font-size:12.5px;background:#fff;border:1px solid var(--h-line);border-radius:8px;padding:12px 14px;margin-bottom:18px}
+.zmeta span:nth-child(odd){color:var(--h-ink3)}
+.zmeta span:nth-child(even){font-weight:600;min-width:0}
+.zsteps{position:relative;padding-left:46px}
+.zsteps::before{content:"";position:absolute;left:15px;top:16px;bottom:22px;border-left:2px solid #c9d6e8}
+.zst{position:relative;margin-bottom:18px;opacity:0;transform:translateY(-8px);transition:opacity .45s,transform .6s var(--ease)}
+.zst.on{opacity:1;transform:none}
+.zst:last-child{margin-bottom:0}
+.zst .bdg{position:absolute;left:-46px;top:6px;width:32px;height:32px;border-radius:50%;background:#fff;border:2px solid var(--h-teal);display:grid;place-items:center;z-index:1}
+.zst .bdg svg{width:14px;height:14px;fill:none;stroke:var(--h-teal);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.zst .cap{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--h-teal);margin:0 0 6px;line-height:1.2;padding-top:4px}
+.zcard{position:relative;background:#fff;border:1px solid var(--h-line2);border-radius:8px;padding:11px 14px;font-size:13px;box-shadow:0 1px 3px rgba(31,42,55,.06)}
+.zcard .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;line-height:1.5}
+.zcard .row+.row{margin-top:6px}
+.zcard .k{color:var(--h-ink2)}
+.zcard .tok{font-weight:700;background:var(--h-bg);border:1px solid var(--h-line);border-radius:4px;padding:1px 7px;white-space:nowrap}
+.zcard .and{font-size:10.5px;font-weight:800;color:var(--h-ink3);letter-spacing:.06em}
+.zcard .add{font-size:12px;font-weight:600;color:var(--h-teal);margin-top:8px}
+.iot{position:absolute;top:-9px;right:10px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:99px;padding:1px 7px;color:#fff;background:#155eef;border:1px solid #155eef;line-height:1.5}
+.iot.o{background:#12b76a;border-color:#12b76a}
+.zacts{display:flex;flex-direction:column;gap:8px}
+.zact{position:relative;display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--h-line2);border-radius:8px;padding:9px 12px;opacity:0;transform:translateX(-8px);transition:opacity .45s,transform .6s var(--ease),box-shadow .6s}
+.zact.on{opacity:1;transform:none}
+.zact.sel{border-color:var(--h-teal);box-shadow:0 0 0 2px rgba(26,111,214,.25)}
+.zact .ico{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;flex:none}
+.zact .ico svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.zact>div{min-width:0;flex:1}
+.zact .ty{font-size:11px;font-weight:700;color:var(--h-ink3);letter-spacing:.04em;text-transform:uppercase}
+.zact .nm{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zact .ds{font-size:11.5px;color:var(--h-ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zact .ed{font-size:11.5px;font-weight:600;color:var(--h-teal);white-space:nowrap}
+.zsched{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px dashed var(--h-line2);border-radius:8px;padding:10px 14px;font-size:12.5px;color:var(--h-ink3)}
+.zsched b{color:var(--h-teal);font-weight:600}
+.zfn{background:#fff;display:flex;flex-direction:column;min-width:0;opacity:.0;transform:translateX(16px);transition:opacity .6s,transform .8s var(--ease)}
+.zs.fnon .zfn{opacity:1;transform:none}
+.zfh{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--h-line)}
+.zfh .t{font-weight:700;font-size:14.5px;white-space:nowrap}
+.zfh .lang{font-size:11px;font-weight:700;color:var(--h-teal);background:var(--z-bluebg);border-radius:99px;padding:2px 9px}
+.zfh .x{margin-left:auto;color:var(--h-ink3);font-size:18px}
+.zargs{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid var(--h-line);font-size:12px;color:var(--h-ink2);flex-wrap:wrap}
+.zargs b{font-weight:600;color:var(--h-teal)}
+.zargs .tok{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:11.5px;background:var(--h-bg);border:1px solid var(--h-line);border-radius:4px;padding:1px 7px;color:var(--h-ink)}
+.code{flex:1;display:grid;grid-template-columns:40px minmax(0,1fr);font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.72;background:#fbfcfe;padding:10px 0}
+.code .ln{color:#b3bcc9;text-align:right;padding-right:10px;user-select:none;border-right:1px solid #edf0f5}
+.code .src{padding-left:14px;white-space:pre;overflow:hidden;color:#24303f}
+.code .src div{opacity:0;transition:opacity .25s}
+.code .src div.on{opacity:1}
+.code .src div.hl{background:#fff7d6}
+.k1{color:#8a3fc7;font-weight:500}.s1{color:#1b8a4b}.c1{color:#8a95a5;font-style:italic}.f1{color:#1a6fd6}.n1{color:#c05a00}
+.zcon{border-top:1px solid var(--h-line);padding:9px 16px;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--h-ink2);min-height:38px;background:#fff}
+.zcon .okk{color:#15834f;font-weight:700;opacity:0;transition:opacity .5s}
+.zcon .okk.on{opacity:1}
+.zfb{display:flex;gap:10px;padding:12px 16px;border-top:1px solid var(--h-line)}
+.zfb span{font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:6px;white-space:nowrap}
+.zfb .p1{background:var(--h-teal);color:#fff}
+.zfb .p2{border:1px solid var(--h-teal);color:var(--h-teal)}
+.zfb .p3{border:1px solid var(--h-line2);color:var(--h-ink2)}
+.zs.narrow .zbody{grid-template-columns:minmax(0,1fr)}
+.zs.narrow .zrule{border-right:0;border-bottom:1px solid var(--h-line)}
+.zs.narrow .crumb,.zs.narrow .pub.o{display:none}
+
+/* CLOSE */
+#close .wrap{text-align:center}
+.words{position:relative;display:flex;flex-direction:column;align-items:center;gap:22px;transform-style:preserve-3d}
+.word{padding:18px 40px 20px 30px;border-radius:99px;display:flex;align-items:center;gap:18px;font-size:clamp(40px,5.4vw,78px);font-weight:600;letter-spacing:-.04em;line-height:1}
+.word i{width:40px;height:40px;border-radius:50%;background:rgba(31,180,135,.14);display:grid;place-items:center;flex:none}
+.word i::after{content:"";width:15px;height:8px;border-left:3px solid var(--mint);border-bottom:3px solid var(--mint);transform:rotate(-45deg) translate(2px,-2px)}
+.word.w1{margin-right:280px}.word.w2{margin-left:120px}.word.w3{margin-right:160px}.word.w4{margin-left:260px}
+.word.w4 span{background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.foot{margin-top:70px;font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase}
+
+@media (max-width:1100px){
+  .rec{grid-template-columns:250px minmax(0,1fr)}.rr{display:none}
+  .htop .srch{width:200px}
+  .rcg{grid-template-columns:260px minmax(0,1fr)}.rcr{display:none}
+  .ccgrid{grid-template-columns:1fr}
+  .tree-wrap{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+  .sch{margin-top:0}
+  .st3{width:520px}
+}
+@media (max-width:860px){
+  section{padding:100px 16px 80px;min-height:auto;perspective:1100px}
+  #hero{min-height:100vh}
+  .top{padding:14px 16px}.top .brand{font-size:12px}.top .xs{display:none}
+  .head{margin-bottom:30px}
+  .hstage{height:auto;display:grid;gap:18px;margin-top:30px}
+  .hstage>.par{position:relative!important;left:auto!important;right:auto!important;top:auto!important;margin:0!important;width:100%}
+  .mform,.ntf,.bkd,.st3{width:100%!important}
+  .ntf .bd{font-size:15.5px}
+  .st3{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .iog{grid-template-columns:1fr;gap:18px}
+  .iop{padding:18px 16px 20px}
+  .ioar svg{width:80px;height:24px;transform:rotate(90deg);margin:22px 0}
+  .iocall{flex-wrap:wrap}.iocall .ring2{margin-left:0}
+  .appf{padding:6px;border-radius:22px}
+  .hw,.rcw{border-radius:17px}
+  .hnav,.rcnav{display:none}
+  .htop{padding:0 12px;gap:10px}.htop .srch{display:none}.htop .me{margin-left:auto}
+  .htop .hbtn{display:none}
+  .rec{grid-template-columns:minmax(0,1fr)}
+  .rl{border-right:0;border-bottom:1px solid var(--h-line)}
+  .rm{padding:0 12px 12px}
+  .rtabs{gap:16px;overflow:hidden}
+  .tlx{height:auto;min-height:200px}
+  .tli .hd{flex-wrap:wrap;gap:2px 10px}.tli .tm{margin-left:0;width:100%}
+  .rctop .srch{display:none}.rctop .pres{margin-left:auto}
+  .rcg{grid-template-columns:minmax(0,1fr);min-height:0}
+  .rcl{border-right:0;border-bottom:1px solid #e6e8ec}
+  .rcr{display:block;border-left:0;border-top:1px solid #e6e8ec}
+  .rcl .qi:not(.new):not(.keep){display:none}
+  .bub{max-width:90%}
+  .callb span{display:none}
+  .seqh{height:auto;padding:10px 12px;flex-wrap:wrap;gap:8px}.seqh .rtabs{display:none}.seqh .hbtn{display:none}
+  .exitc{margin:10px 10px 0}
+  .seqg{grid-template-columns:minmax(0,1fr);padding:10px}
+  .stp .tt,.stp .sb{white-space:normal}.stp .dy{width:30px}
+  .enl .eh{display:none}
+  .er2{grid-template-columns:minmax(0,1fr) auto;gap:4px 10px}
+  .er2 .cs{grid-column:1;grid-row:2;padding-left:35px;white-space:normal}
+  .er2 .sc{grid-column:2;grid-row:1/3;align-self:center;white-space:normal;text-align:center;max-width:130px}
+  .dsh{padding:12px}
+  .dtop{flex-wrap:wrap}.dtop .illu{margin-left:0}
+  .tiles{grid-template-columns:1fr 1fr;gap:10px}
+  .tile{padding:12px}.tile .v{font-size:26px}
+  .dgrid{grid-template-columns:1fr}
+  .card2 .ct{flex-wrap:wrap}
+  .bars{gap:6px}
+  .tbody{padding:12px 12px 14px;font-size:11.5px}
+  .tbar span{margin-right:0}
+  .tree-wrap{grid-template-columns:1fr}
+  .word{font-size:34px;padding:14px 24px 16px 18px}.word i{width:30px;height:30px}
+  .word.w1,.word.w2,.word.w3,.word.w4{margin:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation:none!important}}
+</style>
+
+<div class="sky"></div>
+<div class="haze"><i></i><i></i><i></i></div>
+<div class="top"><div class="brand"><b></b><span data-k="system"></span><span class="xs"> · Zoho CRM</span></div><div class="chip">Sample data</div></div>
+
+<main>
+<!-- SCREEN: hero -->
+<section id="hero" data-run="hero">
+  <div class="wrap">
+    <div class="kicker fade" id="hkick"></div>
+    <h1 class="fade" style="--d:.1s">Every Meta lead,<br><em>texted inside 60 seconds.</em></h1>
+    <p class="sub fade" style="--d:.2s">A Meta lead lands in Zoho CRM, is de-duplicated, goes to the right location's coordinator and gets a text.</p>
+    <div class="hstage">
+      <div class="par" data-z="-0.6" style="left:0;top:56px"><div class="panel hc mform rise" style="--d:.35s">
+        <div class="h"><span class="ic40 blue"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span><div><div class="t" id="hft"></div><div class="s" id="hfs"></div></div></div>
+        <div class="sent" id="hsent"><span class="tick"></span><span id="hsentt"></span></div>
+      </div></div>
+      <div class="par" data-z="0.5" style="left:50%;top:0;margin-left:-225px"><div class="panel hc ntf rise" style="--d:.5s">
+        <div class="app"><span class="ic40 org"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></span><span>Text message</span><span id="hwhen">now</span></div>
+        <div class="tt" id="htt"></div>
+        <div class="bd" id="hnb"></div>
+        <div class="tags"><span class="pill blue" id="hpill"></span><span class="pill">On the call list</span></div>
+      </div></div>
+      <div class="par" data-z="1.1" style="right:0;top:176px"><div class="panel hc bkd rise" style="--d:.8s">
+        <div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="rgba(150,170,200,.25)" stroke-width="7"/><circle id="hring" cx="50" cy="50" r="44" fill="none" stroke="url(#gm)" stroke-width="7" stroke-linecap="round" stroke-dasharray="276.5" stroke-dashoffset="276.5"/></svg><div class="num"><span id="hsec">0</span><small>s</small></div></div>
+        <div><div class="t">Form to first text</div><div class="s">Inside the 60-second target</div></div>
+      </div></div>
+      <div class="par" data-z="0.9" style="left:50%;top:300px;margin-left:-280px"><div class="panel st3 rise" style="--d:1s">
+        <div id="st1"><span class="tick"></span>De-duplicated</div><div id="st2"><span class="tick"></span>Routed</div><div id="st3"><span class="tick"></span>Texted</div><div id="st4"><span class="tick"></span>Call list</div>
+      </div></div>
+    </div>
+    <div class="scrollcue fade" style="--d:1.4s">Scroll<b></b></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: in -> out -->
+<section id="io" data-run="io">
+  <div class="wrap">
+    <div class="head c"><h2 class="fade">A Meta form in.<br><em>A coordinator on it out.</em></h2></div>
+    <div class="iog">
+      <div class="iocol par" data-z="0.4">
+        <div><div class="panel iop rise" style="--d:.2s">
+          <div class="label">What goes in</div>
+          <div class="iocall pin"><span class="ic40 blue"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span><div><div class="t">Meta lead ad form</div><div class="s" id="ioWho"></div></div><span class="ring2" id="ioWhen"></span></div>
+          <div id="ioRows"></div>
+        </div></div>
+        <p class="iocap fade" style="--d:.5s" id="ioCapIn"></p>
+      </div>
+      <div class="ioar fade" style="--d:.6s">
+        <div class="tt" id="iot">0:00</div>
+        <svg viewBox="0 0 150 24"><path d="M4 12H144M134 3l10 9-10 9"/></svg>
+        <div class="label">to texted and queued</div>
+      </div>
+      <div class="iocol par" data-z="0.9">
+        <div><div class="panel iop out rise" style="--d:.45s">
+          <div class="label">What comes out</div>
+          <div class="ioown pout"><span class="av t" id="ioOwnAv"></span><div><div class="k">Zoho CRM · Lead owner</div><div class="v" id="ioOwn"></div></div></div>
+          <div class="iosms pout"><span class="mm" id="ioSmsM"></span><div class="bb" id="ioSms"></div></div>
+          <div class="ioq pout"><div><div class="k">RingCentral · call list</div><div class="v" id="ioQ"></div></div><span class="nb">New</span></div>
+        </div></div>
+        <p class="iocap fade" style="--d:.8s" id="ioCapOut"></p>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: lead record (INPUT) -->
+<section id="rec" data-run="rec">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>01</span>Input</div><h2 class="fade" style="--d:.1s">De-duplicated and routed, <em>in seconds.</em></h2><p class="sub fade" style="--d:.2s">The Meta lead lands in Zoho CRM, merges with her earlier record, and goes to the Brooklyn hair restoration coordinator.</p></div>
+    <div class="par" data-z="0.4"><div class="panel appf rise" style="--d:.25s"><div class="hw"><div class="hnav" data-a="1"></div><div class="hbody">
+      <div class="htop"><span class="pt">Leads</span><div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg>Search records</div><span class="me" id="meA"></span></div>
+      <div class="rec">
+        <div class="rl">
+          <div class="bk">‹ All leads</div>
+          <div class="who"><span class="av r" id="rAv"></span><div><div class="nm" id="rNm"></div><div class="tl" id="rTl"></div></div></div>
+          <div class="acts"><span class="pr">Send email</span><span>Convert</span><span>Edit</span><span>···</span></div>
+          <div class="sech">Lead information<small>Hide details</small></div>
+          <div id="rFields"></div>
+        </div>
+        <div class="rm">
+          <div class="rtabs"><span>Overview</span><span class="a">Timeline</span><span>Related list</span></div>
+          <div class="fchips"><span class="a">All</span><span>Workflow</span><span>Functions</span><span>SMS</span><span>Calls</span></div>
+          <div class="tmon" id="tmon"></div>
+          <div class="tlx" id="tlx"></div>
+        </div>
+        <div class="rr">
+          <div class="ac2" id="rDup"><div class="h">Duplicate check<small>Rule</small></div><div class="b"><div class="emp">Checking mobile and email</div><div class="fillin" id="rDupB"></div></div></div>
+          <div class="ac2" id="rAct"><div class="h">Open activities<small>+ Add</small></div><div class="b"><div class="emp">No open activities</div><div class="fillin" id="rActB"></div></div></div>
+          <div class="ac2" id="rCad"><div class="h">Cadences<small>+ Enroll</small></div><div class="b"><div class="emp">Not enrolled</div><div class="fillin" id="rCadB"></div></div></div>
+        </div>
+      </div>
+    </div></div></div></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: coordinator on RingCentral -->
+<section id="rc" data-run="rc">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>02</span>RingCentral</div><h2 class="fade" style="--d:.1s">The coordinator sees it <em>first.</em></h2><p class="sub fade" style="--d:.2s">Maya's call list shows the new lead with the Zoho details, the text already sent and a call time once Alexis replies.</p></div>
+    <div class="par" data-z="0.4"><div class="panel appf rise" style="--d:.25s"><div class="rcw">
+      <div class="rcnav" id="rcnav"></div>
+      <div class="rcb">
+        <div class="rctop"><span class="pt">Call list</span><div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg>Search contacts and messages</div><span class="pres"><i></i><span id="rcMe"></span></span></div>
+        <div class="rcg">
+          <div class="rcl"><div class="lh"><span id="rcLh"></span><small id="rcCnt"></small></div><div id="rcList"></div></div>
+          <div class="rct">
+            <div class="th"><span class="av r" id="rcAv"></span><div><div class="n" id="rcNm"></div><div class="s" id="rcPh"></div></div><span class="callb"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a1 1 0 01-1 1A16 16 0 014 5a1 1 0 011-1z"/></svg><span>Call</span></span></div>
+            <div class="msgs" id="msgs"></div>
+            <div class="cmp">Type a message</div>
+          </div>
+          <div class="rcr">
+            <div class="zc"><div class="zh">Zoho CRM · Lead</div><div id="rcZ"></div></div>
+            <div class="ctask" id="ctask"><div class="k">Call scheduled</div><div class="v" id="ctV"></div><div class="s" id="ctS"></div></div>
+          </div>
+        </div>
+      </div>
+    </div></div></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: follow-up cadence with do-not-contact -->
+<section id="drip" data-run="drip">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>03</span>Follow-up</div><h2 class="fade" style="--d:.1s">Follow-ups stop at <em>do-not-contact.</em></h2><p class="sub fade" style="--d:.2s">Leads who don't answer get a five-step cadence. A STOP reply sets Do Not Contact and skips every step after it.</p></div>
+    <div class="par" data-z="0.4"><div class="panel appf rise" style="--d:.25s"><div class="hw"><div class="hnav" data-a="2"></div><div class="hbody">
+      <div class="seqh"><span class="nm"><small>Cadences ›</small> <span id="cdName"></span></span><div class="rtabs"><span>Follow-ups</span><span class="a">Enrolled records</span><span>Analytics</span></div><span class="hbtn o">Edit cadence</span></div>
+      <div class="exitc"><b>Unenroll when</b><span>Do Not Contact is set</span><span>Reply is STOP</span><span class="n">Replied</span><span class="n">Consultation booked</span></div>
+      <div class="seqg">
+        <div><div class="sttl" id="sttl"></div><div class="steps" id="steps"></div><div class="sms2" id="sms2"><span class="q">STOP</span><div class="w" id="sms2w"></div></div></div>
+        <div class="enl"><div class="eh"><span>Lead</span><span>Current step</span><span>Status</span></div><div id="enl"></div></div>
+      </div>
+    </div></div></div></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: speed-to-lead dashboard (OUTPUT) -->
+<section id="dash" data-run="dash">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>04</span>Output</div><h2 class="fade" style="--d:.1s">Speed to lead, <em>on one screen.</em></h2><p class="sub fade" style="--d:.2s">How fast each Meta lead gets a text and a call, by week, location and coordinator, for the owner and managers.</p></div>
+    <div class="par" data-z="0.4"><div class="panel appf rise" style="--d:.25s"><div class="hw"><div class="hnav" data-a="4"></div><div class="hbody">
+      <div class="htop"><span class="pt">Analytics</span><div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg>Search reports</div><span class="me" id="meC"></span></div>
+      <div class="dsh">
+        <div class="dtop"><span class="dn">Speed to lead · Meta Lead Ads</span><span class="hsel">Last 8 weeks</span><span class="hsel">All locations</span><span class="illu">Illustrative</span></div>
+        <div class="tiles" id="tiles"></div>
+        <div class="dgrid">
+          <div class="card2"><div class="ct">Meta leads and leads called within 15 min, by week<div class="lg2"><span><i style="background:#b9d3f3"></i>Leads</span><span><i style="background:#1a6fd6"></i>Called ≤ 15 min</span></div></div>
+            <div class="bars" id="bars"></div></div>
+          <div class="card2"><div class="ct">Median time to first call</div>
+            <div class="src2" id="src2"></div></div>
+        </div>
+      </div>
+    </div></div></div></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: built with Claude Code -->
+<section id="cc" data-run="cc">
+  <div class="wrap">
+    <div class="head c"><div class="eyebrow fade"><span>05</span>Claude Code</div><h2 class="fade" style="--d:.1s">Changes ship from <em>Claude Code.</em></h2><p class="sub fade" style="--d:.2s">A new location rule is asked for in one line. Claude Code updates the table, replays leads in the sandbox, ships and updates the runbook.</p></div>
+    <div class="ccgrid">
+      <div class="par" data-z="0.4"><div class="panel shell rise" style="--d:.3s"><div class="term">
+        <div class="tbar"><i></i><i></i><i></i><span id="ttitle"></span></div>
+        <div class="tbody" id="tbody2"></div>
+      </div></div></div>
+      <div class="tree-wrap">
+        <div class="par" data-z="1.1"><div class="panel tree rise" style="--d:.6s">
+          <div class="th"><b>Project files</b><span class="label" id="troot"></span></div>
+          <ul id="tree"></ul>
+        </div></div>
+        <div class="par" data-z="0.7"><div class="panel sch rise" style="--d:.8s">
+          <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V7z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></div>
+          <div><div class="t" id="schT"></div><div class="s" id="schS"></div></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: platform (Zoho CRM workflow rule + Deluge function) -->
+<section id="zss" data-run="zs">
+  <div class="wrap">
+    <div class="head c"><div class="eyebrow fade"><span>06</span>In your Zoho CRM</div><h2 class="fade" style="--d:.1s">This is what it will look like<br><em>in your Zoho CRM.</em></h2><p class="sub fade" style="--d:.2s">One workflow rule on new Meta leads runs the route_lead function, sets the status and calls the texting webhook.</p><div class="chip hslab fade" style="--d:.2s">Your workflow rule in Zoho CRM · illustrative</div></div>
+    <div class="par" data-z="0.5"><div class="hswrap rise" style="--d:.3s"><div class="panel hsframe"><div class="hsbox" id="hsbox"><div class="zs" id="zsui">
+      <div class="bar1">
+        <div class="back">‹</div>
+        <div><div class="crumb">Setup › Automation › Workflow Rules</div><div class="wname" id="wfName"></div></div>
+        <div class="tog"><span id="togl">Inactive</span><div class="sw"></div></div>
+        <div class="pub o">Cancel</div><div class="pub">Save</div>
+      </div>
+      <div class="zbody">
+        <div class="zrule">
+          <div class="zmeta" id="zmeta"></div>
+          <div class="zsteps" id="zsteps"></div>
+        </div>
+        <div class="zfn">
+          <div class="zfh"><span class="t" id="fnT"></span><span class="lang">Deluge</span><span class="x">×</span></div>
+          <div class="zargs"><b>Edit arguments</b><span class="tok" id="fnArg"></span></div>
+          <div class="code"><div class="ln" id="lns"></div><div class="src" id="src"></div></div>
+          <div class="zcon"><span id="conT">Console</span> <span class="okk" id="conOk"></span></div>
+          <div class="zfb"><span class="p1">Save</span><span class="p2">Save &amp; Execute Script</span><span class="p3">Cancel</span></div>
+        </div>
+      </div>
+    </div></div></div></div></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: close -->
+<section id="close" data-run="close">
+  <div class="wrap">
+    <div class="head c"><p class="sub fade">Each Meta lead is merged, assigned to the right coordinator and texted inside a minute, and the dashboard shows the speed.</p></div>
+    <div class="words" id="words"></div>
+    <div class="foot fade" style="--d:1.2s">Your Zoho CRM · lead routing and speed to lead</div>
+  </div>
+</section>
+<!-- /SCREEN -->
+</main>
+
+<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="gm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8ec0ff"/><stop offset="1" stop-color="#2f74f5"/></linearGradient></defs></svg>
+
+<script>
+/* ===== SAMPLE CONTENT: a real job edits this object (and the headlines) ===== */
+const DATA={
+ system:'Lead routing and speed to lead',
+ me:'OW',
+ practice:'Meridian',
+ lead:{name:'Alexis Romero',first:'Alexis',ini:'AR',mobile:'(555) 014-2387',email:'alexis.romero@example.com',
+  brand:'Meridian Hair',interest:'Hair restoration consultation',location:'Brooklyn',ad:'Fall consult campaign',
+  status:['New','Attempting to Contact','Contacted']},
+ coord:{name:'Maya Chen',ini:'MC',c:'t',role:'Brooklyn coordinator'},
+ textSec:38,
+ hero:{kicker:'Tuesday · 9:14 AM · a Meta lead ad form',form:'Meta lead ad form',time:'Tue · 9:14 AM'},
+ sms:'Hi Alexis, it’s Maya from Meridian Hair in Brooklyn. Thanks for asking about a consultation. Is now a good time for a quick call, or later today?',
+ ioRows:[['Form','Hair restoration consult'],['Preferred office','Brooklyn'],['Ad','Fall consult campaign']],
+ ioCapIn:'Alexis fills in a Meta lead ad form on her phone.',
+ ioCapOut:'Her lead assigned to Maya, the text on her phone and her name on Maya’s call list.',
+ timelineMonth:'Today · September 29',
+ timeline:[
+  {i:'form',t:'Lead created from Meta Lead Ads',m:'9:14:03 AM',d:'Form: Hair restoration consult · Office: Brooklyn · Ad: Fall consult campaign'},
+  {i:'dup',t:'Duplicate merged into this lead',m:'9:14:04 AM',d:'Matched on mobile with her Sep 8 enquiry · the new ad response is added here'},
+  {i:'owner',t:'Lead owner set to Maya Chen',m:'9:14:05 AM',d:'Function route_lead · Meridian Hair | Brooklyn → Brooklyn coordinator'},
+  {i:'status',t:'Lead Status: Attempting to Contact',m:'9:14:05 AM',d:'Field update from workflow rule “Meta Lead Routing”'},
+  {i:'sms',t:'Text sent through RingCentral',m:'9:14:41 AM',d:'38 sec after the form · from the Brooklyn office number'},
+  {i:'call',t:'Added to Maya Chen’s call list',m:'9:14:42 AM',d:'Webhook text_and_queue → RingCentral call queue'},
+  {i:'cad',t:'Enrolled in cadence',m:'9:14:42 AM',d:'New Meta lead follow-up · stops on reply, STOP or Do Not Contact'}],
+ recFields:[['Lead Source','Meta Lead Ads'],['Brand','Meridian Hair'],['Location','Brooklyn'],['Interest','Hair restoration consultation'],['SMS consent','Yes · Meta form']],
+ coords:[{name:'Maya Chen',ini:'MC',c:'t',loc:'Brooklyn'},{name:'Daniela Ruiz',ini:'DR',c:'p',loc:'Upper East Side'},{name:'Chris Park',ini:'CP',c:'y',loc:'Tribeca'}],
+ rc:{list:'Maya Chen · call list',queue:[
+   {n:'Alexis Romero',d:'New Meta lead · Meridian Hair',tg:'New',c:'or',new:1},
+   {n:'Jordan Blake',d:'Callback at 11:30 AM',tg:'11:30'},
+   {n:'Nina Patel',d:'Voicemail left · Mon',tg:'Retry'},
+   {n:'Sam Ortiz',d:'Consultation booked · Thu 10 AM',tg:'Booked',c:'g'}],
+  reply:'Later today works, any time after 2?',reply2:'Perfect, I’ll call you at 2:15. Talk soon!',
+  call:{v:'Call Alexis Romero · 2:15 PM',s:'Created in Zoho CRM · owner Maya Chen'}},
+ cadence:{name:'New Meta lead follow-up',
+  steps:[
+   {day:'Min 1',i:'sms',t:'Text',s:'Sent by the routing workflow'},
+   {day:'Day 1',i:'call',t:'Call task',s:'Coordinator calls the lead'},
+   {day:'Day 2',i:'mail',t:'Email',s:'Your consultation at Meridian'},
+   {day:'Day 4',i:'sms',t:'Text',s:'Still want a consultation time?'},
+   {day:'Day 7',i:'mail',t:'Email',s:'Closing the loop'}],
+  stepsFor:'Steps for Nina Patel',
+  stopNote:'Nina Patel replied STOP on Day 1 · Do Not Contact set on her lead',
+  enrolled:[
+   {n:'Alexis Romero',loc:'Brooklyn · Hair',ini:'AR',c:'r',step:'Text sent',st:'Replied · unenrolled',sc:'g'},
+   {n:'Jordan Blake',loc:'Brooklyn · Hair',ini:'JB',c:'p',step:'Day 2 · Email',st:'Active',sc:'b'},
+   {n:'Nina Patel',loc:'Upper East Side · Surgery',ini:'NP',c:'o',step:'Day 1 · Call task',st:'Active',sc:'b',stop:1,after:'Do Not Contact · unenrolled'},
+   {n:'Leo Grant',loc:'Tribeca · Weight loss',ini:'LG',c:'n',step:'None',st:'Do Not Contact · skipped',sc:'x'},
+   {n:'Sam Ortiz',loc:'Brooklyn · Hair',ini:'SO',c:'g',step:'Day 1 · Call task',st:'Booked · unenrolled',sc:'g'}]},
+ dash:{tiles:[{k:'Meta leads',v:214,d:'Last 4 weeks · 3 locations'},{k:'Median form to text',v:38,u:'sec',d:'Target under 60',hi:1},{k:'Texted within 60 sec',v:97,u:'%',d:'208 of 214'},{k:'Duplicates merged',v:31,d:'Matched on mobile or email'}],
+  weeks:[['W1',41,22],['W2',46,27],['W3',44,33],['W4',52,41],['W5',49,42],['W6',55,48],['W7',51,46],['W8',58,53]],
+  coordTimes:[[0,6],[1,4],[2,9]],note:'From the RingCentral call log · bar shows minutes against the 15-minute target'},
+ cc:{title:'zoho-ops — claude',cwd:'/Users/you/zoho-ops',prompt:'Tribeca now takes weight-loss consults. Route them to Chris Park, test it, ship it and update the runbook.',
+  todos:['Add the Tribeca weight-loss row to the routing table','Sync routing rules to the Zoho sandbox','Replay the last 50 Meta leads in the sandbox','Sync to production','Update the lead-routing runbook'],
+  steps:[
+   {tool:'Read',arg:'CLAUDE.md',res:'Read 52 lines',hit:'CLAUDE.md'},
+   {tool:'Read',arg:'deluge/route_lead.dg',res:'Read 21 lines',hit:'route_lead.dg',todos:1},
+   {tool:'Edit',arg:'config/routing_rules.csv',res:'Added "Meridian Weight Loss | Tribeca, Chris Park"',hit:'routing_rules.csv',tick:0,ed:1,spin:'Updating the routing table'},
+   {tool:'Bash',arg:'python scripts/sync_routing_rules.py --sandbox',res:'Upserted 13 Routing_Rules records via the CRM API · 0 errors',hit:'sync_routing_rules.py',tick:1,spin:'Syncing to the sandbox'},
+   {tool:'Bash',arg:'python scripts/replay_meta_leads.py --last 50 --sandbox',res:'50 of 50 routed · 0 duplicates created · median text 31 sec',hit:'replay_meta_leads.py',tick:2,spin:'Replaying Meta leads'},
+   {tool:'Bash',arg:'python scripts/sync_routing_rules.py --prod',res:'Production updated · workflow rule "Meta Lead Routing" unchanged',hit:'sync_routing_rules.py',tick:3,spin:'Syncing to production'},
+   {tool:'Edit',arg:'docs/runbooks/lead-routing.md',res:'Added the Tribeca weight-loss row and the replay result',hit:'lead-routing.md',tick:4,ed:1,spin:'Updating the runbook'}],
+  summary:'Done. Weight-loss consults from Tribeca now route to Chris Park. The sandbox replay routed 50 of 50 with no duplicates, production is synced and the runbook has the new row.'},
+ tree:[
+  {n:'CLAUDE.md',d:0},
+  {n:'config/',d:0,dir:1},{n:'routing_rules.csv',d:1},
+  {n:'deluge/',d:0,dir:1},{n:'route_lead.dg',d:1},{n:'merge_into_oldest.dg',d:1},
+  {n:'services/',d:0,dir:1},{n:'text-and-queue/',d:1,dir:1},{n:'main.py',d:2},
+  {n:'scripts/',d:0,dir:1},{n:'sync_routing_rules.py',d:1},{n:'replay_meta_leads.py',d:1},
+  {n:'docs/runbooks/',d:0,dir:1},{n:'lead-routing.md',d:1}],
+ sched:{t:'Sandbox first',s:'Each change is replayed on sample leads before production'},
+ workflow:{name:'Meta Lead Routing',module:'Leads',desc:'Route new Meta leads by brand and location, then text and queue them',
+  when:[['Execute based on','Record action'],['Action','Create']],
+  cond:[['Lead Source','is','Meta Lead Ads'],['Do Not Contact','is','not selected']],
+  actions:[
+   {ty:'Function',nm:'route_lead',ds:'De-duplicate, then set owner by brand and location',i:'fn',sel:1},
+   {ty:'Field update',nm:'Lead Status',ds:'Set to Attempting to Contact',i:'fu'},
+   {ty:'Webhook',nm:'text_and_queue',ds:'POST to Render · RingCentral text and call list',i:'wh',out:1}]},
+ fn:{name:'route_lead',arg:'leadId = Leads - Lead Id',
+  code:[
+   ['k','void '],['f','automation.route_lead'],['p','(Int leadId)\n'],
+   ['p','{\n'],
+   ['p','\tlead = '],['f','zoho.crm.getRecordById'],['p','('],['s','"Leads"'],['p',', leadId);\n'],
+   ['c','\t// 1. De-duplicate on mobile, keep the oldest lead\n'],
+   ['p','\tmobile = lead.get('],['s','"Mobile"'],['p',');\n'],
+   ['p','\tdupes = '],['f','zoho.crm.searchRecords'],['p','('],['s','"Leads"'],['p',', '],['s','"(Mobile:equals:"'],['p',' + mobile + '],['s','")"'],['p',');\n'],
+   ['k','\tif'],['p','(dupes.size() > '],['n','1'],['p',')\n'],
+   ['p','\t{\n'],
+   ['p','\t\tleadId = '],['f','standalone.merge_into_oldest'],['p','(leadId, dupes);\n'],
+   ['p','\t}\n'],
+   ['c','\t// 2. Route by brand and location\n'],
+   ['p','\tkey = lead.get('],['s','"Brand"'],['p',') + '],['s','" | "'],['p',' + lead.get('],['s','"Location"'],['p',');\n'],
+   ['p','\tcrit = '],['s','"(Route_Key:equals:"'],['p',' + key + '],['s','")"'],['p',';\n'],
+   ['p','\trule = '],['f','zoho.crm.searchRecords'],['p','('],['s','"Routing_Rules"'],['p',', crit).get('],['n','0'],['p',');\n'],
+   ['p','\tnow = '],['f','zoho.currenttime'],['p','.toString('],['s','"yyyy-MM-dd\'T\'HH:mm:ssXXX"'],['p',');\n'],
+   ['p','\tupdate = '],['f','Map'],['p','();\n'],
+   ['p','\tupdate.put('],['s','"Owner"'],['p',', rule.get('],['s','"Coordinator"'],['p',').get('],['s','"id"'],['p','));\n'],
+   ['p','\tupdate.put('],['s','"Routed_At"'],['p',', now);\n'],
+   ['p','\tresp = '],['f','zoho.crm.updateRecord'],['p','('],['s','"Leads"'],['p',', leadId, update);\n'],
+   ['k','\tinfo'],['p',' resp;\n'],
+   ['p','}']],
+  hl:[11,12,13,16],
+  run:'Executed · Owner = Maya Chen (Brooklyn coordinator) · 1 duplicate merged'},
+ words:['Merged.','Routed.','Texted.','Measured.']
+};
+
+(function(){
+const $=id=>document.getElementById(id);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const ease=t=>1-Math.pow(1-t,3);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function count(el,a,b,dur,fmt,cb){const t0=performance.now();(function f(n){const p=Math.min(1,Math.max(0,(n-t0)/dur)),v=a+(b-a)*ease(p);if(cb)cb(v,p);if(el)el.textContent=fmt?fmt(v):Math.round(v);if(p<1)requestAnimationFrame(f)})(t0)}
+const D=DATA,L=D.lead,CO=D.coord;
+const av=(r,cls)=>'<span class="av '+r.c+(cls?' '+cls:'')+'">'+r.ini+'</span>';
+const clock=v=>{v=Math.round(v);return Math.floor(v/60)+':'+String(v%60).padStart(2,'0')};
+
+/* icons */
+const SV={form:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>',dup:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 00-1-1H5a1 1 0 00-1 1v10a1 1 0 001 1h3"/>',
+ owner:'<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>',status:'<path d="M4 20h4L20 8l-4-4L4 16z"/>',
+ sms:'<path d="M4 5h16v11H9l-5 4z"/>',call:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a1 1 0 01-1 1A16 16 0 014 5a1 1 0 011-1z"/>',
+ cad:'<path d="M4 6h16M4 12h10M4 18h6"/>',mail:'<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 7l9 6 9-6"/>'};
+const TLC={form:'#1a6fd6',dup:'#8a5cd6',owner:'#2a8fd0',status:'#5b6778',sms:'#f47a20',call:'#1e9e62',cad:'#d9a63a'};
+
+/* static text */
+document.querySelectorAll('[data-k]').forEach(e=>e.textContent=D[e.dataset.k]);
+['meA','meC'].forEach(i=>$(i).textContent=D.me);
+$('hkick').textContent=D.hero.kicker;$('hft').textContent=D.hero.form;$('hfs').textContent=L.name+' · '+L.interest.replace(' consultation','')+' · '+L.location;
+$('hsentt').textContent='Routed to '+CO.name+' in 2 sec';
+$('htt').textContent='Texted in '+D.textSec+' sec';$('hnb').textContent=D.sms;$('hpill').textContent=L.location+' · Hair';
+
+/* in -> out */
+$('ioWho').innerHTML=L.name+'<br>'+L.mobile;$('ioWhen').textContent=D.hero.time;
+$('ioRows').innerHTML=D.ioRows.map(r=>'<div class="iorow pin"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>').join('');
+$('ioCapIn').textContent=D.ioCapIn;$('ioCapOut').textContent=D.ioCapOut;
+$('ioOwnAv').textContent=CO.ini;$('ioOwn').innerHTML=CO.name+' <small>· '+CO.role+'</small>';
+$('ioSmsM').textContent='Text · 9:14 AM · '+D.textSec+' sec after the form';$('ioSms').textContent=D.sms;
+$('ioQ').textContent=L.name+' · '+CO.name+'’s list';
+
+/* app nav */
+const NAV=['<path d="M3 11l9-7 9 7v9H3z"/>','<circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 5h5M16 9h5"/>',
+ '<path d="M4 6h16M4 12h10M4 18h6"/>','<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>','<path d="M4 20h16M6 16l4-5 3 3 5-7"/>',
+ '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>','<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>'];
+document.querySelectorAll('.hnav').forEach(n=>{const a=+n.dataset.a;n.innerHTML='<span class="acct"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM9 7V4h6v3"/></svg></span>'+NAV.map((p,i)=>'<span class="ni'+(i===a?' a':'')+'"><svg viewBox="0 0 24 24">'+p+'</svg></span>').join('')});
+
+/* 01 lead record */
+$('rAv').textContent=L.ini;$('rNm').textContent=L.name;$('rTl').innerHTML=L.brand+' · '+L.location;
+$('rFields').innerHTML=
+ '<div class="fld"><div class="fk">Mobile</div><div class="fv">'+L.mobile+'</div></div>'+
+ '<div class="fld"><div class="fk">Email</div><div class="fv" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block">'+L.email+'</div></div>'+
+ D.recFields.map(f=>'<div class="fld"><div class="fk">'+f[0]+'</div><div class="fv">'+f[1]+'</div></div>').join('')+
+ '<div class="fld"><div class="fk">Lead Owner</div><div class="fv mute" id="fOwn">Unassigned</div></div>'+
+ '<div class="fld"><div class="fk">Lead Status</div><div class="fv" id="fStat">'+L.status[0]+'</div></div>'+
+ '<div class="fld"><div class="fk">Do Not Contact</div><div class="fv">No</div></div>';
+$('tmon').textContent=D.timelineMonth;
+$('rDupB').innerHTML='<b>1 duplicate merged</b><span>Matched on Mobile · kept the Sep 8 lead</span><br><span class="stp2 g">No duplicate left</span>';
+$('rActB').innerHTML='<b>Call '+L.name+'</b><span>RingCentral call list · '+CO.name+'</span><br><span class="stp2">Open</span>';
+$('rCadB').innerHTML='<b>'+D.cadence.name+'</b><span>Step 1 of 5 · text sent</span><br><span class="stp2">Active</span>';
+function tlItem(e){const d=document.createElement('div');d.className='tli';d.innerHTML='<span class="ti" style="background:'+TLC[e.i]+'"><svg viewBox="0 0 24 24">'+SV[e.i]+'</svg></span><div><div class="hd"><span class="tt">'+e.t+'</span><span class="tm">'+e.m+'</span></div><div class="td">'+e.d+'</div></div>';return d}
+const hotc=el=>{el.classList.add('on','hot');setTimeout(()=>el.classList.remove('hot'),1300)};
+const flash=el=>{el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),1400)};
+
+/* 02 phone app */
+const RC=D.rc;
+const RCNAV=['<path d="M4 5h16v11H9l-5 4z"/>',SV.call,'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>','<circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/>','<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/>'];
+$('rcnav').innerHTML='<span class="me2">'+CO.ini+'</span>'+RCNAV.map((p,i)=>'<span class="ni'+(i===1?' a':'')+'"><svg viewBox="0 0 24 24">'+p+'</svg>'+(i===1?'<b id="rcBadge">1</b>':'')+'</span>').join('');
+$('rcMe').textContent=CO.name+' · Available';$('rcLh').textContent=RC.list;$('rcCnt').textContent=(RC.queue.length)+' today';
+$('rcList').innerHTML=RC.queue.map((q,k)=>'<div class="qi'+(q.new?' new sel':'')+(k===1?' keep':'')+'"'+(q.new?' id="qnew"':'')+'><span class="av '+['r','p','o','g'][k%4]+'">'+q.n.split(' ').map(w=>w[0]).join('')+'</span><div><div class="n">'+q.n+'</div><div class="d">'+q.d+'</div></div><span class="tg'+(q.c?' '+q.c:'')+'">'+q.tg+'</span></div>').join('');
+$('rcAv').textContent=L.ini;$('rcNm').textContent=L.name;$('rcPh').textContent=L.mobile+' · mobile';
+$('msgs').innerHTML='<div class="day">Today</div>'+
+ '<div class="bub out" id="b1"><span class="mm">Auto-text · 9:14 AM</span><div class="bb">'+esc(D.sms)+'</div></div>'+
+ '<div class="typ" id="typ"><i></i><i></i><i></i></div>'+
+ '<div class="bub in" id="b2"><span class="mm">'+L.first+' · 9:16 AM</span><div class="bb">'+esc(RC.reply)+'</div></div>'+
+ '<div class="bub out" id="b3"><span class="mm">'+CO.name+' · 9:17 AM</span><div class="bb">'+esc(RC.reply2)+'</div></div>';
+const ZR=[['Lead Owner',CO.name],['Brand',L.brand],['Location',L.location],['Source','Meta Lead Ads'],['Interest','Hair restoration consult'],['Lead Status',L.status[1]]];
+$('rcZ').innerHTML=ZR.map((r,k)=>'<div class="zr"><span>'+r[0]+'</span><span'+(k===5?' id="rcStat"':'')+'>'+r[1]+'</span></div>').join('');
+$('ctV').textContent=RC.call.v;$('ctS').textContent=RC.call.s;
+
+/* 03 cadence */
+const CD=D.cadence;$('cdName').textContent=CD.name;
+const SIC={sms:'#f47a20',call:'#1e9e62',mail:'#1a6fd6'};
+$('steps').innerHTML=CD.steps.map((s,k)=>'<div class="stp"><span class="dy">'+s.day+'</span><span class="si" style="background:'+SIC[s.i]+'"><svg viewBox="0 0 24 24">'+SV[s.i]+'</svg></span><div><div class="tt">'+s.t+'</div><div class="sb">'+s.s+'</div></div><span class="sc" id="sc'+k+'">'+(k===0?'Sent':'Scheduled')+'</span></div>').join('');
+$('sms2w').textContent=CD.stopNote;$('sttl').textContent=CD.stepsFor;
+$('enl').innerHTML=CD.enrolled.map((e,k)=>'<div class="er2" id="er'+k+'"><div class="p">'+av(e)+'<div><b>'+e.n+'</b><small>'+e.loc+'</small></div></div><span class="cs">'+e.step+'</span><span class="sc '+e.sc+'" id="es'+k+'">'+e.st+'</span></div>').join('');
+$('sc0').classList.add('g');
+
+/* 04 dashboard */
+const DS=D.dash;
+$('tiles').innerHTML=DS.tiles.map((t,k)=>'<div class="tile'+(t.hi?' hi':'')+'"><div class="k">'+t.k+'</div><div class="v"><span id="dv'+k+'">0</span>'+(t.u?'<small>'+t.u+'</small>':'')+'</div><span class="d">'+t.d+'</span></div>').join('');
+const mx=Math.max(...DS.weeks.map(w=>w[1]))*1.1;
+$('bars').innerHTML=DS.weeks.map(d=>'<div class="g"><i data-h="'+(d[1]/mx*100)+'"></i><i data-h="'+(d[2]/mx*100)+'"></i><span>'+d[0]+'</span></div>').join('');
+const tmax=Math.max(...DS.coordTimes.map(o=>o[1]));
+$('src2').innerHTML=DS.coordTimes.map(o=>{const c=D.coords[o[0]];return '<div class="r">'+av(c)+'<span>'+c.name+'<small>'+c.loc+'</small></span><em>'+o[1]+' min</em><div class="tr"><i data-w="'+(o[1]/15*100)+'"></i></div></div>'}).join('')+'<div class="nt">'+DS.note+'</div>';
+
+/* 05 claude code terminal */
+const C=D.cc;$('ttitle').textContent=C.title;$('troot').textContent=C.cwd.split('/').pop();
+$('schT').textContent=D.sched.t;$('schS').textContent=D.sched.s;
+const SPARK='<svg viewBox="0 0 24 24"><path d="M12 1.5l2.2 7.2 7.3 2.3-7.3 2.3L12 20.5l-2.2-7.2L2.5 11l7.3-2.3z"/></svg>';
+let th='<div class="wel"><div class="w1">'+SPARK+'<span>Welcome to Claude Code!</span></div><div class="w2">/help for help, /status for your current setup</div><div class="w3">cwd: '+esc(C.cwd)+'</div></div>';
+th+='<div class="upr tl" id="tl-p">&gt; <b>'+esc(C.prompt)+'</b></div>';
+C.steps.forEach((s,i)=>{
+ th+='<div class="tstp tl" id="tl-s'+i+'"><span class="dot"></span><div><div class="tn"><b>'+s.tool+'</b><span>('+esc(s.arg)+')</span></div><div class="res"><span>'+esc(s.res)+'</span></div></div></div>';
+ if(s.todos){th+='<div class="tstp tl ok" id="tl-todo"><span class="dot"></span><div><div class="tn"><b>Update Todos</b></div>'+C.todos.map((t,j)=>'<div class="todo'+(j?'':' f')+'" id="td'+j+'"><span><span class="c">☐</span>'+esc(t)+'</span></div>').join('')+'</div></div>'}
+});
+th+='<div class="tstp txt tl" id="tl-sum"><span class="dot"></span><div class="sumy">'+esc(C.summary)+'</div></div>';
+th+='<div class="spin" id="spin">&nbsp;</div><div class="inp"><span>&gt;</span><i></i></div><div class="hint">? for shortcuts</div>';
+$('tbody2').innerHTML=th;
+const FILE_ICON='<svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>',DIR_ICON='<svg viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v11H3z"/></svg>';
+$('tree').innerHTML=D.tree.map(f=>'<li class="'+(f.dir?'dir':'')+'" data-n="'+esc(f.n)+'" style="padding-left:'+(8+f.d*16)+'px">'+(f.dir?DIR_ICON:FILE_ICON)+'<span>'+esc(f.n)+'</span>'+(f.dir?'':'<span class="nw">edited</span>')+'</li>').join('');
+const treeLi=n=>document.querySelector('#tree li[data-n="'+n+'"]');
+
+/* 06 Zoho workflow rule + Deluge */
+const WF=D.workflow;$('wfName').textContent=WF.name;
+$('zmeta').innerHTML='<span>Module</span><span>'+WF.module+'</span><span>Rule name</span><span>'+WF.name+'</span><span>Description</span><span>'+WF.desc+'</span>';
+const ZI={when:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',cond:'<path d="M6 3v6a6 6 0 006 6h6M18 21v-6M6 21V9"/>',act:'<path d="M5 12l4 4 10-10"/>',
+ fn:['#8a5cd6','<path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/>'],fu:['#5b6778','<path d="M4 20h4L20 8l-4-4L4 16z"/>'],wh:['#1e9e62','<path d="M10 14a4 4 0 010-5.7l2.8-2.8a4 4 0 015.7 5.7l-1.4 1.4M14 10a4 4 0 010 5.7l-2.8 2.8a4 4 0 01-5.7-5.7l1.4-1.4"/>']};
+$('zsteps').innerHTML=
+ '<div class="zst" id="zw"><span class="bdg"><svg viewBox="0 0 24 24">'+ZI.when+'</svg></span><div class="cap">When</div><div class="zcard"><span class="iot">In</span>'+WF.when.map(r=>'<div class="row"><span class="k">'+r[0]+'</span><span class="tok">'+r[1]+'</span></div>').join('')+'</div></div>'+
+ '<div class="zst" id="zc"><span class="bdg"><svg viewBox="0 0 24 24">'+ZI.cond+'</svg></span><div class="cap">Condition 1</div><div class="zcard">'+WF.cond.map((c,k)=>'<div class="row">'+(k?'<span class="and">AND</span>':'')+'<span class="tok">'+c[0]+'</span><span class="k">'+c[1]+'</span><span class="tok">'+c[2]+'</span></div>').join('')+'<div class="add">+ Add another condition</div></div></div>'+
+ '<div class="zst" id="za"><span class="bdg"><svg viewBox="0 0 24 24">'+ZI.act+'</svg></span><div class="cap">Instant actions</div><div class="zacts">'+WF.actions.map((a,k)=>'<div class="zact'+(a.sel?' sel':'')+'" id="zact'+k+'">'+(a.out?'<span class="iot o">Out</span>':'')+'<span class="ico" style="background:'+ZI[a.i][0]+'"><svg viewBox="0 0 24 24">'+ZI[a.i][1]+'</svg></span><div><div class="ty">'+a.ty+'</div><div class="nm">'+a.nm+'</div><div class="ds">'+a.ds+'</div></div><span class="ed">Edit</span></div>').join('')+'</div></div>'+
+ '<div class="zst" id="zsc"><span class="bdg" style="border-color:#c9d6e8"><svg viewBox="0 0 24 24" style="stroke:#8a95a5"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></span><div class="cap" style="color:#8a95a5">Scheduled actions</div><div class="zsched"><span>None for this rule</span><b>+ Action</b></div></div>';
+const FN=D.fn;$('fnT').textContent='Function · '+FN.name;$('fnArg').textContent=FN.arg;
+const CLS={k:'k1',s:'s1',c:'c1',f:'f1',n:'n1',p:''};
+let html='';FN.code.forEach(([t,s])=>{html+=s.split('\n').map(x=>CLS[t]&&x?'<span class="'+CLS[t]+'">'+esc(x)+'</span>':esc(x)).join('\n')});
+const lines=html.split('\n');
+$('src').innerHTML=lines.map((l,k)=>'<div data-l="'+k+'">'+(l.replace(/\t/g,'  ')||' ')+'</div>').join('');
+$('lns').innerHTML=lines.map((l,k)=>'<div>'+(k+1)+'</div>').join('');
+function fitZS(){const box=$('hsbox'),zs=$('zsui'),narrow=innerWidth<760;zs.classList.toggle('narrow',narrow);
+ const baseW=narrow?610:1100;zs.style.width=baseW+'px';zs.style.transform='none';
+ const avail=Math.min(baseW,box.closest('.hswrap').clientWidth-24);const s=Math.min(1,avail/baseW);zs.style.transform='scale('+s+')';box.style.width=baseW*s+'px';box.style.height=zs.offsetHeight*s+'px'}
+fitZS();addEventListener('resize',fitZS);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitZS);
+
+/* close words */
+$('words').innerHTML=D.words.map((w,k)=>'<div class="par" data-z="'+[0.3,0.8,1.2,1.6][k]+'"><div class="panel word w'+(k+1)+' rise" style="--d:'+(.1+k*.25)+'s"><i></i>'+(k===D.words.length-1?'<span>'+w+'</span>':w)+'</div></div>').join('');
+
+/* runners */
+const R={
+ hero:async()=>{await wait(500);$('st1').classList.add('on');await wait(500);$('hsent').classList.add('on');$('st2').classList.add('on');
+  count($('hsec'),0,D.textSec,2200,null,v=>{$('hring').style.strokeDashoffset=276.5*(1-v/60)});
+  await wait(2200);$('st3').classList.add('on');await wait(500);$('st4').classList.add('on')},
+ io:async()=>{const it=[...document.querySelectorAll('#io .pin,#io .pout')];await wait(500);
+  for(const e of it.filter(e=>e.classList.contains('pin'))){e.classList.add('on');await wait(220)}
+  count($('iot'),0,D.textSec+1,1800,clock);await wait(1500);
+  for(const e of it.filter(e=>e.classList.contains('pout'))){e.classList.add('on');await wait(380)}},
+ rec:async()=>{const box=$('tlx');await wait(900);
+  for(let k=0;k<D.timeline.length;k++){const e=D.timeline[k],el=tlItem(e);box.prepend(el);await wait(30);el.classList.add('show','hot');setTimeout(()=>el.classList.remove('hot'),1300);
+   if(e.i==='dup')hotc($('rDup'));
+   if(e.i==='owner'){const o=$('fOwn');o.classList.remove('mute');o.innerHTML=av(CO)+CO.name;flash(o)}
+   if(e.i==='status'){$('fStat').textContent=L.status[1];flash($('fStat'))}
+   if(e.i==='call')hotc($('rAct'));
+   if(e.i==='cad')hotc($('rCad'));
+   await wait(800)}},
+ rc:async()=>{await wait(900);$('qnew').classList.add('on');$('rcBadge').classList.add('on');await wait(700);
+  $('b1').classList.add('on');await wait(900);$('typ').classList.add('on');await wait(1200);$('typ').classList.remove('on');$('b2').classList.add('on');
+  const st=$('rcStat');st.textContent=L.status[2];st.classList.add('flash');await wait(900);$('b3').classList.add('on');await wait(500);$('ctask').classList.add('on')},
+ drip:async()=>{const st=[...document.querySelectorAll('#steps .stp')],sc=k=>$('sc'+k);await wait(900);
+  st[1].classList.add('act');sc(1).textContent='Due today';sc(1).classList.add('b');await wait(1100);
+  $('sms2').classList.add('on');const k=CD.enrolled.findIndex(e=>e.stop),row=$('er'+k),es=$('es'+k);await wait(600);
+  row.classList.add('flash');es.textContent=CD.enrolled[k].after;es.classList.remove('b');es.classList.add('x');await wait(600);
+  st[1].classList.remove('act');for(let j=1;j<st.length;j++){await wait(220);st[j].style.opacity='.55';sc(j).textContent='Skipped for DNC';sc(j).classList.add('x')}
+  setTimeout(()=>row.classList.remove('flash'),1400)},
+ dash:async()=>{await wait(500);DS.tiles.forEach((t,k)=>count($('dv'+k),0,t.v,1800));
+  document.querySelectorAll('#bars i').forEach((b,i)=>setTimeout(()=>b.style.height=b.dataset.h+'%',i*60));
+  document.querySelectorAll('#src2 i').forEach((b,i)=>setTimeout(()=>b.style.width=b.dataset.w+'%',300+i*120))},
+ cc:async()=>{await wait(900);$('tl-p').classList.add('on');await wait(700);
+  for(let i=0;i<C.steps.length;i++){const s=C.steps[i],el=$('tl-s'+i);
+   if(s.spin)$('spin').innerHTML='✻ '+esc(s.spin)+'… <small>(esc to interrupt)</small>';
+   if(s.tick!=null)$('td'+s.tick).classList.add('cur');
+   el.classList.add('on');const li=treeLi(s.hit);document.querySelectorAll('#tree li.hit').forEach(x=>x.classList.remove('hit'));if(li){li.classList.add('hit');if(s.ed)li.classList.add('ed')}
+   await wait(650);el.classList.add('ok');
+   if(s.tick!=null){const td=$('td'+s.tick);td.classList.remove('cur');td.classList.add('done');td.querySelector('.c').textContent='☒'}
+   if(s.todos){await wait(300);$('tl-todo').classList.add('on')}
+   await wait(200)}
+  $('spin').innerHTML='&nbsp;';document.querySelectorAll('#tree li.hit').forEach(x=>x.classList.remove('hit'));$('tl-sum').classList.add('on')},
+ zs:async()=>{await wait(800);for(const id of ['zw','zc','za']){$(id).classList.add('on');await wait(220)}
+  for(let k=0;k<WF.actions.length;k++){$('zact'+k).classList.add('on');await wait(200)}
+  $('zsc').classList.add('on');await wait(300);$('zsui').classList.add('fnon');await wait(400);
+  const ls=[...document.querySelectorAll('#src div')];for(const l of ls){l.classList.add('on');await wait(55)}
+  await wait(300);FN.hl.forEach(k=>ls[k]&&ls[k].classList.add('hl'));$('conT').textContent='Console ›';$('conOk').textContent=FN.run;$('conOk').classList.add('on');
+  await wait(900);$('zsui').classList.add('live');$('togl').textContent='Active'},
+ close:async()=>{}
+};
+
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const s=e.target;s.classList.add('in');io.unobserve(s);const f=R[s.dataset.run];if(f)f()}}),{threshold:.22});
+document.querySelectorAll('section').forEach(s=>io.observe(s));
+
+/* spatial parallax */
+const pars=[...document.querySelectorAll('.par')].map(el=>({el,z:parseFloat(el.dataset.z||0),sec:el.closest('section')}));
+let mx2=0,tx=0;addEventListener('mousemove',e=>{tx=e.clientX/innerWidth-.5},{passive:true});
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(){mx2+=(tx-mx2)*.06;const vh=innerHeight,small=innerWidth<860,amp=reduce?0:(small?.35:1);
+ document.documentElement.style.setProperty('--sp',(scrollY/(document.body.scrollHeight-vh||1)).toFixed(3));
+ for(const p of pars){const r=p.sec.getBoundingClientRect();if(r.bottom<-200||r.top>vh+200)continue;
+  const t=Math.max(-1.2,Math.min(1.2,(r.top+Math.min(r.height,vh)/2-vh/2)/vh));
+  const big=p.el.offsetHeight>500?.35:1;
+  const y=-t*p.z*70*amp,rx=Math.max(-10,Math.min(12,t*9*(0.5+p.z*.4)))*amp*big,x=small?0:mx2*p.z*-16*amp,ry=small?0:mx2*p.z*3*amp*big;
+  p.el.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,'+(p.z*20*amp).toFixed(1)+'px) rotateX('+rx.toFixed(2)+'deg) rotateY('+ry.toFixed(2)+'deg)'}
+ requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+})();
+</script>

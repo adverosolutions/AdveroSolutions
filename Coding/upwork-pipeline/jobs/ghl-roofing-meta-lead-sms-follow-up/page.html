@@ -1,0 +1,890 @@
+<title>Roofing Lead Follow-Up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16202e; --ink2:#4d596b; --ink3:#8792a3;
+  --blue:#2f74f5; --blue2:#6aa5ff; --mint:#1fb487; --amber:#e8a13a;
+  --line:rgba(150,170,200,.28);
+  --panel:linear-gradient(180deg,rgba(255,255,255,.94),rgba(248,251,255,.80));
+  --shadow:0 40px 70px -30px rgba(38,72,128,.30),0 16px 30px -18px rgba(38,72,128,.22);
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;background:#e9f0f8}
+body{font-family:"Figtree",system-ui,sans-serif;color:var(--ink);background:#e9f0f8;overflow-x:hidden;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+.sky{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+   radial-gradient(1200px 600px at 78% -10%,rgba(255,255,255,.95),rgba(255,255,255,0) 60%),
+   radial-gradient(900px 520px at 8% 30%,rgba(206,226,250,.75),rgba(206,226,250,0) 70%),
+   linear-gradient(180deg,#c9dcf2 0%,#dce8f5 28%,#ecf1f7 58%,#f3f4f6 82%,#e9edf2 100%);}
+.sky::after{content:"";position:absolute;left:-10%;right:-10%;top:calc(58% - var(--sp,0) * 18%);height:40%;
+  background:radial-gradient(60% 50% at 50% 0%,rgba(255,255,255,.85),rgba(255,255,255,0) 70%);filter:blur(10px)}
+.haze{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.haze i{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;animation:drift 26s ease-in-out infinite alternate}
+.haze i:nth-child(1){width:520px;height:520px;left:-120px;top:10%;background:#d6e6fb}
+.haze i:nth-child(2){width:460px;height:460px;right:-100px;top:45%;background:#e6f1fb;animation-duration:32s}
+.haze i:nth-child(3){width:380px;height:380px;left:40%;top:70%;background:#dff0ec;opacity:.45;animation-duration:38s}
+@keyframes drift{to{transform:translate3d(60px,-50px,0) scale(1.08)}}
+
+main{position:relative;z-index:1}
+.top{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:18px 32px;pointer-events:none}
+.top .brand{font-weight:600;font-size:13px;letter-spacing:.02em;color:var(--ink2);display:flex;gap:10px;align-items:center;padding:7px 14px 7px 12px;border-radius:99px;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff,0 6px 18px -8px rgba(38,72,128,.25);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.top .brand b{width:9px;height:9px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 4px rgba(47,116,245,.15)}
+.chip{white-space:nowrap;font-size:12px;font-weight:600;color:var(--ink2);padding:7px 13px;border-radius:99px;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff,0 6px 18px -8px rgba(38,72,128,.25);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(14px)}
+
+section{position:relative;min-height:100vh;padding:120px 48px 110px;display:flex;flex-direction:column;justify-content:center;perspective:1700px;perspective-origin:50% 40%}
+.wrap{width:100%;max-width:1240px;margin:0 auto;position:relative;transform-style:preserve-3d}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
+.eyebrow span{font-variant-numeric:tabular-nums;color:var(--ink3);letter-spacing:.06em}
+h1,h2{font-weight:600;letter-spacing:-.035em;line-height:1.02;color:var(--ink)}
+h1{font-size:clamp(44px,6.6vw,96px)}
+h2{font-size:clamp(38px,4.8vw,70px);margin-top:14px}
+h2 em,h1 em{font-style:normal;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.head{margin-bottom:56px}
+.sub{font-size:clamp(17px,1.45vw,21px);line-height:1.45;font-weight:450;color:var(--ink2);max-width:660px;margin-top:18px;letter-spacing:-.005em}
+#hero .sub,#hs .sub{margin-left:auto;margin-right:auto}
+
+/* panels */
+.par{will-change:transform;transform-style:preserve-3d}
+.panel{position:relative;background:var(--panel);border-radius:28px;border:1px solid rgba(255,255,255,.95);
+  box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.55),var(--shadow);backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3)}
+.panel::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,0) 28%,rgba(255,255,255,0) 72%,rgba(200,218,242,.35) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;padding:1.5px}
+.panel::after{content:"";position:absolute;left:10%;right:10%;bottom:-46px;height:34px;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(52,86,140,.22),rgba(52,86,140,0));filter:blur(6px);pointer-events:none;transform:translateZ(-1px)}
+.rise{opacity:0;transform:perspective(1400px) translate3d(0,90px,-180px) rotateX(20deg);transform-origin:50% 100%;
+  transition:opacity 1.1s var(--ease),transform 1.6s var(--ease);transition-delay:var(--d,0s)}
+.in .rise{opacity:1;transform:perspective(1400px) translate3d(0,0,0) rotateX(0)}
+.fade{opacity:0;transform:translateY(18px);transition:opacity .9s var(--ease),transform 1.2s var(--ease);transition-delay:var(--d,0s)}
+.in .fade{opacity:1;transform:none}
+
+.label{font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+.avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(160deg,#7fb2ff,#2f74f5);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 6px 14px -6px rgba(47,116,245,.6);flex:none}
+.row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--line);font-size:15px}
+.row:first-child{border-top:0}
+.row .k{color:var(--ink3)}
+.row .v{font-weight:600}
+.ok{color:var(--mint)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;background:rgba(31,180,135,.12);color:#12926b}
+.pill.blue{background:rgba(47,116,245,.1);color:var(--blue)}
+
+.scrollcue{margin-top:40px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);display:flex;flex-direction:column;align-items:center;gap:10px}
+.scrollcue b{width:1.5px;height:36px;background:linear-gradient(var(--ink3),transparent);animation:cue 2.4s ease-in-out infinite}
+@keyframes cue{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+#close .wrap{text-align:center}
+.words{position:relative;display:flex;flex-direction:column;align-items:center;gap:22px;transform-style:preserve-3d}
+.word{padding:18px 40px 20px 30px;border-radius:99px;display:flex;align-items:center;gap:18px;font-size:clamp(40px,5.4vw,78px);font-weight:600;letter-spacing:-.04em;line-height:1}
+.word i{width:40px;height:40px;border-radius:50%;background:rgba(31,180,135,.14);display:grid;place-items:center;flex:none}
+.word i::after{content:"";width:15px;height:8px;border-left:3px solid var(--mint);border-bottom:3px solid var(--mint);transform:rotate(-45deg) translate(2px,-2px)}
+.word.w1{margin-right:280px}.word.w2{margin-left:120px}.word.w3{margin-right:160px}.word.w4{margin-left:260px}
+.word.w4 span{background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.foot{margin-top:70px;font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase}
+
+#hero .sub,#ghs .sub,#close .sub{margin-left:auto;margin-right:auto}
+.head.c{text-align:center}
+
+/* HERO */
+#hero{padding-top:110px}
+#hero .wrap{display:grid;grid-template-columns:1fr;justify-items:center;text-align:center}
+#hero .kicker{font-size:15px;font-weight:500;color:var(--ink2);margin-bottom:22px}
+.hstage{position:relative;width:min(1100px,100%);height:420px;margin-top:40px;transform-style:preserve-3d}
+.hstage>.par{position:absolute}
+.hc{padding:22px 24px;text-align:left}
+.mcall{width:300px}
+.mcall .h{display:flex;gap:12px;align-items:center}
+.ic40{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;flex:none}
+.ic40 svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ic40.red{background:linear-gradient(160deg,#f07a6e,#d9463b);box-shadow:0 8px 16px -8px rgba(217,70,59,.7)}
+.ic40.blue{background:linear-gradient(160deg,#6aa5ff,#155eef);box-shadow:0 8px 16px -8px rgba(21,94,239,.7)}
+.hc .t{font-weight:700;font-size:16px}
+.hc .s{font-size:13px;color:var(--ink3);margin-top:2px}
+.mcall .sent{margin-top:16px;font-size:13.5px;font-weight:600;color:#12926b;display:flex;gap:8px;align-items:center;opacity:0;transform:translateY(6px);transition:all .7s var(--ease)}
+.mcall .sent.on{opacity:1;transform:none}
+.ntf{width:450px;border-radius:30px}
+.ntf .app{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+.ntf .app .ic40{width:30px;height:30px;border-radius:9px}.ntf .app .ic40 svg{width:15px;height:15px}
+.ntf .app span:last-child{margin-left:auto;letter-spacing:0;text-transform:none;font-weight:500}
+.ntf .tt{font-size:20px;font-weight:700;letter-spacing:-.015em;margin-top:14px}
+.ntf .bd{font-size:17px;line-height:1.4;color:var(--ink2);margin-top:6px;font-weight:500}
+.ntf .tags{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.bkd{width:320px;display:flex;gap:18px;align-items:center}
+.ring{position:relative;width:86px;height:86px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .num{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:21px;letter-spacing:-.02em}
+.bkd .t{font-size:19px;letter-spacing:-.02em}
+.st3{width:450px;padding:16px 18px;display:flex;justify-content:space-between;gap:8px}
+.st3 div{flex:1;display:flex;gap:8px;align-items:center;font-size:13.5px;font-weight:600;color:var(--ink2);opacity:.35;transition:opacity .6s;white-space:nowrap}
+.st3 div.on{opacity:1}
+.tick{width:20px;height:20px;border-radius:50%;background:rgba(31,180,135,.14);display:grid;place-items:center;flex:none}
+.tick::after{content:"";width:8px;height:4px;border-left:2px solid var(--mint);border-bottom:2px solid var(--mint);transform:rotate(-45deg) translate(1px,-1px)}
+
+/* APP SHELL (GoHighLevel-style, no logo) */
+.appf{padding:10px;border-radius:30px}
+.gw{border-radius:20px;overflow:hidden;background:#f9fafb;display:flex;color:#101828;font-size:13px;position:relative;text-align:left}
+.gnav{width:62px;flex:none;background:#101828;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 0}
+.gnav .acct{width:36px;height:36px;border-radius:10px;background:linear-gradient(160deg,#475467,#344054);color:#fff;font-weight:700;font-size:12px;display:grid;place-items:center;margin-bottom:10px}
+.gnav .ni{width:40px;height:36px;border-radius:9px;display:grid;place-items:center}
+.gnav .ni svg{width:18px;height:18px;fill:none;stroke:#98a2b3;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.gnav .ni.a{background:#155eef}.gnav .ni.a svg{stroke:#fff}
+.gbody{flex:1;min-width:0;display:flex;flex-direction:column}
+.gtop{height:52px;flex:none;background:#fff;border-bottom:1px solid #eaecf0;display:flex;align-items:center;padding:0 18px;gap:14px}
+.gtop .pt{font-weight:700;font-size:15px;white-space:nowrap}
+.gtop .srch{margin-left:auto;width:220px;height:32px;border:1px solid #d0d5dd;border-radius:8px;display:flex;align-items:center;padding:0 10px;color:#98a2b3;font-size:12.5px;gap:8px}
+.gtop .srch svg{width:14px;height:14px;fill:none;stroke:#98a2b3;stroke-width:2}
+.gtop .me{width:30px;height:30px;border-radius:50%;background:#e0eaff;color:#155eef;font-weight:700;font-size:11.5px;display:grid;place-items:center;flex:none}
+.gbtn{white-space:nowrap;background:#155eef;color:#fff;font-weight:600;font-size:12.5px;padding:7px 13px;border-radius:8px}
+.gseg{display:flex;border:1px solid #d0d5dd;border-radius:8px;overflow:hidden;font-size:12px;font-weight:600;color:#475467;white-space:nowrap}
+.gseg span{padding:6px 11px}.gseg span+span{border-left:1px solid #d0d5dd}.gseg span.a{background:#f2f4f7;color:#101828}
+.gsel{border:1px solid #d0d5dd;border-radius:8px;padding:6px 11px;font-size:12.5px;font-weight:600;color:#344054;background:#fff;white-space:nowrap}
+.gsel::after{content:" ▾";color:#98a2b3;font-size:10px}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12px;color:#fff;flex:none;background:#98a2b3}
+.av.b{background:#155eef}.av.g{background:#12b76a}.av.o{background:#f79009}.av.p{background:#7a5af8}.av.t{background:#0ba5ec}
+
+/* 01 INBOX */
+.inbox{display:grid;grid-template-columns:250px minmax(0,1fr) 250px;flex:1;min-height:0}
+.clist{background:#fff;border-right:1px solid #eaecf0}
+.ctabs{display:flex;gap:16px;padding:0 14px;border-bottom:1px solid #eaecf0;font-size:12.5px;font-weight:600;color:#667085;height:42px}
+.ctabs span{display:flex;align-items:center;border-bottom:2px solid transparent}
+.ctabs span.a{color:#155eef;border-color:#155eef}
+.ci{display:flex;gap:10px;padding:11px 14px;border-bottom:1px solid #f2f4f7;align-items:flex-start}
+.ci .av{width:32px;height:32px;font-size:11px}
+.ci .n{font-weight:700;font-size:13px;display:flex;justify-content:space-between;gap:6px}
+.ci .n small{font-weight:500;color:#98a2b3;font-size:11px}
+.ci .p{font-size:12px;color:#667085;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci>div{min-width:0;flex:1}
+.ci.act{background:#eff4ff;box-shadow:inset 3px 0 0 #155eef}
+.thread{display:flex;flex-direction:column;min-width:0;background:#f9fafb}
+.thh{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#fff;border-bottom:1px solid #eaecf0}
+.thh .n{font-weight:700;font-size:14px}.thh .s{font-size:11.5px;color:#667085}
+.aichip{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#5925dc;background:#f4f3ff;border:1px solid #d9d6fe;border-radius:99px;padding:4px 10px;white-space:nowrap}
+.aichip i{width:7px;height:7px;border-radius:50%;background:#7a5af8;box-shadow:0 0 0 3px rgba(122,90,248,.2);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(122,90,248,0)}}
+.thb{flex:1;padding:14px 16px;display:flex;flex-direction:column;gap:9px;min-height:440px}
+.mw{display:flex;flex-direction:column;opacity:0;transform:translateY(10px) scale(.98);transition:opacity .5s var(--ease),transform .7s var(--ease)}
+.mw.show{opacity:1;transform:none}
+.mw.o{align-items:flex-end}.mw.i{align-items:flex-start}.mw.e{align-items:center}
+.mm{font-size:10.5px;color:#98a2b3;font-weight:600;margin:0 4px 3px}
+.mm.ai{color:#6941c6}
+.bb{max-width:80%;padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.4}
+.mw.o .bb{background:#155eef;color:#fff;border-bottom-right-radius:4px}
+.mw.o.ai .bb{background:linear-gradient(180deg,#7a5af8,#6941c6)}
+.mw.i .bb{background:#fff;border:1px solid #eaecf0;border-bottom-left-radius:4px}
+.evp{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:99px;background:#fef3f2;color:#b42318;border:1px solid #fecdca}
+.evp.g{background:#ecfdf3;color:#067647;border-color:#abefc6}
+.evp svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.typ{align-self:flex-start;display:none;gap:4px;padding:10px 12px;border-radius:14px;background:#fff;border:1px solid #eaecf0}
+.typ.show{display:flex}
+.typ i{width:5px;height:5px;border-radius:50%;background:#a8b3c3;animation:dot 1s infinite}
+.typ i:nth-child(2){animation-delay:.15s}.typ i:nth-child(3){animation-delay:.3s}
+@keyframes dot{50%{transform:translateY(-3px);opacity:.5}}
+.comp{margin:0 16px 14px;height:40px;border:1px solid #d0d5dd;background:#fff;border-radius:10px;display:flex;align-items:center;padding:0 6px 0 12px;gap:8px;font-size:12.5px;color:#98a2b3}
+.comp b{font-size:11px;font-weight:700;color:#344054;background:#f2f4f7;border-radius:6px;padding:3px 7px}
+.comp span{flex:1}
+.comp .snd{width:28px;height:28px;border-radius:7px;background:#155eef;display:grid;place-items:center}
+.comp .snd svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.cpan{background:#fff;border-left:1px solid #eaecf0;padding:16px}
+.cpan .h{display:flex;gap:10px;align-items:center;padding-bottom:14px;border-bottom:1px solid #f2f4f7}
+.cpan .h .n{font-weight:700;font-size:14px}.cpan .h .s{font-size:11.5px;color:#667085}
+.cpan .lb{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#98a2b3;margin:14px 0 8px}
+.tgs{display:flex;flex-wrap:wrap;gap:6px;min-height:26px}
+.tg{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:6px;background:#eff4ff;color:#155eef;border:1px solid #d1e0ff;opacity:0;transform:translateY(-14px) scale(.8);transition:opacity .4s,transform .6s cubic-bezier(.34,1.56,.64,1);display:none}
+.tg.on{display:inline-block}.tg.in2{opacity:1;transform:none}
+.tg.g{background:#ecfdf3;color:#067647;border-color:#abefc6}
+.tg.r{background:#fef3f2;color:#b42318;border-color:#fecdca}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:7px 0;font-size:12.5px;border-top:1px solid #f2f4f7}
+.kv:first-of-type{border-top:0}
+.kv span:first-child{color:#667085}.kv span:last-child{font-weight:600;text-align:right;transition:color .4s}
+.stg{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:#f2f4f7;color:#344054}
+.stg.g{background:#ecfdf3;color:#067647}
+
+/* 02 PIPELINE */
+.phead{display:flex;align-items:center;gap:10px;padding:12px 16px 0}
+.phead .sum{margin-left:auto;font-size:12.5px;color:#667085;white-space:nowrap}.phead .sum b{color:#101828}
+.board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;padding:14px 16px 16px}
+.col{background:#f2f4f7;border-radius:12px;padding:10px;min-height:380px;border-top:3px solid var(--sc)}
+.col .ch{display:flex;justify-content:space-between;align-items:baseline;gap:6px;padding:2px 2px 0}
+.col .ch b{font-size:13px}.col .ch span{font-size:11.5px;color:#667085;white-space:nowrap}
+.col .tot{font-size:12px;font-weight:700;color:#344054;padding:2px 2px 10px}
+.cards{display:flex;flex-direction:column;gap:8px}
+.oc{position:relative;background:#fff;border:1px solid #eaecf0;border-radius:10px;padding:10px 11px;box-shadow:0 1px 2px rgba(16,24,40,.05);z-index:1}
+.oc .n{font-weight:700;font-size:13px;display:flex;justify-content:space-between;gap:6px;align-items:center}
+.oc .n .av{width:22px;height:22px;font-size:9px}
+.oc .j{font-size:12px;color:#667085;margin-top:2px}
+.oc .v{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;font-weight:700}
+.oc .v small{font-weight:600;color:#98a2b3;font-size:11px}
+.oc.mv{z-index:5;box-shadow:0 0 0 2px #155eef,0 18px 30px -12px rgba(21,94,239,.45)}
+.oc.done{box-shadow:0 0 0 2px #12b76a,0 14px 26px -12px rgba(18,183,106,.45)}
+.oc .ntag{display:none;font-size:10.5px;font-weight:700;color:#067647;background:#ecfdf3;border-radius:5px;padding:2px 6px}
+.oc.done .ntag{display:inline-block}
+
+/* 03 CALENDAR */
+.chead{display:flex;align-items:center;gap:10px;padding:12px 16px}
+.chead .rng{font-weight:700;font-size:14px;white-space:nowrap}
+.chead .ar{display:flex;gap:4px}.chead .ar span{width:26px;height:26px;border:1px solid #d0d5dd;border-radius:7px;display:grid;place-items:center;color:#475467;font-size:13px;background:#fff}
+.chead .gseg{margin-left:auto}
+.calg{display:grid;grid-template-columns:52px repeat(5,minmax(0,1fr));padding:0 16px 16px}
+.dh{text-align:center;padding:6px 0 10px;font-size:11.5px;font-weight:600;color:#667085;border-bottom:1px solid #eaecf0}
+.dh b{display:block;font-size:18px;color:#101828;margin-top:2px;font-weight:600}
+.dh.today b{width:34px;height:34px;border-radius:50%;background:#155eef;color:#fff;display:grid;place-items:center;margin:2px auto 0;font-size:16px}
+.tcol{position:relative;height:414px}
+.tcol span{position:absolute;right:8px;font-size:10.5px;color:#98a2b3;font-weight:600;transform:translateY(-50%)}
+.dcol{position:relative;height:414px;border-left:1px solid #eaecf0;background-image:repeating-linear-gradient(180deg,#eaecf0 0 1px,transparent 1px 46px)}
+.dcol.today{background-color:rgba(21,94,239,.03)}
+.ev{position:absolute;left:4px;right:4px;border-radius:8px;padding:5px 8px;background:var(--eb);border-left:3px solid var(--ec);overflow:hidden}
+.ev .tm{font-size:10.5px;font-weight:600;color:var(--ec)}
+.ev .tl{font-size:12px;font-weight:700;color:#101828;line-height:1.25;margin-top:1px}
+.ev .sl{font-size:11px;color:#475467;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev.blue{--eb:#eff4ff;--ec:#155eef}.ev.teal{--eb:#f0f9ff;--ec:#0086c9}.ev.vio{--eb:#f4f3ff;--ec:#6941c6}.ev.amb{--eb:#fffaeb;--ec:#b54708}
+.ev.new{--eb:#ecfdf3;--ec:#079455;opacity:0;transform:translateY(-70px) scale(1.06);transition:opacity .5s,transform 1s cubic-bezier(.34,1.4,.64,1),box-shadow .8s;z-index:3}
+.ev.new.drop{opacity:1;transform:none;box-shadow:0 0 0 2px #12b76a,0 16px 26px -12px rgba(18,183,106,.55)}
+.ev.new .tm{padding-right:40px}
+.ev.new .nb{position:absolute;top:5px;right:6px;font-size:9.5px;font-weight:800;letter-spacing:.06em;color:#fff;background:#12b76a;border-radius:4px;padding:1px 5px}
+.toast{position:absolute;right:18px;bottom:18px;width:290px;background:#fff;border:1px solid #eaecf0;border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;box-shadow:0 20px 40px -16px rgba(16,24,40,.35);opacity:0;transform:translateY(16px);transition:opacity .6s,transform .8s var(--ease);z-index:6}
+.toast.on{opacity:1;transform:none}
+.toast .ic40{width:32px;height:32px;border-radius:9px;background:#12b76a}.toast .ic40 svg{width:16px;height:16px}
+.toast b{display:block;font-size:13px}.toast small{font-size:12px;color:#667085;line-height:1.4;display:block;margin-top:2px}
+
+/* 04 DASHBOARD */
+.dsh{padding:14px 16px 16px;display:grid;gap:12px}
+.dtop{display:flex;align-items:center;gap:10px}
+.dtop .illu{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#667085;border:1px dashed #98a2b3;padding:4px 9px;border-radius:99px;white-space:nowrap}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tile{background:#fff;border:1px solid #eaecf0;border-radius:12px;padding:14px 16px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.tile .k{font-size:12.5px;font-weight:600;color:#667085;display:flex;align-items:center;gap:8px}
+.tile .k i{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;flex:none}
+.tile .k i svg{width:14px;height:14px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tile .v{font-size:32px;font-weight:700;letter-spacing:-.03em;margin-top:10px;line-height:1}
+.tile .v small{font-size:15px;font-weight:600;color:#667085;margin-left:2px}
+.tile .d{display:inline-block;margin-top:8px;font-size:11.5px;font-weight:700;color:#067647;background:#ecfdf3;border-radius:99px;padding:2px 8px}
+.dgrid{display:grid;grid-template-columns:1.55fr 1fr;gap:12px}
+.card2{background:#fff;border:1px solid #eaecf0;border-radius:12px;padding:14px 16px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.card2 .ct{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:13.5px;gap:10px}
+.lg2{display:flex;gap:12px;font-size:11.5px;font-weight:600;color:#667085;white-space:nowrap}
+.lg2 i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:0}
+.bars{display:flex;align-items:flex-end;gap:10px;height:170px;margin-top:14px;padding-bottom:22px;position:relative;border-bottom:1px solid #eaecf0}
+.bars .g{flex:1;display:flex;gap:4px;align-items:flex-end;justify-content:center;height:100%;position:relative}
+.bars .g i{width:40%;max-width:22px;border-radius:5px 5px 0 0;height:0;transition:height 1.4s var(--ease)}
+.bars .g i:nth-child(1){background:#b2ccff}.bars .g i:nth-child(2){background:#155eef}
+.bars .g span{position:absolute;bottom:-20px;font-size:11px;color:#667085;font-weight:600}
+.src2{margin-top:12px;display:grid;gap:12px}
+.src2 .r{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:12.5px;font-weight:600}
+.src2 .r em{font-style:normal;color:#667085}
+.src2 .tr{grid-column:1/-1;height:7px;border-radius:9px;background:#f2f4f7;overflow:hidden}
+.src2 .tr i{display:block;height:100%;width:0;background:#155eef;border-radius:9px;transition:width 1.6s var(--ease)}
+
+/* 05 GHL BUILDER */
+.ghlab{margin-top:14px;display:inline-block}
+.ghwrap{position:relative;width:100%;transform-style:preserve-3d}
+.ghframe{padding:12px;border-radius:30px;margin:0 auto;width:max-content;max-width:100%}
+.ghbox{overflow:hidden;border-radius:20px;position:relative}
+.gh{width:1100px;height:1000px;transform-origin:0 0;background:#f7f8fa;color:#101828;position:relative;border-radius:20px;overflow:hidden;text-align:left}
+.gh .bar1{height:58px;background:#fff;border-bottom:1px solid #e4e7ec;display:flex;align-items:center;padding:0 18px;gap:16px}
+.gh .back{font-size:13px;font-weight:600;color:#155eef;white-space:nowrap}
+.gh .wname{font-weight:700;font-size:15px;white-space:nowrap}
+.gh .tabs{display:flex;gap:22px;margin-left:18px;font-size:13.5px;font-weight:600;color:#667085;height:100%}
+.gh .tabs span{display:flex;align-items:center;border-bottom:2px solid transparent;white-space:nowrap}
+.gh .tabs span.a{color:#155eef;border-color:#155eef}
+.gh .tog{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#667085;white-space:nowrap}
+.gh .sw{width:38px;height:21px;border-radius:99px;background:#d0d5dd;position:relative;transition:background .4s}
+.gh .sw::after{content:"";position:absolute;top:3px;left:3px;width:15px;height:15px;border-radius:50%;background:#fff;transition:left .4s var(--ease);box-shadow:0 1px 2px rgba(16,24,40,.2)}
+.gh.live .sw{background:#12b76a}.gh.live .sw::after{left:20px}
+.gh.narrow .tabs span:not(.a){display:none}
+.gh .save{white-space:nowrap;background:#155eef;color:#fff;font-weight:600;font-size:13.5px;padding:9px 18px;border-radius:8px;margin-left:8px}
+.gh .canvas{position:absolute;top:58px;left:0;right:320px;bottom:0;background-color:#f2f4f7;background-image:radial-gradient(#d0d5dd 1px,transparent 1.2px);background-size:20px 20px}
+.gh .zoom{position:absolute;right:16px;bottom:16px;display:flex;background:#fff;border:1px solid #d0d5dd;border-radius:8px;font-size:15px;color:#475467;overflow:hidden}
+.gh .zoom span{width:32px;height:30px;display:grid;place-items:center}
+.gh .zoom span:nth-child(2){width:52px;font-size:12px;font-weight:600}
+.gh .zoom span+span{border-left:1px solid #d0d5dd}
+.gn{position:absolute;width:236px;height:56px;background:#fff;border:1px solid #e4e7ec;border-radius:10px;box-shadow:0 1px 3px rgba(16,24,40,.08);padding:10px 12px;display:flex;gap:10px;align-items:center;opacity:0;transform:translateY(-10px);transition:opacity .45s,transform .6s var(--ease)}
+.gn.on{opacity:1;transform:none}
+.gn .ico{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex:none}
+.gn .ico svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.gn .tt{font-size:13px;font-weight:700;color:#101828;line-height:1.25}
+.gn .ss{font-size:11.5px;color:#667085;margin-top:2px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gn>div{min-width:0}
+.gn.trig{border-color:#b2ccff;background:#f5f8ff}
+.gn.trig .hdr{position:absolute;top:-9px;left:10px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#155eef;background:#fff;border:1px solid #b2ccff;border-radius:99px;padding:1px 7px}
+.gn.addt{width:190px;border:1.5px dashed #84adff;background:rgba(255,255,255,.6);box-shadow:none;justify-content:center;color:#155eef;font-size:13px;font-weight:700}
+.gn.sel{border-color:#155eef;box-shadow:0 0 0 3px rgba(21,94,239,.18)}
+.gend{position:absolute;width:56px;margin-left:-28px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.06em;color:#475467;background:#e4e7ec;border-radius:99px;padding:4px 0;opacity:0;transition:opacity .5s}
+.gend.on{opacity:1}
+.gplus{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:#fff;border:1.5px solid #98a2b3;color:#475467;font-size:15px;line-height:18px;text-align:center;font-weight:600}
+.gbl{position:absolute;font-size:11.5px;font-weight:700;color:#344054;background:#fff;border:1px solid #d0d5dd;border-radius:6px;padding:2px 9px;transform:translate(-50%,-50%);white-space:nowrap}
+.gbl.y{color:#067647;border-color:#abefc6;background:#ecfdf3}
+.gh svg.lines{position:absolute;inset:0;width:100%;height:100%}
+.gh svg.lines path{fill:none;stroke:#98a2b3;stroke-width:1.5}
+.gh .side{position:absolute;top:58px;right:0;bottom:0;width:320px;background:#fff;border-left:1px solid #e4e7ec;transform:translateX(100%);transition:transform .8s var(--ease);display:flex;flex-direction:column}
+.gh.panelon .side{transform:none}
+.side .sh{display:flex;gap:12px;align-items:center;padding:18px 20px;border-bottom:1px solid #e4e7ec}
+.side .sh .ico{width:34px;height:34px;border-radius:9px;background:#12b76a;display:grid;place-items:center;flex:none}
+.side .sh .ico svg{width:17px;height:17px;fill:none;stroke:#fff;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.side .sh b{font-size:15px;display:block}.side .sh small{font-size:12px;color:#667085}
+.side .sh .x{margin-left:auto;color:#98a2b3;font-size:18px;align-self:flex-start}
+.side .sb{padding:18px 20px;flex:1}
+.side .f{margin-bottom:16px}
+.side .f label{display:block;font-size:12.5px;font-weight:600;color:#344054;margin-bottom:6px}
+.side .f div{border:1px solid #d0d5dd;background:#fff;border-radius:8px;padding:9px 11px;font-size:13px;color:#101828;display:flex;justify-content:space-between;line-height:1.45;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.side .f.dd div::after{content:"▾";color:#98a2b3;font-size:11px}
+.side .f.msg div{min-height:108px;display:block}
+.side .f.msg em{font-style:normal;color:#155eef;background:#eff4ff;border-radius:4px;padding:0 3px}
+.side .foot3{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid #e4e7ec}
+.side .foot3 span{font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;border:1px solid #d0d5dd;color:#344054}
+.side .foot3 span:last-child{background:#155eef;border-color:#155eef;color:#fff}
+
+/* CLOSE */
+.word.w1{margin-right:280px}.word.w2{margin-left:120px}.word.w3{margin-right:160px}.word.w4{margin-left:260px}
+.word.w4 span{background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.foot{margin-top:70px;font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase}
+
+/* IN -> OUT */
+#io .wrap{text-align:center}
+.iog{display:grid;grid-template-columns:minmax(0,1fr) 170px minmax(0,1fr);align-items:center;gap:20px;max-width:1060px;margin:0 auto;transform-style:preserve-3d;text-align:left}
+.iocol{display:flex;flex-direction:column;gap:18px;min-width:0}
+.iop{padding:24px 24px 26px;display:flex;flex-direction:column;gap:14px}
+.iop .label{color:var(--blue)}
+.iop.out .label{color:#12926b}
+.iocap{font-size:15.5px;line-height:1.45;font-weight:500;color:var(--ink2);text-align:center;padding:0 10px}
+.iocall{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid #eaecf0;border-radius:16px;padding:14px 16px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.iocall .t{font-weight:700;font-size:16px}.iocall .s{font-size:13px;color:var(--ink3);margin-top:2px}
+.iocall .ring2{margin-left:auto;font-size:11.5px;font-weight:700;color:#b42318;background:#fef3f2;border:1px solid #fecdca;border-radius:99px;padding:4px 10px;white-space:nowrap}
+.iorow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:0 4px}
+.iorow span:first-child{color:var(--ink3)}.iorow span:last-child{font-weight:600;text-align:right}
+.ioev{--eb:#ecfdf3;--ec:#079455;background:var(--eb);border-left:3px solid var(--ec);border-radius:10px;padding:9px 12px;box-shadow:0 0 0 2px #12b76a,0 14px 24px -14px rgba(18,183,106,.5)}
+.ioev .tm{font-size:11.5px;font-weight:700;color:var(--ec)}
+.ioev .tl{font-size:14px;font-weight:700;color:#101828;margin-top:2px}
+.ioev .sl{font-size:12px;color:#475467;margin-top:1px}
+.iosms{align-self:flex-end;max-width:92%;display:flex;flex-direction:column;align-items:flex-end}
+.iosms .mm{margin:0 4px 3px}
+.iosms .bb{max-width:100%;background:linear-gradient(180deg,#7a5af8,#6941c6);color:#fff;border-bottom-right-radius:4px}
+.iobk{display:flex;gap:10px;align-items:center}
+.iobk .colh{flex:none;font-size:11.5px;font-weight:700;color:#155eef;background:#eff4ff;border-top:3px solid #155eef;border-radius:8px;padding:6px 10px}
+.iobk .oc{flex:1;min-width:0;box-shadow:0 0 0 2px #12b76a,0 14px 26px -12px rgba(18,183,106,.45)}
+.iobk .oc .ntag{display:inline-block}
+.ioar{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.ioar .tt{font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:1;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ioar svg{width:150px;height:24px;overflow:visible}
+.ioar svg path{fill:none;stroke:url(#gm);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.ioar .label{letter-spacing:.1em}
+.iop .pin,.iop .pout{opacity:0;transform:translateY(10px);transition:opacity .6s var(--ease),transform .8s var(--ease)}
+.iop .on{opacity:1;transform:none}
+/* builder In/Out tags */
+.gn .iot{position:absolute;top:-9px;right:10px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:99px;padding:1px 7px;color:#fff;background:#155eef;border:1px solid #155eef}
+.gn .iot.o{background:#12b76a;border-color:#12b76a}
+@media (max-width:860px){
+  .iog{grid-template-columns:1fr;gap:18px}
+  .iop{padding:18px 16px 20px}
+  .ioar svg{width:80px;height:24px;transform:rotate(90deg);margin:22px 0}
+  .ioar .tt{font-size:32px}
+  .iocall{flex-wrap:wrap}.iocall .ring2{margin-left:54px}
+}
+@media (max-width:1100px){
+  .inbox{grid-template-columns:minmax(0,1fr) 230px}.clist{display:none}
+}
+@media (max-width:860px){
+  section{padding:100px 16px 80px;min-height:auto;perspective:1100px}
+  #hero{min-height:100vh}
+  .top{padding:14px 16px}.top .brand{font-size:12px}.top .xs{display:none}
+  .head{margin-bottom:30px}
+  .hstage{height:auto;display:grid;gap:18px;margin-top:30px}
+  .hstage>.par{position:relative!important;left:auto!important;right:auto!important;top:auto!important;margin:0!important;width:100%}
+  .mcall,.ntf,.bkd,.st3{width:100%!important}
+  .ntf .bd{font-size:15.5px}
+  .st3{flex-direction:column}
+  .appf{padding:6px;border-radius:22px}
+  .gw{border-radius:17px}
+  .gnav{display:none}
+  .gtop{padding:0 12px;gap:10px}.gtop .srch{display:none}.gtop .me{margin-left:auto}
+  .gtop .gbtn{display:none}
+  .inbox{grid-template-columns:1fr}
+  .cpan{border-left:0;border-top:1px solid #eaecf0}
+  .thb{min-height:0}
+  .bb{max-width:88%}
+  .aichip{font-size:10.5px;padding:3px 8px}
+  .phead{flex-wrap:wrap}.phead .sum{margin-left:0;width:100%}
+  .board{grid-template-columns:1fr;gap:10px;padding:12px}
+  .col{min-height:0}
+  .chead{flex-wrap:wrap;padding:12px}.chead .gseg{margin-left:0}
+  .calg{grid-template-columns:44px repeat(2,minmax(0,1fr));padding:0 10px 12px}
+  .calg .d1,.calg .d4,.calg .d5{display:none}
+  .ev .tl,.ev .tm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .toast{position:relative;right:auto;bottom:auto;width:auto;margin:0 10px 12px}
+  .dsh{padding:12px}
+  .dtop{flex-wrap:wrap}.dtop .illu{margin-left:0}
+  .tiles{grid-template-columns:1fr 1fr;gap:10px}
+  .tile{padding:12px}.tile .v{font-size:26px}
+  .dgrid{grid-template-columns:1fr}
+  .bars{gap:6px}
+  .word{font-size:34px;padding:14px 24px 16px 18px}.word i{width:30px;height:30px}
+  .word.w1,.word.w2,.word.w3,.word.w4{margin:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation:none!important}}
+</style>
+<style>
+/* job additions */
+.ic40.fb{background:linear-gradient(160deg,#6aa5ff,#1f5fd6);box-shadow:0 8px 16px -8px rgba(21,94,239,.7)}
+.ic40.bell{background:linear-gradient(160deg,#f7b347,#e0851a);box-shadow:0 8px 16px -8px rgba(224,133,26,.7)}
+.evp.b{background:#eff4ff;color:#155eef;border-color:#d1e0ff}
+.evp.a{background:#fffaeb;color:#b54708;border-color:#fedf89}
+.bb u{text-decoration:underline;text-underline-offset:2px;font-weight:700}
+.iosms.plain .bb{background:#155eef}
+/* 01 CONTACT */
+.ctc{display:grid;grid-template-columns:330px minmax(0,1fr);flex:1;min-height:0}
+.ctl{background:#fff;border-right:1px solid #eaecf0;padding:14px 16px 18px}
+.ctl .h{display:flex;gap:10px;align-items:center;padding-bottom:12px;border-bottom:1px solid #f2f4f7}
+.ctl .h .n{font-weight:700;font-size:15px}.ctl .h .s{font-size:11.5px;color:#667085}
+.flds{display:grid;grid-template-columns:1fr 1fr;gap:10px 10px;margin-top:12px}
+.fi{min-width:0}.fi.w{grid-column:1/-1}
+.fi label{display:block;font-size:11.5px;font-weight:600;color:#344054;margin-bottom:4px}
+.fi div{height:34px;border:1px solid #d0d5dd;border-radius:8px;background:#fff;padding:0 10px;display:flex;align-items:center;font-size:12.5px;font-weight:600;box-shadow:0 1px 2px rgba(16,24,40,.05);transition:border-color .5s,box-shadow .5s,background .5s;overflow:hidden}
+.fi div span{opacity:0;transform:translateY(5px);transition:opacity .45s,transform .6s var(--ease);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi.on div{border-color:#6ce9a6;background:#f6fef9;box-shadow:0 0 0 3px rgba(18,183,106,.12)}
+.fi.on div span{opacity:1;transform:none}
+.ctm{padding:14px 16px 16px;display:grid;gap:12px;align-content:start;background:#f9fafb;min-width:0}
+.cc{background:#fff;border:1px solid #eaecf0;border-radius:12px;padding:12px 14px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.cc .ct{display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:700;font-size:13.5px;margin-bottom:6px}
+.cc .ct small{font-size:11px;font-weight:700;color:#667085;background:#f2f4f7;border-radius:6px;padding:2px 7px;white-space:nowrap}
+.qa{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;padding:9px 0;border-top:1px solid #f2f4f7;font-size:12.5px;opacity:.25;transition:opacity .5s}
+.qa:first-of-type{border-top:0}
+.qa.on{opacity:1}
+.qa span:first-child{color:#667085}.qa span:last-child{font-weight:600}
+.actv{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid #f2f4f7;font-size:12.5px;opacity:0;transform:translateY(6px);transition:opacity .5s,transform .7s var(--ease)}
+.actv:first-of-type{border-top:0}
+.actv.on{opacity:1;transform:none}
+.actv i{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;flex:none}
+.actv i svg{width:12px;height:12px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.actv small{display:block;color:#98a2b3;font-size:11px;margin-top:1px}
+/* notifications in conversations side panel */
+.nti{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-top:1px solid #f2f4f7;font-size:12px;opacity:0;transform:translateY(6px);transition:opacity .5s,transform .7s var(--ease)}
+.nti:first-of-type{border-top:0}
+.nti.on{opacity:1;transform:none}
+.nti i{width:20px;height:20px;border-radius:6px;background:#f79009;display:grid;place-items:center;flex:none}
+.nti i svg{width:11px;height:11px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.nti b{display:block;font-size:12px}.nti small{color:#98a2b3;font-size:11px}
+/* pipeline: 4 stages */
+.board{grid-template-columns:repeat(4,minmax(0,1fr))}
+/* tested end to end */
+.tested{margin-top:26px;padding:18px 22px 20px}
+#cal .toast{right:auto;left:80px}
+.tested .th{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tested .th b{font-size:17px;letter-spacing:-.01em}
+.tested .th .pill{margin-left:auto}
+.tsteps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:14px}
+.tsteps div{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;font-weight:600;color:var(--ink2);opacity:.3;transition:opacity .6s;line-height:1.3}
+.tsteps div.on{opacity:1}
+.tsteps small{display:block;font-size:12px;font-weight:500;color:var(--ink3);margin-top:2px}
+/* builder note */
+.gnote{position:absolute;width:200px;background:#fffaeb;border:1px solid #fedf89;border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.4;color:#7a2e0e;box-shadow:0 1px 3px rgba(16,24,40,.08);opacity:0;transition:opacity .6s}
+.gnote.on{opacity:1}
+.gnote b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#b54708;margin-bottom:3px}
+@media (max-width:860px){
+  .board{grid-template-columns:1fr}
+  #cal .toast{left:auto}
+  .ctc{grid-template-columns:1fr}
+  .ctl{border-right:0;border-bottom:1px solid #eaecf0}
+  .calg .d1,.calg .d2,.calg .d5{display:none}
+  .calg .d4{display:block}
+  .tsteps{grid-template-columns:1fr;gap:12px}
+  .tested{padding:16px}
+  .tested .th .pill{margin-left:0}
+}
+</style>
+
+<div class="sky"></div>
+<div class="haze"><i></i><i></i><i></i></div>
+<div class="top"><div class="brand"><b></b>Roofing lead follow-up<span class="xs"> · GoHighLevel</span></div><div class="chip">Sample data</div></div>
+
+<main>
+<!-- HERO -->
+<section id="hero" data-run="hero">
+  <div class="wrap">
+    <div class="kicker fade">Tuesday · 9:14 AM · a Meta form lead</div>
+    <h1 class="fade" style="--d:.1s">Every Meta lead,<br><em>texted and booked.</em></h1>
+    <p class="sub fade" style="--d:.2s">A homeowner fills in your Instant Form. GoHighLevel saves her, texts her in seconds and follows up until she books.</p>
+    <div class="hstage">
+      <div class="par" data-z="-0.6" style="left:0;top:56px"><div class="panel hc mcall rise" style="--d:.35s">
+        <div class="h"><span class="ic40 fb"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span><div><div class="t">Facebook lead form</div><div class="s">Karen Mitchell · 9:14 AM</div></div></div>
+        <div class="sent" id="hsent"><span class="tick"></span>Instant text sent in 6 sec</div>
+      </div></div>
+      <div class="par" data-z="0.5" style="left:50%;top:0;margin-left:-225px"><div class="panel hc ntf rise" style="--d:.5s">
+        <div class="app"><span class="ic40 bell"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0112 0v5l2 2H4z"/><path d="M10 21h4"/></svg></span><span>Internal notification</span><span>now</span></div>
+        <div class="tt">New Meta lead</div>
+        <div class="bd">Karen Mitchell · Roof and attic ventilation<br>(555) 018-4432 · ZIP 75089</div>
+        <div class="tags"><span class="pill blue">Texted in 6 sec</span><span class="pill">New Lead</span></div>
+      </div></div>
+      <div class="par" data-z="1.1" style="right:0;top:176px"><div class="panel hc bkd rise" style="--d:.8s">
+        <div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="rgba(150,170,200,.25)" stroke-width="7"/><circle id="hring" cx="50" cy="50" r="44" fill="none" stroke="url(#gm)" stroke-width="7" stroke-linecap="round" stroke-dasharray="276.5" stroke-dashoffset="276.5"/></svg><div class="num" id="hmin">0:00</div></div>
+        <div><div class="t">Form to first text</div><div class="s">Nobody had to see the lead first</div></div>
+      </div></div>
+      <div class="par" data-z="0.9" style="left:50%;top:300px;margin-left:-225px"><div class="panel st3 rise" style="--d:1s">
+        <div id="st1"><span class="tick"></span>Captured</div><div id="st2"><span class="tick"></span>Texted</div><div id="st3"><span class="tick"></span>Booked</div>
+      </div></div>
+    </div>
+    <div class="scrollcue fade" style="--d:1.4s">Scroll<b></b></div>
+  </div>
+</section>
+
+<!-- IN -> OUT -->
+<section id="io" data-run="io">
+  <div class="wrap">
+    <div class="head c"><h2 class="fade">A Meta form in.<br><em>A booked inspection out.</em></h2></div>
+    <div class="iog">
+      <div class="iocol par" data-z="0.4">
+        <div><div class="panel iop rise" style="--d:.2s">
+          <div class="label">What goes in</div>
+          <div class="iocall pin"><span class="ic40 fb"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span><div><div class="t">Facebook lead form</div><div class="s">Karen Mitchell<br>(555) 018-4432</div></div><span class="ring2" style="color:#155eef;background:#eff4ff;border-color:#d1e0ff">Tue · 9:14 AM</span></div>
+          <div class="iorow pin"><span>Needs</span><span>Roof and attic ventilation</span></div>
+          <div class="iorow pin"><span>Address</span><span>2417 Ridgeview Dr · 75089</span></div>
+          <div class="iorow pin"><span>Best time</span><span>Weekdays after 5 PM</span></div>
+        </div></div>
+        <p class="iocap fade" style="--d:.5s">Karen fills in your Instant Form on Facebook.</p>
+      </div>
+      <div class="ioar fade" style="--d:.6s">
+        <div class="tt" id="iot">0:00</div>
+        <svg viewBox="0 0 150 24" id="ioarr"><path d="M4 12H144M134 3l10 9-10 9"/></svg>
+        <div class="label">to first text</div>
+      </div>
+      <div class="iocol par" data-z="0.9">
+        <div><div class="panel iop out rise" style="--d:.45s">
+          <div class="label">What comes out</div>
+          <div class="ioev pout"><div class="tm">Thu 5:30 – 6:30 PM · Roof inspections</div><div class="tl">Roof and attic inspection</div><div class="sl">Karen Mitchell · 2417 Ridgeview Dr</div></div>
+          <div class="iosms plain pout"><span class="mm">Appointment confirmation · Wed 11:09 AM</span><div class="bb">You're booked for Thursday at 5:30 PM at 2417 Ridgeview Dr. See you then!</div></div>
+          <div class="iobk pout"><span class="colh">Appointment Booked</span><div class="oc"><div class="n">Karen Mitchell<span class="ntag">All fields</span></div><div class="j">Roof and attic ventilation</div></div></div>
+        </div></div>
+        <p class="iocap fade" style="--d:.8s">The inspection on your calendar, her confirmation text and her full record in Appointment Booked.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SCREEN 01 CONTACT -->
+<section id="contact" data-run="contact">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>01</span>Input</div><h2 class="fade" style="--d:.1s">Every field, <em>captured.</em></h2><p class="sub fade" style="--d:.2s">The form lands as a contact with her details, how she wants to be reached and every qualification answer.</p></div>
+    <div class="par" data-z="0.4"><div class="panel appf rise" style="--d:.25s"><div class="gw"><div class="gnav" data-a="3"></div><div class="gbody">
+      <div class="gtop"><span class="pt">Contacts › Karen Mitchell</span><div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg>Search contacts</div><span class="me">RF</span></div>
+      <div class="ctc">
+        <div class="ctl">
+          <div class="h"><span class="av b">KM</span><div><div class="n">Karen Mitchell</div><div class="s">Created Tue 9:14 AM · Facebook Lead Form</div></div></div>
+          <div class="flds" id="flds">
+            <div class="fi"><label>First name</label><div><span>Karen</span></div></div>
+            <div class="fi"><label>Last name</label><div><span>Mitchell</span></div></div>
+            <div class="fi"><label>Phone</label><div><span>(555) 018-4432</span></div></div>
+            <div class="fi"><label>Email</label><div><span>karen.m@example.com</span></div></div>
+            <div class="fi w"><label>Street address</label><div><span>2417 Ridgeview Dr</span></div></div>
+            <div class="fi"><label>ZIP code</label><div><span>75089</span></div></div>
+            <div class="fi"><label>Preferred contact</label><div><span>Text message</span></div></div>
+            <div class="fi w"><label>Best time to contact</label><div><span>Weekdays after 5 PM</span></div></div>
+          </div>
+        </div>
+        <div class="ctm">
+          <div class="cc"><div class="ct">Meta qualification answers<small>Custom fields</small></div>
+            <div class="qa"><span>What do you need help with?</span><span>Roof inspection and attic ventilation</span></div>
+            <div class="qa"><span>Do you own the home?</span><span>Yes</span></div>
+            <div class="qa"><span>How old is the roof?</span><span>15 to 20 years</span></div>
+            <div class="qa"><span>Any leaks or hot rooms?</span><span>Upstairs gets very hot</span></div>
+          </div>
+          <div class="cc"><div class="ct">Activity<small>Tue</small></div>
+            <div class="actv"><i style="background:#155eef"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6"/></svg></i><div>Contact created from Facebook Lead Form<small>Roof and Attic Inspection form · 9:14 AM</small></div></div>
+            <div class="actv"><i style="background:#12b76a"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></i><div>Instant SMS delivered<small>Meta lead SMS follow-up · 9:14 AM</small></div></div>
+            <div class="actv"><i style="background:#f79009"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0112 0v5l2 2H4z"/></svg></i><div>Office notified of new lead<small>Internal notification · 9:14 AM</small></div></div>
+            <div class="actv"><i style="background:#7a5af8"><svg viewBox="0 0 24 24"><path d="M4 6h4v12H4zM10 6h4v8h-4zM16 6h4v5h-4z"/></svg></i><div>Opportunity added to Roof Leads<small>Stage: New Lead · 9:14 AM</small></div></div>
+          </div>
+        </div>
+      </div>
+    </div></div></div></div>
+  </div>
+</section>
+
+<!-- SCREEN 02 CONVERSATIONS -->
+<section id="inbox" data-run="inbox">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>02</span>Conversations</div><h2 class="fade" style="--d:.1s">Texted now, <em>followed up after.</em></h2><p class="sub fade" style="--d:.2s">She gets a text right away and a follow-up with the booking link. When she replies, the follow-ups stop and you're notified.</p></div>
+    <div class="par" data-z="0.4"><div class="panel appf rise" style="--d:.25s"><div class="gw"><div class="gnav" data-a="1"></div><div class="gbody">
+      <div class="gtop"><span class="pt">Conversations</span><div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg>Search conversations</div><span class="me">RF</span></div>
+      <div class="inbox">
+        <div class="clist">
+          <div class="ctabs"><span>Unread</span><span class="a">Recents</span><span>Starred</span><span>All</span></div>
+          <div class="ci act"><span class="av b">KM</span><div><div class="n">Karen Mitchell<small id="ciT">9:14 AM</small></div><div class="p" id="ciP">Facebook lead form</div></div></div>
+          <div class="ci"><span class="av o">DR</span><div><div class="n">Dave Ruiz<small>8:52 AM</small></div><div class="p">Thursday works, thanks.</div></div></div>
+          <div class="ci"><span class="av p">LB</span><div><div class="n">Linda Brooks<small>Mon</small></div><div class="p">Follow-up 1 · booking link</div></div></div>
+          <div class="ci"><span class="av t">TN</span><div><div class="n">Tom Nguyen<small>Mon</small></div><div class="p">Is the inspection free?</div></div></div>
+          <div class="ci"><span class="av g">SP</span><div><div class="n">Sara Patel<small>Sun</small></div><div class="p">Booked for Friday 5 PM.</div></div></div>
+          <div class="ci"><span class="av">JO</span><div><div class="n">James Olsen<small>Sun</small></div><div class="p">Follow-up 2 · booking link</div></div></div>
+        </div>
+        <div class="thread">
+          <div class="thh"><span class="av b">KM</span><div><div class="n">Karen Mitchell</div><div class="s">(555) 018-4432 · SMS</div></div><span class="aichip" style="color:#155eef;background:#eff4ff;border-color:#d1e0ff"><i style="background:#155eef;box-shadow:0 0 0 3px rgba(21,94,239,.2)"></i>Meta lead workflow · on</span></div>
+          <div class="thb" id="thb">
+            <div class="mw e" data-fx="t0 n0 c:Facebook lead form"><span class="evp b"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6"/></svg>Facebook lead form · Tue 9:14 AM</span></div>
+            <div class="mw o" data-fx="t1 c:Hi Karen, it's the roofing team."><span class="mm">Instant SMS · Tue 9:14 AM</span><div class="bb">Hi Karen, it's the roofing team. We got your request about the roof and attic ventilation at 2417 Ridgeview Dr. We'll get a free inspection set up for you.</div></div>
+            <div class="mw o" data-fx="s:Follow Up c:Follow-up 1 · booking link"><span class="mm">Follow-up 1 · Wed 9:14 AM · no reply yet</span><div class="bb">Hi Karen, want to get that inspection on the calendar? Pick any open time here: <u>Book your roof inspection</u></div></div>
+            <div class="mw i" data-fx="t2 n1 s:Contacted f:stop c:Can someone come Thursday after 5?"><span class="mm">Wed 11:02 AM</span><div class="bb">Sorry, busy week. The upstairs gets really hot in the afternoon. Can someone come Thursday after 5?</div></div>
+            <div class="mw e"><span class="evp a"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>Contact replied · follow-ups stopped</span></div>
+            <div class="mw o" data-fx="c:Pick the time that works here."><span class="mm">Booking link SMS · Wed 11:02 AM</span><div class="bb">Thanks Karen! Thursday evening is open. Pick the time that works here and you're locked in: <u>Book your roof inspection</u></div></div>
+            <div class="mw e" data-fx="t3 s:Appointment Booked a:Thu 5:30 PM"><span class="evp g"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 14l2 2 4-4"/></svg>Appointment booked · Thu 5:30 PM</span></div>
+            <div class="typ" id="typ"><i></i><i></i><i></i></div>
+          </div>
+          <div class="comp"><b>SMS</b><span>Type a message</span><i class="snd"><svg viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2-7z"/></svg></i></div>
+        </div>
+        <div class="cpan">
+          <div class="h"><span class="av b">KM</span><div><div class="n">Karen Mitchell</div><div class="s">2417 Ridgeview Dr · 75089</div></div></div>
+          <div class="lb">Tags</div>
+          <div class="tgs" id="tgs"><span class="tg">meta lead</span><span class="tg">instant sms sent</span><span class="tg r">replied</span><span class="tg g">booked</span></div>
+          <div class="lb">Opportunity</div>
+          <div class="kv"><span>Pipeline</span><span>Roof Leads</span></div>
+          <div class="kv"><span>Stage</span><span><span class="stg" id="opst">New Lead</span></span></div>
+          <div class="kv"><span>Follow-ups</span><span id="fup">Running</span></div>
+          <div class="kv"><span>Appointment</span><span id="apw">None yet</span></div>
+          <div class="lb">Internal notifications</div>
+          <div class="nti" id="nt0"><i><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0112 0v5l2 2H4z"/></svg></i><div><b>New lead</b><small>Sent to the office · Tue 9:14 AM</small></div></div>
+          <div class="nti" id="nt1"><i><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0112 0v5l2 2H4z"/></svg></i><div><b>Lead replied</b><small>Sent to the office · Wed 11:02 AM</small></div></div>
+        </div>
+      </div>
+    </div></div></div></div>
+  </div>
+</section>
+
+<!-- SCREEN 03 OPPORTUNITIES -->
+<section id="pipe" data-run="pipe">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>03</span>Opportunities</div><h2 class="fade" style="--d:.1s">Every lead, <em>one board.</em></h2><p class="sub fade" style="--d:.2s">New leads, contacted leads, appointments and follow-ups each have a column, and cards move on their own.</p></div>
+    <div class="par" data-z="0.4"><div class="panel appf rise" style="--d:.25s"><div class="gw"><div class="gnav" data-a="4"></div><div class="gbody">
+      <div class="gtop"><span class="pt">Opportunities</span><div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg>Search opportunities</div><span class="gbtn">+ Add opportunity</span><span class="me">RF</span></div>
+      <div class="phead"><span class="gsel">Roof Leads</span><div class="gseg"><span class="a">Board</span><span>List</span></div><span class="sum"><b id="ptot">9</b> opportunities · Illustrative</span></div>
+      <div class="board" id="board">
+        <div class="col" style="--sc:#98a2b3" data-s="New Lead"><div class="ch"><b>New Lead</b><span class="cnt"></span></div><div class="tot">Just came in</div><div class="cards">
+          <div class="oc" id="karen"><div class="n">Karen Mitchell<span class="ntag">Booked</span></div><div class="j">Roof and attic ventilation</div><div class="v">ZIP 75089<small>Meta form</small></div></div>
+          <div class="oc"><div class="n">Greg Holt<span class="av">RF</span></div><div class="j">Storm damage check</div><div class="v">ZIP 75098<small>Meta form</small></div></div>
+        </div></div>
+        <div class="col" style="--sc:#0ba5ec" data-s="Contacted"><div class="ch"><b>Contacted</b><span class="cnt"></span></div><div class="tot">Replied to a text</div><div class="cards">
+          <div class="oc"><div class="n">Tom Nguyen<span class="av t">RF</span></div><div class="j">Attic fan quote</div><div class="v">ZIP 75087<small>Meta form</small></div></div>
+          <div class="oc"><div class="n">Amy Coleman<span class="av t">RF</span></div><div class="j">Roof leak</div><div class="v">ZIP 75032<small>Meta form</small></div></div>
+        </div></div>
+        <div class="col" style="--sc:#155eef" data-s="Appointment Booked" id="bookedCol"><div class="ch"><b>Appointment Booked</b><span class="cnt"></span></div><div class="tot">Inspection on the calendar</div><div class="cards">
+          <div class="oc"><div class="n">Dave Ruiz<span class="av b">RF</span></div><div class="j">Roof inspection</div><div class="v">Thu 4:00 PM<small>Meta form</small></div></div>
+          <div class="oc"><div class="n">Sara Patel<span class="av b">RF</span></div><div class="j">Ridge vent install</div><div class="v">Fri 5:00 PM<small>Meta form</small></div></div>
+        </div></div>
+        <div class="col" style="--sc:#f79009" data-s="Follow Up"><div class="ch"><b>Follow Up</b><span class="cnt"></span></div><div class="tot">No reply yet</div><div class="cards">
+          <div class="oc"><div class="n">Linda Brooks<span class="av o">RF</span></div><div class="j">Hot attic</div><div class="v">Follow-up 1<small>Meta form</small></div></div>
+          <div class="oc"><div class="n">James Olsen<span class="av o">RF</span></div><div class="j">Shingle repair</div><div class="v">Follow-up 2<small>Meta form</small></div></div>
+        </div></div>
+      </div>
+    </div></div></div></div>
+  </div>
+</section>
+
+<!-- SCREEN 04 CALENDAR + TESTED -->
+<section id="cal" data-run="cal">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>04</span>Output</div><h2 class="fade" style="--d:.1s">Inspection booked, <em>tested end to end.</em></h2><p class="sub fade" style="--d:.2s">Karen's inspection lands on your calendar, and a test lead ran the whole path before anything went live.</p></div>
+    <div class="par" data-z="0.4"><div class="panel appf rise" style="--d:.25s"><div class="gw"><div class="gnav" data-a="2"></div><div class="gbody">
+      <div class="gtop"><span class="pt">Calendars</span><div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg>Search appointments</div><span class="gbtn">+ New appointment</span><span class="me">RF</span></div>
+      <div class="chead"><div class="ar"><span>‹</span><span>›</span></div><span class="rng">Oct 5 – 9, 2026</span><span class="gsel">Roof inspections</span><div class="gseg"><span>Day</span><span class="a">Week</span><span>Month</span></div></div>
+      <div class="calg" id="calg">
+        <div></div>
+        <div class="dh d1">MON<b>5</b></div><div class="dh d2">TUE<b>6</b></div><div class="dh today">WED<b>7</b></div><div class="dh d4">THU<b>8</b></div><div class="dh d5">FRI<b>9</b></div>
+        <div class="tcol" id="tcol"></div>
+        <div class="dcol d1"></div><div class="dcol d2"></div><div class="dcol today"></div><div class="dcol d4"></div><div class="dcol d5"></div>
+      </div>
+      <div class="toast" id="toast"><span class="ic40"><svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg></span><div><b>New appointment</b><small>Karen Mitchell · Thu 5:30 PM · booked from the SMS link</small></div></div>
+    </div></div></div></div>
+    <div class="par" data-z="0.7"><div class="panel tested rise" style="--d:.45s">
+      <div class="th"><b>Tested end to end</b><span class="label">Test lead · before go-live</span><span class="pill">5 of 5 passed</span></div>
+      <div class="tsteps" id="tsteps">
+        <div><span class="tick"></span><span>Test form submitted<small>Meta lead form testing tool</small></span></div>
+        <div><span class="tick"></span><span>Contact created<small>All fields and answers mapped</small></span></div>
+        <div><span class="tick"></span><span>Instant SMS delivered<small>Plus new lead alert</small></span></div>
+        <div><span class="tick"></span><span>Reply stopped follow-ups<small>Plus reply alert</small></span></div>
+        <div><span class="tick"></span><span>Appointment booked<small>From the booking link</small></span></div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- PLATFORM SCREEN: GHL BUILDER -->
+<section id="ghs" data-run="gh">
+  <div class="wrap">
+    <div class="head c"><div class="eyebrow fade"><span>05</span>In your GoHighLevel</div><h2 class="fade" style="--d:.1s">This is what it will look like<br><em>in your GoHighLevel.</em></h2><p class="sub fade" style="--d:.2s">One workflow: the form creates the contact, texts her, alerts you, and follows up until she replies.</p><div class="chip ghlab fade" style="--d:.2s">Your workflow in GoHighLevel · illustrative</div></div>
+    <div class="par" data-z="0.5"><div class="ghwrap rise" style="--d:.3s"><div class="panel ghframe"><div class="ghbox" id="ghbox"><div class="gh" id="ghui">
+      <div class="bar1">
+        <div class="back">‹ Back to Workflows</div>
+        <div class="wname">Meta lead SMS follow-up</div>
+        <div class="tabs"><span class="a">Builder</span><span>Settings</span><span>Enrollment History</span><span>Execution Logs</span></div>
+        <div class="tog"><span id="togl">Draft</span><div class="sw"></div><span>Publish</span></div>
+        <div class="save">Save</div>
+      </div>
+      <div class="canvas" id="gcanvas">
+        <svg class="lines" id="glines"></svg>
+        <div class="zoom"><span>−</span><span>100%</span><span>+</span></div>
+      </div>
+      <div class="side">
+        <div class="sh"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></span><div><b>SMS</b><small>Sends a text to the contact</small></div><span class="x">×</span></div>
+        <div class="sb">
+          <div class="f"><label>Action name</label><div>Instant SMS</div></div>
+          <div class="f dd"><label>From number</label><div>Main business line</div></div>
+          <div class="f msg"><label>Message</label><div>Hi <em>{{contact.first_name}}</em>, it's the roofing team. We got your request about the roof and attic ventilation at <em>{{contact.address1}}</em>. We'll get a free inspection set up for you.</div></div>
+          <div class="f dd"><label>Send</label><div>Immediately</div></div>
+        </div>
+        <div class="foot3"><span>Cancel</span><span>Save action</span></div>
+      </div>
+    </div></div></div></div></div>
+  </div>
+</section>
+
+<!-- CLOSE -->
+<section id="close" data-run="close">
+  <div class="wrap">
+    <div class="head c"><p class="sub fade">Each Meta lead is captured in full, texted in seconds, followed up until she replies and booked on your calendar.</p></div>
+    <div class="words">
+      <div class="par" data-z="0.3"><div class="panel word w1 rise" style="--d:.1s"><i></i>Captured.</div></div>
+      <div class="par" data-z="0.8"><div class="panel word w2 rise" style="--d:.35s"><i></i>Texted.</div></div>
+      <div class="par" data-z="1.2"><div class="panel word w3 rise" style="--d:.6s"><i></i>Followed up.</div></div>
+      <div class="par" data-z="1.6"><div class="panel word w4 rise" style="--d:.85s"><i></i><span>Booked.</span></div></div>
+    </div>
+    <div class="foot fade" style="--d:1.2s">Your GoHighLevel · roofing lead follow-up</div>
+  </div>
+</section>
+</main>
+
+<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="gm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8ec0ff"/><stop offset="1" stop-color="#2f74f5"/></linearGradient></defs></svg>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const ease=t=>1-Math.pow(1-t,3);
+function count(el,a,b,dur,fmt,cb){const t0=performance.now();(function f(n){const p=Math.min(1,Math.max(0,(n-t0)/dur)),v=a+(b-a)*ease(p);if(cb)cb(v,p);if(el)el.textContent=fmt?fmt(v):Math.round(v);if(p<1)requestAnimationFrame(f)})(t0)}
+const clock=v=>{v=Math.round(v);return Math.floor(v/60)+':'+String(v%60).padStart(2,'0')};
+
+/* app nav */
+const NAV=['<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+ '<path d="M4 5h16v11H9l-5 4z"/>','<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+ '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>','<path d="M4 6h4v12H4zM10 6h4v8h-4zM16 6h4v5h-4z"/>',
+ '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>','<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'];
+document.querySelectorAll('.gnav').forEach(n=>{const a=+n.dataset.a;n.innerHTML='<span class="acct">RF</span>'+NAV.map((p,i)=>'<span class="ni'+(i===a?' a':'')+'"><svg viewBox="0 0 24 24">'+p+'</svg></span>').join('')});
+
+/* pipeline counts */
+function recount(){let n=0;document.querySelectorAll('#board .col').forEach(c=>{const k=c.querySelectorAll('.oc').length;n+=k;c.querySelector('.cnt').textContent=k+(k===1?' opportunity':' opportunities')});$('ptot').textContent=n}
+recount();
+function flip(card,col){const a=card.getBoundingClientRect();col.querySelector('.cards').prepend(card);const b=card.getBoundingClientRect();
+ card.style.transition='none';card.style.transform='translate('+(a.left-b.left)+'px,'+(a.top-b.top)+'px)';card.offsetWidth;
+ card.style.transition='transform 1.2s cubic-bezier(.16,1,.3,1)';card.style.transform='';recount()}
+const colOf=s=>document.querySelector('#board .col[data-s="'+s+'"]');
+
+/* calendar: 10 AM to 7 PM */
+const HR=46,H0=10;const tc=$('tcol');for(let h=H0;h<=H0+9;h++){const s=document.createElement('span');s.style.top=((h-H0)*HR)+'px';s.textContent=(h>12?h-12:h)+(h>=12?' PM':' AM');if(h>H0)tc.appendChild(s)}
+const dcols=document.querySelectorAll('#calg .dcol');
+const EV=[[0,10.5,1,'blue','Roof inspection','Mark Hill · 88 Oak Ln'],[0,14,1.5,'vio','Ridge vent install','Ana Cruz · 12 Elm Ct'],
+ [1,11,1.5,'amb','Storm damage check','Greg Holt · 5 Bay St'],[1,16,1,'blue','Roof inspection','Pete Ward · 9 Mill Rd'],
+ [2,10,2,'vio','Attic fan install','Joy Lin · 300 Hill Ave'],[2,15,1,'teal','Leak check','Amy Coleman · 7 Lake Dr'],
+ [3,11.5,1,'blue','Attic fan quote','Tom Nguyen · 41 Pine St'],[3,16,1,'teal','Roof inspection','Dave Ruiz · 16 Ash Way'],
+ [4,10.5,1.5,'amb','Shingle repair','Rob King · 22 Cedar Ln'],[4,17,1,'blue','Ridge vent install','Sara Patel · 70 Bay St']];
+const tfmt=h=>{const H=Math.floor(h),m=Math.round((h-H)*60);return (H>12?H-12:H)+':'+String(m).padStart(2,'0')+(H>=12?' PM':' AM')};
+function addEv(d,s,len,c,t,sub,extra){const e=document.createElement('div');e.className='ev '+c+(extra||'');e.style.top=((s-H0)*HR+2)+'px';e.style.height=(len*HR-4)+'px';
+ e.innerHTML='<div class="tm">'+tfmt(s)+' – '+tfmt(s+len)+'</div><div class="tl">'+t+'</div>'+(len>=1.5?'<div class="sl">'+sub+'</div>':'');dcols[d].appendChild(e);return e}
+EV.forEach(v=>addEv(...v));
+const nev=addEv(3,17.5,1,'','Roof and attic inspection','Karen Mitchell · 2417 Ridgeview Dr',' new');nev.insertAdjacentHTML('beforeend','<span class="nb">NEW</span>');
+
+/* GoHighLevel builder */
+const IC={form:['#155eef','<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>'],
+ user:['#0ba5ec','<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>'],
+ sms:['#12b76a','<path d="M4 5h16v11H9l-5 4z"/>'],
+ opp:['#7a5af8','<path d="M4 6h4v12H4zM10 6h4v8h-4zM16 6h4v5h-4z"/>'],wait:['#667085','<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>'],
+ ifel:['#0ba5ec','<path d="M6 3v6a6 6 0 006 6h6M18 21v-6M6 21V9"/>'],
+ bell:['#f04438','<path d="M6 16V11a6 6 0 0112 0v5l2 2H4z"/><path d="M10 21h4"/>']};
+const N=[
+ {x:390,t:'Facebook Lead Form Submitted',s:'Roof and Attic Inspection form',i:'form',c:'trig',w:268},
+ {x:390,t:'Create/Update Contact',s:'Form fields + Meta answers',i:'user'},
+ {x:390,t:'Send SMS',s:'Instant SMS',i:'sms',c:'sel'},
+ {x:390,t:'Internal Notification',s:'New lead · text the office',i:'bell'},
+ {x:390,t:'Create/Update Opportunity',s:'Roof Leads · New Lead',i:'opp'},
+ {x:390,t:'Wait',s:'Goal: contact replied · 1 day',i:'wait'},
+ {x:390,t:'If/Else',s:'Contact replied?',i:'ifel'},
+ {x:210,t:'Internal Notification',s:'Lead replied · text the office',i:'bell'},
+ {x:210,t:'Update Opportunity',s:'Stage: Contacted',i:'opp'},
+ {x:210,t:'Send SMS',s:'Booking link · pick a time',i:'sms',io:1},
+ {x:570,t:'Update Opportunity',s:'Stage: Follow Up',i:'opp'},
+ {x:570,t:'Send SMS',s:'Follow-up 1 · booking link',i:'sms'},
+ {x:570,t:'Wait',s:'Goal: contact replied · 2 days',i:'wait'},
+ {x:570,t:'Send SMS',s:'Follow-up 2 · booking link',i:'sms',io:1}];
+const W=236,cv=$('gcanvas'),gn=[];
+N.forEach(n=>{const d=document.createElement('div');d.className='gn '+(n.c||'');d.style.left=(n.x-(n.w||W)/2)+'px';if(n.w)d.style.width=n.w+'px';
+ d.innerHTML=(n.c==='trig'?'<span class="hdr">Trigger</span><span class="iot">In</span>':'')+(n.io?'<span class="iot o">Out</span>':'')+'<span class="ico" style="background:'+IC[n.i][0]+'"><svg viewBox="0 0 24 24">'+IC[n.i][1]+'</svg></span><div><div class="tt">'+n.t+'</div><div class="ss">'+n.s+'</div></div>';cv.appendChild(d);gn.push(d)});
+const add=document.createElement('div');add.className='gn addt';add.textContent='+ Add New Trigger';add.style.left=(390+268/2+20)+'px';cv.appendChild(add);
+const ends=[0,1].map(()=>{const e=document.createElement('div');e.className='gend';e.textContent='END';cv.appendChild(e);return e});
+const G=36,H=gn.map(()=>56);
+const place=(k,y)=>{N[k].y=y;gn[k].style.top=y+'px';return y+H[k]};
+let y=place(0,36);add.style.top='36px';add.style.height=H[0]+'px';
+for(let k=1;k<=6;k++)y=place(k,y+G);
+const splitY=y+24,brY=y+64;
+let ya=place(7,brY);for(let k=8;k<=9;k++)ya=place(k,ya+G);
+let yb=place(10,brY);for(let k=11;k<=13;k++)yb=place(k,yb+G);
+const endA=ya+26,endB=yb+26;ends[0].style.left='210px';ends[0].style.top=endA+'px';ends[1].style.left='570px';ends[1].style.top=endB+'px';
+const note=document.createElement('div');note.className='gnote';note.innerHTML='<b>Reply goal</b>If she replies at any point, the follow-up texts stop and she moves to the Replied branch.';
+note.style.left='532px';note.style.top=(N[5].y-8)+'px';cv.appendChild(note);
+$('ghui').style.height=(58+Math.max(endA,endB)+64)+'px';
+const bot=k=>N[k].y+H[k];let P='';
+const plus=(x,yy)=>{const p=document.createElement('div');p.className='gplus';p.style.left=x+'px';p.style.top=yy+'px';p.textContent='+';cv.appendChild(p)};
+[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[7,8],[8,9],[10,11],[11,12],[12,13]].forEach(([a,b])=>{P+='M'+N[a].x+' '+bot(a)+'V'+N[b].y;plus(N[a].x,(bot(a)+N[b].y)/2)});
+P+='M390 '+bot(6)+'V'+splitY+'M210 '+brY+'V'+splitY+'H570V'+brY;
+P+='M210 '+bot(9)+'V'+endA+'M570 '+bot(13)+'V'+endB;
+$('glines').innerHTML='<path d="'+P+'"/>';
+[['Replied',210,'y'],['No reply',570,'']].forEach(([t,x,c])=>{const b=document.createElement('div');b.className='gbl '+c;b.style.left=x+'px';b.style.top=((splitY+brY)/2)+'px';b.textContent=t;cv.appendChild(b)});
+function fitGH(){const box=$('ghbox'),g=$('ghui'),narrow=innerWidth<700;g.style.width=narrow?'780px':'1100px';g.classList.toggle('narrow',narrow);g.querySelector('.side').style.display=narrow?'none':'';g.querySelector('.canvas').style.right=narrow?'0':'320px';
+ const baseW=narrow?780:1100;const avail=Math.min(baseW,box.closest('.ghwrap').clientWidth-24);const s=Math.min(1,avail/baseW);g.style.transform='scale('+s+')';box.style.width=baseW*s+'px';box.style.height=g.offsetHeight*s+'px'}
+fitGH();addEventListener('resize',fitGH);
+
+/* runners */
+const R={
+ hero:async()=>{count($('hmin'),0,6,1600,clock,v=>{$('hring').style.strokeDashoffset=276.5*(1-v/6)});
+  await wait(700);$('st1').classList.add('on');await wait(700);$('hsent').classList.add('on');$('st2').classList.add('on');await wait(1100);$('st3').classList.add('on')},
+ io:async()=>{const it=[...document.querySelectorAll('#io .pin,#io .pout')];await wait(500);
+  for(const e of it.filter(e=>e.classList.contains('pin'))){e.classList.add('on');await wait(220)}
+  count($('iot'),0,6,1200,clock);await wait(1300);
+  for(const e of it.filter(e=>e.classList.contains('pout'))){e.classList.add('on');await wait(380)}},
+ contact:async()=>{await wait(700);for(const f of document.querySelectorAll('#flds .fi')){f.classList.add('on');await wait(230)}
+  for(const q of document.querySelectorAll('#contact .qa')){q.classList.add('on');await wait(260)}
+  for(const a of document.querySelectorAll('#contact .actv')){a.classList.add('on');await wait(320)}},
+ inbox:async()=>{const m=[...document.querySelectorAll('#thb .mw')],ty=$('typ'),tg=[...document.querySelectorAll('#tgs .tg')];
+  const tag=async i=>{tg[i].classList.add('on');await wait(30);tg[i].classList.add('in2')};
+  await wait(600);
+  for(const el of m){
+   if(el.classList.contains('i')){el.parentNode.insertBefore(ty,el);ty.classList.add('show');await wait(750);ty.classList.remove('show')}
+   el.classList.add('show');
+   const fx=(el.dataset.fx||'');
+   fx.replace(/c:(.*)$/,(_,p)=>{$('ciP').textContent=p});
+   fx.split(' ').forEach(f=>{
+    if(/^t\d$/.test(f))tag(+f[1]);
+    if(/^n\d$/.test(f))$('nt'+f[1]).classList.add('on');
+    if(f==='f:stop'){$('fup').textContent='Stopped · replied';$('fup').style.color='#b54708'}
+   });
+   const s=fx.match(/s:(Follow Up|Contacted|Appointment Booked)/);if(s){$('opst').textContent=s[1];$('opst').classList.toggle('g',s[1]==='Appointment Booked')}
+   const a=fx.match(/a:(Thu 5:30 PM)/);if(a)$('apw').textContent=a[1];
+   await wait(650)}},
+ pipe:async()=>{const c=$('karen');await wait(1200);c.classList.add('mv');flip(c,colOf('Follow Up'));await wait(1500);
+  flip(c,colOf('Contacted'));await wait(1500);flip(c,$('bookedCol'));await wait(1250);c.classList.remove('mv');c.classList.add('done')},
+ cal:async()=>{await wait(1100);nev.classList.add('drop');await wait(700);$('toast').classList.add('on');await wait(400);
+  for(const s of document.querySelectorAll('#tsteps>div')){s.classList.add('on');await wait(380)}},
+ gh:async()=>{await wait(900);gn[0].classList.add('on');add.classList.add('on');await wait(180);
+  for(const k of [1,2,3,4,5,6,7,10,8,11,9,12,13]){gn[k].classList.add('on');if(k===5)note.classList.add('on');if(k===9)ends[0].classList.add('on');if(k===13)ends[1].classList.add('on');await wait(160)}
+  await wait(300);$('ghui').classList.add('panelon');await wait(1200);$('ghui').classList.add('live');$('togl').textContent='Published'},
+ close:async()=>{}
+};
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const s=e.target;s.classList.add('in');io.unobserve(s);const f=R[s.dataset.run];if(f)f()}}),{threshold:.22});
+document.querySelectorAll('section').forEach(s=>io.observe(s));
+
+/* spatial parallax */
+const pars=[...document.querySelectorAll('.par')].map(el=>({el,z:parseFloat(el.dataset.z||0),sec:el.closest('section')}));
+let mx=0,my=0,tx=0,ty=0;addEventListener('mousemove',e=>{tx=e.clientX/innerWidth-.5;ty=e.clientY/innerHeight-.5},{passive:true});
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(){mx+=(tx-mx)*.06;my+=(ty-my)*.06;const vh=innerHeight,small=innerWidth<860,amp=reduce?0:(small?.35:1);
+ document.documentElement.style.setProperty('--sp',(scrollY/(document.body.scrollHeight-vh||1)).toFixed(3));
+ for(const p of pars){const r=p.sec.getBoundingClientRect();if(r.bottom<-200||r.top>vh+200)continue;
+  const t=Math.max(-1.2,Math.min(1.2,(r.top+Math.min(r.height,vh)/2-vh/2)/vh));
+  const big=p.el.offsetHeight>500?.35:1;
+  const y=-t*p.z*70*amp,rx=Math.max(-10,Math.min(12,t*9*(0.5+p.z*.4)))*amp*big,x=small?0:mx*p.z*-16*amp,ry=small?0:mx*p.z*3*amp*big;
+  p.el.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,'+(p.z*20*amp).toFixed(1)+'px) rotateX('+rx.toFixed(2)+'deg) rotateY('+ry.toFixed(2)+'deg)'}
+ requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+})();
+</script>

@@ -1,0 +1,8 @@
+- This is a working prototype of your HubSpot for restoration referrals.
+- Carrier, regional office, adjuster: click any node to see properties.
+- One naming rule, and account types that report cleanly.
+- Watch a referred water loss credit the adjuster and carrier.
+- Palm Beach and Treasure Coast split by county, automatically.
+- Cleanup run: duplicates merged, names and phones standardized first.
+- Referral dashboards; I built a roofer's $750M+ annual bid-routing system.
+- Worth a quick 15 minute call to walk your referral map?

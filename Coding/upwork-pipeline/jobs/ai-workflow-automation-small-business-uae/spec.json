@@ -1,0 +1,429 @@
+{
+  "title": "AI for Your Emails, Leads, Customer Support and Daily Reporting",
+  "platform": "n8n",
+  "client": {
+    "industry": "small business",
+    "location": "United Arab Emirates"
+  },
+  "overview": {
+    "how_it_works": [
+      "Every email that lands in your inbox is read by Claude and sorted: new lead, customer support or other.",
+      "New leads get a follow-up right away and are logged in one Google Sheet.",
+      "Support questions get a drafted answer in Gmail that your team checks and sends.",
+      "Every morning you get one report of yesterday's leads and support questions.",
+      "Next from your list: content generation, your CRM, and what we find in your processes."
+    ],
+    "setup": [
+      "Connect the inbox your leads and customers write to, your Gmail and the Google Sheet for the log.",
+      "Fill in the 0 - Config node: your business name, what you sell, your booking link, your email.",
+      "Claude runs the sorting; OpenAI plugs into the same step if you prefer it.",
+      "In workflow settings, set the error workflow to this one so step 11 catches every failure."
+    ],
+    "need_from_you": [
+      "The inbox your leads and customers write to.",
+      "One line on what you sell, and your booking link.",
+      "Which replies can send on their own and which your team checks first.",
+      "Where your leads live today, if not a sheet."
+    ]
+  },
+  "config": {
+    "business_name": "PASTE-YOUR-BUSINESS-NAME",
+    "what_you_sell": "PASTE-ONE-LINE-ON-WHAT-YOU-SELL",
+    "booking_link": "PASTE-YOUR-BOOKING-LINK",
+    "owner_email": "PASTE-YOUR-EMAIL",
+    "log_sheet": "PASTE-YOUR-LOG-SHEET-URL"
+  },
+  "sections": [
+    {
+      "key": "emails",
+      "label": "1 - EMAILS",
+      "color": 0,
+      "note": "Every email that lands in your inbox is read by AI and sorted into new lead, customer support or other. Each one is logged in your Google Sheet."
+    },
+    {
+      "key": "leads",
+      "label": "2 - LEAD MANAGEMENT",
+      "color": 1,
+      "note": "A new lead gets a follow-up right away, written from what they asked, with your booking link."
+    },
+    {
+      "key": "support",
+      "label": "3 - CUSTOMER SUPPORT",
+      "color": 2,
+      "note": "A support question gets a drafted answer in Gmail, and your team checks it and presses send."
+    },
+    {
+      "key": "report",
+      "label": "4 - REPORTING",
+      "color": 3,
+      "note": "Every morning you get one email with yesterday's leads, support questions and anything still waiting."
+    },
+    {
+      "key": "errors",
+      "label": "5 - ERROR HANDLING",
+      "color": 4,
+      "note": "If any step fails, you get an email naming the step and the error."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "inbox",
+      "kind": "trigger.email",
+      "label": "1 - New Email Lands in Your Inbox",
+      "section": "emails"
+    },
+    {
+      "key": "sort",
+      "kind": "ai.llm",
+      "label": "2 - Claude Sorts It: New Lead, Customer Support or Other",
+      "section": "emails",
+      "notes": "Claude reads each email and writes the reply, so nothing sits unanswered.",
+      "params": {
+        "system_message": "You read the inbox of a small business and sort every incoming email. Categories: lead (someone asking about buying, pricing, a quote, availability or a booking), support (an existing customer with a question, a problem, a change or a complaint), other (newsletters, suppliers, invoices, spam, auto-replies). If an email asks about pricing and also mentions an existing order, it is support. Write reply in the language the sender used, in a warm, short, plain tone, signed with the business name. For a lead: thank them, answer only what the business description supports, never invent prices, dates or policies, and offer the booking link for a quick call. For support: answer from the email and the business description only; if you are not sure, say the team will confirm and ask for the one detail you need. For other: reply is empty. If the email is empty or unreadable, return other and say why in summary.",
+        "prompt": "=Business: {{ $('0 - Config: Your Settings').item.json.business_name }}\nWhat we sell: {{ $('0 - Config: Your Settings').item.json.what_you_sell }}\nBooking link: {{ $('0 - Config: Your Settings').item.json.booking_link }}\n\nFrom: {{ $('1 - New Email Lands in Your Inbox').item.json.from }}\nSubject: {{ $('1 - New Email Lands in Your Inbox').item.json.subject }}\nReceived: {{ $('1 - New Email Lands in Your Inbox').item.json.date }}\nEmail:\n{{ $('1 - New Email Lands in Your Inbox').item.json.textPlain }}\n\nReturn category (lead, support or other), name, email (the sender's address only), summary (one sentence on what they want) and reply (the email to send back, or empty for other)."
+      }
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "app": "anthropic",
+      "label": "Claude - Reads the Email and Writes the Reply",
+      "parent": "sort",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Parser - Returns Category, Contact, Summary and Reply",
+      "parent": "sort",
+      "port": "ai_outputParser",
+      "params": {
+        "schema": {
+          "category": "lead",
+          "name": "Omar Khalid",
+          "email": "omar.khalid@gmail.com",
+          "summary": "Wants pricing for a team of 12 and a start next month.",
+          "reply": "Hi Omar, thanks for reaching out. Happy to walk you through pricing for your team on a quick call: PASTE-YOUR-BOOKING-LINK. Best regards"
+        }
+      }
+    },
+    {
+      "key": "log",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "append",
+      "label": "3 - Google Sheets: Log Every Email With Its Category",
+      "section": "emails",
+      "params": {
+        "sheet": "Inbox Log",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": "={{ $now.toISODate() }}",
+            "name": "={{ $json.output.name }}",
+            "email": "={{ $json.output.email }}",
+            "category": "={{ $json.output.category }}",
+            "subject": "={{ $('1 - New Email Lands in Your Inbox').item.json.subject }}",
+            "summary": "={{ $json.output.summary }}",
+            "status": "={{ $json.output.category === 'lead' ? 'followed up' : ($json.output.category === 'support' ? 'draft ready' : 'logged') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "route",
+      "kind": "flow.switch",
+      "label": "4 - New Lead or Support Question?",
+      "section": "emails",
+      "notes": "Anything else stays logged in your sheet and untouched in your inbox.",
+      "params": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "route-lead",
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "lead",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "route-support",
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "support",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "support"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "key": "followup",
+      "kind": "app.action",
+      "app": "gmail",
+      "op": "send",
+      "label": "5 - Gmail: Follow Up With the New Lead Right Away",
+      "section": "leads",
+      "notes": "Leads hear back while they are still looking, with your booking link.",
+      "params": {
+        "sendTo": "={{ $('2 - Claude Sorts It: New Lead, Customer Support or Other').item.json.output.email }}",
+        "subject": "=Re: {{ $('1 - New Email Lands in Your Inbox').item.json.subject }}",
+        "emailType": "text",
+        "message": "={{ $('2 - Claude Sorts It: New Lead, Customer Support or Other').item.json.output.reply }}",
+        "options": {
+          "appendAttribution": false
+        }
+      }
+    },
+    {
+      "key": "draft",
+      "kind": "app.action",
+      "app": "gmail",
+      "op": "draft",
+      "label": "6 - Gmail: Draft the Answer for Your Team to Check",
+      "section": "support",
+      "notes": "Your team stays in control: nothing goes to a customer until they press send.",
+      "params": {
+        "subject": "=Re: {{ $('1 - New Email Lands in Your Inbox').item.json.subject }}",
+        "emailType": "text",
+        "message": "={{ $('2 - Claude Sorts It: New Lead, Customer Support or Other').item.json.output.reply }}",
+        "options": {
+          "sendTo": "={{ $('2 - Claude Sorts It: New Lead, Customer Support or Other').item.json.output.email }}"
+        }
+      }
+    },
+    {
+      "key": "daily",
+      "kind": "trigger.schedule",
+      "label": "7 - Every Morning Before You Start",
+      "section": "report",
+      "params": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "read",
+      "kind": "app.action",
+      "app": "googleSheets",
+      "op": "read",
+      "label": "8 - Google Sheets: Read the Inbox Log",
+      "section": "report",
+      "params": {
+        "document": "PASTE-YOUR-LOG-SHEET-URL",
+        "sheet": "Inbox Log"
+      }
+    },
+    {
+      "key": "count",
+      "kind": "data.code",
+      "label": "9 - Count Yesterday's Leads, Support Questions and Open Drafts",
+      "section": "report",
+      "params": {
+        "jsCode": "const y = new Date(Date.now() - 86400000).toISOString().slice(0, 10);\nconst rows = $input.all().map(i => i.json).filter(r => String(r.date).slice(0, 10) === y);\nconst leads = rows.filter(r => r.category === 'lead');\nconst support = rows.filter(r => r.category === 'support');\nconst open = support.filter(r => r.status === 'draft ready');\nconst line = r => '- ' + (r.name || r.email) + ': ' + r.summary;\nconst report = [\n  'Yesterday (' + y + '): ' + rows.length + ' emails, ' + leads.length + ' new leads, ' + support.length + ' support questions.',\n  '',\n  'New leads (followed up):', ...leads.map(line),\n  '',\n  'Support drafts waiting for your team:', ...open.map(line)\n].join('\\n');\nreturn [{ json: { date: y, emails: rows.length, leads: leads.length, support: support.length, open_drafts: open.length, report } }];"
+      }
+    },
+    {
+      "key": "send_report",
+      "kind": "app.action",
+      "app": "gmail",
+      "op": "send",
+      "label": "10 - Gmail: Send You the Daily Report",
+      "section": "report",
+      "notes": "One email a morning tells you what came in and what is still waiting.",
+      "params": {
+        "sendTo": "PASTE-YOUR-EMAIL",
+        "subject": "=Daily report {{ $json.date }}: {{ $json.leads }} leads, {{ $json.support }} support",
+        "emailType": "text",
+        "message": "={{ $json.report }}",
+        "options": {
+          "appendAttribution": false
+        }
+      }
+    },
+    {
+      "key": "failed",
+      "kind": "trigger.app",
+      "app": "n8n",
+      "op": "error_trigger",
+      "label": "11 - If Any Step Fails",
+      "section": "errors"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "app": "gmail",
+      "op": "send",
+      "label": "12 - Gmail: Alert You With the Step and the Error",
+      "section": "errors",
+      "params": {
+        "sendTo": "PASTE-YOUR-EMAIL",
+        "subject": "=Automation failed at {{ $json.execution.lastNodeExecuted }}",
+        "emailType": "text",
+        "message": "=Step: {{ $json.execution.lastNodeExecuted }}\nError: {{ $json.execution.error.message }}\nOpen the run: {{ $json.execution.url }}",
+        "options": {
+          "appendAttribution": false
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "inbox",
+      "to": "sort"
+    },
+    {
+      "from": "sort",
+      "to": "log"
+    },
+    {
+      "from": "log",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "followup",
+      "branch": "lead"
+    },
+    {
+      "from": "route",
+      "to": "draft",
+      "branch": "support"
+    },
+    {
+      "from": "daily",
+      "to": "read"
+    },
+    {
+      "from": "read",
+      "to": "count"
+    },
+    {
+      "from": "count",
+      "to": "send_report"
+    },
+    {
+      "from": "failed",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "from": "Omar Khalid <omar.khalid@gmail.com>",
+    "subject": "Pricing for your services",
+    "date": "2026-09-28T09:14:00+04:00",
+    "textPlain": "Hi, we are a team of 12 and looking at your services. Can you send pricing and let me know if you can start next month? Thanks, Omar"
+  },
+  "output_sample": {
+    "date": "2026-09-28",
+    "emails": 23,
+    "leads": 4,
+    "support": 7,
+    "open_drafts": 2,
+    "report": "Yesterday (2026-09-28): 23 emails, 4 new leads, 7 support questions.\n\nNew leads (followed up):\n- Omar Khalid: Wants pricing for a team of 12 and a start next month.\n\nSupport drafts waiting for your team:\n- Lina Farouk: Asks to move her appointment to Thursday."
+  }
+}

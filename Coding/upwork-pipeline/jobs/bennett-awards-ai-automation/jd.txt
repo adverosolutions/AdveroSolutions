@@ -1,0 +1,128 @@
+url: https://www.upwork.com/jobs/~022105369097770120005
+AI Automation Engineer / Consultant for Business Workflow Automation
+Hourly, part-time, expert, rate not given. Client in United States: Bennett Awards, custom awards studio (high-end custom awards and deal toys). Saved 2026-09-30. Avg bid $70. First paid project is the weekly marketing reporting automation. Asks five questions including a cost estimate (never quote; answer on the call).
+
+Bennett Awards is a custom awards studio specializing in high-end custom awards and deal toys.
+
+We are looking for an experienced AI automation engineer / consultant to help us design and implement several practical business automations.
+
+We are not looking for general AI strategy or prompt-writing assistance. We are looking for someone who has personally built and deployed reliable business workflows involving APIs, automation platforms and LLMs.
+
+Initial Projects
+1. Weekly Marketing Reporting Automation
+We currently manually gather data each week from:
+• Google Ads
+• Google Analytics / GA4
+• Microsoft Ads
+• Copper CRM
+
+We then enter the data into an Excel-based historical tracking/reporting system.
+We would like to automate this process so that:
+• Data is retrieved automatically on a scheduled basis
+• The appropriate metrics are added to our existing historical reporting
+• Calculations and comparisons are completed automatically
+• AI provides a short weekly analysis highlighting meaningful changes, trends and anomalies
+
+Accuracy and reliability are very important. We expect APIs or other deterministic methods to be used for retrieving and calculating data, with AI used primarily for interpretation and analysis.
+
+2. AI-Assisted Project Success Stories / Case Studies
+
+We complete many custom award projects that could become website case studies, success stories and marketing content.
+Relevant information is currently spread across:
+• QuickBooks Online
+• Gmail
+• Google Drive
+• Project files
+• Design/specification files
+• Finished-product photography
+
+We would like to create a workflow that can gather relevant project information and produce a draft success story using a standardized Bennett Awards format and brand voice.
+Potential outputs could include:
+• Customer/project overview
+• Customer objective or challenge
+• Creative/design solution
+• Materials and production techniques
+• Finished case study
+• Recommended/select project photography
+• Photo captions and alt text
+• SEO title and meta description
+• Related social-media content
+
+We would require a human review/approval step before external publication.
+A key requirement is that the system must remain grounded in source material and avoid inventing unsupported project details.
+
+3. Gmail Inbox Triage and Routing
+We would also like to automate the review and sorting of incoming Gmail messages.
+The system would review emails, interpret their content and assign them to predefined Gmail labels/folders such as:
+• To Review
+• New Leads
+• Strategic Leads / "Home Runs"
+• Reorders
+• Photos to Add
+• Testimonials to Add
+• Other predefined operational categories
+
+The system should use contextual classification rather than simple keyword matching.
+Messages that clearly meet defined criteria could be routed automatically. Messages that do not match a useful category and meet predefined deletion rules could eventually be deleted automatically.
+
+We would expect appropriate safeguards around deletion, including confidence thresholds, logging and/or an initial review period before irreversible actions are enabled.
+
+What We Are Looking For
+Ideal experience includes:
+• OpenAI / ChatGPT APIs
+• LLM-powered workflow automation
+• AI agents / agentic workflows
+• Zapier, Make, n8n or similar tools
+• API integrations
+• OAuth
+• Google Workspace / Gmail / Drive
+• Google Ads
+• GA4
+• Microsoft Ads
+• QuickBooks Online
+• Excel and/or Google Sheets
+• Python and/or JavaScript
+• Structured and unstructured data
+• Error handling, logging and workflow monitoring
+
+We are especially interested in candidates who have built real production automations, not just AI demonstrations.
+Important Requirements
+Solutions should be:
+• Reliable
+• Secure
+• Well documented
+• Maintainable by our internal team
+• Built using Bennett-controlled accounts and credentials
+• Designed with appropriate human approval points
+• Practical rather than unnecessarily complex
+
+Bennett Awards should own all workflows, prompts, code, configurations and related intellectual property created for the project.
+
+Initial Engagement
+
+We expect to start with the weekly marketing reporting automation as the first paid project.
+
+If that project goes well, we would like to proceed with the Gmail triage and project success-story workflows and potentially additional automations.
+
+We are ultimately looking for someone who could help us establish a reusable automation architecture and identify additional high-value automation opportunities throughout the company.
+
+When Applying
+
+Please answer the following questions:
+1. Describe one production AI/automation workflow you personally built. What systems did it connect, what technology did you use, and what did the automation actually do?
+
+2. Briefly explain how you would automate our weekly reporting workflow: Google Ads + GA4 + Microsoft Ads → Excel historical tracking/reporting → AI-written weekly analysis.
+
+3. How would you build an AI-powered Gmail classification workflow while minimizing incorrect routing or accidental deletion of important emails?
+
+4. How would you create an AI-generated case study from QuickBooks, Gmail, Drive and project photography while preventing unsupported or hallucinated information?
+5. Please provide your estimated cost for the initial marketing-reporting project.
+Please include:
+• Your estimated number of hours to complete it
+• Your hourly rate
+• Your estimated total cost
+• Any assumptions that materially affect your estimate
+
+If you prefer to quote the other two projects, and/or broader three-project engagement as well, please provide that separately.
+
+We value practical experience, good judgment, clear communication and maintainable system design more than polished AI terminology.

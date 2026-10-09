@@ -1,0 +1,8 @@
+- This is qualified appointments from US clinicians for your healthcare technology services.
+- Band one builds and segments by specialty, practice type, size, use case.
+- Separate lookalike domains through Zapmail keep your main domain out of it.
+- CAN-SPAM basics on every email: address, opt-out, business contacts only.
+- I send 100k+ a month this way; your volume sets mailboxes.
+- Booked meetings go to your Technical Sales Executive or founders, with context.
+- Bounces are the big risk, so nothing sends until the list verifies.
+- Can start [START], first draft by [DRAFT].

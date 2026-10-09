@@ -1,0 +1,7 @@
+- This is an AI ops agent with RAG for your logistics company
+- Five sections, your five asks in order, starting with finding the process
+- Agent tools: SOP search, shipment lookup in your system, customer update draft
+- Every answer cites its source; no source means a task for ops
+- Section five is RAG: I paste an SOP, the agent quotes it
+- Key question: does your shipment system have an API we can reach?
+- Quick 15 minute call? Walk your processes, pick what to automate first

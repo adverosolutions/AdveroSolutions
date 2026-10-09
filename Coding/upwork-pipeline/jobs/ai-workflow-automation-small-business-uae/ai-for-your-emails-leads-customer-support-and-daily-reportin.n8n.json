@@ -1,0 +1,716 @@
+{
+  "name": "AI for Your Emails, Leads, Customer Support and Daily Reporting",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## AI for Your Emails, Leads, Customer Support and Daily Reporting\n\n### How it works\n- Every email that lands in your inbox is read by Claude and sorted: new lead, customer support or other.\n- New leads get a follow-up right away and are logged in one Google Sheet.\n- Support questions get a drafted answer in Gmail that your team checks and sends.\n- Every morning you get one report of yesterday's leads and support questions.\n- Next from your list: content generation, your CRM, and what we find in your processes.\n\n### Setup\n- Connect the inbox your leads and customers write to, your Gmail and the Google Sheet for the log.\n- Fill in the 0 - Config node: your business name, what you sell, your booking link, your email.\n- Claude runs the sorting; OpenAI plugs into the same step if you prefer it.\n- In workflow settings, set the error workflow to this one so step 11 catches every failure.\n\n### What I need from you\n- The inbox your leads and customers write to.\n- One line on what you sell, and your booking link.\n- Which replies can send on their own and which your team checks first.\n- Where your leads live today, if not a sheet.",
+        "height": 720,
+        "width": 520,
+        "color": 1
+      },
+      "id": "06011b47-ae60-5fed-b462-682ce5ecd584",
+      "name": "Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -680,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 1 - EMAILS\n\nEvery email that lands in your inbox is read by AI and sorted into new lead, customer support or other. Each one is logged in your Google Sheet.",
+        "height": 710,
+        "width": 1480,
+        "color": 5
+      },
+      "id": "886e8e6e-45dd-5e50-a955-ac2adf43c912",
+      "name": "Section - 1 - EMAILS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - LEAD MANAGEMENT\n\nA new lead gets a follow-up right away, written from what they asked, with your booking link.",
+        "height": 710,
+        "width": 340,
+        "color": 1
+      },
+      "id": "ac73cd15-7996-5dba-884c-ad2d5f8040d8",
+      "name": "Section - 2 - LEAD MANAGEMENT",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - CUSTOMER SUPPORT\n\nA support question gets a drafted answer in Gmail, and your team checks it and presses send.",
+        "height": 710,
+        "width": 340,
+        "color": 2
+      },
+      "id": "07d535bc-72f9-5f55-a670-eb3d1b8323b5",
+      "name": "Section - 3 - CUSTOMER SUPPORT",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1900,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - REPORTING\n\nEvery morning you get one email with yesterday's leads, support questions and anything still waiting.",
+        "height": 710,
+        "width": 940,
+        "color": 3
+      },
+      "id": "a92a751a-1bc5-575d-b54a-e9c99cd305b5",
+      "name": "Section - 4 - REPORTING",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2340,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - ERROR HANDLING\n\nIf any step fails, you get an email naming the step and the error.",
+        "height": 710,
+        "width": 460,
+        "color": 4
+      },
+      "id": "2bf3af94-1b29-5897-a0b5-45ad89287e50",
+      "name": "Section - 5 - ERROR HANDLING",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3440,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "format": "simple"
+      },
+      "id": "fcf2e712-1f91-575f-918e-a1e82669062d",
+      "name": "1 - New Email Lands in Your Inbox",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [
+        0,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0401379d-4fef-535c-a456-a0f48ac53972",
+              "name": "business_name",
+              "value": "PASTE-YOUR-BUSINESS-NAME",
+              "type": "string"
+            },
+            {
+              "id": "91a8460a-096f-55be-9298-e2511b5c379d",
+              "name": "what_you_sell",
+              "value": "PASTE-ONE-LINE-ON-WHAT-YOU-SELL",
+              "type": "string"
+            },
+            {
+              "id": "d3f87a2d-2aa3-550c-9086-f2077ab4c1dd",
+              "name": "booking_link",
+              "value": "PASTE-YOUR-BOOKING-LINK",
+              "type": "string"
+            },
+            {
+              "id": "4df66f28-57b1-5832-a907-e7a0ba9aa669",
+              "name": "owner_email",
+              "value": "PASTE-YOUR-EMAIL",
+              "type": "string"
+            },
+            {
+              "id": "4000a4b9-9f3c-59f7-be4a-843e5973f86f",
+              "name": "log_sheet",
+              "value": "PASTE-YOUR-LOG-SHEET-URL",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "784f145f-ce9d-5478-b2ce-84a1da0c43c4",
+      "name": "0 - Config: Your Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        240,
+        80
+      ],
+      "notes": "Every account id, list id and key this workflow uses, in one place.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Business: {{ $('0 - Config: Your Settings').item.json.business_name }}\nWhat we sell: {{ $('0 - Config: Your Settings').item.json.what_you_sell }}\nBooking link: {{ $('0 - Config: Your Settings').item.json.booking_link }}\n\nFrom: {{ $('1 - New Email Lands in Your Inbox').item.json.from }}\nSubject: {{ $('1 - New Email Lands in Your Inbox').item.json.subject }}\nReceived: {{ $('1 - New Email Lands in Your Inbox').item.json.date }}\nEmail:\n{{ $('1 - New Email Lands in Your Inbox').item.json.textPlain }}\n\nReturn category (lead, support or other), name, email (the sender's address only), summary (one sentence on what they want) and reply (the email to send back, or empty for other).",
+        "batching": {},
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You read the inbox of a small business and sort every incoming email. Categories: lead (someone asking about buying, pricing, a quote, availability or a booking), support (an existing customer with a question, a problem, a change or a complaint), other (newsletters, suppliers, invoices, spam, auto-replies). If an email asks about pricing and also mentions an existing order, it is support. Write reply in the language the sender used, in a warm, short, plain tone, signed with the business name. For a lead: thank them, answer only what the business description supports, never invent prices, dates or policies, and offer the booking link for a quick call. For support: answer from the email and the business description only; if you are not sure, say the team will confirm and ask for the one detail you need. For other: reply is empty. If the email is empty or unreadable, return other and say why in summary."
+            }
+          ]
+        },
+        "hasOutputParser": true
+      },
+      "id": "40f5cff1-e22e-54ec-9231-ec53e5c4a9aa",
+      "name": "2 - Claude Sorts It: New Lead, Customer Support or Other",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        580,
+        80
+      ],
+      "notes": "Claude reads each email and writes the reply, so nothing sits unanswered.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "cf6e5168-5bb5-5be9-8f1a-eb4e023835d1",
+      "name": "Claude - Reads the Email and Writes the Reply",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"category\": \"lead\",\n  \"name\": \"Omar Khalid\",\n  \"email\": \"omar.khalid@gmail.com\",\n  \"summary\": \"Wants pricing for a team of 12 and a start next month.\",\n  \"reply\": \"Hi Omar, thanks for reaching out. Happy to walk you through pricing for your team on a quick call: PASTE-YOUR-BOOKING-LINK. Best regards\"\n}"
+      },
+      "id": "02a3844d-3575-5840-b82f-d0de3405227e",
+      "name": "Parser - Returns Category, Contact, Summary and Reply",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('0 - Config: Your Settings').item.json.log_sheet }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Inbox Log"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": "={{ $now.toISODate() }}",
+            "name": "={{ $json.output.name }}",
+            "email": "={{ $json.output.email }}",
+            "category": "={{ $json.output.category }}",
+            "subject": "={{ $('1 - New Email Lands in Your Inbox').item.json.subject }}",
+            "summary": "={{ $json.output.summary }}",
+            "status": "={{ $json.output.category === 'lead' ? 'followed up' : ($json.output.category === 'support' ? 'draft ready' : 'logged') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "59a2f10a-5df5-5a18-b7ff-7c3fb8be9345",
+      "name": "3 - Google Sheets: Log Every Email With Its Category",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1020,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "route-lead",
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "lead",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "route-support",
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "support",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "support"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6f0f5589-4151-5e0f-bb80-d569899415a9",
+      "name": "4 - New Lead or Support Question?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1260,
+        80
+      ],
+      "notes": "Anything else stays logged in your sheet and untouched in your inbox.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $('2 - Claude Sorts It: New Lead, Customer Support or Other').item.json.output.email }}",
+        "subject": "=Re: {{ $('1 - New Email Lands in Your Inbox').item.json.subject }}",
+        "message": "={{ $('2 - Claude Sorts It: New Lead, Customer Support or Other').item.json.output.reply }}",
+        "options": {
+          "appendAttribution": false
+        },
+        "emailType": "text"
+      },
+      "id": "bb26700d-ad44-555d-80a7-648d92bc3fdd",
+      "name": "5 - Gmail: Follow Up With the New Lead Right Away",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1640,
+        0
+      ],
+      "notes": "Leads hear back while they are still looking, with your booking link.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "operation": "create",
+        "options": {
+          "sendTo": "={{ $('2 - Claude Sorts It: New Lead, Customer Support or Other').item.json.output.email }}"
+        },
+        "sendTo": "={{ $json.email }}",
+        "subject": "=Re: {{ $('1 - New Email Lands in Your Inbox').item.json.subject }}",
+        "message": "={{ $('2 - Claude Sorts It: New Lead, Customer Support or Other').item.json.output.reply }}",
+        "emailType": "text"
+      },
+      "id": "f761e3ca-5515-5282-8bb5-d9f456a404e4",
+      "name": "6 - Gmail: Draft the Answer for Your Team to Check",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2020,
+        180
+      ],
+      "notes": "Your team stays in control: nothing goes to a customer until they press send.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "5217476e-bc37-5a6b-90e6-d5b43c8fe001",
+      "name": "7 - Every Morning Before You Start",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        2400,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "options": {},
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "PASTE-YOUR-LOG-SHEET-URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Inbox Log"
+        }
+      },
+      "id": "de12aa6c-d037-5c77-ad6f-1cebb4475b6a",
+      "name": "8 - Google Sheets: Read the Inbox Log",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2640,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const y = new Date(Date.now() - 86400000).toISOString().slice(0, 10);\nconst rows = $input.all().map(i => i.json).filter(r => String(r.date).slice(0, 10) === y);\nconst leads = rows.filter(r => r.category === 'lead');\nconst support = rows.filter(r => r.category === 'support');\nconst open = support.filter(r => r.status === 'draft ready');\nconst line = r => '- ' + (r.name || r.email) + ': ' + r.summary;\nconst report = [\n  'Yesterday (' + y + '): ' + rows.length + ' emails, ' + leads.length + ' new leads, ' + support.length + ' support questions.',\n  '',\n  'New leads (followed up):', ...leads.map(line),\n  '',\n  'Support drafts waiting for your team:', ...open.map(line)\n].join('\\n');\nreturn [{ json: { date: y, emails: rows.length, leads: leads.length, support: support.length, open_drafts: open.length, report } }];"
+      },
+      "id": "86f4b66d-2fb1-55c8-90ae-63cd6d9e0775",
+      "name": "9 - Count Yesterday's Leads, Support Questions and Open Drafts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "PASTE-YOUR-EMAIL",
+        "subject": "=Daily report {{ $json.date }}: {{ $json.leads }} leads, {{ $json.support }} support",
+        "message": "={{ $json.report }}",
+        "options": {
+          "appendAttribution": false
+        },
+        "emailType": "text"
+      },
+      "id": "f9b9ebbd-8b13-5ffb-9c9e-edadb0d17a5c",
+      "name": "10 - Gmail: Send You the Daily Report",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3120,
+        80
+      ],
+      "notes": "One email a morning tells you what came in and what is still waiting.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {},
+      "id": "de32da29-4861-5cc9-941d-8a03bef8e23c",
+      "name": "11 - If Any Step Fails",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        3500,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "PASTE-YOUR-EMAIL",
+        "subject": "=Automation failed at {{ $json.execution.lastNodeExecuted }}",
+        "message": "=Step: {{ $json.execution.lastNodeExecuted }}\nError: {{ $json.execution.error.message }}\nOpen the run: {{ $json.execution.url }}",
+        "options": {
+          "appendAttribution": false
+        },
+        "emailType": "text"
+      },
+      "id": "be7b027e-514e-545c-9fb4-93bedea91908",
+      "name": "12 - Gmail: Alert You With the Step and the Error",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3740,
+        80
+      ]
+    }
+  ],
+  "connections": {
+    "1 - New Email Lands in Your Inbox": {
+      "main": [
+        [
+          {
+            "node": "0 - Config: Your Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "0 - Config: Your Settings": {
+      "main": [
+        [
+          {
+            "node": "2 - Claude Sorts It: New Lead, Customer Support or Other",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Claude Sorts It: New Lead, Customer Support or Other": {
+      "main": [
+        [
+          {
+            "node": "3 - Google Sheets: Log Every Email With Its Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Google Sheets: Log Every Email With Its Category": {
+      "main": [
+        [
+          {
+            "node": "4 - New Lead or Support Question?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - New Lead or Support Question?": {
+      "main": [
+        [
+          {
+            "node": "5 - Gmail: Follow Up With the New Lead Right Away",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "6 - Gmail: Draft the Answer for Your Team to Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - Every Morning Before You Start": {
+      "main": [
+        [
+          {
+            "node": "8 - Google Sheets: Read the Inbox Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - Google Sheets: Read the Inbox Log": {
+      "main": [
+        [
+          {
+            "node": "9 - Count Yesterday's Leads, Support Questions and Open Drafts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9 - Count Yesterday's Leads, Support Questions and Open Drafts": {
+      "main": [
+        [
+          {
+            "node": "10 - Gmail: Send You the Daily Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - If Any Step Fails": {
+      "main": [
+        [
+          {
+            "node": "12 - Gmail: Alert You With the Step and the Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude - Reads the Email and Writes the Reply": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "2 - Claude Sorts It: New Lead, Customer Support or Other",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser - Returns Category, Contact, Summary and Reply": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "2 - Claude Sorts It: New Lead, Customer Support or Other",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "3d872cd9-21b0-515c-9eb8-67c52e8eed49",
+  "pinData": {
+    "1 - New Email Lands in Your Inbox": [
+      {
+        "json": {
+          "from": "Omar Khalid <omar.khalid@gmail.com>",
+          "subject": "Pricing for your services",
+          "date": "2026-09-28T09:14:00+04:00",
+          "textPlain": "Hi, we are a team of 12 and looking at your services. Can you send pricing and let me know if you can start next month? Thanks, Omar"
+        }
+      }
+    ],
+    "5 - Gmail: Follow Up With the New Lead Right Away": [
+      {
+        "json": {
+          "date": "2026-09-28",
+          "emails": 23,
+          "leads": 4,
+          "support": 7,
+          "open_drafts": 2,
+          "report": "Yesterday (2026-09-28): 23 emails, 4 new leads, 7 support questions.\n\nNew leads (followed up):\n- Omar Khalid: Wants pricing for a team of 12 and a start next month.\n\nSupport drafts waiting for your team:\n- Lina Farouk: Asks to move her appointment to Thursday."
+        }
+      }
+    ]
+  }
+}

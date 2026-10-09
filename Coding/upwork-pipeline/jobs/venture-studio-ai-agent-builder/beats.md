@@ -1,0 +1,8 @@
+- This is practical AI agents, shipped continuously, for your venture studio.
+- Agent studio prototype: recruiting live, five more queued with v0.1 scopes.
+- Scaled my AI agency to $10,000 a month, same kind of system.
+- Your question four: press start, it interviews a candidate by voice.
+- Vague answer gets a sharp follow-up; scorecard fills with evidence quotes.
+- v0.1 in 4 hours: Vapi, Claude, one sheet. Multi-agent is overengineering.
+- Teach us tab: how, why, and how to change it yourself.
+- Worth a quick 15 minute call? Reply here and I'll send times.

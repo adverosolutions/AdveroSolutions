@@ -1,0 +1,8 @@
+- This is your AI consulting growth plan for maritime logistics buyers.
+- Five bands, your order: strategy, marketing, sales, operations, business development.
+- Step two: a paid pilot automating freight quotes or shipping paperwork.
+- Claude reads each forwarder's site and writes about their own trade lanes.
+- Same outbound raised a software consultancy's qualified lead volume 35%.
+- Decision for us: forwarders, customs brokers or ship agents first.
+- Every Monday you see sends, replies, calls, pilots sold and delivery.
+- Reply here, I'll send three times, can jump on today or tomorrow.

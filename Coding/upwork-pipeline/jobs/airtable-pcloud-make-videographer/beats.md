@@ -1,0 +1,8 @@
+- This is a working prototype of your pCloud folder automation.
+- Here's your Airtable board; drag Ava and Theo into PCLOUD.
+- Your paid Zapier builds 2026-10-17_Ava and Theo Linden, edits, raw.
+- Four links fill in: upload, edits, raw view link, raw download.
+- In the prototype, here's what your couple sees opening each link.
+- No project date? It waits, flagged, and never makes a duplicate folder.
+- I built routing behind $750M+ a year in roofing bids.
+- Worth a quick 15 minute call? Reply here and I'll send times.

@@ -1,0 +1,51 @@
+url: https://www.upwork.com/jobs/~022104966700493243329
+Senior AI Systems Engineer: Claude-Powered Appraisal Production System
+Hourly $50-$200, as needed, expert. Client in United States: commercial real estate appraisal firm. Saved 2026-09-29. Avg bid $63. Paid ~2-week discovery then ~16 weeks of fixed-price milestones. Requires the word PROVENANCE at the top, 2-3 production systems on this stack, the sale-comp PDF to Excel row answer, what to defer, availability, discovery fee and hourly rate. Declines chat/RAG-only proposals.
+
+We are a commercial real estate appraisal firm building a private, controlled valuation intelligence platform around the tools we already use. We need one senior engineer, or a small firm with one named technical lead, to own the architecture and build it over about 16 weeks.
+
+This is not a chatbot or a generic RAG portal. Proposals built around a chat interface or vector database alone will be declined.
+
+What the system does:
+- Reads authorized OneDrive/SharePoint job folders (PDF, scanned PDF, Word, Excel, images)
+- Extracts assignment facts and sale, rent and expense comps with page-level citations
+- Stages comp records in Supabase/PostgreSQL for human approval before production, with duplicate detection and property-versus-transaction matching
+- Populates our existing Excel valuation model through mapped inputs and native desktop recalculation, without altering formulas
+- Populates our existing Word report template and drafts factual sections from approved facts
+- Runs multi-layer QC review (deterministic checks plus Claude-based specialist reviewers) with findings in an AppSheet queue
+- Logs every read, write, model call and approval in an append-only audit trail
+
+AI never makes appraisal judgments. Our appraisers select comps, set adjustments, reconcile value and sign the report.
+
+Stack: Claude commercial API and Claude Team, Python 3.12+, LangGraph or equivalent with Pydantic, FastAPI/MCP tool services, Supabase (PostGIS, pgvector, row-level security), Microsoft Graph, a Windows 365 Cloud PC automation runner, desktop Excel/Word automation (.NET/Open XML), AppSheet, Entra ID and GitHub.
+
+You must have shipped production work in:
+- Claude or other LLM APIs with structured, schema-validated output
+- Microsoft Graph / OneDrive integration
+- Desktop Excel and Word automation that preserves formulas, macros and formatting
+- PostgreSQL schema design with transactions and row-level security
+- Durable workflow orchestration with retries, checkpoints and audit logging
+
+Appraisal, real estate, lending or financial-model experience is a strong plus.
+
+Engagement structure:
+- Paid discovery first: about 2 weeks. You inspect our actual templates and deliver architecture, threat model, data model, Excel/Word mapping plans, schedule and fixed milestone pricing. We own this work whether or not we continue.
+- Build: phase-gated, fixed-price milestones. Approximately 16-week target.
+- First build milestone: one sale comp moves from a PDF in OneDrive, through staging and approval, into the Excel model with full evidence and audit.
+- Desired ongoing maintenance of about 3-4 hours per month.
+
+Non-negotiable terms:
+- All code, prompts, schemas and documentation committed continuously to our GitHub organization; we own it
+- The named lead personally does most of the work; any subcontractors disclosed and approved in advance
+- NDA and data-handling terms before any real data; no client data in personal accounts or your repositories
+- 90-day defect warranty after production acceptance, with a final payment holdback
+
+To apply, include:
+1. The word PROVENANCE at the top of your proposal
+2. Two or three production systems you built that touch this stack, with your specific role
+3. A few paragraphs on how you would move a sale-comp PDF from OneDrive into an approved Excel row without creating duplicates, and how you would prove no workbook formulas changed
+4. What you would deliberately defer from a 16-week first release
+5. Your weekly availability through the 16 weeks and who else would work on it
+6. Your discovery fee and hourly rate
+
+Shortlisted candidates will receive more detailed specifications, followed by a live technical interview with the proposed lead architect.

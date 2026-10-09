@@ -1,0 +1,680 @@
+{
+  "name": "Client Intake Agent: Every Inquiry Qualified, Logged and Handed Off",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Client Intake Agent: Every Inquiry Qualified, Logged and Handed Off\n\n### How it works\n- An agent, not a fixed automation: it reads each website inquiry against your fit rules and picks which of its four tools to use.\n- It saves the contact and opens a deal in HubSpot, creates the scoping task in ClickUp and hands the client to the right owner in Slack.\n- Safe replies go out from your Gmail at once. Declines and anything about price or contracts wait as a draft.\n- Room to add next, on the same tools: project coordination, reporting and follow-up agents.\n\n### Setup\n- Your part 1 comes first: a workflow audit and automation roadmap, ranked by business impact (hours saved).\n- Connect HubSpot, ClickUp, Slack, Gmail and Anthropic, then fill in 0 - Config.\n- Point your website form at the step 1 URL and set this workflow as its own error workflow.\n- Your part 4: an architecture, maintenance and troubleshooting doc, plus a recorded walkthrough.\n\n### What I need from you\n- Your fit rules and who owns each service.\n- Your HubSpot pipeline, ClickUp list and Slack channel.\n- A few real past inquiries to test the agent against.",
+        "height": 680,
+        "width": 520,
+        "color": 1
+      },
+      "id": "5c95fad1-f010-5b77-8f4f-22be60311dad",
+      "name": "Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -680,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 1 - CLIENT INTAKE AGENT\n\nThe first task on your list. Each inquiry from your website form goes to an agent that checks it against your fit rules, then decides which of its four tools to call.",
+        "height": 790,
+        "width": 1740,
+        "color": 5
+      },
+      "id": "6db69c70-eb55-5bce-b4ec-02311cad4e9f",
+      "name": "Section - 1 - CLIENT INTAKE AGENT",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - YOUR TOOLS: HUBSPOT, CLICKUP AND SLACK UNDER THE AGENT, GMAIL HERE\n\nHubSpot, ClickUp and Slack are the agent's tools, hanging under it in section 1, and write while it works. Here the client's reply goes out from your Gmail, or waits as a draft when a person should read it first.",
+        "height": 790,
+        "width": 460,
+        "color": 4
+      },
+      "id": "0a558e91-f3c5-5590-bea4-302350282610",
+      "name": "Section - 2 - YOUR TOOLS: HUBSPOT, CLICKUP AND SLACK UNDER THE AGENT, GMAIL HERE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1900,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - TEST, MONITOR AND ITERATE\n\nAny failed step posts to Slack with a link to the run, where the inquiry waits for a retry. Every run keeps the agent's tool calls in n8n, and those are what we review each week to tune it.",
+        "height": 790,
+        "width": 460,
+        "color": 6
+      },
+      "id": "21c5713c-7a6e-5f44-88dd-c553deabe4c6",
+      "name": "Section - 3 - TEST, MONITOR AND ITERATE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2520,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "client-intake",
+        "responseMode": "onReceived"
+      },
+      "id": "e2111f6c-9845-5cef-9f0b-640768c7f0d6",
+      "name": "1 - New Client Inquiry From Your Website Form",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        80
+      ],
+      "webhookId": "b3fd9fc8-312e-51af-acd0-529e05eddccb"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c78f7749-fdd3-5ed5-a20c-f6746b898d95",
+              "name": "fit_rules",
+              "value": "PASTE-YOUR-FIT-RULES: who you take on and who you turn away, in plain English",
+              "type": "string"
+            },
+            {
+              "id": "83b07418-27e8-56cd-ae08-1ef7f91351d1",
+              "name": "services_and_owners",
+              "value": "PASTE-YOUR-SERVICES-AND-OWNERS: one per line, Service | Owner | HubSpot owner id | ClickUp user id | Slack member id",
+              "type": "string"
+            },
+            {
+              "id": "d3f87a2d-2aa3-550c-9086-f2077ab4c1dd",
+              "name": "booking_link",
+              "value": "PASTE-YOUR-BOOKING-LINK",
+              "type": "string"
+            },
+            {
+              "id": "94db3f7e-42d3-5ed5-a434-4cd58d60fd3f",
+              "name": "hubspot_pipeline_id",
+              "value": "PASTE-YOUR-HUBSPOT-PIPELINE-ID",
+              "type": "string"
+            },
+            {
+              "id": "41ff67fb-e115-5adf-8f72-f57ceecc80a1",
+              "name": "hubspot_new_inquiry_stage_id",
+              "value": "PASTE-YOUR-NEW-INQUIRY-STAGE-ID",
+              "type": "string"
+            },
+            {
+              "id": "fe759584-1ff5-5445-93bd-88a30829ede8",
+              "name": "clickup_list_id",
+              "value": "PASTE-YOUR-CLICKUP-LIST-ID",
+              "type": "string"
+            },
+            {
+              "id": "dee5bfb1-2b5a-533e-ab3e-d2954f6cbd70",
+              "name": "slack_intake_channel",
+              "value": "PASTE-YOUR-SLACK-CHANNEL",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "c33dc5a9-64a3-5e04-851e-8ee41179dfe9",
+      "name": "0 - Config: Your Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        240,
+        80
+      ],
+      "notes": "Every account id, list id and key this workflow uses, in one place.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Your fit rules:\n{{ $('0 - Config: Your Settings').item.json.fit_rules }}\n\nYour services and owners (Service | Owner | HubSpot owner id | ClickUp user id | Slack member id):\n{{ $('0 - Config: Your Settings').item.json.services_and_owners }}\n\nBooking link: {{ $('0 - Config: Your Settings').item.json.booking_link }}\n\nThe inquiry:\nName: {{ $json.body.first_name }} {{ $json.body.last_name }}\nEmail: {{ $json.body.email }}\nCompany: {{ $json.body.company }}\nRole: {{ $json.body.job_title || 'not given' }}\nWebsite: {{ $json.body.website || 'not given' }}\nInterested in: {{ $json.body.service_interest || 'not given' }}\nBudget: {{ $json.body.budget_range || 'not given' }}\nTimeline: {{ $json.body.timeline || 'not given' }}\nMessage: {{ $json.body.message }}\n\nUse your tools in order, then return fit, service, owner, contact_id, deal_id, task_url, missing_info, handoff_note, safe_to_send, reply_subject and reply_body.",
+        "options": {
+          "systemMessage": "You are the client intake agent for an operations and consulting team. Every inquiry from their website form comes to you. Your job: decide whether it is a fit, pick the service and the owner, record it in HubSpot, set up the first piece of work in ClickUp, hand it to the owner in Slack, and write the client's reply.\n\nJudge fit only against the fit rules you are given; never add rules of your own. fit is one of: good_fit (matches the rules and says what they need help with plus a timeline or a budget), needs_info (could fit, but a detail the rules depend on is missing or vague), not_a_fit (outside the rules, a vendor pitch, a job application or spam).\n\nPick service and owner only from the services and owners table. If two services could fit, choose the one the message spends the most words on. If none fits, use the first owner in the table and say so in handoff_note.\n\nTools, in this order:\n1. Save the Client as a Contact: every real inquiry, not_a_fit included. Skip only spam and test entries. Keep the contact id it returns.\n2. Open a Deal in Your Pipeline: good_fit and needs_info only, with that contact id and the owner's HubSpot owner id. Deal name: company - service.\n3. Create the Scoping Task: good_fit only, assigned to the owner's ClickUp user id, with what they asked for, their budget and timeline, and three questions for the discovery call.\n4. Hand the Client to the Owner in Slack: every real inquiry. Mention the owner as <@their Slack member id>, then fit, service, a two-sentence summary, what is missing, and the deal id and task link when they exist.\nIf a tool returns an error, retry it once at most, carry on with the others, and name the failed step in handoff_note so the owner can finish it by hand.\n\nThe reply to the client: plain text, under 120 words, signed with the owner's first name, direct and warm. good_fit: thank them for one specific detail from their message and give the booking link. needs_info: ask only for the missing details, two questions at most. not_a_fit: a polite no, with a referral only if the fit rules name one. Never quote prices, timelines or guarantees, and never promise work.\n\nsafe_to_send is true only for a good_fit or needs_info reply whose inquiry does not raise pricing, contracts, a complaint, anything legal or a current client's project. Everything else is false, and the reply waits as a draft for the owner.\n\nUse only facts from the inquiry and the tables you are given. If the message is empty or unreadable, return needs_info with safe_to_send false and say why in handoff_note."
+        },
+        "hasOutputParser": true
+      },
+      "id": "9263b193-2f1e-5a40-8790-8a56ae57b5b5",
+      "name": "2 - Intake Agent Qualifies the Client and Sets Up the Work",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        980,
+        80
+      ],
+      "notes": "An agent, not a fixed automation: it decides which tools each inquiry needs.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "1212db06-6a44-5de8-bb5e-430810517728",
+      "name": "Claude - Runs the Intake Agent",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Create or update the client in HubSpot, matched on email. Call once for every real inquiry. The response holds the contact id you need to open the deal.",
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/batch/upsert",
+        "options": {
+          "timeout": 15000
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"inputs\": [ {\"idProperty\": \"email\", \"id\": \"{email}\", \"properties\": {\"email\": \"{email}\", \"firstname\": \"{first_name}\", \"lastname\": \"{last_name}\", \"company\": \"{company}\", \"jobtitle\": \"{job_title}\" } } ]}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "email",
+              "description": "The client's email exactly as written in the inquiry",
+              "type": "string"
+            },
+            {
+              "name": "first_name",
+              "description": "The client's first name",
+              "type": "string"
+            },
+            {
+              "name": "last_name",
+              "description": "The client's last name, or an empty string if not given",
+              "type": "string"
+            },
+            {
+              "name": "company",
+              "description": "The client's company name as written in the inquiry",
+              "type": "string"
+            },
+            {
+              "name": "job_title",
+              "description": "The client's role, or an empty string if not given",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "81babb73-e816-5ca5-80d7-a2348360ab8f",
+      "name": "HubSpot - Save the Client as a Contact",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "toolDescription": "Open a deal in the team's HubSpot pipeline at the new inquiry stage, linked to the contact. Call only for good_fit and needs_info, after the contact is saved.",
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/deals",
+        "options": {
+          "timeout": 15000
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"properties\": {\"dealname\": \"{deal_name}\", \"pipeline\": \"{{ $('0 - Config: Your Settings').item.json.hubspot_pipeline_id }}\", \"dealstage\": \"{{ $('0 - Config: Your Settings').item.json.hubspot_new_inquiry_stage_id }}\", \"hubspot_owner_id\": \"{hubspot_owner_id}\", \"description\": \"{deal_summary}\" }, \"associations\": [ {\"to\": {\"id\": \"{contact_id}\" }, \"types\": [ {\"associationCategory\": \"HUBSPOT_DEFINED\", \"associationTypeId\": 3 } ] } ]}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "deal_name",
+              "description": "Company - service, for example Gulf Coast Property Group - Automation build",
+              "type": "string"
+            },
+            {
+              "name": "hubspot_owner_id",
+              "description": "The owner's HubSpot owner id from the services and owners table",
+              "type": "string"
+            },
+            {
+              "name": "deal_summary",
+              "description": "Two sentences: what they need, their budget and timeline",
+              "type": "string"
+            },
+            {
+              "name": "contact_id",
+              "description": "The contact id returned by Save the Client as a Contact",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "fbce731c-2ed9-58c5-8b3b-85825b39f434",
+      "name": "HubSpot - Open a Deal in Your Pipeline",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        920,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "notes": "Every good fit lands in your pipeline with its owner already set.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "toolDescription": "Create the scoping task in the team's ClickUp intake list, assigned to the owner. Call only for good_fit. The response holds the task url.",
+        "method": "POST",
+        "url": "=https://api.clickup.com/api/v2/list/{{ $('0 - Config: Your Settings').item.json.clickup_list_id }}/task",
+        "options": {
+          "timeout": 15000
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "clickUpApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"name\": \"{task_name}\", \"markdown_description\": \"{task_description}\", \"assignees\": [ {clickup_user_id} ], \"priority\": 2, \"tags\": [\"client-intake\"] }",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "task_name",
+              "description": "Scope: company - service, for example Scope: Gulf Coast Property Group - Automation build",
+              "type": "string"
+            },
+            {
+              "name": "task_description",
+              "description": "What they asked for, their budget and timeline, the HubSpot deal id, and three questions for the discovery call",
+              "type": "string"
+            },
+            {
+              "name": "clickup_user_id",
+              "description": "The owner's ClickUp user id from the services and owners table",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "id": "e3e98ba4-42b4-56f6-8509-07bb98921d9e",
+      "name": "ClickUp - Create the Scoping Task for the Owner",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "notes": "The owner walks into the discovery call with three questions ready.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "toolDescription": "Post the handoff for the owner in the team's intake channel in Slack. Call once for every real inquiry, last.",
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "options": {
+          "timeout": 15000
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"channel\": \"{{ $('0 - Config: Your Settings').item.json.slack_intake_channel }}\", \"text\": \"{handoff_message}\" }",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "handoff_message",
+              "description": "Starts with <@owner Slack member id>, then fit, service, a two-sentence summary, what is missing, and the deal id and task link when they exist",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "bc290337-2bb1-5eab-a280-f4f2db096a29",
+      "name": "Slack - Hand the Client to the Owner",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1320,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"fit\": \"good_fit\",\n  \"service\": \"Automation build\",\n  \"owner\": \"Alex\",\n  \"contact_id\": \"118340512\",\n  \"deal_id\": \"30211876452\",\n  \"task_url\": \"https://app.clickup.com/t/86b2kq7xm\",\n  \"missing_info\": \"none\",\n  \"handoff_note\": \"Gulf Coast Property Group, 14 staff and about 1,100 rental units, wants maintenance requests from phone, text and email in one queue before hiring a third coordinator. Budget $5,000 to $10,000, starting within 30 days.\",\n  \"safe_to_send\": true,\n  \"reply_subject\": \"Your maintenance request intake: next step\",\n  \"reply_body\": \"Hi Marcus,\\n\\nThanks for spelling out the three ways maintenance requests reach you and the two coordinators re-typing them. That is the kind of work we look at first.\\n\\nPick a time for a first call here: [booking link]\\n\\nAlex\"\n}"
+      },
+      "id": "d74b6546-ecd4-5948-abfd-65c6f4b25bf6",
+      "name": "Parser - Fit, Owner and Client Reply",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0d691b29-95ab-5b60-9f67-70ef176218cc",
+              "leftValue": "={{ $json.output.safe_to_send }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "555181f5-26bc-539d-b150-04b44b6fad48",
+      "name": "3 - Safe to Send Without a Person?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1960,
+        80
+      ],
+      "notes": "Declines and anything about price or contracts never send on their own.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $('1 - New Client Inquiry From Your Website Form').item.json.body.email }}",
+        "subject": "={{ $json.output.reply_subject }}",
+        "message": "={{ $json.output.reply_body }}",
+        "options": {
+          "appendAttribution": false
+        },
+        "emailType": "text"
+      },
+      "id": "9ace51e7-25ba-5104-a42a-c15073429afb",
+      "name": "4 - Gmail: Send the Client Their Next Step",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "operation": "create",
+        "options": {
+          "sendTo": "={{ $('1 - New Client Inquiry From Your Website Form').item.json.body.email }}"
+        },
+        "sendTo": "={{ $json.email }}",
+        "subject": "={{ $json.output.reply_subject }}",
+        "message": "={{ $json.output.reply_body }}",
+        "emailType": "text"
+      },
+      "id": "cc363143-c3e1-579c-936e-368903e8e515",
+      "name": "4b - Gmail: Hold the Reply as a Draft for the Owner",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2200,
+        240
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "2e6c942b-14ba-584e-98b8-3b24e5b7e678",
+      "name": "5 - If Any Step Fails",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        2580,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        },
+        "channelId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "#ops-alerts"
+        },
+        "text": "=:rotating_light: Client intake agent stopped at *{{ $json.execution.lastNodeExecuted }}*\n{{ $json.execution.error.message }}\nThe inquiry is kept in this run. Fix it and retry here: {{ $json.execution.url }}"
+      },
+      "id": "063ea821-ae2f-5ba3-b51d-c25dca342491",
+      "name": "6 - Slack: Alert Ops With the Failed Step and Run Link",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        2820,
+        80
+      ],
+      "notes": "The inquiry is kept in the failed run; retry it from the link.",
+      "notesInFlow": true
+    }
+  ],
+  "connections": {
+    "1 - New Client Inquiry From Your Website Form": {
+      "main": [
+        [
+          {
+            "node": "0 - Config: Your Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "0 - Config: Your Settings": {
+      "main": [
+        [
+          {
+            "node": "2 - Intake Agent Qualifies the Client and Sets Up the Work",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Intake Agent Qualifies the Client and Sets Up the Work": {
+      "main": [
+        [
+          {
+            "node": "3 - Safe to Send Without a Person?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Safe to Send Without a Person?": {
+      "main": [
+        [
+          {
+            "node": "4 - Gmail: Send the Client Their Next Step",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "4b - Gmail: Hold the Reply as a Draft for the Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - If Any Step Fails": {
+      "main": [
+        [
+          {
+            "node": "6 - Slack: Alert Ops With the Failed Step and Run Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude - Runs the Intake Agent": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "2 - Intake Agent Qualifies the Client and Sets Up the Work",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot - Save the Client as a Contact": {
+      "ai_tool": [
+        [
+          {
+            "node": "2 - Intake Agent Qualifies the Client and Sets Up the Work",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot - Open a Deal in Your Pipeline": {
+      "ai_tool": [
+        [
+          {
+            "node": "2 - Intake Agent Qualifies the Client and Sets Up the Work",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ClickUp - Create the Scoping Task for the Owner": {
+      "ai_tool": [
+        [
+          {
+            "node": "2 - Intake Agent Qualifies the Client and Sets Up the Work",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack - Hand the Client to the Owner": {
+      "ai_tool": [
+        [
+          {
+            "node": "2 - Intake Agent Qualifies the Client and Sets Up the Work",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser - Fit, Owner and Client Reply": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "2 - Intake Agent Qualifies the Client and Sets Up the Work",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "5617b21a-42a9-579c-886c-a913cff7505b",
+  "pinData": {
+    "1 - New Client Inquiry From Your Website Form": [
+      {
+        "json": {
+          "body": {
+            "first_name": "Marcus",
+            "last_name": "Bell",
+            "email": "marcus.bell@gulfcoastpropertygroup.com",
+            "company": "Gulf Coast Property Group",
+            "job_title": "Operations Manager",
+            "website": "gulfcoastpropertygroup.com",
+            "service_interest": "Automation build",
+            "budget_range": "$5,000 - $10,000",
+            "timeline": "Start within 30 days",
+            "message": "We manage about 1,100 rental units with a team of 14. Maintenance requests come in by phone, text and email, and two coordinators re-type all of it into our property system and a spreadsheet. I'd like to see what can be automated before we hire a third coordinator.",
+            "source": "Website - Work With Us form"
+          }
+        }
+      }
+    ],
+    "4 - Gmail: Send the Client Their Next Step": [
+      {
+        "json": {
+          "sent_to": "marcus.bell@gulfcoastpropertygroup.com",
+          "subject": "Your maintenance request intake: next step",
+          "fit": "good_fit",
+          "service": "Automation build",
+          "owner": "Alex",
+          "hubspot_contact_id": "118340512",
+          "hubspot_deal_id": "30211876452",
+          "clickup_task_url": "https://app.clickup.com/t/86b2kq7xm",
+          "slack_handoff": "posted to the intake channel",
+          "gmail_message_id": "19276c0f4e2ab913",
+          "labelIds": [
+            "SENT"
+          ]
+        }
+      }
+    ]
+  }
+}

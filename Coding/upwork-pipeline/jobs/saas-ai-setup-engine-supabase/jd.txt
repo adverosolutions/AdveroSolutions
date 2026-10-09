@@ -1,0 +1,90 @@
+url: https://www.upwork.com/jobs/~022104603594668896549
+AI/Automation Engineer: Build an AI Setup Engine for a SaaS Platform (Supabase + TypeScript)
+Hourly $25-$50, expert, FULL TIME (30-40 h/week preferred), contract to long-term. Client in the United States. Client record not pulled. Posted 2026-09-28. Recorded bids avg $51.18 (basis unspecified). Full-time: pitch as a retainer.
+
+About us
+
+We're a fast-growing vertical SaaS company. Our platform runs bookings, memberships, recurring billing, payments and customer communications for recreation and entertainment venues. We're signing new clients every week, and our onboarding process hasn't kept up.
+
+Right now, each new client needs a lot of custom setup: membership plans, pricing rules, promo codes, customer imports, staff schedules and more. Most of it is done by hand through an AI coding tool, one request at a time. That makes it slow, puts too much on the founder, and ties up our development capacity with configuration work instead of product work.
+
+Your first project: an AI setup engine for the entire platform
+
+We want every part of a new client's configuration to be set up through one AI-driven tool. This includes:
+
+business details, hours and holiday closures
+bays/rooms, per-room hours and buffers
+pricing: base rates, peak and off-peak windows, member rates, overage and guest fees
+memberships, punch passes, lesson packages, commitment and annual-fee plans
+promo codes, discounts and referral programs
+instructors, lesson types, durations and schedules
+events, leagues and packages
+customer and member imports (CSV), including mapping existing members to new plans
+waivers, membership agreements and cancellation policies
+automated messages and notifications
+booking page settings and branding
+door access settings
+
+Here's how it should work:
+
+The onboarding specialist pastes in the client's requirements: an email, a document, notes from a call.
+AI converts them into structured configuration across all of the areas above.
+The system shows one clear preview of everything that will be created or changed.
+A human approves, and the system applies it through the platform's own validated server functions, never through direct database writes.
+Anything the platform doesn't support yet gets flagged as a feature gap with a clear description, instead of being guessed at.
+Every change is logged and can be undone.
+
+The platform handles real money through recurring billing across multiple payment processors, so safety matters as much as speed.
+
+Expected pace: we move fast and use AI heavily ourselves.
+
+Within the first few days, we expect a working version covering the most common setup areas.
+Within the first few weeks, we expect full platform coverage, tested on a test account.
+
+Handoff and training: you'll train our onboarding specialist to run client setups end to end with this tool. That includes:
+
+written guides
+short walkthrough videos
+a checklist for each new client
+
+They should be able to onboard a client without engineering help, except for real feature gaps.
+
+Out of scope for the tool: payment processor credentials (API keys and secrets). Clients always enter those themselves.
+
+Ongoing work (if it's a fit)
+
+Build the feature gaps the setup engine flags, working in our codebase through GitHub alongside our existing AI-assisted development workflow.
+Set up read-only AI access to our database for diagnostics and support.
+Automate support and internal workflows: help desk AI agent, intake forms, internal tooling.
+Review and harden AI-generated code, especially around payments and billing.
+
+Our stack
+
+React and TypeScript (Vite)
+Supabase: Postgres, Row Level Security, Edge Functions (Deno), scheduled jobs
+Payment processor APIs, including Stripe and Square
+GitHub-based workflow
+AI coding tools used heavily across the team
+
+Requirements
+
+Strong TypeScript and Postgres experience, with production Supabase experience (RLS, Edge Functions, migrations).
+You've built production integrations with LLM APIs, such as tool calling or structured outputs.
+Experience with payment or billing systems, and an understanding of idempotency, failure handling and reconciliation.
+A safety-first mindset. You design for "what if this runs twice" and "what if the AI misreads the input."
+You ship fast with AI tools without cutting corners on testing.
+You write clear documentation and can train non-technical team members.
+Comfortable working asynchronously with a small, fast-moving team.
+
+Nice to have
+
+You've built MCP servers or other AI agent tools.
+Experience with Claude Code, Cursor or similar AI-assisted development workflows.
+Background in multi-tenant SaaS, bookings or subscription billing.
+Experience setting up AI support tools such as Intercom Fin or Help Scout.
+
+Engagement
+
+Contract to start, with a clear path to a long-term or full-time role for the right person.
+Around 30-40 hours per week preferred.
+Hourly or milestone-based; open to discussion.

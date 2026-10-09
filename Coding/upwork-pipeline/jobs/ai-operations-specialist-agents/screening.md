@@ -1,0 +1,7 @@
+# Their application asks (reference only; skill rule 9: not answered point by point in the proposal. Fill every [LORENZO] if Upwork shows a text box)
+
+**"Include examples of agentic workflows you've built (not just automations)."**
+My own outbound runs 100k+ cold emails a month on Instantly, with an agent researching and writing each message; Instantly's API is wired to Claude. I built the routing and follow-up system a commercial roofing contractor runs $750M+ in annual bid volume through, with every estimate request tracked and followed up on, and an outbound system for a software consultancy that personalizes each message instead of blasting a template, which raised their qualified lead volume 35%. [LORENZO: in each, name the step where an agent decides and the tools it calls, e.g. what it routes on and what it researches before writing.] I scaled my own AI agency to $10,000 a month on the same kind of system.
+
+**"Describe a time you identified an automation opportunity a client or team hadn't asked for."**
+[LORENZO: one real story in two or three sentences: what they asked for, what you noticed they had not asked for, what you built and the result.] Only if true: on the roofing contractor's bid routing, was following up on every estimate request your idea rather than theirs? If so, the draft is: "They asked me for [X]. I saw estimate requests being lost to manual chasing and added follow-up on every one; that system now carries $750M+ in annual bid volume."

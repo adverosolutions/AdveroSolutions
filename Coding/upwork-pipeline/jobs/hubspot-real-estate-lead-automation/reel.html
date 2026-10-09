@@ -1,0 +1,783 @@
+<title>Linden Lead Reel</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@200;300;400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  color-scheme:dark;
+  --ink:#EEF4F1;--ink2:rgba(238,244,241,.74);--mut:rgba(238,244,241,.56);--line:rgba(255,255,255,.1);
+  --mint:#6CF0C2;--mint2:#2FBF94;--teal:#2B8FB0;--amber:#F2B45C;
+  --serif:'Instrument Serif',Georgia,serif;--sans:'Geist',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'Geist Mono',ui-monospace,Menlo,monospace;
+  --e:cubic-bezier(.16,1,.3,1);--io:cubic-bezier(.65,0,.35,1);--sp:cubic-bezier(.34,1.45,.64,1);
+}
+html,body{height:100%}
+body{margin:0;background:#040607;color:var(--ink);font-family:var(--sans);display:flex;flex-direction:column;align-items:center;justify-content:center;padding-inline:16px;padding-block:16px;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+.wrap{width:min(100%,calc((100vh - 100px)*16/9),1400px)}
+.frame{position:relative;width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#06090B;box-shadow:0 50px 120px -40px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.06)}
+.stage{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0;overflow:hidden}
+
+/* atmosphere */
+.aur{position:absolute;inset:-25%;filter:blur(90px) saturate(125%);transition:filter 2s ease,opacity 2s ease;opacity:.9}
+.aur i{position:absolute;border-radius:50%;mix-blend-mode:screen}
+.aur .b1{width:760px;height:760px;left:18%;top:22%;background:radial-gradient(circle,rgba(34,170,128,.55),transparent 62%);animation:d1 16s ease-in-out infinite alternate}
+.aur .b2{width:680px;height:680px;left:52%;top:8%;background:radial-gradient(circle,rgba(38,120,170,.5),transparent 62%);animation:d2 19s ease-in-out infinite alternate}
+.aur .b3{width:520px;height:520px;left:40%;top:52%;background:radial-gradient(circle,rgba(242,180,92,.22),transparent 62%);animation:d3 14s ease-in-out infinite alternate}
+@keyframes d1{to{transform:translate(160px,-60px) scale(1.15)}}
+@keyframes d2{to{transform:translate(-180px,90px) scale(.9)}}
+@keyframes d3{to{transform:translate(120px,-120px) scale(1.2)}}
+.frame[data-s="0"] .aur{filter:blur(100px) saturate(110%) hue-rotate(20deg);opacity:.55}
+.frame[data-s="1"] .aur{filter:blur(90px) saturate(125%) hue-rotate(0deg)}
+.frame[data-s="2"] .aur{filter:blur(90px) saturate(125%) hue-rotate(-18deg)}
+.frame[data-s="3"] .aur{filter:blur(90px) saturate(140%) hue-rotate(14deg)}
+.frame[data-s="4"] .aur{filter:blur(90px) saturate(125%) hue-rotate(-30deg)}
+.frame[data-s="5"] .aur{filter:blur(90px) saturate(130%) hue-rotate(24deg)}
+.frame[data-s="6"] .aur{filter:blur(95px) saturate(135%) hue-rotate(34deg);opacity:.8}
+.frame[data-s="7"] .aur{filter:blur(100px) saturate(120%) hue-rotate(-40deg);opacity:.7}
+.frame[data-s="8"] .aur{filter:blur(90px) saturate(150%) hue-rotate(0deg);opacity:1}
+#bokeh{position:absolute;inset:0;width:1280px;height:720px;pointer-events:none;opacity:.8}
+.grain{position:absolute;inset:0;pointer-events:none;opacity:.09;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 45%,rgba(0,0,0,.62) 100%)}
+.hud{position:absolute;left:64px;right:64px;top:40px;z-index:8;display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.hud .k{display:flex;gap:12px;align-items:center}
+.hud .k i{width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px 2px rgba(108,240,194,.7)}
+.hud .k span{transition:opacity .35s,transform .5s var(--e)}
+.hud .k span.sw{opacity:0;transform:translateY(-8px)}
+
+/* letterbox + light streak */
+.lbx{position:absolute;left:0;right:0;height:62px;background:#000;z-index:9;transition:transform 1.2s var(--e)}
+.lbx.t{top:0;transform:translateY(-101%)}.lbx.b{bottom:0;transform:translateY(101%)}
+.frame.lbon .lbx{transform:none}
+.streak{position:absolute;inset:-10% -30%;z-index:7;pointer-events:none;opacity:0;mix-blend-mode:screen;background:linear-gradient(104deg,transparent 42%,rgba(108,240,194,.12) 46%,rgba(214,255,240,.7) 50%,rgba(108,240,194,.12) 54%,transparent 58%);background-size:260% 100%;background-position:130% 0;filter:blur(2px)}
+.streak.go{animation:streak .95s cubic-bezier(.65,0,.35,1) both}
+@keyframes streak{0%{opacity:0;background-position:130% 0}15%{opacity:1}85%{opacity:1}100%{opacity:0;background-position:-30% 0}}
+
+/* shots + camera + transitions */
+.shot{position:absolute;inset:0;opacity:0;visibility:hidden;perspective:1600px;transform-origin:var(--ox,50%) var(--oy,50%)}
+.shot.on{visibility:visible;animation:shotIn 1.1s var(--e) both}
+.shot.out{visibility:visible;animation:shotOut .8s var(--io) both;pointer-events:none}
+@keyframes shotIn{from{opacity:0;transform:scale(.93);filter:blur(18px)}to{opacity:1;transform:none;filter:none}}
+@keyframes shotOut{from{opacity:1}to{opacity:0;transform:scale(1.07);filter:blur(22px)}}
+.frame[data-x=push] .shot.on{animation:pushIn 1.2s var(--e) .12s both}
+.frame[data-x=push] .shot.out{animation:pushOut .95s cubic-bezier(.7,0,.84,0) both}
+@keyframes pushIn{from{opacity:0;transform:scale(.8);filter:blur(14px)}to{opacity:1;transform:none;filter:none}}
+@keyframes pushOut{0%{opacity:1;transform:none;filter:none}100%{opacity:0;transform:scale(2.7);filter:blur(16px)}}
+.frame[data-x=track] .shot.on{animation:trackIn 1.15s var(--e) .05s both}
+.frame[data-x=track] .shot.out{animation:trackOut .9s var(--io) both}
+@keyframes trackIn{from{opacity:0;transform:translateX(420px) rotateY(-8deg);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
+@keyframes trackOut{to{opacity:0;transform:translateX(-420px) rotateY(8deg);filter:blur(10px)}}
+.frame[data-x=streak] .shot.on{animation:shotIn 1s var(--e) .25s both}
+.frame[data-x=streak] .shot.out{animation:streakOut .65s ease both}
+@keyframes streakOut{to{opacity:0;transform:translateX(-60px);filter:brightness(1.8) blur(8px)}}
+.cam{position:absolute;inset:0;transform-style:preserve-3d}
+.shot.on .cam{animation:push 8s cubic-bezier(.3,.1,.3,1) both}
+@keyframes push{from{transform:scale(1)}to{transform:scale(1.055)}}
+.paused .shot,.paused .shot *,.paused .shot *::after,.paused .shot *::before,.paused .streak{animation-play-state:paused!important}
+
+/* reveals */
+.a{opacity:0}
+.shot.on .a{animation:var(--k,rise) 1.1s var(--e) var(--d,0s) both}
+@keyframes rise{from{opacity:0;transform:translateY(34px);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
+@keyframes pop{0%{opacity:0;transform:scale(.86) translateY(14px);filter:blur(8px)}100%{opacity:1;transform:none;filter:none}}
+@keyframes fromL{from{opacity:0;transform:translateX(-70px);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
+@keyframes fromR{from{opacity:0;transform:translateX(70px);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes drop{0%{opacity:0;transform:translateY(-40px) scale(.96);filter:blur(8px)}100%{opacity:1;transform:none;filter:none}}
+.ln{display:block;overflow:hidden;padding:0 .04em .12em}
+.ln>span{display:inline-block;transform:translateY(115%)}
+.shot.on .ln>span{animation:lineUp 1.2s var(--e) var(--d,0s) both}
+@keyframes lineUp{to{transform:none}}
+.hl{font-family:var(--serif);font-weight:400;font-size:64px;line-height:1;letter-spacing:-.015em;margin:0}
+.hl em{font-style:italic;background:linear-gradient(100deg,#B8FFE6,var(--mint) 45%,#7FD3F0);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 18px rgba(108,240,194,.25))}
+.cap{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+
+/* glass */
+.g{position:absolute;border-radius:22px;background:linear-gradient(155deg,rgba(255,255,255,.12),rgba(255,255,255,.035) 60%);backdrop-filter:blur(26px) saturate(160%);-webkit-backdrop-filter:blur(26px) saturate(160%);border:1px solid rgba(255,255,255,.13);box-shadow:0 50px 100px -36px rgba(0,0,0,.85),0 12px 30px -18px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.16);overflow:hidden}
+.g::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.16) 50%,transparent 62%);background-size:260% 100%;background-position:130% 0}
+.shot.on .g.sh::after{animation:sheen 1.8s ease var(--s,1.2s) both}
+@keyframes sheen{to{background-position:-40% 0}}
+.fgb{position:absolute;border-radius:24px;background:linear-gradient(155deg,rgba(255,255,255,.16),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.14);filter:blur(9px);opacity:0;pointer-events:none}
+.shot.on .fgb{animation:fgIn 1.4s ease .2s forwards,fgDrift 8s ease-in-out .2s both}
+@keyframes fgIn{to{opacity:.5}}
+@keyframes fgDrift{from{transform:translate(0,0)}to{transform:translate(var(--fx,-40px),var(--fy,-10px))}}
+.row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--line);font-size:16px;color:var(--ink2)}
+.row b{font-weight:500;color:var(--ink)}
+.av{width:48px;height:48px;border-radius:50%;flex:none;display:inline-flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:21px;color:#fff;background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.85),transparent 26%),radial-gradient(circle at 50% 60%,var(--c1,#2FBF94),var(--c2,#0E5A45));box-shadow:0 8px 24px -8px var(--c1,#2FBF94),inset 0 0 0 1px rgba(255,255,255,.25)}
+.av.lg{width:64px;height:64px;font-size:28px}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;font-size:14px;font-weight:500;background:rgba(108,240,194,.13);color:var(--mint);border:1px solid rgba(108,240,194,.35)}
+.pill i{width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint)}
+
+/* S0 cold open */
+.mapw{position:absolute;inset:0;perspective:760px;perspective-origin:50% 22%;overflow:hidden}
+.map{position:absolute;left:-420px;top:-700px;width:2120px;height:1460px;transform-origin:50% 100%;transform:rotateX(68deg)}
+.shot.on .map{animation:mapFly 6s cubic-bezier(.3,.1,.3,1) both}
+@keyframes mapFly{from{transform:rotateX(68deg) translateY(120px)}to{transform:rotateX(68deg) translateY(-60px)}}
+.map svg{width:100%;height:100%;overflow:visible}
+.map .st{fill:none;stroke:rgba(108,240,194,.22);stroke-width:1.4;stroke-dasharray:1;stroke-dashoffset:1}
+.map .st.av2{stroke:rgba(150,255,220,.5);stroke-width:2.6;filter:drop-shadow(0 0 6px rgba(108,240,194,.7))}
+.shot.on .map .st{animation:draw 1.6s var(--io) var(--d) forwards}
+.map .lot{fill:#DFFFF3;opacity:0}
+.shot.on .map .lot{animation:twk 2.4s ease-in-out var(--d) infinite alternate}
+@keyframes twk{0%{opacity:0}40%{opacity:.9}100%{opacity:.25}}
+.horizon{position:absolute;left:0;right:0;top:300px;height:180px;background:radial-gradient(ellipse at 50% 60%,rgba(108,240,194,.22),transparent 65%);filter:blur(20px)}
+.beacon{position:absolute;left:640px;top:486px;width:0;height:0}
+.beacon .col{position:absolute;left:-1px;bottom:0;width:2px;height:190px;background:linear-gradient(0deg,#E8FFF6,rgba(108,240,194,.5) 40%,transparent);box-shadow:0 0 18px 3px rgba(108,240,194,.45);transform-origin:50% 100%;transform:scaleY(0)}
+.shot.on .beacon .col{animation:colUp 1.4s var(--e) 1.9s forwards}
+@keyframes colUp{to{transform:scaleY(1)}}
+.beacon .core2{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;background:#F4FFFB;box-shadow:0 0 16px 6px rgba(108,240,194,.9),0 0 60px 20px rgba(108,240,194,.35);opacity:0}
+.shot.on .beacon .core2{animation:pop .8s var(--sp) 1.8s both}
+.beacon .gr{position:absolute;left:-60px;top:-22px;width:120px;height:44px;border-radius:50%;border:1.5px solid rgba(108,240,194,.8);opacity:0}
+.shot.on .beacon .gr{animation:gring 2.2s ease-out 2s infinite}
+.shot.on .beacon .gr:nth-child(4){animation-delay:2.75s}
+@keyframes gring{0%{opacity:.9;transform:scale(.2)}100%{opacity:0;transform:scale(1.8)}}
+.chip{left:664px;top:384px;padding:10px 16px;border-radius:14px}
+.chip b{display:block;font-size:16px;font-weight:500}
+.chip span{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;color:var(--mint)}
+.s0t{position:absolute;left:0;right:0;top:112px;text-align:center}
+.s0t .hl{font-size:78px}
+.s0t .cap{margin-top:14px}
+
+/* S1 lock screen */
+.date{position:absolute;left:0;right:0;top:146px;text-align:center;font-size:21px;font-weight:400;color:var(--ink2)}
+.clock{position:absolute;left:0;right:0;top:164px;text-align:center;font-weight:200;font-size:176px;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums;background:linear-gradient(180deg,#fff,rgba(255,255,255,.62));-webkit-background-clip:text;background-clip:text;color:transparent}
+.nt{left:370px;width:540px;padding:18px 20px;display:flex;gap:16px;align-items:center;border-radius:26px}
+.nt .ic{width:46px;height:46px;border-radius:13px;flex:none;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#7CF5CC,#1E9C77);box-shadow:0 8px 20px -6px rgba(47,191,148,.8)}
+.nt .ic svg{width:24px;height:24px;color:#04221A}
+.nt b{display:block;font-size:17px;font-weight:600}
+.nt span{font-size:15.5px;color:var(--ink2);line-height:1.35;display:block}
+.nt .t{margin-left:auto;align-self:flex-start;font-size:13px;color:var(--mut)}
+.nt.ok{border-color:rgba(108,240,194,.4);box-shadow:0 0 0 1px rgba(108,240,194,.15),0 30px 70px -30px rgba(47,191,148,.55)}
+.nt.ok .ic{background:rgba(108,240,194,.14);box-shadow:none;border:1px solid rgba(108,240,194,.4)}
+.nt.ok .ic svg{color:var(--mint)}
+.s1cap{position:absolute;left:0;right:0;bottom:92px;text-align:center}
+.s1cap .hl{font-size:46px}
+
+/* S2 clean up */
+.s2h{position:absolute;left:72px;top:104px}
+.stack3{position:absolute;left:180px;top:250px;width:400px;height:330px;transform-style:preserve-3d}
+.dup{width:340px;padding:18px 22px;font-size:15px}
+.dup b{display:flex;justify-content:space-between;font-size:19px;font-weight:500;margin-bottom:6px}
+.dup b small{font-family:var(--mono);font-size:12px;color:var(--mut);font-weight:400}
+.dup .bad{color:#FF9B85}
+.shot.on .dup{animation:dupIn 1s var(--e) var(--d) both,dupGo .95s var(--io) 1.9s forwards}
+@keyframes dupIn{from{opacity:0;transform:var(--t0) translateX(-60px);filter:blur(10px)}to{opacity:1;transform:var(--t0);filter:none}}
+@keyframes dupGo{to{opacity:0;transform:translate(var(--gx),var(--gy)) scale(.7);filter:blur(14px)}}
+.gold{left:520px;top:236px;width:390px;padding:24px 26px 12px}
+.shot.on .gold{animation:pop 1.1s var(--sp) 2.4s both}
+.gold .gh{display:flex;gap:14px;align-items:center;margin-bottom:14px}
+.gold .gh b{display:block;font-size:24px;font-weight:500}
+.gold .gh span{font-family:var(--mono);font-size:12.5px;color:var(--mint);letter-spacing:.04em}
+.shot.on .gold .row{animation:fade .6s ease both}
+.gauge{position:absolute;left:968px;top:220px;width:240px;height:240px}
+.gauge svg{width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+.gauge circle{fill:none;stroke-width:10}
+.gauge .tr{stroke:rgba(255,255,255,.08)}
+.gauge .v{stroke:url(#gg);stroke-linecap:round;stroke-dasharray:629;stroke-dashoffset:264;filter:drop-shadow(0 0 10px rgba(108,240,194,.6))}
+.shot.on .gauge .v{animation:gauge 2.6s var(--e) 2.5s both}
+@keyframes gauge{from{stroke-dashoffset:264}to{stroke-dashoffset:19}}
+.gauge .n{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.gauge .n b{font-family:var(--serif);font-weight:400;font-size:96px;line-height:.9}
+.gauge .n span{margin-top:6px}
+.dupct{position:absolute;left:968px;top:500px;width:240px;text-align:center;font-size:15px;color:var(--ink2)}
+.dupct b{font-family:var(--mono);font-weight:500;color:var(--mint)}
+
+/* S3 capture */
+.s3h{position:absolute;left:72px;top:96px}
+.streams{position:absolute;inset:0;width:1280px;height:720px;overflow:visible}
+.streams path{fill:none;stroke:url(#sg);stroke-width:1.6;stroke-dasharray:600;stroke-dashoffset:600;opacity:.9}
+.shot.on .streams path{animation:draw 1.3s var(--io) var(--d) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.src{position:absolute;width:214px;height:54px;padding:0 18px;display:flex;align-items:center;gap:12px;font-size:16px;border-radius:16px}
+.src svg{width:20px;height:20px;color:var(--mint);flex:none}
+.pt{position:absolute;left:0;top:0;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:#DFFFF3;box-shadow:0 0 10px 3px rgba(108,240,194,.85),0 0 24px 6px rgba(108,240,194,.35);opacity:0;offset-rotate:0deg}
+.shot.on .pt{animation:flow 1.7s cubic-bezier(.55,0,.45,1) var(--d) infinite}
+@keyframes flow{0%{offset-distance:0%;opacity:0}12%{opacity:1}88%{opacity:1}100%{offset-distance:100%;opacity:0}}
+.core{position:absolute;left:560px;top:300px;width:160px;height:160px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:17px;font-weight:500;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.28),rgba(108,240,194,.18) 40%,rgba(10,40,32,.6) 75%);border:1px solid rgba(108,240,194,.45);box-shadow:0 0 60px 6px rgba(47,191,148,.35),inset 0 0 40px rgba(108,240,194,.25);backdrop-filter:blur(10px)}
+.core svg{width:30px;height:30px;color:var(--mint)}
+.core .rg{position:absolute;inset:-2px;border-radius:50%;border:1px solid rgba(108,240,194,.6);opacity:0}
+.shot.on .core .rg{animation:ring 2.2s ease-out infinite}
+.shot.on .core .rg:nth-child(2){animation-delay:.73s}.shot.on .core .rg:nth-child(3){animation-delay:1.46s}
+@keyframes ring{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(1.9)}}
+.contact{left:780px;top:190px;width:380px;padding:24px 26px 12px}
+.contact .gh{display:flex;gap:14px;align-items:center;margin-bottom:12px}
+.contact .gh b{display:block;font-size:22px;font-weight:500}
+.contact .gh span{font-size:13.5px;color:var(--mut)}
+.today{position:absolute;left:780px;top:556px;display:flex;align-items:baseline;gap:14px}
+.today b{font-family:var(--serif);font-weight:400;font-size:72px;line-height:1}
+.today span{font-size:15px;color:var(--ink2)}
+
+/* S4 qualify */
+.phone{position:absolute;left:140px;top:62px;width:300px;height:600px;border-radius:52px;padding:10px;background:linear-gradient(150deg,#3A4743,#0B1110 45%,#1B2522);box-shadow:0 70px 120px -40px rgba(0,0,0,.95),0 0 0 1px rgba(255,255,255,.12),inset 0 0 0 1px rgba(255,255,255,.08);transform:rotateY(16deg) rotateX(4deg) rotateZ(-1deg)}
+.shot.on .phone{animation:phoneIn 1.4s var(--e) both}
+@keyframes phoneIn{from{opacity:0;transform:rotateY(38deg) rotateX(8deg) translateX(-80px) translateZ(-120px)}to{opacity:1;transform:rotateY(16deg) rotateX(4deg) rotateZ(-1deg)}}
+.screen{height:100%;border-radius:43px;overflow:hidden;position:relative;background:linear-gradient(180deg,#0E1A17,#07100D);display:flex;flex-direction:column;justify-content:flex-end;gap:10px;padding:18px 14px 26px;box-sizing:border-box}
+.screen::before{content:"";position:absolute;left:50%;top:10px;width:96px;height:28px;margin-left:-48px;border-radius:16px;background:#000}
+.screen .who{position:absolute;left:0;right:0;top:54px;text-align:center;font-size:13px;color:var(--mut)}
+.screen .who .av{width:40px;height:40px;font-size:17px;margin:0 auto 6px;display:flex}
+.msg{max-width:86%;padding:11px 15px;border-radius:21px;font-size:15.5px;line-height:1.38}
+.msg.o{align-self:flex-end;background:linear-gradient(160deg,#5BE7B6,#23A881);color:#03251B;border-bottom-right-radius:6px;box-shadow:0 10px 24px -12px rgba(47,191,148,.8)}
+.msg.i{align-self:flex-start;background:rgba(255,255,255,.1);border-bottom-left-radius:6px}
+.typing{align-self:flex-start;display:flex;gap:5px;padding:13px 16px;border-radius:21px;border-bottom-left-radius:6px;background:rgba(255,255,255,.1);height:0;padding-block:0;opacity:0;overflow:hidden}
+.shot.on .typing{animation:typ 2.2s ease 1.1s both}
+@keyframes typ{0%{opacity:0;height:0;padding-block:0}10%,40%{opacity:1;height:10px;padding-block:13px}50%,100%{opacity:0;height:0;padding-block:0;margin-top:-10px}}
+.typing i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.6);animation:bl 1s ease-in-out infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes bl{50%{opacity:.25;transform:translateY(-2px)}}
+.dial{position:absolute;left:560px;top:150px;width:460px;height:270px}
+.dial svg{width:100%;height:100%;overflow:visible}
+.dial .bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:14;stroke-linecap:round}
+.dial .fg{fill:none;stroke:url(#dg);stroke-width:14;stroke-linecap:round;stroke-dasharray:629;stroke-dashoffset:629;filter:drop-shadow(0 0 14px rgba(108,240,194,.55))}
+.shot.on .dial .fg{animation:dialg 3.6s var(--e) 1.3s both}
+@keyframes dialg{0%{stroke-dashoffset:629}40%{stroke-dashoffset:245}55%{stroke-dashoffset:245}100%{stroke-dashoffset:88}}
+.dial .n{position:absolute;left:0;right:0;top:92px;text-align:center}
+.dial .n b{display:block;font-family:var(--serif);font-weight:400;font-size:150px;line-height:.85;letter-spacing:-.02em}
+.dial .n span{display:block;margin-top:10px}
+.sready{position:absolute;left:720px;top:452px}
+.facts{position:absolute;left:560px;top:530px;display:flex;gap:12px}
+.fact{position:relative;padding:14px 18px;border-radius:16px;font-size:15px;color:var(--ink2)}
+.fact b{display:block;font-size:19px;font-weight:500;color:var(--ink);margin-top:2px}
+
+/* S5 assign */
+.s5h{position:absolute;left:72px;top:96px}
+.lead{position:absolute;left:150px;top:330px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.lead .av{width:92px;height:92px;font-size:40px;--c1:#F2B45C;--c2:#8A4E12}
+.lead .halo{position:absolute;left:50%;top:46px;width:92px;height:92px;margin:-46px 0 0 -46px;border-radius:50%;border:1px solid rgba(242,180,92,.6);opacity:0}
+.shot.on .lead .halo{animation:ring 2.2s ease-out .6s infinite}
+.lead b{font-size:18px;font-weight:500}
+.lead span{font-size:13.5px;color:var(--mut);margin-top:-8px}
+.beams{position:absolute;inset:0;width:1280px;height:720px;overflow:visible}
+.beams path{fill:none;stroke:rgba(255,255,255,.28);stroke-width:1.4;stroke-dasharray:700;stroke-dashoffset:700}
+.shot.on .beams path{animation:draw 1.1s var(--io) var(--d) forwards,beamDim .6s ease var(--x,99s) forwards}
+@keyframes beamDim{to{opacity:.08}}
+.beams path.win{stroke:url(#bg2);stroke-width:2.4;filter:drop-shadow(0 0 8px rgba(108,240,194,.8))}
+.shot.on .beams path.win{animation:draw 1.1s var(--io) 2.6s forwards}
+.agt{left:760px;width:420px;height:74px;padding:0 20px;display:flex;align-items:center;gap:16px;border-radius:20px}
+.agt b{display:block;font-size:18px;font-weight:500}
+.agt span{font-size:14px;color:var(--mut)}
+.agt .ld{margin-left:auto;font-family:var(--mono);font-size:13px;color:var(--mut)}
+.shot.on .agt.x{animation:fromR 1s var(--e) var(--d) both,agtDim .6s ease var(--x) forwards}
+@keyframes agtDim{to{opacity:.3;filter:saturate(0) blur(1.5px);transform:scale(.97)}}
+.shot.on .agt.w{animation:fromR 1s var(--e) var(--d) both,agtWin .8s var(--sp) 2.7s forwards}
+@keyframes agtWin{to{border-color:rgba(108,240,194,.55);box-shadow:0 0 0 1px rgba(108,240,194,.25),0 30px 80px -24px rgba(47,191,148,.65);transform:scale(1.04) translateX(-10px)}}
+.timer{left:760px;top:560px;width:420px;padding:16px 20px;display:flex;gap:18px;align-items:center}
+.timer .rt{position:relative;width:62px;height:62px;flex:none}
+.timer .rt svg{width:62px;height:62px;transform:rotate(-90deg)}
+.timer .rt circle{fill:none;stroke-width:4}
+.timer .rt .a1{stroke:rgba(255,255,255,.1)}
+.timer .rt .a2{stroke:var(--mint);stroke-linecap:round;stroke-dasharray:176;stroke-dashoffset:176;filter:drop-shadow(0 0 6px rgba(108,240,194,.7))}
+.shot.on .timer .a2{animation:tmr 1.5s linear 3.5s forwards}
+@keyframes tmr{to{stroke-dashoffset:97}}
+.timer .rt b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;font-weight:500}
+.timer strong{display:block;font-size:17px;font-weight:500}
+.timer span{font-size:14px;color:var(--mut)}
+
+/* booking card (logic scene) */
+.book{left:880px;top:520px;width:320px;padding:18px 20px;display:flex;gap:18px;align-items:center;border-color:rgba(108,240,194,.4)}
+.book .tile{width:72px;height:80px;border-radius:16px;overflow:hidden;text-align:center;flex:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14)}
+.book .tile i{display:block;font-style:normal;background:linear-gradient(90deg,#5BE7B6,#23A881);color:#03251B;font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:.14em;padding:4px 0}
+.book .tile b{display:block;font-family:var(--serif);font-weight:400;font-size:42px;line-height:1.3}
+.book strong{display:block;font-size:18px;font-weight:500}
+.book span{font-size:14px;color:var(--mut)}
+
+/* S7 workflow logic */
+.s7h{position:absolute;left:72px;top:96px;z-index:2}
+.s7h .hl{font-size:56px}
+.dgrid{position:absolute;left:0;top:0;width:2000px;height:720px;background-image:radial-gradient(rgba(255,255,255,.09) 1.2px,transparent 1.6px);background-size:30px 30px;-webkit-mask-image:radial-gradient(ellipse at 40% 55%,#000 30%,transparent 75%);mask-image:radial-gradient(ellipse at 40% 55%,#000 30%,transparent 75%)}
+.shot.on .dgrid{animation:par 4.4s var(--io) 1.5s both}
+@keyframes par{to{transform:translateX(-360px)}}
+.lc{position:absolute;left:0;top:0;width:2380px;height:720px}
+.shot.on .lc{animation:pan 4.4s var(--io) 1.5s both}
+@keyframes pan{to{transform:translateX(-1100px)}}
+.wires{position:absolute;inset:0;width:2380px;height:720px;overflow:visible}
+.wires path{fill:none;stroke-linecap:round}
+.wires .wb{stroke:rgba(255,255,255,.16);stroke-width:1.6;stroke-dasharray:1;stroke-dashoffset:1}
+.shot.on .wires .wb{animation:draw .8s var(--io) var(--d) forwards}
+.wires .wb.dash{stroke-dasharray:.02 .025;stroke-dashoffset:0;opacity:0}
+.shot.on .wires .wb.dash{animation:fade .8s ease var(--d) forwards}
+.wires .wl{stroke:url(#wlg);stroke-width:2.6;stroke-dasharray:1;stroke-dashoffset:1;filter:drop-shadow(0 0 7px rgba(108,240,194,.8))}
+.shot.on .wires .wl{animation:draw .45s cubic-bezier(.55,0,.45,1) var(--d) forwards}
+.pz{position:absolute;left:0;top:0;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:#F0FFF9;box-shadow:0 0 12px 4px rgba(108,240,194,.9),0 0 30px 8px rgba(108,240,194,.4);opacity:0;offset-rotate:0deg}
+.shot.on .pz{animation:flow1 .45s cubic-bezier(.55,0,.45,1) var(--d) both}
+@keyframes flow1{0%{offset-distance:0%;opacity:0}15%{opacity:1}85%{opacity:1}100%{offset-distance:100%;opacity:0}}
+.wn{width:236px;height:84px;padding:0 14px;box-sizing:border-box;display:flex;align-items:center;gap:12px;border-radius:18px;opacity:0}
+.shot.on .wn{animation:pop .9s var(--e) var(--d) both,wnLit .6s var(--sp) var(--l,99s) forwards}
+@keyframes wnLit{0%{opacity:1}60%{transform:scale(1.05)}100%{opacity:1;transform:scale(1);border-color:rgba(108,240,194,.6);box-shadow:0 0 0 1px rgba(108,240,194,.25),0 0 40px -6px rgba(108,240,194,.55),0 40px 80px -30px rgba(0,0,0,.8)}}
+.wn .wi{width:32px;height:32px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:var(--ink2)}
+.wn .wi svg{width:17px;height:17px}
+.shot.on .wn .wi{animation:wiLit .5s ease var(--l,99s) forwards}
+@keyframes wiLit{to{background:linear-gradient(145deg,#7CF5CC,#1E9C77);border-color:transparent;color:#04221A;box-shadow:0 6px 16px -4px rgba(47,191,148,.8)}}
+.wn em{display:block;font-style:normal;font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--mut)}
+.wn b{display:block;font-size:15px;font-weight:500;white-space:nowrap;margin:2px 0 1px}
+.wn span{display:block;font-size:12.5px;color:var(--ink2);white-space:nowrap}
+.wn .ck{position:absolute;right:12px;top:12px;width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(255,255,255,.2);box-sizing:border-box}
+.shot.on .wn .ck{animation:ckOn .4s var(--sp) var(--l,99s) forwards}
+@keyframes ckOn{to{background:var(--mint) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M4 8.4l2.6 2.5L12 5.5' fill='none' stroke='%2304221A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/12px no-repeat;border-color:var(--mint)}}
+.wn.nt2{border-style:dashed}
+.shot.on .wn.nt2{animation:pop .9s var(--e) var(--d) both,skip .6s ease 3.3s forwards}
+@keyframes skip{to{opacity:.38;filter:saturate(0)}}
+.bl{position:absolute;font-family:var(--mono);font-size:11px;letter-spacing:.14em;padding:4px 9px;border-radius:999px;opacity:0}
+.bl.y{color:#04221A;background:var(--mint);box-shadow:0 0 16px rgba(108,240,194,.6)}
+.bl.n{color:var(--mut);border:1px solid rgba(255,255,255,.2);background:rgba(10,16,14,.8)}
+.shot.on .bl{animation:pop .6s var(--sp) var(--d) both}
+.tick{position:absolute;left:64px;top:630px;height:44px;padding:0 18px 0 14px;display:flex;align-items:center;gap:12px;border-radius:999px;font-size:14.5px;color:var(--ink2);z-index:2}
+.tick i{width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px 2px rgba(108,240,194,.8);animation:blink 1.2s ease-in-out infinite}
+@keyframes blink{50%{opacity:.35}}
+.tick b{font-family:var(--mono);font-weight:500;font-size:12.5px;color:var(--mint);letter-spacing:.06em}
+.tick span{transition:opacity .25s}
+
+/* S8 builder finale */
+.s8h{position:absolute;left:150px;top:78px;right:150px;display:flex;justify-content:space-between;align-items:flex-end}
+.s8h .hl{font-size:40px}
+.s8h .cap{padding-bottom:6px}
+.bglow{position:absolute;left:260px;top:170px;width:760px;height:460px;border-radius:50%;background:radial-gradient(ellipse,rgba(108,240,194,.26),rgba(255,122,89,.08) 50%,transparent 70%);filter:blur(40px)}
+.win8{position:absolute;left:150px;top:140px;width:980px;height:540px;border-radius:14px;overflow:hidden;background:#F5F8FA;box-shadow:0 60px 140px -40px rgba(0,0,0,.95),0 0 0 1px rgba(255,255,255,.18),0 0 80px -20px rgba(108,240,194,.35);transform-origin:50% 0;color:#33475B;font-family:var(--sans)}
+.shot.on .win8{animation:winIn 1.3s var(--e) .1s both}
+@keyframes winIn{from{opacity:0;transform:rotateX(22deg) translateY(80px) scale(.94);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
+.tb{position:absolute;left:0;right:0;top:0;height:52px;background:#fff;border-bottom:1px solid #DFE3EB;display:flex;align-items:center;gap:14px;padding:0 18px;box-sizing:border-box;z-index:3}
+.tb .bk{font-size:18px;color:#7C98B6}
+.tb b{font-size:15px;font-weight:600}
+.tb .ty{font-size:12px;color:#516F90;background:#EAF0F6;border-radius:4px;padding:3px 8px}
+.tb .tabs{display:flex;gap:18px;margin-left:24px;font-size:13.5px;color:#516F90}
+.tb .tabs span:first-child{color:#33475B;font-weight:500;box-shadow:0 2px 0 #00A4BD;padding-bottom:4px}
+.tb .sw{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px;color:#516F90}
+.tgl{width:40px;height:22px;border-radius:11px;background:#CBD6E2;position:relative}
+.tgl::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.shot.on .tgl{animation:tglOn .4s ease 6.3s forwards}
+.shot.on .tgl::after{animation:tglK .4s var(--sp) 6.3s forwards}
+@keyframes tglOn{to{background:#00BDA5}}
+@keyframes tglK{to{transform:translateX(18px)}}
+.tb .st{position:relative;width:24px;height:16px}
+.tb .st span{position:absolute;left:0;top:0}
+.tb .st .on{opacity:0;color:#00A38D;font-weight:600}
+.shot.on .tb .st .of{animation:fade .3s ease 6.3s reverse both}
+.shot.on .tb .st .on{animation:fade .3s ease 6.3s both}
+.tb .btn{background:#FF7A59;color:#fff;font-size:13px;font-weight:600;border-radius:4px;padding:8px 14px}
+.cv{position:absolute;left:0;top:52px;width:740px;bottom:0;overflow:hidden;background-color:#F5F8FA;background-image:radial-gradient(#CBD6E2 1.1px,transparent 1.5px);background-size:18px 18px}
+.trk{position:absolute;left:0;top:0;width:740px;height:1060px}
+.shot.on .trk{animation:trk 6s linear both}
+@keyframes trk{0%{transform:translateY(0);animation-timing-function:linear}36.7%{transform:translateY(0);animation-timing-function:cubic-bezier(.65,0,.35,1)}56.7%{transform:translateY(-180px);animation-timing-function:cubic-bezier(.65,0,.35,1)}76.7%{transform:translateY(-380px);animation-timing-function:cubic-bezier(.65,0,.35,1)}100%{transform:translateY(-560px)}}
+.hc{position:absolute;width:300px;box-sizing:border-box;background:#fff;border:1px solid #CBD6E2;border-radius:6px;padding:10px 14px 11px;box-shadow:0 1px 2px rgba(45,62,80,.08),0 6px 18px -8px rgba(45,62,80,.18);opacity:0}
+.shot.on .hc{animation:hcIn .7s var(--sp) var(--b) both,hcRing 1.4s ease var(--b) both}
+@keyframes hcIn{from{opacity:0;transform:translateY(-16px) scale(.95)}to{opacity:1;transform:none}}
+@keyframes hcRing{0%,30%{border-color:#00A4BD;box-shadow:0 0 0 3px rgba(0,164,189,.25),0 10px 24px -8px rgba(45,62,80,.25)}100%{border-color:#CBD6E2}}
+.hc.sel{z-index:2}
+.shot.on .hc.sel{animation:hcIn .7s var(--sp) var(--b) both,hcSel .5s ease var(--b) forwards}
+@keyframes hcSel{to{border-color:#00A4BD;box-shadow:0 0 0 3px rgba(0,164,189,.25),0 10px 24px -8px rgba(45,62,80,.25)}}
+.hh{display:flex;align-items:center;gap:8px;font-size:12px;color:#516F90;margin-bottom:5px}
+.hh i{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;background:var(--ic);color:#fff;flex:none}
+.hh i svg{width:12px;height:12px}
+.hc b{display:block;font-size:14px;font-weight:600;color:#33475B;white-space:nowrap}
+.hc p{margin:3px 0 0;font-size:12.5px;color:#516F90}
+.hc .tag{position:absolute;right:10px;top:9px;font-size:10.5px;font-weight:600;color:#00A38D;background:#E5F8F6;border-radius:3px;padding:2px 6px}
+.hc.trg{border-top:3px solid #FF7A59}
+.cn{position:absolute;width:2px;background:#CBD6E2;transform-origin:50% 0;transform:scaleY(0)}
+.shot.on .cn{animation:cnIn .3s ease var(--b) forwards}
+@keyframes cnIn{to{transform:scaleY(1)}}
+.cnh{position:absolute;height:2px;background:#CBD6E2;transform:scaleX(0)}
+.shot.on .cnh{animation:cnhIn .35s ease var(--b) forwards}
+@keyframes cnhIn{to{transform:scaleX(1)}}
+.pl8{position:absolute;width:22px;height:22px;margin-left:-11px;margin-top:-11px;border-radius:50%;background:#fff;border:1.5px solid #CBD6E2;color:#7C98B6;font-size:16px;line-height:19px;text-align:center;opacity:0;box-sizing:border-box}
+.shot.on .pl8{animation:pop .4s var(--sp) var(--b) both}
+.bp{position:absolute;transform:translateX(-50%);font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:12px;opacity:0;white-space:nowrap}
+.bp.y{background:#E5F8F6;color:#00A38D;border:1px solid #7FD1C7}
+.bp.n{background:#EAF0F6;color:#516F90;border:1px solid #CBD6E2}
+.shot.on .bp{animation:pop .4s var(--sp) var(--b) both}
+.endp{position:absolute;transform:translateX(-50%);font-size:11.5px;color:#7C98B6;background:#fff;border:1px solid #DFE3EB;border-radius:12px;padding:3px 12px;opacity:0}
+.shot.on .endp{animation:pop .4s var(--sp) var(--b) both}
+.sp8{position:absolute;right:0;top:52px;bottom:0;width:240px;background:#fff;border-left:1px solid #DFE3EB;box-sizing:border-box}
+.sp8 .pn{position:absolute;inset:0;padding:18px 18px}
+.sp8 h4{margin:0 0 14px;font-size:15px;font-weight:600;color:#33475B;display:flex;justify-content:space-between}
+.sp8 h4 span{color:#7C98B6;font-weight:400}
+.sp8 .srch{height:32px;border:1px solid #CBD6E2;border-radius:3px;background:#F5F8FA;font-size:12.5px;color:#7C98B6;display:flex;align-items:center;padding:0 10px;margin-bottom:14px}
+.sp8 .ct{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7C98B6;margin:12px 0 6px}
+.sp8 .it{display:flex;align-items:center;gap:8px;font-size:13px;color:#33475B;padding:6px 0}
+.sp8 .it i{width:18px;height:18px;border-radius:4px;background:var(--ic)}
+.sp8 .p1{opacity:1}
+.shot.on .sp8 .p1{animation:fade .35s ease 4.25s reverse both}
+.sp8 .p2{opacity:0}
+.shot.on .sp8 .p2{animation:fromR .5s var(--e) 4.3s both}
+.fl{margin-bottom:12px}
+.fl label{display:block;font-size:12px;color:#516F90;margin-bottom:4px}
+.fl div{border:1px solid #CBD6E2;border-radius:3px;background:#F5F8FA;font-size:13px;color:#33475B;padding:7px 10px}
+.fl div.hi{border-color:#00A4BD;background:#fff}
+
+/* S9 close */
+.endc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;background:radial-gradient(ellipse at 50% 55%,rgba(6,12,10,.5),rgba(4,6,7,.92) 72%)}
+.endc .hl{font-size:92px;text-align:center;line-height:1.02}
+.endc .ln{display:inline-block;vertical-align:top}
+.endc .rule{width:0;height:1px;background:linear-gradient(90deg,transparent,var(--mint),transparent)}
+.shot.on .endc .rule{animation:ruleW 1.4s var(--e) 1.2s forwards}
+@keyframes ruleW{to{width:420px}}
+
+/* controls: scene dots */
+.ctl{width:100%;display:flex;align-items:center;gap:12px;margin-top:12px;height:40px}
+.nb{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:none;color:var(--ink2);cursor:pointer;font-size:18px;line-height:1;flex:none}
+.nb:hover{color:var(--ink);border-color:rgba(255,255,255,.3)}
+.dots{display:flex;align-items:center;gap:8px}
+.dots button{position:relative;width:8px;height:8px;padding:0;border:0;border-radius:4px;background:rgba(255,255,255,.22);cursor:pointer;overflow:hidden;transition:width .5s var(--e),background .3s}
+.dots button.on{width:34px;background:rgba(255,255,255,.14)}
+.dots button i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--mint2),var(--mint))}
+.dots button.done{background:rgba(108,240,194,.5)}
+.nm{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);min-width:90px}
+.nm small{color:var(--mut);margin-right:10px;font-size:11.5px}
+.spc{flex:1}
+.gh2{border:0;background:none;color:var(--mut);cursor:pointer;font:inherit;font-size:13px;padding:8px}
+.gh2:hover{color:var(--ink)}
+.nx{height:36px;padding:0 18px;border-radius:18px;border:0;background:#EEF4F1;color:#06090B;font:inherit;font-size:13.5px;font-weight:500;cursor:pointer}
+.nx[disabled]{opacity:.35;cursor:default}
+.big{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(3,5,6,.35);border:0;cursor:pointer;transition:opacity .5s}
+.big span{width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 20px 60px -10px rgba(0,0,0,.6)}
+.big svg{width:34px;height:34px;margin-left:5px;color:#fff}
+.started .big{opacity:0;pointer-events:none}
+@media (max-width:600px){.nm small,.gh2{display:none}}
+@media (prefers-reduced-motion:reduce){.aur i{animation:none}}
+</style>
+
+<div class="wrap paused" id="app">
+  <div class="frame" id="frame" data-s="0">
+    <div class="stage" id="stage">
+      <div class="aur"><i class="b1"></i><i class="b2"></i><i class="b3"></i></div>
+      <canvas id="bokeh" width="1280" height="720"></canvas>
+      <svg width="0" height="0" style="position:absolute">
+        <defs>
+          <linearGradient id="gg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#2FBF94"/><stop offset="1" stop-color="#B8FFE6"/></linearGradient>
+          <linearGradient id="dg" x1="0" x2="1"><stop offset="0" stop-color="#2B8FB0"/><stop offset=".6" stop-color="#6CF0C2"/><stop offset="1" stop-color="#D8FFF1"/></linearGradient>
+          <linearGradient id="sg" x1="0" x2="1"><stop offset="0" stop-color="rgba(108,240,194,.05)"/><stop offset="1" stop-color="rgba(108,240,194,.75)"/></linearGradient>
+          <linearGradient id="bg2" x1="0" x2="1"><stop offset="0" stop-color="#F2B45C"/><stop offset="1" stop-color="#6CF0C2"/></linearGradient>
+          <linearGradient id="pg" x1="0" x2="1"><stop offset="0" stop-color="#2B8FB0"/><stop offset="1" stop-color="#6CF0C2"/></linearGradient>
+          <linearGradient id="wlg" gradientUnits="userSpaceOnUse" x1="0" x2="2380"><stop offset="0" stop-color="#4FD6A8"/><stop offset="1" stop-color="#B8FFE6"/></linearGradient>
+        </defs>
+      </svg>
+      <div class="hud"><div class="k"><i></i><span id="kick">Monday · 9:42 PM</span></div><div>Sample data</div></div>
+
+      <!-- 0 · cold open -->
+      <section class="shot" data-sc="0" data-t="0" data-in="fade" data-lb data-k="Monday · 9:42 PM" style="--ox:640px;--oy:486px"><div class="cam">
+        <div class="horizon"></div>
+        <div class="mapw"><div class="map"><svg id="mapsvg" viewBox="0 0 2120 1460"></svg></div></div>
+        <div class="beacon"><span class="col"></span><span class="gr"></span><span class="core2"></span><span class="gr"></span></div>
+        <div class="g chip a" style="--k:fromL;--d:2.5s"><b>214 Linden Ave</b><span>NEW INQUIRY · 9:42 PM</span></div>
+        <div class="s0t"><h1 class="hl"><span class="ln"><span style="--d:.5s">Every inquiry,</span></span><span class="ln"><span style="--d:.8s"><em>answered at 9:42 PM.</em></span></span></h1><div class="cap a" style="--k:fade;--d:1.6s">Real estate lead management · HubSpot</div></div>
+      </div></section>
+
+      <!-- 1 · the inquiry -->
+      <section class="shot" data-sc="0" data-t="4.6" data-in="push" data-k="Monday · 9:42 PM"><div class="cam">
+        <div class="fgb" style="left:-70px;top:520px;width:300px;height:170px;--fx:30px;--fy:-12px"></div>
+        <div class="fgb" style="left:1080px;top:90px;width:260px;height:130px;--fx:-30px;--fy:10px"></div>
+        <div class="date a" style="--k:fade;--d:.2s">Monday, October 5</div>
+        <div class="clock a" style="--d:.1s">9:42</div>
+        <div class="g nt sh a" style="--k:drop;--d:.9s;--s:1.6s;top:382px"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 11L12 4l8.5 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/></svg></div><div><b>Showing request · 214 Linden Ave</b><span>Maya Chen: “Is this still available? We’re pre-approved.”</span></div><div class="t">now</div></div>
+        <div class="g nt ok a" style="--k:drop;--d:2.3s;top:490px"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><div><b>Handled in 38 seconds</b><span>In HubSpot, texted, routed to Jordan</span></div><div class="t">9:42 PM</div></div>
+      </div></section>
+
+      <!-- 2 · clean up -->
+      <section class="shot" data-sc="1" data-t="0" data-in="streak" data-k="01 · Clean up the CRM"><div class="cam">
+        <div class="fgb" style="left:-90px;top:590px;width:280px;height:160px;--fx:40px"></div>
+        <div class="s2h"><h2 class="hl"><span class="ln"><span style="--d:.15s">One record</span></span><span class="ln"><span style="--d:.3s"><em>per person.</em></span></span></h2></div>
+        <div class="stack3">
+          <div class="g dup" style="position:absolute;left:0;top:0;--d:.3s;--t0:rotateY(22deg) rotateZ(-3deg) translateZ(-40px);--gx:360px;--gy:40px"><b>Maya Chen <small>2023</small></b><span class="bad">No phone · no owner</span></div>
+          <div class="g dup" style="position:absolute;left:30px;top:112px;--d:.45s;--t0:rotateY(22deg) rotateZ(2deg);--gx:330px;--gy:-70px"><b>M. Chen <small>2024</small></b><span class="bad">Stage: “HOT!!”</span></div>
+          <div class="g dup" style="position:absolute;left:0;top:224px;--d:.6s;--t0:rotateY(22deg) rotateZ(-1.5deg) translateZ(30px);--gx:360px;--gy:-180px"><b>maya chen <small>2025</small></b><span class="bad">Type: “b/s”</span></div>
+        </div>
+        <div class="g gold sh" style="--s:3.2s">
+          <div class="gh"><span class="av lg">MC</span><div><b>Maya Chen</b><span>3 RECORDS → 1</span></div></div>
+          <div class="row" style="animation-delay:2.9s"><span>Phone</span><b>(555) 014-7720</b></div>
+          <div class="row" style="animation-delay:3.05s"><span>Lead type</span><b>Buyer</b></div>
+          <div class="row" style="animation-delay:3.2s"><span>Lifecycle</span><b>Lead</b></div>
+          <div class="row" style="animation-delay:3.35s"><span>Owner</span><b>Jordan Reyes</b></div>
+        </div>
+        <div class="gauge a" style="--k:fade;--d:.6s"><svg viewBox="0 0 240 240"><circle class="tr" cx="120" cy="120" r="100"/><circle class="v" cx="120" cy="120" r="100"/></svg><div class="n"><b id="hg">58</b><span class="cap">CRM health</span></div></div>
+        <div class="dupct a" style="--d:3s">Duplicates <b id="dp">412</b></div>
+      </div></section>
+
+      <!-- 3 · capture -->
+      <section class="shot" data-sc="1" data-t="5.2" data-in="track" data-k="01 · Capture every source" style="--ox:1020px;--oy:320px"><div class="cam">
+        <div class="fgb" style="left:1150px;top:630px;width:240px;height:150px;--fx:-30px;--fy:-8px"></div>
+        <svg class="streams" viewBox="0 0 1280 720">
+          <path style="--d:.7s" d="M314 283 C450 283 470 380 560 380"/>
+          <path style="--d:.85s" d="M290 357 C430 357 470 380 560 380"/>
+          <path style="--d:1s" d="M314 431 C450 431 470 380 560 380"/>
+          <path style="--d:1.15s" d="M354 505 C470 505 480 380 560 380"/>
+          <path style="--d:1.3s" d="M394 579 C500 579 500 380 560 380"/>
+          <path style="--d:2s" d="M720 380 C750 380 750 330 780 330"/>
+        </svg>
+        <div class="g src a" style="--k:fromL;--d:.25s;left:100px;top:256px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18"/></svg>Website form</div>
+        <div class="g src a" style="--k:fromL;--d:.35s;left:76px;top:330px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16v12H4z"/><path d="M4 7l8 6 8-6"/></svg>Portal inquiry</div>
+        <div class="g src a" style="--k:fromL;--d:.45s;left:100px;top:404px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 11l8-6 8 6"/><path d="M6 10v9h12v-9"/></svg>Open house</div>
+        <div class="g src a" style="--k:fromL;--d:.55s;left:140px;top:478px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19h16"/><path d="M7 16V9M12 16V5M17 16v-4"/></svg>Home valuation</div>
+        <div class="g src a" style="--k:fromL;--d:.65s;left:180px;top:552px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Calls and texts</div>
+        <i class="pt" style="offset-path:path('M314 283 C450 283 470 380 560 380');--d:1.6s"></i>
+        <i class="pt" style="offset-path:path('M290 357 C430 357 470 380 560 380');--d:2.1s"></i>
+        <i class="pt" style="offset-path:path('M314 431 C450 431 470 380 560 380');--d:1.9s"></i>
+        <i class="pt" style="offset-path:path('M354 505 C470 505 480 380 560 380');--d:2.5s"></i>
+        <i class="pt" style="offset-path:path('M394 579 C500 579 500 380 560 380');--d:2.3s"></i>
+        <i class="pt" style="offset-path:path('M314 283 C450 283 470 380 560 380');--d:2.8s"></i>
+        <i class="pt" style="offset-path:path('M720 380 C750 380 750 330 780 330');--d:2.4s"></i>
+        <div class="core a" style="--k:pop;--d:.5s"><span class="rg"></span><span class="rg"></span><span class="rg"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v12c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V6"/><path d="M5 12c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6"/></svg>HubSpot</div>
+        <div class="g contact sh a" style="--k:fromR;--d:2.1s;--s:3.1s">
+          <div class="gh"><span class="av">MC</span><div><b>Maya Chen</b><span>Contact · created 9:42 PM</span></div></div>
+          <div class="row a" style="--k:fade;--d:2.6s"><span>Listing</span><b>214 Linden Ave</b></div>
+          <div class="row a" style="--k:fade;--d:2.75s"><span>Source</span><b>Website form</b></div>
+          <div class="row a" style="--k:fade;--d:2.9s"><span>Lead type</span><b>Buyer</b></div>
+          <div class="row a" style="--k:fade;--d:3.05s"><span>Duplicate</span><b style="color:var(--mint)">None found</b></div>
+        </div>
+        <div class="today a" style="--d:3.2s"><b id="cap">0</b><span>new leads today<br><span class="cap" style="font-size:11px">Illustrative</span></span></div>
+      </div></section>
+
+      <!-- 4 · qualify -->
+      <section class="shot" data-sc="2" data-t="0" data-in="push" data-k="02 · Qualify"><div class="cam">
+        <div class="fgb" style="left:1090px;top:80px;width:260px;height:150px;--fx:-40px;--fy:12px"></div>
+        <div class="phone"><div class="screen">
+          <div class="who"><span class="av" style="--c1:#F2B45C;--c2:#8A4E12">MC</span>Maya Chen</div>
+          <div class="msg o a" style="--k:pop;--d:.8s">Hi Maya, thanks for asking about 214 Linden. When are you hoping to move?</div>
+          <div class="typing"><i></i><i></i><i></i></div>
+          <div class="msg i a" style="--k:pop;--d:1.6s">Lease ends in November. Pre-approved up to $520k.</div>
+          <div class="msg o a" style="--k:pop;--d:2.4s">Great. Which areas, and how many beds?</div>
+          <div class="msg i a" style="--k:pop;--d:3.2s">Northside or Riverside. 3 beds.</div>
+        </div></div>
+        <div class="dial a" style="--k:fade;--d:.5s"><svg viewBox="0 0 460 270"><path class="bg" d="M30 240 A200 200 0 0 1 430 240"/><path class="fg" d="M30 240 A200 200 0 0 1 430 240"/></svg><div class="n"><b id="sc">0</b><span class="cap">Lead score</span></div></div>
+        <div class="sready a" style="--k:pop;--d:4s"><span class="pill"><i></i>Sales-ready · handed to an agent</span></div>
+        <div class="facts">
+          <div class="g fact a" style="--d:2s"><span>Moving</span><b>60 days</b></div>
+          <div class="g fact a" style="--d:2.2s"><span>Pre-approved</span><b>$520k</b></div>
+          <div class="g fact a" style="--d:3.6s"><span>Looking</span><b>Northside · 3 bd</b></div>
+        </div>
+      </div></section>
+
+      <!-- 5 · assign -->
+      <section class="shot" data-sc="2" data-t="5.2" data-in="track" data-k="02 · Assign"><div class="cam">
+        <div class="s5h"><h2 class="hl"><span class="ln"><span style="--d:.15s">The right agent,</span></span><span class="ln"><span style="--d:.3s"><em>in seconds.</em></span></span></h2></div>
+        <div class="lead a" style="--k:pop;--d:.3s"><span class="halo"></span><span class="av">MC</span><b>Maya Chen</b><span>Buyer · Northside</span></div>
+        <svg class="beams" viewBox="0 0 1280 720">
+          <path style="--d:.9s;--x:1.6s" d="M245 376 C500 376 520 214 760 214"/>
+          <path style="--d:1s;--x:1.9s" d="M245 376 C500 376 520 302 760 302"/>
+          <path style="--d:1.1s;--x:2.2s" d="M245 376 C500 376 520 390 760 390"/>
+          <path style="--d:1.2s;--x:2.4s" d="M245 376 C500 376 520 478 760 478"/>
+          <path class="win" d="M245 376 C500 376 520 478 760 478"/>
+        </svg>
+        <i class="pt" style="offset-path:path('M245 376 C500 376 520 478 760 478');--d:3s"></i>
+        <div class="g agt x" style="top:177px;--d:.4s;--x:1.6s"><span class="av" style="--c1:#7C8CF0;--c2:#2A3486">SO</span><div><b>Sam Okafor</b><span>Buyers · Downtown</span></div><div class="ld">2 open</div></div>
+        <div class="g agt x" style="top:265px;--d:.5s;--x:1.9s"><span class="av" style="--c1:#E58FB5;--c2:#7A2250">PN</span><div><b>Priya Nair</b><span>Sellers · Riverside</span></div><div class="ld">3 open</div></div>
+        <div class="g agt x" style="top:353px;--d:.6s;--x:2.2s"><span class="av" style="--c1:#B59BF0;--c2:#4A2E8C">EB</span><div><b>Elena Brooks</b><span>Buyers · Northside</span></div><div class="ld">7 open</div></div>
+        <div class="g agt w" style="top:441px;--d:.7s"><span class="av">JR</span><div><b>Jordan Reyes</b><span>Buyers · Northside · on shift</span></div><div class="ld">4 open</div></div>
+        <div class="g timer a" style="--d:3.1s"><div class="rt"><svg viewBox="0 0 62 62"><circle class="a1" cx="31" cy="31" r="28"/><circle class="a2" cx="31" cy="31" r="28"/></svg><b id="tmr">5:00</b></div><div><strong id="tmrh">Text to Jordan: call Maya</strong><span id="tmrs">5 minutes, or it moves to the next agent</span></div></div>
+      </div></section>
+
+      <!-- 7 · the workflow, running -->
+      <section class="shot" data-sc="3" data-t="0" data-in="track" data-k="03 · The workflow, live" style="--ox:640px;--oy:380px"><div class="cam">
+        <div class="dgrid"></div>
+        <div class="s7h"><h2 class="hl"><span class="ln"><span style="--d:.15s">The logic, <em>running live.</em></span></span></h2></div>
+        <div class="lc">
+          <svg class="wires" viewBox="0 0 2380 720">
+            <path class="wb" pathLength="1" style="--d:.5s" d="M286 430 H340"/>
+            <path class="wb" pathLength="1" style="--d:.65s" d="M576 430 H630"/>
+            <path class="wb" pathLength="1" style="--d:.8s" d="M866 430 H920"/>
+            <path class="wb" pathLength="1" style="--d:.95s" d="M1156 430 C1184 430 1182 292 1210 292"/>
+            <path class="wb dash" pathLength="1" style="--d:.95s" d="M1156 430 C1184 430 1182 568 1210 568"/>
+            <path class="wb" pathLength="1" style="--d:1.1s" d="M1446 292 H1500"/>
+            <path class="wb" pathLength="1" style="--d:1.25s" d="M1736 292 H1790"/>
+            <path class="wb" pathLength="1" style="--d:1.4s" d="M2026 292 H2080"/>
+            <path class="wl" pathLength="1" style="--d:1.35s" d="M286 430 H340"/>
+            <path class="wl" pathLength="1" style="--d:1.95s" d="M576 430 H630"/>
+            <path class="wl" pathLength="1" style="--d:2.55s" d="M866 430 H920"/>
+            <path class="wl" pathLength="1" style="--d:3.2s" d="M1156 430 C1184 430 1182 292 1210 292"/>
+            <path class="wl" pathLength="1" style="--d:3.85s" d="M1446 292 H1500"/>
+            <path class="wl" pathLength="1" style="--d:4.45s" d="M1736 292 H1790"/>
+            <path class="wl" pathLength="1" style="--d:5.35s" d="M2026 292 H2080"/>
+          </svg>
+          <i class="pz" style="offset-path:path('M286 430 H340');--d:1.35s"></i>
+          <i class="pz" style="offset-path:path('M576 430 H630');--d:1.95s"></i>
+          <i class="pz" style="offset-path:path('M866 430 H920');--d:2.55s"></i>
+          <i class="pz" style="offset-path:path('M1156 430 C1184 430 1182 292 1210 292');--d:3.2s"></i>
+          <i class="pz" style="offset-path:path('M1446 292 H1500');--d:3.85s"></i>
+          <i class="pz" style="offset-path:path('M1736 292 H1790');--d:4.45s"></i>
+          <i class="pz" style="offset-path:path('M2026 292 H2080');--d:5.35s"></i>
+          <div class="g wn" style="left:50px;top:388px;--d:.3s;--l:1.15s"><span class="wi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10h10M7 14h6"/></svg></span><div><em>TRIGGER</em><b>Form submitted</b><span>Listing page · 214 Linden</span></div><i class="ck"></i></div>
+          <div class="g wn" style="left:340px;top:388px;--d:.45s;--l:1.8s"><span class="wi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h10M4 17h7"/><circle cx="18" cy="16" r="3"/></svg></span><div><em>ACTION</em><b>Set type + lifecycle</b><span>Buyer · Lead</span></div><i class="ck"></i></div>
+          <div class="g wn" style="left:630px;top:388px;--d:.6s;--l:2.4s"><span class="wi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v11H9l-5 4z"/></svg></span><div><em>ACTION</em><b>Send qualifying SMS</b><span>Timeline, budget, area</span></div><i class="ck"></i></div>
+          <div class="g wn" style="left:920px;top:388px;--d:.75s;--l:3s"><span class="wi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 4v6a4 4 0 0 0 4 4h8M6 20v-6"/><path d="M15 11l3 3-3 3"/></svg></span><div><em>BRANCH</em><b>Lead score ≥ 80?</b><span>Maya scores 86</span></div><i class="ck"></i></div>
+          <span class="bl y" style="left:1162px;top:334px;--d:3.1s">YES</span>
+          <span class="bl n" style="left:1166px;top:500px;--d:1.1s">NO</span>
+          <div class="g wn" style="left:1210px;top:250px;--d:.9s;--l:3.6s"><span class="wi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/></svg></span><div><em>ROTATE</em><b>Northside buyer agent</b><span>Assigned to Jordan Reyes</span></div><i class="ck"></i></div>
+          <div class="g wn nt2" style="left:1210px;top:526px;--d:1s"><span class="wi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><div><em>SEQUENCE</em><b>Enrol in nurture</b><span>Not taken · score 86</span></div></div>
+          <div class="g wn" style="left:1500px;top:250px;--d:1.05s;--l:4.25s"><span class="wi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/></svg></span><div><em>TASK</em><b>Call Maya Chen</b><span>SLA 5 minutes</span></div><i class="ck"></i></div>
+          <div class="g wn" style="left:1790px;top:250px;--d:1.2s;--l:4.85s"><span class="wi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></span><div><em>DELAY</em><b>Wait 1 day</b><span>Resumes Tue 8:00 AM</span></div><i class="ck"></i></div>
+          <div class="g wn sh" style="left:2080px;top:250px;--d:1.35s;--l:5.75s;--s:6.1s"><span class="wi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span><div><em>EMAIL</em><b>3 similar listings</b><span>Stops when she replies</span></div><i class="ck"></i></div>
+        </div>
+        <div class="g tick a" style="--k:fromL;--d:1s"><i></i><b id="tkt">9:42:07 PM</b><span id="tkx">Maya Chen enrolled · form submitted</span></div>
+        <div class="g book sh a" style="--k:pop;--d:6.6s;--s:7.1s;left:840px;top:530px"><div class="tile"><i>SAT</i><b>11</b></div><div><strong>Showing booked</strong><span>214 Linden · 11:00 AM</span></div></div>
+      </div></section>
+
+      <!-- 8 · builder finale -->
+      <section class="shot" data-sc="4" data-t="0" data-in="push" data-k="04 · In your HubSpot" style="--ox:640px;--oy:420px"><div class="cam">
+        <div class="bglow"></div>
+        <div class="s8h"><h2 class="hl"><span class="ln"><span style="--d:.25s">This is what it will look like <em>in your HubSpot.</em></span></span></h2><span class="cap a" style="--k:fade;--d:.9s">Your workflow in HubSpot · illustrative</span></div>
+        <div class="win8">
+          <div class="tb"><span class="bk">‹</span><b>Listing inquiry · buyer routing</b><span class="ty">Contact-based</span><div class="tabs"><span>Actions</span><span>Settings</span><span>Performance</span></div><div class="sw"><span class="st"><span class="of">Off</span><span class="on">On</span></span><span class="tgl"></span><span class="btn">Review and publish</span></div></div>
+          <div class="cv"><div class="trk">
+            <div class="hc trg" style="left:220px;top:30px;--b:.9s"><div class="hh"><i style="--ic:#FF7A59"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg></i>Trigger · Contact enrollment</div><b>Form submission</b><p>Listing page inquiry form</p></div>
+            <span class="cn" style="left:369px;top:116px;height:34px;--b:1.3s"></span><span class="pl8" style="left:370px;top:133px;--b:1.35s">+</span>
+            <div class="hc" style="left:220px;top:150px;--b:1.45s"><div class="hh"><i style="--ic:#00A4BD"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></i>1 · Edit record</div><b>Set Lead type to Buyer</b></div>
+            <span class="cn" style="left:369px;top:214px;height:36px;--b:1.85s"></span><span class="pl8" style="left:370px;top:232px;--b:1.9s">+</span>
+            <div class="hc" style="left:220px;top:250px;--b:2s"><div class="hh"><i style="--ic:#00A4BD"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></i>2 · Edit record</div><b>Set Lifecycle stage to Lead</b></div>
+            <span class="cn" style="left:369px;top:314px;height:36px;--b:2.35s"></span><span class="pl8" style="left:370px;top:332px;--b:2.4s">+</span>
+            <div class="hc" style="left:220px;top:350px;--b:2.5s"><div class="hh"><i style="--ic:#6A78D1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 5h16v11H9l-5 4z"/></svg></i>3 · Send SMS</div><b>Qualifying questions to Maya</b></div>
+            <span class="cn" style="left:369px;top:414px;height:36px;--b:2.85s"></span><span class="pl8" style="left:370px;top:432px;--b:2.9s">+</span>
+            <div class="hc" style="left:220px;top:450px;--b:3s"><div class="hh"><i style="--ic:#00BDA5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 4v6a4 4 0 0 0 4 4h8M6 20v-6"/></svg></i>4 · If/then branch</div><b>Lead score is ≥ 80</b></div>
+            <span class="cn" style="left:369px;top:514px;height:32px;--b:3.3s"></span>
+            <span class="cnh" style="left:200px;top:545px;width:361px;--b:3.4s"></span>
+            <span class="cn" style="left:199px;top:546px;height:44px;--b:3.5s"></span>
+            <span class="cn" style="left:559px;top:546px;height:44px;--b:3.5s"></span>
+            <span class="bp y" style="left:200px;top:556px;--b:3.55s">Yes</span>
+            <span class="bp n" style="left:560px;top:556px;--b:3.6s">None met</span>
+            <div class="hc" style="left:50px;top:590px;--b:3.65s"><div class="hh"><i style="--ic:#00A4BD"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/></svg></i>5 · Rotate record to owner</div><b>Northside buyer agents</b></div>
+            <div class="hc" style="left:410px;top:590px;--b:3.8s"><div class="hh"><i style="--ic:#6A78D1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 6h16M4 12h16M4 18h10"/></svg></i>9 · Enroll in sequence</div><b>Buyer nurture</b></div>
+            <span class="cn" style="left:559px;top:654px;height:30px;--b:4.05s"></span><span class="endp" style="left:560px;top:684px;--b:4.1s">End</span>
+            <span class="cn" style="left:199px;top:654px;height:36px;--b:4.1s"></span><span class="pl8" style="left:200px;top:672px;--b:4.15s">+</span>
+            <div class="hc sel" style="left:50px;top:690px;--b:4.25s"><div class="hh"><i style="--ic:#F5C26B"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 12l4 4 8-9"/></svg></i>6 · Create task</div><b>Call Maya · due in 5 min</b></div>
+            <span class="cn" style="left:199px;top:754px;height:36px;--b:4.65s"></span><span class="pl8" style="left:200px;top:772px;--b:4.7s">+</span>
+            <div class="hc" style="left:50px;top:790px;--b:4.8s"><div class="hh"><i style="--ic:#516F90"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></i>7 · Delay</div><b>Wait 1 day</b></div>
+            <span class="cn" style="left:199px;top:854px;height:36px;--b:5.2s"></span><span class="pl8" style="left:200px;top:872px;--b:5.25s">+</span>
+            <div class="hc" style="left:50px;top:890px;--b:5.35s"><div class="hh"><i style="--ic:#6A78D1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></i>8 · Send email</div><b>3 similar listings</b><span class="tag">Unenroll on reply</span></div>
+            <span class="cn" style="left:199px;top:954px;height:30px;--b:5.7s"></span><span class="endp" style="left:200px;top:984px;--b:5.75s">End</span>
+          </div></div>
+          <div class="sp8">
+            <div class="pn p1"><h4>Choose an action <span>×</span></h4><div class="srch">Search actions</div><div class="ct">CRM</div><div class="it"><i style="--ic:#00A4BD"></i>Edit record</div><div class="it"><i style="--ic:#00A4BD"></i>Rotate record to owner</div><div class="it"><i style="--ic:#F5C26B"></i>Create task</div><div class="ct">Communications</div><div class="it"><i style="--ic:#6A78D1"></i>Send SMS</div><div class="it"><i style="--ic:#6A78D1"></i>Send email</div><div class="ct">Flow</div><div class="it"><i style="--ic:#00BDA5"></i>If/then branch</div><div class="it"><i style="--ic:#516F90"></i>Delay</div></div>
+            <div class="pn p2"><h4>Create task <span>×</span></h4><div class="fl"><label>Task title</label><div>Call Maya Chen</div></div><div class="fl"><label>Due date</label><div class="hi">5 minutes after enrollment</div></div><div class="fl"><label>Assign to</label><div>Contact owner</div></div><div class="fl"><label>Priority</label><div>High</div></div><div class="fl"><label>Type</label><div>Call</div></div></div>
+          </div>
+        </div>
+      </div></section>
+
+      <!-- 9 · close -->
+      <section class="shot" data-sc="4" data-t="7.6" data-in="fade" data-lb data-k="Real estate lead management"><div class="cam">
+        <div class="endc">
+          <h2 class="hl"><span class="ln"><span style="--d:.3s">Captured.</span></span> <span class="ln"><span style="--d:.5s">Qualified.</span></span><br><span class="ln"><span style="--d:.7s">Assigned.</span></span> <span class="ln"><span style="--d:.9s"><em>Booked.</em></span></span></h2>
+          <span class="rule"></span>
+          <div class="cap a" style="--k:fade;--d:1.5s">Your HubSpot · real estate lead management</div>
+        </div>
+      </div></section>
+
+      <div class="streak" id="streak"></div>
+      <div class="grain"></div><div class="vig"></div>
+      <div class="lbx t"></div><div class="lbx b"></div>
+    </div>
+    <button class="big" id="big" aria-label="Play"><span><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg></span></button>
+  </div>
+  <div class="ctl">
+    <button class="nb" id="bk" aria-label="Previous scene">‹</button>
+    <div class="dots" id="dots"></div>
+    <span class="nm"><small id="no">1/5</small><span id="nm">Open</span></span>
+    <span class="spc"></span>
+    <button class="gh2" id="rp">Replay</button>
+    <button class="nx" id="nx">Next ›</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var NAMES=['Open','Clean-up','Qualify','Logic','HubSpot'], DURS=[8.4,9.8,10.6,8.6,10.2];
+  var app=document.getElementById('app'), stage=document.getElementById('stage'), frame=document.getElementById('frame');
+  var shots=[].slice.call(document.querySelectorAll('.shot')), kick=document.getElementById('kick');
+  var SC=[]; shots.forEach(function(s,k){ var i=+s.dataset.sc; (SC[i]=SC[i]||[]).push(k); });
+  var sc=0, t=0, last=0, cur=-1, fired={}, gen=0, running=false;
+  function fit(){ stage.style.transform='scale('+(frame.clientWidth/1280)+')'; }
+  window.addEventListener('resize',fit); fit();
+  function fmt(s){ s=Math.max(0,Math.floor(s)); return Math.floor(s/60)+':'+('0'+s%60).slice(-2); }
+  function $(id){ return document.getElementById(id); }
+  function count(id,a,b,ms,f){ var el=$(id), g0=gen, st=null; (function g(n){ if(g0!==gen) return; if(st===null) st=n; var p=Math.min(1,(n-st)/ms), e=1-Math.pow(1-p,3), v=Math.round(a+(b-a)*e); el.textContent=f?f(v):v; if(p<1) requestAnimationFrame(g); })(performance.now()); }
+  function tk(time,txt){ var g0=gen, x=$('tkx'); x.style.opacity=0; setTimeout(function(){ if(g0!==gen) return; $('tkt').textContent=time; x.textContent=txt; x.style.opacity=1; },220); }
+
+  /* cold-open street grid, drawn from light */
+  (function(){
+    var s=$('mapsvg'), h='', r=function(a,b){ return a+Math.random()*(b-a); }, d;
+    for(var y=60;y<1460;y+=r(62,96)){ d=r(0,1.5); h+='<path class="st" pathLength="1" style="--d:'+d.toFixed(2)+'s" d="M0 '+y.toFixed(0)+' L2120 '+(y+r(-18,18)).toFixed(0)+'"/>'; }
+    for(var x=40;x<2120;x+=r(96,150)){ d=r(.1,1.6); h+='<path class="st" pathLength="1" style="--d:'+d.toFixed(2)+'s" d="M'+x.toFixed(0)+' 0 L'+(x+r(-30,30)).toFixed(0)+' 1460"/>'; }
+    h+='<path class="st av2" pathLength="1" style="--d:.3s" d="M160 1460 C700 1000 1300 700 2120 120"/>';
+    h+='<path class="st av2" pathLength="1" style="--d:.6s" d="M1060 1460 C1050 1000 1080 500 1030 0"/>';
+    for(var i=0;i<70;i++){ h+='<circle class="lot" r="'+r(2,4.2).toFixed(1)+'" cx="'+r(40,2080).toFixed(0)+'" cy="'+r(40,1440).toFixed(0)+'" style="--d:'+r(.6,2.6).toFixed(2)+'s"/>'; }
+    s.innerHTML=h;
+  })();
+
+  /* cues, in seconds from the start of each scene */
+  var CUES=[
+    [],
+    [[2.5,function(){ count('hg',58,97,2600); count('dp',412,0,2200); }],
+     [8.4,function(){ count('cap',0,29,1600); }]],
+    [[1.6,function(){ count('sc',0,61,1300); }],
+     [3.4,function(){ count('sc',61,86,1300); }],
+     [8.7,function(){ $('tmrh').textContent='Jordan is calling Maya'; count('tmr',300,166,1500,fmt); }],
+     [10.2,function(){ $('tmrh').textContent='Called in 2:14'; $('tmrs').textContent='Maya is talking to Jordan'; }]],
+    [[1.8,function(){ tk('9:42:07 PM','Lead type Buyer · lifecycle Lead'); }],
+     [2.4,function(){ tk('9:42:09 PM','Qualifying SMS sent'); }],
+     [3.0,function(){ tk('9:44:31 PM','Score 86 · Yes branch'); }],
+     [3.6,function(){ tk('9:44:32 PM','Rotated to Jordan Reyes'); }],
+     [4.3,function(){ tk('9:44:32 PM','Task due 9:49 PM'); }],
+     [4.9,function(){ tk('Tue 8:00 AM','Delay done · resuming'); }],
+     [5.8,function(){ tk('Tue 8:00 AM','Email sent · stops on reply'); }],
+     [6.6,function(){ tk('Tue 8:20 AM','Maya replied · email stopped'); }]],
+    []
+  ];
+
+  function show(i){
+    if(i===cur) return;
+    var prev=shots[cur], s=shots[i]; cur=i;
+    var x=s.dataset.in||'fade'; frame.dataset.x=x;
+    shots.forEach(function(o,k){ if(k!==i && o!==prev) o.classList.remove('on','out'); });
+    if(prev){ prev.classList.remove('on'); prev.classList.add('out'); setTimeout(function(){ if(shots[cur]!==prev) prev.classList.remove('out'); },1000); }
+    s.classList.remove('on','out'); void s.offsetWidth; s.classList.add('on');
+    frame.dataset.s=i; frame.classList.toggle('lbon', s.hasAttribute('data-lb'));
+    if(x==='streak'){ var st=$('streak'); st.classList.remove('go'); void st.offsetWidth; st.classList.add('go'); }
+    var k=s.dataset.k; kick.classList.add('sw'); setTimeout(function(){ kick.textContent=k; kick.classList.remove('sw'); },300);
+  }
+  function resetTexts(){
+    $('hg').textContent='58'; $('dp').textContent='412'; $('cap').textContent='0'; $('sc').textContent='0'; $('tmr').textContent='5:00';
+    $('tmrh').textContent='Text to Jordan: call Maya'; $('tmrs').textContent='5 minutes, or it moves to the next agent';
+    $('tkt').textContent='9:42:07 PM'; $('tkx').textContent='Maya Chen enrolled · form submitted'; $('tkx').style.opacity=1;
+  }
+  function go(i,replay){
+    if(i<0||i>=SC.length) return;
+    sc=i; t=0; fired={}; gen++; resetTexts();
+    if(replay){ shots.forEach(function(o){ o.classList.remove('on','out'); }); cur=-1; }
+    show(SC[i][0]);
+    if(replay) frame.dataset.x='fade';
+    bar();
+  }
+  function start(){ app.classList.remove('paused'); app.classList.add('started'); running=true; go(0,true); }
+  function next(){ if(!running) return start(); go(sc+1); }
+  function back(){ if(running) go(sc-1); }
+  function replay(){ if(!running) return start(); go(sc,true); }
+
+  var dots=$('dots');
+  NAMES.forEach(function(n,i){ var b=document.createElement('button'); b.setAttribute('aria-label',n); b.innerHTML='<i></i>'; b.onclick=function(){ if(!running){ app.classList.remove('paused'); app.classList.add('started'); running=true; } go(i); }; dots.appendChild(b); });
+  function bar(){
+    [].forEach.call(dots.children,function(b,k){ b.classList.toggle('on',k===sc); b.classList.toggle('done',k<sc); b.firstChild.style.width=k<sc?'100%':'0'; });
+    $('nm').textContent=NAMES[sc]; $('no').textContent=(sc+1)+'/'+NAMES.length;
+    $('nx').disabled=running && sc===NAMES.length-1; $('bk').disabled=!running || sc===0;
+  }
+  function tick(n){
+    var dt=Math.min(.1,(n-last)/1000); last=n;
+    if(running){
+      t=Math.min(t+dt,DURS[sc]);
+      var idx=SC[sc][0]; SC[sc].forEach(function(k){ if(t>=+shots[k].dataset.t) idx=k; }); show(idx);
+      CUES[sc].forEach(function(c,k){ if(!fired[k] && t>=c[0]){ fired[k]=1; c[1](); } });
+      var f=dots.children[sc].firstChild; f.style.width=(t/DURS[sc]*100)+'%';
+    }
+    requestAnimationFrame(tick);
+  }
+  $('big').onclick=start; $('nx').onclick=next; $('bk').onclick=back; $('rp').onclick=replay;
+  document.addEventListener('keydown',function(e){
+    if(e.code==='Space'||e.code==='ArrowRight'){ e.preventDefault(); next(); }
+    else if(e.code==='ArrowLeft'){ e.preventDefault(); back(); }
+    else if(e.key==='r'||e.key==='R'){ replay(); }
+  });
+  show(0); bar();
+  requestAnimationFrame(function(n){ last=n; requestAnimationFrame(tick); });
+
+  /* drifting bokeh for depth */
+  var cv=$('bokeh'), cx=cv.getContext('2d'), P=[];
+  for(var i=0;i<34;i++) P.push({x:Math.random()*1280,y:Math.random()*720,r:2+Math.random()*9,vx:(Math.random()-.5)*.12,vy:-.05-Math.random()*.18,a:.05+Math.random()*.16,h:Math.random()<.75?'108,240,194':'242,180,92'});
+  (function draw(){
+    cx.clearRect(0,0,1280,720);
+    P.forEach(function(p){ p.x+=p.vx; p.y+=p.vy; if(p.y<-20){p.y=740;p.x=Math.random()*1280;}
+      var gr=cx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*2.4); gr.addColorStop(0,'rgba('+p.h+','+p.a+')'); gr.addColorStop(1,'rgba('+p.h+',0)');
+      cx.fillStyle=gr; cx.beginPath(); cx.arc(p.x,p.y,p.r*2.4,0,6.283); cx.fill(); });
+    requestAnimationFrame(draw);
+  })();
+})();
+</script>

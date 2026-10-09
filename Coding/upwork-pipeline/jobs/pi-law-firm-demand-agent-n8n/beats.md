@@ -1,0 +1,8 @@
+- This is your demand package agent for your personal injury firm.
+- Case marked ready for demand, records and bills pulled from Drive.
+- Claude logs every visit, diagnosis and charge with its page.
+- Expenses totaled by provider; missing records and treatment gaps flagged.
+- Drafts from your template, facts only; attorney keeps liability and amount.
+- Risk: scanned faxes need OCR first; we test on your files.
+- Exhibit index built; attorney approves or sends edits; Word and PDF.
+- Can start [START], working demo by [DRAFT].

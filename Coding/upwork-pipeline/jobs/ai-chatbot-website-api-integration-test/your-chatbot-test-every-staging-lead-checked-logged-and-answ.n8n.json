@@ -1,0 +1,655 @@
+{
+  "name": "Your Chatbot Test: Every Staging Lead Checked, Logged and Answered",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Your Chatbot Test: Every Staging Lead Checked, Logged and Answered\n\n### How it works\n- Your chatbot snippet on the staging site posts each lead to one webhook\n- Name, email, phone and message are checked the moment they arrive\n- Every capture lands in a test sheet, passed or not, with what was missing\n- The chatbot gets an answer back: received, or which field it dropped\n- Next phase: the same lead becomes a HubSpot contact and a Google Calendar booking\n\n### Setup\n- Paste the webhook URL into your code snippet's submit or lead callback\n- Share a test sheet with columns for the four fields plus Passed and Missing\n- Run five test chats on staging: one complete, one per missing field\n- Point the error trigger's alert at the inbox you watch during the test\n\n### What I need from you\n- Your chatbot's code snippet and the staging site login\n- What the snippet sends today (one sample payload or its docs)\n- The inbox that should get missing-field flags\n- For the next phase: your CRM login (shown here in HubSpot) and the Google Calendar to book into",
+        "height": 720,
+        "width": 520,
+        "color": 1
+      },
+      "id": "f306c747-feda-5253-a651-a99bb7a7a0b6",
+      "name": "Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -680,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 1 - YOUR STAGING SITE AND CODE SNIPPET\n\nYour parts 1 and 2: the chatbot goes on staging, and its snippet posts every lead to this one webhook. If it posts through your own backend instead, that backend's webhook points here.",
+        "height": 670,
+        "width": 460,
+        "color": 5
+      },
+      "id": "795e8c2e-237d-5c1b-8e4e-e6544d62291c",
+      "name": "Section - 1 - YOUR STAGING SITE AND CODE SNIPPET",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - TEST THE LEAD AND CONTACT COLLECTION\n\nYour part 3: each lead is checked for name, email, phone and message, whatever the snippet calls those fields.",
+        "height": 670,
+        "width": 340,
+        "color": 4
+      },
+      "id": "6518d526-0c00-5a79-8c09-c6ccede7c80d",
+      "name": "Section - 2 - TEST THE LEAD AND CONTACT COLLECTION",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        500,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - THE WEBHOOK: LOG EVERY CAPTURE\n\nYour part 4: every capture goes into the test sheet, good or bad, so you can see the test yourself.",
+        "height": 670,
+        "width": 340,
+        "color": 6
+      },
+      "id": "e1999e57-983b-5e5b-8af6-a5a5ff5877de",
+      "name": "Section - 3 - THE WEBHOOK: LOG EVERY CAPTURE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - VERIFY IT PASSED CORRECTLY, FLAG WHAT DID NOT\n\nYour parts 5 and 6: a complete lead gets a received reply, a broken one gets flagged with the exact field so troubleshooting starts there.",
+        "height": 670,
+        "width": 700,
+        "color": 7
+      },
+      "id": "d1b32f96-0d63-5595-aa3b-c795308bc877",
+      "name": "Section - 4 - VERIFY IT PASSED CORRECTLY, FLAG WHAT DID NOT",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5 - NEXT PHASE: YOUR CRM (SHOWN IN HUBSPOT) AND GOOGLE CALENDAR\n\nThe onboarding work you named: a verified lead becomes a CRM contact and a booked call. HubSpot stands in for your CRM here. Switched on after the test passes.",
+        "height": 670,
+        "width": 460,
+        "color": 2
+      },
+      "id": "3df7a227-fa69-5292-a65e-0414be2ad1f3",
+      "name": "Section - 5 - NEXT PHASE: YOUR CRM (SHOWN IN HUBSPOT) AND GOOGLE CALENDAR",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2180,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 6 - IF A RUN BREAKS\n\nAny failed step emails you the step, the error and a link to the run, so no test chat disappears without a trace.",
+        "height": 670,
+        "width": 460,
+        "color": 5
+      },
+      "id": "dd8109f8-998c-549d-95da-8a05323cc01d",
+      "name": "Section - 6 - IF A RUN BREAKS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2800,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "staging-chatbot-leads",
+        "responseMode": "responseNode"
+      },
+      "id": "2bd68aa9-f544-54c5-aeeb-ca16eda1160a",
+      "name": "1 - Chatbot Snippet on Staging Posts the Lead Here",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        80
+      ],
+      "notes": "The one URL your code snippet needs. Nothing else on the site changes.",
+      "notesInFlow": true,
+      "webhookId": "b36c4f1e-ac5b-53d1-8d3b-eba61d6f2479"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "df83a5b8-96c7-5c36-b9c4-522dba0c6421",
+              "name": "test_sheet_id",
+              "value": "PASTE-YOUR-TEST-SHEET-ID",
+              "type": "string"
+            },
+            {
+              "id": "9483c943-73e5-5e69-ab4b-7fd952661360",
+              "name": "flag_inbox",
+              "value": "PASTE-YOUR-TEST-INBOX",
+              "type": "string"
+            },
+            {
+              "id": "1266ba08-0505-5964-b354-8ab9b0e0d889",
+              "name": "booking_calendar",
+              "value": "PASTE-YOUR-GOOGLE-CALENDAR-ID",
+              "type": "string"
+            },
+            {
+              "id": "8bcd3a35-1f61-524b-b69a-be651806a98b",
+              "name": "call_length_minutes",
+              "value": "PASTE-YOUR-CALL-LENGTH",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "26d45c38-23ed-5b18-83ca-6d7fd3615649",
+      "name": "0 - Config: Your Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        240,
+        80
+      ],
+      "notes": "Every account id, list id and key this workflow uses, in one place.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// 2 - Check Name, Email, Phone and Message Arrived\n// The chatbot snippet posts one JSON body per lead. Field names are mapped here once,\n// so if the snippet sends fullName or tel instead, only this map changes.\nconst MAP = { name: ['name', 'fullName', 'full_name'], email: ['email', 'emailAddress'], phone: ['phone', 'tel', 'phoneNumber'], message: ['message', 'msg', 'question'] };\nconst REQUIRED = ['name', 'email', 'phone', 'message'];\n\nreturn $input.all().map(({ json }) => {\n  const b = json.body || {};\n  const pick = (keys) => { for (const k of keys) { const v = b[k]; if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim(); } return ''; };\n  const lead = {};\n  for (const f of REQUIRED) lead[f] = pick(MAP[f]);\n  lead.email = lead.email.toLowerCase();\n\n  const missing = REQUIRED.filter((f) => !lead[f]);\n  const problems = [...missing];\n  if (lead.email && !/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(lead.email)) problems.push('email format');\n  if (lead.phone && lead.phone.replace(/[^0-9]/g, '').length < 7) problems.push('phone too short');\n\n  return { json: {\n    ...lead,\n    session_id: b.session_id || '',\n    page_url: b.page_url || json.headers?.referer || '',\n    preferred_time: b.preferred_time || '',\n    captured_at: b.captured_at || new Date().toISOString(),\n    received_at: new Date().toISOString(),\n    passed: problems.length === 0,\n    missing: problems.join(', '),\n    raw_keys: Object.keys(b).join(', '),\n  } };\n});"
+      },
+      "id": "f03b774a-86f7-5779-b1e7-3449bf24e4b0",
+      "name": "2 - Check Name, Email, Phone and Message Arrived",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        80
+      ],
+      "notes": "If the snippet names a field differently, only this map changes.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('0 - Config: Your Settings').item.json.test_sheet_id }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Chatbot Test Captures"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "received_at": "={{ $json.received_at }}",
+            "session_id": "={{ $json.session_id }}",
+            "page_url": "={{ $json.page_url }}",
+            "name": "={{ $json.name }}",
+            "email": "={{ $json.email }}",
+            "phone": "={{ $json.phone }}",
+            "message": "={{ $json.message }}",
+            "passed": "={{ $json.passed }}",
+            "missing": "={{ $json.missing }}",
+            "raw_keys": "={{ $json.raw_keys }}"
+          },
+          "matchingColumns": [
+            "session_id"
+          ],
+          "schema": [
+            {
+              "id": "received_at",
+              "displayName": "received_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "page_url",
+              "displayName": "page_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "passed",
+              "displayName": "passed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "missing",
+              "displayName": "missing",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "raw_keys",
+              "displayName": "raw_keys",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "799010ac-a70c-5844-9242-757d957d396c",
+      "name": "3 - Log Every Capture to the Test Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1000,
+        80
+      ],
+      "notes": "Your proof: one row per test chat, with Passed and Missing columns.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0d691b29-95ab-5b60-9f67-70ef176218cc",
+              "leftValue": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.passed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1b8c898e-93e5-5ed0-b953-b0cf8551209a",
+      "name": "4 - All Four Fields There and Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1380,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"received\", \"session_id\": $('2 - Check Name, Email, Phone and Message Arrived').item.json.session_id } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "64ae2b0b-d980-5906-848c-e930adb549f2",
+      "name": "5 - Tell the Chatbot: Lead Received",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1620,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $('0 - Config: Your Settings').item.json.flag_inbox }}",
+        "subject": "=Chatbot test: lead missing {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.missing }}",
+        "message": "=Session {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.session_id }} on {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.page_url }} arrived without: {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.missing }}.\nKeys the snippet sent: {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.raw_keys }}\nName: {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.name }} | Email: {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.email }} | Phone: {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.phone }}",
+        "options": {}
+      },
+      "id": "5478a101-38e9-5c13-b368-437fd042b193",
+      "name": "5b - Flag the Missing Field to Your Test Inbox",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1620,
+        240
+      ],
+      "notes": "Troubleshooting starts at the field that broke, not a guess.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"incomplete\", \"missing\": $('2 - Check Name, Email, Phone and Message Arrived').item.json.missing } }}",
+        "options": {
+          "responseCode": 422
+        }
+      },
+      "id": "2260f0d9-baed-59d6-99fa-235024a2ae7d",
+      "name": "5c - Tell the Chatbot Which Field Was Missing",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1860,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "upsert",
+        "email": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.email }}",
+        "additionalFields": {
+          "firstName": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.name.split(' ')[0] }}",
+          "lastName": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.name.split(' ').slice(1).join(' ') }}",
+          "phoneNumber": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.phone }}",
+          "leadStatus": "NEW"
+        }
+      },
+      "id": "43da65c6-98f6-57c3-8e11-76e550367646",
+      "name": "6 - Next Phase: HubSpot Creates the Contact From the Chat",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        2240,
+        0
+      ],
+      "notes": "Your next phase. HubSpot stands in for your CRM. Off during the test, on once the sheet shows clean captures.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resource": "event",
+        "operation": "create",
+        "start": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.preferred_time }}",
+        "end": "={{ DateTime.fromISO($('2 - Check Name, Email, Phone and Message Arrived').item.json.preferred_time).plus({ minutes: Number($('0 - Config: Your Settings').item.json.call_length_minutes) }).toISO() }}",
+        "additionalFields": {
+          "summary": "=Call with {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.name }}",
+          "description": "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.message }}\nPhone: {{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.phone }}",
+          "attendees": [
+            "={{ $('2 - Check Name, Email, Phone and Message Arrived').item.json.email }}"
+          ]
+        },
+        "calendar": "={{ $('0 - Config: Your Settings').item.json.booking_calendar }}"
+      },
+      "id": "3e426508-3ec2-56f5-a719-648ec2e68788",
+      "name": "7 - Google Calendar: Book the Call Time They Asked For",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        2480,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "35c97583-0a72-5ebf-830a-1de82db3e4d3",
+      "name": "8 - Any Step Fails",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        2860,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "PASTE-YOUR-TEST-INBOX",
+        "subject": "=Chatbot test run failed at {{ $json.execution.lastNodeExecuted }}",
+        "message": "=Step: {{ $json.execution.lastNodeExecuted }}\nError: {{ $json.execution.error.message }}\nRun: {{ $json.execution.url }}",
+        "options": {}
+      },
+      "id": "65276296-ddad-5105-baa6-4253f7da4d5e",
+      "name": "9 - Email You the Failed Step and a Link to the Run",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3100,
+        80
+      ]
+    }
+  ],
+  "connections": {
+    "1 - Chatbot Snippet on Staging Posts the Lead Here": {
+      "main": [
+        [
+          {
+            "node": "0 - Config: Your Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "0 - Config: Your Settings": {
+      "main": [
+        [
+          {
+            "node": "2 - Check Name, Email, Phone and Message Arrived",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Check Name, Email, Phone and Message Arrived": {
+      "main": [
+        [
+          {
+            "node": "3 - Log Every Capture to the Test Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Log Every Capture to the Test Sheet": {
+      "main": [
+        [
+          {
+            "node": "4 - All Four Fields There and Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - All Four Fields There and Valid?": {
+      "main": [
+        [
+          {
+            "node": "5 - Tell the Chatbot: Lead Received",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "5b - Flag the Missing Field to Your Test Inbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - Tell the Chatbot: Lead Received": {
+      "main": [
+        [
+          {
+            "node": "6 - Next Phase: HubSpot Creates the Contact From the Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5b - Flag the Missing Field to Your Test Inbox": {
+      "main": [
+        [
+          {
+            "node": "5c - Tell the Chatbot Which Field Was Missing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Next Phase: HubSpot Creates the Contact From the Chat": {
+      "main": [
+        [
+          {
+            "node": "7 - Google Calendar: Book the Call Time They Asked For",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - Any Step Fails": {
+      "main": [
+        [
+          {
+            "node": "9 - Email You the Failed Step and a Link to the Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "4c7d4e66-6b2b-5713-87d1-551559050b8f",
+  "pinData": {
+    "1 - Chatbot Snippet on Staging Posts the Lead Here": [
+      {
+        "json": {
+          "body": {
+            "source": "staging-chatbot",
+            "session_id": "cb_7f3a91e2",
+            "page_url": "https://staging.brightlinehomeservices.com/contact",
+            "name": "Sam Carter",
+            "email": "sam.carter@brightlinehomeservices.com",
+            "phone": "+1 555 014 2273",
+            "message": "Hi, I'd like a quote for next month. Can we talk Thursday afternoon?",
+            "preferred_time": "2026-10-01T14:00:00Z",
+            "captured_at": "2026-09-25T10:42:17Z"
+          }
+        }
+      }
+    ],
+    "7 - Google Calendar: Book the Call Time They Asked For": [
+      {
+        "json": {
+          "kind": "calendar#event",
+          "status": "confirmed",
+          "summary": "Call with Sam Carter",
+          "start": {
+            "dateTime": "2026-10-01T14:00:00Z"
+          },
+          "end": {
+            "dateTime": "2026-10-01T14:30:00Z"
+          },
+          "attendees": [
+            {
+              "email": "sam.carter@brightlinehomeservices.com"
+            }
+          ],
+          "description": "Hi, I'd like a quote for next month. Can we talk Thursday afternoon?\nPhone: +1 555 014 2273"
+        }
+      }
+    ]
+  }
+}

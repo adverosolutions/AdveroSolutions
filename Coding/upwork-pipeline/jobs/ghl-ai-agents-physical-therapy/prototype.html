@@ -1,0 +1,1067 @@
+<title>PT Patient Agent</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&family=Instrument+Sans:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap');
+
+:root{
+  color-scheme: light;
+  --bg:#F4F2EC; --surface:#FBFAF6; --raised:#FFFFFF;
+  --ink:#16201D; --ink-2:#48534F; --ink-3:#7B8682; --ink-4:#A9B2AE;
+  --line:rgba(22,32,29,.10); --line-2:rgba(22,32,29,.06);
+  --accent:#2C6A59; --accent-ink:#FFFFFF; --accent-soft:rgba(44,106,89,.08); --accent-line:rgba(44,106,89,.28);
+  --bubble:#ECEAE3; --warn:#A45E2C; --warn-soft:rgba(164,94,44,.09);
+  --shadow:0 1px 2px rgba(22,32,29,.04),0 8px 24px -12px rgba(22,32,29,.12);
+  --r:12px; --r-s:8px;
+  --ease:cubic-bezier(.2,.7,.2,1);
+  --f-display:'Newsreader', 'Iowan Old Style', Georgia, serif;
+  --f-text:'Instrument Sans', ui-sans-serif, -apple-system, 'Segoe UI', sans-serif;
+  --f-mono:'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#0D1211; --surface:#131A18; --raised:#18201E;
+    --ink:#E3E9E6; --ink-2:#A7B2AD; --ink-3:#76827D; --ink-4:#4F5A56;
+    --line:rgba(227,233,230,.09); --line-2:rgba(227,233,230,.05);
+    --accent:#7CC5AB; --accent-ink:#0D1211; --accent-soft:rgba(124,197,171,.09); --accent-line:rgba(124,197,171,.3);
+    --bubble:#1C2522; --warn:#DDA070; --warn-soft:rgba(221,160,112,.1);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px -16px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#0D1211; --surface:#131A18; --raised:#18201E;
+  --ink:#E3E9E6; --ink-2:#A7B2AD; --ink-3:#76827D; --ink-4:#4F5A56;
+  --line:rgba(227,233,230,.09); --line-2:rgba(227,233,230,.05);
+  --accent:#7CC5AB; --accent-ink:#0D1211; --accent-soft:rgba(124,197,171,.09); --accent-line:rgba(124,197,171,.3);
+  --bubble:#1C2522; --warn:#DDA070; --warn-soft:rgba(221,160,112,.1);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px -16px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);overflow-x:clip;max-width:100%}
+body{font-family:var(--f-text);font-size:15px;line-height:1.55;color:var(--ink);-webkit-font-smoothing:antialiased;font-feature-settings:"ss01","cv11";overflow-x:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.num{font-variant-numeric:tabular-nums}
+svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ---------- rail ---------- */
+.rail{position:fixed;inset:0 auto 0 0;width:260px;padding:28px 20px 24px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:28px;background:var(--bg);z-index:5}
+.mark{display:flex;align-items:center;gap:10px;padding:0 8px;font-family:var(--f-display);font-size:21px;letter-spacing:-.01em}
+.mark svg{width:22px;height:22px;stroke:var(--accent);stroke-width:1.6;fill:none}
+.clinic{position:relative}
+.clinic-btn{width:100%;text-align:left;display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--surface);transition:border-color .2s var(--ease)}
+.clinic-btn:hover{border-color:var(--accent-line)}
+.clinic-btn .dot{width:28px;height:28px;border-radius:7px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.clinic-btn b{display:block;font-weight:500;font-size:13.5px;line-height:1.25}
+.clinic-btn small{display:block;font-size:12px;color:var(--ink-3)}
+.clinic-btn .chev{margin-left:auto;color:var(--ink-3)}
+.clinic-menu{position:absolute;left:0;width:300px;max-width:calc(100vw - 32px);top:calc(100% + 6px);background:var(--raised);border:1px solid var(--line);border-radius:var(--r-s);box-shadow:var(--shadow);padding:6px;opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .18s var(--ease),transform .18s var(--ease);z-index:20}
+.clinic.open .clinic-menu{opacity:1;transform:none;pointer-events:auto}
+.clinic-menu button{width:100%;text-align:left;padding:8px 10px;border-radius:6px;display:flex;align-items:center;gap:10px;font-size:13.5px}
+.clinic-menu button:hover{background:var(--accent-soft)}
+.clinic-menu button small{color:var(--ink-3);font-size:11.5px;margin-left:auto}
+.clinic-menu button[aria-current="true"]{color:var(--accent)}
+.clinic-menu .sep{height:1px;background:var(--line);margin:6px 4px}
+.clinic-menu .add{color:var(--ink-2)}
+.nav-label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);padding:0 10px 8px}
+.navs{display:flex;flex-direction:column;gap:2px}
+.nav{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:7px;color:var(--ink-2);font-size:14px;text-align:left;transition:background .15s var(--ease),color .15s var(--ease)}
+.nav:hover{background:var(--line-2);color:var(--ink)}
+.nav.on{color:var(--ink);background:var(--accent-soft)}
+.nav.on svg{color:var(--accent)}
+.nav .kn{margin-left:auto;font-family:var(--f-mono);font-size:11px;color:var(--ink-4)}
+.rail-foot{margin-top:auto;padding:0 10px;font-size:12px;color:var(--ink-3);line-height:1.5}
+.rail-foot b{font-weight:500;color:var(--ink-2)}
+
+/* ---------- corner controls ---------- */
+.corner{position:fixed;top:18px;right:24px;display:flex;gap:2px;z-index:6;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:10px;padding:3px}
+.ghost{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:7px;font-size:13px;color:var(--ink-2);transition:background .15s var(--ease),color .15s}
+.ghost:hover{background:var(--line-2);color:var(--ink)}
+.ghost:active{transform:translateY(1px)}
+
+/* ---------- main ---------- */
+main{margin-left:260px;min-height:100vh}
+.view{display:none;padding:64px 72px 96px;max-width:1180px}
+.view.on{display:block;animation:viewIn .5s var(--ease) both}
+@keyframes viewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.eyebrow{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.eyebrow .live{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+h1.display{font-family:var(--f-display);font-weight:360;font-size:62px;line-height:1.02;letter-spacing:-.025em;text-wrap:balance;max-width:14ch}
+h1.display em{font-style:italic;color:var(--accent);font-weight:340}
+h2.title{font-family:var(--f-display);font-weight:380;font-size:42px;line-height:1.08;letter-spacing:-.02em;text-wrap:balance;max-width:20ch}
+h3{font-family:var(--f-display);font-weight:420;font-size:22px;letter-spacing:-.01em;line-height:1.25}
+.lede{font-size:17px;line-height:1.6;color:var(--ink-2);max-width:60ch;margin-top:20px;text-wrap:pretty}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:32px;margin-bottom:48px;flex-wrap:wrap}
+.head .lede{margin-top:14px;font-size:16px}
+.btn{display:inline-flex;align-items:center;gap:9px;padding:11px 18px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-weight:500;font-size:14px;transition:transform .15s var(--ease),filter .15s,opacity .2s}
+.btn:hover{filter:brightness(1.07)}
+.btn:active{transform:translateY(1px)}
+.btn.running{cursor:progress;filter:none}
+.pulse{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 1.2s var(--ease) infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+.btn[disabled]{opacity:.45;cursor:default;filter:none}
+.btn.quiet{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.quiet:hover{border-color:var(--accent-line);filter:none}
+.hair{height:1px;background:var(--line);border:0}
+.note{font-size:12px;color:var(--ink-3)}
+
+/* ---------- overview ---------- */
+.hero{display:grid;grid-template-columns:1.25fr .9fr;gap:64px;align-items:end}
+.hero-actions{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}
+.lastnight{border-left:1px solid var(--line);padding:4px 0 4px 32px}
+.lastnight .t{font-family:var(--f-mono);font-size:12px;color:var(--ink-3);margin-bottom:14px}
+.lastnight p{font-family:var(--f-display);font-size:21px;line-height:1.4;letter-spacing:-.005em;color:var(--ink);text-wrap:pretty}
+.lastnight p span{color:var(--ink-3)}
+.lastnight .m{display:flex;gap:24px;margin-top:18px;font-size:13px;color:var(--ink-2)}
+.lastnight .m b{display:block;font-family:var(--f-mono);font-weight:400;font-size:18px;color:var(--ink)}
+.journey{margin-top:48px;position:relative}
+.journey-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:22px}
+.jline{display:grid;grid-template-columns:repeat(6,1fr);position:relative}
+.jline:before{content:"";position:absolute;left:0;right:0;top:7px;height:1px;background:var(--line)}
+.jline .prog{position:absolute;left:0;top:7px;height:1px;background:var(--accent);width:0;transition:width .45s var(--ease)}
+.jstep{position:relative;padding-right:20px;text-align:left;align-self:start}
+.jstep .pip{display:block;width:15px;height:15px;border-radius:50%;background:var(--bg);border:1px solid var(--ink-4);position:relative;z-index:1;transition:border-color .3s,background .3s}
+.jstep.lit .pip{border-color:var(--accent);background:var(--accent);box-shadow:0 0 0 5px var(--accent-soft)}
+.jstep .who{font-family:var(--f-mono);font-size:11px;color:var(--ink-3);margin-top:18px;letter-spacing:.02em}
+.jstep h4{font-weight:500;font-size:15px;margin-top:4px}
+.jstep p{font-size:13.5px;color:var(--ink-2);margin-top:6px;line-height:1.5}
+.jstep:hover h4{color:var(--accent)}
+.week{margin-top:36px;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line)}
+.stat{padding:20px 24px 0 0}
+.stat + .stat{padding-left:24px;border-left:1px solid var(--line)}
+.stat .v{font-family:var(--f-display);font-size:44px;font-weight:340;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums lining-nums}
+.stat .v small{font-size:20px;color:var(--ink-3);margin-left:2px}
+.stat .l{font-size:13px;color:var(--ink-2);margin-top:10px}
+.why{margin-top:80px;display:grid;grid-template-columns:200px 1fr 1fr 1fr;gap:40px;border-top:1px solid var(--line);padding-top:28px}
+.why .lab{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+.why h4{font-weight:500;font-size:15px;margin-bottom:6px}
+.why p{font-size:14px;color:var(--ink-2);text-wrap:pretty}
+
+/* ---------- conversation ---------- */
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;padding:3px;gap:2px;background:var(--surface)}
+.seg button{padding:6px 12px;border-radius:6px;font-size:13px;color:var(--ink-2);display:inline-flex;align-items:center;gap:7px}
+.seg button[aria-pressed="true"]{background:var(--raised);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08),0 0 0 1px var(--line)}
+.convo-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.convo{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:56px;align-items:start}
+.thread{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.thread-h{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.av{width:34px;height:34px;border-radius:50%;background:var(--bubble);display:grid;place-items:center;font-size:12.5px;font-weight:500;color:var(--ink-2);flex:none}
+.thread-h b{font-weight:500;font-size:14px;display:block;line-height:1.3}
+.thread-h small{font-size:12px;color:var(--ink-3)}
+.thread-h .st{margin-left:auto;font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3);display:flex;align-items:center;gap:7px}
+.thread-h .st i{width:6px;height:6px;border-radius:50%;background:var(--ink-4);transition:background .3s}
+.thread-h .st.on i{background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.msgs{height:540px;overflow-y:auto;padding:24px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.empty{margin:auto;text-align:center;color:var(--ink-3);font-size:14px;max-width:34ch}
+.empty svg{width:28px;height:28px;margin:0 auto 12px;display:block;stroke-width:1.2;color:var(--ink-4)}
+.msg{max-width:84%;animation:msgIn .45s var(--ease) both}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg .b{padding:11px 14px;border-radius:14px;font-size:14.5px;line-height:1.5;text-wrap:pretty}
+.msg .who{font-size:11.5px;color:var(--ink-3);margin-bottom:5px;display:flex;gap:8px;align-items:center}
+.msg.pt{align-self:flex-start}
+.msg.pt .b{background:var(--bubble);border-bottom-left-radius:5px}
+.msg.ag{align-self:flex-end}
+.msg.ag .who{justify-content:flex-end}
+.msg.ag .b{background:var(--accent-soft);border:1px solid var(--accent-line);border-bottom-right-radius:5px}
+.sms .msg .b{border-radius:18px}
+.sms .msg.ag .b{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.slots{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.slot{padding:8px 12px;border-radius:8px;border:1px solid var(--accent-line);background:var(--raised);font-size:13px;text-align:left;line-height:1.3;transition:background .25s,color .25s,border-color .25s}
+.slot small{display:block;font-family:var(--f-mono);font-size:11px;color:var(--ink-3)}
+.slot.pick{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.slot.pick small{color:inherit;opacity:.8}
+.sms .slot{color:var(--ink)}
+.typing{align-self:flex-start;display:flex;gap:4px;padding:12px 14px;background:var(--bubble);border-radius:14px;animation:msgIn .3s var(--ease) both}
+.typing.ag{align-self:flex-end;background:var(--accent-soft)}
+.typing i{width:5px;height:5px;border-radius:50%;background:var(--ink-3);animation:dot 1.1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes dot{0%,60%,100%{opacity:.3;transform:none}30%{opacity:1;transform:translateY(-2px)}}
+.thread-f{padding:12px 16px 16px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;color:var(--ink-3);font-size:13px}
+.thread-f .inp{flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg)}
+
+.side h3{margin-bottom:6px}
+.side .sub{font-size:13.5px;color:var(--ink-2);margin-bottom:22px}
+.trace{list-style:none;position:relative}
+.trace:before{content:"";position:absolute;left:11px;top:6px;bottom:6px;width:1px;background:var(--line)}
+.trace li{display:grid;grid-template-columns:24px 1fr auto;gap:14px;padding:0 0 18px;position:relative;animation:msgIn .4s var(--ease) both}
+.trace .ic{width:23px;height:23px;border-radius:50%;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;color:var(--ink-2);position:relative;z-index:1}
+.trace .ic svg{width:12px;height:12px}
+.trace li.tool .ic{color:var(--accent);border-color:var(--accent-line)}
+.trace li.guard .ic{color:var(--warn);border-color:var(--warn)}
+.trace li.done .ic{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.trace .tx{font-size:14px;line-height:1.45}
+.trace .tx code{display:block;font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3);margin-top:3px;word-break:break-word}
+.trace .tx .res{color:var(--accent)}
+.trace li.guard .tx .res{color:var(--warn)}
+.trace .tm{font-family:var(--f-mono);font-size:11px;color:var(--ink-4);padding-top:3px}
+.side-empty{font-size:14px;color:var(--ink-3);padding:18px 0;border-top:1px solid var(--line)}
+.handover{margin-top:28px;padding-top:24px;border-top:1px solid var(--line);display:none}
+.handover.on{display:block;animation:msgIn .5s var(--ease) both}
+.handover .lab{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.ho{display:flex;gap:12px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--line-2);font-size:14px;opacity:0;transform:translateY(4px);transition:opacity .4s var(--ease),transform .4s var(--ease)}
+.ho.on{opacity:1;transform:none}
+.ho svg{color:var(--accent);position:relative;top:3px}
+.ho .tm{margin-left:auto;font-family:var(--f-mono);font-size:11px;color:var(--ink-3);white-space:nowrap}
+.booked{margin-top:28px;display:none;grid-template-columns:auto 1fr;gap:20px;align-items:center;padding:20px 22px;border-radius:var(--r);background:var(--accent-soft);border:1px solid var(--accent-line)}
+.booked.on{display:grid;animation:msgIn .6s var(--ease) both}
+.cal{width:58px;text-align:center;border-radius:9px;background:var(--raised);border:1px solid var(--line);overflow:hidden}
+.cal small{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:4px 0;background:var(--accent);color:var(--accent-ink)}
+.cal b{display:block;font-family:var(--f-display);font-size:26px;font-weight:400;padding:4px 0 6px}
+.booked h4{font-weight:500;font-size:15px}
+.booked p{font-size:13.5px;color:var(--ink-2)}
+
+/* ---------- setup ---------- */
+.rows{border-top:1px solid var(--line)}
+.row{display:grid;grid-template-columns:240px 1fr;gap:48px;padding:40px 0;border-bottom:1px solid var(--line)}
+.row .lab h3{margin-bottom:8px}
+.row .lab p{font-size:13.5px;color:var(--ink-2)}
+.klist{display:grid;grid-template-columns:1fr 1fr;column-gap:40px}
+.k{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:12px 0;border-bottom:1px solid var(--line-2);font-size:14px}
+.k span{color:var(--ink-2)}
+.k b{font-weight:400;font-family:var(--f-mono);font-size:12.5px;color:var(--ink);text-align:right}
+.rules{list-style:none}
+.rules li{display:grid;grid-template-columns:22px 1fr auto;gap:14px;padding:12px 0;border-bottom:1px solid var(--line-2);font-size:14.5px;align-items:start}
+.rules li svg{color:var(--accent);margin-top:3px}
+.rules li small{font-family:var(--f-mono);font-size:11px;color:var(--ink-3);white-space:nowrap;padding-top:3px}
+.tryit{margin-top:28px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:28px;align-items:start}
+.tryit .qs{display:flex;flex-direction:column;gap:8px}
+.q{text-align:left;padding:11px 14px;border:1px solid var(--line);border-radius:9px;font-size:14px;background:var(--surface);transition:border-color .2s,background .2s}
+.q:hover{border-color:var(--accent-line)}
+.q[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.answer{min-height:170px;padding:18px 20px;border-radius:var(--r);border:1px dashed var(--line);font-size:14.5px;color:var(--ink-3)}
+.answer.on{border-style:solid;color:var(--ink);background:var(--surface)}
+.answer .rule{display:flex;align-items:center;gap:8px;font-family:var(--f-mono);font-size:11.5px;margin-bottom:10px;color:var(--warn)}
+.answer .rule.ok{color:var(--accent)}
+.answer .rtx{line-height:1.55}
+.answer .act{margin-top:12px;font-size:12.5px;color:var(--ink-3);font-family:var(--f-mono)}
+.when{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.when ul{list-style:none}
+.when li{padding:10px 0;border-bottom:1px solid var(--line-2);font-size:14.5px;display:flex;gap:12px}
+.when li svg{color:var(--ink-3);margin-top:3px}
+.when .lab2{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.notecard{margin-top:24px;font-family:var(--f-mono);font-size:12.5px;line-height:1.7;padding:16px 18px;border-left:2px solid var(--accent);background:var(--surface);color:var(--ink-2);border-radius:0 8px 8px 0}
+.notecard b{color:var(--ink);font-weight:500}
+
+/* ---------- workflows ---------- */
+.wf{display:grid;grid-template-columns:320px minmax(0,1fr);gap:56px;align-items:start}
+.wlist{border-top:1px solid var(--line)}
+.w{width:100%;text-align:left;padding:18px 4px 18px 14px;border-bottom:1px solid var(--line);position:relative;transition:background .2s}
+.w:before{content:"";position:absolute;left:0;top:18px;bottom:18px;width:2px;border-radius:2px;background:transparent;transition:background .2s}
+.w[aria-selected="true"]:before{background:var(--accent)}
+.w:hover{background:var(--line-2)}
+.w b{display:block;font-weight:500;font-size:14.5px}
+.w small{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--ink-3);margin-top:4px}
+.w small .mono{font-size:11.5px}
+.wdetail .trig{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--ink-2);margin:10px 0 32px}
+.wdetail .trig .mono{font-size:12px;padding:3px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.steps{list-style:none;position:relative}
+.steps:before{content:"";position:absolute;left:114px;top:10px;bottom:10px;width:1px;background:var(--line)}
+.steps li{display:grid;grid-template-columns:86px 30px 1fr;gap:14px;align-items:start;padding:10px 0 18px}
+.steps .tm{font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3);text-align:right;padding-top:5px;white-space:nowrap}
+.steps .nd{width:29px;height:29px;border-radius:50%;border:1px solid var(--line);background:var(--bg);display:grid;place-items:center;color:var(--ink-3);position:relative;z-index:1;transition:all .35s var(--ease)}
+.steps .nd svg{width:13px;height:13px}
+.steps .sx{font-size:15px;padding-top:3px;line-height:1.45}
+.steps .sx small{display:block;font-size:12.5px;color:var(--ink-3);margin-top:2px}
+.steps li.run .nd{border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 5px var(--accent-soft)}
+.steps li.ok .nd{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.steps li.skip{opacity:.4}
+.outcome{margin-top:12px;display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:var(--r);background:var(--accent-soft);border:1px solid var(--accent-line);font-size:14px;opacity:0;transform:translateY(6px);transition:opacity .4s var(--ease),transform .4s var(--ease)}
+.outcome.on{opacity:1;transform:none}
+.outcome svg{color:var(--accent)}
+.wd-actions{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+
+/* ---------- tools ---------- */
+.ttable{width:100%;border-collapse:collapse;font-size:14px}
+.ttable th{font-weight:400;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:0 16px 14px 0;border-bottom:1px solid var(--line)}
+.ttable td{padding:18px 16px 18px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.ttable td b{font-weight:500;display:block}
+.ttable td small{display:block;color:var(--ink-3);font-size:12.5px;margin-top:2px}
+.ttable .perm{color:var(--ink-2)}
+.ttable .none{color:var(--ink-4)}
+.ttable .stat2{display:flex;align-items:center;gap:8px;white-space:nowrap;font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3)}
+.ttable .stat2 i{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.ttable .stat2.ex i{background:transparent;border:1px solid var(--ink-3)}
+.tlogh{display:flex;justify-content:space-between;align-items:baseline;margin:64px 0 16px}
+.tlog{font-family:var(--f-mono);font-size:12px;border-top:1px solid var(--line)}
+.tlog div{display:grid;grid-template-columns:90px 180px 1fr auto;gap:16px;padding:10px 0;border-bottom:1px solid var(--line-2);color:var(--ink-2)}
+.tlog div span:first-child{color:var(--ink-4)}
+.tlog div span:nth-child(2){color:var(--accent)}
+.tlog div span:last-child{color:var(--ink-3)}
+
+/* ---------- performance ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);margin-bottom:56px}
+.kpi{padding:24px 24px 0 0}
+.kpi + .kpi{padding-left:24px;border-left:1px solid var(--line)}
+.kpi .l{font-size:13px;color:var(--ink-2)}
+.kpi .v{font-family:var(--f-display);font-size:40px;font-weight:340;letter-spacing:-.02em;line-height:1.1;margin-top:8px;font-variant-numeric:tabular-nums lining-nums}
+.kpi .d{font-family:var(--f-mono);font-size:11.5px;color:var(--accent);margin-top:6px}
+.kpi .d span{color:var(--ink-3)}
+.chart-h{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.chart-wrap{position:relative}
+.chart{width:100%;height:auto;display:block;overflow:visible}
+.chart .grid line{stroke:var(--line);stroke-width:1}
+.chart .ax text{font-family:var(--f-mono);font-size:11px;fill:var(--ink-3)}
+.chart .area{fill:var(--accent-soft)}
+.chart .ln{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.chart .mk circle{fill:var(--bg);stroke:var(--accent);stroke-width:1.5;cursor:pointer;transition:r .2s}
+.chart .mk.on circle{fill:var(--accent)}
+.chart .mk line{stroke:var(--accent-line);stroke-dasharray:2 3}
+.chart .mk text{font-family:var(--f-mono);font-size:10.5px;fill:var(--accent)}
+.changes{margin-top:48px;border-top:1px solid var(--line)}
+.ch{display:grid;grid-template-columns:110px 1fr 150px;gap:24px;padding:16px 0;border-bottom:1px solid var(--line);align-items:baseline;transition:background .25s}
+.ch.on{background:var(--accent-soft)}
+.ch .wk{font-family:var(--f-mono);font-size:12px;color:var(--ink-3);padding-left:8px}
+.ch .tx{font-size:14.5px}
+.ch .tx small{display:block;font-size:13px;color:var(--ink-3);margin-top:3px}
+.ch .ef{font-family:var(--f-mono);font-size:12px;color:var(--accent);text-align:right;padding-right:8px}
+
+/* ---------- toast ---------- */
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,16px);opacity:0;background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:10px;font-size:13.5px;box-shadow:var(--shadow);transition:all .35s var(--ease);pointer-events:none;z-index:30;max-width:calc(100vw - 32px)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- responsive ---------- */
+@media (max-width:1180px){
+  .view{padding:64px 48px 88px}
+  .hero{grid-template-columns:1fr;gap:40px}
+  .lastnight{border-left:0;border-top:1px solid var(--line);padding:28px 0 0}
+  .convo{grid-template-columns:1fr;gap:40px}
+  .wf{grid-template-columns:1fr;gap:32px}
+  .why{grid-template-columns:1fr 1fr 1fr}
+  .why .lab{grid-column:1/-1}
+}
+@media (max-width:860px){
+  .rail{position:sticky;top:0;width:auto;height:auto;flex-direction:column;gap:12px;padding:14px 16px 0;border-right:0;border-bottom:1px solid var(--line)}
+  .rail-top{display:flex;align-items:center;gap:12px}
+  .mark{padding:0;font-size:19px}
+  .clinic{flex:1;min-width:0;position:static}
+  .clinic-menu{left:16px;right:16px;width:auto;max-width:none;top:60px}
+  .clinic-btn{padding:6px 10px}
+  .clinic-btn .dot{display:none}
+  .clinic-btn b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nav-label,.rail-foot,.nav .kn{display:none}
+  .thread-h .st span{display:none}
+  .journey-top{flex-direction:column;gap:4px}
+  .navs{flex-direction:row;overflow-x:auto;gap:2px;margin:0;padding:0 0 10px;scrollbar-width:none;max-width:100%}
+  .navs::-webkit-scrollbar{display:none}
+  .nav{white-space:nowrap;padding:7px 10px;font-size:13.5px}
+  main{margin-left:0}
+  .corner{position:static;flex:none;box-shadow:none;padding:2px}
+  .corner .ghost{padding:7px}
+  .corner .gt{display:none}
+  .navwrap{min-width:0;max-width:100%;overflow:hidden}
+  .rail-top{min-width:0}
+  .view{padding:36px 16px 96px}
+  h1.display{font-size:42px}
+  h2.title{font-size:31px}
+  .lede{font-size:16px}
+  .head{margin-bottom:32px}
+  .jline{grid-template-columns:1fr;gap:0}
+  .jline:before,.jline .prog{left:7px;right:auto;top:0;bottom:0;width:1px;height:auto}
+  .jline .prog{width:1px!important;height:0;transition:height .45s var(--ease)}
+  .jstep{display:grid;grid-template-columns:15px 1fr;column-gap:18px;padding:0 0 22px}
+  .jstep .who{margin-top:0;grid-column:2}
+  .jstep h4,.jstep p{grid-column:2}
+  .jstep .pip{grid-row:1/4}
+  .journey{margin-top:56px}
+  .week,.kpis{grid-template-columns:1fr 1fr}
+  .stat,.kpi{padding:20px 12px 20px 0}
+  .stat:nth-child(3),.kpi:nth-child(3){padding-left:0;border-left:0}
+  .stat:nth-child(n+3),.kpi:nth-child(n+3){border-top:1px solid var(--line)}
+  .stat + .stat,.kpi + .kpi{padding-left:16px}
+  .stat:nth-child(3),.kpi:nth-child(3){padding-left:0}
+  .stat .v{font-size:36px}
+  .kpi .v{font-size:32px}
+  .why{grid-template-columns:1fr;gap:20px;margin-top:56px}
+  .msgs{height:480px;padding:18px 14px}
+  .msg{max-width:92%}
+  .row{grid-template-columns:1fr;gap:20px;padding:32px 0}
+  .klist,.when,.tryit{grid-template-columns:1fr}
+  .tryit{gap:16px}
+  .steps:before{left:92px}
+  .steps li{grid-template-columns:66px 30px 1fr;gap:12px}
+  .steps .tm{white-space:normal}
+  .ttable thead{display:none}
+  .ttable tr{display:block;padding:16px 0;border-bottom:1px solid var(--line)}
+  .ttable td{display:block;border:0;padding:3px 0}
+  .ttable td[data-l]:before{content:attr(data-l);display:inline-block;width:92px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+  .tlog div{grid-template-columns:64px 1fr;row-gap:2px}
+  .tlog div span:nth-child(3){grid-column:2}
+  .tlog div span:last-child{grid-column:2}
+  .ch{grid-template-columns:1fr;gap:4px;padding:14px 8px}
+  .ch .wk{padding-left:0}
+  .ch .ef{text-align:left;padding-right:0}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20 12a7.5 7.5 0 0 1-11 6.6L4 20l1.4-4.6A7.5 7.5 0 1 1 20 12z"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M5 20v-6M5 10V4M12 20v-8M12 8V4M19 20v-4M19 12V4M3 14h4M10 8h4M17 16h4"/></symbol>
+  <symbol id="i-flow" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M6 8.5v3a3 3 0 0 0 3 3h6a3 3 0 0 1 3 3"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 4v16h16"/><path d="m7 15 4-4 3 3 5-6"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m8 10 4 4 4-4"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.6L4 8.7"/><path d="M4 4v4.7h4.7"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5v14l11-7z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5zM5 19.5A1.5 1.5 0 0 0 6.5 21H19"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 5 6v5.5c0 4.3 3 7.9 7 9.5 4-1.6 7-5.2 7-9.5V6z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12 20 4l-5 16-3-7z"/><path d="m12 13 8-9"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></symbol>
+  <symbol id="i-branch" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="9" r="2"/><path d="M6 7v10M18 11a6 6 0 0 1-6 6H8"/></symbol>
+  <symbol id="i-task" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 4v4M12 16v4M4 12h4M16 12h4M6.5 6.5l2.5 2.5M15 15l2.5 2.5M6.5 17.5 9 15M15 9l2.5-2.5"/></symbol>
+  <symbol id="i-hand" viewBox="0 0 24 24"><path d="M8 12V6.5a1.5 1.5 0 0 1 3 0V11M11 10V5a1.5 1.5 0 0 1 3 0v5M14 10V6.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-.5A5.5 5.5 0 0 1 5.8 17L3.6 13a1.5 1.5 0 0 1 2.5-1.6L8 13.5"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 4 2.4 5 5.3.6-4 3.6 1.2 5.3L12 15.8 7.1 18.5l1.2-5.3-4-3.6 5.3-.6z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4 3 19.5h18z"/><path d="M12 10v4.5M12 17.2v.1"/></symbol>
+</svg>
+
+<aside class="rail">
+  <div class="rail-top">
+    <div class="mark"><svg viewBox="0 0 24 24"><path d="M4 18c3.5 0 4.5-12 8-12s4.5 12 8 12"/><circle cx="12" cy="6" r="1.6"/></svg>Pathway</div>
+    <div class="clinic" id="clinic">
+      <button class="clinic-btn" id="clinicBtn" aria-haspopup="true" aria-expanded="false">
+        <span class="dot"><svg class="i"><use href="#i-home"/></svg></span>
+        <span style="min-width:0"><b data-bind="name">Harbor Street Physical Therapy</b><small data-bind="locsLine">3 locations</small></span>
+        <svg class="i chev"><use href="#i-chev"/></svg>
+      </button>
+      <div class="clinic-menu" id="clinicMenu" role="menu"></div>
+    </div>
+    <div class="corner">
+      <button class="ghost" id="resetBtn" title="Replay everything from the start" aria-label="Reset"><svg class="i"><use href="#i-reset"/></svg><span class="gt">Reset</span></button>
+      <button class="ghost" id="themeBtn" aria-label="Toggle theme"><svg class="i" id="themeIc"><use href="#i-moon"/></svg><span class="gt" id="themeTx">Dark</span></button>
+    </div>
+  </div>
+  <div class="navwrap">
+    <div class="nav-label">This clinic</div>
+    <nav class="navs" id="navs">
+      <button class="nav on" data-v="overview"><svg class="i"><use href="#i-home"/></svg>Overview<span class="kn">1</span></button>
+      <button class="nav" data-v="agent"><svg class="i"><use href="#i-chat"/></svg>AI agent<span class="kn">2</span></button>
+      <button class="nav" data-v="setup"><svg class="i"><use href="#i-sliders"/></svg>Agent setup<span class="kn">3</span></button>
+      <button class="nav" data-v="workflows"><svg class="i"><use href="#i-flow"/></svg>Workflows<span class="kn">4</span></button>
+      <button class="nav" data-v="tools"><svg class="i"><use href="#i-plug"/></svg>Tools<span class="kn">5</span></button>
+      <button class="nav" data-v="performance"><svg class="i"><use href="#i-chart"/></svg>Performance<span class="kn">6</span></button>
+    </nav>
+  </div>
+  <div class="rail-foot"><b>Runs inside GoHighLevel.</b><br>Clinics, patients and figures are sample data.</div>
+</aside>
+
+<main id="main">
+
+<!-- ================= OVERVIEW ================= -->
+<section class="view on" id="overview">
+  <div class="hero">
+    <div>
+      <div class="eyebrow"><span class="live"></span><span data-bind="name">Harbor Street Physical Therapy</span></div>
+      <h1 class="display">AI agents inside your GoHighLevel <em>automations.</em></h1>
+      <p class="lede">The agent answers every new patient inquiry, screens it safely and books the initial evaluation. Your GoHighLevel workflows take over from there, through the plan of care to the review request after discharge.</p>
+      <div class="hero-actions">
+        <button class="btn" id="watchBtn"><svg class="i"><use href="#i-play"/></svg>Watch a new inquiry</button>
+        <button class="btn quiet" data-go="workflows">See the workflows</button>
+      </div>
+    </div>
+    <div class="lastnight">
+      <div class="t">Last night, 9:14 PM, clinic closed</div>
+      <p>Maya B. asked about lower back pain from half&#8209;marathon training. <span>Ten messages later she had an initial evaluation at</span> <span data-bind="loc2" style="color:var(--ink)">Eastside</span><span>, with intake forms on the way.</span></p>
+      <div class="m"><div><b>4 s</b>first reply</div><div><b>4 min</b>to booked</div><div><b>0</b>staff time</div></div>
+    </div>
+  </div>
+
+  <div class="journey">
+    <div class="journey-top"><h3>One patient, start to finish</h3><span class="note">Click a stage to open it</span></div>
+    <div class="jline" id="jline">
+      <span class="prog" id="jprog"></span>
+      <button class="jstep" data-go="agent"><span class="pip"></span><div class="who">AGENT</div><h4>Inquiry</h4><p>Web chat or text, any hour, answered in seconds.</p></button>
+      <button class="jstep" data-go="setup"><span class="pip"></span><div class="who">AGENT</div><h4>Screened</h4><p>Pain area, red flags, insurance or self-pay, location and time.</p></button>
+      <button class="jstep" data-go="agent"><span class="pip"></span><div class="who">AGENT</div><h4>Evaluation booked</h4><p>Straight onto the clinic calendar, then handed to the workflow.</p></button>
+      <button class="jstep" data-go="workflows"><span class="pip"></span><div class="who">WORKFLOW</div><h4>Before the visit</h4><p>Confirmation, intake forms, reminders, no-show recovery.</p></button>
+      <button class="jstep" data-go="workflows"><span class="pip"></span><div class="who">WORKFLOW</div><h4>Plan of care</h4><p>Patients who stop booking get a check-in, not silence.</p></button>
+      <button class="jstep" data-go="workflows"><span class="pip"></span><div class="who">WORKFLOW</div><h4>Discharge</h4><p>A review request, only after a good outcome.</p></button>
+    </div>
+  </div>
+
+  <div class="week" id="weekStats"></div>
+  <p class="note" style="margin-top:14px">This week, illustrative.</p>
+
+  <div class="why">
+    <div class="lab">Why it's built this way</div>
+    <div><h4>The agent talks, GoHighLevel keeps time.</h4><p>Conversations need judgement, reminders need a clock. Each part does the job it's good at.</p></div>
+    <div><h4>One template, every clinic.</h4><p>Agent and workflows are shared. Each clinic brings its own locations, insurance list and calendar.</p></div>
+    <div><h4>A person is always one message away.</h4><p>Anything clinical, unclear or upset goes to the front desk with a written summary.</p></div>
+  </div>
+</section>
+
+<!-- ================= AI AGENT ================= -->
+<section class="view" id="agent">
+  <div class="head">
+    <div>
+      <div class="eyebrow">AI agent</div>
+      <h2 class="title">A new patient inquiry, handled start to finish.</h2>
+      <p class="lede">It answers like your best front desk person, asks what booking needs, never gives medical advice, and puts the evaluation on the calendar.</p>
+    </div>
+    <div class="convo-controls">
+      <div class="seg" role="group" aria-label="Channel">
+        <button aria-pressed="true" data-ch="web"><svg class="i"><use href="#i-chat"/></svg>Web chat</button>
+        <button aria-pressed="false" data-ch="sms"><svg class="i"><use href="#i-send"/></svg>Text</button>
+      </div>
+      <button class="btn" id="runChat"><svg class="i"><use href="#i-play"/></svg>Start the inquiry</button>
+    </div>
+  </div>
+
+  <div class="convo">
+    <div class="thread" id="thread">
+      <div class="thread-h">
+        <div class="av">MB</div>
+        <div><b>Maya Brooks</b><small id="chLine">Web chat on the clinic website</small></div>
+        <div class="st" id="agentSt"><i></i><span>Agent idle</span></div>
+      </div>
+      <div class="msgs" id="msgs">
+        <div class="empty" id="emptyChat"><svg class="i"><use href="#i-chat"/></svg>A sample patient is about to message the clinic after hours. Press <b style="color:var(--ink);font-weight:500">Start the inquiry</b> to watch it.</div>
+      </div>
+      <div class="thread-f"><div class="inp">Agent is replying for the clinic</div><svg class="i"><use href="#i-send"/></svg></div>
+    </div>
+
+    <div class="side">
+      <h3>What the agent is doing</h3>
+      <p class="sub">Every lookup, rule and booking it makes, in order.</p>
+      <ol class="trace" id="trace"></ol>
+      <div class="side-empty" id="traceEmpty">Nothing yet. Tool calls and guardrail checks appear here as the conversation runs.</div>
+      <div class="booked" id="booked">
+        <div class="cal"><small id="bkDay">Thu</small><b id="bkDate">1</b></div>
+        <div><h4 id="bkTitle">Initial evaluation, 7:30 AM</h4><p id="bkSub">Eastside with Lena Ortiz, PT, DPT. 60 minutes.</p></div>
+      </div>
+      <div class="handover" id="handover">
+        <div class="lab"><svg class="i"><use href="#i-flow"/></svg>GoHighLevel takes over</div>
+        <div class="ho"><svg class="i"><use href="#i-check"/></svg><span>Contact tagged <span class="mono" style="font-size:12px">new-patient, low-back</span></span><span class="tm">9:20 PM</span></div>
+        <div class="ho"><svg class="i"><use href="#i-check"/></svg><span>Moved to <b style="font-weight:500">Evaluation booked</b> in the pipeline</span><span class="tm">9:20 PM</span></div>
+        <div class="ho"><svg class="i"><use href="#i-check"/></svg><span>Confirmation text with address and parking</span><span class="tm">9:21 PM</span></div>
+        <div class="ho"><svg class="i"><use href="#i-check"/></svg><span>Intake forms and insurance card upload sent</span><span class="tm">9:21 PM</span></div>
+        <div class="ho"><svg class="i"><use href="#i-clock"/></svg><span>Reminders set for the day before and 2 hours before</span><span class="tm" id="remTm">Wed, Thu</span></div>
+        <div class="ho"><svg class="i"><use href="#i-task"/></svg><span>Front desk task to verify benefits before the visit</span><span class="tm">Mon 8:00 AM</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SETUP ================= -->
+<section class="view" id="setup">
+  <div class="head">
+    <div>
+      <div class="eyebrow">Agent setup, <span data-bind="name" style="text-transform:none;letter-spacing:0">Harbor Street Physical Therapy</span></div>
+      <h2 class="title">What the agent knows, and where it stops.</h2>
+      <p class="lede">The same agent serves every clinic. What changes per clinic is its knowledge, a few guardrail details and who it hands off to.</p>
+    </div>
+  </div>
+  <div class="rows">
+    <div class="row">
+      <div class="lab"><h3>Knowledge</h3><p>Read from the clinic's own information. Updated when the clinic changes it, no retraining.</p></div>
+      <div class="klist" id="klist"></div>
+    </div>
+    <div class="row">
+      <div class="lab"><h3>Guardrails</h3><p>Checked on every message before the agent replies.</p></div>
+      <div>
+        <ul class="rules">
+          <li><svg class="i"><use href="#i-shield"/></svg><span>Never diagnoses, names a cause or says whether something is serious.</span><small>always on</small></li>
+          <li><svg class="i"><use href="#i-shield"/></svg><span>Never suggests exercises, ice, heat, rest or medication.</span><small>always on</small></li>
+          <li><svg class="i"><use href="#i-shield"/></svg><span>Screens for red-flag symptoms before booking. If any are present, it gives urgent care guidance and alerts staff.</span><small>always on</small></li>
+          <li><svg class="i"><use href="#i-shield"/></svg><span>Confirms whether the clinic is in network, never what a plan will cover. The front desk verifies benefits.</span><small>always on</small></li>
+          <li><svg class="i"><use href="#i-shield"/></svg><span>Asks only what booking needs. No medical history over chat or text.</span><small>always on</small></li>
+        </ul>
+        <div class="tryit">
+          <div>
+            <div class="note" style="margin-bottom:10px">Try a question a patient might ask</div>
+            <div class="qs" id="qs">
+              <button class="q" data-q="0">"Should I put ice or heat on it tonight?"</button>
+              <button class="q" data-q="1">"My legs are going numb and it's getting worse."</button>
+              <button class="q" data-q="2">"Will my insurance cover all my visits?"</button>
+            </div>
+          </div>
+          <div class="answer" id="answer">The agent's reply and the rule it applied will show here.</div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="lab"><h3>Handoff to front desk</h3><p>The agent stops and a person takes the conversation.</p></div>
+      <div>
+        <div class="when">
+          <div><div class="lab2">When</div><ul>
+            <li><svg class="i"><use href="#i-user"/></svg>The patient asks for a person</li>
+            <li><svg class="i"><use href="#i-alert"/></svg>Any red-flag symptom</li>
+            <li><svg class="i"><use href="#i-pulse"/></svg>A current patient with a clinical question</li>
+            <li><svg class="i"><use href="#i-hand"/></svg>A billing or coverage dispute</li>
+            <li><svg class="i"><use href="#i-spark"/></svg>The agent isn't sure twice in a row</li>
+          </ul></div>
+          <div><div class="lab2">How</div><ul>
+            <li><svg class="i"><use href="#i-check"/></svg><span>Conversation assigned to <span data-bind="desk">Front desk, Downtown</span></span></li>
+            <li><svg class="i"><use href="#i-check"/></svg>Internal note with a short summary</li>
+            <li><svg class="i"><use href="#i-check"/></svg>Staff notified in the GoHighLevel app</li>
+            <li><svg class="i"><use href="#i-check"/></svg>Agent pauses on that contact until released</li>
+            <li><svg class="i"><use href="#i-check"/></svg>Patient told who will reply, and by when</li>
+          </ul></div>
+        </div>
+        <div class="notecard"><b>Handoff note, sample</b><br>Existing patient (visit 5 of 12) says knee pain is worse since Tuesday's session and asks if she should skip Thursday. Clinical question, not answered. Please call before Thursday 10:30 AM. Agent paused.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= WORKFLOWS ================= -->
+<section class="view" id="workflows">
+  <div class="head">
+    <div>
+      <div class="eyebrow">Workflows in GoHighLevel</div>
+      <h2 class="title">The workflows the agent hands off to.</h2>
+      <p class="lede">Four workflows cover the patient's whole path. The agent sits inside them where a reply needs judgement.</p>
+    </div>
+  </div>
+  <div class="wf">
+    <div class="wlist" id="wlist" role="tablist"></div>
+    <div class="wdetail">
+      <div class="wd-actions">
+        <h3 id="wTitle"></h3>
+        <button class="btn quiet" id="runWf"><svg class="i"><use href="#i-play"/></svg>Run with a sample patient</button>
+      </div>
+      <div class="trig"><span>Starts when</span><span class="mono" id="wTrig"></span></div>
+      <ol class="steps" id="wSteps"></ol>
+      <div class="outcome" id="wOut"><svg class="i"><use href="#i-check"/></svg><span id="wOutTx"></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TOOLS ================= -->
+<section class="view" id="tools">
+  <div class="head">
+    <div>
+      <div class="eyebrow">Connected tools</div>
+      <h2 class="title">Every tool, and exactly what the agent may do with it.</h2>
+      <p class="lede">Read and change rights are set per tool, so the agent can book an evaluation but can't touch a chart note.</p>
+    </div>
+  </div>
+  <table class="ttable">
+    <thead><tr><th>Tool</th><th>Used for</th><th>Agent can read</th><th>Agent can change</th><th>Status</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div class="tlogh"><h3>Latest tool calls</h3><span class="note" id="tlogNote">Across this clinic, most recent first</span></div>
+  <div class="tlog" id="tlog"></div>
+</section>
+
+<!-- ================= PERFORMANCE ================= -->
+<section class="view" id="performance">
+  <div class="head">
+    <div>
+      <div class="eyebrow">Performance</div>
+      <h2 class="title">Improving automation performance, week by week.</h2>
+      <p class="lede">Every week the conversations and drop-off points get reviewed, one change goes in, and its effect is measured against the week before.</p>
+    </div>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <div class="chart-h">
+    <h3 id="chartTitle">Inquiries that booked an evaluation</h3>
+    <div class="seg" role="group" aria-label="Metric" id="metricSeg">
+      <button aria-pressed="true" data-m="book">Booking rate</button>
+      <button aria-pressed="false" data-m="noshow">No-shows</button>
+      <button aria-pressed="false" data-m="drop">Plan drop-off</button>
+    </div>
+  </div>
+  <div class="chart-wrap"><svg class="chart" id="chart" viewBox="0 0 880 260" role="img" aria-label="Weekly trend"></svg></div>
+  <p class="note" style="margin-top:10px">Twelve weeks, illustrative. Markers are the changes below; click one.</p>
+  <div class="changes" id="changes"></div>
+</section>
+
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const RM=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let GEN=0;
+const sleep=ms=>new Promise((res,rej)=>{const g=GEN;setTimeout(()=>g===GEN?res():rej(new Error('reset')),RM?Math.min(ms,60):ms)});
+let CG=0;
+const csleep=ms=>new Promise((res,rej)=>{const g=GEN,c=CG;setTimeout(()=>(g===GEN&&c===CG)?res():rej(new Error('reset')),RM?Math.min(ms,60):Math.round(ms*0.7))});
+const run=fn=>()=>{fn().catch(e=>{if(e&&e.message!=='reset')console.warn(e)})};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(t){const e=$('#toast');e.innerHTML=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),3400)}
+
+/* ---------------- clinics (sample) ---------------- */
+const CLINICS=[
+ {id:'hs',name:'Harbor Street Physical Therapy',locs:['Downtown','Eastside','Harbor Point'],pt:'Lena Ortiz, PT, DPT',plans:14,
+  week:{inq:47,reply:'38',ev:26,hand:5},lift:0,counts:[26,4,9,6]},
+ {id:'nf',name:'Northfield Sports & Spine',locs:['Northfield','Lakeview'],pt:'Marcus Hale, PT, DPT',plans:11,
+  week:{inq:31,reply:'41',ev:17,hand:3},lift:-3,counts:[17,2,6,4]},
+ {id:'rb',name:'Riverbend PT & Wellness',locs:['Riverbend','Mill Creek','Westgate','Old Town'],pt:'Priya Shah, PT, DPT',plans:16,
+  week:{inq:68,reply:'35',ev:39,hand:8},lift:2,counts:[39,6,13,9]}
+];
+let C=CLINICS[0];
+
+function bindClinic(){
+  $$('[data-bind="name"]').forEach(e=>e.textContent=C.name);
+  $$('[data-bind="locsLine"]').forEach(e=>e.textContent=C.locs.length+' locations');
+  $$('[data-bind="loc2"]').forEach(e=>e.textContent=C.locs[1]);
+  $$('[data-bind="desk"]').forEach(e=>e.textContent='Front desk, '+C.locs[0]);
+  $('#clinicMenu').innerHTML=CLINICS.map((c,i)=>`<button role="menuitem" data-c="${i}" aria-current="${c===C}">${esc(c.name)}<small class="mono">${c.locs.length}</small></button>`).join('')+
+   `<div class="sep"></div><button class="add" data-add="1"><svg class="i"><use href="#i-plus"/></svg>Add a clinic from the template</button>`;
+  renderWeek();renderKnowledge();renderWorkflows();renderTools();renderPerf();
+}
+
+/* ---------------- theme ---------------- */
+function curTheme(){const t=document.documentElement.getAttribute('data-theme');if(t)return t;return (window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'}
+function paintThemeBtn(){const d=curTheme()==='dark';$('#themeIc').innerHTML=`<use href="#i-${d?'sun':'moon'}"/>`;$('#themeTx').textContent=d?'Light':'Dark'}
+$('#themeBtn').onclick=()=>{document.documentElement.setAttribute('data-theme',curTheme()==='dark'?'light':'dark');paintThemeBtn();try{localStorage.setItem('pt-theme',curTheme())}catch(e){}};
+try{const t=localStorage.getItem('pt-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}
+paintThemeBtn();
+
+/* ---------------- navigation ---------------- */
+let cur='overview';
+function go(v){
+  cur=v;
+  $$('.nav').forEach(n=>n.classList.toggle('on',n.dataset.v===v));
+  $$('.view').forEach(x=>x.classList.toggle('on',x.id===v));
+  try{window.scrollTo(0,0)}catch(e){}
+  const nb=$('.nav[data-v="'+v+'"]'),ns=$('#navs');if(nb&&window.innerWidth<=860)ns.scrollLeft=nb.offsetLeft-ns.offsetLeft-ns.clientWidth/2+nb.offsetWidth/2;
+  if(v!=='agent'&&chatRunning){CG++;resetChat();$('#toast').classList.remove('on')}
+  if(v==='overview')playJourney();
+  if(v==='performance')drawChart(true);
+}
+$$('.nav').forEach(n=>n.onclick=()=>go(n.dataset.v));
+$$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeMenu();
+  if(/INPUT|TEXTAREA/.test(e.target.tagName))return;
+  const order=$$('.nav').map(n=>n.dataset.v),i=order.indexOf(cur);
+  if(e.key==='ArrowRight'&&i<order.length-1)go(order[i+1]);
+  if(e.key==='ArrowLeft'&&i>0)go(order[i-1]);
+});
+
+/* clinic menu */
+function closeMenu(){$('#clinic').classList.remove('open');$('#clinicBtn').setAttribute('aria-expanded','false')}
+$('#clinicBtn').onclick=e=>{e.stopPropagation();const o=$('#clinic').classList.toggle('open');$('#clinicBtn').setAttribute('aria-expanded',String(o))};
+document.addEventListener('click',e=>{if(!e.target.closest('#clinic'))closeMenu()});
+$('#clinicMenu').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.add){closeMenu();toast('A new clinic starts from this template: locations, insurance list and calendars, then it goes live.');return}
+  const c=CLINICS[+b.dataset.c];closeMenu();if(c===C)return;
+  C=c;resetAll(true);bindClinic();toast('Switched to <b>'+esc(C.name)+'</b>. Same agent and workflows, this clinic\'s knowledge.');
+});
+
+/* ---------------- overview ---------------- */
+function renderWeek(){
+  const w=C.week;
+  $('#weekStats').innerHTML=[
+   [w.inq,'','New inquiries answered by the agent'],
+   [w.reply,'s','Median time to first reply'],
+   [w.ev,'','Initial evaluations booked'],
+   [w.hand,'','Handed to the front desk']
+  ].map(s=>`<div class="stat"><div class="v">${s[0]}<small>${s[1]}</small></div><div class="l">${s[2]}</div></div>`).join('');
+}
+let jT=null;
+function playJourney(){
+  const steps=$$('.jstep'),prog=$('#jprog'),mobile=window.innerWidth<=860;
+  clearTimeout(jT);steps.forEach(s=>s.classList.remove('lit'));
+  prog.style.transition='none';prog.style.width=mobile?'1px':'0';prog.style.height=mobile?'0':'1px';
+  void prog.offsetWidth;prog.style.transition='';
+  let i=0;
+  const tick=()=>{if(i>=steps.length)return;steps[i].classList.add('lit');
+    const pct=steps.length>1?(i/(steps.length-1)):1;
+    if(mobile){prog.style.height=(steps[i].offsetTop+7)+'px'}else{prog.style.width=(steps[i].offsetLeft+7)+'px'}
+    i++;jT=setTimeout(tick,RM?0:260)};
+  jT=setTimeout(tick,RM?0:350);
+}
+$('#watchBtn').onclick=()=>{go('agent');setTimeout(()=>{if(!chatRunning&&!chatDone)$('#runChat').click()},RM?0:450)};
+
+/* ---------------- AI agent conversation ---------------- */
+let channel='web',chatRunning=false,chatDone=false;
+$$('[data-ch]').forEach(b=>b.onclick=()=>{
+  if(chatRunning)return;channel=b.dataset.ch;
+  $$('[data-ch]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+  $('#thread').classList.toggle('sms',channel==='sms');
+  $('#chLine').textContent=channel==='sms'?'Text to the clinic number, (555) 010-4400':'Web chat on the clinic website';
+  if(chatDone)resetChat();
+});
+function stamp(m){return m}
+function addMsg(who,html,tm){
+  const e=$('#emptyChat');if(e)e.remove();
+  const d=document.createElement('div');d.className='msg '+who;
+  const label=who==='pt'?'Maya':'Clinic assistant, AI';
+  d.innerHTML=`<div class="who">${who==='ag'?`<span class="mono">${tm}</span><span>${label}</span>`:`<span>${label}</span><span class="mono">${tm}</span>`}</div><div class="b">${html}</div>`;
+  $('#msgs').appendChild(d);scrollMsgs();return d;
+}
+function scrollMsgs(){const m=$('#msgs');const f=()=>{m.scrollTop=m.scrollHeight};f();requestAnimationFrame(f);setTimeout(f,480)}
+async function typing(who,ms){
+  const t=document.createElement('div');t.className='typing '+(who==='ag'?'ag':'');t.innerHTML='<i></i><i></i><i></i>';
+  $('#msgs').appendChild(t);scrollMsgs();
+  try{await csleep(ms)}finally{t.remove()}
+}
+function trace(kind,icon,text,code,res,tm){
+  $('#traceEmpty').style.display='none';
+  const li=document.createElement('li');li.className=kind;
+  li.innerHTML=`<span class="ic"><svg class="i"><use href="#i-${icon}"/></svg></span><div class="tx">${text}${code?`<code>${code}${res?` <span class="res">&rarr; ${res}</span>`:''}</code>`:''}</div><span class="tm">${tm}</span>`;
+  $('#trace').appendChild(li);
+}
+function setSt(on,t){$('#agentSt').classList.toggle('on',on);$('#agentSt span').textContent=t}
+
+async function chat(){
+  if(chatRunning)return;
+  if(chatDone)resetChat();
+  chatRunning=true;$('#runChat').setAttribute('aria-disabled','true');$('#runChat').classList.add('running');$('#runChat').innerHTML='<span class="pulse"></span>Running';
+  const L=C.locs,loc=L[1],pt=C.pt,sms=channel==='sms';
+  const locList=L.length===2?`${L[0]} or ${L[1]}`:L.slice(0,-1).join(', ')+' or '+L[L.length-1];
+  setSt(true,'Agent listening');
+  await csleep(500);
+  await typing('pt',1100);
+  addMsg('pt','Hi, my lower back has been sore for about 3 weeks, since I started training for a half marathon. Is this a disc thing? Should I stop running?','9:14 PM');
+  await csleep(500);
+  trace('','book','Read the clinic\'s knowledge','knowledge.get("'+esc(C.name)+'")','loaded','9:14:03');
+  await csleep(420);
+  trace('guard','shield','Medical question detected, so no diagnosis and no running advice','guardrail("no_diagnosis")','applied','9:14:03');
+  await csleep(380);
+  await typing('ag',1300);
+  addMsg('ag',`Sorry you're dealing with that, 3 weeks is a long stretch. I can't tell you what's causing it or whether to keep running, but that's exactly what a physical therapist works out at your first evaluation, and I can get you booked.<br><br>Quick safety question first: any numbness, tingling or weakness in your legs, or any change in bladder or bowel control?`,'9:14 PM');
+  trace('','alert','Red-flag screen asked before anything else','screen.red_flags()','awaiting reply','9:14:07');
+  await csleep(700);
+  await typing('pt',1300);
+  addMsg('pt','No, nothing like that. Just stiff and achy, worse after long runs.','9:15 PM');
+  await csleep(350);
+  trace('done','check','Red-flag screen clear, safe to book','screen.red_flags(answer)','clear','9:15:11');
+  await typing('ag',900);
+  addMsg('ag','Good to know, thank you. Will you be using insurance, or paying yourself?','9:15 PM');
+  await csleep(600);
+  await typing('pt',1000);
+  addMsg('pt','Insurance, Blue Cross PPO.','9:16 PM');
+  await csleep(350);
+  trace('tool','search','Checked the insurance list','insurance.check("Blue Cross Blue Shield PPO")','in network, '+L.length+' locations','9:16:02');
+  await typing('ag',1100);
+  addMsg('ag',`We're in network with Blue Cross PPO, and our front desk will verify your benefits before the visit. Which location suits you best, ${locList}? And do you prefer mornings or evenings?`,'9:16 PM');
+  await csleep(600);
+  await typing('pt',1000);
+  addMsg('pt',`${loc}, early mornings before work if possible.`,'9:17 PM');
+  await csleep(350);
+  trace('tool','cal','Found open evaluation slots','calendar.free_slots(location: "'+loc+'", type: "Initial evaluation", before: "09:00")','3 open','9:17:04');
+  await typing('ag',1000);
+  const m=addMsg('ag',`Here are the earliest initial evaluations at ${loc}, each 60 minutes:<div class="slots"><button class="slot" tabindex="-1">Wed, Sep 30<small>7:00 AM</small></button><button class="slot" tabindex="-1">Thu, Oct 1<small>7:30 AM</small></button><button class="slot" tabindex="-1">Fri, Oct 2<small>8:00 AM</small></button></div>`,'9:17 PM');
+  await csleep(1300);
+  const s=m.querySelectorAll('.slot')[1];s.classList.add('pick');scrollMsgs();
+  await csleep(700);
+  addMsg('pt','Thursday 7:30 works.','9:18 PM');
+  await csleep(400);
+  trace('tool','cal','Booked the evaluation on the clinic calendar','calendar.book(slot: "Thu Oct 1 07:30", therapist: "'+pt+'")','confirmed','9:18:06');
+  await csleep(380);
+  trace('tool','user','Updated the contact and pipeline','contacts.update(tags: ["new-patient","low-back"], stage: "Evaluation booked")','saved','9:18:06');
+  await csleep(380);
+  trace('tool','flow','Handed to the new-inquiry workflow','workflow.enroll("New inquiry to booked evaluation")','enrolled','9:18:07');
+  await typing('ag',1200);
+  addMsg('ag',`You're booked: initial evaluation on <b style="font-weight:600">Thursday, Oct 1 at 7:30 AM</b> at ${loc} with ${pt}. You'll get a text confirmation and your intake forms in a minute. Wear something you can move in.`,'9:18 PM');
+  setSt(false,'Handed to workflow');
+  $('#bkSub').textContent=`${loc} with ${pt}. 60 minutes, Blue Cross PPO.`;
+  $('#booked').classList.add('on');
+  await csleep(500);
+  $('#handover').classList.add('on');
+  const hos=$$('.ho');
+  for(const h of hos){await csleep(330);h.classList.add('on')}
+  chatRunning=false;chatDone=true;
+  $('#runChat').removeAttribute('aria-disabled');$('#runChat').classList.remove('running');$('#runChat').innerHTML='<svg class="i"><use href="#i-reset"/></svg>Run it again';
+  toast('Evaluation booked for <b>Maya Brooks</b>, Thu 7:30 AM at '+esc(loc)+'. No staff time used.');
+}
+$('#runChat').onclick=run(chat);
+function resetChat(){
+  $('#msgs').innerHTML='<div class="empty" id="emptyChat"><svg class="i"><use href="#i-chat"/></svg>A sample patient is about to message the clinic after hours. Press <b style="color:var(--ink);font-weight:500">Start the inquiry</b> to watch it.</div>';
+  $('#trace').innerHTML='';$('#traceEmpty').style.display='';
+  $('#booked').classList.remove('on');$('#handover').classList.remove('on');$$('.ho').forEach(h=>h.classList.remove('on'));
+  setSt(false,'Agent idle');chatDone=false;chatRunning=false;
+  $('#runChat').removeAttribute('aria-disabled');$('#runChat').classList.remove('running');$('#runChat').innerHTML='<svg class="i"><use href="#i-play"/></svg>Start the inquiry';
+}
+
+/* ---------------- setup ---------------- */
+function renderKnowledge(){
+  const K=[
+   ['Locations and hours',C.locs.length+' locations'],
+   ['Insurance accepted',C.plans+' plans'],
+   ['Evaluation types','Initial eval, 60 min'],
+   ['Therapists and specialties',(C.locs.length*2+1)+' PTs'],
+   ['Self-pay rates','from price sheet'],
+   ['Referral rules','by clinic state'],
+   ['Parking and directions','per location'],
+   ['Common questions','22 answers']
+  ];
+  $('#klist').innerHTML=K.map(k=>`<div class="k"><span>${k[0]}</span><b>${k[1]}</b></div>`).join('');
+}
+const ANS=[
+ {rule:'guardrail: no_treatment_advice',ok:false,tx:"That's a good question for your physical therapist, and I don't want to steer you wrong without an assessment. I can book you an evaluation, and if the pain gets a lot worse before then, please contact your doctor.",act:'no advice given, booking offered'},
+ {rule:'guardrail: red_flag, urgent',ok:false,tx:"Numbness that's getting worse needs to be checked today. Please contact your doctor now, or go to urgent care or the emergency room if it's spreading or you notice any change in bladder or bowel control. I've let our team know so someone can follow up with you.",act:'booking paused, front desk alerted, handoff note written'},
+ {rule:'guardrail: network_only',ok:true,tx:"We're in network with your plan, but what it covers depends on your specific benefits. Our front desk checks that before your first visit and will let you know about any copay or visit limits.",act:'front desk task: verify benefits'}
+];
+$$('.q').forEach(b=>b.onclick=run(async()=>{
+  const i=+b.dataset.q,a=ANS[i];
+  $$('.q').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+  const box=$('#answer');box.classList.add('on');
+  box.innerHTML='<div class="typing ag" style="display:inline-flex"><i></i><i></i><i></i></div>';
+  await sleep(700);
+  box.innerHTML=`<div class="rule ${a.ok?'ok':''}"><svg class="i"><use href="#i-shield"/></svg>${a.rule}</div><div class="rtx">${a.tx}</div><div class="act">&rarr; ${a.act}</div>`;
+}));
+function resetSetup(){$$('.q').forEach(x=>x.setAttribute('aria-pressed','false'));const a=$('#answer');a.classList.remove('on');a.textContent="The agent's reply and the rule it applied will show here."}
+
+/* ---------------- workflows ---------------- */
+const WF=[
+ {name:'New inquiry to booked evaluation',trig:'agent books an initial evaluation',
+  steps:[
+   ['+0 min','user','Tag the contact and move it to Evaluation booked','Pipeline stage updates on its own'],
+   ['+1 min','send','Text the confirmation with address and parking',''],
+   ['+1 min','book','Send intake forms and the insurance card upload','Forms live in GoHighLevel'],
+   ['next 8 AM','task','Create a front desk task to verify benefits','Insurance patients only'],
+   ['-24 h','branch','Intake not finished? The agent sends one friendly nudge','Skipped when forms are done'],
+   ['-24 h','clock','Reminder texts the day before and 2 hours before',''],
+   ['visit day','check','Checked in, so the patient moves to Plan of care','Visit 1 of the plan']],
+  skip:[4],out:'Maya arrived with forms done. Stage is now Plan of care, visit 1.'},
+ {name:'No-show recovery',trig:'appointment marked no-show',
+  steps:[
+   ['+15 min','chat','The agent texts, no guilt, and offers two new times','Times come from the live calendar'],
+   ['next morning','send','No reply yet? One more text with a single time',''],
+   ['day 2','task','Still quiet: a call task for the front desk',''],
+   ['on rebook','flow','Back into confirmation and reminders',''],
+   ['day 7','user','Not rebooked: tagged for reactivation','Nothing further sent automatically']],
+  skip:[1,2,4],out:'Rebooked for Friday 8:00 AM from the first text.'},
+ {name:'Plan-of-care drop-off reactivation',trig:'visits left in plan, none booked for 10 days',
+  steps:[
+   ['day 10','chat','The agent checks in and asks how things are feeling',''],
+   ['on reply','branch','Feeling better: offers the remaining visits or a discharge visit',''],
+   ['on reply','alert','Worse or a new symptom: task to the treating PT, agent pauses','Clinical, so a person answers'],
+   ['day 13','send','No reply: one last check-in',''],
+   ['day 16','task','Still no reply: front desk call task','']],
+  skip:[2,3,4],out:'Patient resumed care at visit 7 of 12.'},
+ {name:'Review request after discharge',trig:'patient discharged in the EMR',
+  steps:[
+   ['+2 days','clock','Wait two days after the last visit',''],
+   ['+2 days','chat','The agent asks how they are doing and if they met their goals',''],
+   ['on reply','star','Happy reply: send the review link','Link is per location'],
+   ['on reply','user','Unhappy reply: route to the clinic director, no review link','Director gets the full thread']],
+  skip:[3],out:''}
+];
+let wSel=0,wRunning=false;
+function renderWorkflows(){
+  $('#wlist').innerHTML=WF.map((w,i)=>`<button class="w" role="tab" aria-selected="${i===wSel}" data-w="${i}"><b>${w.name}</b><small><span>${w.steps.length} steps</span><span class="mono">${C.counts[i]} this week</span></small></button>`).join('');
+  $$('.w').forEach(b=>b.onclick=()=>{if(wRunning)return;wSel=+b.dataset.w;renderWorkflows()});
+  const w=WF[wSel];
+  $('#wTitle').textContent=w.name;$('#wTrig').textContent=w.trig;
+  $('#wSteps').innerHTML=w.steps.map(s=>`<li><span class="tm">${s[0]}</span><span class="nd"><svg class="i"><use href="#i-${s[1]}"/></svg></span><div class="sx">${s[2]}${s[3]?`<small>${s[3]}</small>`:''}</div></li>`).join('');
+  $('#wOut').classList.remove('on');
+  $('#runWf').disabled=false;$('#runWf').innerHTML='<svg class="i"><use href="#i-play"/></svg>Run with a sample patient';
+}
+async function runWf(){
+  if(wRunning)return;wRunning=true;$('#runWf').disabled=true;
+  const w=WF[wSel],lis=$$('#wSteps li');lis.forEach(l=>l.className='');$('#wOut').classList.remove('on');
+  for(let i=0;i<lis.length;i++){
+    if(w.skip.includes(i)){lis[i].classList.add('skip');await sleep(260);continue}
+    lis[i].classList.add('run');await sleep(620);lis[i].classList.remove('run');lis[i].classList.add('ok');
+  }
+  const out=wSel===3?'Five-star review left for '+C.locs[0]+'.':w.out;
+  $('#wOutTx').textContent=out;$('#wOut').classList.add('on');
+  wRunning=false;$('#runWf').disabled=false;$('#runWf').innerHTML='<svg class="i"><use href="#i-reset"/></svg>Run it again';
+}
+$('#runWf').onclick=run(runWf);
+
+/* ---------------- tools ---------------- */
+function renderTools(){
+  const T=[
+   ['GoHighLevel Conversations','Web chat and text messages','The current thread','Sends replies','live'],
+   ['GoHighLevel Calendars','Evaluation slots at '+C.locs.length+' locations','Open slots','Books and reschedules','live'],
+   ['GoHighLevel Contacts and Pipeline','Patient record and stage','Name, phone, tags, stage','Tags, stage, notes','live'],
+   ['GoHighLevel Workflows','Confirmations, reminders, follow-ups','Which workflow a patient is in','Enrolls a contact','live'],
+   ['Claude, by Anthropic','The agent\'s reasoning and replies','Only what the conversation needs','Nothing directly','live'],
+   ['Your EMR (e.g. WebPT)','Visits, plan of care, discharge','Visit count, discharge status','Nothing, read only','example'],
+   ['Review platform','Review requests after discharge','Review count per location','Nothing, link only','example']
+  ];
+  $('#tbody').innerHTML=T.map(t=>`<tr><td><b>${t[0]}</b></td><td data-l="Used for">${t[1]}</td><td data-l="Reads" class="perm">${t[2]}</td><td data-l="Changes" class="${/^Nothing/.test(t[3])?'none':'perm'}">${t[3]}</td><td data-l="Status"><span class="stat2 ${t[4]==='live'?'':'ex'}"><i></i>${t[4]==='live'?'Connected':'Example'}</span></td></tr>`).join('');
+  const L=C.locs;
+  const logs=[
+   ['9:18:07 PM','workflow.enroll','New inquiry to booked evaluation','ok'],
+   ['9:18:06 PM','calendar.book','Thu Oct 1 07:30, '+L[1],'confirmed'],
+   ['9:17:04 PM','calendar.free_slots',L[1]+', initial evaluation','3 open'],
+   ['9:16:02 PM','insurance.check','Blue Cross Blue Shield PPO','example'],
+   ['8:52:40 PM','emr.visits','Plan of care, visit 6 of 12','example'],
+   ['8:31:15 PM','handoff.front_desk','Billing question, '+L[0],'assigned']
+  ];
+  $('#tlog').innerHTML=logs.map(l=>`<div><span>${l[0]}</span><span>${l[1]}</span><span>${esc(l[2])}</span><span>${l[3]}</span></div>`).join('');
+}
+
+/* ---------------- performance ---------------- */
+const WEEKS=['Jul 6','Jul 13','Jul 20','Jul 27','Aug 3','Aug 10','Aug 17','Aug 24','Aug 31','Sep 7','Sep 14','Sep 21'];
+const BASE={
+ book:{t:'Inquiries that booked an evaluation',unit:'%',s:[41,42,40,47,49,48,52,54,55,57,61,63],good:'up'},
+ noshow:{t:'Evaluations missed without notice',unit:'%',s:[14,14,13,13,12,12,9,9,9,8,8,8],good:'down'},
+ drop:{t:'Patients who stopped before the plan ended',unit:'%',s:[29,28,28,27,27,26,26,25,21,20,19,19],good:'down'}
+};
+const CHANGES=[
+ {i:3,m:'book',tx:'The agent asks for the location before insurance.',why:'Patients saw real times sooner and dropped off less mid-chat.',ef:'+7 pts booking'},
+ {i:6,m:'noshow',tx:'Reminders moved from 48 hours to the day before and 2 hours before.',why:'The 48-hour text was being forgotten by the visit.',ef:'-3 pts no-shows'},
+ {i:8,m:'drop',tx:'Drop-off check-in moved from 14 days without a visit to 10.',why:'Past two weeks, most patients had already decided not to come back.',ef:'-4 pts drop-off'},
+ {i:10,m:'book',tx:'Early and late slots offered first when a patient mentions work.',why:'Found in the weekly review of unbooked conversations.',ef:'+4 pts booking'}
+];
+let metric='book',selChange=-1;
+function series(m){const b=BASE[m];const d=m==='book'?C.lift:-Math.round(C.lift/2);return b.s.map(v=>v+d)}
+function renderPerf(){
+  const b=series('book'),n=series('noshow'),d=series('drop');
+  const K=[
+   ['Inquiry to evaluation',b[11]+'%',`+${b[11]-b[0]} pts`,'since July'],
+   ['Median first reply',C.week.reply+' s','was 3 h 12 m','before the agent'],
+   ['No-show rate',n[11]+'%',`${n[11]-n[0]} pts`,'since July'],
+   ['Plan-of-care drop-off',d[11]+'%',`${d[11]-d[0]} pts`,'since July']
+  ];
+  $('#kpis').innerHTML=K.map(k=>`<div class="kpi"><div class="l">${k[0]}</div><div class="v">${k[1]}</div><div class="d">${k[2]} <span>${k[3]}</span></div></div>`).join('');
+  $('#changes').innerHTML=CHANGES.map((c,i)=>`<div class="ch ${i===selChange?'on':''}" data-ci="${i}"><span class="wk">Wk of ${WEEKS[c.i]}</span><div class="tx">${c.tx}<small>${c.why}</small></div><span class="ef">${c.ef}</span></div>`).join('');
+  drawChart(false);
+}
+function drawChart(animate){
+  const svg=$('#chart');if(!svg)return;
+  const s=series(metric),W=880,H=260,pl=40,pr=16,pt=16,pb=34;
+  const min=Math.floor((Math.min(...s)-4)/5)*5,max=Math.ceil((Math.max(...s)+4)/5)*5;
+  const x=i=>pl+i*(W-pl-pr)/(s.length-1),y=v=>pt+(H-pt-pb)*(1-(v-min)/(max-min));
+  let g='<g class="grid">';const ticks=[];for(let v=min;v<=max;v+=5)ticks.push(v);
+  const step=ticks.length>6?2:1;
+  ticks.forEach((v,k)=>{if(k%step)return;g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}"/>`});g+='</g>';
+  let ax='<g class="ax">';ticks.forEach((v,k)=>{if(k%step)return;ax+=`<text x="${pl-10}" y="${y(v)+4}" text-anchor="end">${v}%</text>`});
+  WEEKS.forEach((w,i)=>{if(i%2===0||i===11)ax+=`<text x="${x(i)}" y="${H-10}" text-anchor="${i===11?'end':'middle'}">${w}</text>`});ax+='</g>';
+  const pts=s.map((v,i)=>[x(i),y(v)]);
+  const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const area=d+` L${x(s.length-1)} ${H-pb} L${x(0)} ${H-pb} Z`;
+  let mk='';CHANGES.forEach((c,ci)=>{if(c.m!==metric)return;const px=x(c.i),py=y(s[c.i]);
+    mk+=`<g class="mk ${ci===selChange?'on':''}" data-ci="${ci}" tabindex="0" role="button" aria-label="Change in week of ${WEEKS[c.i]}"><line x1="${px}" x2="${px}" y1="${pt}" y2="${H-pb}"/><circle cx="${px}" cy="${py}" r="5.5"/><text x="${px+8}" y="${pt+10}">${c.ef.split(' ')[0]}</text></g>`});
+  const last=pts[pts.length-1];
+  svg.innerHTML=g+ax+`<path class="area" d="${area}" opacity="0"/><path class="ln" d="${d}"/>`+mk+`<circle cx="${last[0]}" cy="${last[1]}" r="3.5" fill="var(--accent)"/><text x="${last[0]-6}" y="${last[1]-12}" text-anchor="end" style="font-family:var(--f-mono);font-size:12px;fill:var(--ink)">${s[s.length-1]}%</text>`;
+  const ln=svg.querySelector('.ln'),ar=svg.querySelector('.area');
+  if(animate&&!RM&&ln.getTotalLength){const L=ln.getTotalLength();ln.style.strokeDasharray=(L+2)+' '+(L+2);ln.style.strokeDashoffset=L+2;ln.getBoundingClientRect();ln.style.transition='stroke-dashoffset 1.2s cubic-bezier(.2,.7,.2,1)';ln.style.strokeDashoffset='0';const clr=()=>{ln.style.transition='';ln.style.strokeDasharray='';ln.style.strokeDashoffset=''};ln.addEventListener('transitionend',clr,{once:true});setTimeout(clr,1400);ar.style.transition='opacity .8s .5s';}
+  requestAnimationFrame(()=>{ar.setAttribute('opacity','1')});
+  $('#chartTitle').textContent=BASE[metric].t;
+  svg.querySelectorAll('.mk').forEach(g=>{const f=()=>selectChange(+g.dataset.ci);g.addEventListener('click',f);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();f()}})});
+}
+function selectChange(ci){selChange=ci;$$('.ch').forEach(c=>c.classList.toggle('on',+c.dataset.ci===ci));$$('#chart .mk').forEach(g=>g.classList.toggle('on',+g.dataset.ci===ci))}
+$$('#metricSeg button').forEach(b=>b.onclick=()=>{metric=b.dataset.m;$$('#metricSeg button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));selChange=-1;$$('.ch').forEach(c=>c.classList.remove('on'));drawChart(true)});
+$('#changes').addEventListener('click',e=>{const r=e.target.closest('.ch');if(!r)return;const c=CHANGES[+r.dataset.ci];
+  if(c.m!==metric){metric=c.m;$$('#metricSeg button').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.m===metric)));drawChart(true)}selectChange(+r.dataset.ci)});
+
+/* ---------------- reset ---------------- */
+function resetAll(silent){
+  GEN++;CG++;chatRunning=false;wRunning=false;
+  resetChat();resetSetup();
+  wSel=0;metric='book';selChange=-1;
+  $$('#metricSeg button').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.m==='book')));
+  renderWorkflows();renderPerf();
+  if(!silent){go('overview');toast('Reset. Everything is ready to run again.')}
+}
+$('#resetBtn').onclick=()=>resetAll(false);
+
+bindClinic();
+playJourney();
+})();
+</script>

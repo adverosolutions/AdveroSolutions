@@ -1,0 +1,1321 @@
+<title>Restoration Referral CRM</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Onest:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap');
+
+:root{
+  color-scheme: light;
+  --bg:#F4F2EC; --surface:#FBFAF7; --sunk:#EEEBE3;
+  --ink:#18201D; --ink-2:#48534E; --ink-3:#7A8580;
+  --line:rgba(24,32,29,.12); --line-2:rgba(24,32,29,.065);
+  --accent:#1D6A63; --accent-ink:#FBFAF7; --accent-soft:rgba(29,106,99,.085); --accent-2:#9CC4BD;
+  --ok:#2E7A4F; --warn:#A5612A; --err:#A23B34;
+  --shadow:0 1px 2px rgba(24,32,29,.05), 0 8px 24px -12px rgba(24,32,29,.18);
+  --r:10px;
+  --f-display:'Newsreader', 'Iowan Old Style', Georgia, serif;
+  --f-text:'Onest', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-mono:'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --ease:cubic-bezier(.22,.8,.24,1);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#0D1211; --surface:#131A18; --sunk:#0A0E0D;
+    --ink:#E6ECE9; --ink-2:#AEB9B4; --ink-3:#77837E;
+    --line:rgba(230,236,233,.11); --line-2:rgba(230,236,233,.06);
+    --accent:#62BDB1; --accent-ink:#0D1211; --accent-soft:rgba(98,189,177,.11); --accent-2:#2C625B;
+    --ok:#6CC08F; --warn:#D99A5E; --err:#E0786F;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#0D1211; --surface:#131A18; --sunk:#0A0E0D;
+  --ink:#E6ECE9; --ink-2:#AEB9B4; --ink-3:#77837E;
+  --line:rgba(230,236,233,.11); --line-2:rgba(230,236,233,.06);
+  --accent:#62BDB1; --accent-ink:#0D1211; --accent-soft:rgba(98,189,177,.11); --accent-2:#2C625B;
+  --ok:#6CC08F; --warn:#D99A5E; --err:#E0786F;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px -12px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-text);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;font-feature-settings:"ss01"}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:.86em;letter-spacing:-.01em}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:264px 1fr;min-height:100vh}
+.rail{position:sticky;top:0;height:100vh;border-right:1px solid var(--line);padding:28px 20px 20px;display:flex;flex-direction:column;background:var(--bg)}
+.mark{display:flex;align-items:center;gap:10px;padding:0 8px 28px}
+.mark svg{flex:none}
+.mark b{font-family:var(--f-display);font-weight:500;font-size:19px;letter-spacing:-.01em}
+.mark small{display:block;font-size:11.5px;color:var(--ink-3);letter-spacing:.02em;margin-top:1px}
+.nav{display:flex;flex-direction:column;gap:1px;overflow-y:auto;margin:0 -4px;padding:0 4px}
+.nav button{display:grid;grid-template-columns:26px 1fr;align-items:baseline;text-align:left;padding:7px 8px;border-radius:7px;color:var(--ink-2);font-size:13.5px;transition:background .2s var(--ease),color .2s var(--ease)}
+.nav button span{font-family:var(--f-mono);font-size:11px;color:var(--ink-3)}
+.nav button:hover{background:var(--line-2);color:var(--ink)}
+.nav button[aria-current="true"]{background:var(--accent-soft);color:var(--ink)}
+.nav button[aria-current="true"] span{color:var(--accent)}
+.rail-foot{margin-top:auto;padding-top:16px;border-top:1px solid var(--line-2);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.rail-foot .note{font-size:11.5px;color:var(--ink-3);line-height:1.4}
+.icon-btn{width:32px;height:32px;display:grid;place-items:center;border-radius:8px;color:var(--ink-2);transition:background .2s,color .2s}
+.icon-btn:hover{background:var(--line-2);color:var(--ink)}
+.icon-btn svg{width:16px;height:16px}
+
+.topbar{display:none}
+main{min-width:0}
+.screen{display:none;max-width:1080px;margin:0 auto;padding:72px 64px 96px}
+.screen.on{display:block;animation:rise .5s var(--ease) both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.eyebrow{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:0 0 18px}
+.eyebrow b{color:var(--accent);font-weight:500}
+h1,h2{font-family:var(--f-display);font-weight:400;letter-spacing:-.02em;text-wrap:balance;margin:0}
+h1{font-size:64px;line-height:1.02}
+h2{font-size:44px;line-height:1.06}
+h3{font-size:16px;font-weight:600;margin:0;letter-spacing:-.005em}
+.lede{font-size:18px;line-height:1.55;color:var(--ink-2);max-width:62ch;margin:20px 0 0;text-wrap:pretty}
+.muted{color:var(--ink-3)}
+.sec{margin-top:56px}
+.hair{height:1px;background:var(--line);border:0;margin:0}
+.label{font-family:var(--f-mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:500;font-size:14px;transition:transform .15s var(--ease),filter .2s}
+.btn:hover{filter:brightness(1.07)}
+.btn:active{transform:scale(.97)}
+.btn[disabled]{opacity:.45;cursor:default;filter:none;transform:none}
+.btn svg{width:15px;height:15px}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.btn.ghost:hover{background:var(--line-2)}
+.seg{display:inline-flex;padding:3px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--line);gap:2px}
+.seg button{padding:6px 14px;border-radius:999px;font-size:13px;color:var(--ink-2);transition:background .2s,color .2s}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.illus{font-size:12px;color:var(--ink-3);font-style:italic;font-family:var(--f-display);font-size:14px}
+
+/* ---------- overview ---------- */
+.journey{margin-top:64px;display:grid;grid-template-columns:1.1fr auto 1fr auto 1fr;align-items:center;gap:28px}
+.src-list{display:flex;flex-direction:column;gap:0}
+.src-list div{padding:11px 0;border-bottom:1px solid var(--line-2);display:flex;justify-content:space-between;font-size:14.5px}
+.src-list div:first-child{border-top:1px solid var(--line-2)}
+.src-list i{font-style:normal;color:var(--ink-3);font-size:12.5px}
+.arrow{color:var(--ink-3)}
+.arrow svg{width:36px;height:12px;display:block}
+.journey .job{padding:24px;border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow)}
+.job .t{font-family:var(--f-display);font-size:22px;letter-spacing:-.01em;line-height:1.2;margin:6px 0 14px}
+.job .stages{display:flex;gap:4px}
+.job .stages i{flex:1;height:4px;border-radius:2px;background:var(--line)}
+.job .stages i.on{background:var(--accent)}
+.credit-list div{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--line-2);font-size:14.5px}
+.credit-list div:first-child{border-top:1px solid var(--line-2)}
+.why{margin-top:80px;display:grid;grid-template-columns:repeat(3,1fr);gap:48px}
+.why p{margin:8px 0 0;color:var(--ink-2);font-size:14.5px;line-height:1.6}
+.why .n{font-family:var(--f-display);font-size:28px;color:var(--accent);line-height:1}
+
+/* ---------- discovery ---------- */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:64px}
+.channels{margin-top:40px}
+.ch{display:grid;grid-template-columns:200px 1fr 120px;gap:32px;padding:22px 0;border-top:1px solid var(--line);align-items:baseline}
+.ch:last-child{border-bottom:1px solid var(--line)}
+.ch h3{font-family:var(--f-display);font-weight:400;font-size:22px;letter-spacing:-.01em}
+.ch p{margin:0;color:var(--ink-2);font-size:14.5px;max-width:58ch}
+.ch .who{font-size:12.5px;color:var(--ink-3);text-align:right}
+.qs{margin:0;padding:0;list-style:none;counter-reset:q}
+.qs li{counter-increment:q;padding:12px 0 12px 36px;position:relative;border-top:1px solid var(--line-2);font-size:14.5px;color:var(--ink-2)}
+.qs li::before{content:counter(q,decimal-leading-zero);position:absolute;left:0;top:13px;font-family:var(--f-mono);font-size:11px;color:var(--ink-3)}
+
+/* ---------- data model ---------- */
+.model{margin-top:40px;display:grid;grid-template-columns:1fr 264px;gap:40px;align-items:start}
+.diagram{position:relative;border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow);padding:8px}
+.diagram svg{width:100%;height:auto;display:block}
+.edge{stroke:var(--line);stroke-width:1.25;fill:none;transition:stroke .3s,stroke-width .3s}
+.edge.hot{stroke:var(--accent);stroke-width:1.75}
+.edge-l{font-family:var(--f-mono);font-size:10px;fill:var(--ink-3);transition:fill .3s}
+.edge-bg{fill:var(--surface);stroke:var(--line-2);stroke-width:1}
+.edge-l.hot{fill:var(--accent)}
+.node{cursor:pointer}
+.node rect{fill:var(--bg);stroke:var(--line);stroke-width:1;transition:fill .25s,stroke .25s}
+.node:hover rect{stroke:var(--ink-3)}
+.node.sel rect{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.5}
+.node .k{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.08em;fill:var(--ink-3);text-transform:uppercase}
+.node .n{font-family:var(--f-text);font-size:15px;font-weight:500;fill:var(--ink)}
+.node.sel .k{fill:var(--accent)}
+.node:focus{outline:none}
+.node:focus-visible rect{stroke:var(--accent);stroke-width:2}
+.panel h3.pt{font-family:var(--f-display);font-weight:400;font-size:28px;letter-spacing:-.015em;margin:6px 0 10px}
+.panel p{margin:0 0 20px;color:var(--ink-2);font-size:14px}
+.props{margin:0;padding:0;list-style:none}
+.props li{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line-2);font-size:13.5px;animation:rise .35s var(--ease) both}
+.props li span:first-child{white-space:nowrap}
+.props li span:last-child{color:var(--ink-3);font-family:var(--f-mono);font-size:11px;text-align:right}
+.legend-row{display:flex;gap:24px;margin-top:16px;font-size:12.5px;color:var(--ink-3);flex-wrap:wrap}
+
+/* ---------- dictionary ---------- */
+.conv{margin-top:40px;display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.conv > div{padding:24px 24px 24px 0}
+.conv > div + div{padding-left:24px;border-left:1px solid var(--line-2)}
+.conv code{font-family:var(--f-mono);font-size:15px;color:var(--ink);display:block;margin:10px 0 8px}
+.conv code em{font-style:normal;color:var(--accent)}
+.conv p{margin:0;font-size:13.5px;color:var(--ink-2)}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:40px 0 12px;flex-wrap:wrap}
+.search{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--line);min-width:220px}
+.search svg{width:14px;height:14px;color:var(--ink-3);flex:none}
+.search input{border:0;background:none;outline:none;font:inherit;font-size:13.5px;color:var(--ink);width:100%}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{text-align:left;font-family:var(--f-mono);font-weight:400;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);padding:10px 12px 10px 0;border-bottom:1px solid var(--line)}
+.tbl td{padding:12px 12px 12px 0;border-bottom:1px solid var(--line-2);vertical-align:top}
+.tbl td.mono{color:var(--ink-2)}
+.tbl tr{transition:background .2s}
+.tbl tbody tr:hover{background:var(--line-2)}
+.tbl .req{color:var(--accent);font-size:12.5px}
+.tbl-wrap{overflow-x:auto}
+
+/* ---------- account type ---------- */
+.tax{margin-top:40px;display:grid;grid-template-columns:repeat(4,1fr);gap:32px}
+.tax h3{font-family:var(--f-display);font-weight:400;font-size:22px;letter-spacing:-.01em;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.tax ul{list-style:none;margin:0;padding:0}
+.tax li{padding:9px 0;border-bottom:1px solid var(--line-2);font-size:14px;display:flex;justify-content:space-between;gap:12px;transition:color .25s}
+.tax li i{white-space:nowrap;flex:none;font-style:normal;font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3)}
+.tax li.hit{color:var(--accent)}
+.tax li.hit i{color:var(--accent)}
+.chain{margin-top:56px;padding:32px;border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow)}
+.chain-picks{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 28px}
+.pick{padding:7px 14px;border-radius:999px;font-size:13px;box-shadow:inset 0 0 0 1px var(--line);color:var(--ink-2);transition:all .2s}
+.pick:hover{color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink-3)}
+.pick[aria-pressed="true"]{background:var(--ink);color:var(--bg);box-shadow:none}
+.chain-row{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.chain-row > div{padding:0 20px;border-left:1px solid var(--line-2);opacity:.25;transition:opacity .45s var(--ease)}
+.chain-row > div:first-child{padding-left:0;border-left:0}
+.chain-row > div.lit{opacity:1}
+.chain-row .v{font-family:var(--f-display);font-size:21px;line-height:1.25;margin-top:8px;letter-spacing:-.01em}
+.chain-row .s{font-size:12.5px;color:var(--ink-3);margin-top:6px}
+
+/* ---------- pipeline ---------- */
+.pipe-head{display:flex;justify-content:space-between;align-items:end;gap:24px;flex-wrap:wrap}
+.pipe-ctl{display:flex;gap:10px;align-items:center}
+.board{position:relative;margin-top:40px;display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.col{min-width:0}
+.col-h{display:flex;justify-content:space-between;align-items:baseline;padding:0 2px 12px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.col-h b{font-weight:500;font-size:13.5px}
+.col-h span{font-family:var(--f-mono);font-size:11px;color:var(--ink-3)}
+.col-h small{display:block;font-size:11.5px;color:var(--ink-3);font-weight:400;margin-top:2px}
+.slot{height:0;border-radius:var(--r);border:1px dashed transparent;transition:border-color .3s}
+.board.has-live .slot.here{height:162px;margin-bottom:8px}
+.slot.wait{border-color:var(--line)}
+.card{padding:12px 13px;border-radius:var(--r);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2);margin-bottom:8px;font-size:12.5px}
+.card b{display:block;font-weight:500;font-size:13px;margin-bottom:4px;line-height:1.3}
+.card .m{color:var(--ink-3);display:flex;justify-content:space-between;gap:6px}
+.live{position:absolute;left:0;top:0;height:162px;padding:13px 14px;border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow),inset 0 0 0 1.5px var(--accent);font-size:12.5px;opacity:0;transition:transform .9s var(--ease),opacity .4s;z-index:3;overflow:hidden}
+.live.show{opacity:1}
+.live .tag{font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:6px}
+.live .tag i{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1.6s ease-in-out 3}
+@keyframes pulse{50%{opacity:.3}}
+.live b{display:block;font-weight:500;font-size:13.5px;margin:6px 0 4px;line-height:1.3}
+.live .m{color:var(--ink-3);line-height:1.45}
+.live .amt{margin-top:6px;font-family:var(--f-mono);font-size:12px;color:var(--ink)}
+.after{margin-top:48px;display:grid;grid-template-columns:1.1fr 1fr;gap:56px}
+.log{list-style:none;margin:0;padding:0}
+.log li{display:grid;grid-template-columns:64px 1fr;gap:12px;padding:10px 0;border-top:1px solid var(--line-2);font-size:13.5px;color:var(--ink-2);animation:rise .4s var(--ease) both}
+.log li .mono{color:var(--ink-3);font-size:11px;padding-top:2px}
+.log li b{color:var(--ink);font-weight:500}
+.log .empty{display:block;color:var(--ink-3);font-size:13.5px;padding:14px 0;border-top:1px solid var(--line-2)}
+.ledger .row{display:grid;grid-template-columns:18px 1fr auto auto;gap:14px;align-items:center;padding:14px 0;border-top:1px solid var(--line-2)}
+.ledger .row:last-child{border-bottom:1px solid var(--line-2)}
+.ledger .dot{width:9px;height:9px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--ink-3);transition:all .4s var(--ease)}
+.ledger .row.cr .dot{background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.ledger .who b{display:block;font-weight:500;font-size:14px}
+.ledger .who span{font-size:12px;color:var(--ink-3)}
+.ledger .jobs,.ledger .rev{font-family:var(--f-mono);font-size:13px;text-align:right;min-width:56px}
+.ledger .rev{min-width:92px}
+.ledger .delta{display:block;font-size:10.5px;color:var(--accent);height:14px;opacity:0;transition:opacity .4s}
+.ledger .row.cr .delta{opacity:1}
+.rollup{margin-left:4px;padding-left:18px;border-left:1px solid var(--line)}
+
+/* ---------- territory ---------- */
+.terr{margin-top:40px;display:grid;grid-template-columns:320px 1fr;gap:64px;align-items:start}
+.coast svg{width:100%;height:auto;display:block}
+.county{fill:var(--sunk);stroke:var(--line);stroke-width:1;transition:fill .4s var(--ease)}
+.county.tc{fill:color-mix(in srgb,var(--accent-2) 22%,var(--sunk))}
+.county.pb{fill:color-mix(in srgb,var(--accent) 16%,var(--sunk))}
+.county.hot{fill:var(--accent)}
+.c-l{font-family:var(--f-text);font-size:12px;fill:var(--ink-2);pointer-events:none}
+.c-l.hot{fill:var(--accent-ink)}
+.ocean-l{font-family:var(--f-display);font-style:italic;font-size:14px;fill:var(--ink-3)}
+.pin{transition:opacity .3s}
+.losses .row{display:grid;grid-template-columns:1fr auto;gap:16px;padding:14px 0;border-top:1px solid var(--line-2);text-align:left;width:100%;align-items:center;transition:background .2s}
+.losses .row:hover{background:var(--line-2)}
+.losses .row[aria-pressed="true"] b{color:var(--accent)}
+.losses .row b{font-weight:500;font-size:14px;display:block}
+.losses .row span{font-size:12.5px;color:var(--ink-3)}
+.assign{margin-top:32px;display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--line)}
+.assign > div{padding:18px 16px 0 0}
+.assign > div + div{padding-left:16px;border-left:1px solid var(--line-2)}
+.assign .v{font-family:var(--f-display);font-size:22px;margin-top:6px;letter-spacing:-.01em;transition:opacity .3s}
+
+/* ---------- users ---------- */
+.teams{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:48px}
+.team h3{font-family:var(--f-display);font-weight:400;font-size:24px;letter-spacing:-.01em;display:flex;justify-content:space-between;align-items:baseline;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.team h3 span{font-family:var(--f-mono);font-size:11px;color:var(--ink-3)}
+.person{display:grid;grid-template-columns:32px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line-2);font-size:14px}
+.av{width:32px;height:32px;border-radius:50%;background:var(--sunk);display:grid;place-items:center;font-family:var(--f-mono);font-size:10.5px;color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--line)}
+.person small{display:block;font-size:12px;color:var(--ink-3)}
+.person .role{font-size:12px;color:var(--ink-3)}
+.matrix{margin-top:56px}
+.matrix .tbl td,.matrix .tbl th{text-align:center;padding-right:8px}
+.matrix .tbl td:first-child,.matrix .tbl th:first-child{text-align:left}
+.matrix .tbl tbody tr{cursor:pointer}
+.matrix .tbl tbody tr[aria-selected="true"]{background:var(--accent-soft)}
+.lvl{font-size:12.5px;color:var(--ink-2)}
+.lvl.all{color:var(--ink);font-weight:500}
+.lvl.none{color:var(--ink-3)}
+.viewas{margin-top:24px;font-size:14.5px;color:var(--ink-2);min-height:48px;max-width:70ch}
+.viewas b{color:var(--ink);font-weight:500}
+
+/* ---------- cleanup ---------- */
+.plan{margin-top:40px;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line)}
+.plan > div{padding:18px 18px 0 0;font-size:13.5px;color:var(--ink-2)}
+.plan > div + div{padding-left:18px;border-left:1px solid var(--line-2)}
+.plan b{display:block;color:var(--ink);font-weight:500;margin:6px 0 4px;font-size:14px}
+.clean-head{display:flex;justify-content:space-between;align-items:end;margin-top:56px;gap:24px;flex-wrap:wrap}
+.stats{display:flex;gap:40px}
+.stats div{min-width:72px}
+.stats .v{font-family:var(--f-display);font-size:36px;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stats .l{font-size:12px;color:var(--ink-3);margin-top:6px}
+.raw{margin-top:24px}
+.raw td{transition:background .5s,color .5s,opacity .5s}
+.raw tr{transition:opacity .5s var(--ease)}
+.raw td.fix{background:var(--accent-soft);color:var(--ink)}
+.raw td.bad{color:var(--warn)}
+.raw tr.gone{opacity:.25;text-decoration:line-through;text-decoration-color:var(--ink-3)}
+.raw tr.merged td:first-child{box-shadow:inset 2px 0 0 var(--accent);padding-left:12px}
+.raw td.mono{white-space:nowrap}
+.steps-line{display:flex;gap:24px;margin-top:20px;flex-wrap:wrap}
+.steps-line span{font-size:12.5px;color:var(--ink-3);display:flex;align-items:center;gap:8px;transition:color .3s}
+.steps-line span i{width:7px;height:7px;border-radius:50%;box-shadow:inset 0 0 0 1.5px currentColor;transition:all .3s}
+.steps-line span.done{color:var(--ink)}
+.seg button[disabled]{opacity:.4;cursor:default}
+.raw .src{display:block;font-size:11.5px;color:var(--accent);margin-top:2px}
+.steps-line span.done i{background:var(--accent);box-shadow:none}
+
+/* ---------- dashboards ---------- */
+.dash-ctl{display:flex;gap:16px;justify-content:space-between;align-items:center;margin-top:40px;flex-wrap:wrap}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);margin-top:32px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.kpis > div{padding:20px 20px 20px 0}
+.kpis > div + div{padding-left:20px;border-left:1px solid var(--line-2)}
+.kpis .v{font-family:var(--f-display);font-size:34px;line-height:1.05;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:6px}
+.kpis .l{font-size:12.5px;color:var(--ink-3)}
+.chart{margin-top:36px}
+.bar-row{display:grid;grid-template-columns:170px 1fr 88px 64px;gap:16px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-2);font-size:13.5px}
+.bar-track{height:10px;border-radius:5px;background:var(--line-2);overflow:hidden;display:flex}
+.bar{height:100%;background:var(--accent);border-radius:5px;width:0;transition:width .8s var(--ease)}
+.bar.b2{background:var(--accent-2);border-radius:0 5px 5px 0}
+.bar.b1s{border-radius:5px 0 0 5px}
+.bar-row .mono{text-align:right;color:var(--ink-2)}
+.chart-h{display:grid;grid-template-columns:170px 1fr 88px 64px;gap:16px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.chart-h span{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.chart-h span:nth-child(n+3){text-align:right}
+.key{display:flex;gap:18px;font-size:12.5px;color:var(--ink-3);margin-top:14px}
+.key i{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--accent);margin-right:6px;vertical-align:-1px}
+.key i.b2{background:var(--accent-2)}
+
+/* ---------- integrations ---------- */
+.integ{margin-top:40px}
+.int{display:grid;grid-template-columns:220px 1fr 200px;gap:40px;padding:28px 0;border-top:1px solid var(--line);align-items:start}
+.int:last-child{border-bottom:1px solid var(--line)}
+.int h3{font-family:var(--f-display);font-weight:400;font-size:26px;letter-spacing:-.015em}
+.int .how{font-size:12.5px;color:var(--ink-3);margin-top:6px}
+.int ul{margin:0;padding:0;list-style:none}
+.int li{font-size:14px;color:var(--ink-2);padding:5px 0 5px 20px;position:relative}
+.int li svg{position:absolute;left:0;top:10px;width:11px;height:11px;color:var(--accent)}
+.flowline{display:flex;align-items:center;gap:10px;font-family:var(--f-mono);font-size:11.5px;color:var(--ink-2)}
+.flowline svg{width:34px;height:10px;color:var(--ink-3);flex:none}
+.status{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;margin-top:14px;color:var(--ink-2)}
+.status i{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.status.v i{background:var(--warn)}
+
+/* ---------- docs ---------- */
+.docs{margin-top:40px;display:grid;grid-template-columns:1fr 1.25fr;gap:56px;align-items:start}
+.toc{list-style:none;margin:0;padding:0}
+.toc li{display:grid;grid-template-columns:34px 1fr auto;padding:11px 0;border-top:1px solid var(--line-2);font-size:14px;align-items:baseline}
+.toc li:last-child{border-bottom:1px solid var(--line-2)}
+.toc li span:first-child{font-family:var(--f-mono);font-size:11px;color:var(--ink-3)}
+.toc li span:last-child{font-size:12px;color:var(--ink-3)}
+.player{border-radius:var(--r);overflow:hidden;background:var(--surface);box-shadow:var(--shadow)}
+.screenish{aspect-ratio:16/9;background:var(--sunk);position:relative;display:flex;align-items:flex-end;padding:24px}
+.screenish .cap{font-family:var(--f-display);font-size:26px;letter-spacing:-.015em;line-height:1.15;max-width:22ch;transition:opacity .3s}
+.screenish .ts{position:absolute;top:18px;left:24px;font-family:var(--f-mono);font-size:11px;color:var(--ink-3)}
+.screenish .play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:var(--surface);box-shadow:var(--shadow);display:grid;place-items:center;color:var(--ink)}
+.screenish .play svg{width:18px;height:18px;margin-left:3px}
+.scrub{height:3px;background:var(--line);position:relative}
+.scrub i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);transition:width .5s var(--ease)}
+.chapters{padding:8px 20px 12px}
+.chapters button{display:grid;grid-template-columns:52px 1fr;width:100%;text-align:left;padding:9px 0;border-bottom:1px solid var(--line-2);font-size:13.5px;color:var(--ink-2);transition:color .2s}
+.chapters button:last-child{border-bottom:0}
+.chapters button span{font-family:var(--f-mono);font-size:11px;color:var(--ink-3);padding-top:2px}
+.chapters button:hover{color:var(--ink)}
+.chapters button[aria-current="true"]{color:var(--accent)}
+
+.foot-note{margin-top:72px;padding-top:20px;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.next{font-size:13.5px;color:var(--ink-2);display:inline-flex;align-items:center;gap:6px}
+.next:hover{color:var(--accent)}
+.next svg{width:14px;height:14px}
+
+/* ---------- responsive ---------- */
+@media (max-width: 1100px){
+  .screen{padding:56px 40px 80px}
+  .model{grid-template-columns:1fr}
+  .tax{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width: 860px){
+  .app{grid-template-columns:1fr}
+  .rail{display:none}
+  .rail.open{display:flex;position:fixed;inset:0;z-index:50;height:100%;width:100%;border:0}
+  .topbar{display:flex;position:sticky;top:0;z-index:40;align-items:center;justify-content:space-between;gap:8px;padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--line)}
+  .topbar .cur{font-size:13.5px;display:flex;gap:8px;align-items:baseline;min-width:0}
+  .topbar .cur span{font-family:var(--f-mono);font-size:11px;color:var(--accent)}
+  .topbar .cur b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar .tb-r{display:flex;gap:2px;flex:none}
+  .rail .close-rail{display:grid}
+  .screen{padding:40px 16px 64px}
+  h1{font-size:42px}
+  h2{font-size:32px}
+  .lede{font-size:16px}
+  .journey{grid-template-columns:1fr;gap:20px}
+  .arrow{transform:rotate(90deg);justify-self:center}
+  .why{grid-template-columns:1fr;gap:28px;margin-top:56px}
+  .two,.after,.teams,.docs,.terr{grid-template-columns:1fr;gap:40px}
+  .ch{grid-template-columns:1fr;gap:6px}
+  .ch .who{text-align:left}
+  .conv{grid-template-columns:1fr}
+  .conv > div + div{padding-left:0;border-left:0;border-top:1px solid var(--line-2)}
+  .tax{grid-template-columns:1fr 1fr;gap:24px}
+  .chain{padding:20px}
+  .chain-row{grid-template-columns:1fr 1fr;gap:20px 0}
+  .chain-row > div:nth-child(3){padding-left:0;border-left:0}
+  .board{grid-template-columns:1fr;gap:4px}
+  .board.has-live .slot.here{height:128px}
+  .live{height:128px}
+  .col .card{margin-bottom:6px}
+  .col{padding-bottom:10px}
+  .assign,.plan{grid-template-columns:1fr}
+  .assign > div + div,.plan > div + div{padding-left:0;border-left:0}
+  .plan > div{padding-bottom:14px}
+  .kpis{grid-template-columns:1fr 1fr}
+  .kpis > div:nth-child(3){padding-left:0;border-left:0}
+  .kpis > div:nth-child(n+3){border-top:1px solid var(--line-2)}
+  .bar-row,.chart-h{grid-template-columns:104px 1fr 70px;gap:10px}
+  .bar-row > :nth-child(4),.chart-h > :nth-child(4){display:none}
+  .int{grid-template-columns:1fr;gap:14px}
+  .stats{gap:24px}
+  .stats .v{font-size:28px}
+  .coast{max-width:260px}
+  .raw .tbl{font-size:12.5px}
+  .raw td.mono{font-size:11px}
+  .edge-l,.edge-bg{display:none}
+  .node .n{font-size:17px}
+  .hide-sm{display:none}
+}
+.close-rail{display:none}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+</style>
+
+<div class="app">
+  <aside class="rail" id="rail" aria-label="Sections">
+    <div class="mark">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true"><circle cx="13" cy="13" r="12" stroke="currentColor" stroke-opacity=".35"/><path d="M6 15.5c2.2-2.4 4.4-2.4 6.6 0s4.6 2.4 7.4-.4" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round"/><path d="M6 11c2.2-2.4 4.4-2.4 6.6 0s4.6 2.4 7.4-.4" stroke="currentColor" stroke-opacity=".45" stroke-width="1.3" stroke-linecap="round"/></svg>
+      <div><b>Referral CRM</b><small>HubSpot architecture, v1</small></div>
+      <button class="icon-btn close-rail" id="closeRail" aria-label="Close menu" style="margin-left:auto"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="rail-foot">
+      <div class="note">Sample data throughout.<br>Company names are made up.</div>
+      <div style="display:flex;gap:2px">
+        <button class="icon-btn" data-reset aria-label="Reset the prototype" title="Reset"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 1 0 1.8-4.1"/><path d="M2.5 2.5v3h3"/></svg></button>
+        <button class="icon-btn" data-theme-toggle aria-label="Toggle theme" title="Theme"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v11a5.5 5.5 0 0 0 0-11z" fill="currentColor" stroke="none"/></svg></button>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <button class="icon-btn" id="openRail" aria-label="Open sections"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h7"/></svg></button>
+      <div class="cur" id="cur"><span>00</span><b>Overview</b></div>
+      <div class="tb-r">
+        <button class="icon-btn" data-reset aria-label="Reset the prototype"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 1 0 1.8-4.1"/><path d="M2.5 2.5v3h3"/></svg></button>
+        <button class="icon-btn" data-theme-toggle aria-label="Toggle theme"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v11a5.5 5.5 0 0 0 0-11z" fill="currentColor" stroke="none"/></svg></button>
+      </div>
+    </div>
+
+    <!-- 00 OVERVIEW -->
+    <section class="screen on" data-s="overview">
+      <p class="eyebrow">Working prototype <b>&middot;</b> Two offices, South Florida</p>
+      <h1>HubSpot built around how you actually get work.</h1>
+      <p class="lede">A referral from an adjuster, a property manager or a plumber becomes one job that moves from lead to inspection, mitigation, reconstruction and closed. Every person and company that sent it gets the credit, up the chain to the carrier.</p>
+      <button class="next" data-go="pipeline" data-run style="margin-top:20px">Watch a referral earn credit <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button>
+
+      <div class="journey">
+        <div>
+          <p class="label" style="margin:0 0 10px">Where work comes from</p>
+          <div class="src-list">
+            <div>Insurance carriers <i>assignments</i></div>
+            <div>Adjusters <i>field referrals</i></div>
+            <div>Property managers <i>portfolios</i></div>
+            <div>Plumbers <i>first on site</i></div>
+            <div>Commercial accounts <i>contracts</i></div>
+          </div>
+        </div>
+        <div class="arrow" aria-hidden="true"><svg viewBox="0 0 36 12" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M0 6h34M29 1l5 5-5 5"/></svg></div>
+        <div class="job">
+          <span class="label">One job</span>
+          <div class="t">Water loss, 2nd floor condo, Jupiter</div>
+          <div class="stages" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
+          <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--ink-3)"><span>Mitigation</span><span class="mono">Palm Beach</span></div>
+        </div>
+        <div class="arrow" aria-hidden="true"><svg viewBox="0 0 36 12" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M0 6h34M29 1l5 5-5 5"/></svg></div>
+        <div>
+          <p class="label" style="margin:0 0 10px">Who gets the credit</p>
+          <div class="credit-list">
+            <div>Dana Whitcomb <span class="muted" style="font-size:12.5px">adjuster</span></div>
+            <div>Southeast Region <span class="muted" style="font-size:12.5px">regional office</span></div>
+            <div>Coastline Mutual <span class="muted" style="font-size:12.5px">carrier</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="why">
+        <div><div class="n">01</div><h3 style="margin-top:14px">The job is the deal</h3><p>Your lifecycle is the pipeline. A job never gets forced through a SaaS funnel of demos and proposals.</p></div>
+        <div><div class="n">02</div><h3 style="margin-top:14px">Referrals are relationships</h3><p>Carriers, regional offices and adjusters are linked parent to child, so one referral reports at every level.</p></div>
+        <div><div class="n">03</div><h3 style="margin-top:14px">Reports are designed first</h3><p>Every property exists because a dashboard or a decision needs it. Nothing is added "just in case".</p></div>
+      </div>
+      <div class="foot-note"><span>Eleven sections, in the order of your scope. Start with discovery.</span><button class="next" data-go="discovery">Discovery summary <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></div>
+    </section>
+
+    <!-- 01 DISCOVERY -->
+    <section class="screen" data-s="discovery">
+      <p class="eyebrow"><b>01</b> &nbsp;Discovery session</p>
+      <h2>How you win and track work.</h2>
+      <p class="lede">The summary that comes out of the first session. Every later decision in the build points back to one of these lines.</p>
+      <div class="channels">
+        <div class="ch"><h3>Insurance carriers</h3><p>Assignments come through a regional office, not the carrier's head office. The relationship that matters is the office and the people in it.</p><span class="who">Tracked at the regional office</span></div>
+        <div class="ch"><h3>Adjusters</h3><p>The single most valuable relationship. An adjuster can move between carriers or work independently, so the person is tracked separately from the company.</p><span class="who">Tracked on the contact</span></div>
+        <div class="ch"><h3>Property managers</h3><p>One manager covers many buildings. A good one sends repeat jobs across a portfolio, which is what BD visits are meant to protect.</p><span class="who">Tracked on the company</span></div>
+        <div class="ch"><h3>Plumbers</h3><p>Often first on site for a water loss. Fast handoff matters more than anything else, so speed from call to inspection gets measured.</p><span class="who">Tracked on the job</span></div>
+        <div class="ch"><h3>Commercial accounts</h3><p>Standing relationships with facilities teams. Fewer jobs, larger tickets, and often reconstruction as well as mitigation.</p><span class="who">Tracked on the company</span></div>
+      </div>
+      <div class="two sec">
+        <div>
+          <p class="label" style="margin:0 0 12px">What the build has to answer</p>
+          <ul class="qs">
+            <li>Which referral sources send the jobs that actually close, per office?</li>
+            <li>Where is every open job in the lifecycle, and which one is stuck?</li>
+            <li>Which adjusters and property managers has BD not seen in 30 days?</li>
+          </ul>
+        </div>
+        <div>
+          <p class="label" style="margin:0 0 12px">Decisions confirmed in the session</p>
+          <ul class="qs">
+            <li>Is reconstruction the same job as mitigation, or its own contract?</li>
+            <li>Who can see the other office's jobs and relationships?</li>
+            <li>Which system owns the job once production starts: HubSpot or RMS/Luxor?</li>
+          </ul>
+        </div>
+      </div>
+      <div class="foot-note"><span>Sample summary, confirmed with you in the first session.</span><button class="next" data-go="model">Data model <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></div>
+    </section>
+
+    <!-- 02 DATA MODEL -->
+    <section class="screen" data-s="model">
+      <p class="eyebrow"><b>02</b> &nbsp;Data model</p>
+      <h2>Objects, associations and the carrier hierarchy.</h2>
+      <p class="lede">Carrier, regional office and adjuster sit parent to child, and every job links back to the people who sent it. Click any object to see its properties.</p>
+      <div class="model">
+        <div class="diagram">
+          <svg id="dm" viewBox="0 0 700 460" role="group" aria-label="Data model diagram"></svg>
+        </div>
+        <div class="panel" id="dmPanel" aria-live="polite"></div>
+      </div>
+      <div class="legend-row">
+        <span>Jobs are HubSpot deals, so nothing depends on custom objects.</span>
+        <span>Labels on each line are association labels.</span>
+      </div>
+      <div class="foot-note"><span>Company names are made up.</span><button class="next" data-go="dictionary">Property dictionary <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></div>
+    </section>
+
+    <!-- 03 DICTIONARY -->
+    <section class="screen" data-s="dictionary">
+      <p class="eyebrow"><b>03</b> &nbsp;Custom properties</p>
+      <h2>One naming rule, and a dictionary that explains every field.</h2>
+      <p class="lede">Anyone opening a property knows which object it lives on, what it groups with and why it exists. Nothing is named "Other info 2".</p>
+      <div class="conv">
+        <div><span class="label">Internal name</span><code><em>object</em>_<em>group</em>_name</code><p>Lowercase, underscores, never renamed after launch.</p></div>
+        <div><span class="label">Example</span><code>deal_loss_date_of_loss</code><p>Object first, so exports and workflows read cleanly.</p></div>
+        <div><span class="label">Groups</span><code>loss &middot; referral &middot; office &middot; bd</code><p>Four groups per object keep the record sidebar short.</p></div>
+      </div>
+      <div class="toolbar">
+        <div class="seg" id="dictSeg" role="group" aria-label="Filter by object">
+          <button aria-pressed="true" data-o="all">All</button><button aria-pressed="false" data-o="Job">Job</button><button aria-pressed="false" data-o="Company">Company</button><button aria-pressed="false" data-o="Contact">Contact</button>
+        </div>
+        <label class="search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14" stroke-linecap="round"/></svg><input id="dictQ" type="text" placeholder="Search properties" aria-label="Search properties"></label>
+      </div>
+      <div class="tbl-wrap">
+        <table class="tbl" id="dict">
+          <thead><tr><th>Label</th><th>Internal name</th><th class="hide-sm">Type</th><th class="hide-sm">Required at</th><th class="hide-sm">Why it exists</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="foot-note"><span id="dictCount"></span><button class="next" data-go="account">Account type <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></div>
+    </section>
+
+    <!-- 04 ACCOUNT TYPE -->
+    <section class="screen" data-s="account">
+      <p class="eyebrow"><b>04</b> &nbsp;Account type and referral source</p>
+      <h2>What a company is, and how a job came in.</h2>
+      <p class="lede">Account Type lives on the company and never changes. Referral Source lives on the job and is set from whoever referred it, so reports never depend on someone picking the right dropdown.</p>
+      <div class="tax" id="tax">
+        <div><h3>Insurance</h3><ul><li data-t="carrier">Insurance carrier <i>INS-CAR</i></li><li data-t="region">Regional office <i>INS-REG</i></li><li data-t="ia">Independent adjusting firm <i>INS-IA</i></li></ul></div>
+        <div><h3>Property</h3><ul><li data-t="pm">Property management <i>PRP-PM</i></li><li data-t="hoa">Condo / HOA association <i>PRP-HOA</i></li><li data-t="comm">Commercial account <i>PRP-COM</i></li></ul></div>
+        <div><h3>Trade</h3><ul><li data-t="plumb">Plumber <i>TRD-PLB</i></li><li data-t="roof">Roofer <i>TRD-RFG</i></li><li data-t="trade">Other trade partner <i>TRD-OTH</i></li></ul></div>
+        <div><h3>Direct</h3><ul><li data-t="owner">Property owner <i>DIR-OWN</i></li><li data-t="web">Web or phone <i>DIR-WEB</i></li><li data-t="repeat">Repeat customer <i>DIR-RPT</i></li></ul></div>
+      </div>
+      <div class="chain">
+        <span class="label">Try it: who referred the job?</span>
+        <div class="chain-picks" id="chainPicks"></div>
+        <div class="chain-row" id="chainRow">
+          <div><span class="label">Referred by</span><div class="v" data-k="who"></div><div class="s" data-k="whoS"></div></div>
+          <div><span class="label">Account type</span><div class="v" data-k="type"></div><div class="s" data-k="typeS"></div></div>
+          <div><span class="label">Referral source</span><div class="v" data-k="src"></div><div class="s">Set automatically</div></div>
+          <div><span class="label">Reports under</span><div class="v" data-k="rep"></div><div class="s" data-k="repS"></div></div>
+        </div>
+      </div>
+      <div class="foot-note"><span>Codes are the values stored; labels are what people see.</span><button class="next" data-go="pipeline">Job pipeline <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></div>
+    </section>
+
+    <!-- 05 PIPELINE -->
+    <section class="screen" data-s="pipeline">
+      <div class="pipe-head">
+        <div>
+          <p class="eyebrow"><b>05</b> &nbsp;Deal pipeline</p>
+          <h2>Your job lifecycle, not a sales funnel.</h2>
+          <p class="lede">Each stage asks only for what that stage needs. Run a referred water loss through it and watch the credit land on the adjuster, the regional office and the carrier.</p>
+        </div>
+        <div class="pipe-ctl">
+          <button class="btn" id="runJob"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 3.2v9.6a.5.5 0 0 0 .77.42l7.4-4.8a.5.5 0 0 0 0-.84l-7.4-4.8a.5.5 0 0 0-.77.42z"/></svg><span>Run a referred water loss</span></button>
+        </div>
+      </div>
+      <div class="board" id="board">
+        <div class="col"><div class="col-h"><div><b>Lead</b><small>Loss reported</small></div><span data-c="0">3</span></div><div class="slot"></div>
+          <div class="card"><b>Fire, kitchen, single-family</b><div class="m"><span>Wellington</span><span class="mono">PB</span></div></div>
+          <div class="card"><b>Mold, HOA clubhouse</b><div class="m"><span>Stuart</span><span class="mono">TC</span></div></div></div>
+        <div class="col"><div class="col-h"><div><b>Inspection</b><small>Scope and moisture map</small></div><span data-c="1">4</span></div><div class="slot"></div>
+          <div class="card"><b>Water, office suite 210</b><div class="m"><span>Boca Raton</span><span class="mono">PB</span></div></div>
+          <div class="card"><b>Water, rental unit B</b><div class="m"><span>Port St. Lucie</span><span class="mono">TC</span></div></div></div>
+        <div class="col"><div class="col-h"><div><b>Mitigation</b><small>Dry-out and demo</small></div><span data-c="2">6</span></div><div class="slot"></div>
+          <div class="card"><b>Water, retail bay 4</b><div class="m"><span>Vero Beach</span><span class="mono">TC</span></div></div>
+          <div class="card"><b>Mold, medical plaza</b><div class="m"><span>Jupiter</span><span class="mono">PB</span></div></div></div>
+        <div class="col"><div class="col-h"><div><b>Reconstruction</b><small>Rebuild to pre-loss</small></div><span data-c="3">5</span></div><div class="slot"></div>
+          <div class="card"><b>Fire, townhome</b><div class="m"><span>Palm Beach Gardens</span><span class="mono">PB</span></div></div></div>
+        <div class="col"><div class="col-h"><div><b>Closed</b><small>Invoiced and paid</small></div><span data-c="4">12</span></div><div class="slot"></div>
+          <div class="card"><b>Water, lobby and hall</b><div class="m"><span>Stuart</span><span class="mono">TC</span></div></div></div>
+        <div class="live" id="live" aria-live="polite"></div>
+      </div>
+      <div class="after">
+        <div>
+          <p class="label" style="margin:0 0 12px">Job activity</p>
+          <ul class="log" id="log"><li class="empty" style="display:block;grid-template-columns:none">Run the job to see each stage write to the record.</li></ul>
+        </div>
+        <div class="ledger">
+          <p class="label" style="margin:0 0 12px">Referral credit, this year</p>
+          <div class="row" data-l="adj"><span class="dot"></span><div class="who"><b>Dana Whitcomb</b><span>Adjuster, contact</span></div><div class="jobs"><span class="delta">+1</span><span class="v">7</span> jobs</div><div class="rev"><span class="delta">+$30,000</span><span class="v">$184,200</span></div></div>
+          <div class="rollup">
+            <div class="row" data-l="reg"><span class="dot"></span><div class="who"><b>Coastline Mutual, Southeast Region</b><span>Regional office, child company</span></div><div class="jobs"><span class="delta">+1</span><span class="v">23</span> jobs</div><div class="rev"><span class="delta">+$30,000</span><span class="v">$611,400</span></div></div>
+            <div class="rollup">
+              <div class="row" data-l="car"><span class="dot"></span><div class="who"><b>Coastline Mutual</b><span>Carrier, parent company</span></div><div class="jobs"><span class="delta">+1</span><span class="v">61</span> jobs</div><div class="rev"><span class="delta">+$30,000</span><span class="v">$1,482,900</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="foot-note"><span class="illus">Counts and dollar figures are illustrative.</span><button class="next" data-go="territory">Offices and territory <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></div>
+    </section>
+
+    <!-- 06 TERRITORY -->
+    <section class="screen" data-s="territory">
+      <p class="eyebrow"><b>06</b> &nbsp;Office and territory</p>
+      <h2>Palm Beach and Treasure Coast, set by where the loss is.</h2>
+      <p class="lede">Office comes from the county of the loss address, never from whoever answered the phone. The office decides the team, the owner rotation and which dashboard the job counts on.</p>
+      <div class="terr">
+        <div class="coast">
+          <svg viewBox="0 0 400 620" aria-label="Territory map: Indian River, St. Lucie, Martin and Palm Beach counties">
+            <path class="county tc" data-cty="ir" d="M30 15 L209 15 L218 46 L228 76 L238 104 L246 129 L30 129 Z"/>
+            <path class="county tc" data-cty="sl" d="M103 129 L246 129 L258 160 L270 190 L282 219 L293 247 L297 262 L103 262 Z"/>
+            <path class="county tc" data-cty="mc" d="M103 262 L297 262 L304 285 L314 309 L323 331 L331 353 L95 353 L92 322 Z"/>
+            <path class="county pb" data-cty="pb" d="M95 353 L331 353 L334 361 L340 399 L346 437 L348 475 L348 513 L342 556 L334 600 L27 600 L27 432 C58 428 88 398 95 353 Z"/>
+            <path d="M0 292 C52 290 94 318 95 356 C96 398 58 432 0 434 Z" fill="var(--line-2)" stroke="var(--line)"/>
+            <text class="ocean-l" x="8" y="368" style="font-size:12px">Lake</text>
+            <text class="ocean-l" x="8" y="384" style="font-size:12px">Okeechobee</text>
+            <path d="M205 2 L209 15 L218 46 L228 76 L238 104 L246 129 L258 160 L270 190 L282 219 L293 247 L297 262 L304 285 L314 309 L323 331 L331 353 L334 361 L340 399 L346 437 L348 475 L348 513 L342 556 L334 600 L330 618" stroke="var(--ink-3)" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+            <text class="c-l" data-cl="ir" x="84" y="76">Indian River</text>
+            <text class="c-l" data-cl="sl" x="140" y="200">St. Lucie</text>
+            <text class="c-l" data-cl="mc" x="168" y="312">Martin</text>
+            <text class="c-l" data-cl="pb" x="150" y="486">Palm Beach</text>
+            <text class="ocean-l" x="318" y="160">Atlantic</text>
+            <line x1="392" y1="15" x2="392" y2="349" stroke="var(--accent-2)" stroke-width="2"/>
+            <line x1="392" y1="357" x2="392" y2="600" stroke="var(--accent)" stroke-width="2"/>
+            <text class="c-l" x="382" y="182" transform="rotate(-90 382 182)" text-anchor="middle">Treasure Coast office</text>
+            <text class="c-l" x="382" y="478" transform="rotate(-90 382 478)" text-anchor="middle">Palm Beach office</text>
+            <circle class="pin" id="pin" r="7" fill="var(--surface)" stroke="var(--accent)" stroke-width="2.5" cx="0" cy="0" opacity="0"/>
+          </svg>
+        </div>
+        <div>
+          <p class="label" style="margin:0 0 4px">Incoming losses, pick one</p>
+          <div class="losses" id="losses"></div>
+          <div class="assign">
+            <div><span class="label">Office</span><div class="v" data-a="office">&mdash;</div></div>
+            <div><span class="label">Team lead</span><div class="v" data-a="team">&mdash;</div></div>
+            <div><span class="label">Next owner</span><div class="v" data-a="owner">&mdash;</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="foot-note"><span>ZIPs outside both territories go to the office manager's review queue.</span><button class="next" data-go="users">Users and permissions <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></div>
+    </section>
+
+    <!-- 07 USERS -->
+    <section class="screen" data-s="users">
+      <p class="eyebrow"><b>07</b> &nbsp;Users, teams and permissions</p>
+      <h2>Two teams, five roles, and nobody sees more than they need.</h2>
+      <p class="lede">Teams mirror the offices. Permission sets are built per role, so adding a new hire is picking a role and a team.</p>
+      <div class="teams">
+        <div class="team"><h3>Palm Beach <span>5 users</span></h3>
+          <div class="person"><span class="av">MO</span><div>Marisol Ortega<small>Office manager</small></div><span class="role">Team lead</span></div>
+          <div class="person"><span class="av">JR</span><div>Jordan Reyes<small>Business development</small></div><span class="role">Owner rotation</span></div>
+          <div class="person"><span class="av">AK</span><div>Alyssa Kent<small>Business development</small></div><span class="role">Owner rotation</span></div>
+          <div class="person"><span class="av">TB</span><div>Tomas Brandt<small>Project manager</small></div><span class="role">&nbsp;</span></div>
+          <div class="person"><span class="av">LN</span><div>Lena Novak<small>Accounting, shared</small></div><span class="role">Both offices</span></div>
+        </div>
+        <div class="team"><h3>Treasure Coast <span>4 users</span></h3>
+          <div class="person"><span class="av">GH</span><div>Grant Hollis<small>Office manager</small></div><span class="role">Team lead</span></div>
+          <div class="person"><span class="av">CP</span><div>Carmen Pruitt<small>Business development</small></div><span class="role">Owner rotation</span></div>
+          <div class="person"><span class="av">DW</span><div>Devon Ward<small>Project manager</small></div><span class="role">&nbsp;</span></div>
+          <div class="person"><span class="av">LN</span><div>Lena Novak<small>Accounting, shared</small></div><span class="role">Both offices</span></div>
+        </div>
+      </div>
+      <div class="matrix">
+        <p class="label" style="margin:0 0 12px">Permission sets, click a role</p>
+        <div class="tbl-wrap">
+        <table class="tbl" id="perm">
+          <thead><tr><th>Role</th><th>Jobs</th><th>Companies and contacts</th><th class="hide-sm">Edit jobs</th><th class="hide-sm">Export</th><th class="hide-sm">Delete</th><th class="hide-sm">Settings</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        </div>
+        <p class="viewas" id="viewas" aria-live="polite"></p>
+      </div>
+      <div class="foot-note"><span>Names are sample users.</span><button class="next" data-go="cleanup">Import and cleanup <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></div>
+    </section>
+
+    <!-- 08 CLEANUP -->
+    <section class="screen" data-s="cleanup">
+      <p class="eyebrow"><b>08</b> &nbsp;Data import plan and cleanup</p>
+      <h2>Clean the exports before they touch HubSpot.</h2>
+      <p class="lede">Your existing contact and company exports are deduped and standardized first, then imported in an order that keeps every association intact.</p>
+      <div class="plan">
+        <div><span class="label">Step 1</span><b>Companies</b>Carriers first, then regional offices with their parent set.</div>
+        <div><span class="label">Step 2</span><b>Contacts</b>Adjusters, managers and trade partners, linked to their company.</div>
+        <div><span class="label">Step 3</span><b>Open jobs</b>Only active jobs, with stage and office mapped.</div>
+        <div><span class="label">Step 4</span><b>Verify</b>Counts and ten spot-checked records signed off before go-live.</div>
+      </div>
+      <div class="clean-head">
+        <div class="stats">
+          <div><div class="v" id="stIn">9</div><div class="l">Rows in</div></div>
+          <div><div class="v" id="stFix">0</div><div class="l">Fields fixed</div></div>
+          <div><div class="v" id="stMerge">0</div><div class="l">Merged</div></div>
+          <div><div class="v" id="stOut">&ndash;</div><div class="l">Clean records</div></div>
+        </div>
+        <button class="btn" id="runClean"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 3.2v9.6a.5.5 0 0 0 .77.42l7.4-4.8a.5.5 0 0 0 0-.84l-7.4-4.8a.5.5 0 0 0-.77.42z"/></svg><span>Run cleanup</span></button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-top:20px"><div class="steps-line" id="cleanSteps" style="margin-top:0"><span data-st="0"><i></i>Standardize names</span><span data-st="1"><i></i>Format phones</span><span data-st="2"><i></i>Lowercase emails</span><span data-st="3"><i></i>Map account type</span><span data-st="4"><i></i>Merge duplicates</span></div>
+        <div class="seg" id="baSeg" role="group" aria-label="Compare the export"><button aria-pressed="true" data-v="before">Before</button><button aria-pressed="false" data-v="after" disabled>After</button></div></div>
+      <div class="tbl-wrap raw">
+        <table class="tbl" id="raw">
+          <thead><tr><th>Name</th><th>Company</th><th>Phone</th><th class="hide-sm">Email</th><th>Account type</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="foot-note"><span class="illus">Sample rows from an illustrative export.</span><button class="next" data-go="dashboards">Dashboards <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></div>
+    </section>
+
+    <!-- 09 DASHBOARDS -->
+    <section class="screen" data-s="dashboards">
+      <p class="eyebrow"><b>09</b> &nbsp;Core dashboards</p>
+      <h2 id="dashTitle">Referral source performance.</h2>
+      <div class="dash-ctl">
+        <div class="seg" id="dashSeg" role="group" aria-label="Dashboard">
+          <button aria-pressed="true" data-d="ref">Referral sources</button><button aria-pressed="false" data-d="pipe">Pipeline</button><button aria-pressed="false" data-d="bd">BD activity</button>
+        </div>
+        <div class="seg" id="offSeg" role="group" aria-label="Office">
+          <button aria-pressed="true" data-f="all">Both offices</button><button aria-pressed="false" data-f="pb">Palm Beach</button><button aria-pressed="false" data-f="tc">Treasure Coast</button>
+        </div>
+      </div>
+      <div class="kpis" id="kpis"></div>
+      <div class="chart" id="chart"></div>
+      <div class="foot-note"><span class="illus">All numbers are illustrative, last 12 months.</span><button class="next" data-go="integrations">Integrations <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></div>
+    </section>
+
+    <!-- 10 INTEGRATIONS -->
+    <section class="screen" data-s="integrations">
+      <p class="eyebrow"><b>10</b> &nbsp;Integration recommendations</p>
+      <h2>HubSpot keeps the relationship, the rest of your stack keeps its job.</h2>
+      <p class="lede">Each recommendation says what moves, in which direction and when, so nothing is entered twice.</p>
+      <div class="integ">
+        <div class="int">
+          <div><h3>Outlook</h3><div class="how">Native HubSpot connection</div><div class="status"><i></i>Connect in week one</div></div>
+          <ul>
+            <li><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>Emails with adjusters and managers log to their contact automatically.</li>
+            <li><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>Calendar meetings become BD visits, which feed the activity dashboard.</li>
+            <li><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>Personal and internal email domains are excluded from logging.</li>
+          </ul>
+          <div class="flowline">Outlook <svg viewBox="0 0 34 10" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M0 5h32M28 1l4 4-4 4"/></svg> HubSpot</div>
+        </div>
+        <div class="int">
+          <div><h3>QuickBooks</h3><div class="how">Native HubSpot connection</div><div class="status"><i></i>Connect after go-live</div></div>
+          <ul>
+            <li><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>Invoice status and paid amount come back onto the job.</li>
+            <li><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>Referral reports count collected revenue, not estimates.</li>
+            <li><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>Accounting stays the source of truth for invoices.</li>
+          </ul>
+          <div class="flowline">QuickBooks <svg viewBox="0 0 34 10" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M0 5h32M28 1l4 4-4 4"/></svg> HubSpot</div>
+        </div>
+        <div class="int">
+          <div><h3>RMS/Luxor</h3><div class="how">Method set after an access check</div><div class="status v"><i></i>Confirm API access first</div></div>
+          <ul>
+            <li><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>Job management stays in RMS/Luxor once mitigation starts.</li>
+            <li><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>The job number and production stage come back to HubSpot for reporting.</li>
+            <li><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>Direct sync if it has an API, otherwise middleware or a scheduled file.</li>
+          </ul>
+          <div class="flowline">HubSpot <svg viewBox="0 0 34 10" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M0 5h32M28 1l4 4-4 4M4 1L0 5l4 4"/></svg> RMS/Luxor</div>
+        </div>
+      </div>
+      <div class="foot-note"><span>Recommendations only; each connection is confirmed with you before it is switched on.</span><button class="next" data-go="docs">Documentation <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></div>
+    </section>
+
+    <!-- 11 DOCS -->
+    <section class="screen" data-s="docs">
+      <p class="eyebrow"><b>11</b> &nbsp;Documentation and handoff</p>
+      <h2>Written down once, recorded once, owned by your team.</h2>
+      <p class="lede">A single guide your office managers can use to train the next hire, and a recorded session that walks both offices through it.</p>
+      <div class="docs">
+        <div>
+          <p class="label" style="margin:0 0 12px">The CRM guide</p>
+          <ol class="toc">
+            <li><span>1</span><span>How referrals flow into HubSpot</span><span>2 pp</span></li>
+            <li><span>2</span><span>Data model and association labels</span><span>3 pp</span></li>
+            <li><span>3</span><span>Property dictionary</span><span>6 pp</span></li>
+            <li><span>4</span><span>Account type and referral source rules</span><span>2 pp</span></li>
+            <li><span>5</span><span>Working a job, stage by stage</span><span>4 pp</span></li>
+            <li><span>6</span><span>Offices, teams and permissions</span><span>2 pp</span></li>
+            <li><span>7</span><span>Importing new data without duplicates</span><span>2 pp</span></li>
+            <li><span>8</span><span>Reading the three dashboards</span><span>3 pp</span></li>
+            <li><span>9</span><span>Integrations and who owns what</span><span>2 pp</span></li>
+          </ol>
+        </div>
+        <div class="player">
+          <div class="screenish"><span class="ts" id="vidTs">00:00 / 52:10</span><span class="play" aria-hidden="true"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 3.2v9.6a.5.5 0 0 0 .77.42l7.4-4.8a.5.5 0 0 0 0-.84l-7.4-4.8a.5.5 0 0 0-.77.42z"/></svg></span><div class="cap" id="vidCap">Handoff and training, both offices</div></div>
+          <div class="scrub"><i id="vidBar" style="width:0"></i></div>
+          <div class="chapters" id="chapters"></div>
+        </div>
+      </div>
+      <div class="foot-note"><span>Sample chapter list for the recorded session.</span><button class="next" data-go="overview">Back to overview <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function(){
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var $ = function(s,r){return (r||document).querySelector(s)};
+  var $$ = function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+  var timers = [];
+  function later(fn,ms){var t=setTimeout(fn,reduce?Math.min(ms,60):ms);timers.push(t);return t}
+  function clearTimers(){timers.forEach(clearTimeout);timers=[]}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+  /* ---------- nav ---------- */
+  var screens = [
+    ['overview','Overview'],['discovery','Discovery summary'],['model','Data model'],['dictionary','Property dictionary'],
+    ['account','Account type'],['pipeline','Job pipeline'],['territory','Offices and territory'],['users','Users and permissions'],
+    ['cleanup','Import and cleanup'],['dashboards','Dashboards'],['integrations','Integrations'],['docs','Documentation']
+  ];
+  var nav = $('#nav');
+  nav.innerHTML = screens.map(function(s,i){
+    return '<button data-go="'+s[0]+'"><span>'+(i<10?'0':'')+i+'</span>'+s[1]+'</button>';
+  }).join('');
+  function go(id){
+    $$('.screen').forEach(function(el){el.classList.toggle('on',el.dataset.s===id)});
+    $$('#nav button').forEach(function(b){b.setAttribute('aria-current',b.dataset.go===id?'true':'false')});
+    var i = screens.findIndex(function(s){return s[0]===id});
+    $('#cur').innerHTML = '<span>'+(i<10?'0':'')+i+'</span><b>'+screens[i][1]+'</b>';
+    $('#rail').classList.remove('open');
+    window.scrollTo(0,0);
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+    if(id==='pipeline') placeLive(true);
+    if(id==='dashboards') renderDash();
+  }
+  document.addEventListener('click',function(e){
+    var b = e.target.closest('[data-go]');
+    if(b){e.preventDefault();go(b.dataset.go);if(b.hasAttribute('data-run'))setTimeout(runJob,450)}
+  });
+  $('#openRail').addEventListener('click',function(){$('#rail').classList.add('open')});
+  $('#closeRail').addEventListener('click',function(){$('#rail').classList.remove('open')});
+
+  /* ---------- theme ---------- */
+  $$('[data-theme-toggle]').forEach(function(b){b.addEventListener('click',function(){
+    var root=document.documentElement;
+    var cur = root.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    var nx = cur==='dark'?'light':'dark';
+    root.setAttribute('data-theme',nx);
+    try{localStorage.setItem('rc-theme',nx)}catch(e){}
+  })});
+  try{var th=localStorage.getItem('rc-theme');if(th)document.documentElement.setAttribute('data-theme',th)}catch(e){}
+
+  /* ---------- data model ---------- */
+  var nodes = {
+    carrier:{x:20,y:30,w:150,k:'Company · parent',n:'Insurance carrier',t:'Insurance carrier',d:'The top of the chain. Assignments roll up here so you can see total volume per carrier across every regional office.',p:[['Account type','INS-CAR'],['Carrier programs','multi-select'],['Preferred vendor status','dropdown'],['Jobs referred, all offices','rollup'],['Revenue referred, all offices','rollup']]},
+    region:{x:20,y:200,w:150,k:'Company · child',n:'Regional office',t:'Regional office',d:'Child of the carrier. This is where the relationship lives day to day, and where BD time is measured.',p:[['Account type','INS-REG'],['Parent company','carrier'],['Covers territory','Palm Beach, Treasure Coast'],['Last BD visit','date'],['Jobs referred','rollup']]},
+    adjuster:{x:20,y:370,w:150,k:'Contact',n:'Adjuster',t:'Adjuster',d:'A person, tracked apart from the company, so the relationship follows them if they move to another carrier or go independent.',p:[['Referral role','Adjuster'],['Adjuster type','staff, independent, public'],['Primary company','regional office'],['Last touch','date'],['Jobs referred','rollup']]},
+    job:{x:275,y:200,w:150,k:'Deal',n:'Job',t:'Job',d:'The center of the model. One job per loss, carrying the loss details, the office and every association that earned it.',p:[['Loss type','water, fire, mold'],['Water category','1, 2, 3'],['Date of loss','date'],['Claim number','text'],['Office','Palm Beach, Treasure Coast'],['Referral source','auto-set'],['RMS/Luxor job number','text']]},
+    partner:{x:530,y:30,w:150,k:'Company',n:'Referral partner',t:'Referral partner',d:'Property managers, plumbers and commercial accounts. One object, told apart by Account Type, so every partner reports the same way.',p:[['Account type','PRP or TRD code'],['Doors or buildings managed','number'],['Office','Palm Beach, Treasure Coast'],['BD owner','user'],['Jobs referred','rollup']]},
+    pcontact:{x:530,y:200,w:150,k:'Contact',n:'Partner contact',t:'Partner contact',d:'The manager, plumber or facilities lead who actually picks up the phone and calls you.',p:[['Referral role','manager, plumber, facilities'],['Primary company','referral partner'],['Last touch','date'],['BD cadence','30, 60, 90 days']]},
+    owner:{x:275,y:30,w:150,k:'Contact',n:'Policyholder',t:'Policyholder',d:'The property owner or tenant with the loss. Kept for service and repeat work, never counted as a referral source unless they come back directly.',p:[['Referral role','Policyholder'],['Loss address','address'],['Preferred contact','phone, email, text'],['Repeat customer','yes, no']]},
+    activity:{x:275,y:370,w:150,k:'Activity',n:'BD activity',t:'BD activity',d:'Visits, lunch and learns, calls and emails, logged against adjusters and partners. This is what the BD dashboard reads.',p:[['Activity type','visit, lunch and learn, call, email'],['Office','Palm Beach, Treasure Coast'],['Logged by','user'],['Related to','contact, company']]}
+  };
+  var H = 52;
+  var edges = [
+    ['carrier','region','parent / child','b',0,'t',0],['region','adjuster','works at','b',0,'t',0],
+    ['carrier','job','carrier of record','r',0,'l',-14],['region','job','assigning office','r',0,'l',0],['adjuster','job','referring adjuster','r',-10,'b',-40,[26,0]],
+    ['owner','job','policyholder','b',0,'t',0],['partner','job','referring account','l',0,'r',-14],['pcontact','job','referred by','l',0,'r',0],
+    ['partner','pcontact','works at','b',0,'t',0],['adjuster','activity','logged to','r',10,'l',0,[0,-12]],['activity','pcontact','logged to','r',0,'b',0,[20,0]]
+  ];
+  function port(id,side,off){
+    var n=nodes[id];
+    if(side==='r')return [n.x+n.w,n.y+H/2+off];
+    if(side==='l')return [n.x,n.y+H/2+off];
+    if(side==='t')return [n.x+n.w/2+off,n.y];
+    return [n.x+n.w/2+off,n.y+H];
+  }
+  function ctl(p,side,d){
+    if(side==='r')return [p[0]+d,p[1]];if(side==='l')return [p[0]-d,p[1]];
+    if(side==='t')return [p[0],p[1]-d];return [p[0],p[1]+d];
+  }
+  function buildDM(){
+    var svg=$('#dm'),h='',lbl='';
+    edges.forEach(function(e,i){
+      var p1=port(e[0],e[3],e[4]),p2=port(e[1],e[5],e[6]);
+      var dist=Math.hypot(p2[0]-p1[0],p2[1]-p1[1]),d=Math.max(30,dist*.45);
+      var c1=ctl(p1,e[3],d),c2=ctl(p2,e[5],d);
+      h+='<path class="edge" data-e="'+i+'" d="M'+p1[0]+' '+p1[1]+' C'+c1[0]+' '+c1[1]+' '+c2[0]+' '+c2[1]+' '+p2[0]+' '+p2[1]+'"/>';
+      var mx=.125*p1[0]+.375*c1[0]+.375*c2[0]+.125*p2[0],my=.125*p1[1]+.375*c1[1]+.375*c2[1]+.125*p2[1];
+      var o=e[7]||[0,0];mx+=o[0];my+=o[1];
+      var lw=e[2].length*6.02+12;
+      lbl+='<rect class="edge-bg" x="'+(mx-lw/2).toFixed(1)+'" y="'+(my-7.5).toFixed(1)+'" width="'+lw.toFixed(1)+'" height="15" rx="4"/><text class="edge-l" data-e="'+i+'" x="'+mx.toFixed(1)+'" y="'+(my+3.5).toFixed(1)+'" text-anchor="middle">'+e[2]+'</text>';
+    });
+    h+=lbl;
+    Object.keys(nodes).forEach(function(id){
+      var n=nodes[id];
+      h+='<g class="node" data-n="'+id+'" tabindex="0" role="button" aria-label="'+n.n+'"><rect x="'+n.x+'" y="'+n.y+'" width="'+n.w+'" height="'+H+'" rx="9"/>'+
+         '<text class="k" x="'+(n.x+14)+'" y="'+(n.y+20)+'">'+n.k+'</text><text class="n" x="'+(n.x+14)+'" y="'+(n.y+39)+'">'+n.n+'</text></g>';
+    });
+    svg.innerHTML=h;
+    $$('#dm .node').forEach(function(g){
+      g.addEventListener('click',function(){selectNode(g.dataset.n)});
+      g.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();selectNode(g.dataset.n)}});
+    });
+  }
+  function selectNode(id){
+    var n=nodes[id];
+    $$('#dm .node').forEach(function(g){g.classList.toggle('sel',g.dataset.n===id)});
+    edges.forEach(function(e,i){
+      var hot=e[0]===id||e[1]===id;
+      $$('[data-e="'+i+'"]').forEach(function(el){el.classList.toggle('hot',hot)});
+    });
+    var links=edges.filter(function(e){return e[0]===id||e[1]===id}).map(function(e){return nodes[e[0]===id?e[1]:e[0]].n.toLowerCase()+' ('+e[2]+')'});
+    $('#dmPanel').innerHTML='<span class="label">'+n.k+'</span><h3 class="pt">'+n.t+'</h3><p>'+n.d+'</p><span class="label">Key properties</span><ul class="props" style="margin-top:8px">'+
+      n.p.map(function(p,i){return '<li style="animation-delay:'+(i*50)+'ms"><span>'+p[0]+'</span><span>'+p[1]+'</span></li>'}).join('')+
+      '</ul><p style="margin-top:20px;font-size:13px;color:var(--ink-3)">Linked to '+links.join(', ')+'.</p>';
+  }
+  buildDM();
+
+  /* ---------- dictionary ---------- */
+  var dict=[
+    ['Job','Loss type','deal_loss_type','Dropdown','Lead','Splits every report by water, fire and mold.'],
+    ['Job','Water category','deal_loss_water_category','Dropdown','Inspection','Drives the scope and the dry-out plan.'],
+    ['Job','Date of loss','deal_loss_date_of_loss','Date','Lead','Measures speed from loss to first call.'],
+    ['Job','Claim number','deal_loss_claim_number','Text','Inspection','Matches the job to the carrier file.'],
+    ['Job','Referral source','deal_referral_source','Dropdown, auto-set','Lead','Powers the referral source dashboard.'],
+    ['Job','Office','deal_office_name','Dropdown, auto-set','Lead','Segments pipeline and permissions.'],
+    ['Job','Mitigation estimate','deal_loss_mitigation_estimate','Currency','Mitigation','Pipeline value before rebuild.'],
+    ['Job','Reconstruction estimate','deal_loss_recon_estimate','Currency','Reconstruction','Adds rebuild value to the same job.'],
+    ['Job','RMS/Luxor job number','deal_office_rms_job_number','Text','Mitigation','Links the job to production.'],
+    ['Company','Account type','company_referral_account_type','Dropdown','Create','The classification every report groups by.'],
+    ['Company','Parent company','company_referral_parent','Association','Create','Carrier to regional office hierarchy.'],
+    ['Company','Doors managed','company_referral_doors_managed','Number','Optional','Sizes a property manager’s portfolio.'],
+    ['Company','Preferred vendor status','company_referral_vendor_status','Dropdown','Optional','Tracks carrier program standing.'],
+    ['Company','Last BD visit','company_bd_last_visit','Date, calculated','Automatic','Flags relationships going cold.'],
+    ['Contact','Referral role','contact_referral_role','Dropdown','Create','Adjuster, manager, plumber or policyholder.'],
+    ['Contact','Adjuster type','contact_referral_adjuster_type','Dropdown','Adjusters','Staff, independent or public adjuster.'],
+    ['Contact','BD cadence','contact_bd_cadence_days','Dropdown','Partners','Sets the 30, 60 or 90 day touch reminder.'],
+    ['Contact','Jobs referred','contact_referral_jobs_count','Rollup','Automatic','Credit that follows the person.']
+  ];
+  var dictObj='all';
+  function renderDict(){
+    var q=($('#dictQ').value||'').toLowerCase();
+    var rows=dict.filter(function(r){return (dictObj==='all'||r[0]===dictObj)&&(!q||(r[1]+' '+r[2]+' '+r[5]).toLowerCase().indexOf(q)>-1)});
+    $('#dict tbody').innerHTML=rows.map(function(r){
+      return '<tr><td>'+esc(r[1])+'<div class="muted" style="font-size:12px">'+r[0]+'</div></td><td class="mono">'+r[2]+'</td><td class="hide-sm">'+r[3]+'</td><td class="hide-sm"><span class="req">'+r[4]+'</span></td><td class="hide-sm" style="color:var(--ink-2)">'+esc(r[5])+'</td></tr>';
+    }).join('')||'<tr><td colspan="5" class="muted">No property matches that search.</td></tr>';
+    $('#dictCount').textContent='Showing '+rows.length+' of '+dict.length+' properties in this draft.';
+  }
+  $$('#dictSeg button').forEach(function(b){b.addEventListener('click',function(){
+    dictObj=b.dataset.o;$$('#dictSeg button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});renderDict();
+  })});
+  $('#dictQ').addEventListener('input',renderDict);
+  renderDict();
+
+  /* ---------- account type chain ---------- */
+  var chains=[
+    {id:'adj',label:'An adjuster',who:'Dana Whitcomb',whoS:'Coastline Mutual, Southeast Region',type:'Regional office',typeS:'Parent: Coastline Mutual',t:'region',src:'Adjuster referral',rep:'Insurance',repS:'Credited to adjuster, office and carrier'},
+    {id:'pm',label:'A property manager',who:'Priya Castellano',whoS:'Seagrape Property Group',type:'Property management',typeS:'412 doors managed',t:'pm',src:'Property manager',rep:'Property',repS:'Credited to manager and company'},
+    {id:'plb',label:'A plumber',who:'Rick Soto',whoS:'Harbor Line Plumbing',type:'Plumber',typeS:'Trade partner',t:'plumb',src:'Trade referral',rep:'Trade',repS:'Credited to plumber and company'},
+    {id:'com',label:'A commercial account',who:'Facilities desk',whoS:'Intracoastal Medical Plaza',type:'Commercial account',typeS:'Standing agreement',t:'comm',src:'Commercial account',rep:'Property',repS:'Credited to the account'},
+    {id:'own',label:'The owner, directly',who:'Policyholder',whoS:'Called the office line',type:'Property owner',typeS:'No referrer',t:'owner',src:'Direct',rep:'Direct',repS:'Counted, never credited to a partner'}
+  ];
+  $('#chainPicks').innerHTML=chains.map(function(c){return '<button class="pick" aria-pressed="false" data-c="'+c.id+'">'+c.label+'</button>'}).join('');
+  function pickChain(id){
+    clearTimers();
+    var c=chains.find(function(x){return x.id===id});
+    $$('#chainPicks .pick').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.c===id?'true':'false')});
+    $$('#tax li').forEach(function(li){li.classList.toggle('hit',li.dataset.t===c.t)});
+    var cells=$$('#chainRow > div');cells.forEach(function(d){d.classList.remove('lit')});
+    ['who','whoS','type','typeS','src','rep','repS'].forEach(function(k){$('#chainRow [data-k="'+k+'"]').textContent=c[k]});
+    cells.forEach(function(d,i){later(function(){d.classList.add('lit')},120+i*260)});
+  }
+  $$('#chainPicks .pick').forEach(function(b){b.addEventListener('click',function(){pickChain(b.dataset.c)})});
+  function resetChain(){pickChain('adj')}
+
+  /* ---------- pipeline live ---------- */
+  var liveStage=-1,running=false,gen=0;
+  var baseCounts=[3,4,6,5,12];
+  var stagesText=[
+    {tag:'New referral',b:'Water loss, 2nd floor condo',m:'Jupiter, 33477<br>Referred by Dana Whitcomb',amt:'Claim CM-44871-26'},
+    {tag:'Inspection booked',b:'Water loss, 2nd floor condo',m:'Category 2, loss Sep 14<br>Inspection Sep 15, 9:30 AM',amt:'Palm Beach office'},
+    {tag:'Mitigation',b:'Water loss, 2nd floor condo',m:'Dry-out day 2 of 4<br>RMS/Luxor job 26-0917',amt:'Est. $8,400'},
+    {tag:'Reconstruction',b:'Water loss, 2nd floor condo',m:'Drywall, flooring, cabinets<br>Rebuild estimate approved',amt:'Est. $8,400 + $21,600'},
+    {tag:'Closed, paid',b:'Water loss, 2nd floor condo',m:'Invoice paid in QuickBooks<br>Credit sent up the chain',amt:'$30,000 collected'}
+  ];
+  var logs=[
+    ['Sep 14','<b>Referral logged</b> from Dana Whitcomb, Coastline Mutual Southeast Region. Source set to Adjuster referral.'],
+    ['Sep 14','<b>Office set to Palm Beach</b> from ZIP 33477. Owner: Jordan Reyes, next in rotation.'],
+    ['Sep 15','<b>Inspection</b> requires claim number and water category. Both filled, stage unlocked.'],
+    ['Sep 16','<b>Mitigation started.</b> Job created in RMS/Luxor, job number written back.'],
+    ['Sep 23','<b>Reconstruction</b> scope approved, rebuild value added to the same job.'],
+    ['Oct 30','<b>Closed.</b> Payment synced from QuickBooks. Credit added to adjuster, office and carrier.']
+  ];
+  function slotPos(i){
+    var slot=$$('#board .slot')[i],board=$('#board');
+    var sr=slot.getBoundingClientRect(),br=board.getBoundingClientRect();
+    return {x:sr.left-br.left,y:sr.top-br.top,w:sr.width};
+  }
+  function paintLive(i){
+    var s=stagesText[i],el=$('#live');
+    el.innerHTML='<span class="tag"><i></i>'+s.tag+'</span><b>'+s.b+'</b><div class="m">'+s.m+'</div><div class="amt">'+s.amt+'</div>';
+  }
+  function placeLive(instant){
+    var el=$('#live');
+    if(liveStage<0){el.classList.remove('show');return}
+    var p=slotPos(liveStage);
+    if(instant){el.style.transition='none'}
+    el.style.width=p.w+'px';
+    el.style.transform='translate('+p.x+'px,'+p.y+'px)';
+    if(instant){void el.offsetWidth;el.style.transition=''}
+  }
+  function setCounts(){
+    var cards=$$('#board .col .card'),before=cards.map(function(c){return c.getBoundingClientRect().top});
+    $$('#board .slot').forEach(function(sl,i){sl.classList.toggle('here',i===liveStage)});
+    if(!reduce)cards.forEach(function(c,i){
+      var d=before[i]-c.getBoundingClientRect().top;if(!d)return;
+      c.style.transition='none';c.style.transform='translateY('+d+'px)';void c.offsetWidth;
+      c.style.transition='transform .8s var(--ease)';c.style.transform='';
+    });
+    $$('#board [data-c]').forEach(function(s,i){s.textContent=baseCounts[i]+(liveStage===i?1:0)});
+  }
+  function addLog(i){
+    var ul=$('#log');var em=ul.querySelector('.empty');if(em)em.remove();
+    var li=document.createElement('li');li.innerHTML='<span class="mono">'+logs[i][0]+'</span><span>'+logs[i][1]+'</span>';ul.appendChild(li);
+  }
+  function credit(){
+    var data={adj:[7,184200],reg:[23,611400],car:[61,1482900]};
+    ['adj','reg','car'].forEach(function(k,i){
+      later(function(){
+        var row=$('.ledger [data-l="'+k+'"]');row.classList.add('cr');
+        var v=row.querySelectorAll('.v');v[0].textContent=data[k][0]+1;
+        countTo(v[1],data[k][1],data[k][1]+30000,600);
+      },i*300);
+    });
+  }
+  function countTo(el,a,b,ms){
+    if(reduce){el.textContent='$'+b.toLocaleString('en-US');return}
+    var t0=null,g=gen;
+    function f(t){if(g!==gen)return;if(!t0)t0=t;var k=Math.min(1,(t-t0)/ms);k=1-Math.pow(1-k,3);el.textContent='$'+Math.round(a+(b-a)*k).toLocaleString('en-US');if(k<1)raf=requestAnimationFrame(f)}
+    var raf=requestAnimationFrame(f);
+  }
+  function runJob(){
+    if(running)return;
+    resetPipe();running=true;
+    var btn=$('#runJob');btn.disabled=true;btn.querySelector('span').textContent='Running';
+    $$('#board .slot').forEach(function(s){s.classList.add('wait')});
+    $('#board').classList.add('has-live');
+    liveStage=0;paintLive(0);setCounts();placeLive(true);
+    later(function(){$('#live').classList.add('show')},60);
+    later(function(){addLog(0)},500);
+    later(function(){addLog(1)},800);
+    var t=1200;
+    [1,2,3,4].forEach(function(st){
+      later(function(){liveStage=st;paintLive(st);setCounts();placeLive(false)},t);
+      later(function(){addLog(st+1)},t+450);
+      t+=900;
+    });
+    later(function(){credit()},t-400);
+    later(function(){running=false;btn.disabled=false;btn.querySelector('span').textContent='Run it again';$$('#board .slot').forEach(function(s){s.classList.remove('wait')})},t+900);
+  }
+  function resetPipe(){
+    gen++;liveStage=-1;running=false;
+    $('#live').classList.remove('show');$('#board').classList.remove('has-live');setCounts();
+    $('#log').innerHTML='<li class="empty" style="display:block">Run the job to see each stage write to the record.</li>';
+    var data={adj:[7,'$184,200'],reg:[23,'$611,400'],car:[61,'$1,482,900']};
+    Object.keys(data).forEach(function(k){var row=$('.ledger [data-l="'+k+'"]');row.classList.remove('cr');var v=row.querySelectorAll('.v');v[0].textContent=data[k][0];v[1].textContent=data[k][1]});
+    var btn=$('#runJob');btn.disabled=false;btn.querySelector('span').textContent='Run a referred water loss';
+    $$('#board .slot').forEach(function(s){s.classList.remove('wait')});
+  }
+  $('#runJob').addEventListener('click',runJob);
+  window.addEventListener('resize',function(){placeLive(true)});
+
+  /* ---------- territory ---------- */
+  var losses=[
+    {c:'Jupiter',z:'33477',t:'Water, condo',cty:'pb',o:'Palm Beach',own:'Jordan Reyes',x:318,y:370},
+    {c:'Stuart',z:'34994',t:'Mold, HOA clubhouse',cty:'mc',o:'Treasure Coast',own:'Carmen Pruitt',x:278,y:276},
+    {c:'Boca Raton',z:'33432',t:'Water, office suite',cty:'pb',o:'Palm Beach',own:'Alyssa Kent',x:326,y:580},
+    {c:'Port St. Lucie',z:'34953',t:'Fire, single-family',cty:'sl',o:'Treasure Coast',own:'Carmen Pruitt',x:262,y:238},
+    {c:'Vero Beach',z:'32960',t:'Water, retail bay',cty:'ir',o:'Treasure Coast',own:'Carmen Pruitt',x:214,y:99}
+  ];
+  var ctyName={pb:'Palm Beach County',mc:'Martin County',sl:'St. Lucie County',ir:'Indian River County'};
+  $('#losses').innerHTML=losses.map(function(l,i){return '<button class="row" aria-pressed="false" data-i="'+i+'"><div><b>'+l.t+'</b><span>'+l.c+', FL '+l.z+'</span></div><span class="mono">'+ctyName[l.cty]+'</span></button>'}).join('');
+  function pickLoss(i){
+    var l=losses[i];
+    $$('#losses .row').forEach(function(b){b.setAttribute('aria-pressed',+b.dataset.i===i?'true':'false')});
+    $$('.county').forEach(function(p){p.classList.toggle('hot',p.dataset.cty===l.cty)});
+    $$('.c-l[data-cl]').forEach(function(t){t.classList.toggle('hot',t.dataset.cl===l.cty)});
+    var pin=$('#pin');pin.setAttribute('cx',l.x);pin.setAttribute('cy',l.y);pin.setAttribute('opacity',1);
+    var vals={office:l.o,team:l.o==='Palm Beach'?'Marisol Ortega':'Grant Hollis',owner:l.own};
+    Object.keys(vals).forEach(function(k,j){var el=$('[data-a="'+k+'"]');el.style.opacity=0;later(function(){el.textContent=vals[k];el.style.opacity=1},120+j*160)});
+  }
+  $$('#losses .row').forEach(function(b){b.addEventListener('click',function(){pickLoss(+b.dataset.i)})});
+  function resetTerr(){
+    $$('#losses .row').forEach(function(b){b.setAttribute('aria-pressed','false')});
+    $$('.county').forEach(function(p){p.classList.remove('hot')});$$('.c-l').forEach(function(t){t.classList.remove('hot')});
+    $('#pin').setAttribute('opacity',0);
+    ['office','team','owner'].forEach(function(k){var el=$('[data-a="'+k+'"]');el.textContent='—';el.style.opacity=1});
+  }
+
+  /* ---------- permissions ---------- */
+  var perms=[
+    ['Owner and admin',['All','all'],['All','all'],['All','all'],['Yes','all'],['Yes','all'],['Yes','all'],'sees <b>every job in both offices</b>, can export and delete, and is the only role that changes settings.'],
+    ['Office manager',['Their office','t'],['All','all'],['Their office','t'],['Yes','all'],['No','none'],['No','none'],'sees <b>every job in their own office</b> and every relationship, and can reassign owners inside the team.'],
+    ['Business development',['Their office','t'],['All','all'],['Own jobs','t'],['No','none'],['No','none'],['No','none'],'sees <b>their office’s jobs</b> and all referral partners, and edits only the jobs they own. No exports.'],
+    ['Project manager',['Their office','t'],['View only','t'],['Stage and notes','t'],['No','none'],['No','none'],['No','none'],'sees <b>their office’s jobs</b> and moves them through inspection, mitigation and reconstruction.'],
+    ['Accounting',['All, read only','t'],['View only','t'],['No','none'],['Reports only','t'],['No','none'],['No','none'],'sees <b>closed jobs in both offices</b> for invoicing and revenue reports, without editing relationships.']
+  ];
+  $('#perm tbody').innerHTML=perms.map(function(r,i){
+    return '<tr data-i="'+i+'" tabindex="0" aria-selected="false"><td>'+r[0]+'</td>'+r.slice(1,7).map(function(c,j){return '<td class="'+(j>1?'hide-sm':'')+'"><span class="lvl '+c[1]+'">'+c[0]+'</span></td>'}).join('')+'</tr>';
+  }).join('');
+  function pickRole(i){
+    $$('#perm tbody tr').forEach(function(tr){tr.setAttribute('aria-selected',+tr.dataset.i===i?'true':'false')});
+    $('#viewas').innerHTML='Viewing as <b>'+perms[i][0].toLowerCase()+'</b>: '+perms[i][7];
+  }
+  $$('#perm tbody tr').forEach(function(tr){
+    tr.addEventListener('click',function(){pickRole(+tr.dataset.i)});
+    tr.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();pickRole(+tr.dataset.i)}});
+  });
+
+  /* ---------- cleanup ---------- */
+  var raw0=[
+    ['dana whitcomb','Coastline Mutual SE','561.555.0148','Dana.Whitcomb@Coastline-Sample.com','adjuster'],
+    ['Dana Whitcomb','COASTLINE MUTUAL - SOUTHEAST','(561) 555-0148','dana.whitcomb@coastline-sample.com',''],
+    ['PRIYA CASTELLANO','Seagrape Prop. Group','5615550193','priya@seagrape-sample.com','PM'],
+    ['Priya Castellano','Seagrape Property Group','561-555-0193','Priya@Seagrape-Sample.com','Property Mgmt'],
+    ['rick soto','Harbor Line Plumbing LLC','772 555 0120','rsoto@harborline-sample.com','plumber'],
+    ['Marcus Bell','Intracoastal Medical Plaza','+1 561 555 0177','m.bell@icmedplaza-sample.com','comm'],
+    ['Nadia Farrow','Keystone Adjusting','(772)555-0104','NFarrow@Keystone-Sample.com','IA'],
+    ['Rick Soto','Harbor Line Plumbing','(772) 555-0120','rsoto@harborline-sample.com','Plumbing'],
+    ['Owen Pike','Palmetto Mutual','561.555.0162','owen.pike@palmetto-sample.com','carrier']
+  ];
+  var clean=[
+    ['Dana Whitcomb','Coastline Mutual, Southeast Region','(561) 555-0148','dana.whitcomb@coastline-sample.com','Regional office'],
+    ['Dana Whitcomb','Coastline Mutual, Southeast Region','(561) 555-0148','dana.whitcomb@coastline-sample.com','Regional office'],
+    ['Priya Castellano','Seagrape Property Group','(561) 555-0193','priya@seagrape-sample.com','Property management'],
+    ['Priya Castellano','Seagrape Property Group','(561) 555-0193','priya@seagrape-sample.com','Property management'],
+    ['Rick Soto','Harbor Line Plumbing','(772) 555-0120','rsoto@harborline-sample.com','Plumber'],
+    ['Marcus Bell','Intracoastal Medical Plaza','(561) 555-0177','m.bell@icmedplaza-sample.com','Commercial account'],
+    ['Nadia Farrow','Keystone Adjusting','(772) 555-0104','nfarrow@keystone-sample.com','Independent adjusting firm'],
+    ['Rick Soto','Harbor Line Plumbing','(772) 555-0120','rsoto@harborline-sample.com','Plumber'],
+    ['Owen Pike','Palmetto Mutual','(561) 555-0162','owen.pike@palmetto-sample.com','Insurance carrier']
+  ];
+  var colOrder=[[0,1],[2],[3],[4]]; // step -> columns fixed
+  var dupes=[1,3,7];
+  var cleaning=false;
+  function renderRaw(){
+    $('#raw tbody').innerHTML=raw0.map(function(r,i){
+      return '<tr data-r="'+i+'">'+r.map(function(c,j){
+        var bad=(clean[i][j]!==c);
+        return '<td class="'+(j===2?'mono ':'')+(j===3?'hide-sm ':'')+(bad?'bad':'')+'">'+(c?esc(c):'<span class="muted">blank</span>')+'</td>';
+      }).join('')+'</tr>';
+    }).join('');
+  }
+  function runClean(){
+    if(cleaning)return;resetClean();cleaning=true;
+    var btn=$('#runClean');btn.disabled=true;btn.querySelector('span').textContent='Cleaning';
+    var fixed=0,t=300;
+    colOrder.forEach(function(cols,step){
+      later(function(){
+        $$('#raw tbody tr').forEach(function(tr,i){
+          cols.forEach(function(j){
+            var td=tr.children[j];
+            if(raw0[i][j]!==clean[i][j]){td.textContent=clean[i][j];td.classList.remove('bad');td.classList.add('fix');fixed++}
+          });
+        });
+        $('#stFix').textContent=fixed;
+        $('#cleanSteps [data-st="'+step+'"]').classList.add('done');
+      },t);
+      t+=750;
+    });
+    later(function(){
+      dupes.forEach(function(i){$('#raw tr[data-r="'+i+'"]').classList.add('gone')});
+      [0,2,4].forEach(function(i){$('#raw tr[data-r="'+i+'"]').classList.add('merged')});
+      $('#stMerge').textContent=dupes.length;$('#stOut').textContent=raw0.length-dupes.length;
+      $('#cleanSteps [data-st="4"]').classList.add('done');
+    },t);
+    later(function(){
+      dupes.forEach(function(i){var tr=$('#raw tr[data-r="'+i+'"]');if(tr)tr.style.display='none'});
+      cleaning=false;setView('after');btn.disabled=false;btn.querySelector('span').textContent='Run it again';
+    },t+1100);
+  }
+  var mergedFrom={0:1,2:3,4:7};
+  function renderAfter(){
+    $('#raw tbody').innerHTML=clean.map(function(r,i){
+      if(dupes.indexOf(i)>-1)return '';
+      return '<tr class="'+(mergedFrom[i]!=null?'merged':'')+'">'+r.map(function(c,j){
+        var changed=raw0[i][j]!==c;
+        return '<td class="'+(j===2?'mono ':'')+(j===3?'hide-sm ':'')+'">'+esc(c)+(j===0&&mergedFrom[i]!=null?'<span class="src">2 rows merged</span>':'')+'</td>';
+      }).join('')+'</tr>';
+    }).join('');
+  }
+  function setView(v){
+    $$('#baSeg button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.v===v?'true':'false')});
+    $('#baSeg [data-v="after"]').disabled=false;
+    if(v==='after')renderAfter();else renderRaw();
+  }
+  $$('#baSeg button').forEach(function(b){b.addEventListener('click',function(){if(!cleaning&&!b.disabled)setView(b.dataset.v)})});
+  function resetClean(){
+    cleaning=false;renderRaw();
+    $$('#baSeg button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.v==='before'?'true':'false')});$('#baSeg [data-v="after"]').disabled=true;
+    $('#stFix').textContent=0;$('#stMerge').textContent=0;$('#stOut').innerHTML='&ndash;';
+    $$('#cleanSteps span').forEach(function(s){s.classList.remove('done')});
+    var btn=$('#runClean');btn.disabled=false;btn.querySelector('span').textContent='Run cleanup';
+  }
+  $('#runClean').addEventListener('click',runClean);
+  renderRaw();
+
+  /* ---------- dashboards ---------- */
+  var dash='ref',office='all';
+  var ref=[ // source, jobs pb, jobs tc, won rev pb, won rev tc, close rate
+    ['Adjuster referral',74,41,1310000,702000,.68],
+    ['Carrier assignment',52,38,905000,611000,.81],
+    ['Property manager',39,22,588000,301000,.57],
+    ['Plumber',31,27,262000,219000,.49],
+    ['Commercial account',12,6,498000,214000,.74],
+    ['Direct',18,15,141000,104000,.38]
+  ];
+  var pipe=[['Lead',11,7],['Inspection',9,6],['Mitigation',14,9],['Reconstruction',10,5],['Closed, last 90 days',26,17]];
+  var pipeVal=[['Lead',0,0],['Inspection',0,0],['Mitigation',118000,74000],['Reconstruction',236000,121000],['Closed, last 90 days',512000,318000]];
+  var bd=[['Jordan Reyes','pb',38,6,64,4],['Alyssa Kent','pb',31,4,52,3],['Carmen Pruitt','tc',34,5,58,5],['Marisol Ortega','pb',12,2,20,1],['Grant Hollis','tc',10,2,18,1]];
+  function money(n){return n>=1000000?'$'+(n/1000000).toFixed(2)+'M':'$'+Math.round(n/1000)+'k'}
+  function pick(a,b){return office==='all'?a+b:office==='pb'?a:b}
+  function renderDash(){
+    var k='',c='';
+    var titles={ref:'Referral source performance.',pipe:'Pipeline by stage and office.',bd:'Business development activity.'};
+    $('#dashTitle').textContent=titles[dash];
+    if(dash==='ref'){
+      var rows=ref.map(function(r){return {n:r[0],j:pick(r[1],r[2]),v:pick(r[3],r[4]),cr:r[5]}}).sort(function(a,b){return b.v-a.v});
+      var directJ=rows.filter(function(r){return r.n==='Direct'})[0].j;
+      var tj=rows.reduce(function(s,r){return s+r.j},0),tv=rows.reduce(function(s,r){return s+r.v},0);
+      var top=rows.slice().sort(function(a,b){return b.v-a.v})[0];
+      k=kpi('Jobs referred',tj)+kpi('Revenue collected',money(tv))+kpi('Top source',top.n.split(' ')[0])+kpi('Partner share',Math.round((tj-directJ)/tj*100)+'%');
+      var max=Math.max.apply(null,rows.map(function(r){return r.v}));
+      c='<div class="chart-h"><span>Source</span><span>Revenue collected</span><span>Revenue</span><span>Jobs</span></div>'+
+        rows.map(function(r){return '<div class="bar-row"><span>'+r.n+'</span><div class="bar-track"><div class="bar" data-w="'+(r.v/max*100)+'"></div></div><span class="mono">'+money(r.v)+'</span><span class="mono">'+r.j+'</span></div>'}).join('');
+    } else if(dash==='pipe'){
+      var both=office==='all';
+      var totOpen=pipe.slice(0,4).reduce(function(s,r){return s+pick(r[1],r[2])},0);
+      var val=pipeVal.slice(2,4).reduce(function(s,r){return s+pick(r[1],r[2])},0);
+      k=kpi('Open jobs',totOpen)+kpi('Open value',money(val))+kpi('Avg days to inspection','1.4')+kpi('Stuck over 14 days','3');
+      var mx=Math.max.apply(null,pipe.map(function(r){return r[1]+r[2]}));
+      c='<div class="chart-h"><span>Stage</span><span>Jobs by office</span><span>Jobs</span><span>Value</span></div>'+
+        pipe.map(function(r,i){
+          var a=office==='tc'?0:r[1],b=office==='pb'?0:r[2];
+          var v=pipeVal[i];var vv=pick(v[1],v[2]);
+          return '<div class="bar-row"><span>'+r[0]+'</span><div class="bar-track"><div class="bar'+(b?' b1s':'')+'" data-w="'+(a/mx*100)+'"></div><div class="bar b2" data-w="'+(b/mx*100)+'"></div></div><span class="mono">'+(a+b)+'</span><span class="mono">'+(vv?money(vv):'—')+'</span></div>';
+        }).join('')+'<div class="key"><span><i></i>Palm Beach</span><span><i class="b2"></i>Treasure Coast</span></div>';
+    } else {
+      var rs=bd.filter(function(r){return office==='all'||r[1]===office});
+      var vis=rs.reduce(function(s,r){return s+r[2]},0),ll=rs.reduce(function(s,r){return s+r[3]},0),calls=rs.reduce(function(s,r){return s+r[4]},0),np=rs.reduce(function(s,r){return s+r[5]},0);
+      k=kpi('Visits, last 30 days',vis)+kpi('Lunch and learns',ll)+kpi('Calls and emails',calls)+kpi('New referral partners',np);
+      var m2=Math.max.apply(null,bd.map(function(r){return r[2]}));
+      c='<div class="chart-h"><span>Rep</span><span>Visits to adjusters and partners</span><span>Visits</span><span>New</span></div>'+
+        rs.map(function(r){return '<div class="bar-row"><span>'+r[0]+'<span class="muted mono" style="margin-left:8px">'+r[1].toUpperCase()+'</span></span><div class="bar-track"><div class="bar" data-w="'+(r[2]/m2*100)+'"></div></div><span class="mono">'+r[2]+'</span><span class="mono">'+r[5]+'</span></div>'}).join('')+
+        '<p style="margin-top:20px;font-size:13.5px;color:var(--ink-2)">11 adjusters and 4 property managers have had no touch in 30 days. They show as a list on this dashboard for each rep.</p>';
+    }
+    $('#kpis').innerHTML=k;$('#chart').innerHTML=c;
+    requestAnimationFrame(function(){requestAnimationFrame(function(){$$('#chart .bar').forEach(function(b){b.style.width=b.dataset.w+'%'})})});
+  }
+  function kpi(l,v){return '<div><div class="l">'+l+'</div><div class="v">'+v+'</div></div>'}
+  $$('#dashSeg button').forEach(function(b){b.addEventListener('click',function(){dash=b.dataset.d;$$('#dashSeg button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});renderDash()})});
+  $$('#offSeg button').forEach(function(b){b.addEventListener('click',function(){office=b.dataset.f;$$('#offSeg button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});renderDash()})});
+
+  /* ---------- docs ---------- */
+  var chaps=[['00:00','How a referral becomes a job',0],['06:40','Finding carriers, offices and adjusters',13],['14:15','Working a job through each stage',27],['23:50','Account types and referral sources',46],['30:05','Your office, your team, your permissions',58],['36:30','Importing a new list the right way',70],['42:10','Reading the three dashboards',81],['48:20','Questions from both offices',93]];
+  $('#chapters').innerHTML=chaps.map(function(c,i){return '<button data-ch="'+i+'" aria-current="'+(i===0?'true':'false')+'"><span>'+c[0]+'</span>'+c[1]+'</button>'}).join('');
+  function pickChap(i){
+    $$('#chapters button').forEach(function(b){b.setAttribute('aria-current',+b.dataset.ch===i?'true':'false')});
+    $('#vidCap').textContent=chaps[i][1];$('#vidTs').textContent=chaps[i][0]+' / 52:10';$('#vidBar').style.width=chaps[i][2]+'%';
+  }
+  $$('#chapters button').forEach(function(b){b.addEventListener('click',function(){pickChap(+b.dataset.ch)})});
+
+  /* ---------- reset ---------- */
+  function resetAll(){
+    clearTimers();
+    resetPipe();resetClean();resetTerr();pickRole(2);pickChap(0);
+    $('#vidCap').textContent='Handoff and training, both offices';$('#vidTs').textContent='00:00 / 52:10';$('#vidBar').style.width='0';
+    selectNode('job');resetChain();
+    dash='ref';office='all';
+    $$('#dashSeg button').forEach(function(x,i){x.setAttribute('aria-pressed',i===0?'true':'false')});
+    $$('#offSeg button').forEach(function(x,i){x.setAttribute('aria-pressed',i===0?'true':'false')});
+    renderDash();
+    dictObj='all';$('#dictQ').value='';$$('#dictSeg button').forEach(function(x,i){x.setAttribute('aria-pressed',i===0?'true':'false')});renderDict();
+  }
+  $$('[data-reset]').forEach(function(b){b.addEventListener('click',resetAll)});
+  resetAll();
+  $('#vidCap').textContent='Handoff and training, both offices';
+  var start=(location.hash||'').slice(1);
+  go(screens.some(function(s){return s[0]===start})?start:'overview');
+})();
+</script>

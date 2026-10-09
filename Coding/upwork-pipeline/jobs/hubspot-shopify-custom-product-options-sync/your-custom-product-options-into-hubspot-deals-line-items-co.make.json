@@ -1,0 +1,499 @@
+{
+  "name": "Your Custom Product Options Into HubSpot Deals, Line Items, Contacts",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 12421,
+        "maxResults": 1
+      },
+      "mapper": {
+        "maxResults": 1
+      },
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "1 - Shopify Order Created or Updated: Webhook Fires"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 2,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {
+        "scope": "roundtrip"
+      },
+      "mapper": {
+        "name": "sample_input",
+        "scope": "roundtrip",
+        "value": "{\n  \"id\": 5550123456789,\n  \"admin_graphql_api_id\": \"gid://shopify/Order/5550123456789\",\n  \"name\": \"#1042\",\n  \"email\": \"jenna.alvarez@gmail.com\",\n  \"created_at\": \"2026-09-24T10:14:32-06:00\",\n  \"updated_at\": \"2026-09-24T10:14:35-06:00\",\n  \"financial_status\": \"paid\",\n  \"fulfillment_status\": null,\n  \"total_price\": \"132.00\",\n  \"currency\": \"USD\",\n  \"customer\": {\n    \"id\": 7012345678901,\n    \"first_name\": \"Jenna\",\n    \"last_name\": \"Alvarez\",\n    \"email\": \"jenna.alvarez@gmail.com\"\n  },\n  \"line_items\": [\n    {\n      \"id\": 14123456789012,\n      \"product_id\": 8123456789012,\n      \"title\": \"Custom Walnut Cutting Board\",\n      \"variant_title\": \"Large\",\n      \"sku\": \"CB-WAL-L\",\n      \"quantity\": 1,\n      \"price\": \"132.00\",\n      \"properties\": [\n        {\n          \"name\": \"Engraving Text\",\n          \"value\": \"The Alvarez Family - Est. 2019\"\n        },\n        {\n          \"name\": \"Font\",\n          \"value\": \"Serif\"\n        },\n        {\n          \"name\": \"Gift Wrap\",\n          \"value\": \"Yes\"\n        },\n        {\n          \"name\": \"_Configuration ID\",\n          \"value\": \"cfg_88213\"\n        }\n      ]\n    }\n  ]\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Sample Input"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://PASTE-YOUR-STORE.myshopify.com/admin/api/2026-07/graphql.json",
+        "method": "post",
+        "headers": [
+          {
+            "name": "X-Shopify-Access-Token",
+            "value": "PASTE-YOUR-SHOPIFY-ADMIN-API-TOKEN"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "contentType": "application/json",
+        "data": "{\n  \"query\": \"query OrderOptions($id: ID!) { order(id: $id) { name customer { amountSpent { amount currencyCode } numberOfOrders } lineItems(first: 50) { nodes { title variantTitle sku quantity originalUnitPriceSet { shopMoney { amount } } image { url } customAttributes { key value } product { metafields(first: 10, namespace: \\\"custom\\\") { nodes { key value } } } } } } }\",\n  \"variables\": {\n    \"id\": \"{{1.admin_graphql_api_id}}\"\n  }\n}",
+        "timeout": "",
+        "shareCookies": false,
+        "followRedirect": true,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "2 - Shopify: Pull Line-Item Properties and Metafields"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/search",
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer PASTE-YOUR-HUBSPOT-PRIVATE-APP-TOKEN"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "contentType": "application/json",
+        "data": "{\n  \"filterGroups\": [\n    {\n      \"filters\": [\n        {\n          \"propertyName\": \"shopify_order_id\",\n          \"operator\": \"EQ\",\n          \"value\": \"{{1.id}}\"\n        }\n      ]\n    }\n  ],\n  \"properties\": [\n    \"dealname\",\n    \"amount\",\n    \"dealstage\",\n    \"shopify_order_id\"\n  ],\n  \"limit\": 1\n}",
+        "timeout": "",
+        "shareCookies": false,
+        "followRedirect": true,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "3 - HubSpot: Search Deals for This Shopify Order ID"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 5,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "mapper": null,
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0,
+          "name": "4 - New Order or Already a Deal?"
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 6,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/contacts/batch/upsert",
+                "method": "post",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer PASTE-YOUR-HUBSPOT-PRIVATE-APP-TOKEN"
+                  }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\n  \"inputs\": [\n    {\n      \"idProperty\": \"email\",\n      \"id\": \"{{1.email}}\",\n      \"properties\": {\n        \"email\": \"{{1.email}}\",\n        \"firstname\": \"{{1.customer.first_name}}\",\n        \"lastname\": \"{{1.customer.last_name}}\",\n        \"shopify_customer_id\": \"{{1.customer.id}}\",\n        \"shopify_lifetime_value\": \"{{3.data.data.order.customer.amountSpent.amount}}\",\n        \"shopify_order_count\": \"{{3.data.data.order.customer.numberOfOrders}}\",\n        \"last_order_number\": \"{{1.name}}\",\n        \"last_order_date\": \"{{formatDate(1.created_at; YYYY-MM-DD)}}\",\n        \"last_order_product\": \"{{3.data.data.order.lineItems.nodes[1].title}}\",\n        \"last_order_image_url\": \"{{3.data.data.order.lineItems.nodes[1].image.url}}\",\n        \"last_order_engraving\": \"{{first(map(3.data.data.order.lineItems.nodes[1].customAttributes; value; key; Engraving Text))}}\",\n        \"abandoned_cart_url\": \"\"\n      }\n    }\n  ]\n}",
+                "timeout": "",
+                "shareCookies": false,
+                "followRedirect": true,
+                "rejectUnauthorized": true
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": -75,
+                  "name": "4a - HubSpot: Upsert the Contact by Email"
+                },
+                "restore": {}
+              },
+              "filter": {
+                "name": "New Order",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{5.value}}",
+                      "o": "exist"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "id": 7,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/deals",
+                "method": "post",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer PASTE-YOUR-HUBSPOT-PRIVATE-APP-TOKEN"
+                  }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\n  \"properties\": {\n    \"dealname\": \"{{1.name}} - {{1.customer.first_name}} {{1.customer.last_name}}\",\n    \"amount\": \"{{1.total_price}}\",\n    \"pipeline\": \"PASTE-YOUR-SHOPIFY-ORDERS-PIPELINE-ID\",\n    \"dealstage\": \"PASTE-YOUR-ORDER-PLACED-STAGE-ID\",\n    \"closedate\": \"{{1.created_at}}\",\n    \"shopify_order_id\": \"{{1.id}}\",\n    \"shopify_order_number\": \"{{1.name}}\",\n    \"shopify_financial_status\": \"{{1.financial_status}}\",\n    \"order_options\": \"{{join(map(flatten(map(3.data.data.order.lineItems.nodes; customAttributes)); value; key; Engraving Text,Font,Gift Wrap); / )}}\"\n  },\n  \"associations\": [\n    {\n      \"to\": {\n        \"id\": \"{{6.data.results[1].id}}\"\n      },\n      \"types\": [\n        {\n          \"associationCategory\": \"HUBSPOT_DEFINED\",\n          \"associationTypeId\": 3\n        }\n      ]\n    }\n  ]\n}",
+                "timeout": "",
+                "shareCookies": false,
+                "followRedirect": true,
+                "rejectUnauthorized": true
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": -75,
+                  "name": "5 - HubSpot: Create the Deal With Its Options"
+                },
+                "restore": {}
+              }
+            },
+            {
+              "id": 8,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://PASTE-YOUR-STORE.myshopify.com/admin/api/2026-07/graphql.json",
+                "method": "post",
+                "headers": [
+                  {
+                    "name": "X-Shopify-Access-Token",
+                    "value": "PASTE-YOUR-SHOPIFY-ADMIN-API-TOKEN"
+                  }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\n  \"query\": \"mutation SaveDealId($metafields: [MetafieldsSetInput!]!) { metafieldsSet(metafields: $metafields) { metafields { key value } userErrors { field message } } }\",\n  \"variables\": {\n    \"metafields\": [\n      {\n        \"ownerId\": \"{{1.admin_graphql_api_id}}\",\n        \"namespace\": \"hubspot\",\n        \"key\": \"deal_id\",\n        \"type\": \"single_line_text_field\",\n        \"value\": \"{{7.data.id}}\"\n      }\n    ]\n  }\n}",
+                "timeout": "",
+                "shareCookies": false,
+                "followRedirect": true,
+                "rejectUnauthorized": true
+              },
+              "metadata": {
+                "designer": {
+                  "x": 2100,
+                  "y": -75,
+                  "name": "6 - Shopify: Save the HubSpot Deal ID on the Order"
+                },
+                "restore": {}
+              }
+            },
+            {
+              "id": 9,
+              "module": "builtin:BasicFeeder",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "array": "{{3.data.data.order.lineItems.nodes}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 2400,
+                  "y": -75,
+                  "name": "7 - Split the Order Into Its Line Items"
+                },
+                "restore": {}
+              }
+            },
+            {
+              "id": 10,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/line_items",
+                "method": "post",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer PASTE-YOUR-HUBSPOT-PRIVATE-APP-TOKEN"
+                  }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\n  \"properties\": {\n    \"name\": \"{{9.title}}\",\n    \"quantity\": \"{{9.quantity}}\",\n    \"price\": \"{{9.originalUnitPriceSet.shopMoney.amount}}\",\n    \"hs_sku\": \"{{9.sku}}\",\n    \"shopify_variant\": \"{{9.variantTitle}}\",\n    \"option_engraving_text\": \"{{first(map(9.customAttributes; value; key; Engraving Text))}}\",\n    \"option_font\": \"{{first(map(9.customAttributes; value; key; Font))}}\",\n    \"option_gift_wrap\": \"{{first(map(9.customAttributes; value; key; Gift Wrap))}}\",\n    \"shopify_configuration_id\": \"{{first(map(9.customAttributes; value; key; _Configuration ID))}}\",\n    \"product_material\": \"{{first(map(9.product.metafields.nodes; value; key; material))}}\",\n    \"product_lead_time\": \"{{first(map(9.product.metafields.nodes; value; key; lead_time))}}\"\n  },\n  \"associations\": [\n    {\n      \"to\": {\n        \"id\": \"{{7.data.id}}\"\n      },\n      \"types\": [\n        {\n          \"associationCategory\": \"HUBSPOT_DEFINED\",\n          \"associationTypeId\": 20\n        }\n      ]\n    }\n  ]\n}",
+                "timeout": "",
+                "shareCookies": false,
+                "followRedirect": true,
+                "rejectUnauthorized": true
+              },
+              "metadata": {
+                "designer": {
+                  "x": 2700,
+                  "y": -75,
+                  "name": "8 - HubSpot: Create Each Line Item With Its Options"
+                },
+                "restore": {}
+              }
+            },
+            {
+              "id": 12,
+              "module": "gateway:CustomWebHook",
+              "version": 1,
+              "parameters": {
+                "hook": 12421,
+                "maxResults": 1
+              },
+              "mapper": {
+                "maxResults": 1
+              },
+              "metadata": {
+                "designer": {
+                  "x": 3000,
+                  "y": -75,
+                  "name": "9 - Shopify Checkout Created or Updated: Webhook Fires"
+                },
+                "restore": {}
+              }
+            },
+            {
+              "id": 13,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/contacts/batch/upsert",
+                "method": "post",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer PASTE-YOUR-HUBSPOT-PRIVATE-APP-TOKEN"
+                  }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\n  \"inputs\": [\n    {\n      \"idProperty\": \"email\",\n      \"id\": \"{{12.email}}\",\n      \"properties\": {\n        \"email\": \"{{12.email}}\",\n        \"abandoned_cart_product\": \"{{12.line_items[1].title}} {{12.line_items[1].variant_title}}\",\n        \"abandoned_cart_engraving\": \"{{first(map(12.line_items[1].properties; value; name; Engraving Text))}}\",\n        \"abandoned_cart_font\": \"{{first(map(12.line_items[1].properties; value; name; Font))}}\",\n        \"abandoned_cart_value\": \"{{12.total_price}}\",\n        \"abandoned_cart_url\": \"{{12.abandoned_checkout_url}}\",\n        \"abandoned_cart_date\": \"{{formatDate(12.updated_at; YYYY-MM-DD)}}\"\n      }\n    }\n  ]\n}",
+                "timeout": "",
+                "shareCookies": false,
+                "followRedirect": true,
+                "rejectUnauthorized": true
+              },
+              "metadata": {
+                "designer": {
+                  "x": 3300,
+                  "y": -75,
+                  "name": "10 - HubSpot: Save the Cart's Options and Recovery Link on the Contact"
+                },
+                "restore": {}
+              }
+            },
+            {
+              "id": 14,
+              "module": "util:SetVariable2",
+              "version": 1,
+              "parameters": {
+                "scope": "roundtrip"
+              },
+              "mapper": {
+                "name": "final_output",
+                "scope": "roundtrip",
+                "value": "{\n  \"shopify_order\": \"#1042\",\n  \"duplicate_check\": \"No deal had shopify_order_id 5550123456789, so one new deal was created\",\n  \"hubspot_contact\": {\n    \"id\": \"98765432101\",\n    \"email\": \"jenna.alvarez@gmail.com\",\n    \"last_order_product\": \"Custom Walnut Cutting Board\",\n    \"last_order_engraving\": \"The Alvarez Family - Est. 2019\",\n    \"last_order_image_url\": \"https://cdn.shopify.com/s/files/1/0612/3456/7890/files/walnut-board-large.jpg\",\n    \"shopify_lifetime_value\": \"412.00\",\n    \"shopify_order_count\": \"3\"\n  },\n  \"hubspot_deal\": {\n    \"id\": \"18877332211\",\n    \"dealname\": \"#1042 - Jenna Alvarez\",\n    \"amount\": \"132.00\",\n    \"stage\": \"Order placed\",\n    \"order_options\": \"The Alvarez Family - Est. 2019 / Serif / Yes\"\n  },\n  \"hubspot_line_item\": {\n    \"name\": \"Custom Walnut Cutting Board\",\n    \"shopify_variant\": \"Large\",\n    \"option_engraving_text\": \"The Alvarez Family - Est. 2019\",\n    \"option_font\": \"Serif\",\n    \"option_gift_wrap\": \"Yes\",\n    \"shopify_configuration_id\": \"cfg_88213\",\n    \"product_material\": \"Black walnut\",\n    \"product_lead_time\": \"10 business days\",\n    \"associated_deal\": \"18877332211\"\n  },\n  \"shopify_order_metafield\": \"hubspot.deal_id = 18877332211\",\n  \"abandoned_checkout\": {\n    \"email\": \"marcus.reid@outlook.com\",\n    \"abandoned_cart_product\": \"Custom Walnut Cutting Board Medium\",\n    \"abandoned_cart_engraving\": \"Reid Kitchen\",\n    \"abandoned_cart_font\": \"Script\",\n    \"abandoned_cart_value\": \"96.00\",\n    \"abandoned_cart_url\": \"https://walnut-and-oak.myshopify.com/61234567890/checkouts/ac1f4e9b2d/recover?key=9d2e71\"\n  }\n}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 3600,
+                  "y": -75,
+                  "name": "Final Output"
+                },
+                "restore": {}
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 11,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/deals/{{4.data.results[1].id}}",
+                "method": "patch",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer PASTE-YOUR-HUBSPOT-PRIVATE-APP-TOKEN"
+                  }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\n  \"properties\": {\n    \"amount\": \"{{1.total_price}}\",\n    \"shopify_financial_status\": \"{{1.financial_status}}\",\n    \"shopify_fulfillment_status\": \"{{1.fulfillment_status}}\"\n  }\n}",
+                "timeout": "",
+                "shareCookies": false,
+                "followRedirect": true,
+                "rejectUnauthorized": true
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 75,
+                  "name": "4b - HubSpot: Update That Deal's Amount and Status"
+                },
+                "restore": {}
+              },
+              "filter": {
+                "name": "Already Synced",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{5.value}}",
+                      "o": "exist"
+                    }
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com",
+    "notes": [
+      {
+        "moduleIds": [
+          1
+        ],
+        "content": "<p><strong>1 - CAPTURE LINE-ITEM PROPERTIES AND METAFIELDS</strong></p><p>Your Custom Integration &amp; Data Architecture, the sync and the mapping: Shopify's order webhooks feed Make directly, so the native integration's limits never apply. One Shopify call pulls every line-item property and metafield, which steps 4a, 5 and 8 map onto your Contact, Deal and Line Item properties. Engraving Text, Font and Gift Wrap stand in for your own line-item property names until you send the real list.</p>",
+        "isFilterNote": false,
+        "metadata": {
+          "color": "#9138FE"
+        }
+      },
+      {
+        "moduleIds": [
+          4
+        ],
+        "content": "<p><strong>2 - NO DUPLICATE CONTACTS OR CORRUPTED DEALS</strong></p><p>Your clean data handling: step 3 looks up the Shopify order ID before any deal is made, step 4a matches the contact on email, and shopify_order_id is set to unique values in HubSpot. If the native HubSpot app stays installed, its deal sync needs to be off, or orders can land as two deals.</p>",
+        "isFilterNote": false,
+        "metadata": {
+          "color": "#9138FE"
+        }
+      },
+      {
+        "moduleIds": [
+          7
+        ],
+        "content": "<p><strong>3 - OPTIONS FOR YOUR EMAIL TOKENS AND ABANDONED CHECKOUT</strong></p><p>Your Automated HubSpot Workflows &amp; Personalization and Email Template Setup: the deal carries the order's options and the contact its last-order tokens and product image, which your post-purchase, upsell and re-engagement sequences and drag-and-drop templates pull in. Abandoned checkout runs as its own scenario on Shopify's checkout webhook, and only checkouts with an email that were never completed get through: the cart's options and recovery link land on the contact, so your abandoned cart sequence shows the options they picked, and a completed order clears the link. Step 6 sends the deal ID back to the order for the two-way sync.</p>",
+        "isFilterNote": false,
+        "metadata": {
+          "color": "#9138FE"
+        }
+      },
+      {
+        "moduleIds": [
+          9
+        ],
+        "content": "<p><strong>4 - EVERY OPTION ON ITS LINE ITEM FOR REPORTING</strong></p><p>Your Analytics &amp; Custom Reporting: each line item keeps its own option and metafield values beside the deal's revenue and the contact's lifetime spend, the fields your dashboards group by for revenue, CLV and sales by product option variation. Line items with custom properties do this without HubSpot custom objects.</p>",
+        "isFilterNote": false,
+        "metadata": {
+          "color": "#9138FE"
+        }
+      }
+    ]
+  }
+}

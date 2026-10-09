@@ -1,0 +1,8 @@
+- This is a working prototype of your GoHighLevel landing page and form.
+- Sample business here; your content drops into this layout, desktop and phone.
+- The clean form: validation, multi-step option, and a proper success state.
+- Same form on your main website, one embed, leads tagged by source.
+- Why it converts: outcome headline, proof beside the ask, one action.
+- For a lender: $5M in applications in 30 days on $1,500.
+- Submit it: contact created, tagged, team texted, confirmation sent.
+- Worth a quick 15 minute call? Reply here and I'll send times.

@@ -1,0 +1,179 @@
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,300..900&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Cedar & Main Plumbing funnel v2. Shared by both GHL Custom Code blocks; build.py inlines it. */
+html,body{overflow-x:hidden}
+.c-section:has(.cmp),.c-section:has(.cmp)>.inner,.c-row:has(.cmp),.c-row:has(.cmp)>.inner,
+.c-column:has(.cmp),.c-column:has(.cmp)>.inner,.c-wrapper:has(.cmp),.c-code:has(.cmp),.c-custom-code:has(.cmp){
+  padding:0!important;margin-top:0!important;margin-bottom:0!important;max-width:none!important}
+
+.cmp,.cmp *{box-sizing:border-box}
+.cmp{--pine:#0e2620;--pine2:#15342b;--pine3:#1d443a;--paper:#f1f2ee;--paper2:#e6e8e2;--white:#fbfbf9;
+  --ink:#121c18;--ink2:#38443f;--muted:#64706a;--line:rgba(14,38,32,.13);--line-d:rgba(241,242,238,.16);
+  --amber:#f3b52f;--amber-hi:#ffc649;--go:#3fbf7f;
+  --disp:"Archivo","Arial Narrow",system-ui,sans-serif;--text:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  position:relative;width:100vw;left:50%;margin-left:-50vw;background:var(--pine);color:var(--ink2);
+  font:400 16px/1.55 var(--text);-webkit-font-smoothing:antialiased;text-align:left}
+.cmp :where(h1,h2,h3,p,ul,ol,li,figure){margin:0;padding:0}
+.cmp :where(ul,ol){list-style:none}
+.cmp :where(p,li){text-wrap:pretty}
+.cmp h1,.cmp h2,.cmp h3{font-family:var(--disp);font-stretch:112%;font-weight:800;color:var(--ink);letter-spacing:-.022em;line-height:1.02;text-wrap:balance}
+.cmp :where(a){color:inherit}
+.cmp svg.cmp-i{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.cmp-wrap{max-width:1240px;margin:0 auto;padding:0 48px}
+.cmp-eyebrow{display:block;font:600 12px/1.3 var(--text);letter-spacing:.16em;text-transform:uppercase;color:var(--amber)}
+
+/* wordmark: type-only lockup */
+.cmp-logo{display:inline-flex;flex-direction:column;gap:5px;text-decoration:none!important;color:var(--paper)}
+.cmp-logo-name{font:800 21px/1 var(--disp);font-stretch:125%;letter-spacing:.035em;text-transform:uppercase;white-space:nowrap}
+.cmp-logo-name em{font-style:normal;font-weight:500;color:var(--amber);margin:0 .14em}
+.cmp-logo-sub{display:flex;align-items:center;gap:8px;font:600 9.5px/1 var(--text);letter-spacing:.28em;text-transform:uppercase;opacity:.72;white-space:nowrap}
+.cmp-logo-sub::before{content:"";width:22px;height:1px;background:currentColor;opacity:.7}
+
+/* top bar */
+.cmp-top{background:var(--pine);border-bottom:1px solid var(--line-d)}
+.cmp-top .cmp-wrap{display:flex;align-items:center;justify-content:space-between;height:78px}
+.cmp-topr{display:flex;align-items:center;gap:22px}
+.cmp-247{display:flex;align-items:center;gap:10px;font:500 14px/1.2 var(--text);color:rgba(241,242,238,.78)}
+.cmp-dot{width:8px;height:8px;border-radius:50%;background:var(--go);box-shadow:0 0 0 4px rgba(63,191,127,.18);flex:none}
+
+/* buttons */
+.cmp-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:52px;padding:0 26px;border-radius:6px;border:0;cursor:pointer;
+  font:700 16px/1 var(--text);letter-spacing:.005em;text-decoration:none!important;white-space:nowrap;
+  transition:background-color .2s ease,transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease}
+.cmp-btn svg{width:18px;height:18px}
+.cmp-btn-amber{background:var(--amber);color:#1a1606!important;box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 10px 22px -12px rgba(243,181,47,.7)}
+.cmp-btn-amber:hover{background:var(--amber-hi);transform:translateY(-1px)}
+.cmp-btn-line{background:transparent;color:var(--paper)!important;box-shadow:inset 0 0 0 1.5px rgba(241,242,238,.4)}
+.cmp-btn-line:hover{box-shadow:inset 0 0 0 1.5px var(--amber);color:var(--amber)!important}
+.cmp-btn-sm{height:42px;padding:0 18px;font-size:15px}
+.cmp-btn:focus-visible{outline:3px solid rgba(243,181,47,.55);outline-offset:3px}
+
+/* footer */
+.cmp-foot{background:#0a1d18;color:rgba(241,242,238,.6);font-size:13.5px;line-height:1.6}
+.cmp-foot .cmp-wrap{display:flex;align-items:center;justify-content:space-between;gap:32px;padding-top:36px;padding-bottom:40px}
+.cmp-foot .cmp-logo-name{font-size:16px}
+.cmp-foot p{text-align:right}
+
+@media (max-width:820px){
+  .cmp-wrap{padding:0 20px}
+  .cmp-top .cmp-wrap{height:66px}
+  .cmp-logo-name{font-size:17px}
+  .cmp-logo-sub{font-size:8.5px;letter-spacing:.24em}
+  .cmp-247{display:none}
+  .cmp-foot .cmp-wrap{flex-direction:column;align-items:flex-start;gap:16px}
+  .cmp-foot p{text-align:left}
+}
+@media (prefers-reduced-motion:reduce){.cmp *{transition:none!important;animation:none!important}}
+</style>
+<style>
+.cmp-ty{position:relative;background:var(--pine);overflow:hidden}
+.cmp-ty .cmp-wrap{display:grid;grid-template-columns:minmax(0,580px) minmax(0,1fr);gap:80px;align-items:stretch;padding-top:88px;padding-bottom:96px}
+.cmp-ty-ph{position:relative;min-height:560px;border-radius:8px;overflow:hidden;background:#2b302d url("https://images.unsplash.com/photo-1650772263831-41aa1b2c80d0?w=1600&q=80&auto=format&fit=crop") no-repeat 46% 72%/cover}
+.cmp-ty-ph::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,38,32,0) 55%,rgba(14,38,32,.55) 100%)}
+.cmp-ty-tag{position:absolute;left:24px;bottom:22px;z-index:1;display:flex;align-items:center;gap:10px;font:600 14px/1.2 var(--text);color:var(--white)}
+.cmp-ty-tag svg{width:18px;height:18px;color:var(--amber)}
+.cmp-ty-copy{padding:8px 0 0}
+.cmp-check{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;color:var(--amber);box-shadow:inset 0 0 0 1.5px rgba(243,181,47,.6);margin-bottom:32px}
+.cmp-check svg{width:26px;height:26px;stroke-width:2}
+.cmp-ty .cmp-h1{margin-top:18px;font-size:60px;line-height:.98;color:var(--white);letter-spacing:-.028em}
+.cmp-next{margin-top:44px;counter-reset:n}
+.cmp-next li{counter-increment:n;display:grid;grid-template-columns:44px 1fr;align-items:baseline;padding:16px 0;border-top:1px solid var(--line-d);font-size:18px;line-height:1.45;color:rgba(241,242,238,.88)}
+.cmp-next li:last-child{border-bottom:1px solid var(--line-d)}
+.cmp-next li::before{content:"0" counter(n);font:500 14px/1 var(--disp);font-stretch:125%;color:var(--amber);font-feature-settings:"tnum"}
+.cmp-urgent{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-top:44px;padding:22px 22px 22px 26px;border-radius:8px;background:rgba(241,242,238,.06);box-shadow:inset 0 0 0 1px var(--line-d)}
+.cmp-urgent b{display:block;font:700 17px/1.3 var(--text);color:var(--white)}
+.cmp-urgent span{display:block;margin-top:4px;font-size:15px;color:rgba(241,242,238,.68)}
+
+.cmp-wait{background:var(--paper);padding:72px 0 80px}
+.cmp-wait .cmp-wrap{display:grid;grid-template-columns:300px repeat(3,1fr);gap:40px;align-items:start}
+.cmp-wait h2{margin-top:14px;font-size:30px;line-height:1.05}
+.cmp-wait li{padding-top:20px;border-top:2px solid var(--ink)}
+.cmp-wait li svg{width:26px;height:26px;color:var(--pine3)}
+.cmp-wait li p{margin-top:14px;font-size:16px;line-height:1.5;color:var(--ink2)}
+.cmp-wait ul{display:contents}
+.cmp-dk{color:#8a5d00}
+
+@media (max-width:980px){
+  .cmp-ty .cmp-wrap{grid-template-columns:1fr;gap:40px;padding-top:24px;padding-bottom:64px}
+  .cmp-ty-ph{order:2;min-height:0;height:260px;background-position:50% 62%}
+  .cmp-ty-copy{padding:24px 0 0}
+  .cmp-wait .cmp-wrap{grid-template-columns:1fr 1fr}
+  .cmp-wait .cmp-wait-h{grid-column:1/-1}
+}
+@media (max-width:640px){
+  .cmp-ty .cmp-h1{font-size:40px}
+  .cmp-check{width:48px;height:48px;margin-bottom:24px}
+  .cmp-next{margin-top:32px}
+  .cmp-next li{grid-template-columns:36px 1fr;font-size:16.5px}
+  .cmp-urgent{flex-direction:column;align-items:stretch;padding:20px}
+  .cmp-urgent .cmp-btn{width:100%}
+  .cmp-wait{padding:56px 0 64px}
+  .cmp-wait .cmp-wrap{grid-template-columns:1fr;gap:28px}
+}
+</style>
+
+<div class="cmp">
+
+  <header class="cmp-top">
+    <div class="cmp-wrap">
+      <a class="cmp-logo" href="#" aria-label="Cedar &amp; Main Plumbing">
+        <span class="cmp-logo-name">Cedar<em>&amp;</em>Main</span>
+        <span class="cmp-logo-sub">Plumbing &middot; Fort Worth</span>
+      </a>
+      <div class="cmp-topr">
+        <span class="cmp-247"><span class="cmp-dot"></span>24/7 emergency line</span>
+        <a class="cmp-btn cmp-btn-line cmp-btn-sm" href="#">
+          <svg class="cmp-i" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>
+          Call now
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <section class="cmp-ty">
+    <div class="cmp-wrap">
+      <div class="cmp-ty-copy">
+        <div class="cmp-check"><svg class="cmp-i" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+        <span class="cmp-eyebrow">Request received</span>
+        <h1 class="cmp-h1">Got it. Your price is on its way.</h1>
+        <ol class="cmp-next">
+          <li>A dispatcher is looking at your request now.</li>
+          <li>You get a text with one flat price, usually within 10 minutes.</li>
+          <li>Reply with a time that works and we lock it in.</li>
+        </ol>
+        <div class="cmp-urgent">
+          <div><b>Water still running?</b><span>Sewage coming up? Don't wait for the text. Call the 24/7 line.</span></div>
+          <a class="cmp-btn cmp-btn-amber" href="#">
+            <svg class="cmp-i" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>
+            Call now
+          </a>
+        </div>
+      </div>
+      <div class="cmp-ty-ph" role="img" aria-label="Single-story house on a tree-lined street">
+        <span class="cmp-ty-tag"><svg class="cmp-i" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Fort Worth and 11 nearby cities</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="cmp-wait">
+    <div class="cmp-wrap">
+      <div class="cmp-wait-h">
+        <span class="cmp-eyebrow cmp-dk">While you wait</span>
+        <h2>Three things that limit the damage.</h2>
+      </div>
+      <ul>
+        <li><svg class="cmp-i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/></svg><p>Shut the water off at the main valve if anything is still leaking.</p></li>
+        <li><svg class="cmp-i" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="13" r="4.5"/><path d="M8 6.5h2"/><path d="M4 4l16 16"/></svg><p>Hold off on the dishwasher, washer and showers until we've cleared the line.</p></li>
+        <li><svg class="cmp-i" viewBox="0 0 24 24"><path d="M12 3c3.5 4.2 6 7.4 6 10.5a6 6 0 0 1-12 0C6 10.4 8.5 7.2 12 3z"/></svg><p>Keep kids and pets away from standing water, especially near a floor drain.</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer class="cmp-foot">
+    <div class="cmp-wrap">
+      <span class="cmp-logo"><span class="cmp-logo-name">Cedar<em>&amp;</em>Main</span><span class="cmp-logo-sub">Plumbing &middot; Fort Worth</span></span>
+      <p>Emergency and same-day plumbing for Fort Worth and nearby cities. Open 24/7.<br>&copy; 2026 Cedar &amp; Main Plumbing</p>
+    </div>
+  </footer>
+
+</div>

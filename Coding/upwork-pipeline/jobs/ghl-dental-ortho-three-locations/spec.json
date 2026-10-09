@@ -1,0 +1,221 @@
+{
+  "title": "Pembroke Pines, Boynton Beach, Royal Palm Beach: Ad to Actual Patient",
+  "platform": "diagram",
+  "client": {
+    "industry": "dental and orthodontic practice, 3 locations",
+    "location": "South Florida"
+  },
+  "sections": [
+    {
+      "key": "setup",
+      "label": "1 - YOUR ACCOUNT AND PATIENT PIPELINE",
+      "note": "Your parts 1 and 2, milestone 1. Each location's pipeline carries your stages: New Lead, Attempted Contact, Contacted, Appointment Scheduled, Confirmed, Showed, No Show, Rescheduled, Treatment Presented, Became Patient, Treatment Started."
+    },
+    {
+      "key": "sources",
+      "label": "2 - EVERY CALL, CLICK AND FORM KEEPS ITS SOURCE",
+      "note": "Your parts 3, 4 and 5, milestone 2, plus milestone 4's offline conversions; Google takes each stage up to 90 days after the click, so later ortho starts count on your dashboard only. Google gets the click ID, stage and time, never a treatment detail, and hashed contact data for enhanced conversions only if your compliance advisor signs off."
+    },
+    {
+      "key": "followup",
+      "label": "3 - FOLLOW-UP THAT STOPS WHEN STATUS CHANGES",
+      "note": "Your parts 6 and 7, milestone 3. Your 12 follow-up situations, missed calls through treatment follow-up and review requests, are 12 workflows for all 3 locations, not 36 copies, and each checks the stage before it sends."
+    },
+    {
+      "key": "pms",
+      "label": "4 - YOUR PRACTICE MANAGEMENT SYSTEM",
+      "note": "Your part 8, milestone 4. A sync (your PMS's own, or an n8n or Make bridge) or the front desk moves the stage, each move reaches Google Ads, and clinical notes stay in the PMS."
+    },
+    {
+      "key": "reporting",
+      "label": "5 - DASHBOARD BY LOCATION, READY FOR AI CALLING",
+      "note": "Your parts 9 and 10, milestone 5. Pembroke Pines, Boynton Beach and Royal Palm Beach side by side from leads and calls to became patient, with revenue by campaign where your PMS gives a case value."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "account",
+      "kind": "data.transform",
+      "label": "1 - Your Own GHL Account, One Pipeline per Location, No Generic Snapshot",
+      "section": "setup",
+      "notes": "Built in accounts you own; I work in them as a user you can remove."
+    },
+    {
+      "key": "services",
+      "kind": "data.transform",
+      "label": "2 - Every Lead Tagged: General Dental, Orthodontics, Invisalign or Braces",
+      "section": "setup"
+    },
+    {
+      "key": "source",
+      "kind": "data.transform",
+      "label": "3 - Google Ads, Meta Ads, Website or Phone Call: Original Source Retained",
+      "section": "sources"
+    },
+    {
+      "key": "calls",
+      "kind": "data.transform",
+      "label": "4 - Tracking Numbers per Location Log Campaign, Source and Call Outcome",
+      "section": "sources",
+      "notes": "A large share of your new patients call, so each call keeps the campaign it came from."
+    },
+    {
+      "key": "scheduled",
+      "kind": "flow.branch",
+      "label": "5 - Did the Caller or Form Lead Schedule?",
+      "section": "sources"
+    },
+    {
+      "key": "gads",
+      "kind": "data.transform",
+      "label": "6 - Google Ads Gets Scheduled, Showed, Became Patient, Treatment Started",
+      "section": "sources",
+      "notes": "Google accepts each stage up to 90 days after the click; later ortho starts count on your dashboard only."
+    },
+    {
+      "key": "noschedule",
+      "kind": "data.transform",
+      "label": "7 - Missed Call or Did Not Schedule: Text-Back, Then Follow-Up Until Booked",
+      "section": "followup",
+      "notes": "Sent from that location's number, so the reply reaches the right front desk."
+    },
+    {
+      "key": "stagecheck",
+      "kind": "flow.branch",
+      "label": "8 - Status Changed Before the Next Message?",
+      "section": "followup",
+      "notes": "A booked caller never gets another follow-up; a rescheduled patient never gets a no-show text."
+    },
+    {
+      "key": "recall",
+      "kind": "data.transform",
+      "label": "9 - Recall and Reactivation: Hygiene Due, Unscheduled Treatment, Orthodontic Consults",
+      "section": "followup"
+    },
+    {
+      "key": "booked",
+      "kind": "data.transform",
+      "label": "10 - Confirmation and Reminders, No Show or Cancelled Moves to Rescheduled",
+      "section": "followup"
+    },
+    {
+      "key": "pms",
+      "kind": "data.transform",
+      "label": "11 - Your PMS Moves the Stage: Showed, Became Patient, Treatment Started",
+      "section": "pms",
+      "notes": "GHL learns the stage; clinical notes stay in your PMS."
+    },
+    {
+      "key": "dashboard",
+      "kind": "data.aggregate",
+      "label": "12 - Dashboard: Show Rate and Lead-to-Patient Rate by Location and Campaign",
+      "section": "reporting"
+    },
+    {
+      "key": "ai",
+      "kind": "data.transform",
+      "label": "13 - Built So AI Calling Plugs In Later Without Rebuilding the CRM",
+      "section": "reporting"
+    }
+  ],
+  "edges": [
+    {
+      "from": "account",
+      "to": "services"
+    },
+    {
+      "from": "services",
+      "to": "source"
+    },
+    {
+      "from": "source",
+      "to": "calls"
+    },
+    {
+      "from": "calls",
+      "to": "scheduled"
+    },
+    {
+      "from": "scheduled",
+      "to": "gads",
+      "branch": "yes"
+    },
+    {
+      "from": "scheduled",
+      "to": "noschedule",
+      "branch": "no"
+    },
+    {
+      "from": "noschedule",
+      "to": "stagecheck"
+    },
+    {
+      "from": "stagecheck",
+      "to": "booked",
+      "branch": "yes, booked"
+    },
+    {
+      "from": "stagecheck",
+      "to": "recall",
+      "branch": "never replied"
+    },
+    {
+      "from": "gads",
+      "to": "booked"
+    },
+    {
+      "from": "recall",
+      "to": "booked",
+      "branch": "books"
+    },
+    {
+      "from": "booked",
+      "to": "pms"
+    },
+    {
+      "from": "pms",
+      "to": "dashboard"
+    },
+    {
+      "from": "dashboard",
+      "to": "ai"
+    }
+  ],
+  "input_sample": {
+    "contact": "Daniela Ruiz",
+    "phone": "(954) 555-0183",
+    "location": "Pembroke Pines",
+    "service": "Invisalign",
+    "first_source": "Google Ads",
+    "campaign": "Invisalign - Pembroke Pines - Search",
+    "gclid": "Cj0KCQjw9eG3BhCnARIsAKzvHn2tQx",
+    "channel": "Phone call",
+    "call_outcome": "Did not schedule - checking insurance first",
+    "stage": "Attempted Contact",
+    "received": "2026-09-22 10:14"
+  },
+  "output_sample": {
+    "contact": "Daniela Ruiz",
+    "location": "Pembroke Pines",
+    "service": "Invisalign",
+    "first_source": "Google Ads",
+    "campaign": "Invisalign - Pembroke Pines - Search",
+    "stage": "Treatment Started",
+    "follow_up": "Caller did not schedule - stopped after text 2 when she booked",
+    "google_ads_conversions_sent": [
+      "Scheduled 2026-09-23",
+      "Showed 2026-09-30",
+      "Became Patient 2026-09-30",
+      "Treatment Started 2026-10-21"
+    ],
+    "dashboard": {
+      "location": "Pembroke Pines",
+      "source": "Google Ads",
+      "counted_in": [
+        "lead-to-appointment",
+        "appointment-to-patient",
+        "lead-to-patient"
+      ]
+    }
+  }
+}

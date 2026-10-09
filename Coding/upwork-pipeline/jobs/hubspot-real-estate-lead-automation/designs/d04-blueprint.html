@@ -1,0 +1,797 @@
+<title>HubSpot Lead System · Architectural Blueprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Lexend+Deca:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#0c3a70;--deep:#072850;--ink:#f4f9ff;--ink2:rgba(232,244,255,.72);--ink3:rgba(210,232,255,.46);
+  --cy:#7fe3ff;--cy2:#3cc8f0;--hair:rgba(220,240,255,.28);--grid:rgba(150,205,255,.075);--gridM:rgba(150,205,255,.15);
+  --mono:"IBM Plex Mono",ui-monospace,monospace;--disp:"Barlow Condensed","Arial Narrow",sans-serif;
+  --hs-navy:#213343;--hs-org:#ff5c35;--hs-teal:#00a4bd;--hs-slate:#516f90;--hs-line:#cbd6e2;--hs-bg:#f5f8fa;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;overflow-x:clip}
+body{background:var(--ground);color:var(--ink);font-family:var(--mono);font-size:14px;line-height:1.45;overflow-x:clip;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;z-index:-1;
+  background:
+   radial-gradient(120% 90% at 50% 35%,transparent 40%,rgba(3,20,45,.55) 100%),
+   linear-gradient(var(--gridM) 1px,transparent 1px) 0 0/80px 80px,
+   linear-gradient(90deg,var(--gridM) 1px,transparent 1px) 0 0/80px 80px,
+   linear-gradient(var(--grid) 1px,transparent 1px) 0 0/16px 16px,
+   linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/16px 16px,
+   linear-gradient(180deg,#0e4079,#0a3466 60%,#0c3a70);}
+::selection{background:var(--cy);color:var(--deep)}
+
+/* ---------- fixed drawing frame (desktop) ---------- */
+.frame{position:fixed;inset:14px;border:1px solid var(--hair);pointer-events:none;z-index:40}
+.frame::after{content:"";position:absolute;inset:6px;border:1px solid rgba(220,240,255,.12)}
+.zones{position:absolute;left:0;right:0;top:-1px;display:flex;justify-content:space-around;font-size:9px;color:var(--ink3);letter-spacing:.2em}
+.zones span{transform:translateY(-12px)}
+.zonesv{position:absolute;top:0;bottom:0;left:-1px;display:flex;flex-direction:column;justify-content:space-around;font-size:9px;color:var(--ink3)}
+.zonesv span{transform:translateX(-11px)}
+.readout{position:absolute;right:40px;bottom:-8px;font-size:10px;letter-spacing:.14em;color:var(--ink3);background:var(--ground);padding:2px 8px}
+.readout b{color:var(--cy);font-weight:500}
+@media (max-width:899px){.frame{display:none}}
+
+/* ---------- sheet ---------- */
+.sheet{position:relative;max-width:1300px;margin:0 auto;padding:64px 72px 110px;min-height:100vh}
+.sheet+.sheet{border-top:1px dashed rgba(220,240,255,.14)}
+.hdr{display:flex;align-items:center;gap:22px;margin-bottom:26px}
+.bubble{position:relative;width:74px;height:74px;flex:none}
+.bubble svg{width:100%;height:100%;overflow:visible}
+.bubble .t{position:absolute;left:0;right:0;top:12px;text-align:center;font:600 22px/1 var(--disp);color:var(--ink)}
+.bubble .b{position:absolute;left:0;right:0;bottom:15px;text-align:center;font-size:10px;letter-spacing:.08em;color:var(--cy)}
+.hlabel{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--cy)}
+.hlabel small{display:block;color:var(--ink3);letter-spacing:.18em;margin-top:6px;font-size:10px}
+.hleader{flex:1;height:1px;background:var(--hair);transform-origin:left;transform:scaleX(0);transition:transform 1.2s cubic-bezier(.7,0,.2,1) .2s}
+.in .hleader{transform:none}
+h1,h2{font-family:var(--disp);font-weight:600;text-transform:uppercase;letter-spacing:.015em;line-height:.9;color:var(--ink)}
+h2{font-size:clamp(46px,5.4vw,80px);margin-bottom:40px}
+@media (min-width:900px){h2 br{display:none}}
+h2 .c{color:var(--cy)}
+.split{display:inline-block;overflow:hidden;vertical-align:top}
+.split>span{display:inline-block;transform:translateY(105%);transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+.in .split>span{transform:none}
+
+/* reveal primitives */
+.fx{opacity:0;transform:translateY(14px);transition:opacity .7s ease,transform .8s cubic-bezier(.2,.8,.2,1);transition-delay:var(--d,0s)}
+.in .fx{opacity:1;transform:none}
+.lnh{height:1px;background:var(--ink);transform:scaleX(0);transform-origin:left;transition:transform 1s cubic-bezier(.7,0,.2,1) var(--d,0s)}
+.lnv{width:1px;background:var(--ink);transform:scaleY(0);transform-origin:top;transition:transform .7s cubic-bezier(.7,0,.2,1) var(--d,0s)}
+.in .lnh,.in .lnv{transform:none}
+svg .dr{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.4s cubic-bezier(.6,0,.2,1) var(--d,0s)}
+.in svg .dr{stroke-dashoffset:0}
+.dbox{position:relative}
+.dbox>svg.bx{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.dbox>svg.bx rect{fill:none;stroke:var(--ink);stroke-width:1;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.3s cubic-bezier(.6,0,.2,1) var(--d,0s)}
+.in .dbox>svg.bx rect{stroke-dashoffset:0}
+.dbox.dash>svg.bx rect{stroke-dasharray:none;stroke:rgba(220,240,255,.45);opacity:0;transition:opacity .8s var(--d,0s)}
+.in .dbox.dash>svg.bx rect{opacity:1}
+
+/* dimension line */
+.dim{position:relative;height:26px;display:flex;align-items:center}
+.dim .l{position:absolute;left:0;right:0;top:50%;height:1px;background:var(--cy);transform:scaleX(0);transition:transform 1.2s cubic-bezier(.7,0,.2,1) var(--d,0s)}
+.in .dim .l{transform:none}
+.dim::before,.dim::after{content:"";position:absolute;top:4px;width:1px;height:18px;background:var(--cy);opacity:0;transition:opacity .4s var(--d,0s)}
+.dim::before{left:0}.dim::after{right:0}
+.in .dim::before,.in .dim::after{opacity:1}
+.dim .tk{position:absolute;top:50%;width:11px;height:1px;background:var(--cy);transform:translate(-50%,-50%) rotate(-45deg)}
+.dim .tk.r{left:100%}.dim .tk.l0{left:0}
+.dim .lab{position:relative;margin:0 auto;background:var(--ground);padding:0 10px;font-size:11px;letter-spacing:.18em;color:var(--cy);z-index:1}
+
+/* title block */
+.tblock{position:absolute;right:72px;bottom:36px;display:grid;grid-template-columns:auto auto auto;border:1px solid var(--hair);font-size:9.5px;letter-spacing:.14em;color:var(--ink3);text-transform:uppercase}
+.tblock>div{padding:6px 12px;border-right:1px solid var(--hair)}
+.tblock>div:last-child{border-right:0}
+.tblock b{display:block;color:var(--ink);font-weight:500;letter-spacing:.1em;margin-top:2px}
+@media (max-width:899px){.tblock{position:static;margin-top:48px;grid-template-columns:1fr 1fr 1fr}}
+
+.note{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3)}
+.callno{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:1px solid var(--cy);border-radius:50%;font-size:10px;color:var(--cy);flex:none}
+.mono-k{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3)}
+.num{font-family:var(--disp);font-weight:500;font-variant-numeric:tabular-nums}
+
+/* ---------- 00 hero ---------- */
+.hero{padding-top:60px}
+.hero .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:44px;gap:20px}
+.hero .proj{font-size:11px;letter-spacing:.24em;color:var(--cy);text-transform:uppercase}
+.hero .proj small{display:block;color:var(--ink3);margin-top:6px;font-size:10px}
+.hero h1{font-size:clamp(58px,8.6vw,128px)}
+.hero h1 .c{color:var(--cy)}
+.hero .row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:64px;align-items:end;margin-top:48px}
+.inq{padding:26px 26px 22px;background:rgba(7,40,80,.35)}
+.inq .k{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.inq .addr{font:600 34px/1 var(--disp);text-transform:uppercase;letter-spacing:.02em}
+.inq q{display:block;margin-top:14px;font-size:15px;color:var(--ink);quotes:"\201C" "\201D"}
+.inq .who{margin-top:10px;color:var(--ink3);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.track{position:relative;margin-top:34px}
+.track .stops{display:grid;grid-template-columns:repeat(4,1fr);position:relative}
+.track .stop{position:relative;padding-top:22px}
+.track .stop::before{content:"";position:absolute;left:0;top:0;width:9px;height:9px;border:1px solid var(--cy);background:var(--ground);border-radius:50%;transform:translate(-4px,-4px) scale(0);transition:transform .4s cubic-bezier(.3,1.6,.5,1) var(--d)}
+.in .track .stop::before{transform:translate(-4px,-4px) scale(1)}
+.track .stop.done::before{background:var(--cy)}
+.track .t{font-size:11px;color:var(--cy);letter-spacing:.08em}
+.track .w{font:500 19px/1.05 var(--disp);text-transform:uppercase;margin-top:4px;letter-spacing:.02em}
+.track .base{position:absolute;left:0;right:0;top:0}
+.hero .dimwrap{margin-top:30px}
+.hero .big38{font:600 clamp(80px,9vw,132px)/.85 var(--disp);color:var(--cy)}
+.hero .big38 small{font-size:.28em;letter-spacing:.14em;color:var(--ink);margin-left:10px}
+
+/* ---------- 01 clean ---------- */
+.clean .grid{display:grid;grid-template-columns:1.2fr .9fr 1fr;gap:0 40px;align-items:center}
+.dups{display:grid;gap:14px}
+.dup{height:64px;padding:11px 16px;display:grid;grid-template-columns:1fr auto;gap:2px 12px;transition:opacity .8s,transform .9s cubic-bezier(.6,0,.2,1)}
+.dup .n{font:500 21px/1 var(--disp);text-transform:uppercase}
+.dup .y{font-size:10px;color:var(--ink3);letter-spacing:.14em;align-self:center}
+.dup .f{grid-column:1/-1;font-size:11px;color:#ffb3a1;letter-spacing:.06em}
+.clean.merged .dup{opacity:.28}
+.merge-svg{width:100%;height:220px;overflow:visible;display:block}
+.rec{padding:20px 20px 10px;background:rgba(7,40,80,.4)}
+.rec .h{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+.av{width:40px;height:40px;border:1px solid var(--cy);display:flex;align-items:center;justify-content:center;font:600 16px var(--disp);color:var(--cy);border-radius:50%}
+.rec .nm{font:600 26px/1 var(--disp);text-transform:uppercase}
+.rec .tag{font-size:10px;color:var(--cy);letter-spacing:.16em}
+.kv{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid rgba(220,240,255,.14);font-size:12px}
+.kv span:first-child{color:var(--ink3);letter-spacing:.1em;text-transform:uppercase;font-size:10.5px}
+.meters{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:44px;align-items:end}
+.gauge{display:flex;gap:28px;align-items:center}
+.gauge svg{width:180px;height:106px;overflow:visible;flex:none}
+.gauge .v{font:600 84px/.8 var(--disp);color:var(--cy)}
+.dupcount .v{font:600 84px/.8 var(--disp)}
+.dupcount .v.zero{color:var(--cy)}
+
+/* ---------- 02 capture ---------- */
+.cap .grid{display:grid;grid-template-columns:1fr 1.2fr;gap:0;align-items:center}
+.srcs{display:grid;gap:18px;position:relative;z-index:1}
+.src{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--ground);max-width:250px}
+.src .w{font:500 20px/1 var(--disp);text-transform:uppercase;letter-spacing:.02em}
+.src.hot{background:rgba(127,227,255,.1)}
+.src.hot .w{color:var(--cy)}
+.capwrap{position:relative;display:grid;grid-template-columns:260px 1fr;align-items:center}
+.pipes{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.hubnode{justify-self:end;width:min(360px,100%)}
+.hubnode .hn{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--hair)}
+.hubnode .hn b{font:600 24px/1 var(--disp);text-transform:uppercase;letter-spacing:.04em}
+.capstat{margin-top:56px;display:flex;align-items:baseline;gap:18px}
+.capstat .v{font:600 88px/.8 var(--disp);color:var(--cy)}
+.illu{border:1px solid var(--cy);color:var(--cy);font-size:9.5px;letter-spacing:.2em;padding:3px 7px;text-transform:uppercase}
+
+/* ---------- 03 qualify ---------- */
+.qual .grid{display:grid;grid-template-columns:1fr 1.15fr;gap:72px;align-items:start}
+.sms{padding:22px}
+.sms .h{display:flex;align-items:center;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--hair);margin-bottom:16px}
+.bub{max-width:82%;padding:8px 14px;margin:8px 0;font-size:13px;position:relative}
+.bub.out{border:1px solid var(--cy);color:var(--ink)}
+.bub.inn{margin-left:auto;background:rgba(127,227,255,.14);border:1px solid transparent}
+.bub .s{display:block;font-size:9px;letter-spacing:.2em;color:var(--ink3);margin-bottom:4px;text-transform:uppercase}
+.ruler{position:relative;height:120px;margin-top:10px}
+.ruler .ticks{position:absolute;left:0;right:0;top:48px;height:30px}
+.ruler .ticks i{position:absolute;top:0;width:1px;background:var(--ink2);height:8px}
+.ruler .ticks i.m{height:16px;background:var(--ink)}
+.ruler .ticks em{position:absolute;top:22px;font-style:normal;font-size:10px;color:var(--ink3);transform:translateX(-50%)}
+.ruler .axis{position:absolute;left:0;right:0;top:48px}
+.ruler .thr{position:absolute;top:10px;bottom:0;left:80%;border-left:1px dashed #ffd27f;opacity:0;transition:opacity .6s .6s}
+.in .ruler .thr{opacity:1}
+.ruler .thr span{position:absolute;right:8px;top:-2px;font-size:10px;color:#ffd27f;letter-spacing:.14em;white-space:nowrap}
+.ruler .mk{position:absolute;top:26px;left:0;transform:translateX(-50%);transition:left 2.4s cubic-bezier(.5,0,.2,1) 1s}
+.in .ruler .mk{left:86%}
+.ruler .mk::after{content:"";display:block;width:0;height:0;border:7px solid transparent;border-top:12px solid var(--cy);border-bottom:0}
+.scorebig{display:flex;align-items:baseline;gap:18px;margin-top:10px}
+.scorebig .v{font:600 120px/.8 var(--disp);color:var(--cy)}
+.ready{display:inline-block;margin-top:12px;border:1px solid var(--cy);padding:6px 12px;font-size:11px;letter-spacing:.2em;color:var(--cy);text-transform:uppercase;opacity:0;transition:opacity .5s 3.5s,background .5s 3.5s}
+.in .ready{opacity:1;background:rgba(127,227,255,.12)}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);margin-top:34px;border-top:1px solid var(--hair)}
+.facts div{padding:14px 12px 0 0}
+.facts b{display:block;font:500 26px/1 var(--disp);text-transform:uppercase;margin-top:6px}
+
+/* ---------- 04 assign ---------- */
+.asg .grid{display:grid;grid-template-columns:1.35fr 1fr;gap:64px;align-items:start}
+.sched{width:100%;border-collapse:collapse;font-size:12px}
+.sched caption{text-align:left;font-size:10.5px;letter-spacing:.24em;color:var(--cy);padding-bottom:10px}
+.sched th{font-weight:500;font-size:10px;letter-spacing:.18em;color:var(--ink3);text-align:left;padding:8px 10px;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink)}
+.sched td{padding:12px 10px;border-bottom:1px solid rgba(220,240,255,.16);white-space:nowrap}
+.sched td.nm{font:500 19px/1 var(--disp);text-transform:uppercase;letter-spacing:.02em}
+.sched .mark{display:inline-flex;width:24px;height:24px;border:1px solid var(--ink2);align-items:center;justify-content:center;font-size:10px;transform:rotate(45deg)}
+.sched .mark span{transform:rotate(-45deg)}
+.sched tr.pick td{transition:background .6s 2.2s,color .6s 2.2s}
+.in .sched tr.pick td{background:repeating-linear-gradient(-45deg,rgba(127,227,255,.14) 0 2px,transparent 2px 7px);color:var(--cy)}
+.in .sched tr.pick .mark{border-color:var(--cy)}
+.sched tr.fx{transition-delay:var(--d)}
+.mayatag{display:inline-flex;align-items:center;gap:12px;padding:10px 14px;margin-bottom:26px}
+.sla .clock{font:600 112px/.8 var(--disp);color:var(--ink);font-variant-numeric:tabular-nums}
+.sla .clock.hit{color:var(--cy)}
+.sla .bar{position:relative;margin-top:30px;height:44px}
+.sla .fill{position:absolute;left:0;top:12px;height:2px;background:var(--cy);width:0}
+.sla .called{position:absolute;top:-6px;font-size:10px;letter-spacing:.14em;color:var(--cy);white-space:nowrap;opacity:0;transition:opacity .4s}
+.sla .called.on{opacity:1}
+.sla .called::before{content:"";position:absolute;left:0;top:14px;width:1px;height:26px;background:var(--cy)}
+.sla .ends{display:flex;justify-content:space-between;font-size:10px;color:var(--ink3);margin-top:4px;letter-spacing:.1em}
+
+/* ---------- 05 workflow schematic ---------- */
+.wf .grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:60px;align-items:start}
+.sch{display:flex;flex-direction:column;align-items:center}
+.nd{width:min(400px,100%);padding:8px 14px 8px 56px;position:relative;background:var(--ground);transition:background .6s var(--d),box-shadow .6s var(--d)}
+.nd .id{position:absolute;left:0;top:0;bottom:0;width:44px;border-right:1px solid var(--hair);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--ink3);letter-spacing:.06em}
+.nd .ty{font-size:9.5px;letter-spacing:.22em;color:var(--cy)}
+.nd .w{font:600 19px/1.05 var(--disp);text-transform:uppercase;letter-spacing:.02em;margin-top:2px}
+.nd .s{font-size:10.5px;color:var(--ink2);margin-top:1px}
+.in .nd.act{background:rgba(127,227,255,.1);box-shadow:inset 3px 0 0 var(--cy)}
+.nd.off{opacity:.55}
+.nd.off .w{text-decoration:line-through;text-decoration-thickness:1px}
+.cn{height:18px}
+.br{display:grid;grid-template-columns:1fr 1fr;gap:24px;width:100%;position:relative}
+.br .col{display:flex;flex-direction:column;align-items:center}
+.br .yn{font-size:10px;letter-spacing:.24em;padding:4px 0;color:var(--cy)}
+.br .yn.no{color:var(--ink3)}
+.brline{position:absolute;top:0;left:25%;right:25%;height:1px}
+.nd.diamond .id{font-size:16px}
+.notes{font-size:12px}
+.notes h4{font-weight:500;font-size:11px;letter-spacing:.24em;color:var(--cy);border-bottom:1px solid var(--ink);padding-bottom:8px;margin-bottom:6px}
+.notes ol{list-style:none;counter-reset:n}
+.notes li{counter-increment:n;display:grid;grid-template-columns:28px 1fr;gap:6px;padding:7px 0;border-bottom:1px dashed rgba(220,240,255,.16);color:var(--ink2)}
+.notes li::before{content:counter(n,decimal-leading-zero);color:var(--ink3)}
+.notes li b{color:var(--ink);font-weight:500}
+.notes li time{display:block;font-size:10px;color:var(--cy);letter-spacing:.1em}
+.booked{margin-top:28px;display:flex;align-items:center;gap:20px;padding:16px 18px}
+.booked .d{text-align:center;border-right:1px solid var(--hair);padding-right:20px}
+.booked .d b{display:block;font:600 52px/.85 var(--disp);color:var(--cy)}
+.booked .w{font:600 26px/1 var(--disp);text-transform:uppercase}
+.pulse{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--cy);box-shadow:0 0 0 4px rgba(127,227,255,.25),0 0 18px var(--cy);left:50%;top:0;transform:translate(-50%,-50%);opacity:0}
+
+/* ---------- 06 hubspot detail ---------- */
+.det .cap1{display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+.det .cap1 .lbl{font-size:11px;letter-spacing:.22em;color:var(--cy)}
+.det .cap1 .sc{font-size:10px;letter-spacing:.2em;color:var(--ink3)}
+.det .illus{margin-left:auto;font-size:10.5px;letter-spacing:.16em;color:var(--ink2);text-transform:uppercase}
+.hs{font-family:"Lexend Deca",system-ui,sans-serif;position:relative;--t:1.1s}
+.hs *{transition:background-color var(--t) ease var(--fd,0s),color var(--t) ease var(--fd,0s),border-color var(--t) ease var(--fd,0s),box-shadow var(--t) ease var(--fd,0s)}
+.hs .shell{border:1px solid var(--cy);background:transparent;overflow:hidden}
+.hs .bar{display:flex;align-items:center;gap:18px;padding:12px 18px;border-bottom:1px solid var(--cy);color:var(--cy);font-size:13px}
+.hs .bar .back{font-size:18px;line-height:1}
+.hs .bar .nm{font-weight:600;font-size:15px;white-space:nowrap}
+.hs .bar .pill{font-size:11px;border:1px solid var(--cy);padding:2px 8px;border-radius:3px;white-space:nowrap}
+.hs .tabs{display:flex;gap:22px;margin-left:24px;font-size:13px}
+.hs .tabs span.on{border-bottom:2px solid var(--cy);padding-bottom:4px}
+.hs .tog{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;white-space:nowrap}
+.hs .tog i{width:34px;height:18px;border-radius:9px;border:1px solid var(--cy);position:relative;display:inline-block}
+.hs .tog i::after{content:"";position:absolute;right:2px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--cy)}
+.hs .pub{border:1px solid var(--cy);padding:8px 14px;border-radius:3px;font-weight:600;font-size:13px;white-space:nowrap}
+.hs .body{display:grid;grid-template-columns:1fr 320px}
+.hs .canvas{padding:22px 20px 26px;display:flex;flex-direction:column;align-items:center;border-right:1px solid var(--cy);
+  background-image:radial-gradient(rgba(127,227,255,.25) 1px,transparent 1px);background-size:18px 18px}
+.hs .card{width:min(300px,100%);border:1px solid var(--cy);border-radius:4px;color:var(--cy);text-align:left;overflow:hidden}
+.hs .card .ch{font-size:11px;padding:5px 12px;border-bottom:1px solid var(--cy);font-weight:500}
+.hs .card .cb{padding:7px 12px;font-size:13px;font-weight:500}
+.hs .card.trig{width:min(320px,100%)}
+.hs .plus{width:1px;height:26px;background:var(--cy);position:relative}
+.hs .plus::after{content:"+";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:50%;border:1px solid var(--cy);font-size:12px;line-height:16px;text-align:center;color:var(--cy);background:var(--ground)}
+.hs .hsbr{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:640px;position:relative;padding-top:18px}
+.hs .hsbr::before{content:"";position:absolute;top:0;left:25%;right:25%;height:18px;border:1px solid var(--cy);border-bottom:0}
+.hs .hsbr .col{display:flex;flex-direction:column;align-items:center}
+.hs .blab{font-size:11px;border:1px solid var(--cy);color:var(--cy);border-radius:10px;padding:1px 10px;margin-bottom:10px}
+.hs .end{font-size:11px;border:1px solid var(--cy);color:var(--cy);border-radius:12px;padding:3px 14px}
+.hs .card.sel{outline:2px solid transparent}
+.hs .panel{padding:0;color:var(--cy);font-size:13px}
+.hs .panel .ph{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--cy);font-weight:600;font-size:15px}
+.hs .fld{padding:12px 18px 0}
+.hs .fld label{display:block;font-size:12px;font-weight:600;margin-bottom:6px}
+.hs .fld .ip{border:1px solid var(--cy);border-radius:3px;padding:8px 10px;font-size:13px}
+.hs .panel .foot{display:flex;gap:10px;padding:22px 18px}
+.hs .panel .btn{border:1px solid var(--cy);border-radius:3px;padding:7px 14px;font-size:13px;font-weight:600}
+/* callouts over the wire */
+.leaders{position:absolute;inset:0;pointer-events:none;transition:opacity .8s}
+.leader{position:absolute;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--cy);white-space:nowrap}
+.leader i{display:block;height:1px;width:60px;background:var(--cy)}
+.hs.filled .leaders{opacity:0}
+/* the fill */
+.hs.filled .shell{border-color:var(--hs-line);background:#fff;box-shadow:0 40px 80px -30px rgba(0,10,30,.7)}
+.hs.filled .bar{background:#fff;color:var(--hs-navy);border-color:var(--hs-line)}
+.hs.filled .bar .pill{border-color:var(--hs-line);color:var(--hs-slate);background:#eaf0f6}
+.hs.filled .tabs span.on{border-color:var(--hs-org)}
+.hs.filled .tog i{border-color:#00bda5;background:#00bda5}
+.hs.filled .tog i::after{background:#fff}
+.hs.filled .pub{background:var(--hs-org);border-color:var(--hs-org);color:#fff}
+.hs.filled .canvas{background-color:var(--hs-bg);background-image:radial-gradient(#cbd6e2 1px,transparent 1px);border-color:var(--hs-line)}
+.hs.filled .card{background:#fff;border-color:var(--hs-line);color:var(--hs-navy);box-shadow:0 1px 3px rgba(45,62,80,.12)}
+.hs.filled .card .ch{border-color:var(--hs-line);color:var(--hs-slate);background:#fff}
+.hs.filled .card.trig .ch{background:#fff1ee;color:#b33c1f}
+.hs.filled .card.act .ch{background:#e5f5f8;color:#00708a}
+.hs.filled .card.flow .ch{background:#f0eefc;color:#5a4bb7}
+.hs.filled .card.sel{border-color:var(--hs-teal);box-shadow:0 0 0 2px rgba(0,164,189,.35)}
+.hs.filled .plus,.hs.filled .hsbr::before{background:#7c98b6;border-color:#7c98b6}
+.hs.filled .hsbr::before{background:transparent}
+.hs.filled .plus::after{background:#fff;border-color:#7c98b6;color:#516f90}
+.hs.filled .blab{background:#fff;border-color:var(--hs-line);color:var(--hs-slate)}
+.hs.filled .end{background:#eaf0f6;border-color:var(--hs-line);color:var(--hs-slate)}
+.hs.filled .panel{background:#fff;color:var(--hs-navy)}
+.hs.filled .panel .ph{background:var(--hs-navy);color:#fff;border-color:var(--hs-navy)}
+.hs.filled .fld label{color:var(--hs-navy)}
+.hs.filled .fld .ip{border-color:var(--hs-line);background:var(--hs-bg);color:var(--hs-navy)}
+.hs.filled .panel .btn{border-color:var(--hs-org);color:var(--hs-org)}
+.hs.filled .panel .btn.p{background:var(--hs-org);color:#fff}
+.hs.filled .panel .btn.g{border-color:var(--hs-line);color:var(--hs-slate)}
+
+/* ---------- close ---------- */
+.close{display:flex;flex-direction:column;justify-content:center}
+.revs{width:100%;border-collapse:collapse;margin-top:10px}
+.revs th{font-weight:500;font-size:10px;letter-spacing:.2em;color:var(--ink3);text-align:left;padding:8px 12px;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink)}
+.revs td{padding:10px 12px;border-bottom:1px solid rgba(220,240,255,.16);vertical-align:middle}
+.revs td.w{font:600 clamp(52px,7.6vw,116px)/.9 var(--disp);text-transform:uppercase;letter-spacing:.01em}
+.revs td.r{width:70px}
+.revs td.r span{display:inline-flex;width:38px;height:34px;align-items:flex-end;justify-content:center;padding-bottom:5px;color:var(--cy);font-size:12px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 38 34'%3E%3Cpath d='M19 1 L37 33 H1 Z' fill='none' stroke='%237fe3ff'/%3E%3C/svg%3E") center/100% 100% no-repeat}
+.revs td.m{font-size:11px;color:var(--ink3);letter-spacing:.14em;text-transform:uppercase;text-align:right;white-space:nowrap}
+.revs tr:last-child td.w{color:var(--cy)}
+.stamp{position:absolute;right:90px;top:140px;border:2px solid var(--cy);color:var(--cy);padding:12px 18px;font:600 22px/1.05 var(--disp);letter-spacing:.14em;text-transform:uppercase;transform:rotate(-8deg) scale(1.6);opacity:0;transition:transform .5s cubic-bezier(.3,1.5,.5,1) 2.4s,opacity .2s 2.4s;text-align:center}
+.stamp small{display:block;font:500 10px var(--mono);letter-spacing:.2em;margin-top:4px}
+.in .stamp{opacity:.9;transform:rotate(-8deg) scale(1)}
+
+/* ---------- responsive ---------- */
+@media (max-width:1100px){
+  .sheet{padding:90px 40px 110px}
+  .tblock{right:40px}
+  .clean .grid{grid-template-columns:1fr 1fr}
+  .clean .mergecol{display:none}
+  .hs .body{grid-template-columns:1fr 280px}
+}
+@media (max-width:899px){
+  .sheet{padding:64px 18px 56px;min-height:0}
+  .hdr{gap:14px;margin-bottom:30px}
+  .bubble{width:60px;height:60px}.bubble .t{top:9px;font-size:18px}.bubble .b{bottom:11px}
+  h2{margin-bottom:34px}
+  .hero .top{flex-direction:column}
+  .hero .row,.clean .grid,.qual .grid,.asg .grid,.wf .grid,.meters{grid-template-columns:1fr;gap:36px}
+  .track .stops{grid-template-columns:1fr 1fr;row-gap:22px}
+  .track .base{display:none}
+  .track .stop{border-top:1px solid var(--hair)}
+  .cap .grid,.capwrap{grid-template-columns:1fr}
+  .pipes{display:none}
+  .srcs{grid-template-columns:1fr 1fr;gap:10px}
+  .src{max-width:none;padding:10px 12px}.src .w{font-size:17px}
+  .hubnode{justify-self:stretch;width:100%;margin-top:26px}
+  .gauge svg{width:150px;height:90px}
+  .gauge .v,.dupcount .v,.capstat .v{font-size:72px}
+  .scorebig .v{font-size:110px}
+  .sched td,.sched th{padding:9px 6px}
+  .sched td.nm{font-size:16px;white-space:normal}
+  .sched .hideS{display:none}
+  .sla .clock{font-size:96px}
+  .br{grid-template-columns:1fr;gap:0}
+  .brline{display:none}
+  .br .col+.col{margin-top:18px}
+  .hs .bar{flex-wrap:wrap;gap:10px}
+  .hs .tabs{margin-left:0;order:5;width:100%}
+  .hs .tog{margin-left:0}
+  .hs .body{grid-template-columns:1fr}
+  .hs .canvas{border-right:0;border-bottom:1px solid var(--cy);padding:22px 12px}
+  .hs .hsbr{gap:8px}
+  .hs .card .cb{font-size:12px}
+  .leaders{display:none}
+  .det .illus{margin-left:0}
+  .revs td.m{display:none}
+  .stamp{position:static;display:inline-block;margin-top:34px;align-self:flex-start}
+}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;transition-delay:0s!important}}
+</style>
+
+<div class="frame" aria-hidden="true">
+  <div class="zones"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
+  <div class="zonesv"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span></div>
+  <div class="readout">SHEET <b id="ro-s">00</b> / 07 &nbsp;·&nbsp; Y <b id="ro-y">0000</b></div>
+</div>
+
+<!-- ================= 00 HERO ================= -->
+<section class="sheet hero" data-sheet="00">
+  <div class="top">
+    <div class="proj fx">HubSpot lead system · real estate<small>Lead management · capture to booked showing</small></div>
+    <div class="note fx" style="--d:.2s">Drawing set · rev D · 2026-09-28</div>
+  </div>
+  <h1><span class="split"><span>Every inquiry,</span></span> <br><span class="split"><span style="transition-delay:.12s">answered at</span></span> <span class="split"><span class="c" style="transition-delay:.24s">9:42 PM.</span></span></h1>
+  <div class="row">
+    <div>
+      <div class="inq dbox fx" style="--d:.5s">
+        <div class="k"><span class="mono-k">New inquiry · showing request</span><span class="callno">1</span></div>
+        <div class="addr">214 Linden Ave</div>
+        <q>Is this still available? We’re pre-approved.</q>
+        <div class="who">Maya Chen · Monday 9:42 PM</div>
+      </div>
+    </div>
+    <div>
+      <div class="big38 fx" style="--d:.7s"><span class="num" data-count="38" data-dur="1400" data-delay="900">0</span><small>seconds</small></div>
+      <div class="track">
+        <div class="base lnh" style="--d:1s;background:var(--cy)"></div>
+        <div class="stops">
+          <div class="stop done fx" style="--d:1.2s"><div class="t">9:42:00</div><div class="w">Inquiry in</div></div>
+          <div class="stop done fx" style="--d:1.5s"><div class="t">9:42:04</div><div class="w">In HubSpot</div></div>
+          <div class="stop done fx" style="--d:1.8s"><div class="t">9:42:11</div><div class="w">Texted</div></div>
+          <div class="stop done fx" style="--d:2.1s"><div class="t">9:42:38</div><div class="w">Routed to Jordan</div></div>
+        </div>
+      </div>
+      <div class="dimwrap"><div class="dim" style="--d:2.3s"><div class="l"></div><i class="tk l0"></i><i class="tk r"></i><span class="lab fx" style="--d:2.8s">38 SEC · INQUIRY TO AGENT</span></div></div>
+    </div>
+  </div>
+  <div class="tblock fx" style="--d:1s">
+    <div>Project<b>HubSpot lead system</b></div>
+    <div>Data<b>Sample data</b></div>
+    <div>Sheet<b>00 · Overview</b></div>
+  </div>
+</section>
+
+<!-- ================= 01 CLEAN ================= -->
+<section class="sheet clean" data-sheet="01" id="s-clean">
+  <div class="hdr">
+    <div class="bubble"><svg viewBox="0 0 74 74"><circle class="dr" pathLength="1" cx="37" cy="37" r="36" fill="none" stroke="#f4f9ff"/><line class="dr" pathLength="1" x1="1" y1="37" x2="73" y2="37" stroke="#f4f9ff" style="--d:.4s"/></svg><div class="t">01</div><div class="b">A-101</div></div>
+    <div class="hlabel">Section A-A · Clean up<small>Duplicate records merged</small></div>
+    <div class="hleader"></div>
+  </div>
+  <h2><span class="split"><span>One record</span></span> <br><span class="split"><span class="c" style="transition-delay:.12s">per person.</span></span></h2>
+  <div class="grid">
+    <div class="dups">
+      <div class="dup dbox dash fx" style="--d:.3s"><span class="n">Maya Chen</span><span class="y">2023</span><span class="f">No phone · no owner</span></div>
+      <div class="dup dbox dash fx" style="--d:.45s"><span class="n">M. Chen</span><span class="y">2024</span><span class="f">Stage: “HOT!!”</span></div>
+      <div class="dup dbox dash fx" style="--d:.6s"><span class="n">maya chen</span><span class="y">2025</span><span class="f">Type: “b/s”</span></div>
+    </div>
+    <div class="mergecol">
+      <svg class="merge-svg" viewBox="0 0 240 220" preserveAspectRatio="none">
+        <g fill="none" stroke="#7fe3ff" stroke-width="1">
+          <path class="dr" pathLength="1" d="M0 32 H90 V110 H240" style="--d:1s"/>
+          <path class="dr" pathLength="1" d="M0 110 H240" style="--d:1.1s"/>
+          <path class="dr" pathLength="1" d="M0 188 H90 V110" style="--d:1.2s"/>
+        </g>
+        <circle cx="90" cy="110" r="4" fill="#7fe3ff"/>
+        <text x="100" y="100" fill="#7fe3ff" font-family="IBM Plex Mono" font-size="10" letter-spacing="1.5">3 RECORDS → 1</text>
+      </svg>
+    </div>
+    <div class="rec dbox fx" style="--d:1.6s">
+      <div class="h"><div class="av">MC</div><div><div class="nm">Maya Chen</div><div class="tag">MERGED · 1 RECORD</div></div></div>
+      <div class="kv"><span>Phone</span><span>(555) 014-7720</span></div>
+      <div class="kv"><span>Lead type</span><span>Buyer</span></div>
+      <div class="kv"><span>Lifecycle</span><span>Lead</span></div>
+      <div class="kv"><span>Owner</span><span>Jordan Reyes</span></div>
+    </div>
+  </div>
+  <div class="meters">
+    <div class="gauge fx" style="--d:.4s">
+      <svg viewBox="0 0 220 130">
+        <g id="gticks" stroke="#f4f9ff" stroke-opacity=".5"></g>
+        <path d="M20 115 A90 90 0 0 1 200 115" fill="none" stroke="rgba(220,240,255,.18)" stroke-width="8"/>
+        <path id="garc" d="M20 115 A90 90 0 0 1 200 115" fill="none" stroke="#7fe3ff" stroke-width="8" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>
+        <text x="20" y="129" fill="rgba(210,232,255,.5)" font-family="IBM Plex Mono" font-size="9" text-anchor="middle">0</text>
+        <text x="200" y="129" fill="rgba(210,232,255,.5)" font-family="IBM Plex Mono" font-size="9" text-anchor="middle">100</text>
+      </svg>
+      <div><div class="v num" id="health">58</div><div class="mono-k" style="margin-top:10px">CRM health</div></div>
+    </div>
+    <div class="dupcount fx" style="--d:.6s">
+      <div class="mono-k" style="margin-bottom:10px">Duplicates</div>
+      <div class="v num" id="dupn">412</div>
+      <div class="dim" style="--d:.9s;margin-top:16px"><div class="l"></div><i class="tk l0"></i><i class="tk r"></i><span class="lab">412 → 0</span></div>
+    </div>
+  </div>
+  <div class="tblock fx" style="--d:.8s"><div>Detail<b>Records</b></div><div>Scale<b>1 : 412</b></div><div>Sheet<b>A-101</b></div></div>
+</section>
+
+<!-- ================= 02 CAPTURE ================= -->
+<section class="sheet cap" data-sheet="02">
+  <div class="hdr">
+    <div class="bubble"><svg viewBox="0 0 74 74"><circle class="dr" pathLength="1" cx="37" cy="37" r="36" fill="none" stroke="#f4f9ff"/><line class="dr" pathLength="1" x1="1" y1="37" x2="73" y2="37" stroke="#f4f9ff" style="--d:.4s"/></svg><div class="t">02</div><div class="b">A-102</div></div>
+    <div class="hlabel">Section B-B · Capture<small>Five sources, one contact</small></div>
+    <div class="hleader"></div>
+  </div>
+  <h2><span class="split"><span>Every source,</span></span> <br><span class="split"><span class="c" style="transition-delay:.12s">one clean contact.</span></span></h2>
+  <div class="capwrap" id="capwrap">
+    <svg class="pipes" id="pipes"></svg>
+    <div class="srcs">
+      <div class="src dbox hot fx" style="--d:.2s"><span class="callno">1</span><span class="w">Website form</span></div>
+      <div class="src dbox fx" style="--d:.3s"><span class="callno">2</span><span class="w">Portal inquiry</span></div>
+      <div class="src dbox fx" style="--d:.4s"><span class="callno">3</span><span class="w">Open house</span></div>
+      <div class="src dbox fx" style="--d:.5s"><span class="callno">4</span><span class="w">Home valuation</span></div>
+      <div class="src dbox fx" style="--d:.6s"><span class="callno">5</span><span class="w">Calls and texts</span></div>
+    </div>
+    <div class="hubnode dbox fx" style="--d:1.6s" id="hubnode">
+      <div class="hn"><b>HubSpot</b><span class="mono-k">Contact · created 9:42 PM</span></div>
+      <div style="padding:14px 18px 8px">
+        <div class="h" style="display:flex;gap:12px;align-items:center;margin-bottom:10px"><div class="av">MC</div><div><div class="nm" style="font:600 24px/1 var(--disp);text-transform:uppercase">Maya Chen</div></div></div>
+        <div class="kv"><span>Listing</span><span>214 Linden Ave</span></div>
+        <div class="kv"><span>Source</span><span>Website form</span></div>
+        <div class="kv"><span>Lead type</span><span>Buyer</span></div>
+        <div class="kv"><span>Duplicate</span><span style="color:var(--cy)">None found</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="capstat fx" style="--d:2s"><span class="v num" data-count="29" data-dur="1500" data-delay="2100">0</span><span class="mono-k">new leads today</span><span class="illu">Illustrative</span></div>
+  <div class="tblock fx" style="--d:.8s"><div>Detail<b>Intake</b></div><div>Sources<b>05</b></div><div>Sheet<b>A-102</b></div></div>
+</section>
+
+<!-- ================= 03 QUALIFY ================= -->
+<section class="sheet qual" data-sheet="03">
+  <div class="hdr">
+    <div class="bubble"><svg viewBox="0 0 74 74"><circle class="dr" pathLength="1" cx="37" cy="37" r="36" fill="none" stroke="#f4f9ff"/><line class="dr" pathLength="1" x1="1" y1="37" x2="73" y2="37" stroke="#f4f9ff" style="--d:.4s"/></svg><div class="t">03</div><div class="b">A-103</div></div>
+    <div class="hlabel">Section C-C · Qualify<small>Timeline, budget, area</small></div>
+    <div class="hleader"></div>
+  </div>
+  <h2><span class="split"><span>Three questions.</span></span> <br><span class="split"><span class="c" style="transition-delay:.12s">One score.</span></span></h2>
+  <div class="grid">
+    <div class="sms dbox fx" style="--d:.2s">
+      <div class="h"><div class="av" style="width:32px;height:32px;font-size:13px">MC</div><div><div style="font:600 20px/1 var(--disp);text-transform:uppercase">Maya Chen</div><div class="mono-k" style="font-size:9px">SMS · 9:42 PM</div></div></div>
+      <div class="bub out fx" style="--d:.6s"><span class="s">Assistant</span>Hi Maya, thanks for asking about 214 Linden. When are you hoping to move?</div>
+      <div class="bub inn fx" style="--d:1.2s"><span class="s">Maya</span>Lease ends in November. Pre-approved up to $520k.</div>
+      <div class="bub out fx" style="--d:1.8s"><span class="s">Assistant</span>Great. Which areas, and how many beds?</div>
+      <div class="bub inn fx" style="--d:2.4s"><span class="s">Maya</span>Northside or Riverside. 3 beds.</div>
+    </div>
+    <div>
+      <div class="mono-k fx">Lead score</div>
+      <div class="scorebig fx"><span class="v num" data-count="86" data-dur="2400" data-delay="1000">0</span><span class="mono-k">/ 100</span></div>
+      <div class="ruler fx" style="--d:.2s">
+        <div class="thr"><span>SALES-READY ≥ 80</span></div>
+        <div class="axis lnh" style="--d:.3s"></div>
+        <div class="ticks" id="rticks"></div>
+        <div class="mk"></div>
+      </div>
+      <span class="ready">Sales-ready · handed to an agent</span>
+      <div class="facts">
+        <div class="fx" style="--d:1.2s"><span class="mono-k">Moving</span><b>60 days</b></div>
+        <div class="fx" style="--d:1.6s"><span class="mono-k">Pre-approved</span><b>$520k</b></div>
+        <div class="fx" style="--d:2.4s"><span class="mono-k">Looking</span><b>Northside · 3 bd</b></div>
+      </div>
+    </div>
+  </div>
+  <div class="tblock fx" style="--d:.8s"><div>Detail<b>Scoring</b></div><div>Threshold<b>80</b></div><div>Sheet<b>A-103</b></div></div>
+</section>
+
+<!-- ================= 04 ASSIGN ================= -->
+<section class="sheet asg" data-sheet="04" id="s-asg">
+  <div class="hdr">
+    <div class="bubble"><svg viewBox="0 0 74 74"><circle class="dr" pathLength="1" cx="37" cy="37" r="36" fill="none" stroke="#f4f9ff"/><line class="dr" pathLength="1" x1="1" y1="37" x2="73" y2="37" stroke="#f4f9ff" style="--d:.4s"/></svg><div class="t">04</div><div class="b">A-104</div></div>
+    <div class="hlabel">Section D-D · Assign<small>Area, lead type, workload</small></div>
+    <div class="hleader"></div>
+  </div>
+  <h2><span class="split"><span>The right agent,</span></span> <br><span class="split"><span class="c" style="transition-delay:.12s">in seconds.</span></span></h2>
+  <div class="grid">
+    <div>
+      <div class="mayatag dbox fx" style="--d:.2s"><div class="av" style="width:32px;height:32px;font-size:13px">MC</div><div><div style="font:600 20px/1 var(--disp);text-transform:uppercase">Maya Chen</div><div class="tag" style="font-size:10px;color:var(--cy);letter-spacing:.16em">BUYER · NORTHSIDE · SCORE 86</div></div></div>
+      <table class="sched">
+        <caption class="fx">AGENT SCHEDULE · ROUND ROBIN</caption>
+        <thead><tr class="fx" style="--d:.3s"><th>Mark</th><th>Agent</th><th>Team</th><th class="hideS">Area</th><th>Open</th></tr></thead>
+        <tbody>
+          <tr class="fx" style="--d:.5s"><td><span class="mark"><span>A1</span></span></td><td class="nm">Sam Okafor</td><td>Buyers</td><td class="hideS">Downtown</td><td>2</td></tr>
+          <tr class="fx" style="--d:.65s"><td><span class="mark"><span>A2</span></span></td><td class="nm">Priya Nair</td><td>Sellers</td><td class="hideS">Riverside</td><td>3</td></tr>
+          <tr class="fx" style="--d:.8s"><td><span class="mark"><span>A3</span></span></td><td class="nm">Elena Brooks</td><td>Buyers</td><td class="hideS">Northside</td><td>7</td></tr>
+          <tr class="fx pick" style="--d:.95s"><td><span class="mark"><span>A4</span></span></td><td class="nm">Jordan Reyes</td><td>Buyers · on shift</td><td class="hideS">Northside</td><td>4</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="sla fx" style="--d:.6s">
+      <div class="mono-k">Call SLA · Jordan Reyes</div>
+      <div class="clock num" id="slaclock">0:00</div>
+      <div class="bar">
+        <div class="dim" style="--d:1.2s"><div class="l" style="background:rgba(127,227,255,.4)"></div><i class="tk l0"></i><i class="tk r"></i></div>
+        <div class="fill" id="slafill"></div>
+        <div class="called" id="slacalled">CALLED MAYA · 2:14</div>
+      </div>
+      <div class="ends"><span>0:00</span><span>5:00 · moves to next agent</span></div>
+      <div class="kv" style="margin-top:26px"><span>Text to Jordan</span><span>Call Maya · 5 minutes</span></div>
+    </div>
+  </div>
+  <div class="tblock fx" style="--d:.8s"><div>Detail<b>Routing</b></div><div>SLA<b>5 min</b></div><div>Sheet<b>A-104</b></div></div>
+</section>
+
+<!-- ================= 05 WORKFLOW ================= -->
+<section class="sheet wf" data-sheet="05" id="s-wf">
+  <div class="hdr">
+    <div class="bubble"><svg viewBox="0 0 74 74"><circle class="dr" pathLength="1" cx="37" cy="37" r="36" fill="none" stroke="#f4f9ff"/><line class="dr" pathLength="1" x1="1" y1="37" x2="73" y2="37" stroke="#f4f9ff" style="--d:.4s"/></svg><div class="t">05</div><div class="b">S-201</div></div>
+    <div class="hlabel">Schematic · The automation<small>Listing inquiry · buyer routing</small></div>
+    <div class="hleader"></div>
+  </div>
+  <h2><span class="split"><span>The logic,</span></span> <br><span class="split"><span class="c" style="transition-delay:.12s">running live.</span></span></h2>
+  <div class="grid">
+    <div class="sch" id="sch">
+      <div class="nd dbox act fx" style="--d:.3s"><span class="id">T-01</span><div class="ty">TRIGGER</div><div class="w">Form submitted</div><div class="s">Listing page · 214 Linden</div></div>
+      <div class="cn lnv" style="--d:.7s"></div>
+      <div class="nd dbox act fx" style="--d:.9s"><span class="id">A-02</span><div class="ty">ACTION</div><div class="w">Set type + lifecycle</div><div class="s">Buyer · Lead</div></div>
+      <div class="cn lnv" style="--d:1.3s"></div>
+      <div class="nd dbox act fx" style="--d:1.5s"><span class="id">A-03</span><div class="ty">ACTION</div><div class="w">Send qualifying SMS</div><div class="s">Timeline, budget, area</div></div>
+      <div class="cn lnv" style="--d:1.9s"></div>
+      <div class="nd dbox diamond act fx" style="--d:2.1s"><span class="id">◇</span><div class="ty">BRANCH</div><div class="w">Lead score ≥ 80?</div><div class="s">Maya scores 86</div></div>
+      <div class="cn lnv" style="--d:2.5s;height:16px"></div>
+      <div class="br">
+        <div class="brline lnh" style="--d:2.6s"></div>
+        <div class="col">
+          <div class="cn lnv" style="--d:2.9s;height:14px"></div>
+          <div class="yn fx" style="--d:3s">YES</div>
+          <div class="nd dbox act fx" style="--d:3.1s"><span class="id">R-04</span><div class="ty">ROTATE</div><div class="w">Northside buyer agent</div><div class="s">Assigned to Jordan Reyes</div></div>
+          <div class="cn lnv" style="--d:3.5s"></div>
+          <div class="nd dbox act fx" style="--d:3.7s"><span class="id">K-05</span><div class="ty">TASK</div><div class="w">Call Maya Chen</div><div class="s">SLA 5 minutes</div></div>
+          <div class="cn lnv" style="--d:4.1s"></div>
+          <div class="nd dbox act fx" style="--d:4.3s"><span class="id">W-06</span><div class="ty">DELAY</div><div class="w">Wait 1 day</div><div class="s">Resumes Tue 8:00 AM</div></div>
+          <div class="cn lnv" style="--d:4.7s"></div>
+          <div class="nd dbox act fx" style="--d:4.9s"><span class="id">E-07</span><div class="ty">EMAIL</div><div class="w">3 similar listings</div><div class="s">Stops when she replies</div></div>
+        </div>
+        <div class="col">
+          <div class="cn lnv" style="--d:2.9s;height:14px;opacity:.5"></div>
+          <div class="yn no fx" style="--d:3s">NO</div>
+          <div class="nd dbox off fx" style="--d:3.1s"><span class="id">Q-09</span><div class="ty">SEQUENCE</div><div class="w">Enrol in nurture</div><div class="s">Not taken · score 86</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="notes">
+        <h4 class="fx">GENERAL NOTES · RUN LOG</h4>
+        <ol>
+          <li class="fx" style="--d:.4s"><span><time>9:42:07 PM</time><b>Maya Chen enrolled</b> · form submitted</span></li>
+          <li class="fx" style="--d:1s"><span><time>9:42:08 PM</time>Lead type <b>Buyer</b> · lifecycle <b>Lead</b></span></li>
+          <li class="fx" style="--d:1.6s"><span><time>9:42:11 PM</time>Qualifying SMS sent</span></li>
+          <li class="fx" style="--d:2.2s"><span><time>9:43:26 PM</time>Score <b>86</b> · YES branch</span></li>
+          <li class="fx" style="--d:3.2s"><span><time>9:43:27 PM</time>Rotated to <b>Jordan Reyes</b></span></li>
+          <li class="fx" style="--d:3.8s"><span><time>9:43:27 PM</time>Task: call Maya · due 9:48 PM</span></li>
+          <li class="fx" style="--d:5s"><span><time>Tue 8:00 AM</time>3 similar listings sent</span></li>
+        </ol>
+      </div>
+      <div class="booked dbox fx" style="--d:5.6s">
+        <div class="d"><span class="mono-k">SAT</span><b>11</b></div>
+        <div><div class="w">Showing booked</div><div class="mono-k" style="margin-top:6px;color:var(--cy)">214 Linden · 11:00 AM</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="tblock fx" style="--d:.8s"><div>Drawing<b>Schematic</b></div><div>Steps<b>09</b></div><div>Sheet<b>S-201</b></div></div>
+</section>
+
+<!-- ================= 06 HUBSPOT DETAIL ================= -->
+<section class="sheet det" data-sheet="06" id="s-det">
+  <div class="hdr">
+    <div class="bubble"><svg viewBox="0 0 74 74"><circle class="dr" pathLength="1" cx="37" cy="37" r="36" fill="none" stroke="#f4f9ff"/><line class="dr" pathLength="1" x1="1" y1="37" x2="73" y2="37" stroke="#f4f9ff" style="--d:.4s"/></svg><div class="t">06</div><div class="b">D-301</div></div>
+    <div class="hlabel">Detail 1 · In your HubSpot<small>Workflow builder</small></div>
+    <div class="hleader"></div>
+  </div>
+  <h2 style="font-size:clamp(40px,4.4vw,64px)"><span class="split"><span>This is what it will look like</span></span> <br><span class="split"><span class="c" style="transition-delay:.12s">in your HubSpot.</span></span></h2>
+  <div class="cap1 fx" style="--d:.2s"><span class="callno">1</span><span class="lbl">DETAIL 1 · WORKFLOW EDITOR</span><span class="sc">SCALE 1:1</span><span class="illus">Your workflow in HubSpot · illustrative</span></div>
+  <div class="hs fx" id="hs" style="--d:.3s">
+    <div class="shell">
+      <div class="bar">
+        <span class="back">‹</span><span class="nm">Listing inquiry · buyer routing</span><span class="pill">Contact-based</span>
+        <div class="tabs"><span class="on">Actions</span><span>Settings</span><span>Performance</span></div>
+        <div class="tog">Off <i></i> On</div>
+        <span class="pub">Review and publish</span>
+      </div>
+      <div class="body">
+        <div class="canvas">
+          <div class="card trig" style="--fd:.0s"><div class="ch">Trigger · Contact enrollment</div><div class="cb">Form submission<div style="font-weight:400;font-size:12px;opacity:.8;margin-top:2px">Listing page inquiry form</div></div></div>
+          <div class="plus"></div>
+          <div class="card act" style="--fd:.1s"><div class="ch">1 · Edit record</div><div class="cb">Set Lead type to Buyer</div></div>
+          <div class="plus"></div>
+          <div class="card act" style="--fd:.2s"><div class="ch">2 · Edit record</div><div class="cb">Set Lifecycle stage to Lead</div></div>
+          <div class="plus"></div>
+          <div class="card act" style="--fd:.3s"><div class="ch">3 · Send SMS</div><div class="cb">Qualifying questions to Maya</div></div>
+          <div class="plus"></div>
+          <div class="card flow" style="--fd:.4s"><div class="ch">4 · If/then branch</div><div class="cb">Lead score is ≥ 80</div></div>
+          <div class="hsbr">
+            <div class="col">
+              <span class="blab">Yes</span>
+              <div class="card act" style="--fd:.5s"><div class="ch">5 · Rotate record to owner</div><div class="cb">Northside buyer agents</div></div>
+              <div class="plus"></div>
+              <div class="card act sel" style="--fd:.6s"><div class="ch">6 · Create task</div><div class="cb">Call Maya · due in 5 min</div></div>
+              <div class="plus"></div>
+              <div class="card flow" style="--fd:.7s"><div class="ch">7 · Delay</div><div class="cb">Wait 1 day</div></div>
+              <div class="plus"></div>
+              <div class="card act" style="--fd:.8s"><div class="ch">8 · Send email</div><div class="cb">3 similar listings<div style="font-weight:400;font-size:12px;opacity:.8;margin-top:2px">Unenroll on reply</div></div></div>
+              <div class="plus" style="height:22px"></div>
+              <span class="end">End</span>
+            </div>
+            <div class="col">
+              <span class="blab">None met</span>
+              <div class="card act" style="--fd:.5s"><div class="ch">9 · Enroll in sequence</div><div class="cb">Buyer nurture</div></div>
+              <div class="plus" style="height:22px"></div>
+              <span class="end">End</span>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="ph" style="--fd:.3s"><span>Create task</span><span>×</span></div>
+          <div class="fld"><label>Task title</label><div class="ip">Call Maya Chen</div></div>
+          <div class="fld"><label>Due date</label><div class="ip">5 minutes after enrollment</div></div>
+          <div class="fld"><label>Assign to</label><div class="ip">Contact owner</div></div>
+          <div class="fld"><label>Priority</label><div class="ip">High</div></div>
+          <div class="fld"><label>Type</label><div class="ip">Call</div></div>
+          <div class="foot"><span class="btn p">Save</span><span class="btn g">Cancel</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="leaders" aria-hidden="true">
+      <div class="leader" style="left:60px;top:150px">TRIGGER<i></i></div>
+      <div class="leader" style="left:60px;top:520px">BRANCH ≥ 80<i></i></div>
+      <div class="leader" style="right:340px;top:110px"><i></i>ACTION PANEL</div>
+    </div>
+  </div>
+  <div class="tblock fx" style="--d:.8s"><div>Detail<b>1 of 1</b></div><div>Finish<b>Full colour</b></div><div>Sheet<b>D-301</b></div></div>
+</section>
+
+<!-- ================= CLOSE ================= -->
+<section class="sheet close" data-sheet="07">
+  <div class="hdr">
+    <div class="bubble"><svg viewBox="0 0 74 74"><circle class="dr" pathLength="1" cx="37" cy="37" r="36" fill="none" stroke="#f4f9ff"/><line class="dr" pathLength="1" x1="1" y1="37" x2="73" y2="37" stroke="#f4f9ff" style="--d:.4s"/></svg><div class="t">07</div><div class="b">REV D</div></div>
+    <div class="hlabel">Revision schedule<small>Issued for build</small></div>
+    <div class="hleader"></div>
+  </div>
+  <table class="revs">
+    <thead><tr class="fx"><th>Rev</th><th>Description</th><th style="text-align:right" class="m">Sheet</th></tr></thead>
+    <tbody>
+      <tr class="fx" style="--d:.3s"><td class="r"><span>A</span></td><td class="w">Captured.</td><td class="m">A-102</td></tr>
+      <tr class="fx" style="--d:.8s"><td class="r"><span>B</span></td><td class="w">Qualified.</td><td class="m">A-103</td></tr>
+      <tr class="fx" style="--d:1.3s"><td class="r"><span>C</span></td><td class="w">Assigned.</td><td class="m">A-104</td></tr>
+      <tr class="fx" style="--d:1.8s"><td class="r"><span>D</span></td><td class="w">Booked.</td><td class="m">S-201</td></tr>
+    </tbody>
+  </table>
+  <div class="stamp">Issued for build<small>Your HubSpot · real estate</small></div>
+  <div class="tblock fx" style="--d:.8s"><div>Project<b>HubSpot lead system</b></div><div>Numbers<b>Illustrative</b></div><div>Sheet<b>07 of 07</b></div></div>
+</section>
+
+<script>
+(function(){
+  // draw-on boxes: wrap each .dbox with an svg rect outline
+  document.querySelectorAll('.dbox').forEach(function(el){
+    var s=document.createElementNS('http://www.w3.org/2000/svg','svg');s.setAttribute('class','bx');
+    var r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    r.setAttribute('x','0.5');r.setAttribute('y','0.5');r.setAttribute('width','calc(100% - 1px)');r.setAttribute('height','calc(100% - 1px)');
+    r.setAttribute('pathLength','1');s.appendChild(r);el.insertBefore(s,el.firstChild);
+    var d=getComputedStyle(el).getPropertyValue('--d');if(d)r.style.transitionDelay=d;
+  });
+  // rect percentage sizes: set width/height via 100% for engines that reject calc
+  document.querySelectorAll('svg.bx rect').forEach(function(r){r.setAttribute('width','100%');r.setAttribute('height','100%');r.setAttribute('x','0');r.setAttribute('y','0')});
+
+  // ruler ticks 0..100
+  var rt=document.getElementById('rticks');
+  for(var i=0;i<=100;i+=5){var t=document.createElement('i');t.style.left=i+'%';if(i%10===0){t.className='m';var e=document.createElement('em');e.textContent=i;e.style.left=i+'%';rt.appendChild(e)}rt.appendChild(t)}
+  // gauge ticks
+  var gt=document.getElementById('gticks');
+  for(var k=0;k<=20;k++){var a=Math.PI*(1-k/20),r1=k%5?96:100,r0=k%5?92:88;
+    var ln=document.createElementNS('http://www.w3.org/2000/svg','line');
+    ln.setAttribute('x1',110+Math.cos(a)*r0);ln.setAttribute('y1',115-Math.sin(a)*r0);ln.setAttribute('x2',110+Math.cos(a)*r1);ln.setAttribute('y2',115-Math.sin(a)*r1);gt.appendChild(ln)}
+
+  function tween(dur,fn,done){var t0=performance.now();function f(n){var p=Math.min(1,(n-t0)/dur),e=1-Math.pow(1-p,3);fn(e);if(p<1)requestAnimationFrame(f);else if(done)done()}requestAnimationFrame(f)}
+
+  // capture pipes (desktop only), orthogonal routing into the HubSpot node
+  function pipes(){
+    var w=document.getElementById('capwrap'),svg=document.getElementById('pipes');
+    if(getComputedStyle(svg).display==='none')return;
+    var wb=w.getBoundingClientRect(),hb=document.getElementById('hubnode').getBoundingClientRect();
+    var tx=hb.left-wb.left,ty=hb.top-wb.top+hb.height*.5;var html='';
+    w.querySelectorAll('.src').forEach(function(s,i){var b=s.getBoundingClientRect();
+      var x0=b.right-wb.left,y0=b.top-wb.top+b.height/2,mx=x0+46+Math.abs(i-2)*22;
+      var yy=ty-40+i*20;
+      html+='<path class="dr" pathLength="1" style="--d:'+(0.9+i*.1)+'s" d="M'+x0+' '+y0+' H'+mx+' V'+yy+' H'+tx+'" fill="none" stroke="'+(i===0?'#7fe3ff':'rgba(220,240,255,.55)')+'" stroke-width="'+(i===0?1.5:1)+'"/>';
+      html+='<circle cx="'+x0+'" cy="'+y0+'" r="2.5" fill="#f4f9ff"/><path d="M'+(tx-7)+' '+(yy-4)+' L'+tx+' '+yy+' L'+(tx-7)+' '+(yy+4)+'" fill="none" stroke="#7fe3ff"/>';
+    });
+    svg.innerHTML=html;
+  }
+  pipes();window.addEventListener('resize',function(){pipes()});
+
+  var runs={
+    's-clean':function(sec){
+      var arc=document.getElementById('garc'),h=document.getElementById('health'),dn=document.getElementById('dupn');
+      setTimeout(function(){tween(900,function(e){arc.style.strokeDashoffset=100-58*e})},500);
+      setTimeout(function(){sec.classList.add('merged');
+        tween(1800,function(e){var v=Math.round(58+39*e);h.textContent=v;arc.style.strokeDashoffset=100-v});
+        tween(1800,function(e){var v=Math.round(412*(1-e));dn.textContent=v;if(v===0)dn.classList.add('zero')});
+      },1900);
+    },
+    's-asg':function(){
+      var c=document.getElementById('slaclock'),f=document.getElementById('slafill'),cl=document.getElementById('slacalled');
+      cl.style.left=(134/300*100)+'%';
+      setTimeout(function(){tween(2600,function(e){var s=Math.round(134*e);c.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');f.style.width=(s/300*100)+'%'},function(){c.classList.add('hit');cl.classList.add('on')})},2400);
+    },
+    's-det':function(){setTimeout(function(){document.getElementById('hs').classList.add('filled')},2600)}
+  };
+
+  var io=new IntersectionObserver(function(es){es.forEach(function(en){
+    if(!en.isIntersecting)return;var s=en.target;if(s.classList.contains('in'))return;s.classList.add('in');io.unobserve(s);
+    s.querySelectorAll('[data-count]').forEach(function(n){var to=+n.dataset.count,d=+n.dataset.dur||1200,dl=+n.dataset.delay||0;
+      setTimeout(function(){tween(d,function(e){n.textContent=Math.round(to*e)})},dl)});
+    if(runs[s.id])runs[s.id](s);
+    if(s.classList.contains('cap'))pipes();
+  })},{threshold:0.22});
+  document.querySelectorAll('.sheet').forEach(function(s){io.observe(s)});
+
+  // readout
+  var ry=document.getElementById('ro-y'),rs=document.getElementById('ro-s'),secs=[].slice.call(document.querySelectorAll('.sheet'));
+  function ro(){var y=Math.round(scrollY);ry.textContent=String(y).padStart(4,'0');var mid=innerHeight/2,cur='00';
+    secs.forEach(function(s){var b=s.getBoundingClientRect();if(b.top<mid&&b.bottom>mid)cur=s.dataset.sheet});rs.textContent=cur}
+  addEventListener('scroll',ro,{passive:true});ro();
+})();
+</script>

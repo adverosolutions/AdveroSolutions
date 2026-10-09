@@ -1,0 +1,73 @@
+{
+  "title": "Your GHL CRM: From Manual Follow-Ups to Leads That Move on Their Own",
+  "platform": "diagram",
+  "sections": [
+    {"key": "capture", "label": "1 - CAPTURE AND ORGANIZE EVERY LEAD", "color": 0,
+     "note": "Lead capture and contact management share this section. Your forms feed GHL directly, and tags and custom fields sort each contact as it arrives."},
+    {"key": "pipeline", "label": "2 - KEEP THE PIPELINE UP TO DATE", "color": 1,
+     "note": "Each lead becomes an opportunity in your pipeline, and what the lead does moves it between stages. We map the stages from how your team sells today."},
+    {"key": "followup", "label": "3 - FOLLOW UP AND NURTURE AUTOMATICALLY", "color": 2,
+     "note": "Every message depends on what the lead has done, and a reply or a booking stops the automated ones. Texts only deliver once your GHL number is registered for business texting."},
+    {"key": "team", "label": "4 - TASKS AND ALERTS FOR YOUR TEAM", "color": 3,
+     "note": "Task assignments and notifications share this section. Your team is told who to call and when, based on lead activity and pipeline stage."},
+    {"key": "handoff", "label": "5 - TEST IT AND HAND IT TO YOUR TEAM", "color": 4,
+     "note": "Every workflow is tested with test leads before it touches a real one. Everything is named and organized so your team can manage it."}
+  ],
+  "nodes": [
+    {"key": "form", "kind": "data.transform", "section": "capture",
+     "label": "1 - A new lead fills in your GHL form and lands in the CRM without anyone typing it"},
+    {"key": "tags", "kind": "data.transform", "section": "capture",
+     "label": "2 - GHL tags the lead by source and fills in your custom fields automatically"},
+    {"key": "dedupe", "kind": "data.transform", "section": "capture",
+     "label": "3 - If that email or phone is already in GHL, the existing contact gets updated instead"},
+    {"key": "opp", "kind": "data.transform", "section": "pipeline",
+     "label": "4 - The lead is added to the first stage of your pipeline as a new opportunity"},
+    {"key": "stage", "kind": "data.transform", "section": "pipeline",
+     "label": "5 - When the lead replies, books or goes quiet, the stage changes on its own"},
+    {"key": "first", "kind": "data.transform", "section": "followup",
+     "label": "6 - GHL sends the lead a text and an email right away from your business"},
+    {"key": "nurture", "kind": "data.transform", "section": "followup",
+     "label": "7 - If the lead has not replied, a nurture sequence keeps in touch until they do"},
+    {"key": "task", "kind": "data.transform", "section": "team",
+     "label": "8 - When a lead replies or books, GHL assigns a call task to the right person"},
+    {"key": "notify", "kind": "data.transform", "section": "team",
+     "label": "9 - Your team gets a notification when a lead changes stage or needs attention"},
+    {"key": "test", "kind": "data.transform", "section": "handoff",
+     "label": "10 - We run test leads through every form, stage and message before going live"},
+    {"key": "folders", "kind": "data.transform", "section": "handoff",
+     "label": "11 - Each workflow is named and filed in folders so your team can find and edit it"},
+    {"key": "done", "kind": "data.transform", "section": "handoff",
+     "label": "12 - Your team works every lead from the pipeline instead of tracking it by hand"}
+  ],
+  "edges": [
+    {"from": "form", "to": "tags"},
+    {"from": "tags", "to": "dedupe"},
+    {"from": "dedupe", "to": "opp"},
+    {"from": "opp", "to": "stage"},
+    {"from": "stage", "to": "first"},
+    {"from": "first", "to": "nurture"},
+    {"from": "nurture", "to": "task"},
+    {"from": "task", "to": "notify"},
+    {"from": "notify", "to": "test"},
+    {"from": "test", "to": "folders"},
+    {"from": "folders", "to": "done"}
+  ],
+  "input_sample": {
+    "first_name": "Dana",
+    "last_name": "Ruiz",
+    "email": "dana.ruiz@gmail.com",
+    "phone": "+1 555 201 4478",
+    "source": "Website contact form",
+    "message": "Looking for a quote. When can someone call me?",
+    "submitted_at": "2026-09-26 10:14"
+  },
+  "output_sample": {
+    "contact": "Dana Ruiz",
+    "tags": ["source-website-form", "new-lead"],
+    "pipeline_stage": "Contacted",
+    "follow_ups_sent": ["Text", "Email"],
+    "task": "Call Dana Ruiz today",
+    "task_assigned_to": "Your assigned team member",
+    "notification": "Sent to the assigned team member in the GHL app"
+  }
+}

@@ -1,0 +1,8 @@
+- This is all four for your firm, run by your paralegal.
+- Lawmatics form once, then Clio contact, matter, your Sheet, engagement letter.
+- Claude fills your template blanks; your paralegal is editing, not typing.
+- Clio matters checked every weekday morning; reminders go after your quiet days.
+- I've built an intake and reception system for a personal injury firm.
+- Routine mail reaches your paralegal with a summary; legal advice stays yours.
+- I'd fix intake first; drafting and follow-ups run off its Clio matter.
+- Book the paid 1-hour scoping call; I'll show what to fix first.

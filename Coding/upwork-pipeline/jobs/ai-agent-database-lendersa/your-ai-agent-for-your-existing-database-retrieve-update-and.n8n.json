@@ -1,0 +1,573 @@
+{
+  "name": "Your AI Agent for Your Existing Database: Retrieve, Update and Manage",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Your AI Agent for Your Existing Database: Retrieve, Update and Manage\n\n### How it works\n- You or your team ask in plain English: find a record, check a status, change a value.\n- Claude searches your tables and answers from the real rows, with their IDs.\n- Asked to change something, Claude holds it and shows you the old value and the new one.\n- Nothing touches a live row until you say yes; every applied change is logged with what, when and which chat.\n- Room to add next: a read-only mode for staff, and a daily summary of what changed.\n\n### Setup\n- Connect your existing Postgres with a login that can read your tables and write only through the staged-change function.\n- Create two small tables in your database: agent_pending_changes and agent_change_log.\n- Set which tables and columns Claude may change in Config; everything else stays read-only.\n- Embed the chat on an internal page or open it from n8n.\n\n### What I need from you\n- Your database engine and a read replica or a staging copy to test on first.\n- The tables and columns your team works in every day.\n- Who may approve changes, and an email for failure alerts.",
+        "height": 680,
+        "width": 520,
+        "color": 1
+      },
+      "id": "5b7da97c-7b6c-5859-831e-c2820b7b378d",
+      "name": "Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -680,
+        -140
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 1 - AN AI AGENT ON YOUR EXISTING DATABASE\n\nYou ask your database a question in plain English. Claude reads your tables and answers from the real rows, never from memory.",
+        "height": 670,
+        "width": 1540,
+        "color": 5
+      },
+      "id": "c6a66a3c-ed8e-5515-8a70-8ba3534f0de8",
+      "name": "Section - 1 - AN AI AGENT ON YOUR EXISTING DATABASE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -140
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2 - RETRIEVE, UPDATE AND MANAGE: UPDATES WAIT FOR YOUR YES\n\nYour parts 2 and 3: retrieving and updating in one smooth chat. A change is shown back to you as old value and new value first, and only a yes moves it forward.",
+        "height": 670,
+        "width": 460,
+        "color": 4
+      },
+      "id": "d3450e96-1d7f-50e6-902f-cb760636aa33",
+      "name": "Section - 2 - RETRIEVE, UPDATE AND MANAGE: UPDATES WAIT FOR YOUR YES",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1700,
+        -140
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3 - INTEGRATED WITH YOUR CURRENT DATABASE\n\nThe approved change is written to your own Postgres, inside one transaction, only to the tables and columns you allowed. Every change lands in a change log you can undo from.",
+        "height": 670,
+        "width": 700,
+        "color": 6
+      },
+      "id": "2f6c795d-077b-51d3-8abc-f0fa85a83762",
+      "name": "Section - 3 - INTEGRATED WITH YOUR CURRENT DATABASE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        -140
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4 - RELIABLE PERFORMANCE: IF ANYTHING FAILS, YOU HEAR ABOUT IT\n\nA failed query or a timeout never fails quietly. You get an email with the step, the error and a link to the run.",
+        "height": 670,
+        "width": 460,
+        "color": 7
+      },
+      "id": "a3e5a8cb-4471-5dd4-a636-fb04c4e4a601",
+      "name": "Section - 4 - RELIABLE PERFORMANCE: IF ANYTHING FAILS, YOU HEAR ABOUT IT",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3180,
+        -140
+      ]
+    },
+    {
+      "parameters": {
+        "public": false,
+        "options": {}
+      },
+      "id": "f01b8d9e-dd0c-5ee5-b09f-53264a0c4689",
+      "name": "1 - You Ask Your Database in Plain English",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f9fc12b0-ff0f-5cb9-9272-29dc7fcb5b92",
+              "name": "editable_tables",
+              "value": "PASTE-YOUR-EDITABLE-TABLES",
+              "type": "string"
+            },
+            {
+              "id": "bb525488-8eff-5a99-ad6e-485b1e7c969d",
+              "name": "approver_names",
+              "value": "PASTE-YOUR-APPROVER-NAMES",
+              "type": "string"
+            },
+            {
+              "id": "b2fec6f8-6341-5726-a32a-39e7881502a7",
+              "name": "alert_email",
+              "value": "PASTE-YOUR-ALERT-EMAIL",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "a684abad-ea86-533d-8210-c3dbcd971d65",
+      "name": "0 - Config: Your Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        240,
+        80
+      ],
+      "notes": "Every account id, list id and key this workflow uses, in one place.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Question from your team: {{ $json.chatInput }}\nEditable tables: {{ $('0 - Config: Your Settings').item.json.editable_tables }}\nReturn reply (what you tell the user, plain English, with row IDs), action (answer, confirm or apply) and change_id (the held change ID, or null).",
+        "options": {
+          "systemMessage": "You are the database assistant for this company's existing Postgres database. Always answer from the search tool, never from memory, and include the IDs of the rows you used. If a search returns nothing, say so and suggest one looser search. When the user asks to change, add or archive anything, call the hold tool with the table, the row ID, the column, the current value and the new value, then show the old value and the new value and ask them to reply yes. Only the tables and columns listed in editable_tables can be changed; refuse anything else and say why. Never delete a row: archive it by setting status to archived. Set action to apply only when the user's latest message clearly approves the change you held in this chat; otherwise set action to answer. If two rows could match a change, list both and ask which one."
+        },
+        "hasOutputParser": true
+      },
+      "id": "15d19e6e-3e1e-51de-b36d-e875a1b6d732",
+      "name": "2 - Claude Finds the Records You Asked For",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        880,
+        80
+      ],
+      "notes": "Answers come from your rows, with the IDs, so you can check any answer.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "id": "6af27eb0-f6a9-513d-b5a8-e0e6cf2790b6",
+      "name": "Claude - Reads Your Data and Plans the Change",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "fromInput",
+        "contextWindowLength": 10
+      },
+      "id": "ff8bd0ff-7d49-5d76-ab5a-fad8ade22e88",
+      "name": "Memory - Remembers the Chat and the Change Waiting for Your Yes",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        720,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Search the database. Input: table, filters as column and value pairs (for example status = pending, customer_name = Dana Whitfield), and a limit up to 50. Runs a read-only parameterised SELECT and returns the matching rows with their IDs.",
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "48a23144-ebc0-53bc-a4e9-685cb2facf8d",
+      "name": "Tool - Search Your Tables - Read-Only",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        920,
+        300
+      ],
+      "notes": "Read-only: it runs parameterised SELECTs, so a question can never change a row.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "description": "Stage a change without applying it. Input: table, row ID, column, current value, new value and the reason. Checks the table and column are in editable_tables, reads the live current value, writes one row to agent_pending_changes with status pending and this chat's session ID, and returns the change_id with the old and new values to show the user.",
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "4df95035-75b8-5f3d-bd6b-eeda3321181f",
+      "name": "Tool - Hold an Update, Add or Archive Until You Say Yes",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"reply\": \"Order 5521 for Dana Whitfield: status is Pending now, will be Shipped. Reply yes to apply.\",\n  \"action\": \"confirm\",\n  \"change_id\": 1842\n}"
+      },
+      "id": "5ddb08c1-9afd-5add-9381-a2ec100187bf",
+      "name": "Claude Writes the Reply and Says Answer, Confirm or Apply",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1320,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "75872445-8fae-5f57-9745-cae0e3f55234",
+              "leftValue": "={{ $json.output.action }}",
+              "rightValue": "apply",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "78e5b107-7bc9-5ed4-95f4-4876b3c99c16",
+      "name": "3 - Did You Say Yes to the Change?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1760,
+        80
+      ],
+      "notes": "The guard: Claude can suggest a change, only your yes applies it.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "reply-answer",
+              "name": "output",
+              "value": "={{ $json.output.reply }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "139169bc-a716-5bcd-bda2-bcef8d2ae9dd",
+      "name": "3b - Answer You, or Show the Old and New Value to Confirm",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2000,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "database",
+        "operation": "executeQuery",
+        "query": "SELECT change_id, table_name, record_id, column_name, old_value, new_value FROM apply_agent_change($1, $2);",
+        "options": {
+          "queryReplacement": "={{ $json.output.change_id }},{{ $('1 - You Ask Your Database in Plain English').item.json.sessionId }}"
+        }
+      },
+      "id": "f9efd52e-9e6a-5c73-a39a-0d1c4a1693ad",
+      "name": "4 - Postgres: Apply the Staged Change to Your Live Row",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        2380,
+        0
+      ],
+      "notes": "Applies only a change staged earlier in this same chat, only to the columns you allowed.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resource": "database",
+        "operation": "executeQuery",
+        "query": "INSERT INTO agent_change_log (change_id, table_name, record_id, column_name, old_value, new_value, chat_session, applied_at) VALUES ($1, $2, $3, $4, $5, $6, $7, now()) RETURNING *;",
+        "options": {
+          "queryReplacement": "={{ $json.change_id }},{{ $json.table_name }},{{ $json.record_id }},{{ $json.column_name }},{{ $json.old_value }},{{ $json.new_value }},{{ $('1 - You Ask Your Database in Plain English').item.json.sessionId }}"
+        }
+      },
+      "id": "ef7d7199-d662-551d-888b-1569e588572c",
+      "name": "5 - Postgres: Log What Changed, When and in Which Chat",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        2620,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "reply-done",
+              "name": "output",
+              "value": "=Done. {{ $json.table_name }} row {{ $json.record_id }}: {{ $json.column_name }} changed from {{ $json.old_value }} to {{ $json.new_value }}. Logged as change {{ $json.change_id }}.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "46f0ea3d-2423-5832-a700-c01c9faf8a06",
+      "name": "6 - Tell You It Is Done, With the Old and New Value",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2860,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "81236f78-80ac-5905-84f0-0919a4d16be5",
+      "name": "7 - If Any Step Fails",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        3240,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $('0 - Config: Your Settings').item.json.alert_email }}",
+        "subject": "=Database agent: {{ $json.execution.lastNodeExecuted }} failed",
+        "message": "=Step: {{ $json.execution.lastNodeExecuted }}\nError: {{ $json.execution.error.message }}\nRun: {{ $json.execution.url }}\nNo staged change was applied by this run.",
+        "options": {}
+      },
+      "id": "d723b35f-a0d7-5894-a800-f7fcdea6407d",
+      "name": "8 - Email You the Failed Step, the Error and the Run",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3480,
+        80
+      ]
+    }
+  ],
+  "connections": {
+    "1 - You Ask Your Database in Plain English": {
+      "main": [
+        [
+          {
+            "node": "0 - Config: Your Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "0 - Config: Your Settings": {
+      "main": [
+        [
+          {
+            "node": "2 - Claude Finds the Records You Asked For",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Claude Finds the Records You Asked For": {
+      "main": [
+        [
+          {
+            "node": "3 - Did You Say Yes to the Change?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Did You Say Yes to the Change?": {
+      "main": [
+        [
+          {
+            "node": "4 - Postgres: Apply the Staged Change to Your Live Row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "3b - Answer You, or Show the Old and New Value to Confirm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - Postgres: Apply the Staged Change to Your Live Row": {
+      "main": [
+        [
+          {
+            "node": "5 - Postgres: Log What Changed, When and in Which Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - Postgres: Log What Changed, When and in Which Chat": {
+      "main": [
+        [
+          {
+            "node": "6 - Tell You It Is Done, With the Old and New Value",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 - If Any Step Fails": {
+      "main": [
+        [
+          {
+            "node": "8 - Email You the Failed Step, the Error and the Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude - Reads Your Data and Plans the Change": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "2 - Claude Finds the Records You Asked For",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory - Remembers the Chat and the Change Waiting for Your Yes": {
+      "ai_memory": [
+        [
+          {
+            "node": "2 - Claude Finds the Records You Asked For",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool - Search Your Tables - Read-Only": {
+      "ai_tool": [
+        [
+          {
+            "node": "2 - Claude Finds the Records You Asked For",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool - Hold an Update, Add or Archive Until You Say Yes": {
+      "ai_tool": [
+        [
+          {
+            "node": "2 - Claude Finds the Records You Asked For",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude Writes the Reply and Says Answer, Confirm or Apply": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "2 - Claude Finds the Records You Asked For",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "d7d04cdf-656f-5356-9164-e86a0abc5ebe",
+  "pinData": {
+    "1 - You Ask Your Database in Plain English": [
+      {
+        "json": {
+          "sessionId": "chat-7f3a2c",
+          "action": "sendMessage",
+          "chatInput": "Which orders from Dana Whitfield are still pending? Mark order 5521 as shipped."
+        }
+      }
+    ],
+    "6 - Tell You It Is Done, With the Old and New Value": [
+      {
+        "json": {
+          "output": "Done. orders row 5521: status changed from Pending to Shipped. Logged as change 1842.",
+          "change_id": 1842,
+          "table_name": "orders",
+          "record_id": 5521,
+          "column_name": "status",
+          "old_value": "Pending",
+          "new_value": "Shipped",
+          "chat_session": "chat-7f3a2c",
+          "applied_at": "2026-09-25T17:42:08Z"
+        }
+      }
+    ]
+  }
+}

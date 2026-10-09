@@ -1,0 +1,8 @@
+- This is every request in one place, for your electrical company.
+- In this prototype, an email, web form and Spanish call arrive.
+- AI sorts each and pulls name, site address, division, urgency.
+- Teams alert, auto-reply and tracker row; silence escalates on a timer.
+- Same idea as my $750M+ bid routing for a roofing contractor.
+- Emergencies need a person to confirm; replies never promise times or prices.
+- Then phones, website, Copilot pilot, CompanyCam posts and your roadmap.
+- Worth a quick 15 minute call to walk through it?

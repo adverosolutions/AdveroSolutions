@@ -1,0 +1,488 @@
+{
+  "title": "Your GHL and Pipedrive, Connected: Leads Routed, Stages Synced",
+  "platform": "n8n",
+  "client": {
+    "industry": "sales team running GoHighLevel and Pipedrive",
+    "location": "New Jersey, United States"
+  },
+  "overview": {
+    "how_it_works": [
+      "A new lead or a stage change in GHL sends one webhook to n8n.",
+      "The record is cleaned, then Pipedrive is searched by email so nobody is created twice.",
+      "Lead source picks the owner, and the deal lands in the matching pipeline stage.",
+      "A stage move in Pipedrive moves the GHL opportunity, so your GHL follow-up workflows fire.",
+      "Each move books the owner's next call in Pipedrive, and the sync ignores its own echo."
+    ],
+    "setup": [
+      "GHL: one workflow on Opportunity Created and Stage Changed with a Webhook step to URL 1.",
+      "Pipedrive: a deal change webhook to URL 2, plus three deal custom fields for the GHL ids and lead source.",
+      "Lead sources, owners and stages are mapped once, in steps 4 and 10.",
+      "Existing contacts and opportunities migrate through the same cleaner and dedupe.",
+      "Every path tested with test leads before launch, then a written runbook and a training call."
+    ],
+    "need_from_you": [
+      "Your lead sources and which rep owns each one.",
+      "Your GHL stages and the Pipedrive stage each one matches.",
+      "A GHL private integration token and location id, and a Pipedrive API token.",
+      "Where the failure alert should go."
+    ]
+  },
+  "config": {
+    "ghl_api_key": "PASTE-YOUR-GHL-PRIVATE-INTEGRATION-TOKEN",
+    "ghl_location_id": "PASTE-YOUR-GHL-LOCATION-ID",
+    "pipedrive_api_token": "PASTE-YOUR-PIPEDRIVE-API-TOKEN",
+    "pipedrive_pipeline_id": "PASTE-YOUR-PIPEDRIVE-PIPELINE-ID",
+    "pipedrive_default_owner_id": "PASTE-YOUR-PIPEDRIVE-DEFAULT-OWNER-ID"
+  },
+  "sections": [
+    {
+      "key": "fields",
+      "label": "1 - CUSTOM FIELDS, TAGS AND LEAD SOURCES",
+      "color": 0,
+      "note": "Your part on custom fields, tags and lead sources, with the CRM data quality you asked for. Names, phone format and lead source are cleaned, and Pipedrive is searched by email before anyone is created."
+    },
+    {
+      "key": "route",
+      "label": "2 - LEAD ASSIGNMENT AND ROUTING",
+      "color": 1,
+      "note": "Lead source decides which rep owns the lead and which stage the deal opens in. A person already in Pipedrive stays with their rep."
+    },
+    {
+      "key": "connect",
+      "label": "3 - CONNECT GHL AND PIPEDRIVE",
+      "color": 2,
+      "note": "One person and one deal per lead in Pipedrive, linked both ways. The Pipedrive deal id goes back onto the GHL contact, and the clean record replaces the messy one."
+    },
+    {
+      "key": "migrate",
+      "label": "4 - MIGRATE EXISTING CONTACTS AND OPPORTUNITIES",
+      "color": 5,
+      "note": "Run once before launch. Your existing GHL opportunities and their contacts go through the same cleaner, dedupe and routing as a new lead."
+    },
+    {
+      "key": "move",
+      "label": "5 - PIPELINE MOVEMENT AND ACTIVITY AUTOMATION",
+      "color": 3,
+      "note": "When a rep moves a deal in Pipedrive, the GHL opportunity moves to the same stage and your GHL follow-up workflows fire. The rep's next call is booked on the deal."
+    },
+    {
+      "key": "errors",
+      "label": "6 - IF A STEP FAILS",
+      "color": 4,
+      "note": "Any failure emails you the step that stopped and a link to the run, so you can fix it and retry."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 - GoHighLevel: New Lead or Stage Change Sends a Webhook",
+      "section": "fields",
+      "params": {
+        "path": "ghl-to-pipedrive",
+        "httpMethod": "POST"
+      }
+    },
+    {
+      "key": "__config",
+      "kind": "data.transform",
+      "label": "0 - Config: Your Settings",
+      "section": "fields",
+      "notes": "Every account id and key this workflow uses, in one place. New and migrated leads both pass through here."
+    },
+    {
+      "key": "clean",
+      "kind": "data.code",
+      "label": "2 - Clean the Record: Names, Phone Format, Email and Lead Source",
+      "section": "fields",
+      "notes": "Messy names, phone formats and lead source spellings are fixed once, before they reach either CRM.",
+      "params": {
+        "jsCode": "// 2 - Clean the Record: names, phone format, email and lead source\n// A lead with no usable email stops here and reaches your error alert, so no blank person is ever created.\nconst titleCase = (s) => String(s || '').trim().toLowerCase().replace(/\\s+/g, ' ')\n  .replace(/(^|[\\s'-])\\p{L}/gu, (m) => m.toUpperCase());\nconst toE164 = (p) => {\n  const d = String(p || '').replace(/\\D/g, '');\n  if (d.length === 10) return '+1' + d;                      // US number without country code\n  if (d.length === 11 && d.startsWith('1')) return '+' + d;\n  return d ? '+' + d : '';\n};\n// Your lead sources, spelled one way in both CRMs. Add a line per source.\nconst SOURCES = {\n  'facebook lead ad': 'Facebook Ads', 'facebook': 'Facebook Ads',\n  'google ads': 'Google Ads', 'website form': 'Website', 'website': 'Website',\n  'referral': 'Referral',\n};\n\nreturn $input.all().map(({ json }) => {\n  const b = json.body || json;\n  const cd = b.customData || {};\n  const email = String(b.email || '').trim().toLowerCase();\n  if (!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(email)) {\n    throw new Error(`No usable email on GHL contact ${b.contact_id}: \"${b.email || ''}\"`);\n  }\n  const first = titleCase(b.first_name);\n  const last = titleCase(b.last_name);\n  const rawSource = String(b.contact_source || b.source || '').trim();\n  return { json: {\n    ghl_contact_id: b.contact_id,\n    ghl_opportunity_id: cd.opportunity_id || '',\n    first_name: first,\n    last_name: last,\n    full_name: `${first} ${last}`.trim(),\n    email,\n    phone: toE164(b.phone),\n    lead_source: SOURCES[rawSource.toLowerCase()] || rawSource || 'Unknown',\n    ghl_stage: String(cd.stage_name || 'New Lead').trim(),\n    lead_value: Number(cd.lead_value) || 0,\n    pipedrive_deal_id: cd.pipedrive_deal_id ? Number(cd.pipedrive_deal_id) : null,\n  } };\n});"
+      }
+    },
+    {
+      "key": "search",
+      "kind": "net.http",
+      "label": "3 - Pipedrive: Search for This Person by Email Before Creating Anyone",
+      "section": "fields",
+      "notes": "The duplicate check. One email, one person in Pipedrive.",
+      "params": {
+        "method": "GET",
+        "url": "https://api.pipedrive.com/api/v2/persons/search?term={{ encodeURIComponent($json.email) }}&fields=email&exact_match=true&limit=1",
+        "headers": {
+          "x-api-token": "{{ $('0 - Config: Your Settings').item.json.pipedrive_api_token }}",
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "key": "route",
+      "kind": "data.code",
+      "label": "4 - Route by Lead Source: Pick the Owner, Pipeline and Stage",
+      "section": "route",
+      "notes": "Your lead sources map to your reps here, in one table.",
+      "params": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// 4 - Route by lead source: pick the owner, pipeline and stage\n// A returning person keeps the rep who already owns them in Pipedrive.\nconst cfg = $('0 - Config: Your Settings').item.json;\nconst lead = $('2 - Clean the Record: Names, Phone Format, Email and Lead Source').item.json;\n\n// Your lead sources -> the Pipedrive user who owns them (Pipedrive > Settings > Manage users)\nconst OWNER_BY_SOURCE = {\n  'Facebook Ads': 'PASTE-YOUR-PIPEDRIVE-USER-ID-FOR-FACEBOOK-ADS',\n  'Google Ads':   'PASTE-YOUR-PIPEDRIVE-USER-ID-FOR-GOOGLE-ADS',\n  'Website':      'PASTE-YOUR-PIPEDRIVE-USER-ID-FOR-WEBSITE',\n  'Referral':     'PASTE-YOUR-PIPEDRIVE-USER-ID-FOR-REFERRAL',\n};\n// Your GHL stage names -> the matching Pipedrive stage ids\nconst PIPEDRIVE_STAGE_BY_GHL_STAGE = {\n  'New Lead':        'PASTE-YOUR-PIPEDRIVE-STAGE-ID-NEW-LEAD',\n  'Contacted':       'PASTE-YOUR-PIPEDRIVE-STAGE-ID-CONTACTED',\n  'Appointment Set': 'PASTE-YOUR-PIPEDRIVE-STAGE-ID-APPOINTMENT-SET',\n  'Proposal Sent':   'PASTE-YOUR-PIPEDRIVE-STAGE-ID-PROPOSAL-SENT',\n};\n\nconst match = (($json.data && $json.data.items) || [])[0];\nconst person = match ? match.item : null;\n\nreturn { json: {\n  ...lead,\n  person_id: person ? person.id : null,\n  owner_id: (person && person.owner && person.owner.id) || OWNER_BY_SOURCE[lead.lead_source] || cfg.pipedrive_default_owner_id,\n  pipeline_id: cfg.pipedrive_pipeline_id,\n  stage_id: PIPEDRIVE_STAGE_BY_GHL_STAGE[lead.ghl_stage] || PIPEDRIVE_STAGE_BY_GHL_STAGE['New Lead'],\n  deal_title: `${lead.full_name} - ${lead.lead_source}`,\n} };"
+      }
+    },
+    {
+      "key": "exists",
+      "kind": "flow.branch",
+      "label": "5 - Already a Person in Pipedrive?",
+      "section": "connect",
+      "params": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5a1e7c2d-3b4f-4a6e-9c81-2f0d6b7e5a01",
+              "leftValue": "={{ $json.person_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "key": "newperson",
+      "kind": "app.action",
+      "app": "pipedrive",
+      "op": "create_contact",
+      "label": "5b - Pipedrive: Create the Person With a Clean Name and Phone",
+      "section": "connect",
+      "params": {
+        "name": "={{ $json.full_name }}",
+        "additionalFields": {
+          "email": [
+            "={{ $json.email }}"
+          ],
+          "phone": [
+            "={{ $json.phone }}"
+          ],
+          "owner_id": "={{ $json.owner_id }}"
+        }
+      }
+    },
+    {
+      "key": "linked",
+      "kind": "flow.branch",
+      "label": "6 - Deal Already Linked to This GHL Opportunity?",
+      "section": "connect",
+      "params": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6b2f8d3e-4c5a-4b7f-8d92-3a1e7c8f6b02",
+              "leftValue": "={{ $('4 - Route by Lead Source: Pick the Owner, Pipeline and Stage').item.json.pipedrive_deal_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "key": "movedeal",
+      "kind": "net.http",
+      "label": "7 - Pipedrive: Move the Linked Deal to the Same Stage",
+      "section": "connect",
+      "params": {
+        "method": "PATCH",
+        "url": "https://api.pipedrive.com/api/v2/deals/{{ $('4 - Route by Lead Source: Pick the Owner, Pipeline and Stage').item.json.pipedrive_deal_id }}",
+        "headers": {
+          "x-api-token": "{{ $('0 - Config: Your Settings').item.json.pipedrive_api_token }}",
+          "Content-Type": "application/json"
+        },
+        "body": "{ \"stage_id\": {{ $('4 - Route by Lead Source: Pick the Owner, Pipeline and Stage').item.json.stage_id }} }"
+      }
+    },
+    {
+      "key": "newdeal",
+      "kind": "net.http",
+      "label": "7b - Pipedrive: Create the Deal in the Right Pipeline, Stage and Owner",
+      "section": "connect",
+      "params": {
+        "method": "POST",
+        "url": "https://api.pipedrive.com/api/v2/deals",
+        "headers": {
+          "x-api-token": "{{ $('0 - Config: Your Settings').item.json.pipedrive_api_token }}",
+          "Content-Type": "application/json"
+        },
+        "body": "{\n  \"title\": \"{{ $('4 - Route by Lead Source: Pick the Owner, Pipeline and Stage').item.json.deal_title }}\",\n  \"owner_id\": {{ $('4 - Route by Lead Source: Pick the Owner, Pipeline and Stage').item.json.owner_id }},\n  \"person_id\": {{ $json.person_id || $json.id }},\n  \"pipeline_id\": {{ $('4 - Route by Lead Source: Pick the Owner, Pipeline and Stage').item.json.pipeline_id }},\n  \"stage_id\": {{ $('4 - Route by Lead Source: Pick the Owner, Pipeline and Stage').item.json.stage_id }},\n  \"value\": {{ $('4 - Route by Lead Source: Pick the Owner, Pipeline and Stage').item.json.lead_value }},\n  \"currency\": \"USD\",\n  \"custom_fields\": {\n    \"PASTE-YOUR-GHL-CONTACT-ID-FIELD-KEY\": \"{{ $('4 - Route by Lead Source: Pick the Owner, Pipeline and Stage').item.json.ghl_contact_id }}\",\n    \"PASTE-YOUR-GHL-OPPORTUNITY-ID-FIELD-KEY\": \"{{ $('4 - Route by Lead Source: Pick the Owner, Pipeline and Stage').item.json.ghl_opportunity_id }}\",\n    \"PASTE-YOUR-LEAD-SOURCE-FIELD-KEY\": \"{{ $('4 - Route by Lead Source: Pick the Owner, Pipeline and Stage').item.json.lead_source }}\"\n  }\n}"
+      }
+    },
+    {
+      "key": "writeback",
+      "kind": "net.http",
+      "label": "8 - GoHighLevel: Write the Clean Record and Deal ID Back to the Contact",
+      "section": "connect",
+      "notes": "Both CRMs now hold the same clean record, linked by id.",
+      "params": {
+        "service": "gohighlevel",
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/contacts/upsert",
+        "body": {
+          "locationId": "{{ $('0 - Config: Your Settings').item.json.ghl_location_id }}",
+          "email": "{{ $('4 - Route by Lead Source: Pick the Owner, Pipeline and Stage').item.json.email }}",
+          "firstName": "{{ $('4 - Route by Lead Source: Pick the Owner, Pipeline and Stage').item.json.first_name }}",
+          "lastName": "{{ $('4 - Route by Lead Source: Pick the Owner, Pipeline and Stage').item.json.last_name }}",
+          "phone": "{{ $('4 - Route by Lead Source: Pick the Owner, Pipeline and Stage').item.json.phone }}",
+          "source": "{{ $('4 - Route by Lead Source: Pick the Owner, Pipeline and Stage').item.json.lead_source }}",
+          "tags": [
+            "{{ $('4 - Route by Lead Source: Pick the Owner, Pipeline and Stage').item.json.lead_source }}",
+            "in-pipedrive"
+          ],
+          "customFields": [
+            {
+              "key": "pipedrive_deal_id",
+              "field_value": "{{ $json.data.id }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "mrun",
+      "kind": "trigger.webhook",
+      "label": "9 - Run Once: Migrate Your Existing GHL Opportunities",
+      "section": "migrate",
+      "params": {
+        "path": "migrate-existing-ghl",
+        "httpMethod": "POST"
+      }
+    },
+    {
+      "key": "mpull",
+      "kind": "net.http",
+      "label": "10 - GoHighLevel: Pull Existing Opportunities and Their Contacts",
+      "section": "migrate",
+      "notes": "100 at a time; each batch is cleaned and deduped before it touches Pipedrive.",
+      "params": {
+        "service": "gohighlevel",
+        "method": "GET",
+        "url": "https://services.leadconnectorhq.com/opportunities/search?location_id=PASTE-YOUR-GHL-LOCATION-ID&limit=100"
+      }
+    },
+    {
+      "key": "mshape",
+      "kind": "data.code",
+      "label": "11 - Reshape Each Into the Same Lead Record",
+      "section": "migrate",
+      "params": {
+        "jsCode": "// 11 - Reshape each existing GHL opportunity into the same lead record a new lead sends\n// From here migrated leads run through the same cleaner, dedupe and routing as new ones.\n// Your GHL stage ids -> stage names (GHL > Opportunities > Pipelines)\nconst GHL_STAGE_NAME_BY_ID = {\n  'PASTE-YOUR-GHL-STAGE-ID-NEW-LEAD':        'New Lead',\n  'PASTE-YOUR-GHL-STAGE-ID-CONTACTED':       'Contacted',\n  'PASTE-YOUR-GHL-STAGE-ID-APPOINTMENT-SET': 'Appointment Set',\n  'PASTE-YOUR-GHL-STAGE-ID-PROPOSAL-SENT':   'Proposal Sent',\n};\nconst out = [];\nfor (const { json } of $input.all()) {\n  for (const opp of json.opportunities || []) {\n    const c = opp.contact || {};\n    const [first, ...rest] = String(c.name || '').trim().split(/\\s+/);\n    out.push({ json: { body: {\n      contact_id: c.id || opp.contactId,\n      first_name: first || '',\n      last_name: rest.join(' '),\n      email: c.email || '',\n      phone: c.phone || '',\n      contact_source: opp.source || '',\n      customData: {\n        opportunity_id: opp.id,\n        stage_name: GHL_STAGE_NAME_BY_ID[opp.pipelineStageId] || 'New Lead',\n        lead_value: opp.monetaryValue || 0,\n      },\n    } } });\n  }\n}\nreturn out;"
+      }
+    },
+    {
+      "key": "pdhook",
+      "kind": "trigger.webhook",
+      "label": "12 - Pipedrive: A Rep Moves a Deal to a New Stage",
+      "section": "move",
+      "params": {
+        "path": "pipedrive-deal-stage",
+        "httpMethod": "POST"
+      }
+    },
+    {
+      "key": "map",
+      "kind": "data.code",
+      "label": "13 - Match the Pipedrive Stage to Your GHL Stage, Skip Our Own Echo",
+      "section": "move",
+      "notes": "Two-way sync without loops: a change this sync made itself is ignored on the way back.",
+      "params": {
+        "jsCode": "// 13 - Match the Pipedrive stage to your GHL stage, skip our own echo\n// Only real stage moves by a person continue. A move this sync made itself is dropped,\n// so GHL and Pipedrive never bounce the same change back and forth.\nconst SYNC_USER_ID = 'PASTE-YOUR-PIPEDRIVE-API-USER-ID';     // the Pipedrive user whose API token n8n uses\nconst GHL_PIPELINE_ID = 'PASTE-YOUR-GHL-PIPELINE-ID';\nconst GHL_CONTACT_FIELD = 'PASTE-YOUR-GHL-CONTACT-ID-FIELD-KEY';        // Pipedrive deal custom field keys\nconst GHL_OPPORTUNITY_FIELD = 'PASTE-YOUR-GHL-OPPORTUNITY-ID-FIELD-KEY';\n// Your Pipedrive stage ids -> the GHL stage that fires the matching follow-up workflow\nconst GHL_STAGE_BY_PIPEDRIVE_STAGE = {\n  'PASTE-YOUR-PIPEDRIVE-STAGE-ID-CONTACTED':       { ghl: 'PASTE-YOUR-GHL-STAGE-ID-CONTACTED', name: 'Contacted' },\n  'PASTE-YOUR-PIPEDRIVE-STAGE-ID-APPOINTMENT-SET': { ghl: 'PASTE-YOUR-GHL-STAGE-ID-APPOINTMENT-SET', name: 'Appointment Set' },\n  'PASTE-YOUR-PIPEDRIVE-STAGE-ID-PROPOSAL-SENT':   { ghl: 'PASTE-YOUR-GHL-STAGE-ID-PROPOSAL-SENT', name: 'Proposal Sent' },\n};\nconst field = (deal, key) => {\n  const v = (deal.custom_fields || {})[key];\n  return v && typeof v === 'object' ? v.value : v;\n};\n\nconst out = [];\nfor (const { json } of $input.all()) {\n  const b = json.body || json;\n  const meta = b.meta || {};\n  const deal = b.data || {};\n  const prev = b.previous || {};\n  if (meta.entity !== 'deal' || meta.action !== 'change') continue;\n  if (prev.stage_id === undefined || prev.stage_id === deal.stage_id) continue;   // not a stage move\n  if (String(meta.user_id) === String(SYNC_USER_ID)) continue;                      // our own update coming back\n  const target = GHL_STAGE_BY_PIPEDRIVE_STAGE[String(deal.stage_id)];\n  const opportunityId = field(deal, GHL_OPPORTUNITY_FIELD);\n  if (!target || !opportunityId) continue;\n  out.push({ json: {\n    deal_id: deal.id,\n    person_id: deal.person_id,\n    owner_id: deal.owner_id,\n    ghl_contact_id: field(deal, GHL_CONTACT_FIELD),\n    ghl_opportunity_id: opportunityId,\n    ghl_pipeline_id: GHL_PIPELINE_ID,\n    ghl_stage_id: target.ghl,\n    stage_name: target.name,\n    moved_by_user_id: meta.user_id,\n  } });\n}\nreturn out;"
+      }
+    },
+    {
+      "key": "ghlopp",
+      "kind": "net.http",
+      "label": "14 - GoHighLevel: Move the Opportunity So Your Follow-Up Workflows Fire",
+      "section": "move",
+      "params": {
+        "service": "gohighlevel",
+        "method": "PUT",
+        "url": "https://services.leadconnectorhq.com/opportunities/{{ $json.ghl_opportunity_id }}",
+        "body": {
+          "pipelineId": "{{ $json.ghl_pipeline_id }}",
+          "pipelineStageId": "{{ $json.ghl_stage_id }}"
+        }
+      }
+    },
+    {
+      "key": "activity",
+      "kind": "net.http",
+      "label": "15 - Pipedrive: Log the Move and Book the Owner's Next Call",
+      "section": "move",
+      "params": {
+        "method": "POST",
+        "url": "https://api.pipedrive.com/api/v2/activities",
+        "headers": {
+          "x-api-token": "PASTE-YOUR-PIPEDRIVE-API-TOKEN",
+          "Content-Type": "application/json"
+        },
+        "body": "{\n  \"subject\": \"Follow up: deal moved to {{ $('13 - Match the Pipedrive Stage to Your GHL Stage, Skip Our Own Echo').item.json.stage_name }}\",\n  \"type\": \"call\",\n  \"owner_id\": {{ $('13 - Match the Pipedrive Stage to Your GHL Stage, Skip Our Own Echo').item.json.owner_id }},\n  \"deal_id\": {{ $('13 - Match the Pipedrive Stage to Your GHL Stage, Skip Our Own Echo').item.json.deal_id }},\n  \"participants\": [{ \"person_id\": {{ $('13 - Match the Pipedrive Stage to Your GHL Stage, Skip Our Own Echo').item.json.person_id }}, \"primary\": true }],\n  \"due_date\": \"{{ $now.plus({ days: 1 }).toFormat('yyyy-MM-dd') }}\",\n  \"note\": \"Stage synced to GoHighLevel. The {{ $('13 - Match the Pipedrive Stage to Your GHL Stage, Skip Our Own Echo').item.json.stage_name }} follow-up workflow is running there.\"\n}"
+      }
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "app": "n8n",
+      "op": "error_trigger",
+      "label": "16 - Any Step Fails",
+      "section": "errors"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "app": "gmail",
+      "op": "send",
+      "label": "17 - Email You the Failed Step and a Link to the Run",
+      "section": "errors",
+      "params": {
+        "sendTo": "PASTE-YOUR-ALERT-EMAIL",
+        "subject": "=GHL and Pipedrive sync stopped at {{ $json.execution.lastNodeExecuted }}",
+        "message": "=Step: {{ $json.execution.lastNodeExecuted }}\nError: {{ $json.execution.error.message }}\nOpen the run: {{ $json.execution.url }}\n\nFix the record, then retry the run from n8n so the lead lands in both CRMs.",
+        "options": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "__config"
+    },
+    {
+      "from": "__config",
+      "to": "clean"
+    },
+    {
+      "from": "mrun",
+      "to": "mpull"
+    },
+    {
+      "from": "mpull",
+      "to": "mshape"
+    },
+    {
+      "from": "mshape",
+      "to": "__config"
+    },
+    {
+      "from": "clean",
+      "to": "search"
+    },
+    {
+      "from": "search",
+      "to": "route"
+    },
+    {
+      "from": "route",
+      "to": "exists"
+    },
+    {
+      "from": "exists",
+      "to": "linked",
+      "branch": "true"
+    },
+    {
+      "from": "exists",
+      "to": "newperson",
+      "branch": "false"
+    },
+    {
+      "from": "newperson",
+      "to": "linked"
+    },
+    {
+      "from": "linked",
+      "to": "movedeal",
+      "branch": "true"
+    },
+    {
+      "from": "linked",
+      "to": "newdeal",
+      "branch": "false"
+    },
+    {
+      "from": "newdeal",
+      "to": "writeback"
+    },
+    {
+      "from": "pdhook",
+      "to": "map"
+    },
+    {
+      "from": "map",
+      "to": "ghlopp"
+    },
+    {
+      "from": "ghlopp",
+      "to": "activity"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "contact_id": "k3Lq9XfA2bT7wPzR1mNe",
+    "first_name": "  dana ",
+    "last_name": "MORALES",
+    "email": "Dana.Morales@Gmail.com ",
+    "phone": "(732) 555-0148",
+    "contact_source": "Facebook Lead Ad",
+    "tags": [
+      "new-lead"
+    ],
+    "customData": {
+      "opportunity_id": "Yp2cR8sKd4LmQ0vHt6Wa",
+      "opportunity_name": "Dana Morales - Facebook Lead Ad",
+      "stage_name": "New Lead",
+      "lead_value": "2500",
+      "pipedrive_deal_id": ""
+    }
+  },
+  "output_sample": {
+    "success": true,
+    "data": {
+      "id": 4817,
+      "subject": "Follow up: deal moved to Appointment Set",
+      "type": "call",
+      "owner_id": 22031987,
+      "deal_id": 1296,
+      "participants": [
+        {
+          "person_id": 3310,
+          "primary": true
+        }
+      ],
+      "due_date": "2026-09-29",
+      "note": "Stage synced to GoHighLevel. The Appointment Set follow-up workflow is running there.",
+      "done": false
+    }
+  }
+}

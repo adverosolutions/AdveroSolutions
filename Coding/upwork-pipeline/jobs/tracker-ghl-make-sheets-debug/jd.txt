@@ -1,0 +1,22 @@
+url: https://www.upwork.com/jobs/~022107459761450615129
+GHL + Make.com Expert Needed to Debug Lead Tracking
+Hourly $10-25, expert. Client location not shown. Saved 2026-10-06. Avg bid $18. Required keyword: start the proposal with "TRACKER". Asks to briefly mention a similar automation debugged before (do not invent one). Existing flow GHL -> webhooks -> Make.com -> Google Sheets across multiple sub-accounts; one account misses, duplicates or mis-updates rows.
+
+I'm looking for a GoHighLevel + Make.com expert to troubleshoot an existing lead and appointment tracking automation.
+
+The setup is GHL -> Webhooks -> Make.com -> Google Sheets and is already working across multiple sub-accounts. One account, however, is having inconsistent issues - some leads update correctly, while others are missed, duplicated, or don't update the correct row.
+
+We're not 100% sure where the problem is, so you'll need to *trace the full flow and identify the root cause*.
+
+What you'll do:
+
+* Check GHL workflows, triggers, and webhook data
+* Debug the Make.com scenario, filters, and mappings
+* Review Google Sheets search/update logic
+* Fix missed or duplicate updates
+* Make sure appointment/status changes update the correct lead
+* Test the flow with a few different scenarios
+
+The automation is already built, so no need to rebuild everything. This is mainly about investigating the issue, finding what's wrong, and making the necessary fixes.
+
+Please start your proposal with "TRACKER" and briefly mention a similar automation you've debugged before.

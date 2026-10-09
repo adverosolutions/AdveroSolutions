@@ -1,0 +1,8 @@
+- This is your automation operations center, a working prototype for your team.
+- End-to-end workflow: watch the agent look up the order, then reply.
+- Not sure, or a refund? It hands a person the summary.
+- Scaled my own AI agency to $10,000 a month.
+- Improving existing systems: replay a failure, before and after the retries.
+- Opportunities ranked by hours of manual work saved each week.
+- Runs smoothly over time: success rate, alerts, and a Monday report.
+- Worth a quick 15 minute call to walk through your version?

@@ -1,0 +1,8 @@
+- This is your leads and follow-ups running in GHL, not by hand.
+- Step one: your GHL form drops every lead straight into the CRM.
+- Tags and custom fields sort each contact the moment it arrives.
+- What the lead does moves their pipeline stage on its own.
+- Conditional logic: no reply means nurture, a reply stops the messages.
+- Risk: texts need your number registered first, or carriers block them.
+- Your team gets tasks and alerts, and every workflow gets tested first.
+- Can start [START], first draft by [DRAFT].

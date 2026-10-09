@@ -1,0 +1,8 @@
+- This is a working prototype of your clean, reliable n8n workflows.
+- Watch a test lead hit the webhook and every node light up.
+- OpenAI scores it, and Claude takes over if OpenAI times out.
+- Filters and conditions read as plain sentences you can change yourself.
+- The test runner throws bad payloads at it before anything goes live.
+- Before and after: an existing workflow cleaned up, with error handling added.
+- I scaled my own AI agency to $10,000 a month.
+- Open to a quick 15 minute call to walk through your workflows?

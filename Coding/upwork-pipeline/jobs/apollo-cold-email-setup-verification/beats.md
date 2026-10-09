@@ -1,0 +1,8 @@
+- This is a working prototype of your Apollo cold email campaign.
+- Configured: three mailboxes, sending window, daily cap, stop on reply.
+- Email flow refined: filler cut, one ask, spam words out, variables checked.
+- I send 100k+ cold emails a month, so these checks come first.
+- Verification caught a missing DMARC record before a single send.
+- A software consultancy's qualified leads rose 35% on my outbound system.
+- Ready to launch: 24 of 24 checks, first sends scheduled.
+- Worth a quick 15 minute call? Reply here and I'll send times.

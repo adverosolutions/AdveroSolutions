@@ -1,0 +1,182 @@
+{
+  "title": "Qualified Appointments From US Clinicians and Medical Practices",
+  "platform": "diagram",
+  "sections": [
+    {
+      "key": "build",
+      "label": "1 - BUILD AND SEGMENT THE DATABASE",
+      "color": 0,
+      "note": "This covers the first two parts of your post. Every contact is a US physician, clinician, practice or healthcare decision-maker, sorted the way your campaigns will be split."
+    },
+    {
+      "key": "safe",
+      "label": "2 - CLEAN LISTS AND SAFE SENDING",
+      "color": 1,
+      "note": "This covers list hygiene, sender reputation and deliverability. It is the same setup Lorenzo uses to send over 100,000 cold emails a month on Instantly."
+    },
+    {
+      "key": "sequences",
+      "label": "3 - SEQUENCES WITH TWO GOALS",
+      "color": 2,
+      "note": "This covers the campaigns, the testing and the two goals in your post. Each campaign either books a meeting or sends people to subscribe online."
+    },
+    {
+      "key": "track",
+      "label": "4 - TRACKING AND HAND-OFF",
+      "color": 3,
+      "note": "This covers tracking and the hand-off to your team. Your Technical Sales Executive or founders only get the conversations that need a product discussion."
+    },
+    {
+      "key": "optimise",
+      "label": "5 - OPTIMISE FROM THE RESULTS",
+      "color": 4,
+      "note": "Changes are made from real replies, bookings and sign-ups, not guesses."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "db",
+      "kind": "data.transform",
+      "section": "build",
+      "label": "1 - We build a database of US physicians, clinicians, practices and decision-makers"
+    },
+    {
+      "key": "seg",
+      "kind": "data.transform",
+      "section": "build",
+      "label": "2 - Each contact is tagged by specialty, practice type, size and likely use case"
+    },
+    {
+      "key": "verify",
+      "kind": "data.transform",
+      "section": "safe",
+      "label": "3 - Every email address is verified, and bad or duplicate contacts are removed"
+    },
+    {
+      "key": "domains",
+      "kind": "data.transform",
+      "section": "safe",
+      "label": "4 - Emails go out from separate lookalike domains, so your main domain stays safe"
+    },
+    {
+      "key": "warm",
+      "kind": "data.transform",
+      "section": "safe",
+      "label": "5 - New Zapmail mailboxes warm up in Instantly before they send any cold email"
+    },
+    {
+      "key": "volume",
+      "kind": "data.transform",
+      "section": "safe",
+      "label": "6 - Your monthly volume target, which you give us, sets how many mailboxes we buy"
+    },
+    {
+      "key": "canspam",
+      "kind": "data.transform",
+      "section": "safe",
+      "label": "7 - Each email has your postal address and a working opt-out, and uses business data only"
+    },
+    {
+      "key": "research",
+      "kind": "data.transform",
+      "section": "sequences",
+      "label": "8 - Claude researches each practice so every email opens with something true about it"
+    },
+    {
+      "key": "test",
+      "kind": "data.transform",
+      "section": "sequences",
+      "label": "9 - We test subject lines, messages and calls to action across a short follow-up sequence"
+    },
+    {
+      "key": "goal",
+      "kind": "data.transform",
+      "section": "sequences",
+      "label": "10 - Each campaign asks for one thing, either a booked meeting or an online sign-up"
+    },
+    {
+      "key": "unibox",
+      "kind": "data.transform",
+      "section": "track",
+      "label": "11 - Replies land in one unibox, and clicks, appointments and sign-ups are all tracked"
+    },
+    {
+      "key": "handoff",
+      "kind": "data.transform",
+      "section": "track",
+      "label": "12 - Qualified leads go to your Technical Sales Executive or founders with full context"
+    },
+    {
+      "key": "improve",
+      "kind": "data.transform",
+      "section": "optimise",
+      "label": "13 - The weakest subject line or message is replaced once the numbers show a winner"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db",
+      "to": "seg"
+    },
+    {
+      "from": "seg",
+      "to": "verify"
+    },
+    {
+      "from": "verify",
+      "to": "domains"
+    },
+    {
+      "from": "domains",
+      "to": "warm"
+    },
+    {
+      "from": "warm",
+      "to": "volume"
+    },
+    {
+      "from": "volume",
+      "to": "canspam"
+    },
+    {
+      "from": "canspam",
+      "to": "research"
+    },
+    {
+      "from": "research",
+      "to": "test"
+    },
+    {
+      "from": "test",
+      "to": "goal"
+    },
+    {
+      "from": "goal",
+      "to": "unibox"
+    },
+    {
+      "from": "unibox",
+      "to": "handoff"
+    },
+    {
+      "from": "handoff",
+      "to": "improve"
+    }
+  ],
+  "input_sample": {
+    "name": "Dr. Priya Nair",
+    "role": "Physician owner",
+    "specialty": "Family medicine",
+    "practice_type": "Independent practice",
+    "practice_size": "4 clinicians",
+    "state": "Ohio",
+    "likely_use_case": "PASTE-YOUR-USE-CASE",
+    "monthly_volume_target": "PASTE-YOUR-MONTHLY-VOLUME"
+  },
+  "output_sample": {
+    "campaign_goal": "Book a meeting",
+    "status": "Qualified, meeting booked",
+    "handed_to": "Technical Sales Executive",
+    "context": "Replied to email 2, asked how it fits a 4-clinician family practice, prefers Tuesday mornings"
+  }
+}

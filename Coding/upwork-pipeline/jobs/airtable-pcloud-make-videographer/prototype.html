@@ -1,0 +1,888 @@
+<title>Your pCloud Project Folders</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root{
+  color-scheme: light;
+  --bg:#F3EFE7;
+  --surface:#FAF8F3;
+  --sunk:#ECE6DA;
+  --ink:#1E1B16;
+  --ink-2:#5B544A;
+  --ink-3:#8B8376;
+  --line:rgba(52,40,24,.13);
+  --line-2:rgba(52,40,24,.07);
+  --accent:#9C4127;
+  --accent-ink:#FFF8F2;
+  --accent-soft:rgba(156,65,39,.08);
+  --ok:#3D6A4C;
+  --warn:#9A6414;
+  --warn-soft:rgba(154,100,20,.09);
+  --shadow:0 1px 2px rgba(40,28,12,.05),0 8px 28px -12px rgba(40,28,12,.16);
+  --r:10px;
+  --serif:'Instrument Serif',Georgia,'Times New Roman',serif;
+  --sans:'Instrument Sans',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --ease:cubic-bezier(.2,.7,.1,1);
+  --f1:#C9A27A;--f2:#8E5E44;--f3:#3E3A38;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#15130F;--surface:#1C1915;--sunk:#221F1A;
+    --ink:#EDE7DC;--ink-2:#B4AB9C;--ink-3:#7E776B;
+    --line:rgba(237,226,206,.12);--line-2:rgba(237,226,206,.06);
+    --accent:#E0896A;--accent-ink:#1A120D;--accent-soft:rgba(224,137,106,.10);
+    --ok:#86B795;--warn:#D9A95A;--warn-soft:rgba(217,169,90,.10);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -14px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#15130F;--surface:#1C1915;--sunk:#221F1A;
+  --ink:#EDE7DC;--ink-2:#B4AB9C;--ink-3:#7E776B;
+  --line:rgba(237,226,206,.12);--line-2:rgba(237,226,206,.06);
+  --accent:#E0896A;--accent-ink:#1A120D;--accent-soft:rgba(224,137,106,.10);
+  --ok:#86B795;--warn:#D9A95A;--warn-soft:rgba(217,169,90,.10);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -14px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.55 var(--sans);font-feature-settings:"ss01","tnum" 0;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.mono{font-family:var(--mono);font-size:12.5px;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.eyebrow{font:500 11px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+svg.i{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+
+/* top bar */
+.bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line-2)}
+.bar-in{max-width:1280px;margin:0 auto;padding:0 40px;height:60px;display:flex;align-items:center;gap:32px}
+.mark{display:flex;align-items:center;gap:10px;font:400 21px/1 var(--serif);letter-spacing:-.01em;white-space:nowrap}
+.mark svg{width:22px;height:22px;stroke:var(--accent)}
+nav{display:flex;gap:4px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{position:relative;padding:8px 12px;border-radius:8px;color:var(--ink-2);font-size:14px;white-space:nowrap;transition:color .2s var(--ease),background .2s var(--ease)}
+nav button:hover{color:var(--ink);background:var(--line-2)}
+nav button[aria-current="true"]{color:var(--ink)}
+nav button[aria-current="true"]::after{content:"";position:absolute;left:12px;right:12px;bottom:-11px;height:1.5px;background:var(--accent)}
+nav button .n{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-right:6px}
+.tools{display:flex;gap:4px;align-items:center}
+.tool{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border-radius:8px;color:var(--ink-2);font-size:13px}
+.tool:hover{background:var(--line-2);color:var(--ink)}
+
+main{max-width:1280px;margin:0 auto;padding:0 40px 96px}
+.view{display:none;animation:rise .5s var(--ease)}
+.view.on{display:block}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+h1,h2{font-family:var(--serif);font-weight:400;letter-spacing:-.02em;text-wrap:balance;margin:0}
+h1{font-size:64px;line-height:1.02}
+h2{font-size:44px;line-height:1.05}
+h3{font:500 16px/1.35 var(--sans);margin:0;letter-spacing:-.005em}
+h1 em,h2 em{font-style:italic;color:var(--accent)}
+.lede{font-size:17px;line-height:1.6;color:var(--ink-2);max-width:62ch;margin:20px 0 0}
+.head{padding:56px 0 32px;display:grid;grid-template-columns:1fr auto;gap:32px;align-items:end}
+.head .eyebrow{margin-bottom:18px;display:block}
+.head.tight{padding:36px 0 24px}
+.head.tight .eyebrow{margin-bottom:12px}
+.head.tight h2{font-size:40px}
+
+.btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:9px;font-weight:500;font-size:14px;transition:transform .15s var(--ease),background .2s var(--ease),opacity .2s}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--ink);color:var(--bg)}
+.btn.primary:hover{background:color-mix(in srgb,var(--ink) 86%,var(--accent))}
+.btn.ghost{border:1px solid var(--line);color:var(--ink)}
+.btn.ghost:hover{background:var(--line-2)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+
+/* OVERVIEW */
+.hero{padding:96px 0 64px;display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:64px;align-items:center}
+.hero-tree{align-self:center}
+.hero-tree .tree{margin:0;padding:24px 26px;box-shadow:var(--shadow)}
+.hero-tree .cap{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-3);margin-top:12px}
+.hero .eyebrow{display:block;margin-bottom:28px}
+.hero .actions{display:flex;gap:12px;margin-top:36px;flex-wrap:wrap}
+.journey{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);margin-top:24px}
+.journey li{list-style:none;padding:28px 28px 8px 0;position:relative}
+.journey li+li{padding-left:28px;border-left:1px solid var(--line-2)}
+.journey .k{font:400 36px/1 var(--serif);color:var(--ink-3);display:block;margin-bottom:18px}
+.journey p{margin:0;color:var(--ink-2);font-size:15px;max-width:30ch}
+.journey p b{color:var(--ink);font-weight:500}
+.journey{padding:0;margin-left:0}
+.why{margin-top:88px}
+.why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:48px;margin-top:28px}
+.why-grid h3{margin-bottom:10px}
+.why-grid p{margin:0;color:var(--ink-2);font-size:14.5px}
+.fine{margin-top:72px;padding-top:20px;border-top:1px solid var(--line-2);color:var(--ink-3);font-size:13px}
+
+/* FOLDERS (signature) */
+.stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr) minmax(0,1.25fr);gap:0;border-top:1px solid var(--line)}
+.col{padding:28px 32px 32px;min-width:0;scroll-margin-top:112px}
+.col+.col{border-left:1px solid var(--line-2)}
+.col-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:20px}
+.col-h .sub{font-size:12.5px;color:var(--ink-3)}
+
+.lane{margin-bottom:22px}
+.lane-h{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--ink-3);margin-bottom:10px}
+.lane-h b{font:500 11px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.drop{min-height:92px;border-radius:var(--r);transition:background .25s var(--ease),box-shadow .25s var(--ease);padding:2px}
+.drop.pc{border:1px dashed color-mix(in srgb,var(--accent) 45%,transparent);padding:8px;background:var(--accent-soft)}
+.drop.over{background:color-mix(in srgb,var(--accent) 16%,transparent);box-shadow:inset 0 0 0 1px var(--accent)}
+.drop.pc .hint{font-size:12.5px;color:var(--accent);text-align:center;padding:14px 8px 10px}
+.card{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 16px;margin-bottom:8px;cursor:grab;user-select:none;transition:transform .35s var(--ease),opacity .35s var(--ease),box-shadow .2s}
+.card:hover{box-shadow:0 1px 2px rgba(40,28,12,.06),0 14px 32px -14px rgba(40,28,12,.28)}
+.card.dragging{opacity:.4}
+.card.placed{cursor:default}
+.card .t{font:400 21px/1.15 var(--serif);letter-spacing:-.01em}
+.card .m{display:flex;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-3);margin-top:6px}
+.card .m .miss{color:var(--warn)}
+.card .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:8px}
+.move{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--accent);padding:4px 8px;margin:-4px -8px;border-radius:6px}
+.move:hover{background:var(--accent-soft)}
+.state{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-3)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.state.ok{color:var(--ok)}
+.state.run{color:var(--accent)}
+.state.run .dot{animation:pulse 1s var(--ease) infinite}
+.state.warn{color:var(--warn)}
+@keyframes pulse{50%{opacity:.25}}
+.card .fix{margin-top:12px;padding-top:12px;border-top:1px solid var(--line-2);font-size:13px;color:var(--ink-2);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.enter{animation:land .55s var(--ease)}
+@keyframes land{from{opacity:0;transform:translateY(-10px) scale(.98)}to{opacity:1;transform:none}}
+
+/* zap run */
+.run-meta span{white-space:nowrap}
+.run-meta{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12.5px;color:var(--ink-3);margin-bottom:14px}
+.steps{list-style:none;margin:0;padding:0;position:relative}
+.steps li{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:start;padding:4px 0;font-size:13.5px;line-height:1.4;color:var(--ink-3);transition:color .3s var(--ease)}
+.steps .tick{width:22px;height:22px;display:grid;place-items:center;position:relative}
+.steps .tick::before{content:"";width:7px;height:7px;border-radius:50%;border:1px solid var(--line);background:var(--bg);transition:all .3s var(--ease)}
+.steps li:not(:last-child) .tick::after{content:"";position:absolute;top:18px;left:10.5px;width:1px;height:calc(100% + 6px);background:var(--line-2)}
+.steps li .app{font-family:var(--mono);font-size:11px;color:var(--ink-3);display:block;margin-bottom:1px;letter-spacing:.01em}
+.steps li .ms{font-family:var(--mono);font-size:11px;color:var(--ink-3);opacity:0;transition:opacity .3s;padding-top:18px}
+.steps li.done{color:var(--ink)}
+.steps li.done .tick::before{background:var(--ok);border-color:var(--ok)}
+.steps li.done .ms{opacity:1}
+.steps li.now{color:var(--ink)}
+.steps li.now .tick::before{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 5px var(--accent-soft)}
+.steps li.halt{color:var(--warn)}
+.steps li.halt .tick::before{background:var(--warn);border-color:var(--warn)}
+.steps li.skip{opacity:.35}
+.idle{font-size:14px;color:var(--ink-3);padding:24px 0;max-width:34ch}
+
+/* tree + record */
+.tree{font-family:var(--mono);font-size:13px;padding:18px 20px;background:var(--sunk);border-radius:var(--r);min-height:118px;margin-bottom:24px}
+.tree .ln{display:flex;align-items:center;gap:8px;padding:3px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tree .ln svg{color:var(--ink-3)}
+.tree .ln.root svg{color:var(--accent)}
+.tree .ln.kid{padding-left:24px;position:relative}
+.tree .ln.kid::before{content:"";position:absolute;left:7px;top:-4px;height:15px;width:10px;border-left:1px solid var(--line);border-bottom:1px solid var(--line)}
+.tree .path{font-size:11px;color:var(--ink-3);margin-bottom:8px;font-family:var(--mono)}
+.tree .ln span{overflow:hidden;text-overflow:ellipsis}
+.pop{animation:pop .5s var(--ease)}
+@keyframes pop{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+
+.rec-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:6px}
+.rec-h .t{font:400 24px/1.15 var(--serif);letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fields{margin-top:8px}
+.field{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:12px 0;border-top:1px solid var(--line-2);align-items:center}
+.field .lab{font-size:12.5px;color:var(--ink-2)}
+.field .lab small{color:var(--ink-3);font-size:12.5px}
+.field .val{grid-column:1;font-family:var(--mono);font-size:12.5px;color:var(--ink);min-height:19px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.field .val.empty{color:var(--ink-3)}
+.field .val.fill{animation:fill .6s var(--ease)}
+@keyframes fill{from{background:var(--accent-soft);color:var(--accent)}to{background:transparent}}
+.copy{grid-row:1/3;grid-column:2;display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;color:var(--ink-2);transition:all .2s var(--ease)}
+.copy:hover{color:var(--ink);background:var(--line-2)}
+.copy[disabled]{opacity:.35;pointer-events:none}
+.copy.did{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
+.status-line{margin-top:14px;display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-3)}
+
+/* LINKS */
+.links-wrap{display:grid;grid-template-columns:360px minmax(0,1fr);gap:56px;border-top:1px solid var(--line);padding-top:32px}
+.pick{list-style:none;margin:0;padding:0}
+.pick li+li{border-top:1px solid var(--line-2)}
+.pick button{display:block;width:100%;text-align:left;padding:16px 16px 16px 18px;border-radius:0;position:relative;transition:background .2s var(--ease)}
+.pick button:hover{background:var(--line-2)}
+.pick button[aria-pressed="true"]::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:2px;background:var(--accent);border-radius:2px}
+.pick .a{font:400 20px/1.2 var(--serif);display:block}
+.pick .b{font-size:13px;color:var(--ink-3);display:block;margin-top:4px}
+.pick .u{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);display:block;margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who{margin-top:28px;font-size:13.5px;color:var(--ink-2);max-width:40ch}
+
+.window{scroll-margin-top:112px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.window .chrome{height:40px;display:flex;align-items:center;gap:14px;padding:0 16px;border-bottom:1px solid var(--line-2)}
+.window .dots{display:flex;gap:6px}
+.window .dots i{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.window .addr{flex:1;min-width:0;height:24px;border-radius:6px;background:var(--sunk);display:flex;align-items:center;gap:6px;padding:0 10px;font-family:var(--mono);font-size:11.5px;color:var(--ink-3);overflow:hidden;white-space:nowrap}
+.window .addr span{overflow:hidden;text-overflow:ellipsis}
+.page{padding:40px 44px 44px;min-height:470px}
+.page .ph{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:28px;flex-wrap:wrap}
+.page .ph .t{font:400 32px/1.1 var(--serif);letter-spacing:-.015em}
+.page .ph .s{font-size:13px;color:var(--ink-3);margin-top:6px}
+.note{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--ink-2);padding:10px 14px;border-radius:8px;background:var(--sunk);margin-bottom:20px}
+.grid-clips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.clip{min-width:0}
+.clip .frame{aspect-ratio:16/9;border-radius:8px;position:relative;overflow:hidden;background:var(--f3)}
+.clip .frame::after{content:"";position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");opacity:.35;mix-blend-mode:overlay}
+.clip .play{position:absolute;left:12px;bottom:12px;width:32px;height:32px;border-radius:50%;background:rgba(255,250,242,.9);color:#1E1B16;display:grid;place-items:center;z-index:1}
+.clip .play svg{width:12px;height:12px;fill:currentColor;stroke:none;margin-left:2px}
+.clip .dur{position:absolute;right:10px;bottom:10px;font-family:var(--mono);font-size:11px;color:#FFF8F0;z-index:1;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.clip .cap{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:13.5px;gap:8px}
+.clip .cap .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.clip .cap .n.mono{font-size:12px}
+.dl{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2);padding:4px 8px;margin:-4px -8px;border-radius:6px;white-space:nowrap}
+.dl:hover{background:var(--line-2);color:var(--ink)}
+.dz{border:1px dashed var(--line);border-radius:12px;padding:44px 24px;text-align:center;color:var(--ink-2)}
+.dz svg.i{width:26px;height:26px;color:var(--accent);margin-bottom:12px;stroke-width:1.25}
+.dz .big{font:400 24px/1.2 var(--serif);color:var(--ink)}
+.dz p{margin:8px auto 20px;font-size:13.5px;max-width:44ch}
+.ups{list-style:none;margin:24px 0 0;padding:0}
+.ups li{display:grid;grid-template-columns:1fr auto;gap:6px 16px;padding:12px 0;border-top:1px solid var(--line-2);font-size:13.5px}
+.ups .mono{color:var(--ink)}
+.ups .pct{font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+.ups .track{grid-column:1/3;height:2px;background:var(--line-2);border-radius:2px;overflow:hidden}
+.ups .track i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s linear}
+.ups li.done .track i{background:var(--ok)}
+.ups li.done .pct{color:var(--ok)}
+
+/* ZAP */
+.zap-wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:72px;border-top:1px solid var(--line);padding-top:36px}
+.zlist{list-style:none;margin:0;padding:0;counter-reset:z}
+.zlist li{display:grid;grid-template-columns:44px 1fr;gap:4px 12px;padding:14px 0;border-bottom:1px solid var(--line-2)}
+.zlist li .no{font-family:var(--mono);font-size:12px;color:var(--ink-3);padding-top:3px;font-variant-numeric:tabular-nums}
+.zlist li .s{font-size:15px}
+.zlist li .w{grid-column:2;font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+.zlist li.free .w::after{content:" · free step";color:var(--ok)}
+.zsec{font:500 11px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);padding:26px 0 8px}
+.zlist li:first-child .zsec{padding-top:0}
+.play-box{background:var(--surface);border:1px solid var(--line-2);border-radius:14px;box-shadow:var(--shadow);padding:28px}
+.inp{display:grid;grid-template-columns:1fr 150px;gap:12px;margin:18px 0 22px}
+.inp label{font-size:12.5px;color:var(--ink-3);display:block}
+.inp input{width:100%;margin-top:6px;height:40px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:400 14px var(--sans);padding:0 12px}
+.inp input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+.out .ln{display:flex;gap:8px;align-items:center;font-family:var(--mono);font-size:13px;padding:5px 0;white-space:nowrap;overflow:hidden}
+.out .ln span{overflow:hidden;text-overflow:ellipsis}
+.out .ln.kid{padding-left:24px}
+.out .ln svg{color:var(--ink-3)}
+.out .ln:first-child svg{color:var(--accent)}
+.rules{margin:22px 0 0;padding:18px 0 0;border-top:1px solid var(--line-2);list-style:none}
+.rules li{font-size:13.5px;color:var(--ink-2);padding:4px 0 4px 18px;position:relative}
+.rules li::before{content:"";position:absolute;left:2px;top:12px;width:6px;height:1px;background:var(--ink-3)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;padding:2px;margin-top:4px}
+.seg button{font-size:12.5px;padding:5px 10px;border-radius:6px;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-3);margin-top:18px}
+.safe{margin-top:56px}
+.safe-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0 48px;margin-top:18px}
+.safe-grid div{padding:18px 0;border-top:1px solid var(--line-2)}
+.safe-grid h3{margin-bottom:6px}
+.safe-grid p{margin:0;font-size:14px;color:var(--ink-2)}
+
+/* NEXT */
+.next-list{border-top:1px solid var(--line)}
+.next-item{display:grid;grid-template-columns:80px 1fr 1.2fr;gap:40px;padding:36px 0;border-bottom:1px solid var(--line-2);align-items:start}
+.next-item .k{font:400 44px/1 var(--serif);color:var(--ink-3)}
+.next-item h3{font:400 26px/1.2 var(--serif);letter-spacing:-.01em}
+.next-item p{margin:10px 0 0;color:var(--ink-2);font-size:14.5px;max-width:48ch}
+.flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:6px}
+.flow span{font-size:13px;color:var(--ink-2);padding:6px 0}
+.flow svg.i{color:var(--ink-3);width:14px;height:14px}
+.flow b{font-weight:500;color:var(--ink)}
+
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;background:var(--ink);color:var(--bg);font-size:13px;padding:10px 16px;border-radius:9px;transition:all .35s var(--ease);pointer-events:none;z-index:40}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:1100px){
+  .stage{grid-template-columns:1fr 1fr}
+  .stage .col:nth-child(3){grid-column:1/3;border-left:0;border-top:1px solid var(--line-2)}
+  .links-wrap,.zap-wrap{grid-template-columns:minmax(0,1fr);gap:40px}
+  .next-item{grid-template-columns:60px 1fr}
+  .next-item .flow{grid-column:2}
+}
+@media (max-width:720px){
+  .bar-in{padding:0 16px;gap:12px;height:auto;flex-wrap:wrap;padding-top:10px}
+  .mark{font-size:19px}
+  nav{order:3;flex-basis:100%;margin:0 -16px;padding:0 12px 6px}
+  nav button[aria-current="true"]::after{bottom:0}
+  nav{-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+  nav button{padding:8px 9px;font-size:13.5px}
+  nav button .n,nav .long{display:none}
+  .tools{margin-left:auto}
+  .tool .tl{display:none}
+  main{padding:0 16px 72px}
+  h1{font-size:42px}
+  h2{font-size:32px}
+  .hero{padding:48px 0 40px;grid-template-columns:1fr;gap:40px}
+  .head{padding:44px 0 28px;grid-template-columns:1fr}
+  .journey{grid-template-columns:1fr}
+  .journey li,.journey li+li{padding:20px 0;border-left:0;border-top:1px solid var(--line-2)}
+  .journey .k{font-size:28px;margin-bottom:10px}
+  .why{margin-top:56px}
+  .why-grid{grid-template-columns:1fr;gap:28px}
+  .stage{grid-template-columns:1fr}
+  .stage .col:nth-child(3){grid-column:auto}
+  .col{padding:24px 0}
+  .col+.col{border-left:0;border-top:1px solid var(--line-2)}
+  .page{padding:28px 20px 32px;min-height:0}
+  .grid-clips{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .clip .dl .t{display:none}
+  .inp{grid-template-columns:1fr}
+  .play-box{padding:22px 18px}
+  .safe-grid{grid-template-columns:1fr}
+  .next-item{grid-template-columns:1fr;gap:12px;padding:28px 0}
+  .next-item .flow{grid-column:auto}
+  .next-item .k{font-size:28px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4.2l2 2h8.8A1.5 1.5 0 0 1 21 9.5v8A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19.5h14"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 16V5m-4.5 4.5L12 5l4.5 4.5M5 19.5h14"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4.5v4h4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5m0 3.2v.1"/></symbol>
+  <symbol id="i-reel" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="6.6" r="1.8"/><circle cx="12" cy="17.4" r="1.8"/><circle cx="6.6" cy="12" r="1.8"/><circle cx="17.4" cy="12" r="1.8"/></symbol>
+</svg>
+
+<header class="bar">
+  <div class="bar-in">
+    <div class="mark"><svg class="i"><use href="#i-reel"/></svg>Project Folders</div>
+    <nav id="nav" aria-label="Sections">
+      <button data-go="overview" aria-current="true">Overview</button>
+      <button data-go="folders"><span class="n">01</span>Folders</button>
+      <button data-go="links"><span class="n">02</span>Links</button>
+      <button data-go="zap">The zap</button>
+      <button data-go="next">Next<span class="long"> projects</span></button>
+    </nav>
+    <div class="tools">
+      <button class="tool" id="reset" title="Reset the prototype"><svg class="i"><use href="#i-reset"/></svg><span class="tl">Reset</span></button>
+      <button class="tool" id="theme" title="Switch light or dark"><svg class="i"><use href="#i-moon"/></svg><span class="tl">Theme</span></button>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- OVERVIEW -->
+<section class="view on" id="v-overview">
+  <div class="hero">
+    <div>
+    <span class="eyebrow">A working prototype · Airtable, pCloud and Zapier</span>
+    <h1>Move a project into <em>PCLOUD</em>, and its folders and links are waiting for you.</h1>
+    <p class="lede">When a wedding or corporate event lands in your PCLOUD view, Zapier builds the pCloud folders with your naming and writes all four share links back onto the Airtable record, ready to copy.</p>
+    <div class="actions">
+      <button class="btn primary" data-go="folders">Watch it run <svg class="i"><use href="#i-arrow"/></svg></button>
+      <button class="btn ghost" data-go="links">See what your clients see</button>
+    </div>
+    </div>
+    <div class="hero-tree" aria-label="Sample folders">
+      <div class="tree">
+        <div class="path">/Client Projects</div>
+        <div class="ln root"><svg class="i"><use href="#i-folder"/></svg><span>2026-10-17_Ava and Theo Linden</span></div>
+        <div class="ln kid"><svg class="i"><use href="#i-folder"/></svg><span>Ava and Theo Linden edits</span></div>
+        <div class="ln kid"><svg class="i"><use href="#i-folder"/></svg><span>Ava and Theo Linden raw</span></div>
+      </div>
+      <div class="cap"><span>Made by the zap, not by hand</span><span class="mono">4 links saved</span></div>
+    </div>
+  </div>
+  <ol class="journey">
+    <li><span class="k">i.</span><p><b>A project moves into your PCLOUD view</b> in Airtable, the same way you move it today.</p></li>
+    <li><span class="k">ii.</span><p><b>Zapier names and builds the folders</b> in pCloud: the project folder, then edits and raw inside it.</p></li>
+    <li><span class="k">iii.</span><p><b>Four links land on the record:</b> an upload link, the edits link and two raw links.</p></li>
+    <li><span class="k">iv.</span><p><b>You copy the right link</b> for your couple, your client or a second shooter.</p></li>
+  </ol>
+  <div class="why">
+    <span class="eyebrow">Why it's built this way</span>
+    <div class="why-grid">
+      <div><h3>It runs on your paid Zapier, not Make.</h3><p>Make's free plan allows two active scenarios and checks at most every 15 minutes, so this would use up half of it. Your Zapier plan already covers it, and you keep Make free as you asked.</p></div>
+      <div><h3>Folders sort themselves by date.</h3><p>The project date is written as 2026-10-17 at the front of every folder name, so pCloud lists your projects in shooting order without you renaming anything.</p></div>
+      <div><h3>It is safe to run twice.</h3><p>If a folder with that name already exists, the zap uses it instead of making a second one. A project with no date waits with a note instead of making a folder called "_Ava and Theo".</p></div>
+    </div>
+  </div>
+  <p class="fine">Couples, companies, dates and links in this prototype are made-up sample data. Timings are illustrative.</p>
+</section>
+
+<!-- FOLDERS -->
+<section class="view" id="v-folders">
+  <div class="head tight">
+    <div>
+      <span class="eyebrow">Part 1 of your post · The folders</span>
+      <h2>A project enters PCLOUD, <em>the folders appear.</em></h2>
+      <p class="lede" style="margin-top:12px">Drag a project into PCLOUD or press "Move to PCLOUD". Elise and Jonah have no date yet.</p>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="col">
+      <div class="col-h"><span class="eyebrow">Airtable · Projects</span><span class="sub" id="countSub"></span></div>
+      <div class="lane">
+        <div class="lane-h"><b>Booked</b><span id="nBooked"></span></div>
+        <div class="drop" id="lane-booked"></div>
+      </div>
+      <div class="lane">
+        <div class="lane-h"><b>PCLOUD</b><span>view</span></div>
+        <div class="drop pc" id="lane-pcloud" aria-label="PCLOUD view, drop a project here"></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-h"><span class="eyebrow">Zapier · the run</span><span class="sub" id="runSub">Last run Sep 26, 9:14 AM</span></div>
+      <div id="runBox"></div>
+    </div>
+    <div class="col">
+      <div class="col-h"><span class="eyebrow">pCloud · folders</span><span class="sub">/Client Projects</span></div>
+      <div class="tree" id="tree"></div>
+      <div class="col-h" style="margin-bottom:0"><span class="eyebrow">Airtable · the record</span><span class="sub" id="recType"></span></div>
+      <div class="rec-h"><span class="t" id="recName"></span></div>
+      <div class="fields" id="fields"></div>
+      <div class="status-line"><span id="recStatus"></span><span class="mono" id="recTime"></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- LINKS -->
+<section class="view" id="v-links">
+  <div class="head">
+    <div>
+      <span class="eyebrow">Part 2 of your post · The links</span>
+      <h2>Four links, and <em>what each one opens.</em></h2>
+      <p class="lede" id="linksLede"></p>
+    </div>
+  </div>
+  <div class="links-wrap">
+    <div>
+      <ul class="pick" id="pick"></ul>
+      <p class="who" id="who"></p>
+    </div>
+    <div class="window">
+      <div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="addr"><svg class="i" style="width:12px;height:12px"><use href="#i-lock"/></svg><span id="addr"></span></div></div>
+      <div class="page" id="page"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ZAP -->
+<section class="view" id="v-zap">
+  <div class="head">
+    <div>
+      <span class="eyebrow">Inside the automation</span>
+      <h2>Twelve steps, <em>one zap</em>, on your Zapier account.</h2>
+      <p class="lede">The trigger, the Formatter steps and the filter don't count toward your Zapier tasks, so each project uses about 8 tasks. The pCloud steps talk to pCloud's API directly through Webhooks by Zapier, which your paid plan includes.</p>
+    </div>
+  </div>
+  <div class="zap-wrap">
+    <div>
+      <ol class="zlist" id="zlist"></ol>
+    </div>
+    <div>
+      <div class="play-box">
+        <span class="eyebrow">Naming rules · try your own</span>
+        <div class="inp">
+          <div><label for="nm">Client name, as typed in Airtable</label><input id="nm" value="Ava &amp; Theo Linden" autocomplete="off"></div>
+          <div><label for="dt">Project date</label><input id="dt" type="date" value="2026-10-17"></div>
+        </div>
+        <div class="out" id="out"></div>
+        <div class="seg-row"><span>Subfolder names</span>
+          <div class="seg" role="group" aria-label="Subfolder naming">
+            <button aria-pressed="true" data-style="named">Client name edits / raw</button>
+            <button aria-pressed="false" data-style="plain">edits / Raw</button>
+          </div>
+        </div>
+        <ul class="rules">
+          <li>The date is written year, month, day, so folders sort in shooting order.</li>
+          <li>An ampersand becomes "and", because links and some apps break on "&amp;".</li>
+          <li>Extra spaces are trimmed, and characters pCloud rejects, like / : * ? " &lt; &gt; |, are removed.</li>
+          <li>Your post names the subfolders two ways, so both are ready and you pick one.</li>
+        </ul>
+      </div>
+      <div class="safe">
+        <span class="eyebrow">When something is off</span>
+        <div class="safe-grid">
+          <div><h3>The folder already exists.</h3><p>The zap finds it and uses it, so you never get "Ava and Theo Linden (1)", and the links still fill in.</p></div>
+          <div><h3>The project date is missing.</h3><p>Your PCLOUD view only lets in records with a date, so the project waits with a note and runs the moment you add one.</p></div>
+          <div><h3>The client name is blank.</h3><p>The filter stops the run before pCloud is touched, and the record shows what to fill in.</p></div>
+          <div><h3>pCloud doesn't answer.</h3><p>Zapier retries the step, and if it still fails you get an email naming the project.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NEXT -->
+<section class="view" id="v-next">
+  <div class="head">
+    <div>
+      <span class="eyebrow">Your future projects</span>
+      <h2>Next, when you're ready: <em>HoneyBook</em> into the same flow.</h2>
+      <p class="lede">You mentioned more projects coming. These three connect to what's built here and run on the same Zapier account.</p>
+    </div>
+  </div>
+  <div class="next-list">
+    <div class="next-item"><span class="k">1</span><div><h3>A booked HoneyBook project becomes an Airtable record.</h3><p>The couple's names, the date and the venue arrive in Airtable when they sign, so nobody retypes them.</p></div>
+      <div class="flow"><span><b>HoneyBook</b> project booked</span><svg class="i"><use href="#i-arrow"/></svg><span><b>Airtable</b> new project</span></div></div>
+    <div class="next-item"><span class="k">2</span><div><h3>The upload link goes to your second shooter the week of the shoot.</h3><p>They get the project's upload link by email, so footage goes straight into the right folder.</p></div>
+      <div class="flow"><span><b>Project date</b> minus 5 days</span><svg class="i"><use href="#i-arrow"/></svg><span><b>Email</b> with the upload link</span></div></div>
+    <div class="next-item"><span class="k">3</span><div><h3>When edits are delivered, the couple gets their edits link by email.</h3><p>Mark the project delivered in Airtable, and the edits link goes out from your own address with your usual message.</p></div>
+      <div class="flow"><span><b>Airtable</b> marked delivered</span><svg class="i"><use href="#i-arrow"/></svg><span><b>Email</b> with the edits link</span></div></div>
+  </div>
+</section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const wait = ms => new Promise(r => setTimeout(r, RM ? 0 : ms));
+  const ic = (n, cls) => '<svg class="i' + (cls ? ' ' + cls : '') + '"><use href="#i-' + n + '"/></svg>';
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const nice = iso => { if(!iso) return ''; const [y,m,d] = iso.split('-'); return MONTHS[+m-1] + ' ' + (+d) + ', ' + y; };
+  const clean = s => String(s||'').replace(/\s*&\s*/g,' and ').replace(/[\\\/:*?"<>|]/g,'').replace(/\s+/g,' ').trim().replace(/[.\s]+$/,'');
+  let subStyle = 'named';
+  const names = (name, date, style) => {
+    const c = clean(name);
+    const st = style || subStyle;
+    return { parent: (date||'????-??-??') + '_' + c, edits: st === 'plain' ? 'edits' : c + ' edits', raw: st === 'plain' ? 'Raw' : c + ' raw' };
+  };
+  const code = seed => { let h = 0; for (const ch of seed) h = (h*31 + ch.charCodeAt(0)) >>> 0; const a='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'; let s=''; for(let i=0;i<22;i++){ h=(h*1103515245+12345)>>>0; s+=a[h%a.length]; } return s; };
+  const mkLinks = p => ({
+    upload: 'https://u.pcloud.link/uploadlink?code=' + code(p.id+'u'),
+    edits: 'https://u.pcloud.link/publink/show?code=' + code(p.id+'e'),
+    rawView: 'https://u.pcloud.link/publink/show?code=' + code(p.id+'v'),
+    rawDl: 'https://u.pcloud.link/publink/show?code=' + code(p.id+'d')
+  });
+  const FIELDS = [
+    ['upload','Upload link','project folder'],
+    ['edits','Edits','preview and download'],
+    ['rawView','Raw','view link, password and expiry'],
+    ['rawDl','Raw','preview and download']
+  ];
+
+  const seed = () => ([
+    {id:'rec7Hq', name:'Ava & Theo Linden', type:'Wedding', date:'2026-10-17', venue:'Hollis Barn', lane:'booked'},
+    {id:'rec2Lm', name:'Brightwater Co. Holiday Party', type:'Corporate event', date:'2026-12-11', venue:'The Foundry Room', lane:'booked'},
+    {id:'rec9Pb', name:'Elise & Jonah Brandt', type:'Wedding', date:'', venue:'Lake Arden Lodge', lane:'booked'},
+    {id:'rec4Nw', name:'Northgate Partners Summit', type:'Corporate event', date:'2026-09-19', venue:'Harbor Hall', lane:'pcloud', state:'done', at:'Sep 26, 9:14 AM'}
+  ]);
+  let P, current, busy = false, runToken = 0;
+
+  function init(){
+    P = seed();
+    const ng = P[3]; ng.links = mkLinks(ng); ng.style = 'named';
+    current = ng;
+    subStyle = 'named';
+    busy = false;
+    renderBoard(); renderRecord(ng, true); renderTree(ng, 3); renderRunIdle();
+    $('#runSub').textContent = 'Last run Sep 26, 9:14 AM';
+    renderLinks(); renderZap();
+  }
+
+  /* ---------- board ---------- */
+  function cardHTML(p){
+    const miss = !p.date;
+    let foot = '';
+    if (p.state === 'wait') foot = '<span class="state warn"><span class="dot"></span>Waiting for a project date</span>';
+    else if (p.lane === 'booked') foot = '<button class="move" data-move="'+p.id+'">Move to PCLOUD '+ic('arrow')+'</button>';
+    else if (p.state === 'done') foot = '<span class="state ok"><span class="dot"></span>Folders ready</span><span class="mono" style="color:var(--ink-3)">'+esc(p.at||'')+'</span>';
+    else if (p.state === 'run') foot = '<span class="state run"><span class="dot"></span>Zap running</span>';
+    let fix = '';
+    if (p.state === 'wait') fix = '<div class="fix"><span>Set the date to Dec 5, 2026</span><button class="move" data-date="'+p.id+'">Add date '+ic('arrow')+'</button></div><div class="fix" style="border:0;padding-top:0;margin-top:6px;color:var(--ink-3);font-size:12.5px">Not in PCLOUD yet. Your view only shows dated records.</div>';
+    return '<div class="card'+(p.lane==='pcloud'?' placed':'')+(p._enter?' enter':'')+'" draggable="'+(p.lane==='booked' && p.state!=='wait')+'" data-id="'+p.id+'">'+
+      '<div class="t">'+esc(p.name)+'</div>'+
+      '<div class="m"><span>'+esc(p.type)+'</span><span>'+(miss?'<span class="miss">No project date</span>':nice(p.date))+'</span></div>'+
+      '<div class="row">'+foot+'</div>'+fix+'</div>';
+  }
+  function renderBoard(){
+    const b = P.filter(p=>p.lane==='booked'), c = P.filter(p=>p.lane==='pcloud');
+    $('#lane-booked').innerHTML = b.length ? b.map(cardHTML).join('') : '<p class="idle" style="padding:12px 0">Every booked project is in PCLOUD.</p>';
+    $('#lane-pcloud').innerHTML = c.slice().reverse().map(cardHTML).join('') + '<div class="hint">Drop a project here</div>';
+    $('#nBooked').textContent = b.length + (b.length===1?' project':' projects');
+    $('#countSub').textContent = 'Sample base';
+    P.forEach(p=>delete p._enter);
+  }
+
+  document.addEventListener('dragstart', e => {
+    const c = e.target.closest && e.target.closest('.card[draggable="true"]'); if(!c) return;
+    c.classList.add('dragging'); try{ e.dataTransfer.setData('text/plain', c.dataset.id); e.dataTransfer.effectAllowed='move'; }catch(_){}
+  });
+  document.addEventListener('dragend', e => { const c = e.target.closest && e.target.closest('.card'); if(c) c.classList.remove('dragging'); $('#lane-pcloud').classList.remove('over'); });
+  const pc = $('#lane-pcloud');
+  pc.addEventListener('dragover', e => { e.preventDefault(); pc.classList.add('over'); });
+  pc.addEventListener('dragleave', e => { if(!pc.contains(e.relatedTarget)) pc.classList.remove('over'); });
+  pc.addEventListener('drop', e => { e.preventDefault(); pc.classList.remove('over'); let id=''; try{ id = e.dataTransfer.getData('text/plain'); }catch(_){} if(id) moveIn(id); });
+
+  document.addEventListener('click', e => {
+    const m = e.target.closest('[data-move]'); if (m) { moveIn(m.dataset.move); return; }
+    const d = e.target.closest('[data-date]'); if (d) { addDate(d.dataset.date); return; }
+    const g = e.target.closest('[data-go]'); if (g) { go(g.dataset.go); return; }
+    const cp = e.target.closest('[data-copy]'); if (cp) { copy(cp); return; }
+  });
+
+  function moveIn(id){
+    const p = P.find(x=>x.id===id); if(!p || p.lane!=='booked') return;
+    if (busy) { toast('One run at a time in the prototype. Give it a second.'); return; }
+    if (!p.date) { p.state = 'wait'; renderBoard(); runWait(p); return; }
+    p.lane = 'pcloud'; p._enter = true;
+    p.state = 'run'; renderBoard(); run(p);
+  }
+  function addDate(id){
+    const p = P.find(x=>x.id===id); if(!p || busy) return;
+    p.date = '2026-12-05'; p.lane = 'pcloud'; p._enter = true; p.state = 'run'; renderBoard(); run(p);
+  }
+
+  /* ---------- run ---------- */
+  function stepList(p){
+    const n = names(p.name, p.date, 'named');
+    return [
+      ['Airtable','A new record is in PCLOUD.'],
+      ['Formatter','The date became '+(p.date||'—')+'.'],
+      ['Formatter','The name became '+clean(p.name)+'.'],
+      ['Filter','Date and name are there.'],
+      ['pCloud','Made the project folder.','tree1'],
+      ['pCloud','Made the edits folder.','tree2'],
+      ['pCloud','Made the raw folder.','tree3'],
+      ['pCloud','Made the upload link.','f0'],
+      ['pCloud','Made the edits link.','f1'],
+      ['pCloud','Made the raw view link.','f2'],
+      ['pCloud','Made the raw download link.','f3'],
+      ['Airtable','Saved all four links.','rec']
+    ];
+  }
+  function stepsHTML(list){
+    return '<ol class="steps">'+list.map((s,i)=>'<li data-i="'+i+'"><span class="tick"></span><span><span class="app">'+s[0]+'</span>'+esc(s[1])+'</span><span class="ms"></span></li>').join('')+'</ol>';
+  }
+  function renderRunIdle(){
+    const p = P.find(x=>x.id==='rec4Nw');
+    $('#runBox').innerHTML = '<div class="run-meta"><span>'+esc(p.name)+'</span><span class="mono">12 of 12 steps · 6.1 s</span></div>'+stepsHTML(stepList(p));
+    document.querySelectorAll('#runBox .steps li').forEach(li=>li.classList.add('done'));
+    const ms = [0,40,30,20,780,610,640,520,560,590,570,700];
+    document.querySelectorAll('#runBox .ms').forEach((el,i)=>el.textContent = i? ms[i]+' ms' : 'trigger');
+  }
+
+  async function run(p){
+    busy = true; const tok = ++runToken;
+    current = p; p.style = subStyle;
+    const list = stepList(p);
+    $('#runSub').textContent = 'Running now';
+    $('#runBox').innerHTML = '<div class="run-meta"><span>'+esc(p.name)+'</span><span class="mono" id="rc">0 of 12 steps</span></div>'+stepsHTML(list);
+    $('#tree').innerHTML = '<div class="path">/Client Projects</div><p class="idle" style="padding:6px 0;font-family:var(--sans)">Waiting for the zap to reach pCloud.</p>';
+    p.links = mkLinks(p);
+    renderRecord(p, false);
+    if (innerWidth < 720) { const rb = $('#runBox'); rb.parentNode.scrollIntoView({behavior: RM?'auto':'smooth', block:'start'}); }
+    const lis = document.querySelectorAll('#runBox .steps li');
+    const ms = [0,40,30,20,780,610,640,520,560,590,570,700];
+    let total = 0;
+    for (let i=0;i<list.length;i++){
+      if (tok !== runToken) return;
+      lis[i].classList.add('now');
+      await wait(i<4 ? 320 : 480);
+      if (tok !== runToken) return;
+      lis[i].classList.remove('now'); lis[i].classList.add('done');
+      lis[i].querySelector('.ms').textContent = i ? ms[i]+' ms' : 'trigger';
+      total += ms[i];
+      $('#rc').textContent = (i+1)+' of 12 steps';
+      const fx = list[i][2];
+      if (fx === 'tree1') renderTree(p,1,true);
+      if (fx === 'tree2') renderTree(p,2,true);
+      if (fx === 'tree3') renderTree(p,3,true);
+      if (fx && fx[0]==='f') fillField(p, +fx[1]);
+    }
+    if (tok !== runToken) return;
+    const now = new Date(); const hh = now.getHours(), mm = String(now.getMinutes()).padStart(2,'0');
+    p.at = 'Today, ' + ((hh%12)||12) + ':' + mm + (hh<12?' AM':' PM');
+    p.state = 'done';
+    $('#rc').textContent = '12 of 12 steps · ' + (total/1000).toFixed(1) + ' s';
+    $('#runSub').textContent = 'Last run ' + p.at;
+    $('#recStatus').innerHTML = '<span class="state ok"><span class="dot"></span>Folders ready</span>';
+    $('#recTime').textContent = p.at;
+    renderBoard(); renderLinks();
+    busy = false;
+    toast(clean(p.name) + ': folders made and four links saved.');
+  }
+
+  async function runWait(p){
+    busy = true; const tok = ++runToken;
+    $('#runSub').textContent = 'Nothing to run';
+    $('#runBox').innerHTML = '<div class="run-meta"><span>'+esc(p.name)+'</span><span class="mono">not triggered</span></div>'+
+      '<ol class="steps"><li class="halt"><span class="tick"></span><span><span class="app">Airtable</span>Your PCLOUD view only shows records with a project date, so this one waits.</span><span class="ms"></span></li>'+
+      '<li class="skip"><span class="tick"></span><span><span class="app">pCloud</span>No folder is made, so you never get one called "_'+esc(clean(p.name))+'".</span><span class="ms"></span></li>'+
+      '<li class="skip"><span class="tick"></span><span><span class="app">Airtable</span>The record shows "Waiting for a project date" until you add one.</span><span class="ms"></span></li></ol>'+
+      '<p class="idle" style="padding-top:14px">Press "Add date" on the card. The zap picks it up on its own.</p>';
+    current = p;
+    $('#tree').innerHTML = '<div class="path">/Client Projects</div><p class="idle" style="padding:6px 0;font-family:var(--sans)">No folder yet. It needs a project date for its name.</p>';
+    p.links = null; renderRecord(p, false);
+    $('#recStatus').innerHTML = '<span class="state warn"><span class="dot"></span>Waiting for a project date</span>';
+    await wait(200);
+    if (tok === runToken) busy = false;
+  }
+
+  function renderTree(p, depth, anim){
+    const n = names(p.name, p.date, p.style);
+    const a = anim ? ' pop' : '';
+    let h = '<div class="path">/Client Projects</div>';
+    if (depth>=1) h += '<div class="ln root'+(anim&&depth===1?a:'')+'">'+ic('folder')+'<span>'+esc(n.parent)+'</span></div>';
+    if (depth>=2) h += '<div class="ln kid'+(anim&&depth===2?a:'')+'">'+ic('folder')+'<span>'+esc(n.edits)+'</span></div>';
+    if (depth>=3) h += '<div class="ln kid'+(anim&&depth===3?a:'')+'">'+ic('folder')+'<span>'+esc(n.raw)+'</span></div>';
+    $('#tree').innerHTML = h;
+  }
+  function renderRecord(p, filled){
+    $('#recName').textContent = p.name;
+    $('#recType').textContent = p.type + (p.date ? ' · ' + nice(p.date) : '');
+    $('#fields').innerHTML = FIELDS.map((f,i)=>{
+      const v = filled && p.links ? p.links[f[0]] : '';
+      return '<div class="field" data-f="'+i+'"><span class="lab">'+f[1]+' <small>· '+f[2]+'</small></span>'+
+        '<span class="val'+(v?'':' empty')+'">'+(v?esc(v):'Empty')+'</span>'+
+        '<button class="copy" data-copy="'+i+'" '+(v?'':'disabled')+' aria-label="Copy '+f[1]+' '+f[2]+' link">'+ic('copy')+'Copy</button></div>';
+    }).join('');
+    $('#recStatus').innerHTML = filled ? '<span class="state ok"><span class="dot"></span>Folders ready</span>' : '<span class="state run"><span class="dot"></span>Filling in</span>';
+    $('#recTime').textContent = filled ? (p.at||'') : '';
+  }
+  function fillField(p, i){
+    const row = document.querySelector('#fields .field[data-f="'+i+'"]'); if(!row) return;
+    const v = row.querySelector('.val'); v.textContent = p.links[FIELDS[i][0]]; v.classList.remove('empty'); v.classList.add('fill');
+    row.querySelector('.copy').disabled = false;
+  }
+  function copy(btn){
+    const i = +btn.dataset.copy; const p = current; if(!p || !p.links) return;
+    const url = p.links[FIELDS[i][0]];
+    try { if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(url).catch(()=>{}); } catch(_){}
+    btn.classList.add('did'); btn.innerHTML = ic('check') + 'Copied';
+    setTimeout(()=>{ btn.classList.remove('did'); btn.innerHTML = ic('copy') + 'Copy'; }, 1600);
+  }
+
+  /* ---------- links ---------- */
+  let linkSel = 0;
+  const LINKDEF = [
+    {k:'upload', a:'Upload link', b:'To the project folder', who:'For a second shooter or a client sending you files. They can add files, but can\'t see or download anything already there.'},
+    {k:'edits', a:'Edits', b:'Preview and download', who:'For the couple or the client once the films are done. They can watch every edit and download the files.'},
+    {k:'rawView', a:'Raw', b:'View link, password and expiry', who:'For when someone should look through the footage, like a planner picking moments. pCloud\'s API has no switch to turn downloads off, so this link carries a password and stops working after 30 days. I check on your account whether pCloud\'s own link settings can turn downloads off too.'},
+    {k:'rawDl', a:'Raw', b:'Preview and download', who:'For a client who paid for their raw footage, or an editor you hand the project to.'}
+  ];
+  function lastDone(){ return (current && current.state==='done') ? current : (P.filter(p=>p.state==='done').pop()); }
+  function renderLinks(){
+    const p = lastDone(); const n = names(p.name, p.date, p.style);
+    $('#linksLede').textContent = 'These are the four links on ' + p.name + '’s record. Pick one to open it the way the person you send it to will see it.';
+    $('#pick').innerHTML = LINKDEF.map((d,i)=>'<li><button aria-pressed="'+(i===linkSel)+'" data-link="'+i+'"><span class="a">'+d.a+'</span><span class="b">'+d.b+'</span><span class="u">'+esc(p.links[d.k])+'</span></button></li>').join('');
+    $('#who').textContent = LINKDEF[linkSel].who;
+    $('#addr').textContent = p.links[LINKDEF[linkSel].k].replace('https://','');
+    const edits = p.type==='Wedding' ? [['Highlight film','4:32'],['Ceremony','38:10'],['Toasts','21:47'],['First dance','3:58'],['Teaser','0:59'],['Full reception','1:52:06']]
+                                      : [['Event recap','2:48'],['Keynote','46:12'],['Panel','58:30'],['Social cut','0:45'],['Interviews','12:04'],['Awards','24:19']];
+    const raw = [['A-cam_0142.MP4','12:03'],['A-cam_0143.MP4','08:41'],['B-cam_0217.MP4','22:15'],['B-cam_0218.MP4','05:37'],['Drone_0031.MP4','02:10'],['Audio_Lav1.WAV','41:26']];
+    const tint = i => { const g=[['#D4B08A','#7A4B35'],['#B99378','#3B3431'],['#E0C39B','#9A5C3F'],['#8E7766','#2E2A2A'],['#C8A887','#5F4A3F'],['#A88468','#2D2724']][i%6]; return 'background:linear-gradient(155deg,'+g[0]+' 0%,'+g[1]+' 100%)'; };
+    const clipGrid = (items, dl, monoName) => '<div class="grid-clips">'+items.map((c,i)=>'<div class="clip"><div class="frame" style="'+tint(i+(monoName?2:0))+'"><span class="play">'+ic('play')+'</span><span class="dur">'+c[1]+'</span></div><div class="cap"><span class="n'+(monoName?' mono':'')+'">'+c[0]+'</span>'+(dl?'<button class="dl" data-dl aria-label="Download">'+ic('down')+'<span class="t">Download</span></button>':'')+'</div></div>').join('')+'</div>';
+    let h='';
+    if (linkSel===0){
+      h = '<div class="ph"><div><div class="t">Send files for '+esc(clean(p.name))+'</div><div class="s">Into '+esc(n.parent)+'</div></div></div>'+
+          '<div class="dz">'+ic('up')+'<div class="big">Drop your footage here</div><p>Files go straight into the project folder. Nothing else in your pCloud is visible from this link.</p><button class="btn primary" id="upBtn">Try a sample upload</button></div><ul class="ups" id="ups"></ul>';
+    } else if (linkSel===1){
+      h = '<div class="ph"><div><div class="t">'+esc(n.edits)+'</div><div class="s">6 files · shared with you</div></div><button class="btn ghost" data-dl>'+ic('down')+'Download all</button></div>'+clipGrid(edits,true,false);
+    } else if (linkSel===2){
+      h = '<div class="ph"><div><div class="t">'+esc(n.raw)+'</div><div class="s">6 files · shared with you</div></div></div><div class="note">'+ic('lock')+'Opened with the password you shared. This link stops working 30 days after it was made.</div>'+clipGrid(raw,true,true);
+    } else {
+      h = '<div class="ph"><div><div class="t">'+esc(n.raw)+'</div><div class="s">6 files · shared with you</div></div><button class="btn ghost" data-dl>'+ic('down')+'Download all</button></div>'+clipGrid(raw,true,true);
+    }
+    $('#page').innerHTML = h;
+  }
+  document.addEventListener('click', e => {
+    const l = e.target.closest('[data-link]'); if (l){ linkSel = +l.dataset.link; upRun++; clearTimeout(tt); $('#toast').classList.remove('on'); renderLinks(); if (innerWidth < 1100) { const w = document.querySelector('#v-links .window'); w.scrollIntoView({behavior: RM?'auto':'smooth', block:'start'}); } return; }
+    if (e.target.closest('#upBtn')) { sampleUpload(); return; }
+    if (e.target.closest('[data-dl]')) { toast('In the real link this downloads the file. The prototype stays offline.'); }
+  });
+  let upRun = 0;
+  async function sampleUpload(){
+    const tok = ++upRun; const b = $('#upBtn'); if (b) b.disabled = true;
+    const files = [['B-cam_0217.MP4','3.8 GB'],['B-cam_0218.MP4','1.1 GB'],['Audio_Lav2.WAV','412 MB']];
+    $('#ups').innerHTML = files.map((f,i)=>'<li data-u="'+i+'"><span class="mono">'+f[0]+'</span><span class="pct">'+f[1]+'</span><span class="track"><i></i></span></li>').join('');
+    for (let i=0;i<files.length;i++){
+      const li = document.querySelector('#ups li[data-u="'+i+'"]'); if(!li) return;
+      const bar = li.querySelector('.track i'), pct = li.querySelector('.pct');
+      for (let k=1;k<=10;k++){ await wait(90); if (tok!==upRun) return; bar.style.width = (k*10)+'%'; pct.textContent = (k*10)+'%'; }
+      li.classList.add('done'); pct.textContent = 'Uploaded';
+    }
+    if (tok!==upRun) return;
+    if (b) { b.disabled = false; b.textContent = 'Upload again'; }
+    toast('3 files landed in the project folder.');
+  }
+
+  /* ---------- zap ---------- */
+  const ZAP = [
+    ['When', null],
+    ['A project enters your PCLOUD view in Airtable.','Airtable · New record in view',1],
+    ['Prepare the name', null],
+    ['The project date is written as 2026-10-17.','Formatter · Date',1],
+    ['The client name is cleaned up for pCloud.','Formatter · Text',1],
+    ['The zap only goes on when the date and the name are both there.','Filter',1],
+    ['Build the folders', null],
+    ['The project folder is made, or found if it already exists.','pCloud API · createfolderifnotexists'],
+    ['The edits folder is made inside it.','pCloud API · createfolderifnotexists'],
+    ['The raw folder is made inside it.','pCloud API · createfolderifnotexists'],
+    ['Make the links', null],
+    ['An upload link is made for the project folder.','pCloud API · upload link'],
+    ['A preview and download link is made for edits.','pCloud API · share link'],
+    ['A view link is made for raw, with a password and a 30-day expiry.','pCloud API · share link'],
+    ['A second, preview and download link is made for raw.','pCloud API · share link'],
+    ['Save', null],
+    ['All four links and the time are written back onto the Airtable record.','Airtable · Update record']
+  ];
+  function renderZap(){
+    let n=0;
+    $('#zlist').innerHTML = ZAP.map(z => z[1]===null ? '<li style="display:block;border:0;padding:0"><div class="zsec">'+z[0]+'</div></li>' :
+      '<li class="'+(z[2]?'free':'')+'"><span class="no">'+String(++n).padStart(2,'0')+'</span><span class="s">'+esc(z[0])+'</span><span class="w">'+esc(z[1])+'</span></li>').join('');
+    renderOut();
+  }
+  function renderOut(){
+    const nm = $('#nm').value, dt = $('#dt').value;
+    const c = clean(nm);
+    if (!c || !dt){
+      $('#out').innerHTML = '<div class="note" style="margin:0">'+ic('alert')+(!c?'Add a client name. With no name, the zap stops before pCloud.':'Add a project date. The project waits outside PCLOUD until it has one.')+'</div>';
+      return;
+    }
+    const n = names(nm, dt);
+    $('#out').innerHTML = '<div class="ln">'+ic('folder')+'<span>'+esc(n.parent)+'</span></div><div class="ln kid">'+ic('folder')+'<span>'+esc(n.edits)+'</span></div><div class="ln kid">'+ic('folder')+'<span>'+esc(n.raw)+'</span></div>';
+  }
+  $('#nm').addEventListener('input', renderOut);
+  $('#dt').addEventListener('input', renderOut);
+  document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+    subStyle = b.dataset.style;
+    document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(x===b)));
+    renderOut();
+  }));
+
+  /* ---------- nav, theme, reset ---------- */
+  function go(v){
+    document.querySelectorAll('.view').forEach(s => s.classList.toggle('on', s.id === 'v-'+v));
+    document.querySelectorAll('#nav button').forEach(b => b.setAttribute('aria-current', String(b.dataset.go === v)));
+    if (v === 'links') renderLinks();
+    upRun++; clearTimeout(tt); $('#toast').classList.remove('on');
+    window.scrollTo({top:0, behavior: RM ? 'auto' : 'smooth'});
+  }
+  $('#theme').addEventListener('click', () => {
+    const r = document.documentElement;
+    const dark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    r.dataset.theme = dark ? 'light' : 'dark';
+  });
+  $('#reset').addEventListener('click', () => {
+    runToken++; upRun++; linkSel = 0;
+    $('#nm').value = 'Ava & Theo Linden'; $('#dt').value = '2026-10-17';
+    document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.style==='named')));
+    init(); toast('Prototype reset.');
+  });
+  let tt;
+  function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(()=>t.classList.remove('on'), 2600); }
+
+  init();
+})();
+</script>

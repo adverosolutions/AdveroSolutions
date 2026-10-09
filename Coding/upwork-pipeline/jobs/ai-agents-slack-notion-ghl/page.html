@@ -1,0 +1,1123 @@
+<title>Team Ops Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16202e; --ink2:#4d596b; --ink3:#8792a3;
+  --blue:#2f74f5; --blue2:#6aa5ff; --mint:#1fb487; --amber:#e8a13a;
+  --line:rgba(150,170,200,.28);
+  --panel:linear-gradient(180deg,rgba(255,255,255,.94),rgba(248,251,255,.80));
+  --shadow:0 40px 70px -30px rgba(38,72,128,.30),0 16px 30px -18px rgba(38,72,128,.22);
+  --ease:cubic-bezier(.16,1,.3,1);
+  --nt:#37352f; --ng:#787774; --nl:#9b9a97; --nline:#e9e9e7; --nside:#f7f7f5; --nblue:#2383e2;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;background:#e9f0f8}
+body{font-family:"Figtree",system-ui,sans-serif;color:var(--ink);background:#e9f0f8;overflow-x:hidden;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+.sky{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+   radial-gradient(1200px 600px at 78% -10%,rgba(255,255,255,.95),rgba(255,255,255,0) 60%),
+   radial-gradient(900px 520px at 8% 30%,rgba(206,226,250,.75),rgba(206,226,250,0) 70%),
+   linear-gradient(180deg,#c9dcf2 0%,#dce8f5 28%,#ecf1f7 58%,#f3f4f6 82%,#e9edf2 100%);}
+.sky::after{content:"";position:absolute;left:-10%;right:-10%;top:calc(58% - var(--sp,0) * 18%);height:40%;
+  background:radial-gradient(60% 50% at 50% 0%,rgba(255,255,255,.85),rgba(255,255,255,0) 70%);filter:blur(10px)}
+.haze{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.haze i{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;animation:drift 26s ease-in-out infinite alternate}
+.haze i:nth-child(1){width:520px;height:520px;left:-120px;top:10%;background:#d6e6fb}
+.haze i:nth-child(2){width:460px;height:460px;right:-100px;top:45%;background:#e6f1fb;animation-duration:32s}
+.haze i:nth-child(3){width:380px;height:380px;left:40%;top:70%;background:#dff0ec;opacity:.45;animation-duration:38s}
+@keyframes drift{to{transform:translate3d(60px,-50px,0) scale(1.08)}}
+
+main{position:relative;z-index:1}
+.top{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:18px 32px;pointer-events:none}
+.top .brand{font-weight:600;font-size:13px;letter-spacing:.02em;color:var(--ink2);display:flex;gap:10px;align-items:center;padding:7px 14px 7px 12px;border-radius:99px;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff,0 6px 18px -8px rgba(38,72,128,.25);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.top .brand b{width:9px;height:9px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 4px rgba(47,116,245,.15)}
+.chip{white-space:nowrap;font-size:12px;font-weight:600;color:var(--ink2);padding:7px 13px;border-radius:99px;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff,0 6px 18px -8px rgba(38,72,128,.25);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(14px)}
+
+section{position:relative;min-height:100vh;padding:120px 48px 110px;display:flex;flex-direction:column;justify-content:center;perspective:1700px;perspective-origin:50% 40%}
+.wrap{width:100%;max-width:1240px;margin:0 auto;position:relative;transform-style:preserve-3d}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
+.eyebrow span{font-variant-numeric:tabular-nums;color:var(--ink3);letter-spacing:.06em}
+.eyebrow.io-in{color:var(--blue)}.eyebrow.io-out{color:#12926b}
+h1,h2{font-weight:600;letter-spacing:-.035em;line-height:1.02;color:var(--ink)}
+h1{font-size:clamp(44px,6.6vw,96px)}
+h2{font-size:clamp(38px,4.8vw,70px);margin-top:14px}
+h2 em,h1 em{font-style:normal;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.head{margin-bottom:56px}
+.head.c{text-align:center}
+.sub{font-size:clamp(17px,1.45vw,21px);line-height:1.45;font-weight:450;color:var(--ink2);max-width:660px;margin-top:18px;letter-spacing:-.005em}
+#hero .sub,#agent .sub,.head.c .sub{margin-left:auto;margin-right:auto}
+
+/* panels */
+.par{will-change:transform;transform-style:preserve-3d}
+.panel{position:relative;background:var(--panel);border-radius:28px;border:1px solid rgba(255,255,255,.95);
+  box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.55),var(--shadow);backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3)}
+.panel::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,0) 28%,rgba(255,255,255,0) 72%,rgba(200,218,242,.35) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;padding:1.5px}
+.panel::after{content:"";position:absolute;left:10%;right:10%;bottom:-46px;height:34px;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(52,86,140,.22),rgba(52,86,140,0));filter:blur(6px);pointer-events:none;transform:translateZ(-1px)}
+.rise{opacity:0;transform:perspective(1400px) translate3d(0,90px,-180px) rotateX(20deg);transform-origin:50% 100%;
+  transition:opacity 1.1s var(--ease),transform 1.6s var(--ease);transition-delay:var(--d,0s)}
+.in .rise{opacity:1;transform:perspective(1400px) translate3d(0,0,0) rotateX(0)}
+.fade{opacity:0;transform:translateY(18px);transition:opacity .9s var(--ease),transform 1.2s var(--ease);transition-delay:var(--d,0s)}
+.in .fade{opacity:1;transform:none}
+
+.label{font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+.avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(160deg,#7fb2ff,#2f74f5);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 6px 14px -6px rgba(47,116,245,.6);flex:none}
+.avatar svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;background:rgba(31,180,135,.12);color:#12926b;white-space:nowrap}
+.pill.blue{background:rgba(47,116,245,.1);color:var(--blue)}
+.tagI{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);border:1px dashed rgba(135,146,163,.6);padding:4px 9px;border-radius:99px;white-space:nowrap}
+.ring{position:relative;width:86px;height:86px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .num{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:22px;letter-spacing:-.02em}
+.lb{display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:6px;white-space:nowrap;line-height:1.3}
+.lb.red{background:rgba(224,68,90,.12);color:#c22f47}
+.lb.amb{background:rgba(232,161,58,.18);color:#a8650f}
+.lb.grn{background:rgba(31,180,135,.14);color:#0f8a63}
+.lb.gry{background:rgba(135,146,163,.16);color:#5b6576}
+.lb.blu{background:rgba(47,116,245,.12);color:#2360d6}
+.lb.pur{background:rgba(122,90,248,.12);color:#5925dc}
+.cite{display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 4px;border-radius:5px;background:#e8f0fe;color:#1d5bd6;font-size:10.5px;font-weight:800;vertical-align:1px;margin:0 1px;font-family:"Figtree",sans-serif}
+
+/* HERO */
+#hero{padding-top:110px}
+#hero .wrap{display:grid;grid-template-columns:1fr;justify-items:center;text-align:center}
+#hero .kicker{font-size:15px;font-weight:500;color:var(--ink2);margin-bottom:22px}
+.hstage{position:relative;width:min(1100px,100%);height:450px;margin-top:40px;transform-style:preserve-3d}
+.hstage .par{position:absolute}
+.today{width:270px;padding:26px 28px;text-align:left}
+.today .big{font-size:84px;font-weight:300;letter-spacing:-.05em;line-height:1;margin-top:8px}
+.today .big small{font-size:22px;font-weight:500;letter-spacing:0;color:var(--ink3);margin-left:6px}
+.today .s{font-size:14px;color:var(--ink2);margin-top:6px;font-weight:500}
+.today .tagI{margin-top:14px}
+.notif{width:480px;padding:24px 26px;text-align:left}
+.notif .h{display:flex;gap:14px;align-items:center}
+.notif .t{font-weight:700;font-size:16px}
+.notif .s{font-size:13px;color:var(--ink3);margin-top:2px}
+.notif .now{margin-left:auto;font-size:12px;color:var(--ink3);align-self:flex-start;white-space:nowrap}
+.notif .ask{margin-top:14px;font-size:14px;color:var(--ink2);background:rgba(241,244,249,.9);border-radius:12px;padding:9px 12px}
+.notif .ask b{color:var(--ink)}
+.notif q{display:block;margin-top:14px;font-size:19px;line-height:1.38;font-weight:500;letter-spacing:-.01em;quotes:none}
+.notif .tags{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;min-height:26px}
+.notif .tags .lb{font-size:12.5px;padding:5px 11px;border-radius:99px;opacity:0;transform:translateY(-16px) scale(1.25);transition:opacity .5s var(--ease),transform .9s var(--ease)}
+.notif.landed .tags .lb{opacity:1;transform:none}
+.notif.landed .tags .lb:nth-child(2){transition-delay:.15s}.notif.landed .tags .lb:nth-child(3){transition-delay:.3s}
+.hdone{width:320px;padding:22px 24px;text-align:left;display:flex;gap:18px;align-items:center}
+.hdone .t{font-weight:700;font-size:19px;letter-spacing:-.02em}
+.hdone .s{font-size:13.5px;color:var(--ink2);margin-top:6px;line-height:1.4}
+.cats{width:480px;padding:14px 16px;display:flex;justify-content:space-between;gap:6px}
+.cats div{flex:1;display:flex;gap:7px;align-items:center;justify-content:center;font-size:13.5px;font-weight:600;color:var(--ink2);opacity:.3;transition:opacity .6s;white-space:nowrap}
+.cats div.on{opacity:1}
+.cats i{width:9px;height:9px;border-radius:50%;flex:none;background:var(--mint)}
+.scrollcue{margin-top:40px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);display:flex;flex-direction:column;align-items:center;gap:10px}
+.scrollcue b{width:1.5px;height:36px;background:linear-gradient(var(--ink3),transparent);animation:cue 2.4s ease-in-out infinite}
+@keyframes cue{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+.shell{padding:10px;border-radius:30px}
+.shin{border-radius:20px;overflow:hidden;background:#fff;position:relative}
+.btn{font-size:13px;font-weight:700;padding:9px 18px;border-radius:99px;white-space:nowrap}
+
+/* IN -> OUT */
+#io .wrap{text-align:center}
+.iog{display:grid;grid-template-columns:minmax(0,1fr) 170px minmax(0,1fr);align-items:center;gap:20px;max-width:1080px;margin:0 auto;transform-style:preserve-3d;text-align:left}
+.iocol{display:flex;flex-direction:column;gap:18px;min-width:0}
+.iop{padding:24px 24px 26px;display:flex;flex-direction:column;gap:14px}
+.iop .label{color:var(--blue)}
+.iop.out .label{color:#12926b}
+.iocap{font-size:15.5px;line-height:1.45;font-weight:500;color:var(--ink2);text-align:center;padding:0 10px}
+.iomsg{display:flex;gap:12px;background:#fff;border:1px solid #eaecf0;border-radius:16px;padding:14px 16px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.iomsg .av2{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;flex:none;color:#fff;font-weight:700;font-size:13px;background:linear-gradient(160deg,#f3a07b,#d9674a)}
+.iomsg .nm{font-weight:800;font-size:14px}.iomsg .nm small{font-weight:500;font-size:11.5px;color:#616061;margin-left:6px}
+.iomsg .tx{font-size:14.5px;line-height:1.45;margin-top:2px;color:#1d1c1d}
+.iomsg .tx .men{background:#e8f5fa;color:#1264a3;border-radius:3px;padding:0 3px;font-weight:600}
+.iorow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:0 4px}
+.iorow span:first-child{color:var(--ink3);white-space:nowrap}.iorow span:last-child{font-weight:600;text-align:right}
+.ioans{background:#fff;border:1px solid #eaecf0;border-radius:14px;padding:12px 14px;font-size:13.5px;line-height:1.45;color:#1d1c1d}
+.ioans .who{font-size:11.5px;font-weight:700;color:#5925dc;margin-bottom:4px}
+.iodone{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid #eaecf0;border-radius:12px;padding:10px 12px;box-shadow:0 0 0 2px #12b76a,0 14px 24px -14px rgba(18,183,106,.5)}
+.iodone .ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex:none}
+.iodone .ic svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.iodone .t{font-weight:700;font-size:13.5px}.iodone .s{font-size:12px;color:#475467;margin-top:1px}
+.iodone>div{min-width:0}
+.iodone .ok{margin-left:auto;font-size:11px;font-weight:700;color:#067647;background:#ecfdf3;border-radius:5px;padding:2px 7px;white-space:nowrap}
+.ioar{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.ioar .tt{font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:1;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ioar .tt small{font-size:18px;font-weight:600}
+.ioar svg{width:150px;height:24px;overflow:visible}
+.ioar svg path{fill:none;stroke:url(#gm);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.ioar .label{letter-spacing:.1em}
+.iop .pin,.iop .pout{opacity:0;transform:translateY(10px);transition:opacity .6s var(--ease),transform .8s var(--ease)}
+.iop .on{opacity:1;transform:none}
+
+/* SLACK */
+.kgrid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,.7fr);gap:44px;align-items:center;transform-style:preserve-3d}
+.sk{display:grid;grid-template-columns:190px minmax(0,1fr);min-height:500px;font-size:14px}
+.skside{background:#3f0e40;color:rgba(255,255,255,.72);padding:16px 10px}
+.skside .ws{color:#fff;font-weight:800;font-size:15.5px;padding:0 8px 14px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:12px}
+.skside .gh{font-size:12.5px;font-weight:600;padding:8px 8px 4px;opacity:.8}
+.skside .chn{padding:5px 10px;border-radius:6px;font-size:14px;display:flex;justify-content:space-between;align-items:center;white-space:nowrap}
+.skside .chn.a{background:#1164a3;color:#fff;font-weight:700}
+.skside .chn b{background:#cd2553;color:#fff;font-size:11px;border-radius:99px;padding:0 7px;line-height:17px;opacity:0;transition:opacity .4s}
+.skside .chn b.on{opacity:1}
+.skmain{display:flex;flex-direction:column;min-width:0;background:#fff}
+.skh{padding:14px 20px;border-bottom:1px solid #e8e8e8;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.skh .cn{font-weight:800;font-size:16px;white-space:nowrap}
+.skh .mem{font-size:12.5px;color:#616061;border:1px solid #ddd;border-radius:6px;padding:3px 9px;white-space:nowrap}
+.skmsgs{flex:1;padding:14px 20px 8px;display:flex;flex-direction:column;gap:14px}
+.day{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;color:#616061}
+.day::before,.day::after{content:"";flex:1;height:1px;background:#e8e8e8}
+.day span{border:1px solid #e8e8e8;border-radius:99px;padding:3px 12px}
+.m{display:flex;gap:12px;opacity:0;transform:translateY(10px);transition:opacity .6s var(--ease),transform .8s var(--ease)}
+.m.on{opacity:1;transform:none}
+.m .av{width:38px;height:38px;border-radius:8px;display:grid;place-items:center;flex:none;color:#fff;font-weight:700;font-size:13px}
+.m .av svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.m .nm{font-weight:800;font-size:14.5px}
+.m .nm .app{font-size:10.5px;font-weight:700;background:#e8e8e8;color:#616061;border-radius:3px;padding:1px 4px;margin-left:6px;vertical-align:1px}
+.m .nm small{font-weight:500;font-size:12px;color:#616061;margin-left:6px}
+.m .tx{margin-top:2px;line-height:1.5;color:#1d1c1d}
+.m .tx .men{background:#e8f5fa;color:#1264a3;border-radius:3px;padding:0 3px;font-weight:600}
+.m .cnt{min-width:0;flex:1}
+.m.sys{font-size:12.5px;color:#616061;padding-left:50px;font-style:italic}
+.att{margin-top:8px;border-left:4px solid #2f74f5;padding:4px 0 4px 14px}
+.att .ah{font-weight:800;font-size:13.5px}
+.srcs{display:grid;gap:6px;margin-top:8px}
+.src{display:flex;align-items:center;gap:9px;font-size:13.5px;color:#1d1c1d;min-width:0}
+.src .si2{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;flex:none;font-size:11px;font-weight:800;color:#fff}
+.src .si2 svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.src b{font-weight:700;white-space:nowrap}
+.src span.x{color:#616061;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+@media (max-width:860px){.src{flex-wrap:wrap;row-gap:2px}.src span.x{white-space:normal;flex-basis:100%;padding-left:31px}}
+.plan{display:grid;gap:7px;margin-top:8px}
+.plan div{display:flex;gap:9px;font-size:13.5px;line-height:1.45;color:#1d1c1d}
+.plan div i{font-style:normal;font-weight:800;color:#616061;flex:none;width:14px}
+.att .bt{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.att .bt span{font-size:13px;font-weight:700;padding:7px 14px;border-radius:6px;border:1px solid #c9c9c9;color:#1d1c1d;white-space:nowrap;transition:transform .2s,box-shadow .3s}
+.att .bt span.go{background:#007a5a;border-color:#007a5a;color:#fff}
+.att .bt span.press{transform:scale(.92);box-shadow:0 0 0 4px rgba(0,122,90,.25)}
+.dl{display:grid;gap:7px;margin-top:8px}
+.dl div{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;line-height:1.45;opacity:0;transform:translateX(-8px);transition:opacity .5s,transform .7s var(--ease)}
+.dl div.on{opacity:1;transform:none}
+.dl div i{width:18px;height:18px;border-radius:50%;background:#007a5a;display:grid;place-items:center;flex:none;margin-top:1px}
+.dl div i::after{content:"";width:8px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px)}
+.dl div b{font-weight:800}
+.react{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;font-weight:700;color:#1264a3;background:#e8f5fa;border:1px solid #1d9bd1;border-radius:99px;padding:2px 9px;opacity:0;transition:opacity .5s}
+.react.on{opacity:1}
+.react i{width:12px;height:6px;border-left:2px solid #1264a3;border-bottom:2px solid #1264a3;transform:rotate(-45deg) translateY(-2px)}
+.skc{margin:6px 20px 16px;border:1px solid #c9c9c9;border-radius:8px;padding:11px 12px;color:#868686;font-size:13.5px}
+.typing{font-size:12px;color:#616061;padding:0 20px;min-height:18px;opacity:0;transition:opacity .3s}
+.typing.on{opacity:1}
+.knot{padding:18px 20px}
+.knot .r1{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink3);font-weight:600}
+.knot .r1 i{width:22px;height:22px;border-radius:6px;background:#3f0e40;display:grid;place-items:center;flex:none}
+.knot .r1 i::after{content:"#";color:#fff;font-weight:800;font-size:13px;font-style:normal}
+.knot .r1 span:last-child{margin-left:auto}
+.knot .t{font-weight:700;font-size:16px;margin-top:10px}
+.knot .s{font-size:14px;color:var(--ink2);margin-top:4px;line-height:1.45}
+.kstat{padding:22px 22px;margin-top:26px;margin-left:36px}
+.kstat .big{font-size:52px;font-weight:600;letter-spacing:-.04em;line-height:1;margin-top:6px}
+.kstat .big small{font-size:18px;font-weight:600;color:var(--ink3);margin-left:4px;letter-spacing:0}
+.kstat .s{font-size:13.5px;color:var(--ink2);margin-top:6px;line-height:1.4}
+.kstat .tagI{margin-top:12px}
+.guard{padding:18px 20px;display:flex;gap:12px;align-items:flex-start}
+.guard .ic{width:36px;height:36px;border-radius:50%;background:rgba(232,161,58,.16);display:grid;place-items:center;flex:none}
+.guard .ic svg{width:18px;height:18px;stroke:#a8650f;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.guard .t{font-weight:700;font-size:15px}.guard .s{font-size:13.5px;color:var(--ink2);margin-top:4px;line-height:1.45}
+
+/* digest */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px}
+.kpi{border:1px solid #e8e8e8;border-radius:8px;padding:9px 11px;min-width:0}
+.kpi .k{font-size:12px;font-weight:700;color:#616061;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .v{font-size:19px;font-weight:800;letter-spacing:-.02em;margin-top:2px;color:#1d1c1d;white-space:nowrap}
+.kpi .d{font-size:12px;font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#616061}
+.kpi .d.up{color:#007a5a}.kpi .d.bad{color:#c22f47}
+.fls{margin-top:12px;display:grid;gap:7px}
+.fls .fh{font-weight:800;font-size:13.5px}
+.fl1{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;line-height:1.4;color:#1d1c1d;opacity:0;transform:translateX(-8px);transition:opacity .5s,transform .7s var(--ease)}
+.fl1.on{opacity:1;transform:none}
+.fl1 i{width:9px;height:9px;border-radius:50%;margin-top:5px;flex:none}
+.fl1 i.win{background:#1fb487}.fl1 i.stale{background:#e8a13a}.fl1 i.late{background:#e0445a}
+.fl1 b{font-weight:800}
+.att .sm{margin-top:10px;font-size:13.5px;color:#454245;line-height:1.45}
+
+/* NOTION page */
+.nt{font-family:"Inter",-apple-system,"Segoe UI",Helvetica,sans-serif;color:var(--nt);letter-spacing:-.003em}
+.ntg{display:inline-flex;align-items:center;gap:5px;height:21px;padding:0 7px;border-radius:4px;font-size:12.5px;font-weight:500;line-height:1;white-space:nowrap;color:#32302c;background:#e3e2e0}
+.ntg.st::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--dot,#91918e)}
+.ntg.st{border-radius:99px;padding:0 8px 0 7px}
+.c-gray{background:#e3e2e0;--dot:#91918e}.c-orange{background:#fadec9;color:#49290e;--dot:#d9730d}.c-yellow{background:#fdecc8;color:#402c1b;--dot:#cb912f}
+.c-green{background:#dbeddb;color:#1c3829;--dot:#448361}.c-blue{background:#d3e5ef;color:#183347;--dot:#337ea9}
+.c-purple{background:#e8deee;color:#412454;--dot:#9065b0}.c-red{background:#ffe2dd;color:#5d1715;--dot:#d44c47}
+.per{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;white-space:nowrap}
+.per i{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:10px;font-weight:600;color:#fff;flex:none}
+.emo{font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;font-style:normal;line-height:1}
+.ico{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.rgrid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:40px;align-items:start;transform-style:preserve-3d}
+.pg{padding:0;overflow:hidden}
+.pg .cover{height:120px;border-radius:28px 28px 0 0;background:linear-gradient(115deg,#1f4f7a 0%,#3f84b8 45%,#9cc9e6 80%,#dcecf6 100%)}
+.pg .pb{padding:0 44px 30px;position:relative}
+.pg .icon{font-size:56px;margin-top:-34px;position:relative;line-height:1;display:block;width:64px}
+.pg .crumb{font-size:12.5px;color:var(--ng);margin-top:10px}
+.pg .title{font-size:30px;font-weight:700;letter-spacing:-.02em;margin-top:4px;line-height:1.15}
+.props{margin-top:14px;padding-bottom:10px;border-bottom:1px solid var(--nline)}
+.prop{display:grid;grid-template-columns:140px minmax(0,1fr);align-items:center;min-height:32px;font-size:14px}
+.prop .k{display:flex;align-items:center;gap:7px;color:var(--ng)}
+.prop .k .ico{width:15px;height:15px;color:var(--nl)}
+.prop .v{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;padding:4px 0}
+.callout{display:flex;gap:12px;align-items:flex-start;padding:13px 15px;border-radius:6px;background:#f1f1ef;font-size:14px;line-height:1.5;margin-top:16px}
+.callout .emo{font-size:17px;line-height:1.3}
+.nh{font-size:17px;font-weight:600;margin:18px 0 6px;display:flex;align-items:center;gap:8px}
+.nl{font-size:14px;line-height:1.55;padding:2px 0 2px 22px;position:relative}
+.nl::before{content:"";position:absolute;left:8px;top:10px;width:5px;height:5px;border-radius:50%;background:var(--nt)}
+.hl{border-radius:3px;transition:background .8s,box-shadow .8s}
+.hl.on{background:rgba(35,131,226,.14);box-shadow:0 0 0 2px rgba(35,131,226,.14)}
+.hl .cite{opacity:0;transition:opacity .5s}
+.hl.on .cite{opacity:1}
+.rside{display:grid;gap:26px}
+.mini{padding:18px 20px}
+.mini .label{margin-bottom:10px}
+.readl{display:grid;gap:8px}
+.readl div{display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600;color:var(--ink2);opacity:.35;transition:opacity .5s}
+.readl div.on{opacity:1}
+.readl div .src2{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--ink3);white-space:nowrap}
+.readl div .tk{width:18px;height:18px;border-radius:50%;background:rgba(31,180,135,.14);display:grid;place-items:center;flex:none}
+.readl div .tk::after{content:"";width:7px;height:3.5px;border-left:2px solid var(--mint);border-bottom:2px solid var(--mint);transform:rotate(-45deg) translate(1px,-1px)}
+
+/* GHL app shell */
+.appf{padding:10px;border-radius:30px}
+.gw{border-radius:20px;overflow:hidden;background:#f9fafb;display:flex;color:#101828;font-size:13px;position:relative;text-align:left}
+.gnav{width:56px;flex:none;background:#101828;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 0}
+.gnav .acct{width:34px;height:34px;border-radius:10px;background:linear-gradient(160deg,#475467,#344054);color:#fff;font-weight:700;font-size:12px;display:grid;place-items:center;margin-bottom:10px}
+.gnav .ni{width:38px;height:34px;border-radius:9px;display:grid;place-items:center}
+.gnav .ni svg{width:18px;height:18px;fill:none;stroke:#98a2b3;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.gnav .ni.a{background:#155eef}.gnav .ni.a svg{stroke:#fff}
+.gbody{flex:1;min-width:0;display:flex;flex-direction:column}
+.gtop{height:50px;flex:none;background:#fff;border-bottom:1px solid #eaecf0;display:flex;align-items:center;padding:0 16px;gap:12px}
+.gtop .pt{font-weight:700;font-size:15px;white-space:nowrap}
+.gtop .srch{margin-left:auto;width:190px;height:32px;border:1px solid #d0d5dd;border-radius:8px;display:flex;align-items:center;padding:0 10px;color:#98a2b3;font-size:12.5px;gap:8px;white-space:nowrap;overflow:hidden}
+.gtop .srch svg{width:14px;height:14px;fill:none;stroke:#98a2b3;stroke-width:2;flex:none}
+.gtop .me{width:30px;height:30px;border-radius:50%;background:#e0eaff;color:#155eef;font-weight:700;font-size:11.5px;display:grid;place-items:center;flex:none}
+.gseg{display:flex;border:1px solid #d0d5dd;border-radius:8px;overflow:hidden;font-size:12px;font-weight:600;color:#475467;white-space:nowrap}
+.gseg span{padding:6px 11px}.gseg span+span{border-left:1px solid #d0d5dd}.gseg span.a{background:#f2f4f7;color:#101828}
+.gsel{border:1px solid #d0d5dd;border-radius:8px;padding:6px 11px;font-size:12.5px;font-weight:600;color:#344054;background:#fff;white-space:nowrap}
+.gsel::after{content:" ▾";color:#98a2b3;font-size:10px}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12px;color:#fff;flex:none;background:#98a2b3}
+.av.b{background:#155eef}.av.g{background:#12b76a}.av.o{background:#f79009}.av.p{background:#7a5af8}.av.t{background:#0ba5ec}
+/* contact record */
+.crec{background:#fff;padding:16px 18px 18px}
+.crec .h{display:flex;gap:12px;align-items:center;padding-bottom:14px;border-bottom:1px solid #f2f4f7}
+.crec .h .n{font-weight:700;font-size:15px}.crec .h .s{font-size:12px;color:#667085;margin-top:1px}
+.crec .h .av{width:40px;height:40px;font-size:13px}
+.clb{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#98a2b3;margin:14px 0 8px}
+.gtgs{display:flex;flex-wrap:wrap;gap:6px}
+.gtg{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:6px;background:#eff4ff;color:#155eef;border:1px solid #d1e0ff}
+.gtg.g{background:#ecfdf3;color:#067647;border-color:#abefc6}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:7px 0;font-size:12.5px;border-top:1px solid #f2f4f7}
+.kv:first-of-type{border-top:0}
+.kv span:first-child{color:#667085;white-space:nowrap}.kv span:last-child{font-weight:600;text-align:right}
+.stg{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:#fff6ed;color:#c4320a}
+.act{display:flex;gap:10px;padding:8px 0;border-top:1px solid #f2f4f7;font-size:12.5px;line-height:1.4}
+.act:first-of-type{border-top:0}
+.act i{width:8px;height:8px;border-radius:50%;background:#155eef;margin-top:5px;flex:none}
+.act small{display:block;color:#98a2b3;font-size:11.5px}
+/* board */
+.phead{display:flex;align-items:center;gap:10px;padding:12px 14px 0}
+.phead .sum{margin-left:auto;font-size:12.5px;color:#667085;white-space:nowrap}.phead .sum b{color:#101828}
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:12px 14px 14px}
+.col{background:#f2f4f7;border-radius:12px;padding:9px;min-height:330px;border-top:3px solid var(--sc)}
+.col .ch{display:flex;justify-content:space-between;align-items:baseline;gap:6px;padding:2px 2px 0}
+.col .ch b{font-size:12.5px;white-space:nowrap}.col .ch span{font-size:11px;color:#667085;white-space:nowrap}
+.col .tot{font-size:12px;font-weight:700;color:#344054;padding:2px 2px 9px}
+.cards{display:flex;flex-direction:column;gap:8px}
+.oc{position:relative;background:#fff;border:1px solid #eaecf0;border-radius:10px;padding:9px 10px;box-shadow:0 1px 2px rgba(16,24,40,.05);z-index:1}
+.oc .n{font-weight:700;font-size:12.5px;display:flex;justify-content:space-between;gap:6px;align-items:center}
+.oc .n .av{width:20px;height:20px;font-size:8.5px}
+.oc .j{font-size:11.5px;color:#667085;margin-top:2px}
+.oc .v{display:flex;justify-content:space-between;align-items:center;margin-top:7px;font-size:12px;font-weight:700;gap:6px}
+.oc .v small{font-weight:600;color:#98a2b3;font-size:10.5px;white-space:nowrap}
+.oc.mv{z-index:5;box-shadow:0 0 0 2px #155eef,0 18px 30px -12px rgba(21,94,239,.45)}
+.oc.done{box-shadow:0 0 0 2px #12b76a,0 14px 26px -12px rgba(18,183,106,.45)}
+.oc .ntag{display:none;font-size:10px;font-weight:700;color:#067647;background:#ecfdf3;border-radius:5px;padding:2px 6px;white-space:nowrap}
+.oc.done .ntag{display:inline-block;margin-top:7px}
+.oc.done .n .av{display:none}
+/* output grid */
+.ogrid{display:grid;grid-template-columns:1fr;gap:34px;align-items:start;transform-style:preserve-3d}
+.ostack{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:30px;align-items:start}
+.dbp{padding:20px 22px 18px}
+.dbt{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;letter-spacing:-.02em}
+.dbt .emo{font-size:21px}
+.vbar{display:flex;align-items:center;gap:4px;margin-top:10px;border-bottom:1px solid var(--nline);flex-wrap:wrap}
+.vbar .v{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--ng);padding:5px 8px;white-space:nowrap}
+.vbar .v.a{color:var(--nt);box-shadow:inset 0 -2px 0 var(--nt)}
+.vbar .v .ico{width:14px;height:14px}
+.tbl{font-size:13.5px}
+.tr{display:grid;grid-template-columns:minmax(0,1fr) 108px 64px 112px;border-bottom:1px solid var(--nline);min-height:36px}
+.tr>div{padding:7px 8px;border-right:1px solid var(--nline);display:flex;align-items:center;gap:6px;min-width:0}
+.tr>div:last-child{border-right:0}
+.tr.th>div{font-size:12.5px;color:var(--ng);font-weight:500;white-space:nowrap}
+.tr .nm{font-weight:500;line-height:1.35}
+.tr .du{font-size:12.5px;color:var(--ng);white-space:nowrap}
+.tr .du.late{color:#d44c47}
+.tr.new{display:none}
+.tr.new.on{display:grid;animation:rowin 1.1s var(--ease) both}
+@keyframes rowin{0%{opacity:0;transform:translateY(-8px);background:rgba(35,131,226,.1)}60%{background:rgba(35,131,226,.1)}100%{opacity:1;transform:none;background:transparent}}
+.tr .nw{font-size:10.5px;font-weight:600;color:#1c3829;background:#dbeddb;border-radius:4px;padding:1px 5px;white-space:nowrap}
+.post{padding:18px 20px}
+.post .r1{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink3);font-weight:600}
+.post .r1 i{width:22px;height:22px;border-radius:6px;background:#3f0e40;display:grid;place-items:center;flex:none}
+.post .r1 i::after{content:"#";color:#fff;font-weight:800;font-size:13px;font-style:normal}
+.post .r1 span:last-child{margin-left:auto}
+.post .t{font-weight:700;font-size:15px;margin-top:10px}
+.post .s{font-size:14px;color:var(--ink2);margin-top:4px;line-height:1.5}
+.post .tagI{margin-top:10px}
+
+/* PLATFORM: agent builder */
+#agent .head{text-align:center}
+.bchip{display:inline-block;margin-top:14px}
+.bw{border-radius:20px;overflow:hidden;background:#fff;text-align:left}
+.btop{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid #eaecf0;background:#fff}
+.btop .ag{width:30px;height:30px;border-radius:9px;background:linear-gradient(160deg,#8b7bff,#5b45e0);display:grid;place-items:center;flex:none}
+.btop .ag svg{width:16px;height:16px;fill:#fff}
+.btop .nm{font-weight:700;font-size:14.5px;white-space:nowrap}
+.btop .cr{font-size:12.5px;color:#667085;white-space:nowrap}
+.btabs{display:flex;gap:4px;margin-left:18px}
+.btabs span{font-size:13px;font-weight:600;color:#667085;padding:6px 11px;border-radius:8px;white-space:nowrap}
+.btabs span.a{background:#f2f4f7;color:#101828}
+.bright{margin-left:auto;display:flex;align-items:center;gap:10px}
+.btest{font-size:12.5px;font-weight:700;color:#344054;border:1px solid #d0d5dd;border-radius:8px;padding:6px 11px;white-space:nowrap}
+.blive{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:#667085;white-space:nowrap}
+.blive i{width:34px;height:20px;border-radius:99px;background:#d0d5dd;position:relative;transition:background .4s}
+.blive i::after{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .4s var(--ease)}
+.blive.on{color:#067647}.blive.on i{background:#12b76a}.blive.on i::after{transform:translateX(14px)}
+.cvw{position:relative;background-color:#f7f8fb;background-image:radial-gradient(#d5dbe5 1.1px,transparent 1.2px);background-size:18px 18px;overflow:hidden}
+.cv{position:absolute;left:0;top:0;transform-origin:0 0}
+.cv svg.edges{position:absolute;left:0;top:0;overflow:visible}
+.edges path{fill:none;stroke:#b4bfd0;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:stroke .4s}
+.edges path.hot{stroke:#6d5cf0;stroke-width:2.5;stroke-dasharray:7 7;animation:flow .6s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-14}}
+.edges circle{fill:#fff;stroke:#b4bfd0;stroke-width:2}
+.bn{position:absolute;background:#fff;border:1px solid #e4e7ec;border-radius:12px;box-shadow:0 1px 3px rgba(16,24,40,.08),0 8px 20px -14px rgba(16,24,40,.25);padding:12px 13px;opacity:0;transform:translateY(-10px);transition:opacity .5s,transform .7s var(--ease),box-shadow .4s,border-color .4s;font-size:12.5px;color:#101828}
+.bn.on{opacity:1;transform:none}
+.bn.hot{border-color:#8b7bff;box-shadow:0 0 0 3px rgba(122,90,248,.18),0 8px 20px -14px rgba(16,24,40,.25)}
+.bn .bh{display:flex;gap:10px;align-items:center}
+.bn .bi{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex:none}
+.bn .bi svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.bn .tt{font-size:13.5px;font-weight:700;line-height:1.25}
+.bn .ss{font-size:11.5px;color:#667085;margin-top:2px;line-height:1.3}
+.bn .bh>div{min-width:0}
+.bn .hdr,.bn .iot{position:absolute;top:-9px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:99px;padding:1px 7px;background:#fff}
+.bn .hdr{left:10px;color:#155eef;border:1px solid #b2ccff}
+.bn .iot{right:10px;color:#fff;background:#155eef;border:1px solid #155eef}
+.bn .iot.o{background:#12b76a;border-color:#12b76a}
+.bn.k-trig{background:#f5f8ff;border-color:#b2ccff}
+.bn.k-agent{border:1.5px solid #8b7bff;background:linear-gradient(180deg,#fbfaff,#fff)}
+.bn.k-agent .tt{font-size:15px}
+.bn .inst{margin-top:10px;background:#f7f7fb;border:1px solid #ecebf5;border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.45;color:#344054}
+.bn .inst b{display:block;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#98a2b3;margin-bottom:3px}
+.bn .chips{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.bn .chips span{font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;background:#f2f4f7;color:#344054;white-space:nowrap}
+.bn .chips span.p{background:#f4f3ff;color:#5925dc}
+.bn .rows{margin-top:9px;display:grid;gap:4px}
+.bn .rw{display:flex;align-items:center;gap:8px;height:26px;padding:0 8px;border-radius:7px;background:#f9fafb;transition:background .35s,box-shadow .35s}
+.bn .rw code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:11.5px;color:#101828;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.bn .rw .md{margin-left:auto;font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;white-space:nowrap;background:#f2f4f7;color:#667085}
+.bn .rw .md.w{background:#fffaeb;color:#b54708}
+.bn .rw .md.a{background:#eff4ff;color:#155eef}
+.bn .rw.hit{background:#f4f3ff;box-shadow:inset 0 0 0 1px #c4bbff}
+.bn .gl{margin-top:8px;display:grid;gap:5px}
+.bn .gl div{display:flex;gap:8px;font-size:12px;line-height:1.35;color:#344054}
+.bn .gl div::before{content:"";width:6px;height:6px;border-radius:50%;background:#f79009;margin-top:5px;flex:none}
+.bn.k-mem .gl div::before{background:#7a5af8}
+.bfoot{display:flex;align-items:center;gap:12px;padding:10px 16px;border-top:1px solid #eaecf0;background:#fff;font-size:12.5px;color:#667085;flex-wrap:wrap}
+.bfoot .run{display:flex;align-items:center;gap:8px;min-width:0}
+.bfoot .run i{width:8px;height:8px;border-radius:50%;background:#98a2b3;flex:none;transition:background .3s}
+.bfoot .run.go i{background:#7a5af8;box-shadow:0 0 0 3px rgba(122,90,248,.2);animation:pl 1.2s infinite}
+.bfoot .run.ok i{background:#12b76a;animation:none;box-shadow:none}
+@keyframes pl{50%{box-shadow:0 0 0 6px rgba(122,90,248,0)}}
+.bfoot .run span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.bfoot .run code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:11.5px;color:#101828}
+.bfoot .tagI{margin-left:auto}
+
+/* CLOSE */
+#close .wrap{text-align:center}
+.words{position:relative;display:flex;flex-direction:column;align-items:center;gap:22px;transform-style:preserve-3d}
+.word{padding:18px 40px 20px 30px;border-radius:99px;display:flex;align-items:center;gap:18px;font-size:clamp(40px,5.4vw,78px);font-weight:600;letter-spacing:-.04em;line-height:1}
+.word i{width:40px;height:40px;border-radius:50%;background:rgba(31,180,135,.14);display:grid;place-items:center;flex:none}
+.word i::after{content:"";width:15px;height:8px;border-left:3px solid var(--mint);border-bottom:3px solid var(--mint);transform:rotate(-45deg) translate(2px,-2px)}
+.word.w1{margin-right:280px}.word.w2{margin-left:120px}.word.w3{margin-right:160px}.word.w4{margin-left:260px}
+.word.w4 span{background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.foot{margin-top:70px;font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase}
+
+@media (max-width:1100px){
+  .rgrid,.ogrid{grid-template-columns:1fr}
+  .rside{grid-template-columns:1fr 1fr}
+  .btabs{display:none}
+}
+@media (max-width:860px){
+  section{padding:100px 16px 80px;min-height:auto;perspective:1100px}
+  #hero{min-height:100vh}
+  .top{padding:14px 16px}.top .brand{font-size:12px}.top .xs{display:none}
+  .head{margin-bottom:32px}
+  .hstage{height:auto;display:grid;gap:20px;margin-top:32px}
+  .hstage .par{position:relative!important;left:auto!important;right:auto!important;top:auto!important;margin:0!important;width:100%}
+  .today,.notif,.hdone,.cats{width:100%!important;margin:0!important}
+  .today{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.today .big{font-size:56px}
+  .notif q{font-size:16.5px}
+  .cats{flex-wrap:wrap}.cats div{flex:1 1 40%;justify-content:flex-start}
+  .iog{grid-template-columns:1fr;gap:18px}
+  .iop{padding:18px 16px 20px}
+  .ioar svg{width:80px;height:24px;transform:rotate(90deg);margin:22px 0}
+  .ioar .tt{font-size:32px}
+  .kgrid{grid-template-columns:1fr;gap:24px}
+  .sk{grid-template-columns:1fr;min-height:0}.skside{display:none}
+  .skmsgs{padding:12px 14px 6px}.skh{padding:12px 14px}.skc{margin:6px 14px 14px}.typing{padding:0 14px}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kstat{margin-left:0;margin-top:20px}
+  .m.sys{padding-left:0}
+  .rside,.ostack{grid-template-columns:1fr}
+  .pg .pb{padding:0 18px 22px}.pg .title{font-size:25px}.pg .icon{font-size:48px;margin-top:-28px}
+  .pg .cover{height:90px}
+  .prop{grid-template-columns:112px minmax(0,1fr)}
+  .appf{padding:6px;border-radius:22px}
+  .gw{border-radius:17px}
+  .gnav{display:none}
+  .gtop{padding:0 12px;gap:10px}.gtop .srch{display:none}.gtop .me{margin-left:auto}
+  .phead{flex-wrap:wrap}.phead .sum{margin-left:0;width:100%}
+  .board{grid-template-columns:1fr 1fr;gap:8px;padding:10px}
+  .col{min-height:0}
+  .dbp{padding:16px 12px 14px}
+  .tr{grid-template-columns:minmax(0,1fr) 92px 56px}
+  .tr>.c-st{display:none}
+  .btop{flex-wrap:wrap;gap:8px 10px}.btop .cr{display:none}.btest{display:none}
+  .bfoot .tagI{margin-left:0}
+  .word{font-size:34px;padding:14px 24px 16px 18px}.word i{width:30px;height:30px}
+  .word.w1,.word.w2,.word.w3,.word.w4{margin:0}
+}
+@media (max-width:480px){
+  .board{grid-template-columns:1fr}
+  .per span{display:none}
+  .tr{grid-template-columns:minmax(0,1fr) 40px 56px}
+}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation:none!important}}
+</style>
+
+<div class="sky"></div>
+<div class="haze"><i></i><i></i><i></i></div>
+<div class="top"><div class="brand"><b></b><span data-t="brand"></span><span class="xs"> · team ops agent</span></div><div class="chip">Sample data</div></div>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <linearGradient id="gm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8ec0ff"/><stop offset="1" stop-color="#2f74f5"/></linearGradient>
+  <symbol id="i-status" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" stroke-dasharray="3 2.6"/><path d="M12 7.5a4.5 4.5 0 010 9z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20a7.5 7.5 0 0115 0"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></symbol>
+  <symbol id="i-sel" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 10.5l3.5 3.5 3.5-3.5"/></symbol>
+  <symbol id="i-table" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M9.5 9.5v10"/></symbol>
+  <symbol id="i-board" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="4.5" height="15" rx="1"/><rect x="9.8" y="4.5" width="4.5" height="10" rx="1"/><rect x="16" y="4.5" width="4.5" height="6.5" rx="1"/></symbol>
+  <symbol id="i-rel" viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></symbol>
+</defs></svg>
+
+<main>
+<!-- SCREEN: hero -->
+<section id="hero" data-run="hero">
+  <div class="wrap">
+    <div class="kicker fade" data-t="kicker"></div>
+    <h1 class="fade" style="--d:.1s">Ask in Slack.<br><em>It answers and does it.</em></h1>
+    <p class="sub fade" style="--d:.2s">One team agent reads your Notion docs and GoHighLevel, answers with sources, then moves the deal, creates the task and posts the summary.</p>
+    <div class="hstage">
+      <div class="par" data-z="-0.6" style="left:0;top:50px"><div class="panel today rise" style="--d:.35s">
+        <div><div class="label">Answered in</div><div class="big"><span id="hsecs">0</span><small>sec</small></div></div>
+        <div><div class="s">from 2 Notion pages and 1 GoHighLevel deal</div><div class="tagI">Illustrative</div></div>
+      </div></div>
+      <div class="par" data-z="0.5" style="left:50%;top:0;margin-left:-240px"><div class="panel notif rise" id="hnotif" style="--d:.5s">
+        <div class="h"><div class="avatar" style="background:linear-gradient(160deg,#a99bff,#5b45e0)"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg></div><div><div class="t">Ops Agent</div><div class="s" data-t="channel"></div></div><div class="now" data-t="askTime"></div></div>
+        <div class="ask"><b data-t="askerShort"></b>: <span data-t="question"></span></div>
+        <q data-t="heroLine"></q>
+        <div class="tags" id="htags"></div>
+      </div></div>
+      <div class="par" data-z="1.1" style="right:0;top:190px"><div class="panel hdone rise" style="--d:.8s">
+        <div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="rgba(150,170,200,.25)" stroke-width="7"/><circle id="hring" cx="50" cy="50" r="44" fill="none" stroke="url(#gm)" stroke-width="7" stroke-linecap="round" stroke-dasharray="276.5" stroke-dashoffset="276.5"/></svg><div class="num"><span><span id="hdone">0</span>/3</span></div></div>
+        <div><div class="t">Updates done</div><div class="s">Deal moved, task created, summary posted</div></div>
+      </div></div>
+      <div class="par" data-z="0.9" style="left:50%;top:340px;margin-left:-240px"><div class="panel cats rise" style="--d:1s" id="hcats"></div></div>
+    </div>
+    <div class="scrollcue fade" style="--d:1.4s">Scroll<b></b></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: in -> out -->
+<section id="io" data-run="io">
+  <div class="wrap">
+    <div class="head c"><h2 class="fade">A question in.<br><em>Answered and updated out.</em></h2></div>
+    <div class="iog">
+      <div class="iocol par" data-z="0.4">
+        <div><div class="panel iop rise" style="--d:.2s">
+          <div class="label">What goes in</div>
+          <div class="iomsg pin"><div class="av2" data-t="askerInit"></div><div><div class="nm"><span data-t="asker"></span><small data-t="askTime"></small></div><div class="tx"><span class="men">@Ops Agent</span> <span data-t="question"></span></div></div></div>
+          <div class="iorow pin"><span>Asked in</span><span data-t="chan"></span></div>
+          <div class="iorow pin"><span>Then</span><span data-t="followShort"></span></div>
+        </div></div>
+        <p class="iocap fade" style="--d:.5s" data-t="inCap"></p>
+      </div>
+      <div class="ioar fade" style="--d:.6s">
+        <div class="tt"><span id="iot">0</span><small> sec</small></div>
+        <svg viewBox="0 0 150 24"><path d="M4 12H144M134 3l10 9-10 9"/></svg>
+        <div class="label">agent time</div>
+      </div>
+      <div class="iocol par" data-z="0.9">
+        <div><div class="panel iop out rise" style="--d:.45s">
+          <div class="label">What comes out</div>
+          <div class="ioans pout"><div class="who">Ops Agent · with 3 sources</div><span data-t="answerShort"></span></div>
+          <div class="iodone pout"><span class="ic" style="background:#155eef"><svg viewBox="0 0 24 24"><path d="M4 6h4v12H4zM10 6h4v8h-4zM16 6h4v5h-4z"/></svg></span><div><div class="t">GoHighLevel</div><div class="s" data-t="outGhl"></div></div><span class="ok">Updated</span></div>
+          <div class="iodone pout"><span class="ic" style="background:#37352f"><svg viewBox="0 0 24 24"><path d="M5 5h14v14H5z"/><path d="M9 12l2 2 4-4"/></svg></span><div><div class="t">Notion</div><div class="s" data-t="outNotion"></div></div><span class="ok">Created</span></div>
+        </div></div>
+        <p class="iocap fade" style="--d:.8s" data-t="outCap"></p>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: slack ask -->
+<section id="ask" data-run="ask">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow io-in fade"><span>01</span>Input</div><h2 class="fade" style="--d:.1s">Ask it <em>in Slack.</em></h2><p class="sub fade" style="--d:.2s">Mia asks about the Harper account in #client-accounts and gets a straight answer, with its sources, in 9 seconds.</p></div>
+    <div class="kgrid">
+      <div class="par" data-z="0.3"><div class="panel shell rise" style="--d:.2s"><div class="shin sk">
+        <div class="skside">
+          <div class="ws" data-t="brand"></div>
+          <div class="gh">Channels</div>
+          <div class="chn a"><span># client-accounts</span></div>
+          <div class="chn"><span># harper-physio</span></div>
+          <div class="chn"><span># team-daily</span></div>
+          <div class="chn"><span># sales</span></div>
+          <div class="gh" style="margin-top:10px">Apps</div>
+          <div class="chn"><span>Ops Agent</span></div>
+        </div>
+        <div class="skmain">
+          <div class="skh"><span class="cn"># client-accounts</span><span class="mem">8 members</span></div>
+          <div class="skmsgs">
+            <div class="day"><span data-t="dayLabel"></span></div>
+            <div class="m" id="a1">
+              <div class="av" style="background:linear-gradient(160deg,#f3a07b,#d9674a)" data-t="askerInit"></div>
+              <div class="cnt"><div class="nm"><span data-t="asker"></span><small data-t="askTime"></small></div><div class="tx"><span class="men">@Ops Agent</span> <span data-t="question"></span></div></div>
+            </div>
+            <div class="m" id="a2">
+              <div class="av" style="background:linear-gradient(160deg,#a99bff,#5b45e0)"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg></div>
+              <div class="cnt">
+                <div class="nm">Ops Agent<span class="app">APP</span><small data-t="answerTime"></small></div>
+                <div class="tx" id="ansTx"></div>
+                <div class="att"><div class="ah">Sources</div><div class="srcs" id="srcs"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="typing" id="atyp">Ops Agent is reading Notion and GoHighLevel…</div>
+          <div class="skc">Message #client-accounts</div>
+        </div>
+      </div></div></div>
+      <div>
+        <div class="par" data-z="1.3"><div class="panel knot rise" style="--d:.7s">
+          <div class="r1"><i></i><span>#client-accounts</span><span data-t="askTime"></span></div>
+          <div class="t" data-t="asker"></div>
+          <div class="s" data-t="question"></div>
+        </div></div>
+        <div class="par" data-z="0.8"><div class="panel kstat rise" style="--d:.9s">
+          <div class="label">Answered in</div>
+          <div class="big"><span id="asecs">0</span><small>sec</small></div>
+          <div class="s">3 sources read, each one cited in the reply</div>
+          <div class="tagI">Illustrative</div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: sources (Notion + GHL) -->
+<section id="read" data-run="read">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>02</span>Where the answer came from</div><h2 class="fade" style="--d:.1s">It reads <em>your docs and CRM.</em></h2><p class="sub fade" style="--d:.2s">The answer comes from the Harper account page and follow-up SOP in Notion, plus the contact and deal in GoHighLevel.</p></div>
+    <div class="rgrid">
+      <div class="par" data-z="0.4"><div class="panel pg nt rise" style="--d:.2s">
+        <div class="cover"></div>
+        <div class="pb">
+          <span class="icon emo">🩺</span>
+          <div class="crumb">Clients / Active</div>
+          <div class="title" data-t="acct"></div>
+          <div class="props" id="nprops"></div>
+          <div class="callout"><span class="emo">📞</span><span class="hl" id="hl1"><span data-t="callNote"></span> <span class="cite">1</span></span></div>
+          <div class="nh"><span class="emo">📘</span>Follow-up SOP</div>
+          <div class="nl"><span class="hl" id="hl2"><span data-t="sopLine"></span> <span class="cite">2</span></span></div>
+          <div class="nl" data-t="sopLine2"></div>
+          <div class="nl" data-t="sopLine3"></div>
+        </div>
+      </div></div>
+      <div class="rside">
+        <div class="par" data-z="1"><div class="panel appf rise" style="--d:.45s"><div class="gw"><div class="gbody">
+          <div class="gtop"><span class="pt">Contact</span><span class="me" style="margin-left:auto">NB</span></div>
+          <div class="crec">
+            <div class="h"><span class="av b" data-t="contactInit"></span><div><div class="n" data-t="contact"></div><div class="s" data-t="contactSub"></div></div></div>
+            <div class="clb">Tags</div>
+            <div class="gtgs" id="gtags"></div>
+            <div class="clb">Opportunity</div>
+            <div class="hl" id="hl3" style="display:block;padding:0 4px">
+              <div class="kv"><span>Pipeline</span><span data-t="pipeline"></span></div>
+              <div class="kv"><span>Stage</span><span><span class="stg">Proposal Sent</span> <span class="cite">3</span></span></div>
+              <div class="kv"><span>Value</span><span data-t="dealValue"></span></div>
+            </div>
+            <div class="clb">Activity</div>
+            <div id="gact"></div>
+          </div>
+        </div></div></div></div>
+        <div class="par" data-z="1.4"><div class="panel mini rise" style="--d:.65s">
+          <div class="label">What the agent read</div>
+          <div class="readl" id="readl"></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: slack do -->
+<section id="do" data-run="do">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>03</span>On request</div><h2 class="fade" style="--d:.1s">It checks, <em>then does it.</em></h2><p class="sub fade" style="--d:.2s">Mia asks for three changes. The agent lists them, waits for her Confirm, then makes each one.</p></div>
+    <div class="kgrid">
+      <div class="par" data-z="0.3"><div class="panel shell rise" style="--d:.2s"><div class="shin sk">
+        <div class="skside">
+          <div class="ws" data-t="brand"></div>
+          <div class="gh">Channels</div>
+          <div class="chn a"><span># client-accounts</span></div>
+          <div class="chn"><span># harper-physio</span><b id="hpb">1</b></div>
+          <div class="chn"><span># team-daily</span></div>
+          <div class="chn"><span># sales</span></div>
+          <div class="gh" style="margin-top:10px">Apps</div>
+          <div class="chn"><span>Ops Agent</span></div>
+        </div>
+        <div class="skmain">
+          <div class="skh"><span class="cn">Thread · # client-accounts</span><span class="mem">3 replies</span></div>
+          <div class="skmsgs">
+            <div class="m" id="d1">
+              <div class="av" style="background:linear-gradient(160deg,#f3a07b,#d9674a)" data-t="askerInit"></div>
+              <div class="cnt"><div class="nm"><span data-t="asker"></span><small data-t="followTime"></small></div><div class="tx"><span class="men">@Ops Agent</span> <span data-t="follow"></span></div></div>
+            </div>
+            <div class="m" id="d2">
+              <div class="av" style="background:linear-gradient(160deg,#a99bff,#5b45e0)"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg></div>
+              <div class="cnt">
+                <div class="nm">Ops Agent<span class="app">APP</span><small data-t="followTime"></small></div>
+                <div class="tx">Here's what I'll change. Nothing happens until you confirm.</div>
+                <div class="att" style="border-left-color:#e8a13a"><div class="plan" id="plan"></div>
+                  <div class="bt"><span class="go" id="cfm">Confirm</span><span>Edit</span><span>Cancel</span></div></div>
+              </div>
+            </div>
+            <div class="m sys" id="d3"><span><span data-t="asker"></span> confirmed</span></div>
+            <div class="m" id="d4">
+              <div class="av" style="background:linear-gradient(160deg,#a99bff,#5b45e0)"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg></div>
+              <div class="cnt">
+                <div class="nm">Ops Agent<span class="app">APP</span><small data-t="doneTime"></small></div>
+                <div class="tx">Done. All three are in.</div>
+                <div class="dl" id="dlist"></div>
+                <div class="react" id="drx"><i></i>2</div>
+              </div>
+            </div>
+          </div>
+          <div class="skc">Reply…</div>
+        </div>
+      </div></div></div>
+      <div>
+        <div class="par" data-z="1.3"><div class="panel guard rise" style="--d:.7s">
+          <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
+          <div><div class="t">Writes wait for a Confirm</div><div class="s">Reading is automatic. Stage changes, new tasks and posts are listed first and only run after a teammate confirms.</div></div>
+        </div></div>
+        <div class="par" data-z="0.8"><div class="panel kstat rise" style="--d:.9s">
+          <div class="label">After the Confirm</div>
+          <div class="big"><span id="dsecs">0</span><small>sec</small></div>
+          <div class="s">to update GoHighLevel, create the Notion task and post the summary</div>
+          <div class="tagI">Illustrative</div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: output (GHL + Notion + Slack post) -->
+<section id="out" data-run="out">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow io-out fade"><span>04</span>Output</div><h2 class="fade" style="--d:.1s">Updated in <em>GoHighLevel and Notion.</em></h2><p class="sub fade" style="--d:.2s">Harper moves to Won in the pipeline, Jordan's onboarding task lands in Notion and the client channel gets the summary.</p></div>
+    <div class="ogrid">
+      <div class="par" data-z="0.4"><div class="panel appf rise" style="--d:.25s"><div class="gw"><div class="gnav" data-a="3"></div><div class="gbody">
+        <div class="gtop"><span class="pt">Opportunities</span><div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg>Search opportunities</div><span class="me">NB</span></div>
+        <div class="phead"><span class="gsel" data-t="pipeline"></span><div class="gseg"><span class="a">Board</span><span>List</span></div><span class="sum"><b id="ptot">0</b> opportunities · <b id="pval">$0</b>/mo</span></div>
+        <div class="board" id="board"></div>
+      </div></div></div></div>
+      <div class="ostack">
+        <div class="par" data-z="1"><div class="panel dbp nt rise" style="--d:.45s">
+          <div class="dbt"><span class="emo">✅</span>Team tasks</div>
+          <div class="vbar"><span class="v a"><svg class="ico"><use href="#i-table"/></svg>This week</span><span class="v"><svg class="ico"><use href="#i-board"/></svg>By person</span></div>
+          <div class="tbl" id="ttbl"></div>
+        </div></div>
+        <div class="par" data-z="1.4"><div class="panel post rise" style="--d:.65s" id="postc">
+          <div class="r1"><i></i><span>#harper-physio</span><span data-t="doneTime"></span></div>
+          <div class="t">Ops Agent</div>
+          <div class="s" data-t="summary"></div>
+          <div class="tagI">Posted by the agent</div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: daily digest -->
+<section id="digest" data-run="digest">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>05</span>Every morning</div><h2 class="fade" style="--d:.1s">The team digest, <em>at 8:00.</em></h2><p class="sub fade" style="--d:.2s">Each weekday the agent posts yesterday's wins, new leads, tasks due today and anything going stale, from GoHighLevel and Notion.</p></div>
+    <div class="kgrid">
+      <div class="par" data-z="0.3"><div class="panel shell rise" style="--d:.2s"><div class="shin sk">
+        <div class="skside">
+          <div class="ws" data-t="brand"></div>
+          <div class="gh">Channels</div>
+          <div class="chn"><span># client-accounts</span></div>
+          <div class="chn"><span># harper-physio</span></div>
+          <div class="chn a"><span># team-daily</span><b id="tdb">1</b></div>
+          <div class="chn"><span># sales</span></div>
+          <div class="gh" style="margin-top:10px">Apps</div>
+          <div class="chn"><span>Ops Agent</span></div>
+        </div>
+        <div class="skmain">
+          <div class="skh"><span class="cn"># team-daily</span><span class="mem">8 members</span></div>
+          <div class="skmsgs">
+            <div class="day"><span data-t="digestDay"></span></div>
+            <div class="m" id="g1">
+              <div class="av" style="background:linear-gradient(160deg,#a99bff,#5b45e0)"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg></div>
+              <div class="cnt">
+                <div class="nm">Ops Agent<span class="app">APP</span><small>8:00 AM</small></div>
+                <div class="tx"><b>Team digest</b> for <span data-t="digestFor"></span></div>
+                <div class="att">
+                  <div class="kpis" id="kpis"></div>
+                  <div class="fls" id="fls"><div class="fh">Worth a look today</div></div>
+                  <div class="bt"><span class="go">Open pipeline</span><span>Open tasks in Notion</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="m" id="g2">
+              <div class="av" style="background:linear-gradient(160deg,#7fd1b4,#1f9f78)" data-t="teamInit"></div>
+              <div class="cnt"><div class="nm"><span data-t="teamName"></span><small>8:06 AM</small></div><div class="tx" data-t="teamReply"></div><div class="react" id="grx"><i></i>3</div></div>
+            </div>
+          </div>
+          <div class="skc">Message #team-daily</div>
+        </div>
+      </div></div></div>
+      <div>
+        <div class="par" data-z="1.3"><div class="panel knot rise" style="--d:.7s">
+          <div class="r1"><i></i><span>#team-daily</span><span>8:00 AM</span></div>
+          <div class="t">Ops Agent</div>
+          <div class="s" data-t="digestLine"></div>
+        </div></div>
+        <div class="par" data-z="0.8"><div class="panel kstat rise" style="--d:.9s">
+          <div class="label">Won this month</div>
+          <div class="big" id="kpipe">$0</div>
+          <div class="s">in new monthly retainers, including Harper Physio</div>
+          <div class="tagI">Illustrative</div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: platform (agent builder) -->
+<section id="agent" data-run="agent">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>06</span>Your agent</div><h2 class="fade" style="--d:.1s">This is what it will look like<br><em>in your agent builder.</em></h2><p class="sub fade" style="--d:.2s">One agent with its Slack, Notion and GoHighLevel tools, its memory, and the rules it works inside.</p><div class="chip bchip fade" style="--d:.2s">Your agent · illustrative</div></div>
+    <div class="par" data-z="0.3"><div class="panel shell rise" style="--d:.3s"><div class="bw">
+      <div class="btop">
+        <span class="ag"><svg viewBox="0 0 24 24"><path d="M12 2l2.2 6.6L21 11l-6.8 2.4L12 20l-2.2-6.6L3 11l6.8-2.4z"/></svg></span>
+        <span class="nm">Ops Agent</span><span class="cr" data-t="brand"></span>
+        <div class="btabs"><span class="a">Canvas</span><span>Runs</span><span>Memory</span><span>Settings</span></div>
+        <div class="bright"><span class="btest">Test in Slack</span><span class="blive" id="blive"><i></i><span id="blt">Draft</span></span></div>
+      </div>
+      <div class="cvw" id="cvw"><div class="cv" id="cv"><svg class="edges" id="edges"></svg></div></div>
+      <div class="bfoot"><div class="run" id="brun"><i></i><span id="brunt">Idle</span></div><span class="tagI">Illustrative</span></div>
+    </div></div></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: close -->
+<section id="close" data-run="close">
+  <div class="wrap">
+    <div class="words">
+      <div class="par" data-z="0.3"><div class="panel word w1 rise" style="--d:.1s"><i></i>Asked.</div></div>
+      <div class="par" data-z="0.8"><div class="panel word w2 rise" style="--d:.35s"><i></i>Answered.</div></div>
+      <div class="par" data-z="1.2"><div class="panel word w3 rise" style="--d:.6s"><i></i>Updated.</div></div>
+      <div class="par" data-z="1.6"><div class="panel word w4 rise" style="--d:.85s"><i></i><span>Posted.</span></div></div>
+    </div>
+    <div class="foot fade" style="--d:1.2s">Slack · Notion · GoHighLevel · one team agent</div>
+  </div>
+</section>
+<!-- /SCREEN -->
+</main>
+
+<script>
+/* ============ SAMPLE CONTENT: a real job edits this object (and the headlines) ============ */
+const DATA={
+ brand:'Northbeam Digital',
+ kicker:'Northbeam Digital · #client-accounts · Tue 9:14 AM',
+ channel:'#client-accounts · reply in thread',
+ chan:'#client-accounts',
+ dayLabel:'Tuesday, September 29',
+ asker:'Mia Chen', askerShort:'Mia', askerInit:'MC',
+ askTime:'9:14 AM', answerTime:'9:14 AM', followTime:'9:31 AM', doneTime:'9:31 AM',
+ question:"what's the status on the Harper account?",
+ heroLine:'Harper Physio is in Proposal Sent. Kate opened the proposal twice, and the follow-up is due Thursday.',
+ heroTags:[['blu','Notion · Account page'],['blu','Notion · Follow-up SOP'],['pur','GoHighLevel · Deal']],
+ heroCats:['Slack','Notion','GoHighLevel','Memory'],
+ answerSecs:9, doSecs:6,
+ answer:'<b>Harper Physio</b> is in <b>Proposal Sent</b> for the $3,500/mo Growth retainer <span class="cite">3</span>. Kate Harper got proposal v2 on Thu 24 Sep and has opened it twice. On the last call she asked to cap Google Ads at $2k/mo for the first 3 months <span class="cite">1</span>. The SOP says follow up 5 business days after sending, so a call is due <b>Thu 1 Oct</b> <span class="cite">2</span>.',
+ answerShort:'Harper Physio is in Proposal Sent ($3,500/mo). Kate opened v2 twice; follow-up is due Thu 1 Oct.',
+ sources:[['1','#37352f','Notion','Harper Physio · account page'],['2','#37352f','Notion','Follow-up SOP'],['3','#155eef','GoHighLevel','Harper Physio · Growth retainer deal']],
+ follow:"She just signed on the phone. Move Harper to Won, make an onboarding task for Jordan and post a summary in #harper-physio.",
+ followShort:'"She signed. Move it to Won and set up onboarding."',
+ inCap:'Mia asks between client calls, then asks it to update everything.',
+ outCap:'A sourced answer, the deal in Won and Jordan\'s onboarding task in Notion.',
+ outGhl:'Harper Physio moved to Won · $3,500/mo',
+ outNotion:'Onboarding kickoff · Jordan Lee · due Fri 2 Oct',
+ plan:[['GoHighLevel','Move <b>Harper Physio</b> from Proposal Sent to <b>Won</b> ($3,500/mo).'],['Notion','Create <b>Harper Physio onboarding kickoff</b> for Jordan Lee, due Fri 2 Oct, linked to the Onboarding SOP.'],['Slack','Post the deal summary in <b>#harper-physio</b>.']],
+ done:['<b>GoHighLevel:</b> Harper Physio is in Won.','<b>Notion:</b> onboarding task created for Jordan, due Fri 2 Oct.','<b>Slack:</b> summary posted in #harper-physio.'],
+ acct:'Harper Physio',
+ nprops:[['i-status','Status','<span class="ntg st c-orange">Proposal out</span>'],['i-person','Account lead','<span class="per"><i style="background:#d9674a">MC</i><span>Mia Chen</span></span>'],['i-sel','Package','<span class="ntg c-blue">Growth retainer</span><span class="ntg c-purple">Google Ads</span>'],['i-cal','Proposal sent','September 24, 2026'],['i-rel','GoHighLevel','<span style="border-bottom:1px solid rgba(55,53,47,.25);font-weight:500">Harper Physio deal</span>']],
+ callNote:'Call, 21 Sep: Kate wants Google Ads capped at $2k/mo for the first 3 months, then review.',
+ sopLine:'Follow up 5 business days after a proposal is sent, by phone first.',
+ sopLine2:'If no answer, email the one-page summary the same day.',
+ sopLine3:'After a signature, move the deal to Won and book the kickoff within 3 days.',
+ contact:'Dr Kate Harper', contactInit:'KH', contactSub:'Harper Physio · Brisbane',
+ ctags:['physio','google ads','proposal v2'],
+ pipeline:'Client Deals', dealValue:'$3,500 / month',
+ gact:[['Proposal v2 opened (2nd time)','Mon 28 Sep · 7:42 PM'],['Proposal v2 sent','Thu 24 Sep · by Mia Chen'],['Discovery call','Mon 21 Sep · 30 min']],
+ readSteps:[['Notion','Harper Physio · account page'],['Notion','Follow-up SOP'],['GoHighLevel','Contact and deal'],['Memory','Earlier thread about Harper']],
+ board:[
+  {s:'New Lead',c:'#98a2b3',cards:[['Bayview Chiro','Local SEO',1800,'Website'],['Summit Roofing','Google Ads',2400,'Referral']]},
+  {s:'Discovery Call',c:'#0ba5ec',cards:[['Lumen Skin','Meta Ads',2900,'Instagram'],['Oak & Iron Gym','Local SEO',1500,'Website']]},
+  {s:'Proposal Sent',c:'#f79009',cards:[['Harper Physio','Growth retainer',3500,'Referral','harper'],['Coastal Dental','Google Ads',4200,'Website']]},
+  {s:'Won',c:'#12b76a',cards:[['Bayside Gym','Meta Ads',2200,'Referral'],['Northside Vets','Local SEO',3000,'Website']]}
+ ],
+ tasks:[
+  {n:'Harper Physio onboarding kickoff',p:['JL','Jordan Lee','#2f9e7a'],d:'Oct 2',st:['c-gray','Not started'],nw:1},
+  {n:'Coastal Dental follow-up call',p:['MC','Mia Chen','#d9674a'],d:'Sep 30',st:['c-gray','Not started']},
+  {n:'Lumen Skin landing page',p:['PS','Priya Shah','#7a5af8'],d:'Sep 29',st:['c-blue','In progress']},
+  {n:'Bayside Gym monthly ad report',p:['JL','Jordan Lee','#2f9e7a'],d:'Sep 28',st:['c-blue','In progress'],late:1}
+ ],
+ summary:'Harper Physio signed: $3,500/mo Growth retainer. Google Ads capped at $2k/mo for the first 3 months. Jordan owns the onboarding kickoff, due Fri 2 Oct.',
+ digestDay:'Wednesday, September 30', digestFor:'Tuesday, Sep 29',
+ kpis:[{k:'New leads',v:'7',d:'in GoHighLevel',s:''},{k:'Deals won',v:'1',d:'+$3,500/mo',s:'up'},{k:'Tasks due today',v:'5',d:'across 3 people',s:''},{k:'Overdue',v:'2',d:'in Notion',s:'bad'}],
+ flags:[
+  {c:'win',t:'Won: Harper Physio',s:'$3,500/mo. Kickoff task is with Jordan, due Fri.'},
+  {c:'stale',t:'Coastal Dental has gone quiet',s:'No reply 6 days after the proposal. The SOP says call today.'},
+  {c:'late',t:'2 tasks overdue',s:'Bayside Gym ad report (Jordan), Lumen Skin landing page (Priya).'}
+ ],
+ digestLine:'1 deal won, 7 new leads, 5 tasks due and 2 things going stale.',
+ pipeWon:8700,
+ team:{name:'Jordan Lee',init:'JL',reply:'On the Bayside report now. Booking the Harper kickoff for Thursday.'},
+ builder:{
+  nodes:{
+   slackIn:{k:'trig',io:'in',ic:'#4a154b',icon:'hash',t:'Slack mention',s:'@Ops Agent in any client channel'},
+   sched:{k:'trig',ic:'#155eef',icon:'clock',t:'Schedule',s:'Weekdays at 8:00 AM · team digest'},
+   guard:{k:'guard',ic:'#f79009',icon:'shield',t:'Guardrails',s:'Rules the agent always follows',list:['Writes wait for a Confirm in Slack','Every answer cites its sources','Client channels only, no DMs out']},
+   agent:{k:'agent',ic:'#6d5cf0',icon:'spark',t:'Ops Agent',s:'Claude · tool use · thread replies',inst:'Answer team questions from Notion and GoHighLevel. Cite each source. List any change and wait for a Confirm before making it.',chips:[['p','9 tools'],['','Memory on'],['','Confirm writes']]},
+   memory:{k:'mem',ic:'#7a5af8',icon:'db',t:'Memory',s:'What it remembers between asks',list:['Slack thread history','Notes per client account']},
+   notion:{k:'tool',ic:'#37352f',icon:'page',t:'Notion',s:'Docs, SOPs and tasks',rows:[['search_docs','read'],['read_page','read'],['create_task','write']]},
+   ghl:{k:'tool',ic:'#155eef',icon:'bars',t:'GoHighLevel',s:'Contacts and pipeline',rows:[['get_contact','read'],['get_opportunity','read'],['update_stage','write']]},
+   slackOut:{k:'tool',io:'out',ic:'#4a154b',icon:'send',t:'Slack',s:'Replies and posts',rows:[['reply_in_thread','write'],['post_message','write'],['ask_confirm','ask']]}
+  },
+  run:[
+   {n:['slackIn'],e:['slackIn-agent'],t:'Mention from Mia in #client-accounts'},
+   {n:['agent','memory'],e:['agent-memory'],t:'Loading thread history'},
+   {n:['notion'],r:['notion',0],e:['agent-notion'],t:'<code>search_docs</code>("Harper Physio")'},
+   {n:['notion'],r:['notion',1],e:['agent-notion'],t:'<code>read_page</code>(Follow-up SOP)'},
+   {n:['ghl'],r:['ghl',1],e:['agent-ghl'],t:'<code>get_opportunity</code>(Harper Physio)'},
+   {n:['slackOut'],r:['slackOut',0],e:['agent-slackOut'],t:'<code>reply_in_thread</code> · answer with 3 sources'},
+   {n:['guard','slackOut'],r:['slackOut',2],e:['guard-agent','agent-slackOut'],t:'<code>ask_confirm</code> · 3 changes listed'},
+   {n:['ghl'],r:['ghl',2],e:['agent-ghl'],t:'<code>update_stage</code>(Harper Physio → Won)'},
+   {n:['notion'],r:['notion',2],e:['agent-notion'],t:'<code>create_task</code>(Onboarding kickoff, Jordan)'},
+   {n:['slackOut'],r:['slackOut',1],e:['agent-slackOut'],t:'<code>post_message</code>(#harper-physio)'}
+  ],
+  last:'Last run 9:31 AM · 8 tool calls · 0 errors'
+ }
+};
+</script>
+
+<script>
+(function(){
+const D=DATA;
+const $=id=>document.getElementById(id);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const ease=t=>1-Math.pow(1-t,3);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function count(el,a,b,dur,fmt,cb){const t0=performance.now();(function f(n){const p=Math.min(1,Math.max(0,(n-t0)/dur)),v=a+(b-a)*ease(p);if(cb)cb(v,p);if(el)el.textContent=fmt?fmt(v):Math.round(v);if(p<1)requestAnimationFrame(f)})(t0)}
+const money=v=>'$'+Math.round(v).toLocaleString('en-US');
+
+/* ---------- text fills ---------- */
+const TX={brand:D.brand,kicker:D.kicker,channel:D.channel,chan:D.chan,dayLabel:D.dayLabel,asker:D.asker,askerShort:D.askerShort,askerInit:D.askerInit,
+ askTime:D.askTime,answerTime:D.answerTime,followTime:D.followTime,doneTime:D.doneTime,question:D.question,heroLine:D.heroLine,answerShort:D.answerShort,
+ follow:D.follow,followShort:D.followShort,inCap:D.inCap,outCap:D.outCap,outGhl:D.outGhl,outNotion:D.outNotion,acct:D.acct,callNote:D.callNote,
+ sopLine:D.sopLine,sopLine2:D.sopLine2,sopLine3:D.sopLine3,contact:D.contact,contactInit:D.contactInit,contactSub:D.contactSub,pipeline:D.pipeline,
+ dealValue:D.dealValue,summary:D.summary,digestDay:D.digestDay,digestFor:D.digestFor,digestLine:D.digestLine,teamName:D.team.name,teamInit:D.team.init,teamReply:D.team.reply};
+document.querySelectorAll('[data-t]').forEach(el=>{const v=TX[el.dataset.t];if(v!=null)el.textContent=v});
+$('htags').innerHTML=D.heroTags.map(([c,t])=>'<span class="lb '+c+'">'+esc(t)+'</span>').join('');
+$('hcats').innerHTML=D.heroCats.map((c,i)=>'<div id="hc'+(i+1)+'"><i></i>'+esc(c)+'</div>').join('');
+
+/* 01 ask */
+$('ansTx').innerHTML=D.answer;
+const SICON={Notion:'<svg viewBox="0 0 24 24"><path d="M6 4h9l3 3v13H6z"/><path d="M9 10h6M9 14h6"/></svg>',GoHighLevel:'<svg viewBox="0 0 24 24"><path d="M5 18V10M10 18V6M15 18v-5M20 18V9"/></svg>'};
+$('srcs').innerHTML=D.sources.map(s=>'<div class="src"><span class="cite">'+s[0]+'</span><span class="si2" style="background:'+s[1]+'">'+SICON[s[2]]+'</span><b>'+s[2]+'</b><span class="x">'+esc(s[3])+'</span></div>').join('');
+
+/* 02 read */
+$('nprops').innerHTML=D.nprops.map(p=>'<div class="prop"><div class="k"><svg class="ico"><use href="#'+p[0]+'"/></svg>'+p[1]+'</div><div class="v">'+p[2]+'</div></div>').join('');
+$('gtags').innerHTML=D.ctags.map(t=>'<span class="gtg">'+esc(t)+'</span>').join('');
+$('gact').innerHTML=D.gact.map(a=>'<div class="act"><i></i><div>'+esc(a[0])+'<small>'+esc(a[1])+'</small></div></div>').join('');
+$('readl').innerHTML=D.readSteps.map(r=>'<div><span class="tk"></span>'+esc(r[1])+'<span class="src2">'+esc(r[0])+'</span></div>').join('');
+
+/* 03 do */
+$('plan').innerHTML=D.plan.map((p,i)=>'<div><i>'+(i+1)+'</i><span><b>'+p[0]+':</b> '+p[1]+'</span></div>').join('');
+$('dlist').innerHTML=D.done.map(d=>'<div><i></i><span>'+d+'</span></div>').join('');
+
+/* 04 out: GHL board + Notion tasks */
+const NAV=['<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+ '<path d="M4 5h16v11H9l-5 4z"/>','<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>','<path d="M4 6h4v12H4zM10 6h4v8h-4zM16 6h4v5h-4z"/>',
+ '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>','<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'];
+document.querySelectorAll('.gnav').forEach(n=>{const a=+n.dataset.a;n.innerHTML='<span class="acct">NB</span>'+NAV.map((p,i)=>'<span class="ni'+(i===a?' a':'')+'"><svg viewBox="0 0 24 24">'+p+'</svg></span>').join('')});
+const AVC=['b','p','o','t','g'];
+$('board').innerHTML=D.board.map(c=>'<div class="col" style="--sc:'+c.c+'" data-s="'+esc(c.s)+'"><div class="ch"><b>'+esc(c.s)+'</b><span class="cnt"></span></div><div class="tot"></div><div class="cards">'+
+ c.cards.map((o,i)=>'<div class="oc"'+(o[4]?' id="'+o[4]+'"':'')+' data-v="'+o[2]+'"><div class="n">'+esc(o[0])+'<span class="av '+AVC[i%5]+'">MC</span></div><div class="j">'+esc(o[1])+'</div><div class="v">'+money(o[2])+'/mo<small>'+esc(o[3])+'</small></div><span class="ntag">Moved by agent</span></div>').join('')+'</div></div>').join('');
+function recount(){let n=0,v=0;document.querySelectorAll('#board .col').forEach(c=>{const cs=[...c.querySelectorAll('.oc')],s=cs.reduce((a,o)=>a+ +o.dataset.v,0);n+=cs.length;v+=s;
+ c.querySelector('.cnt').textContent=cs.length+(cs.length===1?' deal':' deals');c.querySelector('.tot').textContent=money(s)+'/mo'});$('ptot').textContent=n;$('pval').textContent=money(v)}
+recount();
+function flip(card,col){const a=card.getBoundingClientRect();col.querySelector('.cards').prepend(card);const b=card.getBoundingClientRect();
+ card.style.transition='none';card.style.transform='translate('+(a.left-b.left)+'px,'+(a.top-b.top)+'px)';card.offsetWidth;
+ card.style.transition='transform 1.2s cubic-bezier(.16,1,.3,1)';card.style.transform='';recount()}
+$('ttbl').innerHTML='<div class="tr th"><div>Task</div><div>Assignee</div><div>Due</div><div class="c-st">Status</div></div>'+
+ D.tasks.map(t=>'<div class="tr'+(t.nw?' new" id="newtask':'')+'"><div class="nm">'+esc(t.n)+(t.nw?' <span class="nw">New</span>':'')+'</div><div><span class="per"><i style="background:'+t.p[2]+'">'+t.p[0]+'</i><span>'+esc(t.p[1].split(' ')[0])+'</span></span></div><div class="du'+(t.late?' late':'')+'">'+t.d+'</div><div class="c-st"><span class="ntg st '+t.st[0]+'">'+t.st[1]+'</span></div></div>').join('');
+
+/* 05 digest */
+$('kpis').innerHTML=D.kpis.map(k=>'<div class="kpi"><div class="k">'+esc(k.k)+'</div><div class="v">'+esc(k.v)+'</div><div class="d '+k.s+'">'+esc(k.d)+'</div></div>').join('');
+$('fls').innerHTML+=D.flags.map(f=>'<div class="fl1"><i class="'+f.c+'"></i><div><b>'+esc(f.t)+'.</b> '+esc(f.s)+'</div></div>').join('');
+
+/* ---------- 06 agent builder canvas ---------- */
+const B=D.builder;
+const BI={hash:'<path d="M9 4L7 20M17 4l-2 16M4.5 9h15M3.5 15h15"/>',clock:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',shield:'<path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/>',
+ spark:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',db:'<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/>',
+ page:'<path d="M6 4h9l3 3v13H6z"/><path d="M9 10h6M9 14h6"/>',bars:'<path d="M5 18V10M10 18V6M15 18v-5M20 18V9"/>',send:'<path d="M4 12l16-8-6 16-2-7z"/>'};
+const LAY={
+ desk:{W:1180,H:572,n:{slackIn:[24,188,250,78],sched:[24,320,250,78],guard:[440,10,300,132],agent:[440,176,300,232],memory:[440,452,300,104],
+   notion:[880,14,280,168],ghl:[880,202,280,168],slackOut:[880,390,280,168]},
+  e:[['slackIn','r','agent','l',.5,.3],['sched','r','agent','l',.5,.62],['guard','b','agent','t'],['agent','b','memory','t'],['agent','r','notion','l',.22,.5],['agent','r','ghl','l',.5,.5],['agent','r','slackOut','l',.78,.5]]},
+ mob:{W:360,H:1378,n:{slackIn:[40,14,280,78],sched:[40,122,280,78],agent:[40,236,280,236],guard:[40,508,280,128],memory:[40,672,280,104],
+   notion:[40,812,280,160],ghl:[40,1008,280,160],slackOut:[40,1204,280,160]},
+  e:[['slackIn','r','agent','r',.5,.1],['sched','b','agent','t'],['agent','b','guard','t']],bus:{from:'agent',ofs:.9,x:18,to:['memory','notion','ghl','slackOut']}}
+};
+let mode=null,nodeEls={},edgeEls={};
+function nodeHTML(id,n){
+ let h=(n.k==='trig'?'<span class="hdr">Trigger</span>':'')+(n.io==='in'?'<span class="iot">In</span>':'')+(n.io==='out'?'<span class="iot o">Out</span>':'');
+ h+='<div class="bh"><span class="bi" style="background:'+n.ic+'"><svg viewBox="0 0 24 24">'+BI[n.icon]+'</svg></span><div><div class="tt">'+esc(n.t)+'</div><div class="ss">'+esc(n.s)+'</div></div></div>';
+ if(n.inst)h+='<div class="inst"><b>Instructions</b>'+esc(n.inst)+'</div>';
+ if(n.chips)h+='<div class="chips">'+n.chips.map(c=>'<span class="'+c[0]+'">'+esc(c[1])+'</span>').join('')+'</div>';
+ if(n.rows)h+='<div class="rows">'+n.rows.map(r=>'<div class="rw"><code>'+r[0]+'</code><span class="md'+(r[1]==='write'?' w':r[1]==='ask'?' a':'')+'">'+r[1]+'</span></div>').join('')+'</div>';
+ if(n.list)h+='<div class="gl">'+n.list.map(l=>'<div>'+esc(l)+'</div>').join('')+'</div>';
+ return h}
+function anchor(r,side,f){const [x,y,w,h]=r;f=f==null?.5:f;
+ return side==='r'?[x+w,y+h*f]:side==='l'?[x,y+h*f]:side==='t'?[x+w*f,y]:[x+w*f,y+h]}
+function build(){
+ const cw=$('cvw').clientWidth,m=cw<700?'mob':'desk',L=LAY[m];
+ const sc=Math.min(1,cw/L.W);
+ const cv=$('cv');
+ if(m!==mode){mode=m;cv.querySelectorAll('.bn').forEach(e=>e.remove());nodeEls={};edgeEls={};
+  const on=$('agent').classList.contains('built');
+  for(const id in L.n){const r=L.n[id],n=B.nodes[id];const d=document.createElement('div');d.className='bn k-'+n.k+(on?' on':'');d.dataset.id=id;
+   d.style.cssText='left:'+r[0]+'px;top:'+r[1]+'px;width:'+r[2]+'px;height:'+r[3]+'px';d.innerHTML=nodeHTML(id,n);cv.appendChild(d);nodeEls[id]=d}
+  const sv=$('edges');sv.setAttribute('width',L.W);sv.setAttribute('height',L.H);sv.setAttribute('viewBox','0 0 '+L.W+' '+L.H);let ph='';
+  L.e.forEach(e=>{const a=anchor(L.n[e[0]],e[1],e[4]),b=anchor(L.n[e[2]],e[3],e[5]);
+   let d;
+   if(e[1]==='r'&&e[3]==='l'){const k=Math.max(40,(b[0]-a[0])*.5);d='M'+a[0]+' '+a[1]+' C'+(a[0]+k)+' '+a[1]+' '+(b[0]-k)+' '+b[1]+' '+b[0]+' '+b[1]}
+   else if(e[1]==='r'&&e[3]==='r'){const k=18;d='M'+a[0]+' '+a[1]+' C'+(a[0]+k)+' '+a[1]+' '+(b[0]+k)+' '+b[1]+' '+b[0]+' '+b[1]}
+   else{d='M'+a[0]+' '+a[1]+' L'+b[0]+' '+b[1]}
+   const key=e[0]+'-'+e[2];ph+='<path data-k="'+key+'" d="'+d+'"/><circle cx="'+a[0]+'" cy="'+a[1]+'" r="3.5"/><circle cx="'+b[0]+'" cy="'+b[1]+'" r="3.5"/>'});
+  if(L.bus){const bs=L.bus,fr=L.n[bs.from],sy=fr[1]+fr[3]*bs.ofs,x=bs.x;
+   bs.to.forEach(t=>{const r=L.n[t],ty=r[1]+r[3]/2;const key=bs.from+'-'+t;
+    ph+='<path data-k="'+key+'" d="M'+fr[0]+' '+sy+' H'+(x+8)+' Q'+x+' '+sy+' '+x+' '+(sy+8)+' V'+(ty-8)+' Q'+x+' '+ty+' '+(x+8)+' '+ty+' H'+r[0]+'"/><circle cx="'+r[0]+'" cy="'+ty+'" r="3.5"/>'});
+   ph+='<circle cx="'+fr[0]+'" cy="'+sy+'" r="3.5"/>'}
+  sv.innerHTML=ph;
+  sv.querySelectorAll('path').forEach(p=>{(edgeEls[p.dataset.k]=edgeEls[p.dataset.k]||[]).push(p)});
+  if(!on){sv.style.opacity=0}
+ }
+ cv.style.width=L.W+'px';cv.style.height=L.H+'px';cv.style.transform='scale('+sc+')';
+ $('cvw').style.height=Math.ceil(L.H*sc)+'px';
+ const off=Math.max(0,(cw-L.W*sc)/2);cv.style.left=off+'px';
+}
+build();
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(build,120)});
+function edgesFor(k){return edgeEls[k]||edgeEls[k.split('-').reverse().join('-')]||[]}
+
+/* ---------- runners ---------- */
+const R={
+ hero:async()=>{count($('hsecs'),0,D.answerSecs,1800);await wait(900);$('hnotif').classList.add('landed');
+  count($('hdone'),0,3,2000,null,v=>{$('hring').style.strokeDashoffset=276.5*(1-v/3)});
+  for(let i=1;i<=D.heroCats.length;i++){await wait(380);$('hc'+i).classList.add('on')}},
+ io:async()=>{const it=[...document.querySelectorAll('#io .pin,#io .pout')];await wait(500);
+  for(const e of it.filter(e=>e.classList.contains('pin'))){e.classList.add('on');await wait(220)}
+  count($('iot'),0,D.answerSecs+D.doSecs,1600);await wait(1400);
+  for(const e of it.filter(e=>e.classList.contains('pout'))){e.classList.add('on');await wait(380)}},
+ ask:async()=>{await wait(600);$('a1').classList.add('on');await wait(600);$('atyp').classList.add('on');count($('asecs'),0,D.answerSecs,1600);
+  await wait(1500);$('atyp').classList.remove('on');$('a2').classList.add('on')},
+ read:async()=>{await wait(700);const rs=[...document.querySelectorAll('#readl div')];
+  const hl=[$('hl1'),$('hl2'),$('hl3'),null];
+  for(let i=0;i<rs.length;i++){rs[i].classList.add('on');if(hl[i])hl[i].classList.add('on');await wait(520)}},
+ do:async()=>{await wait(600);$('d1').classList.add('on');await wait(800);$('d2').classList.add('on');await wait(1300);
+  $('cfm').classList.add('press');await wait(260);$('cfm').classList.remove('press');$('d3').classList.add('on');await wait(500);
+  $('d4').classList.add('on');count($('dsecs'),0,D.doSecs,1400);
+  for(const d of document.querySelectorAll('#dlist div')){await wait(420);d.classList.add('on')}
+  $('hpb').classList.add('on');await wait(500);$('drx').classList.add('on')},
+ out:async()=>{const c=$('harper');await wait(1100);c.classList.add('mv');flip(c,document.querySelector('#board .col[data-s="Won"]'));await wait(1250);
+  c.classList.remove('mv');c.classList.add('done');await wait(400);$('newtask').classList.add('on')},
+ digest:async()=>{await wait(700);$('g1').classList.add('on');count($('kpipe'),0,D.pipeWon,1600,v=>money(v)+'/mo');
+  for(const f of document.querySelectorAll('#fls .fl1')){await wait(500);f.classList.add('on')}
+  await wait(800);$('g2').classList.add('on');$('tdb').classList.add('on');await wait(600);$('grx').classList.add('on')},
+ agent:async()=>{const S=$('agent');S.classList.add('built');await wait(900);
+  const order=['slackIn','sched','guard','agent','memory','notion','ghl','slackOut'];
+  for(const id of order){if(nodeEls[id])nodeEls[id].classList.add('on');await wait(150)}
+  const sv=$('edges');sv.style.transition='opacity .8s';sv.style.opacity=1;await wait(700);
+  $('blive').classList.add('on');$('blt').textContent='Live';
+  const run=$('brun');run.classList.add('go');
+  for(const st of B.run){
+   document.querySelectorAll('.bn.hot').forEach(x=>x.classList.remove('hot'));document.querySelectorAll('.edges path.hot').forEach(x=>x.classList.remove('hot'));
+   document.querySelectorAll('.bn .rw.hit').forEach(x=>x.classList.remove('hit'));
+   $('brunt').innerHTML=st.t;
+   st.n.forEach(id=>nodeEls[id]&&nodeEls[id].classList.add('hot'));nodeEls.agent.classList.add('hot');
+   st.e.forEach(k=>edgesFor(k).forEach(p=>p.classList.add('hot')));
+   if(st.r){const rw=nodeEls[st.r[0]]&&nodeEls[st.r[0]].querySelectorAll('.rw')[st.r[1]];if(rw)rw.classList.add('hit')}
+   await wait(900)}
+  document.querySelectorAll('.bn.hot').forEach(x=>x.classList.remove('hot'));document.querySelectorAll('.edges path.hot').forEach(x=>x.classList.remove('hot'));
+  document.querySelectorAll('.bn .rw.hit').forEach(x=>x.classList.remove('hit'));
+  run.classList.remove('go');run.classList.add('ok');$('brunt').textContent=B.last},
+ close:async()=>{}
+};
+
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const s=e.target;s.classList.add('in');io.unobserve(s);const f=R[s.dataset.run];if(f)f()}}),{threshold:.22});
+document.querySelectorAll('section').forEach(s=>io.observe(s));
+
+/* spatial parallax */
+const pars=[...document.querySelectorAll('.par')].map(el=>({el,z:parseFloat(el.dataset.z||0),sec:el.closest('section')}));
+let mx=0,my=0,tx=0,ty=0;addEventListener('mousemove',e=>{tx=e.clientX/innerWidth-.5;ty=e.clientY/innerHeight-.5},{passive:true});
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(){mx+=(tx-mx)*.06;my+=(ty-my)*.06;const vh=innerHeight,small=innerWidth<860,amp=reduce?0:(small?.35:1);
+ document.documentElement.style.setProperty('--sp',(scrollY/(document.body.scrollHeight-vh||1)).toFixed(3));
+ for(const p of pars){const r=p.sec.getBoundingClientRect();if(r.bottom<-200||r.top>vh+200)continue;
+  const t=Math.max(-1.2,Math.min(1.2,(r.top+Math.min(r.height,vh)/2-vh/2)/vh));
+  const big=p.el.offsetHeight>500?.35:1;
+  const y=-t*p.z*70*amp,rx=Math.max(-10,Math.min(12,t*9*(0.5+p.z*.4)))*amp*big,x=small?0:mx*p.z*-16*amp,ry=small?0:mx*p.z*3*amp*big;
+  p.el.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,'+(p.z*20*amp).toFixed(1)+'px) rotateX('+rx.toFixed(2)+'deg) rotateY('+ry.toFixed(2)+'deg)'}
+ requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+})();
+</script>

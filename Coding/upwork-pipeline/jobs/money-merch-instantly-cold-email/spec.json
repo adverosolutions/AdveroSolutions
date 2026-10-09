@@ -1,0 +1,219 @@
+{
+  "title": "Money Merch: Instantly Outbound to Businesses That Buy Uniforms",
+  "platform": "diagram",
+  "client": {
+    "company": "Money Merch",
+    "industry": "custom apparel: screen printing, embroidery and branded merchandise",
+    "location": "California, US"
+  },
+  "overview": {
+    "how_it_works": [
+      "One list per industry you give, only companies that buy uniforms or branded workwear",
+      "The person who orders the apparel, verified email, current customers removed",
+      "Instantly campaigns on separate domains, one mailbox per 175 companies a month",
+      "Positive replies to your sales team, weekly report on your measures"
+    ],
+    "setup": [
+      "Lookalike sending domains and mailboxes, your main domain never sends cold",
+      "Mailboxes warmed before the first send",
+      "One Instantly campaign and 3-email sequence per industry"
+    ],
+    "need_from_you": [
+      "Your industries and criteria, in the order you want them",
+      "Your monthly company target",
+      "Your current customer list to keep off every campaign",
+      "Who on your sales team takes positive replies, and where"
+    ]
+  },
+  "sections": [
+    {
+      "key": "research",
+      "label": "1 - RESEARCH AND LISTS",
+      "note": "Your parts 1 to 3, one list per industry you give: construction, HVAC, plumbing, electrical, landscaping, automotive, property management, restaurants and hospitality, gyms and fitness, warehouses and logistics, home services, multi-location businesses and companies with large employee teams. A company that doesn't buy uniforms or branded workwear never gets an email. Apollo, Sales Navigator, Clay or ZoomInfo: whichever you already pay for."
+    },
+    {
+      "key": "verify",
+      "label": "2 - VERIFY AND CLEAN",
+      "note": "Your parts 4 and 5. Every address is verified before it reaches Instantly, and anyone already buying from you comes off the list."
+    },
+    {
+      "key": "instantly",
+      "label": "3 - INSTANTLY CAMPAIGNS AND DELIVERABILITY",
+      "note": "Your parts 6 to 9. Cold email never sends from your main domain, and your monthly company target sets how many mailboxes."
+    },
+    {
+      "key": "optimize",
+      "label": "4 - A/B TESTS AND POSITIVE-REPLY HANDOFF",
+      "note": "Your parts 10 to 12. One change tested at a time, bad data removed as it shows up, and only positive replies go to your sales team."
+    },
+    {
+      "key": "report",
+      "label": "5 - REPORTING",
+      "note": "Your part 13, scored on your measures: list quality, valid email and bounce rate, positive reply rate, qualified leads, meetings or quote opportunities, and improvement over time."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "research",
+      "kind": "data.transform",
+      "section": "research",
+      "label": "1 - Research Each Industry You Give: Google Maps, Apollo, Sales Navigator"
+    },
+    {
+      "key": "fit",
+      "kind": "flow.branch",
+      "section": "research",
+      "label": "2 - Buys Uniforms or Branded Workwear?",
+      "notes": "Their line: not someone who simply sends thousands of emails."
+    },
+    {
+      "key": "buyer",
+      "kind": "data.transform",
+      "section": "research",
+      "label": "3 - Find Who Orders the Uniforms: Owner, Operations or Office Manager"
+    },
+    {
+      "key": "verify",
+      "kind": "data.transform",
+      "section": "verify",
+      "label": "4 - Find Every Email With Hunter, Verify With MillionVerifier or NeverBounce"
+    },
+    {
+      "key": "clean",
+      "kind": "data.transform",
+      "section": "verify",
+      "label": "5 - Clean the List: Remove Duplicates, Risky Emails and Current Customers"
+    },
+    {
+      "key": "import",
+      "kind": "data.transform",
+      "section": "instantly",
+      "label": "6 - Into Instantly: One Campaign Per Industry, 3 Emails With Follow-Ups"
+    },
+    {
+      "key": "domains",
+      "kind": "data.transform",
+      "section": "instantly",
+      "label": "7 - Separate Sending Domains Protect Your Main One: 1 Mailbox Per 175 Companies a Month",
+      "notes": "Your main domain never carries cold sends."
+    },
+    {
+      "key": "monitor",
+      "kind": "data.transform",
+      "section": "instantly",
+      "label": "8 - Watch Deliverability, Bounce and Reply Rates Every Day"
+    },
+    {
+      "key": "abtest",
+      "kind": "data.transform",
+      "section": "optimize",
+      "label": "9 - A/B Test Subject Lines, Messaging, Offers and Sequences"
+    },
+    {
+      "key": "baddata",
+      "kind": "data.transform",
+      "section": "optimize",
+      "label": "10 - Remove Bad Data: Bounces, Wrong Contacts, Closed Businesses"
+    },
+    {
+      "key": "positive",
+      "kind": "flow.branch",
+      "section": "optimize",
+      "label": "11 - Positive Reply?"
+    },
+    {
+      "key": "handoff",
+      "kind": "data.transform",
+      "section": "optimize",
+      "label": "12 - Hand It to Your Sales Team: Contact, Company, Uniform Need",
+      "notes": "Qualified opportunities only, with the reply attached."
+    },
+    {
+      "key": "weekly",
+      "kind": "data.aggregate",
+      "section": "report",
+      "label": "13 - Weekly Report: Volume, Replies, Interested Leads, Meetings, Quotes",
+      "notes": "Your six success measures, per campaign and per industry."
+    }
+  ],
+  "edges": [
+    {
+      "from": "research",
+      "to": "fit"
+    },
+    {
+      "from": "fit",
+      "to": "buyer",
+      "branch": "yes"
+    },
+    {
+      "from": "fit",
+      "to": "research",
+      "branch": "no",
+      "loop": true
+    },
+    {
+      "from": "buyer",
+      "to": "verify"
+    },
+    {
+      "from": "verify",
+      "to": "clean"
+    },
+    {
+      "from": "clean",
+      "to": "import"
+    },
+    {
+      "from": "import",
+      "to": "domains"
+    },
+    {
+      "from": "domains",
+      "to": "monitor"
+    },
+    {
+      "from": "monitor",
+      "to": "abtest"
+    },
+    {
+      "from": "abtest",
+      "to": "baddata"
+    },
+    {
+      "from": "baddata",
+      "to": "positive"
+    },
+    {
+      "from": "positive",
+      "to": "handoff",
+      "branch": "yes"
+    },
+    {
+      "from": "positive",
+      "to": "weekly",
+      "branch": "no"
+    },
+    {
+      "from": "handoff",
+      "to": "weekly"
+    }
+  ],
+  "input_sample": {
+    "industry": "HVAC companies",
+    "company": "Sierra Ridge Heating & Air",
+    "city": "Fresno, CA",
+    "uniform_signal": "techs in matching logo shirts on Google Maps photos, 9 service vans",
+    "source": "Google Maps"
+  },
+  "output_sample": {
+    "campaign": "HVAC companies - uniforms",
+    "company": "Sierra Ridge Heating & Air",
+    "decision_maker": "Dana Ortiz, Operations Manager",
+    "email": "dana@sierraridgehvac.com",
+    "email_status": "valid",
+    "reply": "We're hiring four techs this spring. Can you quote embroidered shirts and jackets with our logo?",
+    "interest": "positive",
+    "handed_to": "Money Merch sales team"
+  }
+}

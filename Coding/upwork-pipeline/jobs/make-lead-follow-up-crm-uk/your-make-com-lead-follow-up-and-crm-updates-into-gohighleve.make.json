@@ -1,0 +1,606 @@
+{
+  "name": "Your Make.com Lead Follow-Up and CRM Updates Into GoHighLevel",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 12421,
+        "maxResults": 1,
+        "path": "website-enquiries"
+      },
+      "mapper": {
+        "maxResults": 1
+      },
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "1 - New Lead From Your Website Form"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 2,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {
+        "scope": "roundtrip"
+      },
+      "mapper": {
+        "name": "sample_input",
+        "scope": "roundtrip",
+        "value": "{\n  \"full_name\": \"hannah whitlock\",\n  \"email\": \"Hannah.Whitlock@outlook.com\",\n  \"phone\": \"07700 900418\",\n  \"message\": \"Hi, I'd like to book an initial consultation. Are you free any evenings next week? Thanks\",\n  \"form_name\": \"Website contact form\",\n  \"submitted_at\": \"2026-09-24T18:42:00+01:00\"\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Sample Input"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 3,
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "select": "chat",
+        "model": "gpt-4.1",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You read new website enquiries for PASTE-YOUR-BUSINESS-NAME, a UK business that manages its leads in GoHighLevel. Services: PASTE-YOUR-SERVICE-LIST. Booking link: PASTE-YOUR-BOOKING-LINK. Write in British English, warm and brief, as the business (we), with no emojis and no exclamation marks. Never quote a price, promise a time slot or add anything the enquiry does not say.\nReturn one JSON object with these keys and nothing else:\nis_real_lead: true for anyone asking about a service, however short the message. false for spam, test entries, sales pitches, SEO or web design offers, link-only messages and gibberish.\nfirst_name, last_name: split from the full name with normal capitalisation. If only one name is given, leave last_name empty.\nemail: lowercased and trimmed. Empty if missing or clearly fake.\nphone: international format with no spaces, so GoHighLevel can text it. A UK mobile starting 07 becomes +447...; a number that already starts with + stays as it is; if you cannot tell the country, return it exactly as typed. Empty if there is none.\nservice: the closest match from the services list, or other.\nmessage_clean: their message on one line, line breaks replaced with spaces and double quotes with single quotes.\nsummary: one sentence a colleague reads before calling them back, including anything time-sensitive they mentioned.\nsms_reply: the first text back, under 320 characters (two SMS segments). Use their first name, answer what they asked in one line and end with the booking link. If the message is empty, thank them for getting in touch and ask what they need help with.\nNo value may contain a line break or a double quote."
+          },
+          {
+            "role": "user",
+            "content": "New enquiry from {{1.form_name}}, received {{1.submitted_at}}.\nFull name: {{1.full_name}}\nEmail: {{1.email}}\nPhone: {{1.phone}}\nMessage: {{1.message}}\n\nReturn the JSON object: is_real_lead, first_name, last_name, email, phone, service, message_clean, summary, sms_reply."
+          }
+        ],
+        "max_tokens": "800",
+        "temperature": "0.3",
+        "n_completions": "1",
+        "response_format": "json_object"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "2 - Read the Enquiry and Write the First Reply"
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 4,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "mapper": null,
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "3 - Is It a Real Enquiry?"
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 5,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true,
+                "service": "gohighlevel"
+              },
+              "mapper": {
+                "url": "https://services.leadconnectorhq.com/contacts/upsert",
+                "method": "post",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer PASTE-YOUR-GHL-API-KEY"
+                  },
+                  {
+                    "name": "Version",
+                    "value": "2021-07-28"
+                  },
+                  {
+                    "name": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\n  \"locationId\": \"PASTE-YOUR-GHL-LOCATION-ID\",\n  \"firstName\": \"{{3.result.first_name}}\",\n  \"lastName\": \"{{3.result.last_name}}\",\n  \"email\": \"{{3.result.email}}\",\n  \"phone\": \"{{3.result.phone}}\",\n  \"source\": \"Website form - {{1.form_name}}\",\n  \"tags\": [\n    \"website enquiry\",\n    \"{{3.result.service}}\"\n  ]\n}",
+                "timeout": "",
+                "shareCookies": false,
+                "followRedirect": true,
+                "rejectUnauthorized": true
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": -75,
+                  "name": "4 - GoHighLevel: Create or Update the Contact"
+                },
+                "restore": {}
+              },
+              "filter": {
+                "name": "Real Enquiry",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{4.value}}",
+                      "o": "exist"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "id": 6,
+              "module": "builtin:BasicRouter",
+              "version": 1,
+              "mapper": null,
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": -75,
+                  "name": "5 - Did GoHighLevel Save the Lead?"
+                }
+              },
+              "routes": [
+                {
+                  "flow": [
+                    {
+                      "id": 7,
+                      "module": "http:ActionSendData",
+                      "version": 3,
+                      "parameters": {
+                        "handleErrors": true,
+                        "useNewZLibDeCompress": true,
+                        "service": "gohighlevel"
+                      },
+                      "mapper": {
+                        "url": "https://services.leadconnectorhq.com/contacts/{{5.data.contact.id}}/notes",
+                        "method": "post",
+                        "headers": [
+                          {
+                            "name": "Authorization",
+                            "value": "Bearer PASTE-YOUR-GHL-API-KEY"
+                          },
+                          {
+                            "name": "Version",
+                            "value": "2021-07-28"
+                          },
+                          {
+                            "name": "Accept",
+                            "value": "application/json"
+                          }
+                        ],
+                        "qs": [],
+                        "bodyType": "raw",
+                        "parseResponse": true,
+                        "contentType": "application/json",
+                        "data": "{\n  \"body\": \"Website enquiry via {{1.form_name}} ({{3.result.service}}), {{1.submitted_at}}\\n\\nThey wrote: {{3.result.message_clean}}\\n\\nSummary: {{3.result.summary}}\"\n}",
+                        "timeout": "",
+                        "shareCookies": false,
+                        "followRedirect": true,
+                        "rejectUnauthorized": true
+                      },
+                      "metadata": {
+                        "designer": {
+                          "x": 1800,
+                          "y": -150,
+                          "name": "6 - GoHighLevel: Save the Enquiry as a Note"
+                        },
+                        "restore": {}
+                      },
+                      "filter": {
+                        "name": "Saved",
+                        "conditions": [
+                          [
+                            {
+                              "a": "{{6.value}}",
+                              "o": "exist"
+                            }
+                          ]
+                        ]
+                      }
+                    },
+                    {
+                      "id": 8,
+                      "module": "builtin:BasicRouter",
+                      "version": 1,
+                      "mapper": null,
+                      "metadata": {
+                        "designer": {
+                          "x": 2100,
+                          "y": -150,
+                          "name": "7 - New Lead or Already in GoHighLevel?"
+                        }
+                      },
+                      "routes": [
+                        {
+                          "flow": [
+                            {
+                              "id": 9,
+                              "module": "http:ActionSendData",
+                              "version": 3,
+                              "parameters": {
+                                "handleErrors": true,
+                                "useNewZLibDeCompress": true,
+                                "service": "gohighlevel"
+                              },
+                              "mapper": {
+                                "url": "https://services.leadconnectorhq.com/opportunities/",
+                                "method": "post",
+                                "headers": [
+                                  {
+                                    "name": "Authorization",
+                                    "value": "Bearer PASTE-YOUR-GHL-API-KEY"
+                                  },
+                                  {
+                                    "name": "Version",
+                                    "value": "2021-07-28"
+                                  },
+                                  {
+                                    "name": "Accept",
+                                    "value": "application/json"
+                                  }
+                                ],
+                                "qs": [],
+                                "bodyType": "raw",
+                                "parseResponse": true,
+                                "contentType": "application/json",
+                                "data": "{\n  \"locationId\": \"PASTE-YOUR-GHL-LOCATION-ID\",\n  \"pipelineId\": \"PASTE-YOUR-GHL-PIPELINE-ID\",\n  \"pipelineStageId\": \"PASTE-YOUR-GHL-STAGE-ID\",\n  \"contactId\": \"{{5.data.contact.id}}\",\n  \"name\": \"{{3.result.first_name}} {{3.result.last_name}} - {{3.result.service}}\",\n  \"status\": \"open\",\n  \"source\": \"Website form\"\n}",
+                                "timeout": "",
+                                "shareCookies": false,
+                                "followRedirect": true,
+                                "rejectUnauthorized": true
+                              },
+                              "metadata": {
+                                "designer": {
+                                  "x": 2400,
+                                  "y": -225,
+                                  "name": "8 - GoHighLevel: Add the Lead to Your Pipeline"
+                                },
+                                "restore": {}
+                              },
+                              "filter": {
+                                "name": "New Lead",
+                                "conditions": [
+                                  [
+                                    {
+                                      "a": "{{8.value}}",
+                                      "o": "exist"
+                                    }
+                                  ]
+                                ]
+                              }
+                            },
+                            {
+                              "id": 10,
+                              "module": "http:ActionSendData",
+                              "version": 3,
+                              "parameters": {
+                                "handleErrors": true,
+                                "useNewZLibDeCompress": true,
+                                "service": "gohighlevel"
+                              },
+                              "mapper": {
+                                "url": "https://services.leadconnectorhq.com/conversations/messages",
+                                "method": "post",
+                                "headers": [
+                                  {
+                                    "name": "Authorization",
+                                    "value": "Bearer PASTE-YOUR-GHL-API-KEY"
+                                  },
+                                  {
+                                    "name": "Version",
+                                    "value": "2021-04-15"
+                                  },
+                                  {
+                                    "name": "Accept",
+                                    "value": "application/json"
+                                  }
+                                ],
+                                "qs": [],
+                                "bodyType": "raw",
+                                "parseResponse": true,
+                                "contentType": "application/json",
+                                "data": "{\n  \"type\": \"SMS\",\n  \"contactId\": \"{{5.data.contact.id}}\",\n  \"message\": \"{{3.result.sms_reply}}\"\n}",
+                                "timeout": "",
+                                "shareCookies": false,
+                                "followRedirect": true,
+                                "rejectUnauthorized": true
+                              },
+                              "metadata": {
+                                "designer": {
+                                  "x": 2700,
+                                  "y": -225,
+                                  "name": "9 - GoHighLevel: Text the First Reply"
+                                },
+                                "restore": {}
+                              }
+                            },
+                            {
+                              "id": 11,
+                              "module": "http:ActionSendData",
+                              "version": 3,
+                              "parameters": {
+                                "handleErrors": true,
+                                "useNewZLibDeCompress": true,
+                                "service": "gohighlevel"
+                              },
+                              "mapper": {
+                                "url": "https://services.leadconnectorhq.com/contacts/{{5.data.contact.id}}/workflow/PASTE-YOUR-GHL-WORKFLOW-ID",
+                                "method": "post",
+                                "headers": [
+                                  {
+                                    "name": "Authorization",
+                                    "value": "Bearer PASTE-YOUR-GHL-API-KEY"
+                                  },
+                                  {
+                                    "name": "Version",
+                                    "value": "2021-07-28"
+                                  },
+                                  {
+                                    "name": "Accept",
+                                    "value": "application/json"
+                                  }
+                                ],
+                                "qs": [],
+                                "bodyType": "raw",
+                                "parseResponse": true,
+                                "contentType": "application/json",
+                                "data": "{}",
+                                "timeout": "",
+                                "shareCookies": false,
+                                "followRedirect": true,
+                                "rejectUnauthorized": true
+                              },
+                              "metadata": {
+                                "designer": {
+                                  "x": 3000,
+                                  "y": -225,
+                                  "name": "10 - GoHighLevel: Start Your Follow-Up Sequence"
+                                },
+                                "restore": {}
+                              }
+                            },
+                            {
+                              "id": 15,
+                              "module": "util:SetVariable2",
+                              "version": 1,
+                              "parameters": {
+                                "scope": "roundtrip"
+                              },
+                              "mapper": {
+                                "name": "final_output",
+                                "scope": "roundtrip",
+                                "value": "{\n  \"ghl_contact_id\": \"vQ4nX8LrT2pZk6WmJ3sB\",\n  \"new_lead\": true,\n  \"contact\": \"Hannah Whitlock\",\n  \"phone_saved_as\": \"+447700900418\",\n  \"email_saved_as\": \"hannah.whitlock@outlook.com\",\n  \"service\": \"Initial consultation\",\n  \"note_saved\": \"They wrote: Hi, I'd like to book an initial consultation. Are you free any evenings next week?\",\n  \"pipeline_stage\": \"New enquiry\",\n  \"first_text_sent\": \"Hi Hannah, thanks for getting in touch about an initial consultation. You can see next week's evening availability and book straight in here: (your booking link). Any questions, just reply to this text.\",\n  \"follow_up_sequence\": \"started, stops when Hannah replies or books\"\n}"
+                              },
+                              "metadata": {
+                                "designer": {
+                                  "x": 3300,
+                                  "y": -225,
+                                  "name": "Final Output"
+                                },
+                                "restore": {}
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "flow": [
+                            {
+                              "id": 12,
+                              "module": "http:ActionSendData",
+                              "version": 3,
+                              "parameters": {
+                                "handleErrors": true,
+                                "useNewZLibDeCompress": true,
+                                "service": "gohighlevel"
+                              },
+                              "mapper": {
+                                "url": "https://services.leadconnectorhq.com/contacts/{{5.data.contact.id}}/tasks",
+                                "method": "post",
+                                "headers": [
+                                  {
+                                    "name": "Authorization",
+                                    "value": "Bearer PASTE-YOUR-GHL-API-KEY"
+                                  },
+                                  {
+                                    "name": "Version",
+                                    "value": "2021-07-28"
+                                  },
+                                  {
+                                    "name": "Accept",
+                                    "value": "application/json"
+                                  }
+                                ],
+                                "qs": [],
+                                "bodyType": "raw",
+                                "parseResponse": true,
+                                "contentType": "application/json",
+                                "data": "{\n  \"title\": \"Call back {{3.result.first_name}}: enquired again about {{3.result.service}}\",\n  \"body\": \"{{3.result.summary}}\\n\\nSuggested reply: {{3.result.sms_reply}}\",\n  \"dueDate\": \"{{addHours(now; 2)}}\",\n  \"completed\": false\n}",
+                                "timeout": "",
+                                "shareCookies": false,
+                                "followRedirect": true,
+                                "rejectUnauthorized": true
+                              },
+                              "metadata": {
+                                "designer": {
+                                  "x": 2400,
+                                  "y": -75,
+                                  "name": "7b - GoHighLevel: Task for You to Call Them Back"
+                                },
+                                "restore": {}
+                              },
+                              "filter": {
+                                "name": "Returning Lead",
+                                "conditions": [
+                                  [
+                                    {
+                                      "a": "{{8.value}}",
+                                      "o": "exist"
+                                    }
+                                  ]
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "flow": [
+                    {
+                      "id": 13,
+                      "module": "google-email:ActionSendEmail",
+                      "version": 2,
+                      "parameters": {},
+                      "mapper": {
+                        "to": [
+                          "PASTE-YOUR-EMAIL"
+                        ],
+                        "subject": "Lead not saved in GoHighLevel: {{1.full_name}}",
+                        "html": "<p>GoHighLevel did not save this enquiry, so it has not been texted or added to your follow-up sequence.</p><p>Name: {{1.full_name}}<br>Phone: {{1.phone}}<br>Email: {{1.email}}<br>Form: {{1.form_name}}<br>Received: {{1.submitted_at}}<br>Message: {{1.message}}</p><p>GoHighLevel said: {{5.statusCode}} {{5.data.message}}</p><p>The run is kept in Make under Incomplete executions; re-run it once the cause is fixed.</p>",
+                        "cc": [],
+                        "bcc": [],
+                        "attachments": []
+                      },
+                      "metadata": {
+                        "designer": {
+                          "x": 1800,
+                          "y": 0,
+                          "name": "5b - Email You the Lead and What Went Wrong"
+                        },
+                        "restore": {}
+                      },
+                      "filter": {
+                        "name": "Not Saved",
+                        "conditions": [
+                          [
+                            {
+                              "a": "{{6.value}}",
+                              "o": "exist"
+                            }
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 14,
+              "module": "builtin:Ignore",
+              "version": 1,
+              "parameters": {},
+              "mapper": {},
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": 75,
+                  "name": "3b - Spam or Test Entry: Stop, Nothing Sent"
+                },
+                "restore": {}
+              },
+              "filter": {
+                "name": "Spam Or Test Entry",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{4.value}}",
+                      "o": "exist"
+                    }
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com",
+    "notes": [
+      {
+        "moduleIds": [
+          1
+        ],
+        "content": "<p><strong>1 - LEAD FOLLOW-UP</strong></p><p>A new enquiry from your website form is read the moment it arrives and a first reply is written from what they actually asked. Spam and test entries stop at step 3, before anything is sent. If your form tool cannot send to a webhook, step 1 becomes a Make mailhook on the form's notification email and nothing after it changes.</p>",
+        "isFilterNote": false,
+        "metadata": {
+          "color": "#9138FE"
+        }
+      },
+      {
+        "moduleIds": [
+          5
+        ],
+        "content": "<p><strong>2 - CRM UPDATES</strong></p><p>The lead is created in GoHighLevel, or updated if they are already there, matched on email and phone so each person is one contact, with UK mobiles saved as +44 so GoHighLevel can text them.</p>",
+        "isFilterNote": false,
+        "metadata": {
+          "color": "#9138FE"
+        }
+      },
+      {
+        "moduleIds": [
+          6
+        ],
+        "content": "<p><strong>3 - RELIABLE, CONNECTED, DATA FLOWING CORRECTLY</strong></p><p>Your reliable process, connected systems and data flowing correctly between platforms, grouped here: form, Make and GoHighLevel in one scenario, and a lead GoHighLevel refuses comes to your inbox with the reason. Failed runs nobody sees are the first gap I check in your current setup.</p>",
+        "isFilterNote": false,
+        "metadata": {
+          "color": "#9138FE"
+        }
+      },
+      {
+        "moduleIds": [
+          7
+        ],
+        "content": "<p><strong>4 - ONGOING LEAD MANAGEMENT</strong></p><p>What they asked is saved on the contact as a note for whoever calls them back. New leads then get a card in your pipeline, the first text and your follow-up sequence, and someone already in GoHighLevel who enquires again becomes a task for you. Room to add a booking step next, so the card moves when they book.</p>",
+        "isFilterNote": false,
+        "metadata": {
+          "color": "#9138FE"
+        }
+      }
+    ]
+  }
+}

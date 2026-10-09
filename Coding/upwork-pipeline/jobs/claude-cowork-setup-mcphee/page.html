@@ -1,0 +1,879 @@
+<title>Claude Team Setup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16202e; --ink2:#4d596b; --ink3:#8792a3;
+  --blue:#2f74f5; --blue2:#6aa5ff; --mint:#1fb487; --amber:#e8a13a; --red:#e0445a;
+  --line:rgba(150,170,200,.28);
+  --panel:linear-gradient(180deg,rgba(255,255,255,.94),rgba(248,251,255,.80));
+  --shadow:0 40px 70px -30px rgba(38,72,128,.30),0 16px 30px -18px rgba(38,72,128,.22);
+  --ease:cubic-bezier(.16,1,.3,1);
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;background:#e9f0f8}
+body{font-family:"Figtree",system-ui,sans-serif;color:var(--ink);background:#e9f0f8;overflow-x:hidden;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+.sky{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+   radial-gradient(1200px 600px at 78% -10%,rgba(255,255,255,.95),rgba(255,255,255,0) 60%),
+   radial-gradient(900px 520px at 8% 30%,rgba(206,226,250,.75),rgba(206,226,250,0) 70%),
+   linear-gradient(180deg,#c9dcf2 0%,#dce8f5 28%,#ecf1f7 58%,#f3f4f6 82%,#e9edf2 100%);}
+.sky::after{content:"";position:absolute;left:-10%;right:-10%;top:calc(58% - var(--sp,0) * 18%);height:40%;
+  background:radial-gradient(60% 50% at 50% 0%,rgba(255,255,255,.85),rgba(255,255,255,0) 70%);filter:blur(10px)}
+.haze{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.haze i{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;animation:drift 26s ease-in-out infinite alternate}
+.haze i:nth-child(1){width:520px;height:520px;left:-120px;top:10%;background:#d6e6fb}
+.haze i:nth-child(2){width:460px;height:460px;right:-100px;top:45%;background:#e6f1fb;animation-duration:32s}
+.haze i:nth-child(3){width:380px;height:380px;left:40%;top:70%;background:#dff0ec;opacity:.45;animation-duration:38s}
+@keyframes drift{to{transform:translate3d(60px,-50px,0) scale(1.08)}}
+
+main{position:relative;z-index:1}
+.top{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:18px 32px;pointer-events:none}
+.top .brand{font-weight:600;font-size:13px;letter-spacing:.02em;color:var(--ink2);display:flex;gap:10px;align-items:center;padding:7px 14px 7px 12px;border-radius:99px;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff,0 6px 18px -8px rgba(38,72,128,.25);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.top .brand b{width:9px;height:9px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 4px rgba(47,116,245,.15)}
+.chip{white-space:nowrap;font-size:12px;font-weight:600;color:var(--ink2);padding:7px 13px;border-radius:99px;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff,0 6px 18px -8px rgba(38,72,128,.25);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(14px)}
+
+section{position:relative;min-height:100vh;padding:120px 48px 110px;display:flex;flex-direction:column;justify-content:center;perspective:1700px;perspective-origin:50% 40%}
+.wrap{width:100%;max-width:1240px;margin:0 auto;position:relative;transform-style:preserve-3d}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
+.eyebrow span{font-variant-numeric:tabular-nums;color:var(--ink3);letter-spacing:.06em}
+h1,h2{font-weight:600;letter-spacing:-.035em;line-height:1.02;color:var(--ink)}
+h1{font-size:clamp(44px,6.6vw,96px)}
+h2{font-size:clamp(38px,4.8vw,70px);margin-top:14px}
+h2 em,h1 em{font-style:normal;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.head{margin-bottom:56px}
+.head.c{text-align:center}
+.sub{font-size:clamp(17px,1.45vw,21px);line-height:1.45;font-weight:450;color:var(--ink2);max-width:660px;margin-top:18px;letter-spacing:-.005em}
+.head.c .sub{margin-left:auto;margin-right:auto}
+
+/* panels */
+.par{will-change:transform;transform-style:preserve-3d}
+.panel{position:relative;background:var(--panel);border-radius:28px;border:1px solid rgba(255,255,255,.95);
+  box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.55),var(--shadow);backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3)}
+.panel::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,0) 28%,rgba(255,255,255,0) 72%,rgba(200,218,242,.35) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;padding:1.5px}
+.panel::after{content:"";position:absolute;left:10%;right:10%;bottom:-46px;height:34px;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(52,86,140,.22),rgba(52,86,140,0));filter:blur(6px);pointer-events:none;transform:translateZ(-1px)}
+.rise{opacity:0;transform:perspective(1400px) translate3d(0,90px,-180px) rotateX(20deg);transform-origin:50% 100%;
+  transition:opacity 1.1s var(--ease),transform 1.6s var(--ease);transition-delay:var(--d,0s)}
+.in .rise{opacity:1;transform:perspective(1400px) translate3d(0,0,0) rotateX(0)}
+.fade{opacity:0;transform:translateY(18px);transition:opacity .9s var(--ease),transform 1.2s var(--ease);transition-delay:var(--d,0s)}
+.in .fade{opacity:1;transform:none}
+
+.label{font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+.avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(160deg,#7fb2ff,#2f74f5);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 6px 14px -6px rgba(47,116,245,.6);flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;background:rgba(31,180,135,.12);color:#12926b;white-space:nowrap}
+.pill.blue{background:rgba(47,116,245,.1);color:var(--blue)}
+.tagI{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);border:1px dashed rgba(135,146,163,.6);padding:4px 9px;border-radius:99px}
+.ring{position:relative;width:86px;height:86px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .num{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:24px;letter-spacing:-.02em;line-height:1;text-align:center}
+.ring .num small{display:block;font-size:11px;font-weight:600;color:var(--ink3);margin-top:2px}
+.lb{display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:6px;white-space:nowrap;line-height:1.3}
+.lb.red{background:rgba(224,68,90,.12);color:#c22f47}
+.lb.amb{background:rgba(232,161,58,.18);color:#a8650f}
+.lb.grn{background:rgba(31,180,135,.14);color:#0f8a63}
+.lb.gry{background:rgba(135,146,163,.16);color:#5b6576}
+.lb.blu{background:rgba(47,116,245,.12);color:#2360d6}
+.ts{font-family:var(--mono);font-size:11.5px;font-weight:700;color:#2360d6;background:rgba(47,116,245,.1);border-radius:6px;padding:2px 7px;white-space:nowrap;flex:none}
+.shell{padding:10px;border-radius:30px}
+.shin{border-radius:20px;overflow:hidden;background:#fff;position:relative}
+.scrollcue{margin-top:40px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);display:flex;flex-direction:column;align-items:center;gap:10px}
+.scrollcue b{width:1.5px;height:36px;background:linear-gradient(var(--ink3),transparent);animation:cue 2.4s ease-in-out infinite}
+@keyframes cue{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+@keyframes blink{50%{opacity:0}}
+.on-seq{opacity:0;transform:translateY(8px);transition:opacity .55s var(--ease),transform .8s var(--ease)}
+.on-seq.on{opacity:1;transform:none}
+
+/* HERO + GOAL (from pilots/impact-hero.html) */
+#hero .wrap{display:grid;grid-template-columns:1fr;justify-items:center;text-align:center}
+#hero .kicker{font-size:15px;font-weight:500;color:var(--ink2);margin-bottom:22px}
+.goal{margin-top:26px;font-size:clamp(17px,1.45vw,21px);line-height:1.4;font-weight:500;color:var(--ink2);letter-spacing:-.005em;display:inline-flex;align-items:center;gap:12px}
+.goal b{font-weight:700;color:var(--ink)}
+.goal i{width:9px;height:9px;border-radius:50%;background:#12926b;box-shadow:0 0 0 4px rgba(31,180,135,.16);flex:none}
+.hgoal{width:min(1040px,100%);margin-top:22px}
+.gcard{padding:24px 28px 26px;text-align:left;display:flex;flex-direction:column;gap:20px}
+.gtopr{display:grid;grid-template-columns:auto minmax(0,1fr);gap:36px;align-items:center}
+.gres{display:flex;flex-direction:column;gap:10px}
+.gres .label{color:#12926b}
+.gmath{display:flex;flex-direction:column;gap:8px;padding-left:32px;border-left:1px solid var(--line)}
+.gin{display:flex;flex-direction:column;gap:12px;padding-top:18px;border-top:1px solid var(--line)}
+.ginh{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ginh .label{color:var(--blue)}
+.ginr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.hmet{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:min(640px,100%);margin-top:92px;text-align:left}
+.imtag{align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#667085;border:1px dashed #98a2b3;padding:4px 10px;border-radius:99px;white-space:nowrap}
+.imf{display:flex;flex-direction:column;gap:7px}
+.imf label{font-size:13.5px;font-weight:600;color:var(--ink2)}
+.imbox{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #d0d5dd;border-radius:14px;padding:0 16px;height:56px;box-shadow:0 1px 2px rgba(16,24,40,.05);transition:border-color .3s,box-shadow .3s}
+.imbox:focus-within{border-color:var(--blue);box-shadow:0 0 0 4px rgba(47,116,245,.14)}
+.imbox span{font-size:22px;font-weight:600;color:var(--ink3)}
+.imbox input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:24px;font-weight:700;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums;-moz-appearance:textfield;appearance:textfield}
+.imbox input::-webkit-outer-spin-button,.imbox input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.imbox small{font-size:12.5px;font-weight:600;color:var(--ink3);white-space:nowrap}
+.imbig{font-size:clamp(52px,6.2vw,90px);font-weight:600;letter-spacing:-.045em;line-height:.95;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
+.imbig small{font-size:.32em;letter-spacing:-.01em;font-weight:600;margin-left:6px}
+.imeq{font-size:17px;line-height:1.55;font-weight:500;color:var(--ink2)}
+.imeq b{color:var(--ink);font-weight:700}
+.imeq .tot{color:#12926b}
+.ims{background:#fff;border:1px solid #eaecf0;border-radius:16px;padding:14px 16px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.ims .v{font-size:28px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.ims .v small{font-size:14px;font-weight:600;color:var(--ink3);margin-left:3px;letter-spacing:0}
+.ims .k{font-size:12.5px;line-height:1.4;color:var(--ink3);font-weight:500;margin-top:6px}
+.imnote{font-size:12.5px;line-height:1.45;color:var(--ink3);font-weight:500}
+#hero{padding-top:84px;padding-bottom:28px}
+#hero .hmet{margin-top:22px}
+#hero .scrollcue{margin-top:18px}
+#hero h1{font-size:clamp(40px,5.2vw,76px)}
+#hero .goal{margin-top:22px}
+#hero .hgoal{margin-top:26px}
+
+/* IN -> OUT */
+#io .wrap{text-align:center}
+.iog{display:grid;grid-template-columns:minmax(0,1fr) 170px minmax(0,1fr);align-items:center;gap:20px;max-width:1060px;margin:0 auto;transform-style:preserve-3d;text-align:left}
+.iocol{display:flex;flex-direction:column;gap:18px;min-width:0}
+.iop{padding:24px 24px 26px;display:flex;flex-direction:column;gap:12px}
+.iop .label{color:var(--blue)}
+.iop.out .label{color:#12926b}
+.iocap{font-size:15.5px;line-height:1.45;font-weight:500;color:var(--ink2);text-align:center;padding:0 10px}
+.iocall{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid #eaecf0;border-radius:16px;padding:14px 16px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.iocall .t{font-weight:700;font-size:16px}.iocall .s{font-size:13px;color:var(--ink3);margin-top:2px}
+.iocall .ring2{margin-left:auto;font-size:11.5px;font-weight:700;color:#2360d6;background:#eff4ff;border:1px solid #c7d7fe;border-radius:99px;padding:4px 10px;white-space:nowrap}
+.ic40{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;flex:none;background:linear-gradient(160deg,#6aa5ff,#155eef);box-shadow:0 8px 16px -8px rgba(21,94,239,.7)}
+.ic40 svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.trl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;font-size:13.5px;line-height:1.45;padding:0 4px}
+.trl .sp{font-weight:700;color:var(--ink)}
+.trl .sp.p{color:#7a5af8}
+.trl q{quotes:none;color:var(--ink2)}
+.iorow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:0 4px}
+.iorow span:first-child{color:var(--ink3)}.iorow span:last-child{font-weight:600;text-align:right}
+.ioscore{display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #eaecf0;border-radius:16px;padding:12px 16px;box-shadow:0 0 0 2px #12b76a,0 14px 24px -14px rgba(18,183,106,.5)}
+.ioscore .big{font-size:34px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.ioscore .big small{font-size:14px;color:var(--ink3);font-weight:600}
+.ioscore .t{font-weight:700;font-size:14.5px}.ioscore .s{font-size:12.5px;color:var(--ink3);margin-top:2px}
+.ioitem{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.45;background:#fff;border:1px solid #eaecf0;border-radius:12px;padding:10px 12px}
+.ioitem b{font-weight:700}
+.ioar{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.ioar .tt{font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:1;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ioar svg{width:150px;height:24px;overflow:visible}
+.ioar svg path{fill:none;stroke:url(#gm);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.ioar .label{letter-spacing:.1em}
+.iop .pin,.iop .pout{opacity:0;transform:translateY(10px);transition:opacity .6s var(--ease),transform .8s var(--ease)}
+.iop .on{opacity:1;transform:none}
+
+
+/* CLOSE */
+/* CLOSE */
+#close .wrap{text-align:center}
+.words{position:relative;display:flex;flex-direction:column;align-items:center;gap:22px;transform-style:preserve-3d}
+.word{padding:18px 40px 20px 30px;border-radius:99px;display:flex;align-items:center;gap:18px;font-size:clamp(40px,5.4vw,78px);font-weight:600;letter-spacing:-.04em;line-height:1}
+.word i{width:40px;height:40px;border-radius:50%;background:rgba(31,180,135,.14);display:grid;place-items:center;flex:none}
+.word i::after{content:"";width:15px;height:8px;border-left:3px solid var(--mint);border-bottom:3px solid var(--mint);transform:rotate(-45deg) translate(2px,-2px)}
+.word.w1{margin-right:280px}.word.w2{margin-left:120px}.word.w3{margin-right:160px}.word.w4{margin-left:260px}
+.word.w4 span{background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.foot{margin-top:70px;font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase}
+.ioar .tt{font-size:34px}
+.iotool{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.iot2{display:flex;gap:9px;align-items:center;background:#fff;border:1px solid #eaecf0;border-radius:12px;padding:9px 11px;font-size:13px;font-weight:600;min-width:0}
+.iot2 span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.iot2 em{margin-left:auto;font-style:normal;font-size:11px;font-weight:700;color:#0f8a63;white-space:nowrap}
+.gi{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;flex:none;background:#f2f5fa;border:1px solid #e4e8ef}
+.gi svg{width:15px;height:15px;fill:none;stroke:#4d596b;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.gi.b{background:#eef4ff;border-color:#c7d7fe}.gi.b svg{stroke:#2360d6}
+.gi.g{background:#ecfdf3;border-color:#abefc6}.gi.g svg{stroke:#0f8a63}
+.gi.a{background:#fff7ea;border-color:#f7d9a8}.gi.a svg{stroke:#a8650f}
+.gi.v{background:#f4f1ff;border-color:#d9d0fe}.gi.v svg{stroke:#6941c6}
+.gi.lg{width:44px;height:44px;border-radius:12px}.gi.lg svg{width:20px;height:20px}
+
+/* 01 CONNECTORS */
+.kgrid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:36px;align-items:start;transform-style:preserve-3d}
+.setbar{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid #eef1f5;background:#fafbfd;font-size:13.5px;font-weight:600;color:var(--ink3)}
+.setbar b{color:var(--ink);font-weight:700}
+.setbar .cnt{margin-left:auto}
+.crow{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:center;padding:15px 20px;border-bottom:1px solid #f0f2f6}
+.crow:last-child{border-bottom:0}
+.crow .n{font-weight:700;font-size:15px}
+.crow .d{font-size:13px;color:var(--ink3);margin-top:2px;line-height:1.4}
+.crow .sc{margin-top:7px;display:flex;gap:6px;flex-wrap:wrap}
+.crow .rt{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.cst{font-size:12px;font-weight:700;color:var(--ink3);white-space:nowrap}
+.crow.on .cst{color:#0f8a63}
+.tog{width:44px;height:26px;border-radius:99px;background:#d6dbe3;position:relative;transition:background .45s;flex:none}
+.tog::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(16,24,40,.25);transition:transform .45s var(--ease)}
+.crow.on .tog{background:#12b76a}
+.crow.on .tog::after{transform:translateX(18px)}
+.kside{display:grid;gap:24px}
+.knote{padding:20px 22px}
+.knote .t{font-weight:700;font-size:16px;margin-top:10px;letter-spacing:-.01em}
+.knote .s{font-size:13.5px;color:var(--ink2);margin-top:6px;line-height:1.5}
+.kl{list-style:none;display:grid;gap:8px;margin-top:12px}
+.kl li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.45;color:var(--ink2)}
+.kl li b{color:var(--ink)}
+.ck{width:18px;height:18px;border-radius:50%;background:rgba(31,180,135,.14);flex:none;display:grid;place-items:center;margin-top:1px}
+.ck::after{content:"";width:7px;height:4px;border-left:2px solid var(--mint);border-bottom:2px solid var(--mint);transform:rotate(-45deg) translate(1px,-1px)}
+
+/* 02 SKILLS */
+.sgrid{display:grid;grid-template-columns:minmax(0,.86fr) minmax(0,1.14fr);gap:36px;align-items:start;transform-style:preserve-3d}
+.sk{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px 18px;border-bottom:1px solid #f0f2f6;transition:background .5s}
+.sk:last-child{border-bottom:0}
+.sk.sel{background:#eef4ff}
+.sk .ic{width:36px;height:36px;border-radius:10px;background:#f4f1ff;border:1px solid #d9d0fe;display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:15px;color:#6941c6}
+.sk .n{font-family:var(--mono);font-size:13.5px;font-weight:700}
+.sk .d{font-size:13px;color:var(--ink3);margin-top:2px;line-height:1.4}
+.sk .u{font-size:12px;font-weight:700;color:var(--ink3);white-space:nowrap;text-align:right}
+.run{padding:22px 24px}
+.run .rh{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mail{margin-top:14px;background:#fff;border:1px solid #eaecf0;border-radius:14px;padding:13px 15px}
+.mail .mh{display:flex;gap:10px;align-items:center}
+.mail .av{width:32px;height:32px;border-radius:50%;background:linear-gradient(160deg,#c3d6f5,#8ea9d6);color:#fff;font-weight:700;font-size:12px;display:grid;place-items:center;flex:none}
+.mail .fr{font-weight:700;font-size:14px}
+.mail .sj{font-size:12.5px;color:var(--ink3);margin-top:1px}
+.mail .tm{margin-left:auto;font-size:12px;color:var(--ink3);font-weight:600;white-space:nowrap}
+.mail p{font-size:13.5px;line-height:1.5;color:var(--ink2);margin-top:9px}
+.rsteps{display:grid;gap:6px;margin-top:12px}
+.rstep{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--ink2);opacity:0;transform:translateY(6px);transition:opacity .5s var(--ease),transform .7s var(--ease)}
+.rstep.on{opacity:1;transform:none}
+.rstep b{color:var(--ink);font-weight:700}
+.draft{margin-top:12px;border:1px solid #c7d7fe;background:#f7faff;border-radius:14px;padding:13px 15px;opacity:0;transform:translateY(8px);transition:opacity .6s var(--ease),transform .8s var(--ease)}
+.draft.on{opacity:1;transform:none}
+.draft .dl{font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue)}
+.draft p{font-size:13.5px;line-height:1.55;color:var(--ink);margin-top:7px}
+.rfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink3);font-weight:600}
+
+/* 03 SCHEDULED */
+.hgrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:36px;align-items:start;transform-style:preserve-3d}
+.st{width:100%;border-collapse:collapse;font-size:13.5px}
+.st th{font-size:11.5px;text-align:left;color:var(--ink3);font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:10px 14px;border-bottom:1.5px solid #e4e8ef;white-space:nowrap}
+.st td{padding:11px 14px;border-bottom:1px solid #f0f2f6;vertical-align:middle}
+.st td.nm b{display:block;font-weight:700}
+.st td.nm span{display:block;font-size:12.5px;color:var(--ink3);margin-top:1px}
+.st td.wh{white-space:nowrap;color:var(--ink2);font-weight:600}
+.st tr.sel td{background:#eef4ff}
+.logh{padding:12px 16px 4px;font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);display:flex;justify-content:space-between;gap:8px}
+.log{padding:4px 16px 16px;display:grid;gap:3px}
+.lgr{display:grid;grid-template-columns:74px minmax(0,1fr);gap:10px;font-size:13px;line-height:1.5;opacity:0;transition:opacity .45s}
+.lgr.on{opacity:1}
+.lgr .t{font-family:var(--mono);font-size:12px;color:var(--ink3);padding-top:1px}
+.lgr .x{color:var(--ink2)}
+.lgr .x b{color:var(--ink)}
+.lgr.ok .x{color:#0f8a63;font-weight:700}
+.wk{padding:22px 24px}
+.wk .wh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.wk .wt{font-weight:700;font-size:17px;letter-spacing:-.01em;margin-top:12px}
+.wk .ws{font-size:12.5px;color:var(--ink3);margin-top:2px}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.kpi{background:#fff;border:1px solid #eaecf0;border-radius:12px;padding:10px 12px}
+.kpi .v{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.kpi .k{font-size:11.5px;color:var(--ink3);font-weight:600;margin-top:2px}
+.bars{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:end;height:110px;margin-top:16px;padding:0 2px}
+.bars div{display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.bars i{display:block;width:100%;max-width:30px;border-radius:7px 7px 3px 3px;background:linear-gradient(180deg,#8ec0ff,#2f74f5);height:0;transition:height 1s var(--ease)}
+.bars span{font-size:11px;font-weight:600;color:var(--ink3)}
+.wnote{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;line-height:1.5;color:var(--ink2)}
+.wnote b{color:var(--ink)}
+
+/* 04 BRIEF */
+.bdoc{padding:10px;border-radius:30px}
+.bin{border-radius:20px;background:#fff;overflow:hidden}
+.bhd{display:flex;align-items:center;gap:14px;padding:18px 24px;border-bottom:1px solid #eef1f5;flex-wrap:wrap}
+.bhd .t{font-weight:700;font-size:19px;letter-spacing:-.015em}
+.bhd .s{font-size:13px;color:var(--ink3);margin-top:2px}
+.bhd .r{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.bcols{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr);gap:0}
+.bcol{padding:18px 22px 22px;border-right:1px solid #f0f2f6;opacity:0;transform:translateY(10px);transition:opacity .6s var(--ease),transform .8s var(--ease)}
+.bcol:last-child{border-right:0}
+.bcol.on{opacity:1;transform:none}
+.bcol .label{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.bit{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:10px 0;border-top:1px solid #f0f2f6;font-size:13.5px;line-height:1.45}
+.bit:first-of-type{border-top:0;padding-top:0}
+.bit b{font-weight:700}
+.bit .w{grid-column:1/-1;color:var(--ink2);font-size:13px}
+.big2{font-size:40px;font-weight:700;letter-spacing:-.035em;line-height:1}
+.brow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:7px 0;border-top:1px solid #f0f2f6}
+.brow span:first-child{color:var(--ink3)}
+.brow span:last-child{font-weight:700;text-align:right}
+.cal{display:grid;grid-template-columns:62px minmax(0,1fr);gap:10px;padding:9px 0;border-top:1px solid #f0f2f6;font-size:13.5px;line-height:1.4}
+.cal:first-of-type{border-top:0;padding-top:0}
+.cal .h{font-family:var(--mono);font-size:12px;font-weight:700;color:#2360d6;padding-top:1px}
+.cal .e b{font-weight:700;display:block}
+.cal .e span{color:var(--ink3);font-size:12.5px}
+.bfoot{display:flex;gap:10px;align-items:center;padding:14px 24px;border-top:1px solid #eef1f5;background:#fafbfd;font-size:13.5px;color:var(--ink2);flex-wrap:wrap}
+.bfoot b{color:var(--ink)}
+.bfoot .tagI{margin-left:auto}
+
+/* 05 PROJECTS */
+.pjgrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:36px;align-items:start;transform-style:preserve-3d}
+.pjs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.pj{padding:18px 20px;opacity:0;transform:translateY(10px);transition:opacity .6s var(--ease),transform .8s var(--ease)}
+.pj.on{opacity:1;transform:none}
+.pj .ph{display:flex;gap:10px;align-items:center}
+.pj .n{font-weight:700;font-size:15.5px;letter-spacing:-.01em}
+.pj .d{font-size:13px;color:var(--ink2);margin-top:9px;line-height:1.45}
+.pj .ins{margin-top:10px;font-size:12.5px;line-height:1.5;background:#f7f8fb;border:1px solid #eceff4;border-radius:10px;padding:8px 10px;color:var(--ink2)}
+.pj .ins b{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:2px}
+.pj .ch{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.pjside{display:grid;gap:24px}
+.notes{padding:22px 24px}
+.notes .nh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.notes .t{font-weight:700;font-size:17px;margin-top:12px;letter-spacing:-.01em}
+.notes ol{list-style:none;counter-reset:n;display:grid;gap:9px;margin-top:12px}
+.notes li{counter-increment:n;display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;font-size:13.5px;line-height:1.45;color:var(--ink2);opacity:0;transition:opacity .5s}
+.notes li.on{opacity:1}
+.notes li::before{content:counter(n);width:22px;height:22px;border-radius:50%;background:rgba(47,116,245,.1);color:var(--blue);font-weight:800;font-size:12px;display:grid;place-items:center}
+.notes li b{color:var(--ink)}
+.trn{padding:18px 20px;display:flex;gap:14px;align-items:center}
+.trn .t{font-weight:700;font-size:15px}.trn .s{font-size:13px;color:var(--ink3);margin-top:2px;line-height:1.4}
+
+/* 06 PLATFORM: desktop app */
+#app .head{text-align:center}
+#app .sub{margin-left:auto;margin-right:auto}
+.cclab{margin-top:14px;display:inline-block}
+.win{border-radius:20px;overflow:hidden;background:#faf9f6;border:1px solid #e7e4dc}
+.wbar{display:flex;align-items:center;gap:8px;padding:11px 14px;background:#f1efea;border-bottom:1px solid #e3e0d8}
+.wbar i{width:12px;height:12px;border-radius:50%;background:#d3cfc6;flex:none}
+.wbar span{flex:1;text-align:center;font-size:12.5px;font-weight:600;color:#7d786e;margin-right:44px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wgrid{display:grid;grid-template-columns:210px minmax(0,1fr) 250px;min-height:560px}
+.wside{background:#f4f2ed;border-right:1px solid #e7e4dc;padding:14px 12px;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.wnew{display:flex;align-items:center;gap:8px;font-weight:700;color:#3d3a34;padding:8px 10px;border-radius:10px;background:#fff;border:1px solid #e3e0d8;margin-bottom:8px}
+.wnew b{width:18px;height:18px;border-radius:50%;background:#3d3a34;color:#fff;display:grid;place-items:center;font-size:13px;line-height:1}
+.wsh{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9a958a;padding:10px 10px 4px}
+.wit{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;color:#4a463e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wit svg{width:14px;height:14px;flex:none;fill:none;stroke:#8a8579;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.wit.act{background:#e8e5dd;color:#1f1d19;font-weight:700}
+.wmain{display:flex;flex-direction:column;min-width:0}
+.wtop{display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid #ece9e2;font-size:13.5px;font-weight:700;color:#2b2925;flex-wrap:wrap}
+.wtop span{font-weight:500;color:#8a8579;font-size:12.5px}
+.wconv{flex:1;padding:16px 22px 10px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.trig{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid #ece9e2;border-radius:12px;padding:10px 12px;font-size:13.5px;color:#3d3a34}
+.trig b{font-weight:700}
+.iot{flex:none;font-family:"Figtree",sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:99px;padding:2px 8px;color:#fff;background:#155eef}
+.iot.o{background:#12b76a}
+.trig .iot{margin-left:auto}
+.umsg{align-self:flex-end;max-width:85%;background:#ece9e2;border-radius:14px;padding:9px 13px;font-size:13.5px;line-height:1.45;color:#2b2925}
+.tool{display:flex;gap:9px;align-items:center;font-size:13px;color:#5b574e;padding:6px 10px;border:1px solid #ece9e2;border-radius:10px;background:#fdfcfa}
+.tool b{color:#2b2925;font-weight:700;white-space:nowrap}
+.tool span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tool em{margin-left:auto;font-style:normal;font-size:11.5px;font-weight:700;color:#0f8a63;white-space:nowrap}
+.tool .gi{width:22px;height:22px;border-radius:6px}.tool .gi svg{width:12px;height:12px}
+.amsg{font-size:13.5px;line-height:1.55;color:#2b2925}
+.amsg ul{margin:6px 0 0 18px;display:grid;gap:3px}
+.amsg .iot{margin-right:8px;vertical-align:1px}
+.wc{opacity:0;transform:translateY(6px);transition:opacity .45s var(--ease),transform .6s var(--ease)}
+.wc.on{opacity:1;transform:none}
+.wthink{font-size:12.5px;color:#9a958a;min-height:1.5em;padding-left:2px}
+.winp{margin:6px 18px 16px;border:1px solid #e3e0d8;background:#fff;border-radius:16px;padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:13.5px;color:#9a958a}
+.winp .pl{width:24px;height:24px;border-radius:50%;border:1px solid #e3e0d8;display:grid;place-items:center;color:#5b574e;font-size:15px;flex:none}
+.winp .sp{margin-left:auto;width:28px;height:28px;border-radius:9px;background:#d6d2c8;flex:none}
+.waside{border-left:1px solid #e7e4dc;padding:14px 14px;display:flex;flex-direction:column;gap:6px;background:#f8f7f3}
+.ash{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9a958a;padding:4px 2px}
+.ash+.ash{margin-top:0}
+.acon{display:flex;align-items:center;gap:9px;font-size:13px;color:#3d3a34;padding:6px 2px}
+.acon .an{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.acon .gi{width:24px;height:24px;border-radius:7px}.acon .gi svg{width:12px;height:12px}
+.acon .tog{width:34px;height:20px}.acon .tog::after{width:14px;height:14px}
+.acon.on .tog{background:#12b76a}.acon.on .tog::after{transform:translateX(14px)}
+.asch{background:#fff;border:1px solid #ece9e2;border-radius:10px;padding:8px 10px;font-size:12.5px;line-height:1.4;color:#5b574e;transition:box-shadow .5s,border-color .5s}
+.asch b{display:block;color:#2b2925;font-size:13px}
+.asch.hit{border-color:#84adff;box-shadow:0 0 0 3px rgba(47,116,245,.12)}
+.asep{height:1px;background:#e7e4dc;margin:8px 0}
+@media (max-width:1180px){
+  .wgrid{grid-template-columns:190px minmax(0,1fr) 220px}
+}
+@media (max-width:1100px){
+  .kgrid,.sgrid,.hgrid,.pjgrid{grid-template-columns:minmax(0,1fr)}
+  .kside{grid-template-columns:1fr 1fr;align-items:start}
+  .bcols{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .bcol:first-child{grid-column:1/-1;border-right:0;border-bottom:1px solid #f0f2f6}
+  .wgrid{grid-template-columns:minmax(0,1fr) 230px}
+  .wside{display:none}
+}
+@media (max-width:860px){
+  section{padding:100px 16px 80px;min-height:auto;perspective:1100px}
+  #hero{min-height:100vh;padding-top:84px}
+  .top{padding:14px 16px}.top .brand{font-size:12px}
+  .top .xs{display:none}
+  .head{margin-bottom:34px}
+  .goal{margin-top:20px;align-items:flex-start;text-align:left}.goal i{margin-top:8px}
+  .gcard{padding:20px 16px 22px;gap:16px}
+  .gtopr{grid-template-columns:1fr;gap:14px}
+  .gmath{padding-left:0;border-left:0}
+  .ginr{grid-template-columns:1fr;gap:12px}
+  .hmet{grid-template-columns:1fr;margin-top:24px}
+  .imeq{font-size:16px}
+  .iog{grid-template-columns:1fr;gap:18px}
+  .iop{padding:18px 16px 20px}
+  .ioar svg{width:80px;height:24px;transform:rotate(90deg);margin:22px 0}
+  .ioar .tt{font-size:30px}
+  .iotool{grid-template-columns:1fr}
+  .kside{grid-template-columns:1fr}
+  .crow{grid-template-columns:40px minmax(0,1fr);padding:14px 14px}
+  .crow .gi.lg{width:40px;height:40px}
+  .crow .rt{grid-column:2;flex-direction:row;align-items:center;justify-content:space-between}
+  .setbar{padding:12px 14px;flex-wrap:wrap}
+  .knote,.run,.wk,.notes{padding:18px 16px}
+  .sk{padding:12px 14px}
+  .st th,.st td{padding:9px 10px}
+  .st .ls{display:none}
+  .kpis{grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .kpi{padding:8px 9px}.kpi .v{font-size:17px}
+  .bcols{grid-template-columns:minmax(0,1fr)}
+  .bcol{border-right:0;border-bottom:1px solid #f0f2f6;padding:16px}
+  .bcol:last-child{border-bottom:0}
+  .bhd,.bfoot{padding:14px 16px}
+  .bhd .r{margin-left:0}
+  .bfoot .tagI{margin-left:0}
+  .pjs{grid-template-columns:1fr}
+  .wgrid{grid-template-columns:minmax(0,1fr)}
+  .waside{border-left:0;border-top:1px solid #e7e4dc}
+  .wconv{padding:14px 12px 8px}
+  .wtop{padding:10px 12px}
+  .winp{margin:6px 12px 14px}
+  .wbar span{margin-right:0}
+  .cclab{white-space:normal;max-width:100%;line-height:1.4;border-radius:16px}
+  .tool{flex-wrap:wrap}.tool span{white-space:normal}
+  .word{font-size:34px;padding:14px 24px 16px 18px}.word i{width:30px;height:30px}
+  .word.w1,.word.w2,.word.w3,.word.w4{margin:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation:none!important}}
+</style>
+
+<div class="sky"></div>
+<div class="haze"><i></i><i></i><i></i></div>
+<div class="top"><div class="brand"><b></b><span data-t="brand"></span><span class="xs"> · Claude for the team</span></div><div class="chip">Sample data</div></div>
+
+<main>
+<!-- SCREEN: hero -->
+<section id="hero" data-run="goal">
+  <div class="wrap">
+    <div class="kicker fade" data-t="kicker"></div>
+    <h1 class="fade" style="--d:.1s">Claude, set up<br><em>for the whole team.</em></h1>
+    <p class="goal fade" style="--d:.2s"><i></i><span>A system built around one clear goal: <b>hours back every week on emails, documents and reports.</b></span></p>
+    <div class="hgoal par" data-z="0.4"><div class="panel gcard rise" style="--d:.4s">
+      <div class="gtopr">
+        <div class="gres"><div class="label">The goal, a week</div><div class="imbig"><span id="imR">12</span><small>hrs/wk</small></div></div>
+        <div class="gmath"><p class="imeq" id="imEq"></p><p class="imnote" id="imNote"></p></div>
+      </div>
+      <div class="gin">
+        <div class="ginh"><div class="label">Your numbers</div><span class="imtag">Illustrative · we'll use your real numbers</span></div>
+        <div class="ginr">
+          <div class="imf"><label for="imL">People on the team</label><div class="imbox"><input id="imL" type="number" inputmode="numeric" min="0" max="500" step="1" value="6"><small>using Claude</small></div></div>
+          <div class="imf"><label for="imM">Hours each on emails, docs and reports</label><div class="imbox"><input id="imM" type="number" inputmode="decimal" min="0" max="60" step="0.5" value="5"><small>hrs a week</small></div></div>
+          <div class="imf"><label for="imP">Share Claude drafts or does</label><div class="imbox"><input id="imP" type="number" inputmode="numeric" min="0" max="100" step="5" value="40"><span>%</span></div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="hmet">
+      <div class="ims fade" style="--d:.7s"><div class="v">8:00<small>AM</small></div><div class="k">morning brief waiting every weekday: replies, sales, calendar</div></div>
+      <div class="ims fade" style="--d:.8s"><div class="v">4<small>skills</small></div><div class="k">for everyday work, shared with the whole team</div></div>
+    </div>
+    <div class="scrollcue fade" style="--d:1.4s">Scroll<b></b></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: in -> out -->
+<section id="io" data-run="io">
+  <div class="wrap">
+    <div class="head c"><h2 class="fade">Your tools in.<br><em>A morning brief out.</em></h2></div>
+    <div class="iog">
+      <div class="iocol par" data-z="0.4">
+        <div><div class="panel iop rise" style="--d:.2s">
+          <div class="label">What goes in</div>
+          <div class="iotool pin" id="ioTools"></div>
+          <div class="iorow pin"><span>New emails overnight</span><span id="ioMail"></span></div>
+          <div class="iorow pin"><span>Square sales yesterday</span><span id="ioSales"></span></div>
+          <div class="iorow pin"><span>On today's calendar</span><span id="ioCal"></span></div>
+        </div></div>
+        <p class="iocap fade" style="--d:.5s">The tools you already use, connected once: Gmail and Drive, Microsoft 365 and Outlook, Square.</p>
+      </div>
+      <div class="ioar fade" style="--d:.6s">
+        <div class="tt" id="iot">7:59</div>
+        <svg viewBox="0 0 150 24"><path d="M4 12H144M134 3l10 9-10 9"/></svg>
+        <div class="label">brief ready</div>
+      </div>
+      <div class="iocol par" data-z="0.9">
+        <div><div class="panel iop out rise" style="--d:.45s">
+          <div class="label">What comes out</div>
+          <div class="ioscore pout"><div class="big" id="ioRep">3</div><div><div class="t">Emails need a reply today</div><div class="s">Drafts written and waiting for you</div></div></div>
+          <div class="ioitem pout"><span class="lb grn">Sales</span><span id="ioSalesOut"></span></div>
+          <div class="ioitem pout"><span class="lb blu">Today</span><span id="ioCalOut"></span></div>
+        </div></div>
+        <p class="iocap fade" style="--d:.8s">One brief at 8 AM with what needs a reply, how yesterday went and what's on today.</p>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: connectors -->
+<section id="conn" data-run="conn">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>01</span>Input</div><h2 class="fade" style="--d:.1s">Your tools, <em>connected.</em></h2><p class="sub fade" style="--d:.2s">Gmail, Drive, Outlook and Square switch on one by one, each with only the access the team's work needs.</p></div>
+    <div class="kgrid">
+      <div class="par" data-z="0.3"><div class="panel shell rise" style="--d:.2s"><div class="shin">
+        <div class="setbar"><span>Settings</span><span>›</span><b>Connectors</b><span class="lb gry cnt" id="kcnt">0 of 5 connected</span></div>
+        <div id="krows"></div>
+      </div></div></div>
+      <div class="kside">
+        <div class="par" data-z="1.1"><div class="panel knote rise" style="--d:.6s">
+          <span class="lb blu">How access works</span>
+          <div class="t">Signed in over screen share</div>
+          <div class="s">Each person connects their own account while we're on the call. No passwords are shared.</div>
+        </div></div>
+        <div class="par" data-z="0.7"><div class="panel knote rise" style="--d:.8s">
+          <span class="label">What Claude can do</span>
+          <ul class="kl">
+            <li><span class="ck"></span><span><b>Read and search</b> email, files, the calendar and sales</span></li>
+            <li><span class="ck"></span><span><b>Write drafts</b> that wait in Gmail or Outlook</span></li>
+            <li><span class="ck"></span><span><b>Send nothing</b> until a person hits send</span></li>
+          </ul>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: skills -->
+<section id="skills" data-run="skills">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>02</span>Skills</div><h2 class="fade" style="--d:.1s">Everyday work, <em>one command.</em></h2><p class="sub fade" style="--d:.2s">Four skills the whole team shares. Here the email-reply skill answers a customer using the order in Square.</p></div>
+    <div class="sgrid">
+      <div class="par" data-z="0.3"><div class="panel shell rise" style="--d:.2s"><div class="shin">
+        <div class="setbar"><b>Team skills</b><span class="lb gry cnt">Shared with 6 people</span></div>
+        <div id="sklist"></div>
+      </div></div></div>
+      <div class="par" data-z="1"><div class="panel run rise" style="--d:.5s">
+        <div class="rh"><span class="lb blu">/draft-reply</span><span class="lb gry">Running on a sample email</span></div>
+        <div class="mail"><div class="mh"><span class="av" id="mAv"></span><div style="min-width:0"><div class="fr" id="mFr"></div><div class="sj" id="mSj"></div></div><span class="tm" id="mTm"></span></div><p id="mBody"></p></div>
+        <div class="rsteps" id="rsteps"></div>
+        <div class="draft" id="draft"><div class="dl">Draft reply · in your voice</div><p id="dBody"></p></div>
+        <div class="rfoot"><span class="pill">Saved to Gmail drafts</span><span>You read it and hit send</span></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: scheduled tasks -->
+<section id="sched" data-run="sched">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>03</span>Scheduled tasks</div><h2 class="fade" style="--d:.1s">Set once, <em>runs on its own.</em></h2><p class="sub fade" style="--d:.2s">The morning brief runs at 8 every weekday and the weekly report every Monday, with no one asking for them.</p></div>
+    <div class="hgrid">
+      <div class="par" data-z="0.3"><div class="panel shell rise" style="--d:.2s"><div class="shin">
+        <div class="setbar"><b>Scheduled</b><span class="lb gry cnt" id="schCnt"></span></div>
+        <table class="st"><thead><tr><th>Task</th><th>Runs</th><th class="ls">Last run</th><th></th></tr></thead><tbody id="schRows"></tbody></table>
+        <div class="logh"><span>This morning's run</span><span>Daily morning brief</span></div>
+        <div class="log" id="schLog"></div>
+      </div></div></div>
+      <div class="par" data-z="1"><div class="panel wk rise" style="--d:.5s">
+        <div class="wh"><span class="lb blu">Weekly report</span><span class="tagI">Illustrative</span></div>
+        <div class="wt" id="wkT"></div>
+        <div class="ws" id="wkS"></div>
+        <div class="kpis" id="wkK"></div>
+        <div class="bars" id="wkB"></div>
+        <div class="wnote" id="wkN"></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: the brief -->
+<section id="brief" data-run="brief">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>04</span>Output</div><h2 class="fade" style="--d:.1s">Your 8 AM brief, <em>waiting.</em></h2><p class="sub fade" style="--d:.2s">The emails that need a reply with drafts ready, yesterday's Square sales and today's calendar, in one place.</p></div>
+    <div class="par" data-z="0.4"><div class="panel bdoc rise" style="--d:.2s"><div class="bin">
+      <div class="bhd"><div class="gi b lg" data-ic="sun"></div><div><div class="t" id="bT"></div><div class="s" id="bS"></div></div><div class="r"><span class="pill">Delivered 8:00 AM</span><span class="lb gry">Daily morning brief</span></div></div>
+      <div class="bcols">
+        <div class="bcol"><div class="label"><span class="gi b" data-ic="mail"></span>Needs a reply</div><div id="bMail"></div></div>
+        <div class="bcol"><div class="label"><span class="gi a" data-ic="card"></span>Yesterday in Square</div><div class="big2" id="bRev">$0</div><div style="font-size:13px;color:var(--ink3);margin:6px 0 10px" id="bRevS"></div><div id="bSales"></div></div>
+        <div class="bcol"><div class="label"><span class="gi g" data-ic="cal"></span>Today</div><div id="bCal"></div></div>
+      </div>
+      <div class="bfoot"><span class="lb amb">Heads up</span><span id="bHead"></span><span class="tagI">Illustrative</span></div>
+    </div></div></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: projects + training -->
+<section id="proj" data-run="proj">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>05</span>Projects and training</div><h2 class="fade" style="--d:.1s">A Project per area, <em>notes for everyone.</em></h2><p class="sub fade" style="--d:.2s">Each area gets its own Project with instructions and files, and the team gets a live session plus short how-to notes.</p></div>
+    <div class="pjgrid">
+      <div class="pjs" id="pjs"></div>
+      <div class="pjside">
+        <div class="par" data-z="1.1"><div class="panel notes rise" style="--d:.6s">
+          <div class="nh"><span class="lb blu">How-to notes</span><span class="lb gry">1 page</span></div>
+          <div class="t" id="nT"></div>
+          <ol id="nList"></ol>
+        </div></div>
+        <div class="par" data-z="0.7"><div class="panel trn rise" style="--d:.8s">
+          <div class="gi g lg" data-ic="chat"></div>
+          <div><div class="t">Live training, 1 to 2 hours</div><div class="s">Over screen share in Pacific hours, then light support for a couple of weeks.</div></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: platform (Claude desktop app) -->
+<section id="app" data-run="app">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>06</span>In your Claude app</div><h2 class="fade" style="--d:.1s">This is what it will look like<br><em>in your Claude app.</em></h2><p class="sub fade" style="--d:.2s">At 8:00 the scheduled task wakes up, checks each connected tool and posts the brief into the Operations project.</p><div class="chip cclab fade" style="--d:.2s">Your Claude desktop app with connectors, skills and scheduled tasks · illustrative</div></div>
+    <div class="par" data-z="0.4"><div class="panel shell rise" style="--d:.3s"><div class="win">
+      <div class="wbar"><i></i><i></i><i></i><span>Claude · McPhee Companies</span></div>
+      <div class="wgrid">
+        <div class="wside" id="wside"></div>
+        <div class="wmain">
+          <div class="wtop">Daily morning brief <span id="wtopS"></span></div>
+          <div class="wconv" id="wconv"></div>
+          <div class="wthink" id="wthink" style="padding:0 22px">&nbsp;</div>
+          <div class="winp"><span class="pl">+</span><span>Reply, or type / for a skill</span><span class="sp"></span></div>
+        </div>
+        <div class="waside" id="waside"></div>
+      </div>
+    </div></div></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: close -->
+<section id="close" data-run="close">
+  <div class="wrap">
+    <div class="words">
+      <div class="par" data-z="0.3"><div class="panel word w1 rise" style="--d:.1s"><i></i>Connected.</div></div>
+      <div class="par" data-z="0.8"><div class="panel word w2 rise" style="--d:.35s"><i></i>Scheduled.</div></div>
+      <div class="par" data-z="1.2"><div class="panel word w3 rise" style="--d:.6s"><i></i>Trained.</div></div>
+      <div class="par" data-z="1.6"><div class="panel word w4 rise" style="--d:.85s"><i></i><span>Hours back.</span></div></div>
+    </div>
+    <div class="foot fade" style="--d:1.2s">McPhee Companies · Claude for the team</div>
+  </div>
+</section>
+<!-- /SCREEN -->
+</main>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <linearGradient id="gm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8ec0ff"/><stop offset="1" stop-color="#2f74f5"/></linearGradient>
+</defs></svg>
+
+<script>
+/* ============ SAMPLE CONTENT: a real job edits this object (and the headlines) ============ */
+const DATA={
+ brand:'McPhee Companies',
+ kicker:'McPhee Companies · Claude for the team · Friday 8:00 AM',
+ day:'Friday, Oct 2',
+ newMail:14, gmailNew:9, outlookNew:5,
+ sales:{rev:2418,orders:41,avg:59,vsLast:'+1% vs last Thursday',refunds:'1 · $38',busy:'12 to 1 PM'},
+ connectors:[
+  {ic:'mail',c:'b',n:'Gmail',d:'Shared inbox and personal inboxes',sc:['Read','Search','Draft']},
+  {ic:'folder',c:'b',n:'Google Drive',d:'Invoices, price lists, contracts',sc:['Read','Search']},
+  {ic:'mail',c:'v',n:'Microsoft 365 · Outlook',d:'Outlook mail and calendar',sc:['Read','Search','Draft']},
+  {ic:'card',c:'a',n:'Square',d:'Payments, orders and items',sc:['Read only']}
+ ],
+ skills:[
+  ['/draft-reply','Answers an email in your voice, checking Square and Drive first','38 this week'],
+  ['/summarize','Turns any document or attachment into five lines','21 this week'],
+  ['/weekly-report','Builds Monday\'s sales and inbox report','Mondays'],
+  ['/follow-up','Finds customers waiting on you and drafts a nudge','12 this week']
+ ],
+ mail:{av:'DO',from:'Dana Ortiz',subj:'Invoice + order #1042',tm:'7:42 AM',
+  body:'Hi, could you resend the invoice from September? Also, when should we expect order #1042? We need it before the 10th. Thanks, Dana'},
+ runSteps:[
+  ['mail','b','<b>Gmail</b> · read the full thread'],
+  ['card','a','<b>Square</b> · order #1042, paid Sep 29, set for Oct 6'],
+  ['folder','b','<b>Drive</b> · found Invoices / 2026-09 / Ortiz.pdf'],
+  ['chat','v','<b>Customer emails</b> project · used the team\'s tone guide']
+ ],
+ draft:'Hi Dana, the September invoice is attached. Order #1042 is paid and set for Tuesday, Oct 6, so it will be with you before the 10th. I\'ll let you know the moment it\'s on its way. Thanks!',
+ sched:[
+  ['Daily morning brief','Email, Square and calendar → Operations','Weekdays 8:00 AM','Today 8:00 AM'],
+  ['Weekly report','Square sales and inbox, last 7 days','Mondays 7:30 AM','Mon, Sep 28'],
+  ['Customer follow-ups','Customers waiting 2+ days for a reply','Fridays 3:00 PM','Fri, Sep 25']
+ ],
+ log:[
+  ['8:00:00','Started <b>Daily morning brief</b>'],
+  ['8:00:06','<b>Gmail + Outlook</b>: 14 new emails, 3 need a reply'],
+  ['8:00:19','Drafted <b>2 replies</b>, summarized <b>1 attachment</b>'],
+  ['8:00:24','<b>Square</b>: 41 sales, $2,418 yesterday'],
+  ['8:00:28','<b>Calendar</b>: 3 events today'],
+  ['8:00:31','Brief posted to Operations · delivered',1]
+ ],
+ week:{t:'Week of Sep 21 to 27',s:'Delivered Mon, Sep 28 at 7:30 AM to Sales & reporting',
+  days:[['Mon',1980],['Tue',2210],['Wed',2050],['Thu',2390],['Fri',2740],['Sat',2120],['Sun',1360]],
+  orders:268,
+  note:'Best day <b>Friday at $2,740</b>. Claude drafted <b>64 replies</b> this week and flagged <b>5 customers</b> for follow-up.'},
+ brief:{
+  mail:[
+   ['Dana Ortiz','Draft ready','Resend September invoice, date for order #1042'],
+   ['Priya Shah','Draft ready','Asks to move Tuesday\'s 10 AM call to Wednesday'],
+   ['Ray Chen · supplier','Summary ready','New price list attached, 6 pages, 4 changes']
+  ],
+  cal:[['9:30 AM','Team check-in','30 min · Outlook'],['11:00 AM','Call with Ray Chen','Price list summary attached'],['3:00 PM','Review the weekly numbers','From Monday\'s report']],
+  head:'2 customer emails have waited more than 2 days. /follow-up has drafts for both.'
+ },
+ projects:[
+  ['Operations','chat','g','Morning brief, scheduled tasks and team check-ins.','Lead with what needs a decision today. Keep it to one screen.',['Gmail','Outlook','Square']],
+  ['Customer emails','mail','b','Replies and follow-ups for every customer thread.','Friendly and short. Check Square for the order before answering.',['/draft-reply','/follow-up','Tone guide']],
+  ['Sales & reporting','card','a','The weekly report and anything about Square numbers.','Compare with the same day last week. Flag anything off by 20%.',['/weekly-report','Square']],
+  ['Documents & admin','folder','v','Summaries of contracts, price lists and forms in Drive.','Five lines, then anything that needs a signature or a date.',['/summarize','Drive']]
+ ],
+ notesT:'Using Claude at McPhee: the basics',
+ notes:[
+  'Open the <b>Project</b> for the area you\'re working in.',
+  'Type <b>/</b> to pick a skill: draft-reply, summarize, weekly-report or follow-up.',
+  'Drafts wait in <b>Gmail or Outlook</b>. A person always hits send.',
+  'Your <b>8 AM brief</b> is under Scheduled every weekday.',
+  'Not sure what Claude can see? Ask <b>"which tools are connected?"</b>'
+ ],
+ app:{
+  trigger:'Daily morning brief · weekdays 8:00 AM',
+  ask:'Build my morning brief: emails that need a reply with drafts, yesterday\'s Square sales, today\'s calendar.',
+  tools:[
+   ['mail','b','Gmail','Searched inbox since 6 PM','9 new'],
+   ['mail','v','Outlook','Searched inbox since 6 PM','5 new'],
+   ['chat','v','/draft-reply','Drafted replies to Dana Ortiz and Priya Shah','2 drafts'],
+   ['folder','b','/summarize','Read price-list-oct.pdf from Ray Chen','5 lines'],
+   ['card','a','Square','Pulled yesterday\'s payments','41 sales'],
+   ['cal','g','Outlook calendar','Read today\'s events','3 events']
+  ],
+  think:['Checking Gmail','Checking Outlook','Drafting replies','Summarizing the attachment','Pulling Square sales','Reading the calendar'],
+  out:['3 emails need a reply: 2 drafts are in Gmail, 1 summary is attached','$2,418 from 41 Square sales yesterday, up 1% on last Thursday','3 events today, the first at 9:30 AM'],
+  side:{projects:['Operations','Customer emails','Sales & reporting','Documents & admin'],sched:['Daily morning brief','Weekly report','Customer follow-ups'],recent:['Price list summary','Reply to Dana Ortiz']}
+ }
+};
+</script>
+
+<script>
+(function(){
+const D=DATA;
+const $=id=>document.getElementById(id);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const ease=t=>1-Math.pow(1-t,3);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function count(el,a,b,dur,fmt,cb){const t0=performance.now();(function f(n){const p=Math.min(1,(n-t0)/dur),v=a+(b-a)*ease(p);if(cb)cb(v,p);if(el)el.textContent=fmt?fmt(v):Math.round(v);if(p<1)requestAnimationFrame(f)})(t0)}
+const fmtN=v=>Math.round(v).toLocaleString('en-US');
+const usd=v=>'$'+fmtN(v);
+const IC={
+ mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+ folder:'<path d="M3 6h7l2 2h9v11H3z"/>',
+ cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+ card:'<rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19M6 15h4"/>',
+ chat:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 10h8"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+ hash:'<path d="M9 4L7 20M17 4l-2 16M4 9h16M3 15h16"/>'
+};
+const gi=(ic,c,lg)=>'<span class="gi '+(c||'')+(lg?' lg':'')+'"><svg viewBox="0 0 24 24">'+IC[ic]+'</svg></span>';
+document.querySelectorAll('[data-ic]').forEach(el=>{el.innerHTML='<svg viewBox="0 0 24 24">'+IC[el.dataset.ic]+'</svg>'});
+
+/* ---------- render from DATA ---------- */
+const TX={brand:D.brand,kicker:D.kicker};
+document.querySelectorAll('[data-t]').forEach(el=>{const v=TX[el.dataset.t];if(v!=null)el.textContent=v});
+/* io */
+$('ioTools').innerHTML=D.connectors.map(c=>'<div class="iot2">'+gi(c.ic,c.c)+'<span>'+esc(c.n.replace('Microsoft 365 · ',''))+'</span><em>On</em></div>').join('');
+$('ioMail').textContent=D.newMail;
+$('ioSales').textContent=usd(D.sales.rev)+' · '+D.sales.orders+' sales';
+$('ioCal').textContent=D.brief.cal.length+' events';
+$('ioSalesOut').textContent=usd(D.sales.rev)+' from '+D.sales.orders+' sales yesterday, '+D.sales.vsLast;
+$('ioCalOut').textContent=D.brief.cal.length+' events, first at '+D.brief.cal[0][0]+': '+D.brief.cal[0][1];
+$('ioRep').textContent=D.brief.mail.length;
+/* connectors */
+$('krows').innerHTML=D.connectors.map((c,i)=>'<div class="crow" id="kr'+i+'">'+gi(c.ic,c.c,1)+'<div style="min-width:0"><div class="n">'+esc(c.n)+'</div><div class="d">'+esc(c.d)+'</div><div class="sc">'+c.sc.map(s=>'<span class="lb gry">'+esc(s)+'</span>').join('')+'</div></div><div class="rt"><span class="tog"></span><span class="cst" id="ks'+i+'">Not connected</span></div></div>').join('');
+$('kcnt').textContent='0 of '+D.connectors.length+' connected';
+/* skills */
+$('sklist').innerHTML=D.skills.map((s,i)=>'<div class="sk" id="sk'+i+'"><span class="ic">/</span><div style="min-width:0"><div class="n">'+esc(s[0])+'</div><div class="d">'+esc(s[1])+'</div></div><span class="u">'+esc(s[2])+'</span></div>').join('');
+$('mAv').textContent=D.mail.av;$('mFr').textContent=D.mail.from;$('mSj').textContent=D.mail.subj;$('mTm').textContent=D.mail.tm;$('mBody').textContent=D.mail.body;
+$('rsteps').innerHTML=D.runSteps.map(s=>'<div class="rstep">'+gi(s[0],s[1])+'<span>'+s[2]+'</span></div>').join('');
+$('dBody').textContent=D.draft;
+/* scheduled */
+$('schCnt').textContent=D.sched.length+' tasks';
+$('schRows').innerHTML=D.sched.map((s,i)=>'<tr id="sr'+i+'"><td class="nm"><b>'+esc(s[0])+'</b><span>'+esc(s[1])+'</span></td><td class="wh">'+esc(s[2])+'</td><td class="wh ls">'+esc(s[3])+'</td><td><span class="lb grn">Delivered</span></td></tr>').join('');
+$('schLog').innerHTML=D.log.map(l=>'<div class="lgr'+(l[2]?' ok':'')+'"><span class="t">'+l[0]+'</span><span class="x">'+l[1]+'</span></div>').join('');
+const W=D.week,wTot=W.days.reduce((a,d)=>a+d[1],0),wMax=Math.max(...W.days.map(d=>d[1]));
+$('wkT').textContent=W.t;$('wkS').textContent=W.s;
+$('wkK').innerHTML='<div class="kpi"><div class="v">'+usd(wTot)+'</div><div class="k">Square sales</div></div><div class="kpi"><div class="v">'+W.orders+'</div><div class="k">Sales</div></div><div class="kpi"><div class="v">'+usd(wTot/W.orders)+'</div><div class="k">Average sale</div></div>';
+$('wkB').innerHTML=W.days.map(d=>'<div><i data-h="'+(d[1]/wMax*100).toFixed(0)+'"></i><span>'+d[0]+'</span></div>').join('');
+$('wkN').innerHTML=W.note;
+/* brief */
+$('bT').textContent='Morning brief · '+D.day;
+$('bS').textContent=D.newMail+' new emails, '+D.sales.orders+' sales yesterday, '+D.brief.cal.length+' events today';
+$('bMail').innerHTML=D.brief.mail.map(m=>'<div class="bit"><b>'+esc(m[0])+'</b><span class="lb '+(m[1]==='Draft ready'?'grn':'blu')+'">'+esc(m[1])+'</span><span class="w">'+esc(m[2])+'</span></div>').join('');
+$('bRevS').textContent=D.sales.orders+' sales · '+D.sales.vsLast;
+$('bSales').innerHTML=[['Average sale',usd(D.sales.avg)],['Refunds',D.sales.refunds],['Busiest hour',D.sales.busy]].map(r=>'<div class="brow"><span>'+r[0]+'</span><span>'+esc(r[1])+'</span></div>').join('');
+$('bCal').innerHTML=D.brief.cal.map(c=>'<div class="cal"><span class="h">'+esc(c[0])+'</span><span class="e"><b>'+esc(c[1])+'</b><span>'+esc(c[2])+'</span></span></div>').join('');
+$('bHead').textContent=D.brief.head;
+/* projects */
+$('pjs').innerHTML=D.projects.map((p,i)=>'<div class="par" data-z="'+(0.3+i*0.25).toFixed(2)+'"><div class="panel pj" id="pj'+i+'"><div class="ph">'+gi(p[1],p[2])+'<span class="n">'+esc(p[0])+'</span></div><div class="d">'+esc(p[3])+'</div><div class="ins"><b>Instructions</b>'+esc(p[4])+'</div><div class="ch">'+p[5].map(c=>'<span class="lb gry">'+esc(c)+'</span>').join('')+'</div></div></div>').join('');
+$('nT').textContent=D.notesT;
+$('nList').innerHTML=D.notes.map(n=>'<li><span>'+n+'</span></li>').join('');
+/* platform: desktop app */
+const A=D.app;
+const sideItem=(ic,t,act)=>'<div class="wit'+(act?' act':'')+'"><svg viewBox="0 0 24 24">'+IC[ic]+'</svg>'+esc(t)+'</div>';
+$('wside').innerHTML='<div class="wnew"><b>+</b>New chat</div><div class="wsh">Projects</div>'+A.side.projects.map(p=>sideItem('folder',p)).join('')+'<div class="wsh">Scheduled</div>'+A.side.sched.map((s,i)=>sideItem('clock',s,i===0)).join('')+'<div class="wsh">Recents</div>'+A.side.recent.map(r=>sideItem('chat',r)).join('');
+$('wtopS').textContent='Operations · scheduled run · '+D.day+', 8:00 AM';
+let cv='<div class="trig wc" id="wc0">'+gi('clock','b')+'<span><b>Scheduled task</b> · '+esc(A.trigger)+'</span><span class="iot">In</span></div>';
+cv+='<div class="umsg wc" id="wc1">'+esc(A.ask)+'</div>';
+A.tools.forEach((t,i)=>{cv+='<div class="tool wc" id="wt'+i+'">'+gi(t[0],t[1])+'<b>'+esc(t[2])+'</b><span>'+esc(t[3])+'</span><em>'+esc(t[4])+'</em></div>'});
+cv+='<div class="amsg wc" id="wcOut"><span class="iot o">Out</span>Your brief for '+esc(D.day)+' is ready in Operations.<ul>'+A.out.map(o=>'<li>'+esc(o)+'</li>').join('')+'</ul></div>';
+$('wconv').innerHTML=cv;
+$('waside').innerHTML='<div class="ash">Connectors</div>'+D.connectors.map((c,i)=>'<div class="acon" id="ac'+i+'">'+gi(c.ic,c.c)+'<span class="an">'+esc(c.n.replace('Microsoft 365 · ',''))+'</span><span class="tog"></span></div>').join('')+'<div class="asep"></div><div class="ash">Scheduled tasks</div>'+D.sched.slice(0,2).map((s,i)=>'<div class="asch" id="as'+i+'"><b>'+esc(s[0])+'</b>'+esc(s[2])+'</div>').join('')+'<div class="asep"></div><div class="ash">Skills</div><div style="display:flex;gap:5px;flex-wrap:wrap">'+D.skills.map(s=>'<span class="lb gry" style="font-family:var(--mono);font-size:11px">'+esc(s[0])+'</span>').join('')+'</div>';
+D.connectors.forEach((c,i)=>$('ac'+i).classList.add('on'));
+
+/* ---------- goal card (from pilots/impact-hero.html) ---------- */
+const imIn=['imL','imM','imP'].map($);
+const num=(el,max)=>{const v=parseFloat(el.value);return isFinite(v)?Math.min(max,Math.max(0,v)):0};
+function imCalc(){const L=num(imIn[0],500),M=num(imIn[1],60),P=num(imIn[2],100);
+ const all=L*M,wk=all*P/100,mo=wk*52/12;return {L,M,P,all,wk,mo}}
+const h1=v=>(Math.round(v*10)/10).toLocaleString('en-US');
+function imRender(){const m=imCalc();
+ $('imEq').innerHTML='<b>'+fmtN(m.L)+'</b> people × <b>'+h1(m.M)+' hrs</b> a week each on emails, documents and reports = <b>'+h1(m.all)+' hrs</b>. Claude drafts or does <b>'+m.P+'%</b> of it = <b class="tot">'+h1(m.wk)+' hrs a week</b> back for the team.';
+ $('imNote').textContent='Assumes a person still reads every draft and report before it goes out. About '+fmtN(m.mo)+' hrs a month.';
+ $('imR').textContent=h1(m.wk)}
+imRender();
+let imUser=false;imIn.forEach(el=>el.addEventListener('input',()=>{imUser=true;imRender()}));
+
+/* ---------- runners ---------- */
+const R={
+ goal:async()=>{await wait(700);if(!imUser)count($('imR'),0,imCalc().wk,1800,v=>h1(imUser?imCalc().wk:v))},
+ io:async()=>{const it=[...document.querySelectorAll('#io .pin,#io .pout')];await wait(500);
+  for(const e of it.filter(e=>e.classList.contains('pin'))){e.classList.add('on');await wait(220)}
+  count($('iot'),0,1,1500,v=>v<1?'7:59':'8:00');await wait(1500);
+  for(const e of it.filter(e=>e.classList.contains('pout'))){e.classList.add('on');await wait(380)}},
+ conn:async()=>{await wait(800);for(let i=0;i<D.connectors.length;i++){$('kr'+i).classList.add('on');$('ks'+i).textContent='Connected';$('kcnt').textContent=(i+1)+' of '+D.connectors.length+' connected';await wait(550)}},
+ skills:async()=>{await wait(600);$('sk0').classList.add('sel');await wait(500);
+  for(const s of document.querySelectorAll('#rsteps .rstep')){s.classList.add('on');await wait(420)}
+  await wait(200);$('draft').classList.add('on')},
+ sched:async()=>{await wait(500);$('sr0').classList.add('sel');
+  document.querySelectorAll('#wkB i').forEach((b,i)=>setTimeout(()=>b.style.height=b.dataset.h+'%',300+i*110));
+  for(const l of document.querySelectorAll('#schLog .lgr')){await wait(380);l.classList.add('on')}},
+ brief:async()=>{await wait(600);const cols=[...document.querySelectorAll('#brief .bcol')];
+  cols[0].classList.add('on');await wait(350);cols[1].classList.add('on');count($('bRev'),0,D.sales.rev,1300,usd);await wait(350);cols[2].classList.add('on')},
+ proj:async()=>{await wait(400);for(let i=0;i<D.projects.length;i++){$('pj'+i).classList.add('on');await wait(220)}
+  for(const l of document.querySelectorAll('#nList li')){await wait(260);l.classList.add('on')}},
+ app:async()=>{await wait(900);$('as0').classList.add('hit');$('wc0').classList.add('on');await wait(600);$('wc1').classList.add('on');await wait(600);
+  for(let i=0;i<A.tools.length;i++){$('wthink').textContent=A.think[i]+'…';$('wt'+i).classList.add('on');await wait(520)}
+  $('wthink').innerHTML='&nbsp;';$('wcOut').classList.add('on')},
+ close:async()=>{}
+};
+
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const s=e.target;s.classList.add('in');io.unobserve(s);const f=R[s.dataset.run];if(f)f()}}),{threshold:.22});
+document.querySelectorAll('section').forEach(s=>io.observe(s));
+
+/* spatial parallax */
+const pars=[...document.querySelectorAll('.par')].map(el=>({el,z:parseFloat(el.dataset.z||0),sec:el.closest('section')}));
+let mx=0,my=0,tx=0,ty=0;addEventListener('mousemove',e=>{tx=e.clientX/innerWidth-.5;ty=e.clientY/innerHeight-.5},{passive:true});
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(){mx+=(tx-mx)*.06;my+=(ty-my)*.06;const vh=innerHeight,small=innerWidth<860,amp=reduce?0:(small?.35:1);
+ document.documentElement.style.setProperty('--sp',(scrollY/(document.body.scrollHeight-vh||1)).toFixed(3));
+ for(const p of pars){const r=p.sec.getBoundingClientRect();if(r.bottom<-200||r.top>vh+200)continue;
+  const t=Math.max(-1.2,Math.min(1.2,(r.top+Math.min(r.height,vh)/2-vh/2)/vh));
+  const big=p.el.offsetHeight>500?.35:1;
+  const y=-t*p.z*70*amp,rx=Math.max(-10,Math.min(12,t*9*(0.5+p.z*.4)))*amp*big,x=small?0:mx*p.z*-16*amp,ry=small?0:mx*p.z*3*amp*big;
+  p.el.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,'+(p.z*20*amp).toFixed(1)+'px) rotateX('+rx.toFixed(2)+'deg) rotateY('+ry.toFixed(2)+'deg)'}
+ requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+})();
+</script>

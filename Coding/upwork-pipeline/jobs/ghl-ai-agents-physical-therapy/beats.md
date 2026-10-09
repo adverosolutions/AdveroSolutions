@@ -1,0 +1,8 @@
+- This is AI agents inside your GoHighLevel automations, for PT clinics
+- Switch clinics up here: same agent, each clinic's own knowledge
+- A back pain inquiry: it screens, never diagnoses, books the evaluation
+- Guardrails and front desk handoff are set per clinic in this prototype
+- Then GHL workflows take over, with calendar, texting and your EMR connected
+- Scaled my AI agency to $10k/month on the same kind of system
+- Performance shows each weekly change and what it did to bookings
+- Quick 15 minute call to walk your clinics through it?

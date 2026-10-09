@@ -1,0 +1,843 @@
+<title>Lead Tracker Fix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16202e; --ink2:#4d596b; --ink3:#8792a3;
+  --blue:#2f74f5; --blue2:#6aa5ff; --mint:#1fb487; --amber:#e8a13a; --red:#d9463b;
+  --line:rgba(150,170,200,.28);
+  --panel:linear-gradient(180deg,rgba(255,255,255,.94),rgba(248,251,255,.80));
+  --shadow:0 40px 70px -30px rgba(38,72,128,.30),0 16px 30px -18px rgba(38,72,128,.22);
+  --ease:cubic-bezier(.16,1,.3,1);
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;background:#e9f0f8}
+body{font-family:"Figtree",system-ui,sans-serif;color:var(--ink);background:#e9f0f8;overflow-x:hidden;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+.sky{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+   radial-gradient(1200px 600px at 78% -10%,rgba(255,255,255,.95),rgba(255,255,255,0) 60%),
+   radial-gradient(900px 520px at 8% 30%,rgba(206,226,250,.75),rgba(206,226,250,0) 70%),
+   linear-gradient(180deg,#c9dcf2 0%,#dce8f5 28%,#ecf1f7 58%,#f3f4f6 82%,#e9edf2 100%);}
+.sky::after{content:"";position:absolute;left:-10%;right:-10%;top:calc(58% - var(--sp,0) * 18%);height:40%;
+  background:radial-gradient(60% 50% at 50% 0%,rgba(255,255,255,.85),rgba(255,255,255,0) 70%);filter:blur(10px)}
+.haze{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.haze i{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;animation:drift 26s ease-in-out infinite alternate}
+.haze i:nth-child(1){width:520px;height:520px;left:-120px;top:10%;background:#d6e6fb}
+.haze i:nth-child(2){width:460px;height:460px;right:-100px;top:45%;background:#e6f1fb;animation-duration:32s}
+.haze i:nth-child(3){width:380px;height:380px;left:40%;top:70%;background:#dff0ec;opacity:.45;animation-duration:38s}
+@keyframes drift{to{transform:translate3d(60px,-50px,0) scale(1.08)}}
+
+main{position:relative;z-index:1}
+.top{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:18px 32px;pointer-events:none}
+.top .brand{font-weight:600;font-size:13px;letter-spacing:.02em;color:var(--ink2);display:flex;gap:10px;align-items:center;padding:7px 14px 7px 12px;border-radius:99px;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff,0 6px 18px -8px rgba(38,72,128,.25);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.top .brand b{width:9px;height:9px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 4px rgba(47,116,245,.15)}
+.chip{white-space:nowrap;font-size:12px;font-weight:600;color:var(--ink2);padding:7px 13px;border-radius:99px;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff,0 6px 18px -8px rgba(38,72,128,.25);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(14px)}
+
+section{position:relative;min-height:100vh;padding:120px 48px 110px;display:flex;flex-direction:column;justify-content:center;perspective:1700px;perspective-origin:50% 40%}
+.wrap{width:100%;max-width:1240px;margin:0 auto;position:relative;transform-style:preserve-3d}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
+.eyebrow span{font-variant-numeric:tabular-nums;color:var(--ink3);letter-spacing:.06em}
+.eyebrow.io{color:#12926b}
+h1,h2{font-weight:600;letter-spacing:-.035em;line-height:1.02;color:var(--ink)}
+h1{font-size:clamp(44px,6.6vw,96px)}
+h2{font-size:clamp(38px,4.8vw,70px);margin-top:14px}
+h2 em,h1 em{font-style:normal;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.head{margin-bottom:44px}
+.head.c{text-align:center}
+.sub{font-size:clamp(17px,1.45vw,21px);line-height:1.45;font-weight:450;color:var(--ink2);max-width:680px;margin-top:18px;letter-spacing:-.005em}
+.head.c .sub{margin-left:auto;margin-right:auto}
+
+/* panels */
+.par{will-change:transform;transform-style:preserve-3d}
+.panel{position:relative;background:var(--panel);border-radius:28px;border:1px solid rgba(255,255,255,.95);
+  box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.55),var(--shadow);backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3)}
+.panel::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,0) 28%,rgba(255,255,255,0) 72%,rgba(200,218,242,.35) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;padding:1.5px}
+.panel::after{content:"";position:absolute;left:10%;right:10%;bottom:-46px;height:34px;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(52,86,140,.22),rgba(52,86,140,0));filter:blur(6px);pointer-events:none;transform:translateZ(-1px)}
+.rise{opacity:0;transform:perspective(1400px) translate3d(0,90px,-180px) rotateX(20deg);transform-origin:50% 100%;
+  transition:opacity 1.1s var(--ease),transform 1.6s var(--ease);transition-delay:var(--d,0s)}
+.in .rise{opacity:1;transform:perspective(1400px) translate3d(0,0,0) rotateX(0)}
+.fade{opacity:0;transform:translateY(18px);transition:opacity .9s var(--ease),transform 1.2s var(--ease);transition-delay:var(--d,0s)}
+.in .fade{opacity:1;transform:none}
+
+.label{font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+.tagI{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);border:1px dashed rgba(135,146,163,.6);padding:4px 9px;border-radius:99px;white-space:nowrap}
+.lb{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:6px;white-space:nowrap;line-height:1.3}
+.lb.dup{background:rgba(232,161,58,.18);color:#a8650f}
+.lb.wrong{background:rgba(217,70,59,.12);color:#b42318}
+.lb.miss{background:rgba(135,146,163,.16);color:#5b6576}
+.lb.ok{background:rgba(31,180,135,.14);color:#0f8a63}
+.lb.blue{background:rgba(47,116,245,.12);color:#2360d6}
+.tick{width:20px;height:20px;border-radius:50%;background:rgba(31,180,135,.14);display:grid;place-items:center;flex:none}
+.tick::after{content:"";width:8px;height:4px;border-left:2px solid var(--mint);border-bottom:2px solid var(--mint);transform:rotate(-45deg) translate(1px,-1px)}
+.scrollcue{margin-top:40px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);display:flex;flex-direction:column;align-items:center;gap:10px}
+.scrollcue b{width:1.5px;height:36px;background:linear-gradient(var(--ink3),transparent);animation:cue 2.4s ease-in-out infinite}
+@keyframes cue{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+.shell{padding:10px;border-radius:30px}
+.shin{border-radius:20px;overflow:hidden;background:#fff;position:relative}
+
+/* HERO */
+#hero .wrap{display:grid;grid-template-columns:1fr;justify-items:center;text-align:center}
+#hero .kicker{font-size:15px;font-weight:500;color:var(--ink2);margin-bottom:22px}
+.goal{margin-top:26px;font-size:clamp(17px,1.45vw,21px);line-height:1.4;font-weight:500;color:var(--ink2);letter-spacing:-.005em;display:inline-flex;align-items:center;gap:12px}
+.goal b{font-weight:700;color:var(--ink)}
+.goal i{width:9px;height:9px;border-radius:50%;background:#12926b;box-shadow:0 0 0 4px rgba(31,180,135,.16);flex:none}
+.hgoal{width:min(1040px,100%);margin-top:22px}
+.gcard{padding:24px 28px 26px;text-align:left;display:flex;flex-direction:column;gap:20px}
+.gtopr{display:grid;grid-template-columns:auto minmax(0,1fr);gap:36px;align-items:center}
+.gres{display:flex;flex-direction:column;gap:10px}
+.gres .label{color:#12926b}
+.gmath{display:flex;flex-direction:column;gap:8px;padding-left:32px;border-left:1px solid var(--line)}
+.gin{display:flex;flex-direction:column;gap:12px;padding-top:18px;border-top:1px solid var(--line)}
+.ginh{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ginh .label{color:var(--blue)}
+.ginr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.hmet{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:min(640px,100%);margin-top:92px;text-align:left}
+.imtag{align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#667085;border:1px dashed #98a2b3;padding:4px 10px;border-radius:99px;white-space:nowrap}
+.imf{display:flex;flex-direction:column;gap:7px}
+.imf label{font-size:13.5px;font-weight:600;color:var(--ink2)}
+.imbox{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #d0d5dd;border-radius:14px;padding:0 16px;height:56px;box-shadow:0 1px 2px rgba(16,24,40,.05);transition:border-color .3s,box-shadow .3s}
+.imbox:focus-within{border-color:var(--blue);box-shadow:0 0 0 4px rgba(47,116,245,.14)}
+.imbox span{font-size:22px;font-weight:600;color:var(--ink3)}
+.imbox input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:24px;font-weight:700;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums;-moz-appearance:textfield;appearance:textfield}
+.imbox input::-webkit-outer-spin-button,.imbox input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.imbox small{font-size:12.5px;font-weight:600;color:var(--ink3);white-space:nowrap}
+.imbig{font-size:clamp(52px,6.2vw,90px);font-weight:600;letter-spacing:-.045em;line-height:.95;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
+.imwhat{margin-top:6px;font-size:15px;line-height:1.35;font-weight:600;color:var(--ink2)}
+.imbig small{font-size:.32em;letter-spacing:-.01em;font-weight:600;margin-left:6px}
+.imeq{font-size:17px;line-height:1.55;font-weight:500;color:var(--ink2)}
+.imeq b{color:var(--ink);font-weight:700}
+.imeq .tot{color:#12926b}
+.ims{background:#fff;border:1px solid #eaecf0;border-radius:16px;padding:14px 16px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.ims .v{font-size:28px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.ims .v small{font-size:14px;font-weight:600;color:var(--ink3);margin-left:3px;letter-spacing:0}
+.ims .k{font-size:12.5px;line-height:1.4;color:var(--ink3);font-weight:500;margin-top:6px}
+.imnote{font-size:12.5px;line-height:1.45;color:var(--ink3);font-weight:500}
+#hero{padding-top:68px;padding-bottom:8px}
+#hero .hmet{margin-top:22px}
+#hero .scrollcue{margin-top:18px}
+#hero h1{font-size:clamp(40px,5.2vw,76px)}
+#hero .goal{margin-top:22px}
+#hero .hgoal{margin-top:26px}
+
+/* IN -> OUT */
+#io .wrap{text-align:center}
+.iog{display:grid;grid-template-columns:minmax(0,1fr) 170px minmax(0,1fr);align-items:center;gap:20px;max-width:1060px;margin:0 auto;transform-style:preserve-3d;text-align:left}
+.iocol{display:flex;flex-direction:column;gap:18px;min-width:0}
+.iop{padding:24px 24px 26px;display:flex;flex-direction:column;gap:14px}
+.iop .label{color:var(--blue)}
+.iop.out .label{color:#12926b}
+.iocap{font-size:15.5px;line-height:1.45;font-weight:500;color:var(--ink2);text-align:center;padding:0 10px}
+.iorow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:0 4px}
+.iorow span:first-child{color:var(--ink3)}.iorow span:last-child{font-weight:600;text-align:right}
+.ioar{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.ioar .tt{font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:1;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
+.ioar svg{width:150px;height:24px;overflow:visible}
+.ioar svg path{fill:none;stroke:url(#gm);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.ioar .label{letter-spacing:.1em}
+.iop .pin,.iop .pout{opacity:0;transform:translateY(10px);transition:opacity .6s var(--ease),transform .8s var(--ease)}
+.iop .on{opacity:1;transform:none}
+.hook{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid #eaecf0;border-radius:16px;padding:14px 16px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.hook .t{font-weight:700;font-size:16px}.hook .s{font-size:13px;color:var(--ink3);margin-top:2px}
+.hook .when{margin-left:auto;font-size:11.5px;font-weight:700;color:#155eef;background:#eff4ff;border:1px solid #c7d7fe;border-radius:99px;padding:4px 10px;white-space:nowrap}
+.ic40{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;flex:none}
+.ic40 svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ic40.pink{background:linear-gradient(160deg,#f27aa0,#d9336a);box-shadow:0 8px 16px -8px rgba(217,51,106,.7)}
+.ic40.green{background:linear-gradient(160deg,#4cc98a,#1fa463);box-shadow:0 8px 16px -8px rgba(31,164,99,.7)}
+.orow{display:flex;gap:12px;align-items:center;background:#fff;border-radius:16px;padding:14px 16px;box-shadow:0 0 0 2px #12b76a,0 14px 24px -14px rgba(18,183,106,.5)}
+.orow .t{font-weight:700;font-size:16px}.orow .s{font-size:13px;color:var(--ink2);margin-top:2px}
+.orow .rn{margin-left:auto;font-size:11.5px;font-weight:700;color:#067647;background:#ecfdf3;border-radius:99px;padding:4px 10px;white-space:nowrap}
+
+/* sheet (shared) */
+.sui{font-size:13px;color:#202124}
+.stop{display:flex;align-items:center;gap:12px;padding:12px 16px 8px}
+.sico{width:30px;height:30px;border-radius:7px;background:#1fa463;display:grid;place-items:center;flex:none}
+.sico svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2}
+.stop .fn{font-weight:600;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stop .menu{display:flex;gap:14px;font-size:12.5px;color:#5f6368;margin-top:2px;white-space:nowrap;overflow:hidden}
+.stop .share{margin-left:auto;background:#c2e7ff;color:#001d35;font-weight:700;font-size:13px;padding:8px 16px;border-radius:99px;white-space:nowrap}
+.fx{display:flex;align-items:center;border-top:1px solid #e1e3e6;font-size:13px;height:32px}
+.fx .nm{width:64px;padding:0 10px;border-right:1px solid #e1e3e6;color:#5f6368;height:100%;display:flex;align-items:center;flex:none}
+.fx .f{padding:0 12px;color:#9aa0a6;font-style:italic;font-family:Georgia,serif}
+.fx .v{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.sg{border-top:1px solid #e1e3e6}
+.sg .r{display:grid;grid-template-columns:var(--cols);height:38px;position:relative}
+.sg .r>div{border-right:1px solid #e6e8eb;border-bottom:1px solid #e6e8eb;padding:0 10px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;min-width:0}
+.sg .r>div>.el{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.sg .r>div:first-child{justify-content:center;background:#f8f9fa;color:#5f6368;font-size:11.5px;padding:0}
+.sg .ch{height:24px}
+.sg .ch>div{background:#f8f9fa;justify-content:center;color:#5f6368;font-size:11.5px}
+.sg .hd>div{font-weight:700;background:#f1f6fd}
+.sg .dr{opacity:0;transform:translateY(-8px);transition:opacity .5s var(--ease),transform .7s var(--ease),background .8s}
+.sg .dr.on{opacity:1;transform:none}
+.sg .mono{font-family:var(--mono);font-size:11.5px;color:#3c4043}
+.sg .r>div.fl{border-right:0;background:transparent;padding:0 0 0 10px}
+.sg .fl .lb{opacity:0;transform:translateX(-10px) scale(1.15);transition:opacity .5s var(--ease),transform .8s var(--ease)}
+.sg .dr.flag .fl .lb{opacity:1;transform:none}
+.sg .dr.flag.d{background:#fff7e8}.sg .dr.flag.w{background:#fff1f0}
+.sg .dr.flag.d>div:nth-child(3){box-shadow:inset 0 0 0 2px #e8a13a}
+.sg .dr.flag.w>div:nth-child(5){box-shadow:inset 0 0 0 2px #d9463b}
+.sg .ghost>div{border-bottom:1px dashed #d0d5dd;color:#98a2b3;font-style:italic}
+.sg .ghost>div:first-child{font-style:normal}
+.sg .dr.flag.m{background:repeating-linear-gradient(135deg,#fafbfc 0 8px,#f3f4f6 8px 16px)}
+.sg .dr.new{background:#e6f4ea}
+.stabs{display:flex;align-items:center;gap:6px;padding:8px 12px;border-top:1px solid #e1e3e6;background:#f8f9fa;font-size:12.5px;color:#5f6368}
+.stabs span{padding:5px 14px;border-radius:6px}
+.stabs span.a{background:#e1ecfb;color:#0b57d0;font-weight:700}
+
+/* 01 BROKEN */
+.bgrid>*,.tgrid>*,.fgrid>*,.wgrid>*,.fcol>*{min-width:0}
+.bgrid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:34px;align-items:start;transform-style:preserve-3d}
+#sgB{--cols:36px 128px 124px 146px 112px minmax(0,1fr)}
+.pay{padding:22px 22px 20px}
+.pay .ph{display:flex;align-items:center;gap:12px}
+.pay .ph .t{font-weight:700;font-size:15.5px}.pay .ph .s{font-size:12.5px;color:var(--ink3);margin-top:2px}
+.code{margin-top:16px;background:#fff;border:1px solid #eaecf0;border-radius:14px;padding:14px 16px;font-family:var(--mono);font-size:12.5px;line-height:1.75;color:#344054;overflow:hidden}
+.code .k{color:#6941c6}.code .s{color:#067647}.code .p{color:#98a2b3}
+.code .ln{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:5px;padding:0 4px;margin:0 -4px;transition:background .6s}
+.code .ln.hl{background:#fff4e5}
+.code .ln.hlb{background:#eff4ff}
+.pnote{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.pnote div{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.4;color:var(--ink2);opacity:0;transform:translateY(8px);transition:opacity .6s var(--ease),transform .8s var(--ease)}
+.pnote div.on{opacity:1;transform:none}
+.pnote .lb{flex:none;margin-top:1px}
+
+/* 02 TRACE (Make history) */
+.tgrid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:34px;align-items:start;transform-style:preserve-3d}
+.mkh{font-family:"Figtree",sans-serif;color:#2b2437}
+.mkh .mtb2{height:50px;display:flex;align-items:center;gap:12px;padding:0 18px;border-bottom:1px solid #ece9f2}
+.mkh .mtb2 .bk{font-size:20px;color:#6d00cc;font-weight:700}
+.mkh .mtb2 .nm{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mkh .tabs{margin-left:auto;display:flex;gap:4px;font-size:13px;font-weight:600;color:#7a7389;white-space:nowrap}
+.mkh .tabs span{padding:6px 12px;border-radius:8px}
+.mkh .tabs span.a{background:#f1eafb;color:#6d00cc}
+.hrow{display:grid;grid-template-columns:86px 92px 46px minmax(0,1fr);gap:12px;align-items:center;padding:13px 18px;border-bottom:1px solid #f1eff5;font-size:13.5px;transition:background .5s}
+.hrow.hh{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9a93a8;padding:10px 18px;background:#faf9fc}
+.hrow .tm{font-weight:700}
+.hrow .st{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#0f8a63;background:#ecfdf3;border-radius:99px;padding:3px 9px;justify-self:start}
+.hrow .st.none{color:#5b6576;background:#f2f4f7}
+.hrow .op{color:#6f6880;font-weight:600}
+.hrow .wd{min-width:0;display:flex;gap:8px;align-items:center}
+.hrow .wd span.el{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;color:#4a4458}
+.hrow .wd .lb{flex:none}
+.hrow.dr2{opacity:0;transform:translateY(8px);transition:opacity .5s var(--ease),transform .7s var(--ease),background .5s}
+.hrow.dr2.on{opacity:1;transform:none}
+.hrow.sel{background:#f6f0fe;box-shadow:inset 3px 0 0 #6d00cc}
+.bout{padding:16px 18px 18px;border-top:1px solid #ece9f2;background:#fbfafd}
+.bout .bh{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700}
+.bout .bh i{width:22px;height:22px;border-radius:50%;background:#1fa463;display:grid;place-items:center;flex:none}
+.bout .bh i svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2.2}
+.bout .bh span:last-child{margin-left:auto;font-size:12px;color:#9a93a8;font-weight:600}
+.bout .kv{display:grid;grid-template-columns:150px minmax(0,1fr);gap:6px 14px;margin-top:12px;font-size:13px}
+.bout .kv .k{color:#7a7389;font-weight:600}
+.bout .kv .v{font-family:var(--mono);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bout .kv .v.bad{color:#b42318;font-weight:600}
+.causes{padding:24px 24px 22px;display:flex;flex-direction:column;gap:14px}
+.causes .ch2{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.causes .ch2 .label{color:var(--blue)}
+.cz{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;padding:14px 14px;border-radius:16px;background:#fff;border:1px solid #eaecf0;opacity:0;transform:translateY(10px);transition:opacity .6s var(--ease),transform .8s var(--ease)}
+.cz.on{opacity:1;transform:none}
+.cz b{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff;background:linear-gradient(180deg,#2f74f5,#5b9bff)}
+.cz .t{font-weight:700;font-size:15px;line-height:1.3}
+.cz .s{font-size:13.5px;line-height:1.45;color:var(--ink2);margin-top:4px}
+.cz .lbs{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+
+/* 03 FIX */
+.fgrid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:34px;align-items:start;transform-style:preserve-3d}
+.mset{font-family:"Figtree",sans-serif;color:#2b2437}
+.mset .mh{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid #ece9f2}
+.mset .mh .bub{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#1fa463dd,#1fa463);display:grid;place-items:center;flex:none;box-shadow:0 8px 14px -8px rgba(31,164,99,.7)}
+.mset .mh .bub svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2}
+.mset .mh .t{font-weight:800;font-size:16px}.mset .mh .s{font-size:12.5px;color:#7a7389;margin-top:1px}
+.mset .mh .q{margin-left:auto;font-size:18px;color:#9a93a8}
+.mf{padding:12px 20px;border-bottom:1px solid #f4f2f8;position:relative;transition:background .6s}
+.mf .fk{font-size:12.5px;font-weight:700;color:#4a4458;display:flex;align-items:center;gap:8px}
+.mf .fk .chg{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#067647;background:#ecfdf3;border-radius:99px;padding:2px 8px;opacity:0;transition:opacity .5s}
+.mf.fixed .fk .chg{opacity:1}
+.mf.fixed{background:#f6fdf9}
+.mf .fv{margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.fbox{border:1px solid #ddd8e8;border-radius:8px;padding:7px 11px;font-size:13px;background:#fff;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.fbox.grow{flex:1}
+.mp{display:inline-flex;align-items:center;font-size:12px;font-weight:700;color:#fff;border-radius:6px;padding:3px 8px;white-space:nowrap}
+.mp.wh{background:#d9336a}.mp.gs{background:#1fa463}
+.mset .mftr{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px}
+.mset .mftr span{font-size:13px;font-weight:700;padding:8px 18px;border-radius:99px;white-space:nowrap}
+.mset .mftr .c{color:#6d00cc}
+.mset .mftr .o{background:#6d00cc;color:#fff}
+.fcol{display:flex;flex-direction:column;gap:22px}
+.ups{padding:22px 22px 20px}
+.ups .uh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.ups .uh .label{color:var(--blue)}
+.route{margin-top:14px;display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.rt{background:#fff;border:1px solid #eaecf0;border-radius:14px;padding:12px 14px;opacity:0;transform:translateY(8px);transition:opacity .6s var(--ease),transform .8s var(--ease)}
+.rt.on{opacity:1;transform:none}
+.rt .r1{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:#4a4458;flex-wrap:wrap}
+.rt .r1 svg{width:13px;height:13px;fill:#6d00cc;flex:none}
+.rt .r1 .arr{color:#9a93a8;font-weight:600}
+.rt .r2{margin-top:6px;font-size:13px;color:var(--ink2);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ghlw{padding:22px 22px 20px}
+.ghlw .label{color:var(--blue)}
+.wfl{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.wf{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;opacity:.35;transition:opacity .5s}
+.wf.on{opacity:1}
+.wf .tick{transform:scale(.4);transition:transform .5s cubic-bezier(.34,1.56,.64,1)}
+.wf.on .tick{transform:none}
+.wf small{margin-left:auto;font-size:12px;color:var(--ink3);font-weight:600;white-space:nowrap}
+.ghlw .pl{margin-top:12px;font-family:var(--mono);font-size:12px;color:#475467;background:#fff;border:1px solid #eaecf0;border-radius:10px;padding:9px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* 04 WIN */
+.wgrid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:34px;align-items:start;transform-style:preserve-3d}
+.tests{padding:22px 22px 18px}
+.tests .th{display:flex;align-items:center;gap:14px}
+.tests .th .big{font-size:44px;font-weight:600;letter-spacing:-.04em;line-height:1}
+.tests .th .big small{font-size:18px;color:var(--ink3);font-weight:600;letter-spacing:0;margin-left:2px}
+.tests .th .s{font-size:13.5px;color:var(--ink2);line-height:1.4}
+.tests .th .tagI{margin-left:auto}
+.ttab{margin-top:16px;background:#fff;border:1px solid #eaecf0;border-radius:16px;overflow:hidden}
+.tr{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1.3fr) 78px;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid #f2f4f7;font-size:13.5px}
+.tr:first-child{border-top:0}
+.tr.h{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);background:#f9fafb}
+.tr .sc{font-weight:700}
+.tr .sc small{display:block;font-weight:500;color:var(--ink3);font-size:12px;margin-top:1px}
+.tr .ex{color:var(--ink2);line-height:1.35}
+.tr .res{justify-self:end}
+.tr .res .lb{opacity:0;transform:scale(.5);transition:opacity .4s,transform .6s cubic-bezier(.34,1.56,.64,1)}
+.tr.pass .res .lb{opacity:1;transform:none}
+.tr.pass{background:#f6fdf9}
+.tr.run{background:#f5f9ff}
+#sgW{--cols:32px 116px minmax(0,1fr) 112px 92px}
+.wnote{position:absolute;right:-12px;top:-50px;z-index:3;width:250px;padding:14px 16px;display:flex;gap:12px;align-items:center;opacity:0;transform:translate3d(0,12px,40px) scale(.96);transition:opacity .7s var(--ease),transform 1s var(--ease)}
+.wnote.on{opacity:1;transform:translate3d(0,0,60px)}
+.wnote .t{font-weight:700;font-size:14px}.wnote .s{font-size:12.5px;color:var(--ink3);margin-top:2px}
+.wside{position:relative}
+
+/* MAKE CANVAS */
+#make .head{text-align:center}
+#make .sub{margin-left:auto;margin-right:auto}
+.mklab{margin-top:14px;display:inline-block}
+.mkwrap{position:relative;width:100%;transform-style:preserve-3d}
+.mkframe{padding:12px;border-radius:30px;margin:0 auto;width:max-content;max-width:100%}
+.mkbox{overflow:hidden;border-radius:20px;position:relative}
+.mk{position:relative;transform-origin:0 0;background:#fff;color:#2b2437;font-family:"Figtree",sans-serif;border-radius:20px;overflow:hidden}
+.mk .mtb{position:absolute;top:0;left:0;right:0;height:52px;display:flex;align-items:center;gap:12px;padding:0 18px;border-bottom:1px solid #ece9f2;background:#fff;z-index:2}
+.mk .mtb .bk{font-size:20px;color:#6d00cc;font-weight:700;width:22px}
+.mk .mtb .nm{font-weight:700;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mk .mtb .tabs{margin-left:auto;display:flex;gap:4px;font-size:13px;font-weight:600;color:#7a7389;white-space:nowrap}
+.mk .mtb .tabs span{padding:6px 12px;border-radius:8px}
+.mk .mtb .tabs span.a{background:#f1eafb;color:#6d00cc}
+.mk .mcv{position:absolute;top:52px;left:0;right:0;background-color:#f7f6fb;background-image:radial-gradient(#dcd7e7 1px,transparent 1.2px);background-size:20px 20px}
+.mk svg.ml{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.mk svg.ml path{fill:none;stroke:#bdb6cc;stroke-width:3.2;stroke-linecap:round;stroke-dasharray:0 8;opacity:0;transition:opacity .8s}
+.mk.linked svg.ml path{opacity:1}
+.mm{position:absolute;opacity:0;transform:scale(.6);transition:opacity .5s,transform .7s cubic-bezier(.34,1.56,.64,1)}
+.mm.on{opacity:1;transform:none}
+.mm .bub{position:absolute;border-radius:50%;display:grid;place-items:center;box-shadow:0 10px 18px -8px rgba(40,20,70,.45),inset 0 -4px 0 rgba(0,0,0,.08),inset 0 2px 0 rgba(255,255,255,.25)}
+.mm .bub svg{width:44%;height:44%;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mm .bub::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:3px solid rgba(109,0,204,.0);transition:border-color .3s}
+.mm.run .bub::after{border-color:rgba(109,0,204,.35)}
+.mm .ml2{position:absolute;white-space:nowrap;font-size:13px;line-height:1.3}
+.mm .ml2 b{font-weight:800;color:#2b2437}
+.mm .ml2 .no{font-weight:600;color:#9a93a8;font-size:11.5px;margin-left:4px}
+.mm .ml2 .ac{color:#6f6880;font-size:12px}
+.mm .clk{position:absolute;width:24px;height:24px;border-radius:50%;background:#fff;border:1.5px solid #d6d0e2;display:grid;place-items:center}
+.mm .clk svg{width:14px;height:14px;stroke:#6d00cc;fill:none;stroke-width:2;stroke-linecap:round}
+.mm .xb{position:absolute;min-width:26px;height:26px;padding:0 6px;border-radius:13px;background:#fff;border:1.5px solid #e2dcec;font-size:12.5px;font-weight:800;color:#2b2437;display:grid;place-items:center;box-shadow:0 4px 10px -4px rgba(40,20,70,.4);opacity:0;transform:scale(.4);transition:opacity .3s,transform .5s cubic-bezier(.34,1.56,.64,1)}
+.mm .xb.on{opacity:1;transform:none}
+.mm .iot{position:absolute;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-radius:99px;padding:2px 8px;color:#fff;background:#155eef;white-space:nowrap;box-shadow:0 4px 10px -4px rgba(21,94,239,.6)}
+.mm .iot.o{background:#12b76a;box-shadow:0 4px 10px -4px rgba(18,183,106,.6)}
+.flt{position:absolute;display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:#4a4458;background:#fff;border:1.5px solid #d9d2e6;border-radius:99px;padding:3px 9px 3px 6px;white-space:nowrap;transform:translate(-50%,-50%);opacity:0;transition:opacity .6s}
+.mk.linked .flt{opacity:1}
+.flt svg{width:12px;height:12px;fill:#6d00cc}
+.mk .mbt{position:absolute;left:0;right:0;bottom:0;height:68px;background:#fff;border-top:1px solid #ece9f2;display:flex;align-items:center;gap:14px;padding:0 18px;z-index:2}
+.runb{display:flex;align-items:center;gap:10px;background:#6d00cc;color:#fff;font-weight:700;font-size:14px;padding:0 20px 0 6px;height:44px;border-radius:99px;box-shadow:0 8px 18px -8px rgba(109,0,204,.7);transition:transform .2s,box-shadow .3s;white-space:nowrap}
+.runb i{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center}
+.runb i::after{content:"";border-left:10px solid #fff;border-top:6.5px solid transparent;border-bottom:6.5px solid transparent;margin-left:3px}
+.mk.press .runb{transform:scale(.94);box-shadow:0 0 0 6px rgba(109,0,204,.18)}
+.sched{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;color:#5d566c;white-space:nowrap}
+.sched .sw{width:38px;height:22px;border-radius:99px;background:#6d00cc;position:relative;flex:none}
+.sched .sw::after{content:"";position:absolute;top:3px;left:19px;width:16px;height:16px;border-radius:50%;background:#fff}
+.mbt .sep{width:1px;height:30px;background:#ece9f2}
+.mbt .ib{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#7a7389}
+.mbt .ib svg{width:17px;height:17px;fill:none;stroke:#7a7389;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mbt .zm{margin-left:auto;display:flex;border:1px solid #e2dcec;border-radius:8px;overflow:hidden}
+.mbt .zm span{width:32px;height:30px;display:grid;place-items:center;font-size:16px;color:#5d566c}
+.mbt .zm span+span{border-left:1px solid #e2dcec}
+.mtoast{position:absolute;left:22px;bottom:18px;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #d7efe3;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:600;color:#1d6b49;box-shadow:0 8px 20px -12px rgba(40,20,70,.35);opacity:0;transform:translateY(8px);transition:opacity .5s,transform .6s var(--ease)}
+.mtoast.on{opacity:1;transform:none}
+.mtoast i{width:20px;height:20px;border-radius:50%;background:#1fb487;display:grid;place-items:center;flex:none}
+.mtoast i::after{content:"";width:8px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px)}
+.mk.narrow .mtoast,.mk.narrow .mtb .tabs,.mk.narrow .mbt .ib,.mk.narrow .mbt .sep,.mk.narrow .mbt .zm{display:none}
+
+/* CLOSE */
+#close .wrap{text-align:center}
+.foot{margin-top:40px;font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase}
+.ctabtn{margin:44px auto 0;display:inline-flex;align-items:center;gap:12px;padding:18px 30px;border-radius:99px;background:linear-gradient(180deg,#2f74f5,#3d84ff);color:#fff;font-size:18px;font-weight:650;letter-spacing:-.01em;box-shadow:0 18px 40px -12px rgba(47,116,245,.55)}
+.ctabtn .dot{width:9px;height:9px;border-radius:50%;background:#7ef0c2;box-shadow:0 0 0 4px rgba(126,240,194,.25)}
+.nextbox{display:flex;justify-content:center;transform-style:preserve-3d}
+.nxt{width:min(820px,100%);padding:56px 48px 52px;text-align:center;display:flex;flex-direction:column;align-items:center}
+.nxtlab{display:inline-flex;align-items:center;gap:10px;font-size:15px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--blue)}
+.nxtlab .dot{width:10px;height:10px;border-radius:50%;background:#2f74f5;box-shadow:0 0 0 5px rgba(47,116,245,.18)}
+.nxt h2{font-size:clamp(46px,6.4vw,96px);margin-top:18px;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.nxtsub{margin-top:16px;font-size:clamp(17px,1.5vw,21px);color:var(--ink2)}
+.nxt .ctabtn{margin-top:34px}
+.nxtfacts{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;margin-top:30px;text-align:left}
+.nxtfacts div{padding:16px 18px;border-radius:18px;background:rgba(47,116,245,.06);border:1px solid rgba(47,116,245,.14);display:flex;flex-direction:column;gap:4px}
+.nxtfacts b{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--blue)}
+.nxtfacts span{font-size:16px;line-height:1.4;color:var(--ink);font-weight:550}
+
+@media (max-width:1100px){
+  .bgrid,.tgrid,.fgrid,.wgrid{grid-template-columns:1fr;gap:30px}
+  .wnote{right:0}
+}
+@media (max-width:860px){
+  section{padding:100px 16px 80px;min-height:auto;perspective:1100px}
+  #hero{min-height:100vh}
+  .top{padding:14px 16px}.top .brand{font-size:12px}.top .xs{display:none}
+  .head{margin-bottom:30px}
+  .goal{margin-top:20px;align-items:flex-start;text-align:left}.goal i{margin-top:8px}
+  .gcard{padding:20px 16px 22px;gap:16px}
+  .gtopr{grid-template-columns:1fr;gap:14px}
+  .gmath{padding-left:0;border-left:0}
+  .ginr{grid-template-columns:1fr;gap:12px}
+  .hmet{grid-template-columns:1fr;margin-top:24px}
+  .imeq{font-size:16px}
+  .iog{grid-template-columns:1fr;gap:18px}
+  .iop{padding:18px 16px 20px}
+  .ioar svg{width:80px;height:24px;transform:rotate(90deg);margin:22px 0}
+  .ioar .tt{font-size:32px}
+  .hook,.orow{flex-wrap:wrap}.hook .when,.orow .rn{margin-left:54px}
+  .shell{padding:6px;border-radius:22px}.shin{border-radius:17px}
+  .stop .menu,.stop .share{display:none}
+  #sgB{--cols:24px minmax(0,1fr) 148px 78px}
+  #sgB .r>div:nth-child(3),#sgB .r>div:nth-child(5){display:none}
+  #sgW{--cols:28px minmax(0,1fr) 96px}
+  #sgW .r>div:nth-child(2),#sgW .r>div:nth-child(5){display:none}
+  .sg .r>div{padding:0 7px}
+  .sg .r>div.fl{padding-left:6px}
+  .fx .nm{width:44px}
+  .code{font-size:11.5px}.code .ln{white-space:normal}
+  .ghlw .pl{white-space:normal}
+  .stop .fn{white-space:normal;font-size:14.5px;line-height:1.25}
+  .mkh .tabs span:not(.a){display:none}
+  .hrow{grid-template-columns:62px minmax(0,1fr);row-gap:6px;padding:12px 14px}
+  .hrow .op{display:none}
+  .hrow .wd{grid-column:1 / -1;flex-wrap:wrap}
+  .hrow .wd span.el{white-space:normal}
+  .hrow.hh{display:none}
+  .bout .kv{grid-template-columns:1fr;gap:2px}
+  .bout .kv .k{margin-top:6px}
+  .causes,.ups,.ghlw,.tests,.pay{padding:18px 16px}
+  .mf{padding:12px 14px}
+  .mset .mh{padding:14px}
+  .tr{grid-template-columns:minmax(0,1fr) 64px;padding:11px 12px}
+  .tr .ex{grid-column:1 / -1;grid-row:2;font-size:12.5px}
+  .tr.h .ex{display:none}
+  .tests .th{flex-wrap:wrap}.tests .th .tagI{margin-left:0}
+  .wnote{position:relative;right:auto;top:auto;width:100%;margin-bottom:16px}
+  .nxt{padding:40px 22px 38px}
+  .nxtfacts{grid-template-columns:1fr}
+  .ctabtn{font-size:16px;padding:16px 22px;text-align:center}
+}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation:none!important}}
+</style>
+
+<div class="sky"></div>
+<div class="haze"><i></i><i></i><i></i></div>
+<div class="top"><div class="brand"><b></b>Lead &amp; appointment tracker<span class="xs"> · GoHighLevel → Make → Sheets</span></div><div class="chip">Sample data</div></div>
+
+<main>
+<!-- SCREEN: hero -->
+<section id="hero" data-run="goal">
+  <div class="wrap">
+    <div class="kicker fade">One sub-account · GoHighLevel → webhooks → Make → Google Sheets</div>
+    <h1 class="fade" style="--d:.1s">Every lead tracked,<br><em>on the right row.</em></h1>
+    <p class="goal fade" style="--d:.2s"><i></i><span>A system built around one clear goal: <b>every lead and appointment lands once, on its own row.</b></span></p>
+    <div class="hgoal par" data-z="0.4"><div class="panel gcard rise" style="--d:.4s">
+      <div class="gtopr">
+        <div class="gres"><div class="label">The goal</div><div class="imbig">+<span id="imR">22</span><small id="imU">leads a month</small></div><div class="imwhat">back in the tracker, that are missed or duplicated today</div></div>
+        <div class="gmath"><p class="imeq" id="imEq"></p><p class="imnote">Assumes appointment updates go wrong at the same rate as leads, and that every test scenario passes before handover.</p></div>
+      </div>
+      <div class="gin">
+        <div class="ginh"><div class="label">Your numbers</div><span class="imtag">Illustrative · we'll use your real numbers</span></div>
+        <div class="ginr">
+          <div class="imf"><label for="imL">Leads a month in that account</label><div class="imbox"><input id="imL" type="number" inputmode="numeric" min="0" max="100000" step="1" value="180"><small>new contacts</small></div></div>
+          <div class="imf"><label for="imP">Missed or duplicated today</label><div class="imbox"><input id="imP" type="number" inputmode="numeric" min="0" max="100" step="1" value="12"><span>%</span></div></div>
+          <div class="imf"><label for="imA">Appointments a month</label><div class="imbox"><input id="imA" type="number" inputmode="numeric" min="0" max="100000" step="1" value="60"><small>booked</small></div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="hmet">
+      <div class="ims fade" style="--d:.7s"><div class="v"><span id="imAB">7</span><small>updates a month</small></div><div class="k">appointment changes that land on the right lead, not someone else's row</div></div>
+      <div class="ims fade" style="--d:.8s"><div class="v">5<small>of 5</small></div><div class="k">test scenarios passing before the fix is handed over</div></div>
+    </div>
+    <div class="scrollcue fade" style="--d:1.4s">Scroll<b></b></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: in -> out -->
+<section id="io" data-run="io">
+  <div class="wrap">
+    <div class="head c"><h2 class="fade">A webhook in.<br><em>One right row out.</em></h2></div>
+    <div class="iog">
+      <div class="iocol par" data-z="0.4">
+        <div><div class="panel iop rise" style="--d:.2s">
+          <div class="label">What goes in</div>
+          <div class="hook pin"><span class="ic40 pink"><svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="2.5"/><circle cx="6" cy="17" r="2.5"/><circle cx="18" cy="17" r="2.5"/><path d="M11 8.2L7.2 14.8M13 8.2l3.8 6.6M8.5 17h7"/></svg></span><div><div class="t">Appointment booked</div><div class="s">Maria Alvarez<br>Northside sub-account</div></div><span class="when">Thu · 10:31 AM</span></div>
+          <div class="iorow pin"><span>contact_id</span><span>q8XvT2mLr4Kp</span></div>
+          <div class="iorow pin"><span>Phone sent as</span><span>+15125550143</span></div>
+          <div class="iorow pin"><span>Phone in the sheet</span><span>(512) 555-0143</span></div>
+        </div></div>
+        <p class="iocap fade" style="--d:.5s">GoHighLevel fires the webhook the moment Maria books her appointment.</p>
+      </div>
+      <div class="ioar fade" style="--d:.6s">
+        <div class="tt" id="iot">0 sec</div>
+        <svg viewBox="0 0 150 24"><path d="M4 12H144M134 3l10 9-10 9"/></svg>
+        <div class="label">to the right row</div>
+      </div>
+      <div class="iocol par" data-z="0.9">
+        <div><div class="panel iop out rise" style="--d:.45s">
+          <div class="label">What comes out</div>
+          <div class="orow pout"><span class="ic40 green"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M4 10h16M4 15h16M10 4v16"/></svg></span><div><div class="t">Maria Alvarez</div><div class="s">Appointment booked · Thu 10:30 AM</div></div><span class="rn">Row 14 updated</span></div>
+          <div class="iorow pout"><span>Matched on</span><span>GHL contact ID</span></div>
+          <div class="iorow pout"><span>Rows for Maria</span><span>1, not 2</span></div>
+          <div class="iorow pout"><span>Other sub-accounts</span><span>Filtered out by location ID</span></div>
+        </div></div>
+        <p class="iocap fade" style="--d:.8s">Her existing row is updated in place, matched on the ID GoHighLevel already gives her.</p>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: 01 input, the broken sheet -->
+<section id="broken" data-run="broken">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow io fade">Input</div><h2 class="fade" style="--d:.1s">Missed, duplicated, <em>wrong row.</em></h2><p class="sub fade" style="--d:.2s">Here is the tracker for the one sub-account that drifts, next to the webhook GoHighLevel sent for Maria's booking.</p></div>
+    <div class="bgrid">
+      <div class="par" data-z="0.3"><div class="panel shell rise" style="--d:.2s"><div class="shin sui">
+        <div class="stop"><div class="sico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M4 10h16M4 15h16M10 4v16"/></svg></div><div style="min-width:0"><div class="fn">Lead &amp; appointment tracker · Northside</div><div class="menu"><span>File</span><span>Edit</span><span>View</span><span>Insert</span><span>Format</span><span>Data</span><span>Tools</span></div></div><div class="share">Share</div></div>
+        <div class="fx"><div class="nm">E11</div><div class="f">fx</div><div class="v">Appointment booked</div></div>
+        <div class="sg" id="sgB">
+          <div class="r ch"><div></div><div>A</div><div>B</div><div>C</div><div>D</div><div></div></div>
+          <div class="r hd"><div>1</div><div>Name</div><div>Phone</div><div>Status</div><div>Appointment</div><div class="fl"></div></div>
+          <div class="r dr"><div>10</div><div><span class="el">Dev Patel</span></div><div>(512) 555-0110</div><div><span class="el">Contacted</span></div><div>—</div><div class="fl"></div></div>
+          <div class="r dr w" id="bW"><div>11</div><div><span class="el">James Carter</span></div><div>(512) 555-0187</div><div><span class="el">Appointment booked</span></div><div>Wed 9:00 AM</div><div class="fl"><span class="lb wrong">Wrong row</span></div></div>
+          <div class="r dr"><div>12</div><div><span class="el">James Carter</span></div><div>(737) 555-0122</div><div><span class="el">New lead</span></div><div>—</div><div class="fl"></div></div>
+          <div class="r dr"><div>13</div><div><span class="el">Lena Brooks</span></div><div>(512) 555-0164</div><div><span class="el">Showed</span></div><div>Tue 2:00 PM</div><div class="fl"></div></div>
+          <div class="r dr d" id="bD1"><div>14</div><div><span class="el">Maria Alvarez</span></div><div>(512) 555-0143</div><div><span class="el">New lead</span></div><div>—</div><div class="fl"><span class="lb dup">Original</span></div></div>
+          <div class="r dr"><div>15</div><div><span class="el">Tom Nguyen</span></div><div>(737) 555-0109</div><div><span class="el">Contacted</span></div><div>—</div><div class="fl"></div></div>
+          <div class="r dr d" id="bD2"><div>16</div><div><span class="el">Maria Alvarez</span></div><div>+15125550143</div><div><span class="el">Appointment booked</span></div><div>Thu 10:30 AM</div><div class="fl"><span class="lb dup">Duplicate</span></div></div>
+          <div class="r dr ghost m" id="bM"><div>–</div><div><span class="el">Priya Nair</span></div><div>(512) 555-0176</div><div><span class="el">Form lead, Tue</span></div><div>—</div><div class="fl"><span class="lb miss">Missed</span></div></div>
+        </div>
+        <div class="stabs"><span>+</span><span class="a">Leads</span><span>Appointments</span></div>
+      </div></div></div>
+      <div class="par" data-z="0.9"><div class="panel pay rise" style="--d:.45s">
+        <div class="ph"><span class="ic40 pink"><svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="2.5"/><circle cx="6" cy="17" r="2.5"/><circle cx="18" cy="17" r="2.5"/><path d="M11 8.2L7.2 14.8M13 8.2l3.8 6.6M8.5 17h7"/></svg></span><div><div class="t">Webhook payload</div><div class="s">From GoHighLevel · Thu 10:31:02 AM</div></div></div>
+        <div class="code">
+          <span class="ln"><span class="p">{</span></span>
+          <span class="ln hlb" id="plId">&nbsp;&nbsp;<span class="k">"contact_id"</span>: <span class="s">"q8XvT2mLr4Kp"</span>,</span>
+          <span class="ln">&nbsp;&nbsp;<span class="k">"full_name"</span>: <span class="s">"Maria Alvarez"</span>,</span>
+          <span class="ln" id="plPh">&nbsp;&nbsp;<span class="k">"phone"</span>: <span class="s">"+15125550143"</span>,</span>
+          <span class="ln">&nbsp;&nbsp;<span class="k">"location"</span>: { <span class="k">"id"</span>: <span class="s">"Nth7Lk2Q"</span> },</span>
+          <span class="ln">&nbsp;&nbsp;<span class="k">"calendar"</span>: { <span class="k">"status"</span>: <span class="s">"booked"</span>,</span>
+          <span class="ln">&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"startTime"</span>: <span class="s">"Thu 10:30 AM"</span> },</span>
+          <span class="ln">&nbsp;&nbsp;<span class="k">"workflow"</span>: { <span class="k">"name"</span>: <span class="s">"Appt booked → tracker"</span> }</span>
+          <span class="ln"><span class="p">}</span></span>
+        </div>
+        <div class="pnote">
+          <div><span class="lb dup">Duplicate</span><span>The phone arrives as +15125550143, but row 14 stores (512) 555-0143.</span></div>
+          <div><span class="lb wrong">Wrong row</span><span>Two contacts named James Carter; the update hit the first one.</span></div>
+          <div><span class="lb miss">Missed</span><span>Priya's form lead never reached Make at all.</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: 02 the trace, Make run history -->
+<section id="trace" data-run="trace">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>02</span>The trace</div><h2 class="fade" style="--d:.1s">Every run said Success.<br><em>The search was wrong.</em></h2><p class="sub fade" style="--d:.2s">Make's run history shows no errors, so each bad row is traced to what Search Rows returned and what never arrived.</p></div>
+    <div class="tgrid">
+      <div class="par" data-z="0.3"><div class="panel shell rise" style="--d:.2s"><div class="shin mkh">
+        <div class="mtb2"><span class="bk">‹</span><span class="nm">GHL → tracker (Northside)</span><div class="tabs"><span>Diagram</span><span class="a">History</span><span>Incomplete executions</span></div></div>
+        <div class="hrow hh"><span>Run</span><span>Status</span><span>Ops</span><span>What it did</span></div>
+        <div class="hrow dr2" id="h1"><span class="tm">Thu 10:31</span><span class="st">Success</span><span class="op">3</span><span class="wd"><span class="el">Search by phone found 0 rows, added row 16</span><span class="lb dup">Duplicate</span></span></div>
+        <div class="hrow dr2" id="h2"><span class="tm">Wed 8:47</span><span class="st">Success</span><span class="op">3</span><span class="wd"><span class="el">Search by name found 2 rows, updated row 11</span><span class="lb wrong">Wrong row</span></span></div>
+        <div class="hrow dr2" id="h3"><span class="tm">Wed 8:12</span><span class="st">Success</span><span class="op">3</span><span class="wd"><span class="el">Lena Brooks marked Showed, row 13</span><span class="lb ok">Correct</span></span></div>
+        <div class="hrow dr2" id="h4"><span class="tm">Tue 4:05</span><span class="st none">No run</span><span class="op">0</span><span class="wd"><span class="el">Priya Nair's form: no webhook was sent</span><span class="lb miss">Missed</span></span></div>
+        <div class="bout" id="bout">
+          <div class="bh"><i><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M4 10h16M4 15h16M10 4v16"/></svg></i><span>Google Sheets · Search Rows · run Thu 10:31</span><span>Operation 2</span></div>
+          <div class="kv">
+            <span class="k">Filter</span><span class="v">Phone = 1. phone</span>
+            <span class="k">Value searched</span><span class="v">+15125550143</span>
+            <span class="k">Total number of bundles</span><span class="v bad">0</span>
+            <span class="k">Next module</span><span class="v">Add a Row → row 16</span>
+          </div>
+        </div>
+      </div></div></div>
+      <div class="par" data-z="0.9"><div class="panel causes rise" style="--d:.45s">
+        <div class="ch2"><div class="label">Root cause</div><span class="tagI">Illustrative</span></div>
+        <div style="font-size:14px;color:var(--ink2);line-height:1.45">The most common causes we check first, until we see your account:</div>
+        <div class="cz" id="c1"><b>1</b><div><div class="t">Search Rows matches on phone or name</div><div class="s">Phone formats differ and names repeat, so the lookup misses Maria and finds the wrong James.</div><div class="lbs"><span class="lb dup">Duplicate</span><span class="lb wrong">Wrong row</span></div></div></div>
+        <div class="cz" id="c2"><b>2</b><div><div class="t">Webhook sits in one workflow only</div><div class="s">Only "Appt booked → tracker" sends to Make, so form leads in this sub-account never arrive.</div><div class="lbs"><span class="lb miss">Missed</span></div></div></div>
+        <div class="cz" id="c3"><b>3</b><div><div class="t">No location ID filter</div><div class="s">Nothing checks which sub-account sent the event, so the scenario can't tell Northside's leads apart.</div><div class="lbs"><span class="lb wrong">Wrong row</span></div></div></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: 03 the fix -->
+<section id="fix" data-run="fix">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>03</span>The fix</div><h2 class="fade" style="--d:.1s">Keyed on the <em>GHL contact ID.</em></h2><p class="sub fade" style="--d:.2s">Search Rows now matches one row by contact ID, then updates it or adds it, and only for this sub-account.</p></div>
+    <div class="fgrid">
+      <div class="par" data-z="0.3"><div class="panel shell rise" style="--d:.2s"><div class="shin mset">
+        <div class="mh"><span class="bub"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M4 10h16M4 15h16M10 4v16"/></svg></span><div><div class="t">Google Sheets</div><div class="s">Search Rows</div></div><span class="q">⋯</span></div>
+        <div class="mf"><div class="fk">Connection</div><div class="fv"><span class="fbox grow">Tracker Google account</span></div></div>
+        <div class="mf"><div class="fk">Spreadsheet</div><div class="fv"><span class="fbox grow">Lead &amp; appointment tracker · Northside</span></div></div>
+        <div class="mf"><div class="fk">Sheet Name</div><div class="fv"><span class="fbox grow">Leads</span></div></div>
+        <div class="mf" id="fF"><div class="fk">Filter<span class="chg">Fixed</span></div><div class="fv"><span class="fbox">GHL contact ID (A)</span><span class="fbox">Equal to</span><span class="mp wh">1. contact_id</span></div></div>
+        <div class="mf" id="fM"><div class="fk">Maximum number of returned rows<span class="chg">Fixed</span></div><div class="fv"><span class="fbox">1</span></div></div>
+        <div class="mftr"><span class="c">Cancel</span><span class="o">Save</span></div>
+      </div></div></div>
+      <div class="fcol">
+        <div class="par" data-z="0.8"><div class="panel ups rise" style="--d:.4s">
+          <div class="uh"><div class="label">Update or add</div><span class="tagI">Upsert</span></div>
+          <div class="route">
+            <div class="rt" id="r0"><div class="r1"><svg viewBox="0 0 24 24"><path d="M3 4h18l-7 8v6l-4 2v-8z"/></svg>This sub-account only</div><div class="r2">location.id equals Northside's ID, before the search runs</div></div>
+            <div class="rt" id="r1"><div class="r1"><svg viewBox="0 0 24 24"><path d="M3 4h18l-7 8v6l-4 2v-8z"/></svg>Row found <span class="arr">→</span> Update a Row</div><div class="r2">Row number <span class="mp gs">2. Row number</span></div></div>
+            <div class="rt" id="r2"><div class="r1"><svg viewBox="0 0 24 24"><path d="M3 4h18l-7 8v6l-4 2v-8z"/></svg>No row found <span class="arr">→</span> Add a Row</div><div class="r2">GHL contact ID <span class="mp wh">1. contact_id</span></div></div>
+          </div>
+        </div></div>
+        <div class="par" data-z="1.2"><div class="panel ghlw rise" style="--d:.6s">
+          <div class="label">In GoHighLevel · Northside</div>
+          <div class="wfl">
+            <div class="wf" id="w1"><span class="tick"></span>Contact Created<small>Webhook action</small></div>
+            <div class="wf" id="w2"><span class="tick"></span>Form Submitted<small>Webhook action</small></div>
+            <div class="wf" id="w3"><span class="tick"></span>Customer Booked Appointment<small>Webhook action</small></div>
+            <div class="wf" id="w4"><span class="tick"></span>Appointment Status<small>Webhook action</small></div>
+          </div>
+          <div class="pl">Same payload: contact_id · location.id · event · updated_at</div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: 04 output, tests passing + clean sheet -->
+<section id="win" data-run="win">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow io fade">Output</div><h2 class="fade" style="--d:.1s">Five tests passed.<br><em>One row per lead.</em></h2><p class="sub fade" style="--d:.2s">Each scenario is sent from GoHighLevel and checked in the sheet before handover, duplicates and reschedules included.</p></div>
+    <div class="wgrid">
+      <div class="par" data-z="0.3"><div class="panel tests rise" style="--d:.2s">
+        <div class="th"><div class="big"><span id="tp">0</span><small>/5</small></div><div class="s">test scenarios passing<br>on the Northside sub-account</div><span class="tagI">Illustrative</span></div>
+        <div class="ttab">
+          <div class="tr h"><span>Scenario</span><span class="ex">Expected in the sheet</span><span class="res">Result</span></div>
+          <div class="tr" data-t><div class="sc">New lead<small>Priya Nair, form</small></div><div class="ex">Row added with her contact ID</div><div class="res"><span class="lb ok">Pass</span></div></div>
+          <div class="tr" data-t><div class="sc">Appointment booked<small>Maria Alvarez</small></div><div class="ex">Row 14 updated, no new row</div><div class="res"><span class="lb ok">Pass</span></div></div>
+          <div class="tr" data-t><div class="sc">Status changed<small>James Carter, 737</small></div><div class="ex">His own row, not the other James</div><div class="res"><span class="lb ok">Pass</span></div></div>
+          <div class="tr" data-t><div class="sc">Rescheduled<small>Maria Alvarez</small></div><div class="ex">Same row, time moves to Fri 2:00 PM</div><div class="res"><span class="lb ok">Pass</span></div></div>
+          <div class="tr" data-t><div class="sc">Duplicate webhook<small>Same event sent twice</small></div><div class="ex">Still one row for Maria</div><div class="res"><span class="lb ok">Pass</span></div></div>
+        </div>
+      </div></div>
+      <div class="wside">
+        <div class="par" data-z="1.4" style="position:relative;z-index:3"><div class="panel wnote" id="wnote"><span class="tick"></span><div><div class="t">Rows 14 and 16 merged</div><div class="s">One row per contact ID</div></div></div></div>
+        <div class="par" data-z="0.7"><div class="panel shell rise" style="--d:.4s"><div class="shin sui">
+          <div class="stop"><div class="sico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M4 10h16M4 15h16M10 4v16"/></svg></div><div style="min-width:0"><div class="fn">Lead &amp; appointment tracker · Northside</div></div></div>
+          <div class="sg" id="sgW">
+            <div class="r ch"><div></div><div>A</div><div>B</div><div>C</div><div>D</div></div>
+            <div class="r hd"><div>1</div><div>GHL contact ID</div><div>Name</div><div>Status</div><div>Appt</div></div>
+            <div class="r dr"><div>11</div><div class="mono">b3KdQ9wE1x</div><div><span class="el">James Carter</span></div><div><span class="el">New lead</span></div><div>—</div></div>
+            <div class="r dr"><div>12</div><div class="mono">Zp4Rt7cM2n</div><div><span class="el">James Carter</span></div><div><span class="el">Showed</span></div><div>Wed 9:00</div></div>
+            <div class="r dr"><div>13</div><div class="mono">Lm8Vh3sB6y</div><div><span class="el">Lena Brooks</span></div><div><span class="el">Showed</span></div><div>Tue 2:00</div></div>
+            <div class="r dr" id="wM"><div>14</div><div class="mono">q8XvT2mLr4Kp</div><div><span class="el">Maria Alvarez</span></div><div><span class="el">Rescheduled</span></div><div>Fri 2:00</div></div>
+            <div class="r dr"><div>15</div><div class="mono">Tn2Gc5kP8w</div><div><span class="el">Tom Nguyen</span></div><div><span class="el">Contacted</span></div><div>—</div></div>
+            <div class="r dr" id="wP"><div>16</div><div class="mono">Pn6Jr1aZ4v</div><div><span class="el">Priya Nair</span></div><div><span class="el">New lead</span></div><div>—</div></div>
+          </div>
+          <div class="stabs"><span>+</span><span class="a">Leads</span><span>Appointments</span></div>
+        </div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: platform (Make scenario) -->
+<section id="make" data-run="make">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>05</span>In your Make.com</div><h2 class="fade" style="--d:.1s">This is what it will look like<br><em>in your Make.com.</em></h2><p class="sub fade" style="--d:.2s">The webhook from this sub-account searches by contact ID, then the router updates the row it found or adds a new one.</p><div class="chip mklab fade" style="--d:.2s">Your scenario in Make · illustrative</div></div>
+    <div class="par" data-z="0.5"><div class="mkwrap rise" style="--d:.3s"><div class="panel mkframe"><div class="mkbox" id="mkbox"><div class="mk" id="mk">
+      <div class="mtb"><span class="bk">‹</span><span class="nm">GHL → tracker (Northside)</span><div class="tabs"><span class="a">Diagram</span><span>History</span><span>Incomplete executions</span></div></div>
+      <div class="mcv" id="mcv"><svg class="ml" id="mlines"></svg><div class="mtoast" id="mtoast"><i></i>Run completed · Maria Alvarez, row 14 updated</div></div>
+      <div class="mbt">
+        <div class="runb"><i></i>Run once</div>
+        <div class="sched"><div class="sw"></div>Immediately as data arrives</div>
+        <div class="sep"></div>
+        <div class="ib"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></svg></div>
+        <div class="ib"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg></div>
+        <div class="ib"><svg viewBox="0 0 24 24"><path d="M5 4h14v12l-4 4H5z"/><path d="M15 20v-4h4"/></svg></div>
+        <div class="zm"><span>−</span><span>+</span></div>
+      </div>
+    </div></div></div></div></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: close -->
+<section id="close" data-run="close">
+  <div class="wrap">
+    <div class="nextbox par" data-z="0.6"><div class="panel nxt rise" style="--d:.1s">
+      <div class="nxtlab"><span class="dot"></span>Next step</div>
+      <h2>A 15-minute call.</h2>
+      <p class="nxtsub">We look at that account together and I fix it.</p>
+      <div class="nxtfacts">
+        <div><b>Live fast</b><span>First fix within a few days of access.</span></div>
+        <div><b>Your part</b><span>One 15-minute call. I handle the rest.</span></div>
+      </div>
+      <div class="ctabtn"><span class="dot"></span>Reply on Upwork and I'll send three times</div>
+    </div></div>
+    <div class="foot fade" style="--d:1.1s">Your Make.com · lead &amp; appointment tracker</div>
+  </div>
+</section>
+<!-- /SCREEN -->
+</main>
+
+<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="gm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8ec0ff"/><stop offset="1" stop-color="#2f74f5"/></linearGradient></defs></svg>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const ease=t=>1-Math.pow(1-t,3);
+function count(el,a,b,dur,fmt,cb){const t0=performance.now();(function f(n){const p=Math.min(1,Math.max(0,(n-t0)/dur)),v=a+(b-a)*ease(p);if(cb)cb(v,p);if(el)el.textContent=fmt?fmt(v):Math.round(v);if(p<1)requestAnimationFrame(f)})(t0)}
+const n0=v=>Math.round(v).toLocaleString('en-US');
+
+/* ---------- Make scenario canvas ---------- */
+const IC={
+ hook:'<circle cx="12" cy="6" r="2.5"/><circle cx="6" cy="17" r="2.5"/><circle cx="18" cy="17" r="2.5"/><path d="M11 8.2L7.2 14.8M13 8.2l3.8 6.6M8.5 17h7"/>',
+ grid:'<rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M4 10h16M4 15h16M10 4v16"/>',
+ route:'<circle cx="6" cy="12" r="2"/><path d="M8 12h4M12 12l6-6M12 12l6 6"/>'
+};
+const APPS={wh:['Webhooks','#d9336a','hook'],gs:['Google Sheets','#1fa463','grid'],rt:['Router','#86c541','route']};
+const MODS=[
+ {id:1,a:'wh',ac:'Custom webhook',n:1,trig:1,io:'In'},
+ {id:2,a:'gs',ac:'Search Rows',n:1},
+ {id:3,a:'rt',ac:'',n:1,router:1},
+ {id:4,a:'gs',ac:'Update a Row',n:1,io:'Out'},
+ {id:5,a:'gs',ac:'Add a Row',n:0,io:'Out'}
+];
+const LINKS=[[1,2,'This sub-account only'],[2,3],[3,4,'Row found'],[3,5,'No row found']];
+const LAY={
+ wide:{W:1040,H:420,r:40,rr:32,pos:{1:[110,210],2:[400,210],3:[580,210],4:[880,100],5:[880,320]}},
+ narrow:{W:380,H:700,r:30,rr:24,pos:{1:[60,70],2:[60,250],3:[60,380],4:[200,500],5:[200,630]}}
+};
+const isR=id=>!!(MODS.find(m=>m.id===id)||{}).router;
+let mkMode=null;const mkEls={};
+function buildMK(mode){
+ const L=LAY[mode],cv=$('mcv'),mk=$('mk');mk.classList.toggle('narrow',mode==='narrow');
+ cv.querySelectorAll('.mm,.flt').forEach(e=>e.remove());
+ mk.style.width=L.W+'px';mk.style.height=(52+L.H+68)+'px';cv.style.height=L.H+'px';
+ const on=mk.dataset.built==='1';
+ MODS.forEach(m=>{const [x,y]=L.pos[m.id],r=m.router?L.rr:L.r,ap=APPS[m.a];
+  const d=document.createElement('div');d.className='mm'+(on?' on':'');d.style.left=x+'px';d.style.top=y+'px';d.style.width='0';d.style.height='0';
+  let h='<div class="bub" style="left:'+(-r)+'px;top:'+(-r)+'px;width:'+(2*r)+'px;height:'+(2*r)+'px;background:radial-gradient(circle at 35% 30%,'+ap[1]+'dd,'+ap[1]+')"><svg viewBox="0 0 24 24">'+IC[ap[2]]+'</svg></div>';
+  if(!m.router){
+   const lbl='<b>'+ap[0]+'</b><span class="no">'+m.id+'</span><br><span class="ac">'+m.ac+'</span>';
+   if(mode==='wide')h+='<div class="ml2" style="left:0;top:'+(r+10)+'px;transform:translateX(-50%);text-align:center">'+lbl+'</div>';
+   else h+='<div class="ml2" style="left:'+(r+12)+'px;top:-17px">'+lbl+'</div>';
+  }
+  if(m.trig)h+='<div class="clk" style="left:'+(-r-6)+'px;top:'+(r*.45)+'px"><svg viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg></div>';
+  if(m.io)h+='<div class="iot'+(m.io==='Out'?' o':'')+'" style="left:'+(-r-12)+'px;top:'+(-r-12)+'px">'+m.io+'</div>';
+  const bx=r*.72;h+='<div class="xb" style="left:'+(bx-6)+'px;top:'+(-bx-18)+'px">'+m.n+'</div>';
+  d.innerHTML=h;cv.appendChild(d);mkEls[m.id]=d});
+ let P='';
+ LINKS.forEach(([a,b,f])=>{const A=L.pos[a],B=L.pos[b],ra=isR(a)?L.rr:L.r,rb=isR(b)?L.rr:L.r;let d,lp;
+  if(mode==='wide'){
+   if(A[1]!==B[1]){const x1=A[0]+ra+4,y1=A[1],x2=B[0]-rb-4,y2=B[1],mx=(x1+x2)/2;d='M'+x1+' '+y1+'C'+mx+' '+y1+' '+mx+' '+y2+' '+x2+' '+y2;lp=[mx+40,(y1+y2)/2+(y2>y1?40:-40)]}
+   else{const x1=A[0]+ra+4,x2=B[0]-rb-4;d='M'+x1+' '+A[1]+'H'+x2;lp=[(x1+x2)/2,A[1]]}
+  }else{
+   if(A[0]!==B[0]){const x1=A[0],y1=A[1]+ra+4,x2=B[0]-rb-4,y2=B[1];d='M'+x1+' '+y1+'V'+(y2-34)+'Q'+x1+' '+y2+' '+(x1+34)+' '+y2+'H'+x2;lp=[x1,y2-62]}
+   else{const y1=A[1]+ra+4,y2=B[1]-rb-4;d='M'+A[0]+' '+y1+'V'+y2;lp=[A[0]+(f?92:0),(y1+y2)/2]}
+  }
+  P+='<path d="'+d+'"/>';
+  if(f){const e=document.createElement('div');e.className='flt';e.style.left=lp[0]+'px';e.style.top=lp[1]+'px';e.innerHTML='<svg viewBox="0 0 24 24"><path d="M3 4h18l-7 8v6l-4 2v-8z"/></svg>'+f;cv.appendChild(e)}
+ });
+ $('mlines').innerHTML=P;
+}
+let ranMK=false;
+function finishMK(){const mk=$('mk');mk.classList.add('linked');Object.values(mkEls).forEach(e=>e.classList.add('on'));MODS.forEach(m=>{if(m.n)mkEls[m.id].querySelector('.xb').classList.add('on')});$('mtoast').classList.add('on')}
+function fitMK(){const mode=innerWidth<700?'narrow':'wide';if(mode!==mkMode){mkMode=mode;buildMK(mode);if(ranMK)finishMK()}
+ const L=LAY[mode],mk=$('mk'),box=$('mkbox');const avail=Math.min(L.W,box.closest('.wrap').clientWidth-24);const s=Math.min(1,avail/L.W);
+ mk.style.transform='scale('+s+')';box.style.width=L.W*s+'px';box.style.height=(52+L.H+68)*s+'px'}
+fitMK();addEventListener('resize',fitMK);
+
+/* ---------- goal math ---------- */
+const imIn=['imL','imP','imA'].map($);
+const num=(el,max)=>{const v=parseFloat(el.value);return isFinite(v)?Math.min(max,Math.max(0,v)):0};
+function imCalc(){const L=num(imIn[0],100000),P=num(imIn[1],100),A=num(imIn[2],100000);
+ return {L,P,A,lost:Math.round(L*P/100),appt:Math.round(A*P/100)}}
+function imRender(){const m=imCalc();
+ $('imEq').innerHTML='<b>'+n0(m.L)+'</b> leads a month × <b>'+m.P+'%</b> missed or duplicated = <b>'+n0(m.lost)+'</b> '+(m.lost===1?'lead':'leads')+' the tracker gets wrong today. Keyed on contact ID, <b class="tot">all '+n0(m.lost)+' land on their own row</b>, plus <b>'+n0(m.appt)+'</b> of <b>'+n0(m.A)+'</b> appointment updates.';
+ $('imU').textContent=m.lost===1?'lead a month':'leads a month';
+ $('imAB').textContent=n0(m.appt);
+ $('imR').textContent=n0(m.lost)}
+imRender();
+let imUser=false;
+imIn.forEach(el=>el.addEventListener('input',()=>{imUser=true;imRender()}));
+
+/* ---------- runners ---------- */
+const R={
+ goal:async()=>{await wait(700);if(!imUser)count($('imR'),0,imCalc().lost,1800,v=>n0(imUser?imCalc().lost:v))},
+ io:async()=>{const it=[...document.querySelectorAll('#io .pin,#io .pout')];await wait(500);
+  for(const e of it.filter(e=>e.classList.contains('pin'))){e.classList.add('on');await wait(220)}
+  count($('iot'),0,3,1500,v=>Math.round(v)+' sec');await wait(1300);
+  for(const e of it.filter(e=>e.classList.contains('pout'))){e.classList.add('on');await wait(320)}},
+ broken:async()=>{const rows=[...document.querySelectorAll('#sgB .dr')];await wait(600);
+  for(const r of rows){r.classList.add('on');await wait(170)}
+  const notes=[...document.querySelectorAll('.pnote div')];
+  await wait(400);$('plPh').classList.add('hl');$('bD1').classList.add('flag');await wait(500);$('bD2').classList.add('flag');notes[0].classList.add('on');
+  await wait(900);$('bW').classList.add('flag');notes[1].classList.add('on');
+  await wait(900);$('bM').classList.add('flag');notes[2].classList.add('on')},
+ trace:async()=>{await wait(600);for(const i of [1,2,3,4]){$('h'+i).classList.add('on');await wait(260)}
+  await wait(300);$('h1').classList.add('sel');
+  for(const i of [1,2,3]){await wait(550);$('c'+i).classList.add('on')}},
+ fix:async()=>{await wait(900);$('fF').classList.add('fixed');await wait(500);$('fM').classList.add('fixed');
+  for(const i of [0,1,2]){await wait(420);$('r'+i).classList.add('on')}
+  for(const i of [1,2,3,4]){await wait(300);$('w'+i).classList.add('on')}},
+ win:async()=>{const rows=[...document.querySelectorAll('#sgW .dr')];const ts=[...document.querySelectorAll('.tr[data-t]')];await wait(600);
+  for(const r of rows){r.classList.add('on');await wait(120)}
+  let p=0;for(const t of ts){t.classList.add('run');await wait(420);t.classList.remove('run');t.classList.add('pass');p++;$('tp').textContent=p}
+  $('wM').classList.add('new');$('wnote').classList.add('on');await wait(1600);$('wM').classList.remove('new')},
+ make:async()=>{const mk=$('mk');await wait(700);
+  for(const m of MODS){mkEls[m.id].classList.add('on');await wait(120)}
+  mk.classList.add('linked');await wait(800);mk.classList.add('press');await wait(260);mk.classList.remove('press');
+  for(const id of [1,2,3,4]){const e=mkEls[id];e.classList.add('run');e.querySelector('.xb').classList.add('on');await wait(300);e.classList.remove('run')}
+  ranMK=true;mk.dataset.built='1';$('mtoast').classList.add('on')},
+ close:async()=>{}
+};
+
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const s=e.target;s.classList.add('in');io.unobserve(s);const f=R[s.dataset.run];if(f)f()}}),{threshold:.22});
+document.querySelectorAll('section').forEach(s=>io.observe(s));
+
+/* spatial parallax */
+const pars=[...document.querySelectorAll('.par')].map(el=>({el,z:parseFloat(el.dataset.z||0),sec:el.closest('section')}));
+let mx=0,my=0,tx=0,ty=0;addEventListener('mousemove',e=>{tx=e.clientX/innerWidth-.5;ty=e.clientY/innerHeight-.5},{passive:true});
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(){mx+=(tx-mx)*.06;my+=(ty-my)*.06;const vh=innerHeight,small=innerWidth<860,amp=reduce?0:(small?.35:1);
+ document.documentElement.style.setProperty('--sp',(scrollY/(document.body.scrollHeight-vh||1)).toFixed(3));
+ for(const p of pars){const r=p.sec.getBoundingClientRect();if(r.bottom<-200||r.top>vh+200)continue;
+  const t=Math.max(-1.2,Math.min(1.2,(r.top+Math.min(r.height,vh)/2-vh/2)/vh));
+  const big=p.el.offsetHeight>500?.35:1;
+  const y=-t*p.z*70*amp,rx=Math.max(-10,Math.min(12,t*9*(0.5+p.z*.4)))*amp*big,x=small?0:mx*p.z*-16*amp,ry=small?0:mx*p.z*3*amp*big;
+  p.el.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,'+(p.z*20*amp).toFixed(1)+'px) rotateX('+rx.toFixed(2)+'deg) rotateY('+ry.toFixed(2)+'deg)'}
+ requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+})();
+</script>

@@ -1,0 +1,7 @@
+- This is a working prototype of your complete conversational workflow.
+- Ava takes Megan's call: qualifies, books Saturday, hands price to Dana.
+- Call ends: HubSpot record, SMS confirmation and n8n follow-up fire.
+- Outbound calls only people who asked, and opt-outs stick.
+- Guardrails: switch one off and you see exactly what changes.
+- Trace a call: Twilio, Vapi or Retell, Claude, tools, n8n.
+- Worth a quick 15 minute call? Reply here and I'll send times.

@@ -1,0 +1,386 @@
+{
+  "title": "Client Intake Agent: Every Inquiry Qualified, Logged and Handed Off",
+  "platform": "n8n",
+  "client": {
+    "industry": "operations, consulting or agency team",
+    "location": "Texas, US"
+  },
+  "overview": {
+    "how_it_works": [
+      "An agent, not a fixed automation: it reads each website inquiry against your fit rules and picks which of its four tools to use.",
+      "It saves the contact and opens a deal in HubSpot, creates the scoping task in ClickUp and hands the client to the right owner in Slack.",
+      "Safe replies go out from your Gmail at once. Declines and anything about price or contracts wait as a draft.",
+      "Room to add next, on the same tools: project coordination, reporting and follow-up agents."
+    ],
+    "setup": [
+      "Your part 1 comes first: a workflow audit and automation roadmap, ranked by business impact (hours saved).",
+      "Connect HubSpot, ClickUp, Slack, Gmail and Anthropic, then fill in 0 - Config.",
+      "Point your website form at the step 1 URL and set this workflow as its own error workflow.",
+      "Your part 4: an architecture, maintenance and troubleshooting doc, plus a recorded walkthrough."
+    ],
+    "need_from_you": [
+      "Your fit rules and who owns each service.",
+      "Your HubSpot pipeline, ClickUp list and Slack channel.",
+      "A few real past inquiries to test the agent against."
+    ]
+  },
+  "config": {
+    "fit_rules": "PASTE-YOUR-FIT-RULES: who you take on and who you turn away, in plain English",
+    "services_and_owners": "PASTE-YOUR-SERVICES-AND-OWNERS: one per line, Service | Owner | HubSpot owner id | ClickUp user id | Slack member id",
+    "booking_link": "PASTE-YOUR-BOOKING-LINK",
+    "hubspot_pipeline_id": "PASTE-YOUR-HUBSPOT-PIPELINE-ID",
+    "hubspot_new_inquiry_stage_id": "PASTE-YOUR-NEW-INQUIRY-STAGE-ID",
+    "clickup_list_id": "PASTE-YOUR-CLICKUP-LIST-ID",
+    "slack_intake_channel": "PASTE-YOUR-SLACK-CHANNEL"
+  },
+  "sections": [
+    {
+      "key": "agent",
+      "label": "1 - CLIENT INTAKE AGENT",
+      "color": 0,
+      "note": "The first task on your list. Each inquiry from your website form goes to an agent that checks it against your fit rules, then decides which of its four tools to call."
+    },
+    {
+      "key": "tools",
+      "label": "2 - YOUR TOOLS: HUBSPOT, CLICKUP AND SLACK UNDER THE AGENT, GMAIL HERE",
+      "color": 0,
+      "note": "HubSpot, ClickUp and Slack are the agent's tools, hanging under it in section 1, and write while it works. Here the client's reply goes out from your Gmail, or waits as a draft when a person should read it first."
+    },
+    {
+      "key": "monitor",
+      "label": "3 - TEST, MONITOR AND ITERATE",
+      "color": 0,
+      "note": "Any failed step posts to Slack with a link to the run, where the inquiry waits for a retry. Every run keeps the agent's tool calls in n8n, and those are what we review each week to tune it."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "hook",
+      "kind": "trigger.webhook",
+      "label": "1 - New Client Inquiry From Your Website Form",
+      "section": "agent",
+      "params": {
+        "path": "client-intake",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "key": "agent",
+      "kind": "ai.agent",
+      "label": "2 - Intake Agent Qualifies the Client and Sets Up the Work",
+      "section": "agent",
+      "notes": "An agent, not a fixed automation: it decides which tools each inquiry needs.",
+      "params": {
+        "system_message": "You are the client intake agent for an operations and consulting team. Every inquiry from their website form comes to you. Your job: decide whether it is a fit, pick the service and the owner, record it in HubSpot, set up the first piece of work in ClickUp, hand it to the owner in Slack, and write the client's reply.\n\nJudge fit only against the fit rules you are given; never add rules of your own. fit is one of: good_fit (matches the rules and says what they need help with plus a timeline or a budget), needs_info (could fit, but a detail the rules depend on is missing or vague), not_a_fit (outside the rules, a vendor pitch, a job application or spam).\n\nPick service and owner only from the services and owners table. If two services could fit, choose the one the message spends the most words on. If none fits, use the first owner in the table and say so in handoff_note.\n\nTools, in this order:\n1. Save the Client as a Contact: every real inquiry, not_a_fit included. Skip only spam and test entries. Keep the contact id it returns.\n2. Open a Deal in Your Pipeline: good_fit and needs_info only, with that contact id and the owner's HubSpot owner id. Deal name: company - service.\n3. Create the Scoping Task: good_fit only, assigned to the owner's ClickUp user id, with what they asked for, their budget and timeline, and three questions for the discovery call.\n4. Hand the Client to the Owner in Slack: every real inquiry. Mention the owner as <@their Slack member id>, then fit, service, a two-sentence summary, what is missing, and the deal id and task link when they exist.\nIf a tool returns an error, retry it once at most, carry on with the others, and name the failed step in handoff_note so the owner can finish it by hand.\n\nThe reply to the client: plain text, under 120 words, signed with the owner's first name, direct and warm. good_fit: thank them for one specific detail from their message and give the booking link. needs_info: ask only for the missing details, two questions at most. not_a_fit: a polite no, with a referral only if the fit rules name one. Never quote prices, timelines or guarantees, and never promise work.\n\nsafe_to_send is true only for a good_fit or needs_info reply whose inquiry does not raise pricing, contracts, a complaint, anything legal or a current client's project. Everything else is false, and the reply waits as a draft for the owner.\n\nUse only facts from the inquiry and the tables you are given. If the message is empty or unreadable, return needs_info with safe_to_send false and say why in handoff_note.",
+        "prompt": "=Your fit rules:\n{{ $('0 - Config: Your Settings').item.json.fit_rules }}\n\nYour services and owners (Service | Owner | HubSpot owner id | ClickUp user id | Slack member id):\n{{ $('0 - Config: Your Settings').item.json.services_and_owners }}\n\nBooking link: {{ $('0 - Config: Your Settings').item.json.booking_link }}\n\nThe inquiry:\nName: {{ $json.body.first_name }} {{ $json.body.last_name }}\nEmail: {{ $json.body.email }}\nCompany: {{ $json.body.company }}\nRole: {{ $json.body.job_title || 'not given' }}\nWebsite: {{ $json.body.website || 'not given' }}\nInterested in: {{ $json.body.service_interest || 'not given' }}\nBudget: {{ $json.body.budget_range || 'not given' }}\nTimeline: {{ $json.body.timeline || 'not given' }}\nMessage: {{ $json.body.message }}\n\nUse your tools in order, then return fit, service, owner, contact_id, deal_id, task_url, missing_info, handoff_note, safe_to_send, reply_subject and reply_body."
+      }
+    },
+    {
+      "key": "model",
+      "kind": "ai.model",
+      "app": "anthropic",
+      "label": "Claude - Runs the Intake Agent",
+      "parent": "agent",
+      "port": "ai_languageModel"
+    },
+    {
+      "key": "t_contact",
+      "kind": "ai.tool",
+      "app": "http",
+      "label": "HubSpot - Save the Client as a Contact",
+      "parent": "agent",
+      "port": "ai_tool",
+      "params": {
+        "toolDescription": "Create or update the client in HubSpot, matched on email. Call once for every real inquiry. The response holds the contact id you need to open the deal.",
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/batch/upsert",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"inputs\": [ {\"idProperty\": \"email\", \"id\": \"{email}\", \"properties\": {\"email\": \"{email}\", \"firstname\": \"{first_name}\", \"lastname\": \"{last_name}\", \"company\": \"{company}\", \"jobtitle\": \"{job_title}\" } } ]}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "email",
+              "description": "The client's email exactly as written in the inquiry",
+              "type": "string"
+            },
+            {
+              "name": "first_name",
+              "description": "The client's first name",
+              "type": "string"
+            },
+            {
+              "name": "last_name",
+              "description": "The client's last name, or an empty string if not given",
+              "type": "string"
+            },
+            {
+              "name": "company",
+              "description": "The client's company name as written in the inquiry",
+              "type": "string"
+            },
+            {
+              "name": "job_title",
+              "description": "The client's role, or an empty string if not given",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "t_deal",
+      "kind": "ai.tool",
+      "app": "http",
+      "label": "HubSpot - Open a Deal in Your Pipeline",
+      "parent": "agent",
+      "port": "ai_tool",
+      "notes": "Every good fit lands in your pipeline with its owner already set.",
+      "params": {
+        "toolDescription": "Open a deal in the team's HubSpot pipeline at the new inquiry stage, linked to the contact. Call only for good_fit and needs_info, after the contact is saved.",
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/deals",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"properties\": {\"dealname\": \"{deal_name}\", \"pipeline\": \"{{ $('0 - Config: Your Settings').item.json.hubspot_pipeline_id }}\", \"dealstage\": \"{{ $('0 - Config: Your Settings').item.json.hubspot_new_inquiry_stage_id }}\", \"hubspot_owner_id\": \"{hubspot_owner_id}\", \"description\": \"{deal_summary}\" }, \"associations\": [ {\"to\": {\"id\": \"{contact_id}\" }, \"types\": [ {\"associationCategory\": \"HUBSPOT_DEFINED\", \"associationTypeId\": 3 } ] } ]}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "deal_name",
+              "description": "Company - service, for example Gulf Coast Property Group - Automation build",
+              "type": "string"
+            },
+            {
+              "name": "hubspot_owner_id",
+              "description": "The owner's HubSpot owner id from the services and owners table",
+              "type": "string"
+            },
+            {
+              "name": "deal_summary",
+              "description": "Two sentences: what they need, their budget and timeline",
+              "type": "string"
+            },
+            {
+              "name": "contact_id",
+              "description": "The contact id returned by Save the Client as a Contact",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "t_task",
+      "kind": "ai.tool",
+      "app": "http",
+      "label": "ClickUp - Create the Scoping Task for the Owner",
+      "parent": "agent",
+      "port": "ai_tool",
+      "notes": "The owner walks into the discovery call with three questions ready.",
+      "params": {
+        "toolDescription": "Create the scoping task in the team's ClickUp intake list, assigned to the owner. Call only for good_fit. The response holds the task url.",
+        "method": "POST",
+        "url": "=https://api.clickup.com/api/v2/list/{{ $('0 - Config: Your Settings').item.json.clickup_list_id }}/task",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "clickUpApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"name\": \"{task_name}\", \"markdown_description\": \"{task_description}\", \"assignees\": [ {clickup_user_id} ], \"priority\": 2, \"tags\": [\"client-intake\"] }",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "task_name",
+              "description": "Scope: company - service, for example Scope: Gulf Coast Property Group - Automation build",
+              "type": "string"
+            },
+            {
+              "name": "task_description",
+              "description": "What they asked for, their budget and timeline, the HubSpot deal id, and three questions for the discovery call",
+              "type": "string"
+            },
+            {
+              "name": "clickup_user_id",
+              "description": "The owner's ClickUp user id from the services and owners table",
+              "type": "number"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "t_slack",
+      "kind": "ai.tool",
+      "app": "http",
+      "label": "Slack - Hand the Client to the Owner",
+      "parent": "agent",
+      "port": "ai_tool",
+      "params": {
+        "toolDescription": "Post the handoff for the owner in the team's intake channel in Slack. Call once for every real inquiry, last.",
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"channel\": \"{{ $('0 - Config: Your Settings').item.json.slack_intake_channel }}\", \"text\": \"{handoff_message}\" }",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "handoff_message",
+              "description": "Starts with <@owner Slack member id>, then fit, service, a two-sentence summary, what is missing, and the deal id and task link when they exist",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "parser",
+      "kind": "ai.parser",
+      "label": "Parser - Fit, Owner and Client Reply",
+      "parent": "agent",
+      "port": "ai_outputParser",
+      "params": {
+        "schema": {
+          "fit": "good_fit",
+          "service": "Automation build",
+          "owner": "Alex",
+          "contact_id": "118340512",
+          "deal_id": "30211876452",
+          "task_url": "https://app.clickup.com/t/86b2kq7xm",
+          "missing_info": "none",
+          "handoff_note": "Gulf Coast Property Group, 14 staff and about 1,100 rental units, wants maintenance requests from phone, text and email in one queue before hiring a third coordinator. Budget $5,000 to $10,000, starting within 30 days.",
+          "safe_to_send": true,
+          "reply_subject": "Your maintenance request intake: next step",
+          "reply_body": "Hi Marcus,\n\nThanks for spelling out the three ways maintenance requests reach you and the two coordinators re-typing them. That is the kind of work we look at first.\n\nPick a time for a first call here: [booking link]\n\nAlex"
+        }
+      }
+    },
+    {
+      "key": "gate",
+      "kind": "flow.branch",
+      "label": "3 - Safe to Send Without a Person?",
+      "section": "tools",
+      "notes": "Declines and anything about price or contracts never send on their own.",
+      "params": {
+        "condition": {
+          "left": "={{ $json.output.safe_to_send }}",
+          "op": "true"
+        }
+      }
+    },
+    {
+      "key": "reply_send",
+      "kind": "app.action",
+      "app": "gmail",
+      "op": "send",
+      "label": "4 - Gmail: Send the Client Their Next Step",
+      "section": "tools",
+      "params": {
+        "sendTo": "={{ $('1 - New Client Inquiry From Your Website Form').item.json.body.email }}",
+        "subject": "={{ $json.output.reply_subject }}",
+        "emailType": "text",
+        "message": "={{ $json.output.reply_body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      }
+    },
+    {
+      "key": "reply_draft",
+      "kind": "app.action",
+      "app": "gmail",
+      "op": "draft",
+      "label": "4b - Gmail: Hold the Reply as a Draft for the Owner",
+      "section": "tools",
+      "params": {
+        "subject": "={{ $json.output.reply_subject }}",
+        "emailType": "text",
+        "message": "={{ $json.output.reply_body }}",
+        "options": {
+          "sendTo": "={{ $('1 - New Client Inquiry From Your Website Form').item.json.body.email }}"
+        }
+      }
+    },
+    {
+      "key": "err",
+      "kind": "trigger.app",
+      "app": "n8n",
+      "op": "error_trigger",
+      "label": "5 - If Any Step Fails",
+      "section": "monitor"
+    },
+    {
+      "key": "alert",
+      "kind": "app.action",
+      "app": "slack",
+      "op": "post",
+      "label": "6 - Slack: Alert Ops With the Failed Step and Run Link",
+      "section": "monitor",
+      "notes": "The inquiry is kept in the failed run; retry it from the link.",
+      "params": {
+        "channel": "#ops-alerts",
+        "text": ":rotating_light: Client intake agent stopped at *{{ $json.execution.lastNodeExecuted }}*\n{{ $json.execution.error.message }}\nThe inquiry is kept in this run. Fix it and retry here: {{ $json.execution.url }}"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "hook",
+      "to": "agent"
+    },
+    {
+      "from": "agent",
+      "to": "gate"
+    },
+    {
+      "from": "gate",
+      "to": "reply_send",
+      "branch": "true"
+    },
+    {
+      "from": "gate",
+      "to": "reply_draft",
+      "branch": "false"
+    },
+    {
+      "from": "err",
+      "to": "alert"
+    }
+  ],
+  "input_sample": {
+    "body": {
+      "first_name": "Marcus",
+      "last_name": "Bell",
+      "email": "marcus.bell@gulfcoastpropertygroup.com",
+      "company": "Gulf Coast Property Group",
+      "job_title": "Operations Manager",
+      "website": "gulfcoastpropertygroup.com",
+      "service_interest": "Automation build",
+      "budget_range": "$5,000 - $10,000",
+      "timeline": "Start within 30 days",
+      "message": "We manage about 1,100 rental units with a team of 14. Maintenance requests come in by phone, text and email, and two coordinators re-type all of it into our property system and a spreadsheet. I'd like to see what can be automated before we hire a third coordinator.",
+      "source": "Website - Work With Us form"
+    }
+  },
+  "output_sample": {
+    "sent_to": "marcus.bell@gulfcoastpropertygroup.com",
+    "subject": "Your maintenance request intake: next step",
+    "fit": "good_fit",
+    "service": "Automation build",
+    "owner": "Alex",
+    "hubspot_contact_id": "118340512",
+    "hubspot_deal_id": "30211876452",
+    "clickup_task_url": "https://app.clickup.com/t/86b2kq7xm",
+    "slack_handoff": "posted to the intake channel",
+    "gmail_message_id": "19276c0f4e2ab913",
+    "labelIds": [
+      "SENT"
+    ]
+  }
+}

@@ -1,0 +1,240 @@
+{
+  "workflowId": "c7b304dd-4115-4438-bf36-0b4dbc967bf7",
+  "workflowName": "From Capturing a Lead to the Opportunity and the Follow-Up - Lead Replied on Any Channel",
+  "locationId": "ebyNANPagaK7ycf1pfge",
+  "url": "https://app.gohighlevel.com/v2/location/ebyNANPagaK7ycf1pfge/automation/workflow/c7b304dd-4115-4438-bf36-0b4dbc967bf7",
+  "capturedAt": "2026-09-28T14:34:25.443624Z",
+  "status": "draft",
+  "folder": null,
+  "references": {
+    "other": {
+      "c7b304dd-4115-4438-bf36-0b4dbc967bf7": "From Capturing a Lead to the Opportunity and the Follow-Up - Lead Replied on Any Channel",
+      "sOC3HgMckehHKYxO3Jnn": "Lead Replied on Any Channel",
+      "77bed9e0-2968-4927-b1ec-de203fe07927": "Is This a Lead in the Follow-Up?",
+      "00bc21a0-df10-4979-8984-30f36263190f": "Yes",
+      "1005b9f9-d335-405c-829e-e4f4c12aedf8": "None",
+      "6890d1bb-1fe3-4d70-9833-0b78f5554e07": "Tag the Contact lead-engaged",
+      "bea36b6a-73b2-4605-9641-5e5cbb99b7cc": "Move the Opportunity to Replied",
+      "cf5b8098-7d95-4498-92ff-ca0daa542576": "Text the Owner to Answer Now"
+    }
+  },
+  "unresolvedReferenceIds": [],
+  "captureComplete": {
+    "triggers": true,
+    "tier": "compiled:upwork_gen"
+  },
+  "triggers": [
+    {
+      "id": "sOC3HgMckehHKYxO3Jnn",
+      "date_added": "2026-09-28T14:34:25.443624Z",
+      "deleted": false,
+      "active": false,
+      "actions": [
+        {
+          "workflow_id": "c7b304dd-4115-4438-bf36-0b4dbc967bf7",
+          "type": "add_to_workflow",
+          "workflow_name": "From Capturing a Lead to the Opportunity and the Follow-Up - Lead Replied on Any Channel"
+        }
+      ],
+      "conditions": [],
+      "type": "customer_replied",
+      "masterType": "highlevel",
+      "workflow_id": "c7b304dd-4115-4438-bf36-0b4dbc967bf7",
+      "location_id": "ebyNANPagaK7ycf1pfge",
+      "name": "Lead Replied on Any Channel",
+      "belongs_to": "workflow",
+      "date_updated": "2026-09-28T14:34:25.443624Z",
+      "status": "draft",
+      "workflow_name": "From Capturing a Lead to the Opportunity and the Follow-Up - Lead Replied on Any Channel"
+    }
+  ],
+  "metadata": {
+    "createdAt": "2026-09-28T14:34:25.443624Z",
+    "updatedAt": "2026-09-28T14:34:25.443624Z",
+    "settings": {
+      "locationId": "ebyNANPagaK7ycf1pfge",
+      "version": 1,
+      "dataVersion": 7,
+      "allowMultiple": true,
+      "timezone": "account",
+      "removeContactFromLastStep": true,
+      "stopOnResponse": false,
+      "autoMarkAsRead": false,
+      "type": "workflow",
+      "deleted": false,
+      "allowMultipleOpportunity": true,
+      "creationSource": "upwork_gen",
+      "originType": "user"
+    }
+  },
+  "nodes": [
+    {
+      "type": "if_else",
+      "id": "77bed9e0-2968-4927-b1ec-de203fe07927",
+      "name": "Is This a Lead in the Follow-Up?",
+      "attributes": {
+        "currentRecipeType": "CUSTOM",
+        "branches": [
+          {
+            "name": "Yes",
+            "operator": "and",
+            "segments": [
+              {
+                "operator": "and",
+                "conditions": [
+                  {
+                    "conditionType": "contact_detail",
+                    "conditionSubType": "tags",
+                    "conditionOperator": "index-of-true",
+                    "conditionValue": [
+                      "lead-form"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "id": "00bc21a0-df10-4979-8984-30f36263190f"
+          }
+        ],
+        "if": true,
+        "operator": "and",
+        "conditionName": "Is This a Lead in the Follow-Up?",
+        "version": 2,
+        "noneBranchName": "None"
+      },
+      "order": 0,
+      "nodeType": "condition-node",
+      "cat": "conditions",
+      "next": [
+        "00bc21a0-df10-4979-8984-30f36263190f",
+        "1005b9f9-d335-405c-829e-e4f4c12aedf8"
+      ],
+      "nextNames": [
+        "Yes",
+        "None"
+      ]
+    },
+    {
+      "type": "if_else",
+      "id": "00bc21a0-df10-4979-8984-30f36263190f",
+      "name": "Yes",
+      "parentKey": "77bed9e0-2968-4927-b1ec-de203fe07927",
+      "parent": "77bed9e0-2968-4927-b1ec-de203fe07927",
+      "nodeType": "branch-yes",
+      "cat": "conditions",
+      "sibling": [
+        "1005b9f9-d335-405c-829e-e4f4c12aedf8"
+      ],
+      "attributes": {
+        "if": false,
+        "conditionName": "Condition",
+        "operator": "and",
+        "branches": []
+      },
+      "order": 1,
+      "parentKeyName": "Is This a Lead in the Follow-Up?",
+      "parentName": "Is This a Lead in the Follow-Up?",
+      "siblingNames": [
+        "None"
+      ],
+      "next": "6890d1bb-1fe3-4d70-9833-0b78f5554e07",
+      "nextName": "Tag the Contact lead-engaged"
+    },
+    {
+      "type": "add_contact_tag",
+      "id": "6890d1bb-1fe3-4d70-9833-0b78f5554e07",
+      "name": "Tag the Contact lead-engaged",
+      "attributes": {
+        "tags": [
+          "lead-engaged"
+        ]
+      },
+      "order": 0,
+      "parentKey": "00bc21a0-df10-4979-8984-30f36263190f",
+      "parentKeyName": "Yes",
+      "parent": "00bc21a0-df10-4979-8984-30f36263190f",
+      "parentName": "Yes",
+      "next": "bea36b6a-73b2-4605-9641-5e5cbb99b7cc",
+      "nextName": "Move the Opportunity to Replied"
+    },
+    {
+      "type": "internal_update_opportunity",
+      "id": "bea36b6a-73b2-4605-9641-5e5cbb99b7cc",
+      "name": "Move the Opportunity to Replied",
+      "attributes": {
+        "type": "internal_update_opportunity",
+        "allowBackward": true,
+        "pipelineId": "",
+        "__customInputFields__": [
+          {
+            "filterField": "pipelineStageId",
+            "value": "",
+            "dataType": "SINGLE_OPTIONS",
+            "valueFieldType": "select",
+            "__customInputs__": {}
+          }
+        ],
+        "__customInputs__": {},
+        "DYNAMIC": "Update opportunity to 'Replied' stage with status open in 'Lead Pipeline' pipeline",
+        "pipeline_name": "Lead Pipeline",
+        "pipeline_stage_name": "Replied"
+      },
+      "order": 1,
+      "parentKey": "6890d1bb-1fe3-4d70-9833-0b78f5554e07",
+      "parentKeyName": "Tag the Contact lead-engaged",
+      "parent": "00bc21a0-df10-4979-8984-30f36263190f",
+      "parentName": "Yes",
+      "workflowsActionType": "INTERNAL",
+      "next": "cf5b8098-7d95-4498-92ff-ca0daa542576",
+      "nextName": "Text the Owner to Answer Now"
+    },
+    {
+      "type": "internal_notification",
+      "id": "cf5b8098-7d95-4498-92ff-ca0daa542576",
+      "name": "Text the Owner to Answer Now",
+      "attributes": {
+        "type": "sms",
+        "email": null,
+        "sms": {
+          "userType": "assign",
+          "assignedOwners": [
+            "contact_owner"
+          ],
+          "alsoNotifyContactFollowers": false,
+          "alsoNotifyOpportunityFollowers": false,
+          "body": "{{contact.first_name}} {{contact.last_name}} just replied to the lead follow-up. Answer while it's warm: {{contact.phone}}"
+        },
+        "userType": "assign",
+        "whatsapp": null,
+        "notification": null
+      },
+      "order": 2,
+      "parentKey": "bea36b6a-73b2-4605-9641-5e5cbb99b7cc",
+      "parentKeyName": "Move the Opportunity to Replied",
+      "parent": "00bc21a0-df10-4979-8984-30f36263190f",
+      "parentName": "Yes",
+      "next": ""
+    },
+    {
+      "type": "if_else",
+      "id": "1005b9f9-d335-405c-829e-e4f4c12aedf8",
+      "name": "None",
+      "parentKey": "77bed9e0-2968-4927-b1ec-de203fe07927",
+      "parent": "77bed9e0-2968-4927-b1ec-de203fe07927",
+      "nodeType": "branch-no",
+      "cat": "conditions",
+      "sibling": [
+        "00bc21a0-df10-4979-8984-30f36263190f"
+      ],
+      "attributes": {
+        "else": true
+      },
+      "order": 1,
+      "parentKeyName": "Is This a Lead in the Follow-Up?",
+      "parentName": "Is This a Lead in the Follow-Up?",
+      "siblingNames": [
+        "Yes"
+      ]
+    }
+  ]
+}

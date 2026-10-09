@@ -1,0 +1,7 @@
+- This is a working prototype of your AI setup engine.
+- Your specialist pastes the client's kickoff email and member CSV.
+- AI sorts it into all twelve areas. Stripe keys stay out.
+- One preview. A misread gets fixed, a missing feature gets flagged.
+- Approved changes run through your server functions. Twice means zero duplicates.
+- The venue is live, every change logged, any of it undoable.
+- Worth a quick 15 minute call to map this onto your platform?

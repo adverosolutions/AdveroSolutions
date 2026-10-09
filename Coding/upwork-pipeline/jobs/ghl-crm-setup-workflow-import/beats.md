@@ -1,0 +1,8 @@
+- This is your leads handled in GHL, from form to follow-up.
+- A form fill gets tagged, its source saved, into your pipeline.
+- Text and email go out within a minute, then a one-day wait.
+- One check on lead activity: did they reply or book a call?
+- Yes moves the stage, assigns your team a task, texts the owner.
+- No gets a second text and email, then a call task.
+- Each lead needs one owner, or tasks land on nobody.
+- Can start [START], first draft by [DRAFT].

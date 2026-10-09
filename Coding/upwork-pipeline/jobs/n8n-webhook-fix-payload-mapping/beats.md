@@ -1,0 +1,8 @@
+- This is your webhook workflow fixed, delivering cleanly to your downstream API.
+- In the prototype, the failing payload breaks at the Code node.
+- Then the fix applies, it re-runs, and the POST returns 200.
+- Inspecting the export pins every problem to its node and line.
+- The broken mapping lines, side by side with the corrected code.
+- Delivery checks the API schema, retries 503s, alerts with the failed payload.
+- Eight edge-case payloads all pass, batches and missing fields included.
+- Want a quick 15 minute call to go through your export?

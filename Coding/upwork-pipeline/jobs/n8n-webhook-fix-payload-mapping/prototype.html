@@ -1,0 +1,750 @@
+<title>Webhook Mapping Fix</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap');
+
+:root{
+  color-scheme: light;
+  --bg:#F5F5F7; --surface:#FFFFFF; --sunk:#EEEEF3;
+  --ink:#15161D; --ink-2:#464859; --muted:#7B7D8E;
+  --line:rgba(24,26,52,.10); --line-2:rgba(24,26,52,.18);
+  --accent:#3C49D6; --accent-soft:rgba(60,73,214,.09);
+  --ok:#1D7A52; --ok-soft:rgba(29,122,82,.09);
+  --err:#BC3A2A; --err-soft:rgba(188,58,42,.08);
+  --warn:#A8701A;
+  --k:#3C49D6; --s:#1D7A52; --n:#A8701A; --c:#8E90A2;
+  --shadow:0 1px 2px rgba(20,22,48,.04), 0 8px 24px -12px rgba(20,22,48,.12);
+  --r:10px;
+  --ease:cubic-bezier(.22,.8,.26,1);
+  --serif:'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --sans:'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono:'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#0E0F16; --surface:#15161F; --sunk:#11121A;
+    --ink:#ECECF4; --ink-2:#B3B5C6; --muted:#81839A;
+    --line:rgba(210,214,255,.09); --line-2:rgba(210,214,255,.16);
+    --accent:#8C97FF; --accent-soft:rgba(140,151,255,.12);
+    --ok:#52C592; --ok-soft:rgba(82,197,146,.11);
+    --err:#F07562; --err-soft:rgba(240,117,98,.11);
+    --warn:#E0A64A;
+    --k:#9AA4FF; --s:#6FCF9F; --n:#E4B062; --c:#6C6E85;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px -16px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#0E0F16; --surface:#15161F; --sunk:#11121A;
+  --ink:#ECECF4; --ink-2:#B3B5C6; --muted:#81839A;
+  --line:rgba(210,214,255,.09); --line-2:rgba(210,214,255,.16);
+  --accent:#8C97FF; --accent-soft:rgba(140,151,255,.12);
+  --ok:#52C592; --ok-soft:rgba(82,197,146,.11);
+  --err:#F07562; --err-soft:rgba(240,117,98,.11);
+  --warn:#E0A64A;
+  --k:#9AA4FF; --s:#6FCF9F; --n:#E4B062; --c:#6C6E85;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px -16px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:15px; line-height:1.55;
+  -webkit-font-smoothing:antialiased; font-feature-settings:"ss01","cv11"; overflow-x:hidden}
+button{font:inherit; color:inherit}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:6px}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* Top bar */
+.bar{position:sticky; top:0; z-index:10; background:color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter:saturate(1.4) blur(12px); -webkit-backdrop-filter:saturate(1.4) blur(12px); border-bottom:1px solid var(--line)}
+.bar-in{max-width:1180px; margin:0 auto; padding:0 32px; height:60px; display:flex; align-items:center; gap:32px}
+.mark{display:flex; align-items:center; gap:10px; font-weight:600; font-size:14px; letter-spacing:-.01em; white-space:nowrap}
+.mark svg{color:var(--accent)}
+nav{display:flex; gap:2px; overflow-x:auto; scrollbar-width:none; flex:1; min-width:0}
+nav::-webkit-scrollbar{display:none}
+.tab{background:none; border:0; padding:7px 12px; border-radius:8px; font-size:13.5px; color:var(--muted); cursor:pointer; white-space:nowrap;
+  transition:color .2s var(--ease), background .2s var(--ease)}
+.tab .sh{display:none}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink); background:var(--sunk)}
+.tools{display:flex; gap:4px; align-items:center}
+.icon-btn{display:inline-flex; align-items:center; gap:6px; background:none; border:0; color:var(--muted); cursor:pointer; padding:7px 9px; border-radius:8px; font-size:13px;
+  transition:color .2s var(--ease), background .2s var(--ease)}
+.icon-btn:hover{color:var(--ink); background:var(--sunk)}
+.icon-btn:active{transform:translateY(1px)}
+
+/* Layout */
+main{max-width:1180px; margin:0 auto; padding:72px 32px 40px}
+.screen{display:none}
+.screen.on{display:block; animation:rise .5s var(--ease)}
+@keyframes rise{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:none}}
+.eyebrow{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0 0 16px}
+h1,h2{font-family:var(--serif); font-weight:400; letter-spacing:-.02em; text-wrap:balance; margin:0}
+h1{font-size:64px; line-height:1.02; max-width:18ch}
+h2{font-size:44px; line-height:1.06; max-width:20ch}
+h3{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:500; margin:0 0 16px}
+.lede{font-size:17px; color:var(--ink-2); max-width:62ch; margin:20px 0 0; text-wrap:pretty}
+.head{display:flex; align-items:flex-end; justify-content:space-between; gap:32px; flex-wrap:wrap}
+.section{margin-top:72px}
+.hair{border:0; border-top:1px solid var(--line); margin:0}
+
+.btn{display:inline-flex; align-items:center; gap:10px; border:0; cursor:pointer; border-radius:999px; padding:12px 20px 12px 16px; font-size:14px; font-weight:500;
+  background:var(--ink); color:var(--bg); transition:transform .15s var(--ease), opacity .2s, box-shadow .2s; box-shadow:var(--shadow)}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0) scale(.99)}
+.btn[disabled]{opacity:.5; cursor:default; transform:none}
+.btn.quiet{background:transparent; color:var(--ink); box-shadow:inset 0 0 0 1px var(--line-2)}
+.status{font-size:13px; color:var(--muted); display:flex; align-items:center; gap:8px}
+.dot{width:7px; height:7px; border-radius:50%; background:var(--line-2); flex:none; transition:background .3s}
+.dot.live{background:var(--accent); box-shadow:0 0 0 4px var(--accent-soft)}
+.dot.ok{background:var(--ok)} .dot.err{background:var(--err)}
+
+/* Flow drawing */
+.flow{margin-top:56px; position:relative}
+.rail{display:grid; grid-template-columns:repeat(5,1fr); position:relative}
+.rail::before{content:""; position:absolute; left:10%; right:10%; top:11px; height:1px; background:var(--line-2)}
+.rail .prog{position:absolute; left:10%; top:11px; height:1px; width:0; background:var(--accent); transition:width .6s var(--ease)}
+.node{position:relative; text-align:center; padding:0 8px}
+.pin{width:23px; height:23px; margin:0 auto; border-radius:50%; background:var(--bg); border:1px solid var(--line-2); display:grid; place-items:center; position:relative; z-index:1;
+  transition:border-color .3s var(--ease), background .3s var(--ease), transform .3s var(--ease)}
+.pin i{width:7px; height:7px; border-radius:50%; background:var(--line-2); transition:background .3s}
+.pin svg{display:none; width:12px; height:12px}
+.node .nm{margin-top:14px; font-size:14px; font-weight:500}
+.node .sub{font-family:var(--mono); font-size:12px; color:var(--muted); margin-top:2px}
+.node .note{font-size:12px; color:var(--muted); margin-top:6px; min-height:18px; transition:color .3s}
+.node.run .pin{border-color:var(--accent); transform:scale(1.12)}
+.node.run .pin i{background:var(--accent); animation:pulse 1s var(--ease) infinite}
+@keyframes pulse{50%{transform:scale(.55); opacity:.6}}
+.node.ok .pin{border-color:var(--ok); background:var(--ok)} .node.ok .pin i{display:none} .node.ok .pin .i-ok{display:block; color:var(--bg)}
+.node.err .pin{border-color:var(--err); background:var(--err)} .node.err .pin i{display:none} .node.err .pin .i-x{display:block; color:var(--bg)}
+.node.err .note{color:var(--err)} .node.ok .note{color:var(--ok)}
+.node.ghost{opacity:.4} .node.ghost .pin{border-style:dashed}
+.node.skip{opacity:.4}
+.branch{display:flex; align-items:center; gap:12px; margin:28px 10% 0; font-size:13px; color:var(--muted)}
+.branch .ln{flex:1; height:1px; background:repeating-linear-gradient(90deg,var(--line-2) 0 4px,transparent 4px 8px)}
+.branch b{font-weight:500; color:var(--ink-2)}
+
+/* Panes */
+.panes{display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:56px}
+.pane{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); min-width:0; overflow:hidden}
+.pane-h{display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--line); font-size:13px; gap:12px}
+.pane-h span:first-child{font-weight:500}
+.pane-h .m{font-family:var(--mono); font-size:12px; color:var(--muted)}
+.code{font-family:var(--mono); font-size:12.5px; line-height:1.75; padding:14px 0; margin:0; overflow-x:auto; font-variant-ligatures:none}
+.code .l{display:block; padding:0 18px; white-space:pre; transition:background .4s var(--ease), opacity .3s}
+.code .l.hide{opacity:0}
+.code .l.hl-err{background:var(--err-soft); box-shadow:inset 2px 0 0 var(--err)}
+.code .l.hl-ok{background:var(--ok-soft); box-shadow:inset 2px 0 0 var(--ok)}
+.code .ln{display:inline-block; width:22px; color:var(--c); user-select:none; text-align:right; margin-right:16px}
+.tk{color:var(--k)} .ts{color:var(--s)} .tn{color:var(--n)} .tc{color:var(--c); font-style:italic}
+.log{list-style:none; margin:0; padding:10px 0; font-family:var(--mono); font-size:12.5px; min-height:360px}
+.log li{display:grid; grid-template-columns:92px 1fr; gap:12px; padding:5px 18px; animation:rise .35s var(--ease)}
+.log li time{color:var(--c)}
+.log li.err span{color:var(--err)} .log li.ok span{color:var(--ok)} .log li.hd span{color:var(--ink); font-weight:500}
+.log li span{color:var(--ink-2); overflow-wrap:anywhere}
+.log .empty{display:block; color:var(--muted); font-family:var(--sans); font-size:13px; padding:12px 18px}
+
+/* Diff */
+.diff-wrap{margin-top:56px; overflow:hidden; transition:opacity .5s var(--ease), transform .5s var(--ease)}
+.diff-wrap.off{opacity:0; transform:translateY(8px); pointer-events:none; height:0; margin:0}
+.pairs{border-top:1px solid var(--line)}
+.pair{display:grid; grid-template-columns:28px 1fr 1fr; gap:0 24px; padding:14px 0; border-bottom:1px solid var(--line); align-items:start; opacity:.35; transition:opacity .4s var(--ease)}
+.pair.on{opacity:1}
+.pair .no{font-family:var(--mono); font-size:12px; color:var(--muted); padding-top:3px}
+.pair code{display:block; font-family:var(--mono); font-size:12.5px; line-height:1.6; padding:4px 10px; border-radius:6px; overflow-wrap:anywhere; transition:background .4s}
+.pair.on .was code{background:var(--err-soft); text-decoration:line-through; text-decoration-color:color-mix(in srgb, var(--err) 55%, transparent)}
+.pair.on .now code{background:var(--ok-soft)}
+.pair .why{font-size:12.5px; color:var(--muted); margin-top:6px; padding-left:10px}
+.cols-h{display:grid; grid-template-columns:28px 1fr 1fr; gap:0 24px; font-size:12px; color:var(--muted); padding-bottom:10px}
+
+/* Outcome */
+.outcome{display:grid; grid-template-columns:repeat(3,1fr); margin-top:56px; border-top:1px solid var(--line)}
+.stat{padding:24px 24px 0 0}
+.stat + .stat{padding-left:24px; border-left:1px solid var(--line)}
+.stat .k{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
+.stat .v{font-family:var(--serif); font-size:40px; line-height:1.1; margin-top:10px; letter-spacing:-.01em}
+.stat .d{font-size:13px; color:var(--muted); margin-top:4px}
+.stat .v.err{color:var(--err)} .stat .v.ok{color:var(--ok)}
+
+/* Tables / lists */
+.rows{border-top:1px solid var(--line); margin-top:8px}
+.row{display:grid; gap:24px; padding:18px 0; border-bottom:1px solid var(--line); align-items:baseline}
+.row .t{font-weight:500}
+.row .s{color:var(--muted); font-size:13.5px}
+.mono{font-family:var(--mono); font-size:12.5px}
+.nodes .row{grid-template-columns:200px 220px 1fr}
+.find{display:grid; grid-template-columns:28px 1fr; gap:4px 12px}
+.find .n{font-family:var(--mono); font-size:12px; color:var(--err); padding-top:2px}
+.find p{margin:0; color:var(--ink-2)}
+.find p + p{color:var(--muted); font-size:13.5px}
+.split{display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:24px}
+@media (min-width: 901px){ .split{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr)} }
+.split .code .l{white-space:pre-wrap; padding-left:56px; text-indent:-38px}
+.split .code .ln{text-indent:0}
+#valcode .l{white-space:pre-wrap; padding-left:56px; text-indent:-38px}
+#valcode .ln{text-indent:0}
+.ok-t{color:var(--ok)} .err-t{color:var(--err)}
+.ic{width:15px; height:15px; vertical-align:-2px}
+.schema .row{grid-template-columns:130px 1fr 1fr 1fr 70px}
+.schema .hd{font-size:12px; color:var(--muted); padding:10px 0}
+.hard .row{grid-template-columns:260px 1fr}
+.two{display:grid; grid-template-columns:1fr 1fr; gap:64px}
+.two > div,.split > *,.panes > *{min-width:0}
+.schema .row > *{min-width:0; overflow-wrap:anywhere}
+.attempts{border-top:1px solid var(--line)}
+.att{display:grid; grid-template-columns:90px 70px 1fr; gap:16px; padding:14px 0; border-bottom:1px solid var(--line); font-size:14px; opacity:.3; transition:opacity .4s var(--ease)}
+.att.on{opacity:1}
+.alert{margin-top:4px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:18px 20px; font-size:14px; border-style:dashed; border-color:var(--line-2); box-shadow:none; transition:border-color .5s var(--ease), box-shadow .5s var(--ease)}
+.alert.on{border-style:solid; border-color:var(--line); box-shadow:var(--shadow), 0 0 0 3px var(--err-soft)}
+.alert .w{display:inline-flex; align-items:center; gap:6px}
+.alert .w::before{content:""; width:6px; height:6px; border-radius:50%; background:var(--line-2)}
+.alert.on .w::before{background:var(--err)}
+.alert .w .on-t{display:none} .alert.on .w .on-t{display:inline} .alert.on .w .off-t{display:none}
+.alert .who{display:flex; justify-content:space-between; font-size:12.5px; color:var(--muted); margin-bottom:8px}
+.alert pre{margin:10px 0 0; background:var(--sunk); border-radius:6px; padding:10px 12px; font-family:var(--mono); font-size:12px; overflow-x:auto; line-height:1.6}
+.tests .row{grid-template-columns:28px minmax(0,1.3fr) minmax(0,1.4fr) minmax(0,1.2fr) 130px}
+.tests .res{font-size:13px; color:var(--muted); display:flex; align-items:center; gap:8px; white-space:nowrap}
+.tests .res.pass{color:var(--ok)}
+.spin{width:12px; height:12px; border-radius:50%; border:1.5px solid var(--line-2); border-top-color:var(--accent); animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.prose{max-width:66ch; margin-top:48px}
+.prose p{font-size:17px; color:var(--ink-2); margin:0 0 22px; text-wrap:pretty}
+.prose p b{color:var(--ink); font-weight:500}
+.prose code{font-family:var(--mono); font-size:.86em; background:var(--sunk); padding:1px 5px; border-radius:4px}
+.prose ol{padding:0; margin:0 0 22px; list-style:none; counter-reset:c}
+.prose li{counter-increment:c; display:grid; grid-template-columns:36px 1fr; padding:16px 0; border-top:1px solid var(--line); font-size:16px; color:var(--ink-2)}
+.prose li::before{content:counter(c,decimal-leading-zero); font-family:var(--mono); font-size:12px; color:var(--muted); padding-top:4px}
+.prose li b{color:var(--ink); font-weight:500}
+footer{max-width:1180px; margin:0 auto; padding:24px 32px 48px; font-size:12.5px; color:var(--muted); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap}
+
+@media (max-width: 900px){
+  .bar-in{padding:0 16px; gap:12px; height:auto; flex-wrap:wrap; padding-top:12px}
+  nav{order:3; flex-basis:100%; margin:0 -16px; padding:0 12px 8px; overflow:visible; justify-content:space-between}
+  .tab{padding:7px 10px}
+  .tab .lg{display:none} .tab .sh{display:inline}
+  .mark{flex:1}
+  main{padding:40px 16px 32px}
+  h1{font-size:42px} h2{font-size:32px}
+  .lede{font-size:16px}
+  .rail{grid-template-columns:1fr; gap:0}
+  .rail::before{left:11px; right:auto; top:12px; bottom:40px; width:1px; height:auto}
+  .rail .prog{display:none}
+  .node{display:grid; grid-template-columns:23px 1fr; gap:0 14px; text-align:left; padding:0 0 20px}
+  .node .pin{margin:0; grid-row:span 3}
+  .node .nm{margin-top:1px}
+  .node .note{min-height:0}
+  .branch{margin:4px 0 0}
+  .panes,.split,.two{grid-template-columns:1fr; gap:24px}
+  .log{min-height:220px}
+  .pair,.cols-h{grid-template-columns:22px 1fr; gap:6px 12px}
+  .pair .now{grid-column:2} .cols-h span:last-child{display:none}
+  .outcome{grid-template-columns:1fr}
+  .stat,.stat + .stat{padding:20px 0; border-left:0; border-bottom:1px solid var(--line)}
+  .nodes .row,.hard .row{grid-template-columns:1fr; gap:4px}
+  .schema .hd{display:none}
+  .schema .row{grid-template-columns:1fr auto; gap:4px 12px}
+  .schema .row > :nth-child(2),.schema .row > :nth-child(3),.schema .row > :nth-child(4){grid-column:1}
+  .tests .row{grid-template-columns:22px 1fr; gap:4px 12px}
+  .tests .row > :nth-child(n+3){grid-column:2}
+  .section{margin-top:56px}
+  .prose p{font-size:16px}
+  footer{padding:16px 16px 40px}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}
+}
+</style>
+
+<header class="bar">
+  <div class="bar-in">
+    <div class="mark">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="2.2"/><circle cx="19" cy="6" r="2.2"/><circle cx="19" cy="18" r="2.2"/><path d="M7.2 12H11c2 0 2.5-6 5.8-6M11 12c2 0 2.5 6 5.8 6"/></svg>
+      Webhook repair
+    </div>
+    <nav role="tablist" aria-label="Screens">
+      <button class="tab" role="tab" data-tab="run" aria-selected="true">Run</button>
+      <button class="tab" role="tab" data-tab="export" aria-selected="false"><span class="lg">Inspect the export</span><span class="sh">Export</span></button>
+      <button class="tab" role="tab" data-tab="fix" aria-selected="false"><span class="lg">Fix the mapping</span><span class="sh">Fix</span></button>
+      <button class="tab" role="tab" data-tab="deliver" aria-selected="false"><span class="lg">Deliver to the API</span><span class="sh">Deliver</span></button>
+      <button class="tab" role="tab" data-tab="tests" aria-selected="false"><span class="lg">Test payloads</span><span class="sh">Tests</span></button>
+    </nav>
+    <div class="tools">
+      <button class="icon-btn" id="reset" title="Reset every screen">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4v4.5H8"/></svg>Reset
+      </button>
+      <button class="icon-btn" id="theme" title="Switch theme" aria-label="Switch theme">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- RUN -->
+  <section class="screen on" id="s-run" role="tabpanel">
+    <p class="eyebrow">Fix &amp; optimize n8n webhook workflow</p>
+    <div class="head">
+      <div>
+        <h1>Your webhook, fixed and delivering.</h1>
+        <p class="lede">Replay a sample payload. It stops at the Code node the way a mapping error like yours does, the broken lines come up next to the corrected ones, and the re-run lands at the downstream API with a 200. This is an example diagnosis until your export arrives.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px; align-items:flex-start">
+        <button class="btn" id="play">
+          <svg class="ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l11-6.5a1 1 0 0 0 0-1.72l-11-6.5A1 1 0 0 0 8 5.5z"/></svg>
+          <span>Replay the failing webhook</span>
+        </button>
+        <div class="status"><span class="dot" id="sdot"></span><span id="stext">Waiting for a delivery</span></div>
+      </div>
+    </div>
+
+    <div class="flow">
+      <div class="rail" id="rail">
+        <span class="prog" id="prog"></span>
+        <div class="node" data-n="hook"><div class="pin"><i></i><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><svg class="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></div><div class="nm">Webhook</div><div class="sub">POST /webhook/orders</div><div class="note"></div></div>
+        <div class="node" data-n="val"><div class="pin"><i></i><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><svg class="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></div><div class="nm">Validate input</div><div class="sub">Code, new</div><div class="note"></div></div>
+        <div class="node" data-n="map"><div class="pin"><i></i><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><svg class="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></div><div class="nm">Code node</div><div class="sub">Transform payload</div><div class="note"></div></div>
+        <div class="node" data-n="post"><div class="pin"><i></i><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><svg class="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></div><div class="nm">POST to API</div><div class="sub">/v1/orders, retry on</div><div class="note"></div></div>
+        <div class="node" data-n="resp"><div class="pin"><i></i><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><svg class="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></div><div class="nm">Respond</div><div class="sub">200 to the sender</div><div class="note"></div></div>
+      </div>
+      <div class="branch"><span>Any node fails</span><span class="ln"></span><b>Error branch alerts you with the failed payload</b></div>
+    </div>
+
+    <div class="panes">
+      <div class="pane">
+        <div class="pane-h"><span>Incoming payload</span><span class="m" id="pmeta">no delivery yet</span></div>
+        <pre class="code" id="payload"></pre>
+      </div>
+      <div class="pane">
+        <div class="pane-h"><span>Execution log</span><span class="m" id="lmeta">idle</span></div>
+        <ol class="log" id="log"><li class="empty" style="display:block">Press replay to send the sample delivery through the workflow.</li></ol>
+      </div>
+    </div>
+
+    <div class="diff-wrap off" id="diffwrap">
+      <h3>The broken mapping lines, and what replaced them</h3>
+      <div class="cols-h"><span></span><span>Original Transform payload</span><span>Fixed</span></div>
+      <div class="pairs" id="pairs"></div>
+    </div>
+
+    <div class="outcome">
+      <div class="stat"><div class="k">Original run</div><div class="v tnum" id="o1">Not run</div><div class="d" id="o1d">Stops at the Code node today</div></div>
+      <div class="stat"><div class="k">Schema check</div><div class="v tnum" id="o2">Not run</div><div class="d" id="o2d">Fields the API requires</div></div>
+      <div class="stat"><div class="k">Fixed run</div><div class="v tnum" id="o3">Not run</div><div class="d" id="o3d">POST /v1/orders</div></div>
+    </div>
+  </section>
+
+  <!-- EXPORT -->
+  <section class="screen" id="s-export" role="tabpanel">
+    <p class="eyebrow">Part 1 of your post</p>
+    <h2>Inspecting the workflow export.</h2>
+    <p class="lede">An example of what the read-through finds, until your export arrives: three nodes, no error output, no retries, and every execution stopping at the same node.</p>
+
+    <div class="section">
+      <h3>Nodes in the export</h3>
+      <div class="rows nodes">
+        <div class="row"><span class="t">Webhook</span><span class="mono s">n8n-nodes-base.webhook</span><span class="s">POST on <span class="mono">/webhook/orders</span>, responds on receive. Healthy: every delivery arrives.</span></div>
+        <div class="row"><span class="t err-t">Transform payload</span><span class="mono s">n8n-nodes-base.code</span><span class="s">Runs once for all items. Reads paths the sender no longer uses. Fails on line 4.</span></div>
+        <div class="row"><span class="t">HTTP Request</span><span class="mono s">n8n-nodes-base.httpRequest</span><span class="s">POST to <span class="mono">/v1/orders</span>. Retry off, no error output, never reached.</span></div>
+        <div class="row"><span class="t">Error workflow</span><span class="mono s">settings.errorWorkflow</span><span class="s">Not set, so failures were silent until someone opened Executions.</span></div>
+      </div>
+      <p style="font-size:13.5px; color:var(--muted); margin:16px 0 0"><span class="err-t tnum">12 of 12</span> recent executions errored at Transform payload (illustrative).</p>
+    </div>
+
+    <div class="section">
+      <h3>What the export shows, pinned to node and line</h3>
+      <div class="rows">
+        <div class="row find"><span class="n">01</span><div><p>Transform payload, line 2 to 4: reads <span class="mono">body.contact</span>, but the sender nests the record under <span class="mono">body.data</span>.</p><p>So <span class="mono">contact</span> is undefined and reading <span class="mono">.email</span> throws.</p></div></div>
+        <div class="row find"><span class="n">02</span><div><p>Transform payload, line 2 and 3: <span class="mono">$input.first()</span> and a bare object return.</p><p>Batched deliveries lose every item after the first, and n8n expects a list of <span class="mono">{ json }</span> items back.</p></div></div>
+        <div class="row find"><span class="n">03</span><div><p>Transform payload, line 8: <span class="mono">body.items[0]</span> sends one object.</p><p>The API wants <span class="mono">line_items</span> as an array.</p></div></div>
+        <div class="row find"><span class="n">04</span><div><p>Transform payload, line 7 and 9: <span class="mono">"149.00"</span> and <span class="mono">"09/28/2026 14:03"</span> pass through as strings.</p><p>With the path fixed, the API would still answer 422: it wants a number and an ISO 8601 date.</p></div></div>
+        <div class="row find"><span class="n">05</span><div><p>HTTP Request: no retry, no error output, no error workflow.</p><p>A single 503 from the API drops the order with nobody told.</p></div></div>
+      </div>
+    </div>
+    <div class="section" style="max-width:66ch">
+      <h3>What I need to do this on your workflow</h3>
+      <p style="font-size:17px; color:var(--ink-2); margin:0">The export and the API's docs, or one request you know works.</p>
+    </div>
+  </section>
+
+  <!-- FIX -->
+  <section class="screen" id="s-fix" role="tabpanel">
+    <p class="eyebrow">Part 2 of your post</p>
+    <h2>The JSON mapping, corrected.</h2>
+    <p class="lede">The whole Code node before and after. Red lines are the ones that broke; green lines replace them. If your mapping lives in a Set node instead, the same paths and types go into its fields.</p>
+    <div class="split">
+      <div class="pane"><div class="pane-h"><span>Transform payload, original</span><span class="m">10 lines</span></div><pre class="code" id="orig"></pre></div>
+      <div class="pane"><div class="pane-h"><span>Transform payload, fixed</span><span class="m">18 lines</span></div><pre class="code" id="fixed"></pre></div>
+    </div>
+
+    <div class="section">
+      <h3>Hardening added</h3>
+      <div class="rows hard">
+        <div class="row"><span class="t">Input validation</span><span class="s">A new Code node before the mapping checks <span class="mono">order_id</span>, <span class="mono">contact.email</span> and at least one item. A payload missing any of them goes to the error branch with the reason, instead of crashing the mapping.</span></div>
+        <div class="row"><span class="t">Defaults for missing fields</span><span class="s">No last name gives the first name alone, no currency gives USD, no quantity gives 1, a date that won't parse gives the time received.</span></div>
+        <div class="row"><span class="t">Types the API accepts</span><span class="s">Totals, prices and quantities cast to numbers (commas and currency symbols stripped), dates to ISO 8601, email trimmed and lowercased.</span></div>
+        <div class="row"><span class="t">Any payload shape</span><span class="s">Works whether the sender wraps the record in <span class="mono">body.data</span> or not, sends one item or a batch, and sends items as an array or a single object.</span></div>
+      </div>
+      <pre class="code pane" id="valcode" style="margin-top:24px"></pre>
+    </div>
+  </section>
+
+  <!-- DELIVER -->
+  <section class="screen" id="s-deliver" role="tabpanel">
+    <p class="eyebrow">Part 3 of your post</p>
+    <h2>Smooth delivery to the downstream API.</h2>
+    <p class="lede">Each mapped item is checked against the API's schema before it is sent. Temporary failures retry with backoff, and anything that still fails reaches you with the payload attached.</p>
+
+    <div class="section">
+      <h3>Schema check, POST /v1/orders</h3>
+      <div class="rows schema">
+        <div class="row hd"><span>Field</span><span>The API expects</span><span>Before the fix</span><span>After the fix</span><span></span></div>
+        <div id="schemaRows" style="display:contents"></div>
+      </div>
+    </div>
+
+    <div class="section two">
+      <div>
+        <h3>Retry with backoff</h3>
+        <p class="s" style="color:var(--muted); font-size:14px; margin:0 0 16px">Only on 429 and 5xx. Up to 3 attempts, waiting 2, 4 and 8 seconds.</p>
+        <div class="attempts" id="atts">
+          <div class="att"><span class="mono">14:03:08.4</span><span class="mono err-t">503</span><span class="s">Service unavailable, waiting 2 s</span></div>
+          <div class="att"><span class="mono">14:03:10.5</span><span class="mono ok-t">200</span><span class="s">Accepted as <span class="mono">ord_8f2k1c</span> in 184 ms</span></div>
+        </div>
+        <div style="margin-top:20px"><button class="btn quiet" id="retryBtn"><svg class="ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l11-6.5a1 1 0 0 0 0-1.72l-11-6.5A1 1 0 0 0 8 5.5z"/></svg>Send into a 503</button></div>
+      </div>
+      <div>
+        <h3>Error branch</h3>
+        <p class="s" style="color:var(--muted); font-size:14px; margin:0 0 16px">When validation fails or the last retry fails, you get this in Slack or email, with the payload to replay.</p>
+        <div class="alert" id="alert">
+          <div class="who"><span class="w"><span class="off-t">Example alert, waiting for a failure</span><span class="on-t">Alert sent</span></span><span class="mono">14:11:52</span></div>
+          <div><b style="font-weight:500">ORD-20493 did not reach the API.</b> Validation failed: missing <span class="mono">contact.email</span>. Nothing was sent; the payload is below to fix and replay.</div>
+          <pre>{ "order_id": "ORD-20493", "contact": { "first_name": "Marisol" },
+  "items": [ { "sku": "KIT-118", "qty": "1", "price": "89.00" } ],
+  "total": "89.00" }</pre>
+        </div>
+        <div style="margin-top:20px"><button class="btn quiet" id="alertBtn"><svg class="ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l11-6.5a1 1 0 0 0 0-1.72l-11-6.5A1 1 0 0 0 8 5.5z"/></svg>Send a payload with no email</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTS -->
+  <section class="screen" id="s-tests" role="tabpanel">
+    <p class="eyebrow">Proof it holds</p>
+    <div class="head">
+      <div>
+        <h2>Eight sample payloads, every edge case.</h2>
+        <p class="lede">Pinned in the workflow so anyone can re-run them after a change. Each one goes through validation, the mapping and a sandbox POST.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px; align-items:flex-start">
+        <button class="btn" id="runTests"><svg class="ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l11-6.5a1 1 0 0 0 0-1.72l-11-6.5A1 1 0 0 0 8 5.5z"/></svg><span>Run all 8</span></button>
+        <div class="status"><span class="dot" id="tdot"></span><span id="ttext">Not run yet</span></div>
+      </div>
+    </div>
+    <div class="section rows tests" id="testRows" style="margin-top:48px"></div>
+  </section>
+
+</main>
+
+<footer>
+  <span>Sample payloads and responses, illustrative. Runs on n8n.</span>
+  <span>Working prototype of your webhook fix</span>
+</footer>
+
+<script>
+(function(){
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const SPEED = reduce ? 0.15 : 1;
+  let timers = [];
+  const later = (ms, fn) => { timers.push(setTimeout(fn, ms * SPEED)); };
+  const clearAll = () => { timers.forEach(clearTimeout); timers = []; };
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const ICON_OK = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+
+  /* ---------- theme ---------- */
+  $('#theme').addEventListener('click', () => {
+    const root = document.documentElement;
+    const cur = root.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('whr-theme', next); } catch(e) {}
+  });
+  try { const t = localStorage.getItem('whr-theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch(e) {}
+
+  /* ---------- tabs ---------- */
+  function show(id){
+    $$('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === id)));
+    $$('.screen').forEach(s => s.classList.toggle('on', s.id === 's-' + id));
+    window.scrollTo({top:0, behavior: reduce ? 'auto' : 'smooth'});
+  }
+  $$('.tab').forEach(t => t.addEventListener('click', () => show(t.dataset.tab)));
+
+  /* ---------- JS highlighter ---------- */
+  const TOK = /(\/\/.*$)|('(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|"(?:[^"\\]|\\.)*")|\b(const|return|if|throw|new|null|Error)\b|(\$input|\$json)|\b(\d+(?:\.\d+)?)\b/g;
+  function hl(line){
+    let out = '', last = 0, m;
+    TOK.lastIndex = 0;
+    while ((m = TOK.exec(line))){
+      out += esc(line.slice(last, m.index));
+      const cls = m[1] ? 'tc' : m[2] ? 'ts' : m[3] ? 'tk' : m[4] ? 'tk' : 'tn';
+      out += '<span class="'+cls+'">'+esc(m[0])+'</span>';
+      last = m.index + m[0].length;
+      if (m[0].length === 0) TOK.lastIndex++;
+    }
+    return out + esc(line.slice(last));
+  }
+  function codeBlock(el, lines, marks, cls){
+    el.innerHTML = lines.map((l,i) =>
+      '<span class="l'+(marks && marks.includes(i+1) ? ' '+cls : '')+'"><span class="ln">'+(i+1)+'</span>'+hl(l)+'</span>').join('');
+  }
+
+  const ORIG = [
+    "// Transform payload",
+    "const body = $input.first().json.body;",
+    "return {",
+    "  email: body.contact.email,",
+    "  name: body.contact.first_name + ' ' + body.contact.last_name,",
+    "  order_id: body.order_id,",
+    "  total: body.total,",
+    "  line_items: body.items[0],",
+    "  created_at: body.created_at,",
+    "};"
+  ];
+  const FIXED = [
+    "// Transform payload, fixed",
+    "const num = v => Number(String(v ?? 0).replace(/[^0-9.-]/g, ''));",
+    "const iso = v => { const t = Date.parse(v); return isNaN(t) ? null : new Date(t).toISOString(); };",
+    "",
+    "return $input.all().map(item => {",
+    "  const d = item.json.body?.data ?? item.json.body ?? {};",
+    "  const c = d.contact ?? {};",
+    "  const items = Array.isArray(d.items) ? d.items : [d.items].filter(Boolean);",
+    "  return { json: {",
+    "    email: String(c.email ?? '').trim().toLowerCase(),",
+    "    name: [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Customer',",
+    "    order_id: String(d.order_id ?? ''),",
+    "    total: num(d.total),",
+    "    currency: String(d.currency ?? 'USD').toUpperCase(),",
+    "    line_items: items.map(i => ({ sku: i.sku, qty: num(i.qty ?? 1), price: num(i.price) })),",
+    "    created_at: iso(d.created_at) ?? new Date().toISOString(),",
+    "  } };",
+    "});"
+  ];
+  const VAL = [
+    "// Validate input (new node, runs once for each item, errors go to the error branch)",
+    "const d = $json.body?.data ?? $json.body ?? {};",
+    "const missing = ['order_id', 'contact.email', 'items']",
+    "  .filter(p => p.split('.').reduce((o, k) => o?.[k], d) == null);",
+    "if (missing.length) throw new Error(`Missing ${missing.join(', ')} on ${d.order_id ?? 'unknown order'}`);",
+    "return $input.item;"
+  ];
+  codeBlock($('#orig'), ORIG, [2,3,4,7,8,9], 'hl-err');
+  codeBlock($('#fixed'), FIXED, [5,6,7,8,9,10,13,15,16], 'hl-ok');
+  codeBlock($('#valcode'), VAL, [], '');
+
+  /* ---------- payload ---------- */
+  const PAYLOAD = [
+    '{',
+    '  "headers": { "content-type": "application/json" },',
+    '  "body": {',
+    '    "event": "order.created",',
+    '    "data": {',
+    '      "order_id": "ORD-20488",',
+    '      "created_at": "09/28/2026 14:03",',
+    '      "contact": {',
+    '        "first_name": "Dana",',
+    '        "last_name": "Whitfield",',
+    '        "email": "Dana.Whitfield@example.com "',
+    '      },',
+    '      "items": [',
+    '        { "sku": "KIT-204", "qty": "2", "price": "49.50" },',
+    '        { "sku": "SVC-011", "qty": "1", "price": "50.00" }',
+    '      ],',
+    '      "total": "149.00",',
+    '      "currency": "usd"',
+    '    }',
+    '  }',
+    '}'
+  ];
+  const payloadEl = $('#payload');
+  function renderPayload(hidden){
+    payloadEl.innerHTML = PAYLOAD.map((l,i) => '<span class="l'+(hidden?' hide':'')+'" data-i="'+(i+1)+'"><span class="ln">'+(i+1)+'</span>'+hl(l)+'</span>').join('');
+  }
+  const pline = n => payloadEl.querySelector('[data-i="'+n+'"]');
+
+  /* ---------- diff pairs ---------- */
+  const PAIRS = [
+    ["const body = $input.first().json.body;", "const d = item.json.body?.data ?? item.json.body ?? {};", "The record sits under body.data; the node read body."],
+    ["return {", "return $input.all().map(item => ({ json: {", "Every item in a batch, returned as { json } items."],
+    ["email: body.contact.email,", "email: String(c.email ?? '').trim().toLowerCase(),", "Line 4 threw here: contact was undefined."],
+    ["total: body.total,", "total: num(d.total),", "\"149.00\" becomes 149. The API rejects strings."],
+    ["line_items: body.items[0],", "line_items: items.map(i => ({ sku: i.sku, qty: num(i.qty), price: num(i.price) })),", "The API wants the full array, with numbers."],
+    ["created_at: body.created_at,", "created_at: iso(d.created_at),", "\"09/28/2026 14:03\" becomes ISO 8601."]
+  ];
+  $('#pairs').innerHTML = PAIRS.map((p,i) =>
+    '<div class="pair" data-p="'+i+'"><span class="no">0'+(i+1)+'</span><div class="was"><code>'+hl(p[0])+'</code><div class="why">'+esc(p[2])+'</div></div><div class="now"><code>'+hl(p[1])+'</code></div></div>').join('');
+
+  /* ---------- run sequence ---------- */
+  const nodes = {};
+  $$('#rail .node').forEach(n => nodes[n.dataset.n] = n);
+  const ORDER = ['hook','val','map','post','resp'];
+  function setNode(k, state, note){
+    const n = nodes[k];
+    n.classList.remove('run','ok','err','ghost','skip');
+    if (state) n.classList.add(state);
+    n.querySelector('.note').textContent = note || '';
+  }
+  function prog(k){
+    const i = ORDER.indexOf(k);
+    $('#prog').style.width = (i < 0 ? 0 : (i/4)*80) + '%';
+  }
+  function status(text, cls){
+    $('#stext').textContent = text;
+    $('#sdot').className = 'dot' + (cls ? ' '+cls : '');
+  }
+  const logEl = $('#log');
+  let clock = 0;
+  function stamp(){ const base = 14*3600*1000 + 3*60*1000 + 7112 + clock; const s = Math.floor(base/1000); const ms = base%1000;
+    const h = Math.floor(s/3600), m = Math.floor(s/60)%60, sec = s%60;
+    return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')+'.'+String(ms).padStart(3,'0'); }
+  function log(text, cls, add){
+    clock += (add || 40);
+    const li = document.createElement('li');
+    if (cls) li.className = cls;
+    li.innerHTML = '<time class="tnum">'+stamp()+'</time><span>'+text+'</span>';
+    logEl.appendChild(li);
+  }
+  function outcome(id, v, cls, d){
+    const el = $('#'+id); el.textContent = v; el.className = 'v tnum' + (cls ? ' '+cls : '');
+    if (d) $('#'+id+'d').textContent = d;
+  }
+
+  function resetRun(){
+    ORDER.forEach(k => setNode(k, null, ''));
+    prog(null);
+    renderPayload(false);
+    $('#pmeta').textContent = 'no delivery yet';
+    $('#lmeta').textContent = 'idle';
+    logEl.innerHTML = '<li class="empty" style="display:block">Press replay to send the sample delivery through the workflow.</li>';
+    $('#diffwrap').classList.add('off');
+    $$('.pair').forEach(p => p.classList.remove('on'));
+    outcome('o1','Not run','', 'Stops at the Code node today');
+    outcome('o2','Not run','', 'Fields the API requires');
+    outcome('o3','Not run','', 'POST /v1/orders');
+    status('Waiting for a delivery', '');
+    $('#play').disabled = false;
+    $('#play span').textContent = 'Replay the failing webhook';
+    clock = 0;
+  }
+
+  function play(){
+    clearAll(); resetRun();
+    $('#play').disabled = true;
+    logEl.innerHTML = '';
+    renderPayload(true);
+    status('Receiving the delivery', 'live');
+    $('#pmeta').textContent = 'receiving';
+    $('#lmeta').textContent = 'run 1, original';
+    setNode('hook','run');
+    PAYLOAD.forEach((_, i) => later(40 + i*38, () => pline(i+1).classList.remove('hide')));
+    later(900, () => { setNode('hook','ok','1 item, 612 B'); $('#pmeta').textContent = 'POST, 612 B, 1 item'; log('Run 1 on the original workflow', 'hd', 0); log('Webhook received POST /webhook/orders, 1 item'); });
+    later(1250, () => { setNode('val','ghost','not in the original'); prog('map'); setNode('map','run'); log('Transform payload started'); });
+    later(2250, () => {
+      setNode('map','err','TypeError, line 4');
+      setNode('post','skip','not reached'); setNode('resp','skip','');
+      [5,8,11].forEach(n => pline(n).classList.add('hl-err'));
+      log("TypeError: Cannot read properties of undefined (reading 'email') [line 4]", 'err', 180);
+      log('Execution stopped. 0 items reached the API.', 'err');
+      status('Failed at Transform payload', 'err');
+      outcome('o1','Failed','err','TypeError at Transform payload, line 4');
+    });
+    later(3100, () => { $('#diffwrap').classList.remove('off'); later(80, () => $('#diffwrap').scrollIntoView({behavior: reduce ? 'auto' : 'smooth', block:'center'})); log('Opening the mapping: 6 lines to change', '', 400); });
+    PAIRS.forEach((_, i) => later(3400 + i*300, () => $('.pair[data-p="'+i+'"]').classList.add('on')));
+    later(5500, () => {
+      log('Fix applied to Transform payload, Validate input added', 'hd', 600);
+      log('Run 2 on the fixed workflow', 'hd');
+      $('.flow').scrollIntoView({behavior: reduce ? 'auto' : 'smooth', block:'start'});
+      $('#lmeta').textContent = 'run 2, fixed';
+      status('Re-running with the fix', 'live');
+      ORDER.forEach(k => setNode(k, null, '')); prog('hook');
+      [5,8,11].forEach(n => pline(n).classList.remove('hl-err'));
+      setNode('hook','ok','1 item, 612 B');
+    });
+    later(5900, () => { prog('val'); setNode('val','run'); });
+    later(6400, () => { setNode('val','ok','order, email, 2 items'); log('Validate input passed: order_id, contact.email, 2 items'); [5,8,11].forEach(n => pline(n).classList.add('hl-ok')); });
+    later(6700, () => { prog('map'); setNode('map','run'); });
+    later(7300, () => { setNode('map','ok','numbers cast, ISO date'); log('Transform payload: 1 item out, total 149, 2 line_items, 2026-09-28T14:03:00.000Z', 'ok'); });
+    later(7700, () => { log('Schema POST /v1/orders: 7 of 7 fields valid', 'ok'); outcome('o2','7 of 7','ok','Fields valid against the API schema'); });
+    later(8000, () => { prog('post'); setNode('post','run'); log('POST https://api.example.com/v1/orders'); });
+    later(8800, () => { setNode('post','ok','200 OK, 184 ms'); log('HTTP 200 OK in 184 ms. {"id":"ord_8f2k1c","status":"accepted"}', 'ok', 184); outcome('o3','200 OK','ok','Accepted as ord_8f2k1c in 184 ms'); });
+    later(9200, () => { prog('resp'); setNode('resp','ok','sender told 200'); log('Responded 200 to the sender. Execution succeeded.', 'ok'); status('Delivered to the API', 'ok'); $('#play').disabled = false; $('#play span').textContent = 'Replay again'; });
+  }
+  $('#play').addEventListener('click', play);
+
+  /* ---------- schema ---------- */
+  const SCHEMA = [
+    ['email','string, email','undefined, crashed','"dana.whitfield@example.com"'],
+    ['name','string','undefined','"Dana Whitfield"'],
+    ['order_id','string','undefined','"ORD-20488"'],
+    ['total','number','"149.00", a string','149'],
+    ['currency','3-letter code','missing','"USD"'],
+    ['line_items','array, 1 or more','one object','2 items, numbers'],
+    ['created_at','ISO 8601','"09/28/2026 14:03"','"2026-09-28T14:03:00.000Z"']
+  ];
+  $('#schemaRows').innerHTML = SCHEMA.map(r =>
+    '<div class="row"><span class="mono t">'+r[0]+'</span><span class="s">'+esc(r[1])+'</span><span class="mono err-t">'+esc(r[2])+'</span><span class="mono">'+esc(r[3])+'</span><span class="ok-t" style="font-size:13px">'+ICON_OK+' Valid</span></div>').join('');
+
+  /* ---------- retry + alert ---------- */
+  function resetDeliver(){
+    $$('.att').forEach(a => a.classList.remove('on'));
+    $('#alert').classList.remove('on');
+    $('#retryBtn').disabled = false; $('#alertBtn').disabled = false;
+  }
+  $('#retryBtn').addEventListener('click', () => {
+    $$('.att').forEach(a => a.classList.remove('on'));
+    $('#retryBtn').disabled = true;
+    later(200, () => $$('.att')[0].classList.add('on'));
+    later(1400, () => { $$('.att')[1].classList.add('on'); $('#retryBtn').disabled = false; });
+  });
+  $('#alertBtn').addEventListener('click', () => {
+    $('#alert').classList.remove('on');
+    $('#alertBtn').disabled = true;
+    later(700, () => { $('#alert').classList.add('on'); $('#alertBtn').disabled = false; });
+  });
+
+  /* ---------- tests ---------- */
+  const TESTS = [
+    ['Standard order', 'Record nested under body.data', '1 item to the API', '31 ms'],
+    ['Older sender', 'Flat body, no data wrapper', '1 item to the API', '28 ms'],
+    ['Batch delivery', '3 orders in one POST', '3 items to the API', '64 ms'],
+    ['Single line item', 'items sent as an object', 'line_items array of 1', '27 ms'],
+    ['Formatted numbers', '"1,049.00" and "$89"', '1049 and 89', '29 ms'],
+    ['Missing optional fields', 'No last name, no currency', 'Name alone, USD', '26 ms'],
+    ['Missing email', 'contact.email absent', 'Error branch, alert sent', '19 ms'],
+    ['API returns 503 once', 'Sandbox fails first try', '200 on attempt 2', '2.2 s']
+  ];
+  const testRows = $('#testRows');
+  function renderTests(){
+    testRows.innerHTML = TESTS.map((t,i) =>
+      '<div class="row" data-t="'+i+'"><span class="mono s">0'+(i+1)+'</span><span class="t">'+esc(t[0])+'</span><span class="s">'+esc(t[1])+'</span><span class="s">'+esc(t[2])+'</span><span class="res">Not run</span></div>').join('');
+    $('#ttext').textContent = 'Not run yet'; $('#tdot').className = 'dot';
+    $('#runTests').disabled = false; $('#runTests span').textContent = 'Run all 8';
+  }
+  $('#runTests').addEventListener('click', () => {
+    renderTests();
+    $('#runTests').disabled = true;
+    $('#ttext').textContent = 'Running'; $('#tdot').className = 'dot live';
+    TESTS.forEach((t,i) => {
+      later(i*380, () => { const r = $('[data-t="'+i+'"] .res', testRows); r.innerHTML = '<span class="spin"></span>Running'; });
+      later(i*380 + 330, () => { const r = $('[data-t="'+i+'"] .res', testRows); r.className = 'res pass tnum'; r.innerHTML = ICON_OK + 'Passed, ' + t[3]; });
+    });
+    later(TESTS.length*380 + 100, () => { $('#ttext').textContent = '8 of 8 passed'; $('#tdot').className = 'dot ok'; $('#runTests').disabled = false; $('#runTests span').textContent = 'Run again'; });
+  });
+
+  /* ---------- reset ---------- */
+  function resetAll(){ clearAll(); resetRun(); resetDeliver(); renderTests(); }
+  $('#reset').addEventListener('click', () => { resetAll(); show('run'); });
+  resetAll();
+})();
+</script>

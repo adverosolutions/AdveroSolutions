@@ -1,0 +1,8 @@
+- This is AI on your emails, leads, support, reporting for your business
+- Every email lands here; Claude or OpenAI sorts it: lead, support, other
+- New leads get a follow-up right away and land in your sheet
+- Support questions get a drafted Gmail answer your team checks first
+- Every morning, one report of yesterday's leads and open drafts
+- Error handling and documentation: failures email you, the sticky explains setup
+- I'd look at your current processes and recommend where AI fits
+- Quick 15 minute call? Can start [START], working demo by [DRAFT]

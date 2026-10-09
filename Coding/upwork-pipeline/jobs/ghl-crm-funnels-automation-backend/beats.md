@@ -1,0 +1,8 @@
+- This is lead capture to opportunity to follow-up for your client accounts.
+- Form or survey fires it, one source tag, the team gets notified.
+- Opportunity opens at New Lead, so the pipeline always shows real status.
+- Email and SMS alternate over a week, each with the booking link.
+- A follow-up system I built runs $750M+ a year in roofing bids.
+- No reply in a week: No Response stage and a call task.
+- Why split: replies and bookings each stop the sequence through one goal.
+- Quick 15 minute call and we can get your account started.

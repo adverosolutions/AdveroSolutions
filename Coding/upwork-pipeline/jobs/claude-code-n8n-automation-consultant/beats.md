@@ -1,0 +1,8 @@
+- This is a working prototype of your Claude Code agent with n8n.
+- Pick a request from your support inbox; watch Claude work it.
+- One decision: approve every reply, or auto-send within policy.
+- Claude Code project: CLAUDE.md, eight typed tools, an approval gate.
+- Scaled my own AI agency to $10,000 a month.
+- Integrations map shows every API, its auth and what it writes.
+- n8n takes the side effects: the change, Slack, sheet, follow-up.
+- Worth a quick 15 minute call to walk through your use case?

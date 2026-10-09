@@ -1,0 +1,177 @@
+{
+  "title": "Your 2-Step Funnel Cloned From ClickFunnels/WordPress Into GHL",
+  "platform": "diagram",
+  "client": {
+    "industry": "lead generation funnel",
+    "location": "Australia"
+  },
+  "sections": [
+    {
+      "key": "design",
+      "label": "1 - DESIGN CLONING",
+      "color": 0,
+      "note": "I rebuild your Landing Page and Thank You Page in the Go High Level page builder. I check colors, fonts and layout side by side until they match the original exactly."
+    },
+    {
+      "key": "assets",
+      "label": "2 - ASSET MIGRATION",
+      "color": 1,
+      "note": "Every image, graphic and piece of copy moves into your GHL media library. Each one goes back in the same spot on the new pages, so nothing links back to the old platform."
+    },
+    {
+      "key": "form",
+      "label": "3 - FORM CREATION",
+      "color": 2,
+      "note": "Your opt-in form is rebuilt inside Go High Level with the same fields and embedded on the new funnel page. Every lead it captures lands in your GHL contacts. If your old funnel sent an email after each opt-in, I'll flag it so it doesn't quietly stop."
+    },
+    {
+      "key": "mobile",
+      "label": "4 - MOBILE OPTIMIZATION",
+      "color": 3,
+      "note": "Both pages get checked on desktop, tablet and phone against the original."
+    },
+    {
+      "key": "qa",
+      "label": "5 - LINK & BUTTON QA",
+      "color": 4,
+      "note": "Every button and link gets clicked, then a test opt-in runs start to finish. Each one has to take the visitor to the correct next step in your GHL funnel."
+    }
+  ],
+  "nodes": [
+    {
+      "key": "landing",
+      "kind": "data.transform",
+      "section": "design",
+      "label": "1 - I rebuild your landing page in the GHL page builder, section by section"
+    },
+    {
+      "key": "thanks",
+      "kind": "data.transform",
+      "section": "design",
+      "label": "2 - I rebuild your thank you page the same way, so both funnel steps match"
+    },
+    {
+      "key": "sidebyside",
+      "kind": "data.transform",
+      "section": "design",
+      "label": "3 - I match every color, font and spacing side by side with the original"
+    },
+    {
+      "key": "fonts",
+      "kind": "data.transform",
+      "section": "design",
+      "label": "4 - If a font isn't built into GHL, I upload it so your text still matches"
+    },
+    {
+      "key": "download",
+      "kind": "data.transform",
+      "section": "assets",
+      "label": "5 - I download every image, graphic and line of copy from your current funnel"
+    },
+    {
+      "key": "upload",
+      "kind": "data.transform",
+      "section": "assets",
+      "label": "6 - I upload them to your GHL media library and place each one in the same spot"
+    },
+    {
+      "key": "optin",
+      "kind": "data.transform",
+      "section": "form",
+      "label": "7 - I recreate your opt-in form in GHL with the same fields in the same order"
+    },
+    {
+      "key": "embed",
+      "kind": "data.transform",
+      "section": "form",
+      "label": "8 - I embed it on the landing page so every opt-in lands in your GHL contacts"
+    },
+    {
+      "key": "devices",
+      "kind": "data.transform",
+      "section": "mobile",
+      "label": "9 - I check both pages on desktop, tablet and phone, side by side with the original"
+    },
+    {
+      "key": "phonefix",
+      "kind": "data.transform",
+      "section": "mobile",
+      "label": "10 - I fix text sizes and image stacking on phones so nothing gets cut off"
+    },
+    {
+      "key": "links",
+      "kind": "data.transform",
+      "section": "qa",
+      "label": "11 - I click every button and link, then send a test opt-in to the thank you page"
+    },
+    {
+      "key": "live",
+      "kind": "data.aggregate",
+      "section": "qa",
+      "label": "12 - Your funnel goes live on your domain in GHL, and a test lead lands in your contacts"
+    }
+  ],
+  "edges": [
+    {
+      "from": "landing",
+      "to": "thanks"
+    },
+    {
+      "from": "thanks",
+      "to": "sidebyside"
+    },
+    {
+      "from": "sidebyside",
+      "to": "fonts"
+    },
+    {
+      "from": "fonts",
+      "to": "download"
+    },
+    {
+      "from": "download",
+      "to": "upload"
+    },
+    {
+      "from": "upload",
+      "to": "optin"
+    },
+    {
+      "from": "optin",
+      "to": "embed"
+    },
+    {
+      "from": "embed",
+      "to": "devices"
+    },
+    {
+      "from": "devices",
+      "to": "phonefix"
+    },
+    {
+      "from": "phonefix",
+      "to": "links"
+    },
+    {
+      "from": "links",
+      "to": "live"
+    }
+  ],
+  "input_sample": {
+    "current_platform": "ClickFunnels/WordPress",
+    "funnel": "2-step",
+    "pages": [
+      "Landing Page",
+      "Thank You Page"
+    ],
+    "opt_in_form": "name, email, phone"
+  },
+  "output_sample": {
+    "first_name": "Olivia",
+    "email": "olivia.hart@gmail.com",
+    "phone": "+61 412 555 208",
+    "funnel_step": "Landing Page",
+    "redirected_to": "Thank You Page",
+    "saved_in": "GHL contacts"
+  }
+}
