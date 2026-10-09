@@ -1,0 +1,55 @@
+{
+  "niche": "pest_control",
+  "label": "Commercial pest control",
+  "target": 1200,
+  "fill_rate": 0.5,
+  "filters": {
+    "company_keywords": [
+      "pest control",
+      "exterminator",
+      "pest management",
+      "termite",
+      "commercial pest control",
+      "wildlife removal"
+    ],
+    "company_not_keywords": [
+      "software",
+      "saas",
+      "franchise opportunity",
+      "staffing",
+      "recruiting",
+      "chemical manufacturer",
+      "distributor",
+      "equipment",
+      "orkin",
+      "terminix",
+      "rentokil",
+      "ecolab",
+      "fumigation ship"
+    ],
+    "size": [
+      "1-10",
+      "11-20",
+      "21-50",
+      "51-100",
+      "101-200"
+    ],
+    "seniority_level": [
+      "owner",
+      "founder",
+      "partner",
+      "c_suite"
+    ],
+    "email_status": [
+      "validated"
+    ],
+    "contact_not_job_title": [
+      "franchise"
+    ],
+    "company_industry": [
+      "consumer services",
+      "environmental services",
+      "facilities services"
+    ]
+  }
+}

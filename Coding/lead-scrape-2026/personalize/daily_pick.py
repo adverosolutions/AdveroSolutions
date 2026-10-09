@@ -67,6 +67,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=300); ap.add_argument("--niche", default="all")
     ap.add_argument("--only-clean", action="store_true")
+    ap.add_argument("--esp", default="google,other,zoho", help="comma list of mailbox providers to pick (MX lookup); 'any' disables. Default google (Lorenzo 2026-09-29)")
     a = ap.parse_args()
 
     pre = {r["lead_id"]: r for r in csv.DictReader(PRE.open(encoding="utf-8-sig"))}
@@ -76,13 +77,19 @@ def main():
 
     # next N in send order with an empty status, spread across campaigns by send_order
     todo, skips = [], []
+    allowed = None if a.esp == "any" else {x.strip() for x in a.esp.split(",")}
+    if allowed:
+        from esp import esp_of, prime, save as esp_save
+        prime([r.get("email", "") for r in rows if not str(r.get("personalization_status", "")).strip()])
+        esp_save()
     for i, r in enumerate(rows):
+        if allowed and esp_of(r.get("email", "")) not in allowed: continue
         if a.niche != "all" and r["campaign"] != a.niche: continue
         if a.only_clean and r["mv_result"] != "ok": continue
         if str(r.get("personalization_status", "")).strip(): continue
         route = pre.get(r["lead_id"], {}).get("route", "TIER1_ONLY")
         (skips if route == "SKIP" else todo).append((i + 2, r, route))
-    todo.sort(key=lambda t: (int(t[1]["send_order"]), t[1]["campaign"]))
+    todo.sort(key=lambda t: (t[1]["mv_result"] != "ok", int(t[1]["send_order"]), t[1]["campaign"]))  # verified-clean first, then risky
     # round-robin by campaign so a day's batch mirrors the send mix
     by = {}
     for t in todo: by.setdefault(t[1]["campaign"], []).append(t)

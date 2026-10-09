@@ -1,0 +1,70 @@
+{
+  "niche": "msp",
+  "label": "Managed IT service providers",
+  "target": 1500,
+  "fill_rate": 0.8,
+  "filters": {
+    "company_industry": [
+      "information technology & services",
+      "computer & network security",
+      "computer networking"
+    ],
+    "company_keywords": [
+      "managed it services",
+      "managed services provider",
+      "managed service provider",
+      "msp",
+      "it support",
+      "help desk",
+      "network support",
+      "microsoft partner",
+      "it managed services"
+    ],
+    "company_not_keywords": [
+      "software",
+      "saas",
+      "franchise opportunity",
+      "staffing",
+      "recruiting",
+      "software development",
+      "app development",
+      "web development",
+      "saas",
+      "staffing",
+      "recruiting",
+      "telecom carrier",
+      "data center",
+      "isp",
+      "consulting group",
+      "hr services",
+      "product development",
+      "engineering",
+      "home automation",
+      "audio",
+      "artificial intelligence",
+      "generative ai",
+      "advisory",
+      "office equipment",
+      "awards",
+      "loyalty"
+    ],
+    "size": [
+      "1-10",
+      "11-20",
+      "21-50",
+      "51-100"
+    ],
+    "seniority_level": [
+      "owner",
+      "founder",
+      "partner",
+      "c_suite"
+    ],
+    "email_status": [
+      "validated"
+    ],
+    "contact_not_job_title": [
+      "franchise"
+    ]
+  }
+}

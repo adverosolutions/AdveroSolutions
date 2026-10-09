@@ -1,3 +1,5 @@
 .env
 output/
 __pycache__/
+logs/*.jsonl
+logs/slots_backup_*.json

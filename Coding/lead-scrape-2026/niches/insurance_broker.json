@@ -1,0 +1,57 @@
+{
+  "niche": "insurance_broker",
+  "label": "Independent insurance brokers / agencies",
+  "target": 1500,
+  "fill_rate": 0.8,
+  "filters": {
+    "company_industry": [
+      "insurance"
+    ],
+    "company_keywords": [
+      "insurance agency",
+      "insurance broker",
+      "independent insurance agency",
+      "commercial insurance",
+      "business insurance",
+      "employee benefits",
+      "property and casualty"
+    ],
+    "company_not_keywords": [
+      "software",
+      "saas",
+      "franchise opportunity",
+      "staffing",
+      "recruiting",
+      "carrier",
+      "underwriter",
+      "claims adjusting",
+      "public adjuster",
+      "state farm",
+      "allstate",
+      "farmers insurance",
+      "geico",
+      "insurtech",
+      "life insurance only",
+      "medicare only"
+    ],
+    "size": [
+      "1-10",
+      "11-20",
+      "21-50",
+      "51-100"
+    ],
+    "seniority_level": [
+      "owner",
+      "founder",
+      "partner",
+      "c_suite"
+    ],
+    "email_status": [
+      "validated"
+    ],
+    "contact_not_job_title": [
+      "franchise",
+      "agent"
+    ]
+  }
+}

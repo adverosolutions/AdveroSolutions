@@ -1,0 +1,70 @@
+{
+  "niche": "landscaping",
+  "label": "Commercial landscaping / grounds maintenance",
+  "target": 1200,
+  "fill_rate": 0.5,
+  "filters": {
+    "company_keywords": [
+      "commercial landscaping",
+      "landscape maintenance",
+      "grounds maintenance",
+      "landscaping services",
+      "lawn maintenance",
+      "landscape management"
+    ],
+    "company_not_keywords": [
+      "software",
+      "saas",
+      "franchise opportunity",
+      "staffing",
+      "recruiting",
+      "nursery",
+      "garden center",
+      "landscape architect",
+      "irrigation supply",
+      "equipment dealer",
+      "tree service only",
+      "golf course",
+      "residential only",
+      "design studio",
+      "general contractor",
+      "paving",
+      "erosion",
+      "concrete",
+      "pool",
+      "custom homes",
+      "remodel",
+      "painting",
+      "plumbing",
+      "hvac",
+      "rental",
+      "recycling",
+      "waste",
+      "daycare"
+    ],
+    "size": [
+      "1-10",
+      "11-20",
+      "21-50",
+      "51-100",
+      "101-200"
+    ],
+    "seniority_level": [
+      "owner",
+      "founder",
+      "partner",
+      "c_suite"
+    ],
+    "email_status": [
+      "validated"
+    ],
+    "contact_not_job_title": [
+      "franchise"
+    ],
+    "company_industry": [
+      "facilities services",
+      "consumer services",
+      "environmental services"
+    ]
+  }
+}

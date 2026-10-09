@@ -5,6 +5,12 @@
   python3 instantly_push.py --setup                 # cap every inbox at 25/day, create the 6 campaigns
   python3 instantly_push.py --push output/daily/day_<id>.csv   # upload that day's leads
   python3 instantly_push.py --activate              # start all 6 campaigns
+  python3 instantly_push.py --push a.csv b.csv --offer ai_agents [--dry-run] [--ids-file f.json] [--limit-per-campaign N] [--allow-active]
+      # AI-agents campaigns (ids in instantly_campaigns_ai_agents.json), slot1/slot2 set; never activates;
+      # GETs the six campaigns first and refuses (exit 2) to add to an active one unless --allow-active;
+      # a live run writes logs/push_ai_<ts>.json before the first add (pre_existing leads per campaign),
+      # then the rollback list (instantly_ids = leads this push created), and reads one lead per campaign back
+  --setup is refused with --offer or --dry-run, --activate with --dry-run (both write live).
 
 Key: INSTANTLY_API_KEY in this folder's .env (falls back to Agentic Worklfows/.env).
 Campaign ids are saved to instantly_campaigns.json after --setup.
@@ -202,6 +208,9 @@ def clean_company(n):
     return " ".join(ACR.get(w, w) for w in n.split()) or raw
 
 
+ALLOWED_ESP = {"google", "other", "zoho"}  # Lorenzo 2026-09-29: no Microsoft-hosted leads (deliverability); free Yahoo mailboxes stay out too
+
+
 def push(tok, day_csv):
     ids = json.loads((ROOT / "instantly_campaigns.json").read_text())
     master = {}
@@ -210,12 +219,20 @@ def push(tok, day_csv):
     rows = list(csv.DictReader(open(day_csv, encoding="utf-8-sig")))
     by_niche = {n: [k for k, c in CAMPAIGNS.items() if c["niche"] == n] for n in {c["niche"] for c in CAMPAIGNS.values()}}
     counter, assigned = {}, {}
+    no_camp = sorted({r["campaign"] for r in rows if r["campaign"] not in by_niche})
+    if no_camp: print(f"  no Instantly campaign yet for {no_camp}: those rows stay on the sheet only")
+    rows = [r for r in rows if r["campaign"] in by_niche]
     for r in rows:  # round-robin within each niche, in send order
         n = r["campaign"]; i = counter.get(n, 0); assigned[r["lead_id"]] = by_niche[n][i % len(by_niche[n])]; counter[n] = i + 1
     sent, skipped, per = 0, [], {}
+    from personalize.esp import esp_of, prime, save as esp_save
+    prime([master.get(r["lead_id"], {}).get("email", "") for r in rows])
+    esp_skipped = {}
     for r in rows:
         m = master.get(r["lead_id"])
         if not m or not m.get("email"): skipped.append(r["lead_id"]); continue
+        e = esp_of(m["email"])
+        if e not in ALLOWED_ESP: esp_skipped[e] = esp_skipped.get(e, 0) + 1; continue
         spec = r.get("specialty") or "your clients'"
         ck = assigned[r["lead_id"]]; per[ck] = per.get(ck, 0) + 1
         body = {"campaign": ids[ck], "email": m["email"], "first_name": r.get("first_name") or m.get("first_name", ""),
@@ -224,8 +241,300 @@ def push(tok, day_csv):
                 "custom_variables": {"personalization": r["personalization"], "specialty": spec, "lead_id": r["lead_id"], "mv_result": m.get("mv_result", "")}}
         call("POST", "leads", body, tok); sent += 1
         if sent % 50 == 0: print(f"  {sent}/{len(rows)}"); time.sleep(1)
-    print(f"pushed {sent} leads; skipped {len(skipped)} with no email {skipped[:5]}")
+    esp_save()
+    print(f"pushed {sent} leads; skipped {len(skipped)} with no email {skipped[:5]}; skipped by mailbox provider {esp_skipped} (allowed: {sorted(ALLOWED_ESP)})")
     for ck, n in per.items(): print(f"  {CAMPAIGNS[ck]['name']}: {n}")
+
+
+# ---- AI-agents offer (six campaigns created by the ai_agents change-set; ids in their OWN file) ----
+AI_NICHE_TO_KEY = {"bookkeeping": "bookkeeping_ai", "insurance_broker": "insurance_broker_ai",
+                   "landscaping": "landscaping_ai", "marketing_agency": "marketing_agency_ai",
+                   "msp": "msp_ai", "pest_control": "pest_control_ai"}
+BULK_ADD_MAX = 1000          # POST leads/add takes 1-1000 leads per call
+BULK_PAUSE_S = 2.0
+
+
+def _bump(d, k):
+    d[k] = d.get(k, 0) + 1
+
+
+def _write_record(path, record):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(record, indent=1, default=str))
+
+
+CAMPAIGN_STATUS = {0: "draft", 1: "ACTIVE", 2: "paused", 3: "completed", 4: "running subsequences",
+                   -99: "suspended", -1: "accounts unhealthy", -2: "bounce protect"}
+
+
+def _campaign_statuses(api, ids):
+    """{campaign key: status int, or None when it could not be read}. GETs only."""
+    out = {}
+    for ck, cid in ids.items():
+        if cid.startswith("<missing:"):
+            out[ck] = None
+            continue
+        try:
+            out[ck] = (api("GET", f"campaigns/{cid}") or {}).get("status")
+        except (Exception, SystemExit) as exc:  # noqa: BLE001 - reported, then the caller decides
+            print(f"  {ck}: GET campaigns/{cid} failed: {str(exc)[:200]}")
+            out[ck] = None
+    return out
+
+
+def _utc_ts(s):
+    """An Instantly ISO timestamp ('2026-09-30T12:00:00.123Z') as an aware UTC datetime, or None."""
+    from datetime import datetime, timezone
+    try:
+        dt = datetime.fromisoformat(str(s).strip().replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
+def created_by_this_push(found, sent, pre_existing_ids, started_at):
+    """Split the campaign's leads whose email this push sent into
+    ({email: id} created by this push, {email: {id, reason}} that were not).
+    A lead counts as created only if its id was not in the campaign before the
+    first add and, when it carries timestamp_created, that is >= started_at."""
+    start = _utc_ts(started_at)
+    created, not_created = {}, {}
+    for l in found:
+        em = (l.get("email") or "").strip().lower()
+        if em not in sent or not l.get("id"):
+            continue
+        if l["id"] in pre_existing_ids:
+            not_created[em] = {"id": l["id"], "reason": "in the campaign before this push"}
+            continue
+        if l.get("timestamp_created") is not None:
+            ts = _utc_ts(l["timestamp_created"])
+            if ts is None or start is None or ts < start:
+                not_created[em] = {"id": l["id"], "reason": "timestamp_created %s before the push start %s"
+                                   % (l["timestamp_created"], started_at)}
+                continue
+        created[em] = l["id"]
+    return created, not_created
+
+
+def _verify_push(api, ids, record):
+    """After a live push: read each campaign's leads, record the Instantly id of
+    every lead this push created there (the rollback list: not in `pre_existing`,
+    created at or after the push start) and print one pushed lead's custom
+    variables per campaign. Reads only."""
+    import slots_daily as sd
+    print("verification (reads only):")
+    for ck, camp in record["campaigns"].items():
+        sent = {l["email"].strip().lower() for l in camp["sent"]}
+        if not sent:
+            continue
+        try:
+            found = sd.list_campaign_leads(api, [ids[ck]]).get(ids[ck], [])
+        except (Exception, SystemExit) as exc:  # noqa: BLE001 - the push record already exists
+            camp["verify_error"] = str(exc)[:300]
+            print(f"  {ck}: leads/list failed ({exc}); resolve ids by hand before any rollback")
+            continue
+        pre_ids = {p["id"] for p in camp.get("pre_existing", [])}
+        camp["instantly_ids"], camp["not_created_by_this_push"] = created_by_this_push(
+            found, sent, pre_ids, record["push_started_at"])
+        print(f"  {ck}: {len(camp['instantly_ids'])} of {len(sent)} sent emails created in the campaign by this push"
+              f"; {len(camp['not_created_by_this_push'])} sent email(s) were already there (not in the rollback list)")
+        if not camp["instantly_ids"]:
+            continue
+        email, lid = sorted(camp["instantly_ids"].items())[0]
+        try:
+            got = api("GET", f"leads/{lid}") or {}
+        except (Exception, SystemExit) as exc:  # noqa: BLE001
+            print(f"    GET leads/{lid} failed: {exc}")
+            continue
+        cv = sd._vars_view(got)
+        camp["verified_lead"] = {"id": lid, "email": email, "variables": cv}
+        print(f"    {email} ({lid}): {json.dumps(cv)}")
+        missing = [k for k in ("personalization", "lead_id", "slot1", "slot2", "slot_date") if not cv.get(k)]
+        if missing:
+            print(f"    !! MISSING on the read-back: {missing}")
+
+
+def push_ai_agents(tok, day_csvs, dry_run=False, ids_file=None, call_fn=None, now=None, free_fn=None,
+                   master_path=None, esp=None, sleep=time.sleep, limit_per_campaign=None, record_dir=None,
+                   allow_active=False):
+    """Push day files into the six AI-agents campaigns with {{slot1}}/{{slot2}} set.
+    Never writes instantly_campaigns.json and never activates anything.
+    limit_per_campaign keeps only the first N leads per campaign (a rehearsal).
+    GETs the six campaigns first; a live push into an ACTIVE campaign (status 1),
+    or one whose status cannot be read, exits 2 unless allow_active.
+    A live push writes logs/push_ai_<ts>.json before the first add (start time,
+    each campaign's pre_existing leads), then every email/lead_id sent per
+    campaign, Instantly's returned counts, and the Instantly ids this push created."""
+    import slots_daily as sd
+    call_fn = call_fn or call
+    try:
+        ids = sd.load_ai_ids(ids_file)
+    except SystemExit as exc:
+        if not dry_run:
+            raise
+        print(f"  WARNING (dry-run only): {exc}; using placeholder ids")
+        ids = {k: f"<missing:{k}>" for k in sd.AI_CAMPAIGN_KEYS}
+    master = {}
+    for r in csv.DictReader(open(master_path or ROOT / "output" / "FINAL" / "MASTER_for_sheets.csv", encoding="utf-8-sig")):
+        master[r.get("lead_id") or r.get("email")] = r
+
+    skipped, per_file, kept, seen_ids, seen_emails = {}, {}, [], set(), set()
+    for path in day_csvs:
+        rows = list(csv.DictReader(open(path, encoding="utf-8-sig")))
+        per_file[str(path)] = len(rows)
+        for r in rows:
+            ck = AI_NICHE_TO_KEY.get((r.get("campaign") or "").strip())
+            if not ck: _bump(skipped, f"other niche ({r.get('campaign')})"); continue
+            if not (r.get("personalization") or "").strip(): _bump(skipped, "empty personalization"); continue
+            if (r.get("tier") or "").strip().lower() == "skip": _bump(skipped, "skip tier"); continue
+            m = master.get(r.get("lead_id"))
+            if not m or not m.get("email"): _bump(skipped, "no email in master"); continue
+            em = m["email"].strip().lower()
+            if r["lead_id"] in seen_ids or em in seen_emails: _bump(skipped, "duplicate"); continue
+            seen_ids.add(r["lead_id"]); seen_emails.add(em)
+            kept.append((ck, r, m))
+
+    if esp is None:
+        from personalize.esp import esp_of, prime, save as esp_save
+        prime([m["email"] for _, _, m in kept])
+    else:
+        esp_of, esp_save = esp, (lambda: None)
+    allowed = []
+    for ck, r, m in kept:
+        e = esp_of(m["email"])
+        if e not in ALLOWED_ESP: _bump(skipped, f"esp {e}"); continue
+        allowed.append((ck, r, m))
+    esp_save()
+
+    now = now or sd.datetime.now(sd.TZ)
+    send_day = sd.next_send_day(now)
+    free = (free_fn or sd.ghl_free_slots)(now)
+    try:
+        day1, day2, source = sd.compute_slots(send_day, free, now)  # once per run
+    except sd.SlotError as exc:
+        raise SystemExit(f"ERROR: {exc}")
+
+    leads = {}
+    for ck, r, m in allowed:
+        cv = {"personalization": r["personalization"], "specialty": r.get("specialty") or "your clients'",
+              "lead_id": r["lead_id"], "mv_result": m.get("mv_result", "")}
+        cv.update(sd.slot_vars_for(m["email"], send_day, day1, day2))
+        leads.setdefault(ck, []).append({
+            "email": m["email"], "first_name": r.get("first_name") or m.get("first_name", ""),
+            "last_name": m.get("last_name", ""),
+            "company_name": clean_company(r.get("company_name") or m.get("company_name", "")),
+            "personalization": r["personalization"], "custom_variables": cv})
+    if limit_per_campaign is not None:
+        for ck in list(leads):
+            over = len(leads[ck]) - limit_per_campaign
+            if over > 0:
+                leads[ck] = leads[ck][:limit_per_campaign]
+                skipped[f"over --limit-per-campaign {limit_per_campaign}"] = (
+                    skipped.get(f"over --limit-per-campaign {limit_per_campaign}", 0) + over)
+
+    print("rows per file:")
+    for f, n in per_file.items(): print(f"  {Path(f).name}: {n}")
+    print(f"total rows {sum(per_file.values())}; to push {sum(len(v) for v in leads.values())}")
+    print("per campaign:")
+    for ck in sd.AI_CAMPAIGN_KEYS: print(f"  {ck:20s} {len(leads.get(ck, []))}  ({ids[ck]})")
+    print("skipped by reason:")
+    shown = dict.fromkeys(("skip tier", "empty personalization", "no email in master", "duplicate"), 0)
+    shown.update(skipped)
+    for k, n in sorted(shown.items(), key=lambda x: -x[1]): print(f"  {k}: {n}")
+    if source != "ghl":
+        sd.print_fallback_banner(source)
+    print(f"send day {send_day} ({send_day.strftime('%A')}), slot source: {source}")
+    print(f"  slot1 options: {[sd.fmt_slot(x) for x in day1]}")
+    print(f"  slot2 options: {[sd.fmt_slot(x, zone=True) for x in day2]}")
+    summary = {"per_file": per_file, "per_campaign": {k: len(v) for k, v in leads.items()}, "skipped": skipped,
+               "source": source, "send_day": send_day.isoformat(), "leads": leads, "ids": ids, "results": []}
+
+    # The no-MODE-gate decision assumes the campaigns are drafts: check before any add (GETs only).
+    statuses = _campaign_statuses(lambda m, p, b=None: call_fn(m, p, b, tok), ids)
+    summary["campaign_status"] = statuses
+    print("campaign status (GET campaigns/{id}):")
+    for ck in sd.AI_CAMPAIGN_KEYS:
+        st = statuses.get(ck)
+        label = "unreadable" if st is None else f"{st} {CAMPAIGN_STATUS.get(st, '?')}"
+        print(f"  {ck:20s} {label}{'   <- receives leads' if leads.get(ck) else ''}")
+    active = [ck for ck in sd.AI_CAMPAIGN_KEYS if leads.get(ck) and statuses.get(ck) == 1]
+    unknown = [ck for ck in sd.AI_CAMPAIGN_KEYS if leads.get(ck) and statuses.get(ck) is None]
+    if active or unknown:
+        why = (f"ACTIVE campaign(s) {active} would start mailing the new leads" if active else "") + \
+              ("; " if active and unknown else "") + \
+              (f"status of {unknown} could not be read (draft not confirmed)" if unknown else "")
+        if allow_active:
+            print(f"  WARNING: {why}; going ahead because --allow-active was passed")
+        elif dry_run:
+            print(f"  WARNING: {why}. A live push would be refused (exit 2) without --allow-active.")
+        else:
+            print(f"refused: {why}. The push has no MODE gate only because it adds to drafts; "
+                  f"pass --allow-active to push anyway. Nothing written.")
+            raise SystemExit(2)
+
+    if dry_run:
+        samples = [(ck, l) for ck, ls in leads.items() for l in ls][:2]
+        for ck, l in samples:
+            print(f"sample body ({ck}):")
+            print(json.dumps({"campaign_id": ids[ck], "skip_if_in_workspace": True, "leads": [l]}, indent=1))
+        print("dry-run: nothing written")
+        return summary
+
+    stamp = sd.datetime.now(sd.TZ).strftime("%Y%m%dT%H%M%S")
+    record_path, n = Path(record_dir or ROOT / "logs") / f"push_ai_{stamp}.json", 1
+    while record_path.exists():
+        n += 1
+        record_path = record_path.with_name(f"push_ai_{stamp}_{n}.json")
+    from datetime import timezone
+    started = sd.datetime.now(timezone.utc)
+    started = started.replace(microsecond=started.microsecond // 1000 * 1000)  # Instantly stamps milliseconds
+    record = {"kind": "push_ai", "ts": sd.datetime.now(sd.TZ).isoformat(), "files": [str(f) for f in day_csvs],
+              "push_started_at": started.isoformat().replace("+00:00", "Z"),
+              "send_day": send_day.isoformat(), "source": source, "limit_per_campaign": limit_per_campaign,
+              "allow_active": allow_active, "campaign_status": statuses,
+              "campaigns": {ck: {"campaign_id": ids[ck], "pre_existing": [], "sent": [], "results": []}
+                            for ck in sd.AI_CAMPAIGN_KEYS if leads.get(ck)}}
+    # every lead already in a target campaign, read before the first add: a rollback
+    # deletes only ids that are NOT in this list, even after a crash mid-push
+    api = lambda m, p, b=None: call_fn(m, p, b, tok)  # noqa: E731
+    for ck, camp in record["campaigns"].items():
+        try:
+            found = sd.list_campaign_leads(api, [ids[ck]]).get(ids[ck], [])
+        except (Exception, SystemExit) as exc:  # noqa: BLE001 - no safe rollback without this list
+            print(f"refused: listing {ck}'s existing leads failed ({str(exc)[:200]}); nothing written")
+            raise SystemExit(1)
+        camp["pre_existing"] = [{"id": l.get("id"), "email": (l.get("email") or "").strip().lower()}
+                                for l in found if l.get("id")]
+        print(f"  {ck}: {len(camp['pre_existing'])} lead(s) already in the campaign (saved as pre_existing)")
+    _write_record(record_path, record)
+    summary["record"] = str(record_path)
+    print(f"push record (written before the first add): {record_path}")
+    for ck in sd.AI_CAMPAIGN_KEYS:
+        ls = leads.get(ck, [])
+        for i in range(0, len(ls), BULK_ADD_MAX):
+            chunk = ls[i:i + BULK_ADD_MAX]
+            # recorded before the call, so a crash mid-push still leaves the rollback list
+            record["campaigns"][ck]["sent"].extend(
+                {"email": l["email"], "lead_id": l["custom_variables"]["lead_id"]} for l in chunk)
+            _write_record(record_path, record)
+            res = call_fn("POST", "leads/add", {"campaign_id": ids[ck], "leads": chunk, "skip_if_in_workspace": True}, tok) or {}
+            counts = {k: res.get(k) for k in (
+                "total_sent", "leads_uploaded", "skipped_count", "duplicated_leads", "in_blocklist",
+                "invalid_email_count", "duplicate_email_count", "remaining_in_plan")}
+            summary["results"].append({"campaign": ck, **counts})
+            record["campaigns"][ck]["results"].append({"batch": i // BULK_ADD_MAX + 1, **counts,
+                                                       "response": res})
+            _write_record(record_path, record)
+            print(f"  {ck} batch {i // BULK_ADD_MAX + 1}: sent {res.get('total_sent')}, uploaded {res.get('leads_uploaded')}, "
+                  f"skipped (in workspace) {res.get('skipped_count')}, already in campaign {res.get('duplicated_leads')}, "
+                  f"blocklist {res.get('in_blocklist')}, invalid {res.get('invalid_email_count')}, "
+                  f"dup in payload {res.get('duplicate_email_count')}")
+            sleep(BULK_PAUSE_S)
+    print(f"push record: {record_path}")
+    _verify_push(api, ids, record)
+    _write_record(record_path, record)
+    print("campaigns NOT activated (Lorenzo turns them on by hand)")
+    return summary
 
 
 def activate(tok):
@@ -234,13 +543,37 @@ def activate(tok):
         call("POST", f"campaigns/{cid}/activate", {}, tok); print(f"activated {CAMPAIGNS[ck]['name']} {cid}")
 
 
-if __name__ == "__main__":
+def main(argv=None):
     p = argparse.ArgumentParser()
     p.add_argument("--check", action="store_true"); p.add_argument("--setup", action="store_true")
-    p.add_argument("--push"); p.add_argument("--activate", action="store_true")
-    a = p.parse_args(); tok = key()
+    p.add_argument("--push", nargs="+"); p.add_argument("--activate", action="store_true")
+    p.add_argument("--offer", choices=["ai_agents"], help="ai_agents: push into the six AI-agents campaigns (ids from --ids-file)")
+    p.add_argument("--dry-run", action="store_true", help="with --offer ai_agents: print what would be pushed, write nothing")
+    p.add_argument("--ids-file", help="with --offer ai_agents: campaign ids JSON (default instantly_campaigns_ai_agents.json)")
+    p.add_argument("--limit-per-campaign", type=int, metavar="N",
+                   help="with --offer ai_agents: push at most N leads per campaign (N=1 is the first live rehearsal)")
+    p.add_argument("--allow-active", action="store_true",
+                   help="with --offer ai_agents: push even if a target campaign is active (status 1) or its status is unreadable")
+    a = p.parse_args(argv)
+    # every refusal happens here, before key() or any call: --setup and --activate are live writes on the OLD campaigns
+    if a.setup and (a.offer or a.dry_run): p.error("--setup cannot be combined with --offer or --dry-run (it writes live)")
+    if a.activate and a.dry_run: p.error("--activate cannot be combined with --dry-run (it writes live)")
+    if a.offer == "ai_agents" and a.activate: p.error("--activate is never allowed with --offer ai_agents")
+    if a.offer != "ai_agents" and (a.dry_run or a.ids_file or a.limit_per_campaign is not None or a.allow_active):
+        p.error("--dry-run/--ids-file/--limit-per-campaign/--allow-active only work with --offer ai_agents")
+    if a.limit_per_campaign is not None and a.limit_per_campaign < 1: p.error("--limit-per-campaign must be >= 1")
+    if a.offer == "ai_agents" and not a.push: p.error("--offer ai_agents needs --push <day csv> [...]")
+    if a.push and a.offer != "ai_agents" and len(a.push) != 1: p.error("--push takes one file unless --offer ai_agents")
+    tok = key()
     if a.check: check(tok)
     if a.setup: setup(tok)
-    if a.push: push(tok, a.push)
+    if a.push and a.offer == "ai_agents":
+        push_ai_agents(tok, a.push, dry_run=a.dry_run, ids_file=a.ids_file, limit_per_campaign=a.limit_per_campaign,
+                       allow_active=a.allow_active)
+    elif a.push: push(tok, a.push[0])
     if a.activate: activate(tok)
     if not any([a.check, a.setup, a.push, a.activate]): p.print_help()
+
+
+if __name__ == "__main__":
+    main()

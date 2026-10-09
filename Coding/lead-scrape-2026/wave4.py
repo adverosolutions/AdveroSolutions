@@ -14,7 +14,7 @@ Prints per-state counts and overlap against every lead already scraped
 import glob, json, sys, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from runner import run_shard, token, write_outputs, START_FEE, PER_LEAD
+from runner import run_shard, token, write_outputs, START_FEE, PER_LEAD, SHARD_WEIGHTS
 
 ROOT = Path(__file__).resolve().parent
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
@@ -29,7 +29,12 @@ cfg = json.loads((ROOT / "niches" / f"{niche}.json").read_text())
 filters = dict(cfg["filters"])
 if "--seniority" in opts:
     filters["seniority_level"] = opts["--seniority"].split("|")
-worst = len(states) * START_FEE + len(states) * quota * PER_LEAD
+if "--weighted" in opts:  # per-state quota from SHARD_WEIGHTS, summing to --weighted
+    denom = sum(SHARD_WEIGHTS[st] for st in states)
+    QUOTA = {st: max(1, round(int(opts["--weighted"]) * SHARD_WEIGHTS[st] / denom)) for st in states}
+else:
+    QUOTA = {st: quota for st in states}
+worst = len(states) * START_FEE + sum(QUOTA.values()) * PER_LEAD
 print(f"[w4:{tag}] {niche} seniority={filters.get('seniority_level')} x {len(states)} states x {quota} -> worst ${worst:.2f}")
 if worst > float(opts.get("--max-usd", 8.0)):
     sys.exit("ABORT: over --max-usd")
@@ -44,7 +49,7 @@ tok = token()
 leads, n, err = [], 0, 0
 t0 = time.time()
 with ThreadPoolExecutor(12) as ex:
-    futs = [ex.submit(run_shard, niche, st, quota, filters, tok) for st in states]
+    futs = [ex.submit(run_shard, niche, st, QUOTA[st], filters, tok) for st in states]
     for fut in as_completed(futs):
         r = fut.result(); n += 1
         if r["error"]: err += 1
@@ -55,7 +60,7 @@ with ThreadPoolExecutor(12) as ex:
         print(f"  [{n:2d}/{len(states)}] {r['state']:24s} {r['error'] or f'{len(got):4d} leads, {len(em):4d} email, {dup:4d} already-known'}", flush=True)
 
 stamp = time.strftime("%Y%m%d_%H%M%S")
-jp, _ = write_outputs(tag, leads, stamp, "production")
+jp, _ = write_outputs(tag, leads, stamp, opts.get("--out", "production"))
 em = [(l.get("email") or l.get("personal_email") or "").strip().lower() for l in leads]
 em = [e for e in em if e]
 new = len(set(em) - known)

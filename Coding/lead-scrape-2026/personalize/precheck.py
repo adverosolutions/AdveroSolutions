@@ -21,11 +21,21 @@ PARKED = ["domain is for sale", "buy this domain", "this domain may be for sale"
 
 ON = {"recruiting": ["recruit", "staffing", "search", "talent", "placement", "headhunt", "hiring", "personnel", "workforce", "executive", "career"],
       "cleaning":   ["clean", "janitor", "custodial", "maint", "sanit", "floor", "porter", "disinfect", "facility"],
-      "bookkeeping": ["bookkeep", "tax", "account", "cpa", "payroll", "financial", "audit", "advisor"]}
+      "bookkeeping": ["bookkeep", "tax", "account", "cpa", "payroll", "financial", "audit", "advisor"],
+      "msp": ["managed", "msp", "it support", "it service", "network", "cyber", "help desk", "computer", "cloud", "technology"],
+      "marketing_agency": ["marketing", "seo", "advertis", "agency", "ppc", "media", "brand", "web design", "creative", "public relations"],
+      "insurance_broker": ["insurance", "benefit", "broker", "agency", "coverage", "risk"],
+      "landscaping": ["landscap", "lawn", "grounds", "turf", "tree", "snow", "irrigation", "green"],
+      "pest_control": ["pest", "extermin", "termite", "wildlife", "rodent", "mosquito", "bug"]}
 OFF = {"recruiting": ["software", "saas", "app ", "platform", "consulting firm", "marketing", "real estate", "insurance"],
        "cleaning":   ["sign", "furniture", "restoration", "water damage", "fire damage", "remediation", "plumb", "hvac", "electric",
                       "landscap", "lawn", "pest", "roof", "paint", "moving", "storage", "car wash", "auto", "laundr", "linen", "security"],
-       "bookkeeping": ["software", "saas", "wealth", "investment", "insurance", "mortgage", "real estate", "staffing", "law "]}
+       "bookkeeping": ["software", "saas", "wealth", "investment", "insurance", "mortgage", "real estate", "staffing", "law "],
+       "msp": ["software development", "app development", "saas", "staffing", "recruit", "marketing agency", "sql", "sap", "salesforce", "home automation", "manufactur"],
+       "marketing_agency": ["printing", "sign", "promotional products", "market research", "software", "saas", "staffing", "photograph"],
+       "insurance_broker": ["state farm", "allstate", "farmers insurance", "geico", "carrier", "underwrit", "adjust", "wealth", "investment", "software"],
+       "landscaping": ["janitorial", "cleaning", "pest", "pool", "deck", "general contractor", "paving", "concrete", "custom home", "franchise"],
+       "pest_control": ["landscap", "lawn", "tree", "cleaning", "janitorial", "courier", "delivery", "manufactur", "distribut"]}
 
 def site(url):
     if not url: return "NONE"

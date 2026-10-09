@@ -1,0 +1,14 @@
+You are extracting facts for cold-email personalization. Batch dir: BATCHDIR
+Your lead_ids are chunk index K of `_chunks.json` in that dir (a JSON list of lists; take list[K]). Do not modify any existing file. Write no temp or preliminary files.
+
+For each lead_id, actually READ `BATCHDIR/<lead_id>.txt` (it has [HOME url] and maybe [ABOUT url] sections). Work ONLY from that text; never browse or guess. Return a JSON array to `BATCHDIR/extract_K.json`, one object per lead_id, keys exactly:
+{"lead_id":"", "is_in_niche": true|false|null, "what_it_is":"", "founded_year":null, "years_claim":"", "named_niche":"", "guarantee":"", "credential":"", "about_voice_quote":"", "service_traits":[], "source_url":"", "evidence_quote":""}
+- is_in_niche: is this a recruiting, executive search, headhunting, staffing or talent placement firm that fills roles for client companies? Most will be, including firms that call it "talent acquisition", "search", "placement" or "RPO". false ONLY if the page clearly shows a different business that does not place candidates (HR consulting with no recruiting, career coaching for job seekers, software, design agency). The firm's country is NOT a reason for false. null if the page text is empty, a login page, garbled, or unreadable.
+- what_it_is: ONE plain sentence in your own words saying what the firm does and for whom. Never paste the page title, nav text or a slogan.
+- named_niche: the SPECIFIC industry or role type they recruit for (accounting and finance, construction, life sciences, software engineers, nurses...). Never generic ("top talent", "all industries").
+- guarantee: exact wording of any replacement or placement guarantee. credential: NON-default ones only (CPC, CERS, CIR, SHRM-CP...). Else blank.
+- about_voice_quote: a short verbatim phrase (4-14 words) showing a distinctive personality or origin story, if one exists. Else blank.
+- founded_year: only if stated (integer). years_claim: e.g. "over 20 years" if stated.
+- service_traits: 2-6 short lowercase phrases of concrete services, industries or role types from the text.
+- source_url: the [HOME]/[ABOUT] url the facts came from. evidence_quote: ONE verbatim string of at most 15 words supporting the best fact (a single JSON string).
+Use "" for unknown strings, null for unknown numbers/booleans, [] for empty lists. Fabrication is the one unforgivable error. Write valid JSON only. After writing, confirm the file has one object per lead_id in your chunk. Reply with just the count of objects written.

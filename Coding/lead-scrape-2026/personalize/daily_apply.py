@@ -34,7 +34,12 @@ VARIETY_CAP = 0.40
 
 NICHE_WORDS = {"recruiting": ["recruit", "search", "staffing", "placement", "hiring", "talent", "headhunt"],
                "cleaning": ["clean", "janitorial"],
-               "bookkeeping": ["tax", "accounting", "bookkeeping", "cpa", "payroll", "audit"]}
+               "bookkeeping": ["tax", "accounting", "bookkeeping", "cpa", "payroll", "audit"],
+               "msp": ["it ", "it support", "managed", "network", "cyber", "help desk", "tech support", "computer"],
+               "marketing_agency": ["marketing", "seo", "ads", "advertising", "web design", "branding", "social media", "ppc", "lead gen", "pr ", "public relations"],
+               "insurance_broker": ["insurance", "benefits", "coverage", "brokerage"],
+               "landscaping": ["landscap", "lawn", "grounds", "turf", "tree", "snow", "irrigation", "hardscap"],
+               "pest_control": ["pest", "extermin", "termite", "wildlife", "mosquito", "rodent", "bug"]}
 MARKETING = ["top-tier", "finest", "human capital", "quality and efficiency", "providing", "finding and implementing", "demanding", "specialized hiring needs", "solutions", "premier", "state of the art", "state-of-the-art", "unparalleled", "full service", "full-service", "tailored", "comprehensive", "cutting edge", "cutting-edge", "world class", "world-class", "innovative", "trusted"]
 
 
@@ -74,12 +79,21 @@ Y_FREE = {"business", "owner", "owners", "manager", "managers", "director", "dir
           "town", "state", "region", "county", "area", "books", "month's", "return", "returns", "taxes", "tax", "rolodex", "rolodexes", "desk", "half", "every", "sleep", "speed", "dial", "name", "now",
           "able", "close", "know", "have", "must", "you", "one", "the", "of", "in", "on", "by", "at", "a", "an", "your", "and", "or", "to", "be", "with", "all", "around", "entire", "biggest", "deepest", "whole", "kind",
           "small", "local", "firm", "firms", "shop", "shops", "book", "file", "audit", "payroll", "search", "searches", "placement", "placements", "candidates", "candidate", "spot", "sharp", "keep", "run", "service", "handle", "manage", "do",
-          "professionals", "people", "talent", "type", "types", "major", "startups", "startup", "entrepreneur", "entrepreneurs", "landlord", "landlords", "contractor", "contractors", "practice", "clinic", "clinics", "hospital", "hospitals"}
+          "professionals", "people", "talent", "type", "types", "major", "startups", "startup", "entrepreneur", "entrepreneurs", "landlord", "landlords", "contractor", "contractors", "practice", "clinic", "clinics", "hospital", "hospitals",
+          "server", "servers", "network", "networks", "password", "passwords", "ticket", "tickets", "policy", "policies", "renewal", "renewals", "claim", "claims", "campaign", "campaigns", "site", "sites", "website", "websites",
+          "lawn", "lawns", "yard", "yards", "mower", "mowers", "hedge", "hedges", "bug", "bugs", "termite", "termites", "trap", "traps", "restaurant", "restaurants", "warehouse", "warehouses", "storefront", "storefronts", "plaza", "plazas", "hoa", "hoas", "complex", "complexes", "campus", "campuses", "keyword", "keywords", "quote", "quotes", "rate", "rates"}
 NICHE_CLASH = {"recruiting": ["books", "taxes", "tax ", "return", "clean", "facilit", "recruiter"],
                "cleaning": ["staffing", "hire", "hiring", "books", "taxes", "recruit", "talent"],
-               "bookkeeping": ["staffing", "hire", "hiring", "clean", "facilit", "recruit", "accountant", "cpa", "talent"]}
+               "bookkeeping": ["staffing", "hire", "hiring", "clean", "facilit", "recruit", "accountant", "cpa", "talent"],
+               "msp": ["books", "taxes", "clean", "recruit", "talent", "hiring", "landscap", "pest"],
+               "marketing_agency": ["books", "taxes", "clean", "recruit", "talent", "hiring", "landscap", "pest", "marketer"],
+               "insurance_broker": ["books", "taxes", "clean", "recruit", "talent", "hiring", "landscap", "pest", "insurance agent", "salesman"],
+               "landscaping": ["books", "taxes", "clean", "recruit", "talent", "hiring", "pest", "landscaper", "janitor"],
+               "pest_control": ["books", "taxes", "clean", "recruit", "talent", "hiring", "landscap", "exterminator", "janitor"]}
 STOP = {"and", "for", "of", "the", "in", "to", "with", "a", "an", "&", "services", "service", "out", "on", "across", "throughout", "work", "firm", "company", "companies", "professionals", "roles", "business", "businesses", "small", "commercial", "local"}
-NICHE_GENERIC = {"recruiting", "recruitment", "recruit", "search", "staffing", "placement", "placements", "hiring", "talent", "executive", "cleaning", "janitorial", "maintenance", "tax", "taxes", "accounting", "bookkeeping", "cpa", "payroll", "planning", "preparation", "consulting", "advisory", "financial", "finance"}
+NICHE_GENERIC = {"recruiting", "recruitment", "recruit", "search", "staffing", "placement", "placements", "hiring", "talent", "executive", "cleaning", "janitorial", "maintenance", "tax", "taxes", "accounting", "bookkeeping", "cpa", "payroll", "planning", "preparation", "consulting", "advisory", "financial", "finance",
+                 "managed", "network", "networks", "support", "cyber", "cybersecurity", "cloud", "technology", "marketing", "seo", "ads", "advertising", "branding", "design", "media", "digital",
+                 "insurance", "benefits", "coverage", "brokerage", "broker", "commercial", "landscaping", "landscape", "lawn", "grounds", "maintenance", "turf", "tree", "snow", "pest", "control", "termite", "wildlife"}
 
 
 def lead_text(sel_row, data):

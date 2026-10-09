@@ -1,0 +1,54 @@
+{
+  "niche": "marketing_agency",
+  "label": "Marketing / SEO agencies",
+  "target": 1500,
+  "fill_rate": 0.8,
+  "filters": {
+    "company_industry": [
+      "marketing & advertising"
+    ],
+    "company_keywords": [
+      "seo",
+      "digital marketing agency",
+      "marketing agency",
+      "ppc",
+      "paid media",
+      "google ads",
+      "lead generation agency",
+      "web design",
+      "social media marketing"
+    ],
+    "company_not_keywords": [
+      "software",
+      "saas",
+      "franchise opportunity",
+      "staffing",
+      "recruiting",
+      "printing",
+      "signs",
+      "promotional products",
+      "market research",
+      "event marketing",
+      "influencer platform",
+      "adtech",
+      "media buying platform"
+    ],
+    "size": [
+      "1-10",
+      "11-20",
+      "21-50"
+    ],
+    "seniority_level": [
+      "owner",
+      "founder",
+      "partner",
+      "c_suite"
+    ],
+    "email_status": [
+      "validated"
+    ],
+    "contact_not_job_title": [
+      "franchise"
+    ]
+  }
+}
