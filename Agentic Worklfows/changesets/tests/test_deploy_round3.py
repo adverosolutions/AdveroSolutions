@@ -661,5 +661,5 @@ def test_the_self_test_runs_no_job_and_records_one_row(tmp_env, monkeypatch):
     assert module.main(["--self-test"]) == 0
     rows = module.read_runs(module.runs_dir())
     assert [r["status"] for r in rows] == ["self_test_ok"] and rows[0]["name"] == "self_test"
-    assert rows[0]["schedules_read"] == 16 and alerts == []
+    assert rows[0]["schedules_read"] == 17 and alerts == []
     assert "self_test_ok" in watch_report.LAPTOP_HEALTHY

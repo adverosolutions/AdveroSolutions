@@ -135,6 +135,13 @@ SCHEDULES = {
     "precall_tick": Schedule(
         "*/5 * * * *", "every 5 minutes, beside appointments_tick; one container at a time (max_containers=1)",
         "sales", RUNTIME_MODAL, ("--scheduled",)),
+    # The "I'm on" nudge 3 minutes after a call starts (N1). Every minute in
+    # call hours; a run with no call on does nothing. Its file lock
+    # (jobs/appointments_tick._run_lock) covers one container's disk only, so
+    # max_containers=1 (MODAL_MAX_CONTAINERS) keeps one run at a time.
+    "no_show_watch": Schedule(
+        "* 12-18 * * 1-5", "every minute 12:00-18:59 CT weekdays; one container at a time (max_containers=1)",
+        "sales", RUNTIME_MODAL, ("--no-show-watch",)),
     "pipeline_sync": Schedule("0 6 * * *", "06:00 CT", "sales", RUNTIME_MODAL, None),
     # O3, the ONE scheduled 07:30 sweep (GOL-13). jobs/positive_sweep.py only
     # delegates to this same sweep, so scheduling both pushed two identical
@@ -203,6 +210,7 @@ SCHEDULE_JOB_MODULE = {
     "cadence_veto_ping": "services.reply_engine.cadence",
     "appointments_tick": "services.reply_engine.show_rate",
     "precall_tick": "jobs.precall_tick",
+    "no_show_watch": "jobs.appointments_tick",
     "pipeline_sync": "services.reply_engine.pipeline_sync",
     "pipeline_sweep": "jobs.pipeline_sweep",
     "inbox_placement": "jobs.inbox_placement",
@@ -227,6 +235,7 @@ MODAL_TIMEOUTS = {
     "cadence_veto_ping": 240,
     "appointments_tick": 240,
     "precall_tick": 600,
+    "no_show_watch": 120,
     "pipeline_sync": 600,
     "pipeline_sweep": 600,
 }  # type: Dict[str, int]
@@ -237,6 +246,7 @@ MODAL_TIMEOUTS = {
 # its container's disk, which a second container never sees.
 MODAL_MAX_CONTAINERS = {
     "precall_tick": 1,
+    "no_show_watch": 1,
 }  # type: Dict[str, int]
 
 # The scheduled poller stops TAKING NEW replies once this many seconds of its
@@ -831,6 +841,12 @@ def precall_tick():
     ``--scheduled`` only (push only when there is something to say); this
     job's --now takes an ISO clock, it is not the action flag."""
     _run_job("jobs.precall_tick", SCHEDULES["precall_tick"].argv, "precall_tick")
+
+
+def no_show_watch():
+    """The "I'm on" nudge 3 minutes after a booked call starts (N1). argv is
+    ``--no-show-watch``; a run with no call on does nothing."""
+    _run_job("jobs.appointments_tick", SCHEDULES["no_show_watch"].argv, "no_show_watch")
 
 
 def pipeline_sync():

@@ -161,6 +161,13 @@ META = {
         "shadow_safe": True,
         "needs": ["GHL_PRIVATE_INTEGRATION_TOKEN", "PAYMENT_LINK_URL for the SOP-009 draft"],
     },
+    "no_show_watch": {
+        "command": "python3 -m jobs.appointments_tick --no-show-watch",
+        "purpose": "The \"I'm on\" nudge 3 minutes after a booked call starts (S5 N1); does nothing when no call is on.",
+        "writes": "the N1 I'm-on email in the lead's thread and the no-show flag (guarded; a one-time claim per call stops a second email when it overlaps the 10-minute tick)",
+        "shadow_safe": True,
+        "needs": ["GHL_PRIVATE_INTEGRATION_TOKEN", "INSTANTLY_API_KEY"],
+    },
     "pipeline_sync": {
         "command": "python3 -m services.reply_engine.pipeline_sync --now",
         "purpose": "Mirror the GHL Sales pipeline onto Instantly interest status (S8).",

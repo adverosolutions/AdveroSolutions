@@ -19,9 +19,11 @@ safe to leave running in shadow. It is generated from
 
 ## The split (owner decisions R3 and R4)
 
-**Modal, sales tier only (8 schedules):** `poller`, `approval_escalation`,
+**Modal, sales tier only (9 schedules):** `poller`, `approval_escalation`,
 `cadence_tick`, `cadence_veto_ping`, `appointments_tick`, `precall_tick`,
-`pipeline_sync`, `pipeline_sweep`. `modal deploy` registers the Modal schedules
+`no_show_watch`, `pipeline_sync`, `pipeline_sweep`. `no_show_watch` runs
+`jobs.appointments_tick --no-show-watch` every minute 12:00-18:59 CT on
+weekdays with `max_containers=1`; `appointments_tick` stays every 10 minutes. `modal deploy` registers the Modal schedules
 of the tiers in `DEPLOY_TIERS` (default `sales`), plus the web endpoint. Tiers
 are added one redeploy at a time, and the list must keep `sales`
 (`DEPLOY_TIERS=sales,marketing`), because a deploy replaces the whole app.
@@ -133,7 +135,7 @@ On Modal, `MODE=live` plus `ALLOW_LIVE_WRITES=1` in the secret (written only by
 the laptop the runner sets that pair per job, only for a tier in
 `LAPTOP_LIVE_TIERS` as saved in `.env` (never the shell).
 
-`shadow_safe` is `true` for 15 of the 16 schedules. The exception is
+`shadow_safe` is `true` for 16 of the 17 schedules. The exception is
 `list_factory`: **shadow does not cover paid calls.** Apify, Perplexity,
 MillionVerifier and the factory's own model calls spend the moment
 `ALLOW_PAID_CALLS=1`, live or not. The runner keeps it `0` unless
@@ -152,7 +154,7 @@ bash changesets/schedules/install_schedules.sh --preflight
 
 ## Rollback
 
-`python3 -m modal app stop advero-reply-engine` removes all 8 Modal schedules at once,
+`python3 -m modal app stop advero-reply-engine` removes all 9 Modal schedules at once,
 and the web endpoint with them. The Modal Dicts survive a stop. To remove one
 Modal tier, redeploy with a shorter `DEPLOY_TIERS`. To stop a laptop job,
 unload its plist (`launchctl bootout gui/$(id -u)/com.advero.<name>`) and then
