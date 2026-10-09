@@ -1,0 +1,83 @@
+{
+ "id": "d81f1d53-23d6-48a6-aea3-80c21192e17e",
+ "name": "2026 Service - AI Agents",
+ "status": 1,
+ "campaign_schedule": {
+  "schedules": [
+   {
+    "name": "Business hours",
+    "timing": {
+     "from": "07:00",
+     "to": "19:00"
+    },
+    "days": {
+     "0": false,
+     "1": true,
+     "2": true,
+     "3": true,
+     "4": true,
+     "5": true,
+     "6": true
+    },
+    "timezone": "America/Detroit"
+   }
+  ],
+  "start_date": null,
+  "end_date": null
+ },
+ "timestamp_created": "2026-09-30T19:55:04.625Z",
+ "timestamp_updated": "2026-09-30T21:26:59.211Z",
+ "pl_value": 1000,
+ "sequences": [
+  {
+   "steps": [
+    {
+     "type": "email",
+     "delay": 3,
+     "variants": [
+      {
+       "subject": "{{firstName}}, question",
+       "body": "<div>{{personalization}}</div><div><br /></div><div>I run AI agent systems for commercial cleaning companies.</div><div><br /></div><div>I'd start by auditing how {{companyName}} runs day to day, then map AI agents onto the follow-ups, busywork and ad and marketing creation that eat your week, plugged into how you already operate.</div><div><br /></div><div>{If this interests you|If this is of interest}, let's hop on a short 15 minute call. Just reply yes and I can {shoot you over|send you} a calendar invite.</div><div><br /></div><div>{Thanks|Thanks for the time},</div><div>Lorenzo</div>"
+      }
+     ],
+     "delay_unit": "days",
+     "pre_delay_unit": "days"
+    },
+    {
+     "type": "email",
+     "delay": 3,
+     "variants": [
+      {
+       "subject": "",
+       "body": "<div>{Hey|Hi} {{firstName}},</div><div><br /></div><div>{Checking in|Bumping this|Circling back}, in case the first one {got buried|got lost|slipped by}. {Quick version|Short version}:</div><div>- I map AI agents onto the follow-ups, busywork and ad and marketing creation at {{companyName}}, plugged into how you already operate.</div><div>- I start with an audit of how the week actually runs.</div><div><br /></div><div>{Worth a quick 15 minute call|Open to a quick 15 minute call}? Just {reply yes|say yes} and I'll {send|shoot over} a calendar invite.</div><div><br /></div><div>{Thanks for the time|Thanks},</div><div>Lorenzo</div>"
+      }
+     ],
+     "delay_unit": "days",
+     "pre_delay_unit": "days"
+    }
+   ]
+  }
+ ],
+ "email_gap": 7,
+ "text_only": true,
+ "email_list": [
+  "lorenzo@adveromedia.com",
+  "lorenzo@myadvero.com",
+  "lorenzo@proadvero.com",
+  "lorenzo@theadvero.com",
+  "lorenzov@adveromedia.com",
+  "lorenzov@myadvero.com",
+  "lorenzov@proadvero.com",
+  "lorenzov@theadvero.com",
+  "lorenzovillarreal@adveromedia.com",
+  "lorenzovillarreal@myadvero.com",
+  "lorenzovillarreal@proadvero.com",
+  "lorenzovillarreal@theadvero.com"
+ ],
+ "daily_limit": 50,
+ "stop_on_reply": true,
+ "link_tracking": false,
+ "open_tracking": false,
+ "not_sending_status": 1,
+ "organization": "92fb7f1b-1d71-45d5-bea0-178894b5b492"
+}

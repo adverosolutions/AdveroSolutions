@@ -264,6 +264,18 @@ to true: `skip_if_in_workspace` stops the list factory re-importing a lead who i
 already being mailed, and `verify_leads_on_import` lets Instantly drop an address
 the local verifier passed.
 
+## POST /leads/add and PATCH /leads/{id} — unverified, pending one-lead rehearsal
+
+Used by `Coding/lead-scrape-2026/instantly_push.py --offer ai_agents` (bulk add,
+1-1000 leads per call, `{"campaign_id", "leads", "skip_if_in_workspace"}`) and
+`slots_daily.py` (`PATCH {"custom_variables": <full dict>}`). Neither has been
+exercised live. Unverified: which count fields `leads/add` answers with
+(`total_sent`, `leads_uploaded`, `skipped_count`, ...) and whether it returns the
+new lead ids, so the push resolves ids with a `leads/list` read after the add;
+and whether `PATCH custom_variables` merges or replaces. Settle both with the
+one-lead rehearsals in `Coding/lead-scrape-2026/SLOTS_RUNBOOK.md`
+(`--limit-per-campaign 1`, `slots_daily.py --lead-id`), then update this entry.
+
 ## GET /audit-logs
 
 A pure read (`shared.instantly.audit_logs_list`). It is what the Friday retro's
