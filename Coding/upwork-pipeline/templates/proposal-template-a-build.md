@@ -1,4 +1,4 @@
-Hey there 👋 I build [their kind of system] like this all the time, so I went ahead and built this one custom for you, [N]-min Loom: https://www.loom.com/share/[LOOMURL]
+Hey [greeting] 👋 I went ahead and built your [2-3 tool names from the post] [their kind of system], [N]-min Loom: https://www.loom.com/share/[LOOMURL]
 
 tldr: [one or two short lines on what it does, no mechanics]. The video walks through how.
 

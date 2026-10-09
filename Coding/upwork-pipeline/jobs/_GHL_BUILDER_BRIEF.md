@@ -7,15 +7,17 @@ location `ebyNANPagaK7ycf1pfge`; never a client location). First real import
 2026-09-22 (Cal.com job): 12 of 12 steps landed. The Build-Using-AI prompt lane
 is the fallback only (last section).
 
-Keep his account uncluttered (Lorenzo, 2026-09-23). Everything a GHL prop needs
-is created in his real sub-account, so:
-- A post that names no specific automation gets a chart (`"platform":
-  "diagram"`), not GHL workflows.
-- A post that names specific automations still gets the full spec (the chart
-  draws every workflow), but only ONE workflow goes live: the one that best
-  answers the post. `ghl_prereqs` runs on that workflow alone (the main session
-  trims the spec), and only its import file is loaded. The beats say which
-  workflow is live and which ones are on the chart.
+Keep his account uncluttered (Lorenzo, 2026-09-23, tightened 2026-09-24).
+Everything a GHL prop needs is created in his real sub-account, so GHL posts
+default to a chart (`"platform": "diagram"`, chart rules in `_AGENT_BRIEF.md`
+step 4):
+- Account setups, multi-location or multi-pipeline builds, snapshots, audits,
+  consultations, and any post that names several workflows: chart only.
+  Nothing is created in his account, and he never walks through a whole
+  account setup on camera.
+- Only a post that is just one automation (one trigger and what follows it)
+  gets a GHL workflow spec. That one workflow goes live (`ghl_prereqs` on it,
+  its import file loaded), with only the steps the automation needs.
 - The narrow key cannot create pipelines (`POST /opportunities/pipelines` answers
   401 "not authorized for this scope"). Lorenzo makes the pipeline by hand, then a
   prereqs dry run refreshes the id map.

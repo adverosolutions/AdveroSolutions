@@ -1,0 +1,50 @@
+# Batch page brief (finished-product pages from the kit)
+
+You build ONE job's page. Write only inside that job's folder:
+- `page.html`
+- `beats.md`
+
+No proposal, no git, no publishing.
+
+## Steps
+1. Read the job's `jd.txt`. Build only from what the post says; never invent facts about the client.
+2. Read `jobs/_REEL_BRIEF.md`, UPDATE 4, UPDATE 5 and UPDATE 6. UPDATE 6 (the goal card on a one-screen hero, copied from `jobs/_examples/pilots/impact-hero.html`) is required: the hero must fit 1440x900 with no scrolling. UPDATE 5 is the inputs/outputs rule, and it is required:
+   - an In → Out band right after the hero
+   - an INPUT eyebrow on the first finished screen and an OUTPUT eyebrow on the win screen
+   - IN/OUT tags on the platform screen's trigger and final steps
+3. Copy the reference page named in your prompt from `jobs/_examples/` as your starting point. Its look, engine and components are approved; don't rebuild them. For the In → Out band, copy the pattern from `jobs/_examples/finished-ghl.html`.
+4. Rewrite the content for this job:
+   - the DATA object where there is one
+   - the headlines
+   - one `.sub` sentence per section
+   - the sample records (their business type, their tools, their words)
+   - the platform screen
+
+   Keep the shape: hero with the goal card (UPDATE 6), In → Out band, at most 4 finished screens (goal-oriented, problem-focused; see UPDATE 6 notes), the platform screen ("This is what it will look like in your <Platform>", labelled "... · illustrative"), then the close. Use a generic, realistic sample business of the client's type unless the post names the company.
+5. Keep these rules:
+   - "Sample data" appears in the top bar.
+   - Numbers are labelled Illustrative.
+   - No vendor logos.
+   - `<title>` is 2–4 words and never contains reel, film, video, prototype or mock. Those words don't appear on the page at all.
+   - No doctype/html/head/body tags.
+6. Write `beats.md`: first the line "This is a working prototype of <their thing>.", then at most 8 numbered beats of 12 words or fewer (beat 1 states the goal and its number), then "Worth a quick 15 minute call? Reply here and I'll send times."
+7. Check with Playwright pointed at installed Google Chrome, at 1440x900 section by section and at 390 wide:
+   - no console errors, overlaps, clipped text or sideways scroll
+   - the whole hero, goal card included, fits the first 1440x900 viewport, and the inputs recompute the total
+   - screenshot the platform screen alone and verify it per the builder accuracy check in `_REEL_BRIEF.md`
+
+   Put scratch files in the scratchpad folder named in your prompt.
+
+## Report (short)
+- the screens
+- the In → Out pair
+- the platform-screen screenshot path
+- anything in the post you could not show
+
+- Currency: always US dollars on the page, even when the client is abroad (Lorenzo, 2026-10-02).
+- Goal card: the big line is an outcome statement ("+$X a month in ..." or "X hours a week saved on ..."), never a bare number (Lorenzo, 2026-10-03; see UPDATE 6).
+- Ending: the 15-minute call screen from pilots/impact-hero.html replaces the 4-word close (Lorenzo, 2026-10-03).
+- Final screen: the single 'Next step · A 15-minute call.' panel from pilots/impact-hero.html (Lorenzo, 2026-10-04).
+- At most 4 finished screens, chosen for the goal and the client's problem (Lorenzo, 2026-10-04).
+- Next step panel carries the two facts boxes (Live fast / Your part) from the pilot. The sub line and the Live fast box fit this post's real next step (UPDATE 7 in `_REEL_BRIEF.md`): build, fix, ongoing support, live sessions or audit.
+- Platform screen is the software the post names, drawn the way it really looks (UPDATE 7 in `_REEL_BRIEF.md`). Never a GoHighLevel-style canvas for n8n, Make, Claude, ChatGPT, AWS, Apify or anything else.

@@ -90,7 +90,9 @@ params depth is the inline example in step 3, not any file.
 
 ## Step 3. spec.json, built from the dossier
 Pick the prop: n8n (default), `"platform": "make"` when they name Make,
-`"platform": "gohighlevel"` for GHL posts (see the GHL brief), a chart-only spec
+`"platform": "gohighlevel"` only for a GHL post that asks for one specific
+automation (see the GHL brief; every other GHL post, account setups included,
+gets a chart), a chart-only spec
 with `"platform": "diagram"` (step 4) for audits, setup/infrastructure, methods,
 and Zapier posts.
 
@@ -221,9 +223,25 @@ mappings. Keys the Make compiler honors:
 - gmail send: `to` (a list), `subject`, `html`, `cc`, `bcc`.
 - `flow.wait`: `delay` (seconds). `data.transform`: `name`, `value`.
   `data.split`: `array`.
+- `flow.branch` / `flow.switch`: `condition`, as `{"left": ..., "op": ...,
+  "right": ...}` or a list of those (all must hold), in Make syntax. `left` is a
+  module mapping like `{{5.statusCode}}`. The number is Make's module id, not
+  the step number in the label: Sample Input and every router take an id too,
+  so compile once and read the `id` beside each `metadata.designer.name` in the
+  job's `.make.json` before you write `left`. `op` is one of `eq`, `neq`, `gt`,
+  `gte`, `lt`, `lte`, `contains`, `exists`, `not_exists`, `true`, `false`
+  (`exists`, `not_exists`, `true` and `false` take no `right`), or a raw Make
+  operator id such as `text:startwith`. On a two-way branch the edge labelled
+  `true` or `yes` gets the condition (when one edge is labelled `false` or `no`,
+  the other edge gets it), else the first edge, and the other route gets the
+  opposite. For a switch with more than 2 routes, or to set each route
+  yourself, put `condition` on each edge next to `branch`:
+  ```json
+  {"from": "gate", "to": "contact", "branch": "New Order", "condition": {"left": "{{4.data.total}}", "op": "eq", "right": 0}},
+  {"from": "gate", "to": "upddeal", "branch": "Already Synced", "condition": {"left": "{{4.data.total}}", "op": "gt", "right": 0}}
+  ```
 Known limits (Make shows its own generic value or nothing, so do not rely on
-them): `condition` on `flow.branch` / `data.filter` (routes carry only the
-branch name), `path` on `trigger.webhook` (webhooks stay unset), `service`,
+them): `data.filter` (it carries no condition), `path` on `trigger.webhook` (webhooks stay unset), `service`,
 googleSheets read, any app not listed above, and every key not listed above. AI
 sub-nodes (`ai.model`, `ai.parser`, memory, tools) are not drawn in Make at all,
 so `schema` goes nowhere: ask for the fields you need in the AI step's `prompt`.
@@ -249,10 +267,24 @@ write or say "placeholder", "example CRM", "any CRM swaps in", `example.com`.
 a real-looking record of THEIR business: their industry, their numbers, their
 terminology, visible work done. Never another client's names or companies.
 
-**Shape (n8n and Make specs only)**: 10 to 18 flow nodes (more only when the
-post is architecture-heavy), sections per the rule above plus the error path,
-one error trigger (`trigger.app` app `n8n` op `error_trigger`) unless the job is
-trivially small. Kinds, catalog `app:op` pairs, AI sub-node ports and edge rules
+**Shape (n8n and Make specs only; Lorenzo, 2026-09-24)**: the minimum that
+really works, so he can walk through it on camera without it taking all day.
+Aim for 10 to 15 nodes, counting every node on the canvas (the Config node, AI
+sub-nodes and the error path included). It is a target, not a cap: go past 15
+when the post's requirements need it (`verify_job` warns above 15, and the
+reviewer checks each extra node is needed). Every node is one the flow needs to run:
+if deleting it leaves the flow working and nothing the post asked for missing,
+it goes. No logging, formatting, normalizing or double-check steps added for
+polish, no node per field, no branch that repeats another. Not so bare that it
+stops making sense: each requirement in the post gets its step on the canvas,
+even when that takes it past 15. Only extras the post did not ask for go in the
+overview's `how_it_works` or a section note as the next add-on ("room to add
+WhatsApp next"). Too simple is a miss too: a requirement the post names (like
+abandoned checkout in a Shopify post) never gets pushed to "next" just to stay
+under 15. An error trigger (`trigger.app` app `n8n` op
+`error_trigger`) plus one alert node only when they fit under the ceiling;
+otherwise the overview's setup list says to point it at their error workflow.
+Sections per the rule above. Kinds, catalog `app:op` pairs, AI sub-node ports and edge rules
 are in SKILL.md "Authoring a WorkflowSpec". A false arm shared by two gates goes
 in the last section it touches. Never a "side paths" section.
 
@@ -269,8 +301,20 @@ specs are exempt too**: they follow step 4, not Shape.
   another job's archetype, and the reviewer rejects it. A match against this
   job's own earlier build (its old archetype, whose files sit in the job's
   `.stale/`) is exempt: a rebuild is expected to reuse the client's own words.
+- Charts are full sentences (Lorenzo, 2026-09-25, final word): every step label is
+  one complete, plain sentence a person would say out loud, in sentence case
+  ("6 - When they book, they get a confirmation right away and reminders before the
+  visit"). No fragments, no colon lists, no "X: Y, Z" tidbits, no Title Case.
+  Section labels and notes too: notes are full sentences, never "Your parts 6 and
+  7: ...". Under about 90 characters. One straight line
+  from the first step to the last, zero or one gate; read in order, the steps
+  explain the whole system with no narration. A "no" case can be its own step
+  ("6 - No deposit yet? Monday reminds you to follow up") instead of a branch.
+  When the post is vague, fill the steps with the automations Lorenzo would
+  really put in for that kind of business, not guesses about their current
+  setup.
 - Kinds: only `data.transform`, `flow.branch`, `data.aggregate`; no trigger, no
-  `ai.*`, no `app.action`. 8 to 13 steps, one or two gates. Bands follow the
+  `ai.*`, no `app.action`. 8 to 13 steps. Bands follow the
   Sections rule in step 3: one per requirement in their order, adjacent ones
   grouped past 5, fewer than 4 when they asked for fewer.
   Params are not needed on chart steps; the labels and band notes carry the
@@ -304,7 +348,14 @@ accounts, plan tiers, API access, real data; say plainly what is unverified for
 Lorenzo), Standard pricing (defensible market range plus recurring software; the
 post's rate vs market stated plainly), Ask before quoting (the questions that
 move the estimate), Flags (US-only, portfolio demands, no contact outside
-Upwork). Anything sharp here that the client would value (sizing, a risk to
+Upwork; client metrics such as reviews, spend, hourly rate and verification
+are flags, never a reason to skip). Pricing path (for Lorenzo only, never in
+the proposal or chats): the value per year in hours saved or revenue, with
+the assumption stated (a number the post does not give is labelled as an
+assumption); a price range of 10 to 20% of that value; a small land offer,
+which is milestone 1; the upsell path after it; and 3 to 4 milestones, each
+with its % of the price (totalling 100%) and worded "paid once
+[deliverables] are delivered and you've signed off". Anything sharp here that the client would value (sizing, a risk to
 their list or data) must also be on the build and in a beat.
 
 ## Step 7. beats.md
@@ -318,13 +369,27 @@ their list or data) must also be on the build and in a beat.
   numbers rule in step 3.
 - Middle beats walk the canvas by section using the real labels. One beat names
   a risk or decision.
-- Last beat is the CTA with the timing placeholders: "can start [START], working
-  demo by [DRAFT]" (chart jobs: "delivered by [DRAFT]").
+- One middle beat (not the first, not the last) carries the P.S. case-study
+  bullet that matches the job (`templates/ps-case-studies.md`), said while the
+  matching part of the build is on screen. Only that bullet's fixed facts: no
+  new numbers, no invented detail.
+- Last beat is a direct call ask, 12 words max: "Reply here, I'll send three
+  times, can jump on today or tomorrow." Start and draft timing stay in the
+  proposal body, never in the beats.
 
 ## Facts about Lorenzo you may use (nothing else; never invent)
 - Runs AdveroSolutions, an AI lead-gen agency. His own outbound runs 100k+ cold
   emails a month on Instantly, an agent researching and writing each message,
   plus a daily metrics dashboard.
+- Has deployed Claude and Grok agents in his own agency and for numerous client
+  companies, and has consulted for very large companies (Lorenzo, 2026-09-24).
+- Has set up flows like these for other bakeries (Lorenzo, 2026-09-24).
+- Has worked with outdoor living / construction companies and has expertise in
+  that industry (Lorenzo, 2026-09-24).
+- Has built AI agents on a client's existing database for numerous companies
+  (Lorenzo, 2026-09-25).
+- Has worked with dental practices (Lorenzo, 2026-09-24; no GHL-specific dental
+  configuration, dental PMS integration or offline-conversion claim).
 - Builds in n8n and Make daily; uses Claude Code and the Anthropic API daily,
   with MCP tools wired into live software.
 - Cold-email infra method: mailboxes and lookalike domains through a mailbox
@@ -333,3 +398,37 @@ their list or data) must also be on the build and in a beat.
 - The four case-study bullets in `upwork-pipeline/templates/ps-case-studies.md`.
 - No production claims for LangChain, Hermes or Ollama. No past-project claims
   ("did this exact setup last week", "for other businesses"). No location claims.
+
+## Only the job post (Lorenzo, 2026-09-25)
+Everything the client sees (title, labels, sticky, section notes, samples, beats,
+proposal) is generated from the job post alone. The client's hiring history and
+freelancer reviews never appear on screen: no company name, industry, tool or
+first name that the post itself does not state. History may inform the private
+assessment only. When the post names no tool, commit to the most common one
+(HubSpot for a CRM, Postgres for a database), not the one their history shows.
+Why: the Lendersa build named the client's company from a past job title; he
+couldn't pronounce it and the client never mentioned it.
+
+## An "agent" has tools (Lorenzo, 2026-09-25)
+When a build calls something an AI agent, it is an `ai.agent` node with real tool
+sub-nodes (search, look up, update, send) doing visible work on the canvas. A single
+Claude/LLM step that only reads text and writes text is labelled as Claude doing that
+step, never as an agent. Why: the PI demand-package canvas said "agent" but was two
+bare Claude LLM calls; he said it "makes the agent look like it does nothing".
+
+## Best version first (Lorenzo, 2026-09-28)
+Before writing the spec, decide what the highest-quality version of this client's ask would be that we can reasonably build in this pipeline, and build that. Every pain point the post names is handled visibly and properly on the canvas or chart, even past 15 nodes. The minimal-build rule is a floor on fluff, not a cap on quality. Only-the-job-post and full-sentence rules still apply.
+
+## Prototype week (Lorenzo, 2026-09-28; was "visual walkthrough week")
+This week every job's Loom prop is a clickable prototype of the client's finished system: one self-contained `prototype.html` in the job folder that Lorenzo clicks through on camera and the client can click through themselves from a link in the proposal. It applies to n8n, Make and GHL jobs alike; the real build happens after the hire. Design standard: `jobs/_PROTOTYPE_DESIGN.md`.
+- The bar (Lorenzo, 2026-09-28): gorgeous and elegant, "almost like a $15,000 custom build". Read `jobs/_PROTOTYPE_DESIGN.md` in full before designing and follow it; it overrides any style cue elsewhere in this section. When the post asks for a system, the page IS that finished system running on sample data ("this is exactly what it'll look like when it's done"), every requirement its own working screen. The first two prototypes (cold email, GHL + Pipedrive, 2026-09-28) were judged not good enough: never use them as a style reference. The GHL CRM walkthrough.html is a reference for interaction depth only, not looks.
+- Positioning: it is "a working prototype of your <system in their words>", never "a mock", "a walkthrough" or "a visual". The page title and header name their outcome in their words (e.g. "Your Lead System: From Capture to Booked Call").
+- Tabs follow the post's asks in the post's order, in the post's words, plus an Overview tab with the journey and a short "why it's built this way" row.
+- At least one live moment: a "submit a test lead" or "run it" button that animates a sample record through the system, and a simulated outcome (reply, booking, approval). A visible "Reset" control so the client can replay it.
+- Neutral branding: never an imitation of a vendor's UI (no GHL, n8n or Make logos or look-alike screens). Tool names in text are fine ("Runs on n8n").
+- Samples look like their business from the post only; illustrative numbers are labelled illustrative. No real names, no client data.
+- Single file, inline CSS and JS, Google Fonts only, no other external scripts. Colors as CSS variables on :root with a dark-mode override under @media (prefers-color-scheme: dark) guarded by :root:not([data-theme="light"]) and again under :root[data-theme="dark"]; body has an explicit background. Works at 1440x900 and at phone width (no horizontal scroll). No console errors.
+- Where the real backend exists or is cheap to produce (GHL import files, an n8n spec), keep spec.json and compile it too, so the proposal can say "the workflows behind it are already built".
+- Still write dossier.md, assessment.md and beats.md (beats follow the tabs; say "prototype" on camera, never "mock").
+- Artifact page contract: no `<!DOCTYPE>`, `<html>`, `<head>` or `<body>` tags (the publisher wraps the page); put `<title>` (a 2-4 word name, e.g. "Pipedrive Lead Sync") and `<style>` at the very top. No alert/confirm/prompt, no downloads, no mailto links, no forms that submit anywhere (preventDefault). Respect prefers-reduced-motion. Design per `jobs/_PROTOTYPE_DESIGN.md`.
+- The main session publishes prototype.html as a private Artifact and puts its link in the proposal ("Click through it yourself: <link>"); Lorenzo shares it when he sends the proposal. Finalize with `--variant prototype`.

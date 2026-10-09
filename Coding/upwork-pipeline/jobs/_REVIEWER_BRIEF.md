@@ -20,7 +20,8 @@ verdict as your final message.
 - `assessment.md`: the private sizing, risks and questions (item 7 checks that
   its sharpest insight made it onto the build).
 - `proposal.md`: the main session's draft; read its timing line ("I can start
-  [START], working demo by [DRAFT]" or "... delivered by [DRAFT]") for item 8.
+  [START], working demo by [DRAFT]" or "... a first draft of ... by [DRAFT]"); item 8 checks the beats leave
+  those dates to it.
 - Also run `cd /Users/lorenzovillarreal/Desktop/AdveroSolutions/Coding/upwork-workflow-generator && python3 -m upwork_gen.verify_job <job folder>`
   and read its lint lines (it is read-only). Field-level WARNs (Slack with no
   channel, Sheets with no document, the default parser schema) are
@@ -73,9 +74,20 @@ tool the client named. Other nodes may use compiler defaults.
    the earlier build.
 8. **Beat 1 names me and my ask** (by first name when `jd.txt` carries a
    `client first name:` line or the post is signed), at least two beats point
-   at things only I would recognize, and the last beat's timing matches the
-   timing line in `proposal.md` (a working demo there means a demo in the
-   beat; a chart job says "delivered by").
+   at things only I would recognize, one middle beat carries the matching
+   P.S. case study with its facts unchanged (no new numbers or detail), and
+   the last beat is a direct call ask with no start or draft dates (those
+   stay in `proposal.md`).
+
+9. **Simple enough to walk through, complete enough for the post** (n8n and
+   Make; Lorenzo, 2026-09-24): aim for 10 to 15 nodes on the canvas, each one
+   the flow needs to run. Over 15 is fine when the extra nodes carry something
+   the post asked for. A node that adds nothing the flow needs (extra logging,
+   formatting, duplicate checks) is a fix: name the nodes to cut or merge. A
+   requirement the post names that was left off the canvas (pushed to "next"
+   to stay small) is also a fix: name the steps to add. Extras the post did not
+   ask for go in the overview as the next add-on. A GoHighLevel workflow build for a post that
+   is more than one automation should have been a chart: say so.
 
 ## Scores (1 to 10)
 - **Made only for me**: 10 = could not be anyone else's; 5 = my industry but
@@ -105,3 +117,6 @@ fixes in its prompt, it opens this run's files and applies only those fixes
 (the one exception to the rebuild rule in `_AGENT_BRIEF.md`); fixes aimed at
 `proposal.md` go to the main session. The main session then re-batches. A
 second REVISE goes to Lorenzo, flagged, with both reviews.
+
+## Prototype design review (Lorenzo, 2026-09-28)
+When the job has a `prototype.html`, also score **"$15k custom build" (1-10)** against `jobs/_PROTOTYPE_DESIGN.md`: would a founder who paid a studio $15,000 be proud to show this? A PASS needs 8 or more on this score as well. Name the exact screens and elements that look templated, busy or generic (card and chip overload, glyph or emoji icons, default fonts, rainbow palettes, cramped spacing, a weak signature moment, a dark mode that's just an inversion), and give concrete fixes. Also check that every requirement in the post is answered and that the page reads as the finished system running. Then apply "Keep the system, cut the words" in `_PROTOTYPE_DESIGN.md` and score **"easy to talk over" (1-10)**: the screens and live moments stay, fluff words are gone (ledes, explanatory paragraphs, restating captions, helper text), every screen has something moving, and the whole thing can be walked in 2 minutes. PASS needs 8 or more here too. Quote every sentence that should be cut.

@@ -2,6 +2,6 @@ Hey there 👋 I run this exact [setup / audit] for [their kind of business] all
 
 The video walks through [one short paragraph on the stages and the evidence-driven differentiator, money framing]
 
-I can start [START], [deliverable] delivered by [DRAFT]. Estimated timeline is [X]. [rush seed]. We just need a quick 15 minute call to [what it decides].
+I can start [START], with a first draft of [deliverable] by [DRAFT]. Estimated timeline is [X]. [rush seed]. We just need a quick 15 minute call to [what it decides].
 
 [same closer, Lorenzo, P.S.]

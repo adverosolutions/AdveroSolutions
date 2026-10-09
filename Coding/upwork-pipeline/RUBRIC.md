@@ -1,5 +1,11 @@
 # Upwork Job Scoring Rubric — v2 (2026-08-13)
 
+> **Retired 2026-08-17.** The automated sweep and its kill rules below no
+> longer run. The live rule is "never skip a job Lorenzo saved for its
+> terms". Client metrics (reviews, spend, hourly rate, verification) are
+> flags in the private assessment, not kills. The rest of this file is kept
+> for reference.
+
 ## MODE: COLD-START (active until ~5–10 five-star reviews, then revert to standard)
 
 Lorenzo's stated objective right now is **compiling 5-star reviews as fast as

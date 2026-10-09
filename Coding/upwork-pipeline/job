@@ -49,4 +49,5 @@ esac
 [ -z "$S" ] && { echo "$M: cannot read the build slug from spec.json"; exit 1; }
 [ -z "$F" ] && { echo "$M has no $K file for the current spec ($S) yet (not compiled)"; exit 1; }
 pbcopy < "$F" && echo "clipboard: $(basename "$F")  ->  Cmd+V into $WHERE"
+[ "$K" = make ] && echo "scenario name: $(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("name", ""))' "$F")"
 echo; echo "== $M"; grep -m1 "^url:" "$J/jd.txt" 2>/dev/null; for f in assessment beats proposal; do echo; echo "--- $f"; cat "$J/$f.md" 2>/dev/null; done

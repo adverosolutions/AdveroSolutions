@@ -1,0 +1,665 @@
+<title>Enriched Lead List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16202e; --ink2:#4d596b; --ink3:#8792a3;
+  --blue:#2f74f5; --blue2:#6aa5ff; --mint:#1fb487; --amber:#e8a13a;
+  --line:rgba(150,170,200,.28);
+  --panel:linear-gradient(180deg,rgba(255,255,255,.94),rgba(248,251,255,.80));
+  --shadow:0 40px 70px -30px rgba(38,72,128,.30),0 16px 30px -18px rgba(38,72,128,.22);
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;background:#e9f0f8}
+body{font-family:"Figtree",system-ui,sans-serif;color:var(--ink);background:#e9f0f8;overflow-x:hidden;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+.sky{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+   radial-gradient(1200px 600px at 78% -10%,rgba(255,255,255,.95),rgba(255,255,255,0) 60%),
+   radial-gradient(900px 520px at 8% 30%,rgba(206,226,250,.75),rgba(206,226,250,0) 70%),
+   linear-gradient(180deg,#c9dcf2 0%,#dce8f5 28%,#ecf1f7 58%,#f3f4f6 82%,#e9edf2 100%);}
+.sky::after{content:"";position:absolute;left:-10%;right:-10%;top:calc(58% - var(--sp,0) * 18%);height:40%;
+  background:radial-gradient(60% 50% at 50% 0%,rgba(255,255,255,.85),rgba(255,255,255,0) 70%);filter:blur(10px)}
+.haze{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.haze i{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;animation:drift 26s ease-in-out infinite alternate}
+.haze i:nth-child(1){width:520px;height:520px;left:-120px;top:10%;background:#d6e6fb}
+.haze i:nth-child(2){width:460px;height:460px;right:-100px;top:45%;background:#e6f1fb;animation-duration:32s}
+.haze i:nth-child(3){width:380px;height:380px;left:40%;top:70%;background:#e6e2fb;opacity:.45;animation-duration:38s}
+@keyframes drift{to{transform:translate3d(60px,-50px,0) scale(1.08)}}
+
+main{position:relative;z-index:1}
+.top{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:18px 32px;pointer-events:none}
+.top .brand{font-weight:600;font-size:13px;letter-spacing:.02em;color:var(--ink2);display:flex;gap:10px;align-items:center;padding:7px 14px 7px 12px;border-radius:99px;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff,0 6px 18px -8px rgba(38,72,128,.25);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.top .brand b{width:9px;height:9px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 4px rgba(47,116,245,.15)}
+.chip{white-space:nowrap;font-size:12px;font-weight:600;color:var(--ink2);padding:7px 13px;border-radius:99px;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff,0 6px 18px -8px rgba(38,72,128,.25);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(14px)}
+
+section{position:relative;min-height:100vh;padding:120px 48px 110px;display:flex;flex-direction:column;justify-content:center;perspective:1700px;perspective-origin:50% 40%}
+.wrap{width:100%;max-width:1240px;margin:0 auto;position:relative;transform-style:preserve-3d}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
+.eyebrow span{font-variant-numeric:tabular-nums;color:var(--ink3);letter-spacing:.06em}
+h1,h2{font-weight:600;letter-spacing:-.035em;line-height:1.02;color:var(--ink)}
+h1{font-size:clamp(44px,6.6vw,96px)}
+h2{font-size:clamp(38px,4.8vw,70px);margin-top:14px}
+h2 em,h1 em{font-style:normal;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.head{margin-bottom:56px}
+.head.c{text-align:center}
+.head.c .sub{margin-left:auto;margin-right:auto}
+.sub{font-size:clamp(17px,1.45vw,21px);line-height:1.45;font-weight:450;color:var(--ink2);max-width:660px;margin-top:18px;letter-spacing:-.005em}
+#hero .sub{margin-left:auto;margin-right:auto}
+
+/* panels */
+.par{will-change:transform;transform-style:preserve-3d}
+.panel{position:relative;background:var(--panel);border-radius:28px;border:1px solid rgba(255,255,255,.95);
+  box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.55),var(--shadow);backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3)}
+.panel::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,0) 28%,rgba(255,255,255,0) 72%,rgba(200,218,242,.35) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;padding:1.5px}
+.panel::after{content:"";position:absolute;left:10%;right:10%;bottom:-46px;height:34px;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(52,86,140,.22),rgba(52,86,140,0));filter:blur(6px);pointer-events:none;transform:translateZ(-1px)}
+.rise{opacity:0;transform:perspective(1400px) translate3d(0,90px,-180px) rotateX(20deg);transform-origin:50% 100%;
+  transition:opacity 1.1s var(--ease),transform 1.6s var(--ease);transition-delay:var(--d,0s)}
+.in .rise{opacity:1;transform:perspective(1400px) translate3d(0,0,0) rotateX(0)}
+.fade{opacity:0;transform:translateY(18px);transition:opacity .9s var(--ease),transform 1.2s var(--ease);transition-delay:var(--d,0s)}
+.in .fade{opacity:1;transform:none}
+
+.label{font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+.avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(160deg,#7fb2ff,#2f74f5);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 6px 14px -6px rgba(47,116,245,.6);flex:none}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line);font-size:15px}
+.row:first-child{border-top:0}
+.row .k{color:var(--ink3)}
+.row .v{font-weight:600;text-align:right}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;background:rgba(31,180,135,.12);color:#12926b;white-space:nowrap}
+.pill.blue{background:rgba(47,116,245,.1);color:var(--blue)}
+.illus{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);border:1px dashed rgba(135,146,163,.6);padding:4px 9px;border-radius:99px;white-space:nowrap}
+
+/* HERO */
+#hero{padding-top:110px}
+#hero .wrap{display:grid;grid-template-columns:1fr;justify-items:center;text-align:center}
+#hero .kicker{font-size:15px;font-weight:500;color:var(--ink2);margin-bottom:22px}
+.hstage{position:relative;width:min(1100px,100%);height:430px;margin-top:40px;transform-style:preserve-3d}
+.hstage .par{position:absolute}
+.scrollcue{margin-top:40px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);display:flex;flex-direction:column;align-items:center;gap:10px}
+.scrollcue b{width:1.5px;height:36px;background:linear-gradient(var(--ink3),transparent);animation:cue 2.4s ease-in-out infinite}
+@keyframes cue{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+/* CLOSE */
+#close .wrap{text-align:center}
+.words{position:relative;display:flex;flex-direction:column;align-items:center;gap:22px;transform-style:preserve-3d}
+.word{padding:18px 40px 20px 30px;border-radius:99px;display:flex;align-items:center;gap:18px;font-size:clamp(40px,5.4vw,78px);font-weight:600;letter-spacing:-.04em;line-height:1}
+.word i{width:40px;height:40px;border-radius:50%;background:rgba(31,180,135,.14);display:grid;place-items:center;flex:none}
+.word i::after{content:"";width:15px;height:8px;border-left:3px solid var(--mint);border-bottom:3px solid var(--mint);transform:rotate(-45deg) translate(2px,-2px)}
+.word.w1{margin-right:280px}.word.w2{margin-left:120px}.word.w3{margin-right:160px}.word.w4{margin-left:260px}
+.word.w4 span{background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.foot{margin-top:70px;font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase}
+.ico{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.pill.amber{background:rgba(232,161,58,.14);color:#b57308}
+.pill.gray{background:rgba(135,146,163,.14);color:var(--ink2)}
+.ck{width:16px;height:16px;border-radius:50%;background:rgba(31,180,135,.16);display:inline-grid;place-items:center;flex:none}
+.ck::after{content:"";width:6px;height:3px;border-left:1.8px solid var(--mint);border-bottom:1.8px solid var(--mint);transform:rotate(-45deg) translate(.5px,-.5px)}
+
+/* HERO */
+.found{width:300px;padding:24px 26px;text-align:left}
+.found .date{font-size:14px;color:var(--ink3);font-weight:500}
+.found .big{font-size:64px;font-weight:300;letter-spacing:-.05em;line-height:1;margin-top:8px}
+.found .s{font-size:13px;color:var(--ink2);margin-top:8px;line-height:1.4}
+.found .illus{margin-top:12px}
+.hlead{width:470px;padding:22px 24px;text-align:left}
+.hlead .h{display:flex;gap:14px;align-items:center}
+.hlead .t{font-weight:700;font-size:18px}
+.hlead .s{font-size:13px;color:var(--ink3);margin-top:2px}
+.hlead .row{font-size:14.5px;padding:10px 0}
+.hlead .row .k{color:var(--ink2);font-weight:500}
+.hlead .row .v{display:flex;gap:6px;align-items:center}
+.hlead .lines{margin-top:12px}
+.onb{width:360px;padding:24px 26px;text-align:left;display:flex;gap:18px;align-items:center}
+.ring{position:relative;width:86px;height:86px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .num{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:22px;letter-spacing:-.02em}
+.onb .t{font-weight:700;font-size:20px;letter-spacing:-.02em}
+.onb .s{font-size:13.5px;color:var(--ink2);margin-top:6px;line-height:1.4}
+.onb .illus{margin-top:8px}
+.steps4{width:470px;padding:16px 18px;display:flex;justify-content:space-between;gap:8px}
+.steps4 div{flex:1;display:flex;gap:8px;align-items:center;font-size:13.5px;font-weight:600;color:var(--ink2);opacity:.35;transition:opacity .6s;white-space:nowrap}
+.steps4 div.on{opacity:1}
+.steps4 i{width:20px;height:20px;border-radius:50%;background:rgba(31,180,135,.14);display:grid;place-items:center;flex:none}
+.steps4 i::after{content:"";width:8px;height:4px;border-left:2px solid var(--mint);border-bottom:2px solid var(--mint);transform:rotate(-45deg) translate(1px,-1px)}
+
+.split{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;transform-style:preserve-3d}
+.h3{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:12px;flex-wrap:wrap}
+.h3 .illus,.h3 .ml{margin-left:auto}
+.h3 small{font-size:12.5px;color:var(--ink3);font-weight:600}
+
+/* 01 COMPANY LIST */
+.filt{padding:22px 24px}
+.fr{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line);opacity:.3;transition:opacity .6s}
+.fr:first-of-type{border-top:0}
+.fr.on{opacity:1}
+.fr .fk{font-size:12px;color:var(--ink3);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.fr .fv{display:inline-flex;margin-top:5px;font-size:14px;font-weight:600;padding:5px 10px;border-radius:8px;background:rgba(47,116,245,.08);color:#2459c4}
+.fr .fn{font-size:18px;font-weight:700;letter-spacing:-.02em;text-align:right}
+.fr .fn small{display:block;font-size:11.5px;font-weight:600;color:var(--ink3);letter-spacing:0}
+.ftot{display:flex;align-items:baseline;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.ftot b{font-size:44px;font-weight:600;letter-spacing:-.04em;line-height:1}
+.ftot span{font-size:14px;color:var(--ink2);font-weight:600}
+.clist{padding:20px 22px}
+.cr{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;padding:10px 4px;border-top:1px solid var(--line);opacity:0;transform:translateY(10px);transition:all .6s var(--ease)}
+.cr.on{opacity:1;transform:none}
+.cr:first-of-type{border-top:0}
+.lg{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff}
+.cr .n{font-size:14.5px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cr .m{font-size:12.5px;color:var(--ink3);font-weight:500;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cr>div{min-width:0}
+
+/* 02 LEAD CARD */
+#lead .split{grid-template-columns:.9fr 1.1fr}
+.site{padding:0;overflow:hidden}
+.site .ub{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);background:rgba(240,244,250,.7);border-radius:28px 28px 0 0}
+.site .ub i{width:9px;height:9px;border-radius:50%;background:#d7dde6}
+.site .ub span{margin-left:8px;flex:1;font-size:12.5px;color:var(--ink2);font-weight:600;background:#fff;border-radius:8px;padding:6px 10px;border:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.site .sb{padding:22px 26px 26px}
+.site .sh{font-size:22px;font-weight:700;letter-spacing:-.02em}
+.site p{font-size:14.5px;line-height:1.6;color:var(--ink2);margin-top:12px}
+.site mark{background:linear-gradient(90deg,rgba(255,213,79,.55),rgba(255,213,79,.55)) no-repeat 0 0/0% 100%;color:inherit;transition:background-size 1.4s var(--ease);border-radius:3px;padding:1px 0}
+.site.hl mark{background-size:100% 100%}
+.site .src{margin-top:16px;display:flex;gap:8px;align-items:center;font-size:12.5px;font-weight:700;color:#b57308;opacity:0;transition:opacity .6s}
+.site.hl .src{opacity:1}
+.lc{padding:22px 24px}
+.lc .h{display:flex;gap:14px;align-items:center}
+.lc .t{font-weight:700;font-size:20px;letter-spacing:-.02em}
+.lc .s{font-size:13px;color:var(--ink3);margin-top:2px}
+.lc .fitw{margin-left:auto;display:flex;align-items:center;gap:10px}
+.lc .ring{width:64px;height:64px}
+.lc .ring .num{font-size:18px}
+.lc .fitw .l{font-size:11.5px;font-weight:700;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase;text-align:right;line-height:1.3}
+.lf{display:grid;grid-template-columns:130px 1fr;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.lf .k{color:var(--ink3);font-weight:600}
+.lf .v{font-weight:600;display:flex;gap:6px;align-items:center;flex-wrap:wrap;min-width:0;opacity:0;transform:translateX(-8px);transition:all .6s var(--ease)}
+.lf.on .v{opacity:1;transform:none}
+.lfacts{margin-top:14px}
+.why{font-size:12.5px;font-weight:600;color:var(--ink2)}
+.fl1{margin-top:14px;padding:14px 16px;border-radius:14px;background:rgba(47,116,245,.06);box-shadow:inset 0 0 0 1.5px rgba(47,116,245,.18)}
+.fl1 .label{color:var(--blue);display:flex;gap:8px;align-items:center}
+.fl1 .tx{font-size:15px;line-height:1.5;font-weight:500;margin-top:8px;min-height:45px}
+.cur{display:inline-block;width:1.5px;height:16px;background:var(--blue);vertical-align:-2px;margin-left:1px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* 03 BREAKDOWN */
+#break .split{grid-template-columns:1.3fr .9fr;align-items:stretch}
+.fun{padding:24px 26px}
+.fb{margin-top:16px}
+.fb .top2{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;font-weight:600;color:var(--ink2)}
+.fb .top2 b{font-size:22px;color:var(--ink);letter-spacing:-.02em}
+.fb .bar{height:28px;border-radius:9px;background:rgba(150,170,200,.18);margin-top:8px;overflow:hidden}
+.fb .bar i{display:block;height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,#8ec0ff,#2f74f5);transition:width 1.6s var(--ease)}
+.fb.q .bar i{background:linear-gradient(90deg,#5fd3ad,#1fb487)}
+.drop{padding:24px 26px}
+.dr{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 0;border-top:1px solid var(--line);opacity:0;transform:translateY(8px);transition:all .6s var(--ease)}
+.dr.on{opacity:1;transform:none}
+.dr .k{font-size:14px;font-weight:600;color:var(--ink2)}
+.dr .k small{display:block;font-size:12px;color:var(--ink3);font-weight:500;margin-top:2px}
+.dr .v{font-size:20px;font-weight:700;color:#c65151;letter-spacing:-.02em}
+.dtot{margin-top:6px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.dtot b{font-size:34px;font-weight:600;letter-spacing:-.04em;color:#12926b}
+
+/* 04 CAMPAIGN */
+#camp .split{grid-template-columns:1.15fr .85fr;align-items:start}
+.cp{padding:20px 22px}
+.cph{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.cph .crumb{font-size:12.5px;color:var(--ink3);font-weight:600}
+.cph .nm{font-size:18px;font-weight:700;letter-spacing:-.01em;margin-top:2px}
+.cph .pill{margin-left:auto;transition:all .5s}
+.ctabs{display:flex;gap:4px;margin:12px 0 6px}
+.ctabs span{font-size:13px;font-weight:600;color:var(--ink3);padding:6px 11px;border-radius:8px}
+.ctabs span.a{background:rgba(47,116,245,.1);color:var(--blue)}
+.cstat{display:flex;gap:24px;align-items:flex-end;padding:10px 0 12px}
+.cstat b{font-size:40px;font-weight:600;letter-spacing:-.04em;line-height:1}
+.cstat span{font-size:13px;color:var(--ink3);font-weight:600}
+.lrow{display:grid;grid-template-columns:1.1fr 1.4fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line);font-size:13.5px;opacity:0;transform:translateX(-14px);transition:all .6s var(--ease)}
+.lrow.on{opacity:1;transform:none}
+.lrow>span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrow .nm2{font-weight:650}
+.lrow .em{color:var(--ink2)}
+.lrow.hd{opacity:1;transform:none;font-size:11.5px;font-weight:700;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase;border-top:0}
+.mail{padding:22px 24px}
+.mail .mh{font-size:12.5px;color:var(--ink3);font-weight:600;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.mail .mh div{padding:3px 0}
+.mail .mh b{color:var(--ink);font-weight:650}
+.mail .mb{font-size:15px;line-height:1.6;margin-top:14px;color:var(--ink)}
+.mail .mb p+p{margin-top:12px}
+.mail .pz{background:rgba(47,116,245,.1);box-shadow:inset 0 0 0 1px rgba(47,116,245,.25);border-radius:6px;padding:1px 4px;transition:background .6s}
+.mail .gl{display:block;height:9px;border-radius:5px;background:rgba(150,170,200,.25);margin-top:9px}
+.mail .note{margin-top:16px;font-size:12.5px;font-weight:600;color:var(--ink3);display:flex;gap:8px;align-items:center}
+
+/* 05 CLAY TABLE */
+.cwin{padding:0;overflow:hidden;border-radius:22px}
+.cwin::before{border-radius:22px}
+.cbar{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #e8ebf0;background:#fff;flex-wrap:wrap}
+.ws{width:24px;height:24px;border-radius:7px;background:#1d1d1f;color:#fff;display:grid;place-items:center;font-size:11px;font-weight:800;flex:none}
+.cbar .bc{font-size:13px;color:#8a8f98;font-weight:600;white-space:nowrap}
+.cbar .bc b{color:#1d1d1f;font-weight:700}
+.cbar .rt{margin-left:auto;display:flex;gap:10px;align-items:center}
+.cred{display:flex;gap:6px;align-items:center;font-size:12.5px;font-weight:700;color:#3b3f46;padding:6px 10px;border-radius:8px;background:#f4f5f7;border:1px solid #e8ebf0;white-space:nowrap}
+.cred i{width:12px;height:12px;border-radius:50%;background:linear-gradient(160deg,#ffd66b,#f0a020);flex:none}
+.runb{display:flex;gap:7px;align-items:center;font-size:13px;font-weight:700;color:#fff;background:#1d1d1f;padding:7px 13px;border-radius:8px;transition:transform .2s,background .4s;white-space:nowrap}
+.runb svg{width:11px;height:11px;fill:#fff}
+.runb.press{transform:scale(.93)}
+.runb.go{background:#2f74f5}
+.ctool{display:flex;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid #e8ebf0;background:#fbfbfc;flex-wrap:wrap}
+.ctool span{font-size:12.5px;font-weight:600;color:#6b707a;padding:5px 9px;border-radius:7px;display:flex;gap:6px;align-items:center;white-space:nowrap}
+.ctool span.a{background:#fff;color:#1d1d1f;box-shadow:0 0 0 1px #e3e6eb}
+.ctool .ico{width:13px;height:13px}
+.ctool .rc{margin-left:auto;color:#8a8f98}
+.gscroll{overflow-x:auto;background:#fff}
+table.cg{border-collapse:separate;border-spacing:0;table-layout:fixed;width:100%;min-width:1236px;font-size:12.5px;color:#1d1d1f}
+.cg th,.cg td{border-right:1px solid #eceef1;border-bottom:1px solid #eceef1;height:40px;padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;vertical-align:middle}
+.cg th{height:38px;background:#fafbfc;font-weight:600;color:#3b3f46;font-size:12.5px}
+.cg th .hc{display:flex;align-items:center;gap:7px;min-width:0}
+.cg th .hc span{overflow:hidden;text-overflow:ellipsis}
+.cg th .pl{margin-left:auto;width:9px;height:9px;fill:#9aa0a9;flex:none}
+.cg th.rn,.cg td.rn{width:36px;padding:0;text-align:center;color:#9aa0a9;font-weight:600;background:#fafbfc}
+.ti{width:18px;height:18px;border-radius:5px;display:grid;place-items:center;flex:none}
+.ti svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.t-txt{background:#eef0f3;color:#6b707a}.t-url{background:#e6f0ff;color:#3b6fd8}.t-ppl{background:#efe7ff;color:#7a4fd6}
+.t-enr{background:#e3f5fb;color:#1b8bb0}.t-wf{background:#e0f7ef;color:#149a6c}.t-ai{background:#ffe9f1;color:#d0457c}
+.t-ai2{background:#fff1dc;color:#c27a0e}.t-snd{background:#e9f7e1;color:#4c9a1f}
+.cg td .cv{display:flex;gap:6px;align-items:center;min-width:0}
+.cg td .cv span{overflow:hidden;text-overflow:ellipsis}
+.cg td .cv.url span{color:#3b6fd8}
+.cg td.sel{box-shadow:inset 0 0 0 2px #2f74f5;background:#f5f9ff}
+.nr{display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;color:#8a8f98;background:#f1f2f4;padding:3px 8px;border-radius:6px}
+.nt{display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;color:#a8adb5;padding:3px 0}
+.spin{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:#6b707a}
+.spin::before{content:"";width:11px;height:11px;border-radius:50%;border:2px solid #d9dde3;border-top-color:#2f74f5;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.sc{display:inline-flex;font-size:12px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(31,180,135,.14);color:#12926b}
+.sc.lo{background:rgba(232,161,58,.16);color:#b57308}
+.sp2{display:inline-flex;gap:5px;align-items:center;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(31,180,135,.14);color:#12926b}
+.cg td.pop{animation:cpop .8s var(--ease)}
+@keyframes cpop{0%{background:#eef5ff}100%{background:#fff}}
+.cdraw{display:grid;grid-template-columns:1.25fr 1fr;border-top:1px solid #e8ebf0;background:#fbfbfc}
+.cdraw>div{padding:16px 18px;min-width:0}
+.cdraw>div+div{border-left:1px solid #e8ebf0}
+.dh{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#1d1d1f;margin-bottom:10px;flex-wrap:wrap}
+.dh small{font-size:12px;color:#8a8f98;font-weight:600}
+.pv{display:grid;grid-template-columns:22px 1fr auto 62px;gap:10px;align-items:center;padding:8px 10px;border-radius:9px;background:#fff;border:1px solid #eceef1;margin-top:6px;font-size:12.5px;font-weight:600;transition:box-shadow .3s}
+.pv .ix{width:22px;height:22px;border-radius:6px;background:#f1f2f4;display:grid;place-items:center;font-size:11px;color:#6b707a;font-weight:700}
+.pv .cr2{font-size:11.5px;color:#8a8f98;text-align:right}
+.pv.act{box-shadow:0 0 0 2px rgba(47,116,245,.35)}
+.pv .res{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pv .res .sp2,.pv .res .nr{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.prm{font-size:12.5px;line-height:1.65;color:#3b3f46;background:#fff;border:1px solid #eceef1;border-radius:9px;padding:10px 12px}
+.tok{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:1px 6px;border-radius:5px;background:#efe7ff;color:#7a4fd6;white-space:nowrap}
+.tok.b{background:#e3f5fb;color:#1b8bb0}
+.dmeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.dmeta span{font-size:11.5px;font-weight:600;color:#6b707a;background:#f1f2f4;padding:3px 8px;border-radius:6px}
+#plat .chip{display:inline-block;margin-top:16px}
+
+@media (max-width:1100px){
+  #camp .split,#lead .split,#break .split{grid-template-columns:1fr 1fr}
+}
+@media (max-width:860px){
+  section{padding:100px 16px 80px;min-height:auto;perspective:1100px}
+  #hero{min-height:100vh}
+  .top{padding:14px 16px}.top .brand{font-size:12px}
+  .top .xs{display:none}
+  .head{margin-bottom:34px}
+  .hstage{height:auto;display:grid;gap:22px;margin-top:34px}
+  .hstage .par{position:relative!important;left:auto!important;right:auto!important;top:auto!important;margin:0!important;width:100%}
+  .found,.hlead,.onb,.steps4{width:100%!important}
+  .found .big{font-size:48px}
+  .steps4{flex-wrap:wrap}.steps4 div{flex:1 1 40%}
+  .split,#lead .split,#break .split,#camp .split{grid-template-columns:1fr;gap:28px}
+  .filt,.clist,.lc,.fun,.drop,.cp,.mail{padding:18px 16px}
+  .site .sb{padding:18px 18px 20px}
+  .lf{grid-template-columns:104px 1fr}
+  .lc .h{flex-wrap:wrap}
+  .lc .fitw{margin-left:0}
+  .lrow{grid-template-columns:1fr auto}
+  .cr .n,.cr .m{white-space:normal}
+  .lrow .em{display:none}
+  .cbar .rt{margin-left:0;width:100%;justify-content:space-between}
+  .ctool .rc{margin-left:0}
+  .cdraw{grid-template-columns:1fr}
+  .cdraw>div+div{border-left:0;border-top:1px solid #e8ebf0}
+  .pv{grid-template-columns:22px 1fr auto}
+  .pv .cr2{display:none}
+  .word{font-size:34px;padding:14px 24px 16px 18px}.word i{width:30px;height:30px}
+  .word.w1,.word.w2,.word.w3,.word.w4{margin:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation:none!important}}
+</style>
+
+<div class="sky"></div>
+<div class="haze"><i></i><i></i><i></i></div>
+<div class="top"><div class="brand"><b></b><span id="topName"></span><span class="xs"> · Clay</span></div><div class="chip">Sample data</div></div>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="gm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8ec0ff"/><stop offset="1" stop-color="#2f74f5"/></linearGradient>
+    <linearGradient id="gg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6fe0b9"/><stop offset="1" stop-color="#1fb487"/></linearGradient>
+    <symbol id="i-txt" viewBox="0 0 24 24"><path d="M5 6h14M12 6v13M8 19h8"/></symbol>
+    <symbol id="i-url" viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></symbol>
+    <symbol id="i-ppl" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><circle cx="17.5" cy="9" r="2.5"/><path d="M16 14.5a5 5 0 016 5"/></symbol>
+    <symbol id="i-enr" viewBox="0 0 24 24"><circle cx="10" cy="8" r="4"/><path d="M3 21a7 7 0 0112.5-4.3"/><path d="M19 14v7M15.5 17.5h7"/></symbol>
+    <symbol id="i-wf" viewBox="0 0 24 24"><path d="M4 5h16M7 11h10M10 17h4"/><path d="M12 19v3"/></symbol>
+    <symbol id="i-ai" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></symbol>
+    <symbol id="i-snd" viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2.5-6.5z"/><path d="M11.5 13.5L20 4"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></symbol>
+    <symbol id="i-sort" viewBox="0 0 24 24"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></symbol>
+    <symbol id="i-bld" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1"/></symbol>
+  </defs>
+</svg>
+
+<main>
+<!-- SCREEN: hero -->
+<section id="hero" data-run="hero">
+  <div class="wrap">
+    <div class="kicker fade" id="hKicker"></div>
+    <h1 class="fade" style="--d:.1s">1,240 companies found.<br><em>486 ready to send.</em></h1>
+    <p class="sub fade" style="--d:.2s">Clay finds US commercial cleaning companies with 20 to 200 staff, finds the owner, verifies the email and writes the opener.</p>
+    <div class="hstage">
+      <div class="par" data-z="-0.6" style="left:0;top:40px"><div class="panel found rise" style="--d:.35s">
+        <div class="date" id="hFoundL"></div><div class="big" id="hFound">0</div><div class="s" id="hFoundS"></div><span class="illus">Illustrative</span>
+      </div></div>
+      <div class="par" data-z="0.5" style="left:50%;top:0;margin-left:-235px"><div class="panel hlead rise" style="--d:.5s">
+        <div class="h"><div class="avatar" id="hAv"></div><div><div class="t" id="hName"></div><div class="s" id="hCo"></div></div></div>
+        <div class="lines" id="hRows"></div>
+      </div></div>
+      <div class="par" data-z="1.1" style="right:0;top:170px"><div class="panel onb rise" style="--d:.8s">
+        <div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="rgba(150,170,200,.25)" stroke-width="7"/><circle id="hring" cx="50" cy="50" r="44" fill="none" stroke="url(#gg)" stroke-width="7" stroke-linecap="round" stroke-dasharray="276.5" stroke-dashoffset="276.5"/></svg><div class="num" id="hQual">0</div></div>
+        <div><div class="t" id="hRingT"></div><div class="s" id="hRingS"></div></div>
+      </div></div>
+      <div class="par" data-z="0.9" style="left:50%;top:296px;margin-left:-235px"><div class="panel steps4 rise" style="--d:1s" id="hSteps"></div></div>
+    </div>
+    <div class="scrollcue fade" style="--d:1.4s">Scroll<b></b></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: company list -->
+<section id="list" data-run="list">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>01</span>Company list</div><h2 class="fade" style="--d:.1s">Your ICP, <em>filtered and counted.</em></h2><p class="sub fade" style="--d:.2s">Clay pulls every company that matches your filters and shows how many are left after each one.</p></div>
+    <div class="split">
+      <div class="par" data-z="0.4"><div class="panel filt rise" style="--d:.2s">
+        <div class="h3"><svg class="ico" style="color:var(--blue)"><use href="#i-filter"/></svg>Company search filters<span class="illus">Illustrative</span></div>
+        <div id="filters"></div>
+        <div class="ftot"><b id="fTot">0</b><span>companies match your ICP</span></div>
+      </div></div>
+      <div class="par" data-z="1.1"><div class="panel clist rise" style="--d:.45s">
+        <div class="h3"><svg class="ico" style="color:var(--blue)"><use href="#i-bld"/></svg>Matching companies<small class="ml" id="cShow"></small></div>
+        <div id="companies"></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: enriched lead card -->
+<section id="lead" data-run="lead">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>02</span>Lead card</div><h2 class="fade" style="--d:.1s">One lead, <em>fully researched.</em></h2><p class="sub fade" style="--d:.2s">Each company gets its owner, a verified email, key facts, a fit score and an opening line taken from its own website.</p></div>
+    <div class="split">
+      <div class="par" data-z="0.4"><div class="panel site rise" id="site" style="--d:.2s">
+        <div class="ub"><i></i><i></i><i></i><span id="sUrl"></span></div>
+        <div class="sb"><div class="sh" id="sHead"></div><p id="sBody"></p><div class="src"><svg class="ico"><use href="#i-ai"/></svg><span id="sSrc"></span></div></div>
+      </div></div>
+      <div class="par" data-z="1.1"><div class="panel lc rise" style="--d:.45s">
+        <div class="h"><div class="avatar" id="lAv"></div><div><div class="t" id="lName"></div><div class="s" id="lRole"></div></div>
+          <div class="fitw"><div class="l">AI fit<br>score</div><div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="rgba(150,170,200,.25)" stroke-width="9"/><circle id="lring" cx="50" cy="50" r="42" fill="none" stroke="url(#gg)" stroke-width="9" stroke-linecap="round" stroke-dasharray="263.9" stroke-dashoffset="263.9"/></svg><div class="num" id="lFit">0</div></div></div></div>
+        <div class="lfacts" id="lFacts"></div>
+        <div class="fl1"><div class="label"><svg class="ico"><use href="#i-ai"/></svg>Personalized first line</div><div class="tx"><span id="lLine"></span><span class="cur" id="lCur" style="display:none"></span></div></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: qualified vs dropped -->
+<section id="break" data-run="break">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>03</span>Breakdown</div><h2 class="fade" style="--d:.1s">1,240 found. <em>486 worth emailing.</em></h2><p class="sub fade" style="--d:.2s">Leads without a decision maker, a verified email or a strong fit score are dropped before anything is sent.</p></div>
+    <div class="split">
+      <div class="par" data-z="0.4"><div class="panel fun rise" style="--d:.2s">
+        <div class="h3">From found to qualified<span class="illus">Illustrative</span></div>
+        <div id="funnel"></div>
+      </div></div>
+      <div class="par" data-z="1.1"><div class="panel drop rise" style="--d:.45s">
+        <div class="h3">Dropped, and why<span class="illus">Illustrative</span></div>
+        <div id="drops"></div>
+        <div class="dtot"><span class="why" id="dTotL"></span><b id="dTot">0</b></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: campaign -->
+<section id="camp" data-run="camp">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>04</span>Campaign</div><h2 class="fade" style="--d:.1s">Qualified leads, <em>ready to send.</em></h2><p class="sub fade" style="--d:.2s">Only the qualified leads go to the campaign, each with its personalized first line already filled in.</p></div>
+    <div class="split">
+      <div class="par" data-z="0.4"><div class="panel cp rise" style="--d:.2s">
+        <div class="cph"><div><div class="crumb" id="cCrumb"></div><div class="nm" id="cName"></div></div><span class="pill gray" id="cStat"></span></div>
+        <div class="ctabs"><span class="a">Leads</span><span>Sequence</span><span>Schedule</span><span>Analytics</span></div>
+        <div class="cstat"><div><b id="cCount">0</b></div><span id="cCountL"></span><span class="illus" style="margin-left:auto">Illustrative</span></div>
+        <div id="cLeads"></div>
+      </div></div>
+      <div class="par" data-z="1.1"><div class="panel mail rise" style="--d:.45s">
+        <div class="mh" id="mHead"></div>
+        <div class="mb" id="mBody"></div>
+        <div class="note"><svg class="ico"><use href="#i-ai"/></svg><span id="mNote"></span></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: platform (Clay table) -->
+<section id="plat" data-run="plat">
+  <div class="wrap">
+    <div class="head c"><div class="eyebrow fade"><span>05</span>In your Clay</div><h2 class="fade" style="--d:.1s">This is what it will look like<br><em>in your Clay table.</em></h2><p class="sub fade" style="--d:.2s">Each column runs left to right: find the owner, enrich them, try email providers in order, score, write the line, send.</p><div class="chip fade" style="--d:.25s">Your lead table in Clay · illustrative</div></div>
+    <div class="par" data-z="0.3"><div class="panel cwin rise" style="--d:.3s">
+      <div class="cbar"><span class="ws">W</span><span class="bc" id="tCrumb"></span><div class="rt"><span class="cred"><i></i><span id="tCred"></span> credits</span><span class="runb" id="runb"><svg viewBox="0 0 24 24"><use href="#i-play"/></svg><span id="runt">Run column</span></span></div></div>
+      <div class="ctool"><span class="a"><svg class="ico"><use href="#i-grid"/></svg>Default view</span><span><svg class="ico"><use href="#i-filter"/></svg>Filter</span><span><svg class="ico"><use href="#i-sort"/></svg>Sort</span><span><svg class="ico"><use href="#i-plus"/></svg>Add enrichment</span><span class="rc" id="tRows"></span></div>
+      <div class="gscroll"><table class="cg" id="cg"></table></div>
+      <div class="cdraw">
+        <div><div class="dh"><span class="ti t-wf"><svg><use href="#i-wf"/></svg></span>Waterfall email<small id="wfRow"></small></div><div id="wf"></div></div>
+        <div><div class="dh"><span class="ti t-ai2"><svg><use href="#i-ai"/></svg></span>AI: First line<small>prompt</small></div><div class="prm" id="prm"></div><div class="dmeta" id="pmeta"></div></div>
+      </div>
+    </div></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: close -->
+<section id="close" data-run="close">
+  <div class="wrap">
+    <div class="words" id="words"></div>
+    <div class="foot fade" style="--d:1.2s" id="cFoot"></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+</main>
+
+<script>
+/* ============ SAMPLE CONTENT: a real job edits this object and the headlines ============ */
+const DATA={
+ name:'Enriched lead list',
+ hero:{kicker:'B2B agency · Clay lead list for cold email',foundL:'This week · ICP search',found:1240,foundS:'US commercial cleaning, 20 to 200 staff',
+   lead:{init:'MH',name:'Marcus Hale',co:'Owner · BrightPath Commercial Cleaning',
+     rows:[['Email','marcus@brightpathclean.com','Verified'],['AI fit score','87 / 100']]},
+   qual:486,ringT:'486 qualified',ringS:'Verified, scored and in the campaign',steps:['Found','Enriched','Scored','Sent']},
+ /* 01 */
+ filters:[['Industry','Commercial cleaning & janitorial',18420],['Country','United States',9860],['Employees','20 to 200',2310],['Has a website','Yes',1240]],
+ companies:[
+  ['BP','BrightPath Commercial Cleaning','Denver, CO · 64 employees','#2f74f5'],
+  ['EF','Evergreen Facility Services','Portland, OR · 120 employees','#1fb487'],
+  ['LO','Lakeshore Office Care','Chicago, IL · 38 employees','#7a4fd6'],
+  ['RC','Redwood Commercial Services','Sacramento, CA · 150 employees','#d0457c'],
+  ['PC','Pinnacle Clean Solutions','Austin, TX · 30 employees','#e8a13a'],
+  ['SJ','Summit Janitorial Group','Salt Lake City, UT · 45 employees','#1b8bb0']
+ ],
+ companiesShown:'Showing 6 of 1,240',
+ /* 02 */
+ site:{url:'brightpathclean.com/about',head:'Clean spaces, healthy teams.',
+   before:'Founded in 2011, BrightPath keeps Denver workplaces spotless. ',
+   mark:'Our dedicated infection-control crew services more than 40 medical and dental offices across the metro.',
+   after:' We also clean offices, schools and warehouses on nightly and weekly contracts.',
+   src:'First line written from this sentence'},
+ lead:{init:'MH',name:'Marcus Hale',role:'Owner · BrightPath Commercial Cleaning',fit:87,
+   facts:[['Verified email','marcus@brightpathclean.com','Verified'],['Location','Denver, CO'],['Employees','64'],['Main work','Medical and dental offices'],['Why it fits','US, right size, recurring contracts']],
+   line:'Saw your infection-control crew covers 40+ medical and dental offices around Denver.'},
+ /* 03 */
+ funnel:[['Companies found',1240],['Decision maker found',1034],['Verified email',812],['Fit score 70 or higher',486,1]],
+ drops:[['No decision maker found','Owner or executive not listed',206],['No verified email','Every provider tried',222],['Fit score below 70','Too small, residential or franchise',326]],
+ dropTotL:'Qualified and sent to the campaign',
+ /* 04 */
+ camp:{crumb:'Instantly · Campaigns',name:'Commercial cleaning owners · Q4',draft:'Draft',live:'Scheduled · Mon 8:00 AM',countL:'leads added from Clay',
+   leads:[['Marcus Hale','marcus@brightpathclean.com'],['Dana Ruiz','dana@evergreenfs.com'],['Priya Nand','priya@lakeshoreofficecare.com'],['Alicia Moreno','alicia@redwoodcs.com'],['James Carter','james@pinnacleclean.com']],
+   ready:'Ready',
+   mail:{from:'Jordan Blake',to:'marcus@brightpathclean.com',subj:'Medical office contracts in Denver',hi:'Hi Marcus,',
+     body:['We help cleaning companies win more recurring office and clinic contracts without adding sales staff.','Worth a quick chat next week?'],sign:'Jordan'},
+   note:'The first line comes from Clay for every lead'},
+ /* 05 platform */
+ table:{crumb:['Lead gen','US commercial cleaning · 20 to 200'],credits:4850,rows:'1,240 rows',
+   cols:[['Company','t-txt','i-txt',156],['Domain','t-url','i-url',150],['Find people','t-ppl','i-ppl',124,1],['Enrich person','t-enr','i-enr',124,1],['Waterfall email','t-wf','i-wf',184,1],['AI: Fit score','t-ai','i-ai',122,1],['AI: First line','t-ai2','i-ai',186,1],['Send to Instantly','t-snd','i-snd',154,1]],
+   /* co, domain, person found, enriched location, email (null = no result), fit, first line */
+   data:[
+    ['BrightPath Commercial Cleaning','brightpathclean.com','Marcus Hale','Denver, CO','marcus@brightpathclean.com',87,'Saw your infection-control crew covers 40+ medical and dental offices around Denver.'],
+    ['Evergreen Facility Services','evergreenfs.com','Dana Ruiz','Portland, OR','dana@evergreenfs.com',81,'Noticed Evergreen runs day-porter crews for Class A offices downtown.'],
+    ['Summit Janitorial Group','summitjanitorial.com','Kevin Oduya','Salt Lake City, UT',null],
+    ['Lakeshore Office Care','lakeshoreofficecare.com','Priya Nand','Chicago, IL','priya@lakeshoreofficecare.com',74,'Saw Lakeshore added green-certified cleaning for Chicago law firms.'],
+    ['Crestline Building Maintenance','crestlinebm.com',null],
+    ['Harborview Cleaning Co.','harborviewclean.com','Tom Becker','Seattle, WA','tom@harborviewclean.com',52],
+    ['Redwood Commercial Services','redwoodcs.com','Alicia Moreno','Sacramento, CA','alicia@redwoodcs.com',90,'Noticed Redwood cleans for 12 school districts across Sacramento County.'],
+    ['Pinnacle Clean Solutions','pinnacleclean.com','James Carter','Austin, TX','james@pinnacleclean.com',78,'Saw Pinnacle does overnight floor care for grocery chains in Austin.']
+   ],
+   fitMin:70,noResult:'No result',notRun:'Not run',sent:'Sent',
+   wfRow:'row 1 · BrightPath',
+   /* providers tried in order for the selected row: [name, result or null, credits] */
+   providers:[['Provider 1',null,'1 credit'],['Provider 2',null,'1 credit'],['Provider 3','marcus@brightpathclean.com','1 credit'],['Email validation','Valid','1 credit']],
+   prompt:['Read ',['tok b','Website text'],' for ',['tok','Company'],'. Write one sentence under 16 words naming one specific thing they do. No praise and no pitch.'],
+   pmeta:['Runs if Fit score is 70 or higher','1 credit per row']},
+ close:{words:['Found.','Enriched.','Scored.','Sent.'],foot:'Your Clay · enriched lead list'}
+};
+
+(function(){
+const $=id=>document.getElementById(id);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const ease=t=>1-Math.pow(1-t,3);
+const fmt=v=>Math.round(v).toLocaleString('en-US');
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+function count(el,a,b,dur,f,cb){const t0=performance.now();(function g(n){const p=Math.min(1,(n-t0)/dur),v=a+(b-a)*ease(p);if(cb)cb(v,p);if(el)el.textContent=f?f(v):fmt(v);if(p<1)requestAnimationFrame(g)})(t0)}
+const ck='<span class="ck"></span>';
+
+/* ---------- render from DATA ---------- */
+const D=DATA,H=D.hero;
+$('topName').textContent=D.name;
+$('hKicker').textContent=H.kicker;$('hFoundL').textContent=H.foundL;$('hFoundS').textContent=H.foundS;
+$('hAv').textContent=H.lead.init;$('hName').textContent=H.lead.name;$('hCo').textContent=H.lead.co;
+$('hRows').innerHTML=H.lead.rows.map(r=>'<div class="row"><span class="k">'+esc(r[0])+'</span><span class="v">'+esc(r[1])+(r[2]?'<span class="pill">'+esc(r[2])+'</span>':'')+'</span></div>').join('');
+$('hRingT').textContent=H.ringT;$('hRingS').textContent=H.ringS;
+$('hSteps').innerHTML=H.steps.map((s,i)=>'<div id="st'+i+'"><i></i>'+esc(s)+'</div>').join('');
+
+$('filters').innerHTML=D.filters.map((f,i)=>'<div class="fr" id="fr'+i+'"><div><div class="fk">'+esc(f[0])+'</div><span class="fv">'+esc(f[1])+'</span></div><div class="fn"><span id="fn'+i+'">0</span><small>companies</small></div></div>').join('');
+$('companies').innerHTML=D.companies.map(c=>'<div class="cr"><span class="lg" style="background:'+c[3]+'">'+esc(c[0])+'</span><div><div class="n">'+esc(c[1])+'</div><div class="m">'+esc(c[2])+'</div></div><span class="pill">ICP match</span></div>').join('');
+$('cShow').textContent=D.companiesShown;
+
+const S=D.site;$('sUrl').textContent=S.url;$('sHead').textContent=S.head;
+$('sBody').innerHTML=esc(S.before)+'<mark>'+esc(S.mark)+'</mark>'+esc(S.after);$('sSrc').textContent=S.src;
+const L=D.lead;$('lAv').textContent=L.init;$('lName').textContent=L.name;$('lRole').textContent=L.role;
+$('lFacts').innerHTML=L.facts.map(f=>'<div class="lf"><span class="k">'+esc(f[0])+'</span><span class="v">'+esc(f[1])+(f[2]?'<span class="pill">'+esc(f[2])+'</span>':'')+'</span></div>').join('');
+
+const F0=D.funnel[0][1];
+$('funnel').innerHTML=D.funnel.map((f,i)=>'<div class="fb'+(f[2]?' q':'')+'"><div class="top2"><span>'+esc(f[0])+'</span><b id="fv'+i+'">0</b></div><div class="bar"><i data-w="'+(f[1]/F0*100).toFixed(1)+'"></i></div></div>').join('');
+$('drops').innerHTML=D.drops.map((d,i)=>'<div class="dr"><div class="k">'+esc(d[0])+'<small>'+esc(d[1])+'</small></div><div class="v">−'+fmt(d[2])+'</div></div>').join('');
+$('dTotL').textContent=D.dropTotL;
+
+const C=D.camp;$('cCrumb').textContent=C.crumb;$('cName').textContent=C.name;$('cStat').textContent=C.draft;$('cCountL').textContent=C.countL;
+$('cLeads').innerHTML='<div class="lrow hd"><span>Lead</span><span class="em">Email</span><span>Status</span></div>'+C.leads.map(l=>'<div class="lrow"><span class="nm2">'+esc(l[0])+'</span><span class="em">'+esc(l[1])+'</span><span class="pill">'+esc(C.ready)+'</span></div>').join('');
+const M=C.mail;
+$('mHead').innerHTML='<div>From <b>'+esc(M.from)+'</b></div><div>To <b>'+esc(M.to)+'</b></div><div>Subject <b>'+esc(M.subj)+'</b></div>';
+$('mBody').innerHTML='<p>'+esc(M.hi)+'</p><p><span class="pz">'+esc(L.line)+'</span></p>'+M.body.map(b=>'<p>'+esc(b)+'</p>').join('')+'<p>'+esc(M.sign)+'</p>';
+$('mNote').textContent=C.note;
+
+const T=D.table;
+$('tCrumb').innerHTML=esc(T.crumb[0])+' / <b>'+esc(T.crumb[1])+'</b>';$('tCred').textContent=fmt(T.credits);$('tRows').textContent=T.rows;$('wfRow').textContent=T.wfRow;
+let tb='<colgroup><col style="width:36px">'+T.cols.map(c=>'<col style="width:'+c[3]+'px">').join('')+'</colgroup><thead><tr><th class="rn"></th>'+
+ T.cols.map(c=>'<th><div class="hc"><span class="ti '+c[1]+'"><svg><use href="#'+c[2]+'"/></svg></span><span>'+esc(c[0])+'</span></div></th>').join('')+'</tr></thead><tbody>';
+T.data.forEach((r,i)=>{tb+='<tr><td class="rn">'+(i+1)+'</td><td><div class="cv"><span>'+esc(r[0])+'</span></div></td><td><div class="cv url"><span>'+esc(r[1])+'</span></div></td>';
+ for(let c=2;c<T.cols.length;c++)tb+='<td id="c'+i+'_'+c+'"></td>';tb+='</tr>'});
+$('cg').innerHTML=tb+'</tbody>';
+$('wf').innerHTML=T.providers.map((p,i)=>'<div class="pv" id="pv'+i+'"><span class="ix">'+(i+1)+'</span><span>'+esc(p[0])+'</span><span class="res" id="pr'+i+'"><span class="nt">Waiting</span></span><span class="cr2">'+esc(p[2])+'</span></div>').join('');
+$('prm').innerHTML=T.prompt.map(p=>Array.isArray(p)?'<span class="'+p[0]+'">'+esc(p[1])+'</span>':esc(p)).join('');
+$('pmeta').innerHTML=T.pmeta.map(m=>'<span>'+esc(m)+'</span>').join('');
+
+const ws=['w1','w2','w3','w4'],zs=[0.3,0.8,1.2,1.6];
+$('words').innerHTML=D.close.words.map((w,i)=>'<div class="par" data-z="'+zs[i]+'"><div class="panel word '+ws[i]+' rise" style="--d:'+(0.1+i*0.25)+'s"><i></i>'+(i===3?'<span>'+esc(w)+'</span>':esc(w))+'</div></div>').join('');
+$('cFoot').textContent=D.close.foot;
+
+/* ---------- Clay table cell values ---------- */
+function cellFor(r,c){ /* returns [html,credits] or null when the row stops before this column */
+ const person=r[2],email=r[4],fit=r[5],line=r[6];
+ const nr='<span class="nr">'+T.noResult+'</span>',nt='<span class="nt">'+T.notRun+'</span>';
+ switch(c){
+  case 2:return person===null?[nr,1]:['<div class="cv">'+ck+'<span>'+esc(person)+'</span></div>',1];
+  case 3:return person===null?[nt,0]:['<div class="cv">'+ck+'<span>'+esc(r[3])+'</span></div>',1];
+  case 4:if(person===null)return[nt,0];return email===null?[nr,3]:['<div class="cv">'+ck+'<span>'+esc(email)+'</span></div>',2];
+  case 5:if(!email)return[nt,0];return['<span class="sc'+(fit<T.fitMin?' lo':'')+'">'+fit+'</span>',1];
+  case 6:if(!email||fit<T.fitMin)return[nt,0];return['<div class="cv"><span>'+esc(line)+'</span></div>',1];
+  case 7:if(!email||fit<T.fitMin)return[nt,0];return['<span class="sp2"><span class="ck"></span>'+T.sent+'</span>',0];
+ }}
+let credits=T.credits;
+function spend(n){if(!n)return;const a=credits;credits-=n;count($('tCred'),a,credits,500)}
+
+/* ---------- runners ---------- */
+const R={
+ hero:async()=>{count($('hFound'),0,H.found,2000);count($('hQual'),0,H.qual,2400,null,v=>{$('hring').style.strokeDashoffset=276.5*(1-v/H.found)});
+  for(let i=0;i<H.steps.length;i++){await wait(650);$('st'+i).classList.add('on')}},
+ list:async()=>{await wait(800);let prev=0;
+  for(let i=0;i<D.filters.length;i++){$('fr'+i).classList.add('on');count($('fn'+i),0,D.filters[i][2],900);count($('fTot'),prev||0,D.filters[i][2],900);prev=D.filters[i][2];await wait(1000)}
+  for(const c of document.querySelectorAll('.cr')){c.classList.add('on');await wait(260)}},
+ lead:async()=>{await wait(900);$('site').classList.add('hl');await wait(1200);
+  for(const f of document.querySelectorAll('.lf')){f.classList.add('on');await wait(300)}
+  count($('lFit'),0,L.fit,1400,null,v=>{$('lring').style.strokeDashoffset=263.9*(1-v/100)});await wait(900);
+  const el=$('lLine'),cur=$('lCur');cur.style.display='inline-block';for(let i=1;i<=L.line.length;i++){el.textContent=L.line.slice(0,i);await wait(26)}await wait(1200);cur.style.display='none'},
+ break:async()=>{await wait(600);
+  document.querySelectorAll('.fb').forEach((f,i)=>{setTimeout(()=>{f.querySelector('.bar i').style.width=f.querySelector('.bar i').dataset.w+'%';count($('fv'+i),0,D.funnel[i][1],1400)},i*350)});
+  await wait(1200);for(const d of document.querySelectorAll('.dr')){d.classList.add('on');await wait(350)}
+  count($('dTot'),0,D.funnel[D.funnel.length-1][1],1200)},
+ camp:async()=>{await wait(800);count($('cCount'),0,H.qual,2200);
+  for(const r of document.querySelectorAll('.lrow:not(.hd)')){r.classList.add('on');await wait(330)}
+  await wait(500);const s=$('cStat');s.classList.remove('gray');s.textContent=C.live},
+ plat:async()=>{await wait(1400);const rb=$('runb');rb.classList.add('press');await wait(200);rb.classList.remove('press');rb.classList.add('go');$('runt').textContent='Running';
+  for(let c=2;c<T.cols.length;c++){
+   const live=[];T.data.forEach((r,i)=>{const td=$('c'+i+'_'+c);const v=cellFor(r,c);if(v[0].indexOf('class="nt"')<0||c===2){td.innerHTML='<span class="spin">Running</span>';live.push(i)}});
+   if(c===4){ /* waterfall: show providers tried in order for row 1 */
+    const td=$('c0_4');td.classList.add('sel');
+    for(let p=0;p<T.providers.length;p++){const pv=$('pv'+p),pr=$('pr'+p),P=T.providers[p];pv.classList.add('act');pr.innerHTML='<span class="spin">Trying</span>';await wait(520);
+     pr.innerHTML=P[1]===null?'<span class="nr">'+T.noResult+'</span>':'<span class="sp2"><span class="ck"></span>'+esc(P[1])+'</span>';pv.classList.remove('act')}
+   } else await wait(500);
+   for(let i=0;i<T.data.length;i++){const td=$('c'+i+'_'+c),v=cellFor(T.data[i],c);td.innerHTML=v[0];if(v[1]){td.classList.remove('pop');void td.offsetWidth;td.classList.add('pop');spend(v[1])}await wait(110)}
+   await wait(350)}
+  rb.classList.remove('go');$('runt').textContent='Run column'},
+ close:async()=>{}
+};
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const s=e.target;s.classList.add('in');io.unobserve(s);const f=R[s.dataset.run];if(f)f()}}),{threshold:.22});
+document.querySelectorAll('section').forEach(s=>io.observe(s));
+
+/* spatial parallax */
+const pars=[...document.querySelectorAll('.par')].map(el=>({el,z:parseFloat(el.dataset.z||0),sec:el.closest('section')}));
+let mx=0,my=0,tx=0,ty=0;addEventListener('mousemove',e=>{tx=e.clientX/innerWidth-.5;ty=e.clientY/innerHeight-.5},{passive:true});
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(){mx+=(tx-mx)*.06;my+=(ty-my)*.06;const vh=innerHeight,small=innerWidth<860,amp=reduce?0:(small?.35:1);
+ document.documentElement.style.setProperty('--sp',(scrollY/(document.body.scrollHeight-vh||1)).toFixed(3));
+ for(const p of pars){const r=p.sec.getBoundingClientRect();if(r.bottom<-200||r.top>vh+200)continue;
+  const t=Math.max(-1.2,Math.min(1.2,(r.top+Math.min(r.height,vh)/2-vh/2)/vh));
+  const y=-t*p.z*70*amp,rx=Math.max(-10,Math.min(12,t*9*(0.5+p.z*.4)))*amp,x=small?0:mx*p.z*-16*amp,ry=small?0:mx*p.z*3*amp;
+  p.el.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,'+(p.z*20*amp).toFixed(1)+'px) rotateX('+rx.toFixed(2)+'deg) rotateY('+ry.toFixed(2)+'deg)'}
+ requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+})();
+</script>

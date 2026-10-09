@@ -5,8 +5,8 @@ The Upwork MCP can only be called by the agent, so the main session saves the
 raw MCP responses as JSON and this script does the deterministic part:
 
   python3 sync_outcomes.py --proposals proposals.json \
-      [--rooms rooms.json] [--contracts contracts.json] \
-      [--csv proposals.csv] [--dry-run] [--report]
+      [--rooms rooms.json] [--contracts contracts.json] [--insights insights.json] \
+      [--fill-boosted] [--csv proposals.csv] [--dry-run] [--report]
   python3 sync_outcomes.py --report            # rates only, no sync
 
 Inputs (all raw MCP output, see OUTCOMES.md):
@@ -22,8 +22,15 @@ Inputs (all raw MCP output, see OUTCOMES.md):
                Archived. Every other contract is listed as unmatched.
 
 What Upwork can tell us (observed 2026-09-22):
-  viewed       NOT exposed per proposal. Only inferred: a client reply,
+  viewed       NOT exposed per proposal. Inferred: a client reply,
                interview, hire or "Declined by client" implies they opened it.
+               With --insights (action=get responses), an open proposal
+               (Accepted / Activated / Offered) whose job shows proposals_opened,
+               messaged and shortlisted all 0 gets "no" (upgraded to yes by a
+               later reply, interview or hire). The counts never give "yes":
+               they are job-level and may not include our proposal. Closed
+               proposals get nothing from insights.
+  boosted      with --fill-boosted, a blank cell gets the proposal's boosted flag.
   replied      a room exists for the proposal (freelancers cannot message
                first), or status Activated / Offered / Hired.
   interviewed  status Activated ("Invitation accepted" label; the proposal is
@@ -90,6 +97,7 @@ STATUS_YES = {
     "Declined": {"viewed"},
 }
 CLOSED_STATUSES = {"Archived", "Declined", "Withdrawn"}
+OPEN_STATUSES = {"Accepted", "Activated", "Offered"}  # still open; a later sync can upgrade them
 OUTCOME_VALUES = {"", "yes", "no"}
 UPWORK_JOB_URL = re.compile(r"^https?://(?:www\.)?upwork\.com/(?:jobs|freelance-jobs)/\S*~\d{10,}\S*$")
 JOB_URL_IN_TEXT = re.compile(r"upwork\.com/[^\s,\"]*?(~[0-9]{10,})")
@@ -166,6 +174,7 @@ def _proposal_from_node(node):
         "reason": reason.get("reason", "") if isinstance(reason, dict) else str(reason),
         "created": _display(audit.get("createdDateTime")),
         "modified": _display(audit.get("modifiedDateTime")),
+        "boosted": node.get("boosted") if isinstance(node.get("boosted"), bool) else None,
     }
 
 
@@ -225,6 +234,53 @@ def extract_rooms(obj):
         if isinstance(room, dict) and room.get("id"):
             rooms[pid] = room
     return rooms, not_found
+
+
+def extract_insights(obj):
+    # type: (Any) -> Dict[str, Dict[str, Any]]
+    """{proposal_id: insights} from saved list_freelancer_proposals action=get
+    responses: {"<proposal_id>": <response>} or a list of responses (the id is
+    then read from data.vendorProposal.id). Responses without insights are left out."""
+    items = []  # type: List[Tuple[str, Any]]
+    if isinstance(obj, dict):
+        items = [(str(k), v) for k, v in obj.items()]
+    elif isinstance(obj, list):
+        for x in obj:
+            if isinstance(x, dict):
+                pid = ((x.get("data") or {}).get("vendorProposal") or {}).get("id", "")
+                items.append((str(pid), x))
+    out = {}  # type: Dict[str, Dict[str, Any]]
+    for pid, resp in items:
+        if pid and isinstance(resp, dict) and isinstance(resp.get("insights"), dict):
+            out[pid] = resp["insights"]
+    return out
+
+
+def viewed_from_insights(p, ins):
+    # type: (Dict[str, Any], Optional[Dict[str, Any]]) -> str
+    """"no" / "" for `viewed` from the job's proposal counts (get action).
+
+    The counts are per job and may not include our proposal (Upwork: "Averages
+    describe the other applicants for this job"), so they never prove a view:
+    "yes" is never returned. None opened, none messaged and none shortlisted
+    means ours was not opened yet, and that "no" is written only while the
+    proposal is open (OPEN_STATUSES), so a later sync that sees a reply,
+    interview or hire can still upgrade it. Closed proposals and counts
+    computed before our proposal existed give "". """
+    if not ins or p.get("status") not in OPEN_STATUSES:
+        return ""
+    try:
+        opened = int(ins.get("proposals_opened"))
+        messaged = int(ins.get("messaged") or 0)
+        shortlisted = int(ins.get("shortlisted") or 0)
+    except (TypeError, ValueError):
+        return ""
+    computed = str(ins.get("computed_at") or "")[:19]
+    if not computed or not p.get("created") or computed <= p["created"][:19]:
+        return ""
+    if opened == 0 and messaged == 0 and shortlisted == 0:
+        return "no"
+    return ""
 
 
 def extract_contracts(obj):
@@ -299,8 +355,8 @@ def load_json(path):
 
 # ---------------------------------------------------------------- outcomes
 
-def outcomes_for(p, rooms, no_rooms, hires):
-    # type: (Dict[str, Any], Dict[str, Any], set, Dict[str, List[str]]) -> Dict[str, str]
+def outcomes_for(p, rooms, no_rooms, hires, insights=None):
+    # type: (Dict[str, Any], Dict[str, Any], set, Dict[str, List[str]], Optional[Dict[str, Dict[str, Any]]]) -> Dict[str, str]
     pid = p["proposal_id"]
     yes = set(STATUS_YES.get(p["status"], set()))
     if pid in rooms:
@@ -308,6 +364,9 @@ def outcomes_for(p, rooms, no_rooms, hires):
     if pid in hires:
         yes |= {"viewed", "replied", "interviewed", "hired"}
     result = {f: "yes" for f in yes}
+    seen = viewed_from_insights(p, (insights or {}).get(pid))
+    if seen:
+        result.setdefault("viewed", seen)
     if p["status"] in CLOSED_STATUSES:
         result.setdefault("hired", "no")
         if pid in no_rooms:  # explicit NOT_FOUND from get_room: the client never messaged
@@ -399,13 +458,15 @@ def match_rows(rows, proposals, skip=(), reserved=(), blocked=None):
     return matches, unmatched, ambiguous
 
 
-def apply_outcomes(rows, matches, rooms, no_rooms, hires):
-    # type: (List[Dict[str, str]], Dict[int, Tuple[Dict[str, Any], str]], Dict[str, Any], set, Dict[str, List[str]]) -> List[Dict[str, Any]]
-    """Mutate rows in place; return one change record per changed row."""
+def apply_outcomes(rows, matches, rooms, no_rooms, hires, insights=None, fill_boosted=False):
+    # type: (List[Dict[str, str]], Dict[int, Tuple[Dict[str, Any], str]], Dict[str, Any], set, Dict[str, List[str]], Optional[Dict[str, Dict[str, Any]]], bool) -> List[Dict[str, Any]]
+    """Mutate rows in place; return one change record per changed row.
+    fill_boosted: a blank boosted cell gets the proposal's boosted flag (yes/no);
+    a filled one is never changed, and a boosted-only change adds no note."""
     changes = []
     for i, (p, how) in sorted(matches.items()):
         row = rows[i]
-        new = outcomes_for(p, rooms, no_rooms, hires)
+        new = outcomes_for(p, rooms, no_rooms, hires, insights)
         changed = {}
         for f in OUTCOME_FIELDS:
             v = new.get(f, "")
@@ -425,6 +486,10 @@ def apply_outcomes(rows, matches, rooms, no_rooms, hires):
             row.pop(None, None)
             row["notes"] = (notes + "; " + note) if notes else note
             note_added = True
+        if fill_boosted and "boosted" in row and not (row.get("boosted") or "").strip() \
+                and p.get("boosted") is not None:
+            row["boosted"] = "yes" if p["boosted"] else "no"
+            changed["boosted"] = ("", row["boosted"])
         if changed or note_added:
             changes.append({"row": i, "title": row.get("job_title", ""), "how": how,
                             "status": p["status"], "changed": changed})
@@ -809,12 +874,15 @@ def summarize(rows, matches, changes, unmatched, unmatched_contracts=(), skip=No
         out.write("UNMATCHED: row %d (%s) has no job_url and its exact title is that of job %s, already "
                   "claimed by another row; not prefix-matched to a different job. Add this row's job_url\n"
                   % (i + 1, (rows[i].get("job_title") or "")[:50], ", ".join(jids)))
-    newly = {f: {"yes": 0, "no": 0} for f in OUTCOME_FIELDS}
+    fields = list(OUTCOME_FIELDS)
+    if any("boosted" in c["changed"] for c in changes):
+        fields.append("boosted")
+    newly = {f: {"yes": 0, "no": 0} for f in fields}
     for c in changes:
         for f, (_, v) in c["changed"].items():
             newly[f][v] += 1
     out.write("Newly marked: " + ", ".join("%s +%d yes / +%d no" % (f, newly[f]["yes"], newly[f]["no"])
-                                           for f in OUTCOME_FIELDS) + "\n")
+                                           for f in fields) + "\n")
     if changes:
         out.write("\nChanged rows:\n")
         for c in changes:
@@ -847,6 +915,10 @@ def main(argv=None):
     ap.add_argument("--proposals", help="saved list_freelancer_proposals JSON ('-' for stdin)")
     ap.add_argument("--rooms", help="saved {proposal_id: get_room response} JSON")
     ap.add_argument("--contracts", help="saved list_contracts search JSON")
+    ap.add_argument("--insights", help="saved {proposal_id: list_freelancer_proposals action=get response} JSON "
+                                       "(its insights can set viewed \"no\" on an open proposal, never \"yes\")")
+    ap.add_argument("--fill-boosted", action="store_true",
+                    help="also fill blank boosted cells (yes/no) from each matched proposal")
     ap.add_argument("--csv", default=DEFAULT_CSV)
     ap.add_argument("--dry-run", action="store_true", help="write to a temp copy and print a diff")
     ap.add_argument("--report", action="store_true", help="print rates by platform and opener_variant")
@@ -866,14 +938,16 @@ def main(argv=None):
         proposals = extract_proposals(load_json(args.proposals))
         rooms, no_rooms = extract_rooms(load_json(args.rooms)) if args.rooms else ({}, set())
         contracts = extract_contracts(load_json(args.contracts)) if args.contracts else []
+        insights = extract_insights(load_json(args.insights)) if args.insights else {}
         hires, unmatched_contracts = match_contracts(contracts, proposals)
-        print("Loaded %d proposals, %d rooms (+%d NOT_FOUND), %d contracts (%d applied)"
+        print("Loaded %d proposals, %d rooms (+%d NOT_FOUND), %d contracts (%d applied)%s"
               % (len(proposals), len(rooms), len(no_rooms), len(contracts),
-                 len(contracts) - len(unmatched_contracts)))
+                 len(contracts) - len(unmatched_contracts),
+                 (", %d insights" % len(insights)) if args.insights else ""))
         blocked = []  # type: List[Tuple[int, List[str]]]
         matches, unmatched, ambiguous = match_rows(rows, proposals, skip=doc["skip"],
                                                    reserved=doc["skipped_jobs"], blocked=blocked)
-        changes = apply_outcomes(rows, matches, rooms, no_rooms, hires)
+        changes = apply_outcomes(rows, matches, rooms, no_rooms, hires, insights, args.fill_boosted)
         summarize(rows, matches, changes, unmatched, unmatched_contracts, doc["skip"],
                   bad=doc["bad"], ambiguous=ambiguous, blocked=blocked, skipped_jobs=doc["skipped_jobs"])
 

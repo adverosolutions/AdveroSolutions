@@ -867,3 +867,69 @@ def test_dry_run_temp_folder_removed_when_write_aborts(csv_path, tmp_path, monke
     with pytest.raises(SystemExit):
         so.main(write_inputs(tmp_path, PAGES, ROOMS, CONTRACTS) + ["--csv", str(csv_path), "--dry-run"])
     assert os.listdir(str(tmp)) == []
+
+
+# ------------------------------------------------ insights (viewed) and --fill-boosted (2026-09-28)
+
+def insight(opened, total, messaged=0, shortlisted=0, computed="2026-09-28T13:33:51.648Z"):
+    return {"data": {"vendorProposal": {"id": "x"}}, "status": "ok",
+            "insights": {"proposals_opened": opened, "proposals_total": total,
+                         "proposals_unopened": total - opened, "messaged": messaged,
+                         "shortlisted": shortlisted, "computed_at": computed}}
+
+
+def test_insights_give_no_on_open_proposals_and_never_yes(csv_path, tmp_path):
+    ij = tmp_path / "insights.json"
+    ij.write_text(json.dumps({
+        "p1": insight(0, 40),               # open, nobody opened anything: no
+        "p3": insight(3, 3),                # Archived, everything opened: stays blank
+        "p8": insight(0, 4),                # Archived, nothing opened: stays blank too
+        "p7": insight(0, 9),                # not in the log
+        "p2": insight(0, 5, messaged=2),    # opened 0 but a client messaged: proves nothing
+    }))
+    run(csv_path, tmp_path, "--insights", str(ij))
+    r = read(csv_path)
+    assert r["Submitted Job"]["viewed"] == "no" and "upwork: Submitted" in r["Submitted Job"]["notes"]
+    assert r["Closed Job"]["viewed"] == ""
+    assert r["Legacy Row Without Url For Title"]["viewed"] == ""
+    assert r["Chatty Client"]["viewed"] == "yes"  # the room still says yes
+
+
+def test_insights_everything_opened_never_gives_yes(csv_path, tmp_path):
+    ij = tmp_path / "insights.json"
+    ij.write_text(json.dumps({"p1": insight(40, 40, messaged=3, shortlisted=2)}))  # open, all opened
+    run(csv_path, tmp_path, "--insights", str(ij))
+    assert read(csv_path)["Submitted Job"]["viewed"] == ""
+    for status in ("Accepted", "Archived", "Withdrawn", "Declined"):
+        p = {"proposal_id": "p1", "status": status, "created": "2026-09-09T10:00:00.000Z"}
+        assert so.viewed_from_insights(p, insight(3, 3)["insights"]) == ""
+        if status in so.CLOSED_STATUSES:
+            assert so.viewed_from_insights(p, insight(0, 3)["insights"]) == ""
+
+
+def test_insights_no_is_upgraded_by_a_later_reply(csv_path, tmp_path):
+    ij = tmp_path / "insights.json"
+    ij.write_text(json.dumps({"p1": insight(0, 40)}))
+    run(csv_path, tmp_path, "--insights", str(ij))
+    assert read(csv_path)["Submitted Job"]["viewed"] == "no"
+    rooms = dict(ROOMS, p1=ROOMS["p2"])  # the client has since messaged on p1
+    sync(csv_path, write_inputs(tmp_path, PAGES, rooms, CONTRACTS), "--insights", str(ij))
+    s = read(csv_path)["Submitted Job"]
+    assert (s["viewed"], s["replied"]) == ("yes", "yes")
+
+
+def test_insights_older_than_the_proposal_prove_nothing():
+    p = {"proposal_id": "p1", "status": "Accepted", "created": "2026-09-09T10:00:00.000Z"}
+    assert so.viewed_from_insights(p, insight(0, 1, computed="2026-09-09T09:00:00.000Z")["insights"]) == ""
+    assert so.viewed_from_insights(p, insight(0, 1)["insights"]) == "no"
+    assert so.viewed_from_insights(p, {"proposals_opened": "?"}) == ""
+    assert so.extract_insights([insight(0, 1)]) == {"x": insight(0, 1)["insights"]}
+
+
+def test_fill_boosted_is_opt_in_and_adds_no_note(csv_path, tmp_path):
+    run(csv_path, tmp_path)
+    assert all(r["boosted"] == "" for r in read(csv_path).values())
+    out = run(csv_path, tmp_path, "--fill-boosted")
+    r = read(csv_path)
+    assert r["Submitted Job"]["boosted"] == "yes" and r["Submitted Job"]["notes"] == "n"
+    assert "boosted +" in out

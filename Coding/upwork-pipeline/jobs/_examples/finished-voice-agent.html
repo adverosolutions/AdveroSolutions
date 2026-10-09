@@ -1,0 +1,844 @@
+<title>AI Dental Receptionist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16202e; --ink2:#4d596b; --ink3:#8792a3;
+  --blue:#2f74f5; --blue2:#6aa5ff; --mint:#1fb487; --amber:#e8a13a;
+  --line:rgba(150,170,200,.28);
+  --panel:linear-gradient(180deg,rgba(255,255,255,.94),rgba(248,251,255,.80));
+  --shadow:0 40px 70px -30px rgba(38,72,128,.30),0 16px 30px -18px rgba(38,72,128,.22);
+  --ease:cubic-bezier(.16,1,.3,1);
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;background:#e9f0f8}
+body{font-family:"Figtree",system-ui,sans-serif;color:var(--ink);background:#e9f0f8;overflow-x:hidden;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+.sky{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+   radial-gradient(1200px 600px at 78% -10%,rgba(255,255,255,.95),rgba(255,255,255,0) 60%),
+   radial-gradient(900px 520px at 8% 30%,rgba(206,226,250,.75),rgba(206,226,250,0) 70%),
+   linear-gradient(180deg,#c9dcf2 0%,#dce8f5 28%,#ecf1f7 58%,#f3f4f6 82%,#e9edf2 100%);}
+.sky::after{content:"";position:absolute;left:-10%;right:-10%;top:calc(58% - var(--sp,0) * 18%);height:40%;
+  background:radial-gradient(60% 50% at 50% 0%,rgba(255,255,255,.85),rgba(255,255,255,0) 70%);filter:blur(10px)}
+.haze{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.haze i{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;animation:drift 26s ease-in-out infinite alternate}
+.haze i:nth-child(1){width:520px;height:520px;left:-120px;top:10%;background:#d6e6fb}
+.haze i:nth-child(2){width:460px;height:460px;right:-100px;top:45%;background:#e6f1fb;animation-duration:32s}
+.haze i:nth-child(3){width:380px;height:380px;left:40%;top:70%;background:#dff0ec;opacity:.45;animation-duration:38s}
+@keyframes drift{to{transform:translate3d(60px,-50px,0) scale(1.08)}}
+
+main{position:relative;z-index:1}
+.top{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:18px 32px;pointer-events:none}
+.top .brand{font-weight:600;font-size:13px;letter-spacing:.02em;color:var(--ink2);display:flex;gap:10px;align-items:center;padding:7px 14px 7px 12px;border-radius:99px;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff,0 6px 18px -8px rgba(38,72,128,.25);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.top .brand b{width:9px;height:9px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 4px rgba(47,116,245,.15)}
+.chip{white-space:nowrap;font-size:12px;font-weight:600;color:var(--ink2);padding:7px 13px;border-radius:99px;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff,0 6px 18px -8px rgba(38,72,128,.25);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(14px)}
+
+section{position:relative;min-height:100vh;padding:120px 48px 110px;display:flex;flex-direction:column;justify-content:center;perspective:1700px;perspective-origin:50% 40%}
+.wrap{width:100%;max-width:1240px;margin:0 auto;position:relative;transform-style:preserve-3d}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
+.eyebrow span{font-variant-numeric:tabular-nums;color:var(--ink3);letter-spacing:.06em}
+h1,h2{font-weight:600;letter-spacing:-.035em;line-height:1.02;color:var(--ink)}
+h1{font-size:clamp(44px,6.6vw,96px)}
+h2{font-size:clamp(38px,4.8vw,70px);margin-top:14px}
+h2 em,h1 em{font-style:normal;background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.head{margin-bottom:56px}
+.sub{font-size:clamp(17px,1.45vw,21px);line-height:1.45;font-weight:450;color:var(--ink2);max-width:660px;margin-top:18px;letter-spacing:-.005em}
+#hero .sub,#vxs .sub,#close .sub{margin-left:auto;margin-right:auto}
+.head.c{text-align:center}
+
+/* panels */
+.par{will-change:transform;transform-style:preserve-3d}
+.panel{position:relative;background:var(--panel);border-radius:28px;border:1px solid rgba(255,255,255,.95);
+  box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.55),var(--shadow);backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3)}
+.panel::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,0) 28%,rgba(255,255,255,0) 72%,rgba(200,218,242,.35) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;padding:1.5px}
+.panel::after{content:"";position:absolute;left:10%;right:10%;bottom:-46px;height:34px;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(52,86,140,.22),rgba(52,86,140,0));filter:blur(6px);pointer-events:none;transform:translateZ(-1px)}
+.rise{opacity:0;transform:perspective(1400px) translate3d(0,90px,-180px) rotateX(20deg);transform-origin:50% 100%;
+  transition:opacity 1.1s var(--ease),transform 1.6s var(--ease);transition-delay:var(--d,0s)}
+.in .rise{opacity:1;transform:perspective(1400px) translate3d(0,0,0) rotateX(0)}
+.fade{opacity:0;transform:translateY(18px);transition:opacity .9s var(--ease),transform 1.2s var(--ease);transition-delay:var(--d,0s)}
+.in .fade{opacity:1;transform:none}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;background:rgba(31,180,135,.12);color:#12926b;white-space:nowrap}
+.pill.blue{background:rgba(47,116,245,.1);color:var(--blue)}
+.pill.amb{background:rgba(232,161,58,.14);color:#b76e0a}
+.pill.vio{background:rgba(122,90,248,.12);color:#6941c6}
+.pill.gry{background:rgba(135,146,163,.14);color:#4d596b}
+.tick{width:20px;height:20px;border-radius:50%;background:rgba(31,180,135,.14);display:grid;place-items:center;flex:none}
+.tick::after{content:"";width:8px;height:4px;border-left:2px solid var(--mint);border-bottom:2px solid var(--mint);transform:rotate(-45deg) translate(1px,-1px)}
+
+.scrollcue{margin-top:40px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);display:flex;flex-direction:column;align-items:center;gap:10px}
+.scrollcue b{width:1.5px;height:36px;background:linear-gradient(var(--ink3),transparent);animation:cue 2.4s ease-in-out infinite}
+@keyframes cue{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* waveform (shared) */
+.wave{display:flex;align-items:center;justify-content:center;gap:3px;height:56px}
+.wave i{display:block;width:4px;border-radius:4px;height:100%;background:currentColor;transform:scaleY(.08);transition:transform .5s var(--ease)}
+.live .wave i{animation:wv var(--du,.9s) ease-in-out var(--dl,0s) infinite alternate}
+@keyframes wv{0%{transform:scaleY(var(--lo,.12))}100%{transform:scaleY(var(--hi,.9))}}
+
+/* HERO */
+#hero{padding-top:110px}
+#hero .wrap{display:grid;grid-template-columns:1fr;justify-items:center;text-align:center}
+#hero .kicker{font-size:15px;font-weight:500;color:var(--ink2);margin-bottom:22px}
+.hstage{position:relative;width:min(1100px,100%);height:420px;margin-top:40px;transform-style:preserve-3d}
+.hstage>.par{position:absolute}
+.hc{padding:22px 24px;text-align:left}
+.ic40{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;flex:none}
+.ic40 svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ic40.grn{background:linear-gradient(160deg,#4fd6a6,#12a877);box-shadow:0 8px 16px -8px rgba(18,168,119,.7)}
+.ic40.blue{background:linear-gradient(160deg,#6aa5ff,#155eef);box-shadow:0 8px 16px -8px rgba(21,94,239,.7)}
+.hc .t{font-weight:700;font-size:16px}
+.hc .s{font-size:13px;color:var(--ink3);margin-top:2px}
+.hcall{width:310px}
+.hcall .h{display:flex;gap:12px;align-items:center}
+.hcall .wave{height:34px;margin-top:14px;color:var(--mint);justify-content:flex-start}
+.hcall .wave i{width:3px}
+.ntf{width:450px;border-radius:30px}
+.ntf .app{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+.ntf .app .ic40{width:30px;height:30px;border-radius:9px}.ntf .app .ic40 svg{width:15px;height:15px}
+.ntf .app span:last-child{margin-left:auto;letter-spacing:0;text-transform:none;font-weight:500}
+.ntf .tt{font-size:20px;font-weight:700;letter-spacing:-.015em;margin-top:14px}
+.ntf .bd{font-size:17px;line-height:1.4;color:var(--ink2);margin-top:6px;font-weight:500}
+.ntf .tags{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.bkd{width:320px;display:flex;gap:18px;align-items:center}
+.ring{position:relative;width:86px;height:86px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .num{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:21px;letter-spacing:-.02em}
+.bkd .t{font-size:19px;letter-spacing:-.02em}
+.st3{width:450px;padding:16px 18px;display:flex;justify-content:space-between;gap:8px}
+.st3 div{flex:1;display:flex;gap:8px;align-items:center;font-size:13.5px;font-weight:600;color:var(--ink2);opacity:.35;transition:opacity .6s;white-space:nowrap}
+.st3 div.on{opacity:1}
+
+/* APP SHELL (neutral, light) */
+.appf{padding:10px;border-radius:30px}
+.gw{border-radius:20px;overflow:hidden;background:#f9fafb;display:flex;color:#101828;font-size:13px;position:relative;text-align:left}
+.gnav{width:62px;flex:none;background:#fff;border-right:1px solid #eaecf0;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 0}
+.gnav .acct{width:36px;height:36px;border-radius:10px;background:linear-gradient(160deg,#6aa5ff,#155eef);color:#fff;font-weight:700;font-size:12px;display:grid;place-items:center;margin-bottom:10px}
+.gnav .ni{width:40px;height:36px;border-radius:9px;display:grid;place-items:center}
+.gnav .ni svg{width:18px;height:18px;fill:none;stroke:#98a2b3;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.gnav .ni.a{background:#eff4ff}.gnav .ni.a svg{stroke:#155eef}
+.gbody{flex:1;min-width:0;display:flex;flex-direction:column}
+.gtop{height:52px;flex:none;background:#fff;border-bottom:1px solid #eaecf0;display:flex;align-items:center;padding:0 18px;gap:12px}
+.gtop .pt{font-weight:700;font-size:15px;white-space:nowrap}
+.gtop .srch{margin-left:auto;width:220px;height:32px;border:1px solid #d0d5dd;border-radius:8px;display:flex;align-items:center;padding:0 10px;color:#98a2b3;font-size:12.5px;gap:8px}
+.gtop .srch svg{width:14px;height:14px;fill:none;stroke:#98a2b3;stroke-width:2}
+.gtop .me{width:30px;height:30px;border-radius:50%;background:#e0eaff;color:#155eef;font-weight:700;font-size:11.5px;display:grid;place-items:center;flex:none}
+.gseg{display:flex;border:1px solid #d0d5dd;border-radius:8px;overflow:hidden;font-size:12px;font-weight:600;color:#475467;white-space:nowrap}
+.gseg span{padding:6px 11px}.gseg span+span{border-left:1px solid #d0d5dd}.gseg span.a{background:#f2f4f7;color:#101828}
+.gsel{border:1px solid #d0d5dd;border-radius:8px;padding:6px 11px;font-size:12.5px;font-weight:600;color:#344054;background:#fff;white-space:nowrap}
+.gsel::after{content:" ▾";color:#98a2b3;font-size:10px}
+.livebadge{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;color:#067647;background:#ecfdf3;border:1px solid #abefc6;border-radius:99px;padding:4px 10px;white-space:nowrap}
+.livebadge i{width:7px;height:7px;border-radius:50%;background:#12b76a;animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(18,183,106,.45)}100%{box-shadow:0 0 0 7px rgba(18,183,106,0)}}
+
+/* PHONE (shared) */
+.phone{width:300px;height:612px;border-radius:50px;padding:11px;background:linear-gradient(160deg,#2b3240,#10141c);box-shadow:inset 0 0 0 1.5px #4a5263,inset 0 0 0 3px #0c0f15,0 50px 80px -34px rgba(20,40,80,.55),0 18px 34px -18px rgba(20,40,80,.45);position:relative;flex:none}
+.phone .scr{position:relative;width:100%;height:100%;border-radius:40px;overflow:hidden;display:flex;flex-direction:column}
+.phone .isl{position:absolute;top:10px;left:50%;width:96px;height:28px;margin-left:-48px;border-radius:99px;background:#05070a;z-index:4}
+.phone .sb{height:48px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:6px 26px 0;font-size:13px;font-weight:700}
+.phone .sb .bat{width:22px;height:11px;border-radius:3px;border:1.5px solid currentColor;position:relative;opacity:.9}
+.phone .sb .bat::after{content:"";position:absolute;inset:1.5px;right:5px;background:currentColor;border-radius:1px}
+
+/* 01 CALL */
+.callgrid{display:grid;grid-template-columns:auto minmax(0,640px);gap:64px;align-items:center;justify-content:center}
+.callscr{background:radial-gradient(120% 70% at 50% 0%,#28406a 0%,#141c2c 55%,#0b0f18 100%);color:#fff}
+.callscr .who{text-align:center;margin-top:34px;padding:0 20px}
+.callscr .who small{display:block;font-size:13px;color:rgba(255,255,255,.62);font-weight:500}
+.callscr .who b{display:block;font-size:27px;font-weight:600;letter-spacing:-.02em;margin-top:6px}
+.callscr .who .stt{font-size:14px;color:rgba(255,255,255,.72);margin-top:6px;font-weight:500;min-height:20px}
+.callscr .agent{margin:26px auto 0;display:flex;align-items:center;gap:10px;padding:8px 14px 8px 8px;border-radius:99px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);width:max-content}
+.callscr .agent .orb{width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#b4f5dd,#1fb487 55%,#0b7a5a);box-shadow:0 0 0 0 rgba(31,180,135,.5)}
+.live .callscr .agent .orb{animation:orb 1.8s ease-out infinite}
+@keyframes orb{0%{box-shadow:0 0 0 0 rgba(31,180,135,.55)}100%{box-shadow:0 0 0 14px rgba(31,180,135,0)}}
+.callscr .agent span{font-size:13px;font-weight:600}
+.callscr .wave{margin-top:30px;height:70px;color:#5de2b6}
+.callscr .cap{margin:18px 20px 0;min-height:64px;font-size:14.5px;line-height:1.45;text-align:center;color:rgba(255,255,255,.88);font-weight:500;transition:opacity .4s}
+.callscr .cap em{font-style:normal;display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5de2b6;margin-bottom:4px}
+.callscr .btns{margin-top:auto;padding:0 34px 38px;display:flex;justify-content:space-between}
+.callscr .btns span{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.14)}
+.callscr .btns span svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.callscr .btns span.end{background:#e5484d}
+.cside{display:grid;gap:16px;align-content:center}
+.cside .card{padding:20px 22px}
+.cside .ct{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.cside .ct b{font-size:15px}
+.kvr{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:14.5px}
+.kvr:first-of-type{border-top:0}
+.kvr span:first-child{color:var(--ink3)}
+.kvr span:last-child{font-weight:600;text-align:right}
+.cstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.cstat{padding:16px 18px}
+.cstat .k{font-size:12px;font-weight:600;color:var(--ink3);letter-spacing:.02em}
+.cstat .v{font-size:26px;font-weight:700;letter-spacing:-.03em;margin-top:6px}
+
+/* 02 TRANSCRIPT */
+.tx{display:grid;grid-template-columns:minmax(0,1fr) 290px;flex:1;min-height:0}
+.txl{display:flex;flex-direction:column;min-width:0;background:#f9fafb}
+.txh{display:flex;align-items:center;gap:12px;padding:12px 18px;background:#fff;border-bottom:1px solid #eaecf0}
+.txh .n{font-weight:700;font-size:14px}.txh .s{font-size:11.5px;color:#667085}
+.txh .livebadge{margin-left:auto}
+.txh .tmr{font-family:var(--mono);font-size:12.5px;font-weight:600;color:#344054;white-space:nowrap}
+.minwave{height:22px;gap:2px;color:#12b76a;width:64px;justify-content:flex-start}
+.minwave i{width:2.5px}
+.txb{padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-height:560px}
+.tl{display:flex;gap:10px;align-items:flex-start}
+.rv{opacity:0;transform:translateY(10px);transition:opacity .5s var(--ease),transform .7s var(--ease)}
+.rv.show{opacity:1;transform:none}
+.tl .who{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:10.5px;font-weight:800;color:#fff}
+.tl.ai .who{background:linear-gradient(160deg,#4fd6a6,#12a877)}
+.tl.us .who{background:#98a2b3}
+.tl .msg{min-width:0;max-width:80%}
+.tl .msg small{display:block;font-size:10.5px;font-weight:700;color:#98a2b3;margin-bottom:3px;letter-spacing:.02em}
+.tl.ai .msg small{color:#079455}
+.tl .msg p{font-size:13.5px;line-height:1.45;background:#fff;border:1px solid #eaecf0;border-radius:4px 14px 14px 14px;padding:9px 13px}
+.tl.ai .msg p{background:#ecfdf3;border-color:#d1fadf}
+.tool{margin-left:38px;border:1px solid #d9d6fe;background:#faf9ff;border-radius:10px;padding:9px 12px;font-family:var(--mono);font-size:11.5px;color:#344054;max-width:calc(100% - 38px)}
+.tool .th{display:flex;align-items:center;gap:8px;font-family:"Figtree",sans-serif;font-size:12px;font-weight:700;color:#5925dc}
+.tool .th svg{width:14px;height:14px;fill:none;stroke:#6941c6;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.tool .th .fn{font-family:var(--mono);font-weight:600}
+.tool .th .stt{margin-left:auto;display:flex;align-items:center;gap:6px;font-weight:600;color:#667085;white-space:nowrap}
+.tool .spin{width:12px;height:12px;border-radius:50%;border:2px solid #d9d6fe;border-top-color:#7a5af8;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tool.done .spin{display:none}
+.tool.done .th .stt{color:#067647}
+.tool .args{margin-top:6px;color:#475467;white-space:pre-wrap;word-break:break-word}
+.tool .args b{color:#6941c6;font-weight:500}.tool .args u{text-decoration:none;color:#067647}
+.tool .res{margin-top:6px;padding-top:6px;border-top:1px dashed #d9d6fe;color:#067647;display:none}
+.tool.done .res{display:block}
+.evp{align-self:center;display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:99px;background:#ecfdf3;color:#067647;border:1px solid #abefc6}
+.evp svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.typ{display:none;gap:4px;padding:10px 12px;border-radius:14px;background:#fff;border:1px solid #eaecf0;align-self:flex-start;margin-left:38px}
+.typ.show{display:flex}
+.typ i{width:5px;height:5px;border-radius:50%;background:#a8b3c3;animation:dot 1s infinite}
+.typ i:nth-child(2){animation-delay:.15s}.typ i:nth-child(3){animation-delay:.3s}
+@keyframes dot{50%{transform:translateY(-3px);opacity:.5}}
+.txr{background:#fff;border-left:1px solid #eaecf0;padding:16px}
+.txr .lb{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#98a2b3;margin:4px 0 8px}
+.txr .lb+.lb,.txr .kv+.lb{margin-top:18px}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:8px 0;font-size:12.5px;border-top:1px solid #f2f4f7}
+.kv span:first-child{color:#667085;white-space:nowrap}.kv span:last-child{font-weight:600;text-align:right;transition:color .4s}
+.kv .pend{color:#98a2b3;font-weight:500}
+.stg{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:#fffaeb;color:#b54708}
+.stg.g{background:#ecfdf3;color:#067647}
+.tlist{display:grid;gap:6px}
+.tlist div{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11.5px;color:#98a2b3;padding:6px 8px;border-radius:7px;background:#f9fafb;border:1px solid #f2f4f7;transition:all .4s}
+.tlist div i{width:7px;height:7px;border-radius:50%;background:#d0d5dd;flex:none}
+.tlist div.on{color:#344054;border-color:#d1fadf;background:#f6fef9}.tlist div.on i{background:#12b76a}
+
+/* 03 BOOKED */
+.bgrid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:40px;align-items:center}
+.chead{display:flex;align-items:center;gap:10px;padding:12px 16px}
+.chead .rng{font-weight:700;font-size:14px;white-space:nowrap}
+.chead .ar{display:flex;gap:4px}.chead .ar span{width:26px;height:26px;border:1px solid #d0d5dd;border-radius:7px;display:grid;place-items:center;color:#475467;font-size:13px;background:#fff}
+.chead .gseg{margin-left:auto}
+.calg{display:grid;grid-template-columns:52px repeat(5,minmax(0,1fr));padding:0 16px 16px}
+.dh{text-align:center;padding:6px 0 10px;font-size:11.5px;font-weight:600;color:#667085;border-bottom:1px solid #eaecf0}
+.dh b{display:block;font-size:18px;color:#101828;margin-top:2px;font-weight:600}
+.dh.today b{width:34px;height:34px;border-radius:50%;background:#155eef;color:#fff;display:grid;place-items:center;margin:2px auto 0;font-size:16px}
+.tcol{position:relative}
+.tcol span{position:absolute;right:8px;font-size:10.5px;color:#98a2b3;font-weight:600;transform:translateY(-50%)}
+.dcol{position:relative;border-left:1px solid #eaecf0;background-image:repeating-linear-gradient(180deg,#eaecf0 0 1px,transparent 1px var(--hr,44px))}
+.dcol.today{background-color:rgba(21,94,239,.03)}
+.ev{position:absolute;left:4px;right:4px;border-radius:8px;padding:5px 8px;background:var(--eb);border-left:3px solid var(--ec);overflow:hidden}
+.ev .tm{font-size:10.5px;font-weight:600;color:var(--ec);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev .tl2{font-size:12px;font-weight:700;color:#101828;line-height:1.25;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev .sl{font-size:11px;color:#475467;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev.blue{--eb:#eff4ff;--ec:#155eef}.ev.teal{--eb:#f0f9ff;--ec:#0086c9}.ev.vio{--eb:#f4f3ff;--ec:#6941c6}.ev.amb{--eb:#fffaeb;--ec:#b54708}
+.ev.new{--eb:#ecfdf3;--ec:#079455;opacity:0;transform:translateY(-70px) scale(1.06);transition:opacity .5s,transform 1s cubic-bezier(.34,1.4,.64,1),box-shadow .8s;z-index:3}
+.ev.new.drop{opacity:1;transform:none;box-shadow:0 0 0 2px #12b76a,0 16px 26px -12px rgba(18,183,106,.55)}
+.ev.new .sl{padding-right:40px}
+.ev.new .nb{position:absolute;bottom:6px;right:6px;font-size:9.5px;font-weight:800;letter-spacing:.06em;color:#fff;background:#12b76a;border-radius:4px;padding:1px 5px}
+.smsscr{background:#f5f6f8;color:#101828}
+.smsscr .sb{color:#101828}
+.smsscr .hd{text-align:center;padding:4px 0 12px;border-bottom:1px solid #e4e7ec;background:rgba(255,255,255,.85)}
+.smsscr .hd .av{width:44px;height:44px;border-radius:50%;margin:0 auto;background:linear-gradient(160deg,#6aa5ff,#155eef);color:#fff;font-weight:700;font-size:15px;display:grid;place-items:center}
+.smsscr .hd b{display:block;font-size:13px;margin-top:6px}
+.smsscr .hd small{font-size:11px;color:#667085}
+.smsscr .ms{flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:8px}
+.smsscr .day{align-self:center;font-size:10.5px;color:#98a2b3;font-weight:600}
+.sm{max-width:84%;padding:9px 12px;border-radius:18px;font-size:13.5px;line-height:1.38;opacity:0;transform:translateY(10px) scale(.97);transition:opacity .5s var(--ease),transform .7s var(--ease)}
+.sm.show{opacity:1;transform:none}
+.sm.frm{align-self:flex-start;background:#e4e7ec;border-bottom-left-radius:5px}
+.sm.mine{align-self:flex-end;background:#1f7cf5;color:#fff;border-bottom-right-radius:5px}
+.smsscr .cmp{margin:0 12px 26px;height:36px;border-radius:99px;border:1px solid #d0d5dd;background:#fff;display:flex;align-items:center;padding:0 14px;font-size:12.5px;color:#98a2b3}
+.toast{position:absolute;right:18px;bottom:18px;width:300px;background:#fff;border:1px solid #eaecf0;border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;box-shadow:0 20px 40px -16px rgba(16,24,40,.35);opacity:0;transform:translateY(16px);transition:opacity .6s,transform .8s var(--ease);z-index:6}
+.toast.on{opacity:1;transform:none}
+.toast .ic40{width:32px;height:32px;border-radius:9px;background:#12b76a}.toast .ic40 svg{width:16px;height:16px}
+.toast b{display:block;font-size:13px}.toast small{font-size:12px;color:#667085;line-height:1.4;display:block;margin-top:2px}
+
+/* 04 DASHBOARD */
+.dsh{padding:14px 16px 16px;display:grid;gap:12px}
+.dtop{display:flex;align-items:center;gap:10px}
+.illu{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#667085;border:1px dashed #98a2b3;padding:4px 9px;border-radius:99px;white-space:nowrap}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tile{background:#fff;border:1px solid #eaecf0;border-radius:12px;padding:14px 16px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.tile .k{font-size:12.5px;font-weight:600;color:#667085;display:flex;align-items:center;gap:8px}
+.tile .k i{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;flex:none}
+.tile .k i svg{width:14px;height:14px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tile .v{font-size:32px;font-weight:700;letter-spacing:-.03em;margin-top:10px;line-height:1}
+.tile .d{display:inline-block;margin-top:8px;font-size:11.5px;font-weight:700;color:#067647;background:#ecfdf3;border-radius:99px;padding:2px 8px}
+.dgrid{display:grid;grid-template-columns:1fr 1.45fr;gap:12px}
+.card2{background:#fff;border:1px solid #eaecf0;border-radius:12px;padding:14px 16px;box-shadow:0 1px 2px rgba(16,24,40,.05);min-width:0}
+.card2 .ct{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:13.5px;gap:10px}
+.lg2{display:flex;gap:12px;font-size:11.5px;font-weight:600;color:#667085;white-space:nowrap}
+.lg2 i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:0}
+.bars{display:flex;align-items:flex-end;gap:8px;height:190px;margin-top:14px;padding-bottom:22px;position:relative;border-bottom:1px solid #eaecf0}
+.bars .g{flex:1;display:flex;flex-direction:column-reverse;align-items:center;height:100%;position:relative}
+.bars .g i{width:60%;max-width:26px;height:0;transition:height 1.4s var(--ease)}
+.bars .g i:nth-child(1){background:#155eef;border-radius:0 0 3px 3px}
+.bars .g i:nth-child(2){background:#7a5af8;border-radius:5px 5px 0 0}
+.bars .g span{position:absolute;bottom:-20px;font-size:11px;color:#667085;font-weight:600}
+.log{width:100%;border-collapse:collapse;margin-top:10px;font-size:12.5px}
+.log th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#98a2b3;padding:6px 8px;border-bottom:1px solid #eaecf0}
+.log td{padding:9px 8px;border-bottom:1px solid #f2f4f7;white-space:nowrap;vertical-align:middle}
+.log td.sm2{color:#667085;white-space:normal}
+.log td.du{font-family:var(--mono);font-size:12px}
+.log tr{opacity:0;transform:translateX(-8px);transition:opacity .5s,transform .6s var(--ease)}
+.log tr.show,.log thead tr{opacity:1;transform:none}
+.log .pill{font-size:11px;padding:3px 9px}
+
+/* 05 VOICE AGENT DASHBOARD (Vapi / Retell style, dark, no logo) */
+.vxlab{margin-top:14px;display:inline-block}
+.vxwrap{position:relative;width:100%;transform-style:preserve-3d}
+.vxframe{padding:12px;border-radius:30px;margin:0 auto;width:max-content;max-width:100%}
+.vxbox{overflow:hidden;border-radius:20px;position:relative}
+.vx{width:1216px;transform-origin:0 0;background:#0d0e11;color:#e8e9ee;border-radius:20px;overflow:hidden;text-align:left;display:grid;grid-template-columns:208px minmax(0,1fr);font-size:13px}
+.vnav{background:#101114;border-right:1px solid #22242b;padding:14px 12px;display:flex;flex-direction:column;gap:2px}
+.vnav .org{display:flex;align-items:center;gap:10px;padding:6px 8px 14px;border-bottom:1px solid #22242b;margin-bottom:10px}
+.vnav .org i{width:28px;height:28px;border-radius:8px;background:linear-gradient(160deg,#2a2d36,#1a1c22);border:1px solid #33363f;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700;color:#cfd2da;flex:none}
+.vnav .org b{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vnav .org small{display:block;font-size:11px;color:#6f7280;font-weight:500}
+.vnav .grp{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#5b5e6a;padding:12px 10px 6px}
+.vnav .it{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;color:#a3a6b2;font-weight:500;font-size:13px;white-space:nowrap}
+.vnav .it svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.vnav .it.a{background:#1c1e24;color:#fff;box-shadow:inset 0 0 0 1px #2a2d35}
+.vnav .it.a svg{stroke:#3ddc97}
+.vnav .sp{flex:1}
+.vmain{min-width:0;display:flex;flex-direction:column}
+.vtop{height:60px;display:flex;align-items:center;gap:12px;padding:0 20px;border-bottom:1px solid #22242b}
+.vtop .crumb{font-size:13px;color:#7c7f8c;white-space:nowrap}.vtop .crumb b{color:#f1f2f5;font-weight:600}
+.vtop .aid{font-family:var(--mono);font-size:11px;color:#7c7f8c;border:1px solid #2a2d35;border-radius:6px;padding:3px 7px;white-space:nowrap}
+.vtop .met{margin-left:auto;display:flex;gap:8px}
+.vtop .met span{font-size:11.5px;color:#a3a6b2;border:1px solid #2a2d35;border-radius:99px;padding:4px 10px;white-space:nowrap;background:#131419}
+.vtop .met span b{color:#3ddc97;font-weight:600}
+.vbtn{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:8px 14px;border-radius:9px;white-space:nowrap}
+.vbtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.vbtn.ghost{border:1px solid #33363f;color:#d7d9e0;background:#15161b}
+.vbtn.talk{background:#3ddc97;color:#062b1c;position:relative}
+.vbtn.talk::after{content:"";position:absolute;inset:-4px;border-radius:12px;border:2px solid rgba(61,220,151,.0);transition:border-color .5s}
+.vx.ready .vbtn.talk::after{border-color:rgba(61,220,151,.45);animation:tk 1.8s ease-out infinite}
+@keyframes tk{0%{transform:scale(.96);opacity:1}100%{transform:scale(1.12);opacity:0}}
+.vx .pub{transition:all .5s}
+.vx.ready .pub{border-color:#1f5e44;color:#3ddc97}
+.vtabs{display:flex;gap:4px;padding:10px 20px 0;border-bottom:1px solid #22242b}
+.vtabs span{display:flex;align-items:center;gap:7px;padding:9px 14px 11px;font-size:13px;font-weight:600;color:#7c7f8c;border-bottom:2px solid transparent;white-space:nowrap}
+.vtabs span svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.vtabs span.a{color:#fff;border-color:#3ddc97}
+.vtabs span .cnt{font-size:10.5px;background:#23252c;color:#a3a6b2;border-radius:99px;padding:1px 6px}
+.vgrid{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;padding:16px 20px 20px}
+.vcard{background:#131419;border:1px solid #24262d;border-radius:12px;padding:16px;opacity:0;transform:translateY(10px);transition:opacity .5s,transform .7s var(--ease)}
+.vcard.on{opacity:1;transform:none}
+.vcol{display:grid;gap:16px;align-content:start;min-width:0}
+.vch{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.vch b{font-size:14px;font-weight:600;color:#f1f2f5}
+.vch small{font-size:11.5px;color:#7c7f8c}
+.vrow2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.vf label{display:block;font-size:11.5px;font-weight:600;color:#8e919d;margin-bottom:6px}
+.vsel{display:flex;justify-content:space-between;align-items:center;background:#0f1014;border:1px solid #2a2d35;border-radius:8px;padding:8px 11px;font-size:13px;color:#e8e9ee;white-space:nowrap;overflow:hidden}
+.vsel::after{content:"▾";color:#6f7280;font-size:10px;margin-left:8px}
+.vin{background:#0f1014;border:1px solid #2a2d35;border-radius:8px;padding:9px 11px;font-size:13px;color:#e8e9ee;line-height:1.45}
+.vf+.vf,.vrow2+.vf,.vf+.vrow2{margin-top:12px}
+.vrow2 .vf{margin-top:0!important}
+.kb{display:flex;gap:8px;flex-wrap:wrap}
+.kb span{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#d7d9e0;background:#0f1014;border:1px solid #2a2d35;border-radius:8px;padding:6px 10px;white-space:nowrap}
+.kb span svg{width:14px;height:14px;fill:none;stroke:#8fb8ff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.kb span small{color:#6f7280;font-size:11px}
+.code{background:#0b0c0f;border:1px solid #2a2d35;border-radius:8px;font-family:var(--mono);font-size:11.8px;line-height:1.62;color:#c9ccd6;padding:10px 0;counter-reset:ln;overflow:hidden}
+.code div{padding:0 12px 0 44px;position:relative;white-space:pre-wrap;word-break:break-word;opacity:0;transition:opacity .35s}
+.code div.on{opacity:1}
+.code div::before{counter-increment:ln;content:counter(ln);position:absolute;left:0;width:30px;text-align:right;color:#4a4d58}
+.code .h{color:#3ddc97}.code .v{color:#8fb8ff}.code .m{color:#6f7280}
+.vsl{display:flex;align-items:center;gap:10px;font-size:12px;color:#a3a6b2}
+.vsl .tr{flex:1;height:4px;border-radius:9px;background:#2a2d35;position:relative}
+.vsl .tr i{position:absolute;left:0;top:0;bottom:0;width:30%;background:#3ddc97;border-radius:9px}
+.vsl .tr i::after{content:"";position:absolute;right:-7px;top:-5px;width:14px;height:14px;border-radius:50%;background:#fff}
+.vsl b{font-family:var(--mono);font-weight:500;color:#e8e9ee}
+.voices{display:grid;gap:8px}
+.vo{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;border:1px solid #24262d;background:#0f1014;transition:all .4s}
+.vo .pl{width:32px;height:32px;border-radius:50%;background:#1f2128;display:grid;place-items:center;flex:none;border:1px solid #33363f}
+.vo .pl svg{width:12px;height:12px;fill:#e8e9ee;margin-left:2px}
+.vo .nm{font-weight:600;font-size:13px}.vo .ds{font-size:11.5px;color:#7c7f8c;margin-top:1px}
+.vo>div:nth-child(2){min-width:0;flex:1}
+.vo .wave{height:22px;width:62px;gap:2px;color:#3ddc97;justify-content:flex-end}
+.vo .wave i{width:2.5px}
+.vo .chk{width:18px;height:18px;border-radius:50%;border:1.5px solid #3a3d47;flex:none}
+.vo.sel{border-color:#1f5e44;background:#0f1a15}
+.vo.sel .pl{background:#3ddc97;border-color:#3ddc97}.vo.sel .pl svg{fill:#062b1c}
+.vo.sel .chk{border-color:#3ddc97;background:radial-gradient(circle,#3ddc97 0 4px,transparent 5px)}
+.tools{display:grid;gap:8px}
+.tlr{border:1px solid #24262d;border-radius:10px;background:#0f1014;overflow:hidden;opacity:0;transform:translateY(8px);transition:opacity .45s,transform .6s var(--ease)}
+.tlr.on{opacity:1;transform:none}
+.tlr .hd{display:flex;align-items:center;gap:10px;padding:10px 12px}
+.tlr .hd i{width:26px;height:26px;border-radius:7px;background:#1b1530;border:1px solid #3b2d6b;display:grid;place-items:center;flex:none;font-style:normal;font-family:var(--mono);font-size:10px;color:#b4a3ff;font-weight:600}
+.tlr .fn{font-family:var(--mono);font-size:12.5px;font-weight:600;color:#f1f2f5}
+.tlr .dd{font-size:11.5px;color:#7c7f8c;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tlr .hd>div{min-width:0;flex:1}
+.tlr .ty{font-size:10.5px;font-weight:700;color:#a3a6b2;border:1px solid #33363f;border-radius:5px;padding:1px 6px;white-space:nowrap}
+.tlr .sch{border-top:1px solid #24262d;background:#0b0c0f;font-family:var(--mono);font-size:11.2px;line-height:1.55;color:#c9ccd6;padding:8px 12px;white-space:pre;overflow:hidden}
+.tlr .sch .k{color:#8fb8ff}.tlr .sch .s{color:#3ddc97}.tlr .sch .p{color:#6f7280}
+.vadd{display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border:1.5px dashed #33363f;border-radius:10px;color:#8e919d;font-size:12.5px;font-weight:600}
+
+/* CLOSE */
+#close .wrap{text-align:center}
+.words{position:relative;display:flex;flex-direction:column;align-items:center;gap:22px;transform-style:preserve-3d}
+.word{padding:18px 40px 20px 30px;border-radius:99px;display:flex;align-items:center;gap:18px;font-size:clamp(40px,5.4vw,78px);font-weight:600;letter-spacing:-.04em;line-height:1}
+.word i{width:40px;height:40px;border-radius:50%;background:rgba(31,180,135,.14);display:grid;place-items:center;flex:none}
+.word i::after{content:"";width:15px;height:8px;border-left:3px solid var(--mint);border-bottom:3px solid var(--mint);transform:rotate(-45deg) translate(2px,-2px)}
+.word.w1{margin-right:280px}.word.w2{margin-left:120px}.word.w3{margin-right:160px}.word.w4{margin-left:260px}
+.word.w4 span{background:linear-gradient(180deg,#2f74f5,#5b9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.foot{margin-top:70px;font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase}
+
+@media (max-width:1100px){
+  .tx{grid-template-columns:minmax(0,1fr) 250px}
+  .bgrid{grid-template-columns:minmax(0,1fr)}
+  .bgrid .ph{justify-self:center}
+  .callgrid{gap:30px}
+}
+@media (max-width:860px){
+  section{padding:100px 16px 80px;min-height:auto;perspective:1100px}
+  #hero{min-height:100vh}
+  .top{padding:14px 16px}.top .brand{font-size:12px}.top .xs{display:none}
+  .head{margin-bottom:30px}
+  .hstage{height:auto;display:grid;gap:18px;margin-top:30px}
+  .hstage>.par{position:relative!important;left:auto!important;right:auto!important;top:auto!important;margin:0!important;width:100%}
+  .hcall,.ntf,.bkd,.st3{width:100%!important}
+  .ntf .bd{font-size:15.5px}
+  .st3{flex-direction:column}
+  .callgrid{grid-template-columns:1fr;gap:24px}
+  .callgrid .ph{justify-self:center}
+  .cstats{grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .cstat{padding:12px}.cstat .v{font-size:20px}.cstat .k{font-size:11px}
+  .appf{padding:6px;border-radius:22px}
+  .gw{border-radius:17px}
+  .gnav{display:none}
+  .gtop{padding:0 12px;gap:8px}.gtop .srch{display:none}.gtop .me{margin-left:auto}
+  .gtop .gseg{display:none}
+  .tx{grid-template-columns:1fr}
+  .txr{border-left:0;border-top:1px solid #eaecf0}
+  .txb{min-height:0;padding:12px}
+  .txh{flex-wrap:wrap;padding:10px 12px}
+  .minwave{display:none}
+  .tl .msg{max-width:88%}
+  .tool{margin-left:0;max-width:100%}
+  .chead{flex-wrap:wrap;padding:12px}.chead .gseg{margin-left:0}
+  .calg{grid-template-columns:44px repeat(2,minmax(0,1fr));padding:0 10px 12px}
+  .calg .d1,.calg .d4,.calg .d5{display:none}
+  .toast{position:relative;right:auto;bottom:auto;width:auto;margin:0 10px 12px}
+  .dsh{padding:12px}
+  .dtop{flex-wrap:wrap}.illu{margin-left:0}
+  .tiles{grid-template-columns:1fr 1fr;gap:10px}
+  .tile{padding:12px}.tile .v{font-size:26px}.tile .k{font-size:11.5px}
+  .dgrid{grid-template-columns:1fr}
+  .log th.sm2,.log td.sm2,.log .du{display:none}
+  .log td,.log th{padding:8px 5px}
+  .word{font-size:34px;padding:14px 24px 16px 18px}.word i{width:30px;height:30px}
+  .word.w1,.word.w2,.word.w3,.word.w4{margin:0}
+}
+@media (max-width:400px){
+  .phone{width:280px;height:580px}
+}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation:none!important}}
+</style>
+
+<div class="sky"></div>
+<div class="haze"><i></i><i></i><i></i></div>
+<div class="top"><div class="brand"><b></b><span id="brandName"></span><span class="xs"> · Voice agent</span></div><div class="chip">Sample data</div></div>
+
+<main>
+<!-- SCREEN: hero -->
+<section id="hero" data-run="hero">
+  <div class="wrap">
+    <div class="kicker fade" id="heroKicker"></div>
+    <h1 class="fade" style="--d:.1s">Every call answered,<br><em>day or night.</em></h1>
+    <p class="sub fade" style="--d:.2s">A patient calls after the office closes. The AI receptionist picks up, answers her question, books the visit and texts her.</p>
+    <div class="hstage">
+      <div class="par" data-z="-0.6" style="left:0;top:56px"><div class="panel hc hcall rise" style="--d:.35s">
+        <div class="h"><span class="ic40 grn"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a1 1 0 01-1 1A16 16 0 014 5a1 1 0 011-1z"/></svg></span><div><div class="t">Call answered</div><div class="s" id="hCallS"></div></div></div>
+        <div class="wave" id="hWave"></div>
+      </div></div>
+      <div class="par" data-z="0.5" style="left:50%;top:0;margin-left:-225px"><div class="panel hc ntf rise" style="--d:.5s">
+        <div class="app"><span class="ic40 blue"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></span><span>Calendar</span><span>now</span></div>
+        <div class="tt">New appointment booked</div>
+        <div class="bd" id="hNtf"></div>
+        <div class="tags"><span class="pill blue">Booked by AI receptionist</span><span class="pill">Text sent</span></div>
+      </div></div>
+      <div class="par" data-z="1.1" style="right:0;top:176px"><div class="panel hc bkd rise" style="--d:.8s">
+        <div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="rgba(150,170,200,.25)" stroke-width="7"/><circle id="hring" cx="50" cy="50" r="44" fill="none" stroke="url(#gm)" stroke-width="7" stroke-linecap="round" stroke-dasharray="276.5" stroke-dashoffset="276.5"/></svg><div class="num" id="hmin">0:00</div></div>
+        <div><div class="t">Call to booked</div><div class="s">The office was closed and no one had to pick up</div></div>
+      </div></div>
+      <div class="par" data-z="0.9" style="left:50%;top:300px;margin-left:-225px"><div class="panel st3 rise" style="--d:1s">
+        <div id="st1"><span class="tick"></span>Answered</div><div id="st2"><span class="tick"></span>Booked</div><div id="st3"><span class="tick"></span>Texted</div>
+      </div></div>
+    </div>
+    <div class="scrollcue fade" style="--d:1.4s">Scroll<b></b></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: incoming call -->
+<section id="call" data-run="call">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>01</span>The call</div><h2 class="fade" style="--d:.1s">Picked up <em>on the first ring.</em></h2><p class="sub fade" style="--d:.2s">A patient calls the main line at 9:14 PM. The AI receptionist answers in the clinic's name and starts talking with her.</p></div>
+    <div class="callgrid">
+      <div class="par ph" data-z="0.7"><div class="phone rise" style="--d:.25s"><div class="scr callscr" id="callScr">
+        <span class="isl"></span>
+        <div class="sb"><span id="clk"></span><span class="bat"></span></div>
+        <div class="who"><small id="cLine"></small><b id="cNum"></b><div class="stt" id="cStt">Incoming call…</div></div>
+        <div class="agent"><span class="orb"></span><span id="cAgent"></span></div>
+        <div class="wave" id="cWave"></div>
+        <div class="cap" id="cCap"></div>
+        <div class="btns"><span><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3zM5 11a7 7 0 0014 0M12 18v3"/></svg></span><span><svg viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4zM15.5 8.5a5 5 0 010 7M18.5 5.5a9 9 0 010 13"/></svg></span><span class="end"><svg viewBox="0 0 24 24"><path d="M3 15c5-5 13-5 18 0l-2 3-4-1.5v-2.5a10 10 0 00-6 0v2.5L5 18z"/></svg></span></div>
+      </div></div></div>
+      <div class="cside">
+        <div class="par" data-z="0.35"><div class="panel card rise" style="--d:.4s">
+          <div class="ct"><b>Live call</b><span class="pill amb" id="cHrs"></span></div>
+          <div id="cKv"></div>
+        </div></div>
+        <div class="par" data-z="0.6"><div class="cstats">
+          <div class="panel cstat rise" style="--d:.55s"><div class="k">Rings to answer</div><div class="v" id="cs1">1</div></div>
+          <div class="panel cstat rise" style="--d:.65s"><div class="k">Call time</div><div class="v" id="cs2">0:00</div></div>
+          <div class="panel cstat rise" style="--d:.75s"><div class="k">On hold</div><div class="v">0 sec</div></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: live transcript -->
+<section id="talk" data-run="talk">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>02</span>Live transcript</div><h2 class="fade" style="--d:.1s">Booked while <em>she's still talking.</em></h2><p class="sub fade" style="--d:.2s">She asks about insurance and a cleaning. The AI answers, checks the calendar mid-call and locks in the slot she picks.</p></div>
+    <div class="par" data-z="0.4"><div class="panel appf rise" style="--d:.25s"><div class="gw"><div class="gnav" data-a="1"></div><div class="gbody">
+      <div class="gtop"><span class="pt">Calls</span><div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg>Search calls</div><span class="me" id="me1"></span></div>
+      <div class="tx">
+        <div class="txl">
+          <div class="txh"><div><div class="n" id="txName"></div><div class="s" id="txSub"></div></div><div class="wave minwave" id="txWave"></div><span class="tmr" id="txT">00:00</span><span class="livebadge"><i></i>Live</span></div>
+          <div class="txb" id="txb"><div class="typ" id="typ"><i></i><i></i><i></i></div></div>
+        </div>
+        <div class="txr">
+          <div class="lb">Captured on the call</div>
+          <div id="capKv"></div>
+          <div class="lb">Tools used</div>
+          <div class="tlist" id="tlist"></div>
+        </div>
+      </div>
+    </div></div></div></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: booked + sms -->
+<section id="booked" data-run="booked">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>03</span>Booked and confirmed</div><h2 class="fade" style="--d:.1s">On the calendar, <em>confirmed by text.</em></h2><p class="sub fade" style="--d:.2s">The visit drops into the clinic calendar and the patient gets a text she can reply to, to confirm or reschedule.</p></div>
+    <div class="bgrid">
+      <div class="par" data-z="0.4"><div class="panel appf rise" style="--d:.25s"><div class="gw"><div class="gnav" data-a="2"></div><div class="gbody">
+        <div class="gtop"><span class="pt">Calendar</span><div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg>Search appointments</div><span class="me" id="me2"></span></div>
+        <div class="chead"><div class="ar"><span>‹</span><span>›</span></div><span class="rng" id="calRange"></span><span class="gsel" id="calName"></span><div class="gseg"><span>Day</span><span class="a">Week</span><span>Month</span></div></div>
+        <div class="calg" id="calg"></div>
+        <div class="toast" id="toast"><span class="ic40"><svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg></span><div><b>New appointment</b><small id="toastS"></small></div></div>
+      </div></div></div></div>
+      <div class="par ph" data-z="0.9"><div class="phone rise" style="--d:.45s"><div class="scr smsscr">
+        <span class="isl"></span>
+        <div class="sb"><span id="clk2"></span><span class="bat"></span></div>
+        <div class="hd"><div class="av" id="smsAv"></div><b id="smsFrom"></b><small>Text message</small></div>
+        <div class="ms" id="sms"><span class="day" id="smsDay"></span></div>
+        <div class="cmp">Text message</div>
+      </div></div></div>
+    </div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: call log dashboard -->
+<section id="dash" data-run="dash">
+  <div class="wrap">
+    <div class="head"><div class="eyebrow fade"><span>04</span>Call log</div><h2 class="fade" style="--d:.1s">Every call, <em>logged and counted.</em></h2><p class="sub fade" style="--d:.2s">Calls answered, bookings, after-hours calls and handle time, with each call's outcome and a one-line summary.</p></div>
+    <div class="par" data-z="0.4"><div class="panel appf rise" style="--d:.25s"><div class="gw"><div class="gnav" data-a="3"></div><div class="gbody">
+      <div class="gtop"><span class="pt">Call log</span><div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg>Search</div><span class="me" id="me3"></span></div>
+      <div class="dsh">
+        <div class="dtop"><span class="gsel">Last 30 days</span><span class="gsel">Main line</span><span class="illu">Illustrative</span></div>
+        <div class="tiles" id="tiles"></div>
+        <div class="dgrid">
+          <div class="card2"><div class="ct">Calls by day<div class="lg2"><span><i style="background:#155eef"></i>Office hours</span><span><i style="background:#7a5af8"></i>After hours</span></div></div><div class="bars" id="bars"></div></div>
+          <div class="card2"><div class="ct">Recent calls</div><table class="log" id="log"><thead><tr><th>Time</th><th>Caller</th><th class="du">Length</th><th>Outcome</th><th class="sm2">Summary</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </div></div></div></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: platform (voice agent dashboard) -->
+<section id="vxs" data-run="vx">
+  <div class="wrap">
+    <div class="head c"><div class="eyebrow fade"><span>05</span>In your voice agent dashboard</div><h2 class="fade" style="--d:.1s">This is what it will look like<br><em>in your voice agent dashboard.</em></h2><p class="sub fade" style="--d:.2s">The assistant behind the calls: its prompt and greeting, the voice it speaks in, and the three tools it uses to book and text.</p><div class="chip vxlab fade" style="--d:.2s">Your voice agent · illustrative</div></div>
+    <div class="par" data-z="0.5"><div class="vxwrap rise" style="--d:.3s"><div class="panel vxframe"><div class="vxbox" id="vxbox"><div class="vx" id="vx">
+      <aside class="vnav" id="vnav"></aside>
+      <div class="vmain">
+        <div class="vtop"><span class="crumb">Assistants / <b id="vName"></b></span><span class="aid" id="vId"></span>
+          <div class="met"><span>Latency <b id="vLat"></b></span></div>
+          <span class="vbtn ghost pub" id="vPub">Publish</span>
+          <span class="vbtn talk"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3zM5 11a7 7 0 0014 0M12 18v3"/></svg>Talk to assistant</span>
+        </div>
+        <div class="vtabs" id="vtabs"></div>
+        <div class="vgrid">
+          <div class="vcol">
+            <div class="vcard" id="vc1"><div class="vch"><b>Model</b><small>How the assistant thinks and what it says first</small></div>
+              <div class="vrow2"><div class="vf"><label>Provider</label><div class="vsel" id="vProv"></div></div><div class="vf"><label>Model</label><div class="vsel" id="vModel"></div></div></div>
+              <div class="vf"><label>First message</label><div class="vin" id="vFirst"></div></div>
+              <div class="vf"><label>System prompt</label><div class="code" id="vPrompt"></div></div>
+              <div class="vf"><label>Knowledge base</label><div class="kb" id="vKb"></div></div>
+              <div class="vf"><label>Temperature</label><div class="vsl"><div class="tr"><i></i></div><b>0.3</b></div></div>
+            </div>
+          </div>
+          <div class="vcol">
+            <div class="vcard" id="vc2"><div class="vch"><b>Voice</b><small id="vVoiceProv"></small></div><div class="voices" id="voices"></div></div>
+            <div class="vcard" id="vc3"><div class="vch"><b>Tools</b><small>Functions the assistant can call</small></div><div class="tools" id="tools"></div><div class="vadd" style="margin-top:8px">+ Add tool</div></div>
+          </div>
+        </div>
+      </div>
+    </div></div></div></div></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+
+<!-- SCREEN: close -->
+<section id="close" data-run="close">
+  <div class="wrap">
+    <div class="head c"><p class="sub fade" id="closeSub"></p></div>
+    <div class="words" id="words"></div>
+    <div class="foot fade" style="--d:1.2s" id="closeFoot"></div>
+  </div>
+</section>
+<!-- /SCREEN -->
+</main>
+
+<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="gm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8ec0ff"/><stop offset="1" stop-color="#2f74f5"/></linearGradient></defs></svg>
+
+<script>
+/* ================= SAMPLE CONTENT: edit this for a real job ================= */
+const DATA = {
+  system: 'AI dental receptionist',
+  business: 'Brightside Dental',
+  initials: 'BD',
+  staffInitials: 'FD',
+  agent: 'Ava',
+  mainLine: 'Brightside Dental · main line',
+  hero: {kicker:'Saturday · 9:14 PM · the office is closed', callSub:'Main line · 9:14 PM · after hours', callSecs:112,
+    notif:'Maya Torres · Cleaning<br>Tue, Oct 6 · 9:30 AM'},
+  caller: {name:'Maya Torres', first:'Maya', phone:'(555) 018-4402', time:'9:14'},
+  callPanel: [['Caller','(555) 018-4402'],['Line','Main line'],['Answered by','Ava · AI receptionist'],['Language','English'],['Status','<span class="pill" id="cStatus">Talking</span>']],
+  hours: 'After hours',
+  captions: [
+    ['Ava','Thanks for calling Brightside Dental, this is Ava. How can I help tonight?'],
+    ['Maya','Hi, I need a cleaning. Do you take PPO insurance?'],
+    ['Ava','We do. We accept most PPO plans and we\'ll check yours before the visit.']],
+  /* transcript: ai | us (caller) | tool | event */
+  transcript: [
+    {k:'ai',t:'Thanks for calling Brightside Dental, this is Ava. How can I help tonight?',at:'00:01'},
+    {k:'us',t:'Hi, I need a cleaning. Do you take PPO insurance?',at:'00:06',cap:{Reason:'Cleaning',Insurance:'PPO · verify before visit'}},
+    {k:'ai',t:'We do. We accept most PPO plans and we\'ll check yours before the visit. What day works for you?',at:'00:10'},
+    {k:'us',t:'Tuesday morning, if you have it.',at:'00:17'},
+    {k:'tool',fn:'check_availability',label:'checking availability…',args:'{ <b>"date"</b>: <u>"2026-10-06"</u>, <b>"part_of_day"</b>: <u>"morning"</u> }',res:'✓ 3 open slots: 8:30, 9:30, 10:30 AM',done:'3 slots found'},
+    {k:'ai',t:'Tuesday morning I have 8:30, 9:30 or 10:30. Which one works?',at:'00:21'},
+    {k:'us',t:'9:30, please.',at:'00:26'},
+    {k:'tool',fn:'book_appointment',label:'booking…',args:'{ <b>"name"</b>: <u>"Maya Torres"</u>, <b>"phone"</b>: <u>"+15550184402"</u>,\n  <b>"start"</b>: <u>"2026-10-06T09:30"</u>, <b>"type"</b>: <u>"Cleaning"</u> }',res:'✓ Booked · appointment #A-2231',done:'Confirmed',cap:{Slot:'Tue, Oct 6 · 9:30 AM'}},
+    {k:'tool',fn:'send_sms',label:'sending text…',args:'{ <b>"to"</b>: <u>"+15550184402"</u>, <b>"template"</b>: <u>"booking_confirmation"</u> }',res:'✓ Text delivered',done:'Sent'},
+    {k:'ai',t:'You\'re all set for Tuesday at 9:30 AM. I just texted you a confirmation. Anything else I can help with?',at:'00:34'},
+    {k:'event',t:'Appointment booked · Tue 9:30 AM'}],
+  captureFields: [['Patient','Maya Torres'],['Phone','(555) 018-4402'],['Reason',null],['Insurance',null],['Slot',null],['Status','<span class="stg" id="capSt">In progress</span>']],
+  calendar: {range:'Oct 5 – 9, 2026', name:'Hygiene · Chair 1', start:8, end:17, todayIdx:1,
+    days:[['MON',5],['TUE',6],['WED',7],['THU',8],['FRI',9]],
+    events:[[0,8.5,1,'blue','Cleaning','J. Okafor'],[0,11,1.5,'vio','Crown fitting','R. Patel'],[0,14,1,'teal','New patient exam','L. Brooks'],
+      [1,8,1,'blue','Cleaning','D. Kim'],[1,11,1,'teal','Filling','T. Reyes'],[1,13.5,1.5,'vio','Crown prep','S. Nguyen'],
+      [2,9,1,'blue','Cleaning','A. Silva'],[2,12,1,'amb','Consult','M. Diaz'],[2,15,1,'blue','Cleaning','C. Ward'],
+      [3,8.5,1.5,'vio','Root canal','P. Hale'],[3,13,1,'teal','Filling','E. Moss'],
+      [4,10,1,'blue','Cleaning','K. Lund'],[4,14,1.5,'amb','Whitening','N. Frost']],
+    newEvent:[1,9.5,1,'Cleaning','Maya Torres']},
+  toast: 'Maya Torres · Tue 9:30 AM · booked by the AI receptionist on a 9:14 PM call',
+  sms: {day:'Today 9:16 PM', thread:[
+    ['frm','Hi Maya, you\'re booked for a cleaning at Brightside Dental on Tue, Oct 6 at 9:30 AM. Reply C to confirm or R to reschedule.'],
+    ['mine','C'],
+    ['frm','Confirmed. See you Tuesday at 9:30 AM! Reply R anytime if you need to move it.']]},
+  tiles: [['Calls answered',312,'','100% picked up','#155eef','#eff4ff','<path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a1 1 0 01-1 1A16 16 0 014 5a1 1 0 011-1z"/>'],
+    ['Bookings',118,'','38% of calls','#079455','#ecfdf3','<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 14l2 2 4-4"/>'],
+    ['After-hours calls',97,'','31% of calls','#6941c6','#f4f3ff','<path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/>'],
+    ['Avg handle time',134,'time','per call','#b54708','#fffaeb','<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>']],
+  days: [['Mon',14,3],['Tue',12,4],['Wed',11,3],['Thu',13,4],['Fri',10,5],['Sat',3,6],['Sun',2,5]],
+  calls: [['9:14 PM','Maya Torres','1:52','Booked','','Cleaning, Tue 9:30 AM'],
+    ['8:02 PM','(555) 017-3310','0:48','FAQ','blue','Asked about Saturday hours'],
+    ['6:41 PM','James Okafor','2:31','Rescheduled','amb','Thu 2:00 PM moved to Fri 11:00 AM'],
+    ['5:12 PM','Lena Brooks','1:37','Booked','','New patient exam, Mon 8:30 AM'],
+    ['12:26 PM','Tom Reyes','3:05','Transferred','vio','Billing question, sent to front desk'],
+    ['7:48 AM','Ana Silva','1:10','Booked','','Crown fitting, Wed 11:00 AM']],
+  platform: {
+    name:'Dental Receptionist', id:'asst_7f2c…91ab', latency:'~780 ms', provider:'OpenAI', model:'gpt-4o', voiceProvider:'Voice library', kb:[['clinic-faq.pdf','14 KB'],['insurance-plans.txt','3 KB']],
+    nav:[['Overview','grid'],['Assistants','bot',1],['Phone Numbers','phone'],['Tools','tool'],['Files','file'],['Call Logs','list'],['Analytics','chart'],['|Settings'],['API Keys','key'],['Billing','card']],
+    tabs:[['Model','cpu',1],['Voice','mic'],['Transcriber','text'],['Tools','tool','3'],['Analysis','chart'],['Advanced','gear']],
+    first:'Thanks for calling Brightside Dental, this is Ava. How can I help today?',
+    prompt:['<span class="h">[Identity]</span>','You are Ava, the receptionist for Brightside Dental. Warm, brief, one question at a time.',
+      '<span class="h">[Tasks]</span>','1. Answer questions from the clinic FAQ: <span class="v">hours, insurance, location, parking</span>.',
+      '2. To book or move a visit, call <span class="v">check_availability</span>, offer up to 3 times, then <span class="v">book_appointment</span>.',
+      '3. After any booking or change, call <span class="v">send_sms</span> with the confirmation.',
+      '<span class="h">[Rules]</span>','Never give clinical advice. Billing questions go to the front desk.','<span class="m">// Office hours: Mon–Fri 8 AM – 5 PM. Answer 24/7.</span>'],
+    voices:[['Ava','Warm · American · female',1],['Leo','Calm · American · male'],['Mia','Bright · British · female']],
+    tools:[
+      {fn:'check_availability',d:'Returns open slots for a day',sch:['<span class="p">{</span> <span class="k">"date"</span>: <span class="s">"string, YYYY-MM-DD"</span>,','  <span class="k">"part_of_day"</span>: <span class="s">"morning | afternoon"</span> <span class="p">}</span>']},
+      {fn:'book_appointment',d:'Books, moves or cancels a visit',sch:['<span class="p">{</span> <span class="k">"name"</span>: <span class="s">"string"</span>, <span class="k">"phone"</span>: <span class="s">"string"</span>,','  <span class="k">"start"</span>: <span class="s">"ISO datetime"</span>, <span class="k">"type"</span>: <span class="s">"string"</span>,','  <span class="k">"action"</span>: <span class="s">"book | reschedule | cancel"</span> <span class="p">}</span>']},
+      {fn:'send_sms',d:'Texts the patient a confirmation',sch:['<span class="p">{</span> <span class="k">"to"</span>: <span class="s">"string"</span>,','  <span class="k">"template"</span>: <span class="s">"booking_confirmation"</span> <span class="p">}</span>']}]},
+  close: {sub:'Each call is answered, booked on the calendar, confirmed by text and logged.', words:['Answered.','Booked.','Confirmed.','Logged.'], foot:'Your voice agent · AI dental receptionist'}
+};
+/* ========================================================================== */
+
+(function(){
+const D=DATA,$=id=>document.getElementById(id);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const ease=t=>1-Math.pow(1-t,3);
+function count(el,a,b,dur,fmt,cb){const t0=performance.now();(function f(n){const p=Math.min(1,Math.max(0,(n-t0)/dur)),v=a+(b-a)*ease(p);if(cb)cb(v,p);if(el)el.textContent=fmt?fmt(v):Math.round(v);if(p<1)requestAnimationFrame(f)})(t0)}
+const mmss=v=>{v=Math.round(v);return Math.floor(v/60)+':'+String(v%60).padStart(2,'0')};
+const pad2=v=>{v=Math.round(v);return String(Math.floor(v/60)).padStart(2,'0')+':'+String(v%60).padStart(2,'0')};
+function wave(el,n,lo,hi){let h='';for(let i=0;i<n;i++){const c=Math.sin(i/n*Math.PI);h+='<i style="--du:'+(.45+Math.random()*.6).toFixed(2)+'s;--dl:-'+(Math.random()).toFixed(2)+'s;--lo:'+(lo||.1)+';--hi:'+((hi||.95)*(.35+.65*c)*(.7+Math.random()*.3)).toFixed(2)+'"></i>'}el.innerHTML=h}
+
+/* chrome */
+$('brandName').textContent=D.system.charAt(0).toUpperCase()+D.system.slice(1);
+['me1','me2','me3'].forEach(i=>$(i).textContent=D.staffInitials);
+const NAV=['<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+ '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a1 1 0 01-1 1A16 16 0 014 5a1 1 0 011-1z"/>','<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+ '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>','<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>','<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>'];
+document.querySelectorAll('.gnav').forEach(n=>{const a=+n.dataset.a;n.innerHTML='<span class="acct">'+D.initials+'</span>'+NAV.map((p,i)=>'<span class="ni'+(i===a?' a':'')+'"><svg viewBox="0 0 24 24">'+p+'</svg></span>').join('')});
+
+/* hero */
+$('heroKicker').textContent=D.hero.kicker;$('hCallS').textContent=D.hero.callSub;$('hNtf').innerHTML=D.hero.notif;wave($('hWave'),34,.12,.95);
+
+/* 01 call */
+$('clk').textContent=$('clk2').textContent=D.caller.time;
+$('cLine').textContent=D.mainLine;$('cNum').textContent=D.caller.phone;$('cAgent').textContent=D.agent+' · AI receptionist';$('cHrs').textContent=D.hours;
+$('cKv').innerHTML=D.callPanel.map(r=>'<div class="kvr"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>').join('');
+wave($('cWave'),30,.1,1);
+
+/* 02 transcript */
+$('txName').textContent=D.caller.name;$('txSub').textContent=D.caller.phone+' · inbound · '+D.agent+' answering';wave($('txWave'),16,.15,.95);
+const TOOLSVG='<svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg>';
+const txb=$('txb'),typ=$('typ');
+const txEls=D.transcript.map(m=>{const e=document.createElement('div');
+ if(m.k==='tool'){e.className='tool rv';e.innerHTML='<div class="th">'+TOOLSVG+'Tool call <span class="fn">'+m.fn+'</span><span class="stt"><i class="spin"></i><span>'+m.label+'</span></span></div><div class="args">'+m.args+'</div><div class="res">'+m.res+'</div>'}
+ else if(m.k==='event'){e.className='evp rv';e.innerHTML='<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 14l2 2 4-4"/></svg>'+m.t}
+ else{e.className='tl rv '+m.k;e.innerHTML='<span class="who">'+(m.k==='ai'?D.agent.slice(0,2).toUpperCase():D.caller.name.split(' ').map(w=>w[0]).join(''))+'</span><div class="msg"><small>'+(m.k==='ai'?D.agent+' · AI':D.caller.first)+' · '+m.at+'</small><p>'+m.t+'</p></div>'}
+ txb.insertBefore(e,typ);return e});
+$('capKv').innerHTML=D.captureFields.map(r=>'<div class="kv"><span>'+r[0]+'</span><span data-f="'+r[0]+'">'+(r[1]===null?'<span class="pend">listening…</span>':r[1])+'</span></div>').join('');
+const tools=[...new Set(D.transcript.filter(m=>m.k==='tool').map(m=>m.fn))];
+$('tlist').innerHTML=tools.map(f=>'<div data-fn="'+f+'"><i></i>'+f+'</div>').join('');
+const setCap=o=>{for(const k in o){const s=document.querySelector('#capKv [data-f="'+k+'"]');if(s)s.textContent=o[k]}};
+
+/* 03 calendar + sms */
+const C=D.calendar,HR=56,calg=$('calg');$('calRange').textContent=C.range;$('calName').textContent=C.name;$('toastS').textContent=D.toast;
+const hide=i=>(i===0?' d1':i===3?' d4':i===4?' d5':'');
+calg.innerHTML='<div></div>'+C.days.map((d,i)=>'<div class="dh'+(i===C.todayIdx?' today':'')+hide(i)+'">'+d[0]+'<b>'+d[1]+'</b></div>').join('')+'<div class="tcol" id="tcol"></div>'+C.days.map((d,i)=>'<div class="dcol'+(i===C.todayIdx?' today':'')+hide(i)+'"></div>').join('');
+const H=(C.end-C.start)*HR;const tc=$('tcol');tc.style.height=H+'px';
+for(let h=C.start+1;h<C.end;h++){const s=document.createElement('span');s.style.top=((h-C.start)*HR)+'px';s.textContent=(h>12?h-12:h)+(h>=12?' PM':' AM');tc.appendChild(s)}
+const dcols=calg.querySelectorAll('.dcol');dcols.forEach(d=>{d.style.height=H+'px';d.style.setProperty('--hr',HR+'px')});
+const tfmt=h=>{const Hh=Math.floor(h),m=Math.round((h-Hh)*60);return (Hh>12?Hh-12:Hh)+':'+String(m).padStart(2,'0')+(Hh>=12?' PM':' AM')};
+function addEv(d,s,len,c,t,sub,extra){const e=document.createElement('div');e.className='ev '+c+(extra||'');e.style.top=((s-C.start)*HR+2)+'px';e.style.height=(len*HR-4)+'px';
+ e.innerHTML='<div class="tm">'+tfmt(s)+' – '+tfmt(s+len)+'</div><div class="tl2">'+t+'</div>'+(len>=1?'<div class="sl">'+sub+'</div>':'');dcols[d].appendChild(e);return e}
+C.events.forEach(v=>addEv(...v));
+const ne=C.newEvent,nev=addEv(ne[0],ne[1],ne[2],'',ne[3],ne[4],' new');nev.insertAdjacentHTML('beforeend','<span class="nb">NEW</span>');
+$('smsAv').textContent=D.initials;$('smsFrom').textContent=D.business;$('smsDay').textContent=D.sms.day;
+const smsEls=D.sms.thread.map(m=>{const e=document.createElement('div');e.className='sm '+m[0];e.textContent=m[1];$('sms').appendChild(e);return e});
+
+/* 04 dashboard */
+$('tiles').innerHTML=D.tiles.map((t,i)=>'<div class="tile"><div class="k"><i style="background:'+t[5]+'"><svg viewBox="0 0 24 24" style="stroke:'+t[4]+'">'+t[6]+'</svg></i>'+t[0]+'</div><div class="v" id="tv'+i+'">0</div><span class="d">'+t[3]+'</span></div>').join('');
+const mx=Math.max(...D.days.map(d=>d[1]+d[2]));
+$('bars').innerHTML=D.days.map(d=>'<div class="g"><i data-h="'+(d[1]/mx*100)+'"></i><i data-h="'+(d[2]/mx*100)+'"></i><span>'+d[0]+'</span></div>').join('');
+document.querySelector('#log tbody').innerHTML=D.calls.map(c=>'<tr><td>'+c[0]+'</td><td><b>'+c[1]+'</b></td><td class="du">'+c[2]+'</td><td><span class="pill '+c[4]+'">'+c[3]+'</span></td><td class="sm2">'+c[5]+'</td></tr>').join('');
+
+/* 05 platform */
+const P=D.platform;
+const VI={grid:'<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+ bot:'<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01"/>',phone:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a1 1 0 01-1 1A16 16 0 014 5a1 1 0 011-1z"/>',
+ tool:'<path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/>',file:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>',
+ list:'<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',key:'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3"/>',
+ card:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/>',cpu:'<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/>',
+ mic:'<path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3zM5 11a7 7 0 0014 0M12 18v3"/>',text:'<path d="M4 6h16M4 12h10M4 18h13"/>',
+ gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>'};
+const svg=k=>'<svg viewBox="0 0 24 24">'+VI[k]+'</svg>';
+$('vnav').innerHTML='<div class="org"><i>'+D.initials+'</i><div style="min-width:0"><b>'+D.business+'</b><small>Production</small></div></div>'+
+ P.nav.map(n=>n[0][0]==='|'?'<div class="grp">'+n[0].slice(1)+'</div>':'<div class="it'+(n[2]?' a':'')+'">'+svg(n[1])+n[0]+'</div>').join('');
+$('vName').textContent=P.name;$('vId').textContent=P.id;$('vLat').textContent=P.latency;$('vProv').textContent=P.provider;$('vModel').textContent=P.model;$('vVoiceProv').textContent=P.voiceProvider;
+$('vtabs').innerHTML=P.tabs.map(t=>'<span'+(t[2]===1?' class="a"':'')+'>'+svg(t[1])+t[0]+(typeof t[2]==='string'?'<span class="cnt">'+t[2]+'</span>':'')+'</span>').join('');
+$('vFirst').textContent=P.first;
+$('vKb').innerHTML=P.kb.map(f=>'<span><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>'+f[0]+'<small>'+f[1]+'</small></span>').join('');
+$('vPrompt').innerHTML=P.prompt.map(l=>'<div>'+l+'</div>').join('');
+$('voices').innerHTML=P.voices.map(v=>'<div class="vo'+(v[2]?' sel':'')+'"><span class="pl"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg></span><div><div class="nm">'+v[0]+'</div><div class="ds">'+v[1]+'</div></div>'+(v[2]?'<div class="wave" id="vWave"></div>':'')+'<span class="chk"></span></div>').join('');
+wave($('vWave'),12,.15,.95);
+$('tools').innerHTML=P.tools.map(t=>'<div class="tlr"><div class="hd"><i>fn</i><div><div class="fn">'+t.fn+'</div><div class="dd">'+t.d+'</div></div><span class="ty">function</span></div><div class="sch">'+t.sch.join('\n')+'</div></div>').join('');
+function fitVX(){const box=$('vxbox'),g=$('vx'),narrow=innerWidth<700;g.style.width=narrow?'760px':'1216px';
+ g.style.gridTemplateColumns=narrow?'minmax(0,1fr)':'';$('vnav').style.display=narrow?'none':'';g.querySelector('.vgrid').style.gridTemplateColumns=narrow?'minmax(0,1fr)':'';
+ g.querySelector('.met').style.display=narrow?'none':'';
+ const baseW=narrow?760:1216;const avail=Math.min(baseW,box.closest('.vxwrap').clientWidth-24);const s=Math.min(1,avail/baseW);g.style.transform='scale('+s+')';box.style.width=baseW*s+'px';box.style.height=g.offsetHeight*s+'px'}
+fitVX();addEventListener('resize',fitVX);
+
+/* close */
+$('closeSub').textContent=D.close.sub;$('closeFoot').textContent=D.close.foot;
+$('words').innerHTML=D.close.words.map((w,i)=>'<div class="par" data-z="'+[.3,.8,1.2,1.6][i]+'"><div class="panel word w'+(i+1)+' rise" style="--d:'+(.1+i*.25)+'s"><i></i>'+(i===3?'<span>'+w+'</span>':w)+'</div></div>').join('');
+
+/* runners */
+const R={
+ hero:async()=>{$('hero').classList.add('live');count($('hmin'),0,D.hero.callSecs,2600,mmss,v=>{$('hring').style.strokeDashoffset=276.5*(1-v/D.hero.callSecs)});
+  await wait(700);$('st1').classList.add('on');await wait(900);$('st2').classList.add('on');await wait(900);$('st3').classList.add('on')},
+ call:async()=>{const sec=$('call');await wait(1300);$('cStt').textContent='Answered by '+D.agent;sec.classList.add('live');
+  let t=0;const tm=setInterval(()=>{t++;$('cs2').textContent=mmss(t);$('cStt').textContent='Answered by '+D.agent+' · '+pad2(t);if(t>=14)clearInterval(tm)},1000);
+  for(const c of D.captions){$('cCap').style.opacity=0;await wait(350);$('cCap').innerHTML='<em>'+c[0]+'</em>'+c[1];$('cCap').style.opacity=1;await wait(2400)}},
+ talk:async()=>{$('talk').classList.add('live');let s=0;const tm=setInterval(()=>{s++;$('txT').textContent=pad2(s);if(s>=34)clearInterval(tm)},330);
+  await wait(500);
+  for(let i=0;i<D.transcript.length;i++){const m=D.transcript[i],e=txEls[i];
+   if(m.k==='ai'){txb.insertBefore(typ,e);typ.classList.add('show');await wait(650);typ.classList.remove('show')}
+   e.classList.add('show');
+   if(m.k==='tool'){const tl=document.querySelector('#tlist [data-fn="'+m.fn+'"]');await wait(1100);e.classList.add('done');e.querySelector('.stt span').textContent=m.done;if(tl)tl.classList.add('on')}
+   if(m.cap)setCap(m.cap);
+   if(m.k==='event'){const st=$('capSt');st.textContent='Booked';st.classList.add('g')}
+   await wait(m.k==='tool'?450:700)}},
+ booked:async()=>{await wait(1100);nev.classList.add('drop');await wait(700);$('toast').classList.add('on');
+  for(const e of smsEls){await wait(900);e.classList.add('show')}},
+ dash:async()=>{await wait(500);D.tiles.forEach((t,i)=>count($('tv'+i),0,t[1],1800,t[2]==='time'?mmss:null));
+  document.querySelectorAll('#bars i').forEach((b,i)=>setTimeout(()=>b.style.height=b.dataset.h+'%',i*50));
+  document.querySelectorAll('#log tbody tr').forEach((r,i)=>setTimeout(()=>r.classList.add('show'),400+i*160))},
+ vx:async()=>{const vx=$('vx');vx.parentNode.closest('section').classList.add('live');await wait(800);$('vc1').classList.add('on');
+  const lines=[...document.querySelectorAll('#vPrompt div')];for(const l of lines){l.classList.add('on');await wait(90)}
+  $('vc2').classList.add('on');await wait(300);$('vc3').classList.add('on');
+  for(const r of document.querySelectorAll('#tools .tlr')){await wait(220);r.classList.add('on')}
+  await wait(600);vx.classList.add('ready');$('vPub').textContent='Published'},
+ close:async()=>{}
+};
+
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const s=e.target;s.classList.add('in');io.unobserve(s);const f=R[s.dataset.run];if(f)f()}}),{threshold:.22});
+document.querySelectorAll('section').forEach(s=>io.observe(s));
+
+/* spatial parallax */
+const pars=[...document.querySelectorAll('.par')].map(el=>({el,z:parseFloat(el.dataset.z||0),sec:el.closest('section')}));
+let mx2=0,tx=0;addEventListener('mousemove',e=>{tx=e.clientX/innerWidth-.5},{passive:true});
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(){mx2+=(tx-mx2)*.06;const vh=innerHeight,small=innerWidth<860,amp=reduce?0:(small?.35:1);
+ document.documentElement.style.setProperty('--sp',(scrollY/(document.body.scrollHeight-vh||1)).toFixed(3));
+ for(const p of pars){const r=p.sec.getBoundingClientRect();if(r.bottom<-200||r.top>vh+200)continue;
+  const t=Math.max(-1.2,Math.min(1.2,(r.top+Math.min(r.height,vh)/2-vh/2)/vh));
+  const big=p.el.offsetHeight>500?.35:1;
+  const y=-t*p.z*70*amp,rx=Math.max(-10,Math.min(12,t*9*(0.5+p.z*.4)))*amp*big,x=small?0:mx2*p.z*-16*amp,ry=small?0:mx2*p.z*3*amp*big;
+  p.el.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,'+(p.z*20*amp).toFixed(1)+'px) rotateX('+rx.toFixed(2)+'deg) rotateY('+ry.toFixed(2)+'deg)'}
+ requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+})();
+</script>
