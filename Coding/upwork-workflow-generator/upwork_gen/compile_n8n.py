@@ -23,9 +23,9 @@ from typing import Any, Dict, List, Optional, Tuple
 from .catalog import Catalog, get_catalog
 from .layout import Placement, layout, section_content
 from .params import (CONFIG_NODE_KEY, CONFIG_NODE_NAME, NODE_SETTINGS, compiles_to_http,
-                     config_source, distinct_set_params, enrich, is_config_node,
-                     is_error_trigger, load_services, resolve_service, service_config_keys,
-                     strip_step, trigger_stand_in)
+                     config_keys_read, config_source, distinct_set_params, enrich,
+                     is_config_node, is_error_trigger, load_services, placeholder_value,
+                     resolve_service, service_config_keys, strip_step, trigger_stand_in)
 from .spec import Edge, MULTI_OUTPUT_KINDS, Node, SpecError, WorkflowSpec, unique_names
 
 _NAMESPACE = uuid.UUID("6f3c1f4e-1f8d-4a2b-9c7e-0a5d2b6e4f11")
@@ -181,7 +181,8 @@ def _config_anchor(spec: WorkflowSpec) -> Optional[Tuple[Node, bool]]:
 
 def with_config_node(spec: WorkflowSpec) -> WorkflowSpec:
     """A copy of the spec with the one "0 - Config: Your Settings" node wired
-    in, when the spec has a `config` block. Idempotent.
+    in, when the spec has a `config` block or its own node params read the
+    Config node by name. Idempotent.
 
     There is exactly one Config node per workflow, placed by _config_anchor
     where it runs before the most nodes. An n8n expression can only read a
@@ -190,16 +191,22 @@ def with_config_node(spec: WorkflowSpec) -> WorkflowSpec:
     params.config_source decides that per node, and every other reader gets
     the literal PASTE-YOUR- value instead.
 
-    The node carries every `config` key plus any key an HTTP service it feeds
-    needs (its API key, location id) that the spec did not list.
+    The node carries every `config` key, then any key a param the spec author
+    wrote reads from it (`$('0 - Config: Your Settings').item.json.key`) that
+    `config` does not list, as a PASTE-YOUR- placeholder, then any key an HTTP
+    service it feeds needs (its API key, location id). The read keys matter
+    for a vault archetype: promotion strips `config` but keeps those params.
     """
-    if not spec.config or any(is_config_node(n) for n in spec.nodes):
+    read = config_keys_read(spec)
+    if (not spec.config and read is None) or any(is_config_node(n) for n in spec.nodes):
         return spec
     found = _config_anchor(spec)
     if found is None:
         return spec
     anchor, after = found
     out = copy.deepcopy(spec)
+    for key in read or []:
+        out.config.setdefault(key, placeholder_value(key))
     config = Node(key=CONFIG_NODE_KEY, kind="data.transform", label=CONFIG_NODE_NAME,
                   section=anchor.section,
                   notes="Every account id, list id and key this workflow uses, in one place.")

@@ -122,6 +122,20 @@ class TestProposalChecks(unittest.TestCase):
         text = make_proposal().replace("Lorenzo\n", "Cheers\n")
         self.assertTrue(any("signature" in f for f in self.fails(text)))
 
+    def test_tools_built_yours_opener_passes(self):
+        # The Template A opener since 2026-09-28 (opener_variant do-x-all-the-time).
+        opener = ("Hey Trey \U0001F44B I went ahead and built your n8n + GoHighLevel lead "
+                  "follow-up system, with Claude writing the replies, [N]-min Loom: "
+                  "https://www.loom.com/share/[LOOMURL]")
+        text = (opener + "\n\ntldr: every new lead gets a reply in minutes. The video walks "
+                "through how.\n\nI can start [START], working demo by [DRAFT] (assuming we "
+                "speak soon).\n\n" + PS_BLOCK)
+        fails, length = check_proposal(text)
+        self.assertEqual(fails, [])
+        self.assertEqual(length, 141)
+        filled = text.replace("[N]", "4").replace("[LOOMURL]", "0123abcdef")
+        self.assertEqual(check_proposal(filled), ([], 141))
+
 
 class TestBeats(unittest.TestCase):
     def test_limits(self):
@@ -231,15 +245,35 @@ class TestFinalize(unittest.TestCase):
         self.assertRegex(row["applied_at"], r"^\d{4}-\d\d-\d\dT\d\d:\d\d$")
         self.assertEqual(row["connects"], "")
 
-    def test_preview_out_of_range_warns_without_editing(self):
+    def test_default_opener_variant_is_tools_built_yours(self):
+        code, output = self.run_main("--loom", "https://www.loom.com/share/abc123",
+                                     "--runtime", "1", "--start", "today",
+                                     "--draft", "tomorrow")
+        self.assertEqual(code, 0, output)
+        with open(self.csv, encoding="utf-8") as fh:
+            rows = list(csv.reader(fh))
+        self.assertEqual(dict(zip(rows[0], rows[-1]))["opener_variant"], "do-x-all-the-time")
+
+    def test_preview_out_of_range_refuses(self):
         with open(os.path.join(self.job, "proposal.md"), "w", encoding="utf-8") as fh:
             fh.write(make_proposal(150))
+        original = self.proposal()
         code, output = self.run_main("--loom", "https://www.loom.com/share/abc",
                                      "--runtime", "1", "--start", "today", "--no-log",
                                      "--name", "Christopher")
-        self.assertEqual(code, 0)
-        self.assertIn("WARNING: preview is 156 chars", output)
-        self.assertTrue(self.proposal().startswith("Hey Christopher"))
+        self.assertEqual(code, 2)
+        self.assertIn("REFUSED: preview is 156 chars", output)
+        self.assertEqual(self.proposal(), original)
+
+    def test_duplicate_signoff_refuses(self):
+        with open(os.path.join(self.job, "proposal.md"), "w", encoding="utf-8") as fh:
+            fh.write(make_proposal(140) + "\nLorenzo\n\nLorenzo\n")
+        original = self.proposal()
+        code, output = self.run_main("--loom", "https://www.loom.com/share/abc",
+                                     "--runtime", "1", "--start", "today", "--no-log")
+        self.assertEqual(code, 2)
+        self.assertIn("signs off 'Lorenzo'", output)
+        self.assertEqual(self.proposal(), original)
 
     def test_refuses_when_start_would_remain(self):
         original = self.proposal()
@@ -446,6 +480,42 @@ class TestChartClone(unittest.TestCase):
         self.assertEqual(chart_overlaps(spec, self.vault), [])
 
 
+# Sample proposals here use stand-in P.S. bullets ("-> one"); the word-for-word
+# proof check is tested on its own below.
+_PROOF_PATCH = None
+
+
+def setUpModule():
+    global _PROOF_PATCH
+    from unittest import mock
+    _PROOF_PATCH = mock.patch("upwork_gen.verify_job.proof_bank", return_value=[])
+    _PROOF_PATCH.start()
+
+
+def tearDownModule():
+    _PROOF_PATCH.stop()
+
+
+class TestProofFactsFixedFramingFree(unittest.TestCase):
+    def test_reframed_bullet_passes_missing_fact_fails(self):
+        from unittest import mock
+        from upwork_gen import verify_job
+        head = ("Hey there 👋 I build n8n lead-to-CRM systems like this all the time, so I went "
+                "ahead and built this one custom for you, [N]-min Loom: "
+                "https://www.loom.com/share/[LOOMURL]\n\ntldr: x. The video walks through how."
+                "\n\nLorenzo\n\nP.S. A few other things I've done:\n\n")
+        good = ("-> Increased a software consultancy's qualified lead volume 35% with outbound.\n"
+                "-> $750M+ in annual bid volume runs through a system I built.\n"
+                "-> Generated $5M in loan applications in 30 days for a lender.\n"
+                "-> Scaled my own AI agency to $10,000 a month.\n")
+        with mock.patch.object(verify_job, "proof_bank", return_value=["-> x"]):
+            fails, _ = verify_job.check_proposal(head + good)
+            self.assertFalse([f for f in fails if "case study" in f], fails)
+            bad = good.replace("$10,000 a month", "$12,000 a month")
+            fails, _ = verify_job.check_proposal(head + bad)
+            self.assertTrue([f for f in fails if "case study" in f], fails)
+
+
 class TestClassifyStripsJdHeader(unittest.TestCase):
     def test_hiring_history_does_not_drive_classification(self):
         post = "We need a RAG chatbot over our knowledge base with a vector database."
@@ -473,9 +543,14 @@ class TestBatchAndNearest(unittest.TestCase):
                 shutil.copyfile(os.path.join(REAL_JOB, name), os.path.join(job, name))
             out_dir = os.path.join(tmp, "out")
             buf = io.StringIO()
-            with contextlib.redirect_stdout(buf):
+            # The real job predates the 15-node ceiling (it has 20 nodes).
+            from unittest import mock
+            with contextlib.redirect_stdout(buf), \
+                    mock.patch("upwork_gen.verify_job.MAX_CANVAS_NODES", 99):
                 code = cli.main(["batch", job, "--no-learn", "--no-log",
                                  "--out-dir", out_dir])
+            from upwork_gen.verify_job import verify
+            self.assertTrue(any("over the 10-15 target" in w for w in verify(job).warns))
             produced = sorted(os.listdir(job))
             self.assertTrue(any(p.endswith(".n8n.json") for p in produced), produced)
             self.assertTrue(any(p.endswith(".excalidraw") for p in produced), produced)
@@ -1718,7 +1793,7 @@ class TestRuntimeCorrection(TestFinalize):
     def test_new_runtime_updates_the_token_the_count_and_the_row(self):
         before = self.first_run()
         row = before.splitlines(True)[-1]  # the row the first run appended
-        self.assertIn(",standard,140,", row)
+        self.assertIn(",do-x-all-the-time,140,", row)
         code, output = self.rerun("12")
         self.assertEqual(code, 0, output)
         text = self.proposal()
@@ -1731,7 +1806,7 @@ class TestRuntimeCorrection(TestFinalize):
         self.assertNotIn("--relog", output)
         # Only that field of that row changes; loom_url and every other byte stay.
         self.assertEqual(self.log(), before[:-len(row)]
-                         + row.replace(",standard,140,", ",standard,141,"))
+                         + row.replace(",do-x-all-the-time,140,", ",do-x-all-the-time,141,"))
 
         # With --replace-loom (and a share-dialog query) it is the same video.
         code, output = self.rerun("3", "--replace-loom", loom=self.LOOM + "?sid=9f8e7d")
@@ -1846,7 +1921,7 @@ class TestFollowUpFixes(TestFinalize):
     def test_rerun_with_only_name_updates_the_logged_count(self):
         before = self.first_run()
         row = before.splitlines(True)[-1]
-        self.assertIn(",standard,140,", row)
+        self.assertIn(",do-x-all-the-time,140,", row)
         code, output = self.run_main("--loom", self.LOOM, "--runtime", "1",
                                      "--start", "today", "--name", "Dana")
         self.assertEqual(code, 0, output)
@@ -1855,7 +1930,7 @@ class TestFollowUpFixes(TestFinalize):
         self.assertIn("updated opener_visible_chars in place on 1 existing row(s)", output)
         self.assertNotIn("NOT LOGGED", output)
         self.assertEqual(self.log(), before[:-len(row)]
-                         + row.replace(",standard,140,", ",standard,139,"))
+                         + row.replace(",do-x-all-the-time,140,", ",do-x-all-the-time,139,"))
 
     def test_broken_spec_writes_nothing(self):
         spec_path = os.path.join(self.job, "spec.json")
@@ -1891,7 +1966,7 @@ class TestNameAndRuntimeFollowUps(TestFollowUpFixes):
     retime paths; verify counts Calendly triggers the compiler's way."""
 
     def assert_row_count(self, text, count):
-        self.assertIn(",standard,{},".format(count), text.splitlines(True)[-1])
+        self.assertIn(",do-x-all-the-time,{},".format(count), text.splitlines(True)[-1])
 
     def test_blank_name_on_first_run_keeps_the_greeting(self):
         _write(os.path.join(self.job, "proposal.md"),
@@ -1938,7 +2013,7 @@ class TestNameAndRuntimeFollowUps(TestFollowUpFixes):
         self.assertIn("updated opener_visible_chars in place on 1 existing row(s)", output)
         row = before.splitlines(True)[-1]
         self.assertEqual(self.log(), before[:-len(row)]
-                         + row.replace(",standard,140,", ",standard,139,"))
+                         + row.replace(",do-x-all-the-time,140,", ",do-x-all-the-time,139,"))
 
     def test_fill_ignores_a_blank_name(self):
         for blank in (None, "", " ", "\t "):
@@ -1948,6 +2023,24 @@ class TestNameAndRuntimeFollowUps(TestFollowUpFixes):
         filled, _ = finalize.fill("Hey there \U0001F44B hi", SHARE + "a", 1, "today",
                                   name="  Dana ")
         self.assertEqual(filled, "Hey Dana \U0001F44B hi")
+
+    def test_greeting_placeholder_filled_by_name(self):
+        _write(os.path.join(self.job, "proposal.md"),
+               make_proposal(140, greeting="Hey [greeting]").replace("1-min", "[N]-min"))
+        code, output = self.run_main("--loom", self.LOOM, "--runtime", "1", "--start", "today",
+                                     "--draft", "Friday", "--name", "Dana")
+        self.assertEqual(code, 0, output)
+        self.assertTrue(self.proposal().startswith("Hey Dana \U0001F44B I "), self.proposal())
+        self.assertNotIn("[greeting]", self.proposal())
+
+    def test_greeting_placeholder_without_name_refuses(self):
+        text = make_proposal(140, greeting="Hey [greeting]").replace("1-min", "[N]-min")
+        _write(os.path.join(self.job, "proposal.md"), text)
+        code, output = self.run_main("--loom", self.LOOM, "--runtime", "1", "--start", "today",
+                                     "--draft", "Friday")
+        self.assertEqual(code, 2, output)
+        self.assertIn("[greeting] would remain", output)
+        self.assertEqual(self.proposal(), text)
 
     def test_rerun_that_moves_the_preview_any_other_way_updates_the_count(self):
         # [DRAFT] left in the opener on the first run (no --draft), filled on
@@ -1967,7 +2060,7 @@ class TestNameAndRuntimeFollowUps(TestFollowUpFixes):
         self.assertIn("updated opener_visible_chars in place on 1 existing row(s)", output)
         row = before.splitlines(True)[-1]
         self.assertEqual(self.log(), before[:-len(row)]
-                         + row.replace(",standard,148,", ",standard,144,"))
+                         + row.replace(",do-x-all-the-time,148,", ",do-x-all-the-time,144,"))
 
     def five_and_three(self):
         """A preview that says "a 5-min pass" and "3-min video"."""
@@ -2045,7 +2138,7 @@ class TestNameAndRuntimeFollowUps(TestFollowUpFixes):
         hand plus the `[N]-min` placeholder, run with --runtime 12 on the same
         video and with --replace-loom: [(output, proposal before with the Loom
         and [START] filled, proposal after)]."""
-        pasted = (make_proposal(140, link=self.LOOM).replace("1-min", "[N]-min")
+        pasted = (make_proposal(140 - len(hand_tokens) - 1, link=self.LOOM).replace("1-min", "[N]-min")
                   .replace("I x", "I {} x".format(hand_tokens), 1))
         runs = []
         for extra, loom in (((), self.LOOM), (("--replace-loom",), SHARE + "zzz999")):

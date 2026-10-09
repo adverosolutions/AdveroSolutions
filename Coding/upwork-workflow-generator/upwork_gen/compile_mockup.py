@@ -137,8 +137,12 @@ def _flatten(spec: WorkflowSpec,
         return stack
 
     stack = walk(start.key, 0)
-    # The trigger is drawn as its own card above the stack.
-    return start, stack[1:] if stack and stack[0].node.key == start.key else stack
+    # The trigger is drawn as its own card above the stack. A forking trigger
+    # stays in the stack instead: its arms hang off that card, and dropping it
+    # would drop every node behind the fork. render() draws it as the trigger.
+    if stack and stack[0].node.key == start.key and not stack[0].arms:
+        stack = stack[1:]
+    return start, stack
 
 
 def _flatten_all(spec: WorkflowSpec) -> List[Tuple[Optional[Node], List[_Card]]]:
@@ -293,11 +297,13 @@ class _Renderer:
     def _stub(self) -> str:
         return '<div class="conn conn-end"><div class="cline"></div></div>'
 
-    def _render_card(self, card: _Card) -> str:
-        data = ""
-        if card.node.key == self._last_key:
-            data = self._data(self.spec.output_sample)
-        html_out = self._card(card.node, data=data)
+    def _render_card(self, card: _Card, *, is_trigger: bool = False,
+                     data: Optional[str] = None) -> str:
+        if data is None:
+            data = ""
+            if card.node.key == self._last_key:
+                data = self._data(self.spec.output_sample)
+        html_out = self._card(card.node, is_trigger=is_trigger, data=data)
         if not card.arms:
             return html_out
 
@@ -353,10 +359,17 @@ class _Renderer:
                 parts.append(
                     '<div class="wsplit"><span>Workflow {}</span></div>'.format(
                         index + 1))
+            forks = bool(trigger and stack and stack[0].node.key == trigger.key)
             if trigger:
                 data = self._data(self.spec.input_sample) if index == 0 else ""
-                parts.append(self._card(trigger, is_trigger=True, data=data))
-            for card in stack:
+                if forks:
+                    # A forking trigger is the stack's first card; the split
+                    # connector follows it directly, with no "+" above it.
+                    parts.append(self._render_card(stack[0], is_trigger=True,
+                                                   data=data))
+                else:
+                    parts.append(self._card(trigger, is_trigger=True, data=data))
+            for card in stack[1:] if forks else stack:
                 parts.append(self._conn())
                 parts.append(self._render_card(card))
             if not (stack and stack[-1].arms):

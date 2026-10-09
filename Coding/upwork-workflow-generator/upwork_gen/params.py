@@ -472,6 +472,61 @@ def config_ref(key: str, config_name: str = CONFIG_NODE_NAME) -> str:
     return "{}.item.json{}".format(node_ref(config_name), _json_access(key))
 
 
+# `$('0 - Config: Your Settings')` as a spec author writes it into a param by
+# hand, then the Config item's json (`.item.json`, `.first().json`,
+# `.last().json`).
+_CONFIG_CALL = r"\$\(\s*(?P<quote>['\"]){}(?P=quote)\s*\)".format(
+    re.escape(CONFIG_NODE_NAME))
+_CONFIG_JSON = _CONFIG_CALL + r"\s*\.\s*(?:item|first\(\s*\)|last\(\s*\))\s*\.\s*json"
+# `.key` or `['key']` / `["key"]` after the json (or after a bound variable).
+_KEY_ACCESS = r"(?:\.\s*([A-Za-z_$][A-Za-z0-9_$]*)|\[\s*(['\"])(.+?)\{q}\s*\])"
+_CONFIG_READ_RE = re.compile(_CONFIG_JSON + _KEY_ACCESS.format(q=3))
+# `const cfg = $('0 - Config: Your Settings').first().json;` binds the whole
+# json, so `cfg.key` reads further on in the same string are Config reads too.
+_CONFIG_BIND_RE = re.compile(r"\b(?:const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+                             + _CONFIG_JSON + r"(?!\s*(?:\.|\[))")
+_CONFIG_NAMED_RE = re.compile(_CONFIG_CALL)
+
+
+def _param_strings(value: Any) -> List[str]:
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, dict):
+        value = list(value.values())
+    if isinstance(value, list):
+        return [text for item in value for text in _param_strings(item)]
+    return []
+
+
+def config_keys_read(spec: WorkflowSpec) -> Optional[List[str]]:
+    """The Config keys the spec's own node params read by name, first seen
+    first; None when no param names the Config node at all (an empty list
+    when one does without a key that can be told).
+
+    A vault archetype has its `config` stripped on promotion but keeps any
+    `$('0 - Config: Your Settings').item.json.key` its author wrote, so the
+    compiler needs these keys to build the node those params point at.
+    """
+    keys: List[str] = []
+    named = False
+    for node in spec.nodes:
+        for text in _param_strings(node.params):
+            if not _CONFIG_NAMED_RE.search(text):
+                continue
+            named = True
+            found = [(m.start(), m.group(2) or m.group(4))
+                     for m in _CONFIG_READ_RE.finditer(text)]
+            for bind in _CONFIG_BIND_RE.finditer(text):
+                var = re.compile(r"(?<![A-Za-z0-9_$.])" + re.escape(bind.group(1)) + r"\s*"
+                                 + _KEY_ACCESS.format(q=2))
+                found.extend((m.start(), m.group(1) or m.group(3))
+                             for m in var.finditer(text, bind.end()))
+            for _, key in sorted(found):
+                if key not in keys:
+                    keys.append(key)
+    return keys if named else None
+
+
 def _flow_anchor(node: Node, spec: WorkflowSpec) -> Optional[Node]:
     """The main-graph node an AI sub-node ultimately hangs off."""
     hops = 0

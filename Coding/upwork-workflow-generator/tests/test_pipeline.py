@@ -25,6 +25,7 @@ from upwork_gen.generate import available_archetypes, load_archetype  # noqa: E4
 from upwork_gen.layout import check, layout  # noqa: E402
 from upwork_gen.learn import derive_keywords, load_learned, promote  # noqa: E402
 from upwork_gen.mockup_theme import THEMES, initials, tile_color  # noqa: E402
+from upwork_gen.params import CONFIG_NODE_NAME  # noqa: E402
 from upwork_gen.spec import AI_SUB_KINDS, unique_names  # noqa: E402
 import html as _html  # noqa: E402
 import subprocess  # noqa: E402
@@ -166,9 +167,12 @@ class TestEveryArchetype(unittest.TestCase):
             with self.subTest(archetype=archetype_id):
                 spec = load_archetype(archetype_id)
                 spec.validate()
+                # The Config node is compiler-inserted plumbing, like the
+                # stickies: every job chart leaves it out, and an archetype whose
+                # params read it by name gets one on the canvas.
                 canvas = {
                     n["name"] for n in compile_n8n(spec)["nodes"]
-                    if "stickyNote" not in n["type"]
+                    if "stickyNote" not in n["type"] and n["name"] != CONFIG_NODE_NAME
                 }
                 body = "\n".join(
                     l for l in compile_excalidraw(spec).splitlines()

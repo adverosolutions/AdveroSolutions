@@ -606,6 +606,177 @@ def _is_now_column(words: List[str], sample: Any = None) -> bool:
     return bool(set(words) & _NOW_WORDS) and set(words) <= _NOW_PARTNERS
 
 
+# --------------------------------------------------------------------------
+# Router route filters
+# --------------------------------------------------------------------------
+
+# The spec's condition ops, mirroring the n8n shorthand (params._SHORT_OPS) so
+# one vocabulary works on both platforms. `eq`/`neq` pick number or text from
+# `right`; `true`/`false` compare against a boolean (`_BOOL_B`).
+_MAKE_OPS = {
+    "exists": "exist", "not_exists": "notexist",
+    "gt": "number:greater", ">": "number:greater",
+    "gte": "number:greaterorequal", ">=": "number:greaterorequal",
+    "lt": "number:less", "<": "number:less",
+    "lte": "number:lessorequal", "<=": "number:lessorequal",
+    "contains": "text:contain",
+}
+_EQ_OPS = frozenset({"eq", "==", "equals"})
+_NEQ_OPS = frozenset({"neq", "!="})
+_BOOL_OPS = {"true": True, "false": False}
+
+# Make operator ids seen in real exports (make_blueprint_structures.md) and in
+# integromat/make-skills skills/make-module-configuring/filtering.md @8ee0fef.
+# make-skills blueprint-construction.md names `text:startswith` / `date:before`,
+# which are wrong: the real ids are `text:startwith` / `date:less`. A raw id in
+# `op` is passed through only when it is one of these.
+_RAW_MAKE_OPS = frozenset({
+    "exist", "notexist",
+    "text:equal", "text:notequal", "text:equal:ci", "text:notequal:ci",
+    "text:contain", "text:notcontain", "text:contain:ci", "text:notcontain:ci",
+    "text:startwith", "text:startwith:ci", "text:endwith:ci",
+    "text:pattern", "text:pattern:ci", "text:notpattern:ci",
+    "number:equal", "number:notequal", "number:greater", "number:greaterorequal",
+    "number:less", "number:lessorequal",
+    "boolean:equal", "boolean:notequal",
+    "array:contain", "array:notcontain", "array:contain:ci",
+    "date:greater", "date:greaterorequal", "date:less", "date:lessorequal",
+})
+_UNARY_OPS = frozenset({"exist", "notexist"})
+_BOOLEAN_OPS = frozenset({"boolean:equal", "boolean:notequal"})
+
+# Operator -> its opposite, for the other arm of a two-way branch.
+_NEGATION_PAIRS = (
+    ("exist", "notexist"),
+    ("text:equal", "text:notequal"),
+    ("text:equal:ci", "text:notequal:ci"),
+    ("number:equal", "number:notequal"),
+    ("number:greater", "number:lessorequal"),
+    ("number:less", "number:greaterorequal"),
+    ("text:contain", "text:notcontain"),
+    ("text:contain:ci", "text:notcontain:ci"),
+    ("array:contain", "array:notcontain"),
+)
+_NEGATE = dict(_NEGATION_PAIRS)
+_NEGATE.update((b, a) for a, b in _NEGATION_PAIRS)
+
+# The `b` a boolean comparison ships with: Make's keyword in a string, as in
+# real exports ({"a": "{{6.result.is_valid_invoice}}", "b": "{{true}}", "o":
+# "boolean:equal"}) and make-skills filtering.md @8ee0fef.
+_BOOL_B = {True: "{{true}}", False: "{{false}}"}
+
+_NUMERIC = re.compile(r"^\s*-?\d+(\.\d+)?\s*$")
+_BARE_MAPPING = re.compile(r"^\d+\.")
+_TRUE_LABELS = frozenset({"true", "yes"})
+_FALSE_LABELS = frozenset({"false", "no"})
+_CONDITION_KINDS = frozenset({"flow.branch", "flow.switch"})
+
+
+def _filter_value(right: Any) -> str:
+    """A filter's `b`, as Make stores it. Numbers ship as JSON strings ("0",
+    "200"), as in real exports."""
+    if isinstance(right, bool):
+        return _BOOL_B[right]
+    if isinstance(right, (int, float)):
+        return str(right)
+    return "" if right is None else right
+
+
+def _is_number(right: Any) -> bool:
+    if isinstance(right, bool):
+        return False
+    if isinstance(right, (int, float)):
+        return True
+    return isinstance(right, str) and bool(_NUMERIC.match(right))
+
+
+def _filter_left(left: Any) -> Tuple[Optional[str], str]:
+    """(`a` in Make syntax, or None and why not)."""
+    if left is None or (isinstance(left, str) and not left.strip()):
+        return None, "missing left"
+    if not isinstance(left, str):
+        return None, "left {!r} is not a Make mapping".format(left)
+    text = left.strip()
+    if _N8N_EXPR.search(text):
+        return None, "left {!r} is n8n syntax".format(left)
+    if text.startswith("{{") and text.endswith("}}"):
+        return text, ""
+    if _BARE_MAPPING.match(text):
+        return "{{%s}}" % text, ""
+    return None, "left {!r} is not a Make mapping like {{{{5.statusCode}}}}".format(left)
+
+
+def _filter_item(raw: Any) -> Tuple[Optional[Dict[str, Any]], str]:
+    """One spec condition -> one Make filter condition, or None and why not."""
+    if not isinstance(raw, dict):
+        return None, "condition {!r} is not an object".format(raw)
+    a, why = _filter_left(raw.get("left"))
+    if a is None:
+        return None, why
+    op = str(raw.get("op", "")).strip()
+    right = raw.get("right")
+    if isinstance(right, str) and _N8N_EXPR.search(right):
+        return None, "right {!r} is n8n syntax".format(right)
+    if right is not None and not isinstance(right, (str, int, float, bool)):
+        return None, "right {!r} is not a string or number".format(right)
+    low = op.lower()
+    if low in _BOOL_OPS:
+        return {"a": a, "o": "boolean:equal", "b": _BOOL_B[_BOOL_OPS[low]]}, ""
+    if low in _EQ_OPS or low in _NEQ_OPS:
+        kind = "number" if _is_number(right) else "text"
+        o = "{}:{}".format(kind, "equal" if low in _EQ_OPS else "notequal")
+    elif low in _MAKE_OPS:
+        o = _MAKE_OPS[low]
+    elif op in _RAW_MAKE_OPS:
+        o = op
+    else:
+        return None, "unknown op {!r}".format(op)
+    if o in _UNARY_OPS:
+        return {"a": a, "o": o}, ""
+    return {"a": a, "o": o, "b": _filter_value(right)}, ""
+
+
+def _filter_group(raw: Any) -> Tuple[Optional[List[Dict[str, Any]]], str]:
+    """A condition (one object, or a list ANDed) -> one inner AND group."""
+    items = raw if isinstance(raw, list) else [raw]
+    if not items:
+        return None, "empty condition"
+    group: List[Dict[str, Any]] = []
+    for item in items:
+        built, why = _filter_item(item)
+        if built is None:
+            return None, why
+        group.append(built)
+    return group, ""
+
+
+def _negated(item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """The opposite of one filter condition, or None when it has none."""
+    o = item["o"]
+    if o in _BOOLEAN_OPS:
+        flipped = [flag for flag, b in _BOOL_B.items() if b == item.get("b")]
+        if not flipped:
+            return None
+        return dict(item, b=_BOOL_B[not flipped[0]])
+    if o not in _NEGATE:
+        return None
+    return dict(item, o=_NEGATE[o])
+
+
+def _true_arm(edges: List[Any]) -> int:
+    """Which of two edges takes the condition, as compile_n8n numbers them:
+    the one labelled true/yes, else the other of one labelled false/no, else
+    the first."""
+    labels = [(e.branch or "").strip().lower() for e in edges]
+    for i, label in enumerate(labels):
+        if label in _TRUE_LABELS:
+            return i
+    for i, label in enumerate(labels):
+        if label in _FALSE_LABELS:
+            return 1 - i
+    return 0
+
+
 class _Builder(object):
     def __init__(self, spec: WorkflowSpec, catalog: Catalog) -> None:
         self.spec = spec
@@ -626,6 +797,9 @@ class _Builder(object):
         self.unresolved: List[str] = []
         # Raw (non-shorthand) params dropped for holding n8n syntax.
         self.dropped: List[str] = []
+        # Router routes whose spec condition could not become a filter, as
+        # "<label> (<reason>)"; those routes keep the placeholder filter.
+        self.route_warnings: List[str] = []
         # Set-variable value -> the label that first used it, so two different
         # steps never show the same value on camera.
         self.var_values: Dict[str, str] = {}
@@ -1114,6 +1288,52 @@ class _Builder(object):
             upstream = upstream + [out]
         return module, upstream
 
+    def route_warn(self, node: Node, reason: str) -> None:
+        line = "{} ({})".format(_ascii(node.label) or node.key, reason)
+        if line not in self.route_warnings:
+            self.route_warnings.append(line)
+
+    def route_filters(self, node: Node, edges: List[Any]) -> List[Optional[List[List[Dict[str, Any]]]]]:
+        """Each route's filter `conditions`, or None for the stand-in.
+
+        An edge's own `condition` wins. Otherwise a flow.branch/flow.switch
+        `params.condition` covers a two-way split: the true arm (`_true_arm`)
+        gets it and the other arm its negation, an OR of each negated item.
+        Anything that cannot be carried exactly is warned about and left to
+        the stand-in; no operator is guessed."""
+        filters: List[Optional[List[List[Dict[str, Any]]]]] = [None] * len(edges)
+        params = node.params or {}
+        node_condition = params.get("condition") if node.kind in _CONDITION_KINDS else None
+        for i, edge in enumerate(edges):
+            if edge.condition is None:
+                continue
+            group, why = _filter_group(edge.condition)
+            if group is None:
+                self.route_warn(node, "route {!r}: {}".format(edge.branch or edge.dst, why))
+            else:
+                filters[i] = [group]
+        pending = [i for i, edge in enumerate(edges) if edge.condition is None]
+        if node_condition is None or not pending:
+            return filters
+        if len(edges) != 2:
+            self.route_warn(node, "{} routes: put `condition` on each edge".format(len(edges)))
+            return filters
+        group, why = _filter_group(node_condition)
+        if group is None:
+            self.route_warn(node, why)
+            return filters
+        true_index = _true_arm(edges)
+        if true_index in pending:
+            filters[true_index] = [group]
+        other = 1 - true_index
+        if other in pending:
+            negated = [_negated(item) for item in group]
+            if any(item is None for item in negated):
+                self.route_warn(node, "no opposite for the other route: put `condition` on each edge")
+            else:
+                filters[other] = [[item] for item in negated]
+        return filters
+
     def walk(self, start: str, x: int, y: int,
              path: Optional[Set[str]] = None,
              upstream: Optional[List[_Output]] = None,
@@ -1164,6 +1384,7 @@ class _Builder(object):
             if node.section and node.section not in self.section_first:
                 self.section_first[node.section] = router["id"]
             cursor += X_STEP
+            filters = self.route_filters(node, edges)
             for i, edge in enumerate(edges):
                 branch_y = y + (i - (len(edges) - 1) / 2.0) * ROUTE_Y_STEP
                 branch_flow, _ = self.walk(edge.dst, cursor, int(branch_y), path, upstream,
@@ -1179,9 +1400,15 @@ class _Builder(object):
                             int(branch_y),
                         )
                     ]
-                if edge.branch:
-                    # `exist` is unary — real exports omit `b` entirely for it,
-                    # and the operator is `exist`, not `exists`.
+                if filters[i] is not None:
+                    branch_flow[0]["filter"] = {
+                        "name": edge.branch.title() if edge.branch else "",
+                        "conditions": filters[i],
+                    }
+                elif edge.branch:
+                    # No usable spec condition: a stand-in that names the
+                    # route. `exist` is unary — real exports omit `b` entirely
+                    # for it, and the operator is `exist`, not `exists`.
                     branch_flow[0]["filter"] = {
                         "name": edge.branch.title(),
                         "conditions": [[{"a": "{{%s.value}}" % router["id"],
@@ -1301,6 +1528,9 @@ def compile_make_with_warnings(spec: WorkflowSpec,
     if builder.dropped:
         warnings.append("make: raw n8n params with n8n expressions not shipped: "
                         + "; ".join(builder.dropped))
+    if builder.route_warnings:
+        warnings.append("make: route conditions not applied (those routes keep the placeholder "
+                        "filter; fix on camera): " + "; ".join(builder.route_warnings))
 
     blueprint = {
         "name": spec.title,

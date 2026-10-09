@@ -5,11 +5,11 @@
         [--replace-loom] [--relog] [--no-log] [--no-copy] [--csv <path>]
 
 Replaces `https://www.loom.com/share/[LOOMURL]`, `[N]-min`, `[START]` and
-`[DRAFT]`; `--name` turns "Hey there" into "Hey <Name>" (stripped; a blank
---name is no name and leaves the greeting alone). The preview is
+`[DRAFT]`; `--name` turns "Hey [greeting]" (or "Hey there") into "Hey <Name>"
+(stripped; a blank --name is no name and leaves the greeting alone). The preview is
 recounted and printed, and a count outside 133-150 is flagged, never
-auto-edited. Refuses (exit 2, nothing written) if `[LOOMURL]` or `[START]`
-would remain.
+auto-edited. Refuses (exit 2, nothing written) if `[LOOMURL]`, `[START]` or
+`[greeting]` would remain.
 
 --loom is stored as https://www.loom.com/share/<video id>: a trailing slash,
 `?sid=...` or `#t=...` from the share dialog is dropped.
@@ -46,6 +46,7 @@ import sys
 import tempfile
 from typing import Dict, List, Optional, Tuple
 
+from . import apply_meta
 from .spec import WorkflowSpec, slugify
 from .verify_job import (
     LOOM_MARK,
@@ -68,7 +69,8 @@ CSV_HEADER = [
     "opener_visible_chars", "connects", "boosted", "viewed", "replied",
     "interviewed", "hired", "notes",
 ]
-REQUIRED_GONE = ("[LOOMURL]", "[START]")
+REQUIRED_GONE = ("[LOOMURL]", "[START]", "[greeting]")
+GREETING_PLACEHOLDER = "Hey [greeting]"
 # What --loom may look like: the share link, optionally with the trailing
 # slash, query string and fragment the share dialog sometimes adds.
 _LOOM_ARG = re.compile(r"^https://www\.loom\.com/share/([A-Za-z0-9]+)/?(?:\?[^\s#]*)?(?:#\S*)?$")
@@ -79,7 +81,7 @@ _LINE_BREAK = re.compile(r"\r\n|\r|\n")
 def fill(text: str, loom: str, runtime: int, start: str, draft: Optional[str] = None,
          name: Optional[str] = None) -> Tuple[str, List[str]]:
     """Return (filled text, placeholders that still remain). `name` is
-    stripped; a blank one leaves "Hey there" as it is."""
+    stripped; a blank one leaves "Hey there" or "Hey [greeting]" as it is."""
     name = normalize_name(name)
     out = text.replace(LOOM_PLACEHOLDER, loom)
     out = out.replace("[N]-min", "{}-min".format(int(runtime)))
@@ -87,8 +89,12 @@ def fill(text: str, loom: str, runtime: int, start: str, draft: Optional[str] = 
     if draft is not None:
         out = out.replace("[DRAFT]", draft)
     if name:
-        out = out.replace("Hey there", "Hey {}".format(name), 1)
-    remaining = [p for p in ("[LOOMURL]", "[START]", "[DRAFT]", "[N]") if p in out]
+        if GREETING_PLACEHOLDER in out:
+            out = out.replace(GREETING_PLACEHOLDER, "Hey {}".format(name), 1)
+        else:
+            out = out.replace("Hey there", "Hey {}".format(name), 1)
+    remaining = [p for p in ("[LOOMURL]", "[START]", "[greeting]", "[DRAFT]", "[N]")
+                 if p in out]
     return out, remaining
 
 
@@ -253,21 +259,37 @@ def write_atomic(path: str, text: str) -> None:
 
 
 def log_row(job_dir: str, loom: str, variant: str, visible_chars: Optional[int],
-            now: Optional[datetime.datetime] = None) -> Dict[str, str]:
-    spec = WorkflowSpec.load(os.path.join(job_dir, "spec.json"))
+            now: Optional[datetime.datetime] = None,
+            meta: Optional[Dict[str, str]] = None) -> Dict[str, str]:
+    """`meta`: apply_meta.meta_for() columns (job_created_utc, age_hours_at_apply,
+    connects, boosted); only those keys are taken, blank when missing."""
+    spec_path = os.path.join(job_dir, "spec.json")
     url, title = jd_fields(job_dir)
+    if os.path.exists(spec_path):
+        spec = WorkflowSpec.load(spec_path)
+        platform, slug, nodes = platform_label(spec), slugify(spec.title), str(len(spec.flow_nodes))
+    elif any(os.path.exists(os.path.join(job_dir, f)) for f in ("prototype.html", "page.html")):
+        # Prototype-only jobs have no spec: log the prototype itself.
+        platform, slug, nodes = "prototype", os.path.basename(os.path.normpath(job_dir)), ""
+    elif os.path.exists(os.path.join(job_dir, "beats.md")):
+        # Loom-only jobs (a screen-share of a real system, no page): log the Loom.
+        platform, slug, nodes = "loom-only", os.path.basename(os.path.normpath(job_dir)), ""
+    else:
+        raise FileNotFoundError(spec_path)
     row = {key: "" for key in CSV_HEADER}
     row.update({
         "applied_at": (now or datetime.datetime.now()).isoformat(timespec="minutes"),
         "job_title": title,
         "job_url": url,
-        "platform": platform_label(spec),
-        "build_slug": slugify(spec.title),
-        "node_count": str(len(spec.flow_nodes)),
+        "platform": platform,
+        "build_slug": slug,
+        "node_count": nodes,
         "loom_url": loom,
-        "opener_variant": variant or "standard",
+        "opener_variant": variant or "do-x-all-the-time",
         "opener_visible_chars": "" if visible_chars is None else str(visible_chars),
     })
+    for key in apply_meta.META_FIELDS:
+        row[key] = (meta or {}).get(key) or ""
     return row
 
 
@@ -408,8 +430,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--runtime", required=True, type=int, help="Loom length in minutes")
     parser.add_argument("--start", required=True, help='replaces [START], e.g. "today"')
     parser.add_argument("--draft", help="replaces [DRAFT]")
-    parser.add_argument("--name", help='client first name: "Hey there" -> "Hey <Name>"')
-    parser.add_argument("--variant", default="standard", help="opener_variant for the log")
+    parser.add_argument("--name", help='client first name: "Hey [greeting]" or "Hey there" -> "Hey <Name>"')
+    parser.add_argument("--variant", default="do-x-all-the-time",
+                        help="opener_variant for the log (the old Template A opener is "
+                             "'template-a-all-the-time', never 'standard', which is one "
+                             "custom-opener row)")
     parser.add_argument("--replace-loom", action="store_true",
                         help="the Loom URL is already filled: swap it (and the <n>-min "
                              "runtime) for --loom/--runtime")
@@ -420,6 +445,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--no-log", action="store_true", help="do not append to proposals.csv")
     parser.add_argument("--no-copy", action="store_true", help="do not pbcopy the proposal")
     parser.add_argument("--csv", default=PROPOSALS_CSV, help=argparse.SUPPRESS)
+    parser.add_argument("--posted", help="job_created_utc, the job's ISO posting time in UTC "
+                                         "(default: jd.txt created_utc: line, else its Posted date)")
+    parser.add_argument("--connects", type=int,
+                        help="connects to apply (default: 'Connects to apply: N' in jd.txt)")
+    parser.add_argument("--boosted", choices=["yes", "no"], help="whether the proposal is boosted")
     args = parser.parse_args(argv)
     # Normalised once: fill() and the re-run's rename check see the same name,
     # so a blank --name never touches the greeting.
@@ -458,7 +488,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     if rerun:
         # A re-run that turns "Hey there" into "Hey <Name>" changes the
         # preview count, so the logged row follows it like a runtime change.
-        renamed = name is not None and "Hey there" in text and name != "there"
+        renamed = name is not None and (GREETING_PLACEHOLDER in text
+                                        or ("Hey there" in text and name != "there"))
         current = existing_loom(text)
         if current is None:
             print("  REFUSED: proposal.md has neither [LOOMURL] nor a loom.com/share URL; "
@@ -531,15 +562,22 @@ def main(argv: Optional[List[str]] = None) -> int:
     preview = body[: length] if length is not None else ""
     print("\n  preview ({} chars): {}".format(length, preview))
     if length is None or not (PREVIEW_MIN <= length <= PREVIEW_MAX):
-        print("  WARNING: preview is {} chars, outside {}-{}. Edit the opener by hand."
-              .format(length, PREVIEW_MIN, PREVIEW_MAX))
+        print("  REFUSED: preview is {} chars, outside {}-{}. Edit the opener in "
+              "proposal.md, then re-run; nothing written.".format(
+                  length, PREVIEW_MIN, PREVIEW_MAX), file=sys.stderr)
+        return 2
+    signoffs = sum(1 for line in filled.splitlines() if line.strip() == "Lorenzo")
+    if signoffs > 1:
+        print("  REFUSED: proposal.md signs off 'Lorenzo' {} times; keep one, then re-run; "
+              "nothing written.".format(signoffs), file=sys.stderr)
+        return 2
     others = [p for p in remaining if p not in REQUIRED_GONE]
     if others:
         print("  WARNING: still in the proposal: {}".format(", ".join(others)))
     if args.name is not None and name is None:
         print("  note: --name is blank, the greeting is left as it is")
-    elif name and "Hey there" not in text:
-        print("  note: no 'Hey there' greeting found, --name had nothing to replace")
+    elif name and "Hey there" not in text and GREETING_PLACEHOLDER not in text:
+        print("  note: no 'Hey there' or 'Hey [greeting]' found, --name had nothing to replace")
 
     # After --replace-loom, a runtime change or a greeting-name change the
     # logged row must follow the proposal. Work the rewrite out before writing anything, so a log that
@@ -587,7 +625,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     row: Dict[str, str] = {}
     if not args.no_log:
         try:
-            row = log_row(job_dir, loom, args.variant, length)
+            now = datetime.datetime.now()
+            row = log_row(job_dir, loom, args.variant, length, now=now,
+                          meta=apply_meta.meta_for(job_dir, now, args.posted, args.connects,
+                                                   args.boosted))
         except Exception as exc:  # noqa: BLE001 - any load failure refuses
             print("  REFUSED: cannot build the log row from {} ({}: {}); nothing written."
                   .format(job_dir, type(exc).__name__, exc), file=sys.stderr)
@@ -624,6 +665,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         else:
             append_row(args.csv, row)
             print("  logged:  {} -> {}".format(row["build_slug"], args.csv))
+            print("  apply:   {}".format(apply_meta.describe(row)))
     print()
     return 0
 

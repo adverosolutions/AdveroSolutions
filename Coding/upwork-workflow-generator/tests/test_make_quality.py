@@ -26,7 +26,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 from upwork_gen.compile_make import (  # noqa: E402
-    channel_name, compile_make, compile_make_with_warnings)
+    _ascii, channel_name, compile_make, compile_make_with_warnings)
 from upwork_gen.generate import available_archetypes, load_archetype  # noqa: E402
 from upwork_gen.spec import WorkflowSpec  # noqa: E402
 
@@ -226,6 +226,9 @@ class TestMakeQualityAcrossSpecs(unittest.TestCase):
             for n in spec.nodes
             if isinstance((n.params or {}).get("options"), dict)
             and "systemMessage" in n.params["options"]}
+        # The `system_message` shorthand ships verbatim (ASCII-folded): the author's text too.
+        own_system_messages |= {_ascii(n.params["system_message"]) for n in spec.nodes
+                                if isinstance((n.params or {}).get("system_message"), str)}
         variables = {}
 
         for module in modules:

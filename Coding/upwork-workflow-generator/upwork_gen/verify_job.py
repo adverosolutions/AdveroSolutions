@@ -34,6 +34,18 @@ UP_ROOT = os.environ.get("UPWORK_PIPELINE") or os.path.join(
 JOBS_DIR = os.path.join(UP_ROOT, "jobs")
 ORDER_PATH = os.path.join(JOBS_DIR, "_ORDER.txt")
 
+# n8n / Make canvases aim for 10-15 nodes, easy to walk through on camera (Lorenzo,
+# 2026-09-24): every node except stickies counts, Config and error path included.
+# A target, not a cap: above it is a WARN, fine when the post needs the nodes.
+MAX_CANVAS_NODES = 15
+# The number each case study must carry, word for word (templates/ps-case-studies.md).
+PROOF_FACTS = ("$750M+ in annual bid volume", "$5M in loan applications in 30 days",
+               "qualified lead volume 35%", "AI agency to $10,000 a month")
+# Billing words that never belong in a proposal (Lorenzo, 2026-09-24, hard stop).
+BILLING = re.compile(
+    r"\bretainers?\b|\$\s?\d|\bper hour\b|\ban hour\b|\bhourly\b|/hr\b|\bbilling\b|"
+    r"\bbilled\b|\bbudget\b|\bfees?\b|\bmy rates?\b|\bfixed[- ]price\b|\bpayment\b|"
+    r"\bmy (?:price|pricing)\b|\bcharge\b|\binvoice me\b", re.I)
 PREVIEW_MIN = 133
 PREVIEW_MAX = 150
 LOOM_MARK = "https://www.loom"
@@ -289,6 +301,12 @@ def _rl_value(value: Any) -> str:
 # --------------------------------------------------------------------------
 
 
+def proof_bank() -> List[str]:
+    """The case-study bullets, word for word, from templates/ps-case-studies.md."""
+    text = read_text(os.path.join(UP_ROOT, "templates", "ps-case-studies.md")) or ""
+    return [line.rstrip() for line in text.splitlines() if line.startswith("-> ")]
+
+
 def check_proposal(text: str) -> Tuple[List[str], Optional[int]]:
     """FAIL items for the locked proposal format, plus the preview length."""
     fails: List[str] = []
@@ -324,6 +342,22 @@ def check_proposal(text: str) -> Tuple[List[str], Optional[int]]:
         if len(bullets) != 4:
             fails.append("proposal: {} '-> ' lines after P.S. (needs exactly 4)".format(
                 len(bullets)))
+        # The facts are fixed; the framing around them fits the job (Lorenzo,
+        # 2026-09-24): each case study appears once, with its number intact.
+        if proof_bank():
+            for anchor in PROOF_FACTS:
+                hits = sum(1 for b in bullets if anchor in b)
+                if hits != 1:
+                    fails.append("proposal: P.S. needs the {} case study exactly once, number "
+                                 "intact (found {})".format(anchor, hits))
+
+    # Hard stop (Lorenzo, 2026-09-24): no billing of any kind above the P.S.
+    # (the case-study bullets' dollar figures are results, not prices).
+    above = text[:ps.start()] if ps else text
+    billing = sorted(set(m.group(0).lower() for m in BILLING.finditer(above)))
+    if billing:
+        fails.append("proposal: talks billing ({}); prices, rates and retainers are for "
+                     "the call, never the proposal".format(", ".join(billing)))
 
     # On a line by itself; trailing spaces (a Markdown line break) are fine.
     if not any(line.strip() == "Lorenzo" for line in text.splitlines()):
@@ -337,6 +371,8 @@ def beat_lines(text: str) -> List[str]:
         stripped = line.strip()
         if stripped.startswith(("- ", "* ")):
             out.append(stripped[2:].strip())
+        elif re.match(r"\d+\.\s", stripped):
+            out.append(re.sub(r"^\d+\.\s+", "", stripped))
     return out
 
 
@@ -732,12 +768,22 @@ def verify(job_dir: str, vault_dir: Optional[str] = None) -> JobReport:
         workflows.append(workflow)
         report.fails.extend(check_n8n(workflow, raw, spec.title if spec else "", name,
                                       calendly_spec_triggers(spec)))
+        on_canvas = sum(1 for n in workflow.get("nodes", []) or []
+                        if "stickyNote" not in str(n.get("type", "")))
+        if on_canvas > MAX_CANVAS_NODES:
+            report.warns.append("{}: {} nodes on the canvas, over the 10-{} target; fine only "
+                                "when every extra node is one the post needs".format(
+                                    name, on_canvas, MAX_CANVAS_NODES))
         report.warns.extend(lint_n8n(workflow, raw))
 
     # -- make --------------------------------------------------------------
     make_files = sorted(glob.glob(os.path.join(job_dir, "*.make.json")))
     if spec is not None and spec.platform == "make" and not make_files:
         report.fails.append("no *.make.json in the job folder (not compiled/copied)")
+    if spec is not None and spec.platform == "make" and len(spec.flow_nodes) > MAX_CANVAS_NODES:
+        report.warns.append("{} modules in the Make scenario, over the 10-{} target; fine "
+                            "only when every extra module is one the post needs".format(
+                                len(spec.flow_nodes), MAX_CANVAS_NODES))
     for path in make_files:
         name = os.path.basename(path)
         _, raw, error = _load_json(path)

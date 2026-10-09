@@ -280,6 +280,10 @@ class Edge:
     # workflows are full of these and they look authentic on canvas, but they
     # are cycles: layout ignores them while the compiler still wires them up.
     loop: bool = False
+    # The route's own test, `{"left", "op", "right"}` or a list of them (ANDed),
+    # in the target platform's syntax. The Make compiler turns it into this
+    # route's filter; it wins over the branch node's `params.condition`.
+    condition: Optional[Any] = None
 
     @staticmethod
     def from_dict(d: Dict[str, Any]) -> "Edge":
@@ -288,7 +292,13 @@ class Edge:
         dst = d.get("to", d.get("dst"))
         if not src or not dst:
             raise SpecError("edge is missing 'from' or 'to': {!r}".format(d))
-        return Edge(src=src, dst=dst, branch=d.get("branch"), loop=bool(d.get("loop", False)))
+        condition = d.get("condition")
+        if condition is not None and not (
+                isinstance(condition, dict)
+                or (isinstance(condition, list) and all(isinstance(c, dict) for c in condition))):
+            raise SpecError("edge condition must be an object or a list of objects: {!r}".format(d))
+        return Edge(src=src, dst=dst, branch=d.get("branch"), loop=bool(d.get("loop", False)),
+                    condition=condition)
 
     def to_dict(self) -> Dict[str, Any]:
         out: Dict[str, Any] = {"from": self.src, "to": self.dst}
@@ -296,6 +306,8 @@ class Edge:
             out["branch"] = self.branch
         if self.loop:
             out["loop"] = True
+        if self.condition is not None:
+            out["condition"] = self.condition
         return out
 
 

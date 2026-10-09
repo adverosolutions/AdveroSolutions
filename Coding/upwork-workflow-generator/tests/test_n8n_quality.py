@@ -24,7 +24,7 @@ from upwork_gen.generate import available_archetypes, load_archetype  # noqa: E4
 from upwork_gen.layout import check, layout, text_height  # noqa: E402
 from upwork_gen.params import (CONFIG_NODE_NAME, DEFAULT_PARSER_EXAMPLE,  # noqa: E402
                                SHORTHAND_CONDITION_OPS, SHORTHAND_KEYS, ascii_safe_obj,
-                               load_services, node_ref)
+                               config_keys_read, load_services, node_ref)
 from upwork_gen.spec import Edge, WorkflowSpec, unique_names  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -806,6 +806,42 @@ class TestConfigWithoutTrigger(unittest.TestCase):
                         self.assertNotIn("Config", content)
 
 
+class TestConfigReadByNameWithoutConfig(unittest.TestCase):
+    """A vault archetype loses `config` on promotion but keeps the params its
+    author wrote against the Config node, so compiled alone it still needs
+    that node, carrying every key those params read."""
+
+    def test_reads_build_the_config_node(self):
+        code = ("const cfg = $('0 - Config: Your Settings').first().json;\n"
+                "return [{ json: { team: cfg.bar } }];")
+        nodes = [
+            {"key": "hook", "kind": "trigger.webhook", "label": "1 - Enquiry Arrives",
+             "section": "in"},
+            {"key": "call", "kind": "net.http", "label": "2 - Look Up the Account",
+             "section": "in", "params": {
+                 "url": "={{ $('0 - Config: Your Settings').item.json.foo }}/accounts"}},
+            {"key": "code", "kind": "data.code", "label": "3 - Pick the Team",
+             "section": "in", "params": {"mode": "runOnceForAllItems", "jsCode": code}},
+        ]
+        spec = _base(nodes, [{"from": "hook", "to": "call"}, {"from": "call", "to": "code"}])
+        self.assertEqual(spec.config, {})
+        workflow = _compile(spec)
+        configs = [n for n in workflow["nodes"] if "Config: Your Settings" in n["name"]]
+        self.assertEqual([n["name"] for n in configs], [CONFIG_NODE_NAME])
+        values = {a["name"]: a["value"]
+                  for a in configs[0]["parameters"]["assignments"]["assignments"]}
+        self.assertEqual(values.get("foo"), "PASTE-YOUR-FOO")
+        self.assertEqual(values.get("bar"), "PASTE-YOUR-BAR")
+        names = {n["name"] for n in workflow["nodes"]}
+        refs = _config_refs(workflow)
+        self.assertTrue(refs)
+        for name, ref in refs:
+            self.assertIn(ref, names)
+            self.assertIn(ref, _upstream(workflow, name))
+        content = _node(workflow, "Overview")["parameters"]["content"]
+        self.assertIn("foo and bar in the {} node".format(CONFIG_NODE_NAME), content)
+
+
 class TestPromoteStripsClientFields(unittest.TestCase):
     """Defect 3: the vault never keeps client, config or overview."""
 
@@ -1263,6 +1299,32 @@ def _strings(value):
             yield from _strings(inner)
 
 
+def _if_bodies(code):
+    """(start, end) of the `{ ... }` body of every `if (...) { ... }` in a
+    code string. A plain bracket count that ignores braces and parens inside
+    strings and comments: good enough for the one narrow exemption below,
+    where a stray brace can only shrink or drop a body, never invent one."""
+    def close(start, opener, closer):
+        depth = 0
+        for i in range(start, len(code)):
+            depth += (code[i] == opener) - (code[i] == closer)
+            if depth == 0:
+                return i
+        return -1
+
+    bodies = []
+    for match in re.finditer(r"\bif\s*\(", code):
+        cond_end = close(match.end() - 1, "(", ")")
+        if cond_end < 0:
+            continue
+        brace = re.compile(r"\s*\{").match(code, cond_end + 1)
+        if brace:
+            body_end = close(brace.end() - 1, "{", "}")
+            if body_end > 0:
+                bodies.append((brace.end() - 1, body_end))
+    return bodies
+
+
 def _dominance_problems(workflow):
     """(reader, referenced node) for every `$('X')`, Config or not, whose X is
     missing, is the reader itself, or does not run on every path from every
@@ -1296,6 +1358,14 @@ def _dominance_problems(workflow):
             stack.extend(d for d in succ.get(current, ()) if d != gate)
         return True
 
+    def guarded(node, ref, text, at):
+        # A Code node evaluates `$('X')` lazily, so reading a branch that fed
+        # it, inside an `if` body that mirrors the branch rule, is valid n8n
+        # (the Shopify/WooCommerce store switch). The guard itself is unseen.
+        return (node["type"] == "n8n-nodes-base.code"
+                and node["name"] in succ.get(ref, ())
+                and any(start < at < end for start, end in _if_bodies(text)))
+
     problems = []
     for node in workflow["nodes"]:
         if node["type"].endswith("stickyNote"):
@@ -1306,7 +1376,9 @@ def _dominance_problems(workflow):
         for text in _strings(node.get("parameters", {})):
             for match in _ANY_REF.finditer(text):
                 ref = re.sub(r"\\(.)", r"\1", match.group(1))
-                if ref not in names or ref == reader or not runs_first(ref, reader):
+                if ref not in names or ref == reader or (
+                        not runs_first(ref, reader)
+                        and not guarded(node, ref, text, match.start())):
                     problems.append((node["name"], ref))
     return problems
 
@@ -1398,7 +1470,10 @@ class TestSingleConfigNode(unittest.TestCase):
                     workflow = compile_n8n(spec)
                     configs = [n["name"] for n in workflow["nodes"]
                                if "Config: Your Settings" in n["name"]]
-                    self.assertEqual(configs, [CONFIG_NODE_NAME] if config else [])
+                    # A spec whose own params read the Config node by name (a
+                    # promoted archetype) gets one even with `config` empty.
+                    wanted = config or config_keys_read(spec) is not None
+                    self.assertEqual(configs, [CONFIG_NODE_NAME] if wanted else [])
                     if not config:
                         continue
                     downstream = {t["node"] for group in
@@ -1602,6 +1677,31 @@ class TestReadBacksOnlyFromNodesThatRan(unittest.TestCase):
         self.assertNotIn("$(", text)
         self.assertIn("{{ $json.name }}", text)
         self.assertEqual(_dominance_problems(workflow), [])
+
+    def test_code_node_reads_a_branch_only_inside_an_if_body(self):
+        """A Code node fed by both sides of a Switch may read either side
+        inside an `if` body; the same read outside one is still reported."""
+        def workflow(code):
+            nodes = [{"name": n, "type": t, "parameters": {}} for n, t in (
+                ("1 - Hook", "n8n-nodes-base.webhook"), ("2 - Store?", "n8n-nodes-base.switch"),
+                ("3a - Shopify", "n8n-nodes-base.httpRequest"),
+                ("3b - Woo", "n8n-nodes-base.httpRequest"))]
+            nodes.append({"name": "4 - One Shape", "type": "n8n-nodes-base.code",
+                          "parameters": {"jsCode": code}})
+            link = lambda *targets: {"main": [[{"node": t, "type": "main", "index": 0}
+                                               for t in targets]]}
+            return {"nodes": nodes, "connections": {
+                "1 - Hook": link("2 - Store?"), "2 - Store?": link("3a - Shopify", "3b - Woo"),
+                "3a - Shopify": link("4 - One Shape"), "3b - Woo": link("4 - One Shape")}}
+
+        guarded = ("let out = {};\nif (platform === 'shopify') { out = $('3a - Shopify').first().json; }\n"
+                   "if (platform === 'woo') {\n  out = $('3b - Woo').all()[0].json;\n}\nreturn [out];")
+        self.assertEqual(_dominance_problems(workflow(guarded)), [])
+        bare = "const a = $('3a - Shopify').first().json;\nif (a) { return [a]; }"
+        self.assertEqual(_dominance_problems(workflow(bare)), [("4 - One Shape", "3a - Shopify")])
+        in_condition = "if ($('3a - Shopify').first()) { return []; }"
+        self.assertEqual(_dominance_problems(workflow(in_condition)),
+                         [("4 - One Shape", "3a - Shopify")])
 
     def test_reported_archetypes(self):
         cases = [("claude_n8n_lead_management", "Facebook Lead Ad Submitted",
