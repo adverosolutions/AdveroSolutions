@@ -2473,9 +2473,11 @@ def answered_card_ids(state_or_row: Any) -> List[str]:
 
     Such a card answers nothing any more, whatever its own status says: a
     first reply Lorenzo sent himself from the thread is recorded on the lead
-    by detect_manual_first_reply while its card still reads pending
-    (approval.py does not retire that card yet), and until it expires that
-    card must not stop the ladder its own reply started."""
+    by detect_manual_first_reply, which then closes a pending card through
+    approval.mark_answered_in_thread (that function only closes a card this
+    list names). A card it does not close (blocked or stale_slots:
+    ``not_pending``; or a close that failed) keeps its own status, and it
+    must not stop the ladder its own reply started."""
     from services.reply_engine import approval as approval_mod
 
     if isinstance(state_or_row, dict):
@@ -2846,9 +2848,12 @@ def detect_manual_first_reply(state: Any, now: datetime, instantly: Any, store: 
     written through approval.save_stale_write under the row's lock, where
     _record_first_reply_under_lock checks again that no reply of ours was
     recorded meanwhile, so the ladder is never armed twice. ``state`` is
-    updated with what was written. The card itself is left as it is
-    (approval.py owns it): answered_card_ids keeps it from stopping the
-    ladder.
+    updated with what was written. Only after that write recorded the reply,
+    the pending card is closed through approval.mark_answered_in_thread
+    (status ``sent_manually``, marked by "thread"); its ``reason`` is in the
+    result as ``card_close`` (``close_failed`` when it raised). Blocked and
+    stale_slots cards stay as they are (``not_pending``): answered_card_ids
+    keeps them from stopping the ladder.
 
     ``dry_run`` reads the thread and reports what it would do; it writes
     nothing (no lead row, no nurture record, no Job_Log row). Never raises
@@ -2960,12 +2965,23 @@ def detect_manual_first_reply(state: Any, now: datetime, instantly: Any, store: 
         now_state = state_from_dict(written)
         for field in ("last_outbound_at", "offered_slots", "history", "cadence", "status"):
             setattr(state, field, getattr(now_state, field, None))
+    # After the locked write saved the reply_sent_manually event:
+    # mark_answered_in_thread only closes a card the lead row lists. It never
+    # touches the lead row; a failure here must not end the tick.
+    try:
+        closed = approval_mod.mark_answered_in_thread(approval_id, sent_at, found.get("email_id"),
+                                                      store=store, now=ct)
+        card_close = (closed or {}).get("reason") if isinstance(closed, dict) else None
+    except Exception as exc:  # noqa: BLE001 - the find stands; the card keeps its status
+        logger.error("could not close %s's card %s from the thread: %s", email, approval_id, type(exc).__name__)
+        card_close = "close_failed"
+    out["card_close"] = card_close
     armed = bool(result.get("armed"))
     _log_job("first_reply_from_thread", {
         "lead": email, "approval": approval_id, "email_id": found.get("email_id"),
         "reply_at": context.get("reply_at"), "sent_at": sent_at.isoformat(), "cadence_armed": armed,
         "cadence_not_armed": None if armed else result.get("reason"), "next_send_at": result.get("next_send_at"),
-        "left_nurture": bool(left)})
+        "left_nurture": bool(left), "card_close": card_close})
     if armed:
         return dict(out, action="ladder_started", day=0, next_send_at=result.get("next_send_at"),
                     left_nurture=bool(left))

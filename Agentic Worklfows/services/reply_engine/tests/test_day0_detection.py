@@ -171,9 +171,10 @@ def test_lorenzos_reply_in_the_thread_is_recorded_as_mark_sent_would_and_starts_
     logged = [d for j, s, d in env["rows"] if (j, s) == ("reply_engine.cadence", "first_reply_from_thread")]
     assert len(logged) == 1 and logged[0]["cadence_armed"] is True and logged[0]["sent_at"] == SENT_AT.isoformat()
     assert inst.sent == []
-    # the card still reads pending (approval.py retires it, not this), but it
-    # answers nothing any more, so it never stops the ladder its reply started
-    assert A._approval_row(store, _card_id(card)).status == "pending"
+    # the pending card is closed after the row write, and it answers nothing
+    # any more, so it never stops the ladder its reply started
+    assert res["card_close"] == "closed" and logged[0]["card_close"] == "closed"
+    assert A._approval_row(store, _card_id(card)).status == "sent_manually"
     assert cadence.open_cards(lead, store, TICK) == []
     assert cadence.changed_in_store(lead, store, TICK) is None
     # and a second check finds nothing more to do: no second read, no second arm
@@ -239,6 +240,45 @@ def test_a_lead_the_ladder_is_over_for_is_not_read(env):
     inst = ThreadInstantly([_row("out-1", SENT_AT)])
     res = cadence.detect_manual_first_reply(state, TICK, inst, store)
     assert (res["action"], res["reason"]) == ("not_candidate", "follow_up_later") and inst.reads == []
+
+
+def test_the_tick_closes_the_pending_card_once_and_a_second_tick_neither_re_arms_nor_re_closes(env):
+    store = env["store"]
+    state, card = _seed(store)
+    inst = ThreadInstantly([_row("out-1", SENT_AT)])
+    cadence_tick.run(TICK, store, instantly=inst, free_slots=cadence.default_slot_grid(TICK))
+    stored = A._approval_row(store, _card_id(card))
+    assert stored.status == "sent_manually"
+    mark = stored.notify_result[A.MARK_SENT_KEY]
+    assert mark["by"] == "thread" and mark["email_id"] == "out-1" and mark["at"] == SENT_AT.isoformat()
+    closes = [r for r in env["rows"] if r[:2] == ("reply_engine.approval", "card_closed_from_thread")]
+    assert len(closes) == 1
+    armed_at = _lead(store, state).cadence["armed_at"]
+    row_before, card_before = store.get(state.key), store.get(A.APPROVAL_PREFIX + _card_id(card))
+
+    summary = cadence_tick.run(TICK + timedelta(hours=1), store, instantly=inst)
+    assert summary["first_reply_candidates"] == 0 and len(inst.reads) == 1
+    assert store.get(A.APPROVAL_PREFIX + _card_id(card)) == card_before
+    assert _lead(store, state).cadence["armed_at"] == armed_at
+    sent = [e for e in store.get(state.key)["history"] if e.get("event") in A.REPLY_SENT_EVENTS]
+    assert sent == [e for e in row_before["history"] if e.get("event") in A.REPLY_SENT_EVENTS] and len(sent) == 1
+    assert len([r for r in env["rows"] if r[:2] == ("reply_engine.approval", "card_closed_from_thread")]) == 1
+    # a direct second call is refused without a second event either
+    again = A.mark_answered_in_thread(_card_id(card), SENT_AT, "out-1", store=store, now=TICK + timedelta(hours=1))
+    assert again == {"closed": False, "status": "sent_manually", "reason": "already_closed"}
+
+
+def test_a_failing_card_close_never_breaks_the_find(env, monkeypatch):
+    store = env["store"]
+    state, card = _seed(store)
+
+    def _boom(*a, **k):
+        raise RuntimeError("store down")
+
+    monkeypatch.setattr(A, "mark_answered_in_thread", _boom)
+    res = cadence.detect_manual_first_reply(state, TICK, ThreadInstantly([_row("out-1", SENT_AT)]), store)
+    assert res["action"] == "ladder_started" and res["card_close"] == "close_failed"
+    assert A._approval_row(store, _card_id(card)).status == "pending"
 
 
 def test_nothing_happens_once_a_reply_is_recorded_even_when_mark_sent_lands_during_the_read(env):
