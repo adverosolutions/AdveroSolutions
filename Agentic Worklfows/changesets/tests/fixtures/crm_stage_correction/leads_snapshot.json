@@ -1,0 +1,636 @@
+{
+  "_meta": {
+    "source": "config/snapshots/instantly_replied_leads_2026-09-21.json",
+    "note": "Real items from the recorded 2026-09-21 replied-leads pull. Every item: email, first_name, last_name, company_name, company_domain, website and personalization replaced, and every payload value replaced with <scrubbed>. Ids, campaign, timestamps, status_summary and the sending inbox are as recorded. edited_fields lists the only other changes, per case.",
+    "edits": [
+      {
+        "case": "zoho_contacted",
+        "source_index": 30,
+        "source_id": "01a0a594-abf5-773e-a4c3-1ebd3aad58f8",
+        "email": "owner@z1-hvac.example",
+        "edited_fields": {
+          "email_reply_count": 0,
+          "esp_code": 3
+        },
+        "why": "Zoho-hosted lead that was emailed: legacy bounced_esp_code -> Closed - Lost"
+      },
+      {
+        "case": "zoho_never_contacted",
+        "source_index": 33,
+        "source_id": "01a0a596-d49d-7055-b417-0a2f4a54d82e",
+        "email": "owner@z2-hvac.example",
+        "edited_fields": {
+          "email_reply_count": 0,
+          "esp_code": 3,
+          "last_contacted_from": null,
+          "status_summary": {},
+          "timestamp_last_contact": null,
+          "timestamp_last_touch": null
+        },
+        "why": "Zoho-hosted lead never emailed: legacy Closed - Lost, fixed sync None"
+      },
+      {
+        "case": "zoho_with_notes",
+        "source_index": 31,
+        "source_id": "01a0a594-d190-72d2-94ea-e664a9701b1a",
+        "email": "owner@z3-hvac.example",
+        "edited_fields": {
+          "email_reply_count": 0,
+          "esp_code": 3
+        },
+        "why": "Zoho-hosted emailed lead whose CRM row has Notes"
+      },
+      {
+        "case": "zoho_duplicate_rows",
+        "source_index": 32,
+        "source_id": "01a0a596-a0cb-7bd9-8cf8-ebf3d3e4a07c",
+        "email": "owner@z4-hvac.example",
+        "edited_fields": {
+          "email_reply_count": 0,
+          "esp_code": 3
+        },
+        "why": "Zoho-hosted emailed lead whose email is on two HVAC rows"
+      },
+      {
+        "case": "real_bounce",
+        "source_index": 34,
+        "source_id": "01a0a596-e7fa-780f-9153-54b269e15648",
+        "email": "owner@b1-hvac.example",
+        "edited_fields": {
+          "email_reply_count": 0,
+          "status": -1
+        },
+        "why": "real bounce (status -1): Closed - Lost is right"
+      },
+      {
+        "case": "google_never_moved",
+        "source_index": 35,
+        "source_id": "01a0a5e6-38c9-782e-8c28-90fc5af86d2a",
+        "email": "owner@g1-hvac.example",
+        "edited_fields": {
+          "email_reply_count": 0
+        },
+        "why": "Google-hosted emailed lead the legacy sync never moved to Contacted"
+      },
+      {
+        "case": "microsoft_not_contacted",
+        "source_index": 24,
+        "source_id": "01a0a594-43d1-708c-981f-4d63e504bdbd",
+        "email": "owner@m1-roof.example",
+        "edited_fields": {
+          "email_reply_count": 0,
+          "last_contacted_from": null,
+          "status_summary": {},
+          "timestamp_last_contact": null,
+          "timestamp_last_touch": null
+        },
+        "why": "Microsoft-hosted active lead not yet emailed: legacy delivered_esp_code -> Contacted"
+      },
+      {
+        "case": "completed_no_reply",
+        "source_index": 22,
+        "source_id": "01a09b47-aca7-7829-8c1a-60a6c813f5b4",
+        "email": "owner@c1-roof.example",
+        "edited_fields": {
+          "email_reply_count": 0
+        },
+        "why": "status 3 (Completed) with no reply: legacy completed_as_replied -> Replied - Neutral"
+      },
+      {
+        "case": "ooo_reply",
+        "source_index": 8,
+        "source_id": "01a088ae-ea3c-7a7c-9c30-039b3de0f53c",
+        "email": "owner@o1-roof.example",
+        "edited_fields": {},
+        "why": "real item as recorded: status 1, 1 reply, lt_interest_status 0 (Out of Office)"
+      },
+      {
+        "case": "zoho_positive_reply",
+        "source_index": 12,
+        "source_id": "01a088af-7a39-7741-bd46-296929cd7a95",
+        "email": "owner@p1-roof.example",
+        "edited_fields": {},
+        "why": "real item as recorded: Zoho-hosted (esp 3) lead that replied positively (interest 1)"
+      },
+      {
+        "case": "not_in_crm",
+        "source_index": 0,
+        "source_id": "01a088ac-989c-7ba9-a6c3-fa70a1f01986",
+        "email": "owner@n1-other.example",
+        "edited_fields": {},
+        "why": "real item as recorded, email on no CRM row (workspace-wide pull)"
+      }
+    ]
+  },
+  "items": [
+    {
+      "id": "01a0a594-abf5-773e-a4c3-1ebd3aad58f8",
+      "timestamp_created": "2026-09-15T14:59:39.126Z",
+      "timestamp_updated": "2026-09-18T11:40:35.443Z",
+      "organization": "92fb7f1b-1d71-45d5-bea0-178894b5b492",
+      "status": 1,
+      "email_open_count": 0,
+      "email_reply_count": 0,
+      "email_click_count": 0,
+      "company_domain": "z1-hvac.example",
+      "status_summary": {
+        "lastStep": {
+          "from": "lorenzov@adveromedia.com",
+          "stepID": "0_0_0",
+          "timestamp_executed": "2026-09-18T11:40:19.812Z"
+        }
+      },
+      "campaign": "f00c5e28-fdc4-4d84-a7e6-dfba9695f35d",
+      "email": "owner@z1-hvac.example",
+      "personalization": "",
+      "website": "",
+      "last_name": "Lastname",
+      "first_name": "Firstname",
+      "company_name": "Example Company",
+      "payload": {
+        "firstName": "<scrubbed>",
+        "lastName": "<scrubbed>",
+        "companyName": "<scrubbed>",
+        "website": "<scrubbed>",
+        "personalization": "<scrubbed>",
+        "email": "<scrubbed>",
+        "lead_id": "<scrubbed>",
+        "campaign": "<scrubbed>",
+        "mv_result": "<scrubbed>",
+        "specialty": "<scrubbed>"
+      },
+      "email_replied_step": 0,
+      "email_replied_variant": 0,
+      "timestamp_last_contact": "2026-09-18T11:40:19.825Z",
+      "timestamp_last_reply": "2026-09-18T11:40:35.443Z",
+      "upload_method": "api",
+      "assigned_to": "fdb81354-a6cc-4460-9efb-0944b23abcec",
+      "timestamp_last_touch": "2026-09-18T11:40:35.443Z",
+      "esp_code": 3
+    },
+    {
+      "id": "01a0a596-d49d-7055-b417-0a2f4a54d82e",
+      "timestamp_created": "2026-09-15T15:02:00.607Z",
+      "timestamp_updated": "2026-09-19T11:12:30.612Z",
+      "organization": "92fb7f1b-1d71-45d5-bea0-178894b5b492",
+      "status": 1,
+      "email_open_count": 0,
+      "email_reply_count": 0,
+      "email_click_count": 0,
+      "company_domain": "z2-hvac.example",
+      "status_summary": {},
+      "campaign": "87ebb167-9b64-4b6f-b658-88f3d1af9980",
+      "email": "owner@z2-hvac.example",
+      "personalization": "",
+      "website": "",
+      "last_name": "Lastname",
+      "first_name": "Firstname",
+      "company_name": "Example Company",
+      "payload": {
+        "firstName": "<scrubbed>",
+        "lastName": "<scrubbed>",
+        "companyName": "<scrubbed>",
+        "website": "<scrubbed>",
+        "personalization": "<scrubbed>",
+        "email": "<scrubbed>",
+        "lead_id": "<scrubbed>",
+        "campaign": "<scrubbed>",
+        "mv_result": "<scrubbed>",
+        "specialty": "<scrubbed>"
+      },
+      "email_replied_step": 0,
+      "email_replied_variant": 0,
+      "timestamp_last_contact": null,
+      "timestamp_last_reply": "2026-09-19T11:12:30.612Z",
+      "upload_method": "api",
+      "assigned_to": "fdb81354-a6cc-4460-9efb-0944b23abcec",
+      "timestamp_last_touch": null,
+      "esp_code": 3,
+      "last_contacted_from": null
+    },
+    {
+      "id": "01a0a594-d190-72d2-94ea-e664a9701b1a",
+      "timestamp_created": "2026-09-15T14:59:48.755Z",
+      "timestamp_updated": "2026-09-18T11:48:07.913Z",
+      "organization": "92fb7f1b-1d71-45d5-bea0-178894b5b492",
+      "status": 1,
+      "email_open_count": 0,
+      "email_reply_count": 0,
+      "email_click_count": 0,
+      "company_domain": "z3-hvac.example",
+      "status_summary": {
+        "lastStep": {
+          "from": "lorenzo@adveromedia.com",
+          "stepID": "0_0_0",
+          "timestamp_executed": "2026-09-18T11:45:31.134Z"
+        }
+      },
+      "campaign": "87ebb167-9b64-4b6f-b658-88f3d1af9980",
+      "email": "owner@z3-hvac.example",
+      "personalization": "",
+      "website": "",
+      "last_name": "Lastname",
+      "first_name": "Firstname",
+      "company_name": "Example Company",
+      "payload": {
+        "firstName": "<scrubbed>",
+        "lastName": "<scrubbed>",
+        "companyName": "<scrubbed>",
+        "website": "<scrubbed>",
+        "personalization": "<scrubbed>",
+        "email": "<scrubbed>",
+        "lead_id": "<scrubbed>",
+        "campaign": "<scrubbed>",
+        "mv_result": "<scrubbed>",
+        "specialty": "<scrubbed>",
+        "pause_until": "<scrubbed>"
+      },
+      "email_replied_step": 0,
+      "email_replied_variant": 0,
+      "lt_interest_status": 0,
+      "timestamp_last_contact": "2026-09-18T11:45:31.163Z",
+      "timestamp_last_reply": "2026-09-18T11:47:57.803Z",
+      "timestamp_last_interest_change": "2026-09-18T11:48:07.913Z",
+      "upload_method": "api",
+      "assigned_to": "fdb81354-a6cc-4460-9efb-0944b23abcec",
+      "timestamp_last_touch": "2026-09-18T11:47:57.803Z",
+      "esp_code": 3
+    },
+    {
+      "id": "01a0a596-a0cb-7bd9-8cf8-ebf3d3e4a07c",
+      "timestamp_created": "2026-09-15T15:01:47.341Z",
+      "timestamp_updated": "2026-09-19T11:13:24.747Z",
+      "organization": "92fb7f1b-1d71-45d5-bea0-178894b5b492",
+      "status": 1,
+      "email_open_count": 0,
+      "email_reply_count": 0,
+      "email_click_count": 0,
+      "company_domain": "z4-hvac.example",
+      "status_summary": {
+        "lastStep": {
+          "from": "lorenzov@proadvero.com",
+          "stepID": "0_0_0",
+          "timestamp_executed": "2026-09-19T11:12:47.200Z"
+        }
+      },
+      "campaign": "f00c5e28-fdc4-4d84-a7e6-dfba9695f35d",
+      "email": "owner@z4-hvac.example",
+      "personalization": "",
+      "website": "",
+      "last_name": "Lastname",
+      "first_name": "Firstname",
+      "company_name": "Example Company",
+      "payload": {
+        "firstName": "<scrubbed>",
+        "lastName": "<scrubbed>",
+        "companyName": "<scrubbed>",
+        "website": "<scrubbed>",
+        "personalization": "<scrubbed>",
+        "email": "<scrubbed>",
+        "lead_id": "<scrubbed>",
+        "campaign": "<scrubbed>",
+        "mv_result": "<scrubbed>",
+        "specialty": "<scrubbed>",
+        "pause_until": "<scrubbed>"
+      },
+      "email_replied_step": 0,
+      "email_replied_variant": 0,
+      "lt_interest_status": 0,
+      "timestamp_last_contact": "2026-09-19T11:12:47.307Z",
+      "timestamp_last_reply": "2026-09-19T11:13:16.045Z",
+      "timestamp_last_interest_change": "2026-09-19T11:13:24.747Z",
+      "upload_method": "api",
+      "assigned_to": "fdb81354-a6cc-4460-9efb-0944b23abcec",
+      "timestamp_last_touch": "2026-09-19T11:13:16.045Z",
+      "esp_code": 3
+    },
+    {
+      "id": "01a0a596-e7fa-780f-9153-54b269e15648",
+      "timestamp_created": "2026-09-15T15:02:05.566Z",
+      "timestamp_updated": "2026-09-19T11:07:06.872Z",
+      "organization": "92fb7f1b-1d71-45d5-bea0-178894b5b492",
+      "status": -1,
+      "email_open_count": 0,
+      "email_reply_count": 0,
+      "email_click_count": 0,
+      "company_domain": "b1-hvac.example",
+      "status_summary": {
+        "lastStep": {
+          "from": "lorenzovillarreal@theadvero.com",
+          "stepID": "0_0_0",
+          "timestamp_executed": "2026-09-19T11:06:47.802Z"
+        }
+      },
+      "campaign": "f347604e-48c7-4813-831c-dc7b9d4b50ae",
+      "email": "owner@b1-hvac.example",
+      "personalization": "",
+      "website": "",
+      "last_name": "Lastname",
+      "first_name": "Firstname",
+      "company_name": "Example Company",
+      "payload": {
+        "firstName": "<scrubbed>",
+        "lastName": "<scrubbed>",
+        "companyName": "<scrubbed>",
+        "website": "<scrubbed>",
+        "personalization": "<scrubbed>",
+        "email": "<scrubbed>",
+        "lead_id": "<scrubbed>",
+        "campaign": "<scrubbed>",
+        "mv_result": "<scrubbed>",
+        "specialty": "<scrubbed>",
+        "pause_until": "<scrubbed>"
+      },
+      "email_replied_step": 0,
+      "email_replied_variant": 0,
+      "lt_interest_status": 0,
+      "timestamp_last_contact": "2026-09-19T11:06:47.875Z",
+      "timestamp_last_reply": "2026-09-19T11:06:54.262Z",
+      "timestamp_last_interest_change": "2026-09-19T11:07:06.872Z",
+      "upload_method": "api",
+      "assigned_to": "fdb81354-a6cc-4460-9efb-0944b23abcec",
+      "timestamp_last_touch": "2026-09-19T11:06:54.262Z",
+      "esp_code": 1
+    },
+    {
+      "id": "01a0a5e6-38c9-782e-8c28-90fc5af86d2a",
+      "timestamp_created": "2026-09-15T16:28:43.593Z",
+      "timestamp_updated": "2026-09-19T11:26:50.121Z",
+      "organization": "92fb7f1b-1d71-45d5-bea0-178894b5b492",
+      "status": 1,
+      "email_open_count": 0,
+      "email_reply_count": 0,
+      "email_click_count": 0,
+      "company_domain": "g1-hvac.example",
+      "status_summary": {
+        "lastStep": {
+          "from": "lorenzo@theadvero.com",
+          "stepID": "0_0_0",
+          "timestamp_executed": "2026-09-19T11:26:29.149Z"
+        }
+      },
+      "campaign": "87ebb167-9b64-4b6f-b658-88f3d1af9980",
+      "email": "owner@g1-hvac.example",
+      "personalization": "",
+      "website": "",
+      "last_name": "Lastname",
+      "first_name": "Firstname",
+      "company_name": "Example Company",
+      "payload": {
+        "firstName": "<scrubbed>",
+        "lastName": "<scrubbed>",
+        "companyName": "<scrubbed>",
+        "website": "<scrubbed>",
+        "personalization": "<scrubbed>",
+        "email": "<scrubbed>",
+        "lead_id": "<scrubbed>",
+        "campaign": "<scrubbed>",
+        "mv_result": "<scrubbed>",
+        "specialty": "<scrubbed>",
+        "pause_until": "<scrubbed>"
+      },
+      "email_replied_step": 0,
+      "email_replied_variant": 0,
+      "lt_interest_status": 0,
+      "timestamp_last_contact": "2026-09-19T11:26:29.270Z",
+      "timestamp_last_reply": "2026-09-19T11:26:43.779Z",
+      "timestamp_last_interest_change": "2026-09-19T11:26:50.121Z",
+      "upload_method": "api",
+      "assigned_to": "fdb81354-a6cc-4460-9efb-0944b23abcec",
+      "timestamp_last_touch": "2026-09-19T11:26:43.779Z",
+      "esp_code": 1
+    },
+    {
+      "id": "01a0a594-43d1-708c-981f-4d63e504bdbd",
+      "timestamp_created": "2026-09-15T14:59:12.466Z",
+      "timestamp_updated": "2026-09-18T11:32:45.521Z",
+      "organization": "92fb7f1b-1d71-45d5-bea0-178894b5b492",
+      "status": 1,
+      "email_open_count": 0,
+      "email_reply_count": 0,
+      "email_click_count": 0,
+      "company_domain": "m1-roof.example",
+      "status_summary": {},
+      "campaign": "f00c5e28-fdc4-4d84-a7e6-dfba9695f35d",
+      "email": "owner@m1-roof.example",
+      "personalization": "",
+      "website": "",
+      "last_name": "Lastname",
+      "first_name": "Firstname",
+      "company_name": "Example Company",
+      "payload": {
+        "firstName": "<scrubbed>",
+        "lastName": "<scrubbed>",
+        "companyName": "<scrubbed>",
+        "website": "<scrubbed>",
+        "personalization": "<scrubbed>",
+        "email": "<scrubbed>",
+        "lead_id": "<scrubbed>",
+        "campaign": "<scrubbed>",
+        "mv_result": "<scrubbed>",
+        "specialty": "<scrubbed>",
+        "pause_until": "<scrubbed>"
+      },
+      "email_replied_step": 0,
+      "email_replied_variant": 0,
+      "lt_interest_status": 0,
+      "timestamp_last_contact": null,
+      "timestamp_last_reply": "2026-09-18T11:32:33.859Z",
+      "timestamp_last_interest_change": "2026-09-18T11:32:45.521Z",
+      "upload_method": "api",
+      "assigned_to": "fdb81354-a6cc-4460-9efb-0944b23abcec",
+      "timestamp_last_touch": null,
+      "esp_code": 2,
+      "last_contacted_from": null
+    },
+    {
+      "id": "01a09b47-aca7-7829-8c1a-60a6c813f5b4",
+      "timestamp_created": "2026-09-13T14:59:20.879Z",
+      "timestamp_updated": "2026-09-21T13:15:58.747Z",
+      "organization": "92fb7f1b-1d71-45d5-bea0-178894b5b492",
+      "status": 3,
+      "email_open_count": 0,
+      "email_reply_count": 0,
+      "email_click_count": 0,
+      "company_domain": "c1-roof.example",
+      "status_summary": {
+        "lastStep": {
+          "from": "lorenzovillarreal@theadvero.com",
+          "stepID": "0_1_0",
+          "timestamp_executed": "2026-09-21T13:13:46.060Z"
+        }
+      },
+      "campaign": "87ebb167-9b64-4b6f-b658-88f3d1af9980",
+      "email": "owner@c1-roof.example",
+      "personalization": "",
+      "website": "",
+      "last_name": "Lastname",
+      "first_name": "Firstname",
+      "company_name": "Example Company",
+      "payload": {
+        "firstName": "<scrubbed>",
+        "lastName": "<scrubbed>",
+        "companyName": "<scrubbed>",
+        "website": "<scrubbed>",
+        "personalization": "<scrubbed>",
+        "email": "<scrubbed>",
+        "lead_id": "<scrubbed>",
+        "campaign": "<scrubbed>",
+        "mv_result": "<scrubbed>",
+        "specialty": "<scrubbed>"
+      },
+      "email_replied_step": 0,
+      "email_replied_variant": 0,
+      "timestamp_last_contact": "2026-09-21T13:15:58.747Z",
+      "timestamp_last_reply": "2026-09-18T11:19:47.654Z",
+      "upload_method": "api",
+      "assigned_to": "fdb81354-a6cc-4460-9efb-0944b23abcec",
+      "timestamp_last_touch": "2026-09-21T13:15:58.747Z",
+      "esp_code": 1
+    },
+    {
+      "id": "01a088ae-ea3c-7a7c-9c30-039b3de0f53c",
+      "timestamp_created": "2026-09-10T00:19:19.740Z",
+      "timestamp_updated": "2026-09-16T11:26:10.280Z",
+      "organization": "92fb7f1b-1d71-45d5-bea0-178894b5b492",
+      "status": 1,
+      "email_open_count": 0,
+      "email_reply_count": 1,
+      "email_click_count": 0,
+      "company_domain": "o1-roof.example",
+      "status_summary": {
+        "lastStep": {
+          "from": "lorenzov@theadvero.com",
+          "stepID": "0_0_0",
+          "timestamp_executed": "2026-09-16T11:20:55.866Z"
+        }
+      },
+      "campaign": "1d4d5bb3-40a7-4333-bf34-b269d2cc9955",
+      "email": "owner@o1-roof.example",
+      "personalization": "",
+      "website": "",
+      "last_name": "Lastname",
+      "first_name": "Firstname",
+      "company_name": "Example Company",
+      "payload": {
+        "firstName": "<scrubbed>",
+        "lastName": "<scrubbed>",
+        "companyName": "<scrubbed>",
+        "website": "<scrubbed>",
+        "personalization": "<scrubbed>",
+        "email": "<scrubbed>",
+        "lead_id": "<scrubbed>",
+        "campaign": "<scrubbed>",
+        "mv_result": "<scrubbed>",
+        "specialty": "<scrubbed>",
+        "pause_until": "<scrubbed>"
+      },
+      "email_replied_step": 0,
+      "email_replied_variant": 0,
+      "lt_interest_status": 0,
+      "timestamp_last_contact": "2026-09-16T11:20:55.879Z",
+      "timestamp_last_reply": "2026-09-16T11:25:57.021Z",
+      "timestamp_last_interest_change": "2026-09-16T11:26:10.280Z",
+      "upload_method": "api",
+      "assigned_to": "fdb81354-a6cc-4460-9efb-0944b23abcec",
+      "timestamp_last_touch": "2026-09-16T11:25:57.021Z",
+      "esp_code": 1
+    },
+    {
+      "id": "01a088af-7a39-7741-bd46-296929cd7a95",
+      "timestamp_created": "2026-09-10T00:19:56.600Z",
+      "timestamp_updated": "2026-09-16T15:31:03.396Z",
+      "organization": "92fb7f1b-1d71-45d5-bea0-178894b5b492",
+      "status": 3,
+      "email_open_count": 0,
+      "email_reply_count": 1,
+      "email_click_count": 0,
+      "company_domain": "p1-roof.example",
+      "status_summary": {
+        "lastStep": {
+          "from": "lorenzov@adveromedia.com",
+          "stepID": "0_1_0",
+          "timestamp_executed": "2026-09-16T11:29:48.369Z"
+        }
+      },
+      "campaign": "f347604e-48c7-4813-831c-dc7b9d4b50ae",
+      "email": "owner@p1-roof.example",
+      "personalization": "",
+      "website": "",
+      "last_name": "Lastname",
+      "first_name": "Firstname",
+      "company_name": "Example Company",
+      "payload": {
+        "firstName": "<scrubbed>",
+        "lastName": "<scrubbed>",
+        "companyName": "<scrubbed>",
+        "website": "<scrubbed>",
+        "personalization": "<scrubbed>",
+        "email": "<scrubbed>",
+        "lead_id": "<scrubbed>",
+        "campaign": "<scrubbed>",
+        "mv_result": "<scrubbed>",
+        "specialty": "<scrubbed>"
+      },
+      "email_replied_step": 1,
+      "email_replied_variant": 0,
+      "lt_interest_status": 1,
+      "timestamp_last_contact": "2026-09-16T15:31:03.396Z",
+      "timestamp_last_reply": "2026-09-16T14:40:46.298Z",
+      "timestamp_last_interest_change": "2026-09-16T14:41:01.464Z",
+      "last_contacted_from": "lorenzov@adveromedia.com",
+      "upload_method": "api",
+      "assigned_to": "fdb81354-a6cc-4460-9efb-0944b23abcec",
+      "timestamp_last_touch": "2026-09-16T15:31:03.396Z",
+      "esp_code": 3
+    },
+    {
+      "id": "01a088ac-989c-7ba9-a6c3-fa70a1f01986",
+      "timestamp_created": "2026-09-10T00:16:47.772Z",
+      "timestamp_updated": "2026-09-18T18:25:03.311Z",
+      "organization": "92fb7f1b-1d71-45d5-bea0-178894b5b492",
+      "status": 3,
+      "email_open_count": 0,
+      "email_reply_count": 2,
+      "email_click_count": 0,
+      "company_domain": "n1-other.example",
+      "status_summary": {
+        "lastStep": {
+          "from": "lorenzov@proadvero.com",
+          "stepID": "0_1_0",
+          "timestamp_executed": "2026-09-15T16:23:59.601Z"
+        }
+      },
+      "campaign": "8086b41e-b546-4b36-9fa0-2d01f5cc119a",
+      "email": "owner@n1-other.example",
+      "personalization": "",
+      "website": "",
+      "last_name": "Lastname",
+      "first_name": "Firstname",
+      "company_name": "Example Company",
+      "payload": {
+        "firstName": "<scrubbed>",
+        "lastName": "<scrubbed>",
+        "companyName": "<scrubbed>",
+        "website": "<scrubbed>",
+        "personalization": "<scrubbed>",
+        "email": "<scrubbed>",
+        "lead_id": "<scrubbed>",
+        "campaign": "<scrubbed>",
+        "mv_result": "<scrubbed>",
+        "specialty": "<scrubbed>"
+      },
+      "email_replied_step": 1,
+      "email_replied_variant": 0,
+      "lt_interest_status": -3,
+      "timestamp_last_contact": "2026-09-18T17:32:40.234Z",
+      "timestamp_last_reply": "2026-09-16T04:39:46.497Z",
+      "timestamp_last_interest_change": "2026-09-18T18:25:03.311Z",
+      "last_contacted_from": "lorenzov@proadvero.com",
+      "upload_method": "api",
+      "assigned_to": "fdb81354-a6cc-4460-9efb-0944b23abcec",
+      "timestamp_last_touch": "2026-09-18T17:32:40.234Z",
+      "esp_code": 2
+    }
+  ]
+}
