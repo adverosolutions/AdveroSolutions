@@ -51,7 +51,8 @@ Agentic Worklfows/
 | `batch_personalize_leads.md` | Batch personalize CRM leads |
 | `separate_contacted_leads.md` | Separate contacted leads for campaign management |
 | `generate_deep_multiline_icebreaker.md` | Short "Hey {name}, ..." opener from site research; personalization only, no pitch |
-| `generate_linkedin_content.md` | LinkedIn posts across 5 content pillars into the content calendar sheet |
+| `generate_linkedin_content.md` | RETIRED 2026-10-06; LinkedIn posts now come from the `linkedin-content` skill |
+| `linkedin_outreach.md` | LinkedIn outreach: Sales Navigator list, blank connection requests, Loom DMs, FU1-FU3, voice notes; Lorenzo sends everything, Claude drafts (skill `linkedin-outreach`) |
 | `prevent_anymail_data_corruption.md` | Guard against row misalignment when round-tripping CSVs through AnyMailFinder |
 
 AUTOMATED/: `sync_instantly_leads.md` (daily Instantly → CRM status sync, the only live webhook), `generate_visual_breakdown.md`, `monitor_social_leads.md`.

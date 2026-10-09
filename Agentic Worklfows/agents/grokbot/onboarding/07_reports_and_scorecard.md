@@ -15,6 +15,7 @@ Send a push notification, then the full details in the Grok chat, for:
 8. Opus failing three cases in a row (file 04, section 9).
 9. The copy doc changed after Lorenzo's "done" (file 02, section 9).
 10. A kill switch confirmation.
+11. A LinkedIn security check, captcha, restriction or "unusual activity" warning, or LinkedIn logging out (file 06, section 9).
 
 Push text: first name, company and the fact. No email addresses and no quoted lead text in the push itself. The full details go in the chat.
 
@@ -144,6 +145,7 @@ The trial runs from 2026-09-25 for one month. If Grok does not work out, Lorenzo
 | Hold cards | Cards sent, median time until Lorenzo answered | Report only |
 | Opus cost | Sum of `cost_usd` | Report only |
 | Grok problems | Routines that failed, tool errors, times the computer was busy and work waited | Report only |
+| LinkedIn | Connections, pending sent invitations and followers from the LinkedIn agent's latest Sunday count (`linkedin_counts.jsonl`), and the change from the Sunday before | Report only |
 
 Format (made-up numbers):
 ```
@@ -155,6 +157,7 @@ Double sends: 0. Wrong recipient: 0. Missed leads: 0.
 Calls booked: 3 (3 of 5 positives). No-shows: 1 of 3.
 Hold cards: 11, you answered in 22 min median.
 Opus: 212 calls, $12.40.
+LinkedIn (Sun Sep 27): 51 connections (+0), 0 pending, 120 followers.
 What went wrong and what changed:
 1. The not-now reply came in while E3 was queued. The send check now re-reads the thread right before sending.
 Questions for you:
