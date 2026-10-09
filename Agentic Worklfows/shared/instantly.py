@@ -94,6 +94,7 @@ ENDPOINTS = (
     ("POST", r"leads", "write", None, False),
     ("PATCH", r"leads/[^/]+", "write", None, False),
     ("PATCH", r"campaigns/[^/]+", "write", None, False),
+    ("POST", r"campaigns", "write", None, False),
     ("POST", r"accounts/[^/]+/pause", "write", None, False),
     ("POST", r"accounts/[^/]+/resume", "write", None, False),
     ("POST", r"lead-labels", "write", None, False),
@@ -732,6 +733,23 @@ class Instantly(object):
     def update_campaign(self, id: str, payload: Dict[str, Any]) -> Any:
         record = {"id": id, "payload": payload}
         return self._write("update_campaign", record, lambda: self._patch("campaigns/%s" % id, payload))
+
+    def create_campaign(self, payload: Dict[str, Any]) -> Any:
+        """POST /campaigns (config/instantly_api_contract.md). ``name`` and
+        ``campaign_schedule`` are required and the schema is
+        ``additionalProperties: false``, so the caller sends only create-schema
+        keys (never ``id``, ``status`` or the other read-only keys a GET
+        returns). The answer is the Campaign object; a new campaign is
+        ``status: 0`` (draft) and nothing here ever activates one."""
+        body = dict(payload or {})
+        if not str(body.get("name") or "").strip():
+            raise InstantlyError("create_campaign needs a name")
+        if not isinstance(body.get("campaign_schedule"), dict):
+            raise InstantlyError("create_campaign needs a campaign_schedule object (the API requires it)")
+        for key in ("id", "status"):
+            if key in body:
+                raise InstantlyError("create_campaign: %r is read-only; the create schema rejects it" % key)
+        return self._write("create_campaign", body, lambda: self._post("campaigns", body))
 
     def pause_account(self, email: str) -> Any:
         """POST /accounts/{email}/pause: the email is URL-encoded into the path

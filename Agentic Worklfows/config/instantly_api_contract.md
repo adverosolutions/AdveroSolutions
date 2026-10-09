@@ -37,6 +37,7 @@ Three scopes were read off the reference on 2026-09-22 and are **verified**. Eve
 | `POST /leads` | write | unverified |
 | `PATCH /leads/{id}` | write | unverified |
 | `PATCH /campaigns/{id}` | write | unverified |
+| `POST /campaigns` | write | unverified |
 | `POST /accounts/{email}/pause`, `POST /accounts/{email}/resume` | write | unverified |
 | `POST /lead-labels` | write | unverified |
 | `POST /webhooks` | write | unverified |
@@ -132,6 +133,9 @@ Path parameter only, URL-encoded. **No request body at all.** Returns the Accoun
 `minProperties: 1` (an empty body is rejected) and `additionalProperties: false`. Patchable fields relevant to us: `name`, `pl_value`, `campaign_schedule`, `sequences`, `email_gap`, `random_wait_max`, `text_only`, `first_email_text_only`, `email_list`, `daily_limit`, `stop_on_reply`, `link_tracking`, `open_tracking`, `stop_on_auto_reply`, `daily_max_leads`, `prioritize_new_leads`, `auto_variant_select`, `match_lead_esp`, `stop_for_company`, `insert_unsubscribe_header`, `allow_risky_contacts`, `disable_bounce_protect`, `cc_list`, `bcc_list`, `owned_by`, `provider_routing_rules`, `limit_emails_per_company_override`.
 
 **`status` is read-only and cannot be patched.** Starting or pausing a campaign uses the dedicated activate and pause endpoints. In `sequences`, only the first element is used; each step needs `type` (only `email`), `delay`, and `variants` (1 to 26, each with `subject` and `body`, optional `v_disabled`).
+
+## POST /campaigns (create; read off developer.instantly.ai on 2026-09-27)
+Required: `name`, `campaign_schedule` (`schedules` minItems 1, each with `name`, `timing {from, to}`, `days {"0".."6": bool}`, `timezone`; plus `start_date`, `end_date`). `additionalProperties: false`: send only create-schema keys, never `id`, `status`, `timestamp_*`, `organization`, `core_variables`, `custom_variables` or `not_sending_status` (all read-only on the Campaign object a GET returns). Other create keys relevant to us: `pl_value`, `sequences` (steps: `type` `email`, `delay`, `delay_unit`, `pre_delay_unit`, `variants` with `subject`, `body`, `v_disabled`), `email_list`, `email_tag_list`, `daily_limit`, `email_gap`, `random_wait_max`, `cc_list`, `bcc_list`, `text_only`, `first_email_text_only`, `stop_on_reply`, `stop_on_auto_reply`, `link_tracking`, `open_tracking`, `prioritize_new_leads`, `match_lead_esp`, `stop_for_company`, `allow_risky_contacts`, `insert_unsubscribe_header`, `disable_bounce_protect`, `daily_max_leads`, `auto_variant_select`, `limit_emails_per_company_override`, `owned_by`, `provider_routing_rules`, `is_evergreen`. Answers 200 with the Campaign object; a new campaign is `status: 0` (draft) and sends nothing until the activate endpoint is called. Not yet seen live: `changesets/offer_tests_2026_09_27/` reads every created campaign back and compares each body and subject byte for byte.
 
 ## Campaign step delay semantics
 `delay` is the wait **before the next** email, confirmed by the subsequence schema wording and consistent with the live campaigns, whose two steps both carry `delay: 3` for a day 0 / day 3 sequence. So a three-step sequence that should land on day 0, day 3 and day 7 carries `delay: 3` on step 1 and `delay: 4` on step 2. Verify on the Instantly timeline preview after the first apply.

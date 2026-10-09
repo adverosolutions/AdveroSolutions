@@ -387,9 +387,14 @@ def check_copy(field: str, old: str, new: str, known_vars: Optional[Set[str]], c
     # so refuse)
     if not offers_md or not offers_md.strip():
         errs.append("config/offers.md could not be read, so dollar figures and promises cannot be checked")
-    elif offer not in ("reactivation", "outbound"):
-        errs.append("config/ids.json gives campaign %s no offer type (reactivation|outbound), so its "
+    elif offer not in ("reactivation", "outbound", "build"):
+        errs.append("config/ids.json gives campaign %s no offer type (reactivation|outbound|build), so its "
                     "figures cannot be checked" % campaign_key)
+    elif offer == "build" and campaign_key not in L.proof_users_from_offers(offers_md).get("build", []):
+        # "build" is the offer type of the 2026-09-27 offer tests only; a
+        # campaign the Build proof row does not name cannot borrow its figures.
+        errs.append("campaign %s is given offer type build, but config/offers.md's Build proof row does not "
+                    "list it, so its figures cannot be checked" % campaign_key)
     else:
         money, periods = L.allowed_offer_numbers(campaign_key, offer, offers_md)
         for amount in sorted(L.money_values(text) - L.money_values(old_text) - money):

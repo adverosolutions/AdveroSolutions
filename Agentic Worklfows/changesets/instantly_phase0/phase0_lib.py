@@ -244,16 +244,34 @@ def iter_variants(sequence_doc: Dict[str, Any]) -> Iterator[Tuple[int, int, Dict
                 yield si, vi, step, var
 
 
+# offers.md proof-table label -> the offer type config/ids.json uses. "Build"
+# is the offer type of the 2026-09-27 offer tests (cleaning_crm,
+# bookkeeping_build, recruiting_build).
+PROOF_TABLE_LABELS = {"Reactivation": "reactivation", "Outbound / trigger": "outbound", "Build": "build"}
+
+
 def proof_lines_from_offers(offers_md: str) -> Dict[str, str]:
-    """Pull the two verbatim proof lines out of config/offers.md's table."""
+    """Pull the verbatim proof line of each offer type out of config/offers.md's table."""
     out = {}  # type: Dict[str, str]
     for line in offers_md.splitlines():
         if not line.startswith("|"):
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cells) >= 2 and cells[0] in ("Reactivation", "Outbound / trigger"):
+        if len(cells) >= 2 and cells[0] in PROOF_TABLE_LABELS:
             proof = cells[1].strip().strip('"')
-            out["reactivation" if cells[0] == "Reactivation" else "outbound"] = proof
+            out[PROOF_TABLE_LABELS[cells[0]]] = proof
+    return out
+
+
+def proof_users_from_offers(offers_md: str) -> Dict[str, List[str]]:
+    """{offer type: the campaign keys its proof row's "Used by" cell names}."""
+    out = {}  # type: Dict[str, List[str]]
+    for line in offers_md.splitlines():
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) >= 3 and cells[0] in PROOF_TABLE_LABELS:
+            out[PROOF_TABLE_LABELS[cells[0]]] = [k.strip() for k in cells[2].split(",") if k.strip()]
     return out
 
 

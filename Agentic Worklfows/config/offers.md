@@ -8,6 +8,7 @@ Source of truth for every draft the reply engine writes. Derived from the six li
 |---|---|---|
 | Reactivation | "I built a similar system for a commercial roofer doing $150M/year. I recovered about $6M worth of contracts within 6 months." | cleaning_reactivation, bookkeeping_reactivation, recruiting_reactivation |
 | Outbound / trigger | "I recently implemented the same system for a commercial roofer doing $150M/yr and generated about $180,000 in new contracts in 90 days." | cleaning_trigger, bookkeeping_trigger, recruiting_outbound |
+| Build | "$750M+ in annual bid volume runs through a routing and follow-up system I built for a commercial roofing contractor, every estimate request tracked and followed up on, none lost to manual chasing." | cleaning_crm, bookkeeping_build, recruiting_build |
 
 Other allowed proof (P.S. bullets only, from Lorenzo's case studies): lender $5M pipeline on a $1.5k build; consultancy +35% reply rate; agency to $10k/mo. Never invent client names or numbers.
 
@@ -23,6 +24,11 @@ Other allowed proof (P.S. bullets only, from Lorenzo's case studies): lender $5M
 | cleaning_trigger | Watch triggers (new leases, office expansions, PM changes, new construction); outreach under the client's name; walkthroughs on their calendar | Guarantee **$24,000/yr in new cleaning contracts signed within 90 days** or money back + $200 steakhouse gift card. Pricing: setup + monthly retainer, **$2,500–5,000/mo** (TO CONFIRM with Lorenzo before quoting in writing; until then say on the call "setup plus a monthly retainer, sized to your service area, and the guarantee covers it") | Service area + building types |
 | bookkeeping_trigger | Watch triggers (new business formations, part-time bookkeeper/admin job posts, second locations); outreach under the client's name; discovery calls on their calendar | Guarantee **$15,000 in new annual client fees within 90 days** or money back + $200 gift card. Pricing as above (TO CONFIRM) | Target client profile |
 | recruiting_outbound | Watch {{specialty}} roles open on job boards; outreach to hiring managers under the agency's name; intro calls on their calendar | Guarantee **$40,000 in new placement fees within 180 days** or money back + $200 gift card. Pricing as above (TO CONFIRM) | Specialty + geography |
+| cleaning_crm | One pipeline tracking every inquiry, walkthrough and proposal until it signs | Guarantee **pays for itself within 90 days** or money back + $200 steakhouse gift card. Pricing: setup + monthly (TO CONFIRM with Lorenzo before quoting in writing) | TO CONFIRM |
+| bookkeeping_build | System that chases clients for missing documents and sorts what comes in | Guarantee **at least 10 hours a week back this tax season** or money back + $200 steakhouse gift card. Pricing: setup + monthly (TO CONFIRM with Lorenzo before quoting in writing) | TO CONFIRM |
+| recruiting_build | Custom systems that take admin off recruiters | Guarantee **at least 10 hours a week saved within 30 days of going live** or a $200 steakhouse gift card. Pricing: nothing up front, the fee starts once it's saving time (TO CONFIRM with Lorenzo before quoting in writing) | TO CONFIRM |
+
+cleaning_crm, bookkeeping_build and recruiting_build (offer type Build, proof line above) are the offer tests of 2026-09-27: each runs as its own campaign and takes half of its parent campaign's uncontacted leads (cleaning_trigger, bookkeeping_trigger, recruiting_reactivation). Change-set: `changesets/offer_tests_2026_09_27/`.
 
 ## Reply rules the engine must obey
 
