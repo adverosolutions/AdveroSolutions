@@ -299,7 +299,10 @@ def test_every_reason_is_listed():
     assert set(gate.REASONS) == {
         "ok", "kill_switch", "parity_failed", "no_template", "not_template_render", "unknown_id", "unapproved",
         "changed_since_approval", "not_approvable", "stale_render", "classification", "requested_override",
-        "copy_gate", "nonconforming", "registry_error"}
+        "copy_gate", "nonconforming", "registry_error",
+        # the researched day 2 line (E2, tests/test_e2_research_gate.py)
+        "research_line_missing", "research_evidence_missing", "research_context_missing", "research_line_mismatch",
+        "research_rules_unavailable", "research_rules_error", "research_rules_failed", "research_rules_sha_mismatch"}
 
 
 # ------------------------------------------------------------ gate order

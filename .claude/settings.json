@@ -10,16 +10,6 @@
           }
         ]
       }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "You are finishing a build brief in the AdveroSolutions revenue automation repo. Check the transcript: did this brief (1) run its tests or a --dry-run on fixtures/live read-only data, (2) write Job_Log entries or a shadow log, and (3) write or update its runbook under 'Agentic Worklfows/runbooks/' or 'Agentic Worklfows/directives/'? If any of the three is missing and the brief was a build task, answer that the agent should continue and name the missing item. If this was a conversational turn, a question, or a pause requested by the user, let it stop."
-          }
-        ]
-      }
     ]
   }
 }
