@@ -451,6 +451,20 @@ timing stay in the proposal body, not in the beats.
 
 ## Proposal copy (locked)
 
+**LOCKED OPENER (Lorenzo, 2026-09-29): use this for the next 100 proposals, then compare reply rates.** He dropped "just finished a similar build last week": "it just doesn't sound very true, so people don't buy it." Every proposal now opens by claiming the TYPE of build he does all the time, then hands them their finished system:
+
+```
+Hey [greeting] 👋 I do [X] builds all the time, so here's your [their system] [finished / already running], [N]-min video: https://www.loom.com/share/[LOOMURL]
+```
+
+- [X] is the build type in the post's words (GoHighLevel CRM, lead routing, AI agent, cold email, Zoho automation). Size [X] and [their system] so the preview lands in 133-150.
+- A post that asks for a keyword gets it inline first ("Deluge. Hey there 👋 I do ..."), never on its own line.
+- The body opens "The video walks through what your [system] will look like once it's set up and live: [input] going in and [output] coming out: ...", with inputs and outputs first (Nick Saraev). When the page shows one item from a longer list, add "I picked one item from your list to show finished, and I can build any of the others the same way."
+- Preferred ending (2026-09-30, "perfect intro"): "...so here's your [system] finished and connected, [N]-min video:". The body carries "The build is done; the video is just a more visual way to show it running end to end."
+- Start line: "I can start this week." Closer, sign-off and P.S. as below.
+- finalize logs it as opener_variant `do-x-all-the-time` by default. Don't pass another --variant unless he asks.
+- Templates A and B and the older openers below are superseded while the 100-proposal test runs.
+
 Sentence case is official (proposals have gone out in proper sentence case
 since 2026-09-21). Template A's opener changed on 2026-09-28 (below); B's
 shape is unchanged. Written-out slots: A's "[2-3 tool names from the post]"
