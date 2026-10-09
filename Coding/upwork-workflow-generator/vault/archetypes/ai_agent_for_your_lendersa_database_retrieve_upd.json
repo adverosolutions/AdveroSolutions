@@ -1,12 +1,12 @@
 {
-  "title": "AI Agent for Your Lendersa Database: Retrieve, Update and Manage",
+  "title": "Your AI Agent for Your Existing Database: Retrieve, Update and Manage",
   "platform": "n8n",
   "sections": [
     {
       "key": "agent",
       "label": "1 - AN AI AGENT ON YOUR EXISTING DATABASE",
       "color": 0,
-      "note": "You ask your Lendersa database a question in plain English. Claude reads your lenders, loan programs and borrower requests and answers from the real rows, never from memory."
+      "note": "You ask your database a question in plain English. Claude reads your tables and answers from the real rows, never from memory."
     },
     {
       "key": "manage",
@@ -31,18 +31,18 @@
     {
       "key": "chat",
       "kind": "trigger.chat",
-      "label": "1 - You Ask Your Lendersa Database in Plain English",
+      "label": "1 - You Ask Your Database in Plain English",
       "section": "agent"
     },
     {
       "key": "agent",
       "kind": "ai.agent",
-      "label": "2 - Claude Finds Lenders, Loan Programs and Borrower Requests",
+      "label": "2 - Claude Finds the Records You Asked For",
       "section": "agent",
       "notes": "Answers come from your rows, with the IDs, so you can check any answer.",
       "params": {
-        "system_message": "You are the database assistant for Lendersa, a marketplace that matches borrowers with lenders. The Postgres database has three main tables: lenders (lender_id, name, type, states_served, status), loan_programs (program_id, lender_id, program_name, loan_type, max_ltv, min_loan, max_loan, updated_at) and borrower_requests (request_id, loan_type, property_state, property_city, loan_amount, ltv, status). Always answer from the search tool, never from memory, and include the IDs of the rows you used. If a search returns nothing, say so and suggest one looser search (a nearby state, a wider loan range). Loan amounts are in US dollars and LTV is a percentage. When the user asks to change, add or archive anything, call the stage-update tool with the table, the row ID, the column, the current value and the new value, then show the user the old value and the new value and ask them to reply yes. Only the tables and columns listed in editable_tables can be staged; refuse anything else and say why. Never delete a row: archive it by setting status to archived. Set action to apply only when the user's latest message clearly approves the change you staged in this chat (yes, go ahead, apply it); if they change their mind or ask something else, set action to answer. If two rows could match a change (two lenders with similar names), list both and ask which one before staging.",
-        "prompt": "=Question from the Lendersa team: {{ $json.chatInput }}\nEditable tables: {{ $('0 - Config: Your Settings').item.json.editable_tables }}\nReturn reply (what you tell the user, plain English, with row IDs), action (answer, confirm or apply) and change_id (the staged change ID, or null)."
+        "system_message": "You are the database assistant for this company's existing Postgres database. Always answer from the search tool, never from memory, and include the IDs of the rows you used. If a search returns nothing, say so and suggest one looser search. When the user asks to change, add or archive anything, call the hold tool with the table, the row ID, the column, the current value and the new value, then show the old value and the new value and ask them to reply yes. Only the tables and columns listed in editable_tables can be changed; refuse anything else and say why. Never delete a row: archive it by setting status to archived. Set action to apply only when the user's latest message clearly approves the change you held in this chat; otherwise set action to answer. If two rows could match a change, list both and ask which one.",
+        "prompt": "=Question from your team: {{ $json.chatInput }}\nEditable tables: {{ $('0 - Config: Your Settings').item.json.editable_tables }}\nReturn reply (what you tell the user, plain English, with row IDs), action (answer, confirm or apply) and change_id (the held change ID, or null)."
       }
     },
     {
@@ -63,13 +63,13 @@
     {
       "key": "search",
       "kind": "ai.tool",
-      "label": "Tool - Search Lenders, Loan Programs and Borrower Requests",
+      "label": "Tool - Search Your Tables · Read-Only",
       "app": "workflow",
       "parent": "agent",
       "port": "ai_tool",
       "notes": "Read-only: it runs parameterised SELECTs, so a question can never change a row.",
       "params": {
-        "description": "Search the Lendersa database. Input: table (lenders, loan_programs or borrower_requests), filters as column and value pairs (for example loan_type = land, property_state = PR, max_ltv >= 55), and a limit up to 50. Runs a read-only parameterised SELECT and returns the matching rows with their IDs."
+        "description": "Search the database. Input: table, filters as column and value pairs (for example status = pending, customer_name = Dana Whitfield), and a limit up to 50. Runs a read-only parameterised SELECT and returns the matching rows with their IDs."
       }
     },
     {
@@ -91,7 +91,7 @@
       "port": "ai_outputParser",
       "params": {
         "schema": {
-          "reply": "Caribe Land Capital (lender 3127), Raw Land Loan - Puerto Rico (program 8841): max LTV is 60 now, will be 55. Reply yes to apply.",
+          "reply": "Order 5521 for Dana Whitfield: status is Pending now, will be Shipped. Reply yes to apply.",
           "action": "confirm",
           "change_id": 1842
         }
@@ -140,7 +140,7 @@
         "operation": "executeQuery",
         "query": "SELECT change_id, table_name, record_id, column_name, old_value, new_value FROM apply_agent_change($1, $2);",
         "options": {
-          "queryReplacement": "={{ $json.output.change_id }},{{ $('1 - You Ask Your Lendersa Database in Plain English').item.json.sessionId }}"
+          "queryReplacement": "={{ $json.output.change_id }},{{ $('1 - You Ask Your Database in Plain English').item.json.sessionId }}"
         }
       }
     },
@@ -154,7 +154,7 @@
         "operation": "executeQuery",
         "query": "INSERT INTO agent_change_log (change_id, table_name, record_id, column_name, old_value, new_value, chat_session, applied_at) VALUES ($1, $2, $3, $4, $5, $6, $7, now()) RETURNING *;",
         "options": {
-          "queryReplacement": "={{ $json.change_id }},{{ $json.table_name }},{{ $json.record_id }},{{ $json.column_name }},{{ $json.old_value }},{{ $json.new_value }},{{ $('1 - You Ask Your Lendersa Database in Plain English').item.json.sessionId }}"
+          "queryReplacement": "={{ $json.change_id }},{{ $json.table_name }},{{ $json.record_id }},{{ $json.column_name }},{{ $json.old_value }},{{ $json.new_value }},{{ $('1 - You Ask Your Database in Plain English').item.json.sessionId }}"
         }
       }
     },
@@ -193,7 +193,7 @@
       "section": "reliable",
       "params": {
         "sendTo": "={{ $('0 - Config: Your Settings').item.json.alert_email }}",
-        "subject": "=Lendersa database agent: {{ $json.execution.lastNodeExecuted }} failed",
+        "subject": "=Database agent: {{ $json.execution.lastNodeExecuted }} failed",
         "message": "=Step: {{ $json.execution.lastNodeExecuted }}\nError: {{ $json.execution.error.message }}\nRun: {{ $json.execution.url }}\nNo staged change was applied by this run."
       }
     }
@@ -231,22 +231,22 @@
     }
   ],
   "input_sample": {
-    "sessionId": "lendersa-moshon-7f3a2c",
+    "sessionId": "chat-7f3a2c",
     "action": "sendMessage",
-    "chatInput": "Which lenders do raw land loans in Puerto Rico above $400,000? And drop Caribe Land Capital's max LTV on that program to 55%."
+    "chatInput": "Which orders from Dana Whitfield are still pending? Mark order 5521 as shipped."
   },
   "output_sample": {
-    "output": "Done. loan_programs row 8841: max_ltv changed from 60 to 55. Logged as change 1842.",
+    "output": "Done. orders row 5521: status changed from Pending to Shipped. Logged as change 1842.",
     "change_id": 1842,
-    "table_name": "loan_programs",
-    "record_id": 8841,
-    "column_name": "max_ltv",
-    "old_value": "60",
-    "new_value": "55",
-    "chat_session": "lendersa-moshon-7f3a2c",
+    "table_name": "orders",
+    "record_id": 5521,
+    "column_name": "status",
+    "old_value": "Pending",
+    "new_value": "Shipped",
+    "chat_session": "chat-7f3a2c",
     "applied_at": "2026-09-25T17:42:08Z"
   },
   "archetype": "ai_agent_for_your_lendersa_database_retrieve_upd",
   "learned": true,
-  "learned_at": "2026-09-25"
+  "learned_at": "2026-10-09"
 }

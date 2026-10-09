@@ -145,16 +145,47 @@ def _effective_section(node: Node, by_key: Dict[str, Node]) -> Optional[str]:
     return None
 
 
+def _section_order(spec: WorkflowSpec) -> List[str]:
+    """Section keys in the left-to-right order their bands are laid out.
+
+    The author's declared order, except that a section an edge leaves from
+    always comes before the section that edge enters. A one-off migration path
+    that feeds the live intake, declared after it, would otherwise be pushed
+    right of the intake while its edge pulls the intake right of it: the two
+    can never both hold, and the bands end up drawn over each other. When the
+    declared order already agrees with every edge it is returned unchanged;
+    a cycle between sections falls back to the declared order.
+    """
+    declared = [s.key for s in spec.sections]
+    known = set(declared)
+    section_of = {n.key: n.section for n in spec.flow_nodes if n.section in known}
+    before: Dict[str, set] = {key: set() for key in declared}
+    for edge in spec.flow_edges:
+        src, dst = section_of.get(edge.src), section_of.get(edge.dst)
+        if src and dst and src != dst:
+            before[dst].add(src)
+    order: List[str] = []
+    remaining = list(declared)
+    while remaining:
+        left = set(remaining)
+        ready = [key for key in remaining if not (before[key] & left)]
+        pick = ready[0] if ready else remaining[0]
+        order.append(pick)
+        remaining.remove(pick)
+    return order
+
+
 def _separate_sections(spec: WorkflowSpec, depth: Dict[str, int], order: List[str]) -> None:
     """Give each section an exclusive range of columns, in place.
 
     Without this, a branch whose two arms belong to different sections puts
     both sections in the same column, and their sticky notes end up drawn on
     top of each other. Sections are pushed rightward — never leftward — in the
-    order the author declared them, then edges are repaired so every one still
-    points right. Depths only ever increase, so the pass terminates.
+    order _section_order gives (the declared order unless an edge says
+    otherwise), then edges are repaired so every one still points right.
+    Depths only ever increase, so the pass terminates.
     """
-    sections = [s.key for s in spec.sections]
+    sections = _section_order(spec)
     if len(sections) < 2:
         return
 

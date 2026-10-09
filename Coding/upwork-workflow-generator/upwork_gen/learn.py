@@ -203,14 +203,57 @@ def _save_learned(data: Dict[str, Any]) -> None:
         json.dump(payload, fh, indent=2, ensure_ascii=False)
 
 
+def _posting_url(text: str) -> Optional[str]:
+    """The `url: ...` first line of a pipeline jd.txt, or None."""
+    first = (text or "").lstrip().split("\n", 1)[0].strip()
+    if first.lower().startswith("url:"):
+        return first[4:].strip() or None
+    return None
+
+
+def same_posting_archetype(job_text: Optional[str]) -> Optional[str]:
+    """The learned archetype already promoted from this very posting (its
+    archived source has the same `url:` line), or None.
+
+    A rebuild of the same job under a new title is a revision of that
+    archetype, not a second one: as a sibling it would mine the same post,
+    find every term already claimed by the first and land in the vault with
+    no keywords, unreachable. One with keywords is preferred if there are
+    several.
+    """
+    url = _posting_url(job_text or "")
+    if not url:
+        return None
+    sources = os.path.join(os.path.dirname(VAULT_DIR), "sources")
+    learned = load_learned()
+    matches = []
+    for archetype_id in sorted(learned):
+        if not os.path.exists(os.path.join(VAULT_DIR, "{}.json".format(archetype_id))):
+            continue
+        try:
+            with open(os.path.join(sources, "{}.txt".format(archetype_id)), "r",
+                      encoding="utf-8") as fh:
+                source = fh.read()
+        except OSError:
+            continue
+        if _posting_url(source) == url:
+            matches.append(archetype_id)
+    matches.sort(key=lambda a: not learned[a].get("kw"))
+    return matches[0] if matches else None
+
+
 def promote(spec: WorkflowSpec, job_text: Optional[str] = None,
             archetype_id: Optional[str] = None, force: bool = False) -> Dict[str, Any]:
     """Write the spec into the vault and teach the classifier to find it.
 
+    A posting that was promoted before (same `url:` line) promotes onto that
+    same archetype, whatever the spec's title now says.
+
     Returns a report dict; raises nothing the caller cannot recover from, since
     a failed promotion must never cost a generation that already succeeded.
     """
-    archetype_id = archetype_id or spec.archetype or slugify(spec.title, 48).replace("-", "_")
+    archetype_id = (archetype_id or spec.archetype or same_posting_archetype(job_text)
+                    or slugify(spec.title, 48).replace("-", "_"))
 
     if archetype_id in SEED_ARCHETYPES and not force:
         return {

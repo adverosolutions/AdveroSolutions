@@ -21,7 +21,8 @@ from __future__ import annotations
 import re
 from typing import Dict, List, Optional
 
-from .spec import AI_SUB_KINDS, TRIGGER_KINDS, Node, WorkflowSpec, unique_names
+from .params import is_config_node
+from .spec import AI_SUB_KINDS, TRIGGER_KINDS, Edge, Node, WorkflowSpec, unique_names
 
 # Apps whose nodes read as storage rather than action — drawn as the DSL's
 # database shape so the diagram distinguishes "does something" from "keeps
@@ -55,6 +56,36 @@ def _shape(node: Node, label: str, is_terminal: bool) -> str:
     return "[{}]".format(label)
 
 
+def _bridge_config(spec: WorkflowSpec) -> List[Edge]:
+    """The spec's edges with any Config node cut out: each edge into it is
+    carried on to everything it fed, keeping that edge's branch and loop."""
+    config = {n.key for n in spec.nodes if is_config_node(n)}
+    if not config:
+        return list(spec.edges)
+    out: List[Edge] = []
+    for edge in spec.edges:
+        if edge.src in config:
+            continue
+        if edge.dst not in config:
+            out.append(edge)
+            continue
+        frontier, seen = [edge.dst], set()
+        while frontier:
+            current = frontier.pop(0)
+            if current in seen:
+                continue
+            seen.add(current)
+            for onward in spec.edges:
+                if onward.src != current:
+                    continue
+                if onward.dst in config:
+                    frontier.append(onward.dst)
+                elif not any(e.src == edge.src and e.dst == onward.dst for e in out):
+                    out.append(Edge(src=edge.src, dst=onward.dst, branch=edge.branch,
+                                    loop=edge.loop or onward.loop))
+    return out
+
+
 def compile_excalidraw(spec: WorkflowSpec, direction: str = "LR",
                        spacing: int = 60, include_ai: bool = True) -> str:
     """Render the spec as Excalidraw DSL.
@@ -69,13 +100,19 @@ def compile_excalidraw(spec: WorkflowSpec, direction: str = "LR",
     which outranks any argument about which nodes are interesting enough to
     draw. A test enforces the equivalence.
     """
-    nodes = list(spec.nodes) if include_ai else list(spec.flow_nodes)
+    # The Config node is compiler plumbing, like the stickies: a spec that
+    # carries one (a promoted archetype keeps the node the compiler inserted)
+    # still draws without it, and the steps on either side join up.
+    nodes = [n for n in (spec.nodes if include_ai else spec.flow_nodes)
+             if not is_config_node(n)]
+    edges = _bridge_config(spec)
 
     keys = {n.key for n in nodes}
     names = unique_names([(n.key, _clean(n.label)) for n in nodes])
     by_key: Dict[str, Node] = {n.key: n for n in nodes}
 
-    terminals = [n.key for n in nodes if not spec.successors(n.key)]
+    terminals = [n.key for n in nodes if not any(e.src == n.key and not e.loop
+                                                 for e in edges)]
 
     def token(key: str) -> str:
         node = by_key[key]
@@ -84,7 +121,7 @@ def compile_excalidraw(spec: WorkflowSpec, direction: str = "LR",
     lines: List[str] = ["@direction {}".format(direction),
                         "@spacing {}".format(spacing), ""]
 
-    for edge in spec.edges:
+    for edge in edges:
         if edge.src not in keys or edge.dst not in keys:
             continue
         # A dashed arrow reads as a return path rather than another forward step.
