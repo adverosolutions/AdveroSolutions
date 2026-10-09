@@ -473,9 +473,11 @@ def test_catalogue_digest_is_sorted_id_sha_lines():
     assert ids == dict((k, e["sha256"]) for k, e in idx.items() if e.get("approvable"))
     # ZC: no_show.ns_d1_other_channel is one id now (was 4). Section 2 A2: the
     # show-rate ids went from 21 to 11 (no SMS legs, no pre-read, three reminders).
-    # Section 2 B: the two generic no_show.ns_d3_value_email ids are gone (N5 is skipped without a niche).
+    # Section 2 B: the two generic no_show.ns_d3_value_email (now ns_d2_value_email) ids are gone
+    # (N5 is skipped without a niche).
     # The ten-email cadence ladder (2026-09-23): 29 cadence ids, was 23.
-    assert len(ids) == 102
+    # Go-live no-show ladder (2026-09-24): + no_show.ns_d3_retry_email (one id).
+    assert len(ids) == 103
     lines = "\n".join(sorted("%s=%s" % kv for kv in ids.items()))
     assert digest == hashlib.sha256(lines.encode("utf-8")).hexdigest()
 
@@ -521,7 +523,7 @@ def test_conforms_every_show_rate_and_no_show_render():
             appt = {"niche": niche, "offer": offer, "booking_url": LINK, "id": "a1", "first_name": FIRST,
                     "company": COMPANY, "zoom_link": ZOOM}
             copy = no_show.render(key, appt, START, "Tue 1:00pm or Thu 3:30pm CT", count)
-            if key == "ns_d3_value_email" and niche == "generic":
+            if key == "ns_d2_value_email" and niche == "generic":
                 # no approved niche line without a campaign: never sendable
                 assert no_show.unfilled(copy) == "no_niche_point"
                 continue
@@ -727,7 +729,7 @@ def test_resolve_combo_id_no_show_with_and_without_repeat():
         assert [niche, offer] in idx[first]["applies_to"] and [niche, offer] in idx[again]["applies_to"]
         for key in ta.NO_SHOW_LEAD_FACING:
             tid = gate.resolve_combo_id("no_show", key, niche, offer)
-            if key == "ns_d3_value_email" and niche == "generic":
+            if key == "ns_d2_value_email" and niche == "generic":
                 assert tid is None  # N5 is skipped without a niche line, never generic
                 continue
             assert tid and [niche, offer] in idx[tid]["applies_to"]
@@ -744,7 +746,7 @@ def test_applies_to_covers_every_combo_exactly_once():
                        if tid == base or (tid.startswith(base + ".") and not tid[len(base) + 1:].startswith("repeat"))]
             combos = [tuple(c) for e in entries for c in e.get("applies_to", [])]
             want = [c for c in ta.NICHE_COMBOS
-                    if not (base == "no_show.ns_d3_value_email" and c[0] == "generic")]
+                    if not (base == "no_show.ns_d2_value_email" and c[0] == "generic")]
             assert sorted(combos) == sorted(want), base
 
 
@@ -753,7 +755,7 @@ def test_health_summary_has_no_text(env):
     env.approve_ids("cadence.e1", "cadence.e3")
     h = gate.health_summary()
     assert h["parity"] == "ok" and h["kill_switch"] is False and h["auto_send_enabled"] is True
-    assert h["approved_count"] == 2 and h["approvable_count"] == 102
+    assert h["approved_count"] == 2 and h["approvable_count"] == 103
     assert h["ladder_unapproved_count"] == len(gate.ladder_ids()) - 2
     flat = json.dumps(h)
     assert "Hey" not in flat and "cadence." not in flat and "Lorenzo" not in flat
@@ -794,11 +796,11 @@ def test_parity_cli_write_check_and_mismatch(env, tmp_path, capsys):
     assert parity_cli.main(["--write", "--reference", str(ref)]) == 0
     rec = json.loads(ref.read_text())
     assert set(rec) == {"python", "pytz", "pydantic", "generated_at", "digest", "ids"}
-    assert rec["digest"] == gate.catalogue_digest()[0] and len(rec["ids"]) == 102
+    assert rec["digest"] == gate.catalogue_digest()[0] and len(rec["ids"]) == 103
     assert "Hey" not in ref.read_text()
     capsys.readouterr()
     assert parity_cli.main(["--check", "--reference", str(ref)]) == 0
-    assert capsys.readouterr().out.startswith("OK: 102 ids")
+    assert capsys.readouterr().out.startswith("OK: 103 ids")
     rec["ids"]["cadence.e1"] = "0" * 64
     rec["digest"] = "0" * 64
     ref.write_text(json.dumps(rec))

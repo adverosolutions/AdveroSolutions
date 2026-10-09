@@ -51,7 +51,7 @@ Layer 1: DIRECTIVES (What to do)
     └── sequence_engine.md
 
 Layer 2: ORCHESTRATION (Decision making)
-└── Claude API (Opus 4.5) - Intelligent routing & error handling
+└── Claude API (Opus 5.5, claude-opus-5-5) - Intelligent routing & error handling
 
 Layer 3: EXECUTION (Doing the work)
 ├── google_sheets_crm.py - CRM operations
@@ -66,7 +66,7 @@ Layer 3: EXECUTION (Doing the work)
 
 - **CRM:** Google Sheets (5-sheet structure)
 - **Email:** Instantly (50 accounts, 2000 emails/day)
-- **AI:** Claude API (Opus 4.5)
+- **AI:** Claude API (Opus 5.5, claude-opus-5-5)
 - **Cloud:** Modal (serverless webhooks)
 - **Language:** Python 3.9+
 - **Calendar:** Google Calendar or Calendly
@@ -122,7 +122,7 @@ Layer 3: EXECUTION (Doing the work)
 - **Subtotal:** $450/mo
 
 ### New Infrastructure
-- Claude API (Opus 4.5): $150-300/mo (volume-dependent)
+- Claude API (Opus 5.5, claude-opus-5-5): $150-300/mo (volume-dependent)
 - Modal (webhooks): $0-20/mo (free tier likely sufficient)
 - Python hosting: $5-25/mo (optional, for monitoring)
 - **New Total:** $155-345/mo

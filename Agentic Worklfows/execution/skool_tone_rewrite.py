@@ -45,9 +45,10 @@ except ImportError:
     sys.exit(1)
 
 
-# Deliberately NOT ANTHROPIC_MODEL — that's set to Haiku repo-wide for bulk lead
-# enrichment. Voice rewriting needs the frontier model, and Haiku rejects `effort`.
-MODEL = os.getenv('SKOOL_STYLE_MODEL', 'claude-opus-5')
+# Deliberately NOT ANTHROPIC_MODEL — the local .env still sets that to an old
+# Haiku id, and Haiku rejects `effort`. Every model call runs on Claude Opus 5.5
+# (Lorenzo, 2026-09-25); it always thinks, and effort sets how much.
+MODEL = os.getenv('SKOOL_STYLE_MODEL', 'claude-opus-5-5')
 CARDS_DIR = os.path.join(BASE_DIR, 'style_cards')
 
 

@@ -305,5 +305,6 @@ def test_the_observed_fallback_counts_confirmed_mailboxes_only():
 def test_the_cost_lines_are_bound_to_shared_thresholds():
     from shared import thresholds as TH
 
-    assert ledger_mod.DEFAULT_MAX_COST_PER_CONTACT == TH.LIST_FACTORY_MAX_COST_PER_CONTACT_USD == 0.02
+    # $0.07 since 2026-09-25 (Lorenzo: Opus 5.5 everywhere, worst-case thinking priced)
+    assert ledger_mod.DEFAULT_MAX_COST_PER_CONTACT == TH.LIST_FACTORY_MAX_COST_PER_CONTACT_USD == 0.07
     assert ledger_mod.ALERT_COST_PER_CONTACT == TH.LIST_FACTORY_ALERT_COST_PER_CONTACT_USD == 0.04

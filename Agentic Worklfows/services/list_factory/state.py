@@ -150,7 +150,7 @@ class RunState(object):
         Writing ``meta['ledger']`` only after the stage loop meant a run that
         was actually killed (kill -9, OOM, power) left a state file with no
         ledger at all, and ``--resume`` seeded a fresh Ledger with $0: the
-        2-cent cap restarted on every resume, which is the one failure the cap
+        cost cap restarted on every resume, which is the one failure the cap
         exists to prevent. The snapshot now rides along with the leads, under
         the same atomic write.
         """

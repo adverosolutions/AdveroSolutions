@@ -2,7 +2,7 @@
   "budget_usd": 10.0,
   "warn_at_fraction": 0.8,
   "_what_this_is": "Cumulative USD ceiling on BILLED model calls, enforced in shared/llm.py. Over it, complete() raises LLMBudgetExceeded and calls nothing. LLM_FAKE calls cost nothing and are never counted or refused.",
-  "_why_10": "A healthy 48-hour Modal shadow watch is projected at about $0.65 (arithmetic in shared/llm.py, 'the spend ceiling'). The runaway this bounds is precall_tick or poller on */5, 576 runs in 48 h, which is $40 to $80 of Opus and Haiku. $10 is roughly 10x a busy watch and stops a runaway inside about 12 hours.",
+  "_why_10": "Every role runs on Claude Opus 5.5 ($4 in / $20 out per MTok). A healthy 48-hour Modal shadow watch is projected at about $0.95, and about $2 if every call uses the full 1,024-token thinking headroom (arithmetic in shared/llm.py, 'the spend ceiling'). The runaway this bounds is precall_tick or poller on */5, 576 runs in 48 h, which is $32 (one proposal per run) to $161 (20 replies re-classified every run). $10 is roughly 5x a busy watch at worst-case thinking and stops either runaway at $10. It does NOT cover the first shadow poll's backlog: runbooks/deployment.md, 'What the first shadow poll costs'.",
   "_before_going_live": "This is a rehearsal number. Raise it once real reply volume is the point, and reset the counter: python3 -c \"from shared import llm; llm.reset_spend()\"",
   "_note": "budget_usd <= 0 does NOT mean unlimited. It falls back to the $10.00 default with a warning, so a typo cannot remove the ceiling."
 }

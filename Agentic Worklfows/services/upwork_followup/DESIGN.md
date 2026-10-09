@@ -52,8 +52,8 @@ anything below that disagrees.**
    Loom links (`loom.com`) are allowed.
 4. **Shadow first.** GHL writes go through `shared.ghl` (guarded by
    `guard_write`). `shared.notify` follows the existing shadow contract. LLM calls
-   go through `shared.llm` roles only (`classify` = Haiku, escalate < 0.8 to
-   `escalate`; `draft` = Sonnet). Tests mock every LLM call. No test or dry run
+   go through `shared.llm` roles only (`classify`, escalate < 0.8 to
+   `escalate`; `draft`; every role on Claude Opus 5.5 since 2026-09-25). Tests mock every LLM call. No test or dry run
    spends tokens.
 5. **Client text is untrusted data.** Room messages, job posts and client names
    pass through `upwork_rooms.clean_text` and are wrapped as quoted data in
@@ -146,7 +146,8 @@ client and is out of scope). `collect_calls.md` holds the confirmed call shapes.
      "ask_before_quoting": ["question", ...],   # from assessment.md, private
      "private_notes": "assessment.md Time/Likelihood/Standard pricing lines, private",
      "loom_url": "from proposals.csv or null",
-     "applied_at": "from proposals.csv or null"
+     "applied_at": "from proposals.csv or null",
+     "client_location": "jd.txt summary sentences naming the client's location or time zone, or null"
   }
 }
 ```
@@ -268,10 +269,53 @@ Every touch must add something new, never "just checking in":
 5. **T5 (day 16), easy reply:** a yes/no or pick-one question about scope or
    timing.
 6. **T6 (day 23), next step:** a concrete low-effort next step: a 10-minute
-   Upwork call with two time options (the next two weekdays at 12:00 and 15:00
-   CT, written in words), or a small first milestone.
+   Upwork call on the three offered times (see "Call times" below), or a
+   small first milestone.
 7. **T7 (day 30), close-out:** a graceful close that leaves the door open ("if
    you went another way, no worries").
+
+**Call times** (every draft's CALL_TIMES block, `draft.call_time_options`,
+rule of 2026-09-28): three times on three different business days, the
+first may be today when it is at least 4 hours out, all 12:00-18:00 CT
+Monday to Friday, on the hour, no more than 5 business days out
+(`shared.slots.candidate_slots` enforces the window, lead time and horizon).
+They are written in the client's time zone with its label ("Wednesday at
+3pm, Thursday at 4pm or Friday at 2pm ET"), weekday included, then one line:
+"If none of those work, send me a couple of times that work for you." The
+zone (`client_zone.py`) comes from the client's location: `collect.parse_jd`
+keeps the location sentences of Lorenzo's jd.txt summary line ("Client in
+Virginia, US (America/New_York).") as `job.client_location`. The place
+stated first, right after "Client in", decides: the comma-separated pieces
+after it up to the first one that is not a place, so "Client in Ohio, US, a
+staffing agency that hires from the Philippines" is Ohio. Within them a US
+state, DC (Washington DC, Washington, DC, Washington D.C., D.C.) or a
+two-letter state code beats any city ("Paris, TX" is CT, "Dublin, Ohio" is
+ET), a US marker (US, USA, United States) keeps US places only, then a
+province or other region, then the first big city or one-zone country in
+the country named. An IANA zone in brackets beside the place ("Client in
+Indiana, US (America/Chicago)") wins when it is in the same country;
+otherwise the place wins, and a place always beats an account time zone
+("Client in Nevada (US), timezone Chicago" is PT). With no place: a
+`client_timezone` on the room, then a stated zone ("timezone Bogota",
+"Europe/Berlin"), then CT. A room with no job folder, or a folder whose
+summary names no location, gets CT. The rooms and proposals pull carries no
+client location today; a `client_location` on the room is read with the
+job's, a `client_timezone` only when no place is found. Labels are ET, CT,
+MT, PT (and AT) in North America, "Arizona time" and "Saskatchewan time" for
+the two zones that keep no DST, an unambiguous abbreviation elsewhere (BST,
+CEST, IST for India, AEST), else "<city> time" ("Bogota time", "Manila
+time"); DST comes from zoneinfo. Hours are picked on the client's weekdays
+only: a time on the client's Saturday or Sunday is never offered (5pm CT
+Friday is Saturday morning in Manila). A start between 7am and 9pm client
+time is preferred; 10pm and 11pm come next, then night hours, only when
+nothing earlier fits (Manila, Sydney). The window always holds at least
+four client weekdays (five business days after today, less at most one
+Friday that is already the client's Saturday), so three times always come
+back; if a future rule change ever left fewer, the draft offers the one or
+two that remain ("Tuesday at 6am or Wednesday at 6am Manila time") and the
+none-fit line. No calendar is read and
+Upwork keeps no offered-slot store, so Lorenzo checks the three times
+against his calendar before he sends.
 
 **Reply drafts** (client wrote last): answer what they asked using only facts
 from the room, the job post, the proposal and `config/upwork_offers.md`. Anything

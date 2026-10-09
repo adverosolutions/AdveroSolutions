@@ -56,3 +56,8 @@ changesets/inbox_actions/last_canary_*.json
 # untracking the file (git rm --cached) are Lorenzo's calls:
 # runbooks/GO_LIVE_CHECKLIST.md step 0 and runbooks/DECISIONS_FOR_LORENZO.md 0.1.
 execution/modal_reply_handler_v2.py
+
+# Lead manifests of the 2026-09-25 deliverability change-set: one row per
+# parked lead with name, email and company (PII). The root .gitignore
+# un-ignores changesets/**/*.json, so the folder is excluded here as a whole.
+changesets/deliverability_2026_09_25/manifests/

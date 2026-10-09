@@ -662,11 +662,17 @@ def run_max_classify() -> int:
     return int(_env_number(CLASSIFY_CAP_ENV, DEFAULT_MAX_CLASSIFY, integer=True))
 
 
-def call_cost(role: str, system: str, user: str, max_tokens: int) -> float:
-    """Worst-case cost of one call (prompt as measured, output at max_tokens),
-    the same projection shared.llm reserves against its ceiling. complete()
-    does not return the real cost, so the cap errs high."""
-    return shared_llm.projected_cost_usd(shared_llm.model_for(role), system or "", user or "", int(max_tokens))
+def call_cost(role: str, system: str, user: str, max_tokens: int, json_mode: bool = False,
+              model: Optional[str] = None) -> float:
+    """Worst-case cost of one call, exactly what shared.llm.complete() reserves
+    against its ceiling for the same arguments (shared_llm.reserved_cost_usd):
+    the prompt as sent, the output at max_tokens PLUS the thinking headroom
+    (THINKING_HEADROOM_TOKENS, 1,024), because thinking cannot be turned off
+    on claude-opus-5-5 and counts toward the API's limit. Pricing the bare
+    max_tokens undercounted every call about 2x against the run budget.
+    complete() does not return the real cost, so the cap errs high."""
+    return shared_llm.reserved_cost_usd(role, system or "", user or "", int(max_tokens),
+                                        json_mode=bool(json_mode), model=model)
 
 
 CLASSIFY_ROLES = ("classify", "escalate")
@@ -736,7 +742,8 @@ class Meter(object):
                 "shared LLM spend ceiling reached earlier this run; no model call made (role=%s)" % role)
             self._ceiling()
             raise exc
-        cost = call_cost(role, system, user, kw.get("max_tokens", 800))
+        cost = call_cost(role, system, user, kw.get("max_tokens", 800),
+                         json_mode=kw.get("json_mode", False), model=kw.get("model"))
         if role not in CLASSIFY_ROLES and self.spent + cost > self.budget:
             # a classification already started is let finish (at most two
             # small calls); the gate for it is can_classify()

@@ -278,72 +278,54 @@ def call_link_of(appointment: Dict[str, Any]) -> str:
     return str(appointment.get("zoom_link") or appointment.get("meeting_link") or "").strip()
 
 
-def loom_line(niche: str) -> str:
-    """The Loom sentence, or '' when no URL is configured.
-
-    It used to emit a ``[Loom: ...]`` placeholder, which ``dispatch_touch``
-    then refuses to send in live mode: on go-live day that silently dropped
-    the single most important S4 message. The line is optional copy, so an
-    unrecorded Loom simply removes the sentence.
-    """
-    url = os.environ.get("LOOM_URL_%s" % niche.upper()) or os.environ.get("LOOM_URL_GENERIC")
-    if url:
-        return "Here is a 60-second walkthrough of what I will show you, if you want a head start: %s" % url
-    return ""
-
-
 def has_unresolved_placeholder(text: str) -> bool:
     return bool(LOOM_PLACEHOLDER_RE.search(text or "")) or "{{" in (text or "")
 
 
+# The confirmation's agenda, per (niche, offer): [A] is the second bullet,
+# [B] finishes the third ("a concrete plan for [B]"). Lorenzo approved the
+# text on 2026-09-24.
 AGENDA = {
-    ("cleaning", "reactivation"): [
-        "which of your lost or dormant accounts are worth going after first",
-        "what the email and text sequences say, so it sounds like you and not a vendor",
-        "the commission-only numbers, so you know exactly what a returned account pays me",
-    ],
-    ("cleaning", "outbound"): [
-        "which building types and trigger events (new leases, expansions, PM changes) fit your crews",
-        "how the outreach runs under your name and books walkthroughs on your calendar",
-        "the guarantee ($24,000 a year in new cleaning contracts signed within 90 days) and what it would cost",
-    ],
-    ("bookkeeping", "reactivation"): [
-        "which former clients and lost inquiries to go after first, timed to tax season and year-end",
-        "what the email and text sequences say, so it reads like your practice",
-        "the numbers: $0 up front, 20 to 30% of first-year fees on clients that come back",
-    ],
-    ("bookkeeping", "outbound"): [
-        "which triggers (new formations, bookkeeper job posts, second locations) fit your ideal client",
-        "how the outreach runs under your name and books discovery calls on your calendar",
-        "the guarantee ($15,000 in new annual client fees within 90 days) and what it would cost",
-    ],
-    ("recruiting", "reactivation"): [
-        "which dormant and near-miss client accounts are worth going after first",
-        "what the sequences say to a hiring manager who used you once",
-        "the numbers: $0 up front, a cut of the first placement fee on accounts that come back",
-    ],
-    ("recruiting", "outbound"): [
-        "which specialties and geographies to watch for open roles",
-        "how the outreach reaches hiring managers under your agency's name",
-        "the guarantee ($40,000 in new placement fees within 180 days) and what it would cost",
-    ],
-    # No niche on file: the offer still decides the agenda. An outbound
-    # prospect used to get the reactivation agenda (dormant accounts).
-    ("generic", "outbound"): [
-        "who is in market for what you sell right now",
-        "how the outreach runs under your name and books calls on your calendar",
-        "the guarantee and what it would cost",
-    ],
+    ("cleaning", "reactivation"): (
+        "your accounts, which ones cancelled or went quiet, and how you win work today",
+        "winning those accounts back",
+    ),
+    ("cleaning", "outbound"): (
+        "your crews, the buildings you want more of, and how you win new contracts today",
+        "getting in front of new buildings",
+    ),
+    ("bookkeeping", "reactivation"): (
+        "your practice, your client base, and where past clients went",
+        "winning those clients back",
+    ),
+    ("bookkeeping", "outbound"): (
+        "your practice, the clients you want more of, and how new ones find you today",
+        "getting in front of new clients",
+    ),
+    ("recruiting", "reactivation"): (
+        "your agency, the clients you've placed with, and which ones went quiet",
+        "winning those clients back",
+    ),
+    ("recruiting", "outbound"): (
+        "your agency, the roles you fill best, and how you land new clients today",
+        "getting in front of new hiring managers",
+    ),
+    # No niche on file: the offer still decides the agenda.
+    ("generic", "reactivation"): (
+        "your company, your past customers, and how you bring work in today",
+        "winning those customers back",
+    ),
+    ("generic", "outbound"): (
+        "your company, who you sell to, and how you bring work in today",
+        "getting in front of new customers",
+    ),
 }
-GENERIC_AGENDA = [
-    "which of your dormant accounts are worth going after first",
-    "what the sequences say, so it sounds like you",
-    "the numbers, so you know exactly what it pays me and what it costs you",
-]
 
 
-def agenda_for(niche: str, offer: str) -> List[str]:
-    return AGENDA.get((niche, offer)) or AGENDA.get(("generic", offer)) or GENERIC_AGENDA
+def agenda_for(niche: str, offer: str) -> Tuple[str, str]:
+    """([A], [B]) for the confirmation's agenda."""
+    return (AGENDA.get((niche, offer)) or AGENDA.get(("generic", offer))
+            or AGENDA[("generic", "reactivation")])
 
 
 # ------------------------------------------------------------------- copy
@@ -370,8 +352,7 @@ def render(template_key: str, appointment: Dict[str, Any], start: datetime, now:
     link = call_link_of(appointment)
 
     if template_key == "confirm_email":
-        bullets = "\n".join("- %s" % b for b in agenda_for(niche, offer))
-        loom = loom_line(niche)
+        about, plan = agenda_for(niche, offer)
         if link:
             invite = ("The calendar invite is on its way with the call link, and here it is too so you do not have "
                       "to dig: %s" % link)
@@ -380,11 +361,14 @@ def render(template_key: str, appointment: Dict[str, Any], start: datetime, now:
         body = (
             "Hey %s,\n\n"
             "Locked in for %s. %s\n\n"
-            "Here is what I want to cover in the 15 minutes:\n%s\n\n"
-            "%s"
+            "Here is what I want to cover in the 15 minutes:\n"
+            "- what made you write back now\n"
+            "- %s\n"
+            "- if it makes sense to work together, a concrete plan for %s. If it doesn't, I'll still send you a "
+            "plan I think would help where you are now.\n\n"
             "If anything comes up before then, reply here and we will move it.\n\n"
             "Lorenzo"
-        ) % (first, when_ct, invite, bullets, (loom + "\n\n") if loom else "")
+        ) % (first, when_ct, invite, about, plan)
         return {"subject": "Confirmed: %s, 15 minutes with Lorenzo" % when_ct, "body": body}
 
     if template_key == "reminder_24h_email":

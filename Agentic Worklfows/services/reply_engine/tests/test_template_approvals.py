@@ -508,8 +508,8 @@ FORMATTER_EDITS = [
 # (module, literal in the source, replacement, an id whose hash must flip,
 #  placeholders: every approvable id carrying any of them must flip as well)
 FALLBACK_EDITS = [
-    ("show_rate", "60-second walkthrough", "90-second walkthrough", "show_rate.confirm_email.cleaning_reactivation",
-     ()),
+    ("show_rate", "what made you write back now", "what made you reply now",
+     "show_rate.confirm_email.cleaning_reactivation", ()),
     ("show_rate", "The call link is on the calendar invite from when we booked.",
      "The call link is on the invite from when we booked.", "show_rate.reminder_1h_email", ()),
     ("show_rate", '"The link is on your calendar invite."', '"The link is in your calendar invite."',
@@ -519,10 +519,13 @@ FALLBACK_EDITS = [
     ("show_rate", '"there"', '"friend"', "show_rate.reminder_1h_email", ()),
     ("show_rate", '"The calendar invite is on its way with the call link."', '"The calendar invite is on its way."',
      "show_rate.confirm_email.cleaning_reactivation", ()),
-    ("no_show", "I'm on the call now, no rush. The link is on your calendar invite.",
+    ("no_show", "I'm on the call now. The link is on your calendar invite.",
      "I'm on the call now. The link is in the invite.", "no_show.ns_still_on_email", ()),
-    ("no_show", "Today didn't line up, and no problem if now is a bad time.",
-     "Today didn't work out, and no problem if now is a bad time.", "no_show.ns_reschedule_email.repeat", ()),
+    ("no_show", "Looks like I missed you again on today's call.",
+     "Looks like I missed you again on our call today.", "no_show.ns_reschedule_email.repeat", ()),
+    ("no_show", "Trying once more to get our call back on the calendar.",
+     "Trying once more to get our call on the calendar.", "no_show.ns_d3_retry_email", ()),
+    ("no_show", "Wish you the best of luck with %s.", "Best of luck with %s.", "no_show.ns_third_miss_email", ()),
     ("booking", "your time)", "your local time)", "booking.confirmation.zoom_link", ()),
     ("booking", "Could you send me a couple of times that work for you next week?",
      "Could you send me a few times that work for you next week?", "booking.counter.weekend", ()),
@@ -577,17 +580,19 @@ def test_edit_to_any_fallback_literal_flips_the_id(modname, old, new, tid, carry
     assert not ta.is_approved(tid)
 
 
-def test_loom_sentence_is_inside_confirm_email_text():
+def test_confirm_email_has_no_loom_line_or_loom_variants():
+    """The Loom walkthrough line left the confirmation (2026-09-24), and with
+    it the no_loom_url and no_call_link_or_loom variants."""
     idx = _index()
-    sentence = ta.loom_sentence()
-    assert sentence and "{loom_url}" in sentence and "walkthrough" in sentence
-    for tid, e in idx.items():
-        if tid.startswith("show_rate.confirm_email"):
-            assert sentence in e["text"], tid
-            assert "loom_url" in e["variables"]
-            assert "no_loom_url" in [v["name"] for v in e["variants"]]
-            no_loom = [v for v in e["variants"] if v["name"] == "no_loom_url"][0]["text"]
-            assert sentence not in no_loom
+    confirms = [tid for tid in idx if tid.startswith("show_rate.confirm_email")]
+    assert len(confirms) == 8, confirms
+    for tid in confirms:
+        e = idx[tid]
+        assert "walkthrough" not in e["text"] and "{loom_url}" not in e["text"], tid
+        assert "loom_url" not in e["variables"], tid
+        names = [v["name"] for v in e["variants"]]
+        assert "no_loom_url" not in names and "no_call_link_or_loom" not in names, tid
+        assert {"missing_lead_data", "no_call_link", "lead_in_other_timezone"} <= set(names), tid
 
 
 def test_variants_are_in_the_hash_and_in_the_review_document():

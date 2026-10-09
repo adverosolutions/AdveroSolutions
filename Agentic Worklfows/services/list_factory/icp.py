@@ -9,14 +9,16 @@ a fraction of a cent:
    model never gets a chance to argue it back in.
 2. ``hard_accept_keywords``. Free. A business whose own description says
    "commercial janitorial" does not need a model to confirm it.
-3. Haiku, in batches, on whatever is left. Confidence below the rubric's
-   ``escalate_below`` escalates that one lead to Sonnet (CLAUDE.md: "Haiku for
-   classification, escalate < 0.8 confidence to Sonnet"), up to a per-run cap.
+3. The ``classify`` model role (Claude Opus 5.5), in batches, on whatever is
+   left. Confidence below the rubric's ``escalate_below`` escalates that one
+   lead to the ``escalate`` role (also Opus 5.5 since 2026-09-25; CLAUDE.md
+   "Runtime models"), up to a per-run cap.
    Anything still unsure after that is REJECTED, not accepted: an unsure lead
    mailed is a hostile reply, an unsure lead dropped is a fraction of a cent.
 """
 import json
 import logging
+import math
 import os
 import re
 from typing import Any, Dict, List, Optional
@@ -32,10 +34,50 @@ logger = logging.getLogger("list_factory.icp")
 DEFAULT_BATCH_SIZE = 20
 DEFAULT_MAX_ESCALATIONS = 50
 
-# Per-business token averages measured on the fixture rehearsal, used only to
-# price the call the paid gate is about to refuse.
+# Per-business token averages measured on the fixture rehearsal, used to price
+# the call the paid gate is about to refuse and the pipeline's projections.
+# These are TEXT tokens. Thinking cannot be turned off on claude-opus-5-5 and
+# bills as output, so every price built from them adds
+# shared.llm.output_tokens_with_thinking()'s worst-case allowance once per
+# model CALL: a batch of up to batch_size businesses is one call, and an
+# escalation is one more call for one business. See batch_usd / stage_usd.
 TOKENS_IN_PER_BUSINESS = 140
 TOKENS_OUT_PER_BUSINESS = 25
+
+
+def batch_usd(businesses: int, calls: int = 1, model: Optional[str] = None) -> float:
+    """Projected cost of scoring ``businesses`` in ``calls`` model calls: the
+    measured text tokens plus worst-case thinking for each call."""
+    n = max(0, int(businesses))
+    return llm.estimate_cost(model or llm.model_for("classify"), TOKENS_IN_PER_BUSINESS * n,
+                             llm.output_tokens_with_thinking(TOKENS_OUT_PER_BUSINESS * n, calls=calls))
+
+
+def stage_calls(businesses: float, batch_size: int = DEFAULT_BATCH_SIZE,
+                max_escalations: int = DEFAULT_MAX_ESCALATIONS) -> Dict[str, int]:
+    """Worst-case model calls to score ``businesses`` (rounded up): one batch
+    call per ``batch_size`` and, since any of them may come back unsure or
+    under ``escalate_below``, up to ``max_escalations`` single-business
+    escalation calls (score() stops escalating at that cap)."""
+    n = int(math.ceil(max(0.0, float(businesses)) - 1e-9))
+    if n <= 0:
+        return {"businesses": 0, "batch_calls": 0, "escalations": 0}
+    return {"businesses": n,
+            "batch_calls": int(math.ceil(n / float(max(1, int(batch_size))))),
+            "escalations": min(max(0, int(max_escalations)), n)}
+
+
+def stage_usd(businesses: float, batch_size: int = DEFAULT_BATCH_SIZE,
+              max_escalations: int = DEFAULT_MAX_ESCALATIONS) -> float:
+    """Worst-case cost of the ICP stage for ``businesses`` still to score:
+    every batch call and every possible escalation, text tokens plus
+    worst-case thinking per call. The preflight and the in-run projection
+    both price the stage through this one function."""
+    calls = stage_calls(businesses, batch_size, max_escalations)
+    return round(
+        batch_usd(calls["businesses"], calls=calls["batch_calls"], model=llm.model_for("classify"))
+        + batch_usd(calls["escalations"], calls=calls["escalations"], model=llm.model_for("escalate")),
+        6)
 
 # Fields a hard-accept phrase is allowed to fire from. NOT ``keywords``: the
 # Apify actor echoes its own search terms back into every row ("janitorial
@@ -248,7 +290,7 @@ def score_batch(batch: List[Dict[str, Any]], rubric: Dict[str, Any], model: Opti
         # gate the runbook advertises.
         require_paid(
             "anthropic:%s" % model, len(batch),
-            llm.estimate_cost(model, TOKENS_IN_PER_BUSINESS * len(batch), TOKENS_OUT_PER_BUSINESS * len(batch)),
+            batch_usd(len(batch), calls=1, model=model),
             "ICP scoring bills real tokens. Set LLM_FAKE=1 for a rehearsal.",
         )
     raw = llm.complete(role, SYSTEM, build_prompt(batch, rubric), max_tokens=min(4000, 120 * len(batch) + 300),

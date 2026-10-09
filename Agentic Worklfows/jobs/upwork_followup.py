@@ -55,7 +55,7 @@ from services.upwork_followup import collect, sequence, tick, watch  # noqa: E40
 logger = logging.getLogger("jobs.upwork_followup")
 
 JOB_NAME = "upwork_followup"
-TOKEN_NOTE = ("Note: this run spends Anthropic tokens (Sonnet drafts, Haiku classification). "
+TOKEN_NOTE = ("Note: this run spends Anthropic tokens (Claude Opus 5.5 drafts and classification). "
               "--dry-run makes no model call.")
 
 

@@ -29,7 +29,7 @@ idempotent per `email_id` and persists one `LeadState` per lead under
 | Module | What it owns |
 |---|---|
 | `models.py` | `ReplyEvent` (webhook + `GET /emails` shapes), `Classification`/`Extracted`, `Draft`, `Action`, `Approval`, `LeadState`, the label taxonomy and the label → Instantly interest / GHL stage maps |
-| `classify.py` | Four documented regex rules first (auto-reply, hostile, removal, short no), Haiku for the rest, Sonnet when Haiku is under 0.8. The model only ever sees the lead's own words: `strip_quoted` + `core_text` remove the quoted cold email and the signature |
+| `classify.py` | Four documented regex rules first (auto-reply, hostile, removal, short no), the `classify` model role for the rest, and the `escalate` role when that answer is under 0.8 confidence (both Claude Opus 5.5). The model only ever sees the lead's own words: `strip_quoted` + `core_text` remove the quoted cold email and the signature |
 | `draft.py` | Answer → two afternoon slots → booking link → "Lorenzo", built from `config/offers.md`. `validate_draft` is the gate: no em dash, no exclamation mark, no mention of AI or automation, no dollar figure that is not in offers.md, no figure offers.md marks **TO CONFIRM**, must end with the signature, must carry the booking link |
 | `router.py` | Guarded GHL contact/opportunity/note/task + Instantly interest status and blocklist, per label |
 | `approval.py` | HMAC-signed approval tokens (48 h), the ntfy card, the slot reservation registry, `approve` / `veto` / `edit` / `accept_requested`, the out-of-hours queue and `flush_queued` |

@@ -1,7 +1,7 @@
 """List factory (Blueprint M5, job O8).
 
-3,300 verified, scored, personalized leads a week at no more than 2 cents per
-verified contact, as a resumable state machine so a run that dies in stage 5
+3,300 verified, scored, personalized leads a week at no more than the run's
+cost cap per verified contact ($0.07 since 2026-09-25), as a resumable state machine so a run that dies in stage 5
 continues from stage 5 instead of paying for stages 1-4 again.
 
     source -> icp -> owner -> patterns -> verify -> finder -> suppress

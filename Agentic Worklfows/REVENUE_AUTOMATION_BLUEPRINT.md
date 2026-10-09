@@ -401,6 +401,8 @@ Work inside `Desktop/AdveroSolutions/Agentic Worklfows` (rename to `agentic-work
 
 ### Claude Code setup: collective agents, models, effort, guardrails
 
+> **2026-09-25: every runtime role runs on Opus 5.5 (`claude-opus-5-5`)** per Lorenzo: classification, escalation, drafts, research lines, retro and proposals. Nothing runtime is on Haiku or Sonnet any more; the "Runtime" row in the table below is superseded. `shared/llm.py` MODEL_POLICY stays the single authority.
+>
 > **Fable was retired on 2026-09-21** (Lorenzo's weekly allowance ran out) and **Opus 5 (`claude-opus-5`) replaces it everywhere**: in `.claude/agents/*.md`, in root `CLAUDE.md`, and in `shared/llm.py` MODEL_POLICY, which is the single place that decides what the deployed services call and the only authority when this section disagrees. Every "Fable 5.1" below reads as "Opus 5"; the prose is left as written so the original reasoning about tiering is still legible. `shared/tests/test_llm.py` pins the policy.
 
 Run one orchestrator session on Fable 5.1 at `high` effort, give each tier its own collective agent file, and switch ultracode on only for the phases where the briefs are independent of each other. The deployed services use cheaper models than the ones that build them.

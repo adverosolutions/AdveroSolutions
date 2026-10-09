@@ -1186,7 +1186,9 @@ def test_a_booked_lead_who_asked_nothing_gets_no_answer_paragraph(env):
     ask = webhook_payload("sopiosvanishvili@taxfoaccounting.com", "2026-09-21T14:42",
                           reply_text="Before we talk, what is the percentage?", email_id="booked-q-2")
     res2 = app_mod.process_event(ReplyEvent.from_webhook(ask), deps=env["deps"], now=NOW_BUSINESS)
-    assert "20 to 30 percent" in res2["draft"]["body_text"]
+    # the price answer states no number (2026-09-24): it is covered on the call
+    assert "The rest is easier to cover on a quick call." in res2["draft"]["body_text"]
+    assert "percent" not in res2["draft"]["body_text"]
 
 
 def test_a_question_containing_the_word_confirm_does_not_mark_the_call_confirmed(env):

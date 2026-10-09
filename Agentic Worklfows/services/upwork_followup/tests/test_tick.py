@@ -1415,7 +1415,7 @@ def test_a_lease_lost_during_sequence_run_advances_nothing_more(store, tmp_path,
 # ------------------------------------------------------------------ round 2: run budget
 def test_run_budget_stops_drafting_and_leaves_the_rest_for_next_run(store, tmp_path, monkeypatch, world):
     seed(store)
-    monkeypatch.setattr(tick, "call_cost", lambda role, system, user, max_tokens: 0.5)
+    monkeypatch.setattr(tick, "call_cost", lambda role, system, user, max_tokens, **kw: 0.5)
     monkeypatch.setenv(tick.BUDGET_ENV, "1.2")
     path = write_snap(tmp_path, snapshot([rep_room(), tch_room(), wai_room(), chk_room(), bkd_room()]))
     llm, notify = FakeLLM(), FakeNotify()
@@ -1460,6 +1460,45 @@ def test_meter_counts_projected_cost_from_shared_llm(monkeypatch):
     m = tick.Meter(lambda role, system, user, **kw: "ok", budget=10, max_classify=5)
     assert m("draft", "system text", "user text", max_tokens=400) == "ok"
     assert m.calls == {"draft": 1} and m.spent > 0
+
+
+def test_meter_counts_exactly_what_shared_llm_reserves(monkeypatch, tmp_path):
+    """call_cost priced the caller's bare max_tokens while complete() reserves
+    max_tokens + THINKING_HEADROOM_TOKENS, so every call counted about half
+    its cost against the $1.50 run cap. The Meter's count must equal what
+    complete() hands enforce_budget, for a JSON classification and a draft."""
+    monkeypatch.setenv("LLM_FAKE", "0")
+    monkeypatch.setenv("LLM_LEDGER_PATH", str(tmp_path / "ledger.csv"))
+    reserved = []
+
+    def spy(role, model, system, user, max_tokens):
+        cost = shared_llm_mod.projected_cost_usd(model, system, user, max_tokens)
+        reserved.append((role, max_tokens, cost))
+        return {"reserved_usd": cost, "reserved_in_store": False}
+
+    class _Messages(object):
+        def create(self, **kwargs):
+            if "JSON" in (kwargs.get("system") or ""):
+                text = '{"label": "positive", "confidence": 0.9}'
+            else:
+                text = "a draft"
+            return SimpleNamespace(content=[SimpleNamespace(type="text", text=text)], usage=None,
+                                   stop_reason="end_turn")
+
+    monkeypatch.setattr(shared_llm_mod, "enforce_budget", spy)
+    monkeypatch.setattr(shared_llm_mod, "_client", lambda: SimpleNamespace(messages=_Messages()))
+    monkeypatch.setattr(shared_llm_mod, "complete", REAL_COMPLETE)
+    m = tick.Meter(None, budget=10, max_classify=5)
+    m("classify", "classify system " * 40, "client text " * 60, max_tokens=200, json_mode=True)
+    after_classify = m.spent
+    m("draft", "draft system " * 300, "thread " * 400, max_tokens=400)
+
+    assert [r[:2] for r in reserved] == [
+        ("classify", 200 + shared_llm_mod.THINKING_HEADROOM_TOKENS),
+        ("draft", 400 + shared_llm_mod.THINKING_HEADROOM_TOKENS)]
+    assert after_classify == pytest.approx(reserved[0][2], abs=1e-9)
+    assert m.spent - after_classify == pytest.approx(reserved[1][2], abs=1e-9)
+    assert tick.call_cost("draft", "s", "u", 400) == shared_llm_mod.reserved_cost_usd("draft", "s", "u", 400)
 
 
 # ------------------------------------------------------------------ polish: shared LLM ceiling
@@ -2001,7 +2040,7 @@ class FakeAnthropic(object):
         self.roles = []
         self.messages = self
 
-    def create(self, model, max_tokens, system, messages, thinking=None):
+    def create(self, model, max_tokens, system, messages, thinking=None, output_config=None):
         role = "classify" if "Respond with a single JSON object" in system else "draft"
         self.roles.append(role)
         out = FakeLLM(drafts=FakeAnthropic.DRAFTS)(role, system, messages[0]["content"])
@@ -2183,7 +2222,7 @@ def test_no_store_call_and_no_model_call_while_a_store_mutate_is_open(tmp_path, 
     list, the lease and shared.llm's spend counter. Not one store call and not
     one model call happens while a mutate is open."""
     guard, inside = _guarded(monkeypatch, tmp_path)
-    monkeypatch.setattr(tick, "call_cost", lambda role, system, user, max_tokens: 0.5)
+    monkeypatch.setattr(tick, "call_cost", lambda role, system, user, max_tokens, **kw: 0.5)
     monkeypatch.setenv(tick.BUDGET_ENV, "1.7")        # classify + 2 drafts fit; the third is released
     at = datetime(2026, 9, 10, 18, tzinfo=timezone.utc)
     gone = moved_room("room_gone1", "Fern Gully Florist", "Wedding order intake")

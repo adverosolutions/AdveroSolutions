@@ -33,8 +33,8 @@ SLOTS = "Wed 2:00pm or Thu 3:30pm CT"
 OFFERS = open(str(ta.BASE_DIR / "config" / "offers.md"), encoding="utf-8").read()
 NICHES = ("cleaning", "bookkeeping", "recruiting", "generic")
 SHOW_RATE_KEYS = ("confirm_email", "reminder_24h_email", "reminder_morning_email", "reminder_1h_email")
-NO_SHOW_KEYS = ("ns_still_on_email", "ns_reschedule_email", "ns_d1_email", "ns_d3_value_email",
-                "ns_d7_yes_no_email", "ns_d14_breakup_email", "ns_third_miss_email")
+NO_SHOW_KEYS = ("ns_still_on_email", "ns_reschedule_email", "ns_d1_email", "ns_d2_value_email",
+                "ns_d3_retry_email", "ns_d5_yes_no_email", "ns_d7_breakup_email", "ns_third_miss_email")
 
 
 def appt(niche="cleaning", offer="reactivation", **extra):
@@ -192,31 +192,26 @@ def test_item8_every_show_rate_and_no_show_time_has_am_or_pm():
 
 
 # ------------------------------------------------------------------ item 12
-@pytest.mark.parametrize("niche,terms,offer_sheet", [
-    ("cleaning", "$24,000 a year in new cleaning contracts signed within 90 days",
-     "$24,000/yr in new cleaning contracts signed within 90 days"),
-    ("bookkeeping", "$15,000 in new annual client fees within 90 days",
-     "$15,000 in new annual client fees within 90 days"),
-    ("recruiting", "$40,000 in new placement fees within 180 days",
-     "$40,000 in new placement fees within 180 days"),
-])
-def test_item12_the_guarantee_bullet_reads_as_a_sentence(niche, terms, offer_sheet):
+@pytest.mark.parametrize("niche", ["cleaning", "bookkeeping", "recruiting", "generic"])
+def test_item12_the_confirmation_quotes_no_guarantee(niche):
+    """The agenda Lorenzo approved on 2026-09-24 drops the guarantee bullet:
+    terms are for the call, not the confirmation."""
     body = sr_copy("confirm_email", niche=niche, offer="outbound")["body"]
-    assert "- the guarantee (%s) and what it would cost" % terms in body
-    assert offer_sheet in OFFERS            # the figures are config/offers.md's
+    assert "guarantee" not in body and "$" not in body
 
 
 # ------------------------------------------------------------------ item 14
 def test_item14_the_second_no_show_keeps_the_call_and_never_offers_writing():
     body = ns_copy("ns_reschedule_email", count=2)["body"]
-    assert "Today didn't line up, and no problem if now is a bad time." in body
-    assert "I can do %s. Just reply with the one that works." % SLOTS in body
+    assert "Looks like I missed you again on today's call." in body
+    assert "If you still want to talk, I can do %s." % SLOTS in body
     assert "in writing" not in body and "numbers" not in body
 
 
 # ------------------------------------------------------------------ item 21
 @pytest.mark.parametrize("key,count", [("ns_reschedule_email", 1), ("ns_reschedule_email", 2),
-                                       ("ns_d1_email", 1), ("ns_d3_value_email", 1), ("ns_d7_yes_no_email", 1)])
+                                       ("ns_d1_email", 1), ("ns_d2_value_email", 1), ("ns_d3_retry_email", 1),
+                                       ("ns_d5_yes_no_email", 1)])
 def test_item21_no_times_is_never_sendable_and_never_a_link(key, count):
     bare = ns_copy(key, slots_text="", count=count)
     assert ns.unfilled(bare) == "no_slots"  # the slot email waits for two held times
@@ -227,16 +222,15 @@ def test_item21_no_times_is_never_sendable_and_never_a_link(key, count):
 # ------------------------------------------------------------------ item 22
 def test_item22_generic_outbound_gets_outbound_copy():
     body = sr_copy("confirm_email", niche="generic", offer="outbound")["body"]
-    for line in ("- who is in market for what you sell right now",
-                 "- how the outreach runs under your name and books calls on your calendar",
-                 "- the guarantee and what it would cost"):
+    for line in ("- your company, who you sell to, and how you bring work in today",
+                 "a concrete plan for getting in front of new customers."):
         assert line in body
-    assert "dormant" not in body
+    assert "past customers" not in body
     # no niche on file: no approved N5 line, never a generic one
-    assert ns.unfilled(ns_copy("ns_d3_value_email", niche="generic", offer="outbound")) == "no_niche_point"
-    assert "watch for new leases" in ns_copy("ns_d3_value_email", niche="cleaning", offer="outbound")["body"]
+    assert ns.unfilled(ns_copy("ns_d2_value_email", niche="generic", offer="outbound")) == "no_niche_point"
+    assert "watch for new leases" in ns_copy("ns_d2_value_email", niche="cleaning", offer="outbound")["body"]
     # generic reactivation keeps the reactivation copy
-    assert "dormant" in sr_copy("confirm_email", niche="generic", offer="reactivation")["body"]
+    assert "winning those customers back" in sr_copy("confirm_email", niche="generic", offer="reactivation")["body"]
 
 
 # ------------------------------------------------------------------ item 23
@@ -251,7 +245,7 @@ def test_item23_the_confirmation_subject_names_no_company():
 # ------------------------------------------------------------------ item 24
 def test_item24_the_breakup_email_signs_off_plainly():
     for kw in ({}, {"company": None}):
-        body = ns_copy("ns_d14_breakup_email", **kw)["body"]
+        body = ns_copy("ns_d7_breakup_email", **kw)["body"]
         assert body.endswith("just reply here and I'll send over a couple of times.\n\nLorenzo")
         assert "at your business" not in body and "Brightline" not in body
 
@@ -268,8 +262,8 @@ def test_item29_day_one_is_one_email_for_every_niche(niche):
     assert not [i for i in idx if i.startswith("no_show.ns_d1_email.")]
 
 
-def test_day_seven_has_no_comma_splice():
-    body = ns_copy("ns_d7_yes_no_email")["body"]
+def test_day_five_yes_no_has_no_comma_splice():
+    body = ns_copy("ns_d5_yes_no_email")["body"]
     assert "A one-word answer is plenty. If it's later, just tell me roughly when." in body
 
 
@@ -296,7 +290,7 @@ def test_no_link_on_file_claims_no_link_in_the_message():
                        ("reminder_1h_email", "The call link is on the calendar invite from when we booked.")):
         assert where in sr_copy(key, zoom_link=None)["body"], key
     body = ns_copy("ns_still_on_email", zoom_link=None)["body"]
-    assert "I'm on the call now, no rush. The link is on your calendar invite." in body
+    assert "I'm on the call now. The link is on your calendar invite." in body
     assert sr.call_link_of({"meeting_link": MEET}) == MEET
     assert sr.call_link_of({}) == ""
 

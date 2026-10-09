@@ -1,22 +1,28 @@
 # Runbook: the list factory (M5 / job O8)
 
 ## Purpose
-3,300 verified, ICP-scored, personalized leads a week at no more than 2 cents per verified contact, running unattended on Sunday, so every campaign always has at least five days of uncontacted leads (Blueprint Section 6).
+3,300 verified, ICP-scored, personalized leads a week at no more than $0.07 per verified contact (the run's hard cap since 2026-09-25; Section 6's green line is still $0.02), running unattended on Sunday, so every campaign always has at least five days of uncontacted leads (Blueprint Section 6).
 
 The factory **never uploads anything**. The last stage writes a CSV and records one `POST /leads` intent through `shared.settings.guard_write`. In shadow that is a line in the shadow log and no HTTP request. Turning the upload on is a separate, deliberate step that Lorenzo approves (see "Going live" below).
 
-## Read this first: the run does not currently fit under the cap
+## Read this first: the cap is $0.07 and the projection prices worst-case thinking
 
-`--preflight` on 2026-09-22, after the review fixes:
+**Lorenzo, 2026-09-25:** every model call now runs on Claude Opus 5.5, whose thinking cannot be turned off and bills as output. The preflight and the in-run projection price each model call with the worst case, 1,024 thinking tokens (`shared.llm.output_tokens_with_thinking`, about $0.02 a call): one per personalization line, one per ICP batch and one per possible ICP escalation (up to `--max-escalations`, default 50, which the preflight had never priced before). That alone is about $0.025 per personalization line, so the cap (`LIST_FACTORY_MAX_COST_PER_CONTACT_USD`, `shared/thresholds.py`) was raised from $0.02 to **$0.07**. Measure the real thinking spend on the first real run and lower the cap again.
+
+`--preflight` on 2026-09-25 (cleaning, target 3,300):
 
 | Source | Total | Per **confirmed** contact | Per deliverable (catch-alls included) | Verdict |
 | --- | --- | --- | --- | --- |
-| Apify `code_crafter/leads-finder` | $55.05 | **$0.02224** | $0.01668 | **OVER the $0.02 cap** |
-| Google Maps | $61.84 | **$0.02499** | $0.01874 | **OVER the $0.02 cap** |
+| Apify `code_crafter/leads-finder` | $153.74 | **$0.06212** | $0.04659 | within the $0.07 cap |
+| Google Maps | $160.53 | **$0.06486** | $0.04864 | within the $0.07 cap |
 
-The old runbook said $46.22 / $0.0140 for Apify. Three separate errors made that number: the preflight priced `fill_rate=1.0` while the run over-fetched by `1/0.36`; owner look-ups were hard-coded at $0 for Apify; and catch-all results were counted as verified contacts. `--preflight` now exits 1 and prints OVER CAP, which is the honest signal. Decisions for Lorenzo are at the bottom.
+Of the Apify total, personalization is $81.44 and ICP $27.54 (text tokens plus worst-case thinking), the source $33.64. The per-niche pulls of `--all-campaigns` price at $0.06453 per confirmed contact (600 contacts per niche). Before 2026-09-25 the same Apify run priced at $55.05 and $0.02224 (Sonnet and Haiku, no thinking), over the old $0.02 cap, and every run halted before the source fetch.
 
-**Consequence since the 2026-09-22 re-review (MKT-1): a `--now` run at these rates halts before the source fetch and spends nothing.** The preflight's figure is now enforced as a gate in front of Apify, so every Sunday pull at the default $0.02 cap stops with `status: halted` ("before the source fetch") until one of the "Going live" decisions below is taken. The per-niche pulls of `--all-campaigns` price at $0.02267 per confirmed contact (600 contacts per niche).
+**The $0.04 alert line did not move.** A run that finishes above $0.04 per confirmed contact gets verdict `alert` and status `over_cap` (non-zero exit, push) even inside the $0.07 cap; the message says so ("inside the run's own $0.0700 cap, which was set above the alert line"). A run that really spends the worst case (about $0.062) would finish that way. Real thinking at effort `low` should be well under 1,024 tokens a call, which is what the first real run measures.
+
+**The escalation allowance is a fixed worst case**: 50 extra calls of thinking is about $1.07. A 3,300-contact run absorbs it (under 1% of the bill); a very small run does not. The recorded 58-business fixture, run with the default 50 escalations, projects about $0.16 per confirmed contact and halts, which is why the fixture tests run with `--max-escalations 0`.
+
+The old runbook said $46.22 / $0.0140 for Apify. Three separate errors made that number: the preflight priced `fill_rate=1.0` while the run over-fetched by `1/0.36`; owner look-ups were hard-coded at $0 for Apify; and catch-all results were counted as verified contacts. Since the 2026-09-22 re-review (MKT-1) the preflight's figure is enforced as a gate in front of Apify: a run over the cap stops with `status: halted` ("before the source fetch") and spends nothing.
 
 ## The pipeline
 
@@ -29,13 +35,13 @@ source -> presuppress -> icp -> owner -> patterns -> verify -> finder
 | --- | --- | --- | --- |
 | source | Apify `code_crafter/leads-finder` sharded by US state, Google Maps by metro, or a recorded fixture | $0.02/run start + $0.002/lead **returned** (Apify) | `sources.py` |
 | presuppress | The FREE half of suppression: "this domain is already in a campaign", knowable the moment a row arrives | free | `suppression.py` |
-| icp | Keyword hard-reject, keyword hard-accept, then Haiku in batches with a Sonnet escalation below 0.8 confidence | ~$0.0003/business, **gated** | `icp.py` |
+| icp | Keyword hard-reject, keyword hard-accept, then Claude Opus 5.5 in batches with an escalation (also Opus 5.5) below 0.8 confidence | ~$0.0011/business in text tokens, plus 1,024 worst-case thinking tokens (about $0.02) per batch call of 20 and per escalation (up to 50), all priced by the preflight; **gated** | `icp.py` |
 | owner | Name from the source row when it has one, otherwise `execution/discover_owner.py` | $0.005/look-up, $0 when the row carries a name | `contacts.py` |
 | patterns | `first@`, `first.last@`, `flast@`, `firstlast@` only | free | `contacts.py` |
 | verify | MillionVerifier, first hit wins | $0.0006/check | `contacts.py` |
 | finder | Paid finder on a miss. **Stub: no LeadMagic or Prospeo account exists**, so it only prices what one would have cost | $0.0035/find if it existed | `contacts.py` |
 | suppression | The address-level half. Mandatory, fail-closed. See below | free | `suppression.py` |
-| personalize | One Sonnet line per lead, checked against the copy rules, plus the trigger variables | ~$0.002/lead, **gated** | `personalize.py` |
+| personalize | One Claude Opus 5.5 line per lead, checked against the copy rules, plus the trigger variables | ~$0.0042/lead in text tokens plus 1,024 worst-case thinking tokens (about $0.02), ~$0.025/lead as priced; **gated** | `personalize.py` |
 | stage | CSV + one `POST /leads` would_do record | free | `stage_out.py` |
 
 Each stage only touches the leads that have not been through it (`RunState.pending(stage)`), which is what makes a run resumable.
@@ -139,7 +145,7 @@ Anthropic was added to the third gate on 2026-09-22. Before that the two model s
 - The job **looks for an unfinished run for the niche and continues it** rather than starting over. An at-least-once scheduler that fires the Sunday job twice used to pay for the whole pipeline again. `--fresh` forces a new run. Only `--now` does this: a `--dry-run` never picks up, resumes, changes or closes an existing run (its state lives in its scratch directory), and an `--all-campaigns` run refuses to pick up an open run made with a different source or verifier than the targets file names (a rehearsal left open, say).
 - **A resume runs with the stored source and verifier, never others**, and whether its logs are real or scratch is decided from them before anything is written: resuming a fixture or replay rehearsal writes its Job_Log row and its `create_lead_batch` record into the scratch logs, not the ones the 48-hour shadow watch reads, even when `--verify replay` is not typed again.
 - Run ids carry a random suffix, and `RunState.create` refuses to overwrite an existing `state.json`. Two invocations in the same second used to produce the same id and reset the first run's leads to `[]`.
-- The ledger is written into `state.json` on every checkpoint, so a `kill -9` mid-stage still leaves the spend on disk and the resumed run inherits it. Without that the $0.02 cap restarted on every resume.
+- The ledger is written into `state.json` on every checkpoint, so a `kill -9` mid-stage still leaves the spend on disk and the resumed run inherits it. Without that the cap restarted on every resume.
 - Resuming a run that already finished is safe: the staging step is skipped and the CSV is left alone. It used to be rewritten from an empty list, leaving a header-only file, while reporting `ok`.
 
 ## Suppression: the part that must never be skipped
@@ -177,7 +183,7 @@ The suppression list, its size and its age are printed at the top of every run s
 
 **Add every client's domain to `config/icp/suppression_manual.json` the day they sign.** Nothing else knows about them: there is no GHL token, so the factory cannot see the Won stage.
 
-## The 2-cent rule
+## The cost cap ($0.07 per confirmed contact)
 
 `services/list_factory/ledger.py` holds every unit price with its provenance and is the only place to change one.
 
@@ -217,7 +223,7 @@ They are now counted separately everywhere:
 
 One row per run lands in `.tmp/list_factory/cost_ledger.csv` with per-stage counts, dollars, and the `source`, `verifier`, `dry_run` and `target` columns that tell a free rehearsal from a real paid run. **Rehearsal rows go to a scratch ledger**, not the real one, and the gate keys on the source and verifier actually in use, not on the `--fixtures` shorthand.
 
-Verdicts: `green` at or under $0.02, `over_cap` above it, `alert` above $0.04 (Blueprint Section 6), `halted_over_budget`.
+Verdicts: `green` at or under the lower of the run's cap and $0.04, `alert` above $0.04 (Blueprint Section 6), `over_cap` above a cap set below $0.04, `halted_over_budget`. With the $0.07 default a finished run is `green` up to $0.04 and `alert` above it.
 
 ## ICP rubrics
 

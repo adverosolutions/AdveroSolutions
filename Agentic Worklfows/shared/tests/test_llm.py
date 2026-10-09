@@ -18,15 +18,15 @@ def _fake(tmp_env, monkeypatch):
 
 def test_model_policy_exact():
     assert llm.MODEL_POLICY == {
-        "classify": "claude-haiku-4-5-20251001",
-        "draft": "claude-sonnet-5",
-        "research": "claude-sonnet-5",
-        "retro": "claude-opus-5",
-        "proposal": "claude-opus-5",
-        "escalate": "claude-sonnet-5",
+        "classify": "claude-opus-5-5",
+        "draft": "claude-opus-5-5",
+        "research": "claude-opus-5-5",
+        "retro": "claude-opus-5-5",
+        "proposal": "claude-opus-5-5",
+        "escalate": "claude-opus-5-5",
     }
-    assert llm.model_for("classify") == "claude-haiku-4-5-20251001"
-    assert llm.model_for("unknown-role") == "claude-sonnet-5"
+    assert llm.model_for("classify") == "claude-opus-5-5"
+    assert llm.model_for("unknown-role") == "claude-opus-5-5"
 
 
 def test_fake_classify_returns_dict():
@@ -127,8 +127,8 @@ def test_ledger_rows_and_cost(tmp_env):
     with open(path, newline="") as fh:
         rows = list(csv.DictReader(fh))
     assert [r["role"] for r in rows] == ["classify", "draft"]
-    assert rows[0]["model"] == "claude-haiku-4-5-20251001"
-    assert rows[1]["model"] == "claude-sonnet-5"
+    assert rows[0]["model"] == "claude-opus-5-5"
+    assert rows[1]["model"] == "claude-opus-5-5"
     assert int(rows[0]["input_tokens"]) >= 200
     assert float(rows[0]["est_cost_usd"]) > 0
     assert set(rows[0].keys()) == {"ts", "role", "model", "input_tokens", "output_tokens",
@@ -140,9 +140,9 @@ def test_ledger_rows_and_cost(tmp_env):
 
 
 def test_estimate_cost_uses_price_table():
-    assert llm.estimate_cost("claude-haiku-4-5-20251001", 1_000_000, 0) == 1.0
-    assert llm.estimate_cost("claude-sonnet-5", 1_000_000, 1_000_000) == 12.0
-    assert llm.estimate_cost("claude-opus-5", 0, 100_000) == 2.5  # $25/MTok out (list price 2026-06)
+    assert llm.estimate_cost("claude-opus-5-5", 1_000_000, 0) == 4.0     # $4/MTok in
+    assert llm.estimate_cost("claude-opus-5-5", 0, 100_000) == 2.0       # $20/MTok out
+    assert llm.estimate_cost("claude-opus-5-5", 1_000_000, 1_000_000) == 24.0
     assert llm.estimate_cost("mystery-model", 1_000_000, 0) == llm.DEFAULT_PRICE[0]
 
 
@@ -154,17 +154,15 @@ def test_fake_mode_never_touches_anthropic_client(monkeypatch):
 
 
 def test_model_policy_carries_no_fable_id_and_is_deliberate():
-    """Lorenzo's Fable weekly allowance ran out on 2026-09-21, so every role
-    that used to be Fable is Opus 5. classify/draft/research stay on the cheap
-    models ON PURPOSE (CLAUDE.md "Runtime models"): classification runs on every
-    reply and the drafts are template-shaped, so moving them to Opus 5 is a
-    standing cost decision for Lorenzo, not a silent change."""
+    """Every role runs on Claude Opus 5.5 (Lorenzo, 2026-09-25), including
+    classification and escalation. Nothing is left on Haiku, Sonnet or Opus 5,
+    and no retired Fable id comes back."""
     policy = llm.MODEL_POLICY
     assert "fable" not in json.dumps(policy).lower()
-    assert policy["retro"] == "claude-opus-5" and policy["proposal"] == "claude-opus-5"
-    assert policy["classify"].startswith("claude-haiku")
-    for role in ("draft", "research", "escalate"):
-        assert policy[role].startswith("claude-sonnet"), role
+    assert set(policy.values()) == {"claude-opus-5-5"}
+    for role, model in policy.items():
+        assert not model.startswith(("claude-haiku", "claude-sonnet")), role
+        assert model != "claude-opus-5", role
     # every id in the policy has a price, or the ledger silently bills the
     # conservative fallback and every cost report is wrong
     for role, model in policy.items():

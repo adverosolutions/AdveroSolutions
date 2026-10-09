@@ -146,8 +146,10 @@ def test_pricing_question_draft_is_sendable_in_fake_mode():
     assert d.sendable and d.problems == []
     assert d.subject == "Re: Sopio, question"
     assert d.body_text.startswith("Hey Sopio,")
-    assert "20 to 30 percent of first-year fees" in d.body_text
-    assert "$0 if nothing closes" in d.body_text
+    # no numbers over email (2026-09-24): the price question gets the "asked something else" answer
+    assert D.PRICING["bookkeeping_reactivation"] in d.body_text
+    assert "The rest is easier to cover on a quick call." in d.body_text
+    assert "$" not in d.body_text and "percent" not in d.body_text
     assert len(d.offered_slots) == 2
     assert BOOKING not in d.body_text and "grab a time" not in d.body_text.lower()
     assert d.body_text.split("\n\n")[-2].endswith("work for a 15-minute call?")
@@ -159,14 +161,69 @@ def test_pricing_question_draft_is_sendable_in_fake_mode():
         assert (dt - ev.received_at).total_seconds() >= 4 * 3600
 
 
-def test_outbound_pricing_uses_guarantee_from_offers():
+def test_outbound_pricing_states_no_guarantee_or_price():
+    """We never talk numbers over email (Lorenzo, 2026-09-24): the trigger
+    offer's price question names no retainer, guarantee or gift card."""
     ev = event("tiffany@flowerhillfs.com", "2026-09-17")
     cls = C.classify(ev)
     d = D.build_draft(ev, cls, now=ev.received_at, busy_blocks=[])
     assert ev.campaign_key == "cleaning_trigger"
-    assert "$24,000 a year in new cleaning contracts signed within 90 days" in d.body_text
-    assert "retainer" in d.body_text
+    assert D.PRICING["cleaning_trigger"] in d.body_text
+    for word in ("$", "24,000", "retainer", "guarantee", "gift card", "money back"):
+        assert word not in d.body_text, word
     assert d.problems == []
+
+
+@pytest.mark.parametrize("key", sorted(D.MECHANISM))
+def test_each_price_first_reply_states_no_number(key):
+    """Each offer's price answer is that offer's "asked something else" line:
+    no digit, no "$", no "percent", no guarantee."""
+    text = D.PRICING[key]
+    assert text == "Good question. The short version is that %s The rest is easier to cover on a quick call." % (
+        D._as_clause(D.MECHANISM[key]))
+    ev = ReplyEvent(email_id="e1", thread_id="t1", lead_email="lead@example.com", eaccount="lorenzo@example.com",
+                    subject="Re: question", text="How much does it cost?", received_at=NOW, campaign_key=key,
+                    first_name="Sam", company="Acme")
+    cls = Classification(label="positive_question", extracted=Extracted(question_type="pricing"))
+    assert D.first_reply_branch(cls) == "pricing"
+    assert D.first_reply_template_id(ev, cls) == "first_reply.%s.pricing.full" % key
+    answer = D.answer_paragraph(ev, cls)
+    for t in (text, answer):
+        assert not any(ch.isdigit() for ch in t), t
+        assert "$" not in t and "percent" not in t.lower() and "%" not in t
+        assert "guarantee" not in t.lower() and "retainer" not in t.lower()
+
+
+def test_every_catalogue_price_first_reply_states_no_number():
+    """The pricing first replies as the catalogue renders them (main text and
+    every variant): the answer line carries no digit, "$" or "percent"."""
+    from services.reply_engine import template_approvals as TA
+
+    entries = [e for e in TA.catalogue() if e["id"].startswith("first_reply.") and e["id"].endswith(".pricing.full")]
+    assert len(entries) == len(D.MECHANISM)
+    for e in entries:
+        key = e["id"].split(".")[1]
+        assert [ln for ln in e["text"].split("\n") if ln.startswith("Good question.")] == [D.PRICING[key]], e["id"]
+        for text in [e["text"]] + [v.get("text", "") for v in e.get("variants") or []]:
+            assert "$" not in text and "percent" not in text.lower() and "%" not in text, (e["id"], text)
+            for ln in text.split("\n"):
+                if ln.startswith("Good question."):  # the answer line, in every version that shows it
+                    assert ln == D.PRICING[key] and not any(ch.isdigit() for ch in ln), (e["id"], text)
+
+
+def test_a_polish_that_adds_a_price_is_rejected(monkeypatch):
+    """The LLM polish sees offers.md; a polish that puts a guarantee or a
+    percentage back into a first reply is discarded and the template ships."""
+    ev = event("tiffany@flowerhillfs.com", "2026-09-17")
+    cls = C.classify(ev)
+    base = D.build_draft(ev, cls, now=ev.received_at, busy_blocks=[], use_llm=False)
+    polished = base.body_text.replace(
+        "The rest is easier to cover on a quick call.",
+        "The guarantee is $24,000 a year in new cleaning contracts signed within 90 days.")
+    monkeypatch.setattr(D.llm, "complete", lambda *a, **k: polished)
+    d = D.build_draft(ev, cls, now=ev.received_at, busy_blocks=[], use_llm=True)
+    assert d.model == "template" and d.body_text == base.body_text
+    assert "never in an email" in d.rationale
 
 
 def test_mechanism_and_send_info_answers():
@@ -361,7 +418,7 @@ def test_llm_polish_accepted_when_it_keeps_slots_and_rules():
     def polish(system, user, json_mode):
         seen["system"] = system
         skel = system.split("Skeleton for this reply")[1]
-        return skel.split(":", 1)[1].split("Return only the email body")[0].strip().replace("Nothing up front.", "Nothing up front at all.")
+        return skel.split(":", 1)[1].split("Return only the email body")[0].strip().replace("Good question.", "Fair question.")
 
     llm.register_fake("draft", polish)
     try:
@@ -370,7 +427,7 @@ def test_llm_polish_accepted_when_it_keeps_slots_and_rules():
         llm.clear_fakes()
         C.install_offline_fakes()
     assert d.model == llm.model_for("draft") and d.problems == []
-    assert "Nothing up front at all." in d.body_text
+    assert "Fair question." in d.body_text
     assert "20–30%" in seen["system"]  # offers.md embedded at runtime
     assert "polished by" in d.rationale
 

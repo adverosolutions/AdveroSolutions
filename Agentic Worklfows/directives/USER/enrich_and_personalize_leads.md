@@ -21,7 +21,7 @@
 
 - `execution/perplexity_research.py` - Perplexity API for research
 - `execution/lead_enrichment_pipeline_v2.py` - Main orchestrator (email-based dedup, failed lead tracking, phone formatting)
-- `execution/icebreaker_generator.py` - Claude Haiku icebreaker generation
+- `execution/icebreaker_generator.py` - Claude Opus 5.5 icebreaker generation
 - `execution/google_sheets_crm.py` - Sheet operations
 
 ---

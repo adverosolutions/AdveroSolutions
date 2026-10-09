@@ -12,7 +12,8 @@ This is a **template/angle-library system**, not freeform LLM generation —
 matching the proven pattern already used in the med-spa `relevance_line` tool
 (see [[personalization-line-generator]] in memory): pick the highest-priority
 angle whose required signal(s) are present, fill it in deterministically. No
-LLM call ever writes the actual output sentence anymore; Claude Haiku is only
+LLM call ever writes the actual output sentence anymore; Claude Opus 5.5
+(`claude-opus-5-5`, low effort, since 2026-09-25) is only
 used for (a) summarizing scraped pages and (b) structured signal extraction
 ("is X clearly stated, yes/no/value" — never creative writing).
 
@@ -55,7 +56,7 @@ variants, but only if/when Lorenzo asks for it again.
 
 ### Signal extraction (`extract_signals()`)
 
-One Haiku call per lead over the aggregated page abstracts, filling a strict
+One Opus 5.5 call per lead over the aggregated page abstracts, filling a strict
 JSON schema (`SIGNAL_SCHEMA`). Every field defaults to null/false unless
 **clearly and explicitly stated** in the research — never inferred or
 guessed, same anti-fabrication discipline as everywhere else in this tool.
@@ -140,8 +141,8 @@ Per "use the templates" (literal), these ship exactly as Lorenzo wrote them:
 
 1. Scrapes the lead's homepage, extracts internal links
 2. Picks up to 3 internal sub-pages (About/Services-style pages prioritized)
-3. Scrapes each sub-page, summarizes it with Claude Haiku (cheap)
-4. Extracts structured signals from the aggregated research via Haiku
+3. Scrapes each sub-page, summarizes it with Claude Opus 5.5 (low effort)
+4. Extracts structured signals from the aggregated research via Opus 5.5
    (`extract_signals()`)
 5. Selects the highest-priority matching angle and fills it in deterministically
    (`select_and_fill_angle()`) — rotating wording variants to avoid duplicate
@@ -155,7 +156,7 @@ scrapeable content** — a meaningful reliability improvement over the earlier
 freeform-generation version, which could fail validation and skip a lead
 even when research succeeded.
 
-This is distinct from `icebreaker_generator.py` (single-line Haiku opener for
+This is distinct from `icebreaker_generator.py` (single-line Opus 5.5 opener for
 contractor outreach, which uses admiring language like "shows serious grit"
 by design) and the med-spa `relevance_line` tool in
 [[personalization-line-generator]] (which this tool's angle-library
@@ -222,10 +223,13 @@ confirmed offer content, kept separately since it isn't this tool's job.
 
 ## Costs
 
-- Haiku summarization: ~3 calls/lead (1 per researched page)
-- Haiku signal extraction: 1 call/lead
-- No Sonnet 5 calls anymore (removed with the freeform-generation architecture)
-- Rough order of magnitude: a fraction of a cent per lead, all-in
+- Model: Claude Opus 5.5 (`claude-opus-5-5`) at low effort for every call
+  (every model call runs on Opus 5.5 since 2026-09-25; it replaced Haiku here)
+- Summarization: ~3 calls/lead (1 per researched page)
+- Signal extraction: 1 call/lead
+- Rough order of magnitude: ~$0.07 per lead all-in ($4/$20 per MTok, thinking
+  billed as output). An estimate, not measured; the Haiku version was a
+  fraction of a cent
 
 ---
 

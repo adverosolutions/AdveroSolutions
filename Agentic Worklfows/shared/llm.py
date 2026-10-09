@@ -28,59 +28,76 @@ from shared.paths import CONFIG_DIR, tmp_file
 
 logger = logging.getLogger("shared.llm")
 
+# Every role runs on Claude Opus 5.5 (Lorenzo, 2026-09-25): classification,
+# escalation, drafts, research lines, retro and proposals. The role keys stay
+# because callers name them; this dict is the single place to change a model.
+OPUS_5_5 = "claude-opus-5-5"
 MODEL_POLICY = {
-    "classify": "claude-haiku-4-5-20251001",
-    "draft": "claude-sonnet-5",
-    "research": "claude-sonnet-5",
-    "retro": "claude-opus-5",
-    "proposal": "claude-opus-5",
-    "escalate": "claude-sonnet-5",
+    "classify": OPUS_5_5,
+    "draft": OPUS_5_5,
+    "research": OPUS_5_5,
+    "retro": OPUS_5_5,
+    "proposal": OPUS_5_5,
+    "escalate": OPUS_5_5,
 }
 
-# Extended thinking per role, sent as ``thinking=`` on every real call.
+# Thinking control per role, sent on every real call.
 #
-# WHY DISABLED BY DEFAULT: claude-sonnet-5 uses adaptive thinking when the
-# request carries NO ``thinking`` parameter. On a real Upwork drafting prompt
-# (shadow test, 2026-09-23) it spent about 480 output tokens in a thinking
-# block before a ~380-char text block, 584 output tokens in all, so the
-# max_tokens=400 touch cap stopped the call at max_tokens and complete()
-# raised "cut off at max_tokens". Whether it thinks depends on the prompt, so
-# every role (drafts, research lines, escalation) was exposed. Sending
-# ``{"type": "disabled"}`` returned text only, stop_reason end_turn, and is
-# accepted by claude-sonnet-5 and claude-haiku-4-5.
+# HISTORY: until 2026-09-25 every call sent ``thinking={"type": "disabled"}``.
+# claude-sonnet-5 thinks adaptively when a request carries no ``thinking``
+# parameter; on a real Upwork drafting prompt (shadow test, 2026-09-23) it
+# spent about 480 output tokens thinking before a ~380-char text block, so the
+# max_tokens=400 cap stopped the call and complete() raised "cut off at
+# max_tokens".
 #
-# To re-enable thinking for ONE role, change its entry to
-# ``{"type": "enabled", "budget_tokens": N}`` (N >= 1024). Its callers then
-# need max_tokens > N, which _thinking_param() enforces before anything bills.
-# The budget reservation already prices the call at max_tokens, and thinking
-# tokens are billed as output tokens inside max_tokens, so no extra reserve is
-# needed. Any other shape is refused. A role missing here gets disabled.
-# This is NOT a one-line change: every call site for that role must also raise
-# its max_tokens by at least N, because today's caps run from 120 to 2,000
-# tokens; without that the call is refused or cut off and callers quietly
-# fall back. Newer SDKs also mark ``enabled`` + ``budget_tokens`` deprecated
-# in favour of ``adaptive``, which the guard refuses on purpose, so check the
-# accepted shape on the target model before enabling anything.
-THINKING_DISABLED = {"type": "disabled"}
-THINKING_POLICY = {
-    "classify": THINKING_DISABLED,
-    "draft": THINKING_DISABLED,
-    "research": THINKING_DISABLED,
-    "retro": THINKING_DISABLED,
-    "proposal": THINKING_DISABLED,
-    "escalate": THINKING_DISABLED,
+# ON claude-opus-5-5 THINKING CANNOT BE DISABLED. Per the claude-api skill
+# (shared/model-migration.md, "Migrating to Claude Opus 5.5", breaking change
+# 1): ``{"type": "disabled"}`` and ``{"type": "enabled", "budget_tokens": N}``
+# both return a 400 at every effort level. Thinking is always on (omitting
+# ``thinking`` runs adaptive), and ``output_config.effort`` is the only control
+# for how much it thinks. The default effort on Opus 5.5 is ``medium``, so it
+# is always sent explicitly. So now:
+#   1. ``thinking`` is never sent (sending any shape but adaptive is a 400);
+#   2. every call sends ``output_config={"effort": EFFORT_POLICY[role]}``,
+#      ``low`` for every role, which keeps thinking short (the skill's advice
+#      for a route that used to run with thinking disabled);
+#   3. thinking counts toward ``max_tokens``, so the API request gets
+#      ``reserved_output_tokens(max_tokens)`` = ``max_tokens +
+#      THINKING_HEADROOM_TOKENS``. Without the headroom a 120-token
+#      classification cap would be eaten by a short thinking block and the
+#      max_tokens guard in complete() would refuse the reply. The API's limit
+#      is that padded number across thinking AND text together, so the
+#      caller's ``max_tokens`` is NOT a hard cap on the reply any more: a call
+#      that thinks little can write up to THINKING_HEADROOM_TOKENS more text
+#      than the caller asked for. Text that auto-sends keeps its own length
+#      checks (reply_engine/draft.py validate_draft, 1,500 chars;
+#      reply_engine/proposal.py copy_problems, MAX_PROPOSAL_CHARS). The spend
+#      ceiling reserves against the padded number, and a caller that keeps
+#      its own per-run budget (upwork_followup/tick.py call_cost) prices the
+#      same padded number through reserved_cost_usd().
+# Raising a role's effort (``medium``/``high``/``xhigh``/``max``) means more
+# thinking tokens on every call for that role; raise THINKING_HEADROOM_TOKENS
+# with it. Any value outside VALID_EFFORTS raises LLMError before the call
+# bills. A role missing here gets ``low``.
+VALID_EFFORTS = ("low", "medium", "high", "xhigh", "max")
+DEFAULT_EFFORT = "low"
+EFFORT_POLICY = {
+    "classify": DEFAULT_EFFORT,
+    "draft": DEFAULT_EFFORT,
+    "research": DEFAULT_EFFORT,
+    "retro": DEFAULT_EFFORT,
+    "proposal": DEFAULT_EFFORT,
+    "escalate": DEFAULT_EFFORT,
 }
-MIN_THINKING_BUDGET_TOKENS = 1024
+THINKING_HEADROOM_TOKENS = 1024
 
 # Undated aliases the API also accepts for a model that IS in MODEL_POLICY.
 # An alias is priced identically to its target; test_llm pins that, so an
 # alias can never drift into a second, wrong price for the same model.
-MODEL_ALIASES = {
-    "claude-haiku-4-5": "claude-haiku-4-5-20251001",
-}
+MODEL_ALIASES = {}  # type: Dict[str, str]
 
-# USD per 1M tokens (input, output). Anthropic first-party list prices as
-# published on 2026-09-21 (docs.anthropic.com pricing). UPDATE THIS DICT when
+# USD per 1M tokens (input, output). Anthropic first-party list prices; Opus
+# 5.5 is $4 / $20 per the claude-api skill's model table (2026-09-25). UPDATE THIS DICT when
 # prices or model ids change; est_cost_usd in the ledger is derived from it.
 #
 # This table is CLOSED: exactly the models in MODEL_POLICY plus the aliases
@@ -90,15 +107,17 @@ MODEL_ALIASES = {
 # somebody still calls. ``claude-fable-5`` sat here until 2026-09-22, eleven
 # months after Fable was retired and a day after Lorenzo's weekly Fable
 # allowance ran out and every Fable role moved to Opus 5 (CLAUDE.md, "Runtime
-# models"); ``claude-sonnet-4-6`` was the previous generation and no caller
-# names it. An id that is genuinely gone from the table now falls to
-# DEFAULT_PRICE, which OVER-states the cost, so the spend ceiling below trips
-# early rather than late.
+# models"). Haiku 4.5, Sonnet 5 and Opus 5 left on 2026-09-25 when every role
+# moved to Opus 5.5. Old ledger rows naming them, billed ones included (the
+# main folder's .tmp/llm_ledger.csv holds 278 billed Haiku rows and 253 billed
+# Sonnet rows), are unaffected: every reader (ledger_spend_usd, the cost
+# audits) sums the est_cost_usd stored on the row when it was written and
+# never re-prices a row by its model id. Only a NEW call is priced from this
+# table, and a model id missing from it falls to DEFAULT_PRICE, which
+# OVER-states the cost, so the spend ceiling below trips early rather than
+# late.
 PRICES_USD_PER_MTOK = {
-    "claude-haiku-4-5-20251001": (1.00, 5.00),
-    "claude-haiku-4-5": (1.00, 5.00),
-    "claude-sonnet-5": (2.00, 10.00),
-    "claude-opus-5": (5.00, 25.00),
+    "claude-opus-5-5": (4.00, 20.00),
 }
 DEFAULT_PRICE = (10.00, 50.00)  # conservative fallback for unknown ids
 
@@ -130,28 +149,15 @@ def model_for(role: str) -> str:
     return MODEL_POLICY.get(role, MODEL_POLICY["draft"])
 
 
-def _thinking_param(role: str, max_tokens: int) -> Dict[str, Any]:
-    """The ``thinking`` kwarg for ``role`` from THINKING_POLICY, validated.
+def _effort_param(role: str) -> Dict[str, Any]:
+    """The ``output_config`` kwarg for ``role`` from EFFORT_POLICY, validated.
 
-    Raises LLMError on any shape other than disabled or a well-formed enabled
-    config whose budget_tokens fits under max_tokens. Runs before the budget
+    Raises LLMError on any value outside VALID_EFFORTS. Runs before the budget
     reservation, so a bad config costs nothing."""
-    cfg = THINKING_POLICY.get(role, THINKING_DISABLED)
-    if not isinstance(cfg, dict):
-        raise LLMError("invalid THINKING_POLICY for role=%s: %r" % (role, cfg))
-    kind = cfg.get("type")
-    if kind == "disabled" and set(cfg) == {"type"}:
-        return {"type": "disabled"}
-    if kind == "enabled" and set(cfg) == {"type", "budget_tokens"}:
-        budget = cfg.get("budget_tokens")
-        if (isinstance(budget, int) and not isinstance(budget, bool)
-                and budget >= MIN_THINKING_BUDGET_TOKENS and int(max_tokens) > budget):
-            return {"type": "enabled", "budget_tokens": budget}
-        raise LLMError(
-            "invalid THINKING_POLICY for role=%s: budget_tokens must be an int >= %d and below "
-            "max_tokens=%d, got %r" % (role, MIN_THINKING_BUDGET_TOKENS, int(max_tokens), budget)
-        )
-    raise LLMError("invalid THINKING_POLICY for role=%s: %r" % (role, cfg))
+    effort = EFFORT_POLICY.get(role, DEFAULT_EFFORT)
+    if not isinstance(effort, str) or effort not in VALID_EFFORTS:
+        raise LLMError("invalid EFFORT_POLICY for role=%s: %r" % (role, effort))
+    return {"effort": effort}
 
 
 def register_fake(role: str, fn: FakeFn) -> None:
@@ -276,30 +282,34 @@ def _approx_tokens(text: str) -> int:
 #
 # THE ARITHMETIC BEHIND THE DEFAULT (all figures from PRICES_USD_PER_MTOK)
 # -----------------------------------------------------------------------
-# Per-call cost, input estimated from the prompts, output at max_tokens:
-#   classify  haiku-4-5   2,000 in /   300 out = $0.0035   (classify.py:457)
-#   escalate  sonnet-5    2,000 in /   300 out = $0.007    (classify.py:463)
-#   draft     sonnet-5    4,000 in /   500 out = $0.013    (draft.py:631)
-#   research  sonnet-5    1,500 in /   120 out = $0.0042   (cadence.py:980)
-#   proposal  opus-5      6,000 in / 1,600 out = $0.07     (proposal.py:603)
-#   retro     opus-5     15,000 in / 2,000 out = $0.125    (lessons.py:529)
+# Per-call cost on claude-opus-5-5 ($4 / $20 per MTok, every role since
+# 2026-09-25), input estimated from the prompts, output at the reply cap:
+#   classify  2,000 in /   300 out = $0.014    (classify.py:457)
+#   escalate  2,000 in /   300 out = $0.014    (classify.py:463)
+#   draft     4,000 in /   500 out = $0.026    (draft.py:631)
+#   research  1,500 in /   120 out = $0.0084   (cadence.py:980)
+#   proposal  6,000 in / 1,600 out = $0.056    (proposal.py:603)
+#   retro    15,000 in / 2,000 out = $0.10     (lessons.py:529)
+# Thinking is always on for Opus 5.5 and every call may spend up to
+# THINKING_HEADROOM_TOKENS (1,024) more output, at most $0.0205 per call.
 #
 # A HEALTHY 48 hours, at today's 12 active inboxes x 25/day = 300 sends/day and
 # a 3% reply rate (about 9 replies/day, 18 in the window):
-#   18 classify $0.063 + 5 escalations $0.035 + 5 drafts $0.065
-#   + 20 cadence research lines $0.084 + 4 precall proposals $0.28
-#   + one Friday retro packet $0.125
-#   = about $0.65. Call it $1 for a busy two days.
+#   18 classify $0.25 + 5 escalations $0.07 + 5 drafts $0.13
+#   + 20 cadence research lines $0.17 + 4 precall proposals $0.22
+#   + one Friday retro packet $0.10
+#   = about $0.95, and about $2.00 if all 53 calls use the full thinking
+#   headroom. Call it $2 for a busy two days.
 #
 # A RUNAWAY, which is the case a ceiling is for. modal_app.SCHEDULES runs
 # precall_tick and poller on "*/5 * * * *": 576 runs in 48 hours. If the
-# "already proposed" guard ever stops holding, that is 576 x $0.07 = $40 of
-# Opus for ONE call in the window, about $0.84/hour. A poller re-classifying
-# 20 open replies every tick is 576 x 20 x $0.0035 = $40 as well.
+# "already proposed" guard ever stops holding, that is 576 x $0.056 = $32 of
+# Opus for ONE call in the window, about $0.67/hour. A poller re-classifying
+# 20 open replies every tick is 576 x 20 x $0.014 = $161.
 #
-# DEFAULT_BUDGET_USD = $10.00 sits between the two on purpose: roughly 10x a
-# busy watch, so a healthy 48 hours never sees it, and it stops either runaway
-# inside about 12 hours at $10 rather than $40 to $80. It is a REHEARSAL
+# DEFAULT_BUDGET_USD = $10.00 sits between the two on purpose: roughly 5x a
+# busy watch at worst-case thinking, so a healthy 48 hours never sees it, and it
+# stops either runaway at $10 rather than $32 to $161. It is a REHEARSAL
 # number. Raise it in config/llm_budget.json before the tiers go live, where
 # real reply volume is the point.
 #
@@ -548,8 +558,46 @@ def _try_reserve(cost: float, cap: float) -> Dict[str, Any]:
 def projected_cost_usd(model: str, system: str, user: str, max_tokens: int) -> float:
     """Worst case for one call: the prompts as measured, the output at
     max_tokens. The check has to run BEFORE the call, so it assumes the model
-    fills its budget."""
+    fills its budget. ``max_tokens`` here is the number SENT to the API; for a
+    caller's reply cap use reserved_cost_usd(), which adds the thinking
+    headroom the way complete() does."""
     return estimate_cost(model, _approx_tokens(system) + _approx_tokens(user), int(max_tokens))
+
+
+def output_tokens_with_thinking(text_tokens: int, calls: int = 1) -> int:
+    """``text_tokens`` of output plus the WORST-CASE thinking of ``calls``
+    calls (THINKING_HEADROOM_TOKENS each). Thinking cannot be turned off on
+    claude-opus-5-5 and bills as output, so a cost projection built from
+    measured text-token averages needs this allowance to be a worst case.
+    Nothing has measured the typical thinking length at effort ``low`` yet."""
+    return int(text_tokens) + max(0, int(calls)) * THINKING_HEADROOM_TOKENS
+
+
+def reserved_output_tokens(max_tokens: int) -> int:
+    """The output tokens complete() asks the API for when a caller passes
+    ``max_tokens``: the reply cap plus THINKING_HEADROOM_TOKENS. Thinking
+    counts toward the limit, so this is also the worst-case output one call
+    can bill, and the number any pre-call cost projection must price."""
+    return output_tokens_with_thinking(max_tokens, 1)
+
+
+def _request_system(system: str, json_mode: bool) -> str:
+    """The system prompt complete() actually sends (and prices)."""
+    if json_mode:
+        return (system or "") + "\n\nRespond with a single JSON object and nothing else. No prose, no code fences."
+    return system or ""
+
+
+def reserved_cost_usd(role: str, system: str, user: str, max_tokens: int = 800,
+                      json_mode: bool = False, model: Optional[str] = None) -> float:
+    """What complete(role, system, user, max_tokens, json_mode, model) reserves
+    against the spend ceiling on each attempt: the prompts as sent, the output
+    at reserved_output_tokens(max_tokens). Callers that keep their own
+    per-run budget (upwork_followup/tick.py call_cost) use this so their
+    count cannot drift from the ceiling's."""
+    model = model or model_for(role)
+    return projected_cost_usd(model, _request_system(system, json_mode), user or "",
+                              reserved_output_tokens(max_tokens))
 
 
 def _alert_claim(threshold: str) -> bool:
@@ -760,7 +808,7 @@ def complete(
     """One Claude turn for ``role``. Returns str, or dict when json_mode."""
     model = model or model_for(role)
     if json_mode:
-        system = (system or "") + "\n\nRespond with a single JSON object and nothing else. No prose, no code fences."
+        system = _request_system(system, json_mode)
 
     if is_fake():
         out = _fake_response(role, system, user, json_mode)
@@ -778,22 +826,26 @@ def complete(
             "LLM_FAKE is not set: billing real Anthropic calls (first one: role=%s model=%s)", role, model
         )
     # Validated before the first reservation: an invalid config bills nothing.
-    thinking = _thinking_param(role, max_tokens)
+    output_config = _effort_param(role)
+    # Thinking cannot be disabled on claude-opus-5-5 and counts toward
+    # max_tokens, so the request carries headroom on top of the reply cap.
+    api_max_tokens = reserved_output_tokens(max_tokens)
     client = _client()
     attempt = 0
     while True:
         attempt += 1
-        reservation = enforce_budget(role, model, system, user, max_tokens)
+        reservation = enforce_budget(role, model, system, user, api_max_tokens)
         reserved = float(reservation["reserved_usd"])
         try:
             resp = client.messages.create(
                 model=model,
-                max_tokens=max_tokens,
+                max_tokens=api_max_tokens,
                 system=system or "",
                 messages=[{"role": "user", "content": user}],
-                # Explicit, never omitted: omitting it lets claude-sonnet-5
-                # think adaptively and trip the max_tokens guard below.
-                thinking=thinking,
+                # No ``thinking`` kwarg: on claude-opus-5-5 anything but
+                # adaptive is a 400. Effort is sent explicitly because the
+                # model's default is ``medium``.
+                output_config=output_config,
             )
         except Exception as exc:  # noqa: BLE001 - re-raised below unless retried
             # The reservation stays charged: whether a failed request was
@@ -823,8 +875,9 @@ def complete(
         # A truncated draft reads as finished and the cadence auto-sends it
         # after a 30-minute veto window, so the lead gets a half-written email.
         raise LLMError(
-            "model output was cut off at max_tokens=%d (role=%s, model=%s); raise max_tokens or "
-            "shorten the prompt" % (max_tokens, role, model)
+            "model output was cut off at max_tokens=%d (reply cap %d + thinking headroom %d; "
+            "role=%s, model=%s); raise max_tokens or shorten the prompt"
+            % (api_max_tokens, int(max_tokens), THINKING_HEADROOM_TOKENS, role, model)
         )
     text = "".join(getattr(block, "text", "") for block in resp.content if getattr(block, "type", "") == "text")
     if json_mode:

@@ -43,7 +43,7 @@ class _FakeMessages(object):
 class _FakeClient(object):
     """A stand-in for anthropic.Anthropic that bills a known amount per call."""
 
-    def __init__(self, input_tokens=1_000_000, output_tokens=0):
+    def __init__(self, input_tokens=250_000, output_tokens=0):
         self.messages = _FakeMessages(input_tokens, output_tokens)
 
     @property
@@ -118,7 +118,7 @@ def test_billed_calls_accumulate_and_then_the_cap_refuses(tmp_env, monkeypatch):
     """Two $1.00 calls fit under a $1.50 cap only because the ledger is
     cumulative; the third is refused before the client is touched."""
     _write_budget(llm.BUDGET_PATH, budget_usd=1.5)
-    client = _FakeClient(input_tokens=1_000_000, output_tokens=0)  # $1.00 on haiku-4-5
+    client = _FakeClient(input_tokens=250_000, output_tokens=0)  # $1.00 on opus-5-5 ($4/MTok in)
     _billed(monkeypatch, client)
 
     llm.complete("classify", "s", "u")
@@ -142,7 +142,7 @@ def test_one_oversized_call_cannot_jump_the_cap(tmp_env, monkeypatch):
     _billed(monkeypatch, client)
 
     with pytest.raises(llm.LLMBudgetExceeded):
-        llm.complete("proposal", "s", "u", max_tokens=2000)   # 2000 x $25/MTok = $0.05
+        llm.complete("proposal", "s", "u", max_tokens=2000)   # (2000 + headroom) x $20/MTok = $0.06
     assert client.calls == []
     assert llm.spend_usd() == 0.0
 
@@ -166,8 +166,10 @@ def test_fake_calls_never_consume_or_trip_the_budget(tmp_env, monkeypatch):
 
 
 def test_the_stop_pushes_once(tmp_env, monkeypatch):
-    _write_budget(llm.BUDGET_PATH, budget_usd=0.01)
-    _billed(monkeypatch, _FakeClient(input_tokens=1_000_000))
+    # $0.05 so the first call's worst case ($0.0365 on opus-5-5 with the
+    # thinking headroom) still fits and the refusals come after it.
+    _write_budget(llm.BUDGET_PATH, budget_usd=0.05)
+    _billed(monkeypatch, _FakeClient(input_tokens=250_000))
     llm.complete("classify", "s", "u")   # a cheap-looking call that bills $1.00
     for _ in range(3):
         with pytest.raises(llm.LLMBudgetExceeded):
@@ -179,7 +181,7 @@ def test_the_stop_pushes_once(tmp_env, monkeypatch):
 
 def test_the_warning_fires_once_on_the_way_up(tmp_env, monkeypatch):
     _write_budget(llm.BUDGET_PATH, budget_usd=2.5, warn_at_fraction=0.8)
-    client = _FakeClient(input_tokens=1_000_000)   # $1.00 a call
+    client = _FakeClient(input_tokens=250_000)   # $1.00 a call
     _billed(monkeypatch, client)
 
     llm.complete("classify", "s", "u")             # $1.00, under 80% of $2.50
@@ -196,7 +198,7 @@ def test_the_total_survives_a_fresh_process(tmp_env, monkeypatch):
     total would reset every five minutes and bound nothing. The running total
     lives in the shared store, which is the modal.Dict there."""
     _write_budget(llm.BUDGET_PATH, budget_usd=5.0)
-    _billed(monkeypatch, _FakeClient(input_tokens=1_000_000))
+    _billed(monkeypatch, _FakeClient(input_tokens=250_000))
     llm.complete("classify", "s", "u")
 
     llm._SPEND["process"] = 0.0          # the next container knows nothing
@@ -205,7 +207,7 @@ def test_the_total_survives_a_fresh_process(tmp_env, monkeypatch):
 
 def test_a_store_outage_degrades_to_the_process_and_the_ledger(tmp_env, monkeypatch):
     _write_budget(llm.BUDGET_PATH, budget_usd=5.0)
-    _billed(monkeypatch, _FakeClient(input_tokens=1_000_000))
+    _billed(monkeypatch, _FakeClient(input_tokens=250_000))
     llm.complete("classify", "s", "u")
 
     def _broken():
@@ -221,15 +223,15 @@ def test_ledger_spend_counts_billed_rows_only(tmp_env, monkeypatch):
     monkeypatch.setenv("LLM_FAKE", "1")
     llm.complete("draft", "s" * 4000, "u" * 4000)
     assert llm.ledger_spend_usd() == 0.0
-    _billed(monkeypatch, _FakeClient(input_tokens=1_000_000))
+    _billed(monkeypatch, _FakeClient(input_tokens=250_000))
     llm.complete("classify", "s", "u")
     assert llm.ledger_spend_usd() == pytest.approx(1.0)
 
 
 def test_reset_spend_zeroes_the_counter_and_rearms_the_alerts(tmp_env, monkeypatch):
-    _write_budget(llm.BUDGET_PATH, budget_usd=0.01)
-    _billed(monkeypatch, _FakeClient(input_tokens=1_000_000))
-    llm.complete("classify", "s", "u")           # bills $1.00 against a $0.01 cap
+    _write_budget(llm.BUDGET_PATH, budget_usd=0.05)
+    _billed(monkeypatch, _FakeClient(input_tokens=250_000))
+    llm.complete("classify", "s", "u")           # bills $1.00 against a $0.05 cap
     with pytest.raises(llm.LLMBudgetExceeded):
         llm.complete("classify", "s", "u")
     assert llm.spend_usd() == pytest.approx(1.0)
@@ -259,7 +261,7 @@ def test_the_warning_pushes_once_across_six_fresh_containers(tmp_env, monkeypatc
     llm._store().set(llm.SPEND_KEY, 8.5)          # past warn_at (0.8 x $10), under the cap
     for _run in range(6):
         _fresh_container()
-        llm.enforce_budget("classify", "claude-haiku-4-5", "s", "u", 50)
+        llm.enforce_budget("classify", "claude-opus-5-5", "s", "u", 50)
     assert len(pushes) == 1 and rows == ["warned"]
 
 
@@ -319,9 +321,10 @@ def test_the_default_sits_between_a_healthy_watch_and_a_runaway():
     """The cap is sized from modal_app's real tick frequencies, so a change to
     those has to come back through this number.
 
-    A healthy 48 hours is about $0.65 (the arithmetic is in shared/llm.py).
-    precall_tick and poller both run on */5, which is 576 runs in 48 hours; one
-    Opus proposal per run is $40 of drafts nobody asked for.
+    A healthy 48 hours is about $0.95 to $2 on claude-opus-5-5 (the arithmetic
+    is in shared/llm.py). precall_tick and poller both run on */5, which is 576
+    runs in 48 hours; one Opus 5.5 proposal per run is $32 of drafts nobody
+    asked for.
     """
     from services.reply_engine import modal_app
 
@@ -330,9 +333,9 @@ def test_the_default_sits_between_a_healthy_watch_and_a_runaway():
     runs_in_48h = int(48 * 60 / int(minute_field[2:]))
     assert runs_in_48h == 576
 
-    proposal_call = llm.estimate_cost("claude-opus-5", 6000, 1600)      # $0.07
-    runaway_48h = runs_in_48h * proposal_call                            # about $40
-    healthy_48h = 1.00                                                   # generous rounding of $0.65
+    proposal_call = llm.estimate_cost("claude-opus-5-5", 6000, 1600)    # $0.056
+    runaway_48h = runs_in_48h * proposal_call                            # about $32
+    healthy_48h = 2.00      # $0.95 at the reply caps, ~$2 with full thinking headroom
 
     assert llm.DEFAULT_BUDGET_USD >= 5 * healthy_48h, (
         "the cap would trip during a healthy watch and the watch would prove nothing")
@@ -361,7 +364,9 @@ import time
 
 
 def _projected(role="classify", system="s", user="u", max_tokens=800):
-    return llm.projected_cost_usd(llm.model_for(role), system, user, max_tokens)
+    """What complete() reserves: the reply cap plus the thinking headroom."""
+    return llm.projected_cost_usd(llm.model_for(role), system, user,
+                                  max_tokens + llm.THINKING_HEADROOM_TOKENS)
 
 
 class _ScriptedMessages(object):
@@ -428,7 +433,7 @@ def test_racing_threads_cannot_exceed_the_cap(tmp_env, monkeypatch):
     cap = round(per_call * 9.5, 6)
     _write_budget(llm.BUDGET_PATH, budget_usd=cap)
     input_tokens = llm._approx_tokens("s") + llm._approx_tokens("u")
-    client = _ScriptedClient([(input_tokens, 1000)], delay=0.02)
+    client = _ScriptedClient([(input_tokens, 1000 + llm.THINKING_HEADROOM_TOKENS)], delay=0.02)
     _billed(monkeypatch, client)
 
     start = threading.Barrier(40)

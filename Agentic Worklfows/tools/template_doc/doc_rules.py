@@ -7,19 +7,21 @@ Python 3.9, standard library only.
 import re
 from collections import OrderedDict
 
-# First replies to these question types are never approved from the doc (the
-# doc says so on each of them). Every first reply is a draft Lorenzo sends
-# himself (approval.py, FIRST_REPLY_LOCK_REASON); these were held back from
-# "done" before that rule and still are.
-HELD_QT = ("other", "referral")
-HELD_NOTE = "Saying 'done' does not approve this one."
+# No first reply is approved from the doc (Lorenzo, 2026-09-24: first replies
+# will be rebuilt from his own sent replies, so he approves none of today's
+# text). Every first_reply.* id, main text and every variant, is held: saying
+# "done" never approves it, and the doc says so on each one. Every first reply
+# is also a draft Lorenzo sends himself (approval.py, FIRST_REPLY_LOCK_REASON).
+# (Before 2026-09-24 only the "other" and "referral" first replies were held.)
+HELD_SECTION = "first_reply"
+HELD_INTRO = ("Not approved yet. These stay drafts you write yourself until they are rebuilt from your own "
+              "replies.")
+HELD_NOTE = "Not approved yet. This one stays a draft you write yourself until it is rebuilt from your own replies."
 
 
 def is_held(template_id):
-    """True for first_reply.<offer>.<held question type>.full."""
-    parts = (template_id or "").split(".")
-    return (len(parts) == 4 and parts[0] == "first_reply" and parts[3] == "full"
-            and parts[2] in HELD_QT)
+    """True for every first_reply.* id: saying "done" never approves one."""
+    return (template_id or "").startswith(HELD_SECTION + ".")
 
 
 # Spliced lines: a cadence email "cadence.<name>" carries a placeholder that

@@ -85,6 +85,8 @@ ENDPOINTS = (
     ("GET", r"lead-labels", "read", None, False),
     ("GET", r"webhooks", "read", None, False),
     ("GET", r"subsequences", "read", None, False),
+    ("GET", r"lead-lists", "read", None, False),
+    ("GET", r"background-jobs/[^/]+", "read", None, False),
     # --- writes (write key, only after guard_write said live)
     ("POST", r"emails/reply", "write", "emails:create", True),
     ("POST", r"leads/update-interest-status", "write", None, False),
@@ -100,6 +102,8 @@ ENDPOINTS = (
     ("POST", r"subsequences", "write", None, False),
     ("POST", r"block-lists-entries", "write", None, False),
     ("POST", r"inbox-placement-tests", "write", None, False),
+    ("POST", r"lead-lists", "write", None, False),
+    ("POST", r"leads/move", "write", None, False),
 )
 # The broader scopes the reference lists as also allowing a verified one. The
 # leads/list page lists leads:read alone, so it has no row here.
@@ -351,9 +355,13 @@ class Instantly(object):
             if scope_error is not None:
                 raise scope_error
             if resp.status_code >= 400:
-                raise InstantlyError(
+                err = InstantlyError(
                     "Instantly %s %s -> HTTP %s: %s" % (method, path, resp.status_code, resp.text[:400])
                 )
+                # Callers that must tell a 409 (a leads/move job already
+                # running) from any other refusal read this, not the text.
+                err.status_code = resp.status_code
+                raise err
             if not resp.content:
                 return {}
             try:
@@ -618,6 +626,25 @@ class Instantly(object):
     def subsequences_list(self, parent_campaign: str, limit: int = 100) -> Dict[str, Any]:
         return self._get("subsequences", {"parent_campaign": parent_campaign, "limit": limit})
 
+    def list_lead_lists(self, search: Optional[str] = None, limit: int = 100,
+                        starting_after: Optional[str] = None) -> Dict[str, Any]:
+        """GET /lead-lists: ``{"items": [{id, organization_id, name,
+        timestamp_created, has_enrichment_task, owned_by}], "next_starting_after"}``
+        (developer.instantly.ai, read 2026-09-25). ``search`` is a substring
+        match, so callers compare ``name`` exactly themselves."""
+        return self._get("lead-lists", {"search": search, "limit": limit,
+                                        "starting_after": starting_after})
+
+    def get_background_job(self, job_id: str, data_fields: Optional[str] = None) -> Dict[str, Any]:
+        """GET /background-jobs/{id}: ``{id, workspace_id, user_id, type,
+        entity_id, entity_type, data, progress (0-100), status, created_at,
+        updated_at}``; ``status`` is one of pending, in-progress, success,
+        failed, draining, paused, cancelled (developer.instantly.ai, read
+        2026-09-25; not yet seen live). ``data_fields`` is the reference's
+        comma-separated list of ``data`` keys to include, e.g.
+        ``"moved_leads,moved_lead_emails"`` for a move job."""
+        return self._get("background-jobs/%s" % quote(str(job_id), safe=""), {"data_fields": data_fields})
+
     # --------------------------------------------------------------- writes
     def _write(self, action: str, payload: Dict[str, Any], do: Callable[[], Any], details: Optional[Dict[str, Any]] = None) -> Any:
         guard = settings.guard_write("instantly", action, payload)
@@ -868,6 +895,54 @@ class Instantly(object):
         payload = dict(payload or {})
         return self._write("inbox_placement_create", payload,
                            lambda: self._post("inbox-placement-tests", payload))
+
+    def create_lead_list(self, name: str) -> Any:
+        """POST /lead-lists {"name"}. The schema is ``additionalProperties:
+        false`` with ``name`` the only required field; the answer is the
+        LeadList object (``id``, ``name``, ...)."""
+        name = (name or "").strip()
+        if not name:
+            raise InstantlyError("create_lead_list needs a name")
+        body = {"name": name}
+        return self._write("create_lead_list", body, lambda: self._post("lead-lists", body))
+
+    def move_leads(self, lead_ids: List[str], campaign: Optional[str] = None,
+                   list_id: Optional[str] = None, to_campaign_id: Optional[str] = None,
+                   to_list_id: Optional[str] = None, copy_leads: bool = False,
+                   limit: Optional[int] = None) -> Any:
+        """POST /leads/move: up to 100 lead ids from ONE source (``campaign``
+        or ``list_id``, which the API requires alongside ``ids``) to ONE
+        destination (``to_campaign_id`` or ``to_list_id``).
+
+        The answer is a BackgroundJob (``id``, ``status``, ``progress``); poll
+        get_background_job(id). ``limit`` is the reference's "maximum leads to
+        move", sent as a server-side cap (normally len(lead_ids)); whether it
+        is honoured alongside ``ids`` is unverified. A second move while one runs has been seen to
+        answer 409 (InstantlyError.status_code). Never retried here: a
+        rejected call can still have moved some leads, so the caller re-reads
+        before trying again. PATCHing a lead's ``campaign`` does NOT move it
+        (it silently no-ops), which is why this endpoint exists here."""
+        ids = [str(i) for i in (lead_ids or []) if i]
+        if not ids:
+            raise InstantlyError("move_leads needs at least one lead id")
+        if len(ids) > 100:
+            raise InstantlyError("move_leads takes at most 100 ids per call (got %d)" % len(ids))
+        if bool(campaign) == bool(list_id):
+            raise InstantlyError("move_leads needs exactly one source: campaign or list_id")
+        if bool(to_campaign_id) == bool(to_list_id):
+            raise InstantlyError("move_leads needs exactly one destination: to_campaign_id or to_list_id")
+        body = {"ids": ids, "copy_leads": bool(copy_leads)}  # type: Dict[str, Any]
+        if campaign:
+            body["campaign"] = campaign
+        if list_id:
+            body["list_id"] = list_id
+        if to_campaign_id:
+            body["to_campaign_id"] = to_campaign_id
+        if to_list_id:
+            body["to_list_id"] = to_list_id
+        if limit is not None:
+            body["limit"] = int(limit)
+        return self._write("move_leads", body, lambda: self._post("leads/move", body))
 
     def move_to_subsequence(self, lead_id: str, subsequence_id: str) -> Any:
         """Instantly moves ONE lead per call: POST /leads/subsequence/move

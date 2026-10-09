@@ -6,7 +6,7 @@ Processes leads from Google Sheets CRM and adds AI-generated personalizations.
 This script:
 1. Reads leads from HVAC Leads or Roofing Leads sheets
 2. Filters to leads with research data but no personalization
-3. Generates personalizations using Haiku (90% cost savings) with GPT-4o fallback
+3. Generates personalizations with Claude Opus 5.5 (engine key "haiku", name kept) with GPT-4o fallback
 4. Writes results back to sheet
 5. Reports cost and quality stats
 
@@ -237,7 +237,7 @@ class BatchPersonalizer:
         print(f"   Engine: {estimate['engine']}")
         print(f"   Expected cost: ${estimate['total_cost']:.4f}")
         print(f"   Cost per lead: ${estimate['cost_per_lead']:.6f}")
-        print(f"   Haiku: {estimate['haiku_count']}, GPT-4o: {estimate['gpt4o_count']}, Template: {estimate['fallback_count']}")
+        print(f"   Claude (Opus 5.5): {estimate['haiku_count']}, GPT-4o: {estimate['gpt4o_count']}, Template: {estimate['fallback_count']}")
         print()
 
         # Get worksheet and column index
@@ -279,7 +279,7 @@ class BatchPersonalizer:
         s = self.stats
 
         print(f"Processed: {s['total_processed']} leads in {elapsed_seconds:.1f}s")
-        print(f"  Haiku success: {s['haiku_success']} ({s['haiku_success']/s['total_processed']*100:.1f}%)")
+        print(f"  Claude (Opus 5.5) success: {s['haiku_success']} ({s['haiku_success']/s['total_processed']*100:.1f}%)")
         print(f"  GPT-4o fallback: {s['gpt4o_fallback']} ({s['gpt4o_fallback']/s['total_processed']*100:.1f}%)")
         print(f"  Template fallback: {s['template_fallback']} ({s['template_fallback']/s['total_processed']*100:.1f}%)")
         print(f"  Failures: {s['failures']} ({s['failures']/s['total_processed']*100:.1f}%)")
@@ -340,7 +340,7 @@ def main():
     # Check API keys
     if not os.getenv('ANTHROPIC_API_KEY') and not os.getenv('OPENAI_API_KEY'):
         print("✗ Error: No API keys found in .env")
-        print("   Set ANTHROPIC_API_KEY (for Haiku) or OPENAI_API_KEY (for GPT-4o)")
+        print("   Set ANTHROPIC_API_KEY (for Claude Opus 5.5) or OPENAI_API_KEY (for GPT-4o)")
         sys.exit(1)
 
     # Run batch

@@ -2,7 +2,7 @@
 
 **Purpose:** Generate 5-10 LinkedIn posts per day across 5 content pillars, output to Google Sheets content calendar
 **When to use:** Weekly (or as needed) to fill the content queue
-**Cost:** ~$0.01-0.03 per post using Claude (Haiku for bulk, Opus for premium posts)
+**Cost:** ~$0.02 per post on Claude Opus 5.5 at low effort (rough estimate; every model call runs on Opus 5.5 since 2026-09-25)
 
 ---
 
@@ -85,7 +85,7 @@ Generates a batch of LinkedIn posts optimized for engagement and personal brandi
 | `--posts-per-day` | 7 | Posts per day (5-10 range) |
 | `--pillar` | all | Focus on specific pillar (1-5 or "all") |
 | `--sheet-id` | from .env | Google Sheet ID for content calendar |
-| `--model` | haiku | AI model (haiku = cheap, opus = premium) |
+| `--model` | `claude-opus-5-5` | Model id sent to the API. Leave the default: the call sends `output_config.effort`, which Haiku rejects |
 | `--dry-run` | false | Preview without writing to sheet |
 
 ---

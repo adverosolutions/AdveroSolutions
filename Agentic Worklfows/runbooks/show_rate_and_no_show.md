@@ -38,33 +38,60 @@ at once (a missed tick, a hold that kept R3 pending until R4 came due), only the
 still go is sent and the earlier ones close as `superseded`.
 
 ## No-show recovery (no_show.py)
-S = scheduled start. "10:00 lead" = 10:00 in the lead's zone (CT when unknown).
+S = scheduled start. "10:00 lead" = 10:00 in the lead's zone (CT when unknown). Business days skip
+Saturday and Sunday. Timing and copy as Lorenzo approved them on 2026-09-24.
 
 | Touch | When |
 | --- | --- |
-| N1 `ns_still_on_email` | S+3, before the flag. Only with Zoom join data (meeting started or host joined) and no lead join. Once per call, never after S+10 |
+| N1 `ns_still_on_email` | S+5, before the flag. Only with Zoom join data (meeting started or host joined) and no lead join. Once per call, never at or after S+10 |
 | N3 `ns_reschedule_email` | the later of the flag and S+25 min, two fresh slots |
-| N4 `ns_d1_email` | next business day, 10:00 lead |
-| N5 `ns_d3_value_email` | 3 business days after, 10:00 lead. Skipped (`no_niche_point`) with no niche/offer on file: never a generic line |
-| N6 `ns_d7_yes_no_email` | 7 days after, next weekday, 10:00 lead |
-| N7 `ns_d14_breakup_email` | 14 days after, next weekday, 10:00 lead, then nurture |
-| N8 `ns_third_miss_email` | third miss only, S+25 |
+| N4 `ns_d1_email` | 1 business day after, 10:00 lead, two fresh slots |
+| N5 `ns_d2_value_email` | 2 business days after, 10:00 lead, two fresh slots. Skipped (`no_niche_point`) with no niche/offer on file: never a generic line |
+| N9 `ns_d3_retry_email` | 3 business days after, 10:00 lead, two fresh slots |
+| N6 `ns_d5_yes_no_email` | 5 business days after, 10:00 lead, two fresh slots |
+| N7 `ns_d7_breakup_email` | 7 business days after, 10:00 lead, then nurture |
+| N8 `ns_third_miss_email` | third miss only, S+25, no slots |
 
 Repeat rules (SOP-005 counter per contact):
-- First miss: N1, N3, N4, N5, N6, N7, then `nurture.enroll(no_show_no_rebook)` and stage Follow Up Later.
-- Second miss: N1, N3 `.repeat` at S+25, N6 three business days after, then nurture (+ pattern note).
-- Third miss: N1, N8 at S+25, then nurture and stage Lost.
+- First miss: N1, N3, N4, N5, N9, N6, N7, then `nurture.enroll(no_show_no_rebook)` and stage Follow Up Later.
+- Second miss: N1, N3 `.repeat` ("Missed you again") at S+25, N6 three business days after, then nurture (+ pattern note).
+- Third miss: N1, N8 ("Closing this out") at S+25, then nurture and stage Lost.
 
-Slot emails claim two fresh times the lead was never offered, and give back the previous offer once
-they reach the lead, so "those times got taken" is true. N4/N5/N6 go out only after an earlier slot
-email in the same ladder reached the lead (else `no_prior_offer`).
+Slot emails claim two fresh times the lead was never offered. Only the emails that say "those times
+got taken" (N4/N5/N6) give the earlier times back, once they reach the lead; they go out only after an
+earlier slot email in the same ladder reached the lead (else `no_prior_offer`). N9 does not say the
+earlier times were taken, so it has no such condition and gives nothing back: after N9 the lead holds
+two pairs (N9's and N5's, or N4's when N5 was skipped) until N6 reaches them or the times pass.
+
+No two emails of a ladder reach the lead less than 8 hours apart:
+- A late email (held, deferred, waiting for times, or the tick was down) never goes out once the next
+  email of its ladder is due within 8 hours or already went out: it closes as `superseded` and the
+  next one carries on.
+- No email goes out less than 8 hours after an earlier email of its ladder reached the lead (sent,
+  or maybe sent): it closes as `superseded` too. This is the no-show marked by hand, the go-live path
+  while the calendar is on Google Meet: N3 goes when the tick picks up the flag, and N4, due at 10:00
+  lead time that same morning, would call N3's times taken minutes after offering them. N4 closes and
+  N5 goes on its own day ("the last two times got taken" is true: N3's times reached the lead, and
+  N5 gives them back). Marked less than 8 hours before day 3's email (N9) is due, or later, that email
+  goes first and N3 closes instead (the rule above).
+- The ladder's last email (N7; N6 on a second miss) is never closed by this: it waits until 8 hours
+  after the email before it, moved into 07:00-19:00 CT and lead time, so the stage move and the
+  nurture hand-off still run. A second miss marked on the morning N6 is due gets N3 at once and N6
+  eight hours later.
+- On time the second rule never fires: calls start 12:00-17:45 CT, so N3 goes by 18:10 CT, and N4
+  (N6 on a second miss) goes at 07:00 CT the next business day at the earliest, at least 12 h 50 min
+  later. The day emails after that are a business day apart, except for leads in Asia and Australia:
+  the CT and lead send windows overlap only an hour or three each CT afternoon, so two day emails can
+  land on the same afternoon (Tokyo, Wednesday call: day 1 and day 2 both on Monday 17:00 CT). The
+  earlier one closes as `superseded` under the first rule and the later one goes.
 
 Stops: any reply from the lead since the call's start stops the rest (`replied`). A rebooking
 cancels it (`rebooked`). A late join reverses the flag (`late_show`).
 
 One email per lead per run: the tick sends ladder emails only in its recovery sweep (never also
-inside the per-call check), and the sweep stops at the first email that reaches a lead. A no-show
-marked by hand the next morning gets N3 now and N4 on a later tick, never both in one minute.
+inside the per-call check), and the sweep stops at the first email that reaches a lead. Across runs
+the 8-hour rule above applies: a no-show marked by hand the next morning gets N3 on that tick, and N4
+closes when it comes due.
 
 ## Schedules (section 4 owns the schedule file)
 | Command | When |
@@ -79,7 +106,7 @@ Both take one lock, so they never overlap.
 | --- | --- | --- |
 | `would_do` | recorded in shadow, nothing sent | review `.tmp/shadow_log.jsonl` |
 | `sent` | delivered | none |
-| `deferred` | due outside the send window, stays pending | none, goes next window |
+| `deferred` | due outside the send window, or (`spacing_wait`) the ladder's last email re-armed 8 h after the one before it; stays pending | none, goes next window / at the new time |
 | `needs_attention` | thread lookup held it (ambiguous/foreign lead row, broken thread, recipient mismatch, no lead email) | fix the data; it stays pending |
 | `maybe_sent` | the write request went out and failed or returned nothing: it may have been delivered | **check the thread or GHL conversation by hand. Never retried automatically** (a retry is a duplicate email) |
 
@@ -90,9 +117,11 @@ need his approval before anything goes out:
 - `show_rate.confirm_email.<niche>_<offer>`, `show_rate.reminder_24h_email`,
   `show_rate.reminder_morning_email`, `show_rate.reminder_1h_email`
 - `no_show.ns_still_on_email`, `no_show.ns_reschedule_email`, `no_show.ns_reschedule_email.repeat`,
-  `no_show.ns_d1_email`, `no_show.ns_d3_value_email.<niche>_<offer>` (cleaning, bookkeeping,
-  recruiting only), `no_show.ns_d7_yes_no_email`, `no_show.ns_d14_breakup_email`,
-  `no_show.ns_third_miss_email`
+  `no_show.ns_d1_email`, `no_show.ns_d2_value_email.<niche>_<offer>` (cleaning, bookkeeping,
+  recruiting only), `no_show.ns_d3_retry_email`, `no_show.ns_d5_yes_no_email`,
+  `no_show.ns_d7_breakup_email`, `no_show.ns_third_miss_email`
+  (renamed 2026-09-24 from `ns_d3_value_email`, `ns_d7_yes_no_email`, `ns_d14_breakup_email`; an
+  approval recorded under an old id does not carry over)
 
 Unapproved or changed text is held, never sent.
 

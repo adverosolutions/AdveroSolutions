@@ -528,7 +528,7 @@ def already_drafted(store, appointment_id: Any, call_date: str) -> bool:
 
     Checked by the caller BEFORE the model is invoked. The claim used to be
     taken inside ``deliver()``, after ``gather_inputs`` (two Instantly GETs) and
-    ``build_proposal`` (a billed claude-opus-5 turn) had already run, so the
+    ``build_proposal`` (a billed claude-opus-5-5 turn) had already run, so the
     5-minute tick paid for a proposal on every pass of the whole proposal window
     and threw all but the first away.
     """

@@ -1,15 +1,15 @@
 """
-Identity-Based Personalization Generator - Claude Haiku Version
-Creates identity-based personalizations for cold emails using Claude Haiku 4.5.
-90% cost reduction compared to GPT-4o while maintaining quality.
+Identity-Based Personalization Generator
+Creates identity-based personalizations for cold emails using Claude Opus 5.5
+(low effort). The "_haiku" filename is historical: the model moved from Haiku
+4.5 to Opus 5.5 on 2026-09-25.
 
 Generates personalizations that compliment decision maker achievements, background,
 certifications, awards, or company milestones - ending with "figured I'd reach out."
 
-Cost comparison (per 1,000 personalizations):
-- GPT-4o: ~$2.00
-- Claude Haiku 4.5: ~$0.20
-- Savings: 90%
+Cost (per 1,000 personalizations, rough estimate, not measured):
+- Claude Opus 5.5 at low effort: ~$15 ($4/$20 per MTok, ~2k input tokens,
+  ~300 output tokens including thinking)
 """
 
 import os
@@ -26,6 +26,21 @@ logger = logging.getLogger(__name__)
 
 # Initialize Anthropic client
 client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+
+# Every model call runs on Claude Opus 5.5 (Lorenzo, 2026-09-25). Pinned here on
+# purpose instead of reading ANTHROPIC_MODEL: the local .env still sets that to
+# an old Haiku id, and Haiku would reject the effort parameter below.
+MODEL = "claude-opus-5-5"
+# Opus 5.5 always thinks: `thinking` can't be disabled and temperature/top_p/
+# top_k return a 400. Effort is the control; "low" keeps thinking short on this
+# one-line call. Thinking counts toward max_tokens, so leave room for it.
+EFFORT = "low"
+THINKING_HEADROOM_TOKENS = 1024
+
+
+def _text_of(response) -> str:
+    """Join the text blocks; a thinking block may come first."""
+    return "".join(b.text for b in response.content if getattr(b, "type", None) == "text")
 
 # System prompt for identity-based personalization
 SYSTEM_PROMPT = """You are a cold email personalization writer. Your job is to generate an opening line for a cold email to home service business owners (roofing, HVAC, plumbing) that compliments something impressive about their background, achievements, or business journey.
@@ -145,7 +160,7 @@ def generate_identity_personalization(
 ) -> Optional[str]:
     """
     Generate an identity-based personalization from research data.
-    Uses Claude Haiku 4.5 for 90% cost savings vs GPT-4o.
+    Uses Claude Opus 5.5 at low effort.
 
     Args:
         research_data: Combined research data (decision maker + company details)
@@ -168,18 +183,24 @@ Research data:
 {research_data}"""
 
     try:
-        # Generate personalization using Claude Haiku 4.5
+        # Generate personalization using Claude Opus 5.5
         response = client.messages.create(
-            model=os.getenv('ANTHROPIC_MODEL', 'claude-haiku-4-5'),
-            max_tokens=150,
-            temperature=0.7,
+            model=MODEL,
+            max_tokens=150 + THINKING_HEADROOM_TOKENS,
+            output_config={"effort": EFFORT},
             system=SYSTEM_PROMPT,
             messages=[
                 {"role": "user", "content": user_message}
             ]
         )
 
-        personalization = response.content[0].text.strip()
+        personalization = _text_of(response).strip()
+
+        # A refusal or a reply cut off at max_tokens (thinking included) is
+        # not a personalization.
+        if not personalization or response.stop_reason in ("refusal", "max_tokens"):
+            logger.warning(f"No usable personalization for {company_name} (stop_reason={response.stop_reason})")
+            return None
         logger.info(f"Generated personalization for {company_name}: {personalization}")
 
         # Clean and validate the personalization
@@ -275,7 +296,7 @@ if __name__ == "__main__":
       - 4.8-star rating
     """
 
-    print("Testing Claude Haiku Identity Personalization Generator")
+    print("Testing Claude Opus 5.5 Identity Personalization Generator")
     print("=" * 60)
 
     result = generate_identity_personalization(

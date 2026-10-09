@@ -315,7 +315,7 @@
       "module": "jobs.appointments_tick",
       "tier": "sales",
       "runtime": "modal",
-      "purpose": "The \"I'm on\" nudge 3 minutes after a booked call starts (S5 N1); does nothing when no call is on.",
+      "purpose": "The \"I'm on\" nudge 5 minutes after a booked call starts (S5 N1); does nothing when no call is on.",
       "command": "python3 -m jobs.appointments_tick --no-show-watch",
       "cron_ct": "* 12-18 * * 1-5",
       "timezone": "America/Chicago",

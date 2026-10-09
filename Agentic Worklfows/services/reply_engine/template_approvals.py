@@ -138,9 +138,7 @@ VARIANT_TITLES = {
     "no_alternatives": "no free alternative time",
     "no_proposed_time": "the lead's time could not be read",
     "dated": "the refused time and the alternatives fall in different weeks (example dates)",
-    "no_loom_url": "no Loom URL configured (the sentence is dropped)",
     "no_call_link": "no call link on file (the sentence says the link is on the calendar invite)",
-    "no_call_link_or_loom": "no call link on file and no Loom URL configured",
     "no_booking_link": "no booking link configured",
     "subject": "subject line (thread subject, and the fallback when the thread has none)",
     "value_formats": "how times and slots are written",
@@ -712,7 +710,7 @@ def _booking_entries() -> List[Dict[str, Any]]:
 def _appointment(niche: str, offer: str, missing: bool = False, lead_tz: Optional[str] = None,
                  no_link: bool = False) -> Dict[str, Any]:
     """``missing``: no first name or company on file. ``no_link``: no call
-    link on file (its own variant, no_call_link, like no_loom_url)."""
+    link on file (its own variant, no_call_link)."""
     appt = {"niche": niche, "offer": offer, "booking_url": S_BOOKING, "id": "catalogue"}
     if not missing:
         appt.update({"first_name": S_FIRST, "company": S_COMPANY})
@@ -740,50 +738,15 @@ def _group_by_combo(texts: Dict[Tuple[str, str], Any]) -> List[Tuple[str, Any, L
     return [(".%s_%s" % c, texts[c], [c]) for c in combos]
 
 
-def loom_sentence() -> Optional[str]:
-    """The Loom sentence show_rate.loom_line() emits, with {loom_url}, read from
-    its code constants so no environment variable has to be set to see it."""
-    from services.reply_engine import show_rate
-
-    found = [c for c in show_rate.loom_line.__code__.co_consts
-             if isinstance(c, str) and c.count("%s") == 1 and " " in c and not c.startswith("LOOM_URL")]
-    if len(found) != 1:
-        return None
-    return found[0].replace("%s", "{loom_url}")
-
-
 SHOW_RATE_LEAD_FACING = ("confirm_email", "reminder_24h_email", "reminder_morning_email", "reminder_1h_email")
-NO_SHOW_LEAD_FACING = ("ns_still_on_email", "ns_reschedule_email", "ns_d1_email", "ns_d3_value_email",
-                       "ns_d7_yes_no_email", "ns_d14_breakup_email", "ns_third_miss_email")
-LOOM_ANCHOR = "If anything comes up before then"
+NO_SHOW_LEAD_FACING = ("ns_still_on_email", "ns_reschedule_email", "ns_d1_email", "ns_d2_value_email",
+                       "ns_d3_retry_email", "ns_d5_yes_no_email", "ns_d7_breakup_email", "ns_third_miss_email")
 
 
 def _with_subject(copy: Dict[str, Any]) -> str:
     subject = copy.get("subject")
     body = copy.get("body") or ""
     return ("Subject: %s\n\n%s" % (subject, body)) if subject else body
-
-
-def _put_loom(text: str, niche: str, loom: str) -> str:
-    """confirm_email with the Loom sentence in place as '{loom_url}' wording,
-    whatever the environment holds; raises when it cannot be placed."""
-    from services.reply_engine import show_rate
-
-    real = show_rate.loom_line(niche)
-    if real:
-        if real not in text:
-            raise ValueError("the configured Loom sentence is not where confirm_email puts it")
-        return text.replace(real, loom, 1)
-    if LOOM_ANCHOR not in text:
-        raise ValueError("confirm_email no longer has the anchor the Loom line sits before")
-    return text.replace(LOOM_ANCHOR, loom + "\n\n" + LOOM_ANCHOR, 1)
-
-
-def _drop_loom(text: str, niche: str) -> str:
-    from services.reply_engine import show_rate
-
-    real = show_rate.loom_line(niche)
-    return text.replace(real + "\n\n", "", 1) if real else text
 
 
 def _show_rate_entries() -> List[Dict[str, Any]]:
@@ -798,9 +761,6 @@ def _show_rate_entries() -> List[Dict[str, Any]]:
         base = "show_rate.%s" % key
 
         def build(key=key, base=base):
-            loom = loom_sentence() if key == "confirm_email" else None
-            if key == "confirm_email" and not loom:
-                raise ValueError("the Loom sentence could not be read from show_rate.loom_line")
             mapping = _base_mapping()
             mapping[show_rate.fmt_when(start, None)] = "{when_ct}"
             mapping[show_rate.fmt_time_only(start)] = "{time_ct}"
@@ -819,14 +779,6 @@ def _show_rate_entries() -> List[Dict[str, Any]]:
                     tz_map.pop(show_rate.fmt_time_only(start))
                     variants.append(("lead_in_other_timezone", _swap(render(lead_tz=LEAD_TZ), tz_map)))
                 main = _swap(main_raw, mapping)
-                if key == "confirm_email":
-                    main = _put_loom(main, niche, loom)
-                    variants = [(n, _put_loom(t, niche, loom)) for n, t in variants]
-                    variants.append(("no_loom_url", _swap(_drop_loom(main_raw, niche), mapping)))
-                    # both optional links missing at once: its own wording, so
-                    # it needs its own variant (no single one above shows it)
-                    variants.append(("no_call_link_or_loom",
-                                     _swap(_drop_loom(render(no_link=True), niche), mapping)))
                 texts[(niche, offer)] = (main, tuple(variants))
             entries = []
             for suffix, (main, variants), combos in _group_by_combo(texts):
@@ -861,7 +813,7 @@ def _no_show_entries() -> List[Dict[str, Any]]:
             mapping[show_rate.fmt_time_only(start)] = "{time_ct}"
             texts = {}  # type: Dict[Tuple[str, str], Any]
             for niche, offer in NICHE_COMBOS:
-                if key == "ns_d3_value_email" and niche not in show_rate.NICHES:
+                if key == "ns_d2_value_email" and niche not in show_rate.NICHES:
                     continue  # no approved niche line without a campaign: N5 is skipped, never generic
                 def render(slots_text=S_SLOTS_TEXT, **kw):
                     return _swap(_with_subject(no_show.render(key, _appointment(niche, offer, **kw), start,

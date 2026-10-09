@@ -1,6 +1,7 @@
 """
 Icebreaker Generator - Creates personalized email icebreakers from research data
-Uses Claude Haiku for cost-efficient generation (~$0.0002/icebreaker).
+Uses Claude Opus 5.5 at low effort (every model call runs on Opus 5.5 since
+2026-09-25; rough estimate ~$0.01/icebreaker, not yet measured).
 """
 
 import os
@@ -17,6 +18,18 @@ logging.basicConfig(level=os.getenv('LOG_LEVEL', 'INFO'))
 logger = logging.getLogger(__name__)
 
 client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+
+MODEL = "claude-opus-5-5"
+# Opus 5.5 always thinks: `thinking` can't be disabled and temperature/top_p/
+# top_k return a 400. Effort is the control; "low" keeps thinking short on this
+# one-line call. Thinking counts toward max_tokens, so leave room for it.
+EFFORT = "low"
+THINKING_HEADROOM_TOKENS = 1024
+
+
+def _text_of(response) -> str:
+    """Join the text blocks; a thinking block may come first."""
+    return "".join(b.text for b in response.content if getattr(b, "type", None) == "text")
 
 EXAMPLE_ICEBREAKERS = [
     "Shifting from 14 years in restaurant management to nearly three decades leading a service business shows serious entrepreneurial grit—respect that kind of pivot, figured I'd reach out.",
@@ -109,7 +122,7 @@ def generate_icebreaker(
     industry: str
 ) -> Optional[str]:
     """
-    Generate a personalized icebreaker from research data using Claude Haiku.
+    Generate a personalized icebreaker from research data using Claude Opus 5.5.
     """
     examples_text = "\n".join([f"- {ex}" for ex in random.sample(EXAMPLE_ICEBREAKERS, 10)])
 
@@ -147,14 +160,19 @@ Output ONLY the icebreaker. Nothing else."""
 
     try:
         response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=150,
-            temperature=0.7,
+            model=MODEL,
+            max_tokens=150 + THINKING_HEADROOM_TOKENS,
+            output_config={"effort": EFFORT},
             system="You generate personalized B2B email icebreakers for contractor outreach. You write like a peer who respects their journey. You always end with 'figured I'd reach out.' You are concise and specific.",
             messages=[{"role": "user", "content": prompt}],
         )
 
-        icebreaker = response.content[0].text.strip()
+        icebreaker = _text_of(response).strip()
+        # A refusal or a reply cut off at max_tokens (thinking included) must
+        # not reach validate_and_fix_icebreaker, which would pad it into a line.
+        if not icebreaker or response.stop_reason in ("refusal", "max_tokens"):
+            logger.warning(f"No usable icebreaker (stop_reason={response.stop_reason}), rejecting")
+            return None
 
         # Reject refusals or overly long responses — fall back to template
         word_count = len(icebreaker.split())
@@ -165,7 +183,7 @@ Output ONLY the icebreaker. Nothing else."""
             "i can't generate", "i cannot generate", "no verifiable",
             "recommendation:", "**recommendation", "not enough information",
         ]):
-            logger.warning("Haiku refused to generate icebreaker, rejecting")
+            logger.warning("Model refused to generate icebreaker, rejecting")
             return None
 
         # Hallucination guard: reject if icebreaker mentions a different company
@@ -240,7 +258,7 @@ if __name__ == "__main__":
 - **Structure**: Family-owned and operated
 - **Certifications/Awards**: BBB A+ rating"""
 
-    print("Testing icebreaker generator (Claude Haiku)...")
+    print("Testing icebreaker generator (Claude Opus 5.5)...")
     print("=" * 60)
 
     icebreaker = generate_icebreaker(

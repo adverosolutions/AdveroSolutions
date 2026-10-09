@@ -28,7 +28,7 @@ Cleans a Google Maps scrape and produces a Hunter-ready list.
 4. Strips websites to a base domain and **de-duplicates by domain**.
 5. Tags each business with a **city** from the GPS pin in its Google Maps link
    (offline — no API), and keeps the **Google Maps link** itself.
-6. **AI verification** (optional): asks Claude (`claude-haiku-4-5`) to classify
+6. **AI verification** (optional): asks Claude (`claude-opus-5-5`, low effort) to classify
    each remaining company and keeps only true LOCAL independent businesses —
    dropping chains, suppliers/dealers, and unrelated results the keyword list
    missed. One call per company, ~0.5s apart; failures keep the row. Removed

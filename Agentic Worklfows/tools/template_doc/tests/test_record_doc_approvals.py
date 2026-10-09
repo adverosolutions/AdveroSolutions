@@ -181,7 +181,8 @@ def _refused(plan):
 INDEX = ta.catalogue_index()
 ORDER = [e["id"] for e in ta.catalogue() if e.get("approvable")]  # the approvable ids, catalogue order
 APPROVABLE = set(ORDER)
-HELD = sorted(i for i in INDEX if doc_rules.is_held(i))
+# held: every approvable first reply (Lorenzo, 2026-09-24: none of today's first replies is approved)
+HELD = sorted(i for i in ORDER if doc_rules.is_held(i))
 # The catalogue's own structure, read from its ids: spliced line -> its cadence email
 SPLICED = dict((t, doc_rules.splice_host(t, APPROVABLE)) for t in ORDER if doc_rules.splice_host(t, APPROVABLE))
 HOSTS = [t for t in ORDER if t in set(SPLICED.values())]
@@ -313,6 +314,10 @@ def test_the_doc_approves_every_id_but_the_held_first_replies(doc, fresh, plain,
     # the one count check: the doc holds exactly the catalogue's approvable ids
     assert set(b["template_id"] for b in _template_blocks(doc)) == set(approvable) == set(fresh["hashes"])
     assert sorted(data["approvals"]) == sorted(set(approvable) - set(HELD))
+    # Lorenzo said "done" and still no first reply, main text or variant, is approved
+    first_replies = sorted(t for t in approvable if t.startswith("first_reply."))
+    assert first_replies and HELD == first_replies
+    assert not [t for t in data["approvals"] if t.startswith("first_reply")]
     assert set(data) == {"version", "approvals"}
     by = 'Lorenzo (Google Doc): "done", build %s' % doc["fingerprint"][:12]
     for tid in data["approvals"]:
@@ -434,8 +439,10 @@ def test_a_sentence_edited_inside_a_longer_line_refuses_every_email_carrying_it(
     also where it is a line of its own (the first replies' main texts), and
     exactly the emails route_doc lists as "also appears in"."""
     offer = _time_offer(doc)
-    longer = [b for b in _template_blocks(doc) if b["kind"] == "template_variant" and not doc_rules.is_held(
-        b["template_id"]) and any(offer in l and l != offer for l in b["text"].split("\n"))]
+    # Held or not makes no difference to the repeat rule; since 2026-09-24 every
+    # first reply (the only emails with this sentence) is held.
+    longer = [b for b in _template_blocks(doc) if b["kind"] == "template_variant"
+              and any(offer in l and l != offer for l in b["text"].split("\n"))]
     assert longer
     block = longer[0]
     tag, tid0 = block["tag"], block["template_id"]
@@ -585,14 +592,19 @@ def _note_index(lines, tag, startswith):
     raise AssertionError("no note %r in %s" % (startswith, tag))
 
 
-def _quoting_version(doc):
+def _quoting_version(doc, shared=False):
     """A version block shown as one "Instead of" change, of an email that is
-    not held and has no spliced lines."""
+    not held and has no spliced lines. shared: one whose first quoted line
+    other emails show too, held or not (since 2026-09-24 every first reply is
+    held, and only first replies share such lines)."""
     for b in _template_blocks(doc):
         ch = b.get("changes") or []
         if (b["kind"] == "template_variant" and len(ch) == 1 and ch[0]["kind"] == "instead"
-                and not doc_rules.is_held(b["template_id"]) and b["template_id"] not in SPLICED
+                and (shared or not doc_rules.is_held(b["template_id"])) and b["template_id"] not in SPLICED
                 and b["template_id"] not in HOSTS):
+            if shared and len(set(x["template_id"] for x in _template_blocks(doc)
+                                  if ch[0]["quoted"][0] in x["text"])) < 2:
+                continue
             return b
     raise AssertionError("no version shown as one change")
 
@@ -602,7 +614,7 @@ def test_the_lines_a_version_quotes_are_compared(doc, fresh, plain):
     checked against: an edited, deleted or moved quote refuses that email,
     and a quote edited or deleted refuses every email that shows that line
     (the doc says a change changes everywhere)."""
-    b = _quoting_version(doc)
+    b = _quoting_version(doc, shared=True)
     tag, tid = b["tag"], b["template_id"]
     quoted = b["changes"][0]["quoted"][0]
     lines = plain.split("\n")
@@ -615,7 +627,8 @@ def test_the_lines_a_version_quotes_are_compared(doc, fresh, plain):
     carriers = set(x["template_id"] for x in _template_blocks(doc) if quoted in x["text"])
     assert len(carriers) > 1
     refused = _refused(_plan("\n".join(moved), doc, fresh))
-    assert sorted(refused) == sorted(set(HELD) | {tid}) and refused[tid] == [rda.R_AREA % tag]
+    assert sorted(refused) == sorted(set(HELD) | {tid})
+    assert [r for r in refused[tid] if r != rda.R_HELD] == [rda.R_AREA % tag]
     for variant_text in (edited, deleted):
         refused = _refused(_plan("\n".join(variant_text), doc, fresh))
         assert rda.R_AREA % tag in refused[tid]
@@ -837,17 +850,6 @@ def test_round_two_code_changes_show_in_a_rebuilt_doc(doc, fresh, plain, tmp_pat
 
 def _index_from(build):
     return dict((tid, {"sha256": h, "approvable": True, "extractable": True}) for tid, h in build["hashes"].items())
-
-
-def test_dropped_lines_are_shown(doc):
-    areas = doc_areas.areas(doc["manifest"]["visible"])
-    loom = [tid for tid, e in ta.catalogue_index().items()
-            if e.get("approvable") and any(v["name"] == "no_loom_url" for v in e["variants"])]
-    assert loom
-    for tid in loom:
-        notes = areas[tid + "/no_loom_url"]
-        assert notes[0] == "If no Loom link is set up: (tag: %s/no_loom_url)" % tid
-        assert notes[1].startswith('Leaves out "') and "{loom_url}" in notes[1] and notes[1].endswith('". (note) @0')
 
 
 VARIANT_RE = re.compile(r"^=== variant: (\S+) \((.*)\) ===$")
@@ -1221,7 +1223,7 @@ def test_an_edit_to_shared_words_refuses_every_email_showing_them(doc, fresh, pl
     else:
         old = _time_offer(doc)
         tag = next(b["tag"] for b in _template_blocks(doc) if old in b["text"].split("\n")
-                   and b["kind"] == "template_main" and not doc_rules.is_held(b["template_id"]))
+                   and b["kind"] == "template_main")  # a first reply: held since 2026-09-24
         new = old + " Happy to work around you."
     carriers = _carrying(doc, old)
     assert len(carriers) > 1

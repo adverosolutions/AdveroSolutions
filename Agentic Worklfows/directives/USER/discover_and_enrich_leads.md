@@ -59,7 +59,7 @@ The pipeline is ordered cheapest-to-most-expensive so we never spend money on de
 - `execution/generate_email_patterns.py` — Owner-pattern email generation
 - `execution/verify_emails_bulk.py` — MillionVerifier API wrapper
 - `execution/tag_email_confidence.py` — Confidence-tier rules
-- `execution/icebreaker_generator.py` — Existing Haiku icebreaker (no change)
+- `execution/icebreaker_generator.py` — Existing icebreaker (Claude Opus 5.5 since 2026-09-25)
 - `execution/google_sheets_crm.py` — Existing sheet writes
 
 ## Required API Keys (.env)
@@ -89,8 +89,8 @@ For a 4-email sequence × 7-day cadence at 2k sends/day:
 **Per-lead breakdown:**
 - Owner discovery + research (combined Perplexity): ~$0.005
 - Email verification (~3 patterns avg): ~$0.002
-- Haiku icebreaker: ~$0.0002
-- **Total successful: ~$0.018/lead**
+- Icebreaker (Claude Opus 5.5 since 2026-09-25, was Haiku at ~$0.0002): ~$0.01, rough estimate
+- **Total successful: ~$0.018/lead** (Haiku-era figure; add ~$0.01 for the Opus 5.5 icebreaker, and the same to the full-success rows below)
 
 **Per-lead with gates:**
 - ~15% killed at free gates: $0
