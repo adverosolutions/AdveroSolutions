@@ -1,0 +1,24 @@
+---
+name: ghl-browser-build-limits
+description: "GHL browser builds - subagents blocked from GHL writes on relayed consent; import fix (use 'Create new opportunities'); page builder + workflow lists are iframes the Chrome extension barely clicks; custom-code funnel lane"
+metadata:
+  node_type: memory
+  type: reference
+  originSessionId: 130c206f-920a-408d-83e7-70b2902cf081
+  modified: 2026-10-01T03:08:13.851Z
+---
+
+Learned 2026-09-30 in the sample sub-account (location `R0PhhGCuYFICwRnPdpB8`, agency on a trial). It was "Harlow Heating & Plumbing", renamed by Lorenzo to **"Cedar & Main Plumbing"** (Fort Worth). Pipeline "Lead Pipeline" (New, Contacted, Quoted, Booked, Won, Lost) holds 55 fictional opps; 4 draft workflows (Instant Lead Reply, Missed Call Reply, Quote Follow-Up, Stale Lead Alert); funnel "Cedar & Main Plumbing - Emergency Drain Service". The GHL MCP connector does NOT reach this location (only AdveroSolutions `ebyNANPagaK7ycf1pfge`).
+
+- **Subagents can't do GHL writes on relayed consent.** GHL browser writes have to run in the main session, or Lorenzo adds a permission rule first. Design/render work can still be delegated.
+- **Import (Opportunities > Import > Start CSV import):** select Contacts + Opportunities. Next stays disabled under the default "Create new and update existing opportunities" because update mode wants an Opportunity ID column; switch the Upload step to **"Create new opportunities"** and Next enables. Opportunity-only import needs Contact IDs. Map "Opportunity Status" to Status by typing + Enter. The Verify step's consent attestation is Lorenzo's own click every time.
+- Board default view filters Status = Open, so imported won/lost opps only show after adding Won/Lost in Advanced filters (leaves "Unsaved changes"; don't save).
+- **Iframes:** the page builder (page-builder.leadconnectorhq.com) and the workflow list/builder are cross-origin iframes; extension clicks land maybe 1 in 3 and `find`/JS can't see inside. Opening the builder URL top-level hangs on "Loading". Lorenzo said doing the paste himself is faster: give him dumbed-down steps.
+- **Custom-code funnel lane (worked):** self-contained HTML block (no images, CSS gradients/SVG, `.cm` wrapper with 100vw breakout) pasted into a Custom JS/HTML element on a blank step. Source + build.py: `Coding/upwork-pipeline/jobs/ghl-home-service-lead-leaks/portfolio/funnel/ghl-code/`. Preview `https://sites.leadconnectorhq.com/preview/<pageId>` is public, so Playwright renders it at 2x without login. GHL's section/row/column wrappers render with 0 padding around it.
+- Screenshots: the extension can't capture while Chrome is minimized/behind another app (`visibilityState: hidden` -> "Failed to capture screenshot via CDP"); ask Lorenzo to bring it front. Blur is injected CSS (`#location-switcher-sidbar-v2`, `.crm-opportunities-card-name a`, `.hl_header--avatar`); kanban columns are absolutely positioned (`.stage-column-transition` translateX), so narrow them by script to fit 6 stages.
+- **Workflows: use the JSON import lane first** ([[upwork-ghl-demo-disadvantage]]: compile import JSON, Lorenzo clicks Import in the Backup & Audit extension, then fix in the canvas). Lorenzo flagged it 2026-09-30 after I built 4 demo workflows by hand with GHL's AI box. The AI box is OK for straight sequences but renames the workflow, leaves pipeline/due-date/tag warnings, and on a branching (if/else) prompt it added 5 stray triggers; "Start fresh" with one linear prompt recovered it. It also never creates the tags it uses: after a reload every Add Tag step shows "Referenced Tag does not exist", so create the tags first in Settings > Tags (the Create tag modal keeps the last typed name; select-all before typing). Deleting a trigger (or any canvas change) only sticks after clicking Save; the AI's stray triggers came back on reload in Quote Follow-Up and Stale Lead Alert because the delete was never saved (fixed 2026-09-30). Reload and look for the orange "!" in the left rail before screenshotting.
+- Screenshot detail: `zoom` with `scale: 1` on a quarter-viewport region returns native 2x pixels; stitch 4 quarters for a 2976x1624 shot (script pattern in the session scratchpad `stitch_wf.py`). Taller workflows: scroll the canvas (about 50px per wheel tick at 1x) and stitch 2-3 captures registered on the node column, cutting above the zoom controls; keep each pan under about 320px so the next slice doesn't pull in the canvas toolbar buttons. Zoom steps from 100%: one minus = 83%, two = 69%.
+- UI traps: stage color palette and naive-ui dropdowns animate slowly; type into searchable selects and press Enter, or click by `find` ref.
+- Sample CSVs (fictional, example.com, 555-01xx, tag `portfolio-sample`): `.../portfolio/raw/sample_contacts.csv` (17, Harlow-era, never imported) and `pipeline_fill.csv` (48, imported 2026-09-30).
+
+Related: [[upwork-ghl-demo-disadvantage]], [[no-live-changes-until-tested]].

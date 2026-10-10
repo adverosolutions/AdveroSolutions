@@ -6,5 +6,6 @@ cd "$(dirname "$0")"
 rsync -a --delete --exclude 'synced/' --exclude '.*' ~/.claude/skills/ skills/
 rsync -a --delete ~/.claude/agents/ agents/
 rsync -a --delete --exclude '.*' ~/.claude/scheduled-tasks/ scheduled-tasks/
+rsync -a --delete --exclude '.*' ~/.claude/projects/-Users-lorenzovillarreal-Desktop-AdveroSolutions/memory/ memory/
 cp ~/.claude/CLAUDE.md global-CLAUDE.md
 git status --short .

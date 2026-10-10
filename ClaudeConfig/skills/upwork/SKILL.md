@@ -3,6 +3,8 @@ name: upwork
 description: Lorenzo's complete Upwork proposal process - build the prop (n8n JSON, Make blueprint, GoHighLevel import JSON, or a native Excalidraw flowchart), private assessment, Loom beat sheet, and the locked proposal copy, one job or a batch of saved jobs. Use when he pastes a job post, says his saved jobs are ready, asks to load a build by name, or invokes /upwork.
 ---
 
+> **Superseded in part (2026-10-09):** the current end-to-end process (finished-product pages, Loom over the page, locked proposal format, finalize, screening questions) is `upwork-pipeline/UPWORK_PROCESS.md`. It wins wherever this file disagrees.
+
 # Upwork Proposal Process (v4, quality overhaul 2026-09-22)
 
 This is the vault. When a rule here conflicts with an older memory, this file

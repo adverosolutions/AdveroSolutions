@@ -1,0 +1,71 @@
+- [User profile](user_lorenzo.md) — Lorenzo Villarreal, founder of AdveroSolutions, contractor lead-gen business
+- [Project architecture](project_architecture.md) — 3-layer directive/orchestration/execution system for lead gen automation
+- [Personalization line generator](personalization-line-generator.md) — cold-email relevance-line tool for med-spa SMMA: Haiku research + Sonnet 5 generation, QA pass, multi-angle sequence
+- [Med-spa offer (canonical)](medspa-offer.md) — current confirmed offer: patient reactivation from dormant list, pay-per-result. Supersedes older "Booked Solid" ads narrative
+- [Deep multiline icebreaker tool](deep-multiline-icebreaker-tool.md) — site-research based angle/template library (not freeform LLM), 1-line "Hey {name}, ..." personalization, no offer
+- [Upwork workflow generator](upwork-workflow-generator.md) — n8n/Make workflow props for proposal Looms; two engines split tested; two open verification items
+- [Upwork morning pipeline](upwork-morning-pipeline.md) — /upwork-morning cockpit: official Upwork MCP sweep → Opus scorers → ranked board → production line; assets in Coding/upwork-pipeline/
+- [Maker School digest](maker-school-digest.md) — /maker-school skill: skool-mcp (local, audited) reads Nick Saraev's community, proposes cited Upwork-system patches; auth_token from Dia
+- [GHL builds in his own account](upwork-ghl-demo-disadvantage.md) — chart by default; a GHL workflow only when the post is one automation (2026-09-24); import via Backup & Audit extension; pipelines by hand (PIT 401)
+- [Upwork proposal copy rules](upwork-proposal-copy.md) — LOCKED opener "I do [X] builds all the time, so here's your [system] finished" for next 100 (2026-09-29); 133-150 preview, keyword inline, no em dashes
+- [Upwork proposal assessment](upwork-proposal-assessment.md) — every job build gets a private time / likelihood / standard-pricing block, never in the proposal itself
+- [Daily metrics tracker](daily-metrics-tracker.md) — Google Sheets daily outreach scorecard; rebuild script + service-account can't create new sheets (zero Drive quota)
+- [ego-browser PATH](ego-browser-path.md) — UNINSTALLED; its stale ghost URL-handler registration hijacked default-browser to Safari (fixed 2026-08-13, default is Dia via NSWorkspace API)
+- [Make.com blueprint research method](make-blueprint-research-method.md) — how to find & trust real Make module ids (Sourcegraph API + forum attachments; GitHub code search is blocked)
+- [Apify braveleads actor unusable](apify-braveleads-actor-unusable.md) — bills $0.05 per refused run, only 77 US electrical-contractor records; use code_crafter/leads-finder or Google Maps actors instead
+- [Apify free-plan API gate](apify-free-plan-api-gate.md) — code_crafter/leads-finder needs one-time permission approval AND blocks API runs on free plan (UI only); validate via UI before upgrading
+- [Lead scrape 2026 niches](lead-scrape-2026-niches.md) — eight niches; 2026-09-30 run personalized every non-Microsoft row (8 day files), not pushed; subagents on Sonnet 5.5
+- [Apify lead actor mechanics](apify-lead-actor-mechanics.md) — no offset (shard by state), billed per lead returned, cancelled runs still bill, size gate leaks, verified clean rates
+- [Cold-read research 2026](cold-read-research-2026.md) — which traits are safe to assert per niche; dead-site rates; contact-vs-company location mismatch
+- [Lorenzo case studies](lorenzo-case-studies.md) — his four headline results (roofing $750M+ bid routing, lender $5M on $1.5k, consultancy +35%, agency to $10k/mo) as the P.S. bullets for every proposal
+- [Personalization philosophy 2026](personalization-philosophy-2026.md) — anchor + opinion, no closer, NO sender-side beats, peer voice; two-tier cold-read/researched design
+- [Upwork batch mode](upwork-batch-mode.md) — multi-job batches: per-job folders in Coding/upwork-pipeline/jobs, cheap subagents write files, main session compiles + verifies, load by name via ./job
+- [Instantly 2026 campaigns](instantly-2026-campaigns.md) — working key in lead-scrape-2026/.env; six campaigns one body each, 25/inbox, API quirks (leads/list filter, leads/move)
+- [Cleanup 2026-09-21](cleanup-2026-09-21.md) — 3.57 GB trashed into a Trash mirror w/ restore.sh; 158 items still awaiting decision; security findings (committed secret, Stripe codes, GCP key in Downloads); remote added 2026-09-23
+- [Bulk file ops need user run](bulk-file-ops-need-user-run.md) — classifier blocks bulk trash/move scripts as destructive; stage plan + give Lorenzo a Run-button command; Finder AppleScript trash hangs
+- [No live changes until tested](no-live-changes-until-tested.md) — build/test in shadow, stage change-sets, live writes only with ALLOW_LIVE_WRITES=1 after Lorenzo's sign-off; the guard hook fails open from Coding/, only guard_write protects
+- [Committed live credentials](committed-live-credentials.md) — old creds live only on local archive/* refs; GitHub (private, fresh-start 2026-09-23) gets only main/section refs rooted at fe95263; rotation is Lorenzo's call
+- [Workspace layout](workspace-layout.md) — ~/Personal, ~/Business, ~/Clients workspaces (2026-09-22); AdveroSolutions, Projects, GHL-Imports stay on Desktop (path-bound); agent roster
+- [Upwork quality overhaul](upwork-quality-overhaul-2026-09.md) — why props read generic; quality lives in what the client sees, not node fields; client intel from job-page reviews (paused 2026-09-22)
+- [Cold-email template auto-send](cold-email-template-autosend.md) — approve templates once, then that email type auto-sends; replaces "first reply never auto-sent" (2026-09-22)
+- [Upwork follow-up pipeline](upwork-followup-pipeline.md) — bespoke drafts for proposal chats, Lorenzo sends; stages he moves; own GHL Upwork pipeline
+- [Max parallel agents](feedback-max-parallel-agents.md) — split work into many small disjoint pieces; never stall him with questions while he's away
+- [Estimates and stopping points](feedback-estimates-and-stopping.md) — realistic estimates incl. review rounds; park optional reviewer polish in the report instead of new rounds
+- [Never skip a saved Upwork job](upwork-never-skip-saved-jobs.md) — full-time / human-role posts get built and pitched as a retainer (2026-09-23)
+- [Sections split 2026-09-23](sections-split-2026-09-23.md) — revenue build in 4 parallel chats; handoffs + ownership in Agentic Worklfows/sections/
+- [Push every change](feedback-push-every-change.md) — commit and push each reviewed piece to GitHub; fresh-root check before push
+- [No Claudeisms](feedback-claudeisms.md) — never restate/sum up/sell the point just made; say it and stop; normal caps; skill + global CLAUDE.md (2026-09-23)
+- [Show copy in the question](feedback-show-copy-in-question.md) — approval dialogs must carry the full rendered message (option previews), never just 'good to go?'
+- [Working first, test later](feedback-working-first-test-later.md) — lean tests on main paths, one review per piece, park non-blockers; save usage (2026-09-23)
+- [Offer Intel](offer-intel.md) — Maker School wins run 2026-09-23, Sheet id; fixes 2026-09-24 (collect --via mcp etc.); open: comment paging, closed-call enum
+- [Minimal builds](upwork-builds-minimal.md) — n8n/Make props aim for 10-15 nodes, no fluff, over when the post needs it; GHL posts get a chart (2026-09-24)
+- [Never discuss billing](upwork-never-discuss-billing.md) — hard stop: no prices/rates/retainers in proposals; P.S. facts fixed, framing and order fit the job (2026-09-24)
+- [Charts read like sentences](upwork-charts-read-like-sentences.md) — full plain sentences only, no fragments or colon lists (2026-09-25), straight line, 0-1 gate; vague posts get real automations for the business (2026-09-24)
+- [Grok Bot operator](grokbot-orchestrator.md) — 2026-09-25: Grok executes (event-driven, read-only logins, retries sends), Opus 5.5 decides everything, Claude builds; manual = grok-operator skill
+- [Opus 5.5 everywhere](opus-5-5-everywhere.md) — every runtime model call on claude-opus-5-5 (2026-09-25); no Haiku/Sonnet cost tiers
+- [Only the job post](upwork-only-the-job-post.md) — builds, beats, greeting use only what the post says; no history/review names, companies or tools (2026-09-25)
+- [Legacy lead sync / esp_code](legacy-lead-sync-esp-code.md) — advero-lead-sync IS deployed (Modal profile adverosolutions); esp_code = provider; fix + CRM correction change-set awaiting push/apply (2026-09-25)
+- [Deliverability 2026-09-25](deliverability-2026-09-25.md) — first seed test: proadvero burned at Gmail, Microsoft replies stopped after Sep 18, campaigns paused; gift card stays (Lorenzo 2026-09-27), fine off Microsoft
+- [Keep email formatting on import](feedback-email-formatting-on-import.md) — exact div/blank-line structure + byte read-back when pushing copy to Instantly; "identical email" = only the offer changes, but lines must match the offer
+- [Best version first](upwork-best-version-first.md) — every Upwork build starts from the highest-quality version of the ask that fits the process (2026-09-28)
+- [Grok delta updates](feedback-grok-delta-updates.md) — Grok is onboarded; each skill/context change ships as a small dated update file in agents/grokbot/updates/, Lorenzo pastes it (2026-09-28)
+- [Prototype lane](upwork-visual-walkthrough-lane.md) — Spatial look; finished-product pages (hero, 3-5 screens, platform, close) + In/Out (UPDATE 5) + goal card on a one-screen hero (UPDATE 6, 2026-10-02, pilots/impact-hero.html); 15-platform kit in jobs/_examples/
+- [Show finalized proposal](feedback-show-finalized-proposal.md) — after finalize, show the full proposal in chat for him to copy; --no-copy, never pbcopy
+- [Don't auto-open pages](feedback-dont-auto-open-pages.md) — never `open` job pages mid-batch; he records Looms and it hijacks his browser. Open on request only
+- [Every job gets a page](feedback-every-job-gets-a-page.md) — build page.html for every batch job unless told not to; "show your own workflow" posts get a page of his real system
+- [Ops agent demo](ops-agent-demo.md) — AI agent push (2026-09-30): scripted ops-agent mockup rejected and deleted; he will brainstorm the demo again, ask what he disliked first
+- [Advero brand 2026](advero-brand-2026.md) — logo + social branding in the Spatial look; B (Depth); every banner in the LinkedIn Live design (2026-09-30), repo Brand/; push pending
+- [Advero website](advero-website.md) — LIVE on adverosolutions.com via Vercel (2026-09-30); AI-agents positioning; DNS at Namecheap, redeploy/rollback steps, never touch MX/DKIM
+- [AI agents cold pivot](ai-agents-cold-pivot.md) — 2026-09-30: six new AI agents campaigns (never activated by Claude), "AI" allowed, proadvero back, no more pauses, slot1/slot2 from GHL via slots_daily.py
+- [GHL browser build limits](ghl-browser-build-limits.md) — sample sub-account now Cedar & Main Plumbing (55 opps); import fix = 'Create new opportunities'; builder iframes resist clicks, Lorenzo pastes; custom-code funnel lane
+- [Post-call follow-ups](feedback-post-call-followups.md) — warm prospect after a call: very friendly, exclamation marks OK, full scope in depth + price (2026-10-01)
+- [ZIND Academy GHL build](zind-academy-ghl-build.md) — Nina's dance studio, Upwork $1,140; CANCEL + refund requested 2026-10-06 (her team knows GHL); plan/research in ~/Clients/ZIND Academy/; port needs agency Labs, A2P $1.50 only via chat widget + Mixed
+- [No new client costs after a sale](no-new-client-costs-after-sale.md) — once a price is agreed, no new setup costs/add-ons for the client; free route first, flag the rest (2026-10-06)
+- [LinkedIn outreach channel](linkedin-outreach-channel.md) — channel 3 picked 2026-10-06 over communities; Jonatan Loom playbook doc is the reference; build waits on his go
+- [Hormozi AI research](hormozi-ai-research.md) — 2026-10-06 proposal: mine Hormozi + MoreMozi AI videos (6 mo) into offers/positioning; channel counts, IP block after ~30 transcripts, paid transcript options
+- [Cold reply auto-send 2026-10-06](cold-reply-autosend-2026-10-06.md) — Grok auto-sends interested/price/send-info replies from approved templates; price RANGE in email OK; auto-blocklist; E1 veto dropped; Upwork band from assessment
+- [Advero Scoreboard](advero-scoreboard.md) — daily marketing + sales dashboard (2026-10-06), private Artifact reading Instantly/Upwork/GHL/Calendar live; holds the LinkedIn tracker; republish same path
+- [List builder: Maps + QuickEnrich](list-builder-maps-quickenrich.md) — 2026-10-08: QuickEnrich-only test (Contact Finder free, 264 emails/264 credits, 40% Microsoft → MX-filter first); MV on sendable: ok 48% / catch_all 43% / invalid 5%; Claude screen on plan via claude -p
+- [Overture Places free source](overture-places-free-source.md) — free open US business dataset (websites/emails/phones by category), DuckDB query ~3 min; electricians 42k (union w/ Maps file 42.3k domains); state licence CSVs (TX, FL)
+- [python3 is 3.14, no pytest](python3-is-3-14-no-pytest.md) — run tests with /usr/bin/python3 (3.9 + pytest); Homebrew python3 lacks pytest (2026-10-09)
+- [Sync 2026-10-09](sync-2026-10-09.md) — merged to main (scoreboard, Offer Intel, LinkedIn, lead-sync fix, grokbot), ClaudeConfig backup; scheduled tasks stay off; reply-examples never merge; Grok paste state
