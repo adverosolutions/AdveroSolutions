@@ -68,8 +68,8 @@ rather than relying on anyone noticing.
 
 **Never** call `upwork__send_message`, `upwork__manage_proposals`,
 `upwork__respond_to_offer`, `upwork__manage_meetings`, `upwork__submit_milestones`
-or `upwork__boost_profile`. `.claude/hooks/guard_live_writes.sh` blocks all of
-them, and this job exists precisely so nothing is drafted or sent.
+or `upwork__boost_profile`. This job exists precisely so nothing is drafted or
+sent.
 
 Save the raw responses verbatim. Concatenated pages are fine: pass a list of
 responses per key (`"rooms_response": [page 1, page 2]`), a top-level list of

@@ -120,9 +120,8 @@ def use_scratch_logs(name: str, extra_env: Optional[Dict[str, str]] = None) -> P
     hours nobody could tell a test row from a real one. The polluted file is
     quarantined under ``.tmp/quarantine/``.
 
-    ``.claude/hooks/guard_live_writes.sh`` greps the command string and cannot
-    see a process that sets those variables internally, which is why this is a
-    convention enforced at the entry points rather than by the hook.
+    A process can set those variables internally, where no command-line check
+    would see them, so this is a convention enforced at the entry points.
     """
     scratch = tmp_dir() / "scratch" / name
     try:

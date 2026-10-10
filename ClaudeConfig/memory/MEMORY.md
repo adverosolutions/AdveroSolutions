@@ -23,7 +23,7 @@
 - [Instantly 2026 campaigns](instantly-2026-campaigns.md) — working key in lead-scrape-2026/.env; six campaigns one body each, 25/inbox, API quirks (leads/list filter, leads/move)
 - [Cleanup 2026-09-21](cleanup-2026-09-21.md) — 3.57 GB trashed into a Trash mirror w/ restore.sh; 158 items still awaiting decision; security findings (committed secret, Stripe codes, GCP key in Downloads); remote added 2026-09-23
 - [Bulk file ops need user run](bulk-file-ops-need-user-run.md) — classifier blocks bulk trash/move scripts as destructive; stage plan + give Lorenzo a Run-button command; Finder AppleScript trash hangs
-- [No live changes until tested](no-live-changes-until-tested.md) — build/test in shadow, stage change-sets, live writes only with ALLOW_LIVE_WRITES=1 after Lorenzo's sign-off; the guard hook fails open from Coding/, only guard_write protects
+- [No live changes until tested](no-live-changes-until-tested.md) — build/test in shadow, stage change-sets, live writes only with ALLOW_LIVE_WRITES=1 after Lorenzo's sign-off; guard hook removed 2026-10-10, only guard_write protects
 - [Committed live credentials](committed-live-credentials.md) — old creds live only on local archive/* refs; GitHub (private, fresh-start 2026-09-23) gets only main/section refs rooted at fe95263; rotation is Lorenzo's call
 - [Workspace layout](workspace-layout.md) — ~/Personal, ~/Business, ~/Clients workspaces (2026-09-22); AdveroSolutions, Projects, GHL-Imports stay on Desktop (path-bound); agent roster
 - [Upwork quality overhaul](upwork-quality-overhaul-2026-09.md) — why props read generic; quality lives in what the client sees, not node fields; client intel from job-page reviews (paused 2026-09-22)

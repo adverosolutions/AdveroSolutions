@@ -38,7 +38,7 @@ and the timer are open builds. Do not describe them as done.
 | `services/reply_engine/` | S1-S8: `poller.py`, `router.py`, `draft.py`, `approval.py` (cards), `template_gate.py`, `template_approvals.py`, `cadence.py` (E1-E10), `nurture.py`, `booking.py`, `show_rate.py`, `no_show.py`, `precall.py`, `pipeline_sync.py`, `app.py` (web routes), `modal_app.py` (every schedule) |
 | `services/` others | `metrics`, `retro`, `experiments`, `list_factory`, `upwork_followup` |
 | `jobs/` | scheduled and by-hand CLIs (O1-O8); each has `--dry-run`, `--now`, `--as-of` and writes one Job_Log row |
-| `changesets/` | every live change as data plus an apply script; `deploy/`, `schedules/`, `claude_guard/`, `instantly_copy/`, `inbox_actions/`, `capacity/` |
+| `changesets/` | every live change as data plus an apply script; `deploy/`, `schedules/`, `instantly_copy/`, `inbox_actions/`, `capacity/` |
 | `config/` | `ids.json` (live ids), `offers.md` (the only pricing and proof), `approved_templates.json`, `experiments.json`, `llm_budget.json` ($10 shared cap) |
 | `tools/template_doc/` | build, diff and record tools for the one Google Doc |
 | `tools/netguard/` | blocks network egress during tests |
@@ -56,14 +56,9 @@ and the timer are open builds. Do not describe them as done.
    `.tmp/shadow_log.jsonl`, and the caller must not write. In live it logs a
    `live_write_intent` Job_Log row first, then returns `shadow: False`. This
    is the real protection.
-3. **The guard hook is a tripwire, not a net.** `.claude/hooks/guard_live_writes.sh`
-   runs only in sessions whose repo root has it registered (worktrees and the
-   repo root, not `Coding/`), and it matches command text. It blocks: live
-   flags, non-read-only `modal`, `git push`, writing `.env`/settings/hooks,
-   reading `.env`/`credentials.json`/`token.json`/`~/.advero/`, change-sets
-   without their read-only flag, `launchctl` loads, HTTP writes to Instantly,
-   GHL and Modal hosts, Instantly MCP write tools, and template approvals.
-   Do not route around it.
+3. **There is no guard hook** (removed 2026-10-10, Lorenzo). Nothing checks
+   commands before they run, so `guard_write` and these rules are the only
+   protection.
 4. **Never read or print** `.env`, `credentials.json`, `token.json`,
    `~/.advero/`, `~/.modal.toml`.
 5. **Never approve templates** and never write `config/approved_templates.json`,
