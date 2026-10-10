@@ -1,3 +1,5 @@
+> **Superseded in part (2026-10-09):** the current end-to-end process (finished-product pages, Loom over the page, locked proposal format, finalize, screening questions) is `upwork-pipeline/UPWORK_PROCESS.md`. It wins wherever this file disagrees.
+
 Hey [greeting] 👋 I went ahead and built your [2-3 tool names from the post] [their kind of system], [N]-min Loom: https://www.loom.com/share/[LOOMURL]
 
 tldr: [one or two short lines on what it does, no mechanics]. The video walks through how.

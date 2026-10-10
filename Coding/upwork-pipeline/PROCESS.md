@@ -1,3 +1,5 @@
+> **Superseded in part (2026-10-09):** the current end-to-end process (finished-product pages, Loom over the page, locked proposal format, finalize, screening questions) is `upwork-pipeline/UPWORK_PROCESS.md`. It wins wherever this file disagrees.
+
 # Upwork batch process (pointer, v4 2026-09-22)
 
 The full process lives in the `upwork` skill: `~/.claude/skills/upwork/SKILL.md`
