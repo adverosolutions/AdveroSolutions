@@ -1,6 +1,6 @@
 ---
 name: cold-email-personalization
-description: The per-lead opener that fills {{personalization}} at the top of Lorenzo's cold emails. Covers his philosophy (one specific thing you saw, plain praise, no pitch, the bar test), the locked template mode for recruiting, cleaning and bookkeeping ("Hey {first_name}, saw that you do {x}. That's exciting, {y}, ..."), X and Y rules with real examples, what is safe to assert blind per niche, the guessability test, the med-spa angle library, and the QA gate. Use for "personalize leads", "write the icebreaker", "personalization line", "opener", "cold read", or checking a batch of lines.
+description: The per-lead opener that fills {{personalization}} at the top of Lorenzo's cold emails. Covers his philosophy (one specific thing you saw, plain praise, no pitch, the bar test), the locked template mode for recruiting, cleaning and bookkeeping ("Hey {first_name}, saw that you do {x}. That's exciting, {y}, ..."), X and Y rules with real examples, what is safe to assert blind per niche, the guessability test, the batch review rules (banned vague verbs, X/Y fixes, skip/restore, 2-per-company cap), the step-by-step batch pipeline (pick, extract, fill, review, push to Instantly), the med-spa angle library, and the QA gate. Use for "personalize leads", "write the icebreaker", "personalization line", "opener", "cold read", "enrich and personalize the leads", "run a batch", or checking a batch of lines.
 ---
 
 # Cold email personalization
@@ -87,8 +87,51 @@ spaces", "janitorial work for banks up in North Idaho".
 - No single shape on more than a third of a batch.
 
 Examples: "you must know every flipper in the five boroughs by name", "you must be able to
-close a month's books in your sleep", "you must know every clinic manager in town by name",
+reconcile a bank account in your sleep", "you must know every clinic manager in town by name",
 "you must have one of the deepest rolodexes in the business".
+
+### Batch review rules (learned at volume, 2026-09-28 to 09-30)
+
+Fill models break the same ways every batch. A person reads every line and hand-fixes these:
+
+**X fixes**
+- City or state inside X gets replaced: "tax prep for Chattanooga businesses" becomes "tax
+  prep for local businesses". The place belongs in Y only.
+- "small business" (singular) becomes "small businesses". Brand names keep their caps
+  (QuickBooks, Xero, Gusto).
+- X starts with the service, never a bare list of client types.
+
+**Y fixes**
+- Every sleep line reads "you must be able to <task> in your sleep". "You must file returns
+  in your sleep" (missing "be able to") gets fixed.
+- The sleep task is one concrete, singular job. Banned vague verbs: file taxes, prepare
+  taxes, manage, organize books, balance books, reconcile accounts, process payroll, plan
+  taxes, minimize taxes, handle anything. Plural nouns read wrong ("reconcile accounts");
+  use the singular ("reconcile a bank account").
+- Good bookkeeping/tax tasks: reconcile a bank account, file a business return, file a tax
+  return, prep a tax return, run payroll, do a bookkeeping catch-up, build a tax plan, set up
+  a chart of accounts, settle an IRS notice, set up QuickBooks, set up an LLC, run an audit,
+  build a cash flow forecast, file an S-corp return.
+- Good recruiting tasks: "place a <specific role from X>" (place a CFO, place a travel
+  nurse). Broken nouns ("place a sourcing") get fixed.
+- "by now" only on the desk line; "by name" lines end "by name" and use a noun that is in X.
+- Speed dial and by-name lines use the company city (state only when the city is blank).
+  No regions, counties or nicknames that are not in the data (Long Island, Treasure Coast).
+- No competitor nouns as the client type (PR firms, recruiters).
+- Shapes stay at or under about a third of the batch each. The fill model leans on speed
+  dial, so swap the extras to sleep or desk.
+
+**Skip or restore**
+- Skip foreign firms the state filter missed: Canada, UK, Australia, New Zealand, India,
+  Korea, Ukraine, Poland, Netherlands, Dubai, Honduras and similar.
+- Skip off-niche rows: general business consulting, wealth management, software, job boards,
+  nanny agencies, business brokers, telecom filings, medical billing, audit training.
+- Restore rows the extract wrongly marked off-niche when they are the niche: staffing
+  agencies (recruiting), payroll services, forensic or trust accounting, fractional CFO firms
+  (bookkeeping).
+- No more than 2 contacts per company (same company name and city) across everything already
+  pushed. Later batches repeat firms 3-4 times; check a kept row's Y against the line its
+  colleague already got so two people at one firm do not get the same line.
 
 ### {{specialty}} (recruiting outbound only)
 
@@ -143,6 +186,42 @@ from `state`.
 Known failure seen at volume: the filler model copied examples across leads ("Treasure
 Coast" on a California cleaner, one X reused across four firms).
 
+## Running a batch (enrichment + personalization pipeline)
+
+Code lives in `Coding/lead-scrape-2026/` (repo); the per-batch tools are in
+`personalize/tools/`; `personalize/DAILY_RUN.md` has the older single-script flow. Keys are
+in that folder's `.env`; never print them. Run everything from `Coding/lead-scrape-2026`.
+
+1. **Pick:** `personalize/tools/pick_rounds_n.sh <rounds> <niche...>` picks 100 per niche,
+   fetches home and about pages, retries thin pages, writes `_chunks.json` and prints
+   `READY <batch>`. `daily_pick.py` only picks Google, other and Zoho mailboxes (MX lookup in
+   `personalize/esp.py`), so nothing is spent on rows that cannot be sent.
+2. **Rechunk** to about 12 leads per chunk (smaller chunks stop the extract model from
+   pasting page text or writing scripts).
+3. **Extract:** `python3 personalize/tools/stage.py prompts_extract <batch> <niche>` writes
+   one prompt per chunk; one subagent per chunk writes `extract_<k>.json`. Check them with
+   `xcheck.py <batch>` (missing ids, pasted text, duplicates).
+4. **Merge:** `stage.py merge <batch>` prints every row marked off-niche; decide which to
+   restore (rules above).
+5. **Fill:** `stage.py fill <batch> <niche> [restore ids]` runs select + fill and renders
+   fill prompts (`prompts/fill_<niche>.txt`); `cap.py <batch>` lists rows over the
+   2-per-company cap. Subagents write `x_<k>.json`; tell them to write the file with the
+   Write tool and reply only with the count.
+6. **Review:** `review.py <batch>` (gate flags), `autofix.py <batch>` (rule fixes: city
+   spelling, shape balance), `final_view.py <batch>` prints every line. Hand fixes go in a
+   man file `{"fix":{id:{"x"?,"y"?}},"skip":{id:reason}}` with the cap ids as skips
+   ("duplicate company (already 2 contacts)").
+7. **Apply:** `autofix.py <batch> <man.json>`, then `applyfix.py <batch> fix_<batch>.json`
+   (resets approved.json, so it runs first), then `approve_rest.py <batch>` (loops
+   `daily_apply.py` until nothing is flagged; retries on Sheets rate limits). Lines land on
+   the sheet and in `output/daily/day_<batch>.csv`.
+8. **Push:** `python3 instantly_push.py --push output/daily/day_<batch>.csv`. It splits a
+   niche 50/50 across its two campaigns and refuses excluded mailbox providers. Niches
+   without a campaign (MSP, marketing, insurance, landscaping, pest) stay on the sheet.
+
+Never activate or pause a campaign, and never touch a live campaign's `email_list`; both are
+Lorenzo's.
+
 ## Med-spa angle library (July 2026, separate offer)
 
 For med-spa leads, the output is `Hey {first_name}, {clause}`, the clause taken verbatim
@@ -172,14 +251,16 @@ predate every rule above and fail the bar test.
 
 ## Gaps
 
-- Which model fills X and Y at volume under the Opus 5.5 decision is not settled; the daily
-  run was built on Haiku fill plus a Sonnet rewrite.
+- Which model fills X and Y at volume under the Opus 5.5 decision is not settled. The
+  2026-09-29/30 runs used Haiku subagents for extract and fill with a full hand review;
+  Lorenzo then asked for Sonnet 5.5 subagents going forward.
 - The list factory's personalization stage writes a freeform line (opens "Hey <first
   name>,", 30-240 characters) that Lorenzo has not reviewed; template mode is the only form
   he approved.
 
 ## Sources (for maintainers)
 
+- memory `lead-scrape-2026-niches.md` (2026-09-28 to 09-30): batch review rules, tools, cap
 - memory `personalization-philosophy-2026.md` (2026-09-02 to 09-07): philosophy, corrections, template mode
 - `Coding/lead-scrape-2026/personalize/prompts.json` (2026-09-07 22:06): template, X/Y rules and examples; `DAILY_RUN.md` for the daily pipeline
 - memory `cold-read-research-2026.md` (2026-09-02): safe traits, location mismatch

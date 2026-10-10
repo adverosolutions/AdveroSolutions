@@ -6,6 +6,8 @@ Personalizes the next ~300 leads in send order for the three campaigns
 All model work runs as in-session subagents (on-plan). Code does everything else.
 Working dir: `Coding/lead-scrape-2026`. Run from there.
 
+> **Current flow (from 2026-09-29):** batches now run through the tools in `personalize/tools/` (pick_rounds_n.sh, stage.py, cap.py, review.py, autofix.py, applyfix.py, approve_rest.py) with a hand review of every line. Steps and the review rules are in the `cold-email-personalization` skill (`ClaudeConfig/skills/cold-email-personalization/SKILL.md`, sections "Batch review rules" and "Running a batch"). The sequence below is the original single-script flow.
+
 ## Sequence
 
 1. **Pick + fetch** (code):

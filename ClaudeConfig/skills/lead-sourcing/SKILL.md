@@ -1,6 +1,6 @@
 ---
 name: lead-sourcing
-description: Finding, verifying and loading cold-email leads for AdveroSolutions. Covers the current niches (recruiting, commercial cleaning, bookkeeping/tax), the Apify actors that work and the ones that do not, sharding and billing traps, MillionVerifier rules, the owner-email pipeline, Google Maps scraping, the lead sheet, suppression and the "already contacted" check, and the AnyMail row-misalignment guard. Use for "find leads", "scrape", "how many leads do we have", "Apify", "verify emails", "import leads", "separate contacted leads", "new niche".
+description: Finding, verifying and loading cold-email leads for AdveroSolutions. Covers the current niches (recruiting, commercial cleaning, bookkeeping/tax), the Apify actors that work and the ones that do not, sharding and billing traps, MillionVerifier rules, the mailbox-provider rule (no Microsoft until 2026-10-12, risky rows allowed), the owner-email pipeline, Google Maps scraping, the lead sheet, suppression and the "already contacted" check, and the AnyMail row-misalignment guard. Use for "find leads", "scrape", "how many leads do we have", "Apify", "verify emails", "import leads", "separate contacted leads", "new niche".
 ---
 
 # Lead sourcing
@@ -35,6 +35,23 @@ Lead sheet: `1OWJP1WZIFXUi6fIx_QgeUU-KmLqiK5ZsRo2O61BWsMw`, tab `Leads`, rows in
 (25 clean, then 5 catch-all, repeating; surplus catch-all then unknown at the tail).
 The service account cannot create sheets (zero Drive quota): Lorenzo creates a sheet and
 shares it with the service account.
+
+## Mailbox provider and risky rows (Lorenzo, 2026-09-29)
+
+- Only Google, "other" (GoDaddy, Rackspace, self-hosted) and Zoho mailboxes go to Instantly.
+  The sending inboxes do not land in Microsoft; free Yahoo stays out. Provider comes from an
+  MX lookup (`Coding/lead-scrape-2026/personalize/esp.py`, cache `output/mx_cache.json`);
+  `instantly_push.py` ALLOWED_ESP enforces it on every push and `daily_pick.py --esp`
+  defaults to the same set.
+- Lorenzo said Microsoft leads may be sent from Monday 2026-10-12. ALLOWED_ESP and the
+  `--esp` default still exclude Microsoft until someone changes them on or after that date.
+- Risky rows (catch-all and unknown) are allowed for recruiting, bookkeeping and cleaning
+  because supply is short. Lorenzo pauses a campaign himself if bounces climb.
+- No more than 2 contacts per company (name and city) across every pushed day file
+  (`personalize/tools/cap.py`).
+- Stock after the 2026-09-29/30 push run (about 4,200 leads pushed): recruiting and cleaning
+  have no Google/other/Zoho rows left; what remains is Microsoft or Yahoo. Bookkeeping still
+  had stock.
 
 ## Apify: code_crafter/leads-finder (the one that works)
 
