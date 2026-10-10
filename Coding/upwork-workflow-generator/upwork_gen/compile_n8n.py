@@ -23,9 +23,12 @@ from typing import Any, Dict, List, Optional, Tuple
 from .catalog import Catalog, get_catalog
 from .layout import Placement, layout, section_content
 from .params import (CONFIG_NODE_KEY, CONFIG_NODE_NAME, NODE_SETTINGS, compiles_to_http,
-                     config_keys_read, config_source, distinct_set_params, enrich,
-                     is_config_node, is_error_trigger, load_services, placeholder_value,
-                     resolve_service, service_config_keys, strip_step, trigger_stand_in)
+                     config_keys_read, config_keys_read_by, config_source,
+                     distinct_set_params, enrich,
+                     inline_unreached_config, is_config_node, is_error_trigger,
+                     load_services, placeholder_value, resolve_service,
+                     service_config_keys, strip_step, trigger_stand_in,
+                     unreached_config_keys)
 from .spec import Edge, MULTI_OUTPUT_KINDS, Node, SpecError, WorkflowSpec, unique_names
 
 _NAMESPACE = uuid.UUID("6f3c1f4e-1f8d-4a2b-9c7e-0a5d2b6e4f11")
@@ -189,13 +192,15 @@ def with_config_node(spec: WorkflowSpec) -> WorkflowSpec:
     node that ran earlier in the same execution, so only nodes the Config node
     dominates (every path into them passes through it) reference it;
     params.config_source decides that per node, and every other reader gets
-    the literal PASTE-YOUR- value instead.
+    the literal PASTE-YOUR- value instead, including a by-name read the spec
+    author wrote there (params.inline_unreached_config).
 
     The node carries every `config` key, then any key a param the spec author
-    wrote reads from it (`$('0 - Config: Your Settings').item.json.key`) that
-    `config` does not list, as a PASTE-YOUR- placeholder, then any key an HTTP
-    service it feeds needs (its API key, location id). The read keys matter
-    for a vault archetype: promotion strips `config` but keeps those params.
+    wrote on a node it runs before reads from it
+    (`$('0 - Config: Your Settings').item.json.key`) that `config` does not
+    list, as a PASTE-YOUR- placeholder, then any key an HTTP service it feeds
+    needs (its API key, location id). The read keys matter for a vault
+    archetype: promotion strips `config` but keeps those params.
     """
     read = config_keys_read(spec)
     if (not spec.config and read is None) or any(is_config_node(n) for n in spec.nodes):
@@ -205,8 +210,6 @@ def with_config_node(spec: WorkflowSpec) -> WorkflowSpec:
         return spec
     anchor, after = found
     out = copy.deepcopy(spec)
-    for key in read or []:
-        out.config.setdefault(key, placeholder_value(key))
     config = Node(key=CONFIG_NODE_KEY, kind="data.transform", label=CONFIG_NODE_NAME,
                   section=anchor.section,
                   notes="Every account id, list id and key this workflow uses, in one place.")
@@ -215,6 +218,13 @@ def with_config_node(spec: WorkflowSpec) -> WorkflowSpec:
     else:
         _insert_before(out, config, out.node(anchor.key))
     reachable = [n for n in out.nodes if config_source(n, out) is not None]
+    # A key only a node off the Config node's path reads (the error alert's
+    # address) is typed on that node instead (params.inline_unreached_config),
+    # unless no node on the path reads any key at all.
+    on_path = config_keys_read_by(reachable)
+    for key in read or []:
+        if key in on_path or not on_path:
+            out.config.setdefault(key, placeholder_value(key))
     for key, value in service_config_keys(out, reachable).items():
         out.config.setdefault(key, value)
     return out
@@ -422,6 +432,12 @@ def default_setup(spec: WorkflowSpec) -> List[str]:
     if config_node(spec) is not None:
         bullets.append("Fill in {} in the {} node.".format(_join(list(spec.config)),
                                                             CONFIG_NODE_NAME))
+        # The error path and other trigger paths cannot read the Config node,
+        # so the values a node there needs are typed on the node itself.
+        for node, keys in unreached_config_keys(spec):
+            if keys:
+                bullets.append("Fill in {} on '{}', which runs without the Config "
+                               "node.".format(_join(keys), strip_step(node.label)))
     creds = _credentials(spec)
     apps = [name for kind, name, _ in creds if kind == "app"]
     if apps:
@@ -453,6 +469,12 @@ def default_need(spec: WorkflowSpec) -> List[str]:
             bullets.append("Connection details for your {} database.".format(name))
     open_keys = [k for k, v in spec.config.items()
                  if not isinstance(v, str) or not v.strip() or "YOUR" in v.upper()]
+    for _node, keys in unreached_config_keys(spec):
+        for key in keys:
+            value = spec.config.get(key, placeholder_value(key))
+            if key not in open_keys and (not isinstance(value, str) or not value.strip()
+                                         or "YOUR" in value.upper()):
+                open_keys.append(key)
     if open_keys:
         bullets.append("The real values for {}.".format(_join(open_keys)))
     bullets.append("One real example of the incoming data to test with.")
@@ -597,12 +619,25 @@ def compile_n8n(spec: WorkflowSpec, catalog: Optional[Catalog] = None) -> Dict[s
         # undercuts the label above it — a workflow that promises routing and
         # shows nothing when clicked reads as a mock-up.
         params = enrich(node, spec, params)
+        # A by-name Config read the spec author wrote on a path the Config node
+        # never runs on (the error path, another trigger) gets the value itself.
+        params = inline_unreached_config(node, spec, params)
         if entry["type"] == "n8n-nodes-base.set" and not is_config_node(node):
             fields = tuple(a.get("name") for a in (params.get("assignments") or {})
                            .get("assignments", []))
             authored = "assignments" in (node.params or {})
-            if fields in set_fields and not authored:
-                params.update(distinct_set_params(node, spec, set(set_fields)))
+            if fields in set_fields:
+                # A synthesised list is replaced; an authored one keeps every
+                # field it wrote (a chat reply's `output`) and gains the step
+                # stamp after them.
+                keep = params["assignments"]["assignments"] if authored else None
+                distinct = distinct_set_params(node, spec, set(set_fields), keep=keep)
+                if authored:
+                    params["assignments"] = dict(params["assignments"],
+                                                 assignments=distinct["assignments"]
+                                                 ["assignments"])
+                else:
+                    params.update(distinct)
                 fields = tuple(a.get("name") for a in params["assignments"]["assignments"])
             set_fields.append(fields)
         settings = {k: params.pop(k) for k in NODE_SETTINGS if k in params}

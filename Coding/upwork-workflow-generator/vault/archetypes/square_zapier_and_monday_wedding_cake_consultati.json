@@ -1,105 +1,105 @@
 {
-  "title": "Square, Zapier and Monday: Wedding Cake Consultations and Deliveries",
+  "title": "Your Wedding Cake Orders, Step by Step: Enquiry to Delivered",
   "platform": "diagram",
   "sections": [
     {
-      "key": "basic",
-      "label": "1 - YOUR VERY BASIC WORKFLOW SYSTEM, EXPANDED",
+      "key": "enquiry",
+      "label": "1 - A COUPLE ENQUIRES",
       "color": 0,
-      "note": "Step 1 is my read of your Square, Zapier and Monday flow today, to confirm on our call. Expanded, every payment lands on the couple's one item, matched by the email on their Square invoice."
+      "note": "Every enquiry lands in Monday on its own, and the couple hears back right away."
     },
     {
       "key": "consult",
-      "label": "2 - CONSULTATIONS IN MONDAY",
-      "color": 0,
-      "note": "Each couple from enquiry to tasting to design details on one board. The deposit landing in Square is what books them."
+      "label": "2 - CONSULTATION: TASTING, DESIGN, DEPOSIT",
+      "color": 1,
+      "note": "Your consultations in Monday: Zapier moves each couple along as they book and pay in Square."
     },
     {
-      "key": "deliver",
-      "label": "3 - DELIVERIES IN MONDAY",
-      "color": 0,
-      "note": "Booked cakes move to Deliveries with the venue, the coordinator and your delivery and setup window. Monday checks the final balance against your due date."
+      "key": "delivery",
+      "label": "3 - DELIVERY DAY AND AFTER",
+      "color": 2,
+      "note": "Your deliveries in Monday: the balance, the day's list and the photo at the venue, then a thank-you."
     }
   ],
   "nodes": [
     {
-      "key": "today",
+      "key": "enquire",
       "kind": "data.transform",
-      "label": "1 - Today: A Square Sale Becomes a Monday Item Through Zapier",
-      "section": "basic"
+      "label": "1 - A couple sends an enquiry, and it lands on your Monday consultations board",
+      "section": "enquiry"
     },
     {
-      "key": "match",
+      "key": "reply",
       "kind": "data.transform",
-      "label": "2 - Expanded: Zapier Finds the Couple's Item by Email, or Adds It",
-      "section": "basic"
+      "label": "2 - They get an email right away with a link to book a tasting",
+      "section": "enquiry"
     },
     {
-      "key": "consult_board",
+      "key": "tasting",
       "kind": "data.transform",
-      "label": "3 - Consultations Board: Couple, Wedding Date, Venue, Tasting Date",
+      "label": "3 - They book a tasting in Square, and Zapier adds the date to their Monday item",
       "section": "consult"
     },
     {
       "key": "design",
       "kind": "data.transform",
-      "label": "4 - After the Tasting: Design Details, Tiers, Flavors, Servings",
+      "label": "4 - After the tasting, you add the design, tiers, flavors and servings",
       "section": "consult"
     },
     {
       "key": "deposit",
-      "kind": "flow.branch",
-      "label": "5 - Deposit Paid in Square?",
+      "kind": "data.transform",
+      "label": "5 - They pay the deposit in Square, and Zapier marks them Booked in Monday",
       "section": "consult"
     },
     {
-      "key": "follow_up",
+      "key": "nudge",
       "kind": "data.transform",
-      "label": "5b - Not Yet: Monday Reminds You to Follow Up With the Couple",
+      "label": "6 - No deposit yet? Monday reminds you to follow up with them",
       "section": "consult"
     },
     {
-      "key": "deliveries_board",
+      "key": "move",
       "kind": "data.transform",
-      "label": "6 - Moves to Deliveries: Venue, Coordinator, Delivery and Setup Window",
-      "section": "deliver"
+      "label": "7 - Booked cakes move to your deliveries board with the venue and setup time",
+      "section": "delivery"
     },
     {
       "key": "balance",
-      "kind": "flow.branch",
-      "label": "7 - Final Balance Paid by Your Due Date?",
-      "section": "deliver"
-    },
-    {
-      "key": "balance_flag",
       "kind": "data.transform",
-      "label": "7b - Not Yet: Monday Flags It to You Before the Cake Leaves",
-      "section": "deliver"
+      "label": "8 - Before your due date, Monday checks the final balance came in through Square",
+      "section": "delivery"
     },
     {
-      "key": "week_list",
-      "kind": "data.aggregate",
-      "label": "8 - This Week's Deliveries: One List by Date and Setup Window",
-      "section": "deliver"
-    },
-    {
-      "key": "delivered",
+      "key": "daylist",
       "kind": "data.transform",
-      "label": "9 - Delivered and Set Up: Venue Photo on the Item, Couple Done",
-      "section": "deliver"
+      "label": "9 - On the day, your driver sees the delivery list in the Monday app",
+      "section": "delivery"
+    },
+    {
+      "key": "photo",
+      "kind": "data.transform",
+      "label": "10 - At the venue, a setup photo goes on the item and it's marked Delivered",
+      "section": "delivery"
+    },
+    {
+      "key": "review",
+      "kind": "data.transform",
+      "label": "11 - After the wedding, the couple gets a thank-you email asking for a review",
+      "section": "delivery"
     }
   ],
   "edges": [
     {
-      "from": "today",
-      "to": "match"
+      "from": "enquire",
+      "to": "reply"
     },
     {
-      "from": "match",
-      "to": "consult_board"
+      "from": "reply",
+      "to": "tasting"
     },
     {
-      "from": "consult_board",
+      "from": "tasting",
       "to": "design"
     },
     {
@@ -108,44 +108,37 @@
     },
     {
       "from": "deposit",
-      "to": "deliveries_board",
-      "branch": "yes"
+      "to": "nudge"
     },
     {
-      "from": "deposit",
-      "to": "follow_up",
-      "branch": "no"
+      "from": "nudge",
+      "to": "move"
     },
     {
-      "from": "deliveries_board",
+      "from": "move",
       "to": "balance"
     },
     {
       "from": "balance",
-      "to": "week_list",
-      "branch": "yes"
+      "to": "daylist"
     },
     {
-      "from": "balance",
-      "to": "balance_flag",
-      "branch": "no"
+      "from": "daylist",
+      "to": "photo"
     },
     {
-      "from": "balance_flag",
-      "to": "week_list"
-    },
-    {
-      "from": "week_list",
-      "to": "delivered"
+      "from": "photo",
+      "to": "review"
     }
   ],
   "input_sample": {
-    "source": "Square invoice payment",
-    "invoice_title": "Wedding cake deposit - Morales / Patel",
-    "customer_name": "Jenna Morales",
-    "customer_email": "jenna.m.weds@gmail.com",
-    "amount": 575.0,
-    "paid_at": "2026-10-03T14:12:00-04:00"
+    "source": "Website enquiry form",
+    "names": "Jenna Morales and Ravi Patel",
+    "email": "jenna.m.weds@gmail.com",
+    "wedding_date": "2027-05-22",
+    "venue": "Willow Creek Barn, Flemington NJ",
+    "guests": 120,
+    "message": "We loved your lemon cake at a friend's wedding. Do you do tastings in October?"
   },
   "output_sample": {
     "board": "Deliveries",
@@ -162,5 +155,5 @@
   },
   "archetype": "square_zapier_and_monday_wedding_cake_consultati",
   "learned": true,
-  "learned_at": "2026-09-24"
+  "learned_at": "2026-10-09"
 }

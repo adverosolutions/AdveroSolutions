@@ -507,9 +507,18 @@ def config_keys_read(spec: WorkflowSpec) -> Optional[List[str]]:
     `$('0 - Config: Your Settings').item.json.key` its author wrote, so the
     compiler needs these keys to build the node those params point at.
     """
+    return _config_keys_in(spec.nodes)
+
+
+def config_keys_read_by(nodes: List[Node]) -> List[str]:
+    """The Config keys these nodes' own params read by name, first seen first."""
+    return _config_keys_in(nodes) or []
+
+
+def _config_keys_in(nodes: List[Node]) -> Optional[List[str]]:
     keys: List[str] = []
     named = False
-    for node in spec.nodes:
+    for node in nodes:
         for text in _param_strings(node.params):
             if not _CONFIG_NAMED_RE.search(text):
                 continue
@@ -579,6 +588,89 @@ def config_expr(node: Optional[Node], spec: Optional[WorkflowSpec], key: str
     if source is None:
         return None
     return config_ref(key, node_names(spec).get(source.key, source.label))
+
+
+_CONFIG_TEMPLATE_RE = re.compile(r"\{\{\s*" + _CONFIG_READ_RE.pattern + r"\s*\}\}")
+
+
+def _config_value(spec: WorkflowSpec, key: str) -> Any:
+    return spec.config.get(key, placeholder_value(key))
+
+
+def _js_literal(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False)
+
+
+def _inline_config_text(text: str, spec: WorkflowSpec) -> str:
+    """One param string with every by-name Config read replaced by the value
+    itself: a whole `{{ ... }}` in an expression becomes the plain text, a read
+    inside a larger expression or a Code node becomes a JS literal, and a
+    variable bound to the whole Config json (`const cfg = $('0 - Config:
+    Your Settings').first().json;`) is bound to an object of the keys it
+    reads instead."""
+    if not _CONFIG_NAMED_RE.search(text):
+        return text
+    expression = text.startswith("=")
+    if expression:
+        def plain(match: "re.Match[str]") -> str:
+            value = _config_value(spec, match.group(2) or match.group(4))
+            return value if isinstance(value, str) else _js_literal(value)
+        text = _CONFIG_TEMPLATE_RE.sub(plain, text)
+    text = _CONFIG_READ_RE.sub(
+        lambda m: _js_literal(_config_value(spec, m.group(2) or m.group(4))), text)
+
+    def bound(match: "re.Match[str]") -> str:
+        var = re.compile(r"(?<![A-Za-z0-9_$.])" + re.escape(match.group(1)) + r"\s*"
+                         + _KEY_ACCESS.format(q=2))
+        keys: List[str] = []
+        for read in var.finditer(text, match.end()):
+            key = read.group(1) or read.group(3)
+            if key not in keys:
+                keys.append(key)
+        values = {key: _config_value(spec, key) for key in (keys or list(spec.config))}
+        whole = match.group(0)
+        return whole[:whole.index("$(")] + _js_literal(values)
+    text = _CONFIG_BIND_RE.sub(bound, text)
+    if expression and "{{" not in text:
+        text = text[1:]
+    return text
+
+
+def _inline_config_obj(value: Any, spec: WorkflowSpec) -> Any:
+    if isinstance(value, str):
+        return _inline_config_text(value, spec)
+    if isinstance(value, dict):
+        return {k: _inline_config_obj(v, spec) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_inline_config_obj(v, spec) for v in value]
+    return value
+
+
+def reads_config_unreached(node: Node, spec: WorkflowSpec) -> bool:
+    """Whether the spec author's own params read the Config node by name on a
+    node the Config node does not run before (another trigger's path, the
+    error path). n8n would throw "Referenced node is unexecuted" there."""
+    if is_config_node(node) or not has_config(spec) or config_source(node, spec) is not None:
+        return False
+    return any(_CONFIG_NAMED_RE.search(text) for text in _param_strings(node.params))
+
+
+def unreached_config_keys(spec: WorkflowSpec) -> List[Tuple[Node, List[str]]]:
+    """(node, Config keys it reads) for every node whose by-name Config reads
+    get the values inlined, in spec order."""
+    return [(node, config_keys_read_by([node])) for node in spec.nodes
+            if reads_config_unreached(node, spec)]
+
+
+def inline_unreached_config(node: Node, spec: WorkflowSpec,
+                            params: Dict[str, Any]) -> Dict[str, Any]:
+    """A node's compiled params with its by-name Config reads replaced by the
+    values themselves when the Config node does not run before it, the same
+    literal PASTE-YOUR- value every generated param gets there. Params of a
+    node the Config node runs before are returned as they are."""
+    if not reads_config_unreached(node, spec):
+        return params
+    return _inline_config_obj(params, spec)
 
 
 # --------------------------------------------------------------------------
@@ -1405,11 +1497,18 @@ def for_transform(node: Node, spec: WorkflowSpec) -> Dict[str, Any]:
 
 
 def distinct_set_params(node: Node, spec: WorkflowSpec,
-                        taken: Set[Tuple[str, ...]]) -> Dict[str, Any]:
-    """Fields for a Set node whose synthesised list matched an earlier Set
-    node's. It records which step ran and when, named from its own label
-    ("Fix the Failing Record" -> `fix_failing_record_at`), and passes the
-    item through, so no two Set nodes on a canvas show the same list."""
+                        taken: Set[Tuple[str, ...]],
+                        keep: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+    """Fields for a Set node whose field list matched an earlier Set node's.
+    It records which step ran and when, named from its own label ("Fix the
+    Failing Record" -> `fix_failing_record_at`), and passes the item through,
+    so no two Set nodes on a canvas show the same list.
+
+    `keep` is a list the spec author wrote (two chat replies that both set
+    `output`): those assignments stay first and unchanged, and the stamp is
+    added after them."""
+    keep = list(keep or [])
+    kept = [a.get("name") for a in keep]
     label = strip_step(node.label)
     words = [w for w in _bare_words(node.label)
              if w not in GENERIC_VERBS and not w.isdigit() and len(w) > 2]
@@ -1419,16 +1518,18 @@ def distinct_set_params(node: Node, spec: WorkflowSpec,
     if step:
         candidates.append("{}_{}_at".format(base, step.group(1)))
     candidates.append("{}_{}_at".format(base, _cid(node.key)[:4]))
+    head = kept + ([] if "step" in kept else ["step"])
     stamp = candidates[-1]
     for name in candidates:
-        if ("step", name) not in taken:
+        if tuple(head + [name]) not in taken and name not in kept:
             stamp = name
             break
-    assignments = [
-        {"id": _cid(node.key, "step"), "name": "step", "value": label, "type": "string"},
-        {"id": _cid(node.key, stamp), "name": stamp, "value": "={{ $now.toISO() }}",
-         "type": "string"},
-    ]
+    assignments = list(keep)
+    if "step" not in kept:
+        assignments.append({"id": _cid(node.key, "step"), "name": "step", "value": label,
+                            "type": "string"})
+    assignments.append({"id": _cid(node.key, stamp), "name": stamp,
+                        "value": "={{ $now.toISO() }}", "type": "string"})
     return {"assignments": {"assignments": assignments}, "includeOtherFields": True,
             "options": {}}
 
