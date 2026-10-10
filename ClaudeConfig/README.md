@@ -9,4 +9,6 @@ Backup of the Claude Code setup Lorenzo uses every day. The live copies are on h
 
 To refresh: `ClaudeConfig/sync_from_home.sh`, then commit and push. To restore a skill on a new machine, copy `skills/<name>/` into `~/.claude/skills/`.
 
+To use the same skills, rules and MCP tools in OpenAI Codex, see `codex/README.md` (setup script: `codex/setup_codex.sh`).
+
 The Grok Bot copies of the skills are separate: `Agentic Worklfows/agents/grokbot/onboarding/skills/`, rebuilt by `build_pack.py`.
