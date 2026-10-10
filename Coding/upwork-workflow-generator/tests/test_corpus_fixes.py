@@ -180,39 +180,79 @@ class TestDiagramLeavesOutAnAuthoredConfigNode(unittest.TestCase):
 
 
 class TestRepromotingAPosting(unittest.TestCase):
-    """A rebuild of the same posting under a new title promotes onto the
-    archetype that posting produced first, never a keywordless sibling."""
+    """One posting often yields several different archetypes (separate job
+    folders). Sharing the `url:` line alone never merges them; a retitled
+    rebuild reuses an earlier archetype only on evidence it is that build."""
 
     POST = ("url: https://www.upwork.com/jobs/~01example\nGlazier Quote Follow-Ups\n"
             "Hourly, intermediate.\n\nWe are a glazier shop and want quote follow-ups "
-            "for windshield and storefront glass jobs.\n")
+            "for windshield and storefront glass jobs, plus a reception bot for walk-ins.\n")
 
-    def test_same_url_reuses_the_first_id(self):
-        def spec(title):
-            return _spec([{"key": "hook", "kind": "trigger.webhook", "label": "1 - Quote Sent",
-                           "section": "in"}], [], sections=("in",), title=title)
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = self._tmp.name
+        self.saved = (learn.VAULT_DIR, learn.KEYWORDS_PATH)
+        learn.VAULT_DIR = os.path.join(self.tmp, "archetypes")
+        learn.KEYWORDS_PATH = os.path.join(self.tmp, "keywords.json")
+        os.makedirs(os.path.join(self.tmp, "sources"))
 
-        with tempfile.TemporaryDirectory() as tmp:
-            saved = (learn.VAULT_DIR, learn.KEYWORDS_PATH)
-            learn.VAULT_DIR = os.path.join(tmp, "archetypes")
-            learn.KEYWORDS_PATH = os.path.join(tmp, "keywords.json")
-            try:
-                first = learn.promote(spec("Glazier Quote Follow-Ups"), job_text=self.POST)
-                self.assertTrue(first["reachable"])
-                os.makedirs(os.path.join(tmp, "sources"))
-                with open(os.path.join(tmp, "sources", first["archetype"] + ".txt"), "w") as fh:
-                    fh.write(self.POST)
-                again = learn.promote(spec("Your Glass Quotes, Followed Up"), job_text=self.POST)
-                other = learn.promote(spec("Another Glazier Build"),
-                                      job_text=self.POST.replace("01example", "02other"))
-                learned = learn.load_learned()
-            finally:
-                learn.VAULT_DIR, learn.KEYWORDS_PATH = saved
+    def tearDown(self):
+        learn.VAULT_DIR, learn.KEYWORDS_PATH = self.saved
+        self._tmp.cleanup()
+
+    @staticmethod
+    def _spec(title, label="1 - Quote Sent"):
+        return _spec([{"key": "hook", "kind": "trigger.webhook", "label": label,
+                       "section": "in"}], [], sections=("in",), title=title)
+
+    def _promote(self, spec, job_dir=None):
+        report = learn.promote(spec, job_text=self.POST, job_dir=job_dir)
+        source = os.path.join(self.tmp, "sources", report["archetype"] + ".txt")
+        if not os.path.exists(source):  # what maintain.archive_source keeps
+            with open(source, "w", encoding="utf-8") as fh:
+                fh.write(self.POST)
+        return report
+
+    def _vault(self, archetype_id):
+        with open(os.path.join(learn.VAULT_DIR, archetype_id + ".json"), encoding="utf-8") as fh:
+            return json.load(fh)
+
+    def test_two_builds_of_one_posting_stay_apart(self):
+        quotes = self._promote(self._spec("Glazier Quote Follow-Ups"))
+        desk = self._promote(self._spec("Your Walk-In Reception Bot", "1 - Customer Walks In"))
+        self.assertNotEqual(quotes["archetype"], desk["archetype"])
+        for rebuilt, other in ((quotes, desk), (desk, quotes)):
+            before = self._vault(other["archetype"])
+            title = self._vault(rebuilt["archetype"])["title"]
+            again = self._promote(self._spec(title, "1 - Rebuilt"))
+            self.assertEqual(again["archetype"], rebuilt["archetype"])
+            self.assertEqual(self._vault(other["archetype"]), before)
+        # A new title with no evidence is a new archetype, as before.
+        third = self._promote(self._spec("Glass Invoice Reminders", "1 - Invoice Due"))
+        self.assertNotIn(third["archetype"], (quotes["archetype"], desk["archetype"]))
+        self.assertEqual(len(learn.load_learned()), 3)
+
+    def test_retired_title_in_stale_is_reused(self):
+        first = self._promote(self._spec("Square, Zapier and Monday: Wedding Cake "
+                                         "Consultations and Deliveries"))
+        sibling = self._promote(self._spec("Your Bakery Delivery Board", "1 - Order Paid"))
+        job = os.path.join(self.tmp, "job")
+        os.makedirs(os.path.join(job, ".stale"))
+        open(os.path.join(job, ".stale", "square-zapier-and-monday-wedding-cake-"
+                          "consultations-and-deli.excalidraw"), "w").close()
+        retitled = self._spec("Your Wedding Cake Orders, Step by Step", "1 - Enquiry In")
+        without = learn.earlier_version_of(retitled, self.POST)
+        again = self._promote(retitled, job_dir=job)
+        self.assertIsNone(without)
         self.assertEqual(again["archetype"], first["archetype"])
         self.assertTrue(again["replaced"])
-        self.assertEqual(learned[first["archetype"]]["label"], "Your Glass Quotes, Followed Up")
-        self.assertNotEqual(other["archetype"], first["archetype"])
-        self.assertEqual(sorted(learned), sorted([first["archetype"], other["archetype"]]))
+        self.assertEqual(self._vault(first["archetype"])["title"],
+                         "Your Wedding Cake Orders, Step by Step")
+        self.assertEqual(self._vault(sibling["archetype"])["title"], "Your Bakery Delivery Board")
+        # Once folded, a rebuild under that title finds it by title alone.
+        once_more = self._promote(self._spec("Your Wedding Cake Orders, Step by Step"))
+        self.assertEqual(once_more["archetype"], first["archetype"])
+        self.assertEqual(len(learn.load_learned()), 2)
 
 
 if __name__ == "__main__":

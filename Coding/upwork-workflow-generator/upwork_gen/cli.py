@@ -485,7 +485,8 @@ def cmd_spec(args: argparse.Namespace) -> int:
         else:
             try:
                 report = promote(result.spec, job_text=job_text,
-                                 archetype_id=args.archetype_id, force=args.force)
+                                 archetype_id=args.archetype_id, force=args.force,
+                                 job_dir=os.path.dirname(os.path.abspath(args.jd)))
             except Exception as exc:  # promotion is a nice-to-have, never fatal
                 print("  vault: promotion failed ({})".format(exc))
             else:
@@ -753,7 +754,8 @@ def _batch_compile(job_dir: str, args: argparse.Namespace,
             print("  vault: NOT LEARNING - no jd.txt in the job folder")
         else:
             try:
-                report = learn_promote(result.spec, job_text=job_text, force=False)
+                report = learn_promote(result.spec, job_text=job_text, force=False,
+                                       job_dir=job_dir)
             except Exception as exc:  # promotion is never fatal, same as `spec`
                 print("  vault: promotion failed ({})".format(exc))
             else:

@@ -211,49 +211,79 @@ def _posting_url(text: str) -> Optional[str]:
     return None
 
 
-def same_posting_archetype(job_text: Optional[str]) -> Optional[str]:
-    """The learned archetype already promoted from this very posting (its
-    archived source has the same `url:` line), or None.
+def _archetype_id_for(title: str) -> str:
+    return slugify(title, 48).replace("-", "_")
 
-    A rebuild of the same job under a new title is a revision of that
-    archetype, not a second one: as a sibling it would mine the same post,
-    find every term already claimed by the first and land in the vault with
-    no keywords, unreachable. One with keywords is preferred if there are
-    several.
+
+def earlier_version_of(spec: WorkflowSpec, job_text: Optional[str],
+                       job_dir: Optional[str] = None) -> Optional[str]:
+    """The learned archetype that is an earlier version of this very build,
+    or None.
+
+    The pipeline often builds several different archetypes from one posting
+    in separate job folders, so sharing the posting's `url:` line is never
+    enough on its own. An archetype learned from the same posting counts only
+    on evidence that it is this build:
+
+    * it already carries this spec's title (a rebuild of a build folded under
+      an id from an older title); or
+    * its title, or the old title its id was cut from, is one this job folder
+      retired into `.stale/` (as verify_job.own_archetypes checks).
+
+    Exactly one archetype must qualify; with none, or several, there is no
+    answer and the caller falls back to the title's own id.
     """
     url = _posting_url(job_text or "")
     if not url:
         return None
+    retired: List[str] = []
+    if job_dir:
+        from .verify_job import stale_slugs  # lazy: verify_job imports generate
+        retired = stale_slugs(job_dir)
+    own_title = spec.title.strip().lower()
     sources = os.path.join(os.path.dirname(VAULT_DIR), "sources")
-    learned = load_learned()
     matches = []
-    for archetype_id in sorted(learned):
-        if not os.path.exists(os.path.join(VAULT_DIR, "{}.json".format(archetype_id))):
-            continue
+    for archetype_id in sorted(load_learned()):
+        path = os.path.join(VAULT_DIR, "{}.json".format(archetype_id))
         try:
             with open(os.path.join(sources, "{}.txt".format(archetype_id)), "r",
                       encoding="utf-8") as fh:
                 source = fh.read()
-        except OSError:
+            with open(path, "r", encoding="utf-8") as fh:
+                title = str((json.load(fh) or {}).get("title", ""))
+        except (OSError, ValueError, AttributeError):
             continue
-        if _posting_url(source) == url:
+        if _posting_url(source) != url:
+            continue
+        stem = archetype_id.replace("_", "-")
+        if title.strip().lower() == own_title or any(
+                slug == slugify(title) or slug == stem or slug.startswith(stem + "-")
+                or (len(stem) >= 40 and slug.startswith(stem)) for slug in retired):
             matches.append(archetype_id)
-    matches.sort(key=lambda a: not learned[a].get("kw"))
-    return matches[0] if matches else None
+    return matches[0] if len(matches) == 1 else None
 
 
 def promote(spec: WorkflowSpec, job_text: Optional[str] = None,
-            archetype_id: Optional[str] = None, force: bool = False) -> Dict[str, Any]:
+            archetype_id: Optional[str] = None, force: bool = False,
+            job_dir: Optional[str] = None) -> Dict[str, Any]:
     """Write the spec into the vault and teach the classifier to find it.
 
-    A posting that was promoted before (same `url:` line) promotes onto that
-    same archetype, whatever the spec's title now says.
+    The id is the one passed, else the spec's own `archetype`, else the
+    title's id. When no archetype has the title's id yet, an archetype that
+    is an earlier version of this build (earlier_version_of: same posting
+    plus evidence from the title or the job folder's `.stale/`) is promoted
+    onto instead, so a retitled rebuild never lands as a keywordless sibling.
 
     Returns a report dict; raises nothing the caller cannot recover from, since
     a failed promotion must never cost a generation that already succeeded.
     """
-    archetype_id = (archetype_id or spec.archetype or same_posting_archetype(job_text)
-                    or slugify(spec.title, 48).replace("-", "_"))
+    if not archetype_id and not spec.archetype:
+        own = _archetype_id_for(spec.title)
+        if not os.path.exists(os.path.join(VAULT_DIR, "{}.json".format(own))):
+            archetype_id = earlier_version_of(spec, job_text, job_dir) or own
+        else:
+            archetype_id = own
+    archetype_id = archetype_id or spec.archetype or _archetype_id_for(spec.title)
 
     if archetype_id in SEED_ARCHETYPES and not force:
         return {
