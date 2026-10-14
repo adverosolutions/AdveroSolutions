@@ -10,13 +10,11 @@
 #      imported copies) is MOVED, never deleted, to ~/.agents/skills.imported-backup.<timestamp>/,
 #      as is any dangling symlink in ~/.agents/skills. The first time it moves anything it also
 #      copies ~/.claude/skills into that backup folder as claude-skills-snapshot/.
-#   2. ~/.codex/agents/<name>.toml from ClaudeConfig/codex/agents/ (changed files are backed up
-#      to <file>.bak.<timestamp> first).
-#   3. ~/.codex/AGENTS.md from ClaudeConfig/codex/AGENTS.md (backed up first).
-#   4. Two managed blocks in ~/.codex/config.toml from ClaudeConfig/codex/config.toml (backed up
+#   2. ~/.codex/AGENTS.md from ClaudeConfig/codex/AGENTS.md (backed up first).
+#   3. Two managed blocks in ~/.codex/config.toml from ClaudeConfig/codex/config.toml (backed up
 #      first). Nothing outside the blocks is edited; keys or tables the app already sets outside
 #      them are skipped and reported.
-# Never touches ~/.codex/hooks.json, hooks.json.bak, auth.json or any other file.
+# Never touches ~/.codex/agents/, hooks.json, hooks.json.bak, auth.json or any other file.
 
 set -eu
 
@@ -127,22 +125,15 @@ install_file() {
   act "install $dst" cp "$src" "$dst"
 }
 
-# ---------------------------------------------------------------- 2. agents
+# ---------------------------------------------------------------- 2. AGENTS.md
 say ""
-say "2. Subagents: $CODEX_HOME_DIR/agents/"
-[ -d "$CODEX_HOME_DIR/agents" ] || act "mkdir -p $CODEX_HOME_DIR/agents" mkdir -p "$CODEX_HOME_DIR/agents"
-for f in "$HERE"/agents/*.toml; do
-  install_file "$f" "$CODEX_HOME_DIR/agents/$(basename "$f")"
-done
-
-# ---------------------------------------------------------------- 3. AGENTS.md
-say ""
-say "3. Global instructions: $CODEX_HOME_DIR/AGENTS.md"
+say "2. Global instructions: $CODEX_HOME_DIR/AGENTS.md"
+[ -d "$CODEX_HOME_DIR" ] || act "mkdir -p $CODEX_HOME_DIR" mkdir -p "$CODEX_HOME_DIR"
 install_file "$HERE/AGENTS.md" "$CODEX_HOME_DIR/AGENTS.md"
 
-# ---------------------------------------------------------------- 4. config.toml
+# ---------------------------------------------------------------- 3. config.toml
 say ""
-say "4. Config: managed blocks in $CODEX_HOME_DIR/config.toml"
+say "3. Config: managed blocks in $CODEX_HOME_DIR/config.toml"
 if [ -z "$PY" ]; then
   say "  no python3 with tomllib (3.11+) found; config.toml NOT changed."
   note "config.toml not updated: install Homebrew python3 and re-run"
@@ -294,7 +285,7 @@ fi
 cat <<'EOF'
 
 Next steps (details in ClaudeConfig/codex/README.md):
-  - Quit and reopen the ChatGPT app, or start a new `codex` session, so it reloads config, agents and skills.
+  - Quit and reopen the ChatGPT app, or start a new `codex` session, so it reloads config, instructions and skills.
   - Log in to each remote MCP server once:
       codex mcp login instantly
       codex mcp login upwork
