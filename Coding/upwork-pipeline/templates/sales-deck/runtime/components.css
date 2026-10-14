@@ -1,0 +1,27 @@
+/* Data-driven scenes keep large content within their native frame. */
+.gbody, .thread, .content, .email-preview { min-width: 0; }
+.native .content, .thread, .email-preview { overflow: auto; }
+.event.pending, .message.pending, .metric.pending, .notice.pending, .attendance-email.pending { opacity: .22; }
+.message .bubble { white-space: pre-line; overflow-wrap: anywhere; }
+.message .bubble b { display: block; margin-bottom: 7px; }
+.metric small, .field-row b, .contact-title h3, .notice, .journey-item b { overflow-wrap: anywhere; }
+.field-row b { text-align: right; }
+.stage-track { flex-wrap: wrap; }
+.stage-track .current { color: #027a48; background: #ecfdf3; border-color: #a6f4c5; }
+.metric-definition { font-size: 11px; color: var(--ink3); margin-top: 10px; }
+#chapters { max-width: 100%; }
+.chapter-dot { max-width: 170px; }
+.chapter-dot span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 760px) {
+  .mast .brand { min-width: 0; max-width: calc(100% - 100px); }
+  #systemName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .native .content, .thread, .email-preview { overflow: visible; }
+  .table-box { max-width: 100%; }
+  .success-metric, .success-cta, .contact-side, .email-side { min-width: 0; }
+  .field-row { gap: 12px; }
+  .metrics { flex-wrap: wrap; }
+  .metric { flex: 1; min-width: 90px; }
+  .stage-track { gap: 5px; }
+  .chapter-dot { max-width: 135px; }
+  .contact-title { min-width: 0; }
+}

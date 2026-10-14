@@ -1,0 +1,13 @@
+node_modules/
+__pycache__/
+.pytest_cache/
+.tmp/
+.test-output/
+coverage/
+
+# Required template inputs and dependency lock; keep other JSON ignored.
+!/platforms.json
+!/template-lock.json
+!/package.json
+!/package-lock.json
+!/examples/*.json

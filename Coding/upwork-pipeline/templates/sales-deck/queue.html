@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Recording queue</title>
+  <style>
+    @font-face{font-family:Inter;src:url('/assets/inter-variable.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+    :root{--ink:#16202e;--ink2:#4d596b;--ink3:#7c889a;--blue:#2f74f5;--line:rgba(150,170,200,.28)}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,sans-serif;color:var(--ink);background:#e9f0f8;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;background:radial-gradient(1100px 520px at 78% 0%,rgba(255,255,255,.95),transparent 65%),radial-gradient(900px 600px at 0% 30%,#d6e6fb,transparent 75%),linear-gradient(180deg,#c9dcf2 0%,#ecf1f7 60%,#e9edf2 100%);min-height:100vh}
+    button,a{font:inherit}button{cursor:pointer}a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}button:focus-visible,a:focus-visible{outline:3px solid #6aa5ff;outline-offset:4px}[hidden]{display:none!important}
+    main{max-width:1160px;margin:0 auto;padding:28px 32px 40px}.mast{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:34px}.brand,.connection{font-size:11px;font-weight:600;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.94);padding:8px 12px;border-radius:99px;color:var(--ink2)}.brand i,.connection i{width:7px;height:7px;background:var(--blue);border-radius:50%;box-shadow:0 0 0 3px rgba(47,116,245,.12)}.connection{background:transparent;border-color:transparent;font-weight:500}.connection i{background:#1fb487;box-shadow:none}.connection.offline i{background:#e8a13a}.heading{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:25px}.eyebrow{font-size:10px;color:var(--blue);letter-spacing:.14em;font-weight:700;text-transform:uppercase}h1{font-size:36px;font-weight:600;line-height:1.15;letter-spacing:-.04em;margin:9px 0 9px}.intro{font-size:13px;color:var(--ink2);line-height:1.6;margin:0;max-width:640px}.refresh{border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.75);color:var(--ink2);padding:9px 13px;font-size:12px;white-space:nowrap}.refresh:hover{background:#fff}
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:24px}.stat{padding:18px 21px;border:1px solid rgba(255,255,255,.96);border-radius:19px;background:linear-gradient(180deg,rgba(255,255,255,.93),rgba(248,251,255,.82));box-shadow:0 13px 30px -25px rgba(38,72,128,.3)}.stat b{display:block;font-weight:600;font-size:31px;letter-spacing:-.04em;margin:0 0 8px}.stat span{font-size:11px;font-weight:500;color:var(--ink2)}.stat:first-child{background:var(--blue);border-color:var(--blue);box-shadow:0 15px 25px -20px rgba(47,116,245,.65)}.stat:first-child b,.stat:first-child span{color:#fff}
+    .panel{background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(248,251,255,.85));border:1px solid rgba(255,255,255,.96);border-radius:22px;box-shadow:0 30px 60px -36px rgba(38,72,128,.3),0 16px 30px -24px rgba(38,72,128,.2);overflow:hidden}.toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:17px 22px;border-bottom:1px solid var(--line)}.filters{display:flex;gap:5px}.filter{border:0;background:transparent;color:var(--ink2);border-radius:8px;font-size:12px;padding:8px 11px;font-weight:500}.filter[aria-pressed=true]{color:var(--blue);background:#eaf1ff}.filter:hover{background:#edf3fb}.total{font-size:11px;color:var(--ink3);white-space:nowrap}.column-labels{display:grid;grid-template-columns:minmax(0,1fr) 157px 254px;gap:16px;padding:13px 24px 11px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--ink3);background:rgba(239,244,250,.42)}.column-labels span:last-child{text-align:right}.job{display:grid;grid-template-columns:minmax(0,1fr) 157px 254px;gap:16px;align-items:center;padding:18px 24px;border-top:1px solid rgba(150,170,200,.2);min-height:87px}.job:first-child{border-top:0}.job-title{font-size:13px;font-weight:600;line-height:1.45;margin:0 0 6px;overflow-wrap:anywhere}.job-meta{font-size:10px;color:var(--ink3);line-height:1.5;display:flex;align-items:center;gap:9px;flex-wrap:wrap}.job-meta a{color:var(--ink2)}.job-error{font-size:11px;color:#9f6415;line-height:1.5;margin:7px 0 0;overflow-wrap:anywhere}.badge{display:inline-flex;align-items:center;gap:6px;border-radius:6px;background:#f0f3f7;color:#596578;font-size:10px;font-weight:600;padding:6px 8px;width:fit-content;white-space:nowrap}.badge:before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}.badge.ready{background:#eaf2ff;color:#2467dc}.badge.review{background:#fff4de;color:#99620e}.badge.repair{background:#fcebe8;color:#ac5041}.badge.recorded{background:#e5f4ed;color:#248461}.actions{display:flex;gap:9px;justify-content:flex-end;align-items:center;flex-wrap:wrap}.demo-link{display:inline-flex;align-items:center;gap:13px;border:1px solid rgba(47,116,245,.16);border-radius:9px;background:#edf3ff;color:#2467dc;padding:9px 12px;font-size:11px;font-weight:600;white-space:nowrap}.demo-link:hover{background:#e1ecff;text-decoration:none}.demo-link.primary{background:var(--blue);border-color:var(--blue);color:#fff}.demo-link.primary:hover{background:#2569e8}.demo-link.preview{font-size:10px;background:#f7f8fa;color:var(--ink2);border-color:var(--line);gap:7px}.notes-link{font-size:10px;color:var(--ink2);padding:8px 0;white-space:nowrap}.pending-label{font-size:11px;color:var(--ink3)}.empty{padding:52px 24px 55px;text-align:center}.empty-symbol{height:40px;width:40px;margin:0 auto 14px;background:#edf3ff;color:var(--blue);border-radius:12px;display:grid;place-items:center;font-size:19px}.empty h2{font-size:15px;font-weight:600;margin:0 0 8px}.empty p{font-size:12px;line-height:1.6;color:var(--ink2);margin:0 auto;max-width:410px}.notice{margin:0 0 15px;padding:11px 14px;border:1px solid rgba(232,161,58,.25);border-radius:10px;background:#fff8e9;color:#946218;font-size:12px;line-height:1.5}.footer{display:flex;justify-content:space-between;gap:12px;margin:15px 4px 0;font-size:10px;line-height:1.6;color:var(--ink3)}
+    @media(max-width:850px){.column-labels,.job{grid-template-columns:minmax(0,1fr) 140px}.column-labels span:last-child{display:none}.job .actions{grid-column:1/-1;justify-content:flex-start}.job{gap:9px 12px;padding:17px 20px}.job .badge{justify-self:end}.stats{gap:10px}.stat{padding:17px}}
+    @media(max-width:540px){main{padding:18px 16px 30px}.mast{margin-bottom:26px}.brand,.connection{font-size:10px;padding:7px 9px}.connection{padding-right:0}.heading{align-items:flex-start}.heading .refresh{margin-top:25px;font-size:10px;padding:8px 9px}h1{font-size:30px}.intro{font-size:12px}.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:19px}.stat b{font-size:27px}.stat{border-radius:15px;padding:15px 17px}.toolbar{padding:12px}.filters{gap:2px}.filter{padding:8px;font-size:11px}.total{font-size:10px}.column-labels{display:none}.job{grid-template-columns:1fr;padding:18px}.job .badge{justify-self:start;grid-row:2}.job .actions{grid-column:1;margin-top:4px}.job-title{font-size:13px}.panel{border-radius:18px}.footer{flex-direction:column;gap:3px}.empty{padding:40px 20px}}
+  </style>
+</head>
+<body>
+<main>
+  <header class="mast"><div class="brand"><i aria-hidden="true"></i>AdveroSolutions</div><div class="connection" id="connection"><i aria-hidden="true"></i><span id="connectionText">Connecting…</span></div></header>
+  <section class="heading"><div><div class="eyebrow">Sales demonstrations</div><h1>Recording queue</h1><p class="intro">Paste job posts into Codex chat. Open a ready demo and its recording notes when you’re ready to record.</p></div><button class="refresh" id="refresh" type="button">Refresh ↻</button></section>
+  <section class="stats" aria-label="Queue counts">
+    <div class="stat"><b id="readyCount">—</b><span>Ready to record</span></div>
+    <div class="stat"><b id="progressCount">—</b><span>In progress</span></div>
+    <div class="stat"><b id="attentionCount">—</b><span>Needs attention</span></div>
+    <div class="stat"><b id="recordedCount">—</b><span>Recorded</span></div>
+  </section>
+  <div class="notice" id="notice" role="status" hidden></div>
+  <section class="panel" aria-label="Jobs">
+    <div class="toolbar"><nav class="filters" aria-label="Filter jobs"><button class="filter" type="button" data-filter="all" aria-pressed="true">All jobs</button><button class="filter" type="button" data-filter="ready" aria-pressed="false">Ready</button><button class="filter" type="button" data-filter="recorded" aria-pressed="false">Recorded</button></nav><span class="total" id="total">Loading…</span></div>
+    <div class="column-labels" aria-hidden="true"><span>Job</span><span>Status</span><span>Recording</span></div>
+    <div id="jobs"></div>
+    <div class="empty" id="empty"><div class="empty-symbol" aria-hidden="true">≡</div><h2 id="emptyTitle">Loading your queue</h2><p id="emptyCopy">Checking the local queue for jobs and reviewed demos.</p></div>
+  </section>
+  <footer class="footer"><span id="lastRefresh">Waiting for the first refresh.</span><span>Refreshes every 3 seconds · Changes happen in Codex chat</span></footer>
+</main>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const labels = {queued:'Queued',building:'Building',needs_build:'Needs content',built_pending_review:'Needs review',review_rejected:'Needs repair',reviewed_ready:'Ready to record',recorded:'Recorded',failed:'Needs repair'};
+  const badgeClasses = {reviewed_ready:'ready',built_pending_review:'review',needs_build:'review',review_rejected:'repair',failed:'repair',recorded:'recorded'};
+  const rows = new Map(); let jobs = []; let filter = 'all'; let loaded = false; let refreshing = false;
+  function text(node, value) { const next = String(value); if (node.textContent !== next) node.textContent = next; }
+  function element(tag, className) { const node = document.createElement(tag); if (className) node.className = className; return node; }
+  function link(className) { const node = element('a', className); node.target = '_blank'; node.rel = 'noopener noreferrer'; node.hidden = true; return node; }
+  function makeRow(id) {
+    const row = element('article','job'); row.dataset.id = id;
+    const info = element('div'); const title = element('h2','job-title'); const meta = element('div','job-meta');
+    const identifier = element('span'); const upwork = link(''); text(upwork,'Upwork job ↗'); meta.append(identifier,upwork);
+    const error = element('p','job-error'); error.hidden = true; info.append(title,meta,error);
+    const badge = element('span','badge'); const actions = element('div','actions');
+    const notes = link('notes-link'); text(notes,'Recording notes ↗'); const demo = link('demo-link'); const pending = element('span','pending-label');
+    actions.append(notes,demo,pending); row.append(info,badge,actions);
+    return {row,title,identifier,upwork,error,badge,notes,demo,pending};
+  }
+  function artifactUrl(job, key, filename) {
+    if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(job.id)) return null;
+    const expected = '/jobs/' + job.id + '/' + filename; return job[key] === expected ? expected : null;
+  }
+  function jobUrl(value) {
+    try { const url = new URL(value); return url.protocol === 'https:' && ['upwork.com','www.upwork.com'].includes(url.hostname) && !url.username && !url.password ? url.href : null; } catch (_) { return null; }
+  }
+  function setLink(node, url) { node.hidden = !url; if (url && node.getAttribute('href') !== url) node.setAttribute('href',url); if (!url) node.removeAttribute('href'); }
+  function updateRow(view, job) {
+    text(view.title,job.title || 'Untitled job'); text(view.identifier,job.id); text(view.badge,labels[job.status] || 'Unknown status');
+    const badgeClass = 'badge ' + (badgeClasses[job.status] || ''); if (view.badge.className !== badgeClass) view.badge.className = badgeClass;
+    setLink(view.upwork,jobUrl(job.jobUrl)); text(view.error,job.error || ''); view.error.hidden = !job.error;
+    const page = artifactUrl(job,'pageUrl','page.html'); const notes = artifactUrl(job,'recordingScriptUrl','recording-script.txt');
+    setLink(view.demo,page); setLink(view.notes,notes);
+    const ready = job.status === 'reviewed_ready'; const recorded = job.status === 'recorded';
+    const demoClass = 'demo-link ' + (ready ? 'primary' : recorded ? '' : 'preview'); if (view.demo.className !== demoClass) view.demo.className = demoClass;
+    text(view.demo,ready || recorded ? 'Open demo ↗' : 'Preview · ' + (labels[job.status] || 'pending').toLowerCase() + ' ↗');
+    view.demo.setAttribute('aria-label', (ready || recorded ? 'Open demo for ' : 'Open pending preview for ') + (job.title || job.id));
+    view.notes.setAttribute('aria-label','Recording notes for ' + (job.title || job.id));
+    view.pending.hidden = Boolean(page); text(view.pending,job.status === 'needs_build' ? 'Content needed' : job.status === 'queued' || job.status === 'building' ? 'Demo pending' : 'Demo unavailable');
+  }
+  function applyFilter() {
+    let visible = 0;
+    for (const job of jobs) { const view = rows.get(job.id); const show = filter === 'all' || (filter === 'ready' && job.status === 'reviewed_ready') || (filter === 'recorded' && job.status === 'recorded'); view.row.hidden = !show; if (show) visible++; }
+    $('empty').hidden = visible > 0;
+    if (!loaded) return;
+    const title = !jobs.length ? 'No jobs in the queue yet' : filter === 'ready' ? 'No demos ready to record yet' : filter === 'recorded' ? 'No recorded demos yet' : 'No jobs to show';
+    const copy = !jobs.length ? 'Paste a job post into Codex chat to add it to this queue.' : filter === 'ready' ? 'Jobs appear here after their content, build and independent review are complete.' : filter === 'recorded' ? 'Tell Codex when you have recorded a demo to move it here.' : 'Choose another filter to see your jobs.';
+    text($('emptyTitle'),title); text($('emptyCopy'),copy); text($('total'),visible + (filter === 'all' ? ' jobs' : ' of ' + jobs.length + ' jobs'));
+  }
+  function render(snapshot) {
+    if (snapshot.schemaVersion !== 1 || !Array.isArray(snapshot.jobs) || !snapshot.counts || typeof snapshot.counts !== 'object') throw new Error('Invalid queue response');
+    const seen = new Set();
+    for (const job of snapshot.jobs) { if (!job || typeof job.id !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(job.id) || seen.has(job.id) || typeof job.status !== 'string') throw new Error('Invalid job response'); seen.add(job.id); }
+    jobs = snapshot.jobs; loaded = true;
+    for (const [id, view] of rows) { if (!seen.has(id)) { view.row.remove(); rows.delete(id); } }
+    jobs.forEach((job,index) => { let view = rows.get(job.id); if (!view) { view = makeRow(job.id); rows.set(job.id,view); } updateRow(view,job); const current = $('jobs').children[index]; if (current !== view.row) $('jobs').insertBefore(view.row,current || null); });
+    const count = key => Number.isFinite(snapshot.counts[key]) ? snapshot.counts[key] : 0;
+    text($('readyCount'),count('reviewed_ready')); text($('progressCount'),count('queued') + count('building')); text($('attentionCount'),count('needs_build') + count('built_pending_review') + count('review_rejected') + count('failed')); text($('recordedCount'),count('recorded'));
+    applyFilter();
+  }
+  async function refresh() {
+    if (refreshing) return; refreshing = true;
+    const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(),2500);
+    try {
+      const response = await fetch('/queue.json',{cache:'no-store',signal:controller.signal}); if (!response.ok) throw new Error('Queue unavailable');
+      render(await response.json()); $('notice').hidden = true; $('connection').classList.remove('offline'); text($('connectionText'),'Local queue connected');
+      text($('lastRefresh'),'Last refreshed ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'}));
+    } catch (_) {
+      $('connection').classList.add('offline'); text($('connectionText'),'Queue disconnected');
+      text($('notice'),loaded ? 'The queue is unavailable. Showing the last received jobs; retrying every 3 seconds.' : 'Cannot reach the local queue. Check that the queue server is running; retrying every 3 seconds.'); $('notice').hidden = false;
+      if (!loaded) { text($('emptyTitle'),'Queue unavailable'); text($('emptyCopy'),'Start the local queue server from Codex, then refresh this page.'); text($('total'),'Unavailable'); }
+    } finally { clearTimeout(timeout); refreshing = false; }
+  }
+  document.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click',() => { filter = button.dataset.filter; document.querySelectorAll('[data-filter]').forEach(item => item.setAttribute('aria-pressed',String(item === button))); applyFilter(); }));
+  $('refresh').addEventListener('click',refresh); refresh(); setInterval(refresh,3000);
+})();
+</script>
+</body>
+</html>

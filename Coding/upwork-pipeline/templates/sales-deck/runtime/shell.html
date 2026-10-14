@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>__PAGE_TITLE__</title>
+  <style>
+    @font-face {
+      font-family: Inter;
+      src: url(data:font/woff2;base64,__INLINE_FONT__) format('woff2');
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: swap;
+    }
+    __INLINE_CSS__
+  </style>
+</head>
+<body>
+  <div class="sky"></div>
+  <div class="haze"><i></i><i></i><i></i></div>
+  <main id="app">
+    <header class="mast">
+      <div class="brand"><b></b><span id="systemName"></span></div>
+      <span class="chip">Sample data</span>
+    </header>
+    <div class="reviewbar">
+      <label>Route
+        <select id="durationSelect">
+          <option value="1" selected>Quick · 1 minute</option>
+          <option value="2">Standard · 2 minutes</option>
+          <option value="3">Detailed · 3 minutes</option>
+        </select>
+      </label>
+      <button id="notesToggle" class="quiet" aria-expanded="false" aria-controls="notes">Talking points</button>
+      <button id="present" class="primary small">Present <span aria-hidden="true">↗</span></button>
+    </div>
+    <section id="stage" aria-label="Presentation chapter"></section>
+    <footer class="decknav">
+      <button id="previous" class="nav-button" aria-label="Previous chapter">← <span>Previous</span></button>
+      <nav id="chapters" aria-label="Chapters"></nav>
+      <button id="next" class="nav-button">Next <span aria-hidden="true">→</span></button>
+    </footer>
+    <aside id="notes" class="notes panel" aria-label="Talking points" hidden>
+      <div class="notes-heading">
+        <b>Talking points</b>
+        <button id="closeNotes" aria-label="Close talking points">×</button>
+      </div>
+      <div id="notesBody"></div>
+    </aside>
+  </main>
+  <script>__INLINE_JS__</script>
+</body>
+</html>

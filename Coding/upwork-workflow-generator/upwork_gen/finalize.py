@@ -38,6 +38,7 @@ import argparse
 import csv
 import datetime
 import io
+import json
 import os
 import re
 import stat
@@ -268,6 +269,33 @@ def log_row(job_dir: str, loom: str, variant: str, visible_chars: Optional[int],
     if os.path.exists(spec_path):
         spec = WorkflowSpec.load(spec_path)
         platform, slug, nodes = platform_label(spec), slugify(spec.title), str(len(spec.flow_nodes))
+    elif os.path.exists(os.path.join(job_dir, "deck-spec.json")):
+        # Source-only decks render in the shared queue, outside the job folder.
+        # Count the first workflow, matching the platform recorded for that scene.
+        # Validate only the metadata we consume; deck rendering owns its full schema.
+        with open(os.path.join(job_dir, "deck-spec.json"), encoding="utf-8") as fh:
+            deck = json.load(fh)
+        scenes = deck.get("scenes") if isinstance(deck, dict) else None
+        if not isinstance(scenes, list) or not scenes or any(
+                not isinstance(scene, dict) or not isinstance(scene.get("kind"), str)
+                for scene in scenes):
+            raise ValueError("deck-spec.json: scenes must be a nonempty list of scene objects with kind strings")
+        workflow = next((scene for scene in scenes if scene["kind"] == "workflow"), None)
+        if workflow is None:
+            raise ValueError("deck-spec.json: requires a workflow scene")
+        platform = workflow.get("platform")
+        if not isinstance(platform, str) or platform not in ("ghl", "n8n", "make"):
+            raise ValueError("deck-spec.json: first workflow platform must be ghl, n8n or make")
+        content = workflow.get("content")
+        flow_nodes = content.get("nodes") if isinstance(content, dict) else None
+        if not isinstance(flow_nodes, list) or not flow_nodes or any(
+                not isinstance(node, dict) or not isinstance(node.get("id"), str)
+                or not node["id"].strip() for node in flow_nodes):
+            raise ValueError("deck-spec.json: first workflow content.nodes must be a nonempty list of objects with string ids")
+        if len({node["id"] for node in flow_nodes}) != len(flow_nodes):
+            raise ValueError("deck-spec.json: first workflow node ids must be unique")
+        slug = os.path.basename(os.path.normpath(job_dir))
+        nodes = str(len(flow_nodes))
     elif any(os.path.exists(os.path.join(job_dir, f)) for f in ("prototype.html", "page.html")):
         # Prototype-only jobs have no spec: log the prototype itself.
         platform, slug, nodes = "prototype", os.path.basename(os.path.normpath(job_dir)), ""

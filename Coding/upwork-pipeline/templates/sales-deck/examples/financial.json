@@ -1,0 +1,398 @@
+{
+  "schemaVersion": 1,
+  "id": "financial",
+  "title": "Marketing Automation & CRM Specialist | Build Our Digital Lead-to-Sales Engine",
+  "systemName": "Your lead-to-sales engine",
+  "account": {
+    "name": "Financial services demo",
+    "initials": "FS",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "fixture:financial",
+    "facts": [
+      "Test fixture adapted from approved V4. Not a saved Upwork job.",
+      "Our goal is to generate more customers from the leads we're already paying to acquire.",
+      "If we were generating 100 Meta leads per month but converting very few into customers, what would be the first three things you would investigate?",
+      "Build automated email and SMS follow-up workflows using approved messaging and consent-based practices."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "name": "Avery Morgan",
+      "email": "avery.morgan@example.com"
+    },
+    "owner": {
+      "name": "Maya Chen"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your lead-to-sales engine",
+    "title": "From Meta enquiry",
+    "accent": "to customer.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "100 Meta leads: your example",
+      "CRM selection",
+      "Approved email and SMS"
+    ],
+    "previewSteps": [
+      {
+        "title": "Capture and assign",
+        "detail": "Keep the campaign and owner with the enquiry."
+      },
+      {
+        "title": "Confirm the appointment",
+        "detail": "Show the reply, confirmation, and team notification."
+      },
+      {
+        "title": "Trace the sale",
+        "detail": "Connect the customer outcome to the original campaign."
+      }
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "footer": "Illustrative sample · CRM selection follows account review"
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Measure the journey",
+    "accent": "from enquiry to customer.",
+    "caption": "Establish the baseline, then track response speed, confirmed appointments, and customers.",
+    "metrics": [
+      {
+        "name": "First-response time",
+        "direction": "down",
+        "aim": "Respond sooner",
+        "definition": "Median elapsed time from enquiry receipt to the first approved response sent to that lead, reported separately by lead source and communication channel."
+      },
+      {
+        "name": "Confirmed appointments per 100 leads",
+        "direction": "up",
+        "aim": "Confirm more appointments",
+        "definition": "Distinct leads with an explicitly confirmed appointment divided by all leads in the same acquisition cohort, multiplied by 100. Count each lead once and use an agreed observation period."
+      },
+      {
+        "name": "Lead-to-customer conversion",
+        "direction": "up",
+        "aim": "Convert more existing leads",
+        "definition": "Distinct leads recorded as customers divided by all leads in the same acquisition cohort, multiplied by 100, using the agreed customer definition and observation period."
+      }
+    ],
+    "baselineNote": "We’ll establish the baseline and agree the targets.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "I'd measure response time, confirmed appointments, and customers against your agreed starting baseline. Worth a quick 15-minute call? Reply here and I'll send times."
+  },
+  "scenes": [
+    {
+      "id": "workflow",
+      "kind": "workflow",
+      "platform": "ghl",
+      "title": "Follow each Meta enquiry through to the sale.",
+      "caption": "Assign the lead, start the conversation, and keep its source attached.",
+      "beat": "Avery arrives from Meta, Maya gets assigned, and the campaign stays on the contact. I'm showing GoHighLevel as an option.",
+      "details": [
+        "Meta enquiry → Avery Morgan → Maya Chen",
+        "Campaign retained through every pipeline stage"
+      ],
+      "content": {
+        "name": "Lead-to-sales engine",
+        "nodes": [
+          {
+            "id": "step-1",
+            "type": "facebook_lead",
+            "label": "Meta enquiry received",
+            "detail": "Meta enquiry received"
+          },
+          {
+            "id": "step-2",
+            "type": "assign_user",
+            "label": "Assigned to Maya Chen",
+            "detail": "Assigned to Maya Chen"
+          },
+          {
+            "id": "step-3",
+            "type": "opportunity",
+            "label": "Opportunity created",
+            "detail": "Opportunity created"
+          },
+          {
+            "id": "step-4",
+            "type": "sms",
+            "label": "Approved SMS sent",
+            "detail": "Approved SMS sent"
+          },
+          {
+            "id": "step-5",
+            "type": "email",
+            "label": "Enquiry email sent",
+            "detail": "Enquiry email sent"
+          },
+          {
+            "id": "step-6",
+            "type": "notification",
+            "label": "Maya notified",
+            "detail": "Maya notified"
+          }
+        ],
+        "edges": [
+          {
+            "from": "step-1",
+            "to": "step-2"
+          },
+          {
+            "from": "step-2",
+            "to": "step-3"
+          },
+          {
+            "from": "step-3",
+            "to": "step-4"
+          },
+          {
+            "from": "step-4",
+            "to": "step-5"
+          },
+          {
+            "from": "step-5",
+            "to": "step-6"
+          }
+        ],
+        "runOrder": [
+          "step-1",
+          "step-2",
+          "step-3",
+          "step-4",
+          "step-5",
+          "step-6"
+        ],
+        "context": {
+          "name": "{{lead.name}}",
+          "subtitle": "Meta Lead Ads · Maya Chen",
+          "fields": [
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            }
+          ],
+          "states": [
+            "Meta enquiry received",
+            "Assigned to Maya Chen",
+            "Opportunity created",
+            "Approved SMS sent",
+            "Enquiry email sent",
+            "Maya notified"
+          ]
+        },
+        "related": [
+          {
+            "title": "Appointment confirmation",
+            "detail": "Accepted time recorded before confirmation and owner notification."
+          },
+          {
+            "title": "Customer outcome",
+            "detail": "Original Meta source retained on recorded sale."
+          }
+        ]
+      },
+      "statuses": [
+        "Meta enquiry received",
+        "Assigned to Maya Chen",
+        "Opportunity created",
+        "Approved SMS sent",
+        "Enquiry email sent",
+        "Maya notified"
+      ],
+      "optional": false
+    },
+    {
+      "id": "record",
+      "kind": "record",
+      "platform": "ghl",
+      "title": "Give Maya the enquiry and its context.",
+      "caption": "Avery enters once, with the campaign, request, contact details, and recorded communication preferences.",
+      "beat": "Here's the contact Maya would receive. It has Avery's request, the Meta campaign, and the communication preferences. I'd use the same intake structure for your website, with its own source.",
+      "details": [
+        "Avery Morgan · avery.morgan@example.com",
+        "Source: Meta Lead Ads · Owner: Maya Chen"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.email}}",
+        "sourceTitle": "Meta enquiry",
+        "sourceFields": [
+          {
+            "label": "Source",
+            "value": "Meta Lead Ads"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Owner",
+            "value": "{{owner.name}}"
+          },
+          {
+            "label": "Preferences",
+            "value": "Email and SMS recorded"
+          }
+        ],
+        "events": [
+          {
+            "title": "Contact matched",
+            "detail": "Source and enquiry saved together"
+          },
+          {
+            "title": "Context added",
+            "detail": "Campaign retained"
+          }
+        ],
+        "notice": "Demonstration record. Communication permissions recorded."
+      },
+      "statuses": [
+        "Contact identified",
+        "Context attached"
+      ],
+      "optional": true
+    },
+    {
+      "id": "messages",
+      "kind": "messages",
+      "platform": "ghl",
+      "title": "Turn the enquiry into a confirmed appointment.",
+      "caption": "Approved messages, Avery’s reply, and the appointment details stay together.",
+      "beat": "Here are the approved SMS and email. Avery replies and confirms a time. That moves the opportunity to Appointment confirmed and gives Maya the conversation before the call.",
+      "details": [
+        "Permission recorded before SMS and email",
+        "Customer confirms → appointment → owner notification"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.email}}",
+        "fields": [
+          {
+            "label": "Owner",
+            "value": "{{owner.name}}"
+          },
+          {
+            "label": "Source",
+            "value": "Meta Lead Ads"
+          }
+        ],
+        "items": [
+          {
+            "channel": "sms",
+            "direction": "outgoing",
+            "sender": "Maya Chen",
+            "time": "10:03 am",
+            "body": "Hi Avery, it's Maya. Thanks for your enquiry. Would Thursday at 2 pm work for a quick conversation?"
+          },
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "Maya Chen",
+            "time": "10:04 am",
+            "subject": "Your enquiry",
+            "body": "We can cover your goals, the available options, and the information needed for the next step."
+          },
+          {
+            "channel": "sms",
+            "direction": "incoming",
+            "sender": "{{lead.name}}",
+            "time": "10:08 am",
+            "body": "Thursday at 2 pm works. Please book me in."
+          },
+          {
+            "channel": "sms",
+            "direction": "outgoing",
+            "sender": "Maya Chen",
+            "time": "10:09 am",
+            "body": "Confirmed: Thursday 15 October at 2 pm CT. I will call you then, Avery."
+          }
+        ],
+        "notice": "Avery confirmed Thursday 15 October at 2 pm CT. Maya receives an internal notification with campaign context."
+      },
+      "statuses": [
+        "First message sent",
+        "Email added",
+        "Avery confirms",
+        "Appointment confirmed · Maya notified"
+      ],
+      "optional": false
+    },
+    {
+      "id": "result",
+      "kind": "outcome",
+      "platform": "ghl",
+      "title": "See which Meta enquiries became customers.",
+      "caption": "Illustrative: 100 Meta leads, 20 appointments, 4 customers. Avery keeps the original campaign.",
+      "beat": "This sample shows 100 Meta leads, 20 appointments, and four customers. My relevant past result: $5M in loan applications in 30 days on $1,500 of ad spend for a lender.",
+      "details": [
+        "Illustrative cohort: 100 Meta leads → 20 appointments → 4 customers",
+        "Past result: $5M in loan applications · 30 days · $1,500 ad spend"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "Original Meta campaign retained",
+        "fields": [
+          {
+            "label": "Owner",
+            "value": "{{owner.name}}"
+          },
+          {
+            "label": "Source",
+            "value": "Meta Lead Ads"
+          },
+          {
+            "label": "Campaign",
+            "value": "Consumer enquiry"
+          }
+        ],
+        "stages": [
+          "New enquiry",
+          "Engaged",
+          "Appointment confirmed",
+          "Customer won"
+        ],
+        "stageSequence": [
+          0,
+          2,
+          3
+        ],
+        "metrics": [
+          {
+            "label": "Meta leads",
+            "value": "100",
+            "note": "Illustrative acquisition cohort"
+          },
+          {
+            "label": "Appointments",
+            "value": "20",
+            "note": "Illustrative, not a promised result"
+          },
+          {
+            "label": "Customers",
+            "value": "4",
+            "note": "Illustrative, not a promised result"
+          }
+        ],
+        "note": "The recorded sale retains the original campaign and conversation. Counts are illustrative.",
+        "proof": {
+          "label": "Relevant past project · lender",
+          "value": "$5M in loan applications",
+          "description": "Generated in 30 days on $1,500 ad spend.",
+          "sourceNote": "Past project result, separate from this illustrative cohort. Loan applications are not revenue."
+        }
+      },
+      "statuses": [
+        "100 Meta leads in sample",
+        "20 appointments in sample",
+        "4 customers · source retained"
+      ],
+      "optional": false
+    }
+  ],
+  "personalization": {
+    "firstName": "Ron",
+    "source": "client_reviews",
+    "reviewCount": 4
+  }
+}

@@ -1,0 +1,309 @@
+{
+  "schemaVersion": 1,
+  "id": "make-order-handoff",
+  "title": "Send Make order handoffs into GoHighLevel",
+  "systemName": "Your Make to GoHighLevel order handoff",
+  "account": {
+    "name": "Harbor shop demo",
+    "initials": "HS",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "fixture:make-order-handoff",
+    "facts": [
+      "Invented test fixture. Not a saved Upwork job.",
+      "Invented brief: Send Make order handoffs into GoHighLevel. Native HTTP Request creates or updates the GHL contact and records the handoff tag; an agreed GHL workflow sends the confirmation."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "name": "Morgan Ellis",
+      "email": "morgan@example.com"
+    },
+    "reference": {
+      "id": "ORD-734"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your Make to GoHighLevel order handoff",
+    "title": "From new order",
+    "accent": "to fulfilment.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "make intake workflow",
+      "GoHighLevel handoff",
+      "Review branch held"
+    ],
+    "previewSteps": [
+      {
+        "title": "Capture",
+        "detail": "Keep the source and reference."
+      },
+      {
+        "title": "Route",
+        "detail": "Take the sample through its matching branch."
+      },
+      {
+        "title": "Confirm",
+        "detail": "Show the message and recorded handoff."
+      }
+    ],
+    "footer": "Invented sample · no live system connected",
+    "beat": "Here is the make intake and its GoHighLevel handoff."
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Track the handoff",
+    "accent": "through its result.",
+    "caption": "Agree a baseline for routing, acknowledgement, and completed handoffs.",
+    "metrics": [
+      {
+        "name": "Time to acknowledgement",
+        "direction": "down",
+        "aim": "Acknowledge sooner",
+        "definition": "Elapsed time between intake and acknowledgement."
+      },
+      {
+        "name": "Correct routing",
+        "direction": "up",
+        "aim": "Route more items correctly",
+        "definition": "Items routed to the agreed teammate or fulfilment queue divided by all items."
+      },
+      {
+        "name": "Completed handoffs",
+        "direction": "up",
+        "aim": "Complete more handoffs",
+        "definition": "Items acknowledged by their assigned teammate divided by all routed items."
+      }
+    ],
+    "baselineNote": "Establish the baseline and agree the targets.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "I'd check the routing rules and the handoff with you. Worth a quick 15-minute call? Reply here and I'll send times."
+  },
+  "scenes": [
+    {
+      "id": "workflow",
+      "kind": "workflow",
+      "platform": "make",
+      "title": "Follow the sample through its matching route.",
+      "caption": "The review branch stays inactive while this sample completes.",
+      "beat": "The make workflow captures this sample, selects its matching route, then updates the GoHighLevel contact through an HTTP Request. The handoff tag starts the agreed GoHighLevel confirmation.",
+      "details": [
+        "{{reference.id}} retained on the GoHighLevel contact",
+        "Email match avoids a duplicate sample contact",
+        "HTTP Request is a demonstration action; account authentication and field IDs are agreed during implementation."
+      ],
+      "content": {
+        "name": "Order handoff",
+        "nodes": [
+          {
+            "id": "step-1",
+            "type": "custom_webhook",
+            "label": "Order webhook received",
+            "detail": "Order webhook received"
+          },
+          {
+            "id": "step-2",
+            "type": "google_sheets_add_row",
+            "label": "Append order to handoff sheet",
+            "detail": "Append order to handoff sheet"
+          },
+          {
+            "id": "step-3",
+            "type": "router",
+            "label": "Route standard order",
+            "detail": "Route standard order"
+          },
+          {
+            "id": "step-4",
+            "type": "http_request",
+            "label": "Update GoHighLevel contact",
+            "detail": "Illustrative HTTP Request: match contact by email; update reference and handoff tag in GoHighLevel."
+          },
+          {
+            "id": "step-5",
+            "type": "slack_create_message",
+            "label": "Notify assigned team",
+            "detail": "Slack message includes the contact and original reference."
+          },
+          {
+            "id": "review",
+            "type": "google_sheets_add_row",
+            "label": "Manual review queue",
+            "detail": "Held for teammate review"
+          }
+        ],
+        "edges": [
+          {
+            "from": "step-1",
+            "to": "step-2"
+          },
+          {
+            "from": "step-2",
+            "to": "step-3"
+          },
+          {
+            "from": "step-3",
+            "to": "step-4",
+            "label": "Standard order"
+          },
+          {
+            "from": "step-4",
+            "to": "step-5"
+          },
+          {
+            "from": "step-3",
+            "to": "review",
+            "label": "Review required"
+          }
+        ],
+        "runOrder": [
+          "step-1",
+          "step-2",
+          "step-3",
+          "step-4",
+          "step-5"
+        ],
+        "context": {
+          "name": "{{lead.name}}",
+          "subtitle": "Invented order example",
+          "fields": [
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            }
+          ],
+          "states": [
+            "Order received",
+            "Order appended to sheet",
+            "Standard order route selected",
+            "GoHighLevel contact and handoff tag updated",
+            "Fulfilment team notified"
+          ]
+        },
+        "related": [
+          {
+            "title": "GoHighLevel confirmation",
+            "detail": "Handoff tag starts the approved GoHighLevel email and owner notification."
+          },
+          {
+            "title": "Review branch",
+            "detail": "Items requiring review remain outside the confirmation path."
+          }
+        ]
+      },
+      "statuses": [
+        "Order received",
+        "Order appended to sheet",
+        "Standard order route selected",
+        "GoHighLevel contact and handoff tag updated",
+        "Fulfilment team notified"
+      ],
+      "optional": false
+    },
+    {
+      "id": "messages",
+      "kind": "messages",
+      "platform": "ghl",
+      "title": "See the acknowledgement and team handoff.",
+      "caption": "The GoHighLevel handoff tag starts the confirmation and owner notification.",
+      "beat": "In GoHighLevel, the handoff tag starts the agreed confirmation and gives the owner the original reference.",
+      "details": [
+        "{{reference.id}} stays attached to both messages"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.email}}",
+        "fields": [
+          {
+            "label": "Reference",
+            "value": "{{reference.id}}"
+          },
+          {
+            "label": "Status",
+            "value": "Illustrative handoff"
+          }
+        ],
+        "items": [
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "GoHighLevel workflow",
+            "time": "Sample step",
+            "body": "Order {{reference.id}} added to the fulfilment queue."
+          },
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "Harbor shop",
+            "time": "Sample step",
+            "subject": "Your order",
+            "body": "We received your order. Your confirmation references {{reference.id}}."
+          }
+        ],
+        "notice": "Illustrative GoHighLevel destination screen. The make HTTP Request updates the contact and handoff tag; this GHL workflow sends the approved email and owner notification."
+      },
+      "statuses": [
+        "Team notification prepared",
+        "Acknowledgement prepared"
+      ],
+      "optional": false
+    },
+    {
+      "id": "result",
+      "kind": "outcome",
+      "platform": "ghl",
+      "title": "Keep the handoff attached to the original item.",
+      "caption": "The sample is acknowledged in its assigned queue.",
+      "beat": "This item retains its reference through the handoff.",
+      "details": [
+        "Result for {{reference.id}}",
+        "Counts are illustrative"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{reference.id}}",
+        "fields": [
+          {
+            "label": "Reference",
+            "value": "{{reference.id}}"
+          },
+          {
+            "label": "Destination",
+            "value": "Fulfilment queue"
+          }
+        ],
+        "stages": [
+          "Received",
+          "Routed",
+          "Acknowledged"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2
+        ],
+        "metrics": [
+          {
+            "label": "Sample received",
+            "value": "1",
+            "note": "Illustrative item"
+          },
+          {
+            "label": "Handoff recorded",
+            "value": "1",
+            "note": "Illustrative item"
+          }
+        ],
+        "note": "Illustrative GoHighLevel handoff result. The make intake retains its reference on the destination contact. No live system is connected."
+      },
+      "statuses": [
+        "Received",
+        "Routed",
+        "Acknowledged"
+      ],
+      "optional": false
+    }
+  ]
+}

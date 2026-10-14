@@ -1,0 +1,9 @@
+{
+  "name": "advero-sales-deck-runtime",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Portable DOM tests for the standalone sales presentation runtime",
+  "scripts": { "test": "node tests/runtime.cjs" },
+  "devDependencies": { "jsdom": "26.1.0" },
+  "engines": { "node": ">=18" }
+}

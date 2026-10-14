@@ -1,0 +1,4 @@
+#!/bin/sh
+# Resolve the entry point from this script, independently of the caller's cwd.
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+exec /usr/bin/python3 "$SCRIPT_DIR/templates/sales-deck/queue_engine.py" "$@"

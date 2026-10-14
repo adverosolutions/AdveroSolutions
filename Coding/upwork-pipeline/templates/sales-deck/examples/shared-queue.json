@@ -1,0 +1,24 @@
+{
+  "jobs": [
+    {
+      "id": "financial",
+      "title": "Marketing Automation & CRM Specialist | Build Our Digital Lead-to-Sales Engine",
+      "spec": "financial.json"
+    },
+    {
+      "id": "skool",
+      "title": "GoHighLevel Expert for Skool Integration",
+      "spec": "skool.json"
+    },
+    {
+      "id": "n8n-inbound-routing",
+      "title": "Route website enquiries from n8n into GoHighLevel",
+      "spec": "n8n-inbound-routing.json"
+    },
+    {
+      "id": "make-order-handoff",
+      "title": "Send Make order handoffs into GoHighLevel",
+      "spec": "make-order-handoff.json"
+    }
+  ]
+}

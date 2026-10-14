@@ -1,0 +1,300 @@
+{
+  "schemaVersion": 1,
+  "platforms": {
+    "ghl": {
+      "name": "GoHighLevel",
+      "status": "supported",
+      "layout": "vertical",
+      "referencePath": "../../jobs/_examples/finished-ghl.html",
+      "sources": [
+        "https://help.gohighlevel.com/support/solutions/articles/155000002294-what-are-workflow-actions-complete-list-",
+        "https://help.gohighlevel.com/support/solutions/articles/48001229927-workflows-vs-campaigns-triggers-deprecated-features-",
+        "https://help.gohighlevel.com/support/solutions/articles/155000003300-workflow-action-assign-to-user",
+        "https://help.gohighlevel.com/support/solutions/articles/48001202723-workflow-action-set-event-start-date"
+      ],
+      "actions": {
+        "facebook_lead": {
+          "label": "Facebook Lead Form Submitted",
+          "kind": "trigger",
+          "icon": "bolt",
+          "color": "#155eef",
+          "available": true
+        },
+        "assign_user": {
+          "label": "Assign To User",
+          "kind": "action",
+          "icon": "user",
+          "color": "#155eef",
+          "available": true
+        },
+        "opportunity": {
+          "label": "Create/Update Opportunity",
+          "kind": "action",
+          "icon": "briefcase",
+          "color": "#155eef",
+          "available": true
+        },
+        "sms": {
+          "label": "Send SMS",
+          "kind": "action",
+          "icon": "chat",
+          "color": "#155eef",
+          "available": true
+        },
+        "email": {
+          "label": "Send Email",
+          "kind": "action",
+          "icon": "mail",
+          "color": "#155eef",
+          "available": true
+        },
+        "notification": {
+          "label": "Send Internal Notification",
+          "kind": "action",
+          "icon": "bell",
+          "color": "#155eef",
+          "available": true
+        },
+        "contact_tag": {
+          "label": "Contact Tag",
+          "kind": "trigger",
+          "icon": "tag",
+          "color": "#155eef",
+          "available": true
+        },
+        "event_date": {
+          "label": "Set Event Start Date",
+          "kind": "action",
+          "icon": "calendar",
+          "color": "#155eef",
+          "available": true
+        },
+        "wait": {
+          "label": "Wait",
+          "kind": "action",
+          "icon": "clock",
+          "color": "#155eef",
+          "available": true
+        },
+        "condition": {
+          "label": "If/Else",
+          "kind": "branch",
+          "icon": "branch",
+          "color": "#155eef",
+          "available": true
+        }
+      }
+    },
+    "n8n": {
+      "name": "n8n",
+      "status": "supported",
+      "layout": "horizontal",
+      "referencePath": "../../jobs/_examples/finished-n8n.html",
+      "sources": [
+        "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/",
+        "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.set/",
+        "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.if/",
+        "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.httprequest/",
+        "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.slack/",
+        "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.gmail/",
+        "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.googlesheets/"
+      ],
+      "actions": {
+        "webhook": {
+          "label": "Webhook",
+          "kind": "trigger",
+          "icon": "webhook",
+          "color": "#ef6b53",
+          "available": true
+        },
+        "edit_fields": {
+          "label": "Edit Fields (Set)",
+          "kind": "action",
+          "icon": "edit",
+          "color": "#5b84db",
+          "available": true
+        },
+        "if": {
+          "label": "If",
+          "kind": "branch",
+          "icon": "branch",
+          "color": "#73a347",
+          "available": true
+        },
+        "http_request": {
+          "label": "HTTP Request",
+          "kind": "action",
+          "icon": "globe",
+          "color": "#7289b8",
+          "available": true
+        },
+        "slack": {
+          "label": "Send a message",
+          "kind": "action",
+          "icon": "chat",
+          "color": "#4a154b",
+          "available": true,
+          "app": "Slack"
+        },
+        "gmail": {
+          "label": "Send a message",
+          "kind": "action",
+          "icon": "mail",
+          "color": "#d85040",
+          "available": true,
+          "app": "Gmail"
+        },
+        "google_sheets": {
+          "label": "Append Row",
+          "kind": "action",
+          "icon": "grid",
+          "color": "#229d64",
+          "available": true,
+          "app": "Google Sheets"
+        },
+        "ai_agent": {
+          "label": "AI Agent",
+          "kind": "cluster",
+          "icon": "spark",
+          "color": "#7d65c1",
+          "available": false,
+          "reason": "AI cluster subnode connectors are not supported in schemaVersion 1."
+        },
+        "chat_model": {
+          "label": "Chat Model",
+          "kind": "subnode",
+          "icon": "chat",
+          "color": "#7d65c1",
+          "available": false,
+          "reason": "AI cluster subnode connectors are not supported in schemaVersion 1."
+        }
+      }
+    },
+    "make": {
+      "name": "Make",
+      "status": "supported",
+      "layout": "horizontal",
+      "referencePath": "../../jobs/_examples/finished-make.html",
+      "sources": [
+        "https://help.make.com/webhooks",
+        "https://help.make.com/router",
+        "https://apps.make.com/google-sheets",
+        "https://apps.make.com/gmail-modules",
+        "https://apps.make.com/slack",
+        "https://apps.make.com/http"
+      ],
+      "actions": {
+        "custom_webhook": {
+          "label": "Custom webhook",
+          "kind": "trigger",
+          "icon": "webhook",
+          "color": "#e94d70",
+          "available": true,
+          "app": "Webhooks"
+        },
+        "google_sheets_add_row": {
+          "label": "Add a Row",
+          "kind": "action",
+          "icon": "grid",
+          "color": "#209f65",
+          "available": true,
+          "app": "Google Sheets"
+        },
+        "router": {
+          "label": "Router",
+          "kind": "branch",
+          "icon": "branch",
+          "color": "#83b94b",
+          "available": true,
+          "app": "Flow Control"
+        },
+        "gmail_send_email": {
+          "label": "Send an email",
+          "kind": "action",
+          "icon": "mail",
+          "color": "#de5243",
+          "available": true,
+          "app": "Gmail"
+        },
+        "slack_create_message": {
+          "label": "Create a Message",
+          "kind": "action",
+          "icon": "chat",
+          "color": "#4a154b",
+          "available": true,
+          "app": "Slack"
+        },
+        "http_request": {
+          "label": "Make a request",
+          "kind": "action",
+          "icon": "globe",
+          "color": "#3b86c6",
+          "available": true,
+          "app": "HTTP"
+        }
+      }
+    }
+  },
+  "referenceOnly": {
+    "airtable": {
+      "name": "Airtable",
+      "status": "reference_only",
+      "referencePath": "../../jobs/_examples/finished-airtable.html"
+    },
+    "clay": {
+      "name": "Clay",
+      "status": "reference_only",
+      "referencePath": "../../jobs/_examples/finished-clay.html"
+    },
+    "clickup": {
+      "name": "ClickUp",
+      "status": "reference_only",
+      "referencePath": "../../jobs/_examples/finished-clickup.html"
+    },
+    "claude-code": {
+      "name": "Claude Code",
+      "status": "reference_only",
+      "referencePath": "../../jobs/_examples/finished-claude-code.html"
+    },
+    "cold-email": {
+      "name": "Cold email",
+      "status": "reference_only",
+      "referencePath": "../../jobs/_examples/finished-cold-email.html"
+    },
+    "grok": {
+      "name": "Grok",
+      "status": "reference_only",
+      "referencePath": "../../jobs/_examples/finished-grok.html"
+    },
+    "hermes": {
+      "name": "Hermes",
+      "status": "reference_only",
+      "referencePath": "../../jobs/_examples/finished-hermes.html"
+    },
+    "hubspot": {
+      "name": "HubSpot",
+      "status": "reference_only",
+      "referencePath": "../../jobs/_examples/finished-hubspot.html"
+    },
+    "notion": {
+      "name": "Notion",
+      "status": "reference_only",
+      "referencePath": "../../jobs/_examples/finished-notion.html"
+    },
+    "pipedrive": {
+      "name": "Pipedrive",
+      "status": "reference_only",
+      "referencePath": "../../jobs/_examples/finished-pipedrive.html"
+    },
+    "voice-agent": {
+      "name": "Voice agent",
+      "status": "reference_only",
+      "referencePath": "../../jobs/_examples/finished-voice-agent.html"
+    },
+    "zapier": {
+      "name": "Zapier",
+      "status": "reference_only",
+      "referencePath": "../../jobs/_examples/finished-zapier.html"
+    }
+  }
+}

@@ -119,6 +119,74 @@ class TestFinalizeLogsMeta(unittest.TestCase):
         self.assertEqual(row["job_title"], "A Job")
         self.assertIn("connects blank", out)
 
+    def write_deck(self, deck):
+        with open(os.path.join(self.job, "deck-spec.json"), "w", encoding="utf-8") as fh:
+            json.dump(deck, fh)
+
+    def test_source_only_deck_finalizes_with_first_workflow_metadata(self):
+        os.remove(os.path.join(self.job, "spec.json"))
+        for platform in ("ghl", "n8n", "make"):
+            with self.subTest(platform=platform):
+                self.write_deck({"scenes": [
+                    {"kind": "contact"},
+                    {"kind": "workflow", "platform": platform,
+                     "content": {"nodes": [{"id": "lead"}, {"id": "notify"}]}},
+                    {"kind": "workflow", "platform": "make",
+                     "content": {"nodes": [{"id": "other"}]}},
+                ]})
+                row, _ = self.run_main("url: https://www.upwork.com/jobs/~deck-" + platform + "\nDeck Job\n")
+                self.assertEqual((row["platform"], row["build_slug"], row["node_count"]),
+                                 (platform, "job", "2"))
+                self.assertEqual(row["job_title"], "Deck Job")
+                with open(os.path.join(self.job, "proposal.md"), encoding="utf-8") as fh:
+                    self.assertEqual(fh.read(), finalize.fill(
+                        PROPOSAL, "https://www.loom.com/share/abc123", 2, "today")[0])
+                self.assertEqual(set(os.listdir(self.job)), {"jd.txt", "deck-spec.json", "proposal.md"})
+
+    def test_existing_spec_keeps_precedence_over_deck(self):
+        self.write_deck({"scenes": "invalid"})
+        row, _ = self.run_main("url: https://www.upwork.com/jobs/~legacy\nLegacy Job\n")
+        self.assertEqual((row["platform"], row["build_slug"], row["node_count"]),
+                         ("n8n", "your-lead-router", "2"))
+
+    def test_malformed_deck_refuses_before_proposal_log_or_clipboard_changes(self):
+        os.remove(os.path.join(self.job, "spec.json"))
+        with open(os.path.join(self.job, "jd.txt"), "w", encoding="utf-8") as fh:
+            fh.write("url: https://www.upwork.com/jobs/~bad-deck\nDeck Job\n")
+        bad_decks = [[], {}, {"scenes": "workflow"}, {"scenes": [None]},
+                     {"scenes": [{"kind": "contact"}]}]
+        for platform, content in [(None, {}), ([], {}), ("unsupported", {}),
+                                  ("ghl", []), ("ghl", {"nodes": "bad"}),
+                                  ("ghl", {"nodes": []}), ("ghl", {"nodes": [None]}),
+                                  ("ghl", {"nodes": [{"id": 1}]}),
+                                  ("ghl", {"nodes": [{"id": " "}]}),
+                                  ("ghl", {"nodes": [{"id": "x"}, {"id": "x"}]})]:
+            bad_decks.append({"scenes": [{"kind": "workflow", "platform": platform,
+                                          "content": content}]})
+        for deck in bad_decks + ["invalid-json"]:
+            with self.subTest(deck=deck):
+                self.write_deck(deck)
+                if deck == "invalid-json":
+                    with open(os.path.join(self.job, "deck-spec.json"), "w") as fh:
+                        fh.write("{")
+                paths = [os.path.join(self.job, "proposal.md"), self.csv]
+                before = []
+                for path in paths:
+                    with open(path, "rb") as fh:
+                        before.append(fh.read())
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out), \
+                        unittest.mock.patch.object(finalize.subprocess, "run") as clipboard:
+                    code = finalize.main([self.job, "--csv", self.csv, "--loom",
+                                          "https://www.loom.com/share/abc123", "--runtime", "2",
+                                          "--start", "today"])
+                self.assertEqual(code, 2, out.getvalue())
+                self.assertIn("cannot build the log row", out.getvalue())
+                clipboard.assert_not_called()
+                for path, original in zip(paths, before):
+                    with open(path, "rb") as fh:
+                        self.assertEqual(fh.read(), original)
+
 
 if __name__ == "__main__":
     unittest.main()

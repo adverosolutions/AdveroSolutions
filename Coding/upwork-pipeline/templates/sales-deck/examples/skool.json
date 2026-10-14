@@ -1,0 +1,349 @@
+{
+  "schemaVersion": 1,
+  "id": "skool",
+  "title": "GoHighLevel Expert for Skool Integration",
+  "systemName": "Your reusable workshop setup",
+  "account": {
+    "name": "Workshop studio demo",
+    "initials": "WS",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "fixture:skool",
+    "facts": [
+      "Test fixture adapted from approved V4. Not a saved Upwork job.",
+      "Migrate our existing database from Kit.",
+      "Connect Skool workshops with GoHighLevel for email capture, automated reminders and follow-ups.",
+      "We plan to run public paid workshops every 3 weeks through Skool and need someone who can help us manage and reuse simple automations, troubleshoot issues and provide occasional technical support."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "name": "Jamie Reid",
+      "email": "jamie@example.com"
+    },
+    "owner": {
+      "name": "Workshop team"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your Skool workshops",
+    "title": "Your three-week",
+    "accent": "workshop cycle.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Existing Kit contacts",
+      "Assessment form",
+      "Paid workshops every three weeks"
+    ],
+    "previewSteps": [
+      {
+        "title": "Match the contact",
+        "detail": "Keep the assessment with the existing Kit contact."
+      },
+      {
+        "title": "Confirm and remind",
+        "detail": "Use registration verified for this paid workshop."
+      },
+      {
+        "title": "Prepare the next date",
+        "detail": "Reuse the setup with a fresh registration list."
+      }
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "footer": "Illustrative sample · Registration verified per workshop"
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Measure each workshop.",
+    "accent": "Improve the next one.",
+    "caption": "Track preparation time, reminder coverage, and attendance across each workshop cycle.",
+    "metrics": [
+      {
+        "name": "Preparation time per workshop",
+        "direction": "down",
+        "aim": "Spend less time preparing",
+        "definition": "Total active staff minutes spent preparing the form, event details, registration checks, email sequence, and pre-event test for each workshop. Exclude initial system setup and workshop content creation."
+      },
+      {
+        "name": "Reminder coverage",
+        "direction": "up",
+        "aim": "Reach more verified registrants",
+        "definition": "Verified workshop registrants due a reminder who receive a delivery-confirmed reminder divided by all verified registrants due that reminder. Report ineligible or suppressed recipients separately without overriding their preferences."
+      },
+      {
+        "name": "Attendance rate",
+        "direction": "up",
+        "aim": "Bring more registrants into the workshop",
+        "definition": "Verified workshop registrants recorded as attending divided by all verified registrants for that workshop, multiplied by 100. Apply the same agreed cancellation cutoff and attendance definition to each event."
+      }
+    ],
+    "baselineNote": "We’ll establish the baseline and agree the targets.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "I'd track preparation time, reminder coverage, and attendance against your baseline. Worth a quick 15-minute call? Reply here and I'll send times."
+  },
+  "scenes": [
+    {
+      "id": "workflow",
+      "kind": "workflow",
+      "platform": "ghl",
+      "title": "Run the next workshop from the same setup.",
+      "caption": "Verified registration starts confirmation and reminders in GoHighLevel.",
+      "beat": "Jamie's form matches the existing Kit contact. Then I verify registration for this specific workshop.",
+      "details": [
+        "Existing Kit contact → matched GHL contact",
+        "Verified workshop registration → confirmation → reminder"
+      ],
+      "content": {
+        "name": "Skool workshop system",
+        "nodes": [
+          {
+            "id": "step-1",
+            "type": "contact_tag",
+            "label": "W1028 registration verified",
+            "detail": "W1028 registration verified"
+          },
+          {
+            "id": "step-2",
+            "type": "email",
+            "label": "Confirmation email sent",
+            "detail": "Confirmation email sent"
+          },
+          {
+            "id": "step-3",
+            "type": "event_date",
+            "label": "Event date set",
+            "detail": "Event date set"
+          },
+          {
+            "id": "step-4",
+            "type": "wait",
+            "label": "Wait until one day before",
+            "detail": "Wait until one day before"
+          },
+          {
+            "id": "step-5",
+            "type": "email",
+            "label": "Joining reminder sent",
+            "detail": "Joining reminder sent"
+          }
+        ],
+        "edges": [
+          {
+            "from": "step-1",
+            "to": "step-2"
+          },
+          {
+            "from": "step-2",
+            "to": "step-3"
+          },
+          {
+            "from": "step-3",
+            "to": "step-4"
+          },
+          {
+            "from": "step-4",
+            "to": "step-5"
+          }
+        ],
+        "runOrder": [
+          "step-1",
+          "step-2",
+          "step-3",
+          "step-4",
+          "step-5"
+        ],
+        "context": {
+          "name": "{{lead.name}}",
+          "subtitle": "Verified registration · W1028",
+          "fields": [
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            }
+          ],
+          "states": [
+            "W1028 registration verified",
+            "Confirmation email sent",
+            "Event date set",
+            "Wait until one day before",
+            "Joining reminder sent"
+          ]
+        },
+        "related": [
+          {
+            "title": "Attendance follow-up",
+            "detail": "Attendance stays tied to the registered workshop."
+          },
+          {
+            "title": "Next workshop",
+            "detail": "New event registrations start empty."
+          }
+        ]
+      },
+      "statuses": [
+        "W1028 registration verified",
+        "Confirmation email sent",
+        "Event date set",
+        "Wait until one day before",
+        "Joining reminder sent"
+      ],
+      "optional": false
+    },
+    {
+      "id": "record",
+      "kind": "record",
+      "platform": "ghl",
+      "title": "Keep Jamie's answers on the existing contact.",
+      "caption": "Advertising leads to the Skool page and form; the assessment updates the contact matched by email.",
+      "beat": "Jamie comes through the Skool page and completes the form. I'd match the email to the existing Kit contact and attach these assessment answers. Workshop interest is recorded before registration is verified.",
+      "details": [
+        "Jamie Reid · jamie@example.com · existing Kit contact",
+        "Assessment: Getting started · Goal: build a weekly practice"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.email}}",
+        "sourceTitle": "Kit contact matched by email",
+        "sourceFields": [
+          {
+            "label": "Source",
+            "value": "Advertising → Skool → workshop form"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Owner",
+            "value": "{{owner.name}}"
+          },
+          {
+            "label": "Preferences",
+            "value": "Kit email preferences retained"
+          }
+        ],
+        "events": [
+          {
+            "title": "Contact matched",
+            "detail": "Source and enquiry saved together"
+          },
+          {
+            "title": "Context added",
+            "detail": "Assessment: getting started; goal: weekly practice"
+          }
+        ],
+        "notice": "Workshop interest recorded; paid registration must be verified separately."
+      },
+      "statuses": [
+        "Contact identified",
+        "Context attached"
+      ],
+      "optional": true
+    },
+    {
+      "id": "messages",
+      "kind": "messages",
+      "platform": "ghl",
+      "title": "Send Jamie the right workshop details.",
+      "caption": "A verified registration for 28 October triggers its confirmation and reminder.",
+      "beat": "Once Jamie's paid registration is verified, the confirmation and reminder use the 28 October details. It's tied to this workshop, rather than treating everyone in the Skool group as registered.",
+      "details": [
+        "28 October 2026 · 7 pm NZDT",
+        "Workshop registration verified before confirmation email"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.email}}",
+        "fields": [
+          {
+            "label": "Owner",
+            "value": "{{owner.name}}"
+          },
+          {
+            "label": "Source",
+            "value": "W1028 paid registration verified"
+          }
+        ],
+        "items": [
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "Workshop team",
+            "time": "Registration verified",
+            "subject": "You're registered, Jamie",
+            "body": "You're registered for W1028 on Wednesday 28 October 2026 at 7 pm NZDT. Your joining details are saved with this workshop."
+          },
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "Workshop team",
+            "time": "27 October · 7 pm NZDT",
+            "subject": "Your workshop starts tomorrow",
+            "body": "Your workshop starts tomorrow at 7 pm NZDT. Here are your joining details for W1028."
+          }
+        ],
+        "notice": "Skool membership alone does not verify paid registration for this workshop."
+      },
+      "statuses": [
+        "Registration confirmation sent",
+        "Workshop reminder sent"
+      ],
+      "optional": false
+    },
+    {
+      "id": "result",
+      "kind": "workshop",
+      "platform": "ghl",
+      "title": "Follow up, then prepare 18 November.",
+      "caption": "Jamie's attendance stays with October. November gets its own date and registrations.",
+      "beat": "Jamie attended, so here's the follow-up with the resources. For 18 November, I'd reuse the form and email sequence, update the event details, and start with a fresh registration list.",
+      "details": [
+        "Jamie: attended W1028 → workshop resources",
+        "Reuse setup for W1118 · 18 November 2026 · 7 pm NZDT"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.email}}",
+        "current": {
+          "id": "W1028",
+          "title": "October workshop",
+          "date": "28 October 2026",
+          "time": "7 pm NZDT"
+        },
+        "next": {
+          "id": "W1118",
+          "title": "November workshop",
+          "date": "18 November 2026",
+          "time": "7 pm NZDT"
+        },
+        "events": [
+          {
+            "title": "W1028 attendance recorded",
+            "detail": "Jamie attended the October workshop"
+          },
+          {
+            "title": "Resources sent",
+            "detail": "Follow-up remains linked to W1028"
+          }
+        ],
+        "followup": {
+          "subject": "Thanks for joining, Jamie.",
+          "body": "Here are the workshop resources and your next exercise. Start with the weekly practice we worked through today."
+        },
+        "reusable": [
+          "Capture form",
+          "Email templates",
+          "Reminder timing",
+          "Follow-up paths"
+        ],
+        "historyNote": "Jamie's attendance and follow-up remain with W1028. W1118 has no registrations yet."
+      },
+      "statuses": [
+        "Attendance recorded for W1028",
+        "Resources and next exercise sent",
+        "W1118 prepared · registrations empty"
+      ],
+      "optional": false
+    }
+  ]
+}

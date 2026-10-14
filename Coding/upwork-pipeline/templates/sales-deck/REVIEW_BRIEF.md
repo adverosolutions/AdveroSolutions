@@ -1,0 +1,13 @@
+# Independent page review
+
+Reviewer: explicitly select `gpt-6-astra`, xhigh effort, `reviewer`, fresh context with the original job requirements and exact artifact paths. Review independently from the content worker. Main remains responsible for collecting the verdict and recording its hash-bound receipt.
+
+Read the original requirements, private evidence, normalized spec, generated page, recording script and build report. Verify source/evidence are absent from browser data and public notes; private evidence is never a demo UI fact. Check personalized names against the approved evidence rule and distinguish client contact from account ownership. Check proof units, illustrative counts, directional metrics and live-system claims. Reject stale names, disconnected samples, unsupported tools or fallback interiors.
+
+Inspect bounded desktop screenshots for cover, workflow, messages, result and close; inspect native n8n/Make workflow screens when present. Inspect 390px cover, workflow, messages and close. Verify the approved palette, Inter font, opening caption, close layout and blue CTA. Look for clipped copy, illegible native screens and whole-page horizontal overflow. Large native canvases may scroll inside their own frame.
+
+Exercise Quick/Standard/Detailed, optional record omission, Talking points, Present, Previous/Next, chapter navigation, keyboard arrows/Escape and replay. The initial state appears immediately; later states settle in about five seconds and hold. Replay resets; Show result finishes. Rapid navigation and replay cannot allow stale timers to mutate another scene. Reduced motion must settle. No automatic chapter advance, scroll hijack, remote asset requests or service writes.
+
+Return APPROVE or REJECT with precise defects tied to original requirements and artifact locations. Include the reviewed page SHA-256 from `build-report.json`, content/template hashes and the screenshots/behaviors checked. Main records `recording-queue review <id> --verdict approve --page-hash <reviewed-sha256> --notes <evidence>` only for this exact artifact after independent approval; repairs rebuild and require a new review. Template integrity alone does not establish visual approval.
+
+Review the current registered generation, not an older page in the source folder or a pilot directory. Queue artifacts live under the canonical `.local/recording-queue/public/jobs/<id>/`; main supplies exact paths and the original source folder. An old approval can be reused only when the exact reviewed page and all required generation identities match. A changed template/spec/page/script needs a fresh review. Report the verdict and hashes to main; do not mutate queue state yourself.
