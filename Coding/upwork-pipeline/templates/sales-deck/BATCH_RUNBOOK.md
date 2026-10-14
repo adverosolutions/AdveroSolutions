@@ -1,6 +1,6 @@
 # Shared recording queue runbook
 
-Astra main coordinates explicit Sol content workers and independent Astra review. The Python tools compile specs and serialize queue changes; they do not select models, fetch jobs or review pages. All Codex sessions on this Mac use the same canonical queue. Proposal copy and Loom finalization remain in `../../UPWORK_PROCESS.md`.
+Current Upwork defaults: Astra at `xhigh` coordinates explicit Sol content agents at `high` and independent Astra final review at `max` or `ultra`. The coordinator may adjust these task settings as needed. Default to `max` for routine final review; the coordinator selects `max` or `ultra` per task under Lorenzo's standing preference, without another approval step. The Python tools compile specs and serialize queue changes; they do not select models, fetch jobs or review pages. All Codex sessions on this Mac use the same canonical queue. Proposal copy and Loom finalization remain in `../../UPWORK_PROCESS.md`.
 
 ## Daily commands
 
@@ -26,9 +26,9 @@ PIPELINE=/Users/lorenzovillarreal/Desktop/AdveroSolutions/Coding/upwork-pipeline
    {"jobs":[{"id":"job-slug-123","title":"Original job title","spec":"job-slug-123/deck-spec.json","jobUrl":"https://www.upwork.com/jobs/~02123"}]}
    ```
    Here the manifest lives in `jobs/`; spec paths resolve relative to its directory, or may be absolute. `jobUrl` is optional. ID and spec identity must stay consistent; use the same ID in `deck-spec.json`. Same ID/same path is idempotent; conflicting ID/path is refused. Missing specs are valid queue entries. Never overwrite another job to resolve a collision.
-3. Main explicitly uses `gpt-6-astra`. Select each content worker as `gpt-6.1-sol`, high effort, `worker-heavy`, `fork_turns: none`, with `CONTENT_BRIEF.md`, original requirements, supported adapter keys, a seed spec and its precise assigned folder. Workers write only their spec and private evidence. They do not register, build, approve, edit queue state or alter shared assets.
+3. Main uses `gpt-6-astra` at `xhigh`. Select each content agent as `gpt-6.1-sol` at `high`, using an ordinary generic/default Codex agent where supported, explicit model/effort overrides and `fork_turns: none`, with `CONTENT_BRIEF.md`, original requirements, supported adapter keys, a seed spec and its precise assigned folder. Check current tool support before dispatch and prevent inherited role defaults from replacing the selected effort; do not silently substitute settings. Workers write only their spec and private evidence. They do not register, build, approve, edit queue state or alter shared assets.
 4. Use the exposed capacity, currently four total agents including main in this session. Start at most three workers; as one finishes, use that slot for review. A steady queue can run two workers and one reviewer beside main. A six-agent pool is a future configuration only after verification in a fresh session; never edit global config. Separate user-requested batch chats follow the coordination procedure below; do not create extra chats for ordinary subtasks or assume they increase account capacity.
-5. As specs arrive, main runs `recording-queue build <id>` and gives the exact generated page, script, report, spec, source and original requirements to independent `gpt-6-astra`, xhigh, `reviewer`, `fork_turns: none`, with `REVIEW_BRIEF.md`. Current artifacts are under `.local/recording-queue/public/jobs/<id>/`; `status --json` supplies public page/script URLs. Show results progressively. A build is not ready to record until independently approved.
+5. As specs arrive, main runs `recording-queue build <id>` and gives the exact generated page, script, report, spec, source and original requirements to an independent generic/default Codex agent where supported, explicitly selecting `gpt-6-astra` at `max` or coordinator-selected `ultra`, with `fork_turns: none` and `REVIEW_BRIEF.md`. Current artifacts are under `.local/recording-queue/public/jobs/<id>/`; `status --json` supplies public page/script URLs. Show results progressively. A build is not ready to record until independently approved.
 
 ## Separate batch chats and the dot
 
@@ -58,7 +58,7 @@ Main records the reviewer's exact verdict and page SHA-256:
   --page-hash <reviewed-page-sha256> --notes '<independent review evidence>'
 ```
 
-Use `--verdict reject` for a failed review. The CLI verifies the artifact identities before recording the receipt. Send precise defects to a worker-heavy content worker, rebuild, and request a new independent review. Content workers never approve their own work. Unsupported native tools/actions require approved adapter maintenance; initial support is GHL, n8n and Make, never a GHL substitution for another tool.
+Use `--verdict reject` for a failed review. The CLI verifies the artifact identities before recording the receipt. Send precise defects to a content agent with a task-specific repair brief and explicit supported model/effort settings, rebuild, and request a new independent review. Content workers never approve their own work. Unsupported native tools/actions require approved adapter maintenance; initial support is GHL, n8n and Make, never a GHL substitution for another tool.
 
 Exact unchanged spec/template/page/script and valid review receipts allow reuse, including approved or recorded jobs. Any changed generation resets review. A template change does not automatically approve previously ready pages, even when the story is unchanged. A receipt from an older pilot may be carried only after independent approval is evidenced and the exact reviewed page hash matches the queue artifact; otherwise review again.
 

@@ -1,6 +1,6 @@
 # Independent page review
 
-Reviewer: explicitly select `gpt-6-astra`, xhigh effort, `reviewer`, fresh context with the original job requirements and exact artifact paths. Review independently from the content worker. Main remains responsible for collecting the verdict and recording its hash-bound receipt.
+Final review agent: explicitly select `gpt-6-astra` at `max` or `ultra`, using a generic/default Codex agent where supported and `fork_turns: none`. Default to `max` for routine final review; the coordinator selects `max` or `ultra` per task under Lorenzo's standing preference, without another approval step. Check current tool support; inherited role defaults must not replace the selected effort. Supply fresh context with the original job requirements and exact artifact paths. Review independently from the content worker. Main remains responsible for collecting the verdict and recording its hash-bound receipt.
 
 Read the original requirements, private evidence, normalized spec, generated page, recording script and build report. Verify source/evidence are absent from browser data and public notes; private evidence is never a demo UI fact. Check personalized names against the approved evidence rule and distinguish client contact from account ownership. Check proof units, illustrative counts, directional metrics and live-system claims. Reject stale names, disconnected samples, unsupported tools or fallback interiors.
 

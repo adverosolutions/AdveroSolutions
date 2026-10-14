@@ -81,7 +81,7 @@ Webhook slug → directive mapping lives in `execution/webhooks.json`. The live 
 
 **Instantly API contract:** `Agentic Worklfows/config/instantly_api_contract.md` holds the request schemas verified against developer.instantly.ai on 2026-09-21 (reply, interest status, blocklist, subsequence create and move, webhooks, account pause, campaign patch, rate limits). It is authoritative over any guess in code comments. Note in particular: recipient safety on the reply endpoint is enforced **twice**, because the published REST reference and the Instantly tool schema disagree about whether a `to` field exists. `shared/instantly.py` requires `to=<lead email>` (it raises without one) **and** `cadence.thread_recipient_ok` re-reads the email in live and refuses unless `from_address_email` is the lead. Do not remove either half; one live-send rehearsal settles which is load-bearing. Interest status takes `lead_email` + `interest_value` and answers 202; subsequence move takes one lead as `id` (no `ids` array).
 
-Plan: `Agentic Worklfows/REVENUE_AUTOMATION_BLUEPRINT.md` (build IDs M#/S#/F#/O#, briefs A1–A12). Live ids: `Agentic Worklfows/config/ids.json`. Offer sheet: `Agentic Worklfows/config/offers.md`. Agents: `.claude/agents/{sales,marketing,fulfillment,ops}.md` (Codex copies: `.codex/agents/*.toml`).
+Plan: `Agentic Worklfows/REVENUE_AUTOMATION_BLUEPRINT.md` (build IDs M#/S#/F#/O#, briefs A1–A12). Live ids: `Agentic Worklfows/config/ids.json`. Offer sheet: `Agentic Worklfows/config/offers.md`. Use ordinary Codex agents with task-specific briefs and explicitly selected model/effort settings supported by the current tools; no named role presets are required.
 
 **Controlled-environment rule (Lorenzo, 2026-09-21):** nothing touches live Instantly, GHL, Upwork, Gmail, Calendar or Modal until it is tested and Lorenzo approves the push.
 - `MODE=shadow` (default) proposes, logs and notifies Lorenzo only. `MODE=live` plus `ALLOW_LIVE_WRITES=1` is the only combination that sends, books, pauses or moves anything.
@@ -96,7 +96,7 @@ Rules the engine enforces: an engine email (first reply, counter-proposal, booki
 
 Do not touch: the Upwork application flow and Demo Library loop; live campaign `email_list`; anything without a dry-run first.
 
-Runtime models: as of 2026-09-25 (Lorenzo), every runtime role uses Opus 5.5 (`claude-opus-5-5`): classification, escalation (< 0.8 confidence still escalates), drafts, research lines, the weekly retro and proposals, and the 20-draft/50-classification audit. Nothing runtime is on Haiku or Sonnet. Thinking cannot be disabled on Opus 5.5, so shared/llm.py sends effort `low` per role with a thinking headroom on max_tokens. Build models: Opus 5 for sales/marketing design, Sonnet for fulfillment/ops scripts. (Fable was the original pick; Lorenzo's weekly Fable allowance ran out on 2026-09-21.) shared/llm.py MODEL_POLICY is the single place to change a runtime model.
+Runtime models: as of 2026-09-25 (Lorenzo), every runtime role uses Opus 5.5 (`claude-opus-5-5`): classification, escalation (< 0.8 confidence still escalates), drafts, research lines, the weekly retro and proposals, and the 20-draft/50-classification audit. Nothing runtime is on Haiku or Sonnet. Thinking cannot be disabled on Opus 5.5, so shared/llm.py sends effort `low` per role with a thinking headroom on max_tokens. shared/llm.py MODEL_POLICY is the single place to change a runtime model.
 
 Definition of done for any brief: pytest green, dry-run/replay shadow log, runbook in `runbooks/`, Job_Log rows, evidence in the report.
 
@@ -112,7 +112,7 @@ The revenue build is split into 4 sections, each run in its own chat at the same
 Claude Code keeps its working knowledge outside the repo; these copies are in the repo for Codex:
 - `ClaudeConfig/memory/MEMORY.md`: index of Claude's project memory (decisions, rules, project state). Read the files it links before acting on a topic it covers.
 - `ClaudeConfig/skills/<name>/SKILL.md`: the skills (cold campaigns, personalization, lead sourcing, replies, Upwork, etc.).
-- `ClaudeConfig/global-CLAUDE.md`: Lorenzo's global rules (delegation, no Claudeisms in copy).
+- Writing: no Claudeisms in copy for Lorenzo or clients. Delete any sentence or clause that only restates or sells the preceding point if removing it loses no fact, question or next step. Use the `claudeisms` skill for details. Do not import delegation/model/effort rules from `ClaudeConfig/global-CLAUDE.md`; that file belongs to Claude Code.
 - Cold-email lead pipeline: `Coding/lead-scrape-2026/` (`personalize/DAILY_RUN.md` for the run, `personalize/tools/` for the per-batch tools, `instantly_push.py` for pushes). API keys are in that folder's `.env`; never print them.
 
 Refresh the copies with `ClaudeConfig/sync_from_home.sh`, then commit and push.
