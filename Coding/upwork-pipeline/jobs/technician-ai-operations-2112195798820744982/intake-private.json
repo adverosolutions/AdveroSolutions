@@ -1,0 +1,186 @@
+{
+  "capturedAt": "2026-10-19",
+  "savedAt": "2026-10-19T17:28:48Z",
+  "upwork": {
+    "applied": false,
+    "bid_stats_basis": {
+      "contract_type": "HOURLY",
+      "note": "The bid amounts in activityStat.applicationsBidStats have no unit attached: on fixed-price jobs they have been observed as both hourly rates and whole-project totals, and the API does not say which applies to this job. Do not compare these numbers across jobs, and do not state or imply a per-hour or per-project basis for them — report them as the bid amounts recorded for this job and say the basis is unspecified."
+    },
+    "can_apply": true,
+    "client_open_jobs": {
+      "jobs": [
+        {
+          "id": "2109663787500216853",
+          "job_type": "hourly",
+          "title": "Freelance 2D Animator Needed for a 60-Second Commercial Explainer Video",
+          "url": "https://www.upwork.com/jobs/~022109663787500216853?utm_campaign=LLM_chatgpt_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=chatgpt"
+        },
+        {
+          "id": "2106082940283180805",
+          "job_type": "hourly",
+          "title": "Customer Relationship Representative (CRR) – Remote | US Hours",
+          "url": "https://www.upwork.com/jobs/~022106082940283180805?utm_campaign=LLM_chatgpt_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=chatgpt"
+        },
+        {
+          "id": "2106081619436316704",
+          "job_type": "hourly",
+          "title": "Sales Development Representative",
+          "url": "https://www.upwork.com/jobs/~022106081619436316704?utm_campaign=LLM_chatgpt_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=chatgpt"
+        }
+      ],
+      "note": "A sample, never a count; client_record.open_jobs also counts private jobs and this one.",
+      "selection": "at most 5 of the client's other open jobs visible to freelancers; private jobs are never listed",
+      "shown": 3
+    },
+    "client_record": {
+      "contracts_active": 1,
+      "contracts_total": 11,
+      "feedback_count": 7,
+      "feedback_score": 5,
+      "hire_rate_percent": 6,
+      "hours_total": 4335.33,
+      "jobs_posted": 54,
+      "jobs_with_hires": 3,
+      "open_jobs": 4,
+      "spend_total": "$74,147.78"
+    },
+    "client_work_history": {
+      "closed": [
+        {
+          "ended": "2025-07-22T20:20:38.697Z",
+          "feedback_score": 5,
+          "started": "2025-04-10T14:05:57.131Z",
+          "title": "CSR Private",
+          "type": "HOURLY"
+        },
+        {
+          "ended": "2025-07-22T20:19:27.010Z",
+          "feedback_score": 5,
+          "feedback_to_client_score": 5,
+          "started": "2025-03-24T00:00:00.000Z",
+          "title": "CSR Private",
+          "type": "HOURLY"
+        },
+        {
+          "ended": "2025-07-22T20:19:00.370Z",
+          "feedback_score": 5,
+          "feedback_to_client_score": 5,
+          "started": "2025-03-24T00:00:00.000Z",
+          "title": "CSR Private",
+          "type": "HOURLY"
+        },
+        {
+          "ended": "2025-04-10T13:51:36.133Z",
+          "feedback_score": 4.8,
+          "started": "2025-03-24T00:00:00.000Z",
+          "title": "CSR Private",
+          "type": "HOURLY"
+        },
+        {
+          "ended": "2025-07-22T20:15:56.781Z",
+          "feedback_score": 5,
+          "feedback_to_client_score": 5,
+          "started": "2024-02-21T17:03:27.000Z",
+          "title": "Executive Assistant - GWM Commercial Auto Glass",
+          "type": "HOURLY"
+        }
+      ],
+      "note": "A sample of the client's history, not all of it, and no total can be derived from it. Use client_record for their totals.",
+      "open": [
+        {
+          "started": "2026-10-15T16:48:51.057Z",
+          "status": "ACTIVE",
+          "title": "Freelance 2D Animator Needed for a 60-Second Commercial Explainer Video",
+          "type": "FIXED"
+        }
+      ],
+      "selection": "at most 5 open and 5 closed contracts, the latest of each by start date, newest first",
+      "shown": 6
+    },
+    "connects_balance": 1900,
+    "connects_cost": 27,
+    "data": {
+      "marketplaceJobPosting": {
+        "activityStat": {
+          "applicationsBidStats": {
+            "avgRateBid": {
+              "currency": "USD",
+              "displayValue": "$35.72",
+              "rawValue": "35.72467680608365"
+            },
+            "maxRateBid": {
+              "currency": "USD",
+              "displayValue": "$200.00",
+              "rawValue": "200.0"
+            },
+            "minRateBid": {
+              "currency": "USD",
+              "displayValue": "$10.00",
+              "rawValue": "10.0"
+            }
+          },
+          "jobActivity": {
+            "invitesSent": 0,
+            "totalHired": 0,
+            "totalInvitedToInterview": 0,
+            "totalOffered": 0
+          }
+        },
+        "classification": {
+          "category": {
+            "id": "531770282580668418",
+            "preferredLabel": "Web, Mobile & Software Dev"
+          },
+          "subCategory": {
+            "id": "531770282584862733",
+            "preferredLabel": "Web Development"
+          }
+        },
+        "clientCompanyPublic": {
+          "country": {
+            "name": "United States"
+          },
+          "id": "1012291406",
+          "state": "GA",
+          "timezone": "America/New_York"
+        },
+        "content": {
+          "description": "<untrusted_participant_content>\nWE’RE HIRING: AI Agent Developer & Automation Engineer\n\nWe're looking for an experienced developer for a project-based engagement with a US-based client.\n\nWe’re looking for someone who can build AI agents and automation systems to streamline business operations, including technician outreach, calls and emails, order intake, data entry, and reporting.\n\nWhat we’re looking for:\n- Experience building and deploying AI agents\n- Knowledge of Python and/or JavaScript, LLM APIs, and workflow automation tools such as n8n or Make\n- Experience with API integrations and business process automation\n- Ability to deliver a documented solution that the client can manage independently\n\n📍 Remote | Project-Based | Independent Contractor\n\n📩 Interested? Please include your portfolio, relevant project examples, your proposed pricing, and estimated timeline.\n</untrusted_participant_content>",
+          "title": "AI Agent Developer & Automation Engineer"
+        },
+        "contractTerms": {
+          "contractType": "HOURLY",
+          "experienceLevel": "EXPERT",
+          "hourlyContractTerms": {
+            "engagementType": "FULL_TIME",
+            "hourlyBudgetMax": 47,
+            "hourlyBudgetMin": 25,
+            "hourlyBudgetType": "DEFAULT"
+          },
+          "personsToHire": 1
+        },
+        "id": "2112195798820744982",
+        "url": "https://www.upwork.com/jobs/~022112195798820744982?utm_campaign=LLM_chatgpt_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=chatgpt",
+        "workFlowState": {
+          "status": "ACTIVE"
+        }
+      }
+    },
+    "plan": "Freelancer Plus",
+    "preferred_qualifications": {
+      "contractor_type": "All freelancers",
+      "english_proficiency": "Any",
+      "has_portfolio": false,
+      "min_earnings": "Any",
+      "min_hours_worked": 0,
+      "min_job_success_score": 0,
+      "rising_talent": false
+    },
+    "proposals_tier_unavailable": true,
+    "status": "ok",
+    "trace_id": "61b22b43080b77399da545ed61b8c879",
+    "unanswered_invites_unavailable": true
+  },
+  "personalization": null
+}

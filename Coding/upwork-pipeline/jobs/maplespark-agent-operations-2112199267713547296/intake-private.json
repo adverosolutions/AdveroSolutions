@@ -1,0 +1,258 @@
+{
+  "capturedAt": "2026-10-19",
+  "savedAt": "2026-10-19T17:28:31Z",
+  "upwork": {
+    "applied": false,
+    "bid_stats_basis": {
+      "contract_type": "HOURLY",
+      "note": "The bid amounts in activityStat.applicationsBidStats have no unit attached: on fixed-price jobs they have been observed as both hourly rates and whole-project totals, and the API does not say which applies to this job. Do not compare these numbers across jobs, and do not state or imply a per-hour or per-project basis for them — report them as the bid amounts recorded for this job and say the basis is unspecified."
+    },
+    "can_apply": true,
+    "client_feedback": {
+      "more_available": true,
+      "note": "Reviews freelancers wrote about this client after a contract. A comment often names the client contact or the project — use those to personalize the proposal. Never infer a name that no comment states.",
+      "reviews": [
+        {
+          "comment": "<untrusted_participant_content>\nChang is an excellent and responsive client. We worked extremely productively together on a very urgent project, and it proved to be very professional. I will be glad to work with him in the future!\n</untrusted_participant_content>",
+          "ended": "2026-09-17T00:34:24.044Z",
+          "score": 5,
+          "title": "Urgent: 3-Minute Software Product Video — 24-Hour Deadline"
+        },
+        {
+          "comment": "<untrusted_participant_content>\nThank you so much.....\n</untrusted_participant_content>",
+          "ended": "2025-12-17T15:24:54.773Z",
+          "score": 5,
+          "title": "Linkedin Profile Revamp"
+        },
+        {
+          "comment": "<untrusted_participant_content>\nChang is a true professional, and we shared a very positive working relationship. I would confidently recommend him to others and would be happy to collaborate with him again.\n\nWishing you great succe…\n</untrusted_participant_content>",
+          "ended": "2025-12-17T15:04:07.748Z",
+          "score": 5,
+          "title": "Bluebeam Tutor"
+        },
+        {
+          "comment": "<untrusted_participant_content>\nI would like to work with him again\n</untrusted_participant_content>",
+          "ended": "2025-11-20T09:06:36.759Z",
+          "score": 5,
+          "title": "Lead Generation Parks and Recreation Manager in Canadian Municipalities"
+        },
+        {
+          "comment": "<untrusted_participant_content>\nGood client but ended up disappearing and ghosting\n</untrusted_participant_content>",
+          "ended": "2025-08-12T17:37:42.804Z",
+          "score": 5,
+          "title": "Teach me to build a custom GPT"
+        }
+      ],
+      "selection": "at most 5 of the client's latest revealed reviews that carry a written comment, newest first",
+      "shown": 5
+    },
+    "client_open_jobs": {
+      "jobs": [
+        {
+          "id": "2101476075856555228",
+          "job_type": "hourly",
+          "title": "AI Math Curriculum Developer — Ontario Grades 5–12 | Codex / Claude Code",
+          "url": "https://www.upwork.com/jobs/~022101476075856555228?utm_campaign=LLM_chatgpt_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=chatgpt"
+        }
+      ],
+      "note": "A sample, never a count; client_record.open_jobs also counts private jobs and this one.",
+      "selection": "at most 5 of the client's other open jobs visible to freelancers; private jobs are never listed",
+      "shown": 1
+    },
+    "client_record": {
+      "contracts_active": 13,
+      "contracts_total": 184,
+      "feedback_count": 127,
+      "feedback_score": 4.72,
+      "hire_rate_percent": 91,
+      "hours_total": 5590.77,
+      "jobs_posted": 176,
+      "jobs_with_hires": 161,
+      "open_jobs": 2,
+      "spend_total": "$102,255.43"
+    },
+    "client_work_history": {
+      "closed": [
+        {
+          "ended": "2026-09-17T00:34:24.044Z",
+          "feedback_score": 5,
+          "feedback_to_client_score": 5,
+          "started": "2026-09-13T12:42:42.179Z",
+          "status": "CLOSED",
+          "title": "Urgent: 3-Minute Software Product Video — 24-Hour Deadline",
+          "type": "FIXED"
+        },
+        {
+          "ended": "2026-04-25T00:06:49.176Z",
+          "feedback_to_client_score": 5,
+          "started": "2025-12-22T23:09:16.181Z",
+          "status": "CLOSED",
+          "title": "Financial Model Review — Seed-Stage EdTech Startup",
+          "type": "FIXED"
+        },
+        {
+          "ended": "2026-08-27T19:49:12.115Z",
+          "feedback_to_client_score": 5,
+          "started": "2025-12-10T17:32:00.933Z",
+          "status": "CLOSED",
+          "title": "Financial Model Review — Seed-Stage EdTech Startup",
+          "type": "HOURLY"
+        },
+        {
+          "ended": "2025-12-17T15:27:02.858Z",
+          "feedback_score": 5,
+          "feedback_to_client_score": 5,
+          "started": "2025-10-31T00:11:57.692Z",
+          "status": "CLOSED",
+          "title": "Lead Generation Specialist to Build Email List of Choir Directors for Academic Research",
+          "type": "HOURLY"
+        },
+        {
+          "ended": "2025-03-20T06:32:41.154Z",
+          "feedback_to_client_score": 5,
+          "started": "2024-10-17T04:24:11.274Z",
+          "title": "Menu and Get a Quote Button",
+          "type": "HOURLY"
+        }
+      ],
+      "more_available": true,
+      "note": "A sample of the client's history, not all of it, and no total can be derived from it. Use client_record for their totals.",
+      "open": [
+        {
+          "started": "2026-09-24T23:17:32.802Z",
+          "title": "Data Entry LuxLogic",
+          "type": "HOURLY"
+        },
+        {
+          "started": "2026-09-22T11:01:43.509Z",
+          "title": "Part-Time LinkedIn Virtual Assistant — Potential to Grow Full-Time",
+          "type": "HOURLY"
+        },
+        {
+          "started": "2026-09-21T14:53:35.834Z",
+          "title": "Web and Graphic Designer",
+          "type": "HOURLY"
+        },
+        {
+          "started": "2026-09-21T01:20:22.001Z",
+          "title": "Part-Time LinkedIn Virtual Assistant — Potential to Grow Full-Time",
+          "type": "HOURLY"
+        },
+        {
+          "started": "2026-09-20T17:20:15.814Z",
+          "title": "Part-Time LinkedIn Virtual Assistant — Potential to Grow Full-Time",
+          "type": "HOURLY"
+        }
+      ],
+      "selection": "at most 5 open and 5 closed contracts, the latest of each by start date, newest first",
+      "shown": 10
+    },
+    "connects_balance": 1900,
+    "connects_cost": 27,
+    "data": {
+      "marketplaceJobPosting": {
+        "activityStat": {
+          "applicationsBidStats": {
+            "avgRateBid": {
+              "currency": "USD",
+              "displayValue": "$34.27",
+              "rawValue": "34.273764510779436"
+            },
+            "maxRateBid": {
+              "currency": "USD",
+              "displayValue": "$200.00",
+              "rawValue": "200.0"
+            },
+            "minRateBid": {
+              "currency": "USD",
+              "displayValue": "$7.99",
+              "rawValue": "7.99"
+            }
+          },
+          "jobActivity": {
+            "invitesSent": 0,
+            "totalHired": 0,
+            "totalInvitedToInterview": 0,
+            "totalOffered": 0
+          }
+        },
+        "classification": {
+          "category": {
+            "id": "531770282580668418",
+            "preferredLabel": "Web, Mobile & Software Dev"
+          },
+          "subCategory": {
+            "id": "1737190722360750082",
+            "preferredLabel": "AI Apps & Integration"
+          }
+        },
+        "clientCompanyPublic": {
+          "country": {
+            "name": "Canada"
+          },
+          "id": "2272825",
+          "state": "ON",
+          "timezone": "America/Sao_Paulo"
+        },
+        "content": {
+          "description": "<untrusted_participant_content>\nMapleSpark is an education technology company looking for a full-time remote AI Agent & Workflow Specialist to work with our founder and technical lead.\n\nWe use Claude Code and Codex across different tasks. We need someone who can run agents, monitor their progress, check their output, troubleshoot problems, and improve how the work gets done.\n\nWHAT YOU’LL DO\n\n• Run AI agent workflows and check active tasks at least hourly during your working hours.\n• Catch mistakes, stalled tasks, missed instructions, and poor-quality results.\n• Write and refine prompts, break larger tasks into manageable steps, and add checks between stages.\n• Adjust workflows, test different approaches, and verify whether changes improve results.\n• Inspect outputs yourself rather than relying only on an agent saying the work is complete.\n• Document useful processes and communicate problems clearly to our team.\n\nThe work will span different projects, including educational content, research, and testing. You should be comfortable learning new tasks and helping develop the process without needing detailed instructions for every step.\n\nREQUIRED EXPERIENCE\n\n• Hands-on experience with BOTH Claude Code and Codex.\n• Practical understanding of AI agents, effective prompting, and multi-step workflows.\n• Strong written and spoken English.\n• Attention to detail, initiative, and practical problem-solving.\n• Ability to test results against the original requirements and explain what you checked.\n\nReading code or making small code changes is a bonus, not a requirement. Directing agents effectively and checking that their output works are essential.\n\nHOURS AND RATE\n\nThis is a full-time remote role. Your working hours must overlap substantially with our team in Toronto, Canada (Eastern Time), so we can communicate and resolve issues during the workday.\n\nApplicants worldwide are welcome. Please propose your most competitive hourly rate in USD for a full-time engagement.\n</untrusted_participant_content>",
+          "title": "AI Agent & Workflow Specialist — Full-Time, Remote"
+        },
+        "contractTerms": {
+          "contractType": "HOURLY",
+          "experienceLevel": "INTERMEDIATE",
+          "hourlyContractTerms": {
+            "engagementType": "FULL_TIME",
+            "hourlyBudgetType": "NOT_PROVIDED"
+          },
+          "personsToHire": 1
+        },
+        "id": "2112199267713547296",
+        "url": "https://www.upwork.com/jobs/~022112199267713547296?utm_campaign=LLM_chatgpt_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=chatgpt",
+        "workFlowState": {
+          "status": "ACTIVE"
+        }
+      }
+    },
+    "plan": "Freelancer Plus",
+    "preferred_qualifications": {
+      "contractor_type": "All freelancers",
+      "english_proficiency": "Any",
+      "has_portfolio": false,
+      "min_earnings": "Any",
+      "min_hours_worked": 0,
+      "min_job_success_score": 0,
+      "rising_talent": false
+    },
+    "proposals_tier_unavailable": true,
+    "screening_questions": [
+      "<untrusted_participant_content>\nWhat have you personally accomplished using Claude Code and Codex? Give a specific example for each tool.\n</untrusted_participant_content>",
+      "<untrusted_participant_content>\nDescribe an AI workflow you broke into smaller steps. What checks did you use between steps, and how did you verify the final result?\n</untrusted_participant_content>",
+      "<untrusted_participant_content>\nTell us about a time an AI agent got stuck or produced an incorrect result. How did you identify the problem, fix it, and check your fix?\n</untrusted_participant_content>",
+      "<untrusted_participant_content>\nDescribe a change you made that improved an AI workflow. How did you determine that the revised process worked better?\n</untrusted_participant_content>",
+      "<untrusted_participant_content>\nWhat is your most competitive hourly rate in USD for full-time work? Specify your available working hours in Toronto time and earliest start date.\n</untrusted_participant_content>"
+    ],
+    "status": "ok",
+    "trace_id": "352be289048537489e706c8aab82a356",
+    "unanswered_invites_unavailable": true
+  },
+  "personalization": {
+    "firstName": "Chang",
+    "source": "client_reviews",
+    "reviewCount": 2,
+    "reviews": [
+      {
+        "comment": "<untrusted_participant_content>\nChang is an excellent and responsive client. We worked extremely productively together on a very urgent project, and it proved to be very professional. I will be glad to work with him in the future!\n</untrusted_participant_content>",
+        "ended": "2026-09-17T00:34:24.044Z",
+        "score": 5,
+        "title": "Urgent: 3-Minute Software Product Video — 24-Hour Deadline"
+      },
+      {
+        "comment": "<untrusted_participant_content>\nChang is a true professional, and we shared a very positive working relationship. I would confidently recommend him to others and would be happy to collaborate with him again.\n\nWishing you great succe…\n</untrusted_participant_content>",
+        "ended": "2025-12-17T15:04:07.748Z",
+        "score": 5,
+        "title": "Bluebeam Tutor"
+      }
+    ]
+  }
+}

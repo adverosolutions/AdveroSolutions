@@ -1,0 +1,456 @@
+{
+  "schemaVersion": 1,
+  "id": "technician-ai-operations-2112195798820744982",
+  "title": "AI Agent Developer & Automation Engineer",
+  "systemName": "Your technician outreach and order operations",
+  "account": {
+    "name": "Illustrative operations workspace",
+    "initials": "OP",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112195798820744982",
+    "facts": [
+      "Original post retained in jd.txt; Upwork job ID 2112195798820744982, saved 2026-10-19.",
+      "The post requests AI agents for technician outreach, calls and emails, order intake, data entry and reporting, with a documented solution the client can manage independently.",
+      "The post names Python and/or JavaScript, LLM APIs, and workflow tools such as n8n or Make. n8n is the proposed demonstration tool, not an existing client system.",
+      "No client first name, operating industry, CRM, telephony provider, email provider, order API, field map or existing endpoints are supplied. Do not infer them from unrelated client work history.",
+      "All contacts, order details, events, counts and results are invented illustrative fixtures. Completed sample actions are depicted outcomes, not actual calls, emails or account writes. The workbench is a custom project workspace. HTTP Request integration actions are conceptual; no actual provider endpoint or authentication is claimed.",
+      "The original post requests pricing, timeline and relevant examples. No rates or delivery promises belong in this demo. Its proof is the visible illustrative sample, not past-project delivery."
+    ]
+  },
+  "entities": {
+    "customer": {
+      "name": "Taylor Reed",
+      "email": "taylor.reed@example.com"
+    },
+    "technician": {
+      "name": "Jordan Ellis",
+      "firstName": "Jordan",
+      "email": "jordan.ellis@example.com",
+      "phone": "+1 202-555-0146"
+    },
+    "order": {
+      "id": "ORD-642",
+      "task": "Inspect two units",
+      "quantity": "2",
+      "site": "18 Sample Lane, Suite 204",
+      "access": "Check in at the front desk",
+      "status": "Technician confirmed"
+    },
+    "owner": {
+      "name": "Casey Morgan",
+      "role": "Operations reviewer"
+    },
+    "event": {
+      "id": "EVT-642-B",
+      "failureId": "EVT-642-A",
+      "source": "Illustrative reviewer-corrected intake",
+      "callId": "CALL-642-B",
+      "emailId": "EMAIL-642-B"
+    },
+    "visit": {
+      "date": "22 October 2026",
+      "window": "1pm to 3pm CT"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your technician outreach and order operations",
+    "title": "From order intake",
+    "accent": "to confirmed dispatch.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "n8n orchestration",
+      "Technician calls and emails",
+      "Client handover"
+    ],
+    "previewSteps": [
+      {
+        "title": "Structure",
+        "detail": "Extract the order and check required fields."
+      },
+      {
+        "title": "Contact technician",
+        "detail": "Follow the completed call and sent email."
+      },
+      {
+        "title": "Inspect output",
+        "detail": "Check the written order, report and handover plan."
+      }
+    ],
+    "footer": "Illustrative sample data",
+    "beat": "I'll follow one sample order through intake, technician outreach and the operations report."
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Measure intake",
+    "accent": "and dispatch quality.",
+    "caption": "Agree the order fields, technician contact rules and reporting baseline.",
+    "metrics": [
+      {
+        "name": "Time to confirmed dispatch",
+        "direction": "down",
+        "aim": "Confirm dispatch sooner",
+        "definition": "Elapsed time from the original order intake to a recorded technician confirmation and updated dispatch status."
+      },
+      {
+        "name": "Validated order completeness",
+        "direction": "up",
+        "aim": "Capture more complete orders",
+        "definition": "Orders with every agreed required field verified before data entry divided by all received orders."
+      },
+      {
+        "name": "Technician response rate",
+        "direction": "up",
+        "aim": "Receive more technician responses",
+        "definition": "Technicians who respond to call or email outreach divided by technicians contacted."
+      }
+    ],
+    "baselineNote": "Establish the baseline and agree the targets.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "I'd confirm your order fields, calling and email tools, and dispatch rules. Worth a quick 15-minute call? Reply here and I'll send times."
+  },
+  "scenes": [
+    {
+      "id": "workflow",
+      "kind": "workflow",
+      "platform": "n8n",
+      "title": "Validate the intake, then complete dispatch.",
+      "caption": "The corrected sample passes. Missing access takes the held branch.",
+      "beat": "The original event holds for missing access. Casey verifies the correction. The corrected event passes extraction and validation, then the dispatch integration writes the order, calls Jordan, sends the email and updates the report.",
+      "details": [
+        "{{event.failureId}} holds for missing access; {{owner.name}} corrects it as {{event.id}}.",
+        "The dispatch integration covers order entry, technician calling, email and reporting."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Illustrative order dispatch",
+        "nodes": [
+          {
+            "id": "receive",
+            "type": "webhook",
+            "label": "Order intake",
+            "detail": "{{event.id}} carries corrected intake for {{order.id}}."
+          },
+          {
+            "id": "extract",
+            "type": "http_request",
+            "label": "Extract fields",
+            "detail": "LLM API extraction: task, quantity, site, visit window and access."
+          },
+          {
+            "id": "validate",
+            "type": "if",
+            "label": "Fields complete?",
+            "detail": "Check required fields. Missing access takes the false branch."
+          },
+          {
+            "id": "dispatch",
+            "type": "http_request",
+            "label": "Dispatch integration",
+            "detail": "Write order, call technician, send confirmation email and update dispatch report."
+          },
+          {
+            "id": "hold",
+            "type": "edit_fields",
+            "label": "Hold for correction",
+            "detail": "Assign missing access to {{owner.name}}; stop outreach and order entry."
+          }
+        ],
+        "edges": [
+          {
+            "from": "receive",
+            "to": "extract"
+          },
+          {
+            "from": "extract",
+            "to": "validate"
+          },
+          {
+            "from": "validate",
+            "to": "dispatch",
+            "label": "true"
+          },
+          {
+            "from": "validate",
+            "to": "hold",
+            "label": "false"
+          }
+        ],
+        "runOrder": [
+          "receive",
+          "extract",
+          "validate",
+          "dispatch"
+        ],
+        "context": {
+          "name": "{{order.id}} \u00b7 {{customer.name}}",
+          "subtitle": "Illustrative sample path",
+          "fields": [
+            {
+              "label": "Event",
+              "value": "{{event.id}}"
+            },
+            {
+              "label": "Order",
+              "value": "{{order.id}}"
+            },
+            {
+              "label": "Technician",
+              "value": "{{technician.name}}"
+            },
+            {
+              "label": "Status",
+              "value": "{{order.status}}"
+            }
+          ],
+          "states": [
+            "Corrected intake received",
+            "Order fields extracted",
+            "Required fields complete",
+            "Dispatch completed in sample"
+          ]
+        },
+        "related": [
+          {
+            "title": "Held original",
+            "detail": "{{event.failureId}} lacked access. {{owner.name}} verifies front-desk access with {{customer.name}} and resubmits {{event.id}}."
+          },
+          {
+            "title": "Recorded result",
+            "detail": "{{order.id}} is written, {{technician.name}} confirms the visit, and the confirmation email and report are recorded."
+          }
+        ]
+      },
+      "statuses": [
+        "Corrected intake received",
+        "Order fields extracted",
+        "Required fields complete",
+        "Dispatch completed in sample"
+      ]
+    },
+    {
+      "id": "outreach",
+      "kind": "messages",
+      "platform": "workbench",
+      "title": "Hear the confirmation, then see the email.",
+      "caption": "Jordan confirms the same order and visit window shown in the email.",
+      "beat": "The sample call reaches Jordan, who confirms the inspection window. The confirmation email follows, and both events attach to the order.",
+      "details": [
+        "{{technician.name}} \u00b7 {{technician.email}} \u00b7 {{technician.phone}}",
+        "{{event.callId}} and {{event.emailId}} link to {{order.id}}."
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{order.id}} \u00b7 technician outreach",
+        "subtitle": "Custom project workspace \u00b7 illustrative completed outreach",
+        "fields": [
+          {
+            "label": "Technician",
+            "value": "{{technician.name}}"
+          },
+          {
+            "label": "Visit",
+            "value": "{{visit.date}}, {{visit.window}}"
+          },
+          {
+            "label": "Call",
+            "value": "Completed \u00b7 technician confirmed"
+          },
+          {
+            "label": "Email",
+            "value": "Sent"
+          }
+        ],
+        "items": [
+          {
+            "channel": "internal",
+            "direction": "incoming",
+            "sender": "Completed call transcript \u00b7 {{technician.name}}",
+            "time": "Sample 10:04am CT",
+            "body": "Operations: Can you inspect two units for {{order.id}} at {{order.site}} on {{visit.date}}, {{visit.window}}? Check in at the front desk.\n\nJordan: Yes, I can take that order. I confirm {{visit.date}}, {{visit.window}}. I'll check in at the front desk."
+          },
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "Operations \u00b7 sent to {{technician.email}}",
+            "time": "Sample 10:05am CT",
+            "subject": "Confirmed inspection \u00b7 {{order.id}}",
+            "body": "Hey {{technician.firstName}},\n\nYou're confirmed for {{order.id}} on {{visit.date}}, {{visit.window}}. Inspect two units at {{order.site}} and check in at the front desk. Reply here if your availability changes."
+          }
+        ],
+        "notice": "Illustrative completed call and sent email in a custom project workspace. All contacts, transcript and delivery events are sample data."
+      },
+      "statuses": [
+        "Technician confirmed on call",
+        "Confirmation email sent"
+      ]
+    },
+    {
+      "id": "structured-order",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "Check the written order and correction history.",
+      "caption": "The order retains the held event, verified correction and technician confirmation.",
+      "beat": "The original email lacks access instructions. Casey checks with Taylor and records the correction. The corrected event writes the order, and Jordan's call confirmation updates its dispatch status.",
+      "details": [
+        "{{event.failureId}} is the held original; {{event.id}} is the corrected intake for {{order.id}}.",
+        "A replay keeps the same order ID; the event history records what changed."
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{order.id}} \u00b7 structured order",
+        "subtitle": "Custom project workspace \u00b7 illustrative written order",
+        "sourceTitle": "Illustrative email and reviewer correction",
+        "sourceFields": [
+          {
+            "label": "From",
+            "value": "{{customer.name}} \u00b7 {{customer.email}}"
+          },
+          {
+            "label": "Original event",
+            "value": "{{event.failureId}}"
+          },
+          {
+            "label": "Original request",
+            "value": "Please inspect two units at {{order.site}} on {{visit.date}}, {{visit.window}}. Reference {{order.id}}."
+          },
+          {
+            "label": "Reviewer correction",
+            "value": "{{owner.name}} checked with {{customer.name}}: {{order.access}}."
+          }
+        ],
+        "fields": [
+          {
+            "label": "Order ID",
+            "value": "{{order.id}}"
+          },
+          {
+            "label": "Task / quantity",
+            "value": "{{order.task}} \u00b7 quantity {{order.quantity}}"
+          },
+          {
+            "label": "Site / access",
+            "value": "{{order.site}} \u00b7 {{order.access}}"
+          },
+          {
+            "label": "Confirmed window",
+            "value": "{{visit.date}}, {{visit.window}}"
+          },
+          {
+            "label": "Technician",
+            "value": "{{technician.name}}"
+          },
+          {
+            "label": "Status",
+            "value": "{{order.status}}"
+          }
+        ],
+        "events": [
+          {
+            "title": "{{event.failureId}} \u00b7 held",
+            "detail": "Access missing. Assigned to {{owner.name}}. Outreach and order entry stop for this event."
+          },
+          {
+            "title": "{{event.id}} \u00b7 corrected and written",
+            "detail": "{{owner.name}} verifies access with {{customer.name}}. Corrected intake passes validation and writes {{order.id}}."
+          },
+          {
+            "title": "Dispatch updated",
+            "detail": "{{event.callId}} records Jordan's confirmation. {{event.emailId}} records the sent email. {{order.id}} is updated to {{order.status}}."
+          }
+        ],
+        "notice": "Illustrative written order and event history in a custom project workspace."
+      },
+      "statuses": [
+        "Missing field held",
+        "Correction recorded and order written",
+        "Technician confirmation saved"
+      ]
+    },
+    {
+      "id": "report-and-handover",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "See confirmed dispatch and the handover plan.",
+      "caption": "The report links the written order, completed outreach and resolved hold.",
+      "beat": "The sample report shows the written order, Jordan's completed call and the sent email. The client handover covers credentials, editable mapping, pause and retry instructions, and an independent rerun.",
+      "details": [
+        "Proposed handover: workflow export, field map, credential setup, failure fixtures and pause/retry guide.",
+        "Client check: edit the field map, replay {{event.id}} without a duplicate order, then remove access and confirm the hold.",
+        "Integration errors retain provider status and reviewer before retry; client-owned credentials stay outside the workflow export."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Operations report \u00b7 {{order.id}}",
+        "subtitle": "Custom project workspace \u00b7 illustrative report and handover plan",
+        "fields": [
+          {
+            "label": "Source event",
+            "value": "{{event.id}}"
+          },
+          {
+            "label": "Order status",
+            "value": "{{order.status}}"
+          },
+          {
+            "label": "Outreach",
+            "value": "Call completed \u00b7 confirmation email sent"
+          },
+          {
+            "label": "Dispatch",
+            "value": "{{technician.name}} \u00b7 {{visit.date}}, {{visit.window}}"
+          },
+          {
+            "label": "Original hold",
+            "value": "{{event.failureId}} \u00b7 resolved by {{owner.name}}"
+          },
+          {
+            "label": "Handover check",
+            "value": "Client edits mapping, reruns sample and checks held fixture"
+          }
+        ],
+        "stages": [
+          "Order written",
+          "Technician confirmed",
+          "Dispatch reported"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2
+        ],
+        "metrics": [
+          {
+            "label": "Order written",
+            "value": "1",
+            "note": "Illustrative order with corrected access"
+          },
+          {
+            "label": "Outreach completed",
+            "value": "2",
+            "note": "Illustrative completed call and sent email"
+          },
+          {
+            "label": "Hold resolved",
+            "value": "1",
+            "note": "Illustrative missing-access correction"
+          }
+        ],
+        "note": "Illustrative sample data. Handover checks cover field mapping, duplicate prevention, failed-request recovery and a client-led rerun.",
+        "proof": {
+          "label": "Visible sample proof",
+          "value": "{{order.id}}",
+          "description": "The order links held event {{event.failureId}}, corrected intake {{event.id}}, completed call, sent email and dispatch report.",
+          "sourceNote": "Illustrative sample data."
+        }
+      },
+      "statuses": [
+        "Order written",
+        "Technician confirmation recorded",
+        "Dispatch report updated"
+      ]
+    }
+  ]
+}

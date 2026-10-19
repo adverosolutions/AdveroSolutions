@@ -1,0 +1,528 @@
+{
+  "schemaVersion": 1,
+  "id": "maplespark-agent-operations-2112199267713547296",
+  "title": "AI Agent & Workflow Specialist for MapleSpark",
+  "systemName": "MapleSpark agent operations sample",
+  "account": {
+    "name": "MapleSpark illustrative project",
+    "initials": "MS",
+    "operatorInitials": "AM"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112199267713547296",
+    "facts": [
+      "Original jd.txt: MapleSpark is an education technology company using both Claude Code and Codex.",
+      "Original jd.txt: Run agents; check active tasks at least hourly during working hours; catch stalls, missed instructions and incorrect results; inspect outputs personally.",
+      "Original jd.txt: Break tasks into steps, add checks, test approaches, document processes and communicate problems. Projects include educational content, research and testing.",
+      "Original jd.txt: Full-time with substantial Toronto overlap. Personal accomplishments in each tool, real failure/recovery and improvement examples, rate, working hours and earliest start are screening questions. These are not established by this sample.",
+      "intake-private.json personalization: Chang appears in two separate client reviews, Urgent: 3-Minute Software Product Video (ended 2026-09-17) and Bluebeam Tutor (ended 2025-12-17). Evidence supports client-contact first name only, not ownership.",
+      "The fractions brief, source excerpt, people, checkpoint times, test fixtures and outputs in this deck are invented illustrative data, not MapleSpark source materials or claims of work completed for MapleSpark.",
+      "Terminal transcripts use conceptual prompt/read/edit/command/review/result stages under extension-contract.md, not live sessions or importable workflow nodes."
+    ]
+  },
+  "personalization": {
+    "firstName": "Chang",
+    "source": "client_reviews",
+    "reviewCount": 2
+  },
+  "entities": {
+    "project": {
+      "id": "MS-014",
+      "title": "Equivalent fractions lesson",
+      "audience": "Ages 10 to 11",
+      "artifact": "lesson-v2.md",
+      "sourceFile": "source-note.txt",
+      "testFile": "checks/test_lesson.py"
+    },
+    "people": {
+      "operator": "Alex Morgan",
+      "reviewer": "Maya Chen"
+    },
+    "monitor": {
+      "rule": "At least hourly while working; earlier at stage gates",
+      "checkpoints": "09:00, 10:00, 11:00 ET (illustrative)",
+      "stall": "10:00 ET: no artifact change since 09:05; no source notes"
+    },
+    "brief": {
+      "requirements": "Explain equivalent fractions; solve 2/3 = ?/6 and 3/4 = ?/12 with worked answers; cite S1.",
+      "s1": "S1: Multiply the numerator and denominator by the same nonzero number.",
+      "question": "3/4 = ?/12",
+      "wrong": "3/4 = 6/12",
+      "fixed": "3/4 = 9/12: multiply both parts by 3.",
+      "firstWorked": "2/3 = 4/6: multiply both parts by 2."
+    },
+    "checks": {
+      "fixtures": "MS-014A and MS-014B",
+      "before": "1 of 2 fixtures passed",
+      "after": "2 of 2 fixtures passed"
+    }
+  },
+  "cover": {
+    "eyebrow": "MapleSpark / illustrative agent operations",
+    "title": "Run the agents.",
+    "accent": "Check the actual work.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Claude Code",
+      "Codex",
+      "Human output review"
+    ],
+    "previewSteps": [
+      {
+        "title": "Set the checks",
+        "detail": "Turn the brief into stage gates."
+      },
+      {
+        "title": "Catch and repair",
+        "detail": "Inspect progress and test the draft."
+      },
+      {
+        "title": "Verify",
+        "detail": "Review the artifact against the source."
+      }
+    ],
+    "footer": "Illustrative task and people. No live project connected.",
+    "beat": "This sample uses both Claude Code and Codex on one education task. The people, files and results are illustrative."
+  },
+  "scenes": [
+    {
+      "id": "claude-code-task",
+      "kind": "workflow",
+      "platform": "claude-code",
+      "title": "Split the brief before starting.",
+      "caption": "Claude Code prepares the lesson and source notes in separate stages.",
+      "beat": "I start with the original requirements, then separate research, drafting and checks. At 10:00, the operator finds no new artifact or source note and narrows the task before resuming.",
+      "details": [
+        "Illustrative source brief: {{project.audience}}. {{brief.requirements}}",
+        "{{brief.s1}}",
+        "{{monitor.rule}}. {{monitor.stall}}",
+        "Operator action: inspect transcript and files, stop the stalled attempt, request the source note first, then resume the draft."
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{project.id}} / {{project.title}}",
+        "nodes": [
+          {
+            "id": "task",
+            "type": "prompt",
+            "label": "Set the acceptance checks",
+            "detail": "{{project.id}}: {{brief.requirements}} Return source notes, lesson and check evidence. Cut sentences that only repeat a point."
+          },
+          {
+            "id": "source",
+            "type": "read",
+            "label": "Read the brief and S1",
+            "detail": "{{project.sourceFile}}: {{brief.s1}}"
+          },
+          {
+            "id": "draft",
+            "type": "edit",
+            "label": "Draft one section at a time",
+            "detail": "Research notes, explanation, two questions, worked answers. Save each artifact before moving on."
+          },
+          {
+            "id": "progress",
+            "type": "command",
+            "label": "Inspect progress at 10:00 ET",
+            "detail": "{{monitor.stall}}. Operator reads the transcript and checks file changes."
+          },
+          {
+            "id": "repair",
+            "type": "review",
+            "label": "Recover the stalled task",
+            "detail": "{{people.operator}} stops the attempt. Revised prompt: return S1 notes first, then one lesson section; report a blocker if either cannot be completed."
+          },
+          {
+            "id": "handoff",
+            "type": "result",
+            "label": "Hand the draft to Codex",
+            "detail": "Source notes and lesson-v1.md available. Draft answer {{brief.wrong}} still needs checking."
+          }
+        ],
+        "edges": [
+          {
+            "from": "task",
+            "to": "source"
+          },
+          {
+            "from": "source",
+            "to": "draft"
+          },
+          {
+            "from": "draft",
+            "to": "progress"
+          },
+          {
+            "from": "progress",
+            "to": "repair"
+          },
+          {
+            "from": "repair",
+            "to": "handoff"
+          }
+        ],
+        "runOrder": [
+          "task",
+          "source",
+          "draft",
+          "progress",
+          "repair",
+          "handoff"
+        ],
+        "context": {
+          "name": "{{project.id}}",
+          "subtitle": "Illustrative education, research and testing task",
+          "fields": [
+            {
+              "label": "Operator",
+              "value": "{{people.operator}}"
+            },
+            {
+              "label": "Human reviewer",
+              "value": "{{people.reviewer}}"
+            },
+            {
+              "label": "Check interval",
+              "value": "{{monitor.rule}}"
+            },
+            {
+              "label": "Checkpoints",
+              "value": "{{monitor.checkpoints}}"
+            }
+          ],
+          "states": [
+            "Brief and acceptance checks set",
+            "S1 source note read",
+            "Draft stages assigned",
+            "Stall found at working-hour check",
+            "Prompt narrowed and task resumed",
+            "Draft handed to Codex"
+          ]
+        },
+        "related": [
+          {
+            "title": "brief.md",
+            "detail": "Original requirements remain the acceptance checklist."
+          },
+          {
+            "title": "progress-log.md",
+            "detail": "09:00, 10:00 and 11:00 ET sample checks; earlier checks at handoffs."
+          },
+          {
+            "title": "lesson-v1.md",
+            "detail": "Contains the deliberately incorrect sample answer {{brief.wrong}}."
+          }
+        ]
+      },
+      "statuses": [
+        "Brief and acceptance checks set",
+        "S1 source note read",
+        "Draft stages assigned",
+        "Stall found at working-hour check",
+        "Prompt narrowed and task resumed",
+        "Draft handed to Codex"
+      ]
+    },
+    {
+      "id": "codex-checks",
+      "kind": "workflow",
+      "platform": "codex",
+      "title": "Test the draft, then check the fix.",
+      "caption": "Codex checks the lesson against the original brief and source note.",
+      "beat": "Codex finds that 6 over 12 is one half, so it fails the three-quarters answer. The repair uses the same factor on top and bottom, then reruns the same fixtures. A separate person still checks the final artifact.",
+      "details": [
+        "{{project.id}} retains its original brief, source note and draft through the handoff.",
+        "Wrong output: {{brief.wrong}}. Correct output: {{brief.fixed}}",
+        "Process change: require an acceptance table, artifact paths and check evidence before a completion claim.",
+        "Illustrative comparison on the same fixtures: {{checks.before}} before; {{checks.after}} after. No real performance claim."
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{project.id}} / {{project.title}}",
+        "nodes": [
+          {
+            "id": "qa-task",
+            "type": "prompt",
+            "label": "Check every requirement",
+            "detail": "{{project.id}}: read brief.md and S1, inspect lesson-v1.md, test both worked answers and report omissions."
+          },
+          {
+            "id": "qa-read",
+            "type": "read",
+            "label": "Compare the actual files",
+            "detail": "Required: two questions, worked answers and S1 references. Found: {{brief.wrong}} in the second worked answer."
+          },
+          {
+            "id": "qa-test",
+            "type": "command",
+            "label": "Run the sample lesson checks",
+            "detail": "{{project.testFile}}: fixture A passes; fixture B fails because 3/4 does not equal 6/12."
+          },
+          {
+            "id": "qa-edit",
+            "type": "edit",
+            "label": "Correct answer and task prompt",
+            "detail": "Write {{project.artifact}} with {{brief.fixed}} Add requirement IDs and output paths to the reusable task prompt."
+          },
+          {
+            "id": "qa-review",
+            "type": "review",
+            "label": "Rerun the same fixtures",
+            "detail": "{{checks.fixtures}}: {{checks.after}}. Compare final source references and answer steps to the original requirements."
+          },
+          {
+            "id": "qa-result",
+            "type": "result",
+            "label": "Request separate human review",
+            "detail": "11:00 ET: {{people.operator}} logs the repair and hands {{project.artifact}}, S1 and the check report to {{people.reviewer}}."
+          }
+        ],
+        "edges": [
+          {
+            "from": "qa-task",
+            "to": "qa-read"
+          },
+          {
+            "from": "qa-read",
+            "to": "qa-test"
+          },
+          {
+            "from": "qa-test",
+            "to": "qa-edit"
+          },
+          {
+            "from": "qa-edit",
+            "to": "qa-review"
+          },
+          {
+            "from": "qa-review",
+            "to": "qa-result"
+          }
+        ],
+        "runOrder": [
+          "qa-task",
+          "qa-read",
+          "qa-test",
+          "qa-edit",
+          "qa-review",
+          "qa-result"
+        ],
+        "context": {
+          "name": "{{project.id}}",
+          "subtitle": "Illustrative education, research and testing task",
+          "fields": [
+            {
+              "label": "Operator",
+              "value": "{{people.operator}}"
+            },
+            {
+              "label": "Human reviewer",
+              "value": "{{people.reviewer}}"
+            },
+            {
+              "label": "Check interval",
+              "value": "{{monitor.rule}}"
+            },
+            {
+              "label": "Checkpoints",
+              "value": "{{monitor.checkpoints}}"
+            }
+          ],
+          "states": [
+            "Original requirements loaded",
+            "Incorrect answer identified",
+            "Failure reproduced in fixture B",
+            "Answer and reusable prompt corrected",
+            "Same fixtures pass after repair",
+            "Final artifact sent for human review"
+          ]
+        },
+        "related": [
+          {
+            "title": "{{project.testFile}}",
+            "detail": "MS-014A: 2/3 = 4/6. MS-014B: 3/4 = 9/12. Check question count and S1 references too."
+          },
+          {
+            "title": "process-note.md",
+            "detail": "Record the stall, changed prompt, failed case, repair and before/after check report."
+          },
+          {
+            "title": "review-checklist.md",
+            "detail": "Human recalculates both answers and checks every original requirement without accepting the agent summary."
+          }
+        ]
+      },
+      "statuses": [
+        "Original requirements loaded",
+        "Incorrect answer identified",
+        "Failure reproduced in fixture B",
+        "Answer and reusable prompt corrected",
+        "Same fixtures pass after repair",
+        "Final artifact sent for human review"
+      ]
+    },
+    {
+      "id": "issue-note",
+      "kind": "messages",
+      "platform": "workbench",
+      "title": "Report the problem with its evidence.",
+      "caption": "Project output notes for the sample operator and reviewer.",
+      "beat": "The issue note includes the last confirmed progress, the failed requirement and what changed. The final note records the separate human check.",
+      "details": [
+        "Illustrative internal project notes. No message is sent.",
+        "The working-hour monitoring plan is agreed with the team; these times do not state Lorenzo’s availability."
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{project.id}} / project output notes",
+        "subtitle": "Custom project workspace, illustrative",
+        "fields": [
+          {
+            "label": "Operator",
+            "value": "{{people.operator}}"
+          },
+          {
+            "label": "Reviewer",
+            "value": "{{people.reviewer}}"
+          }
+        ],
+        "items": [
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "{{people.operator}}",
+            "time": "10:00 ET, sample",
+            "body": "{{project.id}} stalled: no file change since 09:05 and source notes are missing. I stopped the attempt, requested S1 notes first and resumed one section at a time."
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "{{people.operator}}",
+            "time": "10:35 ET, sample",
+            "body": "Codex reproduced the wrong answer {{brief.wrong}}. {{project.artifact}} now uses {{brief.fixed}} The same two fixtures pass. Please open the artifact and source note for the final check."
+          },
+          {
+            "channel": "internal",
+            "direction": "incoming",
+            "sender": "{{people.reviewer}}",
+            "time": "11:00 ET, sample",
+            "body": "I read {{project.artifact}} against brief.md and S1, counted both questions, recalculated both answers and checked the S1 references. All listed requirements pass. I did not use the agent completion summary as evidence."
+          }
+        ],
+        "notice": "Internal project notes."
+      },
+      "statuses": [
+        "Stall documented and corrective action recorded",
+        "Wrong output repaired and retested",
+        "Separate human verification recorded"
+      ]
+    },
+    {
+      "id": "verified-result",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "Open the checked lesson and evidence.",
+      "caption": "The sample ends with the corrected answer and a separate human review.",
+      "beat": "Here is the corrected answer, the same-fixture test result and Maya’s separate check against the original brief. These sample counts illustrate the verification process.",
+      "details": [
+        "{{project.id}} / {{project.artifact}}",
+        "Source note, tests and review evidence."
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{project.id}} / checked project output",
+        "subtitle": "Custom project workspace, illustrative",
+        "fields": [
+          {
+            "label": "Audience",
+            "value": "{{project.audience}}"
+          },
+          {
+            "label": "Question 1 and answer",
+            "value": "2/3 = ?/6. {{brief.firstWorked}} (S1)"
+          },
+          {
+            "label": "Question 2 and answer",
+            "value": "{{brief.question}}. {{brief.fixed}} (S1)"
+          },
+          {
+            "label": "Human check",
+            "value": "{{people.reviewer}} opened the lesson, source and original brief."
+          }
+        ],
+        "stages": [
+          "Draft",
+          "Failed check",
+          "Repaired",
+          "Human checked"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "metrics": [
+          {
+            "label": "Original requirements",
+            "value": "Checks passed",
+            "note": "Illustrative: explanation, two worked questions and S1 references."
+          },
+          {
+            "label": "Same fixtures",
+            "value": "1/2 → 2/2",
+            "note": "Same fixtures before and after repair."
+          },
+          {
+            "label": "Working-hour checks",
+            "value": "3 hourly checks",
+            "note": "09:00, 10:00, 11:00 ET; checks at handoffs too."
+          }
+        ],
+        "note": "The revised task prompt requires requirement IDs, artifact paths and check evidence. Reuse it on the next agreed sample and compare results with the baseline.",
+        "proof": {
+          "label": "Visible sample proof",
+          "value": "3/4 = 9/12",
+          "description": "S1 uses the same multiplier on numerator and denominator. Maya independently recalculated 2/3 = 4/6 and 3/4 = 9/12, counted both questions and matched the lesson to the brief.",
+          "sourceNote": "source-note.txt · lesson-v2.md · check report · review checklist"
+        }
+      },
+      "statuses": [
+        "Draft available",
+        "Incorrect worked answer caught",
+        "Same fixtures pass after repair",
+        "Independent human check complete"
+      ]
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Agree the baseline.",
+    "accent": "Then compare the work.",
+    "caption": "Use the same tasks and acceptance checks when comparing workflow changes.",
+    "metrics": [
+      {
+        "name": "Checkpoint coverage",
+        "direction": "up",
+        "aim": "Check active tasks more consistently",
+        "definition": "Working-hour checkpoints completed within the agreed hourly window divided by checkpoints due for active tasks."
+      },
+      {
+        "name": "Time to detect a stall",
+        "direction": "down",
+        "aim": "Find stalled work sooner",
+        "definition": "Elapsed working time from the last confirmed progress to an operator recording and investigating the stall."
+      },
+      {
+        "name": "First-pass acceptance",
+        "direction": "up",
+        "aim": "Accept more outputs on first review",
+        "definition": "Outputs meeting every original requirement at independent human review divided by outputs reviewed."
+      }
+    ],
+    "baselineNote": "Agree the current baseline, working hours and targets with your team before measuring changes.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply on Upwork and I'll send three times.",
+    "beat": "We can pick the first task and agree the checks on a 15-minute call. Reply on Upwork and I'll send three times."
+  }
+}

@@ -1,0 +1,432 @@
+{
+  "schemaVersion": 1,
+  "id": "ghl-crm-marketing-2112187821283899256",
+  "title": "Gohighlevel CRM and Marketing Specialist",
+  "systemName": "Your CRM and email follow-up",
+  "account": {
+    "name": "CRM workspace",
+    "initials": "CRM",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112187821283899256",
+    "facts": [
+      "Original post retained verbatim in jd.txt; private Upwork metadata is in intake-private.json.",
+      "The post asks for management and improvement of CRM and marketing workflows, lead capture, automations, email sequences, campaign tracking, troubleshooting, and part-time independent support.",
+      "GoHighLevel is named in the title. No business name, client contact name, industry, current campaign, existing workflow defect, or baseline performance is supplied.",
+      "Jordan Reed, Sam Lee, website-enquiry, Website enquiry October, timestamps, messages, and the opportunity are invented sample data, not client facts.",
+      "The form-to-tag setup is upstream of the displayed workflow. Contact Tag is configured for Tag Added = website-enquiry; this trigger does not itself apply the tag.",
+      "GHL supported adapter keys used: contact_tag, assign_user, opportunity, email, wait. Stop on Response is a workflow setting, not a node. The opportunity stage after reply is changed by the sample owner, not an unsupported automation.",
+      "Official GHL Contact Tag documentation checked 2026-10-19: https://help.gohighlevel.com/support/solutions/articles/155000002482-workflow-trigger-contact-tag",
+      "Official GHL workflow settings documentation checked 2026-10-19: https://help.gohighlevel.com/support/solutions/articles/48001239875 ; Stop on Response ends this contact's workflow when they reply to a message sent from this workflow.",
+      "No client-specific or past-delivery claim is made. Result proof is a visible illustrative contact trace, not live execution evidence."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "name": "Jordan Reed",
+      "firstName": "Jordan",
+      "email": "jordan.reed@example.com"
+    },
+    "owner": {
+      "name": "Sam Lee",
+      "firstName": "Sam"
+    },
+    "intake": {
+      "source": "Website form",
+      "campaign": "Website enquiry October",
+      "tag": "website-enquiry",
+      "request": "Please send details about your services."
+    },
+    "opportunity": {
+      "name": "Jordan Reed | Website enquiry",
+      "pipeline": "Website enquiries"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your CRM and marketing workflows",
+    "title": "From a captured lead",
+    "accent": "to a tracked conversation.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "GoHighLevel lead capture",
+      "Email follow-up and reply exit",
+      "Campaign performance tracking"
+    ],
+    "previewSteps": [
+      {
+        "title": "Capture and assign",
+        "detail": "Keep the form source, campaign, and owner on the contact."
+      },
+      {
+        "title": "Follow up by email",
+        "detail": "Send the sequence and stop when the lead replies."
+      },
+      {
+        "title": "Check the outcome",
+        "detail": "Trace the conversation back to the campaign and opportunity."
+      }
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "footer": "Illustrative sample · Existing workflows reviewed before changes"
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Measure capture, response,",
+    "accent": "and campaign outcomes.",
+    "caption": "Use the same lead cohorts to compare performance before and after workflow changes.",
+    "metrics": [
+      {
+        "name": "Unassigned form leads",
+        "direction": "down",
+        "aim": "Reduce unassigned enquiries",
+        "definition": "Distinct form leads without an assigned owner at the agreed daily checkpoint, divided by all form leads received in that period. Report by form and campaign."
+      },
+      {
+        "name": "First-response time",
+        "direction": "down",
+        "aim": "Respond sooner",
+        "definition": "Median elapsed time from form submission to the first enquiry email sent to that contact. Report by campaign and separate failed sends from successful sends."
+      },
+      {
+        "name": "Lead-to-conversation rate",
+        "direction": "up",
+        "aim": "Start more conversations",
+        "definition": "Distinct leads with an incoming email reply divided by distinct captured leads in the same campaign cohort, using an agreed observation period. Count each lead once."
+      }
+    ],
+    "baselineNote": "We’ll establish the baseline and agree the targets.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "I'd check unassigned leads, response time, and replies by campaign against your starting baseline. Worth a quick 15-minute call? Reply here and I'll send times."
+  },
+  "scenes": [
+    {
+      "id": "workflow",
+      "kind": "workflow",
+      "platform": "ghl",
+      "optional": false,
+      "title": "Route the form lead into email follow-up.",
+      "caption": "The entry tag starts the workflow. The source and campaign stay on the contact.",
+      "beat": "The form setup applies the website-enquiry tag. That starts this workflow, assigns Sam, creates the opportunity, and sends the enquiry email. With no reply after one day, one follow-up goes out. Jordan then replies during the final wait.",
+      "details": [
+        "{{intake.source}} → {{intake.tag}} → {{owner.name}}",
+        "Stop on Response enabled · replies to this workflow end enrolment"
+      ],
+      "content": {
+        "name": "Website enquiry email follow-up",
+        "nodes": [
+          {
+            "id": "entry",
+            "type": "contact_tag",
+            "label": "Entry tag added",
+            "detail": "Tag Added = {{intake.tag}}. The form setup applies this tag upstream."
+          },
+          {
+            "id": "assign",
+            "type": "assign_user",
+            "label": "Assign to {{owner.name}}",
+            "detail": "Route this new enquiry to the sample owner."
+          },
+          {
+            "id": "opportunity",
+            "type": "opportunity",
+            "label": "Create new enquiry",
+            "detail": "{{opportunity.pipeline}} pipeline · New enquiry stage"
+          },
+          {
+            "id": "first-email",
+            "type": "email",
+            "label": "Send enquiry email",
+            "detail": "Acknowledge {{lead.firstName}}’s request from {{intake.source}}."
+          },
+          {
+            "id": "wait-day",
+            "type": "wait",
+            "label": "Wait one day",
+            "detail": "No reply in this sample, so the follow-up runs."
+          },
+          {
+            "id": "followup",
+            "type": "email",
+            "label": "Send one follow-up",
+            "detail": "Ask whether {{lead.firstName}} still wants the service details."
+          },
+          {
+            "id": "reply-window",
+            "type": "wait",
+            "label": "Wait for a reply",
+            "detail": "Up to two days. Stop on Response is enabled; {{lead.firstName}} replies during this wait."
+          }
+        ],
+        "edges": [
+          {
+            "from": "entry",
+            "to": "assign"
+          },
+          {
+            "from": "assign",
+            "to": "opportunity"
+          },
+          {
+            "from": "opportunity",
+            "to": "first-email"
+          },
+          {
+            "from": "first-email",
+            "to": "wait-day"
+          },
+          {
+            "from": "wait-day",
+            "to": "followup"
+          },
+          {
+            "from": "followup",
+            "to": "reply-window"
+          }
+        ],
+        "runOrder": [
+          "entry",
+          "assign",
+          "opportunity",
+          "first-email",
+          "wait-day",
+          "followup",
+          "reply-window"
+        ],
+        "context": {
+          "name": "{{lead.name}}",
+          "subtitle": "{{intake.campaign}} · {{owner.name}}",
+          "fields": [
+            {
+              "label": "Entry tag",
+              "value": "{{intake.tag}}"
+            },
+            {
+              "label": "Workflow setting",
+              "value": "Stop on Response: enabled"
+            }
+          ],
+          "states": [
+            "Entry tag detected",
+            "{{owner.name}} assigned",
+            "New enquiry created",
+            "Enquiry email sent",
+            "One day passes without a reply",
+            "Follow-up email sent",
+            "Reply received · workflow exits"
+          ]
+        },
+        "related": [
+          {
+            "title": "Lead capture check",
+            "detail": "Confirm the form saves the source and campaign, then applies the configured entry tag."
+          },
+          {
+            "title": "Troubleshooting path",
+            "detail": "Check the entry tag, owner, email history, and reply exit before changing the sequence."
+          }
+        ]
+      },
+      "statuses": [
+        "Entry tag detected",
+        "{{owner.name}} assigned",
+        "New enquiry created",
+        "Enquiry email sent",
+        "One day passes without a reply",
+        "Follow-up email sent",
+        "Reply received · workflow exits"
+      ]
+    },
+    {
+      "id": "record",
+      "kind": "record",
+      "platform": "ghl",
+      "optional": true,
+      "title": "Keep the request and campaign together.",
+      "caption": "The sample contact includes the submitted request, entry tag, assigned owner, and opportunity.",
+      "beat": "Jordan’s contact shows the website request, campaign, and entry tag. Sam can check those fields against the form submission if capture or routing fails.",
+      "details": [
+        "{{lead.name}} · {{lead.email}}",
+        "{{intake.campaign}} · {{opportunity.pipeline}}"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.email}}",
+        "sourceTitle": "Website form submission",
+        "sourceFields": [
+          {
+            "label": "Source",
+            "value": "{{intake.source}}"
+          },
+          {
+            "label": "Campaign",
+            "value": "{{intake.campaign}}"
+          },
+          {
+            "label": "Request",
+            "value": "{{intake.request}}"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Owner",
+            "value": "{{owner.name}}"
+          },
+          {
+            "label": "Entry tag",
+            "value": "{{intake.tag}}"
+          },
+          {
+            "label": "Opportunity",
+            "value": "{{opportunity.name}}"
+          }
+        ],
+        "events": [
+          {
+            "title": "Form fields saved",
+            "detail": "Request, source, and campaign attached to the sample contact."
+          },
+          {
+            "title": "Entry tag applied",
+            "detail": "The configured Contact Tag trigger starts the email workflow."
+          }
+        ],
+        "notice": "Form fields and the entry tag are checked together."
+      },
+      "statuses": [
+        "Form context attached",
+        "Entry tag starts workflow"
+      ]
+    },
+    {
+      "id": "messages",
+      "kind": "messages",
+      "platform": "ghl",
+      "optional": false,
+      "title": "Stop the sequence when Jordan replies.",
+      "caption": "One enquiry email, one follow-up, then a reply to the workflow email.",
+      "beat": "The sample has two emails. Jordan replies to the follow-up while the workflow is waiting. Stop on Response removes Jordan from this workflow, and Sam takes over the conversation.",
+      "details": [
+        "{{owner.name}} · {{intake.campaign}}",
+        "Reply to this workflow → sequence exit → owner takes over"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.email}}",
+        "fields": [
+          {
+            "label": "Owner",
+            "value": "{{owner.name}}"
+          },
+          {
+            "label": "Campaign",
+            "value": "{{intake.campaign}}"
+          }
+        ],
+        "items": [
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "{{owner.name}}",
+            "time": "Day 1 · 9:01 am",
+            "subject": "Your website enquiry",
+            "body": "Hi {{lead.firstName}}, thanks for getting in touch. What would you like help with first?\n\n{{owner.firstName}}"
+          },
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "{{owner.name}}",
+            "time": "Day 2 · 9:01 am",
+            "subject": "Following up on your enquiry",
+            "body": "Hi {{lead.firstName}}, are you still looking for details about our services? Reply with what you need and I’ll take a look.\n\n{{owner.firstName}}"
+          },
+          {
+            "channel": "email",
+            "direction": "incoming",
+            "sender": "{{lead.name}}",
+            "time": "Day 2 · 9:20 am",
+            "subject": "Re: Following up on your enquiry",
+            "body": "Yes, please. I’d like to understand what is included and the next step."
+          }
+        ],
+        "notice": "Illustrative reply during the final wait. Stop on Response ends this contact’s workflow. Sam handles the next response."
+      },
+      "statuses": [
+        "Enquiry email sent",
+        "Follow-up sent after one day",
+        "Reply received · sequence stopped"
+      ]
+    },
+    {
+      "id": "result",
+      "kind": "outcome",
+      "platform": "ghl",
+      "optional": false,
+      "title": "Trace the conversation to its campaign.",
+      "caption": "Sam records Conversation active after the reply. The website source remains attached.",
+      "beat": "Sam updates this sample opportunity after reading the reply. The campaign, owner, and email history remain visible. For ongoing support, I’d use that trace to check reported issues and compare campaign replies with the agreed baseline.",
+      "details": [
+        "{{opportunity.name}} · {{owner.name}}",
+        "Illustrative trace: form → two emails → reply → owner update"
+      ],
+      "content": {
+        "name": "{{opportunity.name}}",
+        "subtitle": "{{intake.campaign}}",
+        "fields": [
+          {
+            "label": "Owner",
+            "value": "{{owner.name}}"
+          },
+          {
+            "label": "Source",
+            "value": "{{intake.source}}"
+          },
+          {
+            "label": "Stage update",
+            "value": "Sam updates after reading the reply"
+          }
+        ],
+        "stages": [
+          "New enquiry",
+          "Conversation active",
+          "Closed outcome"
+        ],
+        "stageSequence": [
+          0,
+          0,
+          1
+        ],
+        "metrics": [
+          {
+            "label": "Capture",
+            "value": "Saved",
+            "note": "Illustrative contact trace"
+          },
+          {
+            "label": "Sequence",
+            "value": "2 emails",
+            "note": "Illustrative, not campaign performance"
+          },
+          {
+            "label": "Next action",
+            "value": "Sam",
+            "note": "Assigned · opportunity open"
+          }
+        ],
+        "note": "The sample stops at an active conversation. A closed outcome is recorded only when it is known.",
+        "proof": {
+          "label": "Illustrative reply-exit trace",
+          "value": "Sequence stopped",
+          "description": "The sample reply ends workflow enrolment during the wait. Sam then updates the opportunity.",
+          "sourceNote": "Illustrative sample data."
+        }
+      },
+      "statuses": [
+        "New enquiry recorded",
+        "Email history retained",
+        "Owner records active conversation"
+      ]
+    }
+  ]
+}

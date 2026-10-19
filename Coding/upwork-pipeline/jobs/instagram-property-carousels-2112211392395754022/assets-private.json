@@ -1,0 +1,58 @@
+{
+  "capturedAt": "2026-10-19",
+  "sourceUrl": "https://vsre.net/wp-content/uploads/2024/03/Countyline-Bldg31-revised.pdf",
+  "sourceType": "Public historical two-page VSRE brochure",
+  "verifiedSourceFacts": {
+    "property": "Countyline Building 31",
+    "address": "11210 W 43rd Avenue, Hialeah, FL 33018",
+    "buildingArea": "\u00b1161,787 SF",
+    "divisibleArea": "\u00b19,751 SF to \u00b1161,787 SF",
+    "clearHeight": "36 ft",
+    "price": "Inquire for Rate",
+    "sourceAvailabilityText": "Available Q1 2025"
+  },
+  "availabilityConclusion": "Historical brochure only; no current availability verified. Do not publish as an active current listing.",
+  "sourceImageWarning": "Page 1 explicitly marks building picture FINAL RENDERING SUBJECT TO CHANGE. This is a rendering, not an actual property photograph. Page 2 has a site plan, not an aerial photograph.",
+  "assets": [
+    {
+      "path": "Coding/upwork-pipeline/jobs/instagram-property-carousels-2112211392395754022/assets/countyline-building31-source.pdf",
+      "kind": "Original brochure",
+      "bytes": 1167889,
+      "sha256": "40153c4d8728277bad8758bcf10a20de2d29150b24fc7ab6aaeee410f111bbae"
+    },
+    {
+      "path": "Coding/upwork-pipeline/jobs/instagram-property-carousels-2112211392395754022/assets/countyline-building31-p1-image1.jpg",
+      "kind": "Unchanged extracted building rendering",
+      "bytes": 242172,
+      "sha256": "2d04db3d6451d577201233f8a58dfd0ecc8f1ab0986a273569bec0ee4d5172b0"
+    },
+    {
+      "path": "Coding/upwork-pipeline/jobs/instagram-property-carousels-2112211392395754022/assets/countyline-building31-siteplan.png",
+      "kind": "Extracted site-plan converted losslessly from JP2 to PNG",
+      "bytes": 968293,
+      "sha256": "450f2c290eb5cf9fb4ea291d6db75732a8a5ca73dc5259d93f0e810c3c5d93ec"
+    }
+  ],
+  "browserObservation": "Read built-in-browser skill; attempted CUA hidden iab tab, unavailable; CUA inventory returned no browser surfaces. No standalone browser script used. A read-only urllib HTML inspection returned 403 and was not retried.",
+  "scope": "Spec updated with required carousel scene and separate required email/SMS drafts. No shared assets, queue or page build changes.",
+  "corporatePhotoEvidence": {
+    "providedBy": "Main session observed actual home-page image links with web tool. Worker downloaded exact supplied URLs, inspected the image bytes using view_image, and embedded unchanged source JPEG bytes.",
+    "association": "Corporate/home imagery only. No property ID, address, current listing or SAMPLE-P101 association verified.",
+    "files": [
+      {
+        "path": "Coding/upwork-pipeline/jobs/instagram-property-carousels-2112211392395754022/assets/vsre-corporate-service.jpg",
+        "url": "https://vsre.net/wp-content/uploads/2024/05/home-ser-22-1.jpg",
+        "observed": "Aerial photo of industrial building with loading bays; main identified Landlord & Tenant Representation image.",
+        "bytes": 973045,
+        "sha256": "370c81d335ca726a37f53d7e4803bcaa918d85f3393dc411890b97c56ce7f644"
+      },
+      {
+        "path": "Coding/upwork-pipeline/jobs/instagram-property-carousels-2112211392395754022/assets/vsre-corporate-metrics.jpg",
+        "url": "https://vsre.net/wp-content/uploads/2024/05/2ebaf7f87c6cf4737e9ff266577533d74b2f1b0a-2-1024x683.jpg",
+        "observed": "Photo of office interior; main identified home metrics image.",
+        "bytes": 193226,
+        "sha256": "138b18f4e01cc9ac51790e2f516bfe8f0575ea53f04ae55a0551a08b2a7ec5c0"
+      }
+    ]
+  }
+}

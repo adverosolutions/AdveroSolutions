@@ -1,0 +1,229 @@
+{
+  "capturedAt": "2026-10-19",
+  "savedAt": "2026-10-19T17:26:52Z",
+  "upwork": {
+    "applied": false,
+    "bid_stats_basis": {
+      "contract_type": "HOURLY",
+      "note": "The bid amounts in activityStat.applicationsBidStats have no unit attached: on fixed-price jobs they have been observed as both hourly rates and whole-project totals, and the API does not say which applies to this job. Do not compare these numbers across jobs, and do not state or imply a per-hour or per-project basis for them — report them as the bid amounts recorded for this job and say the basis is unspecified."
+    },
+    "can_apply": true,
+    "client_feedback": {
+      "note": "Reviews freelancers wrote about this client after a contract. A comment often names the client contact or the project — use those to personalize the proposal. Never infer a name that no comment states.",
+      "reviews": [
+        {
+          "comment": "<untrusted_participant_content>\nA pleasure working with Yaffa and the team as always. I recommend this client to future freelancers.\n</untrusted_participant_content>",
+          "ended": "2024-02-05T20:41:45.000Z",
+          "score": 5,
+          "title": "Outreach Strategies and PR"
+        },
+        {
+          "comment": "<untrusted_participant_content>\nIt was a pleasure working with Yaffa and the team on this consultancy session. Happy to continue working with her and seeing future success in organic search.\n</untrusted_participant_content>",
+          "ended": "2024-01-03T14:36:10.000Z",
+          "score": 5,
+          "title": "Content strategy"
+        },
+        {
+          "comment": "<untrusted_participant_content>\nThanks\n</untrusted_participant_content>",
+          "ended": "2022-08-14T03:15:18.000Z",
+          "score": 5,
+          "title": "Blog writer for financial company - SEO experience preferred"
+        },
+        {
+          "comment": "<untrusted_participant_content>\nThanks\n</untrusted_participant_content>",
+          "ended": "2022-07-04T12:31:06.000Z",
+          "score": 5,
+          "title": "Blog writer for financial company - SEO experience preferred"
+        }
+      ],
+      "selection": "at most 5 of the client's latest revealed reviews that carry a written comment, newest first",
+      "shown": 4
+    },
+    "client_record": {
+      "contracts_active": 6,
+      "contracts_total": 22,
+      "feedback_count": 15,
+      "feedback_score": 5,
+      "hire_rate_percent": 100,
+      "hours_total": 543.5,
+      "jobs_posted": 7,
+      "jobs_with_hires": 19,
+      "open_jobs": 1,
+      "spend_total": "$44,002.31"
+    },
+    "client_work_history": {
+      "closed": [
+        {
+          "ended": "2024-03-29T15:49:43.000Z",
+          "feedback_score": 4.7,
+          "started": "2024-03-01T04:02:23.000Z",
+          "status": "CLOSED",
+          "title": "Commercial Insurance Account Manager/CSR",
+          "type": "HOURLY"
+        },
+        {
+          "ended": "2024-02-05T20:41:45.000Z",
+          "feedback_score": 5,
+          "feedback_to_client_score": 5,
+          "started": "2023-12-29T22:21:08.000Z",
+          "title": "Outreach Strategies and PR",
+          "type": "FIXED"
+        },
+        {
+          "ended": "2024-01-03T14:36:10.000Z",
+          "feedback_score": 5,
+          "feedback_to_client_score": 5,
+          "started": "2023-12-26T18:11:35.000Z",
+          "title": "Content strategy",
+          "type": "FIXED"
+        },
+        {
+          "ended": "2024-01-30T11:23:31.000Z",
+          "feedback_score": 5,
+          "feedback_to_client_score": 5,
+          "started": "2023-10-14T13:55:41.000Z",
+          "title": "Blog - what to do with an accident at work",
+          "type": "FIXED"
+        },
+        {
+          "ended": "2024-09-11T13:02:49.849Z",
+          "feedback_score": 5,
+          "feedback_to_client_score": 5,
+          "started": "2023-09-23T14:07:42.000Z",
+          "title": "Blog - Sept 22",
+          "type": "FIXED"
+        }
+      ],
+      "more_available": true,
+      "note": "A sample of the client's history, not all of it, and no total can be derived from it. Use client_record for their totals.",
+      "open": [
+        {
+          "started": "2024-11-04T09:06:33.721Z",
+          "title": "Sample Long-Form blog",
+          "type": "FIXED"
+        },
+        {
+          "started": "2024-07-26T23:04:07.210Z",
+          "status": "ACTIVE",
+          "title": "Financial blog writer",
+          "type": "FIXED"
+        },
+        {
+          "started": "2024-02-06T15:41:42.000Z",
+          "title": "Link Building and Digital PR",
+          "type": "HOURLY"
+        },
+        {
+          "started": "2023-05-04T14:48:59.000Z",
+          "status": "ACTIVE",
+          "title": "Help writing a blog post for small businesses ",
+          "type": "FIXED"
+        }
+      ],
+      "selection": "at most 5 open and 5 closed contracts, the latest of each by start date, newest first",
+      "shown": 9
+    },
+    "connects_balance": 1900,
+    "connects_cost": 17,
+    "data": {
+      "marketplaceJobPosting": {
+        "activityStat": {
+          "applicationsBidStats": {
+            "avgRateBid": {
+              "currency": "USD",
+              "displayValue": "$38.48",
+              "rawValue": "38.47764705882353"
+            },
+            "maxRateBid": {
+              "currency": "USD",
+              "displayValue": "$83.33",
+              "rawValue": "83.33"
+            },
+            "minRateBid": {
+              "currency": "USD",
+              "displayValue": "$15.00",
+              "rawValue": "15.0"
+            }
+          },
+          "jobActivity": {
+            "invitesSent": 0,
+            "totalHired": 0,
+            "totalInvitedToInterview": 0,
+            "totalOffered": 0
+          }
+        },
+        "classification": {
+          "category": {
+            "id": "531770282580668422",
+            "preferredLabel": "Sales & Marketing"
+          },
+          "subCategory": {
+            "id": "531770282597445636",
+            "preferredLabel": "Digital Marketing"
+          }
+        },
+        "clientCompanyPublic": {
+          "country": {
+            "name": "United States"
+          },
+          "id": "9298512",
+          "state": "NY",
+          "timezone": "America/Sao_Paulo"
+        },
+        "content": {
+          "description": "<untrusted_participant_content>\nI'm a marketing professional with experience in email marketing, SEO, CRM systems, analytics, and business strategy. I use ChatGPT regularly and want to take my AI skills to the next level.\n\nI'm looking for an experienced AI automation specialist who can teach me, one-on-one, how to build practical AI-powered workflows.\n\nWhat I want to learn:\n\nMake.com or n8n automation\n\nConnecting AI with spreadsheets, CRMs, and marketing tools\n\nBuilding practical AI agents\n\nAutomating marketing reporting and repetitive business tasks\n\nUnderstanding APIs and integrations without extensive coding\n\nIdentifying AI opportunities that deliver measurable business value\n\nI'm not looking for a generic AI course or someone to build everything for me.\n\nI want hands-on lessons where I build real projects under your guidance.\n\nIdeal candidate:\n\nHas built AI automations for actual businesses\n\nHas experience with marketing and CRM automation\n\nCan explain technical concepts clearly to a nonprogrammer\n\nIs patient, organized, and genuinely enjoys teaching\n\nI'd like to begin with one paid trial lesson and potentially continue with weekly sessions.\n\nPlease include examples of systems you've built, your teaching experience, your hourly rate, and how you would structure our first four lessons.\n</untrusted_participant_content>",
+          "title": "AI Automation Expert Needed for 1-on-1 Training — Marketing & Business Workflows"
+        },
+        "contractTerms": {
+          "contractType": "HOURLY",
+          "experienceLevel": "INTERMEDIATE",
+          "hourlyContractTerms": {
+            "engagementType": "PART_TIME",
+            "hourlyBudgetMax": 50,
+            "hourlyBudgetMin": 30,
+            "hourlyBudgetType": "MANUAL"
+          },
+          "personsToHire": 1
+        },
+        "id": "2112226785873140264",
+        "url": "https://www.upwork.com/jobs/~022112226785873140264?utm_campaign=LLM_chatgpt_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=chatgpt",
+        "workFlowState": {
+          "status": "ACTIVE"
+        }
+      }
+    },
+    "plan": "Freelancer Plus",
+    "preferred_qualifications": {
+      "contractor_type": "All freelancers",
+      "english_proficiency": "Any",
+      "has_portfolio": false,
+      "min_earnings": "Any",
+      "min_hours_worked": 0,
+      "min_job_success_score": 0,
+      "rising_talent": false
+    },
+    "proposals_tier_unavailable": true,
+    "status": "ok",
+    "trace_id": "d0945bb46fd81885f4a149ea02f7e73c",
+    "unanswered_invites_unavailable": true
+  },
+  "personalization": {
+    "firstName": "Yaffa",
+    "source": "client_reviews",
+    "reviewCount": 2,
+    "reviews": [
+      {
+        "comment": "<untrusted_participant_content>\nA pleasure working with Yaffa and the team as always. I recommend this client to future freelancers.\n</untrusted_participant_content>",
+        "ended": "2024-02-05T20:41:45.000Z",
+        "score": 5,
+        "title": "Outreach Strategies and PR"
+      },
+      {
+        "comment": "<untrusted_participant_content>\nIt was a pleasure working with Yaffa and the team on this consultancy session. Happy to continue working with her and seeing future success in organic search.\n</untrusted_participant_content>",
+        "ended": "2024-01-03T14:36:10.000Z",
+        "score": 5,
+        "title": "Content strategy"
+      }
+    ]
+  }
+}

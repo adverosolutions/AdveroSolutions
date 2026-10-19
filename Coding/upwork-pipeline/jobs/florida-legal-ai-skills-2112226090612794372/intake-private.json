@@ -1,0 +1,221 @@
+{
+  "capturedAt": "2026-10-19",
+  "savedAt": "2026-10-19T17:26:31Z",
+  "upwork": {
+    "applied": false,
+    "bid_stats_basis": {
+      "contract_type": "HOURLY",
+      "note": "The bid amounts in activityStat.applicationsBidStats have no unit attached: on fixed-price jobs they have been observed as both hourly rates and whole-project totals, and the API does not say which applies to this job. Do not compare these numbers across jobs, and do not state or imply a per-hour or per-project basis for them — report them as the bid amounts recorded for this job and say the basis is unspecified."
+    },
+    "can_apply": true,
+    "client_feedback": {
+      "more_available": true,
+      "note": "Reviews freelancers wrote about this client after a contract. A comment often names the client contact or the project — use those to personalize the proposal. Never infer a name that no comment states.",
+      "reviews": [
+        {
+          "comment": "<untrusted_participant_content>\nToor gives clear instructions, he is a great and understanding client.\n</untrusted_participant_content>",
+          "ended": "2026-10-11T22:38:44.118Z",
+          "score": 5,
+          "title": "Build an AI Agent That Plans, Creates & Launches Online Courses"
+        },
+        {
+          "comment": "<untrusted_participant_content>\nHe is a very nice client, and I would definitely like to explore future collaboration opportunities with him.\n</untrusted_participant_content>",
+          "ended": "2026-10-07T20:08:03.185Z",
+          "score": 5,
+          "title": "Integration Retell AI, GoHighLevel, REDEX, LeadConnector, and Sympana for my real estate brokerage."
+        },
+        {
+          "comment": "<untrusted_participant_content>\nIt was a pleasure working with Toor. Looking forward to working with him again.\n</untrusted_participant_content>",
+          "ended": "2026-10-01T15:37:41.724Z",
+          "score": 5,
+          "title": "HR & People Operations Specialist Needed for Employee Onboarding & HR Process Setup"
+        },
+        {
+          "comment": "<untrusted_participant_content>\nGreat experience working with the Toor Khan. Clear requirements, professional communication, and smooth collaboration throughout the project. I’d definitely be happy to work with them again on futur…\n</untrusted_participant_content>",
+          "ended": "2026-09-06T03:39:22.332Z",
+          "score": 5,
+          "title": "WordPress Developer Needed for Custom Theme & Plugin Development"
+        },
+        {
+          "comment": "<untrusted_participant_content>\nGreat client.\n</untrusted_participant_content>",
+          "ended": "2026-08-24T16:51:42.955Z",
+          "score": 5,
+          "title": "AI Developer Needed for LLM-Powered Workflow Automation"
+        }
+      ],
+      "selection": "at most 5 of the client's latest revealed reviews that carry a written comment, newest first",
+      "shown": 5
+    },
+    "client_record": {
+      "contracts_active": 0,
+      "contracts_total": 71,
+      "feedback_count": 66,
+      "feedback_score": 5,
+      "hire_rate_percent": 77,
+      "hours_total": 33,
+      "jobs_posted": 90,
+      "jobs_with_hires": 69,
+      "open_jobs": 1,
+      "spend_total": "$8,480.48"
+    },
+    "client_work_history": {
+      "closed": [
+        {
+          "ended": "2026-10-11T22:38:44.118Z",
+          "feedback_score": 5,
+          "feedback_to_client_score": 5,
+          "started": "2026-10-09T19:57:52.794Z",
+          "status": "CLOSED",
+          "title": "Build an AI Agent That Plans, Creates & Launches Online Courses",
+          "type": "HOURLY"
+        },
+        {
+          "ended": "2026-10-07T20:08:03.185Z",
+          "feedback_score": 5,
+          "feedback_to_client_score": 5,
+          "started": "2026-10-05T21:28:16.500Z",
+          "status": "CLOSED",
+          "title": "Integration Retell AI, GoHighLevel, REDEX, LeadConnector, and Sympana for my real estate brokerage.",
+          "type": "FIXED"
+        },
+        {
+          "ended": "2026-10-04T23:06:43.090Z",
+          "feedback_score": 5,
+          "feedback_to_client_score": 5,
+          "started": "2026-10-02T16:15:50.277Z",
+          "status": "CLOSED",
+          "title": "Full Stack MERN Developer | React & Node.js",
+          "type": "FIXED"
+        },
+        {
+          "ended": "2026-10-04T17:10:07.709Z",
+          "feedback_score": 5,
+          "started": "2026-09-30T19:09:48.225Z",
+          "status": "CLOSED",
+          "title": "Webflow Developer Needed for Figma to Webflow Build + CMS Setup",
+          "type": "FIXED"
+        },
+        {
+          "ended": "2026-10-01T15:37:41.724Z",
+          "feedback_score": 5,
+          "feedback_to_client_score": 5,
+          "started": "2026-09-29T17:09:56.191Z",
+          "status": "CLOSED",
+          "title": "HR & People Operations Specialist Needed for Employee Onboarding & HR Process Setup",
+          "type": "FIXED"
+        }
+      ],
+      "more_available": true,
+      "note": "A sample of the client's history, not all of it, and no total can be derived from it. Use client_record for their totals.",
+      "selection": "at most 5 open and 5 closed contracts, the latest of each by start date, newest first",
+      "shown": 5
+    },
+    "connects_balance": 1900,
+    "connects_cost": 20,
+    "data": {
+      "marketplaceJobPosting": {
+        "activityStat": {
+          "applicationsBidStats": {
+            "avgRateBid": {
+              "currency": "USD",
+              "displayValue": "$36.19",
+              "rawValue": "36.19047619047619"
+            },
+            "maxRateBid": {
+              "currency": "USD",
+              "displayValue": "$85.00",
+              "rawValue": "85.0"
+            },
+            "minRateBid": {
+              "currency": "USD",
+              "displayValue": "$19.00",
+              "rawValue": "19.0"
+            }
+          },
+          "jobActivity": {
+            "invitesSent": 0,
+            "totalHired": 0,
+            "totalInvitedToInterview": 0,
+            "totalOffered": 0
+          }
+        },
+        "classification": {
+          "category": {
+            "id": "531770282580668418",
+            "preferredLabel": "Web, Mobile & Software Dev"
+          },
+          "subCategory": {
+            "id": "1737190722360750082",
+            "preferredLabel": "AI Apps & Integration"
+          }
+        },
+        "clientCompanyPublic": {
+          "country": {
+            "name": "Pakistan"
+          },
+          "id": "1011899261",
+          "timezone": "Asia/Karachi"
+        },
+        "content": {
+          "description": "<untrusted_participant_content>\nWe are seeking an experienced Claude AI developer to build custom AI skills and intelligent workflows for a Florida-based family law firm. The goal is to streamline legal operations, reduce repetitive administrative work, and improve efficiency while maintaining accuracy, confidentiality, and attorney oversight.\n\nKey Responsibilities:\n\nDevelop custom Claude AI skills tailored to Florida family law workflows.\n\nAutomate legal document drafting, case summaries, client intake, and document analysis.\n\nCreate reusable prompts, templates, and structured workflows for common family law matters.\n\nEnsure workflows follow firm-specific procedures and relevant Florida legal requirements.\n\nImplement appropriate privacy safeguards, validation steps, and attorney review checkpoints.\n\nDocument the workflows and provide guidance for practical day-to-day use.\n\nIdeal Candidate:\nExperience with Claude AI, prompt engineering, AI workflow automation, and legal document processing. Familiarity with Florida family law, legal technology, and confidential client information is highly desirable.\n\nThe ideal solution should be reliable, easy for legal professionals to use, and designed to support—not replace—attorney judgment.\n</untrusted_participant_content>",
+          "title": "Claude AI Skills Developer / Legal AI Workflow Specialist for Florida Family Law Firm"
+        },
+        "contractTerms": {
+          "contractType": "HOURLY",
+          "experienceLevel": "EXPERT",
+          "hourlyContractTerms": {
+            "engagementType": "PART_TIME",
+            "hourlyBudgetMax": 50,
+            "hourlyBudgetMin": 25,
+            "hourlyBudgetType": "DEFAULT"
+          },
+          "personsToHire": 1
+        },
+        "id": "2112226090612794372",
+        "url": "https://www.upwork.com/jobs/~022112226090612794372?utm_campaign=LLM_chatgpt_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=chatgpt",
+        "workFlowState": {
+          "status": "ACTIVE"
+        }
+      }
+    },
+    "plan": "Freelancer Plus",
+    "preferred_qualifications": {
+      "contractor_type": "All freelancers",
+      "english_proficiency": "Any",
+      "has_portfolio": false,
+      "min_earnings": "Any",
+      "min_hours_worked": 0,
+      "min_job_success_score": 0,
+      "rising_talent": false
+    },
+    "proposals_tier_unavailable": true,
+    "status": "ok",
+    "trace_id": "ffeae03a1eff4fea6ffe115c8cf67bf0",
+    "unanswered_invites_unavailable": true
+  },
+  "personalization": {
+    "firstName": "Toor",
+    "source": "client_reviews",
+    "reviewCount": 3,
+    "reviews": [
+      {
+        "comment": "<untrusted_participant_content>\nToor gives clear instructions, he is a great and understanding client.\n</untrusted_participant_content>",
+        "ended": "2026-10-11T22:38:44.118Z",
+        "score": 5,
+        "title": "Build an AI Agent That Plans, Creates & Launches Online Courses"
+      },
+      {
+        "comment": "<untrusted_participant_content>\nIt was a pleasure working with Toor. Looking forward to working with him again.\n</untrusted_participant_content>",
+        "ended": "2026-10-01T15:37:41.724Z",
+        "score": 5,
+        "title": "HR & People Operations Specialist Needed for Employee Onboarding & HR Process Setup"
+      },
+      {
+        "comment": "<untrusted_participant_content>\nGreat experience working with the Toor Khan. Clear requirements, professional communication, and smooth collaboration throughout the project. I’d definitely be happy to work with them again on futur…\n</untrusted_participant_content>",
+        "ended": "2026-09-06T03:39:22.332Z",
+        "score": 5,
+        "title": "WordPress Developer Needed for Custom Theme & Plugin Development"
+      }
+    ]
+  }
+}

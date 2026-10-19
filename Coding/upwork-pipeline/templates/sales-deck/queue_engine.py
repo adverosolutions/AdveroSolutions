@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 import fcntl
 import json
 import os
+import re
 from pathlib import Path
 import sys
 from urllib.parse import urlsplit
@@ -178,10 +179,19 @@ def _job_url(value):
     return value
 
 
+def _recording_order(entry):
+    # Upwork's numeric job IDs follow posting chronology. Preserve registration
+    # order for entries without a recognized Upwork ID; never use review time.
+    parsed = urlsplit(entry.get("jobUrl") or "")
+    match = (re.fullmatch(r"/jobs/~02([0-9]+)/?", parsed.path)
+             if parsed.hostname in ("upwork.com", "www.upwork.com") else None)
+    return int(match.group(1)) if match else 0
+
+
 def _snapshot(registry):
     jobs = []
     counts = {status: 0 for status in STATUSES}
-    for entry in registry["jobs"]:
+    for entry in sorted(registry["jobs"], key=_recording_order, reverse=True):
         status = entry["status"]
         counts[status] += 1
         links = status in ("built_pending_review", "review_rejected", "reviewed_ready", "recorded")

@@ -1,0 +1,385 @@
+{
+  "schemaVersion": 1,
+  "id": "ai-workflow-training-2112226785873140264",
+  "title": "Hands-on AI workflow training for marketing reporting",
+  "systemName": "Your n8n marketing reporting lessons",
+  "account": {
+    "name": "Marketing lesson sample",
+    "initials": "ML",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112226785873140264",
+    "facts": [
+      "Source: jd.txt and intake-private.json in this job folder, captured 2026-10-19. The client requests one-on-one practical training, a trial lesson, weekly sessions, Make or n8n, spreadsheets, CRMs, marketing tools, agents, APIs and a first-four-lesson structure.",
+      "The post asks for teaching experience and an hourly rate. No teaching history is evidenced in the supplied material. Do not invent it. Rates and billing are excluded under UPWORK_PROCESS.md; Lorenzo must supply teaching background separately.",
+      "Yaffa is stated in two separate freelancer reviews: Outreach Strategies and PR, ended 2024-02-05; Content strategy, ended 2024-01-03. This supports a client-contact first name, not company ownership.",
+      "All report inputs, names, dates, counts, lesson artifacts and results here are invented sample data. This is visible sample proof, not past delivery or a connected live workflow.",
+      "n8n is one of the two platforms the client accepts. Manual Trigger, HTTP Request, Edit Fields and Google Sheets Append Row are supported by the frozen catalog. AI calls use HTTP Request, not unavailable AI Agent or Chat Model nodes. Workbench is a custom project workspace, not a native vendor UI."
+    ]
+  },
+  "personalization": {
+    "firstName": "Yaffa",
+    "source": "client_reviews",
+    "reviewCount": 2
+  },
+  "entities": {
+    "learner": {
+      "name": "Casey Brooks",
+      "email": "casey@example.com"
+    },
+    "owner": {
+      "name": "Morgan Lee"
+    },
+    "report": {
+      "id": "MKT-104",
+      "period": "12 to 18 October",
+      "campaign": "October newsletter"
+    },
+    "sample": {
+      "sent": 1200,
+      "clicks": 48,
+      "leads": 24,
+      "qualified": 9,
+      "booked": 3,
+      "clickRate": "4%",
+      "qualifiedRate": "37.5%"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your hands-on n8n lessons",
+    "title": "Build your first AI report.",
+    "accent": "Then rerun it yourself.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "You drive the trial lesson",
+      "Four practical lessons",
+      "A report you can check"
+    ],
+    "previewSteps": [
+      {
+        "title": "Teach",
+        "detail": "I explain one node and its input."
+      },
+      {
+        "title": "Do",
+        "detail": "You connect the next step and inspect its output."
+      },
+      {
+        "title": "Rerun",
+        "detail": "You change the sample and check the new report."
+      }
+    ],
+    "footer": "Sample data · illustrative lesson project · no live accounts connected",
+    "beat": "I'd start with this marketing report. You'd share your screen and build it while I guide you."
+  },
+  "scenes": [
+    {
+      "id": "workflow",
+      "kind": "workflow",
+      "platform": "n8n",
+      "optional": false,
+      "title": "Build the report lesson in four steps.",
+      "caption": "Start with supplied spreadsheet and CRM values; add source APIs in lesson two.",
+      "beat": "You load the sample values into named fields, request an AI summary and save the draft. In lesson two, you connect the source APIs and diagnose a 401 response.",
+      "details": [
+        "{{report.id}} · {{report.period}} · {{report.campaign}}",
+        "Supplied sample: {{sample.sent}} sent, {{sample.clicks}} clicks, {{sample.leads}} leads",
+        "The prompt, model response and saved row use illustrative data."
+      ],
+      "content": {
+        "name": "Marketing report lesson",
+        "nodes": [
+          {
+            "id": "start",
+            "type": "manual_trigger",
+            "label": "Start the lesson",
+            "detail": "{{learner.name}} starts {{report.id}}."
+          },
+          {
+            "id": "map",
+            "type": "edit_fields",
+            "label": "Load sample values",
+            "detail": "Map spreadsheet and CRM totals into named fields."
+          },
+          {
+            "id": "ai",
+            "type": "http_request",
+            "label": "Draft the summary",
+            "detail": "Apply the editable prompt to the mapped values."
+          },
+          {
+            "id": "save",
+            "type": "google_sheets",
+            "label": "Save the draft",
+            "detail": "Append {{report.id}} and the summary for review."
+          }
+        ],
+        "edges": [
+          {
+            "from": "start",
+            "to": "map"
+          },
+          {
+            "from": "map",
+            "to": "ai"
+          },
+          {
+            "from": "ai",
+            "to": "save"
+          }
+        ],
+        "runOrder": [
+          "start",
+          "map",
+          "ai",
+          "save"
+        ],
+        "context": {
+          "name": "{{report.id}}",
+          "subtitle": "{{learner.name}} · illustrative lesson run",
+          "fields": [
+            {
+              "label": "Supplied inputs",
+              "value": "{{sample.sent}} sent · {{sample.clicks}} clicks · {{sample.leads}} leads"
+            },
+            {
+              "label": "Review owner",
+              "value": "{{owner.name}}"
+            }
+          ],
+          "states": [
+            "Learner started run",
+            "Sample fields loaded",
+            "Summary response inspected",
+            "Report draft saved"
+          ]
+        },
+        "related": [
+          {
+            "title": "Lesson two: source APIs",
+            "detail": "Add spreadsheet and CRM requests. Inspect method, URL, credentials and JSON; diagnose a sample 401."
+          },
+          {
+            "title": "Review checkpoint",
+            "detail": "Compare the summary with the source totals before using it."
+          }
+        ]
+      },
+      "statuses": [
+        "Learner started run",
+        "Sample fields loaded",
+        "Summary response inspected",
+        "Report draft saved"
+      ]
+    },
+    {
+      "id": "lessons",
+      "kind": "record",
+      "platform": "workbench",
+      "optional": false,
+      "title": "Four lessons, each with a learner run.",
+      "caption": "The trial is lesson one. Weekly sessions follow if the format works for you.",
+      "beat": "In the trial, you build the first steps and rerun changed data. The next lessons add API connections, the AI prompt, then troubleshooting and handover.",
+      "details": [
+        "Teach one step, let you build it, then rerun a changed input.",
+        "Choose the next business task by frequency, time spent and data access."
+      ],
+      "content": {
+        "name": "{{learner.name}}",
+        "subtitle": "Proposed lesson plan · custom project workspace",
+        "sourceTitle": "Trial lesson",
+        "sourceFields": [
+          {
+            "label": "You drive",
+            "value": "Share your screen, add the trigger and map sample rows."
+          },
+          {
+            "label": "Exit check",
+            "value": "Change clicks from 48 to 60 and explain the new output."
+          }
+        ],
+        "fields": [
+          {
+            "label": "Project",
+            "value": "{{report.id}} · {{report.campaign}}"
+          },
+          {
+            "label": "Your copy",
+            "value": "Workflow export, prompt text, sample inputs and run checklist"
+          }
+        ],
+        "events": [
+          {
+            "title": "1 · Trial: read and map",
+            "detail": "You build Manual Trigger and field mapping, inspect sample JSON, then change an input and rerun."
+          },
+          {
+            "title": "2 · Connect the sources",
+            "detail": "You add spreadsheet and CRM API requests. Learn method, URL, credentials and field mapping; diagnose a sample 401."
+          },
+          {
+            "title": "3 · Build the AI assistant",
+            "detail": "You edit the prompt, call the model API and compare its summary with source totals. Missing data stays flagged for review."
+          },
+          {
+            "title": "4 · Debug and hand over",
+            "detail": "You fix a missing field, test a new period and rerun without my clicks. Save the export, prompt and troubleshooting notes."
+          }
+        ],
+        "notice": "In each lesson I demonstrate a step, you build it, then you explain the result."
+      },
+      "statuses": [
+        "Four-lesson plan"
+      ]
+    },
+    {
+      "id": "prompt",
+      "kind": "messages",
+      "platform": "workbench",
+      "optional": false,
+      "title": "Edit the prompt and challenge the answer.",
+      "caption": "Copy this prompt into the request body and change it during the lesson.",
+      "beat": "This is the prompt text you'd edit. Then remove the qualified field, rerun, and check that the answer flags the gap instead of inventing a number.",
+      "details": [
+        "Editable prompt content is shown here as text.",
+        "The learner edits the request in n8n; this workspace is a sample deliverable."
+      ],
+      "content": {
+        "name": "{{report.id}} prompt and checks",
+        "subtitle": "Custom project workspace · illustrative content",
+        "fields": [
+          {
+            "label": "Learner",
+            "value": "{{learner.name}}"
+          },
+          {
+            "label": "Review owner",
+            "value": "{{owner.name}}"
+          }
+        ],
+        "items": [
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Prompt text to edit",
+            "time": "Lesson 3",
+            "body": "Summarize the supplied campaign and CRM totals for this period. Show clicks / sent and qualified / leads with the arithmetic. Cite each input field. Flag missing values and do not guess causes. Suggest one question for the reviewer. Write plainly. Delete any line that only repeats or sells the last point, such as 'No more manual reporting.'"
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Learner troubleshooting card",
+            "time": "Lesson 4",
+            "body": "401: check the selected credential and required header. Empty total: inspect the prior response and field path. Missing qualified value: retain the report ID and flag it for review. Rerun with a new period, then compare source values before saving."
+          }
+        ],
+        "notice": "Credential names, CRM endpoints and model choice are agreed in the lesson."
+      },
+      "statuses": [
+        "Prompt text to edit",
+        "Learner troubleshooting check"
+      ]
+    },
+    {
+      "id": "result",
+      "kind": "outcome",
+      "platform": "workbench",
+      "optional": false,
+      "title": "Check the report against its source values.",
+      "caption": "The sample report keeps its reference, period and review owner.",
+      "beat": "The sample gives a four percent click rate and a thirty-seven point five percent qualified rate. You check both calculations, then rerun with sixty clicks and expect five percent.",
+      "details": [
+        "{{report.id}} · {{report.period}} · {{owner.name}}",
+        "Handover: workflow export, prompt text, sample rows and debugging checklist"
+      ],
+      "content": {
+        "name": "{{report.id}} checked report",
+        "subtitle": "{{report.campaign}} · illustrative project output",
+        "fields": [
+          {
+            "label": "Spreadsheet sample",
+            "value": "{{sample.clicks}} clicks / {{sample.sent}} sent = {{sample.clickRate}}"
+          },
+          {
+            "label": "CRM sample",
+            "value": "{{sample.qualified}} qualified / {{sample.leads}} leads = {{sample.qualifiedRate}}; {{sample.booked}} calls booked"
+          },
+          {
+            "label": "AI summary draft",
+            "value": "clicks 48 / sent 1,200 = 4%. qualified 9 / leads 24 = 37.5%. booked: 3. Which lead sources produced the qualified leads?"
+          }
+        ],
+        "stages": [
+          "Inputs inspected",
+          "Summary checked",
+          "Learner rerun"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2
+        ],
+        "metrics": [
+          {
+            "label": "Click rate",
+            "value": "{{sample.clickRate}}",
+            "note": "Illustrative: 48 / 1,200"
+          },
+          {
+            "label": "Qualified rate",
+            "value": "{{sample.qualifiedRate}}",
+            "note": "Illustrative: 9 / 24"
+          },
+          {
+            "label": "Rerun check",
+            "value": "5%",
+            "note": "Illustrative: change clicks to 60; 60 / 1,200"
+          }
+        ],
+        "note": "Learner {{learner.name}} checks {{report.id}} before review by {{owner.name}}.",
+        "proof": {
+          "label": "Visible sample proof",
+          "value": "48 / 1,200 = 4%",
+          "description": "The report matches the supplied spreadsheet values. The learner test changes clicks to 60 and expects 5%.",
+          "sourceNote": "Illustrative lesson data shown on this page."
+        }
+      },
+      "statuses": [
+        "Inputs inspected",
+        "Summary checked",
+        "Learner rerun"
+      ]
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Measure the work",
+    "accent": "and your independence.",
+    "caption": "Record a manual reporting run and a learner attempt before agreeing targets.",
+    "metrics": [
+      {
+        "name": "Reporting time",
+        "direction": "down",
+        "aim": "Spend less time preparing reports",
+        "definition": "Minutes from collecting the agreed inputs to producing a checked report for one period."
+      },
+      {
+        "name": "Verified report accuracy",
+        "direction": "up",
+        "aim": "Match more source values correctly",
+        "definition": "Report values and calculations verified against source inputs divided by all values checked."
+      },
+      {
+        "name": "Independent reruns",
+        "direction": "up",
+        "aim": "Complete more runs without help",
+        "definition": "Learner runs completed and checked without instructor intervention divided by attempted runs."
+      }
+    ],
+    "baselineNote": "Establish the baseline together and agree the targets after the trial lesson.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "I'd use the call to pick your first reporting task and plan the trial lesson. Worth a quick 15-minute call? Reply here and I'll send times."
+  }
+}

@@ -1,0 +1,255 @@
+{
+  "capturedAt": "2026-10-19",
+  "savedAt": "2026-10-19T17:27:44Z",
+  "upwork": {
+    "applied": false,
+    "bid_stats_basis": {
+      "contract_type": "FIXED",
+      "note": "The bid amounts in activityStat.applicationsBidStats have no unit attached: on fixed-price jobs they have been observed as both hourly rates and whole-project totals, and the API does not say which applies to this job. Do not compare these numbers across jobs, and do not state or imply a per-hour or per-project basis for them — report them as the bid amounts recorded for this job and say the basis is unspecified."
+    },
+    "can_apply": true,
+    "client_feedback": {
+      "more_available": true,
+      "note": "Reviews freelancers wrote about this client after a contract. A comment often names the client contact or the project — use those to personalize the proposal. Never infer a name that no comment states.",
+      "reviews": [
+        {
+          "comment": "<untrusted_participant_content>\nWorking with Simon was a great experience. If there’s ever an opportunity in the future, I’d be happy to work together again. Communication was smooth and easy, and I would definitely recommend Si…\n</untrusted_participant_content>",
+          "ended": "2025-06-08T06:26:37.932Z",
+          "score": 5,
+          "title": "Administrative Support for Japanese Real Estate business in Tokyo (can be long term)"
+        },
+        {
+          "comment": "<untrusted_participant_content>\nHappy to work with him again :)!\n</untrusted_participant_content>",
+          "ended": "2024-08-13T15:44:15.892Z",
+          "score": 5,
+          "title": "update website daily"
+        },
+        {
+          "comment": "<untrusted_participant_content>\nSimon was a great client! He provided clear and straightforward instructions. I definitely hope to work with him again in the future!\n</untrusted_participant_content>",
+          "ended": "2024-08-13T15:29:31.254Z",
+          "score": 5,
+          "title": "Seeking an LGBT/ Gay male Virtual Assistant to do a small update daily on a website vlog"
+        },
+        {
+          "comment": "<untrusted_participant_content>\nThank you so much for your kind words! I truly appreciate your feedback and am grateful for the opportunity to work with you. It's rewarding to hear that my efforts are valued and that you are pleased…\n</untrusted_participant_content>",
+          "ended": "2024-05-19T15:00:01.705Z",
+          "score": 5,
+          "title": "Back up current site and restore wordpress file from another back up file provided"
+        },
+        {
+          "comment": "<untrusted_participant_content>\nAbsolutely amazing client, Was a pleasure to work with. Definitely willing to be working again\n</untrusted_participant_content>",
+          "ended": "2024-05-17T01:38:39.208Z",
+          "score": 5,
+          "title": "Wordpress website error 500 on image slides, pls fix and install new better plugin for image slides"
+        }
+      ],
+      "selection": "at most 5 of the client's latest revealed reviews that carry a written comment, newest first",
+      "shown": 5
+    },
+    "client_open_jobs": {
+      "jobs": [
+        {
+          "id": "2112223072626516996",
+          "job_type": "fixed",
+          "title": "Recruitment Support — Japanese/Chinese Bilingual Real Estate Professional with 宅建 Qualification",
+          "url": "https://www.upwork.com/jobs/~022112223072626516996?utm_campaign=LLM_chatgpt_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=chatgpt"
+        },
+        {
+          "id": "2109986725249985813",
+          "job_type": "fixed",
+          "title": "DMCA Takedown for X account",
+          "url": "https://www.upwork.com/jobs/~022109986725249985813?utm_campaign=LLM_chatgpt_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=chatgpt"
+        }
+      ],
+      "note": "A sample, never a count; client_record.open_jobs also counts private jobs and this one.",
+      "selection": "at most 5 of the client's other open jobs visible to freelancers; private jobs are never listed",
+      "shown": 2
+    },
+    "client_record": {
+      "contracts_active": 4,
+      "contracts_total": 26,
+      "feedback_count": 15,
+      "feedback_score": 4.99,
+      "hire_rate_percent": 56,
+      "hours_total": 3.17,
+      "jobs_posted": 45,
+      "jobs_with_hires": 25,
+      "open_jobs": 3,
+      "spend_total": "$3,706.94"
+    },
+    "client_work_history": {
+      "closed": [
+        {
+          "ended": "2025-06-08T06:26:37.932Z",
+          "feedback_score": 5,
+          "feedback_to_client_score": 5,
+          "started": "2025-05-17T00:17:51.427Z",
+          "status": "CLOSED",
+          "title": "Administrative Support for Japanese Real Estate business in Tokyo (can be long term)",
+          "type": "HOURLY"
+        },
+        {
+          "ended": "2025-01-29T06:20:00.601Z",
+          "feedback_to_client_score": 5,
+          "started": "2025-01-28T13:57:53.774Z",
+          "title": "Fixing inquiry form",
+          "type": "FIXED"
+        },
+        {
+          "ended": "2024-07-28T04:46:22.760Z",
+          "feedback_score": 5,
+          "feedback_to_client_score": 5,
+          "started": "2024-07-24T06:56:14.042Z",
+          "title": "Fixing malware on the website",
+          "type": "FIXED"
+        },
+        {
+          "ended": "2024-11-03T03:23:37.024Z",
+          "feedback_score": 5,
+          "feedback_to_client_score": 5,
+          "started": "2024-07-06T12:41:37.819Z",
+          "title": "SEO for website",
+          "type": "FIXED"
+        },
+        {
+          "ended": "2024-07-17T13:15:44.104Z",
+          "feedback_score": 5,
+          "feedback_to_client_score": 5,
+          "started": "2024-07-04T14:44:45.681Z",
+          "title": "website add functions",
+          "type": "FIXED"
+        }
+      ],
+      "more_available": true,
+      "note": "A sample of the client's history, not all of it, and no total can be derived from it. Use client_record for their totals.",
+      "open": [
+        {
+          "started": "2025-07-16T06:50:09.506Z",
+          "status": "ACTIVE",
+          "title": "Logo Design for Real Estate Company in Japan",
+          "type": "FIXED"
+        },
+        {
+          "started": "2025-02-18T15:09:39.374Z",
+          "title": "SEO",
+          "type": "FIXED"
+        },
+        {
+          "started": "2024-08-15T02:10:06.163Z",
+          "status": "ACTIVE",
+          "title": "Create a website for room rental listings in Japan: needs to be fast and easily accessible worldwide",
+          "type": "FIXED"
+        },
+        {
+          "started": "2024-07-24T14:27:13.879Z",
+          "title": "update website daily",
+          "type": "FIXED"
+        }
+      ],
+      "selection": "at most 5 open and 5 closed contracts, the latest of each by start date, newest first",
+      "shown": 9
+    },
+    "connects_balance": 1900,
+    "connects_cost": 8,
+    "data": {
+      "marketplaceJobPosting": {
+        "activityStat": {
+          "applicationsBidStats": {
+            "avgRateBid": {
+              "currency": "USD",
+              "displayValue": "$360.58",
+              "rawValue": "360.5824"
+            },
+            "maxRateBid": {
+              "currency": "USD",
+              "displayValue": "$7,500.00",
+              "rawValue": "7500.0"
+            },
+            "minRateBid": {
+              "currency": "USD",
+              "displayValue": "$45.00",
+              "rawValue": "45.0"
+            }
+          },
+          "jobActivity": {
+            "invitesSent": 0,
+            "totalHired": 0,
+            "totalInvitedToInterview": 0,
+            "totalOffered": 0
+          }
+        },
+        "classification": {
+          "category": {
+            "id": "531770282580668422",
+            "preferredLabel": "Sales & Marketing"
+          },
+          "subCategory": {
+            "id": "531770282597445634",
+            "preferredLabel": "Lead Generation & Telemarketing"
+          }
+        },
+        "clientCompanyPublic": {
+          "country": {
+            "name": "Hong Kong"
+          },
+          "id": "1002224309",
+          "timezone": "Asia/Shanghai"
+        },
+        "content": {
+          "description": "<untrusted_participant_content>\nTitle: AI & Workflow Automation Specialist for a Real Estate Business — Remote, Paid Pilot, Ongoing Potential\n\nWe are a small real estate development and investment business based in Tokyo, Japan, with hotel-related projects.\n\nWe are looking for an experienced specialist to review how we work, identify opportunities for automation, and build practical systems that reduce repetitive tasks and free up the owner’s time.\n\nThis is a fully remote role. Applicants from any location are welcome, provided we can arrange some overlap with Japan business hours for meetings.\n\nWe need someone who can guide us through the process—from understanding our operations to implementation and training. We have limited time to learn the technical details or prepare lengthy specifications.\n\nPotential workflows:\n• Extracting information from property PDFs into standardized summaries and spreadsheets.\n• Organizing inquiries, summarizing emails, and preparing reply drafts.\n• Updating CRM records and creating follow-up reminders.\n• Organizing receipts and invoices for accounting preparation.\n• Tracking tasks, outstanding items, and project progress.\n\nOur current tools:\nHubSpot, Notion, Nutstore cloud storage, email, Excel, and PDFs.\n\nWe welcome recommendations, with a preference for simple, reliable systems that are easy for a small team to maintain.\n\nInitial paid engagement:\n\nReview our current workflows through video calls and screen sharing.\n\nRecommend approximately three automation opportunities, ranked by impact and implementation effort.\n\nAgree on one clearly defined workflow and build a paid pilot.\n\nTest the system using representative documents and practical working scenarios.\n\nProvide documentation and train our team.\n\nIf the pilot is successful, we would like to develop a longer-term working relationship for further implementation and support.\n\nWho we are looking for:\n• Experience delivering working AI and automation systems for small businesses.\n• Ability to connect CRM, email, document, and cloud-storage systems.\n• Experience with AI-powered document extraction, classification, summarization, and drafting.\n• Ability to handle errors, duplicate records, and human approval steps.\n• Clear communication and a proactive approach to understanding business needs.\n• Ability to turn screen-sharing demonstrations into requirements and proposed solutions.\n\nExperience with Make, Zapier, n8n, or relevant APIs is welcome. Please recommend the tools that best fit the work.\n\nLanguage:\nEnglish communication is required. Many source documents are in Japanese, so the systems must handle Japanese content accurately. Japanese language skills are a plus, but not mandatory if you have a reliable approach to processing and validating these documents.\n\nSecurity and handover:\n• Begin with sample or anonymized data and limited access.\n• Use company-owned accounts with separately assigned permissions.\n• Explain where our data is processed and disclose recurring service costs.\n• Keep outgoing emails and other external communications subject to human approval initially.\n• Provide workflow files, relevant source code, setup instructions, and operating documentation.\n• Be willing to sign a confidentiality agreement.\n\nPlease include in your proposal:\n\nOne or two relevant projects, your specific role, and the results.\n\nHow you would conduct the initial workflow review remotely.\n\nA suggested first pilot based on the workflows above.\n\nYour estimated discovery fee, pilot budget range, and timeline.\n\nYour time zone and availability for meetings during Japan business hours.\n\nYour approach to secure access, handover, and ongoing support.\n\nWe would like to start with a paid discovery phase, followed by a separately agreed pilot scope and price.\n</untrusted_participant_content>",
+          "title": "AI & Workflow Automation Specialist for a Tokyo Real Estate Business — Paid Pilot, Ongoing Potential"
+        },
+        "contractTerms": {
+          "contractType": "FIXED",
+          "experienceLevel": "INTERMEDIATE",
+          "fixedPriceContractTerms": {
+            "amount": {
+              "currency": "USD",
+              "displayValue": "50.0",
+              "rawValue": "50.0"
+            }
+          },
+          "personsToHire": 1
+        },
+        "id": "2112212604943890296",
+        "url": "https://www.upwork.com/jobs/~022112212604943890296?utm_campaign=LLM_chatgpt_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=chatgpt",
+        "workFlowState": {
+          "status": "ACTIVE"
+        }
+      }
+    },
+    "plan": "Freelancer Plus",
+    "preferred_qualifications": {
+      "contractor_type": "All freelancers",
+      "english_proficiency": "Any",
+      "has_portfolio": false,
+      "min_earnings": "Any",
+      "min_hours_worked": 0,
+      "min_job_success_score": 0,
+      "rising_talent": false
+    },
+    "proposals_tier_unavailable": true,
+    "status": "ok",
+    "trace_id": "66d0f6006182958664c8f3b7528c3d06",
+    "unanswered_invites_unavailable": true
+  },
+  "personalization": {
+    "firstName": "Simon",
+    "source": "client_reviews",
+    "reviewCount": 2,
+    "reviews": [
+      {
+        "comment": "<untrusted_participant_content>\nWorking with Simon was a great experience. If there’s ever an opportunity in the future, I’d be happy to work together again. Communication was smooth and easy, and I would definitely recommend Si…\n</untrusted_participant_content>",
+        "ended": "2025-06-08T06:26:37.932Z",
+        "score": 5,
+        "title": "Administrative Support for Japanese Real Estate business in Tokyo (can be long term)"
+      },
+      {
+        "comment": "<untrusted_participant_content>\nSimon was a great client! He provided clear and straightforward instructions. I definitely hope to work with him again in the future!\n</untrusted_participant_content>",
+        "ended": "2024-08-13T15:29:31.254Z",
+        "score": 5,
+        "title": "Seeking an LGBT/ Gay male Virtual Assistant to do a small update daily on a website vlog"
+      }
+    ]
+  }
+}

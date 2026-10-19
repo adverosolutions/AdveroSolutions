@@ -1,0 +1,442 @@
+{
+  "schemaVersion": 1,
+  "id": "tokyo-property-document-pilot-2112212604943890296",
+  "title": "Japanese property PDFs into reviewed records",
+  "systemName": "Your property document pilot",
+  "account": {
+    "name": "Tokyo property pilot sample",
+    "initials": "TP",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112212604943890296",
+    "facts": [
+      "Original requirements in jd.txt; connector capture and name evidence in intake-private.json.",
+      "Tokyo real estate development and investment business, with hotel-related projects. Existing tools: HubSpot, Notion, Nutstore, email, Excel and PDFs.",
+      "Paid discovery by screen sharing, approximately three ranked opportunities, then one separately agreed pilot, representative testing and team training.",
+      "Simon is a client contact named in two separate reviews dated 2025-06-08 and 2024-08-13; ownership is not established.",
+      "All PDF text, property details, reviewer identity, confidence values and outputs in this deck are invented illustrations. No source PDF was supplied.",
+      "No past Japanese property extraction results, native HubSpot/Notion/Nutstore connections, Japanese language fluency or Japan-hours availability are claimed."
+    ]
+  },
+  "entities": {
+    "document": {
+      "file": "aoba-property-sample.pdf",
+      "property": "青葉レジデンス",
+      "reference": "PDF-014",
+      "pages": "1 and 3"
+    },
+    "record": {
+      "id": "PROP-014",
+      "price": "JPY 148,000,000",
+      "landArea": "132.8 m²",
+      "floorArea": "216.4 m²",
+      "initialArea": "132.8 m²",
+      "areaConfidence": "0.62"
+    },
+    "reviewer": {
+      "name": "Mika Sato",
+      "role": "Sample team reviewer"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your property document pilot",
+    "title": "From Japanese property PDFs",
+    "accent": "to reviewed records.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Screen-share discovery",
+      "One agreed pilot",
+      "Approval before export"
+    ],
+    "previewSteps": [
+      {
+        "title": "Review",
+        "detail": "Rank three opportunities by impact and effort."
+      },
+      {
+        "title": "Agree",
+        "detail": "Scope one PDF-to-record pilot together."
+      },
+      {
+        "title": "Test",
+        "detail": "Check Japanese samples, duplicates and approval."
+      }
+    ],
+    "footer": "Illustrative sample data",
+    "beat": "Simon, I would start with a screen-share review, rank about three opportunities, then agree one pilot. This sample shows the property PDF path."
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Measure the pilot",
+    "accent": "against your current process.",
+    "caption": "Use representative Japanese PDFs and agree the acceptance checks before implementation.",
+    "metrics": [
+      {
+        "name": "Review time per document",
+        "direction": "down",
+        "aim": "Spend less time per review",
+        "definition": "Active team minutes from opening a PDF to approving its standardized record."
+      },
+      {
+        "name": "Field accuracy",
+        "direction": "up",
+        "aim": "Extract more fields correctly",
+        "definition": "Correct values and source-page references divided by checked fields in the agreed sample set."
+      },
+      {
+        "name": "Safe processing",
+        "direction": "up",
+        "aim": "Pass more control checks",
+        "definition": "Test scenarios passing duplicate, error-hold and approval-before-export checks divided by scenarios tested."
+      }
+    ],
+    "baselineNote": "Measure the current process first, then agree pilot targets and acceptance criteria.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "I am based in DFW, on US Central Time. We would agree meeting overlap with Japan. Worth a quick 15-minute call? Reply here and I will send times."
+  },
+  "scenes": [
+    {
+      "id": "workflow",
+      "kind": "workflow",
+      "platform": "n8n",
+      "title": "Agree one pilot, then trace a Japanese PDF.",
+      "caption": "Paid discovery starts with screen sharing. Rank about three opportunities by impact and effort, then agree one scope.",
+      "beat": "I would watch your team process a real example and rank the options with you. The proposed pilot takes a Japanese property PDF through duplicate checks, extraction and a human review hold.",
+      "details": [
+        "Illustrative ranking: property PDFs first, inquiry drafts second, receipt sorting third. Confirm the ranking during discovery.",
+        "Begin with sample or anonymized data, limited access and company-owned accounts.",
+        "New documents enter extraction and review; repeated documents link the existing record. Failed requests remain held."
+      ],
+      "content": {
+        "name": "Property PDF pilot, illustrative path",
+        "nodes": [
+          {
+            "id": "start",
+            "type": "manual_trigger",
+            "label": "Select sample PDF",
+            "detail": "{{document.file}} · {{document.reference}}"
+          },
+          {
+            "id": "lookup",
+            "type": "http_request",
+            "label": "Check document key",
+            "detail": "Look up the PDF digest and schema version in the project record store."
+          },
+          {
+            "id": "duplicate",
+            "type": "if",
+            "label": "Already processed?",
+            "detail": "Existing key links the same record. New files continue to extraction."
+          },
+          {
+            "id": "reuse",
+            "type": "edit_fields",
+            "label": "Link existing record",
+            "detail": "Reuse {{record.id}}; skip extraction and a second append."
+          },
+          {
+            "id": "extract",
+            "type": "http_request",
+            "label": "Extract for review",
+            "detail": "Japanese fields, source pages and confidence. Hold export for human review."
+          }
+        ],
+        "edges": [
+          {
+            "from": "start",
+            "to": "lookup"
+          },
+          {
+            "from": "lookup",
+            "to": "duplicate"
+          },
+          {
+            "from": "duplicate",
+            "to": "reuse",
+            "label": "true"
+          },
+          {
+            "from": "duplicate",
+            "to": "extract",
+            "label": "false"
+          }
+        ],
+        "runOrder": [
+          "start",
+          "lookup",
+          "duplicate",
+          "extract"
+        ],
+        "context": {
+          "name": "{{document.reference}}",
+          "subtitle": "Illustrative PDF sample",
+          "fields": [
+            {
+              "label": "File",
+              "value": "{{document.file}}"
+            },
+            {
+              "label": "Record",
+              "value": "{{record.id}}"
+            },
+            {
+              "label": "Export",
+              "value": "Blocked pending approval"
+            }
+          ],
+          "states": [
+            "Sample selected",
+            "Document key checked",
+            "New document selected",
+            "Extraction held for review"
+          ]
+        },
+        "related": [
+          {
+            "title": "1. Property PDFs",
+            "detail": "Illustrative: high impact, medium effort. Proposed first pilot."
+          },
+          {
+            "title": "2. Inquiry drafts",
+            "detail": "Illustrative: medium impact, medium effort. Replies require approval."
+          },
+          {
+            "title": "3. Receipt sorting",
+            "detail": "Illustrative: medium impact, low effort. Validate accounting categories."
+          }
+        ]
+      },
+      "statuses": [
+        "Sample selected",
+        "Document key checked",
+        "New document selected",
+        "Extraction held for review"
+      ],
+      "optional": false
+    },
+    {
+      "id": "evidence",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "Check the Japanese text beside the draft.",
+      "caption": "Custom project workspace. The initial extraction maps the land area into the floor-area field.",
+      "beat": "This invented PDF has two area labels. The draft puts 132.8 square metres in floor area with low confidence. Page one says land area; page three says total floor area. The reviewer can see both source excerpts.",
+      "details": [
+        "Illustrative Japanese excerpts, values and confidence scores.",
+        "Keep the original Japanese labels and source pages attached to each extracted field.",
+        "The record stays {{record.id}} while the area is corrected."
+      ],
+      "content": {
+        "name": "{{document.property}}",
+        "subtitle": "Custom project workspace · {{document.reference}}",
+        "sourceTitle": "{{document.file}} · invented excerpts",
+        "sourceFields": [
+          {
+            "label": "p.1 · 物件名",
+            "value": "{{document.property}} · confidence 0.99"
+          },
+          {
+            "label": "p.1 · 価格",
+            "value": "1億4,800万円 · confidence 0.98"
+          },
+          {
+            "label": "p.1 · 土地面積",
+            "value": "{{record.landArea}} · land area"
+          },
+          {
+            "label": "p.3 · 延床面積",
+            "value": "{{record.floorArea}} · total floor area"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Record ID",
+            "value": "{{record.id}}"
+          },
+          {
+            "label": "Price",
+            "value": "{{record.price}} · p.1"
+          },
+          {
+            "label": "Land area",
+            "value": "{{record.landArea}} · p.1"
+          },
+          {
+            "label": "Floor area draft",
+            "value": "{{record.initialArea}} · confidence {{record.areaConfidence}}"
+          },
+          {
+            "label": "Review status",
+            "value": "Ambiguous area mapping · export held"
+          }
+        ],
+        "events": [
+          {
+            "title": "Mismatch flagged",
+            "detail": "Draft floor area used p.1 land area. Reviewer must check the p.3 label."
+          },
+          {
+            "title": "Missing or unreadable fields",
+            "detail": "Hold for manual review. Never fill gaps with invented values."
+          }
+        ],
+        "notice": "Illustrative Japanese excerpts and review scores. Confidence flags fields for human review."
+      },
+      "statuses": [
+        "Japanese evidence available",
+        "Area mapping held for review"
+      ],
+      "optional": false
+    },
+    {
+      "id": "approval",
+      "kind": "messages",
+      "platform": "workbench",
+      "title": "Correct the field, then approve the record.",
+      "caption": "Custom project workspace. Human approval is required before the export is prepared.",
+      "beat": "The sample reviewer checks page three, changes floor area to 216.4 square metres and approves this version. A repeated upload links the same record and skips a second append.",
+      "details": [
+        "{{reviewer.name}} is an invented team reviewer for this sample.",
+        "Record the correction, source page, reviewer and approved version. Outgoing messages also require human approval initially.",
+        "Confirm processing locations, retention and recurring service costs before connecting company accounts."
+      ],
+      "content": {
+        "name": "{{record.id}} review log",
+        "subtitle": "Custom project workspace · {{document.reference}}",
+        "fields": [
+          {
+            "label": "Assigned reviewer",
+            "value": "{{reviewer.name}}"
+          },
+          {
+            "label": "Document",
+            "value": "{{document.file}}"
+          },
+          {
+            "label": "State",
+            "value": "Illustrative approval sequence"
+          }
+        ],
+        "items": [
+          {
+            "channel": "internal",
+            "direction": "incoming",
+            "sender": "Extraction review queue",
+            "time": "Sample step 1",
+            "body": "{{record.id}} held. Floor-area draft is {{record.initialArea}} with confidence {{record.areaConfidence}}. Check 土地面積 on p.1 against 延床面積 on p.3."
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "{{reviewer.name}}",
+            "time": "Sample step 2",
+            "body": "Checked p.3. Corrected total_floor_area_m2 to 216.4. Land area stays 132.8 from p.1. Approved {{record.id}}, version 2, for the standardized export."
+          },
+          {
+            "channel": "internal",
+            "direction": "incoming",
+            "sender": "Duplicate check sample",
+            "time": "Sample step 3",
+            "body": "The repeated PDF digest matches {{record.id}}. Linked the existing record. Skipped extraction and a second append."
+          }
+        ],
+        "notice": "Illustrative review log. The approved export contains the reviewed version."
+      },
+      "statuses": [
+        "Area held",
+        "Correction approved",
+        "Duplicate linked and skipped"
+      ],
+      "optional": false
+    },
+    {
+      "id": "result",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "Export one reviewed, consistent record.",
+      "caption": "Custom project workspace. This sample export is prepared after approval.",
+      "beat": "The same property now has a standardized record with the corrected area and source references. I would test representative Japanese documents with the team, then hand over the workflow files, setup notes and operating guide and walk them through it.",
+      "details": [
+        "One illustrative approved row: {{record.id}}. A duplicate upload creates no additional row.",
+        "Use the agreed Excel column names and field types. Confirm any HubSpot, Notion or Nutstore connections during discovery.",
+        "Handover includes workflow files, relevant source code, setup instructions, an operating guide and team training."
+      ],
+      "content": {
+        "name": "{{record.id}} approved output",
+        "subtitle": "Custom project workspace · illustrative sample",
+        "fields": [
+          {
+            "label": "Property",
+            "value": "{{document.property}}"
+          },
+          {
+            "label": "Price",
+            "value": "{{record.price}} · p.1"
+          },
+          {
+            "label": "Land / floor area",
+            "value": "{{record.landArea}} p.1 / {{record.floorArea}} p.3"
+          },
+          {
+            "label": "Approval",
+            "value": "{{reviewer.name}} · version 2"
+          },
+          {
+            "label": "Export",
+            "value": "One standardized row prepared"
+          }
+        ],
+        "stages": [
+          "Extracted",
+          "Held",
+          "Approved",
+          "Export prepared"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "metrics": [
+          {
+            "label": "Reviewed record",
+            "value": "1",
+            "note": "Illustrative sample"
+          },
+          {
+            "label": "Duplicate append",
+            "value": "0",
+            "note": "Replay linked to {{record.id}}"
+          },
+          {
+            "label": "Source evidence",
+            "value": "p.1 / p.3",
+            "note": "Retained with approved fields"
+          }
+        ],
+        "note": "Illustrative sample data. Test extraction, error holds and duplicates on representative samples before rollout.",
+        "proof": {
+          "label": "Visible sample proof",
+          "value": "216.4 m²",
+          "description": "Floor area corrected from 132.8 m² on p.1 to 216.4 m² on p.3 before approval.",
+          "sourceNote": "Illustrative Japanese property PDF."
+        }
+      },
+      "statuses": [
+        "Draft extracted",
+        "Ambiguity held",
+        "Version approved",
+        "Sample export prepared"
+      ],
+      "optional": false
+    }
+  ],
+  "personalization": {
+    "firstName": "Simon",
+    "source": "client_reviews",
+    "reviewCount": 2
+  }
+}

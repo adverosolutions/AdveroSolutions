@@ -1,0 +1,217 @@
+url: https://www.upwork.com/jobs/~022112211392395754022
+AI Automation for Instagram Carousel Posts
+job id: 2112211392395754022
+saved: 2026-10-19T17:27:52Z
+terms: {"contractType":"HOURLY","experienceLevel":"INTERMEDIATE","hourlyContractTerms":{"engagementType":"PART_TIME","hourlyBudgetType":"NOT_PROVIDED"},"personsToHire":1}
+client country: not supplied
+connects required: 20
+applied: false
+preferred qualifications: {"english_proficiency":"Any","has_portfolio":false,"min_hours_worked":0,"min_job_success_score":0,"rising_talent":false}
+client first name: Raydel
+name evidence: repeated client contact name in 2 separate review entries; ownership not inferred.
+
+Original job description:
+Job Title: AI Automation Expert Needed – Automated Instagram Content Creation & Publishing for Real Estate
+
+About the Project
+
+I’m a commercial real estate broker specializing in industrial and commercial properties in South Florida. I’m looking for an experienced AI automation developer to build a system that pulls property listings from my company’s website and automatically creates, schedules, and publishes branded Instagram carousel posts.
+
+Website: https://www.vsre.net
+
+I want a reliable, easy-to-use system that continuously promotes my available listings with minimal manual involvement and low recurring costs. Initially, I need to approve every post before publication, with the option to switch to fully automatic publishing later.
+
+1. Website Integration
+
+The system must:
+
+• Automatically retrieve active property listings, including descriptions, specifications, pricing when available, and photographs.
+• Detect new listings and changes to existing listings.
+• Automatically exclude properties that are no longer available.
+• Keep listing information synchronized with the website.
+• Recheck availability before publication to avoid posting outdated listings.
+
+Please review the website and recommend the most reliable integration method, preferably an API or direct data feed where available.
+
+2. Posting Schedule & Listing Rotation
+
+I want two Instagram carousel posts per day, seven days a week—approximately 60 posts per month.
+
+The system must:
+
+• Rotate through all active listings, promoting each property before repeating listings.
+• Automatically restart the rotation after all available properties have been promoted.
+• Prioritize newly added properties.
+• Avoid posting the same property consecutively when other listings are available.
+• Generate fresh captions and vary carousel layouts when properties repeat.
+• Continue operating without manual restarts.
+• Allow me to adjust posting times and prioritize specific properties.
+
+3. Claude AI Integration
+
+I want to use Claude AI to:
+
+• Generate professional Instagram captions.
+• Highlight important property features.
+• Create relevant hashtags and calls to action.
+• Maintain a consistent commercial real estate marketing tone.
+• Produce fresh content variations when properties repeat.
+
+All property facts must come from verified website data. AI must never invent specifications, pricing, availability, or other property details. Missing information should be omitted or flagged for my review.
+
+4. Branded Carousel Creation
+
+The system must automatically create professional Instagram carousels using actual property photographs.
+
+Requirements include:
+
+• Incorporating my company’s logo and my contact information.
+• Following branding guidelines that I will provide.
+• Using approved colors, fonts, and design elements.
+• Offering multiple carousel layouts to maintain variety.
+• Including property specifications, highlights, and appropriate calls to action.
+• Producing clear, readable graphics suitable for professional commercial real estate marketing.
+• Preserving the accuracy of property photographs without adding misleading features.
+
+Please provide examples of comparable automated graphics or carousel systems you have developed.
+
+5. Content Approval Dashboard
+
+Initially, every post must require my approval before publication.
+
+I need a dashboard where I can:
+
+• Preview carousel graphics and captions.
+• Edit, approve, reject, or regenerate content.
+• Approve multiple posts at once.
+• Review up to 14 upcoming posts in advance.
+• Adjust posting schedules and prioritize properties.
+• View approval, scheduling, publishing, and failure statuses.
+• Pause and resume the automation.
+
+Unapproved posts must never be published while manual approval mode is enabled. Changes to approved content must require approval again.
+
+I also need the option to switch to fully automatic publishing later without rebuilding the workflow.
+
+6. Email & SMS Notifications
+
+The system must:
+
+• Notify me by email and text when posts are ready for approval.
+• Include direct links to the approval dashboard.
+• Send reminders for pending approvals.
+• Confirm successful publication.
+• Alert me to failed posts or workflow errors.
+• Let me enable or disable each notification type independently.
+
+Notification frequency should be adjustable to avoid unnecessary messages and costs.
+
+7. Instagram Scheduling & Publishing
+
+The system must use approved Meta APIs or a compatible publishing platform to schedule and publish two approved carousel posts daily.
+
+Please explain any Instagram account requirements, permissions, subscriptions, or setup steps needed.
+
+The workflow must include error handling, duplicate-post prevention, and a process for retrying failed posts. Please explain what happens when a scheduled posting time arrives and no approved content is available.
+
+8. Technology & Deliverables
+
+I’m open to your recommended technology stack, including:
+
+• Claude AI API
+• n8n
+• Make.com
+• Zapier
+• Canva or another graphics-generation tool
+• Airtable or another database/dashboard solution
+• Meta Instagram APIs
+
+I do not require every tool listed above. Please recommend the simplest reliable setup with the lowest practical ongoing cost.
+
+Required deliverables:
+
+• A fully functioning automation system.
+• Website listing and photograph integration.
+• Automated branded carousel and caption generation.
+• Continuous listing rotation.
+• Content approval dashboard.
+• Instagram scheduling and publishing.
+• Email and SMS notifications.
+• Error handling and operational alerts.
+• Testing and troubleshooting.
+• Complete setup and operating documentation.
+• Training and a recorded walkthrough.
+• Full handover of source code, workflows, templates, configurations, and administrative access.
+
+9. Mandatory Cost Breakdown
+
+Full transparency about ongoing costs is essential. Every proposal must disclose ALL expenses needed to build and operate the system.
+
+Please clearly identify:
+
+• One-time development and setup cost.
+• Estimated monthly operating cost for approximately 60 carousel posts.
+• Estimated annual operating cost.
+• Mandatory versus optional subscriptions.
+• Usage-based charges and the assumptions behind your estimates.
+• Optional maintenance and support fees.
+• Any required ongoing developer involvement.
+
+Include an itemized estimate for:
+
+• Claude AI API usage.
+• Automation platform fees.
+• Carousel rendering or graphic design tools.
+• Dashboard and database subscriptions.
+• Hosting and storage.
+• Email and SMS notifications.
+• Instagram publishing or scheduling services.
+• Any additional APIs, licenses, or subscriptions.
+
+Please account for content variations, regenerations, and approval notifications in your estimates.
+
+I strongly prefer minimal recurring expenses and a system that can operate independently after handover without a required monthly payment to the freelancer.
+
+10. Ownership & Access
+
+All accounts, subscriptions, workflows, code, templates, and configurations must be owned and controlled by me or my company.
+
+The system must be built in accounts I control, and I must receive full administrative access. Any third-party licensing restrictions must be disclosed before development begins.
+
+The system must continue operating without relying on the freelancer’s personal accounts or continued involvement.
+
+11. Questions to Answer in Your Proposal
+
+Please answer the following:
+
+1. Have you built a similar automation system? Please provide examples and explain your role.
+2. Which technology stack do you recommend and why?
+3. After reviewing vsre.net, how would you retrieve and synchronize the property listings and photographs?
+4. How would you integrate Claude AI while preventing inaccurate property information?
+5. How would you generate professional, branded Instagram carousels?
+6. How would you implement continuous listing rotation and prioritize new properties?
+7. How would you build the approval dashboard and email/SMS notifications?
+8. How would you handle unavailable properties, missed approvals, failed posts, and duplicate prevention?
+9. What Instagram account setup and permissions would be required?
+10. What is your estimated timeline and fixed development price?
+11. What are all anticipated recurring costs? Please provide an itemized estimate.
+12. Can the system operate independently after handover without ongoing payments to you?
+13. Will I receive complete ownership, source files, and administrative access?
+
+12. Project Structure & Expectations
+
+I’m looking for a complete, turnkey solution under a fixed-price agreement, with milestone payments tied to clear deliverables.
+
+Suggested milestones:
+
+• Website integration and listing synchronization.
+• Branded carousel and caption generation.
+• Approval dashboard and notifications.
+• Instagram publishing and end-to-end testing.
+• Documentation, training, and final handover.
+
+A working demonstration and successful end-to-end testing are required before final payment.
+
+This project is for building an automation system. Ongoing social media management is outside the scope.
+
+Please review https://www.vsre.net before submitting your proposal and include your proposed integration approach, timeline, fixed development cost, and complete recurring cost breakdown.

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "reviewType": "independent source and artifact integrity review",
+  "id": "instagram-property-carousels-2112211392395754022",
+  "reviewedAt": "2026-10-19",
+  "staticVerdict": "APPROVE",
+  "pageVerdict": "PENDING_BROWSER_REVIEW",
+  "queueMutationPerformed": false,
+  "hashes": {
+    "page": "c4813415da183bf315c6c513994cc0c7b331dece47c6e7555f4b6d68d66507f3",
+    "content": "8f409f3189d0b236456d48e6b093aa9df6103e9abe66b834b707d034d96bd128",
+    "spec": "2017bece7d7f64dfb1fe726c8a219ec5e88b0026a1b47227f145b468222e8220",
+    "template": "4dbfdc2ccb27f33075070264178cfdf993572c437c003fbbc5d866d0addd3806",
+    "recordingScript": "70c86a75416485b94770bb9863ddad0ad8ec1a44798975df7818f110a7c3ac51"
+  },
+  "sourceReview": {
+    "read": [
+      "jd.txt",
+      "intake-private.json",
+      "assessment-private.md",
+      "assets-private.json",
+      "deck-spec.json",
+      "templates/sales-deck/REVIEW_BRIEF.md",
+      "templates/sales-deck/extension-contract.md",
+      "canonical public page.html, recording-script.txt, build-report.json"
+    ],
+    "personalization": "Raydel is supported as a client contact by two separate review entries. Neither public copy nor this review infers ownership.",
+    "integration": "Conditional authorized feed/CMS access first, permitted extraction if needed. No verified listing feed, live integration or current real property availability claimed.",
+    "facts": "SAMPLE-P101, SAMPLE Commerce Park, Doral, 12,000 sq ft, 22 ft clear, two grade-level doors, v3 and receipt SAMPLE-MEDIA-101 are consistently illustrative. Missing price is omitted.",
+    "nativeHonesty": "Two compact required Make workflow scenes use only custom_webhook, http_request and router. Webhooks represent scheduler events. Nonworkflow scenes use custom workbench. No fictitious Claude, GHL, Canva or Meta native node/screen.",
+    "approval": "Exact revision approval before publication; edits, regeneration or changed source require approval again. Current active unchanged source, unpaused mode and unused unique post/slot key required at due slot.",
+    "rotation": "New first; unposted active inventory before cycle repeat; avoid consecutive repeat when alternatives exist; restart cycle with fresh caption/layout; confirmed receipt advances rotation.",
+    "failureCases": "Changed, withdrawn or stale source and missing approval block publication. Empty approved queue skips and alerts. Bounded retries, uncertain-response reconciliation, duplicate suppression and final failure alert retained.",
+    "secondaryRequirements": "Detailed optional dashboard maps 14 upcoming posts, review/batch/schedule controls, pause/resume, future explicit auto mode, independent notification preferences and client-owned handover. Private worksheet maps full cost/account-permission requirements; no rate, timeline or numerical cost is publicly promised.",
+    "portfolio": "Corporate images illustrate a proposed layout. No comparable past-project or completed integration claim.",
+    "routes": "Seven Quick/Standard chapters: cover, preparation Make workflow, required two-photo carousel, required email/SMS drafts, due-slot Make workflow, result, close. Detailed adds one optional dashboard record. This route count is source verified, not browser exercised."
+  },
+  "imageIntegrity": {
+    "totalDecodedBytes": 1166271,
+    "inspection": "Both local source JPEGs visually inspected. One industrial building aerial photograph and one office interior photograph; neither is a rendering or site plan.",
+    "association": "Caption, subtitle, body, alt, social caption, fields and recording beat explicitly separate corporate website imagery from fictional SAMPLE-P101 facts. Production requires each listing's verified photos.",
+    "photos": [
+      {
+        "file": "assets/vsre-corporate-service.jpg",
+        "bytes": 973045,
+        "sha256": "370c81d335ca726a37f53d7e4803bcaa918d85f3393dc411890b97c56ce7f644"
+      },
+      {
+        "file": "assets/vsre-corporate-metrics.jpg",
+        "bytes": 193226,
+        "sha256": "138b18f4e01cc9ac51790e2f516bfe8f0575ea53f04ae55a0551a08b2a7ec5c0"
+      }
+    ],
+    "embeddedBytes": "Each public DATA image decoded with strict base64 and matches its corresponding local JPEG hash exactly. JPEG signatures valid. Historical Countyline brochure rendering/site plan absent from public artifact."
+  },
+  "artifactIntegrity": {
+    "independentlyRecomputed": "Template lock, normalized content/spec and exact page/script hashes match report. Recompilation in memory equals artifact bytes; no output files rebuilt.",
+    "publicData": "Generated DATA equals schema.public_job(normalized spec). Private source object, review provenance/count, intake/assessment/assets filenames, private IDs, source URL and historical brochure facts absent from page and script.",
+    "network": "Static artifact has embedded Inter font and JPEGs; no external src/href assets, fetch, XMLHttpRequest, WebSocket or sendBeacon. External URLs are inert shared platform catalog references.",
+    "timers": "Source uses bounded 4.5-second scene sequence, generation and scene guards, timer cancellation on navigation/replay/Show result/unload, manual chapter navigation and reduced-motion finish. No browser execution was verified in this review."
+  },
+  "browserLimitation": "Browser action held while other agents shared viewport. After authorization for an availability check, the interrupted session no longer had the prior tab binding. One hidden createBrowserTab('iab', exact canonical URL, visible:false) returned 'Browser is not available: iab'. No viewport changes or repeated retries. No final-generation desktop/mobile screenshot or runtime behavior was inspected by this reviewer.",
+  "remainingIndependentChecks": [
+    "Desktop cover, both native Make workflow interiors, both carousel photographs, email/SMS, result and close screenshots; verify legibility and photo fit",
+    "390px cover, both workflows, carousel, messages and close; whole-page horizontal overflow and text clipping",
+    "Quick/Standard/Detailed routes and optional dashboard omission",
+    "Carousel Replay first slide and Show result final slide, full caption retained, initial state immediate and subsequent state settled and held",
+    "Talking points, Present, Previous/Next, chapter navigation, keyboard arrows/Escape",
+    "Rapid navigation/replay stale-timer check; reduced motion if tool supports; no auto chapter advance or scroll hijack",
+    "Reconfirm exact page/content/template hashes before recording final approval"
+  ],
+  "defects": [],
+  "notes": "Private cost worksheet stale four-slide reference reported and corrected by main. No public artifact change. This report is not a queue approval receipt."
+}

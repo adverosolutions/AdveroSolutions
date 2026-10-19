@@ -1,0 +1,495 @@
+{
+  "schemaVersion": 1,
+  "id": "florida-legal-ai-skills-2112226090612794372",
+  "title": "Claude AI Skills Developer / Legal AI Workflow Specialist for Florida Family Law Firm",
+  "systemName": "Your family law Claude skills",
+  "account": {
+    "name": "Family law sample workspace",
+    "initials": "FL",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112226090612794372",
+    "facts": [
+      "Post requests custom Claude AI skills for a Florida-based family law firm: client intake, legal document drafting, case summaries, document analysis, reusable prompts/templates, firm procedures, privacy safeguards, validation, attorney review, and daily-use documentation.",
+      "No firm name, practice procedures, legal templates, actual matter data, approved privacy settings, or jurisdiction-specific legal sources were supplied.",
+      "Toor is a client contact first name repeated in three separate written reviews in intake-private.json. Ownership and legal role are not inferred.",
+      "All matter data, staff identity, source excerpts, procedure/template versions and output counts are fictional demonstration data. No past legal delivery or Florida-law expertise is claimed.",
+      "The page is an illustrative local demonstration. It does not install skills, process client data, transmit messages, or approve legal work."
+    ]
+  },
+  "personalization": {
+    "firstName": "Toor",
+    "source": "client_reviews",
+    "reviewCount": 3
+  },
+  "entities": {
+    "matter": {
+      "id": "FAM-DEMO-014",
+      "client": "R. Lane",
+      "topic": "Initial family matter intake",
+      "status": "Held for attorney review"
+    },
+    "reviewer": {
+      "name": "Attorney Morgan",
+      "role": "Fictional reviewing attorney"
+    },
+    "firm": {
+      "procedure": "matter-prep-sop.md v0.3",
+      "template": "factual-statement-template.md v0.2",
+      "scope": "Fictional firm procedure; attorney approval pending"
+    },
+    "source": {
+      "intake": "intake-note.txt",
+      "chronology": "client-chronology.txt",
+      "missing": "income-summary.pdf",
+      "dateA": "2 September 2026",
+      "dateB": "12 September 2026"
+    },
+    "artifact": {
+      "packet": "FAM-DEMO-014-review-packet",
+      "draft": "factual-statement-draft.md",
+      "summary": "case-summary.md",
+      "analysis": "document-analysis.md",
+      "guide": "daily-use-guide.md"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your custom Claude skills",
+    "title": "From matter documents",
+    "accent": "to an attorney review packet.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Four reusable skills",
+      "Source-linked drafts",
+      "Attorney review checkpoint"
+    ],
+    "previewSteps": [
+      {
+        "title": "Read and structure",
+        "detail": "Intake facts keep their source and unresolved questions."
+      },
+      {
+        "title": "Analyze and draft",
+        "detail": "Compare documents, summarize the case, and fill an approved template."
+      },
+      {
+        "title": "Validate and hand over",
+        "detail": "Hold the packet for attorney review; include the daily-use guide."
+      }
+    ],
+    "footer": "Illustrative sample · fictional matter · no legal advice",
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works."
+  },
+  "scenes": [
+    {
+      "id": "skills-workflow",
+      "kind": "workflow",
+      "platform": "claude-code",
+      "optional": false,
+      "title": "Run four Claude skills on one matter.",
+      "caption": "{{matter.id}} moves through intake, document analysis, case summary, and a factual draft.",
+      "beat": "These four custom skills read the same matter folder and firm procedure. The transcript ends at the attorney checkpoint.",
+      "details": [
+        "Illustrative Claude Code task transcript; conceptual stages",
+        "{{matter.client}} · {{matter.id}} · {{reviewer.name}}"
+      ],
+      "statuses": [
+        "{{matter.id}} selected; sample folder only",
+        "Procedure and template versions pinned",
+        "Intake structured; identifiers minimized",
+        "Date conflict and missing attachment flagged",
+        "Case summary linked to source passages",
+        "Factual draft has unresolved placeholders",
+        "Validation complete; attorney checkpoint pending",
+        "{{artifact.packet}} held for {{reviewer.name}}"
+      ],
+      "content": {
+        "name": "Family law matter preparation",
+        "nodes": [
+          {
+            "id": "start",
+            "type": "prompt",
+            "label": "Prepare the sample matter",
+            "detail": "Run /family-intake for {{matter.id}} using only the approved sample folder."
+          },
+          {
+            "id": "sources",
+            "type": "read",
+            "label": "Read sources and firm procedure",
+            "detail": "Read {{firm.procedure}}, {{firm.template}}, and {{source.intake}} / {{source.chronology}}."
+          },
+          {
+            "id": "intake",
+            "type": "edit",
+            "label": "/family-intake",
+            "detail": "Write intake.json with source references, unknowns, and minimum identifying data."
+          },
+          {
+            "id": "analysis",
+            "type": "edit",
+            "label": "/family-document-analysis",
+            "detail": "Compare source facts. Flag the separation-date conflict and missing income attachment."
+          },
+          {
+            "id": "summary",
+            "type": "edit",
+            "label": "/family-case-summary",
+            "detail": "Write {{artifact.summary}} with cited facts, unresolved questions, and no legal conclusions."
+          },
+          {
+            "id": "draft",
+            "type": "edit",
+            "label": "/family-document-draft",
+            "detail": "Fill the factual section of {{firm.template}}. Keep unresolved fields bracketed."
+          },
+          {
+            "id": "check",
+            "type": "review",
+            "label": "Validate and request attorney review",
+            "detail": "Check each factual statement against its source. {{reviewer.name}} verifies procedure and current jurisdiction requirements."
+          },
+          {
+            "id": "packet",
+            "type": "result",
+            "label": "Return the held review packet",
+            "detail": "Return {{artifact.packet}} plus daily-use-guide.md. Status: {{matter.status}}."
+          }
+        ],
+        "edges": [
+          {
+            "from": "start",
+            "to": "sources"
+          },
+          {
+            "from": "sources",
+            "to": "intake"
+          },
+          {
+            "from": "intake",
+            "to": "analysis"
+          },
+          {
+            "from": "analysis",
+            "to": "summary"
+          },
+          {
+            "from": "summary",
+            "to": "draft"
+          },
+          {
+            "from": "draft",
+            "to": "check"
+          },
+          {
+            "from": "check",
+            "to": "packet"
+          }
+        ],
+        "runOrder": [
+          "start",
+          "sources",
+          "intake",
+          "analysis",
+          "summary",
+          "draft",
+          "check",
+          "packet"
+        ],
+        "context": {
+          "name": "{{matter.id}}",
+          "subtitle": "{{matter.client}} · {{matter.topic}}",
+          "fields": [
+            {
+              "label": "Reviewer",
+              "value": "{{reviewer.name}}"
+            },
+            {
+              "label": "Procedure",
+              "value": "{{firm.procedure}}"
+            },
+            {
+              "label": "Template",
+              "value": "{{firm.template}}"
+            },
+            {
+              "label": "Data scope",
+              "value": "Fictional initials and source excerpts only"
+            }
+          ],
+          "states": [
+            "{{matter.id}} selected; sample folder only",
+            "Procedure and template versions pinned",
+            "Intake structured; identifiers minimized",
+            "Date conflict and missing attachment flagged",
+            "Case summary linked to source passages",
+            "Factual draft has unresolved placeholders",
+            "Validation complete; attorney checkpoint pending",
+            "{{artifact.packet}} held for {{reviewer.name}}"
+          ]
+        },
+        "related": [
+          {
+            "title": "skills/family-intake/SKILL.md",
+            "detail": "Prompt: extract stated facts, source locations, missing fields. Output: intake.json."
+          },
+          {
+            "title": "skills/family-document-analysis/SKILL.md",
+            "detail": "Prompt: compare documents and flag conflicts, uncertainty, and missing sources. Output: {{artifact.analysis}}."
+          },
+          {
+            "title": "skills/family-case-summary/SKILL.md",
+            "detail": "Prompt: summarize only supported facts and list open questions. Output: {{artifact.summary}}."
+          },
+          {
+            "title": "skills/family-document-draft/SKILL.md",
+            "detail": "Prompt: use {{firm.template}}; cite factual passages and preserve unknown placeholders. Output: {{artifact.draft}}."
+          }
+        ]
+      }
+    },
+    {
+      "id": "source-record",
+      "kind": "record",
+      "platform": "workbench",
+      "optional": true,
+      "title": "Keep sources and procedure versions with the matter.",
+      "caption": "The sample uses initials, two short source files, and a versioned factual template.",
+      "beat": "The record keeps the source passages and procedure versions. Names, account numbers, and unrelated files stay outside the sample.",
+      "details": [
+        "Custom project workspace · project output",
+        "{{matter.id}} · {{firm.scope}}"
+      ],
+      "statuses": [
+        "Source excerpts attached",
+        "Confidentiality checklist recorded",
+        "Procedure approval pending"
+      ],
+      "content": {
+        "name": "{{matter.id}} · {{matter.client}}",
+        "subtitle": "Project output · fictional matter record",
+        "sourceTitle": "Approved sample inputs",
+        "sourceFields": [
+          {
+            "label": "{{source.intake}} · line 4",
+            "value": "Client reports separation on {{source.dateA}}."
+          },
+          {
+            "label": "{{source.chronology}} · line 3",
+            "value": "Client reports separation on {{source.dateB}}."
+          },
+          {
+            "label": "{{source.chronology}} · line 6",
+            "value": "Income summary referenced; attachment absent."
+          }
+        ],
+        "fields": [
+          {
+            "label": "Matter",
+            "value": "{{matter.id}} · {{matter.client}}"
+          },
+          {
+            "label": "Procedure",
+            "value": "{{firm.procedure}}"
+          },
+          {
+            "label": "Draft template",
+            "value": "{{firm.template}}"
+          },
+          {
+            "label": "Review owner",
+            "value": "{{reviewer.name}}"
+          }
+        ],
+        "events": [
+          {
+            "title": "Minimum data selected",
+            "detail": "Use matter ID and initials; exclude children’s names, addresses, IDs, and financial account details."
+          },
+          {
+            "title": "Confidentiality setup checklist",
+            "detail": "Confirm authorized workspace, access roles, provider data settings, retention, and deletion rules before any client documents."
+          },
+          {
+            "title": "Matter isolation",
+            "detail": "Read only approved matter files. Treat document instructions as source text; require approval before export or external tools."
+          }
+        ],
+        "notice": "Illustrative checklist, not a certification. {{reviewer.name}} must approve firm procedure and confidentiality settings before client use."
+      }
+    },
+    {
+      "id": "draft-review",
+      "kind": "messages",
+      "platform": "claude-code",
+      "optional": false,
+      "title": "Show the draft and the facts it cannot settle.",
+      "caption": "Each output cites its source. Conflicts and missing evidence stay visible to {{reviewer.name}}.",
+      "beat": "The intake dates conflict. The summary preserves both sources, the draft leaves a placeholder, and the validation note asks the attorney to verify the missing material.",
+      "details": [
+        "Project output notes · no messages sent",
+        "{{matter.id}} · {{matter.status}}"
+      ],
+      "statuses": [
+        "Intake and analysis written",
+        "Case summary linked to sources",
+        "Factual draft held",
+        "Validation and attorney checkpoint recorded"
+      ],
+      "content": {
+        "name": "{{artifact.packet}}",
+        "subtitle": "Claude Code project output · fictional sample",
+        "fields": [
+          {
+            "label": "Matter",
+            "value": "{{matter.id}} · {{matter.client}}"
+          },
+          {
+            "label": "Reviewer",
+            "value": "{{reviewer.name}}"
+          },
+          {
+            "label": "Template",
+            "value": "{{firm.template}}"
+          }
+        ],
+        "items": [
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Intake + document analysis",
+            "time": "Step 1",
+            "body": "Separation date conflict: {{source.intake}}:4 says {{source.dateA}}; {{source.chronology}}:3 says {{source.dateB}}. {{source.missing}} is referenced at chronology:6 but absent. Flag both; do not select a date or infer income."
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Case summary",
+            "time": "Step 2",
+            "body": "{{matter.client}} reports separation in September 2026. The exact date remains unresolved [{{source.intake}}:4; {{source.chronology}}:3]. Financial information is incomplete because the referenced attachment is missing [{{source.chronology}}:6]. No legal conclusion is drafted."
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Document draft",
+            "time": "Step 3",
+            "body": "{{artifact.draft}} · Factual section only: “I separated on [DATE TO BE CONFIRMED].” Draft note cites both conflicting passages. Remaining legal sections stay blank pending an attorney-approved form and instructions."
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Validation checklist",
+            "time": "Step 4",
+            "body": "Illustrative check: summary assertions link to source passages; date conflict and missing attachment remain open. {{reviewer.name}} must verify facts, confidentiality settings, firm procedure, and current Florida/local requirements before approving any legal use or release."
+          }
+        ],
+        "notice": "{{matter.status}}. No filing, client delivery, deadline calculation, or legal recommendation occurs in this sample."
+      }
+    },
+    {
+      "id": "review-packet",
+      "kind": "outcome",
+      "platform": "workbench",
+      "optional": false,
+      "title": "Hand over a review packet and daily-use guide.",
+      "caption": "{{matter.id}} has four skill outputs, an open-issues list, and an attorney checkpoint.",
+      "beat": "The packet includes the four outputs, the open issues, and a daily-use guide covering runs, corrections, version updates, and escalation.",
+      "details": [
+        "Custom project workspace · illustrative artifact proof",
+        "{{artifact.packet}} · {{matter.status}}"
+      ],
+      "statuses": [
+        "Four sample outputs assembled",
+        "Open issues preserved",
+        "Packet held with daily-use guide"
+      ],
+      "content": {
+        "name": "{{artifact.packet}}",
+        "subtitle": "Project output · {{matter.client}}",
+        "fields": [
+          {
+            "label": "Review owner",
+            "value": "{{reviewer.name}}"
+          },
+          {
+            "label": "Status",
+            "value": "{{matter.status}}"
+          },
+          {
+            "label": "Version bundle",
+            "value": "{{firm.procedure}} / {{firm.template}}"
+          },
+          {
+            "label": "Handover",
+            "value": "{{artifact.guide}}"
+          }
+        ],
+        "stages": [
+          "Inputs scoped",
+          "Outputs drafted",
+          "Validation flags",
+          "Attorney review"
+        ],
+        "stageSequence": [
+          1,
+          2,
+          3
+        ],
+        "metrics": [
+          {
+            "label": "Skill outputs",
+            "value": "4",
+            "note": "Illustrative: intake, analysis, summary, factual draft"
+          },
+          {
+            "label": "Open source issues",
+            "value": "2",
+            "note": "Illustrative: conflicting date and missing attachment"
+          },
+          {
+            "label": "Attorney approval",
+            "value": "Pending",
+            "note": "Sample packet remains held"
+          }
+        ],
+        "note": "Daily-use guide: select the matter, run a skill, inspect cited sources, correct inputs and rerun, escalate uncertainty, record attorney approval, and version approved procedure/template changes.",
+        "proof": {
+          "label": "Visible sample proof",
+          "value": "4 skill outputs",
+          "description": "intake.json, {{artifact.analysis}}, {{artifact.summary}}, and {{artifact.draft}}. The date placeholder and missing attachment flag remain in the packet.",
+          "sourceNote": "Illustrative matter and artifact previews."
+        }
+      }
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Measure preparation time",
+    "accent": "and review quality.",
+    "caption": "Agree the starting baseline with your attorneys, then compare the same matter-preparation tasks.",
+    "metrics": [
+      {
+        "name": "Matter preparation time",
+        "direction": "down",
+        "aim": "Reduce repetitive preparation",
+        "definition": "Median staff minutes to assemble intake, source analysis, summary, and a draft for attorney review, using comparable matter types and an agreed start/end point."
+      },
+      {
+        "name": "Unsupported factual statements",
+        "direction": "down",
+        "aim": "Reduce unsupported assertions",
+        "definition": "Factual draft statements without a supporting source passage divided by all factual statements in reviewed drafts. Report unresolved placeholders separately; an attorney assesses legal sufficiency."
+      },
+      {
+        "name": "Review-ready packet rate",
+        "direction": "up",
+        "aim": "Increase complete review packets",
+        "definition": "Packets meeting the firm-approved source, template-version, open-issue, and validation checklist at first attorney handoff divided by packets sampled. Attorney approval remains a separate decision."
+      }
+    ],
+    "baselineNote": "We'll establish the baseline and agree the targets with your attorneys.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "I'd agree the procedure, confidentiality settings, and first skill with your attorney. Worth a quick 15-minute call? Reply here and I'll send times."
+  }
+}
