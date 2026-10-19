@@ -331,4 +331,157 @@ test('real n8n and GHL connectors start at their assigned branch output ports', 
   app.dom.window.close();
 });
 
+function agentFixture(platform) {
+  const data = fixture(), scene = data.scenes[0];
+  scene.platform = platform;
+  scene.content.nodes = ['prompt', 'read', 'edit', 'command', 'review', 'result'].map((type, index) => ({ id: `task-${index}`, type, label: `Project task ${index}`, detail: `Sample output ${index}` }));
+  scene.content.runOrder = scene.content.nodes.map(node => node.id);
+  scene.content.edges = scene.content.runOrder.slice(1).map((id, index) => ({ from: `task-${index}`, to: id }));
+  scene.content.context.states = scene.content.nodes.map((_, index) => `Project state ${index}`);
+  scene.statuses = scene.content.nodes.map((_, index) => `Task status ${index}`);
+  return data;
+}
+
+test('agent task transcripts contain no graph or CRM chrome and replay all stages', () => {
+  for (const platform of ['claude-code', 'codex']) {
+    const data = agentFixture(platform);
+    const attack = '<img src=x onerror="window.injected=true">';
+    data.scenes[0].content.nodes[2].detail = attack;
+    const app = mount(data, false, true);
+    app.chapter('workflow-chapter');
+    assert.ok(app.query('.sp-transcript'));
+    assert.equal(app.query('.sp-canvas'), null);
+    assert.equal(app.query('.gnav'), null);
+    assert.match(app.query('.native-tabs').textContent, /Terminal session.*Illustrative sample/);
+    assert.equal(app.window.document.querySelectorAll('.sp-task.active').length, 1);
+    app.flush();
+    assert.equal(app.window.document.querySelectorAll('.sp-task.active').length, 6);
+    assert.equal(app.query('.sp-context-state').textContent, 'Project state 5');
+    assert.equal(app.query('#stage img'), null);
+    assert.match(app.query('.sp-transcript').textContent, /<img/);
+    app.query('.sp-transcript').scrollTop = 500;
+    app.click('#replay');
+    assert.equal(app.query('.sp-transcript').scrollTop, 0);
+    assert.equal(app.window.document.querySelectorAll('.sp-task.active').length, 1);
+    app.click('#showResult');
+    assert.equal(app.pending.size, 0);
+    assert.equal(app.query('#replayStatus').textContent, 'Task status 5');
+    app.dom.window.close();
+  }
+});
+
+test('custom and agent project outputs retain supplied content and lifecycle without GHL navigation', () => {
+  for (const platform of ['workbench', 'claude-code', 'codex']) {
+    const data = fixture();
+    for (const scene of data.scenes) if (['record', 'messages', 'outcome'].includes(scene.kind)) scene.platform = platform;
+    const app = mount(data);
+    app.route('3');
+    for (const kind of ['record', 'messages', 'outcome']) {
+      app.chapter(`${kind}-chapter`);
+      assert.equal(app.query('.gnav'), null);
+      assert.match(app.query('.po-sample').textContent, /Illustrative sample/);
+      assert.match(app.query('.gtop strong').textContent, platform === 'workbench' ? /Custom project workspace/ : /project output/);
+      assert.doesNotMatch(app.query('.native-tabs').textContent, /Manual Actions|Snippets|Attribution|Contact/);
+      app.flush();
+      app.click('#replay');
+      assert.equal(app.query('.demo').dataset.replayStep, '0');
+      app.click('#showResult');
+      assert.equal(app.pending.size, 0);
+      assert.match(app.query('#stage').textContent, /Taylor Fresh/);
+      if (kind === 'outcome') assert.equal(app.query('#outcomeStage').textContent, 'Fresh customer');
+    }
+    app.dom.window.close();
+  }
+});
+
+test('real adapters reject unknown workflows, agent branches and unsupported output combinations', () => {
+  const app = mount(agentFixture('codex'), false, true);
+  const scene = clone(app.window.DATA.scenes[0]);
+  scene.platform = 'unknown';
+  assert.throws(() => app.window.SalesPlatforms.renderWorkflow(scene, app.window.DATA), /Unsupported workflow/);
+  scene.platform = 'workbench';
+  assert.throws(() => app.window.SalesPlatforms.renderWorkflow(scene, app.window.DATA), /Unsupported workflow/);
+  scene.platform = 'codex';
+  scene.content.nodes.push({ id: 'extra', type: 'read', label: 'Extra', detail: 'Sample' });
+  scene.content.edges.push({ from: 'task-1', to: 'extra' });
+  assert.throws(() => app.window.SalesPlatforms.renderWorkflow(scene, app.window.DATA), /linear chain/);
+  app.dom.window.close();
+  for (const platform of ['n8n', 'make', 'unknown']) {
+    const data = fixture();
+    data.scenes[0] = data.scenes[3];
+    data.scenes[0].platform = platform;
+    const invalid = mount(data);
+    let error;
+    invalid.window.addEventListener('error', event => { error = event.error; event.preventDefault(); });
+    invalid.click('[data-chapter="1"]');
+    assert.match(error.message, /Unsupported scene\/platform/);
+    invalid.dom.window.close();
+  }
+});
+
+function carouselFixture() {
+  const data = fixture();
+  const imageData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aWQAAAABJRU5ErkJggg==';
+  const scene = { ...data.scenes[3], id: 'carousel-chapter', kind: 'carousel', platform: 'workbench', statuses: ['First image', 'Second image', 'Last image'], content: { name: 'Sample carousel', subtitle: 'Property preview', slides: [0, 1, 2].map(index => ({ title: `Photo ${index}`, body: `Property detail ${index}`, imageData, alt: `Supplied photo ${index}` })), caption: 'The full social caption.\nSecond paragraph.', fields: [{ label: 'Approval', value: 'For review' }] } };
+  data.scenes = [data.scenes[0], scene];
+  return data;
+}
+
+test('carousel shows supplied photos and caption, replays, holds last image and cancels stale steps', () => {
+  const app = mount(carouselFixture());
+  app.chapter('carousel-chapter');
+  assert.match(app.query('.gtop strong').textContent, /Custom project workspace/);
+  assert.match(app.query('.native-tabs').textContent, /Content approval/);
+  assert.equal(app.query('#carouselCount').textContent, '1 / 3');
+  assert.equal(app.query('#carouselTitle').textContent, 'Photo 0');
+  assert.equal(app.query('#carouselImage').alt, 'Supplied photo 0');
+  assert.match(app.query('.carousel-caption').textContent, /The full social caption/);
+  assert.equal(app.window.document.querySelectorAll('.carousel-thumb img').length, 3);
+  assert.ok([...app.pending.values()].every(timer => timer.delay <= 5000));
+  app.flush();
+  assert.equal(app.query('#carouselCount').textContent, '3 / 3');
+  assert.equal(app.query('#carouselImage').alt, 'Supplied photo 2');
+  assert.equal(app.query('[data-carousel-thumb="2"]').classList.contains('active'), true);
+  app.click('#replay');
+  assert.equal(app.query('#carouselCount').textContent, '1 / 3');
+  app.click('#showResult');
+  assert.equal(app.query('#carouselCount').textContent, '3 / 3');
+  assert.equal(app.pending.size, 0);
+  const stale = [...app.scheduled];
+  app.chapter('cover');
+  stale.forEach(callback => callback());
+  assert.equal(app.query('#stage').dataset.scene, 'cover');
+  app.dom.window.close();
+});
+
+test('carousel reduced motion settles immediately and all image-adjacent text is escaped', () => {
+  const data = carouselFixture(), attack = '<img src=x onerror="window.injected=true">';
+  data.scenes[1].content.slides[2].title = attack;
+  data.scenes[1].content.slides[2].body = attack;
+  data.scenes[1].content.slides[2].alt = attack;
+  data.scenes[1].content.caption = attack;
+  const app = mount(data, true);
+  app.chapter('carousel-chapter');
+  assert.equal(app.pending.size, 0);
+  assert.equal(app.query('#carouselTitle').textContent, attack);
+  assert.equal(app.query('#carouselImage').alt, attack);
+  assert.equal(app.window.document.querySelectorAll('#stage img').length, 4);
+  assert.equal(app.window.injected, undefined);
+  app.dom.window.close();
+});
+
+test('carousel defensive runtime rejects remote or invalid binary images before creating image elements', () => {
+  for (const imageData of ['https://private.example/photo.jpg', 'data:image/svg+xml;base64,PHN2Zz4=', 'data:image/png;base64,aGVsbG8=', 'data:image/png;base64,iVBORw0KGgoAA']) {
+    const data = carouselFixture();
+    data.scenes[1].content.slides[0].imageData = imageData;
+    const app = mount(data);
+    let error;
+    app.window.addEventListener('error', event => { error = event.error; event.preventDefault(); });
+    app.chapter('carousel-chapter');
+    assert.match(error.message, /carousel image|Carousel image/);
+    assert.equal(app.query('#stage img'), null);
+    app.dom.window.close();
+  }
+});
+
 console.log('Runtime checks complete.');

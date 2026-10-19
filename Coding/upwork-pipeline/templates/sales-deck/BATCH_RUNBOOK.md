@@ -58,7 +58,7 @@ Main records the reviewer's exact verdict and page SHA-256:
   --page-hash <reviewed-page-sha256> --notes '<independent review evidence>'
 ```
 
-Use `--verdict reject` for a failed review. The CLI verifies the artifact identities before recording the receipt. Send precise defects to a content agent with a task-specific repair brief and explicit supported model/effort settings, rebuild, and request a new independent review. Content workers never approve their own work. Unsupported native tools/actions require approved adapter maintenance; initial support is GHL, n8n and Make, never a GHL substitution for another tool.
+Use `--verdict reject` for a failed review. The CLI verifies the artifact identities before recording the receipt. Send precise defects to a content agent with a task-specific repair brief and explicit supported model/effort settings, rebuild, and request a new independent review. Content workers never approve their own work. Current support is documented in `PLATFORMS.md` and `extension-contract.md`: GHL, n8n, Make, Claude Code/Codex task transcripts, and explicitly custom workbench outputs including carousel previews. Unsupported native tools/actions require approved adapter maintenance, never a GHL substitution for another tool.
 
 Exact unchanged spec/template/page/script and valid review receipts allow reuse, including approved or recorded jobs. Any changed generation resets review. A template change does not automatically approve previously ready pages, even when the story is unchanged. A receipt from an older pilot may be carried only after independent approval is evidenced and the exact reviewed page hash matches the queue artifact; otherwise review again.
 
@@ -72,6 +72,8 @@ Lorenzo opens the queue only when he requests it. After his actual Loom recordin
 `--loom` is optional when he confirms recording before sharing the URL. `reopen` is for a new recording. These markers do not finalize proposals or log `proposals.csv`; keep the existing finalizer, runtime, locked copy and manual Upwork submission process. At each handoff report the job link, sample path, queue status and unresolved factual questions.
 
 ## Shared state and diagnostics
+
+To remove a withdrawn job or an old pilot from the active recording board without deleting its sources, pages or receipts, use `./recording-queue archive <id>`. Restore it with `./recording-queue restore <id>`; restoration checks the current generation before returning a ready status. Archived IDs cannot be registered again until explicitly restored. Use these commands rather than deleting registry rows. Archiving does not unsave an Upwork job or change a proposal.
 
 All sessions may register/build/review through the wrapper. Its OS lock serializes shared mutations; only main coordinators run queue commands, while workers author isolated specs. Queue registration order is the recording order; leave historical `jobs/_ORDER.txt` alone rather than racing on a second order list. Coordinate ownership if two sessions touch the same source spec. Never hand-edit the registry, receipts or generated index. Never run `build.py batch --out` into the shared queue; that utility is only for isolated pilots/tests.
 

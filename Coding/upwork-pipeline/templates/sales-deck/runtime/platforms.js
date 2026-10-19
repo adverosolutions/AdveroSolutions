@@ -35,7 +35,7 @@
       throw new Error('Unsupported workflow platform: ' + key);
     }
     const platform = catalog.platforms[key];
-    if (platform.status !== 'supported' || !['ghl', 'n8n', 'make'].includes(key)) {
+    if (platform.status !== 'supported' || !['ghl', 'n8n', 'make', 'claude-code', 'codex'].includes(key)) {
       throw new Error('Unsupported workflow platform: ' + key);
     }
     return platform;
@@ -103,6 +103,8 @@
       }
       visited.add(id);
     });
+    if (outgoing.get(content.runOrder[content.runOrder.length - 1]).length) throw new Error('Sample path must end at a terminal result.');
+    if (['claude-code', 'codex'].includes(scene.platform) && (content.runOrder.length !== nodes.size || content.edges.length !== nodes.size - 1 || Array.from(outgoing.values()).some(function (edges) { return edges.length > 1; }))) throw new Error('Agent transcript requires one linear chain containing every task stage.');
     nodes.forEach(function (node, id) {
       if (scene.platform === 'n8n' && node.type === 'if' && outgoing.get(id).length > 2) {
         throw new Error('n8n If supports only true and false outputs.');
@@ -233,18 +235,28 @@
     }
     return '<div class="sp-node sp-' + platform + '-node"' + attributes + '><div class="sp-node-core">' + svg(action.icon) + ports(g, node, platform) + (platform === 'make' ? '<span class="sp-module-number">' + (index + 1) + '</span>' : '') + '<span class="sp-complete" aria-hidden="true">✓</span></div><div class="sp-node-copy"><b>' + esc(label) + '</b><small>' + esc(actionText) + '</small>' + detailHTML + '</div></div>';
   }
-  function contextHTML(content, job, esc) {
+  function contextHTML(content, job, esc, agent) {
     const ui = helpers(), c = content.context || {};
     let html = '<aside class="sp-context"><div class="sp-contact"><div class="contact-title">' + ui.avatar(ui.initials(c.name)) + '<div><h3>' + esc(c.name || '') + '</h3><p>' + esc(c.subtitle || '') + '</p></div></div>' + ui.fields(c.fields || []) + '<div class="sp-context-state" role="status">' + esc((c.states || [])[0] || '') + '</div></div>';
     if (content.related && content.related.length) {
-      html += '<div class="sp-related"><span class="sp-related-title">Related workflows</span>' + content.related.map(function (item) {
+      html += '<div class="sp-related"><span class="sp-related-title">' + (agent ? 'Project artifacts' : 'Related workflows') + '</span>' + content.related.map(function (item) {
         return '<div class="sp-related-item"><span class="sp-related-icon">' + svg('branch') + '</span><div><b>' + esc(item.title) + '</b><p>' + esc(item.detail) + '</p></div></div>';
       }).join('') + '</div>';
     }
     return html + '</aside>';
   }
+  function renderAgent(scene, job, g) {
+    const ui = helpers(), esc = ui.esc;
+    const items = g.content.runOrder.map(function (id, index) {
+      const node = g.nodes.get(id);
+      return '<article class="sp-task" data-workflow-node="' + esc(id) + '"><span class="sp-task-check" aria-hidden="true">✓</span><div><small>' + esc(node.action.label) + '</small><b>' + esc(node.label) + '</b><p>' + esc(node.detail) + '</p></div><span class="sp-task-index">' + String(index + 1).padStart(2, '0') + '</span></article>';
+    }).join('');
+    return '<div class="native sales-workflow sp-agent sp-' + esc(scene.platform) + '" data-workflow-scene="' + esc(scene.id) + '" data-platform="' + esc(scene.platform) + '"><div class="gbody"><div class="gtop sp-top"><strong>' + esc(g.platform.name) + '</strong><span class="sp-workflow-name">' + esc(g.content.name) + '</span><span class="location">' + esc(job.account.name) + '</span><span class="me">' + esc(job.account.operatorInitials) + '</span></div><div class="native-tabs"><span class="active">Terminal session</span><span>Project context</span><span class="sp-sample-label">Illustrative sample</span></div><div class="sp-workspace"><div class="sp-transcript" tabindex="0" role="region" aria-label="' + esc(g.platform.name) + ' illustrative task transcript"><div class="sp-terminal-head"><span aria-hidden="true">›</span> ' + esc(g.content.name) + '<small>Conceptual task stages · sample output</small></div>' + items + '</div>' + contextHTML(g.content,job,esc,true) + '</div></div></div>';
+  }
   function renderWorkflow(scene, job) {
-    const ui = helpers(), esc = ui.esc, g = graph(scene), l = layout(g, scene.platform);
+    const ui = helpers(), esc = ui.esc, g = graph(scene);
+    if (['claude-code', 'codex'].includes(scene.platform)) return renderAgent(scene, job, g);
+    const l = layout(g, scene.platform);
     const nav = scene.platform === 'ghl' ? '<aside class="gnav" aria-label="GoHighLevel navigation"><div class="acct">' + esc(job.account.initials) + '</div>' + ['dashboard','contact','conversation','opportunity','workflow'].map(function (key) { return '<div class="ni ' + (key === 'workflow' ? 'active' : '') + '" title="' + esc(key) + '">' + ui.icon(key) + '</div>'; }).join('') + '</aside>' : '';
     const tabs = scene.platform === 'ghl' ? ['Workflows','Builder'] : scene.platform === 'n8n' ? ['Editor','Executions'] : ['Scenario','History'];
     let html = '<div class="native sales-workflow sp-' + scene.platform + '" data-workflow-scene="' + esc(scene.id) + '" data-platform="' + esc(scene.platform) + '">' + nav + '<div class="gbody"><div class="gtop sp-top"><strong>' + esc(scene.platform === 'ghl' ? 'Automation' : g.platform.name) + '</strong><span class="sp-workflow-name">' + esc(g.content.name) + '</span><span class="location">' + esc(job.account.name) + '</span><span class="me">' + esc(job.account.operatorInitials) + '</span></div><div class="native-tabs">' + tabs.map(function (tab,index) { return '<span class="' + (!index ? 'active' : '') + '">' + esc(tab) + '</span>'; }).join('') + '<span class="sp-sample-label">Illustrative sample</span></div><div class="sp-workspace"><div class="sp-canvas-scroll" tabindex="0" role="region" aria-label="' + esc(g.platform.name + ' workflow canvas. Scroll to inspect the full graph.') + '"><div class="sp-canvas-size" style="width:' + l.width + 'px;height:' + l.height + 'px"><div class="sp-canvas" style="width:' + l.width + 'px;height:' + l.height + 'px">' + connections(g,l,scene.platform,esc);
@@ -300,6 +312,11 @@
     // Pan only the canvas when the sample's current node leaves its viewport.
     // This never scrolls the page or creates timers. Replay starts at the trigger.
     const current = Array.from(frame.querySelectorAll('[data-workflow-node]')).find(function (node) { return node.dataset.workflowNode === order[step]; });
+    const transcript = frame.querySelector('.sp-transcript');
+    if (current && transcript) {
+      if (step === 0) transcript.scrollTop = 0;
+      else if (current.offsetTop < transcript.scrollTop || current.offsetTop + current.offsetHeight > transcript.scrollTop + transcript.clientHeight) transcript.scrollTop = Math.max(0, current.offsetTop - 16);
+    }
     const fitted = fitCanvas(frame);
     if (current && fitted) {
       const viewport = fitted.viewport, scale = fitted.scale, fitsX = fitted.fitsX, fitsY = fitted.fitsY;

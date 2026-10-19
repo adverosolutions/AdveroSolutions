@@ -1,4 +1,5 @@
 """Compiler, schema, privacy and progressive batch checks (stdlib unittest)."""
+import base64
 import copy
 import hashlib
 import json
@@ -119,6 +120,125 @@ class BuildTests(unittest.TestCase):
         self.job = build.read_json(ROOT / "examples/n8n-inbound-routing.json")
         self.job["scenes"][0]["content"]["nodes"][1]["type"] = "ai_agent"
         self.invalid("unsupported action")
+
+    def agent_job(self, platform):
+        job = copy.deepcopy(self.seed)
+        scene = job["scenes"][0]
+        scene["platform"] = platform
+        content = scene["content"]
+        types = ["prompt", "read", "edit", "command", "review", "result"]
+        content["nodes"] = [{"id": "task-{}".format(i), "type": kind, "label": "Sample task {}".format(i), "detail": "Project context"} for i, kind in enumerate(types)]
+        content["runOrder"] = [n["id"] for n in content["nodes"]]
+        content["edges"] = [{"from": a, "to": b} for a, b in zip(content["runOrder"], content["runOrder"][1:])]
+        scene["statuses"] = ["Sample state"] * len(types)
+        content["context"]["states"] = ["Project state"] * len(types)
+        return job
+
+    def test_agent_transcript_contract_and_custom_outputs(self):
+        for platform in ("claude-code", "codex"):
+            self.job = self.agent_job(platform)
+            validate(self.job, self.catalog)
+            for scene in self.job["scenes"][1:]:
+                if scene["kind"] in ("record", "messages", "outcome"):
+                    scene["platform"] = platform
+            validate(self.job, self.catalog)
+            page = build.page(public_job(validate(self.job, self.catalog)), self.catalog)
+            self.assertNotIn('<script src=', page)
+            self.assertIn('Illustrative sample', page)
+        self.job = copy.deepcopy(self.seed)
+        for scene in self.job["scenes"][1:]:
+            scene["platform"] = "workbench"
+        validate(self.job, self.catalog)
+
+    def test_adapter_scene_compatibility_is_explicit(self):
+        for platform in ("n8n", "make", "workbench", "codex", "claude-code"):
+            self.job = copy.deepcopy(self.seed)
+            scene = self.job["scenes"][0 if platform == "workbench" else 1]
+            scene["platform"] = platform
+            if platform in ("codex", "claude-code"):
+                scene["kind"] = "workshop"
+            self.invalid("unsupported scene/platform")
+        catalog = copy.deepcopy(self.catalog)
+        catalog["platforms"]["pretend"] = dict(catalog["platforms"]["ghl"])
+        self.job = copy.deepcopy(self.seed)
+        self.job["scenes"][1]["platform"] = "pretend"
+        with self.assertRaisesRegex(ValidationError, "unsupported scene/platform"):
+            validate(self.job, catalog)
+
+    def test_agent_transcript_rejects_branches_skipped_stages_and_vendor_actions(self):
+        self.job = self.agent_job("codex")
+        c = self.job["scenes"][0]["content"]
+        c["nodes"].append({"id": "off-path", "type": "review", "label": "Extra", "detail": "Sample"})
+        c["edges"].append({"from": "task-1", "to": "off-path"})
+        self.invalid("linear chain")
+        self.job = self.agent_job("claude-code")
+        self.job["scenes"][0]["content"]["nodes"][1]["type"] = "http_request"
+        self.invalid("unsupported action")
+
+    def test_n8n_manual_trigger_and_http_request_are_supported_without_ai_clusters(self):
+        self.job = build.read_json(ROOT / "examples/n8n-inbound-routing.json")
+        self.job["scenes"][0]["content"]["nodes"][0]["type"] = "manual_trigger"
+        self.job["scenes"][0]["content"]["nodes"][1]["type"] = "http_request"
+        validate(self.job, self.catalog)
+        self.job["scenes"][0]["content"]["nodes"][1]["type"] = "chat_model"
+        self.invalid("unsupported action")
+
+    def carousel_job(self):
+        job = copy.deepcopy(self.seed)
+        image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aWQAAAABJRU5ErkJggg=="
+        scene = copy.deepcopy(job["scenes"][-1])
+        scene.update(kind="carousel", platform="workbench", optional=False, statuses=["First photo", "Second photo"])
+        scene["content"] = {"name": "Sample content", "subtitle": "Property preview", "slides": [{"title": "Photo {}".format(i), "body": "Sample property detail", "imageData": image, "alt": "Supplied property photo"} for i in range(2)], "caption": "Sample generated caption", "fields": [{"label": "Status", "value": "For review"}]}
+        job["scenes"] = [job["scenes"][0], scene]
+        return job
+
+    def test_carousel_is_required_visible_proof_and_standalone_inline(self):
+        self.job = self.carousel_job()
+        normalized = validate(self.job, self.catalog)
+        page = build.page(public_job(normalized), self.catalog)
+        self.assertIn('data:image/png;base64,', page)
+        self.assertNotIn('<script src=', page)
+        self.job["scenes"][-1]["optional"] = True
+        self.invalid("visible result/proof")
+
+    def test_carousel_rejects_remote_svg_empty_invalid_and_mismatched_images(self):
+        for value in ("https://private.example/photo.jpg", "file:///private/photo.png", "data:image/svg+xml;base64,PHN2Zz4=", "data:image/png;base64,", "data:image/png;base64,AAAA!", "data:image/jpeg;base64,aGVsbG8=", "data:image/png;base64,iVBORw0KGgoAA"):
+            self.job = self.carousel_job()
+            self.job["scenes"][-1]["content"]["slides"][0]["imageData"] = value
+            self.invalid("image|base64")
+
+    def test_carousel_bounds_statuses_fields_and_platform_compatibility(self):
+        for count in (1, 6):
+            self.job = self.carousel_job()
+            c = self.job["scenes"][-1]["content"]
+            c["slides"] = [c["slides"][0]] * count
+            self.invalid("2..5 slides")
+        self.job = self.carousel_job()
+        self.job["scenes"][-1]["statuses"] = ["One"]
+        self.invalid("one status")
+        for platform in ("ghl", "n8n", "make", "codex", "claude-code"):
+            self.job = self.carousel_job()
+            self.job["scenes"][-1]["platform"] = platform
+            self.invalid("unsupported scene/platform")
+        self.job = self.carousel_job()
+        self.job["scenes"][-1]["content"]["slides"][0]["sourceUrl"] = "https://private.example"
+        self.invalid("unknown fields")
+
+    def test_carousel_image_total_size_and_supported_signatures(self):
+        for mime, raw in (("jpeg", b"\xff\xd8\xffsample"), ("png", b"\x89PNG\r\n\x1a\nsample"), ("webp", b"RIFFsample12WEBP")):
+            if mime == "webp":
+                raw = b"RIFF1234WEBPsample"
+            self.job = self.carousel_job()
+            self.job["scenes"][-1]["content"]["slides"][0]["imageData"] = "data:image/{};base64,".format(mime) + base64.b64encode(raw).decode()
+            validate(self.job, self.catalog)
+        self.job = self.carousel_job()
+        image = "data:image/png;base64," + base64.b64encode(b"\x89PNG\r\n\x1a\n" + b"a" * (1024 * 1024)).decode()
+        for slide in self.job["scenes"][-1]["content"]["slides"]:
+            slide["imageData"] = image
+        self.invalid("2 MiB total")
+        self.job = self.carousel_job()
+        self.job["scenes"][-1]["content"]["caption"] = "x" * 601
+        self.invalid("600 characters")
 
     def test_n8n_if_ports(self):
         self.job = build.read_json(ROOT / "examples/n8n-inbound-routing.json")

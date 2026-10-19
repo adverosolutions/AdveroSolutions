@@ -54,7 +54,7 @@ Each job begins with a required workflow and contains a required outcome or work
 
 `platforms.json` is the available action catalog. A native workflow has one root trigger, 2–12 nodes, a connected acyclic graph, and a sample `runOrder` that follows edges to a terminal node. Unvisited branches stay inactive. n8n If edges require distinct `true`/`false` labels. Unavailable actions and unsupported platforms return `requires_adapter`; no GHL fallback is allowed. Node keys are visual catalog identifiers, not verified import module IDs.
 
-The n8n and Make pilots explicitly request a GoHighLevel destination, so the native HTTP Request handoff and GHL confirmation/result scenes describe both tools. A job with another destination needs that destination's adapter before it can be generated. See `PLATFORMS.md` for supported and reference-only tools.
+The n8n and Make pilots explicitly request a GoHighLevel destination, so the native HTTP Request handoff and GHL confirmation/result scenes describe both tools. A native screen for another destination needs its own adapter. Custom project outputs can use the explicitly labelled workbench; Claude Code/Codex use task transcripts, and carousel previews can include bounded inline photographs. See `PLATFORMS.md` and `extension-contract.md` for current support.
 
 Four seed jobs are test fixtures, never saved Upwork jobs: financial and Skool preserve the V4 stories, while n8n inbound routing and Make order handoff are invented integration briefs. They use distinct accounts, people and paths.
 

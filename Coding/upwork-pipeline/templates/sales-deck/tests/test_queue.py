@@ -80,6 +80,25 @@ class QueueTests(unittest.TestCase):
         env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
         return subprocess.run(command, cwd="/", env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
 
+    def test_archive_preserves_files_blocks_reregistration_and_restores(self):
+        self.ready("alpha")
+        self.add("beta")
+        page = (self.output("alpha") / "page.html").read_bytes()
+        receipt = (self.output("alpha") / "build-report.json").read_bytes()
+        result = self.run_cli("archive", "alpha")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual([j["id"] for j in queue.public_snapshot(self.root)["jobs"]], ["beta"])
+        self.assertEqual((self.output("alpha") / "page.html").read_bytes(), page)
+        self.assertEqual((self.output("alpha") / "build-report.json").read_bytes(), receipt)
+        snapshot, errors = queue.register(self.manifest([self.row("alpha", self.base / "source/alpha/deck-spec.json")]), self.root)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("archived", errors[0])
+        self.assertEqual(len(snapshot["jobs"]), 1)
+        self.assertEqual(self.run_cli("restore", "alpha").returncode, 0)
+        self.assertEqual(self.job(job_id="alpha")["status"], "reviewed_ready")
+        self.assertNotEqual(self.run_cli("restore", "alpha").returncode, 0)
+        self.assertEqual(len(queue.public_snapshot(self.root)["jobs"]), 2)
+
     def test_default_root_and_wrapper_have_no_cwd_dependency(self):
         self.assertEqual(queue.DEFAULT_ROOT, Path.home() / "Desktop/AdveroSolutions/Coding/upwork-pipeline/.local/recording-queue")
         manifest = self.manifest([self.row("alpha")])

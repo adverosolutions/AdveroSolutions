@@ -231,8 +231,11 @@ def register(manifest, root=None):
             errors.append("Row {}: invalid job registration.".format(position))
     with _locked(root) as (root, registry):
         existing = {entry["id"]: entry for entry in registry["jobs"]}
+        archived = {entry["id"] for entry in registry.get("archivedJobs", [])}
         for job_id, entry in rows.items():
-            if job_id in conflicts or job_id in existing and _registration_key(existing[job_id]) != _registration_key(entry):
+            if job_id in archived:
+                errors.append(job_id + ": archived; restore it explicitly before registering again.")
+            elif job_id in conflicts or job_id in existing and _registration_key(existing[job_id]) != _registration_key(entry):
                 errors.append(job_id + ": conflicting registration; existing job preserved.")
             elif job_id not in existing:
                 registry["jobs"].append(entry)
@@ -364,6 +367,38 @@ def reopen(job_id, root=None):
         return _snapshot(registry)
 
 
+def archive(job_id, root=None):
+    """Remove a finished/withdrawn job from the active board, preserving its files."""
+    with _locked(root) as (root, registry):
+        entry = _find(registry, job_id)
+        archived = registry.setdefault("archivedJobs", [])
+        if not isinstance(archived, list) or any(row["id"] == job_id for row in archived):
+            raise ValidationError("invalid or conflicting archive; job preserved")
+        entry["archivedAt"] = _now()
+        registry["jobs"].remove(entry)
+        archived.append(entry)
+        _save(root, registry)
+        return _snapshot(registry)
+
+
+def restore(job_id, root=None):
+    """Return an archived job to the board and recheck its generation identity."""
+    slug(job_id, "id")
+    with _locked(root) as (root, registry):
+        if any(row["id"] == job_id for row in registry["jobs"]):
+            raise ValidationError("job already active; existing job preserved")
+        archived = registry.get("archivedJobs", [])
+        entry = next((row for row in archived if row["id"] == job_id), None)
+        if entry is None:
+            raise ValidationError("unknown archived job")
+        archived.remove(entry)
+        entry.pop("archivedAt", None)
+        registry["jobs"].append(entry)
+        _refresh(root, registry)
+        _save(root, registry)
+        return _snapshot(registry)
+
+
 def _print(snapshot, as_json=False):
     if as_json:
         print(json.dumps(snapshot, ensure_ascii=False))
@@ -376,14 +411,14 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root")
     commands = parser.add_subparsers(dest="command", required=True)
-    for name in ("register", "build", "review", "status", "recorded", "reopen", "serve", "start"):
+    for name in ("register", "build", "review", "status", "recorded", "reopen", "archive", "restore", "serve", "start"):
         sub = commands.add_parser(name)
         sub.add_argument("--root", default=argparse.SUPPRESS)
         if name == "register":
             sub.add_argument("manifest")
         elif name == "build":
             sub.add_argument("ids", nargs="*")
-        elif name in ("review", "recorded", "reopen"):
+        elif name in ("review", "recorded", "reopen", "archive", "restore"):
             sub.add_argument("id")
         if name == "review":
             sub.add_argument("--verdict", choices=("approve", "reject"), required=True)
@@ -408,6 +443,10 @@ def main(argv=None):
             snapshot = recorded(args.id, args.loom, args.root)
         elif args.command == "reopen":
             snapshot = reopen(args.id, args.root)
+        elif args.command == "archive":
+            snapshot = archive(args.id, args.root)
+        elif args.command == "restore":
+            snapshot = restore(args.id, args.root)
         elif args.command == "status":
             snapshot = public_snapshot(args.root)
         else:

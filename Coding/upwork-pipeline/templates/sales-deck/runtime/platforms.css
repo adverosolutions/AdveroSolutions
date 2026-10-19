@@ -92,3 +92,21 @@
 @media(prefers-reduced-motion:reduce){.sales-workflow .sp-node,.sales-workflow .sp-node-core,.sales-workflow .sp-lines path{transition:none}}
 
 .sales-workflow .sp-context>:first-child{margin-top:auto}.sales-workflow .sp-context>:last-child{margin-bottom:auto}
+/* Agent tasks are a terminal transcript, never a node canvas. */
+.sales-workflow.sp-agent .sp-workspace{grid-template-columns:minmax(0,1fr) 300px;background:#f9fafb}
+.sales-workflow .sp-transcript{min-width:0;max-height:610px;overflow:auto;overscroll-behavior:contain;position:relative;padding:20px;background:#101828;color:#f9fafb;scrollbar-width:thin}
+.sales-workflow .sp-terminal-head{padding:0 0 18px;border-bottom:1px solid #667085;font-size:13px;overflow-wrap:anywhere}
+.sales-workflow .sp-terminal-head>span{color:#12b76a;font-weight:700}
+.sales-workflow .sp-terminal-head small{display:block;font-size:10px;color:#d0d5dd;margin-top:8px}
+.sales-workflow .sp-task{display:flex;gap:12px;align-items:flex-start;padding:18px 0;border-bottom:1px solid #667085;opacity:.28;transition:opacity .2s;overflow-wrap:anywhere}
+.sales-workflow .sp-task.active{opacity:1}
+.sales-workflow .sp-task.is-current{background:#ffffff08}
+.sales-workflow .sp-task>div{min-width:0;flex:1}
+.sales-workflow .sp-task small{display:block;color:#d0d5dd;font-size:10px;margin-bottom:6px}
+.sales-workflow .sp-task b{font-size:13px;font-weight:600;line-height:1.5}
+.sales-workflow .sp-task p{font-size:12px;line-height:1.6;color:#d0d5dd;white-space:pre-line;margin:7px 0 0}
+.sales-workflow .sp-task-check{flex:none;width:17px;color:#12b76a;visibility:hidden;font-size:13px}
+.sales-workflow .sp-task.active .sp-task-check{visibility:visible}
+.sales-workflow .sp-task-index{font-size:10px;color:#d0d5dd;flex:none;margin-top:3px}
+@media(max-width:760px){.sales-workflow.sp-agent .sp-workspace{display:flex;flex-direction:column}.sales-workflow .sp-transcript{width:100%;box-sizing:border-box;height:400px;max-height:400px;flex:none;padding:16px}.sales-workflow .sp-task{padding:15px 0}}
+@media(prefers-reduced-motion:reduce){.sales-workflow .sp-task{transition:none}}

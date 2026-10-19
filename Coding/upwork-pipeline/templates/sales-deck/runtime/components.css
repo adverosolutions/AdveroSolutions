@@ -25,3 +25,34 @@
   .chapter-dot { max-width: 135px; }
   .contact-title { min-width: 0; }
 }
+/* Custom/project outputs share content components with explicit workspace chrome. */
+.project-output{min-width:0;max-width:100%;overflow:hidden}
+.project-output .gbody{min-width:0;width:100%;overflow:hidden}
+.project-output .gtop{gap:12px;min-width:0}
+.project-output .gtop strong{overflow-wrap:anywhere}
+.project-output .po-sample{margin-left:auto;color:#667085;font-size:10px;white-space:nowrap}
+@media(max-width:760px){.project-output .gtop{height:auto;min-height:43px;padding:9px 12px}.project-output .gtop strong{font-size:12px}.project-output .native-tabs{gap:12px;padding:0 10px}.project-output .po-sample{font-size:9px}.project-output .gbody>.content{max-height:650px;overflow:auto;overscroll-behavior:contain}.project-output .conversation-layout,.project-output .email-layout{min-width:0;max-width:100%}}
+/* Workbench carousel: supplied photos and approval copy, never vendor chrome. */
+.carousel-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;flex:1;min-height:0;min-width:0;overflow:auto;padding:18px 22px;background:#f9fafb}
+.carousel-preview{display:flex;flex-direction:column;gap:12px;min-height:0;min-width:0;max-width:100%}
+.carousel-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;color:#475467}
+.carousel-toolbar strong{overflow-wrap:anywhere;min-width:0}
+#carouselCount{flex:none;font-size:11px;color:#667085}
+.carousel-slide{position:relative;flex:1;min-height:250px;width:100%;max-width:440px;margin:0 auto;border-radius:12px;overflow:hidden;background:#eaecf0;isolation:isolate}
+.carousel-slide>img{position:absolute;width:100%;height:100%;inset:0;object-fit:cover}
+.carousel-copy{position:absolute;left:18px;right:18px;bottom:18px;padding:18px;background:#155eef;color:#fff;border-radius:9px;max-height:65%;overflow:auto;box-sizing:border-box}
+.carousel-copy .eyebrow{color:#fff;font-size:9px;letter-spacing:.1em}
+.carousel-copy h3{font-size:24px;line-height:1.12;letter-spacing:-.025em;margin:8px 0 0;font-weight:600;overflow-wrap:anywhere}
+.carousel-copy p{font-size:12px;line-height:1.5;margin:9px 0 0;white-space:pre-line;overflow-wrap:anywhere}
+.carousel-thumbnails{display:flex;justify-content:center;gap:8px;flex:none;min-width:0}
+.carousel-thumb{position:relative;width:48px;height:46px;border:2px solid transparent;border-radius:7px;overflow:hidden;opacity:.48;flex:none}
+.carousel-thumb.active{border-color:#155eef;opacity:1}
+.carousel-thumb img{display:block;width:100%;height:100%;object-fit:cover}
+.carousel-thumb span{position:absolute;right:2px;bottom:2px;background:#fff;color:#155eef;border-radius:3px;font-size:9px;padding:1px 4px}
+.carousel-caption{min-width:0;padding:17px 18px;background:#fff;border:1px solid #eaecf0;border-radius:12px;overflow:auto}
+.carousel-caption h3{font-size:17px;line-height:1.25;margin:9px 0 15px;font-weight:600}
+.carousel-caption>p{font-size:13px;line-height:1.65;color:#475467;white-space:pre-line;overflow-wrap:anywhere;margin:0 0 20px}
+.carousel-caption .field-row{font-size:11px}
+.carousel-caption .notice{font-size:10px}
+@media(min-width:761px) and (max-width:1100px){.carousel-layout{grid-template-columns:minmax(0,1fr) 250px;gap:15px;padding:15px}.carousel-copy{padding:14px;left:12px;right:12px;bottom:12px}.carousel-copy h3{font-size:21px}}
+@media(max-width:760px){.carousel-layout{display:flex;flex-direction:column;padding:14px 12px;gap:18px;overflow:hidden}.carousel-preview{flex:none;width:100%}.carousel-slide{flex:none;height:420px;min-height:0;max-width:100%}.carousel-copy{left:14px;right:14px;bottom:14px;padding:16px}.carousel-copy h3{font-size:23px}.carousel-caption{overflow:visible;padding:17px}.carousel-caption>p{font-size:13px}.carousel-thumb{width:43px;height:42px}}

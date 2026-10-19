@@ -34,7 +34,7 @@
   let timers = [];
   let generation = 0;
   const motion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
-  const sceneLabels = { workflow: 'The workflow', record: 'Capture', messages: 'Messages', outcome: 'The result', workshop: 'The result' };
+  const sceneLabels = { workflow: 'The workflow', record: 'Capture', messages: 'Messages', outcome: 'The result', workshop: 'The result', carousel: 'Content preview' };
   const routes = () => [
     { id: 'cover', kind: 'cover', ...job.cover },
     ...job.scenes.filter(scene => duration === '3' || !scene.optional),
@@ -51,7 +51,13 @@
     timers = [];
   }
 
-  function native(title, active, tabs, body) {
+  function native(scene, title, active, tabs, body) {
+    if (scene.platform !== 'ghl') {
+      const names = { workbench: 'Custom project workspace', 'claude-code': 'Claude Code · project output', codex: 'Codex · project output' };
+      if (!Object.prototype.hasOwnProperty.call(names, scene.platform) || !['record', 'messages', 'outcome', ...(scene.platform === 'workbench' ? ['carousel'] : [])].includes(scene.kind)) throw new Error('Unsupported project output adapter.');
+      const labels = { record: ['Project record', 'Activity'], messages: ['Drafts and notes', 'Review'], outcome: ['Project result', 'Evidence'], carousel: ['Content approval', 'Carousel preview'] };
+      return `<div class="native project-output po-${esc(scene.platform)}" data-platform="${esc(scene.platform)}"><div class="gbody"><div class="gtop"><strong>${names[scene.platform]}</strong><span class="location">${esc(job.account.name)}</span><span class="me">${esc(job.account.operatorInitials)}</span></div><div class="native-tabs">${labels[scene.kind].map((label, index) => `<span class="${index === 0 ? 'active' : ''}">${label}</span>`).join('')}<span class="po-sample">Illustrative sample</span></div>${body}</div></div>`;
+    }
     return `<div class="native"><aside class="gnav" aria-label="GoHighLevel navigation">
       <div class="acct">${esc(job.account.initials)}</div>
       ${Object.keys(paths).map(key => `<div class="ni ${active === key ? 'active' : ''}" title="${esc(key)}">${icon(key)}</div>`).join('')}
@@ -83,7 +89,7 @@
 
   function record(scene) {
     const content = scene.content;
-    return native('Contacts', 'contact', ['Contact', 'Activity'], `<div class="content"><div class="two-col">
+    return native(scene, 'Contacts', 'contact', ['Contact', 'Activity'], `<div class="content"><div class="two-col">
       <div class="source-card"><div class="record-heading"><strong>${esc(content.sourceTitle)}</strong></div>
       ${contact(content)}<hr class="rule">${fields(content.sourceFields)}<div class="notice" data-step="0">${esc(content.notice)}</div></div>
       <div class="record-card">${contact(content)}${fields(content.fields)}<div class="event-list">${content.events.map(event).join('')}</div></div>
@@ -101,13 +107,13 @@
     // Outgoing email sequences retain the approved email-preview interior.
     const emailOnly = content.items.every(item => item.channel === 'email' && item.direction === 'outgoing');
     if (emailOnly) {
-      return native('Conversations', 'conversation', ['Conversations', 'Email templates'], `<div class="email-layout">
+      return native(scene, 'Conversations', 'conversation', ['Conversations', 'Email templates'], `<div class="email-layout">
         <aside class="inbox-list"><div class="inbox-title">Email sequence</div>${content.items.map((item, index) => `<div class="template-item ${index === 0 ? 'active' : ''}" data-template="${index}">${esc(item.subject || item.channel)}<small>${esc(item.time)}</small></div>`).join('')}</aside>
         <div class="email-preview"><div class="email-envelope" id="emailEnvelope"></div><div class="email-paper" id="emailPaper"></div></div>
         <aside class="email-side"><h4>${esc(content.name)}</h4>${fields(content.fields)}<div class="event-list">${content.items.map((item, index) => event({ title: item.subject || item.channel, detail: `${item.sender} · ${item.time}` }, index)).join('')}</div>
         <div class="notice green" data-step="${content.items.length - 1}">${esc(content.notice)}</div></aside></div>`);
     }
-    return native('Conversations', 'conversation', ['Conversations', 'Manual Actions', 'Snippets'], `<div class="conversation-layout">
+    return native(scene, 'Conversations', 'conversation', ['Conversations', 'Manual Actions', 'Snippets'], `<div class="conversation-layout">
       <aside class="inbox-list"><div class="inbox-title">All conversations</div><div class="inbox-item">${avatar(initials(content.name))}<div><b>${esc(content.name)}</b><small>${esc(content.subtitle)}</small></div></div></aside>
       <div class="thread"><div class="thread-top"><span>${esc(content.name)}</span>${badge([...new Set(content.items.map(item => item.channel.toUpperCase()))].join(' + '))}</div>${content.items.map(message).join('')}</div>
       <aside class="contact-side">${contact(content)}${fields(content.fields)}<div class="notice green" data-step="${content.items.length - 1}">${esc(content.notice)}</div></aside></div>`);
@@ -116,7 +122,7 @@
   function outcome(scene) {
     const content = scene.content;
     const proof = content.proof;
-    return native('Dashboard', 'dashboard', ['Overview', 'Attribution'], `<div class="content"><div class="outcome-grid"><div>
+    return native(scene, 'Dashboard', 'dashboard', ['Overview', 'Attribution'], `<div class="content"><div class="outcome-grid"><div>
       <div class="table-toolbar"><strong>${esc(content.name)}</strong>${badge('Illustrative sample', 'gray')}</div>
       <div class="metrics">${content.metrics.map((metric, index) => `<div class="metric" data-step="${index}"><small>${esc(metric.label)}</small><b>${esc(metric.value)}</b><small>${esc(metric.note)}</small></div>`).join('')}</div>
       <div class="record-strip">${avatar(initials(content.name))}<div><b>${esc(content.name)}</b><small>${esc(content.subtitle)}</small></div><span id="outcomeStage" class="badge green"></span></div>
@@ -127,7 +133,7 @@
 
   function workshop(scene) {
     const content = scene.content;
-    return native('Contacts', 'contact', [content.name, 'Activity', 'Workshop history'], `<div class="content"><div class="workshop-result">
+    return native(scene, 'Contacts', 'contact', [content.name, 'Activity', 'Workshop history'], `<div class="content"><div class="workshop-result">
       <div class="workshop-card">${contact(content)}<div class="event-list">${content.events.map(event).join('')}</div>
       <div class="attendance-email" data-step="${Math.max(1, content.events.length - 1)}"><h4>${esc(content.followup.subject)}</h4><p>${esc(content.followup.body)}</p></div>
       <div class="notice green" data-step="${stepCount(scene) - 1}">${esc(content.historyNote)}</div></div>
@@ -136,12 +142,32 @@
       <div class="notice" id="registrationNote"></div><div class="tiny" id="historyNote">${esc(content.historyNote)}</div></div></div></div>`);
   }
 
+  function carousel(scene) {
+    const content = scene.content;
+    let total = 0;
+    if (!Array.isArray(content.slides) || content.slides.length < 2 || content.slides.length > 5 || scene.statuses.length !== content.slides.length) throw new Error('Carousel requires 2–5 slides and one status per slide.');
+    content.slides.forEach(slide => {
+      const value = slide.imageData;
+      const match = typeof value === 'string' && value.length <= 2800000 && /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/.exec(value);
+      if (!match || match[2].length % 4) throw new Error('Invalid inline carousel image.');
+      let raw;
+      try { raw = window.atob(match[2]); } catch (_) { throw new Error('Invalid carousel image base64.'); }
+      const valid = match[1] === 'jpeg' ? raw.startsWith('\xff\xd8\xff') : match[1] === 'png' ? raw.startsWith('\x89PNG\r\n\x1a\n') : raw.length >= 12 && raw.slice(0, 4) === 'RIFF' && raw.slice(8, 12) === 'WEBP';
+      total += raw.length;
+      if (!raw.length || !valid || total > 2 * 1024 * 1024) throw new Error('Carousel image MIME signature or total size is invalid.');
+    });
+    const first = content.slides[0];
+    return native(scene, '', '', [], `<div class="carousel-layout"><section class="carousel-preview" aria-label="Custom carousel preview"><div class="carousel-toolbar"><strong>${esc(content.name)}</strong><span id="carouselCount" aria-live="polite"></span></div><div class="carousel-slide"><img id="carouselImage" src="${esc(first.imageData)}" alt="${esc(first.alt)}"><div class="carousel-copy"><span class="eyebrow">${esc(content.subtitle)}</span><h3 id="carouselTitle"></h3><p id="carouselBody"></p></div></div><div class="carousel-thumbnails" aria-label="Carousel slide sequence">${content.slides.map((slide, index) => `<div class="carousel-thumb" data-carousel-thumb="${index}"><img src="${esc(slide.imageData)}" alt=""><span>${index + 1}</span></div>`).join('')}</div></section><aside class="carousel-caption"><span class="eyebrow">Social caption</span><h3>Ready for your review</h3><p>${esc(content.caption)}</p>${fields(content.fields)}<div class="notice">Custom content approval preview · Illustrative sample</div></aside></div>`);
+  }
+
   function sceneBody(scene) {
+    const compatible = { ghl: ['workflow', 'record', 'messages', 'outcome', 'workshop'], n8n: ['workflow'], make: ['workflow'], workbench: ['record', 'messages', 'outcome', 'carousel'], 'claude-code': ['workflow', 'record', 'messages', 'outcome'], codex: ['workflow', 'record', 'messages', 'outcome'] };
+    if (!Object.prototype.hasOwnProperty.call(compatible, scene.platform) || !compatible[scene.platform].includes(scene.kind)) throw new Error('Unsupported scene/platform combination.');
     if (scene.kind === 'workflow') {
       if (!window.SalesPlatforms) throw new Error('Workflow adapters are unavailable.');
       return window.SalesPlatforms.renderWorkflow(scene, job);
     }
-    return { record, messages, outcome, workshop }[scene.kind](scene);
+    return { record, messages, outcome, workshop, carousel }[scene.kind](scene);
   }
 
   function stepCount(scene) {
@@ -150,6 +176,7 @@
     const visibleSteps = {
       workflow: () => content.runOrder.length,
       record: () => content.events.length,
+      carousel: () => content.slides.length,
       messages: () => content.items.length,
       outcome: () => Math.max(content.stageSequence.length, content.metrics.length),
       workshop: () => Math.max(3, content.events.length + 1)
@@ -166,6 +193,17 @@
       query('#emailEnvelope', stage).innerHTML = `<b>From:</b> ${esc(item.sender)} <span>•</span> <b>Subject:</b> ${esc(item.subject)}`;
       query('#emailPaper', stage).innerHTML = `<span class="eyebrow">${esc(item.time)}</span><h3>${esc(item.subject)}</h3><p>${esc(item.body).replace(/\n/g, '<br>')}</p>`;
       stage.querySelectorAll('[data-template]').forEach(element => element.classList.toggle('active', Number(element.dataset.template) === Math.min(index, scene.content.items.length - 1)));
+    }
+    if (scene.kind === 'carousel') {
+      const position = Math.min(Math.max(0, index), scene.content.slides.length - 1);
+      const slide = scene.content.slides[position];
+      const image = query('#carouselImage', stage);
+      image.src = slide.imageData;
+      image.alt = slide.alt;
+      query('#carouselTitle', stage).textContent = slide.title;
+      query('#carouselBody', stage).textContent = slide.body;
+      query('#carouselCount', stage).textContent = `${position + 1} / ${scene.content.slides.length}`;
+      stage.querySelectorAll('[data-carousel-thumb]').forEach(element => element.classList.toggle('active', Number(element.dataset.carouselThumb) === position));
     }
     if (scene.kind === 'outcome') {
       const position = scene.content.stageSequence[Math.min(index, scene.content.stageSequence.length - 1)];

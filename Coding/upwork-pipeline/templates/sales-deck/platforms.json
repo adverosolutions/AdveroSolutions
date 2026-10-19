@@ -83,7 +83,14 @@
           "color": "#155eef",
           "available": true
         }
-      }
+      },
+      "sceneKinds": [
+        "workflow",
+        "record",
+        "messages",
+        "outcome",
+        "workshop"
+      ]
     },
     "n8n": {
       "name": "n8n",
@@ -97,7 +104,8 @@
         "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.httprequest/",
         "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.slack/",
         "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.gmail/",
-        "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.googlesheets/"
+        "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.googlesheets/",
+        "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.manualworkflowtrigger/"
       ],
       "actions": {
         "webhook": {
@@ -167,8 +175,18 @@
           "color": "#7d65c1",
           "available": false,
           "reason": "AI cluster subnode connectors are not supported in schemaVersion 1."
+        },
+        "manual_trigger": {
+          "label": "Manual Trigger",
+          "kind": "trigger",
+          "icon": "bolt",
+          "color": "#ef6b53",
+          "available": true
         }
-      }
+      },
+      "sceneKinds": [
+        "workflow"
+      ]
     },
     "make": {
       "name": "Make",
@@ -232,7 +250,140 @@
           "available": true,
           "app": "HTTP"
         }
+      },
+      "sceneKinds": [
+        "workflow"
+      ]
+    },
+    "claude-code": {
+      "name": "Claude Code",
+      "status": "supported",
+      "layout": "transcript",
+      "sceneKinds": [
+        "workflow",
+        "record",
+        "messages",
+        "outcome"
+      ],
+      "sources": [
+        "https://code.claude.com/docs/en/overview"
+      ],
+      "actions": {
+        "prompt": {
+          "label": "Task prompt",
+          "kind": "trigger",
+          "icon": "chat",
+          "color": "#155eef",
+          "available": true
+        },
+        "read": {
+          "label": "Read project context",
+          "kind": "action",
+          "icon": "grid",
+          "color": "#155eef",
+          "available": true
+        },
+        "edit": {
+          "label": "Write project artifact",
+          "kind": "action",
+          "icon": "edit",
+          "color": "#155eef",
+          "available": true
+        },
+        "command": {
+          "label": "Run command",
+          "kind": "action",
+          "icon": "bolt",
+          "color": "#155eef",
+          "available": true
+        },
+        "review": {
+          "label": "Review output",
+          "kind": "action",
+          "icon": "briefcase",
+          "color": "#155eef",
+          "available": true
+        },
+        "result": {
+          "label": "Return result",
+          "kind": "action",
+          "icon": "briefcase",
+          "color": "#155eef",
+          "available": true
+        }
+      },
+      "referencePath": "../../jobs/_examples/finished-claude-code.html"
+    },
+    "codex": {
+      "name": "Codex",
+      "status": "supported",
+      "layout": "transcript",
+      "sceneKinds": [
+        "workflow",
+        "record",
+        "messages",
+        "outcome"
+      ],
+      "sources": [
+        "https://learn.chatgpt.com/docs/codex/cli"
+      ],
+      "actions": {
+        "prompt": {
+          "label": "Task prompt",
+          "kind": "trigger",
+          "icon": "chat",
+          "color": "#155eef",
+          "available": true
+        },
+        "read": {
+          "label": "Read project context",
+          "kind": "action",
+          "icon": "grid",
+          "color": "#155eef",
+          "available": true
+        },
+        "edit": {
+          "label": "Write project artifact",
+          "kind": "action",
+          "icon": "edit",
+          "color": "#155eef",
+          "available": true
+        },
+        "command": {
+          "label": "Run command",
+          "kind": "action",
+          "icon": "bolt",
+          "color": "#155eef",
+          "available": true
+        },
+        "review": {
+          "label": "Review output",
+          "kind": "action",
+          "icon": "briefcase",
+          "color": "#155eef",
+          "available": true
+        },
+        "result": {
+          "label": "Return result",
+          "kind": "action",
+          "icon": "briefcase",
+          "color": "#155eef",
+          "available": true
+        }
       }
+    },
+    "workbench": {
+      "name": "Custom project workspace",
+      "status": "supported",
+      "layout": "project",
+      "sceneKinds": [
+        "record",
+        "messages",
+        "outcome",
+        "carousel"
+      ],
+      "sources": [],
+      "actions": {}
     }
   },
   "referenceOnly": {
@@ -250,11 +401,6 @@
       "name": "ClickUp",
       "status": "reference_only",
       "referencePath": "../../jobs/_examples/finished-clickup.html"
-    },
-    "claude-code": {
-      "name": "Claude Code",
-      "status": "reference_only",
-      "referencePath": "../../jobs/_examples/finished-claude-code.html"
     },
     "cold-email": {
       "name": "Cold email",

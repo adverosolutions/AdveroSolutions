@@ -1,4 +1,6 @@
 """Strict, data-only sales demonstration schema (Python 3.9+)."""
+import base64
+import binascii
 import copy
 import math
 import re
@@ -189,7 +191,7 @@ def validate(spec, catalog):
         content(scene, platform, p)
     if scenes[0]["kind"] != "workflow" or scenes[0]["optional"]:
         fail("scenes", "first scene must be a required workflow")
-    results = [x for x in scenes if x["kind"] in ("outcome", "workshop") and not x["optional"]]
+    results = [x for x in scenes if x["kind"] in ("outcome", "workshop", "carousel") and not x["optional"]]
     if not results:
         fail("scenes", "requires a visible result/proof scene on every route")
     return s
@@ -199,8 +201,15 @@ def content(scene, platform, path):
     c, kind = scene["content"], scene["kind"]
     p = path + ".content"
     shared = ("name", "subtitle")
-    if kind != "workflow" and scene["platform"] != "ghl":
-        fail(path, "requires_adapter: non-workflow scenes currently require ghl")
+    compatible = {
+        "ghl": ("workflow", "record", "messages", "outcome", "workshop"),
+        "n8n": ("workflow",), "make": ("workflow",),
+        "workbench": ("record", "messages", "outcome", "carousel"),
+        "claude-code": ("workflow", "record", "messages", "outcome"),
+        "codex": ("workflow", "record", "messages", "outcome"),
+    }
+    if kind not in compatible.get(scene["platform"], ()):
+        fail(path, "requires_adapter: unsupported scene/platform combination")
     if kind == "workflow":
         obj(c, p, ("name", "nodes", "edges", "runOrder", "context", "related"))
         text(c["name"], p + ".name")
@@ -266,6 +275,9 @@ def content(scene, platform, path):
             fail(p + ".runOrder", "must contain unique existing node ids")
         if any((a, b) not in pairs for a, b in zip(order, order[1:])):
             fail(p + ".runOrder", "sample path must follow edges")
+        if scene["platform"] in ("claude-code", "codex"):
+            if len(order) != len(ids) or len(edges) != len(ids) - 1 or any(len(adjacency[n]) > 1 for n in ids):
+                fail(p, "agent transcript requires one linear chain containing every task stage")
         if len(scene["statuses"]) != len(order):
             fail(path + ".statuses", "one status required per runOrder step")
         ctx = c["context"]
@@ -305,6 +317,38 @@ def content(scene, platform, path):
         text(c["note"], p + ".note")
         if "proof" in c:
             rows([c["proof"]], p + ".proof", ("label", "value", "description", "sourceNote"))
+    elif kind == "carousel":
+        obj(c, p, shared + ("slides", "caption", "fields"))
+        c["caption"] = text(c["caption"], p + ".caption")
+        c["fields"] = rows(c["fields"], p + ".fields", ("label", "value"))
+        slides = c["slides"]
+        if not isinstance(slides, list) or not 2 <= len(slides) <= 5:
+            fail(p + ".slides", "expected 2..5 slides")
+        if len(scene["statuses"]) != len(slides):
+            fail(path + ".statuses", "one status required per carousel slide")
+        total_bytes = 0
+        for i, slide in enumerate(slides):
+            sp = p + ".slides[{}]".format(i)
+            obj(slide, sp, ("title", "body", "imageData", "alt"))
+            for k in ("title", "body", "alt"):
+                slide[k] = text(slide[k], sp + "." + k)
+            value = slide["imageData"]
+            if not isinstance(value, str) or len(value) > 2800000:
+                fail(sp + ".imageData", "image exceeds inline image size limit")
+            match = re.fullmatch(r"data:image/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})", value)
+            if not match:
+                fail(sp + ".imageData", "expected inline base64 JPEG, PNG or WebP image")
+            try:
+                raw = base64.b64decode(match.group(2), validate=True)
+            except (binascii.Error, ValueError):
+                fail(sp + ".imageData", "invalid image base64")
+            mime = match.group(1)
+            valid = (mime == "jpeg" and raw.startswith(b"\xff\xd8\xff")) or (mime == "png" and raw.startswith(b"\x89PNG\r\n\x1a\n")) or (mime == "webp" and len(raw) >= 12 and raw[:4] == b"RIFF" and raw[8:12] == b"WEBP")
+            if not raw or not valid:
+                fail(sp + ".imageData", "image MIME signature mismatch")
+            total_bytes += len(raw)
+            if total_bytes > 2 * 1024 * 1024:
+                fail(p + ".slides", "decoded carousel images exceed 2 MiB total")
     elif kind == "workshop":
         obj(c, p, shared + ("current", "next", "events", "followup", "reusable", "historyNote"))
         for k in ("current", "next"):
