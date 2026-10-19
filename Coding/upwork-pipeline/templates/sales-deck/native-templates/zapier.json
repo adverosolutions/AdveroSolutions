@@ -1,0 +1,743 @@
+{
+  "schemaVersion": 1,
+  "id": "native-zapier",
+  "title": "zapier native template review",
+  "systemName": "Each new enquiry,",
+  "account": {
+    "name": "Northstar Home Services",
+    "initials": "NH",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "fixture:native-zapier",
+    "facts": [
+      "Invented template acceptance fixture; not a saved Upwork job."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "name": "Avery Morgan",
+      "email": "avery.morgan@example.com",
+      "phone": "+1 (512) 555-0148"
+    },
+    "owner": {
+      "name": "Maya Chen"
+    },
+    "deal": {
+      "value": "$8,450.00"
+    }
+  },
+  "cover": {
+    "eyebrow": "Prepared for Northstar Home Services",
+    "title": "Each new enquiry,",
+    "accent": "logged and acknowledged.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Visual Zap editor",
+      "Real Zapier action names",
+      "Mapped test output"
+    ],
+    "previewSteps": [
+      {
+        "title": "The setup",
+        "detail": "The native screen and the exact sample input."
+      },
+      {
+        "title": "The result",
+        "detail": "The record, message or document the team receives."
+      },
+      {
+        "title": "The next step",
+        "detail": "Agree the account details on a 15-minute call."
+      }
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "footer": "Template review · Illustrative sample"
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Measure the result",
+    "accent": "against your baseline.",
+    "caption": "Agree the starting point and the target before rollout.",
+    "metrics": [
+      {
+        "name": "Manual handling",
+        "direction": "down",
+        "aim": "Reduce manual steps",
+        "definition": "Count the steps a team member completes for each enquiry."
+      },
+      {
+        "name": "Complete records",
+        "direction": "up",
+        "aim": "Capture the required details",
+        "definition": "Track enquiries with all fields required by the next team member."
+      },
+      {
+        "name": "Time to useful output",
+        "direction": "down",
+        "aim": "Return the result sooner",
+        "definition": "Measure elapsed time from receiving the input to a usable output."
+      }
+    ],
+    "baselineNote": "Directional goals. These are not measured performance results.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "Reply here and I'll send times for a 15-minute call."
+  },
+  "scenes": [
+    {
+      "id": "zapier-editor",
+      "kind": "native",
+      "platform": "zapier",
+      "title": "The enquiry becomes a row and an email.",
+      "caption": "Catch Hook receives the enquiry. Google Sheets records it, then Email by Zapier sends the acknowledgement.",
+      "beat": "Catch Hook receives the enquiry. Google Sheets records it, then Email by Zapier sends the acknowledgement.",
+      "details": [
+        "Catch Hook receives the enquiry. Google Sheets records it, then Email by Zapier sends the acknowledgement."
+      ],
+      "optional": false,
+      "content": {
+        "name": "New enquiry follow-up",
+        "subtitle": "Illustrative sample",
+        "surface": "editor",
+        "graph": {
+          "name": "New enquiry follow-up",
+          "nodes": [
+            {
+              "id": "capture",
+              "type": "webhook",
+              "label": "Catch Hook",
+              "detail": "Avery enquiry received"
+            },
+            {
+              "id": "row",
+              "type": "sheets",
+              "label": "Create Spreadsheet Row",
+              "detail": "row = 42 - Avery Morgan"
+            },
+            {
+              "id": "email",
+              "type": "email",
+              "label": "Send Outbound Email",
+              "detail": "Acknowledgement sent to avery.morgan@example.com"
+            }
+          ],
+          "edges": [
+            {
+              "to": "row",
+              "from": "capture"
+            },
+            {
+              "to": "email",
+              "from": "row"
+            }
+          ],
+          "runOrder": [
+            "capture",
+            "row",
+            "email"
+          ],
+          "context": {
+            "name": "{{lead.name}}",
+            "subtitle": "Replacement estimate",
+            "fields": [
+              {
+                "label": "Email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "Opportunity value",
+                "value": "{{deal.value}}"
+              }
+            ],
+            "states": [
+              "Avery enquiry received",
+              "row = 42 - Avery Morgan",
+              "Acknowledgement sent to avery.morgan@example.com"
+            ]
+          },
+          "related": []
+        },
+        "inspectors": [
+          {
+            "node": "capture",
+            "input": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "estimate_value",
+                "value": "8450"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Webhook",
+                "value": "Northstar estimate enquiry"
+              }
+            ],
+            "output": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "estimate_value",
+                "value": "8450"
+              }
+            ]
+          },
+          {
+            "node": "row",
+            "input": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "estimate_value",
+                "value": "8450"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Spreadsheet",
+                "value": "Northstar enquiries"
+              },
+              {
+                "label": "Worksheet",
+                "value": "Replacement estimates"
+              },
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "estimate_value",
+                "value": "8450"
+              }
+            ],
+            "output": [
+              {
+                "label": "Row",
+                "value": "42"
+              },
+              {
+                "label": "Name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "Email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "Estimate value",
+                "value": "8450"
+              }
+            ]
+          },
+          {
+            "node": "email",
+            "input": [
+              {
+                "label": "To",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "Subject",
+                "value": "Your replacement estimate request"
+              },
+              {
+                "label": "Body",
+                "value": "Hey Avery, I have your replacement estimate request. Maya will contact you to confirm a visit time."
+              }
+            ],
+            "parameters": [
+              {
+                "label": "To",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "Subject",
+                "value": "Your replacement estimate request"
+              },
+              {
+                "label": "Body",
+                "value": "Hey Avery, I have your replacement estimate request. Maya will contact you to confirm a visit time."
+              }
+            ],
+            "output": [
+              {
+                "label": "Message ID",
+                "value": "sample-email-1042"
+              },
+              {
+                "label": "Status",
+                "value": "Sent (illustrative sample)"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "row"
+      },
+      "statuses": [
+        "Hook sample received",
+        "Spreadsheet row 42 created",
+        "Acknowledgement sample ready"
+      ]
+    },
+    {
+      "id": "zapier-test",
+      "kind": "native",
+      "platform": "zapier",
+      "title": "Trace the estimate value into row 42.",
+      "caption": "The input and created row both contain Avery, the email address and the $8,450 estimate value.",
+      "beat": "The input and created row both contain Avery, the email address and the $8,450 estimate value.",
+      "details": [
+        "The input and created row both contain Avery, the email address and the $8,450 estimate value."
+      ],
+      "optional": false,
+      "content": {
+        "name": "New enquiry follow-up",
+        "subtitle": "Illustrative sample",
+        "surface": "test",
+        "graph": {
+          "name": "New enquiry follow-up",
+          "nodes": [
+            {
+              "id": "capture",
+              "type": "webhook",
+              "label": "Catch Hook",
+              "detail": "Avery enquiry received"
+            },
+            {
+              "id": "row",
+              "type": "sheets",
+              "label": "Create Spreadsheet Row",
+              "detail": "row = 42 - Avery Morgan"
+            },
+            {
+              "id": "email",
+              "type": "email",
+              "label": "Send Outbound Email",
+              "detail": "Acknowledgement sent to avery.morgan@example.com"
+            }
+          ],
+          "edges": [
+            {
+              "to": "row",
+              "from": "capture"
+            },
+            {
+              "to": "email",
+              "from": "row"
+            }
+          ],
+          "runOrder": [
+            "capture",
+            "row",
+            "email"
+          ],
+          "context": {
+            "name": "{{lead.name}}",
+            "subtitle": "Replacement estimate",
+            "fields": [
+              {
+                "label": "Email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "Opportunity value",
+                "value": "{{deal.value}}"
+              }
+            ],
+            "states": [
+              "Avery enquiry received",
+              "row = 42 - Avery Morgan",
+              "Acknowledgement sent to avery.morgan@example.com"
+            ]
+          },
+          "related": []
+        },
+        "inspectors": [
+          {
+            "node": "capture",
+            "input": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "estimate_value",
+                "value": "8450"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Webhook",
+                "value": "Northstar estimate enquiry"
+              }
+            ],
+            "output": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "estimate_value",
+                "value": "8450"
+              }
+            ]
+          },
+          {
+            "node": "row",
+            "input": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "estimate_value",
+                "value": "8450"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Spreadsheet",
+                "value": "Northstar enquiries"
+              },
+              {
+                "label": "Worksheet",
+                "value": "Replacement estimates"
+              },
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "estimate_value",
+                "value": "8450"
+              }
+            ],
+            "output": [
+              {
+                "label": "Row",
+                "value": "42"
+              },
+              {
+                "label": "Name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "Email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "Estimate value",
+                "value": "8450"
+              }
+            ]
+          },
+          {
+            "node": "email",
+            "input": [
+              {
+                "label": "To",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "Subject",
+                "value": "Your replacement estimate request"
+              },
+              {
+                "label": "Body",
+                "value": "Hey Avery, I have your replacement estimate request. Maya will contact you to confirm a visit time."
+              }
+            ],
+            "parameters": [
+              {
+                "label": "To",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "Subject",
+                "value": "Your replacement estimate request"
+              },
+              {
+                "label": "Body",
+                "value": "Hey Avery, I have your replacement estimate request. Maya will contact you to confirm a visit time."
+              }
+            ],
+            "output": [
+              {
+                "label": "Message ID",
+                "value": "sample-email-1042"
+              },
+              {
+                "label": "Status",
+                "value": "Sent (illustrative sample)"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "row"
+      },
+      "statuses": [
+        "Hook sample",
+        "Row sample",
+        "Output ready to inspect"
+      ]
+    },
+    {
+      "id": "zapier-email",
+      "kind": "native",
+      "platform": "zapier",
+      "title": "Avery gets the acknowledgement.",
+      "caption": "The email goes to Avery with the estimate request acknowledged. It does not claim the visit is confirmed.",
+      "beat": "The email goes to Avery with the estimate request acknowledged. It does not claim the visit is confirmed.",
+      "details": [
+        "The email goes to Avery with the estimate request acknowledged. It does not claim the visit is confirmed."
+      ],
+      "optional": false,
+      "content": {
+        "name": "New enquiry follow-up",
+        "subtitle": "Illustrative sample",
+        "surface": "test",
+        "graph": {
+          "name": "New enquiry follow-up",
+          "nodes": [
+            {
+              "id": "capture",
+              "type": "webhook",
+              "label": "Catch Hook",
+              "detail": "Avery enquiry received"
+            },
+            {
+              "id": "row",
+              "type": "sheets",
+              "label": "Create Spreadsheet Row",
+              "detail": "row = 42 - Avery Morgan"
+            },
+            {
+              "id": "email",
+              "type": "email",
+              "label": "Send Outbound Email",
+              "detail": "Acknowledgement sent to avery.morgan@example.com"
+            }
+          ],
+          "edges": [
+            {
+              "to": "row",
+              "from": "capture"
+            },
+            {
+              "to": "email",
+              "from": "row"
+            }
+          ],
+          "runOrder": [
+            "capture",
+            "row",
+            "email"
+          ],
+          "context": {
+            "name": "{{lead.name}}",
+            "subtitle": "Replacement estimate",
+            "fields": [
+              {
+                "label": "Email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "Opportunity value",
+                "value": "{{deal.value}}"
+              }
+            ],
+            "states": [
+              "Avery enquiry received",
+              "row = 42 - Avery Morgan",
+              "Acknowledgement sent to avery.morgan@example.com"
+            ]
+          },
+          "related": []
+        },
+        "inspectors": [
+          {
+            "node": "capture",
+            "input": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "estimate_value",
+                "value": "8450"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Webhook",
+                "value": "Northstar estimate enquiry"
+              }
+            ],
+            "output": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "estimate_value",
+                "value": "8450"
+              }
+            ]
+          },
+          {
+            "node": "row",
+            "input": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "estimate_value",
+                "value": "8450"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Spreadsheet",
+                "value": "Northstar enquiries"
+              },
+              {
+                "label": "Worksheet",
+                "value": "Replacement estimates"
+              },
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "estimate_value",
+                "value": "8450"
+              }
+            ],
+            "output": [
+              {
+                "label": "Row",
+                "value": "42"
+              },
+              {
+                "label": "Name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "Email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "Estimate value",
+                "value": "8450"
+              }
+            ]
+          },
+          {
+            "node": "email",
+            "input": [
+              {
+                "label": "To",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "Subject",
+                "value": "Your replacement estimate request"
+              },
+              {
+                "label": "Body",
+                "value": "Hey Avery, I have your replacement estimate request. Maya will contact you to confirm a visit time."
+              }
+            ],
+            "parameters": [
+              {
+                "label": "To",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "Subject",
+                "value": "Your replacement estimate request"
+              },
+              {
+                "label": "Body",
+                "value": "Hey Avery, I have your replacement estimate request. Maya will contact you to confirm a visit time."
+              }
+            ],
+            "output": [
+              {
+                "label": "Message ID",
+                "value": "sample-email-1042"
+              },
+              {
+                "label": "Status",
+                "value": "Sent (illustrative sample)"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "email"
+      },
+      "statuses": [
+        "Hook sample",
+        "Row sample",
+        "Acknowledgement sample sent"
+      ]
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+Native rebuild candidates (19 October): see [native-templates/README.md](native-templates/README.md) for the explicit `native` surfaces. Do not infer production approval from catalog support; the exact visual verdict and remaining reference gaps belong to that packet.
+
 # Workflow platform catalog
 
 > **Visual status, 19 October 2026:** This file describes technical renderer support, not accepted native visual fidelity. Lorenzo rejected the current batch. Start with [the native screen library](visual-reference/README.md) and its product/surface plans. Existing illustrations and conceptual transcripts cannot serve as proof of the current vendor UI. No replacement native template is accepted yet.

@@ -1,0 +1,946 @@
+{
+  "schemaVersion": 1,
+  "id": "native-n8n",
+  "title": "n8n native template review",
+  "systemName": "From enquiry payload",
+  "account": {
+    "name": "Northstar Home Services",
+    "initials": "NH",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "fixture:native-n8n",
+    "facts": [
+      "Invented template acceptance fixture; not a saved Upwork job."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "name": "Avery Morgan",
+      "email": "avery.morgan@example.com",
+      "phone": "+1 (512) 555-0148"
+    },
+    "owner": {
+      "name": "Maya Chen"
+    },
+    "deal": {
+      "value": "$8,450.00"
+    }
+  },
+  "cover": {
+    "eyebrow": "Prepared for Northstar Home Services",
+    "title": "From enquiry payload",
+    "accent": "to a clean handoff.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Native node inspection",
+      "Mapped input and output",
+      "A useful execution result"
+    ],
+    "previewSteps": [
+      {
+        "title": "The setup",
+        "detail": "The native screen and the exact sample input."
+      },
+      {
+        "title": "The result",
+        "detail": "The record, message or document the team receives."
+      },
+      {
+        "title": "The next step",
+        "detail": "Agree the account details on a 15-minute call."
+      }
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "footer": "Template review · Illustrative sample"
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Measure the result",
+    "accent": "against your baseline.",
+    "caption": "Agree the starting point and the target before rollout.",
+    "metrics": [
+      {
+        "name": "Manual handling",
+        "direction": "down",
+        "aim": "Reduce manual steps",
+        "definition": "Count the steps a team member completes for each enquiry."
+      },
+      {
+        "name": "Complete records",
+        "direction": "up",
+        "aim": "Capture the required details",
+        "definition": "Track enquiries with all fields required by the next team member."
+      },
+      {
+        "name": "Time to useful output",
+        "direction": "down",
+        "aim": "Return the result sooner",
+        "definition": "Measure elapsed time from receiving the input to a usable output."
+      }
+    ],
+    "baselineNote": "Directional goals. These are not measured performance results.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "Reply here and I'll send times for a 15-minute call."
+  },
+  "scenes": [
+    {
+      "id": "n8n-canvas",
+      "kind": "native",
+      "platform": "n8n",
+      "title": "The complete handoff in n8n.",
+      "caption": "The webhook receives Avery, Edit Fields normalizes the enquiry, and HTTP Request creates the GHL contact and opportunity.",
+      "beat": "The webhook receives Avery, Edit Fields normalizes the enquiry, and HTTP Request creates the GHL contact and opportunity.",
+      "details": [
+        "The webhook receives Avery, Edit Fields normalizes the enquiry, and HTTP Request creates the GHL contact and opportunity."
+      ],
+      "optional": false,
+      "content": {
+        "name": "New enquiry follow-up",
+        "subtitle": "Illustrative sample",
+        "surface": "editor",
+        "graph": {
+          "name": "New enquiry follow-up",
+          "nodes": [
+            {
+              "id": "capture",
+              "type": "webhook",
+              "label": "Receive enquiry",
+              "detail": "POST /replacement-estimate"
+            },
+            {
+              "id": "normalize",
+              "type": "edit_fields",
+              "label": "Normalize enquiry fields",
+              "detail": "service_type = replacement estimate"
+            },
+            {
+              "id": "create",
+              "type": "http_request",
+              "label": "Create GHL contact",
+              "detail": "contact_id = sample-avery-1042"
+            },
+            {
+              "id": "notify",
+              "type": "http_request",
+              "label": "Create GHL opportunity",
+              "detail": "opportunity_id = sample-opp-2841"
+            }
+          ],
+          "edges": [
+            {
+              "to": "normalize",
+              "from": "capture"
+            },
+            {
+              "to": "create",
+              "from": "normalize"
+            },
+            {
+              "to": "notify",
+              "from": "create"
+            }
+          ],
+          "runOrder": [
+            "capture",
+            "normalize",
+            "create",
+            "notify"
+          ],
+          "context": {
+            "name": "{{lead.name}}",
+            "subtitle": "Replacement estimate",
+            "fields": [
+              {
+                "label": "Email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "Opportunity value",
+                "value": "{{deal.value}}"
+              }
+            ],
+            "states": [
+              "POST /replacement-estimate",
+              "service_type = replacement estimate",
+              "contact_id = sample-avery-1042",
+              "opportunity_id = sample-opp-2841"
+            ]
+          },
+          "related": []
+        },
+        "inspectors": [
+          {
+            "node": "capture",
+            "input": [
+              {
+                "label": "body",
+                "value": "{\"name\": \"Avery Morgan\", \"email\": \"avery.morgan@example.com\", \"service_type\": \"replacement estimate\", \"monetaryValue\": 8450}"
+              }
+            ],
+            "output": [
+              {
+                "label": "body",
+                "value": "{\"name\": \"Avery Morgan\", \"email\": \"avery.morgan@example.com\", \"service_type\": \"replacement estimate\", \"monetaryValue\": 8450}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "HTTP Method",
+                "value": "POST"
+              },
+              {
+                "label": "Path",
+                "value": "replacement-estimate"
+              },
+              {
+                "label": "Authentication",
+                "value": "None"
+              },
+              {
+                "label": "Respond",
+                "value": "Immediately"
+              }
+            ]
+          },
+          {
+            "node": "normalize",
+            "input": [
+              {
+                "label": "body",
+                "value": "{\"name\": \"Avery Morgan\", \"email\": \"avery.morgan@example.com\", \"service_type\": \"replacement estimate\", \"monetaryValue\": 8450}"
+              }
+            ],
+            "output": [
+              {
+                "label": "name",
+                "value": "Avery Morgan"
+              },
+              {
+                "label": "email",
+                "value": "avery.morgan@example.com"
+              },
+              {
+                "label": "service_type",
+                "value": "replacement estimate"
+              },
+              {
+                "label": "monetaryValue",
+                "value": "8450"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "name",
+                "value": "Avery Morgan"
+              },
+              {
+                "label": "email",
+                "value": "avery.morgan@example.com"
+              },
+              {
+                "label": "service_type",
+                "value": "replacement estimate"
+              },
+              {
+                "label": "monetaryValue",
+                "value": "8450"
+              }
+            ]
+          },
+          {
+            "node": "create",
+            "input": [
+              {
+                "label": "name",
+                "value": "Avery Morgan"
+              },
+              {
+                "label": "email",
+                "value": "avery.morgan@example.com"
+              },
+              {
+                "label": "service_type",
+                "value": "replacement estimate"
+              },
+              {
+                "label": "monetaryValue",
+                "value": "8450"
+              }
+            ],
+            "output": [
+              {
+                "label": "contact",
+                "value": "{\"id\": \"sample-avery-1042\", \"name\": \"Avery Morgan\", \"email\": \"avery.morgan@example.com\"}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "POST"
+              },
+              {
+                "label": "URL",
+                "value": "https://services.leadconnectorhq.com/contacts/"
+              },
+              {
+                "label": "JSON",
+                "value": "{\"locationId\": \"sample-location-northstar\", \"name\": \"Avery Morgan\", \"email\": \"avery.morgan@example.com\"}"
+              },
+              {
+                "label": "Authentication",
+                "value": "Generic Credential Type"
+              },
+              {
+                "label": "Generic Auth Type",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Header Auth",
+                "value": "HighLevel API (sample)"
+              }
+            ]
+          },
+          {
+            "node": "notify",
+            "input": [
+              {
+                "label": "contact",
+                "value": "{\"id\": \"sample-avery-1042\", \"name\": \"Avery Morgan\", \"email\": \"avery.morgan@example.com\"}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "POST"
+              },
+              {
+                "label": "URL",
+                "value": "https://services.leadconnectorhq.com/opportunities/"
+              },
+              {
+                "label": "JSON",
+                "value": "{\"locationId\":\"sample-location-northstar\",\"pipelineId\":\"sample-estimate-pipeline\",\"pipelineStageId\":\"sample-new-enquiry\",\"contactId\":\"sample-avery-1042\",\"name\":\"Avery Morgan - Replacement estimate\",\"status\":\"open\",\"monetaryValue\":8450}"
+              },
+              {
+                "label": "Authentication",
+                "value": "Generic Credential Type"
+              },
+              {
+                "label": "Generic Auth Type",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Header Auth",
+                "value": "HighLevel API (sample)"
+              }
+            ],
+            "output": [
+              {
+                "label": "id",
+                "value": "sample-opp-2841"
+              },
+              {
+                "label": "contactId",
+                "value": "sample-avery-1042"
+              },
+              {
+                "label": "name",
+                "value": "Avery Morgan - Replacement estimate"
+              },
+              {
+                "label": "monetaryValue",
+                "value": "8450"
+              },
+              {
+                "label": "status",
+                "value": "open"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "notify"
+      },
+      "statuses": [
+        "Webhook received Avery",
+        "Fields normalized",
+        "Contact created",
+        "Opportunity created"
+      ]
+    },
+    {
+      "id": "n8n-node",
+      "kind": "native",
+      "platform": "n8n",
+      "title": "Inspect the data at the handoff.",
+      "caption": "The request and returned opportunity share the same contact ID and $8,450 sample value.",
+      "beat": "The request and returned opportunity share the same contact ID and $8,450 sample value.",
+      "details": [
+        "The request and returned opportunity share the same contact ID and $8,450 sample value."
+      ],
+      "optional": true,
+      "content": {
+        "name": "New enquiry follow-up",
+        "subtitle": "Illustrative sample",
+        "surface": "node",
+        "graph": {
+          "name": "New enquiry follow-up",
+          "nodes": [
+            {
+              "id": "capture",
+              "type": "webhook",
+              "label": "Receive enquiry",
+              "detail": "POST /replacement-estimate"
+            },
+            {
+              "id": "normalize",
+              "type": "edit_fields",
+              "label": "Normalize enquiry fields",
+              "detail": "service_type = replacement estimate"
+            },
+            {
+              "id": "create",
+              "type": "http_request",
+              "label": "Create GHL contact",
+              "detail": "contact_id = sample-avery-1042"
+            },
+            {
+              "id": "notify",
+              "type": "http_request",
+              "label": "Create GHL opportunity",
+              "detail": "opportunity_id = sample-opp-2841"
+            }
+          ],
+          "edges": [
+            {
+              "to": "normalize",
+              "from": "capture"
+            },
+            {
+              "to": "create",
+              "from": "normalize"
+            },
+            {
+              "to": "notify",
+              "from": "create"
+            }
+          ],
+          "runOrder": [
+            "capture",
+            "normalize",
+            "create",
+            "notify"
+          ],
+          "context": {
+            "name": "{{lead.name}}",
+            "subtitle": "Replacement estimate",
+            "fields": [
+              {
+                "label": "Email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "Opportunity value",
+                "value": "{{deal.value}}"
+              }
+            ],
+            "states": [
+              "POST /replacement-estimate",
+              "service_type = replacement estimate",
+              "contact_id = sample-avery-1042",
+              "opportunity_id = sample-opp-2841"
+            ]
+          },
+          "related": []
+        },
+        "inspectors": [
+          {
+            "node": "capture",
+            "input": [
+              {
+                "label": "body",
+                "value": "{\"name\": \"Avery Morgan\", \"email\": \"avery.morgan@example.com\", \"service_type\": \"replacement estimate\", \"monetaryValue\": 8450}"
+              }
+            ],
+            "output": [
+              {
+                "label": "body",
+                "value": "{\"name\": \"Avery Morgan\", \"email\": \"avery.morgan@example.com\", \"service_type\": \"replacement estimate\", \"monetaryValue\": 8450}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "HTTP Method",
+                "value": "POST"
+              },
+              {
+                "label": "Path",
+                "value": "replacement-estimate"
+              },
+              {
+                "label": "Authentication",
+                "value": "None"
+              },
+              {
+                "label": "Respond",
+                "value": "Immediately"
+              }
+            ]
+          },
+          {
+            "node": "normalize",
+            "input": [
+              {
+                "label": "body",
+                "value": "{\"name\": \"Avery Morgan\", \"email\": \"avery.morgan@example.com\", \"service_type\": \"replacement estimate\", \"monetaryValue\": 8450}"
+              }
+            ],
+            "output": [
+              {
+                "label": "name",
+                "value": "Avery Morgan"
+              },
+              {
+                "label": "email",
+                "value": "avery.morgan@example.com"
+              },
+              {
+                "label": "service_type",
+                "value": "replacement estimate"
+              },
+              {
+                "label": "monetaryValue",
+                "value": "8450"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "name",
+                "value": "Avery Morgan"
+              },
+              {
+                "label": "email",
+                "value": "avery.morgan@example.com"
+              },
+              {
+                "label": "service_type",
+                "value": "replacement estimate"
+              },
+              {
+                "label": "monetaryValue",
+                "value": "8450"
+              }
+            ]
+          },
+          {
+            "node": "create",
+            "input": [
+              {
+                "label": "name",
+                "value": "Avery Morgan"
+              },
+              {
+                "label": "email",
+                "value": "avery.morgan@example.com"
+              },
+              {
+                "label": "service_type",
+                "value": "replacement estimate"
+              },
+              {
+                "label": "monetaryValue",
+                "value": "8450"
+              }
+            ],
+            "output": [
+              {
+                "label": "contact",
+                "value": "{\"id\": \"sample-avery-1042\", \"name\": \"Avery Morgan\", \"email\": \"avery.morgan@example.com\"}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "POST"
+              },
+              {
+                "label": "URL",
+                "value": "https://services.leadconnectorhq.com/contacts/"
+              },
+              {
+                "label": "JSON",
+                "value": "{\"locationId\": \"sample-location-northstar\", \"name\": \"Avery Morgan\", \"email\": \"avery.morgan@example.com\"}"
+              },
+              {
+                "label": "Authentication",
+                "value": "Generic Credential Type"
+              },
+              {
+                "label": "Generic Auth Type",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Header Auth",
+                "value": "HighLevel API (sample)"
+              }
+            ]
+          },
+          {
+            "node": "notify",
+            "input": [
+              {
+                "label": "contact",
+                "value": "{\"id\": \"sample-avery-1042\", \"name\": \"Avery Morgan\", \"email\": \"avery.morgan@example.com\"}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "POST"
+              },
+              {
+                "label": "URL",
+                "value": "https://services.leadconnectorhq.com/opportunities/"
+              },
+              {
+                "label": "JSON",
+                "value": "{\"locationId\":\"sample-location-northstar\",\"pipelineId\":\"sample-estimate-pipeline\",\"pipelineStageId\":\"sample-new-enquiry\",\"contactId\":\"sample-avery-1042\",\"name\":\"Avery Morgan - Replacement estimate\",\"status\":\"open\",\"monetaryValue\":8450}"
+              },
+              {
+                "label": "Authentication",
+                "value": "Generic Credential Type"
+              },
+              {
+                "label": "Generic Auth Type",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Header Auth",
+                "value": "HighLevel API (sample)"
+              }
+            ],
+            "output": [
+              {
+                "label": "id",
+                "value": "sample-opp-2841"
+              },
+              {
+                "label": "contactId",
+                "value": "sample-avery-1042"
+              },
+              {
+                "label": "name",
+                "value": "Avery Morgan - Replacement estimate"
+              },
+              {
+                "label": "monetaryValue",
+                "value": "8450"
+              },
+              {
+                "label": "status",
+                "value": "open"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "notify"
+      },
+      "statuses": [
+        "Webhook sample",
+        "Normalized sample",
+        "Contact sample",
+        "Opportunity output visible"
+      ]
+    },
+    {
+      "id": "n8n-execution",
+      "kind": "native",
+      "platform": "n8n",
+      "title": "A usable result for the team.",
+      "caption": "The execution returns sample-opp-2841 for Avery Morgan. The opportunity is open with a value of 8450.",
+      "beat": "The execution returns sample-opp-2841 for Avery Morgan. The opportunity is open with a value of 8450.",
+      "details": [
+        "The execution returns sample-opp-2841 for Avery Morgan. The opportunity is open with a value of 8450."
+      ],
+      "optional": false,
+      "content": {
+        "name": "New enquiry follow-up",
+        "subtitle": "Illustrative sample",
+        "surface": "execution",
+        "graph": {
+          "name": "New enquiry follow-up",
+          "nodes": [
+            {
+              "id": "capture",
+              "type": "webhook",
+              "label": "Receive enquiry",
+              "detail": "POST /replacement-estimate"
+            },
+            {
+              "id": "normalize",
+              "type": "edit_fields",
+              "label": "Normalize enquiry fields",
+              "detail": "service_type = replacement estimate"
+            },
+            {
+              "id": "create",
+              "type": "http_request",
+              "label": "Create GHL contact",
+              "detail": "contact_id = sample-avery-1042"
+            },
+            {
+              "id": "notify",
+              "type": "http_request",
+              "label": "Create GHL opportunity",
+              "detail": "opportunity_id = sample-opp-2841"
+            }
+          ],
+          "edges": [
+            {
+              "to": "normalize",
+              "from": "capture"
+            },
+            {
+              "to": "create",
+              "from": "normalize"
+            },
+            {
+              "to": "notify",
+              "from": "create"
+            }
+          ],
+          "runOrder": [
+            "capture",
+            "normalize",
+            "create",
+            "notify"
+          ],
+          "context": {
+            "name": "{{lead.name}}",
+            "subtitle": "Replacement estimate",
+            "fields": [
+              {
+                "label": "Email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "Opportunity value",
+                "value": "{{deal.value}}"
+              }
+            ],
+            "states": [
+              "POST /replacement-estimate",
+              "service_type = replacement estimate",
+              "contact_id = sample-avery-1042",
+              "opportunity_id = sample-opp-2841"
+            ]
+          },
+          "related": []
+        },
+        "inspectors": [
+          {
+            "node": "capture",
+            "input": [
+              {
+                "label": "body",
+                "value": "{\"name\": \"Avery Morgan\", \"email\": \"avery.morgan@example.com\", \"service_type\": \"replacement estimate\", \"monetaryValue\": 8450}"
+              }
+            ],
+            "output": [
+              {
+                "label": "body",
+                "value": "{\"name\": \"Avery Morgan\", \"email\": \"avery.morgan@example.com\", \"service_type\": \"replacement estimate\", \"monetaryValue\": 8450}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "HTTP Method",
+                "value": "POST"
+              },
+              {
+                "label": "Path",
+                "value": "replacement-estimate"
+              },
+              {
+                "label": "Authentication",
+                "value": "None"
+              },
+              {
+                "label": "Respond",
+                "value": "Immediately"
+              }
+            ]
+          },
+          {
+            "node": "normalize",
+            "input": [
+              {
+                "label": "body",
+                "value": "{\"name\": \"Avery Morgan\", \"email\": \"avery.morgan@example.com\", \"service_type\": \"replacement estimate\", \"monetaryValue\": 8450}"
+              }
+            ],
+            "output": [
+              {
+                "label": "name",
+                "value": "Avery Morgan"
+              },
+              {
+                "label": "email",
+                "value": "avery.morgan@example.com"
+              },
+              {
+                "label": "service_type",
+                "value": "replacement estimate"
+              },
+              {
+                "label": "monetaryValue",
+                "value": "8450"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "name",
+                "value": "Avery Morgan"
+              },
+              {
+                "label": "email",
+                "value": "avery.morgan@example.com"
+              },
+              {
+                "label": "service_type",
+                "value": "replacement estimate"
+              },
+              {
+                "label": "monetaryValue",
+                "value": "8450"
+              }
+            ]
+          },
+          {
+            "node": "create",
+            "input": [
+              {
+                "label": "name",
+                "value": "Avery Morgan"
+              },
+              {
+                "label": "email",
+                "value": "avery.morgan@example.com"
+              },
+              {
+                "label": "service_type",
+                "value": "replacement estimate"
+              },
+              {
+                "label": "monetaryValue",
+                "value": "8450"
+              }
+            ],
+            "output": [
+              {
+                "label": "contact",
+                "value": "{\"id\": \"sample-avery-1042\", \"name\": \"Avery Morgan\", \"email\": \"avery.morgan@example.com\"}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "POST"
+              },
+              {
+                "label": "URL",
+                "value": "https://services.leadconnectorhq.com/contacts/"
+              },
+              {
+                "label": "JSON",
+                "value": "{\"locationId\": \"sample-location-northstar\", \"name\": \"Avery Morgan\", \"email\": \"avery.morgan@example.com\"}"
+              },
+              {
+                "label": "Authentication",
+                "value": "Generic Credential Type"
+              },
+              {
+                "label": "Generic Auth Type",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Header Auth",
+                "value": "HighLevel API (sample)"
+              }
+            ]
+          },
+          {
+            "node": "notify",
+            "input": [
+              {
+                "label": "contact",
+                "value": "{\"id\": \"sample-avery-1042\", \"name\": \"Avery Morgan\", \"email\": \"avery.morgan@example.com\"}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "POST"
+              },
+              {
+                "label": "URL",
+                "value": "https://services.leadconnectorhq.com/opportunities/"
+              },
+              {
+                "label": "JSON",
+                "value": "{\"locationId\":\"sample-location-northstar\",\"pipelineId\":\"sample-estimate-pipeline\",\"pipelineStageId\":\"sample-new-enquiry\",\"contactId\":\"sample-avery-1042\",\"name\":\"Avery Morgan - Replacement estimate\",\"status\":\"open\",\"monetaryValue\":8450}"
+              },
+              {
+                "label": "Authentication",
+                "value": "Generic Credential Type"
+              },
+              {
+                "label": "Generic Auth Type",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Header Auth",
+                "value": "HighLevel API (sample)"
+              }
+            ],
+            "output": [
+              {
+                "label": "id",
+                "value": "sample-opp-2841"
+              },
+              {
+                "label": "contactId",
+                "value": "sample-avery-1042"
+              },
+              {
+                "label": "name",
+                "value": "Avery Morgan - Replacement estimate"
+              },
+              {
+                "label": "monetaryValue",
+                "value": "8450"
+              },
+              {
+                "label": "status",
+                "value": "open"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "notify",
+        "execution": {
+          "id": "1042",
+          "started": "Today, 10:02:00",
+          "duration": "1.8s"
+        }
+      },
+      "statuses": [
+        "Input received",
+        "Mapping complete",
+        "Contact returned",
+        "Opportunity returned"
+      ]
+    }
+  ]
+}

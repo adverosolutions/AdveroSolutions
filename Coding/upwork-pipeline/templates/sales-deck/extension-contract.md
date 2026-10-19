@@ -1,3 +1,7 @@
+## Native scene extension, 19 October 2026
+
+`kind: "native"` uses the strict `native_schema.py` contract. GoHighLevel: builder/pipeline/conversations; n8n: editor/node/execution; Zapier: editor/test; Claude app: skills/project/chat. See `native-templates/README.md` and the four fixture JSON files. These explicit native mechanisms replace the workflow-first restriction for Claude app jobs. The legacy contract below remains for older scenes and does not establish visual acceptance.
+
 # Adapter extension contract
 
 Maintenance scope, 19 October 2026. All scenes remain illustrative samples. The outer deck, palette, font, controls and timing are unchanged.

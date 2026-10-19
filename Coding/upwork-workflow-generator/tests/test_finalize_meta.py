@@ -143,6 +143,16 @@ class TestFinalizeLogsMeta(unittest.TestCase):
                         PROPOSAL, "https://www.loom.com/share/abc123", 2, "today")[0])
                 self.assertEqual(set(os.listdir(self.job)), {"jd.txt", "deck-spec.json", "proposal.md"})
 
+    def test_native_graph_and_assistant_metadata(self):
+        os.remove(os.path.join(self.job, "spec.json"))
+        for platform, surface, count in [("ghl", "builder", "2"), ("n8n", "editor", "2"),
+                                          ("zapier", "editor", "2"), ("claude", "skills", "")]:
+            with self.subTest(platform=platform):
+                self.write_deck({"scenes": [{"kind": "native", "platform": platform,
+                    "content": {"surface": surface, "graph": {"nodes": [{"id": "one"}, {"id": "two"}]}}}]})
+                row, _ = self.run_main("url: https://www.upwork.com/jobs/~native-" + platform + "\nNative fixture\n")
+                self.assertEqual((row["platform"], row["node_count"]), (platform, count))
+
     def test_existing_spec_keeps_precedence_over_deck(self):
         self.write_deck({"scenes": "invalid"})
         row, _ = self.run_main("url: https://www.upwork.com/jobs/~legacy\nLegacy Job\n")

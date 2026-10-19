@@ -189,21 +189,26 @@ def validate(spec, catalog):
         if not platform or platform.get("status") != "supported":
             fail(p + ".platform", "requires_adapter: unsupported platform " + str(scene["platform"]))
         content(scene, platform, p)
-    if scenes[0]["kind"] != "workflow" or scenes[0]["optional"]:
+    from native_schema import MECHANISMS, RESULTS
+    first_mechanism = scenes[0]["kind"] == "workflow" or (scenes[0]["kind"] == "native" and scenes[0]["content"]["surface"] in MECHANISMS)
+    if not first_mechanism or scenes[0]["optional"]:
         fail("scenes", "first scene must be a required workflow")
-    results = [x for x in scenes if x["kind"] in ("outcome", "workshop", "carousel") and not x["optional"]]
+    results = [x for x in scenes if (x["kind"] in ("outcome", "workshop", "carousel") or (x["kind"] == "native" and x["content"]["surface"] in RESULTS)) and not x["optional"]]
     if not results:
         fail("scenes", "requires a visible result/proof scene on every route")
     return s
 
 
-def content(scene, platform, path):
+def content(scene, platform, path, native_graph=False):
     c, kind = scene["content"], scene["kind"]
+    if kind == "native":
+        from native_schema import validate_native
+        return validate_native(scene, platform, path, lambda fake, plat, loc: content(fake, plat, loc, native_graph=True))
     p = path + ".content"
     shared = ("name", "subtitle")
     compatible = {
         "ghl": ("workflow", "record", "messages", "outcome", "workshop"),
-        "n8n": ("workflow",), "make": ("workflow",),
+        "n8n": ("workflow",), "make": ("workflow",), "zapier": ("workflow",) if native_graph else (),
         "workbench": ("record", "messages", "outcome", "carousel"),
         "claude-code": ("workflow", "record", "messages", "outcome"),
         "codex": ("workflow", "record", "messages", "outcome"),

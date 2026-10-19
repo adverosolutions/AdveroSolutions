@@ -280,22 +280,30 @@ def log_row(job_dir: str, loom: str, variant: str, visible_chars: Optional[int],
                 not isinstance(scene, dict) or not isinstance(scene.get("kind"), str)
                 for scene in scenes):
             raise ValueError("deck-spec.json: scenes must be a nonempty list of scene objects with kind strings")
-        workflow = next((scene for scene in scenes if scene["kind"] == "workflow"), None)
+        workflow = next((scene for scene in scenes if scene["kind"] == "workflow" or (
+            scene["kind"] == "native" and isinstance(scene.get("content"), dict)
+            and (scene.get("platform"), scene["content"].get("surface")) in (
+                ("ghl", "builder"), ("n8n", "editor"), ("zapier", "editor"),
+                ("claude", "skills"), ("claude", "project")))), None)
         if workflow is None:
             raise ValueError("deck-spec.json: requires a workflow scene")
         platform = workflow.get("platform")
-        if not isinstance(platform, str) or platform not in ("ghl", "n8n", "make", "claude-code", "codex"):
-            raise ValueError("deck-spec.json: first workflow platform must be ghl, n8n, make, claude-code or codex")
+        if not isinstance(platform, str) or platform not in ("ghl", "n8n", "make", "claude-code", "codex", "zapier", "claude"):
+            raise ValueError("deck-spec.json: first mechanism platform must be ghl, n8n, make, claude-code, codex, zapier or claude")
         content = workflow.get("content")
-        flow_nodes = content.get("nodes") if isinstance(content, dict) else None
-        if not isinstance(flow_nodes, list) or not flow_nodes or any(
+        assistant = workflow["kind"] == "native" and platform == "claude"
+        if workflow["kind"] == "native" and not assistant:
+            content = content.get("graph") if isinstance(content, dict) else None
+        # Assistant Skills/Projects have no workflow nodes; leave that CSV cell blank.
+        flow_nodes = [] if assistant else content.get("nodes") if isinstance(content, dict) else None
+        if not assistant and (not isinstance(flow_nodes, list) or not flow_nodes or any(
                 not isinstance(node, dict) or not isinstance(node.get("id"), str)
-                or not node["id"].strip() for node in flow_nodes):
+                or not node["id"].strip() for node in flow_nodes)):
             raise ValueError("deck-spec.json: first workflow content.nodes must be a nonempty list of objects with string ids")
         if len({node["id"] for node in flow_nodes}) != len(flow_nodes):
             raise ValueError("deck-spec.json: first workflow node ids must be unique")
         slug = os.path.basename(os.path.normpath(job_dir))
-        nodes = str(len(flow_nodes))
+        nodes = "" if assistant else str(len(flow_nodes))
     elif any(os.path.exists(os.path.join(job_dir, f)) for f in ("prototype.html", "page.html")):
         # Prototype-only jobs have no spec: log the prototype itself.
         platform, slug, nodes = "prototype", os.path.basename(os.path.normpath(job_dir)), ""

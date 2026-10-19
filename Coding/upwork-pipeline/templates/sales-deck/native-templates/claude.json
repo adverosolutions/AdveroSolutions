@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 1,
+  "id": "native-claude",
+  "title": "claude native template review",
+  "systemName": "From service notes",
+  "account": {
+    "name": "Northstar operations",
+    "initials": "NH",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "fixture:native-claude",
+    "facts": [
+      "Invented template acceptance fixture; not a saved Upwork job."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "name": "Avery Morgan",
+      "email": "avery.morgan@example.com",
+      "phone": "+1 (512) 555-0148"
+    },
+    "owner": {
+      "name": "Maya Chen"
+    },
+    "deal": {
+      "value": "$8,450.00"
+    }
+  },
+  "cover": {
+    "eyebrow": "Prepared for Northstar Home Services",
+    "title": "From service notes",
+    "accent": "to a reviewed brief.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Claude app Skills",
+      "Project context",
+      "A readable draft with source references"
+    ],
+    "previewSteps": [
+      {
+        "title": "The setup",
+        "detail": "The native screen and the exact sample input."
+      },
+      {
+        "title": "The result",
+        "detail": "The record, message or document the team receives."
+      },
+      {
+        "title": "The next step",
+        "detail": "Agree the account details on a 15-minute call."
+      }
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "footer": "Template review · Illustrative sample"
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Measure the result",
+    "accent": "against your baseline.",
+    "caption": "Agree the starting point and the target before rollout.",
+    "metrics": [
+      {
+        "name": "Manual handling",
+        "direction": "down",
+        "aim": "Reduce manual steps",
+        "definition": "Count the steps a team member completes for each enquiry."
+      },
+      {
+        "name": "Complete records",
+        "direction": "up",
+        "aim": "Capture the required details",
+        "definition": "Track enquiries with all fields required by the next team member."
+      },
+      {
+        "name": "Time to useful output",
+        "direction": "down",
+        "aim": "Return the result sooner",
+        "definition": "Measure elapsed time from receiving the input to a usable output."
+      }
+    ],
+    "baselineNote": "Directional goals. These are not measured performance results.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "Reply here and I'll send times for a 15-minute call."
+  },
+  "scenes": [
+    {
+      "id": "claude-skills",
+      "kind": "native",
+      "platform": "claude",
+      "title": "A reusable skill for the visit brief.",
+      "caption": "The skill preserves the customer details and flags missing information. Open it to inspect the instructions.",
+      "beat": "The skill preserves the customer details and flags missing information. Open it to inspect the instructions.",
+      "details": [
+        "The skill preserves the customer details and flags missing information. Open it to inspect the instructions."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Customize",
+        "subtitle": "Illustrative sample",
+        "surface": "skills",
+        "skills": [
+          {
+            "name": "estimate-visit-brief",
+            "description": "Prepare a dispatch brief from confirmed estimate notes. Preserve contact details, visit time and source references.",
+            "instructions": "Read the supplied visit notes. Extract the customer, appointment and access instructions. Cite the source file next to each fact. If a required fact is absent, list it as missing. Do not infer prices or mark the visit confirmed without an explicit confirmation."
+          }
+        ]
+      },
+      "statuses": [
+        "Skill available",
+        "Skill instructions ready"
+      ]
+    },
+    {
+      "id": "claude-project",
+      "kind": "native",
+      "platform": "claude",
+      "title": "Keep the source material in the project.",
+      "caption": "The project contains Avery’s visit notes and the dispatch checklist.",
+      "beat": "The project contains Avery’s visit notes and the dispatch checklist.",
+      "details": [
+        "The project contains Avery’s visit notes and the dispatch checklist."
+      ],
+      "optional": true,
+      "content": {
+        "name": "Replacement estimate briefs",
+        "subtitle": "Prepare dispatch briefs from customer confirmations.",
+        "surface": "project",
+        "instructions": "Use the visit notes and dispatch checklist.",
+        "files": [
+          {
+            "name": "avery-visit-notes.txt",
+            "detail": "Customer reply and estimate details"
+          },
+          {
+            "name": "dispatch-checklist.md",
+            "detail": "Required visit fields and review steps"
+          }
+        ]
+      },
+      "statuses": [
+        "Source context visible",
+        "Project context ready"
+      ]
+    },
+    {
+      "id": "claude-output",
+      "kind": "native",
+      "platform": "claude",
+      "title": "The team gets a brief it can use.",
+      "caption": "The brief includes Avery’s confirmed time, the gate note and the missing property address. It is ready for a person to review.",
+      "beat": "The brief includes Avery’s confirmed time, the gate note and the missing property address. It is ready for a person to review.",
+      "details": [
+        "The brief includes Avery’s confirmed time, the gate note and the missing property address. It is ready for a person to review."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Avery’s replacement estimate brief",
+        "subtitle": "Illustrative sample",
+        "surface": "chat",
+        "prompt": "Prepare the dispatch brief for Avery from the attached notes. Use the checklist and flag anything missing.",
+        "response": "I prepared the visit brief from the supplied notes. The time and access instructions are cited. The property address is missing, so I left it for confirmation.",
+        "files": [
+          {
+            "name": "avery-visit-notes.txt",
+            "detail": "Customer reply and estimate details"
+          },
+          {
+            "name": "dispatch-checklist.md",
+            "detail": "Required visit fields and review steps"
+          }
+        ],
+        "exception": "The source does not contain a property address. Ask Avery for it before dispatching the visit.",
+        "document": {
+          "title": "Avery Morgan · Visit brief",
+          "sections": [
+            {
+              "title": "Customer and visit",
+              "body": "Avery Morgan\navery.morgan@example.com\nThursday at 2:00 PM, explicitly confirmed by Avery.\nSource: avery-visit-notes.txt, customer reply."
+            },
+            {
+              "title": "Access instructions",
+              "body": "The side gate will be open.\nSource: avery-visit-notes.txt, customer reply."
+            },
+            {
+              "title": "Required before dispatch",
+              "body": "Property address: not provided.\nAsk Avery for the address and confirm the service area.\nSource: dispatch-checklist.md, required visit fields."
+            }
+          ]
+        }
+      },
+      "statuses": [
+        "Source notes received",
+        "Draft brief visible",
+        "Missing address flagged"
+      ]
+    }
+  ]
+}

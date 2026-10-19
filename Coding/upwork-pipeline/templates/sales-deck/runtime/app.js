@@ -34,7 +34,8 @@
   let timers = [];
   let generation = 0;
   const motion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
-  const sceneLabels = { workflow: 'The workflow', record: 'Capture', messages: 'Messages', outcome: 'The result', workshop: 'The result', carousel: 'Content preview' };
+  const sceneLabels = { workflow: 'The workflow', record: 'Capture', messages: 'Messages', outcome: 'The result', workshop: 'The result', carousel: 'Content preview', native: 'Native workspace' };
+  const sceneLabel = scene => scene.kind === 'native' ? ({builder:'Workflow',pipeline:'Pipeline',conversations:'Conversation',editor:scene.platform==='zapier'?'The Zap':'Workflow',node:'Node data',execution:'Execution',test:'Test result',skills:'The skill',project:'Project context',chat:'The brief'}[scene.content.surface]) : sceneLabels[scene.kind];
   const routes = () => [
     { id: 'cover', kind: 'cover', ...job.cover },
     ...job.scenes.filter(scene => duration === '3' || !scene.optional),
@@ -50,6 +51,8 @@
     timers.forEach(window.clearTimeout);
     timers = [];
   }
+
+  if (window.NativeScreens) window.NativeScreens.cancelReplay = cancel;
 
   function native(scene, title, active, tabs, body) {
     if (scene.platform !== 'ghl') {
@@ -71,7 +74,7 @@
     return `<div class="hero cover-slide"><div class="hero-copy">${greeting}
       <span class="eyebrow">${esc(scene.eyebrow)}</span><h1>${esc(scene.title)}<br><em>${esc(scene.accent)}</em></h1>
       <p>${esc(scene.caption)}</p><div class="anchors">${scene.anchors.map(anchor => `<span class="anchor">${esc(anchor)}</span>`).join('')}</div>
-      <button id="seeWorkflow" class="primary cover-cta">See the workflow <span aria-hidden="true">→</span></button></div>
+      <button id="seeWorkflow" class="primary cover-cta">${job.scenes[0].kind === 'native' && job.scenes[0].platform === 'claude' ? 'See the setup' : 'See the workflow'} <span aria-hidden="true">→</span></button></div>
       <div class="journey panel cover-preview"><div class="cover-preview-top"><span class="eyebrow">${esc(job.systemName)}</span><span class="preview-dot"></span></div>
       ${scene.previewSteps.map((step, index) => `<div class="journey-item"><div class="step-icon">${String(index + 1).padStart(2, '0')}</div><div><b>${esc(step.title)}</b><small>${esc(step.detail)}</small></div></div>`).join('')}
       <div class="journey-bottom"><span>${esc(scene.footer)}</span></div></div></div>`;
@@ -161,6 +164,7 @@
   }
 
   function sceneBody(scene) {
+    if (scene.kind === 'native') return window.NativeScreens.render(scene, job);
     const compatible = { ghl: ['workflow', 'record', 'messages', 'outcome', 'workshop'], n8n: ['workflow'], make: ['workflow'], workbench: ['record', 'messages', 'outcome', 'carousel'], 'claude-code': ['workflow', 'record', 'messages', 'outcome'], codex: ['workflow', 'record', 'messages', 'outcome'] };
     if (!Object.prototype.hasOwnProperty.call(compatible, scene.platform) || !compatible[scene.platform].includes(scene.kind)) throw new Error('Unsupported scene/platform combination.');
     if (scene.kind === 'workflow') {
@@ -173,6 +177,7 @@
   function stepCount(scene) {
     const content = scene.content;
     if (!content) return 0;
+    if (scene.kind === 'native') return scene.statuses.length;
     const visibleSteps = {
       workflow: () => content.runOrder.length,
       record: () => content.events.length,
@@ -186,6 +191,7 @@
 
   function applyStep(scene, index) {
     const stage = query('#stage');
+    if (scene.kind === 'native') window.NativeScreens.apply(scene, index, job);
     stage.querySelectorAll('[data-step]').forEach(element => element.classList.toggle('pending', Number(element.dataset.step) > index));
     if (scene.kind === 'workflow') window.SalesPlatforms.applyStep(scene, Math.min(index, scene.content.runOrder.length - 1));
     if (scene.kind === 'messages' && query('#emailPaper', stage)) {
@@ -273,15 +279,15 @@
     if (scene.kind === 'cover' || scene.kind === 'close') {
       stage.innerHTML = scene.kind === 'cover' ? cover(scene) : close(scene);
     } else {
-      stage.innerHTML = `<div class="chapterhead"><span class="eyebrow">${String(chapterIndex + 1).padStart(2, '0')} / ${esc(sceneLabels[scene.kind])}</span>
+      stage.innerHTML = `<div class="chapterhead"><span class="eyebrow">${String(chapterIndex + 1).padStart(2, '0')} / ${esc(sceneLabel(scene))}</span>
         <h2>${esc(scene.title)}</h2><p>${esc(scene.caption)}</p></div><div class="demo panel">${sceneBody(scene)}
         <div class="demo-tools"><span class="status" id="replayStatus" role="status" aria-live="polite"></span>
         <button id="showResult" class="replay">Show result</button><button id="replay" class="replay"><span class="replay-icon" aria-hidden="true">↻</span>Replay</button></div></div>`;
       query('#replay').addEventListener('click', replay);
       query('#showResult').addEventListener('click', finish);
-      replay();
+      if (scene.kind === 'native') finish(); else replay();
     }
-    query('#chapters').innerHTML = routes().map((value, index) => `<button class="chapter-dot ${index === chapterIndex ? 'active' : ''}" data-chapter="${index}" ${index === chapterIndex ? 'aria-current="step"' : ''}><i></i><span>${esc(value.kind === 'cover' ? 'Your project' : value.kind === 'close' ? 'Success measures' : sceneLabels[value.kind])}</span></button>`).join('');
+    query('#chapters').innerHTML = routes().map((value, index) => `<button class="chapter-dot ${index === chapterIndex ? 'active' : ''}" data-chapter="${index}" ${index === chapterIndex ? 'aria-current="step"' : ''}><i></i><span>${esc(value.kind === 'cover' ? 'Your project' : value.kind === 'close' ? 'Success measures' : sceneLabel(value))}</span></button>`).join('');
     query('#chapters').querySelectorAll('[data-chapter]').forEach(button => button.addEventListener('click', () => go(Number(button.dataset.chapter))));
     query('#previous').disabled = chapterIndex === 0;
     query('#next').disabled = chapterIndex === routes().length - 1;

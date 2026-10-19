@@ -1,0 +1,440 @@
+{
+  "schemaVersion": 1,
+  "id": "native-ghl",
+  "title": "ghl native template review",
+  "systemName": "Every estimate enquiry,",
+  "account": {
+    "name": "Northstar Home Services",
+    "initials": "NH",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "fixture:native-ghl",
+    "facts": [
+      "Invented template acceptance fixture; not a saved Upwork job."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "name": "Avery Morgan",
+      "email": "avery.morgan@example.com",
+      "phone": "+1 (512) 555-0148"
+    },
+    "owner": {
+      "name": "Maya Chen"
+    },
+    "deal": {
+      "value": "$8,450.00"
+    }
+  },
+  "cover": {
+    "eyebrow": "Prepared for Northstar Home Services",
+    "title": "Every estimate enquiry,",
+    "accent": "followed through.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Native GHL automation",
+      "A visible pipeline move",
+      "SMS and email in Conversations"
+    ],
+    "previewSteps": [
+      {
+        "title": "The setup",
+        "detail": "The native screen and the exact sample input."
+      },
+      {
+        "title": "The result",
+        "detail": "The record, message or document the team receives."
+      },
+      {
+        "title": "The next step",
+        "detail": "Agree the account details on a 15-minute call."
+      }
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "footer": "Template review · Illustrative sample"
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Measure the result",
+    "accent": "against your baseline.",
+    "caption": "Agree the starting point and the target before rollout.",
+    "metrics": [
+      {
+        "name": "Manual handling",
+        "direction": "down",
+        "aim": "Reduce manual steps",
+        "definition": "Count the steps a team member completes for each enquiry."
+      },
+      {
+        "name": "Complete records",
+        "direction": "up",
+        "aim": "Capture the required details",
+        "definition": "Track enquiries with all fields required by the next team member."
+      },
+      {
+        "name": "Time to useful output",
+        "direction": "down",
+        "aim": "Return the result sooner",
+        "definition": "Measure elapsed time from receiving the input to a usable output."
+      }
+    ],
+    "baselineNote": "Directional goals. These are not measured performance results.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "Reply here and I'll send times for a 15-minute call."
+  },
+  "scenes": [
+    {
+      "id": "ghl-workflow",
+      "kind": "native",
+      "platform": "ghl",
+      "title": "The follow-up lives in GoHighLevel.",
+      "caption": "Avery submits an estimate enquiry. The workflow assigns Maya, creates the opportunity and asks Avery to confirm the visit.",
+      "beat": "Avery submits an estimate enquiry. The workflow assigns Maya, creates the opportunity and asks Avery to confirm the visit.",
+      "details": [
+        "Avery submits an estimate enquiry. The workflow assigns Maya, creates the opportunity and asks Avery to confirm the visit."
+      ],
+      "optional": false,
+      "content": {
+        "name": "New enquiry follow-up",
+        "subtitle": "Illustrative sample",
+        "surface": "builder",
+        "graph": {
+          "name": "New enquiry follow-up",
+          "nodes": [
+            {
+              "id": "capture",
+              "type": "facebook_lead",
+              "label": "Replacement estimate form",
+              "detail": "Estimate enquiry received"
+            },
+            {
+              "id": "assign",
+              "type": "assign_user",
+              "label": "Assign Maya Chen",
+              "detail": "Owner: Maya Chen"
+            },
+            {
+              "id": "deal",
+              "type": "opportunity",
+              "label": "Create replacement estimate",
+              "detail": "Replacement estimate · $8,450.00"
+            },
+            {
+              "id": "sms",
+              "type": "sms",
+              "label": "Ask for visit confirmation",
+              "detail": "SMS sent; awaiting Avery’s reply"
+            }
+          ],
+          "edges": [
+            {
+              "to": "assign",
+              "from": "capture"
+            },
+            {
+              "to": "deal",
+              "from": "assign"
+            },
+            {
+              "to": "sms",
+              "from": "deal"
+            }
+          ],
+          "runOrder": [
+            "capture",
+            "assign",
+            "deal",
+            "sms"
+          ],
+          "context": {
+            "name": "{{lead.name}}",
+            "subtitle": "Replacement estimate",
+            "fields": [
+              {
+                "label": "Email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "Opportunity value",
+                "value": "{{deal.value}}"
+              }
+            ],
+            "states": [
+              "Estimate enquiry received",
+              "Owner: Maya Chen",
+              "Replacement estimate · $8,450.00",
+              "SMS sent; awaiting Avery’s reply"
+            ]
+          },
+          "related": []
+        },
+        "inspectors": [
+          {
+            "node": "capture",
+            "input": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "result",
+                "value": "Estimate enquiry received"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Operation",
+                "value": "Replacement estimate form"
+              },
+              {
+                "label": "Account",
+                "value": "Northstar Home Services"
+              }
+            ]
+          },
+          {
+            "node": "assign",
+            "input": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "result",
+                "value": "Owner: Maya Chen"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Operation",
+                "value": "Assign Maya Chen"
+              },
+              {
+                "label": "Account",
+                "value": "Northstar Home Services"
+              }
+            ]
+          },
+          {
+            "node": "deal",
+            "input": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "result",
+                "value": "Replacement estimate · $8,450.00"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Operation",
+                "value": "Create replacement estimate"
+              },
+              {
+                "label": "Account",
+                "value": "Northstar Home Services"
+              }
+            ]
+          },
+          {
+            "node": "sms",
+            "input": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "result",
+                "value": "SMS sent; awaiting Avery’s reply"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Operation",
+                "value": "Ask for visit confirmation"
+              },
+              {
+                "label": "Account",
+                "value": "Northstar Home Services"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "sms"
+      },
+      "statuses": [
+        "Enquiry received",
+        "Owner assigned",
+        "Opportunity created",
+        "SMS sent; awaiting Avery’s reply"
+      ]
+    },
+    {
+      "id": "ghl-messages",
+      "kind": "native",
+      "platform": "ghl",
+      "title": "The conversation stays with Avery.",
+      "caption": "The SMS reply and confirmation email appear in the same contact conversation.",
+      "beat": "The SMS reply and confirmation email appear in the same contact conversation.",
+      "details": [
+        "The SMS reply and confirmation email appear in the same contact conversation."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Conversations",
+        "subtitle": "Illustrative sample",
+        "surface": "conversations",
+        "contact": "{{lead.name}}",
+        "fields": [
+          {
+            "label": "Email",
+            "value": "{{lead.email}}"
+          },
+          {
+            "label": "Phone",
+            "value": "{{lead.phone}}"
+          },
+          {
+            "label": "Assigned to",
+            "value": "{{owner.name}}"
+          }
+        ],
+        "items": [
+          {
+            "channel": "sms",
+            "direction": "outgoing",
+            "sender": "Maya Chen",
+            "time": "10:02 AM",
+            "body": "Hey Avery, this is Maya at Northstar. I have your replacement estimate request. Does Thursday at 2 PM work for the visit?"
+          },
+          {
+            "channel": "sms",
+            "direction": "incoming",
+            "sender": "{{lead.name}}",
+            "time": "10:04 AM",
+            "body": "Thursday at 2 works. The side gate will be open."
+          },
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "Maya Chen",
+            "time": "10:05 AM",
+            "subject": "Your replacement estimate visit",
+            "body": "Avery, your visit is confirmed for Thursday at 2 PM. Maya has your access note: the side gate will be open."
+          }
+        ]
+      },
+      "statuses": [
+        "SMS sent",
+        "Avery confirms and adds access note",
+        "Confirmation email delivered"
+      ]
+    },
+    {
+      "id": "ghl-pipeline",
+      "kind": "native",
+      "platform": "ghl",
+      "title": "Dispatch sees the confirmed estimate.",
+      "caption": "Avery moves from New enquiry to Estimate confirmed with the value, owner and access note intact.",
+      "beat": "Avery moves from New enquiry to Estimate confirmed with the value, owner and access note intact.",
+      "details": [
+        "Avery moves from New enquiry to Estimate confirmed with the value, owner and access note intact."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Replacement estimates",
+        "subtitle": "Replacement estimate",
+        "surface": "pipeline",
+        "contact": "{{lead.name}}",
+        "value": "{{deal.value}}",
+        "owner": "{{owner.name}}",
+        "fields": [
+          {
+            "label": "Visit",
+            "value": "Thursday, 2:00 PM"
+          },
+          {
+            "label": "Access note",
+            "value": "Side gate will be open"
+          }
+        ],
+        "stages": [
+          "New enquiry",
+          "Contacted",
+          "Estimate confirmed",
+          "Estimate sent"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2
+        ]
+      },
+      "statuses": [
+        "New enquiry",
+        "Contacted",
+        "Estimate confirmed · $8,450.00"
+      ]
+    }
+  ]
+}

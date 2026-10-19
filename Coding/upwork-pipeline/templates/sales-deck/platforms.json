@@ -89,7 +89,8 @@
         "record",
         "messages",
         "outcome",
-        "workshop"
+        "workshop",
+        "native"
       ]
     },
     "n8n": {
@@ -185,7 +186,8 @@
         }
       },
       "sceneKinds": [
-        "workflow"
+        "workflow",
+        "native"
       ]
     },
     "make": {
@@ -383,6 +385,56 @@
         "carousel"
       ],
       "sources": [],
+      "actions": {}
+    },
+    "zapier": {
+      "name": "Zapier",
+      "status": "supported",
+      "layout": "vertical",
+      "sceneKinds": [
+        "native"
+      ],
+      "actions": {
+        "webhook": {
+          "label": "Catch Hook",
+          "app": "Webhooks by Zapier",
+          "kind": "trigger",
+          "icon": "webhook",
+          "color": "#ff4f00",
+          "available": true
+        },
+        "filter": {
+          "label": "Only continue if",
+          "app": "Filter by Zapier",
+          "kind": "branch",
+          "icon": "branch",
+          "color": "#ff4f00",
+          "available": true
+        },
+        "sheets": {
+          "label": "Create Spreadsheet Row",
+          "app": "Google Sheets",
+          "kind": "action",
+          "icon": "grid",
+          "color": "#188038",
+          "available": true
+        },
+        "email": {
+          "label": "Send Outbound Email",
+          "app": "Email by Zapier",
+          "kind": "action",
+          "icon": "mail",
+          "color": "#ff4f00",
+          "available": true
+        }
+      }
+    },
+    "claude": {
+      "name": "Claude",
+      "status": "supported",
+      "sceneKinds": [
+        "native"
+      ],
       "actions": {}
     }
   },

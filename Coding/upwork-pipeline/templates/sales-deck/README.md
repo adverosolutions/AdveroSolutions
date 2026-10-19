@@ -1,3 +1,5 @@
+Current rebuild: [Four native-template candidates](native-templates/README.md). These add explicit GoHighLevel, n8n, Zapier and Claude app scenes. Native review is separate from legacy renderer support.
+
 # Reusable sales decks
 
 Current visual preparation: [Native screen library](visual-reference/README.md), [interactive reference board](visual-reference/index.html), and [screen contract](visual-reference/SCREEN_CONTRACT.md). These distinguish researched references, missing captures and unimplemented native screens; they do not approve the rejected adapters.
@@ -52,7 +54,7 @@ Each generation writes `page.html`, `recording-script.txt` and `build-report.jso
 
 The exact schema is implemented in `schema.py`. Unknown keys, raw markup, executable URLs, missing fields, excessively long copy, unresolved or cyclic entity tokens and malformed graphs produce readable errors. `{{lead.name}}` resolves from nested `entities`; entity leaves are strings or finite numbers. Use public sample data only in entities. Put private job URLs, evidence and source facts exclusively in `source`, and personalization provenance in `personalization`. Those fields are removed before browser embedding and recording-script generation. Repeated review names need at least two separate unambiguous entries, never an inference of ownership.
 
-Each job begins with a required workflow and contains a required outcome or workshop proof scene. Optional record scenes appear only in Detailed. The shared renderer supplies cover and close. Keep the exact approved opening caption, three directional metrics and the blue call panel. Directional aims cannot contain numerical promises; reviewers check the remaining copy for unsupported claims.
+Each job begins with a required mechanism: a supported workflow, native builder/editor, or Claude Skills/Project. Every route requires visible result proof; native pipeline/conversation/execution/test/chat scenes qualify. Optional record scenes appear only in Detailed. The shared renderer supplies cover and close. Keep the exact approved opening caption, three directional metrics and the blue call panel. Directional aims cannot contain numerical promises; reviewers check the remaining copy for unsupported claims.
 
 `platforms.json` is the available action catalog. A native workflow has one root trigger, 2–12 nodes, a connected acyclic graph, and a sample `runOrder` that follows edges to a terminal node. Unvisited branches stay inactive. n8n If edges require distinct `true`/`false` labels. Unavailable actions and unsupported platforms return `requires_adapter`; no GHL fallback is allowed. Node keys are visual catalog identifiers, not verified import module IDs.
 
