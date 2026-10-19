@@ -1,5 +1,7 @@
 # Workflow platform catalog
 
+> **Visual status, 19 October 2026:** This file describes technical renderer support, not accepted native visual fidelity. Lorenzo rejected the current batch. Start with [the native screen library](visual-reference/README.md) and its product/surface plans. Existing illustrations and conceptual transcripts cannot serve as proof of the current vendor UI. No replacement native template is accepted yet.
+
 This template produces local, illustrative sales demonstrations. The software interiors follow the repository's established examples and documented workflow concepts. They are not live software, importable automation exports, or a claim of pixel-identical current vendor interfaces. Every workflow frame displays “Illustrative sample.” Icons are semantic interface symbols; they are not vendor logos.
 
 ## Supported adapters

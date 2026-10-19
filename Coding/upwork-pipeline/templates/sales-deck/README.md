@@ -1,5 +1,7 @@
 # Reusable sales decks
 
+Current visual preparation: [Native screen library](visual-reference/README.md), [interactive reference board](visual-reference/index.html), and [screen contract](visual-reference/SCREEN_CONTRACT.md). These distinguish researched references, missing captures and unimplemented native screens; they do not approve the rejected adapters.
+
 Generate one standalone, interactive sales demonstration per job. Each page contains its font, CSS, native workflow adapters and data. It makes no service calls and creates no importable automation. The approved V4 opening, palette, font and close are shared template assets; content varies through a validated JSON spec.
 
 Use this lane for the finished-product `page.html` prop. Keep the existing proposal and finalization process in `../../UPWORK_PROCESS.md`.
@@ -31,7 +33,7 @@ Use `reject` for rejected reviews. The command checks artifact hashes and record
 
 Only after Lorenzo's actual Loom recording, main uses `recorded <id> --loom <URL>` (URL optional); `reopen <id>` marks a job for another recording. Keep the existing proposal finalizer separately. Shared queue mutations use the CLI's OS lock. Never edit its registry/index manually or run `build.py batch --out` into the shared queue. Runtime state is durable, private and git-ignored; generator, docs, source jobs, fixtures and the version lock stay tracked. There is no cross-device cloud sync.
 
-Read `BATCH_RUNBOOK.md` for intake, agent dispatch and capacity, diagnostics, optional pilot bootstrap and a fresh-chat kickoff prompt. Use ordinary generic/default Codex agents with task-specific briefs and explicit supported settings: Astra `xhigh` for coordination, Sol `high` for content, and independent Astra `max` or coordinator-selected `ultra` for final review. Use `fork_turns: none` for explicit overrides; inherited role defaults must not replace the selected effort. `examples/shared-queue.json` contains four fixture entries for reproducible bootstrap; fixtures still require independent exact-page review receipts.
+Read `BATCH_RUNBOOK.md` for intake, agent dispatch and capacity, diagnostics, optional pilot bootstrap and a fresh-chat kickoff prompt. Use ordinary generic/default Codex agents with task-specific briefs and explicit supported settings: Sol `medium` for coordination and content, with one focused independent Astra `high` final review. Read `OPERATING_POLICY.md` for speed and usage controls and `visual-reference/README.md` for native product-surface evidence. Use `fork_turns: none` for explicit overrides; inherited role defaults must not replace the selected effort. `examples/shared-queue.json` contains four fixture entries for reproducible bootstrap; fixtures still require independent exact-page review receipts.
 
 ## Isolated compiler utilities
 
