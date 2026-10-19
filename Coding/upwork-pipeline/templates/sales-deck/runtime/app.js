@@ -35,7 +35,7 @@
   let generation = 0;
   const motion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
   const sceneLabels = { workflow: 'The workflow', record: 'Capture', messages: 'Messages', outcome: 'The result', workshop: 'The result', carousel: 'Content preview', native: 'Native workspace' };
-  const sceneLabel = scene => scene.kind === 'native' ? ({builder:'Workflow',pipeline:'Pipeline',conversations:'Conversation',editor:scene.platform==='zapier'?'The Zap':'Workflow',node:'Node data',execution:'Execution',test:'Test result',skills:'The skill',project:'Project context',chat:'The brief'}[scene.content.surface]) : sceneLabels[scene.kind];
+  const sceneLabel = scene => scene.kind === 'native' ? ({builder:'Workflow',pipeline:'Pipeline',conversations:'Conversation',editor:scene.platform==='zapier'?'The Zap':'Workflow',node:'The result',execution:'Execution',test:scene.content.selectedNode==='email'?'Customer response':'Saved enquiry',skills:'The skill',project:'Project context',chat:'The brief'}[scene.content.surface]) : sceneLabels[scene.kind];
   const routes = () => [
     { id: 'cover', kind: 'cover', ...job.cover },
     ...job.scenes.filter(scene => duration === '3' || !scene.optional),
@@ -267,7 +267,7 @@
       <p>${esc(scene.beat)}</p><h4>${scene.kind === 'close' ? 'How we define the measures' : 'What to point out'}</h4>
       <ul>${details.map(detail => `<li>${esc(detail)}</li>`).join('')}</ul>
       ${scene.kind === 'close' ? `<p>${esc(scene.baselineNote)}</p>` : ''}
-      <h4>Recording controls</h4><p>Scenes play on entry and hold their result. Use Show result to finish immediately. Next or right arrow advances; Escape exits Present.</p>`;
+      <h4>Recording controls</h4><p>Native scenes open on their result. Replay shows the sequence and holds. Use Show result to finish immediately. Next or right arrow advances; Escape exits Present.</p>`;
   }
 
   function render() {
@@ -282,12 +282,12 @@
       stage.innerHTML = `<div class="chapterhead"><span class="eyebrow">${String(chapterIndex + 1).padStart(2, '0')} / ${esc(sceneLabel(scene))}</span>
         <h2>${esc(scene.title)}</h2><p>${esc(scene.caption)}</p></div><div class="demo panel">${sceneBody(scene)}
         <div class="demo-tools"><span class="status" id="replayStatus" role="status" aria-live="polite"></span>
-        <button id="showResult" class="replay">Show result</button><button id="replay" class="replay"><span class="replay-icon" aria-hidden="true">↻</span>Replay</button></div></div>`;
-      query('#replay').addEventListener('click', replay);
+        <button id="showResult" class="replay">Show result</button>${scene.kind === 'native' && scene.statuses.length === 1 ? '' : '<button id="replay" class="replay"><span class="replay-icon" aria-hidden="true">↻</span>Replay</button>'}</div></div>`;
+      query('#replay')?.addEventListener('click', replay);
       query('#showResult').addEventListener('click', finish);
       if (scene.kind === 'native') finish(); else replay();
     }
-    query('#chapters').innerHTML = routes().map((value, index) => `<button class="chapter-dot ${index === chapterIndex ? 'active' : ''}" data-chapter="${index}" ${index === chapterIndex ? 'aria-current="step"' : ''}><i></i><span>${esc(value.kind === 'cover' ? 'Your project' : value.kind === 'close' ? 'Success measures' : sceneLabel(value))}</span></button>`).join('');
+    query('#chapters').innerHTML = routes().map((value, index) => `<button class="chapter-dot ${index === chapterIndex ? 'active' : ''}" data-chapter="${index}" ${index === chapterIndex ? 'aria-current="step"' : ''}><i></i><span>${esc(value.kind === 'cover' ? 'Your project' : value.kind === 'close' ? '15-minute call' : sceneLabel(value))}</span></button>`).join('');
     query('#chapters').querySelectorAll('[data-chapter]').forEach(button => button.addEventListener('click', () => go(Number(button.dataset.chapter))));
     query('#previous').disabled = chapterIndex === 0;
     query('#next').disabled = chapterIndex === routes().length - 1;

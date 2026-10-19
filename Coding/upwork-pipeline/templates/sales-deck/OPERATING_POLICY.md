@@ -8,7 +8,7 @@ is repository-local guidance, not a change to global app/model settings.
 | Coordination, research, planning, proposals, queue and Loom finalization | GPT-6.1 Sol · Medium · Standard |
 | Daily content from an accepted visual template | GPT-6.1 Sol · Medium; Fast when production is explicitly time constrained |
 | A difficult implementation defect | Sol · High for that bounded repair |
-| Final independent visual review or a new native interface | One Astra · High review with exact sources and screenshots |
+| Final independent sales, behavior and visual review | One Astra · High review with exact sources and screenshots |
 
 The app's speed selection and an agent's model/effort are separate. Use the
 controls actually exposed. If a dispatch tool cannot set or confirm speed, say
@@ -25,7 +25,7 @@ content run fills an accepted template. It does not create an unfamiliar
 software interface while a recording queue waits. Missing product identity,
 reference evidence, adapter coverage or native behavior blocks that screen.
 
-Run mechanical checks before Astra review. The reviewer inspects the original
+Run mechanical checks before Astra review. Follow `SALES_ACCEPTANCE.md`; visual-only review never clears a recording. The reviewer inspects the original
 requirements, the exact generated page, the relevant vendor screenshots and
 the changed behavior. Carry unchanged verified evidence forward transparently.
 A source-code check must not be described as a browser check. After a repeated

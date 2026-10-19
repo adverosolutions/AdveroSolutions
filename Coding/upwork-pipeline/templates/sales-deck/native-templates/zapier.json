@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "native-zapier",
   "title": "zapier native template review",
-  "systemName": "Each new enquiry,",
+  "systemName": "Enquiry capture and acknowledgement",
   "account": {
     "name": "Northstar Home Services",
     "initials": "NH",
@@ -29,59 +29,57 @@
   },
   "cover": {
     "eyebrow": "Prepared for Northstar Home Services",
-    "title": "Each new enquiry,",
-    "accent": "logged and acknowledged.",
+    "title": "Save the enquiry.",
+    "accent": "Send the acknowledgement.",
     "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
     "anchors": [
-      "Visual Zap editor",
-      "Real Zapier action names",
-      "Mapped test output"
+      "Each new enquiry needs a spreadsheet record and a customer response."
     ],
     "previewSteps": [
       {
-        "title": "The setup",
-        "detail": "The native screen and the exact sample input."
+        "title": "The Zap",
+        "detail": "Catch Hook → Google Sheets → Email by Zapier."
       },
       {
-        "title": "The result",
-        "detail": "The record, message or document the team receives."
+        "title": "The response",
+        "detail": "Avery receives an email with Maya as the next contact."
       },
       {
-        "title": "The next step",
-        "detail": "Agree the account details on a 15-minute call."
+        "title": "Your account",
+        "detail": "Confirm the enquiry source and destination sheet."
       }
     ],
     "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
     "footer": "Template review · Illustrative sample"
   },
   "close": {
-    "eyebrow": "What I would measure",
-    "title": "Measure the result",
-    "accent": "against your baseline.",
-    "caption": "Agree the starting point and the target before rollout.",
+    "eyebrow": "Your rollout",
+    "title": "What we would",
+    "accent": "measure together.",
+    "caption": "Use your current process as the starting point.",
     "metrics": [
       {
-        "name": "Manual handling",
+        "name": "Manual spreadsheet entry",
         "direction": "down",
-        "aim": "Reduce manual steps",
-        "definition": "Count the steps a team member completes for each enquiry."
+        "aim": "Reduce copying between tools",
+        "definition": "Manual fields copied for each incoming enquiry."
       },
       {
-        "name": "Complete records",
+        "name": "Acknowledged enquiries",
         "direction": "up",
-        "aim": "Capture the required details",
-        "definition": "Track enquiries with all fields required by the next team member."
+        "aim": "Respond to each captured enquiry",
+        "definition": "Captured enquiries with a delivered acknowledgement."
       },
       {
-        "name": "Time to useful output",
+        "name": "Time to acknowledgement",
         "direction": "down",
-        "aim": "Return the result sooner",
-        "definition": "Measure elapsed time from receiving the input to a usable output."
+        "aim": "Shorten the wait for a response",
+        "definition": "Elapsed time between receiving the enquiry and sending the email."
       }
     ],
     "baselineNote": "Directional goals. These are not measured performance results.",
-    "ctaTitle": "Worth a quick 15-minute call?",
-    "ctaCopy": "Reply here and I'll send times.",
+    "ctaTitle": "Let’s map this to your account.",
+    "ctaCopy": "Reply here and I’ll send times for a 15-minute call.",
     "beat": "Reply here and I'll send times for a 15-minute call."
   },
   "scenes": [
@@ -91,9 +89,9 @@
       "platform": "zapier",
       "title": "The enquiry becomes a row and an email.",
       "caption": "Catch Hook receives the enquiry. Google Sheets records it, then Email by Zapier sends the acknowledgement.",
-      "beat": "Catch Hook receives the enquiry. Google Sheets records it, then Email by Zapier sends the acknowledgement.",
+      "beat": "This Zap catches the enquiry, creates the sheet row and sends the email.",
       "details": [
-        "Catch Hook receives the enquiry. Google Sheets records it, then Email by Zapier sends the acknowledgement."
+        "Follow Catch Hook to Create Spreadsheet Row to Send Outbound Email."
       ],
       "optional": false,
       "content": {
@@ -307,11 +305,12 @@
       "id": "zapier-test",
       "kind": "native",
       "platform": "zapier",
-      "title": "Trace the estimate value into row 42.",
-      "caption": "The input and created row both contain Avery, the email address and the $8,450 estimate value.",
-      "beat": "The input and created row both contain Avery, the email address and the $8,450 estimate value.",
+      "title": "The enquiry is saved in row 42.",
+      "caption": "Name, email and estimate value are captured together in the enquiry sheet.",
+      "beat": "Row 42 keeps Avery’s name, email and estimate value together.",
       "details": [
-        "The input and created row both contain Avery, the email address and the $8,450 estimate value."
+        "Compare name, email and estimate_value with the created row’s fields.",
+        "Point to Row 42 and Estimate value 8450 in Data out."
       ],
       "optional": false,
       "content": {
@@ -525,11 +524,12 @@
       "id": "zapier-email",
       "kind": "native",
       "platform": "zapier",
-      "title": "Avery gets the acknowledgement.",
-      "caption": "The email goes to Avery with the estimate request acknowledged. It does not claim the visit is confirmed.",
-      "beat": "The email goes to Avery with the estimate request acknowledged. It does not claim the visit is confirmed.",
+      "title": "The customer gets an answer.",
+      "caption": "Avery receives the acknowledgement. Maya owns the next step: arranging the visit.",
+      "beat": "Here is the email Avery receives, with Maya arranging the next step.",
       "details": [
-        "The email goes to Avery with the estimate request acknowledged. It does not claim the visit is confirmed."
+        "Point to Avery’s recipient address and read the acknowledgement body.",
+        "This message leaves the visit time to be confirmed."
       ],
       "optional": false,
       "content": {

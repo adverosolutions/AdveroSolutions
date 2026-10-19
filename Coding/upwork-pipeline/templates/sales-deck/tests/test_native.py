@@ -18,7 +18,7 @@ def test_wrong_product_surface_rejected(name,surface):
  value=spec(name);value['scenes'][0]['content']['surface']=surface
  with pytest.raises(ValidationError,match='unsupported native surface'):validate(value,CAT)
 def test_claude_needs_real_result_scene():
- value=spec('claude');value['scenes']=[value['scenes'][0],value['scenes'][1]]
+ value=spec('claude');value['scenes']=[value['scenes'][0],spec('claude')['scenes'][1]];value['scenes'][1]['optional']=True
  with pytest.raises(ValidationError,match='result/proof'):validate(value,CAT)
 def test_inspector_must_match_all_nodes():
  value=spec('n8n');value['scenes'][0]['content']['inspectors'][0]['node']='missing-node'
@@ -36,7 +36,7 @@ def test_markup_and_extra_fields_are_not_native_content():
  value=spec('claude');value['scenes'][0]['content']['fakeApprovalButton']='Approve client'
  with pytest.raises(ValidationError,match='unknown fields'):validate(value,CAT)
 def test_execution_requires_run_metadata():
- value=spec('n8n');value['scenes'][2]['content'].pop('execution')
+ value=spec('n8n');value['scenes'][1]['content']['surface']='execution'
  with pytest.raises(ValidationError,match='metadata required'):validate(value,CAT)
 
 def test_handoff_request_and_output_share_contact_and_value():
@@ -70,3 +70,38 @@ def test_zapier_cannot_fall_into_legacy_workflow_renderer():
     value['scenes'][0]['kind']='workflow'
     value['scenes'][0]['content']=value['scenes'][0]['content']['graph']
     with pytest.raises(ValidationError,match='requires_adapter'):validate(value,CAT)
+
+
+def test_sales_routes_have_distinct_stops_and_concrete_measures():
+    for name in ('ghl','n8n','zapier','claude'):
+        value=spec(name)
+        for detailed in (False,True):
+            scenes=[s for s in value['scenes'] if detailed or not s['optional']]
+            assert 2 <= len(scenes) <= 3
+            signatures=[(s['content']['surface'],s['content'].get('selectedNode')) for s in scenes]
+            assert len(signatures)==len(set(signatures)), name
+            assert len({s['title'] for s in scenes})==len(scenes)
+        assert all(m['name'] not in ('Manual handling','Complete records','Time to useful output') for m in value['close']['metrics'])
+    assert [s['content']['surface'] for s in spec('n8n')['scenes']]==['editor','node']
+    assert [s['content']['surface'] for s in spec('claude')['scenes']]==['skills','chat']
+
+def test_ghl_result_does_not_invent_confirmation():
+    value=spec('ghl')
+    items=value['scenes'][1]['content']['items']
+    assert all(m['direction']=='outgoing' for m in items)
+    assert len(items)==2
+    assert value['scenes'][2]['content']['stageSequence'][-1]==1
+    assert value['scenes'][2]['content']['stages'][1]=='Contacted'
+    assert value['scenes'][2]['content']['stageSequence']==[1]
+    assert value['scenes'][0]['content']['graph']['nodes'][2]['label']=='Create opportunity in Contacted'
+    assert [n['type'] for n in value['scenes'][0]['content']['graph']['nodes']][-2:]==['sms','email']
+
+
+def test_relabelled_duplicate_proof_is_rejected():
+    value=spec('n8n')
+    duplicate=copy.deepcopy(value['scenes'][1])
+    duplicate.update(id='repeated-result',title='A different headline')
+    duplicate['content'].update(surface='execution',execution=dict(id='1042',started='Today',duration='1s'))
+    value['scenes'].append(duplicate)
+    with pytest.raises(ValidationError,match='duplicate native proof screen'):
+        validate(value,CAT)

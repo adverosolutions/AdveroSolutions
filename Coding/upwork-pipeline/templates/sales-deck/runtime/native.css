@@ -34,3 +34,8 @@
 @media(max-width:760px){.ns-opportunity-count{display:none}.ns-opportunity-toolbar{padding:15px 12px;gap:7px}.ns-add-opportunity{font-size:8px;padding:6px}.ns-pipeline-filters{padding:10px 12px;flex-wrap:wrap}.ns-pipeline-filters>.ns-search{display:none}.ns-pipeline-lists{padding-left:12px}.ns-manage-fields{margin-left:auto}.ns-card-field{grid-template-columns:95px minmax(0,1fr)}.ns-ghl-main>.ns-top>span{font-size:8px}}
 .ns-parameters>h3{position:sticky;top:0;z-index:3;background:#fff;min-height:38px;padding:9px 0}.ns-parameters>.ns-detail-tabs{position:sticky;top:38px;z-index:2;background:#fff}.ns-zapier.ns-frame:has(.ns-inspector:not([hidden])) .ns-node.selected{outline:2px solid #ffb48b;outline-offset:2px}
 .ns-node-panes .ns-parameters{padding:0;display:flex;flex-direction:column;overflow:hidden}.ns-param-header{padding:15px 20px 0;flex:none;background:#fff}.ns-param-header h3{display:flex;align-items:center;gap:9px;font-size:14px;min-height:30px}.ns-param-header .ns-detail-tabs{position:static;margin-bottom:0;padding-top:12px;flex:none}.ns-param-body{position:relative;flex:1;min-height:0;overflow:auto;padding:0 20px 23px;overscroll-behavior:contain}
+
+/* Result chapter uses native resizable-pane proportions to foreground returned data. */
+.ns-n8n .ns-inspector.ns-result-detail .ns-node-panes{grid-template-columns:minmax(170px,.7fr) minmax(190px,.7fr) minmax(0,2.6fr)}.ns-result-detail [data-ns-pane="output"] .ns-data-table{font-size:11px}
+
+.ns-result-detail [data-ns-pane="output"] .ns-data-table{table-layout:fixed;width:100%}.ns-result-detail [data-ns-pane="output"] .ns-data-table th,.ns-result-detail [data-ns-pane="output"] .ns-data-table td{min-width:0;white-space:normal;overflow-wrap:anywhere;padding:10px 7px}

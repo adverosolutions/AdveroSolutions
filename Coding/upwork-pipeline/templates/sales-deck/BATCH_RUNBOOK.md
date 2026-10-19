@@ -1,5 +1,7 @@
 # Shared recording queue runbook
 
+Read `SALES_ACCEPTANCE.md` before authoring or reviewing any demo. Its whole-walkthrough sales gate applies to every future generation; visual-only approval is insufficient.
+
 Current model/speed/usage controls are in `OPERATING_POLICY.md`: GPT-6.1 Sol Medium coordinates and builds; one focused Astra High review occurs at the end. Standard speed is used for preparation and administration. Fast is reserved for explicitly time-sensitive demo production. Do not create extra coordinator chats by default. The Python tools compile specs and serialize queue changes; they do not select models, fetch jobs or perform visual review. All sessions on this Mac use the canonical queue.
 
 ## Daily commands

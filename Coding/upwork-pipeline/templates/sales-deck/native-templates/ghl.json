@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "native-ghl",
   "title": "ghl native template review",
-  "systemName": "Every estimate enquiry,",
+  "systemName": "Estimate enquiry follow-up",
   "account": {
     "name": "Northstar Home Services",
     "initials": "NH",
@@ -29,59 +29,57 @@
   },
   "cover": {
     "eyebrow": "Prepared for Northstar Home Services",
-    "title": "Every estimate enquiry,",
-    "accent": "followed through.",
+    "title": "Respond to estimate enquiries",
+    "accent": "inside GoHighLevel.",
     "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
     "anchors": [
-      "Native GHL automation",
-      "A visible pipeline move",
-      "SMS and email in Conversations"
+      "An enquiry comes in. Someone still has to assign it, create the opportunity and respond."
     ],
     "previewSteps": [
       {
-        "title": "The setup",
-        "detail": "The native screen and the exact sample input."
+        "title": "The workflow",
+        "detail": "Assign Maya, create the opportunity, send SMS and email."
       },
       {
-        "title": "The result",
-        "detail": "The record, message or document the team receives."
+        "title": "The customer response",
+        "detail": "See both messages in Avery’s conversation."
       },
       {
-        "title": "The next step",
-        "detail": "Agree the account details on a 15-minute call."
+        "title": "The handoff",
+        "detail": "Avery appears in Contacted with the next action visible."
       }
     ],
     "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
     "footer": "Template review · Illustrative sample"
   },
   "close": {
-    "eyebrow": "What I would measure",
-    "title": "Measure the result",
-    "accent": "against your baseline.",
-    "caption": "Agree the starting point and the target before rollout.",
+    "eyebrow": "Your rollout",
+    "title": "What we would",
+    "accent": "measure together.",
+    "caption": "Use your current process as the starting point.",
     "metrics": [
       {
-        "name": "Manual handling",
+        "name": "First response time",
         "direction": "down",
-        "aim": "Reduce manual steps",
-        "definition": "Count the steps a team member completes for each enquiry."
+        "aim": "Respond sooner",
+        "definition": "Time between form submission and the first delivered response."
       },
       {
-        "name": "Complete records",
+        "name": "Assigned enquiries",
         "direction": "up",
-        "aim": "Capture the required details",
-        "definition": "Track enquiries with all fields required by the next team member."
+        "aim": "Give each enquiry an owner",
+        "definition": "Share of new opportunities assigned to the responsible team member."
       },
       {
-        "name": "Time to useful output",
+        "name": "Unanswered enquiries",
         "direction": "down",
-        "aim": "Return the result sooner",
-        "definition": "Measure elapsed time from receiving the input to a usable output."
+        "aim": "Reduce enquiries without a response",
+        "definition": "New enquiries without a delivered SMS or email."
       }
     ],
     "baselineNote": "Directional goals. These are not measured performance results.",
-    "ctaTitle": "Worth a quick 15-minute call?",
-    "ctaCopy": "Reply here and I'll send times.",
+    "ctaTitle": "Let’s map this to your account.",
+    "ctaCopy": "Reply here and I’ll send times for a 15-minute call.",
     "beat": "Reply here and I'll send times for a 15-minute call."
   },
   "scenes": [
@@ -89,11 +87,12 @@
       "id": "ghl-workflow",
       "kind": "native",
       "platform": "ghl",
-      "title": "The follow-up lives in GoHighLevel.",
-      "caption": "Avery submits an estimate enquiry. The workflow assigns Maya, creates the opportunity and asks Avery to confirm the visit.",
-      "beat": "Avery submits an estimate enquiry. The workflow assigns Maya, creates the opportunity and asks Avery to confirm the visit.",
+      "title": "An enquiry gets an owner and a response.",
+      "caption": "The form starts the workflow: assign Maya, create it in Contacted, then send the SMS and acknowledgement email.",
+      "beat": "The form assigns Maya, creates Avery in Contacted and sends both messages.",
       "details": [
-        "Avery submits an estimate enquiry. The workflow assigns Maya, creates the opportunity and asks Avery to confirm the visit."
+        "Point to the form trigger, Maya’s assignment and the Contacted creation step.",
+        "Trace the SMS and email actions at the end."
       ],
       "optional": false,
       "content": {
@@ -118,14 +117,20 @@
             {
               "id": "deal",
               "type": "opportunity",
-              "label": "Create replacement estimate",
-              "detail": "Replacement estimate · $8,450.00"
+              "label": "Create opportunity in Contacted",
+              "detail": "Contacted · $8,450.00"
             },
             {
               "id": "sms",
               "type": "sms",
               "label": "Ask for visit confirmation",
               "detail": "SMS sent; awaiting Avery’s reply"
+            },
+            {
+              "id": "email",
+              "type": "email",
+              "label": "Acknowledge the estimate request",
+              "detail": "Acknowledgement email sent"
             }
           ],
           "edges": [
@@ -140,13 +145,18 @@
             {
               "to": "sms",
               "from": "deal"
+            },
+            {
+              "from": "sms",
+              "to": "email"
             }
           ],
           "runOrder": [
             "capture",
             "assign",
             "deal",
-            "sms"
+            "sms",
+            "email"
           ],
           "context": {
             "name": "{{lead.name}}",
@@ -165,7 +175,8 @@
               "Estimate enquiry received",
               "Owner: Maya Chen",
               "Replacement estimate · $8,450.00",
-              "SMS sent; awaiting Avery’s reply"
+              "SMS sent; awaiting Avery’s reply",
+              "Acknowledgement email sent"
             ]
           },
           "related": []
@@ -318,6 +329,27 @@
                 "value": "Northstar Home Services"
               }
             ]
+          },
+          {
+            "node": "email",
+            "input": [
+              {
+                "label": "Contact",
+                "value": "{{lead.name}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "Email",
+                "value": "Acknowledgement sent"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Subject",
+                "value": "Your replacement estimate request"
+              }
+            ]
           }
         ],
         "selectedNode": "sms"
@@ -326,18 +358,20 @@
         "Enquiry received",
         "Owner assigned",
         "Opportunity created",
-        "SMS sent; awaiting Avery’s reply"
+        "SMS sent; awaiting Avery’s reply",
+        "Acknowledgement email sent"
       ]
     },
     {
       "id": "ghl-messages",
       "kind": "native",
       "platform": "ghl",
-      "title": "The conversation stays with Avery.",
-      "caption": "The SMS reply and confirmation email appear in the same contact conversation.",
-      "beat": "The SMS reply and confirmation email appear in the same contact conversation.",
+      "title": "Both messages are on the contact.",
+      "caption": "Avery is asked to confirm a visit time. The acknowledgement email is visible alongside the SMS.",
+      "beat": "This is the SMS asking Avery about Thursday, followed by the acknowledgement email.",
       "details": [
-        "The SMS reply and confirmation email appear in the same contact conversation."
+        "Read the visit-time question in the SMS.",
+        "The email acknowledges the request; it does not confirm a booking."
       ],
       "optional": false,
       "content": {
@@ -368,37 +402,30 @@
             "body": "Hey Avery, this is Maya at Northstar. I have your replacement estimate request. Does Thursday at 2 PM work for the visit?"
           },
           {
-            "channel": "sms",
-            "direction": "incoming",
-            "sender": "{{lead.name}}",
-            "time": "10:04 AM",
-            "body": "Thursday at 2 works. The side gate will be open."
-          },
-          {
             "channel": "email",
             "direction": "outgoing",
             "sender": "Maya Chen",
-            "time": "10:05 AM",
-            "subject": "Your replacement estimate visit",
-            "body": "Avery, your visit is confirmed for Thursday at 2 PM. Maya has your access note: the side gate will be open."
+            "time": "10:02 AM",
+            "subject": "Your replacement estimate request",
+            "body": "Hey Avery, I have your replacement estimate request. Maya will contact you to confirm a visit time."
           }
         ]
       },
       "statuses": [
-        "SMS sent",
-        "Avery confirms and adds access note",
-        "Confirmation email delivered"
+        "SMS sent; awaiting Avery’s reply",
+        "Acknowledgement email delivered"
       ]
     },
     {
       "id": "ghl-pipeline",
       "kind": "native",
       "platform": "ghl",
-      "title": "Dispatch sees the confirmed estimate.",
-      "caption": "Avery moves from New enquiry to Estimate confirmed with the value, owner and access note intact.",
-      "beat": "Avery moves from New enquiry to Estimate confirmed with the value, owner and access note intact.",
+      "title": "Maya can pick up the enquiry.",
+      "caption": "Avery is in Contacted with a value of $8,450. Visit confirmation is still the next step.",
+      "beat": "Here is Avery’s opportunity, assigned to Maya, with confirmation still pending.",
       "details": [
-        "Avery moves from New enquiry to Estimate confirmed with the value, owner and access note intact."
+        "Point to $8,450, Maya Chen and Await visit confirmation.",
+        "This opportunity is created in Contacted; no separate stage movement is claimed."
       ],
       "optional": false,
       "content": {
@@ -410,30 +437,26 @@
         "owner": "{{owner.name}}",
         "fields": [
           {
-            "label": "Visit",
-            "value": "Thursday, 2:00 PM"
+            "label": "Service",
+            "value": "Replacement estimate"
           },
           {
-            "label": "Access note",
-            "value": "Side gate will be open"
+            "label": "Next step",
+            "value": "Await visit confirmation"
           }
         ],
         "stages": [
           "New enquiry",
           "Contacted",
-          "Estimate confirmed",
+          "Visit confirmed",
           "Estimate sent"
         ],
         "stageSequence": [
-          0,
-          1,
-          2
+          1
         ]
       },
       "statuses": [
-        "New enquiry",
-        "Contacted",
-        "Estimate confirmed · $8,450.00"
+        "Created in Contacted · $8,450.00"
       ]
     }
   ]

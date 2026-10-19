@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "native-claude",
   "title": "claude native template review",
-  "systemName": "From service notes",
+  "systemName": "Visit notes to dispatch brief",
   "account": {
     "name": "Northstar operations",
     "initials": "NH",
@@ -29,59 +29,57 @@
   },
   "cover": {
     "eyebrow": "Prepared for Northstar Home Services",
-    "title": "From service notes",
-    "accent": "to a reviewed brief.",
+    "title": "Turn visit notes into",
+    "accent": "a dispatch brief.",
     "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
     "anchors": [
-      "Claude app Skills",
-      "Project context",
-      "A readable draft with source references"
+      "Confirmed details arrive in notes. Dispatch still needs a complete, checked brief."
     ],
     "previewSteps": [
       {
-        "title": "The setup",
-        "detail": "The native screen and the exact sample input."
+        "title": "The skill",
+        "detail": "Require the checklist and a source for every visit detail."
       },
       {
         "title": "The result",
-        "detail": "The record, message or document the team receives."
+        "detail": "Read the brief and the missing-address warning."
       },
       {
-        "title": "The next step",
-        "detail": "Agree the account details on a 15-minute call."
+        "title": "Your process",
+        "detail": "Agree the source files and review rules on a short call."
       }
     ],
     "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
     "footer": "Template review · Illustrative sample"
   },
   "close": {
-    "eyebrow": "What I would measure",
-    "title": "Measure the result",
-    "accent": "against your baseline.",
-    "caption": "Agree the starting point and the target before rollout.",
+    "eyebrow": "Your rollout",
+    "title": "What we would",
+    "accent": "measure together.",
+    "caption": "Use your current process as the starting point.",
     "metrics": [
       {
-        "name": "Manual handling",
+        "name": "Brief preparation time",
         "direction": "down",
-        "aim": "Reduce manual steps",
-        "definition": "Count the steps a team member completes for each enquiry."
+        "aim": "Reduce time drafting briefs",
+        "definition": "Time spent preparing a visit brief from source notes."
       },
       {
-        "name": "Complete records",
+        "name": "Source-backed details",
         "direction": "up",
-        "aim": "Capture the required details",
-        "definition": "Track enquiries with all fields required by the next team member."
+        "aim": "Keep facts traceable",
+        "definition": "Brief fields with references to the supplied notes."
       },
       {
-        "name": "Time to useful output",
+        "name": "Incomplete dispatches",
         "direction": "down",
-        "aim": "Return the result sooner",
-        "definition": "Measure elapsed time from receiving the input to a usable output."
+        "aim": "Catch missing visit details",
+        "definition": "Briefs sent to dispatch while required details are missing."
       }
     ],
     "baselineNote": "Directional goals. These are not measured performance results.",
-    "ctaTitle": "Worth a quick 15-minute call?",
-    "ctaCopy": "Reply here and I'll send times.",
+    "ctaTitle": "Let’s map this to your account.",
+    "ctaCopy": "Reply here and I’ll send times for a 15-minute call.",
     "beat": "Reply here and I'll send times for a 15-minute call."
   },
   "scenes": [
@@ -89,11 +87,12 @@
       "id": "claude-skills",
       "kind": "native",
       "platform": "claude",
-      "title": "A reusable skill for the visit brief.",
-      "caption": "The skill preserves the customer details and flags missing information. Open it to inspect the instructions.",
-      "beat": "The skill preserves the customer details and flags missing information. Open it to inspect the instructions.",
+      "title": "The checklist becomes a reusable skill.",
+      "caption": "The instructions require source references and flag missing visit details before dispatch.",
+      "beat": "These instructions require a source for the visit details and flag missing information.",
       "details": [
-        "The skill preserves the customer details and flags missing information. Open it to inspect the instructions."
+        "Open Contents to inspect the checklist rules if useful.",
+        "The skill must not infer a price or a confirmed visit."
       ],
       "optional": false,
       "content": {
@@ -114,46 +113,15 @@
       ]
     },
     {
-      "id": "claude-project",
-      "kind": "native",
-      "platform": "claude",
-      "title": "Keep the source material in the project.",
-      "caption": "The project contains Avery’s visit notes and the dispatch checklist.",
-      "beat": "The project contains Avery’s visit notes and the dispatch checklist.",
-      "details": [
-        "The project contains Avery’s visit notes and the dispatch checklist."
-      ],
-      "optional": true,
-      "content": {
-        "name": "Replacement estimate briefs",
-        "subtitle": "Prepare dispatch briefs from customer confirmations.",
-        "surface": "project",
-        "instructions": "Use the visit notes and dispatch checklist.",
-        "files": [
-          {
-            "name": "avery-visit-notes.txt",
-            "detail": "Customer reply and estimate details"
-          },
-          {
-            "name": "dispatch-checklist.md",
-            "detail": "Required visit fields and review steps"
-          }
-        ]
-      },
-      "statuses": [
-        "Source context visible",
-        "Project context ready"
-      ]
-    },
-    {
       "id": "claude-output",
       "kind": "native",
       "platform": "claude",
-      "title": "The team gets a brief it can use.",
-      "caption": "The brief includes Avery’s confirmed time, the gate note and the missing property address. It is ready for a person to review.",
-      "beat": "The brief includes Avery’s confirmed time, the gate note and the missing property address. It is ready for a person to review.",
+      "title": "A brief with the missing detail flagged.",
+      "caption": "The draft preserves Thursday at 2 PM and the gate note. The address stays on hold for confirmation.",
+      "beat": "The brief keeps the confirmed time and gate note, and flags the missing address.",
       "details": [
-        "The brief includes Avery’s confirmed time, the gate note and the missing property address. It is ready for a person to review."
+        "Point to Thursday at 2 PM and the open side gate, with source filenames.",
+        "Show Property address: not provided before moving to the call ask."
       ],
       "optional": false,
       "content": {

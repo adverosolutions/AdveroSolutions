@@ -1,4 +1,10 @@
-# Native template rebuild, 19 October 2026
+# Native sales templates, revised 19 October 2026
+
+The first rebuild was rejected by Lorenzo for repetition and weak sales sequencing.
+`../SALES_ACCEPTANCE.md` now governs every generation. See
+`SALES-REVIEW-2026-10-19.md` for the current whole-walkthrough review; the earlier
+visual report is historical and does not approve these changed page hashes.
+
 
 Four isolated, reusable native-screen fixtures. This maintenance does not register
 jobs, reopen the rejected batch, send messages, import a workflow or connect accounts.
@@ -23,10 +29,10 @@ They are invented acceptance scenarios, never real saved Upwork posts.
 
 | Product | Native scene surfaces | Useful proof |
 | --- | --- | --- |
-| GoHighLevel | `builder`, `conversations`, `pipeline` | Avery's SMS/reply/email; one $8,450 opportunity moves through the supplied stages |
-| n8n | `editor`, `node`, `execution` | Input / Parameters / Output; the sample HTTP result returns matching contact/opportunity IDs |
+| GoHighLevel | `builder`, `conversations`, `pipeline` | Avery’s SMS and acknowledgement email; one $8,450 opportunity created in Contacted |
+| n8n | `editor`, `node` | One workflow, then one foregrounded returned-record table; technical inspection remains clickable |
 | Zapier | `editor`, `test` | The visual Zap and the selected step's mapped Data in / Data out |
-| Claude app | `skills`, `project`, `chat` | Current skill list/detail/Contents; project context; readable visit brief with source references and missing-address case |
+| Claude app | `skills`, `chat` | Current skill list/detail/Contents; readable visit brief with source references and missing-address case |
 
 Use `kind: "native"` with the exact `platform` and `content.surface`. See the
 fixtures and `../native_schema.py`. Every graph has an inspector for each node;
@@ -35,10 +41,16 @@ Claude Skills/Projects can begin the mechanism route and Claude chat counts as
 result proof; there is no forced CRM/workflow wrapper. Finalization recognizes
 native graph metadata and leaves the node-count cell blank for assistant work.
 
+The standard pitch has 2–3 distinct demonstration stops, plus the opening and closing.
+Zapier shows both promised results on every route: the saved row and the customer email. n8n no longer repeats the
+same inspector as separate node-data and execution slides. Claude’s context is
+visible beside its result instead of a separate Project stop. Each closing uses
+job-specific measures and an explicit reply-to-call ask.
+
 All native chapters enter in a useful settled state. Replay resets only that
 chapter, settles within 4.5 seconds and holds. Next/Previous and route changes
 cancel obsolete timers. Show result settles immediately. Reduced motion settles
-immediately. The native pipeline card moves between columns, conversation items
+immediately. Static opportunity results do not offer a misleading stage replay. Conversation items
 appear in order, and Claude replay progresses from input through output to the
 missing-field exception. Controls live in the demo footer and never follow scroll.
 
@@ -81,6 +93,6 @@ reduced motion and absence of runtime network calls. Browser screenshots and
 exact page hashes are in `qa/`. Same-size comparison sheets preserve the source
 image's aspect ratio; they are visual layout comparisons, not pixel-diff claims.
 
-Independent review belongs in `REVIEW-2026-10-19.md`. Its verdict must distinguish
+Current independent sales review belongs in `SALES-REVIEW-2026-10-19.md`. Its verdict must distinguish
 implemented candidates, visually reviewed surface variants, missing evidence and
 any remaining blockers. Lorenzo's visual acceptance is separate from this report.

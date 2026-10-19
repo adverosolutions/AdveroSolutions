@@ -1,3 +1,5 @@
+> Current sales gate: `../SALES_ACCEPTANCE.md`. The former visual-only review was rejected for story/repetition; use `SALES-REVIEW-2026-10-19.md` for current hashes.
+
 # Acceptance packet: first four native templates
 
 Prepared 19 October 2026. Independent visual verdict: see `REVIEW-2026-10-19.md`.
@@ -37,12 +39,11 @@ for detail. Any mismatch or missing evidence belongs in the independent verdict.
 ## Sample consistency
 
 Avery Morgan, avery.morgan@example.com, Maya Chen and the illustrative $8,450
-value are reused throughout. GHL sends an enquiry acknowledgement requesting
-confirmation; only the subsequent explicit reply is described as confirmed.
-The separate Conversations and pipeline scenes show that confirmed result.
-The fixture does not claim the initial four-step workflow contains the entire
-reply-handling implementation. Future jobs requiring that builder path need an
-additional genuine reply-trigger/settings reference and corresponding scene.
+value are reused throughout. GHL’s depicted workflow assigns Maya, creates the
+opportunity, sends an SMS asking for confirmation and an acknowledgement email.
+Conversations shows those same two outgoing messages. The opportunity is created directly in
+Contacted with visit confirmation still pending; no unseen reply-handling flow
+or confirmed booking is claimed.
 
 n8n's final result returns contact `sample-avery-1042` and opportunity
 `sample-opp-2841`, value `8450`. Zapier shows row 42 with matching identity and

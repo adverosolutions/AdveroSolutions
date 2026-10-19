@@ -3,6 +3,7 @@ import base64
 import binascii
 import copy
 import math
+import json
 import re
 
 OPENING = "I've already put this workflow together for you. Let me walk you through how it works."
@@ -189,6 +190,19 @@ def validate(spec, catalog):
         if not platform or platform.get("status") != "supported":
             fail(p + ".platform", "requires_adapter: unsupported platform " + str(scene["platform"]))
         content(scene, platform, p)
+    # A changed slide title cannot hide the same native proof screen twice.
+    native_proofs = set()
+    for scene in scenes:
+        if scene['kind'] != 'native':
+            continue
+        c = scene['content']
+        surface = c['surface']
+        role = 'inspector' if surface in ('node', 'test', 'execution') else surface
+        payload = {k:v for k,v in c.items() if k not in ('name', 'subtitle', 'surface', 'execution')}
+        signature = (scene['platform'], role, json.dumps(payload, sort_keys=True))
+        if signature in native_proofs:
+            fail('scenes', 'duplicate native proof screen; combine it or show a distinct result')
+        native_proofs.add(signature)
     from native_schema import MECHANISMS, RESULTS
     first_mechanism = scenes[0]["kind"] == "workflow" or (scenes[0]["kind"] == "native" and scenes[0]["content"]["surface"] in MECHANISMS)
     if not first_mechanism or scenes[0]["optional"]:

@@ -6,7 +6,66 @@ ROOT=Path(__file__).resolve().parent.parent
 sys.path.insert(0,str(ROOT))
 from schema import OPENING
 
-def write(p,d):p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n')
+def write(p,d):
+ tighten_sales(d)
+ p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n')
+def tighten_sales(d):
+ """Each stop adds a new buyer-visible fact; node inspection stays in the workflow."""
+ platform=d['scenes'][0]['platform']
+ if platform=='n8n':
+  d['scenes']=[d['scenes'][0],d['scenes'][1]]
+  result=d['scenes'][1];result['optional']=False
+  result.update(title='Avery is ready for follow-up.',caption='The returned opportunity contains Avery’s contact, the $8,450 value and an open status.')
+ elif platform=='zapier':
+  d['scenes'][1]['optional']=False
+  d['scenes'][1].update(title='The enquiry is saved in row 42.',caption='Name, email and estimate value are captured together in the enquiry sheet.')
+  d['scenes'][2].update(title='The customer gets an answer.',caption='Avery receives the acknowledgement. Maya owns the next step: arranging the visit.')
+ elif platform=='claude':
+  d['scenes']=[d['scenes'][0],d['scenes'][2]]
+  d['scenes'][0].update(title='The checklist becomes a reusable skill.',caption='The instructions require source references and flag missing visit details before dispatch.')
+  d['scenes'][1].update(title='A brief with the missing detail flagged.',caption='The draft preserves Thursday at 2 PM and the gate note. The address stays on hold for confirmation.')
+ elif platform=='ghl':
+  flow=d['scenes'][0]['content']['graph']
+  flow['nodes'][2].update(label='Create opportunity in Contacted',detail='Contacted · $8,450.00')
+  flow['nodes'].append(dict(id='email',type='email',label='Acknowledge the estimate request',detail='Acknowledgement email sent'))
+  flow['edges'].append(dict(**{'from':'sms','to':'email'}));flow['runOrder'].append('email');flow['context']['states'].append('Acknowledgement email sent')
+  d['scenes'][0]['content']['inspectors'].append(dict(node='email',input=[dict(label='Contact',value='{{lead.name}}')],output=[dict(label='Email',value='Acknowledgement sent')],parameters=[dict(label='Subject',value='Your replacement estimate request')]))
+  d['scenes'][0]['statuses'].append('Acknowledgement email sent')
+  d['scenes'][0].update(title='An enquiry gets an owner and a response.',caption='The form starts the workflow: assign Maya, create it in Contacted, then send the SMS and acknowledgement email.')
+  conversation=d['scenes'][1];conversation['content']['items']=[conversation['content']['items'][0],conversation['content']['items'][2]]
+  conversation['content']['items'][1].update(time='10:02 AM',subject='Your replacement estimate request',body='Hey Avery, I have your replacement estimate request. Maya will contact you to confirm a visit time.')
+  conversation['statuses']=['SMS sent; awaiting Avery’s reply','Acknowledgement email delivered']
+  conversation.update(title='Both messages are on the contact.',caption='Avery is asked to confirm a visit time. The acknowledgement email is visible alongside the SMS.')
+  pipeline=d['scenes'][2];pipeline['content'].update(stages=['New enquiry','Contacted','Visit confirmed','Estimate sent'],stageSequence=[1],fields=[dict(label='Service',value='Replacement estimate'),dict(label='Next step',value='Await visit confirmation')]);pipeline['statuses']=['Created in Contacted · $8,450.00']
+  pipeline.update(title='Maya can pick up the enquiry.',caption='Avery is in Contacted with a value of $8,450. Visit confirmation is still the next step.')
+ covers={
+  'ghl':('Respond to estimate enquiries','inside GoHighLevel.','An enquiry comes in. Someone still has to assign it, create the opportunity and respond.', [('The workflow','Assign Maya, create the opportunity, send SMS and email.'),('The customer response','See both messages in Avery’s conversation.'),('The handoff','Avery appears in Contacted with the next action visible.')]),
+  'n8n':('Turn an enquiry into','a GHL opportunity.','An enquiry arrives as a webhook. The team needs a usable CRM record.', [('The workflow','Webhook → Edit Fields → contact → opportunity.'),('The returned record','Avery’s contact ID, open status and $8,450 value.'),('Your account','Confirm the source, pipeline and fields on a short call.')]),
+  'zapier':('Save the enquiry.','Send the acknowledgement.','Each new enquiry needs a spreadsheet record and a customer response.', [('The Zap','Catch Hook → Google Sheets → Email by Zapier.'),('The response','Avery receives an email with Maya as the next contact.'),('Your account','Confirm the enquiry source and destination sheet.')]),
+  'claude':('Turn visit notes into','a dispatch brief.','Confirmed details arrive in notes. Dispatch still needs a complete, checked brief.', [('The skill','Require the checklist and a source for every visit detail.'),('The result','Read the brief and the missing-address warning.'),('Your process','Agree the source files and review rules on a short call.')])}
+ title,accent,problem,steps=covers[platform]
+ d['systemName']={'ghl':'Estimate enquiry follow-up','n8n':'Enquiry to GHL opportunity','zapier':'Enquiry capture and acknowledgement','claude':'Visit notes to dispatch brief'}[platform]
+ d['cover'].update(title=title,accent=accent,anchors=[problem],previewSteps=[dict(title=a,detail=b) for a,b in steps])
+ measures={
+ 'ghl':[('First response time','down','Respond sooner','Time between form submission and the first delivered response.'),('Assigned enquiries','up','Give each enquiry an owner','Share of new opportunities assigned to the responsible team member.'),('Unanswered enquiries','down','Reduce enquiries without a response','New enquiries without a delivered SMS or email.')],
+ 'n8n':[('Manual CRM entry','down','Reduce rekeying','Manual contact and opportunity entry steps per enquiry.'),('Complete opportunities','up','Keep the required fields together','Returned opportunities with the expected contact, pipeline and value.'),('Time to CRM','down','Get enquiries into follow-up sooner','Elapsed time from webhook receipt to opportunity creation.')],
+ 'zapier':[('Manual spreadsheet entry','down','Reduce copying between tools','Manual fields copied for each incoming enquiry.'),('Acknowledged enquiries','up','Respond to each captured enquiry','Captured enquiries with a delivered acknowledgement.'),('Time to acknowledgement','down','Shorten the wait for a response','Elapsed time between receiving the enquiry and sending the email.')],
+ 'claude':[('Brief preparation time','down','Reduce time drafting briefs','Time spent preparing a visit brief from source notes.'),('Source-backed details','up','Keep facts traceable','Brief fields with references to the supplied notes.'),('Incomplete dispatches','down','Catch missing visit details','Briefs sent to dispatch while required details are missing.')]}
+ d['close'].update(eyebrow='Your rollout',title='What we would',accent='measure together.',caption='Use your current process as the starting point.',metrics=[dict(name=a,direction=b,aim=c,definition=e) for a,b,c,e in measures[platform]],ctaTitle='Let’s map this to your account.',ctaCopy='Reply here and I’ll send times for a 15-minute call.')
+ cues={
+ 'ghl-workflow':('The form assigns Maya, creates Avery in Contacted and sends both messages.', ['Point to the form trigger, Maya’s assignment and the Contacted creation step.','Trace the SMS and email actions at the end.']),
+ 'ghl-messages':('This is the SMS asking Avery about Thursday, followed by the acknowledgement email.', ['Read the visit-time question in the SMS.','The email acknowledges the request; it does not confirm a booking.']),
+ 'ghl-pipeline':('Here is Avery’s opportunity, assigned to Maya, with confirmation still pending.', ['Point to $8,450, Maya Chen and Await visit confirmation.','This opportunity is created in Contacted; no separate stage movement is claimed.']),
+ 'n8n-canvas':('The enquiry comes through the webhook; these requests create the contact and opportunity.', ['Trace Webhook, Edit Fields and the two HTTP Request nodes.','Click a node only if the prospect needs to see its sample settings.']),
+ 'n8n-node':('The returned record has Avery’s contact ID, the estimate value and an open status.', ['Point to contactId sample-avery-1042, monetaryValue 8450 and status open.','The output is a sample response; do not describe it as a live account test.']),
+ 'zapier-editor':('This Zap catches the enquiry, creates the sheet row and sends the email.', ['Follow Catch Hook to Create Spreadsheet Row to Send Outbound Email.']),
+ 'zapier-test':('Row 42 keeps Avery’s name, email and estimate value together.', ['Compare name, email and estimate_value with the created row’s fields.','Point to Row 42 and Estimate value 8450 in Data out.']),
+ 'zapier-email':('Here is the email Avery receives, with Maya arranging the next step.', ['Point to Avery’s recipient address and read the acknowledgement body.','This message leaves the visit time to be confirmed.']),
+ 'claude-skills':('These instructions require a source for the visit details and flag missing information.', ['Open Contents to inspect the checklist rules if useful.','The skill must not infer a price or a confirmed visit.']),
+ 'claude-output':('The brief keeps the confirmed time and gate note, and flags the missing address.', ['Point to Thursday at 2 PM and the open side gate, with source filenames.','Show Property address: not provided before moving to the call ask.'])}
+ for item in d['scenes']:
+  item['beat'],item['details']=cues[item['id']]
+
 def scene(key,platform,surface,title,caption,data,statuses,optional=False):
  return dict(id=key,kind='native',platform=platform,title=title,caption=caption,beat=caption,details=[caption],optional=optional,content=dict(name=data.pop('name',title),subtitle=data.pop('subtitle','Illustrative sample'),surface=surface,**data),statuses=statuses)
 def base(platform,title,accent,anchors):

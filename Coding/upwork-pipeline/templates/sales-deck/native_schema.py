@@ -10,7 +10,7 @@ SURFACES = {
 }
 NATIVE_ACTIONS = {'n8n': {'webhook','edit_fields','http_request'}, 'zapier': {'webhook','sheets','email'}, 'ghl': {'facebook_lead','contact_tag','assign_user','opportunity','sms','email','notification','wait','event_date'}}
 MECHANISMS = {'builder', 'editor', 'skills', 'project'}
-RESULTS = {'pipeline', 'conversations', 'execution', 'test', 'chat'}
+RESULTS = {'node', 'pipeline', 'conversations', 'execution', 'test', 'chat'}
 
 
 def validate_native(scene, platform, path, validate_content):
