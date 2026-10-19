@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-10-19",
+  "review": "Sol mechanical/browser QA; independent Astra High research-package review approved; see REVIEW-2026-10-19.md. Native renderers remain unapproved.",
+  "productsChecked": 29,
+  "allImageSelectorsChecked": true,
+  "searchPassed": true,
+  "allTabsPassed": true,
+  "watchlistRows": 12,
+  "mobileWidth": 390,
+  "noMobileOverflow": true,
+  "consoleErrors": [],
+  "notes": "These checks cover the research board, not production demo behavior or native renderer acceptance.",
+  "boardHash": "b0b0590370b4a2479188d3ad40b04f635aea8ce271d09b53c1951ba9477a6b73",
+  "finalCopyChange": "Three reference captions corrected to the visible state; GHL missing-overlay capture added to remaining work. All three corrected selectors/captions and image loading passed a narrow browser recheck; GHL desktop/mobile captures refreshed with no mobile overflow. Earlier full route/image checks remain applicable."
+}

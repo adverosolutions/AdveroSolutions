@@ -1,0 +1,53 @@
+{
+  "asOf": "2026-10-19",
+  "method": "Official Upwork public job/category pages located through web search. Direct category-page fetches were blocked, so displayed counts are search-index snapshots with mixed crawl dates. Category samples overlap and are not an unbiased ranking of all Upwork mentions. Local corpus counts are the primary prioritization signal.",
+  "categorySignals": [
+    {
+      "platform": "Zapier",
+      "displayedSampleCount": 731,
+      "url": "https://www.upwork.com/freelance-jobs/zapier/",
+      "access": "search-index only; direct fetch returned 403"
+    },
+    {
+      "platform": "n8n",
+      "displayedSampleCount": 482,
+      "url": "https://www.upwork.com/freelance-jobs/n8n/",
+      "access": "search-index only; direct fetch returned 403"
+    },
+    {
+      "platform": "Make / Integromat",
+      "displayedSampleCount": 174,
+      "url": "https://www.upwork.com/freelance-jobs/integromat/",
+      "access": "search-index only; historical tag name"
+    },
+    {
+      "platform": "HubSpot",
+      "displayedSampleCount": 736,
+      "url": "https://www.upwork.com/freelance-jobs/hubspot/",
+      "access": "search-index only; includes non-automation work"
+    },
+    {
+      "platform": "Airtable",
+      "displayedSampleCount": 164,
+      "url": "https://www.upwork.com/freelance-jobs/airtable/",
+      "access": "search-index only; older crawl than other categories"
+    }
+  ],
+  "examplePosts": [
+    {
+      "title": "Automation & Integration Specialist \u2014 Zapier, Make, HubSpot, Claude",
+      "url": "https://www.upwork.com/freelance-jobs/apply/Automation-Integration-Specialist-Zapier-Make-HubSpot-Claude-Long-Term-Hourly_~022108702524105846616/",
+      "finding": "Names Zapier, Make.com, n8n, HubSpot, OpenAI API and Claude together. Supports separate product-specific screens in multi-tool jobs."
+    },
+    {
+      "title": "Advanced n8n Automation Architect | GoHighLevel, Zapier & Claude Integrations",
+      "url": "https://www.upwork.com/freelance-jobs/apply/Advanced-n8n-Automation-Architect-GoHighLevel-Zapier-Claude-Integrations_~022091584991462213306/",
+      "finding": "Names CRM, LLM processing and orchestration as distinct systems. A single generic CRM frame would collapse different jobs."
+    },
+    {
+      "title": "AI Automation Developer \u2014 n8n Workflows + AI Agents",
+      "url": "https://www.upwork.com/freelance-jobs/apply/Automation-Developer-n8n-Workflows-Agents-OpenAI-Claude_~022108234523354091142/",
+      "finding": "Names n8n, Make or Zapier, APIs and validation/error handling. Workflow appearance and actual result both matter."
+    }
+  ]
+}

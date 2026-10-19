@@ -1,0 +1,1020 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-10-19",
+  "purpose": "Native-interface research and screen plans; not production approval",
+  "productionPaused": true,
+  "products": [
+    {
+      "id": "ghl",
+      "name": "GoHighLevel",
+      "category": "CRM & automation",
+      "priority": "Named by Lorenzo",
+      "surfaces": [
+        "Workflow Builder",
+        "Opportunities pipeline",
+        "Contact detail / overlay",
+        "Conversations",
+        "Calendar / booking",
+        "Funnel or form builder"
+      ],
+      "visualAnchors": [
+        "Account/sub-account context and native navigation",
+        "Dotted infinite builder with compact action cards, plus controls and native builder tabs",
+        "Opportunities as stage columns with opportunity cards and actual deal values",
+        "Conversations as inbox list, thread, composer and contact details"
+      ],
+      "salesProof": [
+        "A real sample enquiry enters the correct workflow",
+        "One contact moves through the named pipeline stages",
+        "The promised SMS/email appears in Conversations with the same name and details"
+      ],
+      "neverSubstitute": "Do not place invented contact-context cards permanently inside the workflow canvas. Do not use fake reply-trigger nodes or a generic CRM interior.",
+      "remainingWork": "Rebuild the rejected workflow/CRM/message interiors against current references; add action setup and execution views only where needed. Capture the open contact/opportunity overlay; the selected Appointments image shows only its entry point. Verify account navigation, action labels and the exact builder generation before acceptance.",
+      "sourceIds": [
+        "ghl-workflow",
+        "ghl-contact",
+        "ghl-conversations"
+      ],
+      "currentAdapter": "Existing ghl renderer: visually rejected",
+      "productionReady": false,
+      "demandName": "GoHighLevel",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "n8n",
+      "name": "n8n",
+      "category": "Workflow automation",
+      "priority": "Named by Lorenzo",
+      "surfaces": [
+        "Workflow canvas",
+        "Node editor with input / parameters / output",
+        "Execution history and run detail",
+        "AI Agent cluster with model/tool connectors"
+      ],
+      "visualAnchors": [
+        "Native canvas controls and workflow header",
+        "App-icon nodes with real ports and connection geometry",
+        "Separate input / parameters / output panes when a node is opened",
+        "AI subnodes connect through the correct typed ports"
+      ],
+      "salesProof": [
+        "The triggering payload enters the actual first node",
+        "The selected branch and item count match the sample",
+        "Node output and the destination record agree"
+      ],
+      "neverSubstitute": "Do not invent native nodes or show AI Agent as an ordinary node with arbitrary main-line model links. Do not squeeze a large graph to illegible text.",
+      "remainingWork": "Replace generic node/context layout. Current adapter lacks AI cluster/subnode schema and a native execution inspector; these are explicit missing capabilities, not content-only repairs.",
+      "sourceIds": [
+        "n8n-current-editor",
+        "n8n-execution",
+        "n8n-ai"
+      ],
+      "currentAdapter": "Existing n8n renderer: visual rebuild; AI cluster unsupported",
+      "productionReady": false,
+      "demandName": "n8n",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "make",
+      "name": "Make",
+      "category": "Workflow automation",
+      "priority": "Named by Lorenzo",
+      "surfaces": [
+        "Scenario canvas",
+        "Module configuration and mapping",
+        "Route filter",
+        "Run inspector / bundles",
+        "Scenario history"
+      ],
+      "visualAnchors": [
+        "Circular app modules with the real app and operation label",
+        "Dotted connections, router routes and inline filters",
+        "Native Run once and scheduling toolbar",
+        "Bundle inspector stays distinct from the scenario canvas"
+      ],
+      "salesProof": [
+        "The correct trigger produces the sample bundle",
+        "Filters select the intended route",
+        "The output bundle creates the promised result in its destination app"
+      ],
+      "neverSubstitute": "A router can run multiple matching routes. Do not present it as a universal first-match if/else. Do not invent Make module identifiers or reuse a GHL action card.",
+      "remainingWork": "Rebuild scenario chrome and module geometry, add configuration/filter/bundle views, and verify actual operations. Keep JSON/module authenticity separate from visual correctness.",
+      "sourceIds": [
+        "make-toolbar",
+        "make-router"
+      ],
+      "currentAdapter": "Existing make renderer: visual rebuild required",
+      "productionReady": false,
+      "demandName": "Make",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "zapier",
+      "name": "Zapier",
+      "category": "Workflow automation",
+      "priority": "Named by Lorenzo",
+      "surfaces": [
+        "Zap visual editor",
+        "Step Setup / Configure / Test panel",
+        "Paths and filters",
+        "Zap run detail",
+        "Next Gen Workflow Manager (only when specified)"
+      ],
+      "visualAnchors": [
+        "Zap name, draft/published state and native top controls",
+        "App/event steps and native path geometry",
+        "Step configuration in the actual right panel",
+        "Next Gen components and code view belong to that distinct surface"
+      ],
+      "salesProof": [
+        "A test trigger returns a useful sample",
+        "The configured step maps real fields",
+        "A successful run and downstream record demonstrate the outcome"
+      ],
+      "neverSubstitute": "Classic Zap editor, current visual editor and Next Gen are not interchangeable. Do not label a GHL workflow Zapier or assume JSON export/import availability across plans.",
+      "remainingWork": "Implement separate classic visual-editor and Next Gen modes only as demanded. Native step setup/run inspector and current variant confirmation are required.",
+      "sourceIds": [
+        "zapier-editor",
+        "zapier-nextgen",
+        "zapier-quickstart"
+      ],
+      "currentAdapter": "Reference examples only; no reusable native adapter",
+      "productionReady": false,
+      "demandName": "Zapier",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "claude",
+      "name": "Claude",
+      "category": "AI workspaces",
+      "priority": "Named by Lorenzo",
+      "surfaces": [
+        "Claude chat",
+        "Customize > Skills",
+        "Project knowledge / instructions",
+        "Artifact or generated file",
+        "Cowork task workspace"
+      ],
+      "visualAnchors": [
+        "Chat sidebar and composer, with Claude's actual warm/neutral surface and response typography",
+        "Skills library, enable state and genuine skill menu",
+        "Project instructions and knowledge files are separate from skills",
+        "Artifact/document output uses the correct pane or file card"
+      ],
+      "salesProof": [
+        "Show the relevant skill configured in its actual library",
+        "Give Claude the client's representative input",
+        "Show the source-grounded output and the missing-information case in chat or the actual artifact"
+      ],
+      "neverSubstitute": "Claude Skills is not a CRM pipeline, a node builder, or automatically Claude Code. Do not invent a native attorney-approval button; show the review in the actual document/chat process.",
+      "remainingWork": "Highest-priority rebuild: add Claude-app Skills, Projects, chat and output surfaces. The current 2025 launch screenshots are historical and current help offers only a small menu crop; capture the current full workspace before implementation acceptance. Cowork is a separate surface.",
+      "sourceIds": [
+        "claude-skills",
+        "claude-projects",
+        "claude-skills-launch",
+        "claude-projects-launch"
+      ],
+      "currentAdapter": "No Claude-app adapter; Code transcript is not a substitute",
+      "productionReady": false,
+      "demandName": "Claude",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "claude-code",
+      "name": "Claude Code",
+      "category": "Coding agents & IDEs",
+      "priority": "Named by Lorenzo",
+      "surfaces": [
+        "Terminal / TUI",
+        "IDE agent integration",
+        "Web or desktop coding task",
+        "Diff and test result",
+        "Skill files in project context"
+      ],
+      "visualAnchors": [
+        "Actual terminal or IDE framing for the requested surface",
+        "Prompt, tool activity and changed files in native arrangement",
+        "Review uses real diff/test output rather than CRM status cards"
+      ],
+      "salesProof": [
+        "The original task and relevant skill/files are visible",
+        "A concrete change is made",
+        "The changed artifact and relevant check are shown"
+      ],
+      "neverSubstitute": "Do not assume every Claude request means Claude Code. A conceptual transcript is not proof of a native UI or a completed backend.",
+      "remainingWork": "Capture target terminal/IDE version, then replace conceptual transcript formatting. No current full native screenshot in this reference pack yet.",
+      "sourceIds": [
+        "claude-code"
+      ],
+      "currentAdapter": "Existing claude-code transcript: conceptual, not visually accepted",
+      "productionReady": false,
+      "demandName": "Claude Code",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "codex",
+      "name": "Codex",
+      "category": "Coding agents & IDEs",
+      "priority": "Named by Lorenzo",
+      "surfaces": [
+        "Desktop app conversation / project",
+        "CLI TUI",
+        "IDE extension",
+        "Files and diff review",
+        "Cloud task (when specified)"
+      ],
+      "visualAnchors": [
+        "Correct surface: desktop sidebar and panels versus terminal TUI",
+        "Native task messages, tool activity and file/diff views",
+        "Code outputs and tests retain their actual formatting"
+      ],
+      "salesProof": [
+        "A specific task starts in its repository",
+        "The implementation and diff are visible",
+        "A real sample artifact or meaningful check closes the demonstration"
+      ],
+      "neverSubstitute": "Desktop Codex is not merely a terminal inside a generic CRM shell. Do not represent a CLI splash screenshot as the current desktop UI.",
+      "remainingWork": "Current desktop capture is missing. The official repository CLI splash is a historical structural reference; it cannot certify a current app or model selector. Implement desktop and CLI separately.",
+      "sourceIds": [
+        "codex-desktop",
+        "codex-cli",
+        "codex-cli-repo"
+      ],
+      "currentAdapter": "Existing codex transcript: conceptual, not visually accepted",
+      "productionReady": false,
+      "demandName": "Codex",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "hermes",
+      "name": "Hermes Agent",
+      "category": "AI workspaces",
+      "priority": "Named by Lorenzo",
+      "surfaces": [
+        "Hermes Desktop chat / skills / messaging / artifacts",
+        "Terminal CLI / TUI",
+        "Web Dashboard sessions / config / skills",
+        "Messaging gateway such as Telegram"
+      ],
+      "visualAnchors": [
+        "Desktop is chat-first with its own sidebar and working panes",
+        "Web Dashboard has a distinct admin navigation and session/config/skills views",
+        "CLI and external messenger use their own native layouts"
+      ],
+      "salesProof": [
+        "An agent receives the representative task",
+        "Its relevant skill/context and tool activity are visible",
+        "The requested artifact or action result is shown in the proper destination"
+      ],
+      "neverSubstitute": "Do not collapse Desktop, CLI, Dashboard and Telegram into one invented Hermes dashboard. The delivery surface must be named.",
+      "remainingWork": "Choose the surface from the post. Desktop video and dashboard screenshots provide separate baselines; implement them separately and capture target-version states before acceptance.",
+      "sourceIds": [
+        "hermes-desktop",
+        "hermes-desktop-product",
+        "hermes-dashboard",
+        "hermes-gateway"
+      ],
+      "currentAdapter": "Reference example only; no accepted adapter",
+      "productionReady": false,
+      "demandName": "Hermes",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "grok",
+      "name": "Grok",
+      "category": "AI workspaces",
+      "priority": "Named by Lorenzo",
+      "surfaces": [
+        "Grok web chat",
+        "Workspace selector",
+        "Files / connected tools",
+        "Shared conversation",
+        "Build mode (only if requested)"
+      ],
+      "visualAnchors": [
+        "Actual chat navigation and composer",
+        "Workspace/profile menu distinct from conversation body",
+        "Source/file cards and responses match the selected feature"
+      ],
+      "salesProof": [
+        "The representative prompt and attached context are shown",
+        "The response uses the relevant evidence or tool",
+        "The output answers the business requirement"
+      ],
+      "neverSubstitute": "Grok chat is not Grok Bot, the API console, or a GHL workflow. Workspace-selector screenshots alone do not establish full chat layout.",
+      "remainingWork": "Capture a complete current chat. Existing references cover workspace/sharing details only; implement chat/build modes separately as needed.",
+      "sourceIds": [
+        "grok-chat",
+        "grok-product"
+      ],
+      "currentAdapter": "Reference example only; no accepted adapter",
+      "productionReady": false,
+      "demandName": "Grok",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "grok-bot",
+      "name": "Grok Bot",
+      "category": "AI workspaces",
+      "priority": "Named by Lorenzo",
+      "surfaces": [
+        "Bot list and creation",
+        "Bot conversation",
+        "Computer / apps",
+        "Skills and routines",
+        "Files and task results"
+      ],
+      "visualAnchors": [
+        "A named Bot and task conversation, not a workflow graph",
+        "Persistent computer/app context belongs to the Bot workspace",
+        "Skills/routines and approval states use the real product controls"
+      ],
+      "salesProof": [
+        "Assign a concrete job to the named Bot",
+        "Show relevant work in the actual connected application",
+        "Return the finished result and any real review checkpoint"
+      ],
+      "neverSubstitute": "Do not infer Grok Bot's layout from ordinary Grok, Cursor IDE, or Lorenzo's internal operator instructions. They are different references.",
+      "remainingWork": "Official docs establish the separate product and task model, but the public product page returned 403 and full native screenshots are absent. A genuine app capture is required before its renderer can be built or approved.",
+      "sourceIds": [
+        "grok-bot",
+        "grok-bot-skills",
+        "grok-bot-getstarted"
+      ],
+      "currentAdapter": "No adapter; native capture required",
+      "productionReady": false,
+      "demandName": "Grok",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "cursor",
+      "name": "Cursor",
+      "category": "Coding agents & IDEs",
+      "priority": "Named by Lorenzo",
+      "surfaces": [
+        "IDE editor and Agent pane",
+        "File explorer",
+        "Diff / review",
+        "Terminal and checks",
+        "Projects or cloud agents (when specified)"
+      ],
+      "visualAnchors": [
+        "Editor tabs and activity/file navigation",
+        "Agent composer and tool events in the actual sidepane",
+        "Changed files and diff remain native editor surfaces"
+      ],
+      "salesProof": [
+        "A concrete issue and relevant files are visible",
+        "The Agent edits the implementation",
+        "The diff plus working result or test demonstrate completion"
+      ],
+      "neverSubstitute": "Do not substitute Codex Desktop, Orca or a generic terminal. The official queued-message video is a pane detail, not a full current IDE capture.",
+      "remainingWork": "Implement the editor/agent split and native diff. Capture current full IDE and any requested cloud/project surface; do not use marketing wallpapers as references.",
+      "sourceIds": [
+        "cursor-agent",
+        "cursor-product"
+      ],
+      "currentAdapter": "No accepted adapter",
+      "productionReady": false,
+      "demandName": "Cursor",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "orca",
+      "name": "Orca IDE",
+      "category": "Coding agents & IDEs",
+      "priority": "Named by Lorenzo",
+      "surfaces": [
+        "Workspace / worktree list",
+        "Parallel agent terminals",
+        "Editor / browser split",
+        "Diff annotation and review",
+        "Rich repo preview"
+      ],
+      "visualAnchors": [
+        "Worktree/project navigation and isolated terminal panes",
+        "Native split boundaries and tabs",
+        "Diff annotation and file/browser previews shown in actual Orca arrangement"
+      ],
+      "salesProof": [
+        "A task is isolated in the correct worktree",
+        "The chosen agent performs the relevant work",
+        "Its diff and running result are reviewed"
+      ],
+      "neverSubstitute": "Lorenzo clarified Orca as an IDE like Antigravity. Do not use Orca Security, orcapods.ai, or another similarly named product.",
+      "remainingWork": "Use onorca.dev as the identified product. Product posters show real features but some are cropped; capture the complete target workspace before implementation acceptance.",
+      "sourceIds": [
+        "orca-ide"
+      ],
+      "currentAdapter": "No adapter; product identified by user clarification",
+      "productionReady": false,
+      "demandName": "Orca",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "antigravity",
+      "name": "Google Antigravity",
+      "category": "Coding agents & IDEs",
+      "priority": "Named by Lorenzo",
+      "surfaces": [
+        "IDE editor / Agent pane",
+        "Agent Manager",
+        "App task conversation",
+        "CLI (when specified)"
+      ],
+      "visualAnchors": [
+        "Editor and Agent Manager are distinct views",
+        "Workspace switcher, editor navigation and native agent composer",
+        "Review and browser/test artifacts use the requested surface"
+      ],
+      "salesProof": [
+        "A concrete task starts in the correct project",
+        "Agent work and artifact evidence are shown",
+        "A working preview or check establishes the result"
+      ],
+      "neverSubstitute": "Do not substitute Orca or Cursor because all are coding tools. The documentation screenshots do not establish the account's current model/version.",
+      "remainingWork": "Confirm IDE versus app/CLI and actual version. Reference screenshots establish editor/manager structure only; implement the selected surface with current target evidence.",
+      "sourceIds": [
+        "antigravity-ide-current",
+        "antigravity-ide"
+      ],
+      "currentAdapter": "No accepted adapter",
+      "productionReady": false,
+      "demandName": "Google Antigravity",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "hubspot",
+      "name": "HubSpot",
+      "category": "CRM & automation",
+      "priority": "Demand expansion",
+      "surfaces": [
+        "CRM contact / deal record",
+        "Deal pipeline",
+        "Workflow editor",
+        "Activity timeline"
+      ],
+      "visualAnchors": [
+        "HubSpot navigation, record properties and activity timeline",
+        "Actual enrollment/action panels and workflow controls",
+        "Native deal cards and pipeline stages"
+      ],
+      "salesProof": [
+        "A contact is enrolled under the intended rule",
+        "The correct property/activity changes",
+        "The expected deal or follow-up appears"
+      ],
+      "neverSubstitute": "Do not recolor the GHL contact page and call it HubSpot.",
+      "remainingWork": "Build a real HubSpot adapter; collected sources include record and workflow-panel details, not full coverage of pipeline and all record states.",
+      "sourceIds": [
+        "hubspot-workflows",
+        "hubspot-record"
+      ],
+      "currentAdapter": "Reference only; no accepted adapter",
+      "productionReady": false,
+      "demandName": "HubSpot",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "chatgpt",
+      "name": "ChatGPT",
+      "category": "AI workspaces",
+      "priority": "Demand expansion",
+      "surfaces": [
+        "Chat",
+        "Project",
+        "GPT configuration",
+        "Artifact/file output",
+        "Codex / Work only if named"
+      ],
+      "visualAnchors": [
+        "Actual sidebar, composer and response controls",
+        "Project instructions/files distinct from GPT configuration",
+        "Output cards use actual ChatGPT behavior"
+      ],
+      "salesProof": [
+        "Provide a representative input and context",
+        "Show the useful output and one validation",
+        "Make the business result visible"
+      ],
+      "neverSubstitute": "Do not substitute Codex or a generic CRM. A Project is not a custom GPT.",
+      "remainingWork": "Current references cover project navigation details. Capture full chat and the specific requested Project/GPT surface before creating an adapter.",
+      "sourceIds": [
+        "chatgpt-projects"
+      ],
+      "currentAdapter": "No accepted adapter",
+      "productionReady": false,
+      "demandName": "ChatGPT",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "openai-api",
+      "name": "OpenAI API",
+      "category": "AI workspaces",
+      "priority": "Demand expansion",
+      "surfaces": [
+        "API request/response",
+        "Developer logs or evaluation results",
+        "Agent's actual application UI"
+      ],
+      "visualAnchors": [
+        "Real API/tool names and request fields",
+        "Structured response and meaningful validation",
+        "Destination application shown when the deliverable is customer-facing"
+      ],
+      "salesProof": [
+        "A sample input reaches the intended API",
+        "A grounded response passes a useful check",
+        "The client's app displays the result"
+      ],
+      "neverSubstitute": "The API does not imply ChatGPT or Codex UI. Do not invent a native OpenAI workflow canvas.",
+      "remainingWork": "Resolve whether the job needs API implementation, an agent framework, a developer console or a custom product. Create a visual reference for that exact surface.",
+      "sourceIds": [],
+      "currentAdapter": "No general native adapter",
+      "productionReady": false,
+      "demandName": "OpenAI API",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "google-sheets",
+      "name": "Google Sheets",
+      "category": "Data & operations",
+      "priority": "Demand expansion",
+      "surfaces": [
+        "Spreadsheet grid",
+        "Formula bar",
+        "Filter / sort",
+        "Integration output / audit rows"
+      ],
+      "visualAnchors": [
+        "Sheet tabs, column/row headers and formula bar",
+        "Readable typed cells and native selection",
+        "Realistic dates, currency and formulas"
+      ],
+      "salesProof": [
+        "The original row is visible",
+        "A validated field or row changes",
+        "The formula/report reflects the same sample data"
+      ],
+      "neverSubstitute": "Do not render a generic web table as the Google Sheets app.",
+      "remainingWork": "Capture native sheet chrome and representative formula/edit states. A custom summary table can be used only as explicitly custom output.",
+      "sourceIds": [
+        "google-sheets"
+      ],
+      "currentAdapter": "No accepted adapter",
+      "productionReady": false,
+      "demandName": "Google Sheets",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "zoho",
+      "name": "Zoho CRM",
+      "category": "CRM & automation",
+      "priority": "Demand expansion",
+      "surfaces": [
+        "Lead / contact record",
+        "Deal pipeline",
+        "Workflow rule configuration",
+        "Activity"
+      ],
+      "visualAnchors": [
+        "Zoho module navigation and record header",
+        "Native criteria and instant/scheduled action sections",
+        "Actual pipeline and activity layouts"
+      ],
+      "salesProof": [
+        "A lead meets the specified criteria",
+        "The intended action updates the record",
+        "The result is visible to the responsible user"
+      ],
+      "neverSubstitute": "Zoho CRM, Creator and Flow are different products. Never choose by brand name alone.",
+      "remainingWork": "Confirm CRM/Flow/Creator and edition, collect full screenshots and implement product-specific screens. Current rule documentation has insufficient full UI imagery.",
+      "sourceIds": [
+        "zoho-workflow"
+      ],
+      "currentAdapter": "No accepted adapter",
+      "productionReady": false,
+      "demandName": "Zoho",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "instantly",
+      "name": "Instantly",
+      "category": "Outreach",
+      "priority": "Demand expansion",
+      "surfaces": [
+        "Campaign sequence editor",
+        "Leads / campaign status",
+        "Unibox conversation",
+        "Campaign analytics"
+      ],
+      "visualAnchors": [
+        "Native campaign tabs and step/delay sequence",
+        "Lead status and sending-account context",
+        "Unibox inbox and thread",
+        "Actual analytics metric names"
+      ],
+      "salesProof": [
+        "A sample lead enters the intended sequence",
+        "A reply appears in Unibox",
+        "Follow-up stops or changes under the intended condition"
+      ],
+      "neverSubstitute": "Do not use generic email bubbles, a CRM conversation screen, or a lead-finder screenshot as evidence of the sequence editor.",
+      "remainingWork": "Obtain current sequence, Unibox and lead screenshots. Some public help routes are unavailable and collected homepage art is excluded from UI evidence.",
+      "sourceIds": [
+        "instantly-sequences",
+        "instantly-export",
+        "instantly-product"
+      ],
+      "currentAdapter": "No accepted adapter",
+      "productionReady": false,
+      "demandName": "Instantly",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "airtable",
+      "name": "Airtable",
+      "category": "Data & operations",
+      "priority": "Demand expansion",
+      "surfaces": [
+        "Base grid",
+        "Automation trigger/actions",
+        "Run history",
+        "Interface Designer"
+      ],
+      "visualAnchors": [
+        "Base/table/view navigation and typed fields",
+        "Actual automation test/run history panels",
+        "Interfaces are separate from the base grid"
+      ],
+      "salesProof": [
+        "A record is created or corrected",
+        "A rule runs against that record",
+        "The status and related output appear"
+      ],
+      "neverSubstitute": "A generic table or form is not the Airtable grid or Interface Designer.",
+      "remainingWork": "Collected automation/history references need a matching grid and Interface Designer capture when those are required by a post.",
+      "sourceIds": [
+        "airtable-automation"
+      ],
+      "currentAdapter": "No accepted adapter",
+      "productionReady": false,
+      "demandName": "Airtable",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "notion",
+      "name": "Notion",
+      "category": "Data & operations",
+      "priority": "Demand expansion",
+      "surfaces": [
+        "Page with blocks",
+        "Database table / board",
+        "Properties and filters",
+        "Database automation"
+      ],
+      "visualAnchors": [
+        "Workspace navigation and breadcrumb",
+        "Actual block/page hierarchy",
+        "Database views, properties and row/page opening behavior"
+      ],
+      "salesProof": [
+        "A record/page enters the proper database",
+        "Relevant fields or content are updated",
+        "The requested view/report reflects the update"
+      ],
+      "neverSubstitute": "Do not present a Kanban-style CRM with Notion written above it.",
+      "remainingWork": "Use actual database-view screenshots; cover full workspace navigation and edit states before implementing the adapter.",
+      "sourceIds": [
+        "notion-database"
+      ],
+      "currentAdapter": "Reference only; no accepted adapter",
+      "productionReady": false,
+      "demandName": "Notion",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "clay",
+      "name": "Clay",
+      "category": "Outreach",
+      "priority": "Demand expansion",
+      "surfaces": [
+        "Table and enrichment columns",
+        "Enrichment configuration",
+        "Row/cell details",
+        "Run results"
+      ],
+      "visualAnchors": [
+        "Native table navigation and typed/enrichment columns",
+        "Configuration panel and row-level execution state",
+        "Sources and validated output in the relevant cell"
+      ],
+      "salesProof": [
+        "A sample company/contact is researched",
+        "The enrichment returns supported values",
+        "Qualified output is handed to the intended destination"
+      ],
+      "neverSubstitute": "Decorative enrichment icons are not evidence of Clay's table UI.",
+      "remainingWork": "Acquire actual table/configuration references; homepage artwork is excluded. Verify provider/operation names and row-result states.",
+      "sourceIds": [
+        "clay-product"
+      ],
+      "currentAdapter": "Reference only; no accepted adapter",
+      "productionReady": false,
+      "demandName": "Clay",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "pipedrive",
+      "name": "Pipedrive",
+      "category": "CRM & automation",
+      "priority": "Demand expansion",
+      "surfaces": [
+        "Deal pipeline",
+        "Deal/contact detail",
+        "Automation editor",
+        "Activity scheduling"
+      ],
+      "visualAnchors": [
+        "Native pipeline cards and stage totals",
+        "Record activities and detail layout",
+        "Actual automation builder and trigger/action labels"
+      ],
+      "salesProof": [
+        "A deal enters the right stage",
+        "The intended activity is created",
+        "The same deal moves with consistent values"
+      ],
+      "neverSubstitute": "Do not substitute GHL or HubSpot pipeline styling.",
+      "remainingWork": "Resolve the current official pipeline documentation route, capture pipeline/detail/editor and implement the matching views.",
+      "sourceIds": [
+        "pipedrive-deals"
+      ],
+      "currentAdapter": "Reference only; no accepted adapter",
+      "productionReady": false,
+      "demandName": "Pipedrive",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "vapi",
+      "name": "Vapi",
+      "category": "Voice agents",
+      "priority": "Demand expansion",
+      "surfaces": [
+        "Assistant configuration",
+        "Test call",
+        "Call logs / transcript",
+        "Tool invocation detail"
+      ],
+      "visualAnchors": [
+        "Assistant list and native configuration sections",
+        "Prompt, voice/model and tool controls",
+        "Call/transcript and extracted fields in their actual views"
+      ],
+      "salesProof": [
+        "The assistant receives a representative call",
+        "It handles one important edge case",
+        "Transcript/tool result and the destination record agree"
+      ],
+      "neverSubstitute": "Do not show a made-up phone waveform and imply a verified live call.",
+      "remainingWork": "Collect complete assistant and call-log views beyond the current detail crops; implement native transcript and call outcome states.",
+      "sourceIds": [
+        "vapi-dashboard"
+      ],
+      "currentAdapter": "Voice-agent example is not a Vapi adapter",
+      "productionReady": false,
+      "demandName": "Vapi",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "retell",
+      "name": "Retell AI",
+      "category": "Voice agents",
+      "priority": "Demand expansion",
+      "surfaces": [
+        "Agent configuration",
+        "Conversation flow if selected",
+        "Test call",
+        "Call history / transcript"
+      ],
+      "visualAnchors": [
+        "Actual agent mode and configuration sections",
+        "Real conversation-flow node types when applicable",
+        "Call detail and transcript layout"
+      ],
+      "salesProof": [
+        "A realistic sample call follows the intended path",
+        "An exception is handled",
+        "The extracted result reaches the destination"
+      ],
+      "neverSubstitute": "Retell prompt agents and flow agents are not interchangeable; do not use a Vapi skin.",
+      "remainingWork": "Resolve current create-agent documentation and capture target agent type, tests and call detail. No accepted imagery yet.",
+      "sourceIds": [
+        "retell-dashboard"
+      ],
+      "currentAdapter": "No accepted adapter",
+      "productionReady": false,
+      "demandName": "Retell",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "twilio",
+      "name": "Twilio",
+      "category": "Voice agents",
+      "priority": "Demand expansion",
+      "surfaces": [
+        "Studio flow canvas",
+        "Widget configuration",
+        "Execution logs",
+        "Messaging/call logs"
+      ],
+      "visualAnchors": [
+        "Native Studio widgets, transition ports and right configuration panel",
+        "Trigger and widget-specific transitions",
+        "Actual log tables and execution detail"
+      ],
+      "salesProof": [
+        "The incoming event reaches the intended widget",
+        "Correct transitions execute",
+        "The message/call result and logs are consistent"
+      ],
+      "neverSubstitute": "Twilio Studio is not n8n. Do not claim a message was sent from a purely visual sample.",
+      "remainingWork": "Implement Studio and log surfaces independently; references cover trigger/widget configuration details, not all log views.",
+      "sourceIds": [
+        "twilio-studio"
+      ],
+      "currentAdapter": "No accepted adapter",
+      "productionReady": false,
+      "demandName": "Twilio",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "supabase",
+      "name": "Supabase",
+      "category": "Data & operations",
+      "priority": "Demand expansion",
+      "surfaces": [
+        "Table Editor",
+        "SQL Editor",
+        "Auth users",
+        "Edge Function / logs"
+      ],
+      "visualAnchors": [
+        "Project navigation and table/schema selection",
+        "Actual grid or query/result split",
+        "Relevant auth/function/log detail"
+      ],
+      "salesProof": [
+        "A sample input is stored correctly",
+        "Validation/query behavior is visible",
+        "The consuming application shows the intended result"
+      ],
+      "neverSubstitute": "An ERD illustration is not the Table Editor, and a generic table is not Supabase.",
+      "remainingWork": "Acquire native dashboard screenshots; conceptual database illustrations have been excluded from UI evidence.",
+      "sourceIds": [
+        "supabase-dashboard"
+      ],
+      "currentAdapter": "No accepted adapter",
+      "productionReady": false,
+      "demandName": "Supabase",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "apify",
+      "name": "Apify",
+      "category": "Data & operations",
+      "priority": "Demand expansion",
+      "surfaces": [
+        "Actor input",
+        "Run progress/log",
+        "Dataset output",
+        "Schedule or integration"
+      ],
+      "visualAnchors": [
+        "Actor/run navigation and native input form",
+        "Actual run status/log",
+        "Dataset table/export controls"
+      ],
+      "salesProof": [
+        "A specific input starts the relevant actor",
+        "The run result is inspected",
+        "Structured records reach the requested destination"
+      ],
+      "neverSubstitute": "Do not substitute a custom scraping dashboard or invent actor IDs.",
+      "remainingWork": "Collect the actual Actor/Run/Dataset interface; console docs alone currently provide insufficient visual coverage.",
+      "sourceIds": [
+        "apify-console"
+      ],
+      "currentAdapter": "No accepted adapter",
+      "productionReady": false,
+      "demandName": "Apify",
+      "state": "reference-plan; implementation and native comparison pending"
+    },
+    {
+      "id": "shopify",
+      "name": "Shopify",
+      "category": "Commerce",
+      "priority": "Demand expansion",
+      "surfaces": [
+        "Admin product/order",
+        "Flow editor",
+        "Run history",
+        "Storefront (when relevant)"
+      ],
+      "visualAnchors": [
+        "Admin navigation and real order/product detail",
+        "Flow trigger/condition/action arrangement",
+        "Run history and storefront are distinct views"
+      ],
+      "salesProof": [
+        "A sample order meets the condition",
+        "The correct Flow action occurs",
+        "Order/customer/storefront output matches"
+      ],
+      "neverSubstitute": "A custom storefront is not Shopify Admin. Shopify Flow must use its own builder.",
+      "remainingWork": "Capture admin plus Flow/editor/run states for the specific task; add only the surfaces the post actually needs.",
+      "sourceIds": [
+        "shopify-flow"
+      ],
+      "currentAdapter": "No accepted adapter",
+      "productionReady": false,
+      "demandName": "Shopify",
+      "state": "reference-plan; implementation and native comparison pending"
+    }
+  ],
+  "watchlist": [
+    {
+      "name": "Slack",
+      "surfaces": "Channel, thread, app/bot messages and relevant workflow",
+      "researchUrl": "https://slack.com/help/categories/200111606-Using-Slack",
+      "status": "intake watchlist; references and adapter required"
+    },
+    {
+      "name": "Gmail",
+      "surfaces": "Inbox, thread, compose and labels",
+      "researchUrl": "https://support.google.com/mail/",
+      "status": "intake watchlist; references and adapter required"
+    },
+    {
+      "name": "Microsoft Excel",
+      "surfaces": "Workbook, formulas, table and requested automation surface",
+      "researchUrl": "https://support.microsoft.com/excel",
+      "status": "intake watchlist; references and adapter required"
+    },
+    {
+      "name": "ClickUp",
+      "surfaces": "Workspace list/board, task detail and automation",
+      "researchUrl": "https://help.clickup.com/",
+      "status": "intake watchlist; references and adapter required"
+    },
+    {
+      "name": "Salesforce",
+      "surfaces": "Lightning record, opportunity and Flow Builder",
+      "researchUrl": "https://help.salesforce.com/",
+      "status": "intake watchlist; references and adapter required"
+    },
+    {
+      "name": "Skool",
+      "surfaces": "Community, classroom and membership result",
+      "researchUrl": "https://help.skool.com/",
+      "status": "intake watchlist; references and adapter required"
+    },
+    {
+      "name": "Kit / ConvertKit",
+      "surfaces": "Subscriber, visual automation and sequence",
+      "researchUrl": "https://help.kit.com/",
+      "status": "intake watchlist; references and adapter required"
+    },
+    {
+      "name": "ActiveCampaign",
+      "surfaces": "Contact, automation and campaign",
+      "researchUrl": "https://help.activecampaign.com/",
+      "status": "intake watchlist; references and adapter required"
+    },
+    {
+      "name": "Klaviyo",
+      "surfaces": "Profile, flow and campaign",
+      "researchUrl": "https://help.klaviyo.com/",
+      "status": "intake watchlist; references and adapter required"
+    },
+    {
+      "name": "Calendly",
+      "surfaces": "Event type, booking and scheduled event",
+      "researchUrl": "https://help.calendly.com/",
+      "status": "intake watchlist; references and adapter required"
+    },
+    {
+      "name": "Microsoft Power Automate",
+      "surfaces": "Cloud flow, desktop flow or app-specific surface",
+      "researchUrl": "https://learn.microsoft.com/power-automate/",
+      "status": "intake watchlist; references and adapter required"
+    },
+    {
+      "name": "ElevenLabs",
+      "surfaces": "Voice or conversational-agent workspace, per post",
+      "researchUrl": "https://elevenlabs.io/docs/",
+      "status": "intake watchlist; references and adapter required"
+    }
+  ],
+  "unlistedPolicy": "Identify product and exact surface; research first-party docs and current screenshots; implement and compare a representative screen; obtain focused independent review before adding it to the accepted visual registry. Never choose the nearest existing skin."
+}

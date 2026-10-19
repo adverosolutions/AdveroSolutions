@@ -1,0 +1,335 @@
+{
+  "asOf": "2026-10-19",
+  "sources": [
+    {
+      "id": "ghl-workflow",
+      "platform": "ghl",
+      "surface": "Workflow builder",
+      "url": "https://help.gohighlevel.com/support/solutions/articles/155000001254-workflow-builder-walkthrough"
+    },
+    {
+      "id": "ghl-contact",
+      "platform": "ghl",
+      "surface": "Contact and opportunity overlay",
+      "url": "https://help.gohighlevel.com/support/solutions/articles/155000008627-how-to-use-the-contact-overlay-in-highlevel"
+    },
+    {
+      "id": "ghl-conversations",
+      "platform": "ghl",
+      "surface": "Conversations",
+      "url": "https://help.gohighlevel.com/support/solutions/articles/155000001321-right-panel-expandable-sidebar-in-conversations"
+    },
+    {
+      "id": "n8n-editor",
+      "platform": "n8n",
+      "surface": "Editor and node configuration",
+      "url": "https://docs.n8n.io/courses/level-one/chapter-1/"
+    },
+    {
+      "id": "n8n-execution",
+      "platform": "n8n",
+      "surface": "Execution review",
+      "url": "https://docs.n8n.io/workflows/executions/"
+    },
+    {
+      "id": "n8n-ai",
+      "platform": "n8n",
+      "surface": "AI Agent and subnodes",
+      "url": "https://docs.n8n.io/advanced-ai/intro-tutorial/"
+    },
+    {
+      "id": "make-editor",
+      "platform": "make",
+      "surface": "Scenario editor",
+      "url": "https://help.make.com/scenario-editor"
+    },
+    {
+      "id": "make-toolbar",
+      "platform": "make",
+      "surface": "Editor toolbar",
+      "url": "https://help.make.com/editor-revamp-and-subscenarios-launch"
+    },
+    {
+      "id": "make-router",
+      "platform": "make",
+      "surface": "Router and filters",
+      "url": "https://help.make.com/router"
+    },
+    {
+      "id": "zapier-editor",
+      "platform": "zapier",
+      "surface": "Zap visual editor",
+      "url": "https://help.zapier.com/hc/en-us/articles/16722578092429-Use-the-editor-to-build-and-view-your-Zap-workflows"
+    },
+    {
+      "id": "zapier-nextgen",
+      "platform": "zapier",
+      "surface": "Next Gen Workflow Manager",
+      "url": "https://help.zapier.com/hc/en-us/articles/49005047515021-Use-the-Workflow-Manager-to-build-and-view-your-Next-Gen-Zaps"
+    },
+    {
+      "id": "claude-skills",
+      "platform": "claude",
+      "surface": "Skills library and upload",
+      "url": "https://support.claude.com/en/articles/12512180-use-skills-in-claude"
+    },
+    {
+      "id": "claude-projects",
+      "platform": "claude",
+      "surface": "Project knowledge and instructions",
+      "url": "https://support.claude.com/en/articles/9517075-what-are-projects"
+    },
+    {
+      "id": "claude-code",
+      "platform": "claude-code",
+      "surface": "Terminal and coding workspace",
+      "url": "https://code.claude.com/docs/en/overview"
+    },
+    {
+      "id": "codex-desktop",
+      "platform": "codex",
+      "surface": "Desktop chats and review",
+      "url": "https://learn.chatgpt.com/docs/quickstart?setup=app"
+    },
+    {
+      "id": "codex-cli",
+      "platform": "codex",
+      "surface": "Terminal agent",
+      "url": "https://learn.chatgpt.com/docs/codex/cli"
+    },
+    {
+      "id": "hermes-desktop",
+      "platform": "hermes",
+      "surface": "Desktop chat and settings",
+      "url": "https://hermes-agent.nousresearch.com/docs/user-guide/desktop"
+    },
+    {
+      "id": "hermes-overview",
+      "platform": "hermes",
+      "surface": "Product overview",
+      "url": "https://hermes-agent.nousresearch.com/"
+    },
+    {
+      "id": "hermes-gateway",
+      "platform": "hermes",
+      "surface": "Messaging gateway",
+      "url": "https://hermes-agent.nousresearch.com/docs/user-guide/messaging/"
+    },
+    {
+      "id": "grok-chat",
+      "platform": "grok",
+      "surface": "Chat and workspaces",
+      "url": "https://docs.x.ai/grok/user-guide"
+    },
+    {
+      "id": "grok-bot",
+      "platform": "grok-bot",
+      "surface": "Bot creation and management",
+      "url": "https://docs.x.ai/grok-bot/bots"
+    },
+    {
+      "id": "grok-bot-skills",
+      "platform": "grok-bot",
+      "surface": "Skills and routines",
+      "url": "https://docs.x.ai/grok-bot/skills-routines-and-automations"
+    },
+    {
+      "id": "grok-product",
+      "platform": "grok",
+      "surface": "Product visuals",
+      "url": "https://x.ai/grok"
+    },
+    {
+      "id": "grok-bot-product",
+      "platform": "grok-bot",
+      "surface": "Product visuals",
+      "url": "https://x.ai/bot"
+    },
+    {
+      "id": "cursor-agent",
+      "platform": "cursor",
+      "surface": "Editor agent pane",
+      "url": "https://cursor.com/docs/agent/overview"
+    },
+    {
+      "id": "cursor-product",
+      "platform": "cursor",
+      "surface": "Product visuals",
+      "url": "https://cursor.com/features"
+    },
+    {
+      "id": "hubspot-workflows",
+      "platform": "hubspot",
+      "surface": "Workflow editor",
+      "url": "https://knowledge.hubspot.com/workflows/create-workflows"
+    },
+    {
+      "id": "hubspot-record",
+      "platform": "hubspot",
+      "surface": "CRM record",
+      "url": "https://knowledge.hubspot.com/records/work-with-records"
+    },
+    {
+      "id": "airtable-automation",
+      "platform": "airtable",
+      "surface": "Automations",
+      "url": "https://support.airtable.com/docs/getting-started-with-airtable-automations"
+    },
+    {
+      "id": "notion-database",
+      "platform": "notion",
+      "surface": "Database views",
+      "url": "https://www.notion.com/help/views-filters-and-sorts"
+    },
+    {
+      "id": "zoho-workflow",
+      "platform": "zoho",
+      "surface": "Workflow rules",
+      "url": "https://help.zoho.com/portal/en/kb/crm/automate-business-processes/workflow-management/articles/configuring-workflow-rules"
+    },
+    {
+      "id": "chatgpt-projects",
+      "platform": "chatgpt",
+      "surface": "Projects",
+      "url": "https://help.openai.com/en/articles/10169521-using-projects-in-chatgpt"
+    },
+    {
+      "id": "google-sheets",
+      "platform": "google-sheets",
+      "surface": "Spreadsheet interface",
+      "url": "https://support.google.com/docs/answer/6000292?hl=en"
+    },
+    {
+      "id": "instantly-sequences",
+      "platform": "instantly",
+      "surface": "Campaign sequences",
+      "url": "https://help.instantly.ai/en/articles/6222404-how-to-create-a-campaign"
+    },
+    {
+      "id": "clay-product",
+      "platform": "clay",
+      "surface": "Table and enrichment",
+      "url": "https://www.clay.com/"
+    },
+    {
+      "id": "pipedrive-deals",
+      "platform": "pipedrive",
+      "surface": "Deals pipeline",
+      "url": "https://support.pipedrive.com/en/article/pipeline-view"
+    },
+    {
+      "id": "vapi-dashboard",
+      "platform": "vapi",
+      "surface": "Voice assistant dashboard",
+      "url": "https://docs.vapi.ai/quickstart/dashboard"
+    },
+    {
+      "id": "retell-dashboard",
+      "platform": "retell",
+      "surface": "Voice agent and tests",
+      "url": "https://docs.retellai.com/build/create-agent"
+    },
+    {
+      "id": "supabase-dashboard",
+      "platform": "supabase",
+      "surface": "Database and logs",
+      "url": "https://supabase.com/docs/guides/database/tables"
+    },
+    {
+      "id": "apify-console",
+      "platform": "apify",
+      "surface": "Actor runs and datasets",
+      "url": "https://docs.apify.com/platform/console"
+    },
+    {
+      "id": "shopify-flow",
+      "platform": "shopify",
+      "surface": "Flow editor",
+      "url": "https://help.shopify.com/en/manual/shopify-flow/create"
+    },
+    {
+      "id": "twilio-studio",
+      "platform": "twilio",
+      "surface": "Studio canvas",
+      "url": "https://www.twilio.com/docs/studio/user-guide"
+    },
+    {
+      "id": "orca-ide",
+      "platform": "orca",
+      "surface": "Agent IDE worktrees, terminals and review",
+      "url": "https://www.onorca.dev/"
+    },
+    {
+      "id": "antigravity-ide",
+      "platform": "antigravity",
+      "surface": "Editor and Agent Manager",
+      "url": "https://www.antigravity.google/docs/getting-started?tab=ide"
+    },
+    {
+      "id": "claude-skills-launch",
+      "platform": "claude",
+      "surface": "Historical Skills UI; date-sensitive reference",
+      "url": "https://www.anthropic.com/research/skills"
+    },
+    {
+      "id": "claude-projects-launch",
+      "platform": "claude",
+      "surface": "Historical project workspace; date-sensitive reference",
+      "url": "https://www.anthropic.com/news/projects"
+    },
+    {
+      "id": "hermes-desktop-product",
+      "platform": "hermes",
+      "surface": "Desktop workspace screenshots",
+      "url": "https://hermes-agent.nousresearch.com/desktop"
+    },
+    {
+      "id": "hermes-dashboard",
+      "platform": "hermes",
+      "surface": "Web dashboard",
+      "url": "https://hermes-agent.nousresearch.com/docs/user-guide/features/web-dashboard"
+    },
+    {
+      "id": "zapier-quickstart",
+      "platform": "zapier",
+      "surface": "Zap editor overview",
+      "url": "https://help.zapier.com/hc/en-us/articles/22234847450893-Zap-workflows-quick-start-guide"
+    },
+    {
+      "id": "instantly-export",
+      "platform": "instantly",
+      "surface": "Campaign and Unibox context",
+      "url": "https://help.instantly.ai/en/articles/13924078-how-to-export-data-from-your-instantly-account"
+    },
+    {
+      "id": "instantly-product",
+      "platform": "instantly",
+      "surface": "Outreach product interface",
+      "url": "https://instantly.ai/"
+    },
+    {
+      "id": "grok-bot-getstarted",
+      "platform": "grok-bot",
+      "surface": "Bot application navigation",
+      "url": "https://docs.x.ai/grok-bot/get-started"
+    },
+    {
+      "id": "n8n-current-editor",
+      "platform": "n8n",
+      "surface": "Current repository editor screenshots",
+      "url": "https://github.com/n8n-io/n8n-docs/tree/main/docs/build/.gitbook/assets"
+    },
+    {
+      "id": "codex-cli-repo",
+      "platform": "codex",
+      "surface": "Codex CLI repository screenshot",
+      "url": "https://github.com/openai/codex"
+    },
+    {
+      "id": "antigravity-ide-current",
+      "platform": "antigravity",
+      "surface": "Editor and Agent Manager",
+      "url": "https://www.antigravity.google/docs/getting-started?tab=ide"
+    }
+  ]
+}

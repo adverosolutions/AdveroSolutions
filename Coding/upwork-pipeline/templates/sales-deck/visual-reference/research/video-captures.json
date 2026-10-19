@@ -1,0 +1,59 @@
+{
+  "asOf": "2026-10-19",
+  "captures": [
+    {
+      "id": "hermes-desktop-video",
+      "platform": "hermes",
+      "surface": "Desktop app video frame",
+      "page": "https://hermes-agent.nousresearch.com/desktop",
+      "video": "https://hermes-assets.nousresearch.com/hermes-desktop.mp4",
+      "time": 15,
+      "status": "captured-and-selected",
+      "image": {
+        "id": "hermes-desktop-frame-15",
+        "platform": "hermes",
+        "sourceId": "hermes-desktop-product",
+        "surface": "Desktop chat and sidebar, video at 15 seconds",
+        "path": "assets/hermes-desktop-frame-15.png",
+        "url": "https://hermes-assets.nousresearch.com/hermes-desktop.mp4",
+        "sourcePage": "https://hermes-agent.nousresearch.com/desktop",
+        "alt": "Desktop chat and sidebar, video at 15 seconds",
+        "width": 1600,
+        "height": 900,
+        "sha256": "34280f8fc0c2ca4a1c745d08cb274df4b383431bbaba834b9d95134e69c08ab9",
+        "bytes": 1001312,
+        "historical": false,
+        "qualification": "Official product video frame; desktop surface only, not the web dashboard. Target version/theme still needs confirmation.",
+        "reviewedBy": "Sol visual inspection, 2026-10-19",
+        "classification": "selected-official-video-frame"
+      }
+    },
+    {
+      "id": "cursor-agent-video",
+      "platform": "cursor",
+      "surface": "Agent pane and queued messages",
+      "page": "https://cursor.com/docs/agent/overview",
+      "video": "https://cursor.com/docs-static/images/agent/planning/agent-queue.mp4",
+      "time": 3,
+      "status": "captured",
+      "image": {
+        "id": "cursor-agent-video",
+        "platform": "cursor",
+        "sourceId": "cursor-agent",
+        "surface": "Agent sidepane detail, video at 3 seconds",
+        "path": "assets/cursor-agent-video.png",
+        "url": "https://cursor.com/docs-static/images/agent/planning/agent-queue.mp4",
+        "sourcePage": "https://cursor.com/docs/agent/overview",
+        "alt": "Agent sidepane detail, video at 3 seconds",
+        "width": 1600,
+        "height": 928,
+        "sha256": "615d93970b245e2d4323d13bb6a03b77bd7b6fe9dcf465f1bf7405307179e836",
+        "bytes": 112875,
+        "historical": true,
+        "qualification": "Official documentation video detail; shows an older model label and is not proof of the current full IDE.",
+        "reviewedBy": "Sol visual inspection, 2026-10-19",
+        "classification": "selected-official-video-frame"
+      }
+    }
+  ]
+}

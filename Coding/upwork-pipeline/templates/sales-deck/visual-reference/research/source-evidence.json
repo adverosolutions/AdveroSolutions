@@ -1,0 +1,1170 @@
+{
+  "asOf": "2026-10-19",
+  "sources": [
+    {
+      "id": "ghl-workflow",
+      "platform": "ghl",
+      "surface": "Workflow builder",
+      "url": "https://help.gohighlevel.com/support/solutions/articles/155000001254-workflow-builder-walkthrough",
+      "checkedAt": "2026-10-19",
+      "images": [
+        {
+          "path": "assets/ghl-workflow-a40574215114.png",
+          "url": "https://s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155039914922/original/LAuW1K8geHJG9gutYFr7gF0cBgrcCkyx3Q.png?1737001655",
+          "sourcePage": "https://help.gohighlevel.com/support/solutions/articles/155000001254-workflow-builder-walkthrough",
+          "alt": "",
+          "width": 2880,
+          "height": 1618,
+          "sha256": "a40574215114e89e69deb0fe965f6a284e4e6e52811abcba9a838c7b62e5f2a1",
+          "bytes": 279955,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "status": "fetched",
+      "finalUrl": "https://help.gohighlevel.com/support/solutions/articles/155000001254-workflow-builder-walkthrough",
+      "title": "Workflow Builder Walkthrough in HighLevel | Automation Guide : HighLevel Support Portal",
+      "candidateCount": 15
+    },
+    {
+      "id": "ghl-contact",
+      "platform": "ghl",
+      "surface": "Contact and opportunity overlay",
+      "url": "https://help.gohighlevel.com/support/solutions/articles/155000008627-how-to-use-the-contact-overlay-in-highlevel",
+      "checkedAt": "2026-10-19",
+      "images": [
+        {
+          "path": "assets/ghl-contact-2beadb770b86.png",
+          "url": "https://s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155080122492/original/axMxr2E1Xb7Dk4ZYIJ_6Qz61dY2qWWvBBQ.png?1788531302",
+          "sourcePage": "https://help.gohighlevel.com/support/solutions/articles/155000008627-how-to-use-the-contact-overlay-in-highlevel",
+          "alt": "",
+          "width": 2954,
+          "height": 1678,
+          "sha256": "2beadb770b86a6326be2a78f7cc84c6dbce223c8f8328a854b1e5582a2686995",
+          "bytes": 412591,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "status": "fetched",
+      "finalUrl": "https://help.gohighlevel.com/support/solutions/articles/155000008627-how-to-use-the-contact-overlay-in-highlevel",
+      "title": "HighLevel Contact Overlay for Opportunities & Appointments : HighLevel Support Portal",
+      "candidateCount": 11
+    },
+    {
+      "id": "ghl-conversations",
+      "platform": "ghl",
+      "surface": "Conversations",
+      "url": "https://help.gohighlevel.com/support/solutions/articles/155000001321-right-panel-expandable-sidebar-in-conversations",
+      "checkedAt": "2026-10-19",
+      "images": [
+        {
+          "path": "assets/ghl-conversations-30e383a67a3b.png",
+          "url": "https://s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155010869904/original/aIHn63Jxv4D_6NFEHxYK5mode5KBGQnwPQ.png?1698123624",
+          "sourcePage": "https://help.gohighlevel.com/support/solutions/articles/155000001321-right-panel-expandable-sidebar-in-conversations",
+          "alt": "",
+          "width": 3448,
+          "height": 1990,
+          "sha256": "30e383a67a3b6570ad9ff6f18838fd7b8f59700691156151b4e7825cb0f30002",
+          "bytes": 679449,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/ghl-conversations-862e469c1971.png",
+          "url": "https://s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155010869921/original/CMmLIDReFx1GoI5v5lJQeEs04uZU_KdHJw.png?1698123677",
+          "sourcePage": "https://help.gohighlevel.com/support/solutions/articles/155000001321-right-panel-expandable-sidebar-in-conversations",
+          "alt": "",
+          "width": 3448,
+          "height": 1990,
+          "sha256": "862e469c197142f31caf467a82fc1fd35088d5e3e141d2bb9a2cbc66b4964f2e",
+          "bytes": 779173,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "status": "fetched",
+      "finalUrl": "https://help.gohighlevel.com/support/solutions/articles/155000001321-right-panel-expandable-sidebar-in-conversations",
+      "title": "Right Panel & Expandable Sidebar in Conversations : HighLevel Support Portal",
+      "candidateCount": 5
+    },
+    {
+      "id": "n8n-editor",
+      "platform": "n8n",
+      "surface": "Editor and node configuration",
+      "url": "https://docs.n8n.io/courses/level-one/chapter-1/",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://learn.n8n.io/",
+      "title": "n8n",
+      "candidateCount": 4
+    },
+    {
+      "id": "n8n-execution",
+      "platform": "n8n",
+      "surface": "Execution review",
+      "url": "https://docs.n8n.io/workflows/executions/",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://docs.n8n.io/build/understand-workflows/understand-executions",
+      "title": "Understand executions | Build | n8n Docsx-twitterdiscordlinkedinyoutube",
+      "candidateCount": 0
+    },
+    {
+      "id": "n8n-ai",
+      "platform": "n8n",
+      "surface": "AI Agent and subnodes",
+      "url": "https://docs.n8n.io/advanced-ai/intro-tutorial/",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://learn.n8n.io/",
+      "title": "n8n",
+      "candidateCount": 4
+    },
+    {
+      "id": "make-editor",
+      "platform": "make",
+      "surface": "Scenario editor",
+      "url": "https://help.make.com/scenario-editor",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "unavailable",
+      "error": "HTTPError: HTTP Error 404: Not Found",
+      "candidateCount": 0
+    },
+    {
+      "id": "make-toolbar",
+      "platform": "make",
+      "surface": "Editor toolbar",
+      "url": "https://help.make.com/editor-revamp-and-subscenarios-launch",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://help.make.com/editor-revamp-and-subscenarios-launch",
+      "title": "Editor revamp and subscenarios launch - Help Center",
+      "candidateCount": 2
+    },
+    {
+      "id": "make-router",
+      "platform": "make",
+      "surface": "Router and filters",
+      "url": "https://help.make.com/router",
+      "checkedAt": "2026-10-19",
+      "images": [
+        {
+          "path": "assets/make-router-31817cc15a9d.webp",
+          "url": "https://cdn.images.archbee.com/4CkrlJIBl1di_p1x71ery-7A9Xm0SEYKNR5hyiYiNtj-20250214-104816.png?format=webp",
+          "sourcePage": "https://help.make.com/router",
+          "alt": "Document image",
+          "width": 677,
+          "height": 420,
+          "sha256": "31817cc15a9d8b9c2f22b20c85d1c4651468a379c42f60f36e2bed73d84fcce4",
+          "bytes": 10848,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/make-router-1b634a50c20a.webp",
+          "url": "https://cdn.images.archbee.com/4CkrlJIBl1di_p1x71ery-AFT6IYmtIq9Qk8Hh71cyt-20250214-105016.png?format=webp",
+          "sourcePage": "https://help.make.com/router",
+          "alt": "Document image",
+          "width": 927,
+          "height": 418,
+          "sha256": "1b634a50c20aea06ea8f4533286a6558619158f25d3f59423d8311cad118323d",
+          "bytes": 17988,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/make-router-9e0abcb55098.webp",
+          "url": "https://cdn.images.archbee.com/oAyFj2GHlBeBVWF5OAir2/IrpZRCGHih_oujYeT9637_uuid-e3def79c-e047-8485-8c6e-d563eb9323a2.png?format=webp",
+          "sourcePage": "https://help.make.com/router",
+          "alt": "Document image",
+          "width": 1545,
+          "height": 633,
+          "sha256": "9e0abcb55098216bf64d9d6f6c5154438f2e834897c39080a1808420077789f5",
+          "bytes": 35262,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/make-router-e3054f5b5bf4.webp",
+          "url": "https://cdn.images.archbee.com/oAyFj2GHlBeBVWF5OAir2/chJne3fCQxUYdpDVbPlVV_uuid-1159cae7-cd6f-80a5-2280-f28de8aa5927.png?format=webp",
+          "sourcePage": "https://help.make.com/router",
+          "alt": "Document image",
+          "width": 1007,
+          "height": 1038,
+          "sha256": "e3054f5b5bf4d8cdf1ef2ed1d8ef2848e01d09537028df4faea6992792ff7a86",
+          "bytes": 30256,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "status": "fetched",
+      "finalUrl": "https://help.make.com/router",
+      "title": "Router - Help Center",
+      "candidateCount": 24
+    },
+    {
+      "id": "zapier-editor",
+      "platform": "zapier",
+      "surface": "Zap visual editor",
+      "url": "https://help.zapier.com/hc/en-us/articles/16722578092429-Use-the-editor-to-build-and-view-your-Zap-workflows",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://help.zapier.com/hc/en-us/articles/16722578092429-Use-the-editor-to-build-and-view-your-Zap-workflows",
+      "title": "Use the editor to build and view your Zap workflows \u2013 Zapier",
+      "candidateCount": 25
+    },
+    {
+      "id": "zapier-nextgen",
+      "platform": "zapier",
+      "surface": "Next Gen Workflow Manager",
+      "url": "https://help.zapier.com/hc/en-us/articles/49005047515021-Use-the-Workflow-Manager-to-build-and-view-your-Next-Gen-Zaps",
+      "checkedAt": "2026-10-19",
+      "images": [
+        {
+          "path": "assets/zapier-nextgen-8ad0653e41d0.png",
+          "url": "https://cdn.zappy.app/c15cefa8e7da49a707a35d64d8b10e3b.png",
+          "sourcePage": "https://help.zapier.com/hc/en-us/articles/49005047515021-Use-the-Workflow-Manager-to-build-and-view-your-Next-Gen-Zaps",
+          "alt": "The Workflow Manager, showing the top menu, the far left sidebar, a workflow on the canvas, and the code editor",
+          "width": 1453,
+          "height": 883,
+          "sha256": "8ad0653e41d0f7239182ce46cc4a179ea1c9d4dcc45b18cda15c036380ad5f73",
+          "bytes": 255558,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/zapier-nextgen-37f210954feb.png",
+          "url": "https://cdn.zappy.app/75280df4fb0d7a5979925a5835308e04.png",
+          "sourcePage": "https://help.zapier.com/hc/en-us/articles/49005047515021-Use-the-Workflow-Manager-to-build-and-view-your-Next-Gen-Zaps",
+          "alt": "The Components page, showing the Connected Accounts tab with one Slack account",
+          "width": 1451,
+          "height": 377,
+          "sha256": "37f210954febf69d66975b75d12bdce161d86434928f4603b3194836ff0233cd",
+          "bytes": 59215,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/zapier-nextgen-1719b98f3fe4.png",
+          "url": "https://cdn.zappy.app/1150f27167a11c77f941184dd676c88d.png",
+          "sourcePage": "https://help.zapier.com/hc/en-us/articles/49005047515021-Use-the-Workflow-Manager-to-build-and-view-your-Next-Gen-Zaps",
+          "alt": "The Agent behavior settings, showing the Agentic Management toggle, an instructions field, and the Heal, Optimize, and Automatically apply fixes toggles",
+          "width": 1455,
+          "height": 657,
+          "sha256": "1719b98f3fe485ddea958e169da4fb1226bec0c652fbc6ee68e063129e1bb3ad",
+          "bytes": 105030,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "status": "fetched",
+      "finalUrl": "https://help.zapier.com/hc/en-us/articles/49005047515021-Use-the-Workflow-Manager-to-build-and-view-your-Next-Gen-Zaps",
+      "title": "Use the Workflow Manager to build and view your Next Gen Zaps \u2013 Zapier",
+      "candidateCount": 36
+    },
+    {
+      "id": "claude-skills",
+      "platform": "claude",
+      "surface": "Skills library and upload",
+      "url": "https://support.claude.com/en/articles/12512180-use-skills-in-claude",
+      "checkedAt": "2026-10-19",
+      "images": [
+        {
+          "path": "assets/claude-skills-9d1ac6cfdd04.png",
+          "url": "https://downloads.intercomcdn.com/i/o/lupk8zyo/2105391273/8359cbf8be20dce0f1cd3fd40e6f/CleanShot-2B2026-02-25-2Bat-2B15_50_16.png?expires=1792436400&signature=e8e1e171234e59ce3dad0e61d26681c964b3f5017b0f201b4a2ef64811c13387&req=diEnE8p3nINYWvMW1HO4zSOgDiksweCpH%2BdCnFXB0ujbvUErRby75C0JXclf%0A7pAy%0A",
+          "sourcePage": "https://support.claude.com/en/articles/12512180-use-skills-in-claude",
+          "alt": "",
+          "width": 215,
+          "height": 223,
+          "sha256": "9d1ac6cfdd046e5248eb55b7eb68978474c9c4c206c51f6cd4dfcf102d6e5e08",
+          "bytes": 12688,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "status": "fetched",
+      "finalUrl": "https://support.claude.com/en/articles/12512180-use-skills-in-claude",
+      "title": "Use skills in Claude | Claude Help Center",
+      "candidateCount": 3
+    },
+    {
+      "id": "claude-projects",
+      "platform": "claude",
+      "surface": "Project knowledge and instructions",
+      "url": "https://support.claude.com/en/articles/9517075-what-are-projects",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://support.claude.com/en/articles/9517075-what-are-projects",
+      "title": "What are projects? | Claude Help Center",
+      "candidateCount": 2
+    },
+    {
+      "id": "claude-code",
+      "platform": "claude-code",
+      "surface": "Terminal and coding workspace",
+      "url": "https://code.claude.com/docs/en/overview",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://code.claude.com/docs/en/overview",
+      "title": "Overview - Claude Code Docs",
+      "candidateCount": 0
+    },
+    {
+      "id": "codex-desktop",
+      "platform": "codex",
+      "surface": "Desktop chats and review",
+      "url": "https://learn.chatgpt.com/docs/quickstart?setup=app",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://learn.chatgpt.com/docs/quickstart?setup=app",
+      "title": "Quickstart | ChatGPT Learn",
+      "candidateCount": 5
+    },
+    {
+      "id": "codex-cli",
+      "platform": "codex",
+      "surface": "Terminal agent",
+      "url": "https://learn.chatgpt.com/docs/codex/cli",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://learn.chatgpt.com/docs/codex/cli",
+      "title": "Codex CLI | ChatGPT Learn",
+      "candidateCount": 1
+    },
+    {
+      "id": "hermes-desktop",
+      "platform": "hermes",
+      "surface": "Desktop chat and settings",
+      "url": "https://hermes-agent.nousresearch.com/docs/user-guide/desktop",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://hermes-agent.nousresearch.com/docs/user-guide/desktop",
+      "title": "Hermes Desktop | Hermes Agent",
+      "candidateCount": 0
+    },
+    {
+      "id": "hermes-overview",
+      "platform": "hermes",
+      "surface": "Product overview",
+      "url": "https://hermes-agent.nousresearch.com/",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://hermes-agent.nousresearch.com/",
+      "title": "Hermes Agent \u2014 Open-Source AI Agent That Grows With You | Nous Research",
+      "candidateCount": 20
+    },
+    {
+      "id": "hermes-gateway",
+      "platform": "hermes",
+      "surface": "Messaging gateway",
+      "url": "https://hermes-agent.nousresearch.com/docs/user-guide/messaging/",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://hermes-agent.nousresearch.com/docs/user-guide/messaging",
+      "title": "Messaging Gateway | Hermes Agent",
+      "candidateCount": 0
+    },
+    {
+      "id": "grok-chat",
+      "platform": "grok",
+      "surface": "Chat and workspaces",
+      "url": "https://docs.x.ai/grok/user-guide",
+      "checkedAt": "2026-10-19",
+      "images": [
+        {
+          "path": "assets/grok-chat-d49110e3b69c.webp",
+          "url": "https://docs.x.ai/_next/image?url=%2Fassets%2Fdocs%2Fgrok-business%2Fworkspaces-selector.png&w=640&q=75&dpl=4c93025131f5cc96b571ff6e8c21653817d90165",
+          "sourcePage": "https://docs.x.ai/grok/user-guide",
+          "alt": "Workspace selector in the Grok interface",
+          "width": 640,
+          "height": 1454,
+          "sha256": "d49110e3b69c1104d135ad57d60fbe2f810edc2c11990965cb36c9ab5b5fba7c",
+          "bytes": 20236,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "status": "fetched",
+      "finalUrl": "https://docs.x.ai/grok/user-guide",
+      "title": "Grok Business Guide | SpaceXSI Docs",
+      "candidateCount": 3
+    },
+    {
+      "id": "grok-bot",
+      "platform": "grok-bot",
+      "surface": "Bot creation and management",
+      "url": "https://docs.x.ai/grok-bot/bots",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://docs.x.ai/grok-bot/bots",
+      "title": "Create and manage Bots | SpaceXSI Docs",
+      "candidateCount": 0
+    },
+    {
+      "id": "grok-bot-skills",
+      "platform": "grok-bot",
+      "surface": "Skills and routines",
+      "url": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+      "title": "Skills and routines | SpaceXSI Docs",
+      "candidateCount": 0
+    },
+    {
+      "id": "grok-product",
+      "platform": "grok",
+      "surface": "Product visuals",
+      "url": "https://x.ai/grok",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://x.ai/grok",
+      "title": "Grok \u2014 Useful AI Chatbot with Voice & Image Generation | SpaceXSI",
+      "candidateCount": 0
+    },
+    {
+      "id": "grok-bot-product",
+      "platform": "grok-bot",
+      "surface": "Product visuals",
+      "url": "https://x.ai/bot",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://x.ai/bot",
+      "title": "AI teammates that finish the work | Grok Bot",
+      "candidateCount": 0
+    },
+    {
+      "id": "cursor-agent",
+      "platform": "cursor",
+      "surface": "Editor agent pane",
+      "url": "https://cursor.com/docs/agent/overview",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://cursor.com/docs/agent/overview",
+      "title": "Overview | Cursor DocsCursor LogoCursor Logo",
+      "candidateCount": 1
+    },
+    {
+      "id": "cursor-product",
+      "platform": "cursor",
+      "surface": "Product visuals",
+      "url": "https://cursor.com/features",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://cursor.com/en-US",
+      "title": "AI Coding Agent for Building Ambitious Software | Cursor",
+      "candidateCount": 11
+    },
+    {
+      "id": "hubspot-workflows",
+      "platform": "hubspot",
+      "surface": "Workflow editor",
+      "url": "https://knowledge.hubspot.com/workflows/create-workflows",
+      "checkedAt": "2026-10-19",
+      "images": [
+        {
+          "path": "assets/hubspot-workflows-3b0696514fae.png",
+          "url": "https://knowledge.hubspot.com/hs-fs/hubfs/Knowledge_Base_2023-24-25/KB-Workflows/Create%20workflows/workflows-set-enrollment-triggers.png?width=933&height=1890&name=workflows-set-enrollment-triggers.png",
+          "sourcePage": "https://knowledge.hubspot.com/workflows/create-workflows",
+          "alt": "workflows-set-enrollment-triggers",
+          "width": 606,
+          "height": 1228,
+          "sha256": "3b0696514faec96c00854b1f336790f58949c34a2e753bd74cd00080a13a7c63",
+          "bytes": 124433,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/hubspot-workflows-144c8ec3c6c3.png",
+          "url": "https://knowledge.hubspot.com/hs-fs/hubfs/Knowledge_Base_2023-24-25/KB-Workflows/Create%20workflows/workflows-add-action.png?width=1107&height=1437&name=workflows-add-action.png",
+          "sourcePage": "https://knowledge.hubspot.com/workflows/create-workflows",
+          "alt": "workflows-add-action",
+          "width": 574,
+          "height": 746,
+          "sha256": "144c8ec3c6c31cfdc9496d9447aaa1861ecbab28221c3097d714a36b70d1baa1",
+          "bytes": 28548,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/hubspot-workflows-e19767b546de.png",
+          "url": "https://knowledge.hubspot.com/hs-fs/hubfs/Knowledge_Base_2023-24-25/KB-Workflows/Create%20workflows/workflows-show-minimap.png?width=1131&height=552&name=workflows-show-minimap.png",
+          "sourcePage": "https://knowledge.hubspot.com/workflows/create-workflows",
+          "alt": "workflows-show-minimap",
+          "width": 574,
+          "height": 280,
+          "sha256": "e19767b546de585bd1b1274ffa163e9288a2bf854d3c5294c8cf3ccb95f7d87b",
+          "bytes": 17357,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "status": "fetched",
+      "finalUrl": "https://knowledge.hubspot.com/workflows/create-workflows",
+      "title": "Create workflows",
+      "candidateCount": 31
+    },
+    {
+      "id": "hubspot-record",
+      "platform": "hubspot",
+      "surface": "CRM record",
+      "url": "https://knowledge.hubspot.com/records/work-with-records",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://knowledge.hubspot.com/records/work-with-records",
+      "title": "Understand and use the record page layout",
+      "candidateCount": 28
+    },
+    {
+      "id": "airtable-automation",
+      "platform": "airtable",
+      "surface": "Automations",
+      "url": "https://support.airtable.com/docs/getting-started-with-airtable-automations",
+      "checkedAt": "2026-10-19",
+      "images": [
+        {
+          "path": "assets/airtable-automation-36c222f5600d.png",
+          "url": "https://assets.usepylon.com/1237091b-3473-415f-9428-359cbf617e00%2F8bdf802a-0248-420f-87cb-ded0c0dd9dcf-image-1723113657092.png?Expires=253370764800&Signature=EAZiSX1zKo5-qO91JwiwFnI5jAWGY-nBTxbvq0prBymWoWrPX50-vfiC0Fe9r8sGjpAE3ibz-USlWnUUNvJJgimOS1yL42JDClYo3j5rAcTO1OVboYr-J~zDY2-BPtXmEoOtKiUiM922~NQBOg2yrKF-8CnS1yu~hdGdK0D6~YjE173EQzYBXEZfWsuaXQ8T0DKQlOxk-GsE4u-FBNhgJycM6pTlWuvQghan-YcAsM7~rhzAiExSP8AcMGbJutD1O5pbQOqfOhX~J~f7cNi8IRThuHXyITrz-ZMQZyMSp6FBAUlc3OclKfMW4VYffGZBwbq33ZGozh634TUBEyMW3g__&Key-Pair-Id=K3NV4LZ47N8M46",
+          "sourcePage": "https://support.airtable.com/docs/getting-started-with-airtable-automations",
+          "alt": "",
+          "width": 2334,
+          "height": 1284,
+          "sha256": "36c222f5600db40420a278025b8c704b722b8ddcb009ec442ec14cfe1a4424f4",
+          "bytes": 332471,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "status": "fetched",
+      "finalUrl": "https://support.airtable.com/articles/3669392397-getting-started-with-airtable-automations",
+      "title": "Getting started with Airtable automations | Airtable Help Center",
+      "candidateCount": 8
+    },
+    {
+      "id": "notion-database",
+      "platform": "notion",
+      "surface": "Database views",
+      "url": "https://www.notion.com/help/views-filters-and-sorts",
+      "checkedAt": "2026-10-19",
+      "images": [
+        {
+          "path": "assets/notion-database-3550bd3cd5dc.webp",
+          "url": "https://www.notion.com/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fspoqsaf9291f%2FnfJxbTGWexijW7BSAEPZL%2Fa39afeb87300553e7fb97fc7006d320d%2Flayouts.png&w=3840&q=75",
+          "sourcePage": "https://www.notion.com/help/views-filters-and-sorts",
+          "alt": "View Layout",
+          "width": 3840,
+          "height": 2400,
+          "sha256": "3550bd3cd5dc086eb2f7bc06172644bd3ce7829ddf3e617cf4a58a17cf87c5fe",
+          "bytes": 138132,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/notion-database-b419b8206516.webp",
+          "url": "https://www.notion.com/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fspoqsaf9291f%2F2KRCKUbMb1AYfqJUWafwSr%2F03dfbdd1149dfbc3525543d373925722%2FGroup_158.png&w=3840&q=75",
+          "sourcePage": "https://www.notion.com/help/views-filters-and-sorts",
+          "alt": "Switch between views",
+          "width": 3840,
+          "height": 2400,
+          "sha256": "b419b820651631e13aae15f6218e7071708c71dd59ee3ec5a7443b3e20178dd5",
+          "bytes": 104126,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "status": "fetched",
+      "finalUrl": "https://www.notion.com/help/views-filters-and-sorts",
+      "title": "Database views, filters, sorts & groups | Notion Help \u2013 Notion Help Center",
+      "candidateCount": 11
+    },
+    {
+      "id": "zoho-workflow",
+      "platform": "zoho",
+      "surface": "Workflow rules",
+      "url": "https://help.zoho.com/portal/en/kb/crm/automate-business-processes/workflow-management/articles/configuring-workflow-rules",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://help.zoho.com/portal/en/kb/crm/automate-business-processes/workflows/articles/configuring-workflow-rules",
+      "title": "",
+      "candidateCount": 0
+    },
+    {
+      "id": "chatgpt-projects",
+      "platform": "chatgpt",
+      "surface": "Projects",
+      "url": "https://help.openai.com/en/articles/10169521-using-projects-in-chatgpt",
+      "checkedAt": "2026-10-19",
+      "images": [
+        {
+          "path": "assets/chatgpt-projects-95f0b11b22fb.webp",
+          "url": "https://images.ctfassets.net/j22is2dtoxu1/intercom-img-af13531f23cdd675621b4353/ccc7528996947a4d4997b3c9d6934694/13d3472c-96a5-4a98-93ec-3ff3872cb3cd?q=80&fm=webp&w=450",
+          "sourcePage": "https://help.openai.com/en/articles/10169521-using-projects-in-chatgpt",
+          "alt": "ChatGPT sidebar project list with New project and example projects Short story ideas, Fitness goals, and Summer vacation",
+          "width": 450,
+          "height": 268,
+          "sha256": "95f0b11b22fbfa929d5693bc1321b13c887fa1f75397aadb790653e79ce4667e",
+          "bytes": 5730,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/chatgpt-projects-c8c898bc45ca.webp",
+          "url": "https://images.ctfassets.net/j22is2dtoxu1/intercom-img-dfd7518cb9b5ab4588cb814d/6ca9c53aec99d74eda875f16468276a2/Screenshot_2026-02-24_at_11.48.11%C3%A2__AM.png?q=80&fm=webp&w=1344",
+          "sourcePage": "https://help.openai.com/en/articles/10169521-using-projects-in-chatgpt",
+          "alt": "ChatGPT project Fitness goals with the more menu open to Project settings",
+          "width": 1344,
+          "height": 297,
+          "sha256": "c8c898bc45cabe4b800d62caa902282d750ff8dd1031c341a40b1863be114646",
+          "bytes": 9712,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "status": "fetched",
+      "finalUrl": "https://help.openai.com/en/articles/10169521-projects-in-chatgpt",
+      "title": "Projects in ChatGPT | OpenAI Help Center",
+      "candidateCount": 7
+    },
+    {
+      "id": "google-sheets",
+      "platform": "google-sheets",
+      "surface": "Spreadsheet interface",
+      "url": "https://support.google.com/docs/answer/6000292?hl=en",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://support.google.com/docs/answer/6000292?hl=en",
+      "title": "How to use Google Sheets - Computer - Google Docs Editors Help",
+      "candidateCount": 3
+    },
+    {
+      "id": "instantly-sequences",
+      "platform": "instantly",
+      "surface": "Campaign sequences",
+      "url": "https://help.instantly.ai/en/articles/6222404-how-to-create-a-campaign",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "unavailable",
+      "error": "HTTPError: HTTP Error 404: Not Found",
+      "candidateCount": 0
+    },
+    {
+      "id": "clay-product",
+      "platform": "clay",
+      "surface": "Table and enrichment",
+      "url": "https://www.clay.com/",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://www.clay.com/",
+      "title": "Clay | Build systems to grow revenue",
+      "candidateCount": 117
+    },
+    {
+      "id": "pipedrive-deals",
+      "platform": "pipedrive",
+      "surface": "Deals pipeline",
+      "url": "https://support.pipedrive.com/en/article/pipeline-view",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "unavailable",
+      "finalUrl": "https://support.pipedrive.com/en/article/pipeline-view",
+      "title": "Pipeline view: manage deals lifecycle - Knowledge Base | Pipedrive",
+      "error": "TypeError: can only concatenate str (not \"NoneType\") to str",
+      "candidateCount": 0
+    },
+    {
+      "id": "vapi-dashboard",
+      "platform": "vapi",
+      "surface": "Voice assistant dashboard",
+      "url": "https://docs.vapi.ai/quickstart/dashboard",
+      "checkedAt": "2026-10-19",
+      "images": [
+        {
+          "path": "assets/vapi-dashboard-76e8c8f6cb9a.webp",
+          "url": "https://docs.vapi.ai/_fern-img/1af8042c76cefca598eacc800704ca79c5320ae82d85bdf19149be539ecaecc5.webp",
+          "sourcePage": "https://docs.vapi.ai/quickstart/dashboard",
+          "alt": "",
+          "width": 326,
+          "height": 344,
+          "sha256": "76e8c8f6cb9ab84294f9c55024d40069f36b5e6ea5bf1912705726468f71d191",
+          "bytes": 11382,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/vapi-dashboard-8a1c1af7f0bb.webp",
+          "url": "https://docs.vapi.ai/_fern-img/bb9fd732ea0847a9ed5e55db2c6de23bdbd218b59a3989092aec9f609dbecbe5.webp",
+          "sourcePage": "https://docs.vapi.ai/quickstart/dashboard",
+          "alt": "",
+          "width": 949,
+          "height": 320,
+          "sha256": "8a1c1af7f0bb83c2db15d4f5119afe51e7cabda78943e858c9e50096bcb38a53",
+          "bytes": 16302,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "status": "fetched",
+      "finalUrl": "https://docs.vapi.ai/quickstart/phone",
+      "title": "Phone calls | Vapi",
+      "candidateCount": 5
+    },
+    {
+      "id": "retell-dashboard",
+      "platform": "retell",
+      "surface": "Voice agent and tests",
+      "url": "https://docs.retellai.com/build/create-agent",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "unavailable",
+      "error": "HTTPError: HTTP Error 404: Not Found",
+      "candidateCount": 0
+    },
+    {
+      "id": "supabase-dashboard",
+      "platform": "supabase",
+      "surface": "Database and logs",
+      "url": "https://supabase.com/docs/guides/database/tables",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://supabase.com/docs/guides/database/tables",
+      "title": "Tables and data | Supabase Docs",
+      "candidateCount": 7
+    },
+    {
+      "id": "apify-console",
+      "platform": "apify",
+      "surface": "Actor runs and datasets",
+      "url": "https://docs.apify.com/platform/console",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://docs.apify.com/account/console",
+      "title": "Apify Console | Platform | Apify Documentation",
+      "candidateCount": 2
+    },
+    {
+      "id": "shopify-flow",
+      "platform": "shopify",
+      "surface": "Flow editor",
+      "url": "https://help.shopify.com/en/manual/shopify-flow/create",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://help.shopify.com/en/manual/shopify-flow/create",
+      "title": "Shopify Help Center | Creating workflows in Shopify Flow",
+      "candidateCount": 0
+    },
+    {
+      "id": "twilio-studio",
+      "platform": "twilio",
+      "surface": "Studio canvas",
+      "url": "https://www.twilio.com/docs/studio/user-guide",
+      "checkedAt": "2026-10-19",
+      "images": [
+        {
+          "path": "assets/twilio-studio-4d3d9c3ac7ae.webp",
+          "url": "https://docs-resources.prod.twilio.com/3be9ec2a6f1448a41b4068c067efefaf3386a0efc36a224d768cc0ba126132eb/1920.webp",
+          "sourcePage": "https://www.twilio.com/docs/studio/user-guide",
+          "alt": "Flow configuration showing a sample Flow with trigger and gather steps.",
+          "width": 733,
+          "height": 548,
+          "sha256": "4d3d9c3ac7ae91768b09bcd79106e9aa132c462d140e2da6506b4d96d746a0d1",
+          "bytes": 20114,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/twilio-studio-12e77564b260.webp",
+          "url": "https://docs-resources.prod.twilio.com/20d5256eb4a0db9d4bbf9a79752c49b69f6bc29334a7d9586605dbee7f6c2605/2048.webp",
+          "sourcePage": "https://www.twilio.com/docs/studio/user-guide",
+          "alt": "Twilio Studio logic for greeting message with conditional first name check.",
+          "width": 1000,
+          "height": 710,
+          "sha256": "12e77564b260d40b98dd1158b36bef551fe9ab687141b0efb55237d06ff43821",
+          "bytes": 25670,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "status": "fetched",
+      "finalUrl": "https://www.twilio.com/docs/studio/user-guide",
+      "title": "Studio User Guide | TwilioGo to the Twilio Docs home pageHelp CenterPositive FeedbackNegative Feedbackwhen-to-use-twilio-studio page anchorPositive FeedbackNegative Feedbackstudio-features page anchorPositive FeedbackNegative Feedbackget-started page anchorPositive FeedbackNegative Feedbackdata-retention-in-studio page anchorPositive FeedbackNegative Feedbackdata-retention-for-underlying-products page anchorPositive FeedbackNegative Feedbackpci-compliance-in-studio page anchorPositive FeedbackNegative Feedback(link takes you to an external page)(link takes you to an external page)triggering-flows page anchorPositive FeedbackNegative Feedbackmessage page anchorPositive FeedbackNegative Feedbackvoice page anchorPositive FeedbackNegative Feedbackhandling-concurrent-calls-from-the-same-number-in-studio page anchorconversation-classic page anchorPositive FeedbackNegative Feedbackrest-api-trigger page anchorPositive FeedbackNegative Feedbacksubflow-trigger page anchorPositive FeedbackNegative Feedbackworking-with-variables page anchorPositive FeedbackNegative Feedbackcontext-variables page anchorPositive FeedbackNegative Feedbackflow-variables page anchorcontact-variables page anchorwidget-variables page anchorsubscribing-to-flow-events-with-event-streams page anchorPositive FeedbackNegative Feedbacktesting-draft-flows page anchorPositive FeedbackNegative Feedbackrenaming-flows page anchorPositive FeedbackNegative Feedbackduplicating-flows page anchorPositive FeedbackNegative Feedback(link takes you to an external page)deleting-flows page anchorPositive FeedbackNegative Feedback(link takes you to an external page)importing-and-exporting-flows page anchorPositive FeedbackNegative Feedback(link takes you to an external page)exporting-flow-data page anchorPositive FeedbackNegative Feedbackimporting-flow-data page anchorPositive FeedbackNegative Feedbacknext-steps page anchorPositive FeedbackNegative Feedback(link takes you to an external page)(link takes you to an external page)",
+      "candidateCount": 11
+    },
+    {
+      "id": "orca-ide",
+      "platform": "orca",
+      "surface": "Agent IDE worktrees, terminals and review",
+      "url": "https://www.onorca.dev/",
+      "checkedAt": "2026-10-19",
+      "images": [
+        {
+          "path": "assets/orca-ide-f5d2c9fee6ee.jpg",
+          "url": "https://www.onorca.dev/whats-new/posters/agent-statuses.jpg",
+          "sourcePage": "https://www.onorca.dev/",
+          "alt": "Parallel Worktrees",
+          "width": 960,
+          "height": 540,
+          "sha256": "f5d2c9fee6ee0b82fc893ed1a8eb54ff5bc32cd983d7083a3e6e7083ccec8a7e",
+          "bytes": 62802,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/orca-ide-7f03154e7dfe.jpg",
+          "url": "https://www.onorca.dev/whats-new/posters/ghostty-style-terminal.jpg",
+          "sourcePage": "https://www.onorca.dev/",
+          "alt": "Terminal Splits",
+          "width": 960,
+          "height": 540,
+          "sha256": "7f03154e7dfe456b1fdf4029449bf09f12171fcf1c637818f0071e8e0369e06d",
+          "bytes": 54510,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/orca-ide-7e333e573b0c.jpg",
+          "url": "https://www.onorca.dev/whats-new/posters/annotate-ai-diff.jpg",
+          "sourcePage": "https://www.onorca.dev/",
+          "alt": "Annotate AI Diffs",
+          "width": 960,
+          "height": 542,
+          "sha256": "7e333e573b0c6a2f5e416d359f8b8060f6fe4cb617ccec30824d21329fd065a0",
+          "bytes": 74091,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/orca-ide-9d33395b9d56.jpg",
+          "url": "https://www.onorca.dev/whats-new/posters/orca-markdown-editor.jpg",
+          "sourcePage": "https://www.onorca.dev/",
+          "alt": "Rich Repo Previews",
+          "width": 1200,
+          "height": 676,
+          "sha256": "9d33395b9d561531ddd731a1c759489eeb91e1cfecb76b68ba69308db9817e25",
+          "bytes": 33865,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "status": "fetched",
+      "finalUrl": "https://www.onorca.dev/",
+      "title": "Orca \u2014 The agent development environmentClaude Code",
+      "candidateCount": 22
+    },
+    {
+      "id": "antigravity-ide",
+      "platform": "antigravity",
+      "surface": "Editor and Agent Manager",
+      "url": "https://www.antigravity.google/docs/getting-started?tab=ide",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://www.antigravity.google/docs/getting-started?tab=ide",
+      "title": "Get started | Google Antigravity Docs",
+      "error": "HTMLParser failed on vendor markup; direct official screenshot assets fetched separately.",
+      "candidateCount": 0
+    },
+    {
+      "id": "claude-skills-launch",
+      "platform": "claude",
+      "surface": "Historical Skills UI; date-sensitive reference",
+      "url": "https://www.anthropic.com/research/skills",
+      "checkedAt": "2026-10-19",
+      "images": [
+        {
+          "path": "assets/claude-skills-launch-55e2cd935aae.webp",
+          "url": "https://www.anthropic.com/_next/image?url=https%3A%2F%2Fwww-cdn.anthropic.com%2Fimages%2F4zrzovbb%2Fwebsite%2Faf2845deb68f4074e12f8b0c1ea3b9cae8946cac-1920x1080.png&w=3840&q=75",
+          "sourcePage": "https://www.anthropic.com/research/skills",
+          "alt": "The Skills capabilities interface in Claude.ai with example Skills toggled on. ",
+          "width": 1920,
+          "height": 1080,
+          "sha256": "55e2cd935aae711df16d8adb14513ac3cc6e01a571172a1780a161546437cea5",
+          "bytes": 57892,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "status": "fetched",
+      "finalUrl": "https://www.anthropic.com/research/skills",
+      "title": "Claude Skills: Customize AI for your workflows \\ Anthropic",
+      "candidateCount": 2
+    },
+    {
+      "id": "claude-projects-launch",
+      "platform": "claude",
+      "surface": "Historical project workspace; date-sensitive reference",
+      "url": "https://www.anthropic.com/news/projects",
+      "checkedAt": "2026-10-19",
+      "images": [
+        {
+          "path": "assets/claude-projects-launch-c9d6f79d1a58.webp",
+          "url": "https://www.anthropic.com/_next/image?url=https%3A%2F%2Fwww-cdn.anthropic.com%2Fimages%2F4zrzovbb%2Fwebsite%2Fcc048db08b3503fa6d713b2b9e3352e8345c8b79-1920x1080.png&w=3840&q=75",
+          "sourcePage": "https://www.anthropic.com/news/projects",
+          "alt": "App screen showing a user uploading docs to Claude.ai",
+          "width": 1920,
+          "height": 1080,
+          "sha256": "c9d6f79d1a58cad6e9eca2dbc0d8637d7a4d50d42c4a25e4e722911c042d3e84",
+          "bytes": 45908,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/claude-projects-launch-935d6d76e03d.webp",
+          "url": "https://www.anthropic.com/_next/image?url=https%3A%2F%2Fwww-cdn.anthropic.com%2Fimages%2F4zrzovbb%2Fwebsite%2F9e34412901722019c5a15062544734b3d78fcbc4-1920x1080.png&w=3840&q=75",
+          "sourcePage": "https://www.anthropic.com/news/projects",
+          "alt": "App screen showing custom instructions",
+          "width": 1920,
+          "height": 1080,
+          "sha256": "935d6d76e03d81d6f6ec7119eb3ea6712f657d4c0bcbbad4d461e804d1dd07fe",
+          "bytes": 61506,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/claude-projects-launch-ec2e9db1f89f.webp",
+          "url": "https://www.anthropic.com/_next/image?url=https%3A%2F%2Fwww-cdn.anthropic.com%2Fimages%2F4zrzovbb%2Fwebsite%2Fc5823949d9350145ce2fda51acbc7076f2139cd0-1920x1080.png&w=3840&q=75",
+          "sourcePage": "https://www.anthropic.com/news/projects",
+          "alt": "App screen that shows the Artifacts panel alongside the user chat",
+          "width": 1920,
+          "height": 1080,
+          "sha256": "ec2e9db1f89f2c935d5decd915016e695c71d93f9ca3e97a72c15698fa2d0f4d",
+          "bytes": 81104,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "status": "fetched",
+      "finalUrl": "https://www.anthropic.com/news/projects",
+      "title": "Collaborate with Claude on Projects \\ Anthropic",
+      "candidateCount": 4
+    },
+    {
+      "id": "hermes-desktop-product",
+      "platform": "hermes",
+      "surface": "Desktop workspace screenshots",
+      "url": "https://hermes-agent.nousresearch.com/desktop",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://hermes-agent.nousresearch.com/desktop",
+      "title": "Hermes Desktop: Native AI Agent App for Mac, Windows & Linux | Nous Research",
+      "candidateCount": 10
+    },
+    {
+      "id": "hermes-dashboard",
+      "platform": "hermes",
+      "surface": "Web dashboard",
+      "url": "https://hermes-agent.nousresearch.com/docs/user-guide/features/web-dashboard",
+      "checkedAt": "2026-10-19",
+      "images": [
+        {
+          "path": "assets/hermes-dashboard-41c7c136d9db.png",
+          "url": "https://nousresearch.github.io/hermes-agent/docs/assets/images/admin-config-278bd624188f3bfb9ec51a0b51767c6e.png",
+          "sourcePage": "https://hermes-agent.nousresearch.com/docs/user-guide/features/web-dashboard",
+          "alt": "Config admin page \u2014 section filters on the left, auto-discovered fields on the right",
+          "width": 1280,
+          "height": 720,
+          "sha256": "41c7c136d9dba87f975dace7f2be9d082d7195a48c3086b5c26a879aa9f9d43e",
+          "bytes": 514222,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/hermes-dashboard-5b997c10c5fc.png",
+          "url": "https://nousresearch.github.io/hermes-agent/docs/assets/images/admin-sessions-677424bf69f04266372c786d9e089215.png",
+          "sourcePage": "https://hermes-agent.nousresearch.com/docs/user-guide/features/web-dashboard",
+          "alt": "Sessions admin page \u2014 stats bar, prune, and per-row rename / export / delete",
+          "width": 1280,
+          "height": 720,
+          "sha256": "5b997c10c5fc811f62f92c91f2c4f4e75d71a3d7f4618ad32b59dc2fad86ee9a",
+          "bytes": 491795,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "status": "fetched",
+      "finalUrl": "https://hermes-agent.nousresearch.com/docs/user-guide/features/web-dashboard",
+      "title": "Hermes Web Dashboard | Hermes Agent",
+      "candidateCount": 11
+    },
+    {
+      "id": "zapier-quickstart",
+      "platform": "zapier",
+      "surface": "Zap editor overview",
+      "url": "https://help.zapier.com/hc/en-us/articles/22234847450893-Zap-workflows-quick-start-guide",
+      "checkedAt": "2026-10-19",
+      "images": [
+        {
+          "path": "assets/zapier-quickstart-4d70d16cfc8f.png",
+          "url": "https://cdn.zappy.app/babd482c8371899f1b7663d4d6b575d2.png",
+          "sourcePage": "https://help.zapier.com/hc/en-us/articles/22234847450893-Zap-workflows-quick-start-guide",
+          "alt": "Zap editor layout",
+          "width": 1712,
+          "height": 1287,
+          "sha256": "4d70d16cfc8f8f60f0bc51be134f9d7d3d773744f3781d9f9942efcbb02de1dd",
+          "bytes": 363987,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "status": "fetched",
+      "finalUrl": "https://help.zapier.com/hc/en-us/articles/22234847450893-Zap-workflows-quick-start-guide",
+      "title": "Zap workflows quick start guide \u2013 Zapier",
+      "candidateCount": 13
+    },
+    {
+      "id": "instantly-export",
+      "platform": "instantly",
+      "surface": "Campaign and Unibox context",
+      "url": "https://help.instantly.ai/en/articles/13924078-how-to-export-data-from-your-instantly-account",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "unavailable",
+      "error": "HTTPError: HTTP Error 404: Not Found",
+      "candidateCount": 0
+    },
+    {
+      "id": "instantly-product",
+      "platform": "instantly",
+      "surface": "Outreach product interface",
+      "url": "https://instantly.ai/",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://instantly.ai/",
+      "title": "Sales Engagement and Lead Intelligence | Instantly",
+      "candidateCount": 43
+    },
+    {
+      "id": "grok-bot-getstarted",
+      "platform": "grok-bot",
+      "surface": "Bot application navigation",
+      "url": "https://docs.x.ai/grok-bot/get-started",
+      "checkedAt": "2026-10-19",
+      "images": [],
+      "status": "fetched",
+      "finalUrl": "https://docs.x.ai/grok-bot/get-started",
+      "title": "Get started | SpaceXSI Docs",
+      "candidateCount": 0
+    },
+    {
+      "id": "n8n-current-editor",
+      "platform": "n8n",
+      "surface": "Current repository editor screenshots",
+      "url": "https://github.com/n8n-io/n8n-docs/tree/main/docs/build/.gitbook/assets",
+      "checkedAt": "2026-10-19",
+      "status": "fetched",
+      "images": [
+        {
+          "path": "assets/n8n-current-editor-f118523d2bb0.png",
+          "url": "https://raw.githubusercontent.com/n8n-io/n8n-docs/main/docs/build/.gitbook/assets/dirty-node-editor.png",
+          "sourcePage": "https://github.com/n8n-io/n8n-docs/tree/main/docs/build/.gitbook/assets",
+          "alt": "Current repository editor screenshots",
+          "width": 769,
+          "height": 434,
+          "sha256": "f118523d2bb0001d88e27b3068d2a4c1ec7d4b882232587d4b3cd64768f7dcbb",
+          "bytes": 45107,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/n8n-current-editor-d82393bef07f.png",
+          "url": "https://raw.githubusercontent.com/n8n-io/n8n-docs/main/docs/build/.gitbook/assets/canvas-groups-overview.png",
+          "sourcePage": "https://github.com/n8n-io/n8n-docs/tree/main/docs/build/.gitbook/assets",
+          "alt": "Current repository editor screenshots",
+          "width": 1233,
+          "height": 544,
+          "sha256": "d82393bef07ff561134cfda4dba34672568906b931dd71be3346548c3dcda3e3",
+          "bytes": 76781,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "candidateCount": 3
+    },
+    {
+      "id": "codex-cli-repo",
+      "platform": "codex",
+      "surface": "Codex CLI repository screenshot",
+      "url": "https://github.com/openai/codex",
+      "checkedAt": "2026-10-19",
+      "status": "fetched",
+      "images": [
+        {
+          "path": "assets/codex-cli-repo-15b86fa9c079.png",
+          "url": "https://raw.githubusercontent.com/openai/codex/main/.github/codex-cli-splash.png",
+          "sourcePage": "https://github.com/openai/codex",
+          "alt": "Codex CLI repository screenshot",
+          "width": 1898,
+          "height": 1190,
+          "sha256": "15b86fa9c0790a779ecdd84f1e7dee029ab79bfb093bd3c4876998696925b013",
+          "bytes": 838131,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "candidateCount": 1
+    },
+    {
+      "id": "antigravity-ide-current",
+      "platform": "antigravity",
+      "surface": "Editor and Agent Manager",
+      "url": "https://www.antigravity.google/docs/getting-started?tab=ide",
+      "checkedAt": "2026-10-19",
+      "status": "fetched",
+      "images": [
+        {
+          "path": "assets/antigravity-ide-current-ac2c2d67a029.png",
+          "url": "https://www.antigravity.google/assets/image/docs/editor-open-agent-manager.png",
+          "sourcePage": "https://www.antigravity.google/docs/getting-started?tab=ide",
+          "alt": "Editor and Agent Manager",
+          "width": 2896,
+          "height": 1726,
+          "sha256": "ac2c2d67a02971734adc05cda0022344308e2bae0bfc9ecf9aa91ca3c550a45d",
+          "bytes": 239832,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        },
+        {
+          "path": "assets/antigravity-ide-current-ae664ecd19b7.png",
+          "url": "https://www.antigravity.google/assets/image/docs/agent-manager-open-editor.png",
+          "sourcePage": "https://www.antigravity.google/docs/getting-started?tab=ide",
+          "alt": "Editor and Agent Manager",
+          "width": 2758,
+          "height": 1858,
+          "sha256": "ae664ecd19b7fa48f24b71f70ea2d12f5903c5bafb7f0991582562bf16ed737e",
+          "bytes": 227243,
+          "classification": "selected-vendor-ui-reference",
+          "retained": true
+        }
+      ],
+      "candidateCount": 2
+    }
+  ]
+}

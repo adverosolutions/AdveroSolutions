@@ -1,0 +1,1543 @@
+{
+  "asOf": "2026-10-19",
+  "scope": "Original repository job posts with real Upwork URLs; selected historical corpus, not all Upwork",
+  "uniqueJobs": 149,
+  "excludedWithoutUpworkUrl": 8,
+  "method": "Deduplicate canonical numeric Upwork job ID or normalized URL. Count each platform once per original title/body; exclude metadata and example folders. Mentions overlap. Only explicit Make.com, Integromat or automation/scenario aliases are counted, so bare Make is conservatively undercounted. Claude Skills uses a 35-character co-occurrence window and is a provisional subcategory. No temporal or market-wide prevalence claim.",
+  "patterns": {
+    "GoHighLevel": "\\b(?:gohighlevel|go\\s+high\\s*level|highlevel|ghl)\\b",
+    "n8n": "\\bn8n\\b",
+    "Make": "\\b(?:make\\.com|integromat|make automation|make scenarios?)\\b",
+    "Zapier": "\\bzapier\\b",
+    "Claude": "\\bclaude\\b",
+    "Claude Code": "\\bclaude\\s+code\\b",
+    "Claude Skills": "\\bclaude\\b.{0,35}\\bskills?\\b|\\bskills?\\b.{0,35}\\bclaude\\b",
+    "Codex": "\\bcodex\\b",
+    "Hermes": "\\bhermes\\b",
+    "Grok": "\\bgrok(?:bot| bot)?\\b",
+    "Cursor": "\\bcursor\\b",
+    "Orca": "\\borca\\b",
+    "ChatGPT": "\\bchatgpt\\b",
+    "OpenAI API": "\\bopenai\\b",
+    "Google Sheets": "\\b(?:google sheets?|gsheets?)\\b",
+    "Airtable": "\\bairtable\\b",
+    "HubSpot": "\\bhubspot\\b",
+    "Notion": "\\bnotion\\b",
+    "ClickUp": "\\bclickup\\b",
+    "Instantly": "\\binstantly(?:\\.ai)?\\b",
+    "Slack": "\\bslack\\b",
+    "Shopify": "\\bshopify\\b",
+    "Twilio": "\\btwilio\\b",
+    "Vapi": "\\bvapi\\b",
+    "Retell": "\\bretell\\b",
+    "Bland": "\\bbland(?:\\.ai)?\\b",
+    "ElevenLabs": "\\belevenlabs\\b",
+    "Clay": "\\bclay\\b",
+    "Apify": "\\bapify\\b",
+    "Supabase": "\\bsupabase\\b",
+    "Salesforce": "\\bsalesforce\\b",
+    "Pipedrive": "\\bpipedrive\\b",
+    "Zoho": "\\bzoho\\b",
+    "Gmail": "\\bgmail\\b",
+    "Microsoft Power Automate": "\\bpower automate\\b",
+    "Microsoft Excel": "\\bexcel\\b",
+    "Skool": "\\bskool\\b",
+    "Kit": "\\b(?:convertkit|kit\\.com)\\b",
+    "ActiveCampaign": "\\bactivecampaign\\b",
+    "Klaviyo": "\\bklaviyo\\b",
+    "Calendly": "\\bcalendly\\b"
+  },
+  "platforms": [
+    {
+      "platform": "GoHighLevel",
+      "jobs": 54,
+      "percent": 36.2,
+      "evidence": [
+        {
+          "path": "jobs/ghl-roofing-attribution-ai-followup/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107114400982634317"
+        },
+        {
+          "path": "jobs/ghl-setup-real-estate/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107501117875768020"
+        },
+        {
+          "path": "jobs/n8n-ai-chatbot-crm/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105690007471009811"
+        },
+        {
+          "path": "jobs/ghl-medspa-snapshot-meta-capi/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106022324559959251"
+        },
+        {
+          "path": "jobs/ghl-boxing-fitness-gym/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107148409891116805"
+        },
+        {
+          "path": "jobs/ghl-crm-setup-workflow-import/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103972376692065389"
+        },
+        {
+          "path": "jobs/ghl-n8n-crm-automation-spain/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105323468027627527"
+        },
+        {
+          "path": "jobs/ghl-medspa-agency-nexttech-specialist/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107452906761301844"
+        },
+        {
+          "path": "jobs/ghl-webinar-launch-specialist/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106018874769392020"
+        },
+        {
+          "path": "jobs/ghl-conversation-ai-ongoing/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107510544953725360"
+        },
+        {
+          "path": "jobs/skool-ghl-workshop-system/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022109071318216150324"
+        },
+        {
+          "path": "jobs/ghl-lead-to-booking-optimization/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106391487351045115"
+        },
+        {
+          "path": "jobs/ghl-ai-agent-inbound-text/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106054967955867588"
+        },
+        {
+          "path": "jobs/ghl-low-ticket-offer-detox-nation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104655571527050288"
+        },
+        {
+          "path": "jobs/ghl-crm-automation-specialist-lead-routing/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104969596163974126"
+        },
+        {
+          "path": "jobs/n8n-ghl-lead-qualification-follow-ups/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102065801227930757"
+        },
+        {
+          "path": "jobs/ghl-n8n-ai-crm-financial-services/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104694949835191162"
+        },
+        {
+          "path": "jobs/ghl-simple-system-integration/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105367991201249385"
+        },
+        {
+          "path": "jobs/ghl-insurance-subaccount-setup/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107538790984272596"
+        },
+        {
+          "path": "jobs/ghl-website-marketing-automation-co/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107576229411283602"
+        },
+        {
+          "path": "jobs/ghl-dental-ortho-three-locations/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103189057814053377"
+        },
+        {
+          "path": "jobs/ghl-landing-page-form-design/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104589731449361230"
+        },
+        {
+          "path": "jobs/el-amigo-insurance-ghl-marketing/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107573117294172393"
+        },
+        {
+          "path": "jobs/ghl-email-marketing-template-designer/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102475051522728228"
+        },
+        {
+          "path": "jobs/restorenow-ghl-integration-support/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107515290756274409"
+        },
+        {
+          "path": "jobs/ghl-home-service-lead-leaks/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104664668779189583"
+        },
+        {
+          "path": "jobs/ghl-ai-agents-physical-therapy/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104537831437698157"
+        },
+        {
+          "path": "jobs/ghl-account-audit-cleanup/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106414971124470995"
+        },
+        {
+          "path": "jobs/financial-services-lead-sales-engine/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022109077801955829352"
+        },
+        {
+          "path": "jobs/ghl-expert-automation-staff-training/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107543576701403481"
+        },
+        {
+          "path": "jobs/ghl-claude-consult-outdoor-living-texas/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103174644722289052"
+        },
+        {
+          "path": "jobs/tracker-ghl-make-sheets-debug/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107459761450615129"
+        },
+        {
+          "path": "jobs/ghl-funnel-automation-setup/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107514496029509921"
+        },
+        {
+          "path": "jobs/clay-cold-email-system-welcome-neighbors/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102016047735746587"
+        },
+        {
+          "path": "jobs/cal-com-ghl-call-booked-pipeline/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102492072733453020"
+        },
+        {
+          "path": "jobs/ghl-clinic-crm-appointments/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105340964977805319"
+        },
+        {
+          "path": "jobs/ghl-crm-marketing-2112187821283899256/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112187821283899256"
+        },
+        {
+          "path": "jobs/ghl-crm-dance-studio/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104984749792896032"
+        },
+        {
+          "path": "jobs/ai-agents-slack-notion-ghl/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104999725700907069"
+        },
+        {
+          "path": "jobs/ghl-automation-expert-agency/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102811395586794410"
+        },
+        {
+          "path": "jobs/ghl-sales-rep-scorecard-google-sheets/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102065889977755181"
+        },
+        {
+          "path": "jobs/ghl-roofing-meta-lead-sms-follow-up/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105238701208306625"
+        },
+        {
+          "path": "jobs/hermes-my-email-bot-setup/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103978950629755316"
+        },
+        {
+          "path": "jobs/ghl-expert-ongoing-small-biz/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107139914498517024"
+        },
+        {
+          "path": "jobs/ghl-crm-funnels-automation-backend/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104547139650075293"
+        },
+        {
+          "path": "jobs/ghl-pipedrive-setup-sync/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104544519995218927"
+        },
+        {
+          "path": "jobs/ghl-pipedrive-sync-a2p-hvac/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107141836651623677"
+        },
+        {
+          "path": "jobs/ghl-healthcare-email-sms/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106011958315958676"
+        },
+        {
+          "path": "jobs/ghl-sales-follow-up-whisper-quo/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102070380686478469"
+        },
+        {
+          "path": "jobs/commercial-cleaning-b2b-prospecting-engine/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102019978124411770"
+        },
+        {
+          "path": "jobs/ghl-lifecycle-30k-payments-funding/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107568392265484577"
+        },
+        {
+          "path": "jobs/ghl-automation-workflows-reliable-follow-up/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103543418666995080"
+        },
+        {
+          "path": "jobs/ghl-car-rental-business-build/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102802939328978346"
+        },
+        {
+          "path": "jobs/ghl-funnel-clone-clickfunnels/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104548727765731893"
+        }
+      ]
+    },
+    {
+      "platform": "n8n",
+      "jobs": 47,
+      "percent": 31.5,
+      "evidence": [
+        {
+          "path": "jobs/n8n-zoho-lead-gen-crm-follow-up/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103123878708204191"
+        },
+        {
+          "path": "jobs/ghl-roofing-attribution-ai-followup/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107114400982634317"
+        },
+        {
+          "path": "jobs/n8n-ai-chatbot-crm/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105690007471009811"
+        },
+        {
+          "path": "jobs/ghl-medspa-snapshot-meta-capi/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106022324559959251"
+        },
+        {
+          "path": "jobs/ghl-n8n-crm-automation-spain/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105323468027627527"
+        },
+        {
+          "path": "jobs/n8n-ai-lead-qualification/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106026925770876960"
+        },
+        {
+          "path": "jobs/estate-planning-law-firm-clio-automation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104564284809129550"
+        },
+        {
+          "path": "jobs/n8n-ghl-lead-qualification-follow-ups/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102065801227930757"
+        },
+        {
+          "path": "jobs/ghl-n8n-ai-crm-financial-services/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104694949835191162"
+        },
+        {
+          "path": "jobs/n8n-troubleshooting-faire-shopify-unleashed-xero/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102052938734572063"
+        },
+        {
+          "path": "jobs/claude-code-automation-engineer-eu/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104972564168343613"
+        },
+        {
+          "path": "jobs/n8n-monday-pandadoc-contract-automation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022098119207372498065"
+        },
+        {
+          "path": "jobs/ai-automation-developer-openai-n8n/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102466742851667494"
+        },
+        {
+          "path": "jobs/hubspot-n8n-vps-ai-engineer/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105364732158400968"
+        },
+        {
+          "path": "jobs/n8n-ai-api-webhook-expert/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104561987790155342"
+        },
+        {
+          "path": "jobs/ghl-dental-ortho-three-locations/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103189057814053377"
+        },
+        {
+          "path": "jobs/n8n-multi-flow-specialist-linkedin-whatsapp-leads/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022101999043599669866"
+        },
+        {
+          "path": "jobs/high-caliber-karting-systems-audit-architecture/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102823830325550248"
+        },
+        {
+          "path": "jobs/n8n-shopify-woocommerce-chatbots-automation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102810572407798243"
+        },
+        {
+          "path": "jobs/ai-automation-developer-claude-n8n-business-systems/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103558841932303752"
+        },
+        {
+          "path": "jobs/ai-workflow-training-2112226785873140264/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112226785873140264"
+        },
+        {
+          "path": "jobs/ghl-claude-consult-outdoor-living-texas/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103174644722289052"
+        },
+        {
+          "path": "jobs/crm-automation-multi-system-api-claude-n8n/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102481039420170532"
+        },
+        {
+          "path": "jobs/technician-ai-operations-2112195798820744982/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112195798820744982"
+        },
+        {
+          "path": "jobs/ai-lead-intake-qualification-n8n-openai/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102822078003027245"
+        },
+        {
+          "path": "jobs/n8n-google-sheets-integration-fix/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022101996524466972376"
+        },
+        {
+          "path": "jobs/n8n-webhook-fix-payload-mapping/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104589162872584802"
+        },
+        {
+          "path": "jobs/ai-voice-agent-consultant-vapi-retell/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104600558041437519"
+        },
+        {
+          "path": "jobs/ai-operations-specialist-agents/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103206040938502805"
+        },
+        {
+          "path": "jobs/n8n-apify-snov-openai-cold-email-funnel/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022097692462933681757"
+        },
+        {
+          "path": "jobs/ai-agent-voice-ai-claude-n8n-urgent/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105321290834838659"
+        },
+        {
+          "path": "jobs/hermes-my-email-bot-setup/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103978950629755316"
+        },
+        {
+          "path": "jobs/fb-community-multi-inbox-support/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106090722569168928"
+        },
+        {
+          "path": "jobs/ai-workflow-automation-small-business-uae/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104261069948029364"
+        },
+        {
+          "path": "jobs/ghl-pipedrive-setup-sync/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104544519995218927"
+        },
+        {
+          "path": "jobs/ai-automation-follow-up-system-n8n-make/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022098948961630758493"
+        },
+        {
+          "path": "jobs/pi-law-firm-demand-agent-n8n/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103549670129109428"
+        },
+        {
+          "path": "jobs/foundry-outbound-zoho-retainer/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107506442590833364"
+        },
+        {
+          "path": "jobs/property-mgmt-ai-automation-atlanta/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107140434588807563"
+        },
+        {
+          "path": "jobs/n8n-ai-news-pipeline-6-sources-2-styles/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022098098597762611518"
+        },
+        {
+          "path": "jobs/ai-automation-test-task-5/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105004921921856494"
+        },
+        {
+          "path": "jobs/commercial-cleaning-b2b-prospecting-engine/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102019978124411770"
+        },
+        {
+          "path": "jobs/tokyo-property-document-pilot-2112212604943890296/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112212604943890296"
+        },
+        {
+          "path": "jobs/bennett-awards-ai-automation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105369097770120005"
+        },
+        {
+          "path": "jobs/claude-code-n8n-automation-consultant/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104598728603613794"
+        },
+        {
+          "path": "jobs/instagram-property-carousels-2112211392395754022/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112211392395754022"
+        },
+        {
+          "path": "jobs/venture-studio-ai-agent-builder/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104571433928184654"
+        }
+      ]
+    },
+    {
+      "platform": "Zapier",
+      "jobs": 32,
+      "percent": 21.5,
+      "evidence": [
+        {
+          "path": "jobs/ai-automation-implementation-assistant/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105311426586682400"
+        },
+        {
+          "path": "jobs/airtable-pcloud-make-videographer/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104589787399541224"
+        },
+        {
+          "path": "jobs/ghl-webinar-launch-specialist/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106018874769392020"
+        },
+        {
+          "path": "jobs/ghl-crm-automation-specialist-lead-routing/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104969596163974126"
+        },
+        {
+          "path": "jobs/estate-planning-law-firm-clio-automation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104564284809129550"
+        },
+        {
+          "path": "jobs/wedding-cake-bakery-square-zapier-monday/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103182659412281756"
+        },
+        {
+          "path": "jobs/ai-automation-developer-openai-n8n/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102466742851667494"
+        },
+        {
+          "path": "jobs/ghl-dental-ortho-three-locations/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103189057814053377"
+        },
+        {
+          "path": "jobs/restorenow-ghl-integration-support/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107515290756274409"
+        },
+        {
+          "path": "jobs/otter-ringcentral-docketwise-m365-integration/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022097756000490147321"
+        },
+        {
+          "path": "jobs/high-caliber-karting-systems-audit-architecture/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102823830325550248"
+        },
+        {
+          "path": "jobs/slack-trello-drive-team-setup/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102003118918315398"
+        },
+        {
+          "path": "jobs/agentic-ai-consultation-crypto-tool/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102058203877831378"
+        },
+        {
+          "path": "jobs/ghl-claude-consult-outdoor-living-texas/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103174644722289052"
+        },
+        {
+          "path": "jobs/clay-cold-email-system-welcome-neighbors/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102016047735746587"
+        },
+        {
+          "path": "jobs/cal-com-ghl-call-booked-pipeline/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102492072733453020"
+        },
+        {
+          "path": "jobs/ghl-crm-dance-studio/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104984749792896032"
+        },
+        {
+          "path": "jobs/ghl-sales-rep-scorecard-google-sheets/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102065889977755181"
+        },
+        {
+          "path": "jobs/hermes-my-email-bot-setup/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103978950629755316"
+        },
+        {
+          "path": "jobs/ai-workflow-automation-small-business-uae/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104261069948029364"
+        },
+        {
+          "path": "jobs/ghl-pipedrive-setup-sync/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104544519995218927"
+        },
+        {
+          "path": "jobs/ghl-pipedrive-sync-a2p-hvac/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107141836651623677"
+        },
+        {
+          "path": "jobs/pi-law-firm-demand-agent-n8n/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103549670129109428"
+        },
+        {
+          "path": "jobs/foundry-outbound-zoho-retainer/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107506442590833364"
+        },
+        {
+          "path": "jobs/property-mgmt-ai-automation-atlanta/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107140434588807563"
+        },
+        {
+          "path": "jobs/ai-automation-test-task-5/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105004921921856494"
+        },
+        {
+          "path": "jobs/commercial-cleaning-b2b-prospecting-engine/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102019978124411770"
+        },
+        {
+          "path": "jobs/tokyo-property-document-pilot-2112212604943890296/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112212604943890296"
+        },
+        {
+          "path": "jobs/bennett-awards-ai-automation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105369097770120005"
+        },
+        {
+          "path": "jobs/hubspot-shopify-custom-product-options-sync/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103201821592918024"
+        },
+        {
+          "path": "jobs/instagram-property-carousels-2112211392395754022/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112211392395754022"
+        },
+        {
+          "path": "jobs/venture-studio-ai-agent-builder/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104571433928184654"
+        }
+      ]
+    },
+    {
+      "platform": "Claude",
+      "jobs": 31,
+      "percent": 20.8,
+      "evidence": [
+        {
+          "path": "jobs/saas-ai-setup-engine-supabase/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104603594668896549"
+        },
+        {
+          "path": "jobs/n8n-ai-lead-qualification/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106026925770876960"
+        },
+        {
+          "path": "jobs/zoho-crm-claude-automation-specialist/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104966179222529056"
+        },
+        {
+          "path": "jobs/claude-dropbox-vault/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105360783331768425"
+        },
+        {
+          "path": "jobs/claude-cowork-setup-mcphee/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106055094838175776"
+        },
+        {
+          "path": "jobs/estate-planning-law-firm-clio-automation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104564284809129550"
+        },
+        {
+          "path": "jobs/claude-chatgpt-live-automation-sessions/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107513752434463152"
+        },
+        {
+          "path": "jobs/ai-gmail-sales-pipeline-zoho/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104649178725478693"
+        },
+        {
+          "path": "jobs/claude-agents-financial-payroll/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106393209125677088"
+        },
+        {
+          "path": "jobs/claude-cowork-setup-skills-realtor/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103534560288616009"
+        },
+        {
+          "path": "jobs/claude-chatgpt-business-setup-rob-referral/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107529326439031442"
+        },
+        {
+          "path": "jobs/claude-code-automation-engineer-eu/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104972564168343613"
+        },
+        {
+          "path": "jobs/maplespark-agent-operations-2112199267713547296/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112199267713547296"
+        },
+        {
+          "path": "jobs/florida-legal-ai-skills-2112226090612794372/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112226090612794372"
+        },
+        {
+          "path": "jobs/ai-automation-developer-claude-n8n-business-systems/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103558841932303752"
+        },
+        {
+          "path": "jobs/ride-hailing-ai-lead-gen-monochrome/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107478692248781145"
+        },
+        {
+          "path": "jobs/ghl-claude-consult-outdoor-living-texas/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103174644722289052"
+        },
+        {
+          "path": "jobs/crm-automation-multi-system-api-claude-n8n/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102481039420170532"
+        },
+        {
+          "path": "jobs/claude-agents-leadgen-shipping-paperwork/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105784232972327225"
+        },
+        {
+          "path": "jobs/ai-voice-agent-consultant-vapi-retell/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104600558041437519"
+        },
+        {
+          "path": "jobs/ai-agent-voice-ai-claude-n8n-urgent/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105321290834838659"
+        },
+        {
+          "path": "jobs/agentic-ai-healthcare-operations-platform/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102823599813958957"
+        },
+        {
+          "path": "jobs/fb-community-multi-inbox-support/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106090722569168928"
+        },
+        {
+          "path": "jobs/ai-workflow-automation-small-business-uae/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104261069948029364"
+        },
+        {
+          "path": "jobs/make-claude-dubai-property-content/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106406278144069453"
+        },
+        {
+          "path": "jobs/legal-contract-review-ai-system/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107497427771450002"
+        },
+        {
+          "path": "jobs/claude-code-n8n-automation-consultant/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104598728603613794"
+        },
+        {
+          "path": "jobs/cold-email-outreach-setup-infrastructure/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022097751877937707326"
+        },
+        {
+          "path": "jobs/instagram-property-carousels-2112211392395754022/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112211392395754022"
+        },
+        {
+          "path": "jobs/claude-appraisal-production-system/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104966700493243329"
+        },
+        {
+          "path": "jobs/venture-studio-ai-agent-builder/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104571433928184654"
+        }
+      ]
+    },
+    {
+      "platform": "OpenAI API",
+      "jobs": 18,
+      "percent": 12.1,
+      "evidence": [
+        {
+          "path": "jobs/n8n-ai-chatbot-crm/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105690007471009811"
+        },
+        {
+          "path": "jobs/n8n-ai-lead-qualification/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106026925770876960"
+        },
+        {
+          "path": "jobs/workiz-quo-openphone-make-openai-sms-automation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022097783228908878142"
+        },
+        {
+          "path": "jobs/ai-gmail-sales-pipeline-zoho/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104649178725478693"
+        },
+        {
+          "path": "jobs/ai-automation-developer-openai-n8n/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102466742851667494"
+        },
+        {
+          "path": "jobs/n8n-ai-api-webhook-expert/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104561987790155342"
+        },
+        {
+          "path": "jobs/ai-lead-intake-qualification-n8n-openai/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102822078003027245"
+        },
+        {
+          "path": "jobs/ai-voice-agent-consultant-vapi-retell/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104600558041437519"
+        },
+        {
+          "path": "jobs/n8n-apify-snov-openai-cold-email-funnel/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022097692462933681757"
+        },
+        {
+          "path": "jobs/agentic-ai-healthcare-operations-platform/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102823599813958957"
+        },
+        {
+          "path": "jobs/ai-workflow-automation-small-business-uae/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104261069948029364"
+        },
+        {
+          "path": "jobs/pi-law-firm-demand-agent-n8n/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103549670129109428"
+        },
+        {
+          "path": "jobs/property-mgmt-ai-automation-atlanta/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107140434588807563"
+        },
+        {
+          "path": "jobs/legal-contract-review-ai-system/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107497427771450002"
+        },
+        {
+          "path": "jobs/ai-automation-test-task-5/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105004921921856494"
+        },
+        {
+          "path": "jobs/commercial-cleaning-b2b-prospecting-engine/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102019978124411770"
+        },
+        {
+          "path": "jobs/bennett-awards-ai-automation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105369097770120005"
+        },
+        {
+          "path": "jobs/venture-studio-ai-agent-builder/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104571433928184654"
+        }
+      ]
+    },
+    {
+      "platform": "ChatGPT",
+      "jobs": 14,
+      "percent": 9.4,
+      "evidence": [
+        {
+          "path": "jobs/ai-automation-implementation-assistant/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105311426586682400"
+        },
+        {
+          "path": "jobs/chatgpt-retail-pricing-system/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106001945934766050"
+        },
+        {
+          "path": "jobs/n8n-ai-chatbot-crm/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105690007471009811"
+        },
+        {
+          "path": "jobs/estate-planning-law-firm-clio-automation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104564284809129550"
+        },
+        {
+          "path": "jobs/claude-chatgpt-live-automation-sessions/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107513752434463152"
+        },
+        {
+          "path": "jobs/claude-chatgpt-business-setup-rob-referral/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107529326439031442"
+        },
+        {
+          "path": "jobs/ai-prompt-engineer-sales-platform/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106022270802274336"
+        },
+        {
+          "path": "jobs/ai-workflow-training-2112226785873140264/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112226785873140264"
+        },
+        {
+          "path": "jobs/real-estate-lender-cold-email-marketer/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105004537747787401"
+        },
+        {
+          "path": "jobs/ai-operations-specialist-agents/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103206040938502805"
+        },
+        {
+          "path": "jobs/ai-workflow-automation-small-business-uae/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104261069948029364"
+        },
+        {
+          "path": "jobs/ghl-sales-follow-up-whisper-quo/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102070380686478469"
+        },
+        {
+          "path": "jobs/bennett-awards-ai-automation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105369097770120005"
+        },
+        {
+          "path": "jobs/venture-studio-ai-agent-builder/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104571433928184654"
+        }
+      ]
+    },
+    {
+      "platform": "HubSpot",
+      "jobs": 13,
+      "percent": 8.7,
+      "evidence": [
+        {
+          "path": "jobs/n8n-zoho-lead-gen-crm-follow-up/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103123878708204191"
+        },
+        {
+          "path": "jobs/n8n-ai-chatbot-crm/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105690007471009811"
+        },
+        {
+          "path": "jobs/hubspot-crm-lenders/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107511357637874096"
+        },
+        {
+          "path": "jobs/ghl-crm-automation-specialist-lead-routing/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104969596163974126"
+        },
+        {
+          "path": "jobs/hubspot-crm-restoration-company/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104599336215815216"
+        },
+        {
+          "path": "jobs/hubspot-n8n-vps-ai-engineer/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105364732158400968"
+        },
+        {
+          "path": "jobs/high-caliber-karting-systems-audit-architecture/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102823830325550248"
+        },
+        {
+          "path": "jobs/financial-services-lead-sales-engine/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022109077801955829352"
+        },
+        {
+          "path": "jobs/hubspot-crm-data-cleanup-b2b/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105303561323086979"
+        },
+        {
+          "path": "jobs/hubspot-real-estate-lead-automation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104659199702069541"
+        },
+        {
+          "path": "jobs/hermes-my-email-bot-setup/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103978950629755316"
+        },
+        {
+          "path": "jobs/tokyo-property-document-pilot-2112212604943890296/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112212604943890296"
+        },
+        {
+          "path": "jobs/hubspot-shopify-custom-product-options-sync/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103201821592918024"
+        }
+      ]
+    },
+    {
+      "platform": "Google Sheets",
+      "jobs": 10,
+      "percent": 6.7,
+      "evidence": [
+        {
+          "path": "jobs/n8n-ai-chatbot-crm/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105690007471009811"
+        },
+        {
+          "path": "jobs/n8n-ai-lead-qualification/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106026925770876960"
+        },
+        {
+          "path": "jobs/estate-planning-law-firm-clio-automation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104564284809129550"
+        },
+        {
+          "path": "jobs/ai-workflow-automation-partnerships-company/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022097776575830928205"
+        },
+        {
+          "path": "jobs/tracker-ghl-make-sheets-debug/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107459761450615129"
+        },
+        {
+          "path": "jobs/n8n-google-sheets-integration-fix/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022101996524466972376"
+        },
+        {
+          "path": "jobs/ghl-sales-rep-scorecard-google-sheets/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102065889977755181"
+        },
+        {
+          "path": "jobs/make-claude-dubai-property-content/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106406278144069453"
+        },
+        {
+          "path": "jobs/n8n-ai-news-pipeline-6-sources-2-styles/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022098098597762611518"
+        },
+        {
+          "path": "jobs/bennett-awards-ai-automation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105369097770120005"
+        }
+      ]
+    },
+    {
+      "platform": "Claude Code",
+      "jobs": 9,
+      "percent": 6.0,
+      "evidence": [
+        {
+          "path": "jobs/saas-ai-setup-engine-supabase/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104603594668896549"
+        },
+        {
+          "path": "jobs/zoho-crm-claude-automation-specialist/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104966179222529056"
+        },
+        {
+          "path": "jobs/claude-code-automation-engineer-eu/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104972564168343613"
+        },
+        {
+          "path": "jobs/maplespark-agent-operations-2112199267713547296/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112199267713547296"
+        },
+        {
+          "path": "jobs/ai-automation-developer-claude-n8n-business-systems/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103558841932303752"
+        },
+        {
+          "path": "jobs/crm-automation-multi-system-api-claude-n8n/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102481039420170532"
+        },
+        {
+          "path": "jobs/ai-voice-agent-consultant-vapi-retell/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104600558041437519"
+        },
+        {
+          "path": "jobs/ai-agent-voice-ai-claude-n8n-urgent/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105321290834838659"
+        },
+        {
+          "path": "jobs/claude-code-n8n-automation-consultant/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104598728603613794"
+        }
+      ]
+    },
+    {
+      "platform": "Make",
+      "jobs": 8,
+      "percent": 5.4,
+      "evidence": [
+        {
+          "path": "jobs/airtable-pcloud-make-videographer/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104589787399541224"
+        },
+        {
+          "path": "jobs/ai-workflow-training-2112226785873140264/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112226785873140264"
+        },
+        {
+          "path": "jobs/tracker-ghl-make-sheets-debug/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107459761450615129"
+        },
+        {
+          "path": "jobs/make-lead-follow-up-crm-uk/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103211339503297421"
+        },
+        {
+          "path": "jobs/ghl-pipedrive-sync-a2p-hvac/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107141836651623677"
+        },
+        {
+          "path": "jobs/ai-automation-follow-up-system-n8n-make/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022098948961630758493"
+        },
+        {
+          "path": "jobs/instagram-property-carousels-2112211392395754022/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112211392395754022"
+        },
+        {
+          "path": "jobs/make-smartsuite-excel-onedrive-sync/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105736852966037395"
+        }
+      ]
+    },
+    {
+      "platform": "Zoho",
+      "jobs": 8,
+      "percent": 5.4,
+      "evidence": [
+        {
+          "path": "jobs/ai-automation-implementation-assistant/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105311426586682400"
+        },
+        {
+          "path": "jobs/n8n-zoho-lead-gen-crm-follow-up/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103123878708204191"
+        },
+        {
+          "path": "jobs/zoho-crm-claude-automation-specialist/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104966179222529056"
+        },
+        {
+          "path": "jobs/ghl-crm-automation-specialist-lead-routing/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104969596163974126"
+        },
+        {
+          "path": "jobs/ai-gmail-sales-pipeline-zoho/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104649178725478693"
+        },
+        {
+          "path": "jobs/real-estate-lender-cold-email-marketer/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105004537747787401"
+        },
+        {
+          "path": "jobs/zoho-ma-crm-sync-trustinsoft/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107151800859046283"
+        },
+        {
+          "path": "jobs/foundry-outbound-zoho-retainer/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107506442590833364"
+        }
+      ]
+    },
+    {
+      "platform": "Gmail",
+      "jobs": 6,
+      "percent": 4.0,
+      "evidence": [
+        {
+          "path": "jobs/claude-cowork-setup-mcphee/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106055094838175776"
+        },
+        {
+          "path": "jobs/estate-planning-law-firm-clio-automation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104564284809129550"
+        },
+        {
+          "path": "jobs/ai-gmail-sales-pipeline-zoho/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104649178725478693"
+        },
+        {
+          "path": "jobs/real-estate-lender-cold-email-marketer/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105004537747787401"
+        },
+        {
+          "path": "jobs/property-mgmt-ai-automation-atlanta/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107140434588807563"
+        },
+        {
+          "path": "jobs/bennett-awards-ai-automation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105369097770120005"
+        }
+      ]
+    },
+    {
+      "platform": "Microsoft Excel",
+      "jobs": 5,
+      "percent": 3.4,
+      "evidence": [
+        {
+          "path": "jobs/agentic-ai-consultation-crypto-tool/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102058203877831378"
+        },
+        {
+          "path": "jobs/tokyo-property-document-pilot-2112212604943890296/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112212604943890296"
+        },
+        {
+          "path": "jobs/bennett-awards-ai-automation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105369097770120005"
+        },
+        {
+          "path": "jobs/make-smartsuite-excel-onedrive-sync/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105736852966037395"
+        },
+        {
+          "path": "jobs/claude-appraisal-production-system/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104966700493243329"
+        }
+      ]
+    },
+    {
+      "platform": "Twilio",
+      "jobs": 5,
+      "percent": 3.4,
+      "evidence": [
+        {
+          "path": "jobs/ghl-insurance-subaccount-setup/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107538790984272596"
+        },
+        {
+          "path": "jobs/ghl-dental-ortho-three-locations/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103189057814053377"
+        },
+        {
+          "path": "jobs/n8n-multi-flow-specialist-linkedin-whatsapp-leads/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022101999043599669866"
+        },
+        {
+          "path": "jobs/high-caliber-karting-systems-audit-architecture/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102823830325550248"
+        },
+        {
+          "path": "jobs/ai-voice-agent-consultant-vapi-retell/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104600558041437519"
+        }
+      ]
+    },
+    {
+      "platform": "Clay",
+      "jobs": 4,
+      "percent": 2.7,
+      "evidence": [
+        {
+          "path": "jobs/money-merch-instantly-cold-email/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103173400885143869"
+        },
+        {
+          "path": "jobs/cold-email-b2b-outreach-specialist/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107456638628219604"
+        },
+        {
+          "path": "jobs/clay-cold-email-system-welcome-neighbors/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102016047735746587"
+        },
+        {
+          "path": "jobs/cold-email-specialist-pay-per-meeting-smartlead-clay/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102476115613458724"
+        }
+      ]
+    },
+    {
+      "platform": "Shopify",
+      "jobs": 4,
+      "percent": 2.7,
+      "evidence": [
+        {
+          "path": "jobs/chatgpt-retail-pricing-system/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106001945934766050"
+        },
+        {
+          "path": "jobs/n8n-troubleshooting-faire-shopify-unleashed-xero/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102052938734572063"
+        },
+        {
+          "path": "jobs/n8n-shopify-woocommerce-chatbots-automation/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102810572407798243"
+        },
+        {
+          "path": "jobs/hubspot-shopify-custom-product-options-sync/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103201821592918024"
+        }
+      ]
+    },
+    {
+      "platform": "Supabase",
+      "jobs": 4,
+      "percent": 2.7,
+      "evidence": [
+        {
+          "path": "jobs/saas-ai-setup-engine-supabase/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104603594668896549"
+        },
+        {
+          "path": "jobs/n8n-multi-flow-specialist-linkedin-whatsapp-leads/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022101999043599669866"
+        },
+        {
+          "path": "jobs/agentic-ai-healthcare-operations-platform/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102823599813958957"
+        },
+        {
+          "path": "jobs/claude-appraisal-production-system/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104966700493243329"
+        }
+      ]
+    },
+    {
+      "platform": "Claude Skills",
+      "jobs": 3,
+      "percent": 2.0,
+      "evidence": [
+        {
+          "path": "jobs/claude-cowork-setup-mcphee/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022106055094838175776"
+        },
+        {
+          "path": "jobs/claude-cowork-setup-skills-realtor/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103534560288616009"
+        },
+        {
+          "path": "jobs/florida-legal-ai-skills-2112226090612794372/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112226090612794372"
+        }
+      ]
+    },
+    {
+      "platform": "Cursor",
+      "jobs": 3,
+      "percent": 2.0,
+      "evidence": [
+        {
+          "path": "jobs/ai-automation-implementation-assistant/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105311426586682400"
+        },
+        {
+          "path": "jobs/saas-ai-setup-engine-supabase/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104603594668896549"
+        },
+        {
+          "path": "jobs/zoho-crm-claude-automation-specialist/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104966179222529056"
+        }
+      ]
+    },
+    {
+      "platform": "Instantly",
+      "jobs": 3,
+      "percent": 2.0,
+      "evidence": [
+        {
+          "path": "jobs/money-merch-instantly-cold-email/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103173400885143869"
+        },
+        {
+          "path": "jobs/cold-email-b2b-outreach-specialist/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107456638628219604"
+        },
+        {
+          "path": "jobs/clay-cold-email-system-welcome-neighbors/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102016047735746587"
+        }
+      ]
+    },
+    {
+      "platform": "Notion",
+      "jobs": 3,
+      "percent": 2.0,
+      "evidence": [
+        {
+          "path": "jobs/ai-workflow-automation-partnerships-company/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022097776575830928205"
+        },
+        {
+          "path": "jobs/ai-agents-slack-notion-ghl/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104999725700907069"
+        },
+        {
+          "path": "jobs/tokyo-property-document-pilot-2112212604943890296/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112212604943890296"
+        }
+      ]
+    },
+    {
+      "platform": "Pipedrive",
+      "jobs": 3,
+      "percent": 2.0,
+      "evidence": [
+        {
+          "path": "jobs/pipedrive-setup-automation-training/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022105312919566091395"
+        },
+        {
+          "path": "jobs/ghl-pipedrive-setup-sync/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104544519995218927"
+        },
+        {
+          "path": "jobs/ghl-pipedrive-sync-a2p-hvac/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107141836651623677"
+        }
+      ]
+    },
+    {
+      "platform": "Slack",
+      "jobs": 3,
+      "percent": 2.0,
+      "evidence": [
+        {
+          "path": "jobs/zoho-crm-claude-automation-specialist/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104966179222529056"
+        },
+        {
+          "path": "jobs/slack-trello-drive-team-setup/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102003118918315398"
+        },
+        {
+          "path": "jobs/ai-agents-slack-notion-ghl/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104999725700907069"
+        }
+      ]
+    },
+    {
+      "platform": "Airtable",
+      "jobs": 2,
+      "percent": 1.3,
+      "evidence": [
+        {
+          "path": "jobs/airtable-pcloud-make-videographer/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104589787399541224"
+        },
+        {
+          "path": "jobs/instagram-property-carousels-2112211392395754022/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112211392395754022"
+        }
+      ]
+    },
+    {
+      "platform": "Apify",
+      "jobs": 2,
+      "percent": 1.3,
+      "evidence": [
+        {
+          "path": "jobs/ride-hailing-ai-lead-gen-monochrome/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022107478692248781145"
+        },
+        {
+          "path": "jobs/n8n-apify-snov-openai-cold-email-funnel/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022097692462933681757"
+        }
+      ]
+    },
+    {
+      "platform": "Vapi",
+      "jobs": 2,
+      "percent": 1.3,
+      "evidence": [
+        {
+          "path": "jobs/ai-voice-agent-consultant-vapi-retell/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104600558041437519"
+        },
+        {
+          "path": "jobs/hermes-my-email-bot-setup/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103978950629755316"
+        }
+      ]
+    },
+    {
+      "platform": "ActiveCampaign",
+      "jobs": 1,
+      "percent": 0.7,
+      "evidence": [
+        {
+          "path": "jobs/ghl-crm-automation-specialist-lead-routing/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104969596163974126"
+        }
+      ]
+    },
+    {
+      "platform": "Calendly",
+      "jobs": 1,
+      "percent": 0.7,
+      "evidence": [
+        {
+          "path": "jobs/cold-email-specialist-pay-per-meeting-smartlead-clay/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022102476115613458724"
+        }
+      ]
+    },
+    {
+      "platform": "Codex",
+      "jobs": 1,
+      "percent": 0.7,
+      "evidence": [
+        {
+          "path": "jobs/maplespark-agent-operations-2112199267713547296/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022112199267713547296"
+        }
+      ]
+    },
+    {
+      "platform": "Hermes",
+      "jobs": 1,
+      "percent": 0.7,
+      "evidence": [
+        {
+          "path": "jobs/hermes-my-email-bot-setup/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022103978950629755316"
+        }
+      ]
+    },
+    {
+      "platform": "Retell",
+      "jobs": 1,
+      "percent": 0.7,
+      "evidence": [
+        {
+          "path": "jobs/ai-voice-agent-consultant-vapi-retell/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104600558041437519"
+        }
+      ]
+    },
+    {
+      "platform": "Salesforce",
+      "jobs": 1,
+      "percent": 0.7,
+      "evidence": [
+        {
+          "path": "jobs/ghl-crm-automation-specialist-lead-routing/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022104969596163974126"
+        }
+      ]
+    },
+    {
+      "platform": "Skool",
+      "jobs": 1,
+      "percent": 0.7,
+      "evidence": [
+        {
+          "path": "jobs/skool-ghl-workshop-system/jd.txt",
+          "url": "https://www.upwork.com/jobs/~022109071318216150324"
+        }
+      ]
+    },
+    {
+      "platform": "Bland",
+      "jobs": 0,
+      "percent": 0.0,
+      "evidence": []
+    },
+    {
+      "platform": "ClickUp",
+      "jobs": 0,
+      "percent": 0.0,
+      "evidence": []
+    },
+    {
+      "platform": "ElevenLabs",
+      "jobs": 0,
+      "percent": 0.0,
+      "evidence": []
+    },
+    {
+      "platform": "Grok",
+      "jobs": 0,
+      "percent": 0.0,
+      "evidence": []
+    },
+    {
+      "platform": "Kit",
+      "jobs": 0,
+      "percent": 0.0,
+      "evidence": []
+    },
+    {
+      "platform": "Klaviyo",
+      "jobs": 0,
+      "percent": 0.0,
+      "evidence": []
+    },
+    {
+      "platform": "Microsoft Power Automate",
+      "jobs": 0,
+      "percent": 0.0,
+      "evidence": []
+    },
+    {
+      "platform": "Orca",
+      "jobs": 0,
+      "percent": 0.0,
+      "evidence": []
+    }
+  ]
+}
