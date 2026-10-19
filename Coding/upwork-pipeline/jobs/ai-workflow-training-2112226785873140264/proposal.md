@@ -1,4 +1,4 @@
-Hey Yaffa 👋 I do AI automation builds all the time, so here's your hands-on lesson finished and connected, 2-min video: https://www.loom.com/share/[LOOMURL]
+Hey Yaffa 👋 I do AI automation builds all the time, so here's your hands-on lesson finished and connected, 2-min video: https://www.loom.com/share/0cdbac46072040679832ef168335c0b6
 
 The video walks through what your hands-on training project will look like once it's built and live, a small marketing dataset going in and a checked report you can rerun yourself coming out: the workflow, the input fields, the AI prompt, a troubleshooting exercise, and your independent rerun.
 

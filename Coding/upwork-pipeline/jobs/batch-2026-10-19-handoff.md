@@ -1,5 +1,7 @@
 # Upwork saved-job batch — 2026-10-19
 
+> **Final user disposition, 2026-10-19:** STOPPED after two recordings: AI training and Florida legal. Lorenzo rejected the batch's visual fidelity, specifically reporting that the Claude legal skills demo looked like GoHighLevel. The other five jobs were marked rejected and archived through the queue CLI. Their files are retained; they are not ready to record. The earlier approvals below are historical technical reviews and are superseded by this user rejection. Do not start another batch today. Next work requires accurate native interface references and cost optimization.
+
 Recording board: http://127.0.0.1:8769/
 
 All seven exact generated pages independently approved on 2026-10-19. The board displays newest Upwork posts first, independent of review completion time. This small ordering change was self-reviewed by the controller; 39 existing queue/server tests passed, and the running endpoint was verified in descending job-ID order.

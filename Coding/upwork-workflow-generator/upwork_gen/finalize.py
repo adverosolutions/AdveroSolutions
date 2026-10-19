@@ -284,8 +284,8 @@ def log_row(job_dir: str, loom: str, variant: str, visible_chars: Optional[int],
         if workflow is None:
             raise ValueError("deck-spec.json: requires a workflow scene")
         platform = workflow.get("platform")
-        if not isinstance(platform, str) or platform not in ("ghl", "n8n", "make"):
-            raise ValueError("deck-spec.json: first workflow platform must be ghl, n8n or make")
+        if not isinstance(platform, str) or platform not in ("ghl", "n8n", "make", "claude-code", "codex"):
+            raise ValueError("deck-spec.json: first workflow platform must be ghl, n8n, make, claude-code or codex")
         content = workflow.get("content")
         flow_nodes = content.get("nodes") if isinstance(content, dict) else None
         if not isinstance(flow_nodes, list) or not flow_nodes or any(

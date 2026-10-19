@@ -1,4 +1,4 @@
-Hey Toor 👋 I do Claude AI builds all the time, so here's your legal skills workflow finished and connected, 2-min video: https://www.loom.com/share/[LOOMURL]
+Hey Toor 👋 I do Claude AI builds all the time, so here's your legal skills workflow finished and connected, 2-min video: https://www.loom.com/share/87b4fa0696d94e37816120342605caf7
 
 The video walks through what your firm's Claude workflow will look like once it's set up and live, an anonymized intake and document packet going in and a source-linked draft for attorney review coming out: the reusable skill, intake checks, document analysis, the case summary, and the attorney review checkpoint.
 
