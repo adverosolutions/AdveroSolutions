@@ -37,3 +37,31 @@ small-screen result pane. Independent motion review is in `REVIEW.md`.
 User review is required before integrating this direction into the production
 runtime or refreshing the master handbook’s default template. Do not start a
 saved-job batch merely by building or opening this preview.
+
+## Cinematic v2 — deliberate maximal direction
+
+Lorenzo requested a substantially more animated presentation after rejecting the
+restrained first study. Build this separate comparison with:
+
+```sh
+/usr/bin/python3 build_preview.py --cinematic
+```
+
+Open `../.local/cinematic-sales-preview/index.html`. **Replay opening** repeats
+the full company-name prelude; **Skip intro** reveals the cover immediately.
+The prelude lasts about three seconds and the complete cover settles in about
+four seconds. This longer opening is deliberate for the maximal comparison.
+Returning to the cover does not force the prelude again unless replay is requested.
+
+V2 adds a full-screen personalized title, moving perspective grid and expanding
+rings, a curtain reveal, large kinetic type, floating glass overview panels,
+animated SVG paths/orbits, perspective chapter transitions and a swept closing CTA.
+The floating panels are explicitly a conceptual system overview, not invented GHL
+software. Native scenes, sample causality, Inter and the outer blue/light palette
+remain. Ongoing decorative effects stop with the presentation toggle or reduced
+motion; the native workflow simulation’s replay remains separate.
+
+Run `node check_preview.cjs --cinematic` with Playwright available for the bounded
+motion test. It additionally checks the skippable intro and responsive animation
+handoff. `CINEMATIC-REVIEW.md` contains the final independent comparison review.
+This is still a preview awaiting Lorenzo’s direction, not the production default.
