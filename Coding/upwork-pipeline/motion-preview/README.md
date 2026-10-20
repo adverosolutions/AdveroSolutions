@@ -48,9 +48,9 @@ restrained first study. Build this separate comparison with:
 ```
 
 Open `../.local/cinematic-sales-preview/index.html`. **Replay opening** repeats
-the full company-name prelude; **Skip intro** reveals the cover immediately.
-The prelude lasts about three seconds and the complete cover settles in about
-four seconds. This longer opening is deliberate for the maximal comparison.
+the full company-name intro. The intro holds until **Start presentation** is clicked.
+The client-name entrance plays on the intro screen, then holds indefinitely.
+Only clicking Start presentation triggers the curtain and presentation reveal.
 Returning to the cover does not force the prelude again unless replay is requested.
 
 V2 adds a full-screen personalized title, moving perspective grid and expanding
@@ -62,6 +62,6 @@ remain. Ongoing decorative effects stop with the presentation toggle or reduced
 motion; the native workflow simulation’s replay remains separate.
 
 Run `node check_preview.cjs --cinematic` with Playwright available for the bounded
-motion test. It additionally checks the skippable intro and responsive animation
+motion test. It additionally checks the manually started intro and responsive animation
 handoff. `CINEMATIC-REVIEW.md` contains the final independent comparison review.
 This is still a preview awaiting Lorenzo’s direction, not the production default.
