@@ -1,5 +1,7 @@
 # Sales deck authoring rules
 
+Fresh-model starting point: `../../master-handoff/00-MASTER.md`. Use the consolidated requirements and saved UI references; do not ask Lorenzo to repeat decisions already documented. Current whole-walkthrough rules are in `SALES_ACCEPTANCE.md`.
+
 Daily content workers edit only their assigned spec and private evidence in the assigned job folder. Never change shared runtime, catalog, compiler, palette, font or template-lock files during a job. Unsupported native tools/actions require a new adapter through explicit template maintenance; do not improvise a fallback.
 
 Read `OPERATING_POLICY.md` for current model/speed settings: Sol Medium coordinates and builds; one bounded independent Astra High review at the end. Use short original requirements and isolated folders. Use normal subagents only when requested; do not create extra coordinator chats by default. Main records exact-page review receipts through the canonical queue. Builders cannot approve their own work. Read `visual-reference/README.md` before selecting a native screen; renderer support alone does not establish visual readiness.

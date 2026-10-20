@@ -1,5 +1,7 @@
 # Upwork pipeline instructions
 
+**Master handoff:** Start with `master-handoff/00-MASTER.md` for the consolidated UI, sales and delivery decisions. The local `UPWORK_MASTER.html` launcher at the repository root opens the self-contained handbook/export. Current operational details and locked proposal copy remain in `UPWORK_PROCESS.md`.
+
 > **User correction, 2026-10-19:** Lorenzo stopped the seven-job batch after two recordings and rejected its visual quality. The five unrecorded jobs are rejected and archived. Do not restart them or generate another batch without a new request. Before future production, resolve native UI fidelity and the excessive usage cost. Existing technical review receipts are not evidence that Lorenzo accepted the visuals.
 
 Every depicted application must match the exact software and product surface named in the post. Research current official screenshots or inspect the actual workspace before implementing or approving an interior. Claude Skills, Claude Projects and Claude Code are different surfaces; do not substitute one for another. A platform label, generic workflow canvas, or shared CRM-looking interior does not satisfy this requirement. Preserve the approved outer presentation colors and typography. See the visual reference gate in `templates/sales-deck/REVIEW_BRIEF.md`.

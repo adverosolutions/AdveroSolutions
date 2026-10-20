@@ -1,5 +1,7 @@
 # AdveroSolutions — Agent Instructions
 
+**Upwork demos and proposals:** Before working in that lane, read `Coding/upwork-pipeline/master-handoff/00-MASTER.md`, then its operations/UI guide and current `UPWORK_PROCESS.md`. The local `UPWORK_MASTER.html` opens the complete saved handbook. Preserve the current sales/UI/model decisions rather than using historical agent defaults. All live-write rules below still apply.
+
 > Canonical source: `Agentic Worklfows/Claude.md`. This root file ensures Claude Code auto-loads the instructions.
 
 ## 3-Layer Architecture

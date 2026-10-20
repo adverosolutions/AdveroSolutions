@@ -1,4 +1,6 @@
-# Upwork proposal process (current, 2026-10-14)
+# Upwork proposal process (current through 2026-10-20)
+
+Master handoff for a fresh model: [`master-handoff/00-MASTER.md`](master-handoff/00-MASTER.md). It consolidates the UI references, sales requirements, quality gate and delivery process; the saved export includes a paste-ready prompt and a test.
 
 > **Whole-walkthrough quality gate (2026-10-19):** Read `templates/sales-deck/SALES_ACCEPTANCE.md`. Every generation needs a nonrepeating problem → workflow → visible result → 15-minute call story. Astra reviews sales logic, copy, sample continuity, interactions and native fidelity together; visual-only approval does not pass.
 

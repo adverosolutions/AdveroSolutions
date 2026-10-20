@@ -1,3 +1,5 @@
+> Historical implementation sketch. Current author/reviewer models and effort come from `OPERATING_POLICY.md`; sales/story/native acceptance comes from `SALES_ACCEPTANCE.md` and the latest exact review. Do not revive the older Astra xhigh / Sol high / Max-or-Ultra defaults below. Fresh models start at `../../master-handoff/00-MASTER.md`.
+
 # Sales deck generator: implementation contract
 
 This is the implementation brief for the first reusable version. The approved source is `/Users/lorenzovillarreal/Documents/Codex/2026-10-09/am-i-inside-of-codex-now/outputs/upwork-sales-test/` (latest V4). Preserve that folder and existing job pages. The outer palette, gradients, Inter font, opening layout, navigation, replay placement, and blue CTA are locked. Native software interiors may use their own established styles.
