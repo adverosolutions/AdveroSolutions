@@ -1,4 +1,4 @@
-> Start-screen controls amendment (20 October 2026): intro now includes route selection (two minutes by default), Present for the clean view, and Preview for the preparation view. It remains presenter-controlled. Recipient text uses verified first name, business name, then “your team.” This bounded amendment is main-session self-reviewed; independent review below applies to its stated older page hash. Current page: `e4d651215bbe8d8e135ffdbd3b7e41eaf918693be6bd6932400dcc8e8c27da78`. Current behavior evidence is in the generated checks.json.
+> Presenter-control amendment (20 October 2026): Present now hides setup while holding the intro. Next or Right Arrow explicitly advances; Escape restores setup. Preview retains its separate preparation path. Main-session self-review and current browser checks cover this bounded change; the independent review below applies to its older stated hash. Current page: `2099680972fb720a39ea73aa16699fc7ee41aa46babd9863a45b223254bc7b54`.
 
 # Cinematic comparison review — 20 October 2026
 

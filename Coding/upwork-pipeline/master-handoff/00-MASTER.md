@@ -146,8 +146,10 @@ Intro recipient fallback is explicit: verified first name → known business nam
 “Prepared for your team.” When no business is known, use “your team” as the neutral
 account display name; never invent a business to satisfy a required spec field.
 For the cinematic comparison, route selection and Present/Preview are on the
-held intro, with two minutes selected by default. Present enters the clean view;
-Preview retains controls. Neither advances until clicked. This comparison remains
+held intro, with two minutes selected by default. Present hides setup and stays on the intro;
+Next or Right Arrow advances when the presenter is ready. Escape restores setup.
+Preview launches the walkthrough with preparation controls visible. No automatic
+intro advancement. This comparison remains
 separate from the default production template until accepted for integration.
 
 End with three relevant **directional** measures, their definitions and a baseline

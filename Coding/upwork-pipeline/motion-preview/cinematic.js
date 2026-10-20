@@ -36,24 +36,26 @@
  }
  function intro(onStart){
   const layer=document.createElement('div');layer.className='cin-intro';layer.setAttribute('role','dialog');layer.setAttribute('aria-modal','true');layer.setAttribute('aria-label','Personalized opening');
-  layer.innerHTML='<div class="cin-intro-grid"></div><div class="cin-intro-orb"></div><div class="cin-intro-content"><span class="cin-intro-kicker">PREPARED EXCLUSIVELY FOR</span><strong>'+escape(MotionConfig.recipient||MotionConfig.company||'your team')+'</strong><div class="cin-intro-rule"></div><span class="cin-intro-bottom">YOUR ESTIMATE ENQUIRY FOLLOW-UP</span><div class="cin-intro-controls"><label>Presentation length<select class="cin-duration"><option value="1">Quick · 1 minute</option><option value="2">Standard · 2 minutes</option><option value="3">Detailed · 3 minutes</option></select></label><div class="cin-launch"><button class="cin-start">Preview</button><button class="cin-present primary">Present <span>↗</span></button></div></div></div><span class="cin-intro-index">ADVEROSOLUTIONS / 01</span>';
+  layer.innerHTML='<div class="cin-intro-grid"></div><div class="cin-intro-orb"></div><div class="cin-intro-content"><span class="cin-intro-kicker">PREPARED EXCLUSIVELY FOR</span><strong>'+escape(MotionConfig.recipient||MotionConfig.company||'your team')+'</strong><div class="cin-intro-rule"></div><span class="cin-intro-bottom">YOUR ESTIMATE ENQUIRY FOLLOW-UP</span><div class="cin-intro-controls"><label>Presentation length<select class="cin-duration"><option value="1">Quick · 1 minute</option><option value="2">Standard · 2 minutes</option><option value="3">Detailed · 3 minutes</option></select></label><div class="cin-launch"><button class="cin-start">Preview</button><button class="cin-present primary">Present <span>↗</span></button></div></div></div><span class="cin-intro-index">ADVEROSOLUTIONS / 01</span><button class="cin-next nav-button" hidden>Next <span>→</span></button>';
   document.body.append(layer);document.querySelector('#app').inert=true;
+  const next=layer.querySelector('.cin-next'), setup=layer.querySelector('.cin-intro-controls');
   const start=layer.querySelector('.cin-present'), preview=layer.querySelector('.cin-start'), route=layer.querySelector('.cin-duration');route.value=hasLaunched?document.querySelector('#durationSelect').value:'2';start.focus({preventScroll:true});
-  layer.addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight'].includes(event.key))event.stopPropagation();if(event.key==='Tab'){const items=[route,preview,start].filter(x=>!x.disabled);const index=items.indexOf(document.activeElement);event.preventDefault();items[(index+(event.shiftKey?-1:1)+items.length)%items.length]?.focus();}});
+  layer.addEventListener('keydown',event=>{if(layer.classList.contains('cin-live')){if(event.key==='ArrowRight'){event.preventDefault();event.stopPropagation();advance();return;}if(event.key==='Escape'){event.preventDefault();event.stopPropagation();layer.classList.remove('cin-live');document.body.classList.remove('presenting');setup.inert=false;setup.removeAttribute('aria-hidden');next.hidden=true;start.focus();return;}if(event.key==='Tab'){event.preventDefault();next.focus();return;}}if(['ArrowLeft','ArrowRight'].includes(event.key))event.stopPropagation();if(event.key==='Tab'){const items=[route,preview,start].filter(x=>!x.disabled);const index=items.indexOf(document.activeElement);event.preventDefault();items[(index+(event.shiftKey?-1:1)+items.length)%items.length]?.focus();}});
   animate(layer.querySelector('.cin-intro-kicker'),[{opacity:0,letterSpacing:'.55em',transform:'translateY(20px)'},{opacity:1,letterSpacing:'.22em',transform:'none'}],900,100);
   animate(layer.querySelector('strong'),[{opacity:0,transform:'perspective(1000px) translateY(90px) rotateX(35deg)',filter:'blur(16px)'},{opacity:1,transform:'none',filter:'blur(0)'}],1200,260);
   animate(layer.querySelector('.cin-intro-rule'),[{transform:'scaleX(0)'},{transform:'scaleX(1)'}],1100,500);
   reveal(layer.querySelector('.cin-intro-bottom'),750,18,900);
-  function launch(present){
-   if(layer.dataset.started)return;layer.dataset.started='true';start.disabled=true;preview.disabled=true;route.disabled=true;
+  function configureRoute(){
    const selector=document.querySelector('#durationSelect');if(selector.value!==route.value){selector.value=route.value;selector.dispatchEvent(new Event('change',{bubbles:true}));const fresh=stage.querySelector('.cover-slide');fresh.dataset.motionReady='true';cinematicCover(fresh);lastScene=stage.dataset.scene;}hasLaunched=true;
-   if(present)document.querySelector('#present').click();
+  }
+  function advance(){
+   if(layer.dataset.started)return;layer.dataset.started='true';start.disabled=true;preview.disabled=true;route.disabled=true;next.disabled=true;
    const finish=()=>{layer.remove();document.querySelector('#app').inert=false;stage.querySelector('#seeWorkflow')?.focus({preventScroll:true});};
    if(!enabled||media.matches){finish();onStart(0);return;}
    const leaving=animate(layer,[{clipPath:'inset(0 0 0 0 round 0px)',transform:'scale(1)',opacity:1},{clipPath:'inset(0 0 100% 0 round 0px)',transform:'scale(1.04)',opacity:1}],1000,0);
    onStart(200);leaving.finished.then(finish).catch(()=>{});
   }
-  start.addEventListener('click',()=>launch(true));preview.addEventListener('click',()=>launch(false));
+  start.addEventListener('click',()=>{configureRoute();document.querySelector('#present').click();layer.classList.add('cin-live');setup.inert=true;setup.setAttribute('aria-hidden','true');next.hidden=false;next.focus({preventScroll:true});});preview.addEventListener('click',()=>{configureRoute();advance();});next.addEventListener('click',advance);
  }
  function playCover(cover,delay=0){
    reveal(cover.querySelector('.motion-client'),delay,45,950);

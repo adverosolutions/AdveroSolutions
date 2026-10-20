@@ -50,9 +50,9 @@ restrained first study. Build this separate comparison with:
 Open `../.local/cinematic-sales-preview/index.html`. **Replay opening** repeats
 the full company-name intro. The intro holds until **Present** or **Preview** is clicked.
 The client-name entrance plays on the intro screen, then holds indefinitely.
-Choose the recording route on the intro (two minutes by default). Present launches
-the reveal directly in presentation mode; Preview retains the preparation toolbar.
-Only one of those buttons triggers the reveal.
+Choose the recording route on the intro (two minutes by default). Present hides the setup controls and holds on the clean intro. Next or Right Arrow
+then reveals the presentation. Escape restores intro setup. Preview launches the
+walkthrough with the preparation toolbar visible. No timed intro advancement.
 Returning to the cover does not force the prelude again unless replay is requested.
 
 V2 adds a full-screen personalized title, moving perspective grid and expanding
