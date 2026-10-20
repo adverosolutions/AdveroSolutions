@@ -48,9 +48,11 @@ restrained first study. Build this separate comparison with:
 ```
 
 Open `../.local/cinematic-sales-preview/index.html`. **Replay opening** repeats
-the full company-name intro. The intro holds until **Start presentation** is clicked.
+the full company-name intro. The intro holds until **Present** or **Preview** is clicked.
 The client-name entrance plays on the intro screen, then holds indefinitely.
-Only clicking Start presentation triggers the curtain and presentation reveal.
+Choose the recording route on the intro (two minutes by default). Present launches
+the reveal directly in presentation mode; Preview retains the preparation toolbar.
+Only one of those buttons triggers the reveal.
 Returning to the cover does not force the prelude again unless replay is requested.
 
 V2 adds a full-screen personalized title, moving perspective grid and expanding
@@ -65,3 +67,5 @@ Run `node check_preview.cjs --cinematic` with Playwright available for the bound
 motion test. It additionally checks the manually started intro and responsive animation
 handoff. `CINEMATIC-REVIEW.md` contains the final independent comparison review.
 This is still a preview awaiting Lorenzo’s direction, not the production default.
+
+Recipient fallback: an evidence-backed first name when supplied; otherwise the business name; otherwise “your team.” No name is inferred.

@@ -31,7 +31,10 @@ def main(cinematic=False):
   function showNotes"""
  if text.count(original)!=1:raise SystemExit('Preview hook no longer matches runtime; inspect before updating.')
  text=text.replace(original,replacement)
- config=js_json({'company':data['account']['name'],'initials':data['account']['initials']})
+ company=data['account'].get('name','').strip()
+ first_name=data.get('personalization',{}).get('firstName','').strip()
+ recipient=first_name or company or 'your team'
+ config=js_json({'company':company or 'your team','recipient':recipient,'initials':data['account'].get('initials','AT')})
  script='window.MotionConfig='+config+';\n'+(HERE/('cinematic.js' if cinematic else 'motion.js')).read_text()
  text=text.replace('</head>','<style>'+ (HERE/('cinematic.css' if cinematic else 'motion.css')).read_text()+'</style></head>',1)
  text=text.replace('<script>','<script>'+script+'</script>\n<script>',1)

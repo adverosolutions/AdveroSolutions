@@ -1,4 +1,4 @@
-> Manual-start amendment (20 October 2026): the current page now holds the personalized intro until Start presentation is clicked, including motion-off and reduced-motion modes. Replay opening restores that waiting state; underlying navigation is inert while waiting. This bounded behavior change is main-session self-reviewed; the independent review below applies to the earlier cinematic page, not this new hash. Current page: `7ab431b5b6d4fe0b2c69ff766d514a9181d9d40a292c3e7c6dd20f4063ad8d3b`. See the generated checks.json for current browser evidence.
+> Start-screen controls amendment (20 October 2026): intro now includes route selection (two minutes by default), Present for the clean view, and Preview for the preparation view. It remains presenter-controlled. Recipient text uses verified first name, business name, then “your team.” This bounded amendment is main-session self-reviewed; independent review below applies to its stated older page hash. Current page: `e4d651215bbe8d8e135ffdbd3b7e41eaf918693be6bd6932400dcc8e8c27da78`. Current behavior evidence is in the generated checks.json.
 
 # Cinematic comparison review — 20 October 2026
 

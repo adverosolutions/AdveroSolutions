@@ -3,7 +3,7 @@
  'use strict';
  const stage=document.querySelector('#stage');
  const media=matchMedia('(prefers-reduced-motion: reduce)');
- let enabled=true, active=null, generation=0, animations=[], lastScene='', firstOpening=true;
+ let enabled=true, active=null, generation=0, animations=[], lastScene='', firstOpening=true, hasLaunched=false;
  const ease='cubic-bezier(.18,.82,.22,1)';
  function cancel(keepIntro=false){if(!keepIntro){document.querySelectorAll('.cin-intro,.cin-curtain').forEach(x=>x.remove());document.querySelector('#app').inert=false;}animations.forEach(a=>a.cancel());animations=[];}
  function animate(el,frames,duration=650,delay=0){
@@ -31,26 +31,29 @@
   if(cover.classList.contains('cinematic-cover'))return;
   const title=cover.querySelector('h1').childNodes[0].textContent.trim(),accent=cover.querySelector('h1 em').textContent,caption=cover.querySelector('.hero-copy>p').textContent;
   cover.classList.add('cinematic-cover');
-  cover.innerHTML='<div class="cin-hero-copy"><div class="motion-client"><div class="motion-monogram">'+escape(MotionConfig.initials)+'</div><div><span>Prepared for</span><strong>'+escape(MotionConfig.company)+'</strong></div></div><h1><span class="cin-headline">'+escape(title)+'</span><em>'+escape(accent)+'</em></h1><p class="cin-caption">'+escape(caption)+'</p><button id="seeWorkflow" class="primary cover-cta">Walk through the system <span>↗</span></button><div class="cin-footnote"><i></i>GoHighLevel · Estimate enquiry follow-up</div></div><div class="cin-system"><div class="cin-system-label"><span>System overview</span><span>Sample enquiry</span></div><div class="cin-orbit cin-orbit-a"><i></i></div><div class="cin-orbit cin-orbit-b"><i></i></div><div class="cin-orbit cin-orbit-c"></div><svg class="cin-route" viewBox="0 0 600 540" aria-hidden="true"><path class="cin-route-base" d="M150 110 C480 110 100 265 385 270 S100 430 310 430"/><path class="cin-route-light" d="M150 110 C480 110 100 265 385 270 S100 430 310 430"/></svg><div class="cin-tile-wrap cin-tile-a"><article class="cin-tile"><span class="cin-tile-number">01</span><div><small>THE ENQUIRY</small><h3>Estimate request received.</h3><p>Avery Morgan · Replacement estimate</p></div><span class="cin-tile-state">↗</span></article></div><div class="cin-tile-wrap cin-tile-b"><article class="cin-tile"><span class="cin-tile-number">02</span><div><small>THE HANDOFF</small><h3>Maya takes ownership.</h3><p>Contacted · $8,450.00</p></div><span class="cin-tile-state">✓</span></article></div><div class="cin-tile-wrap cin-tile-c"><article class="cin-tile"><span class="cin-tile-number">03</span><div><small>THE RESPONSE</small><h3>SMS and email sent.</h3><p>Await visit confirmation</p></div><span class="cin-tile-state">✓</span></article></div></div>';
+  cover.innerHTML='<div class="cin-hero-copy"><div class="motion-client"><div class="motion-monogram">'+escape(MotionConfig.initials)+'</div><div><span>Prepared for</span><strong>'+escape(MotionConfig.recipient||MotionConfig.company||'your team')+'</strong></div></div><h1><span class="cin-headline">'+escape(title)+'</span><em>'+escape(accent)+'</em></h1><p class="cin-caption">'+escape(caption)+'</p><button id="seeWorkflow" class="primary cover-cta">Walk through the system <span>↗</span></button><div class="cin-footnote"><i></i>GoHighLevel · Estimate enquiry follow-up</div></div><div class="cin-system"><div class="cin-system-label"><span>System overview</span><span>Sample enquiry</span></div><div class="cin-orbit cin-orbit-a"><i></i></div><div class="cin-orbit cin-orbit-b"><i></i></div><div class="cin-orbit cin-orbit-c"></div><svg class="cin-route" viewBox="0 0 600 540" aria-hidden="true"><path class="cin-route-base" d="M150 110 C480 110 100 265 385 270 S100 430 310 430"/><path class="cin-route-light" d="M150 110 C480 110 100 265 385 270 S100 430 310 430"/></svg><div class="cin-tile-wrap cin-tile-a"><article class="cin-tile"><span class="cin-tile-number">01</span><div><small>THE ENQUIRY</small><h3>Estimate request received.</h3><p>Avery Morgan · Replacement estimate</p></div><span class="cin-tile-state">↗</span></article></div><div class="cin-tile-wrap cin-tile-b"><article class="cin-tile"><span class="cin-tile-number">02</span><div><small>THE HANDOFF</small><h3>Maya takes ownership.</h3><p>Contacted · $8,450.00</p></div><span class="cin-tile-state">✓</span></article></div><div class="cin-tile-wrap cin-tile-c"><article class="cin-tile"><span class="cin-tile-number">03</span><div><small>THE RESPONSE</small><h3>SMS and email sent.</h3><p>Await visit confirmation</p></div><span class="cin-tile-state">✓</span></article></div></div>';
   cover.querySelector('#seeWorkflow').addEventListener('click',()=>document.querySelector('#next').click());
  }
  function intro(onStart){
   const layer=document.createElement('div');layer.className='cin-intro';layer.setAttribute('role','dialog');layer.setAttribute('aria-modal','true');layer.setAttribute('aria-label','Personalized opening');
-  layer.innerHTML='<div class="cin-intro-grid"></div><div class="cin-intro-orb"></div><div class="cin-intro-content"><span class="cin-intro-kicker">PREPARED EXCLUSIVELY FOR</span><strong>'+escape(MotionConfig.company)+'</strong><div class="cin-intro-rule"></div><span class="cin-intro-bottom">YOUR ESTIMATE ENQUIRY FOLLOW-UP</span><button class="cin-start primary">Start presentation <span>↗</span></button></div><span class="cin-intro-index">ADVEROSOLUTIONS / 01</span>';
+  layer.innerHTML='<div class="cin-intro-grid"></div><div class="cin-intro-orb"></div><div class="cin-intro-content"><span class="cin-intro-kicker">PREPARED EXCLUSIVELY FOR</span><strong>'+escape(MotionConfig.recipient||MotionConfig.company||'your team')+'</strong><div class="cin-intro-rule"></div><span class="cin-intro-bottom">YOUR ESTIMATE ENQUIRY FOLLOW-UP</span><div class="cin-intro-controls"><label>Presentation length<select class="cin-duration"><option value="1">Quick · 1 minute</option><option value="2">Standard · 2 minutes</option><option value="3">Detailed · 3 minutes</option></select></label><div class="cin-launch"><button class="cin-start">Preview</button><button class="cin-present primary">Present <span>↗</span></button></div></div></div><span class="cin-intro-index">ADVEROSOLUTIONS / 01</span>';
   document.body.append(layer);document.querySelector('#app').inert=true;
-  const start=layer.querySelector('.cin-start');start.focus({preventScroll:true});
-  layer.addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight'].includes(event.key))event.stopPropagation();if(event.key==='Tab'){event.preventDefault();start.focus();}});
+  const start=layer.querySelector('.cin-present'), preview=layer.querySelector('.cin-start'), route=layer.querySelector('.cin-duration');route.value=hasLaunched?document.querySelector('#durationSelect').value:'2';start.focus({preventScroll:true});
+  layer.addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight'].includes(event.key))event.stopPropagation();if(event.key==='Tab'){const items=[route,preview,start].filter(x=>!x.disabled);const index=items.indexOf(document.activeElement);event.preventDefault();items[(index+(event.shiftKey?-1:1)+items.length)%items.length]?.focus();}});
   animate(layer.querySelector('.cin-intro-kicker'),[{opacity:0,letterSpacing:'.55em',transform:'translateY(20px)'},{opacity:1,letterSpacing:'.22em',transform:'none'}],900,100);
   animate(layer.querySelector('strong'),[{opacity:0,transform:'perspective(1000px) translateY(90px) rotateX(35deg)',filter:'blur(16px)'},{opacity:1,transform:'none',filter:'blur(0)'}],1200,260);
   animate(layer.querySelector('.cin-intro-rule'),[{transform:'scaleX(0)'},{transform:'scaleX(1)'}],1100,500);
   reveal(layer.querySelector('.cin-intro-bottom'),750,18,900);
-  start.addEventListener('click',()=>{
-   if(layer.dataset.started)return;layer.dataset.started='true';start.disabled=true;
+  function launch(present){
+   if(layer.dataset.started)return;layer.dataset.started='true';start.disabled=true;preview.disabled=true;route.disabled=true;
+   const selector=document.querySelector('#durationSelect');if(selector.value!==route.value){selector.value=route.value;selector.dispatchEvent(new Event('change',{bubbles:true}));const fresh=stage.querySelector('.cover-slide');fresh.dataset.motionReady='true';cinematicCover(fresh);lastScene=stage.dataset.scene;}hasLaunched=true;
+   if(present)document.querySelector('#present').click();
    const finish=()=>{layer.remove();document.querySelector('#app').inert=false;stage.querySelector('#seeWorkflow')?.focus({preventScroll:true});};
    if(!enabled||media.matches){finish();onStart(0);return;}
    const leaving=animate(layer,[{clipPath:'inset(0 0 0 0 round 0px)',transform:'scale(1)',opacity:1},{clipPath:'inset(0 0 100% 0 round 0px)',transform:'scale(1.04)',opacity:1}],1000,0);
    onStart(200);leaving.finished.then(finish).catch(()=>{});
-  });
+  }
+  start.addEventListener('click',()=>launch(true));preview.addEventListener('click',()=>launch(false));
  }
  function playCover(cover,delay=0){
    reveal(cover.querySelector('.motion-client'),delay,45,950);
@@ -69,7 +72,7 @@
   if(cover){
    cinematicCover(cover);
    const playIntro=firstOpening||force;firstOpening=false;
-   if(playIntro){intro(delay=>playCover(cover,delay));return;}
+   if(playIntro){intro(delay=>playCover(stage.querySelector('.cover-slide'),delay));return;}
    playCover(cover,0);
   }else{
    const close=stage.querySelector('.success-slide');
