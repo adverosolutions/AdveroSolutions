@@ -11,63 +11,39 @@ pitch, not a problem statement. The email body carries the offer.
 Lorenzo's wider voice rules are in `lorenzo-voice`; the kicker-line ban is in `claudeisms`.
 The campaigns the line goes into are in `cold-campaigns`.
 
-## Implementation status (checked 2026-11-01)
+## Implementation status (updated 2026-11-01)
 
-The approved output rules below are current. The standard batch pipeline is **not yet
-ready to produce that output**. A skill edit does not update its Python code or prompts.
-The local inspection found:
-- `personalize/prompts.json` still renders the retired “saw that you do / That's exciting /
-  you must” template; `tools/prompts/fill_*.txt` still asks for X and Y.
-- `personalize/daily_fill.py` merges and renders `x`, `y` and `specialty`; it does not carry
-  or render `specific`, its evidence, or the cold-read alternative.
-- `personalize/daily_pick.py` fetches home and about pages, not the full proof-page search
-  required below. Saved September batch CSVs contain the retired wording.
+The current batch implementation now supports the approved achievement template and
+cold-read alternative. `personalize/prompts.json` and `daily_fill.py` carry `specific`,
+mode and evidence; `research.py` retains the homepage and up to four same-site proof
+pages, with fetch diagnostics. The old Y renderer and auto-approval loop are retired.
 
-Do not describe the batch pipeline as ready based on installed tools, an approved example,
-or historical uploads. Recheck the implementation when using this status after code changes.
+Writing, fact selection and copy review use **OpenAI/Codex** in the current session,
+per Lorenzo on 2026-11-01. Do not call Anthropic, Claude or Opus for this pipeline,
+including through the CLI. This overrides older model assignments here and in
+`lorenzo-voice` for personalization. Scripts fetch, stage, render and verify data;
+they make no model API calls or require a separate model API subscription.
 
-### Work required for the intended output
+Local verification: 112 tests pass across personalization, upload and slots. A 12-lead
+real-site validation produced six researched candidates, three approved cold reads,
+two holds and one foreign-company skip. The historical-company cap prevented repeat
+uploads of existing firms. No lines were human-approved or sent. See
+`Coding/lead-scrape-2026/personalize/VALIDATION.md` for evidence and examples.
+This was a Codex self-review, not an independent review.
 
-1. **Research:** extend the existing fetch stage to retain the full home page and up to four
-   relevant proof pages on the business's own site. Keep page URLs and text with the lead;
-   record failed fetches. Do not treat thin or unavailable pages as evidence of no achievement.
-2. **Extract:** extend the extraction prompts and records to retain candidate achievements
-   in the priority order below, each with its verbatim quote and source URL. Retain separate
-   evidence for X. Keep numbers, dates and attribution intact; reject pooled results or a
-   client's own statistic presented as the agency's result.
-3. **Fill and render:** update `prompts.json`, `tools/prompts/fill_*.txt`, `daily_fill.py`
-   and downstream consumers to replace retired Y with `specific` or `cold_read`. Preserve
-   `lead_id`, `specialty`, source evidence and the selected mode through merge, review and
-   export. Render the exact current template, including the no-name form. A cold read replaces
-   the entire “Congrats on {specific}.” sentence; never render an empty or generic congrats.
-4. **Review:** update `daily_apply.py` and the tools for review, autofix, manual fixes and
-   final display to understand those fields. Reject retired wording, unsupported claims and
-   mismatched numbers. Verify that each evidence quote is in the retained source page and
-   supports the actual claim; quote presence alone is insufficient. Keep the two-contact cap
-   and compare the content after the greeting for colleagues at the same company. Do not
-   use the old approval loop to override factual or template failures.
-5. **Validate:** render a local sample of 12 real leads across the intended niches, including
-   no-name, missing-proof and two-contacts-at-one-company cases. Read every line and check
-   every researched claim against its source. Report researched/fallback/held/skipped counts,
-   show the full lines with evidence, and identify any failures. Use offline fixtures for
-   merge/render/QA checks; keep Sheets and Instantly writes out of this validation. Readiness
-   requires a passing implementation and reviewed sample, not just this checklist.
+Read `personalize/DAILY_RUN.md` before running a batch. Review now runs locally by
+default; `daily_apply.py --write-sheet` is the explicit live apply option and refuses
+unresolved QA or missing human review. Matching quotes and numbers do not prove a
+claim's meaning: check attribution, identity, priority and voice by reading the source.
+Only the existing marketing-agency fallback variants are approved; other niches with
+no usable achievement are held for wording review rather than assigned invented copy.
+Changing a reviewed record invalidates its review digest. Old `approved.json` files
+cannot waive template or factual failures.
 
-For a new batch before that migration is complete, research and draft locally using the
-current rules. Do not route new lines through the legacy renderer or its automatic fixes.
-If X cannot be supported by the site, use only reliable lead data and the safe niche traits
-below; do not invent a service or specialization. Hold unresolved identity/niche cases for
-review. A missing achievement alone calls for the cold-read fallback, not dropping the lead.
-Existing PPC fallback wording does not establish approved wording for other niches.
+## Who does what (updated 2026-11-01)
 
-Sheets apply and Instantly upload are live writes. Complete local validation first and follow
-the repository's live-write authorization rules; a request to edit this skill does not
-approve an upload. Never activate or pause campaigns or change their live `email_list`.
-
-## Who does what (decided 2026-09-25)
-
-- **Claude Opus 5.5** decides every line: what X and the specific are for each lead, and whether a
-  line passes. Scripts and cheap models may fetch pages and extract facts.
+- **OpenAI/Codex** selects the facts, writes each line and performs copy QA in the current
+  session. Scripts fetch pages and perform deterministic validation. No Claude/Opus calls.
 - **Grok Bot** never writes, edits, paraphrases or picks a personalization line. If a line
   fails at send time, it reports; it does not rewrite.
 - **Lorenzo** approves the template and reads samples. His literal copy is used verbatim.
@@ -282,43 +258,24 @@ from `state`.
 Known failure seen at volume: the filler model copied examples across leads ("Treasure
 Coast" on a California cleaner, one X reused across four firms).
 
-## Legacy batch commands (pending migration; not the current output procedure)
+## Running a batch
 
-Code lives in `Coding/lead-scrape-2026/` (repo); the per-batch tools are in
-`personalize/tools/`; `personalize/DAILY_RUN.md` has the older single-script flow. Keys are
-in that folder's `.env`; never print them. Run everything from `Coding/lead-scrape-2026`.
-The commands below document the existing X/Y flow for maintenance and old batches. They do
-not implement the current template. Steps 7 and 8 write to live services; they are not tests.
+Code lives in `Coding/lead-scrape-2026/`. Follow `personalize/DAILY_RUN.md` for local
+research, Codex extraction/fill, evidence-aware review, manual corrections and exports.
+The exact record schemas are in `personalize/tools/prompts/extract_mixed.txt` and
+`fill_mixed.txt`. New writer records use `mode`, `x`, `specific`, `achievement_kind`,
+`x_evidence`, `specific_evidence`, `cold_read` and `specialty`; never Y.
 
-1. **Pick:** `personalize/tools/pick_rounds_n.sh <rounds> <niche...>` picks 100 per niche,
-   fetches home and about pages, retries thin pages, writes `_chunks.json` and prints
-   `READY <batch>`. `daily_pick.py` only picks Google, other and Zoho mailboxes (MX lookup in
-   `personalize/esp.py`), so nothing is spent on rows that cannot be sent.
-2. **Rechunk** to about 12 leads per chunk (smaller chunks stop the extract model from
-   pasting page text or writing scripts).
-3. **Extract:** `python3 personalize/tools/stage.py prompts_extract <batch> <niche>` writes
-   one prompt per chunk; one subagent per chunk writes `extract_<k>.json`. Check them with
-   `xcheck.py <batch>` (missing ids, pasted text, duplicates).
-4. **Merge:** `stage.py merge <batch>` prints every row marked off-niche; decide which to
-   restore (rules above).
-5. **Fill:** `stage.py fill <batch> <niche> [restore ids]` runs select + fill and renders
-   fill prompts (`prompts/fill_<niche>.txt`); `cap.py <batch>` lists rows over the
-   2-per-company cap. Subagents write `x_<k>.json`; tell them to write the file with the
-   Write tool and reply only with the count.
-6. **Review:** `review.py <batch>` (gate flags), `autofix.py <batch>` (rule fixes: city
-   spelling, shape balance), `final_view.py <batch>` prints every line. Hand fixes go in a
-   man file `{"fix":{id:{"x"?,"y"?}},"skip":{id:reason}}` with the cap ids as skips
-   ("duplicate company (already 2 contacts)").
-7. **Apply:** `autofix.py <batch> <man.json>`, then `applyfix.py <batch> fix_<batch>.json`
-   (resets approved.json, so it runs first), then `approve_rest.py <batch>` (loops
-   `daily_apply.py` until nothing is flagged; retries on Sheets rate limits). Lines land on
-   the sheet and in `output/daily/day_<batch>.csv`.
-8. **Push:** `python3 instantly_push.py --push output/daily/day_<batch>.csv`. It splits a
-   niche 50/50 across its two campaigns and refuses excluded mailbox providers. Niches
-   without a campaign (MSP, marketing, insurance, landscaping, pest) stay on the sheet.
+`tools/review.py`, `final_view.py`, `autofix.py` and `applyfix.py` are local-only.
+`approve_rest.py` is now a compatibility alias for local review, never automatic approval.
+Every factual or template failure must be corrected or held. Human review of the full
+line and evidence is recorded in `human_review.json` using the current record digest;
+never grant yourself this human review. Only reviewed rows reach `reviewed.csv`.
 
-Never activate or pause a campaign, and never touch a live campaign's `email_list`; both are
-Lorenzo's.
+`daily_pick.py` marks the live Sheet; `daily_apply.py --write-sheet` writes the live Sheet
+and exports the day CSV; Instantly upload is separate. Follow repository live-write
+authorization rules. A code/skill edit does not approve an upload. Never activate or pause
+a campaign or touch a live campaign's `email_list`.
 
 ## Med-spa angle library (July 2026, separate offer)
 
@@ -349,15 +306,12 @@ predate every rule above and fail the bar test.
 
 ## Gaps
 
-- The implementation migration and 12-lead validation above remain outstanding. Updating
-  this skill does not mark them complete.
-
-- Which model fills X and the achievement/fallback at volume under the Opus 5.5 decision is not settled. The
-  2026-09-29/30 runs used Haiku subagents for extract and fill with a full hand review;
-  Lorenzo then asked for Sonnet 5.5 subagents going forward.
-- The list factory's personalization stage writes a freeform line (opens "Hey <first
-  name>,", 30-240 characters) that Lorenzo has not reviewed; template mode is the only form
-  he approved.
+- Cleaning, bookkeeping and recruiting do not yet have approved cold-read wording in the
+  current config. Research an achievement first; hold unresolved fallback wording for Lorenzo.
+- The list factory's separate freeform stage is not the approved template pipeline. Do not
+  infer that updating this pipeline changes unrelated generators or runtime services.
+- Scheduling and unattended model generation are outside this batch implementation. Codex
+  supplies the model work in-session; live operations still require their normal authorization.
 
 ## Sources (for maintainers)
 
@@ -365,7 +319,8 @@ predate every rule above and fail the bar test.
 - memory `personalization-philosophy-2026.md` (2026-09-02 to 09-07): philosophy, corrections, template mode
 - `Coding/lead-scrape-2026/personalize/prompts.json`, `daily_fill.py`, `daily_pick.py`,
   `tools/prompts/fill_*.txt`, and saved September CSVs: implementation status inspected
-  2026-11-01. These still describe/render retired X/Y output; `DAILY_RUN.md` is legacy.
+  2026-11-01, then migrated to the current template. `DAILY_RUN.md` and `VALIDATION.md`
+  document the current procedure and verification.
 - memory `cold-read-research-2026.md` (2026-09-02): safe traits, location mismatch
 - memory `personalization-line-generator.md` (2026-06-29 to 07-06): guessability test, QA pass
 - memory `deep-multiline-icebreaker-tool.md` (2026-07-25/26) and `Agentic Worklfows/execution/deep_multiline_icebreaker.py` `ANGLES`: med-spa library

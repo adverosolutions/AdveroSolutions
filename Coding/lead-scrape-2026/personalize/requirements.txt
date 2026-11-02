@@ -1,0 +1,4 @@
+# Local research, render and review use only the Python standard library.
+# These packages are needed only for live Google Sheets pick/apply.
+gspread>=5,<7
+google-auth>=2,<3

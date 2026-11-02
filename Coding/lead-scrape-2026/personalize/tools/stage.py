@@ -1,50 +1,54 @@
-"""stage.py merge <batch>            -> merge extract_k into extract.json, print niche counts and False rows
-   stage.py fill <batch> <niche> [restore ids...] -> set ids in-niche, select, fill, chunk 25s, render prompts"""
-import json,glob,os,sys,subprocess,collections
-SP=os.path.dirname(os.path.abspath(__file__)); PR=os.path.join(SP,"prompts"); ROOT="/Users/lorenzovillarreal/Desktop/AdveroSolutions/Coding/lead-scrape-2026"
-os.chdir(ROOT)
-cmd,B=sys.argv[1],sys.argv[2].rstrip("/")
-if not B.startswith("/"): B=os.path.join(ROOT,B)
-if cmd=="merge":
-    rows={}
-    for f in sorted(glob.glob(B+"/extract_[0-9]*.json")):
-        for r in json.load(open(f)): rows[r["lead_id"]]=r
-    chunks=json.load(open(B+"/_chunks.json")); want=[i for c in chunks for i in c]
-    missing=[i for i in want if i not in rows]
-    for r in rows.values():
-        for k in ("what_it_is","years_claim","named_niche","guarantee","credential","about_voice_quote","source_url","evidence_quote"):
-            if r.get(k) is None: r[k]=""
-        if r.get("service_traits") is None: r["service_traits"]=[]
-    json.dump(list(rows.values()),open(B+"/extract.json","w"),indent=1)
-    L={l["lead_id"]:l for l in json.load(open(B+"/leads.json"))}
-    print("merged",len(rows),"missing",missing,collections.Counter(r.get("is_in_niche") for r in rows.values()))
-    for r in rows.values():
-        if r.get("is_in_niche") is False: print("  FALSE",r["lead_id"],L[r["lead_id"]]["company_name"],"|",r.get("what_it_is","")[:140])
-elif cmd=="fill":
-    niche=sys.argv[3]; restore=set(sys.argv[4:])
-    E=json.load(open(B+"/extract.json"))
-    for e in E:
-        if e["lead_id"] in restore: e["is_in_niche"]=True
-    json.dump(E,open(B+"/extract.json","w"),indent=1)
-    for s in ("daily_select.py","daily_fill.py"):
-        print(subprocess.run(["python3","personalize/"+s,B],capture_output=True,text=True).stdout.strip().splitlines()[-1])
-    rows=[];seen=set()
-    for f in sorted(glob.glob(B+"/fill_chunk_*.json")):
-        for r in json.load(open(f)):
-            if r["lead_id"] not in seen: seen.add(r["lead_id"]); rows.append(r)
-    for f in glob.glob(B+"/fill_chunk_*.json"): os.remove(f)
-    tpl=open(f"{PR}/fill_{niche}.txt").read()
-    n=0
-    N=int(os.environ.get("FILL_N","25"))
-    for i in range(0,len(rows),N):
-        k=i//N; ch=rows[i:i+N]; json.dump(ch,open(f"{B}/fill_chunk_{k}.json","w"),indent=1)
-        t=tpl.replace("BATCHDIR",B).replace("fill_chunk_K",f"fill_chunk_{k}").replace("x_K.json",f"x_{k}.json").replace("NN",str(len(ch)))
-        open(f"{SP}/p_{os.path.basename(B)}_{k}.txt","w").write(t); n+=1
-    print("fill rows",len(rows),"chunks",n,"prompts",f"{SP}/p_{os.path.basename(B)}_<k>.txt")
-elif cmd=="prompts_extract":
-    niche=sys.argv[3]; tpl=open(f"{PR}/extract_{niche}.txt").read(); chunks=json.load(open(B+"/_chunks.json"))
-    for k in range(len(chunks)):
-        t=tpl.replace("BATCHDIR",B).replace("chunk index K",f"chunk index {k}").replace("list[K]",f"list[{k}]").replace("extract_K.json",f"extract_{k}.json")
-        t+=f"\n\nYour lead_ids, exactly these {len(chunks[k])} (they are list[{k}], zero-based): {json.dumps(chunks[k])}"
-        open(f"{SP}/e_{os.path.basename(B)}_{k}.txt","w").write(t)
-    print("extract prompts",len(chunks))
+"""Local extraction/selection/fill staging; all prompts stay in the batch folder."""
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+PROMPTS = Path(__file__).resolve().parent / 'prompts'
+sys.path.insert(0, str(ROOT / 'personalize'))
+from current import read_json
+
+cmd, batch_arg = sys.argv[1:3]
+batch = Path(batch_arg).resolve()
+if cmd == 'merge':
+    wanted = [lid for chunk in read_json(batch / '_chunks.json', []) for lid in chunk]
+    rows = {}
+    for path in sorted(batch.glob('extract_[0-9]*.json')):
+        for row in read_json(path, []):
+            lid = row['lead_id']
+            if lid in rows or lid not in wanted:
+                raise SystemExit('Duplicate or unknown extraction id: ' + lid)
+            rows[lid] = row
+    if set(wanted) != set(rows):
+        raise SystemExit('Missing extraction ids: ' + str(sorted(set(wanted) - set(rows))))
+    (batch / 'extract.json').write_text(json.dumps(list(rows.values()), indent=2))
+    print('merged', len(rows))
+    for row in rows.values():
+        if row.get('is_in_niche') is False:
+            print('OFF-NICHE', row['lead_id'], row.get('what_it_is', ''))
+elif cmd == 'fill':
+    niche = sys.argv[3]
+    restore = set(sys.argv[4:])
+    extracts = read_json(batch / 'extract.json', [])
+    for row in extracts:
+        if row['lead_id'] in restore:
+            row['is_in_niche'] = True
+    (batch / 'extract.json').write_text(json.dumps(extracts, indent=2))
+    for script in ('daily_select.py', 'daily_fill.py'):
+        subprocess.run([sys.executable, str(ROOT / 'personalize' / script), str(batch)], check=True)
+    template = (PROMPTS / ('fill_' + niche + '.txt')).read_text()
+    for path in sorted(batch.glob('fill_chunk_*.json')):
+        k = path.stem.removeprefix('fill_chunk_')
+        text = template.replace('BATCHDIR', str(batch)).replace('fill_chunk_K', path.stem).replace('x_K.json', 'x_' + k + '.json').replace('NN', str(len(read_json(path, []))))
+        (batch / ('prompt_fill_' + k + '.txt')).write_text(text)
+    print('Fill prompts in', batch)
+elif cmd == 'prompts_extract':
+    niche = sys.argv[3]
+    template = (PROMPTS / ('extract_' + niche + '.txt')).read_text()
+    for k, ids in enumerate(read_json(batch / '_chunks.json', [])):
+        text = template.replace('BATCHDIR', str(batch)).replace('list[K]', 'list[{}]'.format(k)).replace('extract_K.json', 'extract_{}.json'.format(k))
+        (batch / ('prompt_extract_{}.txt'.format(k))).write_text(text + '\nExact lead ids: ' + json.dumps(ids))
+    print('Extraction prompts in', batch)
+else:
+    raise SystemExit('Use merge, fill or prompts_extract')

@@ -1,0 +1,46 @@
+{
+  "_mode": "achievement_template",
+  "template": "Hey {first_name}, I know that you do {x}. Congrats on {specific}. Was wondering if I can run something by you.",
+  "template_no_name": "Hey, I know that you do {x}. Congrats on {specific}. Was wondering if I can run something by you.",
+  "cold_read_template": "Hey {first_name}, I know that you do {x}. {cold_read} Was wondering if I can run something by you.",
+  "cold_read_template_no_name": "Hey, I know that you do {x}. {cold_read} Was wondering if I can run something by you.",
+  "x_rules": [
+    "3-10 words, service first. Name the niche. Lowercase except proper names and acronyms. No company or place names, pronouns, numbers, dashes, ampersands, marketing words, AI or automation.",
+    "Ground X in the company own site. For an unreachable site, use only a reliable company_description or headline, never invent a service or specialization. Keep the exact quote and URL or lead_field. Hold when identity or niche is uncertain."
+  ],
+  "achievement_kinds": [
+    "client_result",
+    "total",
+    "award",
+    "press",
+    "review_rating",
+    "credential",
+    "years_in_business",
+    "milestone"
+  ],
+  "specific_rules": [
+    "Pick the first supported achievement kind in achievement_kinds, strongest first. 3-14 spoken words completing Congrats on. Preserve exact numbers, names, attribution and stated dates; $6 million, not $6M; over 500, not 500+. Never name client companies or demographic groups.",
+    "Evidence must be an exact quote on a retained company page. A client result must describe this agency contribution, not a client standalone statistic or pooled result. Never generic congrats. No achievement: approved niche-matched cold read instead, otherwise hold for wording review.",
+    "Keep x_evidence and specific_evidence with quote and url. Retain all candidate achievements for an alternative for a second contact at the same company. Human semantic review is required. Do not add a sentence or clause that only restates or sells the preceding point."
+  ],
+  "cold_reads": {
+    "marketing_agency": [
+      "Fantastic work on the campaigns. I can tell you really care about the leads and not just the clicks.",
+      "Great work on the campaigns. I can tell you're big on tracking what actually turns into revenue.",
+      "Fantastic work on the accounts. I can tell you stay on top of them instead of setting and forgetting.",
+      "Great work with your clients. I can tell you're upfront with them about the numbers.",
+      "Fantastic work on the Amazon accounts. I can tell you care about profit and not just sales.",
+      "Great work with your brands on Amazon. I can tell you really dig into the numbers."
+    ]
+  },
+  "specialty_rules": [
+    "Recruiting leads only: `specialty` is the 1 to 4 word niche they recruit for, to fill 'I watch for {specialty} roles sitting open on job boards'. Examples: 'commercial HVAC and electrical', 'agtech and foodtech', 'executive'. Must read naturally before the word 'roles'. Blank for other campaigns or if no specialty is known (the email falls back to a generic)."
+  ],
+  "writer_policy": {
+    "provider": "openai",
+    "writer": "current Codex session",
+    "reviewer": "Codex self-review or authorized OpenAI/Codex reviewer",
+    "model_api_calls": false,
+    "note": "Do not invoke Anthropic, Claude or Opus. No separate API subscription required for local research/render/review."
+  }
+}

@@ -1,57 +1,58 @@
 #!/usr/bin/env python3
-"""Template mode, step 4: stage the X-fill for the writer, then merge and template.
-
-  python3 personalize/daily_fill.py <batch_dir>            # -> fill_chunk_<k>.json (50 leads each)
-  python3 personalize/daily_fill.py <batch_dir> --merge    # x_*.json -> x.json -> lines.json
-
-Each fill chunk carries everything the writer may use for X: extracted niche facts,
-the scrape's company description / headline, city and state. The writer returns
-x_<k>.json: [{"lead_id":"", "x":"", "y":""}]. --merge renders prompts.json's template.
-"""
-import glob, json, sys
+"""Stage grounded achievement fill records, or --merge writer JSON locally."""
+import json
+import sys
 from pathlib import Path
+from current import read_json, render
 
-CHUNK = 50
+CHUNK = 12
 
 
 def main():
-    bdir = Path(sys.argv[1]); root = Path(__file__).resolve().parent
-    P = json.loads((root / "prompts.json").read_text())
-    sel = {s["lead_id"]: s for s in json.loads((bdir / "select.json").read_text())}
-    leads = {l["lead_id"]: l for l in json.loads((bdir / "leads.json").read_text())}
-    if "--merge" in sys.argv:
-        xs = {}
-        files = sorted(f for f in glob.glob(str(bdir / "x_*.json")) if "rewrite" not in f) + sorted(glob.glob(str(bdir / "x_rewrite*.json")))
-        for f in files:
-            for o in json.load(open(f)):
-                xs[o["lead_id"]] = {"x": (o.get("x") or "").strip().rstrip("."), "y": (o.get("y") or "").strip().rstrip(".,"),
-                                    "specialty": (o.get("specialty") or "").strip().rstrip(".")}
-        (bdir / "x.json").write_text(json.dumps(xs, indent=1))
+    bdir = Path(sys.argv[1])
+    selections = {s['lead_id']: s for s in read_json(bdir / 'select.json', [])}
+    leads = {l['lead_id']: l for l in read_json(bdir / 'leads.json', [])}
+    if '--merge' in sys.argv:
+        records = {}
+        files = sorted(bdir.glob('x_[0-9]*.json')) + sorted(bdir.glob('x_rewrite*.json'))
+        for path in files:
+            seen = set()
+            for item in read_json(path, []):
+                lid = item['lead_id']
+                if lid not in leads or lid in seen or ('rewrite' not in path.name and lid in records):
+                    raise ValueError('unknown or duplicate lead id in ' + str(path))
+                seen.add(lid)
+                records[lid] = {k: v for k, v in item.items() if k != 'lead_id'}
         lines = []
-        for lid, v in xs.items():
-            fn = (sel[lid].get("first_name") or "").strip()
-            t = P["template"] if fn else P["template_no_name"]
-            ok = v["x"] and ("{y}" not in t or v["y"])
-            lines.append({"lead_id": lid, "icebreaker": t.format(first_name=fn, x=v["x"], y=v["y"]) if ok else ""})
-        (bdir / "lines.json").write_text(json.dumps(lines, indent=1))
-        print(f"[fill] merged {len(xs)} X values -> x.json, lines.json")
+        for lid, selection in selections.items():
+            if selection['tier'] == 'skip':
+                continue
+            rec = records.get(lid, {})
+            try:
+                line = render(leads[lid].get('first_name', ''), rec)
+            except (ValueError, KeyError):
+                line = ''  # The gate reports missing or retired fields; never reuse an old line.
+            lines.append({'lead_id': lid, 'icebreaker': line, 'mode': rec.get('mode', ''),
+                          'x_evidence': rec.get('x_evidence', {}),
+                          'specific_evidence': rec.get('specific_evidence', {})})
+        (bdir / 'x.json').write_text(json.dumps(records, indent=2))
+        (bdir / 'lines.json').write_text(json.dumps(lines, indent=2))
+        print('[fill] merged {} records -> x.json, lines.json'.format(len(records)))
         return
-    ex = {}
-    if (bdir / "extract.json").exists():
-        ex = {o["lead_id"]: o for o in json.loads((bdir / "extract.json").read_text())}
+    extracts = {e['lead_id']: e for e in read_json(bdir / 'extract.json', [])}
     rows = []
-    for lid, s in sel.items():
-        if s["tier"] == "skip": continue
-        l = leads[lid]; e = ex.get(lid, {})
-        rows.append({"lead_id": lid, "campaign": s["campaign"], "company_name": s["company_name"],
-                     "named_niche": e.get("named_niche", ""), "what_it_is": e.get("what_it_is", ""),
-                     "service_traits": e.get("service_traits", []), "headline": l.get("headline", ""),
-                     "company_description": (l.get("company_description") or "")[:400],
-                     "city": l.get("company_city", ""), "state": l.get("company_state", "")})
-    for k in range(0, len(rows), CHUNK):
-        (bdir / f"fill_chunk_{k // CHUNK + 1}.json").write_text(json.dumps(rows[k:k + CHUNK], indent=1))
-    print(f"[fill] {len(rows)} leads -> {(len(rows) + CHUNK - 1) // CHUNK} fill chunks of {CHUNK}")
+    for lid, selection in selections.items():
+        if selection['tier'] == 'skip':
+            continue
+        lead = leads[lid]
+        rows.append(dict(lead, extraction=extracts.get(lid, {}),
+                         research=read_json(bdir / (lid + '.research.json'), {})))
+    for path in bdir.glob('fill_chunk_*.json'):
+        path.unlink()
+    for i in range(0, len(rows), CHUNK):
+        (bdir / ('fill_chunk_{}.json'.format(i // CHUNK))).write_text(json.dumps(rows[i:i + CHUNK], indent=2))
+    print('[fill] {} leads -> {} fill chunks'.format(len(rows), (len(rows) + CHUNK - 1) // CHUNK))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
