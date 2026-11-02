@@ -11,3 +11,21 @@ Backup of the Claude Code setup Lorenzo uses every day. The live copies are on h
 To refresh: `ClaudeConfig/sync_from_home.sh`, then commit and push. To restore a skill on a new machine, copy `skills/<name>/` into `~/.claude/skills/`.
 
 The Grok Bot copies of the skills are separate: `Agentic Worklfows/agents/grokbot/onboarding/skills/`, rebuilt by `build_pack.py`.
+
+## Codex / Orca clones
+
+Codex discovers repo-scoped skills under `.agents/skills/`; `ClaudeConfig/skills/`
+alone is an archive location, not an automatic discovery location. The repo now
+tracks relative symlinks for `cold-email-personalization` and its referenced
+`lorenzo-voice`, `claudeisms` and `cold-campaigns` skills. These point to this
+folder, so they work in another checkout without any files under `~/.claude`.
+
+In an existing clone, run `git pull --ff-only` from the repository root, then
+start a new Codex session in that clone. Use `$cold-email-personalization` or
+look in `/skills`. If the list has not refreshed, restart the Codex process in
+Orca. This configures Codex discovery; Orca's own UI may maintain a separate list.
+No installer, Claude login or Anthropic key is needed for these repo skill links.
+
+When editing a linked skill, change the source under `ClaudeConfig/skills/`;
+the link follows it automatically. `sync_from_home.sh` copies installed skills
+into that source directory, so review its diff to preserve current Codex policies.
